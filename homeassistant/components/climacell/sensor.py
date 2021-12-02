@@ -10,7 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_VERSION, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import slugify
+from homeassistant.util.string import slugify
 
 from . import ClimaCellDataUpdateCoordinator, ClimaCellEntity
 from .const import (

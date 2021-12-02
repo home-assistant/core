@@ -26,8 +26,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
+from homeassistant.util.string import slugify
 
 _LOGGER = logging.getLogger(__name__)
 

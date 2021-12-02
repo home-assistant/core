@@ -1,7 +1,7 @@
 """Constants for the ScreenLogic integration."""
 from screenlogicpy.const import CIRCUIT_FUNCTION, COLOR_MODE
 
-from homeassistant.util import slugify
+from homeassistant.util.string import slugify
 
 DOMAIN = "screenlogic"
 DEFAULT_SCAN_INTERVAL = 30

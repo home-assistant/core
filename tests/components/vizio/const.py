@@ -25,7 +25,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PIN,
 )
-from homeassistant.util import slugify
+from homeassistant.util.string import slugify
 
 NAME = "Vizio"
 NAME2 = "Vizio2"

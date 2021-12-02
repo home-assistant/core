@@ -16,8 +16,8 @@ from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.template import Template, is_template_string
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
-from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
+from homeassistant.util.string import slugify
 
 ATTR_CREATED_AT = "created_at"
 ATTR_MESSAGE = "message"

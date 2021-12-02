@@ -13,8 +13,6 @@ import threading
 from types import MappingProxyType
 from typing import Any, TypeVar
 
-import slugify as unicode_slug
-
 from .dt import as_local, utcnow
 
 T = TypeVar("T")
@@ -43,14 +41,6 @@ def raise_if_invalid_path(path: str) -> None:
     """
     if RE_SANITIZE_PATH.sub("", path) != path:
         raise ValueError(f"{path} is not a safe path")
-
-
-def slugify(text: str | None, *, separator: str = "_") -> str:
-    """Slugify a given text."""
-    if text == "" or text is None:
-        return ""
-    slug = unicode_slug.slugify(text, separator=separator)
-    return "unknown" if slug == "" else slug
 
 
 def repr_helper(inp: Any) -> str:

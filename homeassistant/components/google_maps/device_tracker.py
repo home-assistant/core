@@ -22,7 +22,8 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import dt as dt_util, slugify
+from homeassistant.util import dt as dt_util
+from homeassistant.util.string import slugify
 
 _LOGGER = logging.getLogger(__name__)
 

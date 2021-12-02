@@ -8,7 +8,7 @@ from homeassistant.const import ATTR_ID, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import slugify
+from homeassistant.util.string import slugify
 
 DOMAIN = "lutron"
 

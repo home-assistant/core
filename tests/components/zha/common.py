@@ -7,7 +7,7 @@ import zigpy.zcl
 import zigpy.zcl.foundation as zcl_f
 
 import homeassistant.components.zha.core.const as zha_const
-from homeassistant.util import slugify
+from homeassistant.util.string import slugify
 
 
 def patch_cluster(cluster):

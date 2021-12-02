@@ -4,7 +4,7 @@ import pytest
 from homeassistant.components.nws.const import ATTRIBUTION, DOMAIN, SENSOR_TYPES
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import ATTR_ATTRIBUTION, STATE_UNKNOWN
-from homeassistant.util import slugify
+from homeassistant.util.string import slugify
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 
 from tests.common import MockConfigEntry

@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import slugify
+from homeassistant.util.string import slugify
 
 from .const import DOMAIN, HOME_LOCATION_NAME
 

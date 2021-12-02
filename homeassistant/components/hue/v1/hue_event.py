@@ -10,7 +10,8 @@ from aiohue.v1.sensors import (
 
 from homeassistant.const import CONF_DEVICE_ID, CONF_EVENT, CONF_ID, CONF_UNIQUE_ID
 from homeassistant.core import callback
-from homeassistant.util import dt as dt_util, slugify
+from homeassistant.util import dt as dt_util
+from homeassistant.util.string import slugify
 
 from ..const import ATTR_HUE_EVENT
 from .sensor_device import GenericHueDevice

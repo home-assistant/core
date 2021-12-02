@@ -26,8 +26,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
+from homeassistant.util.string import slugify
 
 from .const import (
     ATTRIBUTION,

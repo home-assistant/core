@@ -20,8 +20,8 @@ from homeassistant.const import (
     STATE_NOT_HOME,
 )
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util import slugify
 from homeassistant.util.dt import utcnow
+from homeassistant.util.string import slugify
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 

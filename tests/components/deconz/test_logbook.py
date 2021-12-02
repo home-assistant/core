@@ -17,7 +17,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
 )
 from homeassistant.setup import async_setup_component
-from homeassistant.util import slugify
+from homeassistant.util.string import slugify
 
 from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
 

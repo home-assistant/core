@@ -9,7 +9,7 @@ from aiohue.v2.models.button import Button
 from homeassistant.const import CONF_DEVICE_ID, CONF_ID, CONF_TYPE, CONF_UNIQUE_ID
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry
-from homeassistant.util import slugify
+from homeassistant.util.string import slugify
 
 from ..const import ATTR_HUE_EVENT, CONF_SUBTYPE, DOMAIN as DOMAIN
 

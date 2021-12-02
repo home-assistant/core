@@ -15,7 +15,7 @@ from homeassistant.components.switcher_kis.const import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.helpers.config_validation import time_period_str
-from homeassistant.util import slugify
+from homeassistant.util.string import slugify
 
 from . import init_integration
 from .consts import (

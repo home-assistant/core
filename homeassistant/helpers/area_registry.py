@@ -10,7 +10,7 @@ import attr
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.loader import bind_hass
-from homeassistant.util import slugify
+from homeassistant.util.string import slugify
 
 from .typing import UNDEFINED, UndefinedType
 

@@ -18,7 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
-from homeassistant.util import slugify
+from homeassistant.util.string import slugify
 
 HOME_LATITUDE = 37.239622
 HOME_LONGITUDE = -115.815811

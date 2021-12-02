@@ -11,7 +11,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.util import slugify
+from homeassistant.util.string import slugify
 
 from .const import DOMAIN
 

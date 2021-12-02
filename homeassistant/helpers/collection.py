@@ -20,7 +20,7 @@ from homeassistant.helpers import entity_registry
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.storage import Store
-from homeassistant.util import slugify
+from homeassistant.util.string import slugify
 
 STORAGE_VERSION = 1
 SAVE_DELAY = 10

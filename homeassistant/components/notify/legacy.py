@@ -13,7 +13,7 @@ from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.setup import async_prepare_setup_platform, async_start_setup
-from homeassistant.util import slugify
+from homeassistant.util.string import slugify
 from homeassistant.util.yaml import load_yaml
 
 from .const import (

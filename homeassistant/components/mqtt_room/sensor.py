@@ -18,7 +18,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import dt, slugify
+from homeassistant.util import dt
+from homeassistant.util.string import slugify
 
 _LOGGER = logging.getLogger(__name__)
 

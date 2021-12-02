@@ -10,8 +10,8 @@ from librouteros.login import plain as login_plain, token as login_token
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
+from homeassistant.util.string import slugify
 
 from .const import (
     ARP,

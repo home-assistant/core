@@ -10,7 +10,7 @@ import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import slugify
+from homeassistant.util.string import slugify
 from script.translations import upload
 
 from .model import Config, Integration

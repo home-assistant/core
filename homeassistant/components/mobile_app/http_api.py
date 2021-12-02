@@ -14,7 +14,7 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.const import ATTR_DEVICE_ID, CONF_WEBHOOK_ID
 from homeassistant.helpers import config_validation as cv
-from homeassistant.util import slugify
+from homeassistant.util.string import slugify
 
 from .const import (
     ATTR_APP_DATA,

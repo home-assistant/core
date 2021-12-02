@@ -41,8 +41,9 @@ from homeassistant.helpers import device_registry as dr, storage
 from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from homeassistant.helpers.frame import report
 from homeassistant.loader import bind_hass
-from homeassistant.util import slugify, uuid as uuid_util
+from homeassistant.util import uuid as uuid_util
 from homeassistant.util.enum import StrEnum
+from homeassistant.util.string import slugify
 from homeassistant.util.yaml import load_yaml
 
 from .typing import UNDEFINED, UndefinedType

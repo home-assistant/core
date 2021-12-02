@@ -3,7 +3,7 @@ import pytest
 
 from homeassistant.components.switcher_kis.const import DATA_DEVICE, DOMAIN
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util import slugify
+from homeassistant.util.string import slugify
 
 from . import init_integration
 from .consts import DUMMY_PLUG_DEVICE, DUMMY_SWITCHER_DEVICES, DUMMY_WATER_HEATER_DEVICE

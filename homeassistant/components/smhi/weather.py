@@ -40,7 +40,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
-from homeassistant.util import Throttle, slugify
+from homeassistant.util import Throttle
+from homeassistant.util.string import slugify
 
 from .const import (
     ATTR_SMHI_CLOUDINESS,

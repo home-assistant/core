@@ -2,7 +2,7 @@
 from homeassistant.components import mqtt
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import callback
-from homeassistant.util import slugify
+from homeassistant.util.string import slugify
 
 from .definitions import SENSORS, DSMRReaderSensorEntityDescription
 

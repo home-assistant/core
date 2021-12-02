@@ -22,7 +22,8 @@ from homeassistant.const import (
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import convert, slugify
+from homeassistant.util import convert
+from homeassistant.util.string import slugify
 
 _LOGGER = logging.getLogger(__name__)
 

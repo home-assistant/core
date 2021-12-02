@@ -22,7 +22,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import slugify
+from homeassistant.util.string import slugify
 
 DOMAIN = "aprs"
 

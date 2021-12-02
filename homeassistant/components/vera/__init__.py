@@ -26,8 +26,9 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import convert, slugify
+from homeassistant.util import convert
 from homeassistant.util.dt import utc_from_timestamp
+from homeassistant.util.string import slugify
 
 from .common import (
     ControllerData,

@@ -73,8 +73,8 @@ from homeassistant.helpers.trigger import (
     async_validate_trigger_config,
 )
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import slugify
 from homeassistant.util.dt import utcnow
+from homeassistant.util.string import slugify
 
 from .trace import (
     TraceElement,

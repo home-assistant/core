@@ -18,7 +18,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.util import slugify
+from homeassistant.util.string import slugify
 
 from . import async_wait_for_elk_to_sync
 from .const import CONF_AUTO_CONFIGURE, DOMAIN

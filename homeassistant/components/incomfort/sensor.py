@@ -15,7 +15,7 @@ from homeassistant.const import (
     PRESSURE_BAR,
     TEMP_CELSIUS,
 )
-from homeassistant.util import slugify
+from homeassistant.util.string import slugify
 
 from . import DOMAIN, IncomfortChild
 

@@ -7,7 +7,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, ServiceDataType
-from homeassistant.util import slugify
+from homeassistant.util.string import slugify
 
 from .account import IcloudAccount
 from .const import (

@@ -8,7 +8,6 @@ from bluepy.btle import BTLEException  # pylint: disable=import-error
 import decora  # pylint: disable=import-error
 import voluptuous as vol
 
-from homeassistant import util
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     PLATFORM_SCHEMA,
@@ -17,6 +16,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import CONF_API_KEY, CONF_DEVICES, CONF_NAME
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.string import slugify
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ def _name_validator(config):
     config = copy.deepcopy(config)
     for address, device_config in config[CONF_DEVICES].items():
         if CONF_NAME not in device_config:
-            device_config[CONF_NAME] = util.slugify(address)
+            device_config[CONF_NAME] = slugify(address)
 
     return config
 

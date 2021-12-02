@@ -33,7 +33,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import slugify
+from homeassistant.util.string import slugify
 
 from . import (
     get_hyperion_device_id,

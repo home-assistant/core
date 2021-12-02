@@ -41,6 +41,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, GPSType, StateType
 from homeassistant.setup import async_prepare_setup_platform, async_start_setup
 from homeassistant.util import dt as dt_util
+from homeassistant.util.string import slugify
 from homeassistant.util.yaml import dump
 
 from .const import (
@@ -492,7 +493,7 @@ class DeviceTracker:
         if mac is not None:
             mac = str(mac).upper()
             if (device := self.mac_to_dev.get(mac)) is None:
-                dev_id = util.slugify(host_name or "") or util.slugify(mac)
+                dev_id = slugify(host_name or "") or slugify(mac)
         else:
             dev_id = cv.slug(str(dev_id).lower())
             device = self.devices.get(dev_id)

@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import slugify
+from homeassistant.util.string import slugify
 
 from . import BlockDeviceWrapper, RpcDeviceWrapper
 from .const import BLOCK, DATA_CONFIG_ENTRY, DOMAIN, RPC

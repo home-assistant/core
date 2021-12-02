@@ -19,7 +19,7 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.util import slugify
+from homeassistant.util.string import slugify
 
 from .const import (
     API_VERSION,

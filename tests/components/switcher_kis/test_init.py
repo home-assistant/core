@@ -13,7 +13,8 @@ from homeassistant.components.switcher_kis.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt, slugify
+from homeassistant.util import dt
+from homeassistant.util.string import slugify
 
 from . import init_integration
 from .consts import DUMMY_SWITCHER_DEVICES, YAML_CONFIG

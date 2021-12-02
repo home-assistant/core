@@ -8,7 +8,7 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import callback
-from homeassistant.util import slugify
+from homeassistant.util.string import slugify
 
 from . import DOMAIN as WF_DOMAIN, UPDATE_TOPIC
 

@@ -1,7 +1,7 @@
 """Gather info for scaffolding."""
 import json
 
-from homeassistant.util import slugify
+from homeassistant.util.string import slugify
 from script.hassfest.manifest import SUPPORTED_IOT_CLASSES
 
 from .const import COMPONENT_DIR

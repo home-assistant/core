@@ -20,8 +20,8 @@ from homeassistant.components.google import (
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers.template import DATE_STR_FORMAT
 from homeassistant.setup import async_setup_component
-from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
+from homeassistant.util.string import slugify
 
 from tests.common import async_mock_service
 

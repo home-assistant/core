@@ -11,7 +11,8 @@ from homeassistant.components.device_tracker.const import (
 )
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util, slugify
+from homeassistant.util import dt as dt_util
+from homeassistant.util.string import slugify
 
 from tests.common import async_fire_time_changed
 

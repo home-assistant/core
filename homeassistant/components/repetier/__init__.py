@@ -24,7 +24,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import track_time_interval
-from homeassistant.util import slugify as util_slugify
+from homeassistant.util.string import slugify as util_slugify
 
 _LOGGER = logging.getLogger(__name__)
 

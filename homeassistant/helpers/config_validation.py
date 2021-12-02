@@ -79,8 +79,9 @@ from homeassistant.helpers import (
     script_variables as script_variables_helper,
     template as template_helper,
 )
-from homeassistant.util import raise_if_invalid_path, slugify as util_slugify
+from homeassistant.util import raise_if_invalid_path
 import homeassistant.util.dt as dt_util
+from homeassistant.util.string import slugify as util_slugify
 
 # pylint: disable=invalid-name
 

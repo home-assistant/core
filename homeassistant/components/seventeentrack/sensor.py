@@ -17,7 +17,8 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.event import async_call_later
-from homeassistant.util import Throttle, slugify
+from homeassistant.util import Throttle
+from homeassistant.util.string import slugify
 
 _LOGGER = logging.getLogger(__name__)
 

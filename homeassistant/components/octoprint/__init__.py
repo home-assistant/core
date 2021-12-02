@@ -24,8 +24,8 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import slugify as util_slugify
 import homeassistant.util.dt as dt_util
+from homeassistant.util.string import slugify as util_slugify
 
 from .const import DOMAIN
 

@@ -42,8 +42,9 @@ from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.event import Event, async_track_entity_registry_updated_event
 from homeassistant.helpers.typing import StateType
 from homeassistant.loader import bind_hass
-from homeassistant.util import dt as dt_util, ensure_unique_string, slugify
+from homeassistant.util import dt as dt_util, ensure_unique_string
 from homeassistant.util.enum import StrEnum
+from homeassistant.util.string import slugify
 
 _LOGGER = logging.getLogger(__name__)
 SLOW_UPDATE_WARNING = 10

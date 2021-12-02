@@ -9,7 +9,7 @@ from homeassistant.components.subaru.sensor import (
     SENSOR_FIELD,
     SENSOR_TYPE,
 )
-from homeassistant.util import slugify
+from homeassistant.util.string import slugify
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
 from .api_responses import (

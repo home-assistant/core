@@ -22,10 +22,10 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.helpers.storage import Store
-from homeassistant.util import slugify
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.dt import utcnow
 from homeassistant.util.location import distance
+from homeassistant.util.string import slugify
 
 from .const import (
     DEVICE_BATTERY_LEVEL,

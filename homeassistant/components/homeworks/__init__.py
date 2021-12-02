@@ -15,7 +15,7 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
-from homeassistant.util import slugify
+from homeassistant.util.string import slugify
 
 _LOGGER = logging.getLogger(__name__)
 

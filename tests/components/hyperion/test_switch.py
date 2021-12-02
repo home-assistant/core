@@ -22,7 +22,8 @@ from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.util import dt, slugify
+from homeassistant.util import dt
+from homeassistant.util.string import slugify
 
 from . import (
     TEST_CONFIG_ENTRY_ID,

@@ -35,13 +35,13 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv, event
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.sun import get_astral_event_date
-from homeassistant.util import slugify
 from homeassistant.util.color import (
     color_RGB_to_xy_brightness,
     color_temperature_kelvin_to_mired,
     color_temperature_to_rgb,
 )
 from homeassistant.util.dt import as_local, utcnow as dt_utcnow
+from homeassistant.util.string import slugify
 
 _LOGGER = logging.getLogger(__name__)
 

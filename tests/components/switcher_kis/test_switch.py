@@ -14,7 +14,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.util import slugify
+from homeassistant.util.string import slugify
 
 from . import init_integration
 from .consts import DUMMY_PLUG_DEVICE, DUMMY_WATER_HEATER_DEVICE

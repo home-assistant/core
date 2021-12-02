@@ -19,7 +19,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.util import slugify
+from homeassistant.util.string import slugify
 
 from .const import CONF_ANGLE, CONF_GESTURE, LOGGER
 from .deconz_device import DeconzBase

@@ -30,7 +30,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.util import slugify
+from homeassistant.util.string import slugify
 
 from . import DOMAIN, TRACKER_UPDATE
 from .const import (

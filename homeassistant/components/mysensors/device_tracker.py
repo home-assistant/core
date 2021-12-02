@@ -14,7 +14,7 @@ from homeassistant.components.mysensors.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.util import slugify
+from homeassistant.util.string import slugify
 
 from .helpers import on_unload
 

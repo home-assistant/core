@@ -23,7 +23,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import slugify
+from homeassistant.util.string import slugify
 
 from .common import (
     FritzBoxBaseEntity,

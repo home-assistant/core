@@ -22,7 +22,8 @@ from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import dt as dt_util, slugify
+from homeassistant.util import dt as dt_util
+from homeassistant.util.string import slugify
 
 from .const import (
     CONF_EVENTS,

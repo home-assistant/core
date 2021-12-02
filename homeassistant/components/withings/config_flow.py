@@ -9,7 +9,7 @@ from withings_api.common import AuthScope
 from homeassistant.components.withings import const
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.helpers import config_entry_oauth2_flow
-from homeassistant.util import slugify
+from homeassistant.util.string import slugify
 
 
 class WithingsFlowHandler(

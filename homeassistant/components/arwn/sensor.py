@@ -12,7 +12,7 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import callback
-from homeassistant.util import slugify
+from homeassistant.util.string import slugify
 
 _LOGGER = logging.getLogger(__name__)
 

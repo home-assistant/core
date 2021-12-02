@@ -11,7 +11,8 @@ from homeassistant.components.device_tracker import (
     SOURCE_TYPE_GPS,
 )
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, STATE_HOME
-from homeassistant.util import decorator, slugify
+from homeassistant.util import decorator
+from homeassistant.util.string import slugify
 
 from .helper import supports_encryption
 
