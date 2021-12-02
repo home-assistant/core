@@ -172,6 +172,8 @@ class DPCode(str, Enum):
     CH4_SENSOR_VALUE = "ch4_sensor_value"
     CHILD_LOCK = "child_lock"  # Child lock
     CLICK_SUSTAIN_TIME = "click_sustain_time"
+    CLEAN_AREA = "clean_area"
+    CLEAN_TIME = "clean_time"
     CO_STATE = "co_state"
     CO_STATUS = "co_status"
     CO_VALUE = "co_value"
@@ -193,6 +195,7 @@ class DPCode(str, Enum):
     DECIBEL_SENSITIVITY = "decibel_sensitivity"
     DECIBEL_SWITCH = "decibel_switch"
     DEHUMIDITY_SET_VALUE = "dehumidify_set_value"
+    DIRECTION_CONTROL = "direction_control"
     DO_NOT_DISTURB = "do_not_disturb"
     DOORCONTACT_STATE = "doorcontact_state"  # Status of door window sensor
     DOORCONTACT_STATE_2 = "doorcontact_state_2"
