@@ -601,6 +601,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             key=DPCode.STATUS,
             name="Status Tuya",
             entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+            entity_registry_enabled_default=False,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CLEAN_AREA,
