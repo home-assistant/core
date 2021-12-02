@@ -711,12 +711,6 @@ jobs:
             --durations-min=1 \
             -p no:sugar \
             tests/components/${{ matrix.group }}
-      - name: Upload coverage to Codecov (full coverage)
-        if: needs.changes.outputs.test_full_suite == 'true'
-        uses: codecov/codecov-action@v2.1.0
-        with:
-          files: coverage.xml
-          flags: full-suite
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v2.2.4
         with:
