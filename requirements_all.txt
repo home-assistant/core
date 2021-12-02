@@ -768,7 +768,7 @@ growattServer==1.1.0
 gstreamer-player==1.1.2
 
 # homeassistant.components.profiler
-guppy3==3.1.0
+guppy3==3.1.2
 
 # homeassistant.components.stream
 ha-av==8.0.4-rc.1
