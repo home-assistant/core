@@ -600,10 +600,12 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         TuyaSensorEntityDescription(
             key=DPCode.CLEAN_AREA,
             name="Cleaning Area",
+            icon="mdi:texture-box",
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CLEAN_TIME,
             name="Cleaning Time",
+            icon="mdi:mdi:progress-clock",
         ),
         TuyaSensorEntityDescription(
             key=DPCode.STATUS,
