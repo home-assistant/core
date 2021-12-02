@@ -717,12 +717,21 @@ jobs:
         with:
           files: coverage.xml
           flags: full-suite
-      - name: Upload coverage to Codecov (partial coverage)
-        if: needs.changes.outputs.test_full_suite == 'false'
-        uses: codecov/codecov-action@v2.1.0
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v2.2.4
         with:
-          files: coverage.xml
-          flags: ${{ matrix.group }}
+          name: coverage-${{ matrix.python-version }}-${{ matrix.group }}.xml
+          path: coverage.xml
       - name: Check dirty
         run: |
           ./script/check_dirty
+
+  coverage:
+    name: Upload test coverage to Codecov
+    runs-on: ubuntu-latest
+    needs: ["pytest"]
+    steps:
+      - name: Download all coverage artifacts
+        uses: actions/download-artifact@v2
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v2.1.0
