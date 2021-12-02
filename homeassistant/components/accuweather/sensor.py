@@ -5,8 +5,9 @@ from typing import Any, cast
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, DEVICE_CLASS_TEMPERATURE
+from homeassistant.const import CONF_NAME, DEVICE_CLASS_TEMPERATURE
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -59,6 +60,7 @@ async def async_setup_entry(
 class AccuWeatherSensor(CoordinatorEntity, SensorEntity):
     """Define an AccuWeather entity."""
 
+    _attr_attribution = ATTRIBUTION
     coordinator: AccuWeatherDataUpdateCoordinator
     entity_description: AccuWeatherSensorDescription
 
@@ -75,7 +77,7 @@ class AccuWeatherSensor(CoordinatorEntity, SensorEntity):
         self._sensor_data = _get_sensor_data(
             coordinator.data, forecast_day, description.key
         )
-        self._attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
+        self._attrs: dict[str, Any] = {}
         if forecast_day is not None:
             self._attr_name = f"{name} {description.name} {forecast_day}d"
             self._attr_unique_id = (
@@ -92,12 +94,12 @@ class AccuWeatherSensor(CoordinatorEntity, SensorEntity):
         else:
             self._unit_system = API_IMPERIAL
             self._attr_native_unit_of_measurement = description.unit_imperial
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, coordinator.location_key)},
-            "name": NAME,
-            "manufacturer": MANUFACTURER,
-            "entry_type": "service",
-        }
+        self._attr_device_info = DeviceInfo(
+            entry_type="service",
+            identifiers={(DOMAIN, coordinator.location_key)},
+            manufacturer=MANUFACTURER,
+            name=NAME,
+        )
         self.forecast_day = forecast_day
 
     @property

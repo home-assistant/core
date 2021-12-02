@@ -37,6 +37,16 @@ def _friendly_name_from_discovery(discovery_info: Mapping[str, Any]) -> str:
     )
 
 
+def _is_complete_discovery(discovery_info: Mapping[str, Any]) -> bool:
+    """Test if discovery is complete and usable."""
+    return (
+        ssdp.ATTR_UPNP_UDN in discovery_info
+        and ssdp.ATTR_SSDP_ST in discovery_info
+        and ssdp.ATTR_SSDP_LOCATION in discovery_info
+        and ssdp.ATTR_SSDP_USN in discovery_info
+    )
+
+
 async def _async_wait_for_discoveries(hass: HomeAssistant) -> bool:
     """Wait for a device to be discovered."""
     device_discovered_event = asyncio.Event()
@@ -133,7 +143,10 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._discoveries = [
             discovery
             for discovery in discoveries
-            if discovery[ssdp.ATTR_SSDP_USN] not in current_unique_ids
+            if (
+                _is_complete_discovery(discovery)
+                and discovery[ssdp.ATTR_SSDP_USN] not in current_unique_ids
+            )
         ]
 
         # Ensure anything to add.
@@ -183,12 +196,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Ensure complete discovery.
         discovery = discoveries[0]
-        if (
-            ssdp.ATTR_UPNP_UDN not in discovery
-            or ssdp.ATTR_SSDP_ST not in discovery
-            or ssdp.ATTR_SSDP_LOCATION not in discovery
-            or ssdp.ATTR_SSDP_USN not in discovery
-        ):
+        if not _is_complete_discovery(discovery):
             LOGGER.debug("Incomplete discovery, ignoring")
             return self.async_abort(reason="incomplete_discovery")
 
@@ -207,12 +215,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         LOGGER.debug("async_step_ssdp: discovery_info: %s", discovery_info)
 
         # Ensure complete discovery.
-        if (
-            ssdp.ATTR_UPNP_UDN not in discovery_info
-            or ssdp.ATTR_SSDP_ST not in discovery_info
-            or ssdp.ATTR_SSDP_LOCATION not in discovery_info
-            or ssdp.ATTR_SSDP_USN not in discovery_info
-        ):
+        if not _is_complete_discovery(discovery_info):
             LOGGER.debug("Incomplete discovery, ignoring")
             return self.async_abort(reason="incomplete_discovery")
 

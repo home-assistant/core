@@ -11,7 +11,7 @@ from pybotvac.robot import Robot
 from homeassistant.components.neato import NeatoHub
 from homeassistant.components.sensor import DEVICE_CLASS_BATTERY, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC, PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -84,6 +84,11 @@ class NeatoSensor(SensorEntity):
         return DEVICE_CLASS_BATTERY
 
     @property
+    def entity_category(self) -> str:
+        """Device entity category."""
+        return ENTITY_CATEGORY_DIAGNOSTIC
+
+    @property
     def available(self) -> bool:
         """Return availability."""
         return self._available
@@ -103,4 +108,4 @@ class NeatoSensor(SensorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Device info for neato robot."""
-        return {"identifiers": {(NEATO_DOMAIN, self._robot_serial)}}
+        return DeviceInfo(identifiers={(NEATO_DOMAIN, self._robot_serial)})

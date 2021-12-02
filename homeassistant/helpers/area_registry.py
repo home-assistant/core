@@ -12,6 +12,8 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.loader import bind_hass
 from homeassistant.util import slugify
 
+from .typing import UNDEFINED, UndefinedType
+
 # mypy: disallow-any-generics
 
 DATA_REGISTRY = "area_registry"
@@ -27,6 +29,7 @@ class AreaEntry:
 
     name: str = attr.ib()
     normalized_name: str = attr.ib()
+    picture: str | None = attr.ib(default=None)
     id: str | None = attr.ib(default=None)
 
     def generate_id(self, existing_ids: Container[str]) -> None:
@@ -76,14 +79,14 @@ class AreaRegistry:
         return self.async_create(name)
 
     @callback
-    def async_create(self, name: str) -> AreaEntry:
+    def async_create(self, name: str, picture: str | None = None) -> AreaEntry:
         """Create a new area."""
         normalized_name = normalize_area_name(name)
 
         if self.async_get_area_by_name(name):
             raise ValueError(f"The name {name} ({normalized_name}) is already in use")
 
-        area = AreaEntry(name=name, normalized_name=normalized_name)
+        area = AreaEntry(name=name, normalized_name=normalized_name, picture=picture)
         area.generate_id(self.areas)
         assert area.id is not None
         self.areas[area.id] = area
@@ -113,36 +116,57 @@ class AreaRegistry:
         self.async_schedule_save()
 
     @callback
-    def async_update(self, area_id: str, name: str) -> AreaEntry:
+    def async_update(
+        self,
+        area_id: str,
+        name: str | UndefinedType = UNDEFINED,
+        picture: str | None | UndefinedType = UNDEFINED,
+    ) -> AreaEntry:
         """Update name of area."""
-        updated = self._async_update(area_id, name)
+        updated = self._async_update(area_id, name=name, picture=picture)
         self.hass.bus.async_fire(
             EVENT_AREA_REGISTRY_UPDATED, {"action": "update", "area_id": area_id}
         )
         return updated
 
     @callback
-    def _async_update(self, area_id: str, name: str) -> AreaEntry:
+    def _async_update(
+        self,
+        area_id: str,
+        name: str | UndefinedType = UNDEFINED,
+        picture: str | None | UndefinedType = UNDEFINED,
+    ) -> AreaEntry:
         """Update name of area."""
         old = self.areas[area_id]
 
         changes = {}
 
-        if name == old.name:
+        if picture is not UNDEFINED:
+            changes["picture"] = picture
+
+        normalized_name = None
+
+        if name is not UNDEFINED:
+            normalized_name = normalize_area_name(name)
+
+            if normalized_name != old.normalized_name and self.async_get_area_by_name(
+                name
+            ):
+                raise ValueError(
+                    f"The name {name} ({normalized_name}) is already in use"
+                )
+
+            changes["name"] = name
+            changes["normalized_name"] = normalized_name
+
+        if not changes:
             return old
 
-        normalized_name = normalize_area_name(name)
-
-        if normalized_name != old.normalized_name and self.async_get_area_by_name(name):
-            raise ValueError(f"The name {name} ({normalized_name}) is already in use")
-
-        changes["name"] = name
-        changes["normalized_name"] = normalized_name
-
         new = self.areas[area_id] = attr.evolve(old, **changes)
-        self._normalized_name_area_idx[
-            normalized_name
-        ] = self._normalized_name_area_idx.pop(old.normalized_name)
+        if normalized_name is not None:
+            self._normalized_name_area_idx[
+                normalized_name
+            ] = self._normalized_name_area_idx.pop(old.normalized_name)
 
         self.async_schedule_save()
         return new
@@ -157,7 +181,11 @@ class AreaRegistry:
             for area in data["areas"]:
                 normalized_name = normalize_area_name(area["name"])
                 areas[area["id"]] = AreaEntry(
-                    name=area["name"], id=area["id"], normalized_name=normalized_name
+                    name=area["name"],
+                    id=area["id"],
+                    # New in 2021.11
+                    picture=area.get("picture"),
+                    normalized_name=normalized_name,
                 )
                 self._normalized_name_area_idx[normalized_name] = area["id"]
 
@@ -174,10 +202,7 @@ class AreaRegistry:
         data = {}
 
         data["areas"] = [
-            {
-                "name": entry.name,
-                "id": entry.id,
-            }
+            {"name": entry.name, "id": entry.id, "picture": entry.picture}
             for entry in self.areas.values()
         ]
 

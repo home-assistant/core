@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from http import HTTPStatus
 import logging
 from xml.parsers.expat import ExpatError
 
@@ -19,7 +20,6 @@ from homeassistant.const import (
     CONF_MONITORED_VARIABLES,
     CONF_NAME,
     DATA_GIGABYTES,
-    HTTP_OK,
     PERCENTAGE,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -195,7 +195,7 @@ class StartcaData:
         url = f"https://www.start.ca/support/usage/api?key={self.api_key}"
         with async_timeout.timeout(REQUEST_TIMEOUT):
             req = await self.websession.get(url)
-        if req.status != HTTP_OK:
+        if req.status != HTTPStatus.OK:
             _LOGGER.error("Request failed with status: %u", req.status)
             return False
 

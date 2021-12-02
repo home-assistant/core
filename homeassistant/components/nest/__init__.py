@@ -81,7 +81,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return await async_setup_legacy(hass, config)
 
     if CONF_SUBSCRIBER_ID not in config[DOMAIN]:
-        _LOGGER.error("Configuration option '{CONF_SUBSCRIBER_ID}' required")
+        _LOGGER.error("Configuration option 'subscriber_id' required")
         return False
 
     # For setup of ConfigEntry below
@@ -115,22 +115,21 @@ class SignalUpdateCallback:
         if not event_message.resource_update_name:
             return
         device_id = event_message.resource_update_name
-        events = event_message.resource_update_events
-        if not events:
+        if not (events := event_message.resource_update_events):
             return
         _LOGGER.debug("Event Update %s", events.keys())
         device_registry = await self._hass.helpers.device_registry.async_get_registry()
         device_entry = device_registry.async_get_device({(DOMAIN, device_id)})
         if not device_entry:
             return
-        for event in events:
-            event_type = EVENT_NAME_MAP.get(event)
-            if not event_type:
+        for api_event_type, image_event in events.items():
+            if not (event_type := EVENT_NAME_MAP.get(api_event_type)):
                 continue
             message = {
                 "device_id": device_entry.id,
                 "type": event_type,
                 "timestamp": event_message.timestamp,
+                "nest_event_id": image_event.event_id,
             }
             self._hass.bus.async_fire(NEST_EVENT, message)
 

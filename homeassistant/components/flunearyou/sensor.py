@@ -24,7 +24,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import CATEGORY_CDC_REPORT, CATEGORY_USER_REPORT, DATA_COORDINATOR, DOMAIN
+from .const import CATEGORY_CDC_REPORT, CATEGORY_USER_REPORT, DOMAIN
 
 ATTR_CITY = "city"
 ATTR_REPORTED_DATE = "reported_date"
@@ -122,7 +122,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Flu Near You sensors based on a config entry."""
-    coordinators = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id]
+    coordinators = hass.data[DOMAIN][entry.entry_id]
 
     sensors: list[CdcSensor | UserSensor] = [
         CdcSensor(coordinators[CATEGORY_CDC_REPORT], entry, description)

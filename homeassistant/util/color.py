@@ -170,7 +170,7 @@ COLORS = {
     "violet": RGBColor(238, 130, 238),
     "wheat": RGBColor(245, 222, 179),
     "white": RGBColor(255, 255, 255),
-    "whitesmoke": RGBColor(245, 245, 245),
+    "whitesmoke": RGBColor(200, 200, 200),
     "yellow": RGBColor(255, 255, 0),
     "yellowgreen": RGBColor(154, 205, 50),
     # And...
@@ -218,7 +218,7 @@ def color_RGB_to_xy(
 
 
 # Taken from:
-# http://www.developers.meethue.com/documentation/color-conversions-rgb-xy
+# https://github.com/PhilipsHue/PhilipsHueSDK-iOS-OSX/blob/00187a3/ApplicationDesignNotes/RGB%20to%20xy%20Color%20conversion.md
 # License: Code is given as is. Use at your own risk and discretion.
 def color_RGB_to_xy_brightness(
     iR: int, iG: int, iB: int, Gamut: GamutType | None = None
@@ -268,7 +268,7 @@ def color_xy_to_RGB(
 
 
 # Converted to Python from Obj-C, original source from:
-# http://www.developers.meethue.com/documentation/color-conversions-rgb-xy
+# https://github.com/PhilipsHue/PhilipsHueSDK-iOS-OSX/blob/00187a3/ApplicationDesignNotes/RGB%20to%20xy%20Color%20conversion.md
 def color_xy_brightness_to_RGB(
     vX: float, vY: float, ibrightness: int, Gamut: GamutType | None = None
 ) -> tuple[int, int, int]:

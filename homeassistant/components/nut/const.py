@@ -16,6 +16,8 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
+    ENTITY_CATEGORY_CONFIG,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     FREQUENCY_HERTZ,
     PERCENTAGE,
     POWER_VOLT_AMPERE,
@@ -42,10 +44,6 @@ DEFAULT_SCAN_INTERVAL = 60
 
 PYNUT_DATA = "data"
 PYNUT_UNIQUE_ID = "unique_id"
-PYNUT_MANUFACTURER = "manufacturer"
-PYNUT_MODEL = "model"
-PYNUT_FIRMWARE = "firmware"
-PYNUT_NAME = "name"
 
 SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
     "ups.status.display": SensorEntityDescription(
@@ -69,6 +67,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=DEVICE_CLASS_TEMPERATURE,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     "ups.load": SensorEntityDescription(
         key="ups.load",
@@ -82,6 +81,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         name="Overload Setting",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:gauge",
+        entity_category=ENTITY_CATEGORY_CONFIG,
     ),
     "ups.id": SensorEntityDescription(
         key="ups.id",
@@ -93,18 +93,21 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         name="Load Restart Delay",
         native_unit_of_measurement=TIME_SECONDS,
         icon="mdi:timer-outline",
+        entity_category=ENTITY_CATEGORY_CONFIG,
     ),
     "ups.delay.reboot": SensorEntityDescription(
         key="ups.delay.reboot",
         name="UPS Reboot Delay",
         native_unit_of_measurement=TIME_SECONDS,
         icon="mdi:timer-outline",
+        entity_category=ENTITY_CATEGORY_CONFIG,
     ),
     "ups.delay.shutdown": SensorEntityDescription(
         key="ups.delay.shutdown",
         name="UPS Shutdown Delay",
         native_unit_of_measurement=TIME_SECONDS,
         icon="mdi:timer-outline",
+        entity_category=ENTITY_CATEGORY_CONFIG,
     ),
     "ups.timer.start": SensorEntityDescription(
         key="ups.timer.start",
@@ -129,16 +132,19 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         name="Self-Test Interval",
         native_unit_of_measurement=TIME_SECONDS,
         icon="mdi:timer-outline",
+        entity_category=ENTITY_CATEGORY_CONFIG,
     ),
     "ups.test.result": SensorEntityDescription(
         key="ups.test.result",
         name="Self-Test Result",
         icon="mdi:information-outline",
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     "ups.test.date": SensorEntityDescription(
         key="ups.test.date",
         name="Self-Test Date",
         icon="mdi:calendar",
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     "ups.display.language": SensorEntityDescription(
         key="ups.display.language",
@@ -197,6 +203,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         key="ups.watchdog.status",
         name="Watchdog Status",
         icon="mdi:information-outline",
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     "ups.start.auto": SensorEntityDescription(
         key="ups.start.auto",
@@ -224,12 +231,14 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         native_unit_of_measurement=PERCENTAGE,
         device_class=DEVICE_CLASS_BATTERY,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     "battery.charge.low": SensorEntityDescription(
         key="battery.charge.low",
         name="Low Battery Setpoint",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:gauge",
+        entity_category=ENTITY_CATEGORY_CONFIG,
     ),
     "battery.charge.restart": SensorEntityDescription(
         key="battery.charge.restart",
@@ -242,6 +251,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         name="Warning Battery Setpoint",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:gauge",
+        entity_category=ENTITY_CATEGORY_CONFIG,
     ),
     "battery.charger.status": SensorEntityDescription(
         key="battery.charger.status",
@@ -298,12 +308,14 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=DEVICE_CLASS_TEMPERATURE,
         state_class=STATE_CLASS_MEASUREMENT,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     "battery.runtime": SensorEntityDescription(
         key="battery.runtime",
         name="Battery Runtime",
         native_unit_of_measurement=TIME_SECONDS,
         icon="mdi:timer-outline",
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     "battery.runtime.low": SensorEntityDescription(
         key="battery.runtime.low",
@@ -321,6 +333,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         key="battery.alarm.threshold",
         name="Battery Alarm Threshold",
         icon="mdi:information-outline",
+        entity_category=ENTITY_CATEGORY_CONFIG,
     ),
     "battery.date": SensorEntityDescription(
         key="battery.date",

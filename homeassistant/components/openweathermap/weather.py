@@ -1,6 +1,7 @@
 """Support for the OpenWeatherMap (OWM) service."""
 from homeassistant.components.weather import WeatherEntity
 from homeassistant.const import PRESSURE_HPA, PRESSURE_INHG, TEMP_CELSIUS
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.util.pressure import convert as pressure_convert
 
 from .const import (
@@ -58,14 +59,14 @@ class OpenWeatherMapWeather(WeatherEntity):
         return self._unique_id
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        return {
-            "identifiers": {(DOMAIN, self._unique_id)},
-            "name": DEFAULT_NAME,
-            "manufacturer": MANUFACTURER,
-            "entry_type": "service",
-        }
+        return DeviceInfo(
+            entry_type="service",
+            identifiers={(DOMAIN, self._unique_id)},
+            manufacturer=MANUFACTURER,
+            name=DEFAULT_NAME,
+        )
 
     @property
     def should_poll(self):

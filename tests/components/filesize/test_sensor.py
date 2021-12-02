@@ -33,7 +33,7 @@ async def test_invalid_path(hass):
     config = {"sensor": {"platform": "filesize", CONF_FILE_PATHS: ["invalid_path"]}}
     assert await async_setup_component(hass, "sensor", config)
     await hass.async_block_till_done()
-    assert len(hass.states.async_entity_ids()) == 0
+    assert len(hass.states.async_entity_ids("sensor")) == 0
 
 
 async def test_valid_path(hass):
@@ -43,7 +43,7 @@ async def test_valid_path(hass):
     hass.config.allowlist_external_dirs = {TEST_DIR}
     assert await async_setup_component(hass, "sensor", config)
     await hass.async_block_till_done()
-    assert len(hass.states.async_entity_ids()) == 1
+    assert len(hass.states.async_entity_ids("sensor")) == 1
     state = hass.states.get("sensor.mock_file_test_filesize_txt")
     assert state.state == "0.0"
     assert state.attributes.get("bytes") == 4

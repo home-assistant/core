@@ -262,8 +262,8 @@ class ExoPlayerDevice(MediaPlayerEntity):
 
     def select_source(self, source):
         """Choose a different available playlist and play it."""
-        # TODO
-        pass
+        _LOGGER.info("source: " + source)
+        # TODO stop spotify app
 
     @property
     def volume_level(self):

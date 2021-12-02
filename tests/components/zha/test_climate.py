@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 import zhaquirks.sinope.thermostat
-import zhaquirks.tuya.valve
+import zhaquirks.tuya.ts0601_trv
 import zigpy.profiles
 import zigpy.zcl.clusters
 from zigpy.zcl.clusters.hvac import Thermostat
@@ -45,6 +45,7 @@ from homeassistant.components.climate.const import (
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_TEMPERATURE,
 )
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.zha.climate import (
     DOMAIN,
     HVAC_MODE_2_SYSTEM,
@@ -174,6 +175,7 @@ def device_climate_mock(hass, zigpy_device_mock, zha_device_joined):
             plugged_attrs = {**ZCL_ATTR_PLUG, **plug}
 
         zigpy_device = zigpy_device_mock(clusters, manufacturer=manuf, quirk=quirk)
+        zigpy_device.node_desc.mac_capability_flags |= 0b_0000_0100
         zigpy_device.endpoints[1].thermostat.PLUGGED_ATTR_READS = plugged_attrs
         zha_device = await zha_device_joined(zigpy_device)
         await async_enable_traffic(hass, [zha_device])
@@ -225,7 +227,7 @@ async def device_climate_moes(device_climate_mock):
     """MOES thermostat."""
 
     return await device_climate_mock(
-        CLIMATE_MOES, manuf=MANUF_MOES, quirk=zhaquirks.tuya.valve.MoesHY368_Type1
+        CLIMATE_MOES, manuf=MANUF_MOES, quirk=zhaquirks.tuya.ts0601_trv.MoesHY368_Type1
     )
 
 
@@ -257,45 +259,60 @@ async def test_climate_hvac_action_running_state(hass, device_climate):
 
     thrm_cluster = device_climate.device.endpoints[1].thermostat
     entity_id = await find_entity_id(DOMAIN, device_climate, hass)
+    sensor_entity_id = await find_entity_id(SENSOR_DOMAIN, device_climate, hass)
 
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_OFF
+    hvac_sensor_state = hass.states.get(sensor_entity_id)
+    assert hvac_sensor_state.state == CURRENT_HVAC_OFF
 
     await send_attributes_report(
         hass, thrm_cluster, {0x001E: Thermostat.RunningMode.Off}
     )
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_OFF
+    hvac_sensor_state = hass.states.get(sensor_entity_id)
+    assert hvac_sensor_state.state == CURRENT_HVAC_OFF
 
     await send_attributes_report(
         hass, thrm_cluster, {0x001C: Thermostat.SystemMode.Auto}
     )
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
+    hvac_sensor_state = hass.states.get(sensor_entity_id)
+    assert hvac_sensor_state.state == CURRENT_HVAC_IDLE
 
     await send_attributes_report(
         hass, thrm_cluster, {0x001E: Thermostat.RunningMode.Cool}
     )
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_COOL
+    hvac_sensor_state = hass.states.get(sensor_entity_id)
+    assert hvac_sensor_state.state == CURRENT_HVAC_COOL
 
     await send_attributes_report(
         hass, thrm_cluster, {0x001E: Thermostat.RunningMode.Heat}
     )
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_HEAT
+    hvac_sensor_state = hass.states.get(sensor_entity_id)
+    assert hvac_sensor_state.state == CURRENT_HVAC_HEAT
 
     await send_attributes_report(
         hass, thrm_cluster, {0x001E: Thermostat.RunningMode.Off}
     )
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
+    hvac_sensor_state = hass.states.get(sensor_entity_id)
+    assert hvac_sensor_state.state == CURRENT_HVAC_IDLE
 
     await send_attributes_report(
         hass, thrm_cluster, {0x0029: Thermostat.RunningState.Fan_State_On}
     )
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_FAN
+    hvac_sensor_state = hass.states.get(sensor_entity_id)
+    assert hvac_sensor_state.state == CURRENT_HVAC_FAN
 
 
 async def test_climate_hvac_action_running_state_zen(hass, device_climate_zen):
@@ -303,63 +320,84 @@ async def test_climate_hvac_action_running_state_zen(hass, device_climate_zen):
 
     thrm_cluster = device_climate_zen.device.endpoints[1].thermostat
     entity_id = await find_entity_id(DOMAIN, device_climate_zen, hass)
+    sensor_entity_id = await find_entity_id(SENSOR_DOMAIN, device_climate_zen, hass)
 
     state = hass.states.get(entity_id)
     assert ATTR_HVAC_ACTION not in state.attributes
+    hvac_sensor_state = hass.states.get(sensor_entity_id)
+    assert hvac_sensor_state.state == "unknown"
 
     await send_attributes_report(
         hass, thrm_cluster, {0x0029: Thermostat.RunningState.Cool_2nd_Stage_On}
     )
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_COOL
+    hvac_sensor_state = hass.states.get(sensor_entity_id)
+    assert hvac_sensor_state.state == CURRENT_HVAC_COOL
 
     await send_attributes_report(
         hass, thrm_cluster, {0x0029: Thermostat.RunningState.Fan_State_On}
     )
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_FAN
+    hvac_sensor_state = hass.states.get(sensor_entity_id)
+    assert hvac_sensor_state.state == CURRENT_HVAC_FAN
 
     await send_attributes_report(
         hass, thrm_cluster, {0x0029: Thermostat.RunningState.Heat_2nd_Stage_On}
     )
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_HEAT
+    hvac_sensor_state = hass.states.get(sensor_entity_id)
+    assert hvac_sensor_state.state == CURRENT_HVAC_HEAT
 
     await send_attributes_report(
         hass, thrm_cluster, {0x0029: Thermostat.RunningState.Fan_2nd_Stage_On}
     )
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_FAN
+    hvac_sensor_state = hass.states.get(sensor_entity_id)
+    assert hvac_sensor_state.state == CURRENT_HVAC_FAN
 
     await send_attributes_report(
         hass, thrm_cluster, {0x0029: Thermostat.RunningState.Cool_State_On}
     )
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_COOL
+    hvac_sensor_state = hass.states.get(sensor_entity_id)
+    assert hvac_sensor_state.state == CURRENT_HVAC_COOL
 
     await send_attributes_report(
         hass, thrm_cluster, {0x0029: Thermostat.RunningState.Fan_3rd_Stage_On}
     )
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_FAN
+    hvac_sensor_state = hass.states.get(sensor_entity_id)
+    assert hvac_sensor_state.state == CURRENT_HVAC_FAN
 
     await send_attributes_report(
         hass, thrm_cluster, {0x0029: Thermostat.RunningState.Heat_State_On}
     )
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_HEAT
+    hvac_sensor_state = hass.states.get(sensor_entity_id)
+    assert hvac_sensor_state.state == CURRENT_HVAC_HEAT
 
     await send_attributes_report(
         hass, thrm_cluster, {0x0029: Thermostat.RunningState.Idle}
     )
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_OFF
+    hvac_sensor_state = hass.states.get(sensor_entity_id)
+    assert hvac_sensor_state.state == CURRENT_HVAC_OFF
 
     await send_attributes_report(
         hass, thrm_cluster, {0x001C: Thermostat.SystemMode.Heat}
     )
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
+    hvac_sensor_state = hass.states.get(sensor_entity_id)
+    assert hvac_sensor_state.state == CURRENT_HVAC_IDLE
 
 
 async def test_climate_hvac_action_pi_demand(hass, device_climate):

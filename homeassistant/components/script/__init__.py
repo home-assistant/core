@@ -404,8 +404,7 @@ class ScriptEntity(ToggleEntity, RestoreEntity):
             script_trace.set_trace(trace_get())
             with trace_path("sequence"):
                 this = None
-                state = self.hass.states.get(self.entity_id)
-                if state:
+                if state := self.hass.states.get(self.entity_id):
                     this = state.as_dict()
                 script_vars = {"this": this, **(variables or {})}
                 return await self.script.async_run(script_vars, context)

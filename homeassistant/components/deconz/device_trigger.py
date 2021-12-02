@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_TYPE,
     CONF_UNIQUE_ID,
 )
+from homeassistant.helpers import device_registry as dr
 
 from . import DOMAIN
 from .deconz_event import CONF_DECONZ_EVENT, CONF_GESTURE
@@ -628,7 +629,7 @@ async def async_validate_trigger_config(hass, config):
     """Validate config."""
     config = TRIGGER_SCHEMA(config)
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get(config[CONF_DEVICE_ID])
 
     trigger = (config[CONF_TYPE], config[CONF_SUBTYPE])
@@ -650,7 +651,7 @@ async def async_validate_trigger_config(hass, config):
 
 async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for state changes based on configuration."""
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get(config[CONF_DEVICE_ID])
 
     trigger = (config[CONF_TYPE], config[CONF_SUBTYPE])
@@ -684,7 +685,7 @@ async def async_get_triggers(hass, device_id):
     Retrieve the deconz event object matching device entry.
     Generate device trigger list.
     """
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get(device_id)
 
     if device.model not in REMOTES:

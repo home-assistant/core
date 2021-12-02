@@ -24,6 +24,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, EventType, StateType
 from homeassistant.util import Throttle
@@ -230,10 +231,10 @@ class DSMREntity(SensorEntity):
         if device_serial is None:
             device_serial = entry.entry_id
 
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, device_serial)},
-            "name": device_name,
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, device_serial)},
+            name=device_name,
+        )
         self._attr_unique_id = f"{device_serial}_{entity_description.name}".replace(
             " ", "_"
         )

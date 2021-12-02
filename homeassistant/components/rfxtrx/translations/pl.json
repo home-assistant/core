@@ -43,6 +43,11 @@
             }
         }
     },
+    "device_automation": {
+        "trigger_type": {
+            "command": "Otrzymane polecenie: {subtype}"
+        }
+    },
     "few": "kilka",
     "many": "wiele",
     "one": "jeden",

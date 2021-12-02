@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
+from http import HTTPStatus
 import json
 import logging
 from types import MappingProxyType
@@ -38,13 +39,7 @@ from homeassistant.components.webhook import (
     async_unregister as webhook_unregister,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_DEVICE_ID,
-    ATTR_NAME,
-    CONF_URL,
-    CONF_WEBHOOK_ID,
-    HTTP_BAD_REQUEST,
-)
+from homeassistant.const import ATTR_DEVICE_ID, ATTR_NAME, CONF_URL, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -412,25 +407,24 @@ async def handle_webhook(
     except (json.decoder.JSONDecodeError, UnicodeDecodeError):
         return Response(
             text="Could not decode request",
-            status=HTTP_BAD_REQUEST,
+            status=HTTPStatus.BAD_REQUEST,
         )
 
     for key in (ATTR_DEVICE_ID, ATTR_EVENT_TYPE):
         if key not in data:
             return Response(
                 text=f"Missing webhook parameter: {key}",
-                status=HTTP_BAD_REQUEST,
+                status=HTTPStatus.BAD_REQUEST,
             )
 
     event_type = data[ATTR_EVENT_TYPE]
     device_registry = dr.async_get(hass)
     device_id = data[ATTR_DEVICE_ID]
-    device = device_registry.async_get(device_id)
 
-    if not device:
+    if not (device := device_registry.async_get(device_id)):
         return Response(
             text=f"Device not found: {device_id}",
-            status=HTTP_BAD_REQUEST,
+            status=HTTPStatus.BAD_REQUEST,
         )
 
     hass.bus.async_fire(
@@ -483,4 +477,4 @@ class MotionEyeEntity(CoordinatorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
-        return {"identifiers": {self._device_identifier}}
+        return DeviceInfo(identifiers={self._device_identifier})

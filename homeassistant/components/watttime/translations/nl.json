@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Apparaat is al geconfigureerd"
+            "already_configured": "Apparaat is al geconfigureerd",
+            "reauth_successful": "Herauthenticatie was succesvol"
         },
         "error": {
             "invalid_auth": "Ongeldige authenticatie",
@@ -21,6 +22,13 @@
                     "location_type": "Locatie"
                 },
                 "description": "Kies een locatie om te monitoren:"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Wachtwoord"
+                },
+                "description": "Voer het wachtwoord voor {username} opnieuw in:",
+                "title": "Verifieer de integratie opnieuw"
             },
             "user": {
                 "data": {

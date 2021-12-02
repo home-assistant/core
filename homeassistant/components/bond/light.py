@@ -273,8 +273,7 @@ class BondFireplace(BondEntity, LightEntity):
         """Turn the fireplace on."""
         _LOGGER.debug("Fireplace async_turn_on called with: %s", kwargs)
 
-        brightness = kwargs.get(ATTR_BRIGHTNESS)
-        if brightness:
+        if brightness := kwargs.get(ATTR_BRIGHTNESS):
             flame = round((brightness * 100) / 255)
             await self._hub.bond.action(self._device.device_id, Action.set_flame(flame))
         else:

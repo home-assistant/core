@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import Any
 from urllib.parse import quote
 
 import voluptuous as vol
@@ -13,6 +14,7 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_TYPE,
 )
 from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
@@ -27,7 +29,7 @@ from .error import Unresolvable
 DEFAULT_EXPIRY_TIME = 3600 * 24
 
 
-def is_media_source_id(media_content_id: str):
+def is_media_source_id(media_content_id: str) -> bool:
     """Test if identifier is a media source."""
     return URI_SCHEME_REGEX.match(media_content_id) is not None
 
@@ -55,7 +57,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def _process_media_source_platform(hass, domain, platform):
+async def _process_media_source_platform(
+    hass: HomeAssistant, domain: str, platform: Any
+) -> None:
     """Process a media source platform."""
     hass.data[DOMAIN][domain] = await platform.async_get_media_source(hass)
 
@@ -97,7 +101,9 @@ async def async_resolve_media(
     }
 )
 @websocket_api.async_response
-async def websocket_browse_media(hass, connection, msg):
+async def websocket_browse_media(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+) -> None:
     """Browse available media."""
     try:
         # AIS - allow to play ais lib in browser like local media
@@ -108,10 +114,10 @@ async def websocket_browse_media(hass, connection, msg):
             import homeassistant.components.ais_exo_player.media_browser as ais_media_browser
 
             media = await ais_media_browser.browse_media(
-                hass, msg.get("media_content_type"), msg.get("media_content_id")
+                hass, msg.get("media_content_type", ""), msg.get("media_content_id", "")
             )
         else:
-            media = await async_browse_media(hass, msg.get("media_content_id"))
+            media = await async_browse_media(hass, msg.get("media_content_id", ""))
         connection.send_result(
             msg["id"],
             media.as_dict(),
@@ -128,7 +134,9 @@ async def websocket_browse_media(hass, connection, msg):
     }
 )
 @websocket_api.async_response
-async def websocket_resolve_media(hass, connection, msg):
+async def websocket_resolve_media(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict
+) -> None:
     """Resolve media."""
     # AIS - allow to play ais lib in browser
     if msg["media_content_id"].startswith("http"):

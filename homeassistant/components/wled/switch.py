@@ -5,6 +5,7 @@ from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ENTITY_CATEGORY_CONFIG
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -42,6 +43,7 @@ class WLEDNightlightSwitch(WLEDEntity, SwitchEntity):
     """Defines a WLED nightlight switch."""
 
     _attr_icon = "mdi:weather-night"
+    _attr_entity_category = ENTITY_CATEGORY_CONFIG
 
     def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
         """Initialize WLED nightlight switch."""
@@ -78,6 +80,7 @@ class WLEDSyncSendSwitch(WLEDEntity, SwitchEntity):
     """Defines a WLED sync send switch."""
 
     _attr_icon = "mdi:upload-network-outline"
+    _attr_entity_category = ENTITY_CATEGORY_CONFIG
 
     def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
         """Initialize WLED sync send switch."""
@@ -110,6 +113,7 @@ class WLEDSyncReceiveSwitch(WLEDEntity, SwitchEntity):
     """Defines a WLED sync receive switch."""
 
     _attr_icon = "mdi:download-network-outline"
+    _attr_entity_category = ENTITY_CATEGORY_CONFIG
 
     def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
         """Initialize WLED sync receive switch."""

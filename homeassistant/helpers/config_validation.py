@@ -929,8 +929,10 @@ SERVICE_SCHEMA = vol.All(
             vol.Exclusive(CONF_SERVICE_TEMPLATE, "service name"): vol.Any(
                 service, dynamic_template
             ),
-            vol.Optional("data"): vol.All(dict, template_complex),
-            vol.Optional("data_template"): vol.All(dict, template_complex),
+            vol.Optional("data"): vol.Any(template, vol.All(dict, template_complex)),
+            vol.Optional("data_template"): vol.Any(
+                template, vol.All(dict, template_complex)
+            ),
             vol.Optional(CONF_ENTITY_ID): comp_entity_ids,
             vol.Optional(CONF_TARGET): vol.Any(ENTITY_SERVICE_FIELDS, dynamic_template),
         }
@@ -1027,13 +1029,13 @@ TIME_CONDITION_SCHEMA = vol.All(
         {
             **CONDITION_BASE_SCHEMA,
             vol.Required(CONF_CONDITION): "time",
-            "before": vol.Any(
+            vol.Optional("before"): vol.Any(
                 time, vol.All(str, entity_domain(["input_datetime", "sensor"]))
             ),
-            "after": vol.Any(
+            vol.Optional("after"): vol.Any(
                 time, vol.All(str, entity_domain(["input_datetime", "sensor"]))
             ),
-            "weekday": weekdays,
+            vol.Optional("weekday"): weekdays,
         }
     ),
     has_at_least_one_key("before", "after", "weekday"),
@@ -1052,7 +1054,7 @@ ZONE_CONDITION_SCHEMA = vol.Schema(
         **CONDITION_BASE_SCHEMA,
         vol.Required(CONF_CONDITION): "zone",
         vol.Required(CONF_ENTITY_ID): entity_ids,
-        "zone": entity_ids,
+        vol.Required("zone"): entity_ids,
         # To support use_trigger_value in automation
         # Deprecated 2016/04/25
         vol.Optional("event"): vol.Any("enter", "leave"),
@@ -1442,6 +1444,7 @@ currency = vol.In(
         "YER",
         "ZAR",
         "ZMK",
+        "ZMW",
         "ZWL",
     },
     msg="invalid ISO 4217 formatted currency",

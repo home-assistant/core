@@ -832,6 +832,7 @@ async def test_device_info_called(hass):
                     unique_id="qwer",
                     device_info={
                         "identifiers": {("hue", "1234")},
+                        "configuration_url": "http://192.168.0.100/config",
                         "connections": {(dr.CONNECTION_NETWORK_MAC, "abcd")},
                         "manufacturer": "test-manuf",
                         "model": "test-model",
@@ -860,13 +861,14 @@ async def test_device_info_called(hass):
     device = registry.async_get_device({("hue", "1234")})
     assert device is not None
     assert device.identifiers == {("hue", "1234")}
+    assert device.configuration_url == "http://192.168.0.100/config"
     assert device.connections == {(dr.CONNECTION_NETWORK_MAC, "abcd")}
+    assert device.entry_type == "service"
     assert device.manufacturer == "test-manuf"
     assert device.model == "test-model"
     assert device.name == "test-name"
-    assert device.sw_version == "test-sw"
     assert device.suggested_area == "Heliport"
-    assert device.entry_type == "service"
+    assert device.sw_version == "test-sw"
     assert device.via_device_id == via.id
 
 
@@ -914,6 +916,144 @@ async def test_device_info_not_overrides(hass):
     assert device.id == device2.id
     assert device2.manufacturer == "test-manufacturer"
     assert device2.model == "test-model"
+
+
+async def test_device_info_invalid_url(hass, caplog):
+    """Test device info is forwarded correctly."""
+    registry = dr.async_get(hass)
+    registry.async_get_or_create(
+        config_entry_id="123",
+        connections=set(),
+        identifiers={("hue", "via-id")},
+        manufacturer="manufacturer",
+        model="via",
+    )
+
+    async def async_setup_entry(hass, config_entry, async_add_entities):
+        """Mock setup entry method."""
+        async_add_entities(
+            [
+                # Valid device info, but invalid url
+                MockEntity(
+                    unique_id="qwer",
+                    device_info={
+                        "identifiers": {("hue", "1234")},
+                        "configuration_url": "foo://192.168.0.100/config",
+                    },
+                ),
+            ]
+        )
+        return True
+
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    config_entry = MockConfigEntry(entry_id="super-mock-id")
+    entity_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    assert await entity_platform.async_setup_entry(config_entry)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids()) == 1
+
+    device = registry.async_get_device({("hue", "1234")})
+    assert device is not None
+    assert device.identifiers == {("hue", "1234")}
+    assert device.configuration_url is None
+
+    assert (
+        "Ignoring invalid device configuration_url 'foo://192.168.0.100/config'"
+        in caplog.text
+    )
+
+
+async def test_device_info_homeassistant_url(hass, caplog):
+    """Test device info with homeassistant URL."""
+    registry = dr.async_get(hass)
+    registry.async_get_or_create(
+        config_entry_id="123",
+        connections=set(),
+        identifiers={("mqtt", "via-id")},
+        manufacturer="manufacturer",
+        model="via",
+    )
+
+    async def async_setup_entry(hass, config_entry, async_add_entities):
+        """Mock setup entry method."""
+        async_add_entities(
+            [
+                # Valid device info, with homeassistant url
+                MockEntity(
+                    unique_id="qwer",
+                    device_info={
+                        "identifiers": {("mqtt", "1234")},
+                        "configuration_url": "homeassistant://config/mqtt",
+                    },
+                ),
+            ]
+        )
+        return True
+
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    config_entry = MockConfigEntry(entry_id="super-mock-id")
+    entity_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    assert await entity_platform.async_setup_entry(config_entry)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids()) == 1
+
+    device = registry.async_get_device({("mqtt", "1234")})
+    assert device is not None
+    assert device.identifiers == {("mqtt", "1234")}
+    assert device.configuration_url == "homeassistant://config/mqtt"
+
+
+async def test_device_info_change_to_no_url(hass, caplog):
+    """Test device info changes to no URL."""
+    registry = dr.async_get(hass)
+    registry.async_get_or_create(
+        config_entry_id="123",
+        connections=set(),
+        identifiers={("mqtt", "via-id")},
+        manufacturer="manufacturer",
+        model="via",
+        configuration_url="homeassistant://config/mqtt",
+    )
+
+    async def async_setup_entry(hass, config_entry, async_add_entities):
+        """Mock setup entry method."""
+        async_add_entities(
+            [
+                # Valid device info, with homeassistant url
+                MockEntity(
+                    unique_id="qwer",
+                    device_info={
+                        "identifiers": {("mqtt", "1234")},
+                        "configuration_url": None,
+                    },
+                ),
+            ]
+        )
+        return True
+
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    config_entry = MockConfigEntry(entry_id="super-mock-id")
+    entity_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    assert await entity_platform.async_setup_entry(config_entry)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids()) == 1
+
+    device = registry.async_get_device({("mqtt", "1234")})
+    assert device is not None
+    assert device.identifiers == {("mqtt", "1234")}
+    assert device.configuration_url is None
 
 
 async def test_entity_disabled_by_integration(hass):

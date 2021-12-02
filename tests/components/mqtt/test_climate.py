@@ -991,10 +991,10 @@ async def test_discovery_removal_climate(hass, mqtt_mock, caplog):
 
 async def test_discovery_update_climate(hass, mqtt_mock, caplog):
     """Test update of discovered climate."""
-    data1 = '{ "name": "Beer" }'
-    data2 = '{ "name": "Milk" }'
+    config1 = {"name": "Beer"}
+    config2 = {"name": "Milk"}
     await help_test_discovery_update(
-        hass, mqtt_mock, caplog, CLIMATE_DOMAIN, data1, data2
+        hass, mqtt_mock, caplog, CLIMATE_DOMAIN, config1, config2
     )
 
 

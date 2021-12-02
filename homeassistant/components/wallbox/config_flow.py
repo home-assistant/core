@@ -1,10 +1,11 @@
 """Config flow for Wallbox integration."""
 import voluptuous as vol
+from wallbox import Wallbox
 
 from homeassistant import config_entries, core
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from . import InvalidAuth, WallboxHub
+from . import InvalidAuth, WallboxCoordinator
 from .const import CONF_STATION, DOMAIN
 
 COMPONENT_DOMAIN = DOMAIN
@@ -23,9 +24,10 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    hub = WallboxHub(data["station"], data["username"], data["password"], hass)
+    wallbox = Wallbox(data["username"], data["password"])
+    wallbox_coordinator = WallboxCoordinator(data["station"], wallbox, hass)
 
-    await hub.async_get_data()
+    await wallbox_coordinator.async_validate_input()
 
     # Return info that you want to store in the config entry.
     return {"title": "Wallbox Portal"}

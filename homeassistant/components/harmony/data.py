@@ -10,6 +10,7 @@ import aioharmony.exceptions as aioexc
 from aioharmony.harmonyapi import HarmonyAPI as HarmonyClient
 
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.entity import DeviceInfo
 
 from .const import ACTIVITY_POWER_OFF
 from .subscriber import HarmonySubscriberMixin
@@ -82,20 +83,20 @@ class HarmonyData(HarmonySubscriberMixin):
         """Return the current activity tuple."""
         return self._client.current_activity
 
-    def device_info(self, domain: str):
+    def device_info(self, domain: str) -> DeviceInfo:
         """Return hub device info."""
         model = "Harmony Hub"
         if "ethernetStatus" in self._client.hub_config.info:
             model = "Harmony Hub Pro 2400"
-        return {
-            "identifiers": {(domain, self.unique_id)},
-            "manufacturer": "Logitech",
-            "sw_version": self._client.hub_config.info.get(
+        return DeviceInfo(
+            identifiers={(domain, self.unique_id)},
+            manufacturer="Logitech",
+            model=model,
+            name=self.name,
+            sw_version=self._client.hub_config.info.get(
                 "hubSwVersion", self._client.fw_version
             ),
-            "name": self.name,
-            "model": model,
-        }
+        )
 
     async def connect(self) -> bool:
         """Connect to the Harmony Hub."""

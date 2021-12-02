@@ -1,6 +1,4 @@
 """Config flow for SONOS."""
-import logging
-
 import soco
 
 from homeassistant import config_entries
@@ -12,8 +10,6 @@ from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import DATA_SONOS_DISCOVERY_MANAGER, DOMAIN
 from .helpers import hostname_to_uid
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def _async_has_devices(hass: HomeAssistant) -> bool:
@@ -34,7 +30,7 @@ class SonosDiscoveryFlowHandler(DiscoveryFlowHandler):
     ) -> FlowResult:
         """Handle a flow initialized by zeroconf."""
         hostname = discovery_info["hostname"]
-        if hostname is None or not hostname.startswith("Sonos-"):
+        if hostname is None or not hostname.lower().startswith("sonos"):
             return self.async_abort(reason="not_sonos_device")
         await self.async_set_unique_id(self._domain, raise_on_progress=False)
         host = discovery_info[CONF_HOST]

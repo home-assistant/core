@@ -46,5 +46,10 @@
             }
         }
     },
+    "device_automation": {
+        "action_type": {
+            "ping": "ping"
+        }
+    },
     "title": "Z-Wave JS"
 }

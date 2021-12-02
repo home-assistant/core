@@ -86,8 +86,7 @@ class NetgearScannerEntity(NetgearDeviceEntity, ScannerEntity):
 
     def get_hostname(self):
         """Return the hostname of the given device or None if we don't know."""
-        hostname = self._device["name"]
-        if hostname == "--":
+        if (hostname := self._device["name"]) == "--":
             return None
 
         return hostname

@@ -1,0 +1,57 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urządzenie jest już skonfigurowane",
+            "invalid_unique_id": "Nie można określić prawidłowego unikalnego identyfikatora urządzenia"
+        },
+        "error": {
+            "adbkey_not_file": "Nie znaleziono pliku z kluczem ADB",
+            "cannot_connect": "Nie udało się połączyć",
+            "invalid_host": "Nieprawidłowa nazwa hosta lub adres IP",
+            "key_and_server": "Podaj tylko klucz ADB lub serwer ADB",
+            "unknown": "Niespodziewany błąd"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "adb_server_ip": "Adres IP serwera ADB (pozostaw puste, aby nie używać)",
+                    "adb_server_port": "Port serwera ADB",
+                    "adbkey": "Ścieżka do pliku klucza ADB (pozostaw puste, aby wygenerować automatycznie)",
+                    "device_class": "Rodzaj urządzenia",
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "description": "Ustaw wymagane parametry, aby połączyć się z urządzeniem Android",
+                "title": "AIS Android"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_det_rules": "Nieprawidłowe reguły wykrywania stanu"
+        },
+        "step": {
+            "apps": {
+                "data": {
+                    "app_delete": "Zaznacz, aby usunąć tę aplikację",
+                    "app_id": "Identyfikator aplikacji",
+                    "app_name": "Nazwa aplikacji"
+                },
+                "description": "Skonfiguruj identyfikator aplikacji {app_id}",
+                "title": "Skonfiguruj aplikacje Android"
+            },
+            "init": {
+                "data": {
+                    "apps": "Skonfiguruj listę aplikacji (wybierz opcję z listy i naciśnij przycisk \"ZATWIERDŹ\".)",
+                    "exclude_unnamed_apps": "Wyklucz aplikację o nieznanej nazwie",
+                    "get_sources": "Czy pobierać uruchomione aplikacje jako listę źródeł",
+                    "screencap": "Określa, czy okładka albumu powinna zostać pobrana z tego, co jest wyświetlane na ekranie",
+                    "state_detection_rules": "Słownik reguł wykrywania stanu (patrz dokumentacja)",
+                    "turn_off_command": "Polecenie powłoki ADB do zastąpienia domyślnego polecenia turn_off",
+                    "turn_on_command": "Polecenie powłoki ADB do zastąpienia domyślnego polecenia włączania"
+                },
+                "title": "Opcje AIS Android"
+            }
+        }
+    }
+}

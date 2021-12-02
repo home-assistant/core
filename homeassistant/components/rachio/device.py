@@ -1,11 +1,12 @@
 """Adapter to wrap the rachiopy api for home assistant."""
 from __future__ import annotations
 
+from http import HTTPStatus
 import logging
 
 import voluptuous as vol
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, HTTP_OK
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
@@ -123,12 +124,12 @@ class RachioPerson:
         rachio = self.rachio
 
         response = rachio.person.info()
-        assert int(response[0][KEY_STATUS]) == HTTP_OK, "API key error"
+        assert int(response[0][KEY_STATUS]) == HTTPStatus.OK, "API key error"
         self._id = response[1][KEY_ID]
 
         # Use user ID to get user data
         data = rachio.person.get(self._id)
-        assert int(data[0][KEY_STATUS]) == HTTP_OK, "User ID error"
+        assert int(data[0][KEY_STATUS]) == HTTPStatus.OK, "User ID error"
         self.username = data[1][KEY_USERNAME]
         devices = data[1][KEY_DEVICES]
         for controller in devices:

@@ -13,7 +13,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     CONF_CURRENCY,
     CONF_DISPLAY_OPTIONS,
     TIME_MINUTES,
@@ -165,7 +164,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class BitcoinSensor(SensorEntity):
     """Representation of a Bitcoin sensor."""
 
-    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+    _attr_attribution = ATTRIBUTION
     _attr_icon = ICON
 
     def __init__(self, data, currency, description: SensorEntityDescription):

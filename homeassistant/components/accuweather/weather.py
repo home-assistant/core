@@ -19,6 +19,7 @@ from homeassistant.components.weather import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utc_from_timestamp
@@ -66,12 +67,12 @@ class AccuWeatherEntity(CoordinatorEntity, WeatherEntity):
             TEMP_CELSIUS if coordinator.is_metric else TEMP_FAHRENHEIT
         )
         self._attr_attribution = ATTRIBUTION
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, coordinator.location_key)},
-            "name": NAME,
-            "manufacturer": MANUFACTURER,
-            "entry_type": "service",
-        }
+        self._attr_device_info = DeviceInfo(
+            entry_type="service",
+            identifiers={(DOMAIN, coordinator.location_key)},
+            manufacturer=MANUFACTURER,
+            name=NAME,
+        )
 
     @property
     def condition(self) -> str | None:

@@ -41,7 +41,7 @@ async def validate_input(hass, data):
             DEFAULT_TIMEOUT,
         )
 
-        info = bridge.info()
+        info = await hass.async_add_executor_job(bridge.info)
     except InvalidCredentialsException as err:
         raise InvalidAuth from err
     except RequestException as err:

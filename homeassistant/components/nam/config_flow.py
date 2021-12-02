@@ -74,6 +74,9 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle zeroconf discovery."""
         self.host = discovery_info[CONF_HOST]
 
+        # Do not probe the device if the host is already configured
+        self._async_abort_entries_match({CONF_HOST: self.host})
+
         try:
             mac = await self._async_get_mac(cast(str, self.host))
         except (ApiError, ClientConnectorError, asyncio.TimeoutError):

@@ -188,8 +188,7 @@ def setup_smartapp(hass, app):
     for each SmartThings account that is configured in hass.
     """
     manager = hass.data[DOMAIN][DATA_MANAGER]
-    smartapp = manager.smartapps.get(app.app_id)
-    if smartapp:
+    if smartapp := manager.smartapps.get(app.app_id):
         # already setup
         return smartapp
     smartapp = manager.register(app.app_id, app.webhook_public_key)
@@ -206,8 +205,7 @@ async def setup_smartapp_endpoint(hass: HomeAssistant):
     SmartApps are an extension point within the SmartThings ecosystem and
     is used to receive push updates (i.e. device updates) from the cloud.
     """
-    data = hass.data.get(DOMAIN)
-    if data:
+    if hass.data.get(DOMAIN):
         # already setup
         return
 
@@ -408,8 +406,8 @@ async def _continue_flow(
     flow = next(
         (
             flow
-            for flow in hass.config_entries.flow.async_progress()
-            if flow["handler"] == DOMAIN and flow["context"]["unique_id"] == unique_id
+            for flow in hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+            if flow["context"]["unique_id"] == unique_id
         ),
         None,
     )

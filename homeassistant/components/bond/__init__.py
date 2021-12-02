@@ -1,23 +1,27 @@
 """The Bond integration."""
 from asyncio import TimeoutError as AsyncIOTimeoutError
+from http import HTTPStatus
+import logging
+from typing import Any
 
-from aiohttp import ClientError, ClientTimeout
+from aiohttp import ClientError, ClientResponseError, ClientTimeout
 from bond_api import Bond, BPUPSubscriptions, start_bpup
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import SLOW_UPDATE_WARNING
 
-from .const import BPUP_STOP, BPUP_SUBS, BRIDGE_MAKE, DOMAIN, HUB
+from .const import BPUP_SUBS, BRIDGE_MAKE, DOMAIN, HUB
 from .utils import BondHub
 
 PLATFORMS = ["cover", "fan", "light", "switch"]
 _API_TIMEOUT = SLOW_UPDATE_WARNING - 1
-_STOP_CANCEL = "stop_cancel"
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -35,6 +39,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hub = BondHub(bond)
     try:
         await hub.setup()
+    except ClientResponseError as ex:
+        if ex.status == HTTPStatus.UNAUTHORIZED:
+            _LOGGER.error("Bond token no longer valid: %s", ex)
+            return False
+        raise ConfigEntryNotReady from ex
     except (ClientError, AsyncIOTimeoutError, OSError) as error:
         raise ConfigEntryNotReady from error
 
@@ -42,18 +51,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     stop_bpup = await start_bpup(host, bpup_subs)
 
     @callback
-    def _async_stop_event(event: Event) -> None:
+    def _async_stop_event(*_: Any) -> None:
         stop_bpup()
 
-    stop_event_cancel = hass.bus.async_listen(
-        EVENT_HOMEASSISTANT_STOP, _async_stop_event
+    entry.async_on_unload(_async_stop_event)
+    entry.async_on_unload(
+        hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, _async_stop_event)
     )
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         HUB: hub,
         BPUP_SUBS: bpup_subs,
-        BPUP_STOP: stop_bpup,
-        _STOP_CANCEL: stop_event_cancel,
     }
 
     if not entry.unique_id:
@@ -82,15 +90,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    data = hass.data[DOMAIN][entry.entry_id]
-    data[_STOP_CANCEL]()
-    if BPUP_STOP in data:
-        data[BPUP_STOP]()
-
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
-
     return unload_ok
 
 

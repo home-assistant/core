@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Enheten er allerede konfigurert"
+            "already_configured": "Enheten er allerede konfigurert",
+            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
         },
         "error": {
             "invalid_auth": "Ugyldig godkjenning",
@@ -21,6 +22,13 @@
                     "location_type": "Plassering"
                 },
                 "description": "Velg et sted \u00e5 overv\u00e5ke:"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Passord"
+                },
+                "description": "Skriv inn passordet for {username} :",
+                "title": "Godkjenne integrering p\u00e5 nytt"
             },
             "user": {
                 "data": {

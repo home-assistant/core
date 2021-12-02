@@ -1,0 +1,49 @@
+{
+    "state": {
+        "tuya__basic_anti_flickr": {
+            "0": "Desactivat",
+            "1": "50 Hz",
+            "2": "60 Hz"
+        },
+        "tuya__basic_nightvision": {
+            "0": "Autom\u00e0tic",
+            "1": "off",
+            "2": "on"
+        },
+        "tuya__decibel_sensitivity": {
+            "0": "Sensibilitat baixa",
+            "1": "Sensibilitat alta"
+        },
+        "tuya__ipc_work_mode": {
+            "0": "Mode de baix consum",
+            "1": "Mode de funcionament continu"
+        },
+        "tuya__led_type": {
+            "halogen": "Halogen",
+            "incandescent": "Incandescent",
+            "led": "LED"
+        },
+        "tuya__light_mode": {
+            "none": "off",
+            "pos": "Indica la ubicaci\u00f3 de l'interruptor",
+            "relay": "Indiqueu l'estat, activat/desactivat"
+        },
+        "tuya__motion_sensitivity": {
+            "0": "Sensibilitat baixa",
+            "1": "Sensibilitat mitjana",
+            "2": "Sensibilitat alta"
+        },
+        "tuya__record_mode": {
+            "1": "Nom\u00e9s enregistra esdeveniments",
+            "2": "Enregistrament continu"
+        },
+        "tuya__relay_status": {
+            "last": "Recorda l'\u00faltim estat",
+            "memory": "Recorda l'\u00faltim estat",
+            "off": "off",
+            "on": "on",
+            "power_off": "off",
+            "power_on": "on"
+        }
+    }
+}

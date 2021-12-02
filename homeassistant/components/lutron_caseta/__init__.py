@@ -1,5 +1,6 @@
 """Component for interacting with a Lutron Caseta system."""
 import asyncio
+import contextlib
 import logging
 import ssl
 
@@ -16,7 +17,7 @@ from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import (
     ACTION_PRESS,
@@ -106,16 +107,17 @@ async def async_setup_entry(hass, config_entry):
         return False
 
     timed_out = True
-    try:
+    with contextlib.suppress(asyncio.TimeoutError):
         async with async_timeout.timeout(BRIDGE_TIMEOUT):
             await bridge.connect()
             timed_out = False
-    except asyncio.TimeoutError:
-        _LOGGER.error("Timeout while trying to connect to bridge at %s", host)
 
     if timed_out or not bridge.is_connected():
         await bridge.close()
-        raise ConfigEntryNotReady
+        if timed_out:
+            raise ConfigEntryNotReady(f"Timed out while trying to connect to {host}")
+        if not bridge.is_connected():
+            raise ConfigEntryNotReady(f"Cannot connect to {host}")
 
     _LOGGER.debug("Connected to Lutron Caseta bridge via LEAP at %s", host)
 
@@ -191,8 +193,7 @@ def _async_merge_lip_leap_data(lip_devices, bridge):
         if leap_device_data is None:
             continue
         for key in ("type", "model", "serial"):
-            val = leap_device_data.get(key)
-            if val is not None:
+            if (val := leap_device_data.get(key)) is not None:
                 device[key] = val
 
     _LOGGER.debug("Button Devices: %s", button_devices_by_id)
@@ -328,16 +329,16 @@ class LutronCasetaDevice(Entity):
         return str(self.serial)
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        return {
-            "identifiers": {(DOMAIN, self.serial)},
-            "name": self.name,
-            "suggested_area": self._device["name"].split("_")[0],
-            "manufacturer": MANUFACTURER,
-            "model": f"{self._device['model']} ({self._device['type']})",
-            "via_device": (DOMAIN, self._bridge_device["serial"]),
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.serial)},
+            manufacturer=MANUFACTURER,
+            model=f"{self._device['model']} ({self._device['type']})",
+            name=self.name,
+            suggested_area=self._device["name"].split("_")[0],
+            via_device=(DOMAIN, self._bridge_device["serial"]),
+        )
 
     @property
     def extra_state_attributes(self):

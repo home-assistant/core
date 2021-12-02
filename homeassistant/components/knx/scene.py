@@ -7,7 +7,7 @@ from xknx import XKNX
 from xknx.devices import Scene as XknxScene
 
 from homeassistant.components.scene import Scene
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -49,6 +49,7 @@ class KNXScene(KnxEntity, Scene):
                 scene_number=config[SceneSchema.CONF_SCENE_NUMBER],
             )
         )
+        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
         self._attr_unique_id = (
             f"{self._device.scene_value.group_address}_{self._device.scene_number}"
         )

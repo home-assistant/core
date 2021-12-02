@@ -53,10 +53,8 @@ async def async_setup_entry(
     if lights:
         async_add_entities(TradfriLight(light, api, gateway_id) for light in lights)
 
-    if config_entry.data[CONF_IMPORT_GROUPS]:
-        groups = tradfri_data[GROUPS]
-        if groups:
-            async_add_entities(TradfriGroup(group, api, gateway_id) for group in groups)
+    if config_entry.data[CONF_IMPORT_GROUPS] and (groups := tradfri_data[GROUPS]):
+        async_add_entities(TradfriGroup(group, api, gateway_id) for group in groups)
 
 
 class TradfriGroup(TradfriBaseClass, LightEntity):
@@ -75,7 +73,7 @@ class TradfriGroup(TradfriBaseClass, LightEntity):
 
         self._attr_unique_id = f"group-{gateway_id}-{device.id}"
         self._attr_should_poll = True
-        self._refresh(device)
+        self._refresh(device, write_ha=False)
 
     async def async_update(self) -> None:
         """Fetch new state data for the group.
@@ -136,8 +134,7 @@ class TradfriLight(TradfriBaseDevice, LightEntity):
         if device.light_control.can_set_temp:
             _features |= SUPPORT_COLOR_TEMP
         self._attr_supported_features = _features
-
-        self._refresh(device)
+        self._refresh(device, write_ha=False)
         if self._device_control:
             self._attr_min_mireds = self._device_control.min_mireds
             self._attr_max_mireds = self._device_control.max_mireds
@@ -259,8 +256,7 @@ class TradfriLight(TradfriBaseDevice, LightEntity):
                 transition_time = None
 
         # HSB can always be set, but color temp + brightness is bulb dependent
-        command = dimmer_command
-        if command is not None:
+        if (command := dimmer_command) is not None:
             command += color_command
         else:
             command = color_command
@@ -273,10 +269,9 @@ class TradfriLight(TradfriBaseDevice, LightEntity):
             if command is not None:
                 await self._api(command)
 
-    def _refresh(self, device: Command) -> None:
+    def _refresh(self, device: Command, write_ha: bool = True) -> None:
         """Refresh the light data."""
-        super()._refresh(device)
-
         # Caching of LightControl and light object
         self._device_control = device.light_control
         self._device_data = device.light_control.lights[0]
+        super()._refresh(device, write_ha=write_ha)

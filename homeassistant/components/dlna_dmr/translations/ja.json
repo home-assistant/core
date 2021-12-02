@@ -1,0 +1,17 @@
+{
+    "config": {
+        "flow_title": "{name}",
+        "step": {
+            "user": {
+                "data": {
+                    "url": "URL"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_url": "\u7121\u52b9\u306aURL"
+        }
+    }
+}

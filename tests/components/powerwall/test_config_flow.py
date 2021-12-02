@@ -8,7 +8,7 @@ from tesla_powerwall import (
     PowerwallUnreachableError,
 )
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
 from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
 from homeassistant.components.powerwall.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
@@ -22,7 +22,7 @@ VALID_CONFIG = {CONF_IP_ADDRESS: "1.2.3.4", CONF_PASSWORD: "00GGX"}
 
 async def test_form_source_user(hass):
     """Test we get config flow setup form as a user."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -137,7 +137,6 @@ async def test_form_wrong_version(hass):
 
 async def test_already_configured(hass):
     """Test we abort when already configured."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_IP_ADDRESS: "1.1.1.1"})
     config_entry.add_to_hass(hass)
@@ -157,7 +156,6 @@ async def test_already_configured(hass):
 
 async def test_already_configured_with_ignored(hass):
     """Test ignored entries do not break checking for existing entries."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     config_entry = MockConfigEntry(
         domain=DOMAIN, data={}, source=config_entries.SOURCE_IGNORE
@@ -178,7 +176,7 @@ async def test_already_configured_with_ignored(hass):
 
 async def test_dhcp_discovery(hass):
     """Test we can process the discovery from dhcp."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},

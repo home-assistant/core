@@ -12,6 +12,7 @@ from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import debounce
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.dt import utcnow
@@ -158,7 +159,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
@@ -166,3 +167,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         if len(hass.data[DOMAIN]) == 0:
             hass.data.pop(DOMAIN)
     return unload_ok
+
+
+def device_info(latitude, longitude) -> DeviceInfo:
+    """Return device registry information."""
+    return DeviceInfo(
+        entry_type="service",
+        identifiers={(DOMAIN, base_unique_id(latitude, longitude))},
+        manufacturer="National Weather Service",
+        name=f"NWS: {latitude}, {longitude}",
+    )

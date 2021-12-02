@@ -9,6 +9,7 @@ from .const import (
     ATTR_DEVICE_NAME,
     ATTR_SENSOR_ATTRIBUTES,
     ATTR_SENSOR_DEVICE_CLASS,
+    ATTR_SENSOR_ENTITY_CATEGORY,
     ATTR_SENSOR_ICON,
     ATTR_SENSOR_NAME,
     ATTR_SENSOR_STATE,
@@ -40,6 +41,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             ATTR_SENSOR_STATE: None,
             ATTR_SENSOR_TYPE: entry.domain,
             ATTR_SENSOR_UNIQUE_ID: entry.unique_id,
+            ATTR_SENSOR_ENTITY_CATEGORY: entry.entity_category,
         }
         entities.append(MobileAppBinarySensor(config, entry.device_id, config_entry))
 

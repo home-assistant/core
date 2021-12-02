@@ -1,5 +1,8 @@
 """Class to hold all switch accessories."""
+from __future__ import annotations
+
 import logging
+from typing import NamedTuple
 
 from pyhap.const import (
     CATEGORY_FAUCET,
@@ -50,11 +53,19 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-VALVE_TYPE = {
-    TYPE_FAUCET: (CATEGORY_FAUCET, 3),
-    TYPE_SHOWER: (CATEGORY_SHOWER_HEAD, 2),
-    TYPE_SPRINKLER: (CATEGORY_SPRINKLER, 1),
-    TYPE_VALVE: (CATEGORY_FAUCET, 0),
+
+class ValveInfo(NamedTuple):
+    """Category and type information for valve."""
+
+    category: int
+    valve_type: int
+
+
+VALVE_TYPE: dict[str, ValveInfo] = {
+    TYPE_FAUCET: ValveInfo(CATEGORY_FAUCET, 3),
+    TYPE_SHOWER: ValveInfo(CATEGORY_SHOWER_HEAD, 2),
+    TYPE_SPRINKLER: ValveInfo(CATEGORY_SPRINKLER, 1),
+    TYPE_VALVE: ValveInfo(CATEGORY_FAUCET, 0),
 }
 
 
@@ -199,7 +210,7 @@ class Valve(HomeAccessory):
         super().__init__(*args)
         state = self.hass.states.get(self.entity_id)
         valve_type = self.config[CONF_TYPE]
-        self.category = VALVE_TYPE[valve_type][0]
+        self.category = VALVE_TYPE[valve_type].category
 
         serv_valve = self.add_preload_service(SERV_VALVE)
         self.char_active = serv_valve.configure_char(
@@ -207,7 +218,7 @@ class Valve(HomeAccessory):
         )
         self.char_in_use = serv_valve.configure_char(CHAR_IN_USE, value=False)
         self.char_valve_type = serv_valve.configure_char(
-            CHAR_VALVE_TYPE, value=VALVE_TYPE[valve_type][1]
+            CHAR_VALVE_TYPE, value=VALVE_TYPE[valve_type].valve_type
         )
         # Set the state so it is in sync on initial
         # GET to avoid an event storm after homekit startup

@@ -2,6 +2,7 @@
 import asyncio
 from contextlib import suppress
 from datetime import timedelta
+from http import HTTPStatus
 import logging
 
 from aiohttp import web
@@ -9,7 +10,6 @@ from aiohttp.web_exceptions import HTTPNotFound
 import async_timeout
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.const import HTTP_INTERNAL_SERVER_ERROR
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, discovery
@@ -255,8 +255,8 @@ class MailboxMediaView(MailboxView):
                     stream = await mailbox.async_get_media(msgid)
                 except StreamError as err:
                     _LOGGER.error("Error getting media: %s", err)
-                    return web.Response(status=HTTP_INTERNAL_SERVER_ERROR)
+                    return web.Response(status=HTTPStatus.INTERNAL_SERVER_ERROR)
             if stream:
                 return web.Response(body=stream, content_type=mailbox.media_type)
 
-        return web.Response(status=HTTP_INTERNAL_SERVER_ERROR)
+        return web.Response(status=HTTPStatus.INTERNAL_SERVER_ERROR)

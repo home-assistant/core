@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Apparaat is al geconfigureerd"
+            "already_configured": "Apparaat is al geconfigureerd",
+            "reauth_successful": "Herauthenticatie was succesvol"
         },
         "error": {
             "cannot_connect": "Kan geen verbinding maken",
@@ -10,6 +11,13 @@
         },
         "step": {
             "user": {
+                "data": {
+                    "password": "Wachtwoord",
+                    "station": "Station Serienummer",
+                    "username": "Gebruikersnaam"
+                }
+            },
+            "reauth_confirm": {
                 "data": {
                     "password": "Wachtwoord",
                     "station": "Station Serienummer",

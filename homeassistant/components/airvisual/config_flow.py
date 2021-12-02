@@ -141,6 +141,9 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         existing_entry = await self.async_set_unique_id(self._geo_id)
         if existing_entry:
             self.hass.config_entries.async_update_entry(existing_entry, data=user_input)
+            self.hass.async_create_task(
+                self.hass.config_entries.async_reload(existing_entry.entry_id)
+            )
             return self.async_abort(reason="reauth_successful")
 
         return self.async_create_entry(
@@ -237,7 +240,7 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="reauth_confirm", data_schema=API_KEY_DATA_SCHEMA
             )
 
-        conf = {CONF_API_KEY: user_input[CONF_API_KEY], **self._entry_data_for_reauth}
+        conf = {**self._entry_data_for_reauth, CONF_API_KEY: user_input[CONF_API_KEY]}
 
         return await self._async_finish_geography(
             conf, self._entry_data_for_reauth[CONF_INTEGRATION_TYPE]
@@ -262,9 +265,9 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 class AirVisualOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle an AirVisual options flow."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self, entry: ConfigEntry) -> None:
         """Initialize."""
-        self.config_entry = config_entry
+        self.entry = entry
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
@@ -279,7 +282,7 @@ class AirVisualOptionsFlowHandler(config_entries.OptionsFlow):
                 {
                     vol.Required(
                         CONF_SHOW_ON_MAP,
-                        default=self.config_entry.options.get(CONF_SHOW_ON_MAP),
+                        default=self.entry.options.get(CONF_SHOW_ON_MAP),
                     ): bool
                 }
             ),

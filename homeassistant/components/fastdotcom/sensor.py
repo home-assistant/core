@@ -56,8 +56,7 @@ class SpeedtestSensor(RestoreEntity, SensorEntity):
 
     def update(self) -> None:
         """Get the latest data and update the states."""
-        data = self._speedtest_data.data  # type: ignore[attr-defined]
-        if data is None:
+        if (data := self._speedtest_data.data) is None:  # type: ignore[attr-defined]
             return
         self._attr_native_value = data["download"]
 

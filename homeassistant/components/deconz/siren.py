@@ -13,7 +13,6 @@ from homeassistant.components.siren import (
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import NEW_LIGHT
 from .deconz_device import DeconzDevice
 from .gateway import get_gateway_from_config_entry
 
@@ -41,7 +40,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     config_entry.async_on_unload(
         async_dispatcher_connect(
-            hass, gateway.async_signal_new_device(NEW_LIGHT), async_add_siren
+            hass,
+            gateway.signal_new_light,
+            async_add_siren,
         )
     )
 

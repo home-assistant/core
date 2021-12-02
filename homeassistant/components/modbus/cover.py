@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-import logging
 from typing import Any
 
 from homeassistant.components.cover import SUPPORT_CLOSE, SUPPORT_OPEN, CoverEntity
@@ -37,7 +36,6 @@ from .const import (
 from .modbus import ModbusHub
 
 PARALLEL_UPDATES = 1
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(

@@ -1,0 +1,48 @@
+{
+    "state": {
+        "tuya__basic_anti_flickr": {
+            "0": "Uitgeschakeld",
+            "1": "50 Hz",
+            "2": "60 Hz"
+        },
+        "tuya__basic_nightvision": {
+            "0": "Automatisch",
+            "1": "Uit",
+            "2": "Aan"
+        },
+        "tuya__decibel_sensitivity": {
+            "0": "Lage gevoeligheid",
+            "1": "Hoge gevoeligheid"
+        },
+        "tuya__ipc_work_mode": {
+            "0": "Energiezuinige modus",
+            "1": "Continue werkmodus:"
+        },
+        "tuya__led_type": {
+            "halogen": "Halogeen",
+            "led": "LED"
+        },
+        "tuya__light_mode": {
+            "none": "Uit",
+            "pos": "Plaats van schakelaar aangeven",
+            "relay": "Aan/uit-toestand aangeven"
+        },
+        "tuya__motion_sensitivity": {
+            "0": "Lage gevoeligheid",
+            "1": "Gemiddelde gevoeligheid",
+            "2": "Hoge gevoeligheid"
+        },
+        "tuya__record_mode": {
+            "1": "Alleen gebeurtenissen opnemen",
+            "2": "Continu opnemen"
+        },
+        "tuya__relay_status": {
+            "last": "Onthoud laatste staat",
+            "memory": "Onthoud laatste staat",
+            "off": "Uit",
+            "on": "Aan",
+            "power_off": "Uit",
+            "power_on": "Aan"
+        }
+    }
+}

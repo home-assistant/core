@@ -95,9 +95,7 @@ class AvionLight(LightEntity):
 
     def turn_on(self, **kwargs):
         """Turn the specified or all lights on."""
-        brightness = kwargs.get(ATTR_BRIGHTNESS)
-
-        if brightness is not None:
+        if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is not None:
             self._attr_brightness = brightness
 
         self.set_state(self.brightness)

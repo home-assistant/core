@@ -182,7 +182,8 @@ async def authenticate(
         raise AuthError("timeout") from err
     finally:
         await api_factory.shutdown()
-
+    if key is None:
+        raise AuthError("cannot_authenticate")
     return await get_gateway_info(hass, host, identity, key)
 
 

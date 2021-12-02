@@ -1,8 +1,11 @@
 """Support for Eight smart mattress covers and mattresses."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
 from pyeight.eight import EightSleep
+from pyeight.user import EightUser
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -12,23 +15,24 @@ from homeassistant.const import (
     CONF_SENSORS,
     CONF_USERNAME,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
 )
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.util.dt import utcnow
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_PARTNER = "partner"
 
 DATA_EIGHT = "eight_sleep"
+DATA_HEAT = "heat"
+DATA_USER = "user"
+DATA_API = "api"
 DOMAIN = "eight_sleep"
 
 HEAT_ENTITY = "heat"
@@ -100,12 +104,15 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Eight Sleep component."""
 
-    conf = config.get(DOMAIN)
-    user = conf.get(CONF_USERNAME)
-    password = conf.get(CONF_PASSWORD)
+    if DOMAIN not in config:
+        return True
+
+    conf = config[DOMAIN]
+    user = conf[CONF_USERNAME]
+    password = conf[CONF_PASSWORD]
 
     if hass.config.time_zone is None:
         _LOGGER.error("Timezone is not set in Home Assistant")
@@ -115,7 +122,7 @@ async def async_setup(hass, config):
 
     eight = EightSleep(user, password, timezone, async_get_clientsession(hass))
 
-    hass.data[DATA_EIGHT] = eight
+    hass.data.setdefault(DATA_EIGHT, {})[DATA_API] = eight
 
     # Authenticate, build sensors
     success = await eight.start()
@@ -123,26 +130,14 @@ async def async_setup(hass, config):
         # Authentication failed, cannot continue
         return False
 
-    async def async_update_heat_data(now):
-        """Update heat data from eight in HEAT_SCAN_INTERVAL."""
-        await eight.update_device_data()
-        async_dispatcher_send(hass, SIGNAL_UPDATE_HEAT)
-
-        async_track_point_in_utc_time(
-            hass, async_update_heat_data, utcnow() + HEAT_SCAN_INTERVAL
-        )
-
-    async def async_update_user_data(now):
-        """Update user data from eight in USER_SCAN_INTERVAL."""
-        await eight.update_user_data()
-        async_dispatcher_send(hass, SIGNAL_UPDATE_USER)
-
-        async_track_point_in_utc_time(
-            hass, async_update_user_data, utcnow() + USER_SCAN_INTERVAL
-        )
-
-    await async_update_heat_data(None)
-    await async_update_user_data(None)
+    heat_coordinator = hass.data[DOMAIN][DATA_HEAT] = EightSleepHeatDataCoordinator(
+        hass, eight
+    )
+    user_coordinator = hass.data[DOMAIN][DATA_USER] = EightSleepUserDataCoordinator(
+        hass, eight
+    )
+    await heat_coordinator.async_config_entry_first_refresh()
+    await user_coordinator.async_config_entry_first_refresh()
 
     # Load sub components
     sensors = []
@@ -169,7 +164,7 @@ async def async_setup(hass, config):
         )
     )
 
-    async def async_service_handler(service):
+    async def async_service_handler(service: ServiceCall) -> None:
         """Handle eight sleep service calls."""
         params = service.data.copy()
 
@@ -180,10 +175,10 @@ async def async_setup(hass, config):
         for sens in sensor:
             side = sens.split("_")[1]
             userid = eight.fetch_userid(side)
-            usrobj = eight.users[userid]
+            usrobj: EightUser = eight.users[userid]
             await usrobj.set_heating_level(target, duration)
 
-        async_dispatcher_send(hass, SIGNAL_UPDATE_HEAT)
+        await heat_coordinator.async_request_refresh()
 
     # Register services
     hass.services.async_register(
@@ -193,55 +188,40 @@ async def async_setup(hass, config):
     return True
 
 
-class EightSleepUserEntity(Entity):
-    """The Eight Sleep device entity."""
+class EightSleepHeatDataCoordinator(DataUpdateCoordinator):
+    """Class to retrieve heat data from Eight Sleep."""
 
-    def __init__(self, eight):
-        """Initialize the data object."""
-        self._eight = eight
-
-    async def async_added_to_hass(self):
-        """Register update dispatcher."""
-
-        @callback
-        def async_eight_user_update():
-            """Update callback."""
-            self.async_schedule_update_ha_state(True)
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, SIGNAL_UPDATE_USER, async_eight_user_update
-            )
+    def __init__(self, hass: HomeAssistant, api: EightSleep) -> None:
+        """Initialize coordinator."""
+        self.api = api
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=f"{DOMAIN}_heat",
+            update_interval=HEAT_SCAN_INTERVAL,
+            update_method=self.api.update_device_data,
         )
 
-    @property
-    def should_poll(self):
-        """Return True if entity has to be polled for state."""
-        return False
 
+class EightSleepUserDataCoordinator(DataUpdateCoordinator):
+    """Class to retrieve user data from Eight Sleep."""
 
-class EightSleepHeatEntity(Entity):
-    """The Eight Sleep device entity."""
-
-    def __init__(self, eight):
-        """Initialize the data object."""
-        self._eight = eight
-
-    async def async_added_to_hass(self):
-        """Register update dispatcher."""
-
-        @callback
-        def async_eight_heat_update():
-            """Update callback."""
-            self.async_schedule_update_ha_state(True)
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, SIGNAL_UPDATE_HEAT, async_eight_heat_update
-            )
+    def __init__(self, hass: HomeAssistant, api: EightSleep) -> None:
+        """Initialize coordinator."""
+        self.api = api
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=f"{DOMAIN}_user",
+            update_interval=USER_SCAN_INTERVAL,
+            update_method=self.api.update_user_data,
         )
 
-    @property
-    def should_poll(self):
-        """Return True if entity has to be polled for state."""
-        return False
+
+class EightSleepEntity(CoordinatorEntity):
+    """The Eight Sleep device entity."""
+
+    def __init__(self, coordinator: DataUpdateCoordinator, eight: EightSleep) -> None:
+        """Initialize the data object."""
+        super().__init__(coordinator)
+        self._eight = eight

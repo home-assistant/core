@@ -138,8 +138,7 @@ class Metering(ZigbeeChannel):
     @property
     def status(self) -> int | None:
         """Return metering device status."""
-        status = self.cluster.get("status")
-        if status is None:
+        if (status := self.cluster.get("status")) is None:
             return None
         if self.cluster.get("metering_device_type") == 0:
             # Electric metering device type

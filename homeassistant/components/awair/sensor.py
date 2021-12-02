@@ -7,7 +7,12 @@ import voluptuous as vol
 from homeassistant.components.awair import AwairDataUpdateCoordinator, AwairResult
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_ACCESS_TOKEN
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    ATTR_CONNECTIONS,
+    ATTR_NAME,
+    CONF_ACCESS_TOKEN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
@@ -211,17 +216,17 @@ class AwairSensor(CoordinatorEntity, SensorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Device information."""
-        info = {
-            "identifiers": {(DOMAIN, self._device.uuid)},
-            "manufacturer": "Awair",
-            "model": self._device.model,
-        }
+        info = DeviceInfo(
+            identifiers={(DOMAIN, self._device.uuid)},
+            manufacturer="Awair",
+            model=self._device.model,
+        )
 
         if self._device.name:
-            info["name"] = self._device.name
+            info[ATTR_NAME] = self._device.name
 
         if self._device.mac_address:
-            info["connections"] = {
+            info[ATTR_CONNECTIONS] = {
                 (dr.CONNECTION_NETWORK_MAC, self._device.mac_address)
             }
 

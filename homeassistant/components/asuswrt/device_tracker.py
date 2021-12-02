@@ -4,9 +4,11 @@ from __future__ import annotations
 from homeassistant.components.device_tracker import SOURCE_TYPE_ROUTER
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_DEFAULT_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 
 from .const import DATA_ASUSWRT, DOMAIN
 from .router import AsusWrtRouter
@@ -60,12 +62,12 @@ class AsusWrtDevice(ScannerEntity):
         self._device = device
         self._attr_unique_id = device.mac
         self._attr_name = device.name or DEFAULT_DEVICE_NAME
-        self._attr_device_info = {
-            "connections": {(CONNECTION_NETWORK_MAC, device.mac)},
-            "default_model": "ASUSWRT Tracked device",
-        }
+        self._attr_device_info = DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, device.mac)},
+            default_model="ASUSWRT Tracked device",
+        )
         if device.name:
-            self._attr_device_info["default_name"] = device.name
+            self._attr_device_info[ATTR_DEFAULT_NAME] = device.name
 
     @property
     def is_connected(self):

@@ -1,6 +1,4 @@
 """Support for Velbus light."""
-import logging
-
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_FLASH,
@@ -15,8 +13,6 @@ from homeassistant.components.light import (
 
 from . import VelbusEntity
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):

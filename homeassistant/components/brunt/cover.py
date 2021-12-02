@@ -43,8 +43,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     bapi = BruntAPI(username=username, password=password)
     try:
-        things = bapi.getThings()["things"]
-        if not things:
+        if not (things := bapi.getThings()["things"]):
             _LOGGER.error("No things present in account")
         else:
             add_entities(

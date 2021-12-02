@@ -561,8 +561,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         player_ids = {
             p.entity_id: p.unique_id for p in self.hass.data[DOMAIN][KNOWN_PLAYERS]
         }
-        other_player_id = player_ids.get(other_player)
-        if other_player_id:
+        if other_player_id := player_ids.get(other_player):
             await self._player.async_sync(other_player_id)
         else:
             _LOGGER.info("Could not find player_id for %s. Not syncing", other_player)

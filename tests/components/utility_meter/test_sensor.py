@@ -627,7 +627,14 @@ async def test_no_reset_yearly_offset(hass, legacy_patchable_time):
     """Test yearly reset of meter."""
     await _test_self_reset(
         hass,
-        gen_config("yearly", timedelta(31)),
-        "2018-01-30T23:59:00.000000+00:00",
+        gen_config("yearly", timedelta(27)),
+        "2018-04-29T23:59:00.000000+00:00",
         expect_reset=False,
+    )
+
+
+async def test_bad_offset(hass, legacy_patchable_time):
+    """Test bad offset of meter."""
+    assert not await async_setup_component(
+        hass, DOMAIN, gen_config("monthly", timedelta(days=31))
     )

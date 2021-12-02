@@ -1,9 +1,10 @@
 # Describes the format for available ADS services
 mob_notify:
-  description: 'Wysłanie powiadomienia do aplikacji AIS-dom.'
+  description: 'Wysłanie powiadomienia do aplikacji AIS-dom. Uwaga nie każda aplikacja mobilna obsługuje powiadomienia w ten sam sposób co AIS-dom. Powiadomienie może różnić się w zależności od platformy i aplikacji.'
   fields:
     device_id:
       description: 'Identyfikator urządzenia.'
+      required: true
       example: 'mobile_ais_dom-'
       selector:
         device:
@@ -12,6 +13,7 @@ mob_notify:
             domain: device_tracker
     message:
       description: 'Tekst wiadomości'
+      required: true
       example: 'Dzwonek do drzwi.'
       selector:
         text:
@@ -25,14 +27,6 @@ mob_notify:
       example: 'http://ai-speaker.com/images/doorbell.jpg'
       selector:
         text:
-    priority:
-      description: 'Priorytet wiadomości normal albo high'
-      example: 'high'
-      selector:
-        select:
-          options:
-            - "normal"
-            - "high"
     say:
       description: 'Czy wiadomość po odebraniu ma być przeczytana na telefonie.'
       example: true
@@ -40,6 +34,7 @@ mob_notify:
         boolean:
     notification_id:
       description: 'Unikalny numer powiadomienia, jeśli wyślesz powiadomienie z tym samym numerem, to powiadomienie będzie nadpisywane.'
+      default: 0
       example: '0'
       selector:
         number:
@@ -50,6 +45,13 @@ mob_notify:
       example: '/lovelace/0'
       selector:
         text:
+    data:
+      name: Data
+      description:
+        Dodatkowe dane do powiadomienia (opcjonalne zależne od platformy i aplikacji).
+      example: 'color: "#2DF56D"'
+      selector:
+        object:
 
 mob_request:
   description: 'Wysłanie komendy (zapytania/żądania) do aplikacji mobilnej. Ta usługa wymaga aplikacji AIS dom w wersji 1.3.0 lub nowszej.'

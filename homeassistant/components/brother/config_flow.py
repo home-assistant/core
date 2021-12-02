@@ -86,12 +86,18 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Hostname is format: brother.local.
         self.host = discovery_info["hostname"].rstrip(".")
 
-        snmp_engine = get_snmp_engine(self.hass)
+        # Do not probe the device if the host is already configured
+        self._async_abort_entries_match({CONF_HOST: self.host})
 
-        self.brother = Brother(self.host, snmp_engine=snmp_engine)
+        snmp_engine = get_snmp_engine(self.hass)
+        model = discovery_info.get("properties", {}).get("product")
+
         try:
+            self.brother = Brother(self.host, snmp_engine=snmp_engine, model=model)
             await self.brother.async_update()
-        except (ConnectionError, SnmpError, UnsupportedModel):
+        except UnsupportedModel:
+            return self.async_abort(reason="unsupported_model")
+        except (ConnectionError, SnmpError):
             return self.async_abort(reason="cannot_connect")
 
         # Check if already configured

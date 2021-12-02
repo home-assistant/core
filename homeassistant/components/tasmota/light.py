@@ -162,8 +162,7 @@ class TasmotaLight(
     def state_updated(self, state: bool, **kwargs: Any) -> None:
         """Handle state updates."""
         self._on_off_state = state
-        attributes = kwargs.get("attributes")
-        if attributes:
+        if attributes := kwargs.get("attributes"):
             if "brightness" in attributes:
                 brightness = float(attributes["brightness"])
                 percent_bright = brightness / TASMOTA_BRIGHTNESS_MAX

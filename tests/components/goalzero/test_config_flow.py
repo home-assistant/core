@@ -10,7 +10,6 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_CREATE_ENTRY,
     RESULT_TYPE_FORM,
 )
-from homeassistant.setup import async_setup_component
 
 from . import (
     CONF_CONFIG_FLOW,
@@ -120,7 +119,7 @@ async def test_flow_user_unknown_error(hass):
 
 async def test_dhcp_discovery(hass):
     """Test we can process the discovery from dhcp."""
-    await async_setup_component(hass, "persistent_notification", {})
+
     mocked_yeti = await _create_mocked_yeti()
     with _patch_config_flow_yeti(mocked_yeti), _patch_setup():
         result = await hass.config_entries.flow.async_init(

@@ -1,6 +1,8 @@
 """Support for Goal Zero Yeti Sensors."""
 from __future__ import annotations
 
+from typing import cast
+
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL_INCREASING,
@@ -20,6 +22,7 @@ from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_WATT_HOUR,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     PERCENTAGE,
     POWER_WATT,
     SIGNAL_STRENGTH_DECIBELS,
@@ -29,6 +32,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import Yeti, YetiEntity
@@ -104,6 +108,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="Temperature",
         device_class=DEVICE_CLASS_TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="wifiStrength",
@@ -111,22 +116,26 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
         entity_registry_enabled_default=False,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="timestamp",
         name="Total Run Time",
         native_unit_of_measurement=TIME_SECONDS,
         entity_registry_enabled_default=False,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="ssid",
         name="Wi-Fi SSID",
         entity_registry_enabled_default=False,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="ipAddr",
         name="IP Address",
         entity_registry_enabled_default=False,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
 )
 
@@ -168,6 +177,6 @@ class YetiSensor(YetiEntity, SensorEntity):
         self._attr_unique_id = f"{server_unique_id}/{description.key}"
 
     @property
-    def native_value(self) -> str:
+    def native_value(self) -> StateType:
         """Return the state."""
-        return self.api.data.get(self.entity_description.key)
+        return cast(StateType, self.api.data[self.entity_description.key])

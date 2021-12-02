@@ -129,8 +129,7 @@ class AcerSwitch(SwitchEntity):
             self._attr_available = False
 
         for key in self._attributes:
-            msg = CMD_DICT.get(key)
-            if msg:
+            if msg := CMD_DICT.get(key):
                 awns = self._write_read_format(msg)
                 self._attributes[key] = awns
         self._attr_extra_state_attributes = self._attributes

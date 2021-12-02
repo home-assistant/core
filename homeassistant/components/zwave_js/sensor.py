@@ -40,6 +40,7 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
     DEVICE_CLASS_VOLTAGE,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
@@ -100,6 +101,7 @@ ENTITY_DESCRIPTION_KEY_MAP: dict[str, ZwaveSensorEntityDescription] = {
     ENTITY_DESC_KEY_BATTERY: ZwaveSensorEntityDescription(
         ENTITY_DESC_KEY_BATTERY,
         device_class=DEVICE_CLASS_BATTERY,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     ENTITY_DESC_KEY_CURRENT: ZwaveSensorEntityDescription(
@@ -160,6 +162,8 @@ ENTITY_DESCRIPTION_KEY_MAP: dict[str, ZwaveSensorEntityDescription] = {
     ENTITY_DESC_KEY_SIGNAL_STRENGTH: ZwaveSensorEntityDescription(
         ENTITY_DESC_KEY_SIGNAL_STRENGTH,
         device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     ENTITY_DESC_KEY_TEMPERATURE: ZwaveSensorEntityDescription(
@@ -452,7 +456,7 @@ class ZWaveNodeStatusSensor(SensorEntity):
     """Representation of a node status sensor."""
 
     _attr_should_poll = False
-    _attr_entity_registry_enabled_default = False
+    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
 
     def __init__(
         self, config_entry: ConfigEntry, client: ZwaveClient, node: ZwaveNode

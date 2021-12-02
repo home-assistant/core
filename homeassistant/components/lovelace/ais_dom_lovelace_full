@@ -170,18 +170,23 @@
                                     "type": "entities"
                                 },
                                 {
-                                    "card": {
-                                        "show_header_toggle": false,
-                                        "type": "entities"
-                                    },
-                                    "filter": {
-                                        "include": [
-                                            {
-                                                "domain": "media_player"
-                                            }
-                                        ]
-                                    },
-                                    "type": "ais-auto-entities"
+                                  "type": "ais-auto-entities",
+                                  "card": {
+                                    "type": "vertical-stack"
+                                  },
+                                  "card_param": "cards",
+                                  "filter": {
+                                    "include": [
+                                      {
+                                        "domain": "media_player",
+                                        "options": {
+                                          "type": "custom:hui-ais-mini-media-player-card",
+                                          "artwork": "cover-fit",
+                                          "source": "full"
+                                        }
+                                      }
+                                    ]
+                                  }
                                 }
                             ],
                             "show_header_toggle": false,

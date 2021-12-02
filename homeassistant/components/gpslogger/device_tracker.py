@@ -11,6 +11,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import DOMAIN as GPL_DOMAIN, TRACKER_UPDATE
@@ -111,9 +112,9 @@ class GPSLoggerEntity(TrackerEntity, RestoreEntity):
         return self._unique_id
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        return {"name": self._name, "identifiers": {(GPL_DOMAIN, self._unique_id)}}
+        return DeviceInfo(identifiers={(GPL_DOMAIN, self._unique_id)}, name=self._name)
 
     @property
     def source_type(self):

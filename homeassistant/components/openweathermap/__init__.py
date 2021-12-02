@@ -71,8 +71,7 @@ async def async_migrate_entry(hass, entry):
     _LOGGER.debug("Migrating OpenWeatherMap entry from version %s", version)
 
     if version == 1:
-        mode = data[CONF_MODE]
-        if mode == FORECAST_MODE_FREE_DAILY:
+        if (mode := data[CONF_MODE]) == FORECAST_MODE_FREE_DAILY:
             mode = FORECAST_MODE_ONECALL_DAILY
 
         new_data = {**data, CONF_MODE: mode}
@@ -89,7 +88,7 @@ async def async_update_options(hass: HomeAssistant, entry: ConfigEntry):
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:

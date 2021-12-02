@@ -17,14 +17,14 @@
                 "data": {
                     "api_key": "API v\u00f5ti"
                 },
-                "description": "Pead sisestama uue Uptime Roboti kirjutuskaitstud API-v\u00f5tme",
+                "description": "Pead sisestama uue UptimeRoboti kirjutuskaitstud API-v\u00f5tme",
                 "title": "Taastuvasta sidumine"
             },
             "user": {
                 "data": {
                     "api_key": "API v\u00f5ti"
                 },
-                "description": "Pead sisestama Uptime Roboti kirjutuskaitstud API-v\u00f5tme"
+                "description": "Pead sisestama UptimeRoboti kirjutuskaitstud API-v\u00f5tme"
             }
         }
     }

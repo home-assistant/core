@@ -7,7 +7,7 @@ import serial.tools.list_ports
 import zigpy.config
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
 from homeassistant.components.ssdp import (
     ATTR_SSDP_LOCATION,
     ATTR_UPNP_MANUFACTURER_URL,
@@ -208,7 +208,7 @@ async def test_discovery_via_usb_no_radio(detect_mock, hass):
 @patch("zigpy_znp.zigbee.application.ControllerApplication.probe", return_value=True)
 async def test_discovery_via_usb_already_setup(detect_mock, hass):
     """Test usb flow -- already setup."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     MockConfigEntry(
         domain=DOMAIN, data={CONF_DEVICE: {CONF_DEVICE_PATH: "/dev/ttyUSB1"}}
     ).add_to_hass(hass)
@@ -233,7 +233,7 @@ async def test_discovery_via_usb_already_setup(detect_mock, hass):
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
 async def test_discovery_via_usb_path_changes(hass):
     """Test usb flow already setup and the path changes."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="AAAA:AAAA_1234_test_zigbee radio",
@@ -386,7 +386,7 @@ async def test_discovery_already_setup(detect_mock, hass):
         "hostname": "_tube_zb_gw._tcp.local.",
         "properties": {"name": "tube_123456"},
     }
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     MockConfigEntry(
         domain=DOMAIN, data={CONF_DEVICE: {CONF_DEVICE_PATH: "/dev/ttyUSB1"}}
     ).add_to_hass(hass)
@@ -498,7 +498,7 @@ async def test_user_flow_existing_config_entry(hass):
     MockConfigEntry(
         domain=DOMAIN, data={CONF_DEVICE: {CONF_DEVICE_PATH: "/dev/ttyUSB1"}}
     ).add_to_hass(hass)
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}
     )
@@ -599,7 +599,6 @@ async def test_user_port_config_fail(probe_mock, hass):
 @patch("bellows.zigbee.application.ControllerApplication.probe", return_value=True)
 async def test_user_port_config(probe_mock, hass):
     """Test port config."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,

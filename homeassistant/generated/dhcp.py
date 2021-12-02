@@ -72,6 +72,88 @@ DHCP = [
         "hostname": "flume-gw-*"
     },
     {
+        "domain": "flux_led",
+        "macaddress": "18B905*",
+        "hostname": "[ba][lk]*"
+    },
+    {
+        "domain": "flux_led",
+        "macaddress": "249494*",
+        "hostname": "[ba][lk]*"
+    },
+    {
+        "domain": "flux_led",
+        "macaddress": "7CB94C*",
+        "hostname": "[ba][lk]*"
+    },
+    {
+        "domain": "flux_led",
+        "macaddress": "B4E842*",
+        "hostname": "[ba][lk]*"
+    },
+    {
+        "domain": "flux_led",
+        "macaddress": "8CCE4E*",
+        "hostname": "lwip*"
+    },
+    {
+        "domain": "flux_led",
+        "hostname": "zengge_0[6789b]_*"
+    },
+    {
+        "domain": "flux_led",
+        "hostname": "zengge_1[06789abc]_*"
+    },
+    {
+        "domain": "flux_led",
+        "hostname": "zengge_2[15]_*"
+    },
+    {
+        "domain": "flux_led",
+        "hostname": "zengge_3[35]_*"
+    },
+    {
+        "domain": "flux_led",
+        "hostname": "zengge_4[14]_*"
+    },
+    {
+        "domain": "flux_led",
+        "hostname": "zengge_5[24]_*"
+    },
+    {
+        "domain": "flux_led",
+        "hostname": "zengge_62_*"
+    },
+    {
+        "domain": "flux_led",
+        "hostname": "zengge_81_*"
+    },
+    {
+        "domain": "flux_led",
+        "hostname": "zengge_0[0e]_*"
+    },
+    {
+        "domain": "flux_led",
+        "hostname": "zengge_9[34567]_*"
+    },
+    {
+        "domain": "flux_led",
+        "hostname": "zengge_a[123]_*"
+    },
+    {
+        "domain": "flux_led",
+        "hostname": "zengge_d1_*"
+    },
+    {
+        "domain": "flux_led",
+        "hostname": "zengge_e[12]_*"
+    },
+    {
+        "domain": "flux_led",
+        "macaddress": "C82E47*",
+        "hostname": "sta*"
+    },
+    {
         "domain": "goalzero",
         "hostname": "yeti*"
     },
@@ -216,6 +298,11 @@ DHCP = [
         "macaddress": "DCEFCA*"
     },
     {
+        "domain": "sense",
+        "hostname": "sense-*",
+        "macaddress": "A4D578*"
+    },
+    {
         "domain": "smartthings",
         "hostname": "st*",
         "macaddress": "24FD5B*"
@@ -263,6 +350,16 @@ DHCP = [
         "domain": "toon",
         "hostname": "eneco-*",
         "macaddress": "74C63B*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "k[lp]*",
+        "macaddress": "005F67*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "k[lp]*",
+        "macaddress": "1027F5*"
     },
     {
         "domain": "tplink",
@@ -378,6 +475,50 @@ DHCP = [
         "domain": "tplink",
         "hostname": "lb*",
         "macaddress": "B09575*"
+    },
+    {
+        "domain": "tuya",
+        "macaddress": "105A17*"
+    },
+    {
+        "domain": "tuya",
+        "macaddress": "10D561*"
+    },
+    {
+        "domain": "tuya",
+        "macaddress": "1869D8*"
+    },
+    {
+        "domain": "tuya",
+        "macaddress": "381F8D*"
+    },
+    {
+        "domain": "tuya",
+        "macaddress": "508A06*"
+    },
+    {
+        "domain": "tuya",
+        "macaddress": "68572D*"
+    },
+    {
+        "domain": "tuya",
+        "macaddress": "708976*"
+    },
+    {
+        "domain": "tuya",
+        "macaddress": "7CF666*"
+    },
+    {
+        "domain": "tuya",
+        "macaddress": "84E342*"
+    },
+    {
+        "domain": "tuya",
+        "macaddress": "D4A651*"
+    },
+    {
+        "domain": "tuya",
+        "macaddress": "D81F12*"
     },
     {
         "domain": "verisure",

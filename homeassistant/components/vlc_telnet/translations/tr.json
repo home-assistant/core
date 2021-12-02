@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Hizmet zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "reauth_successful": "Kimlik do\u011frulama yeniden ba\u015far\u0131l\u0131 oldu"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flant\u0131 ba\u015far\u0131s\u0131z"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "\u015eifre"
+                },
+                "description": "L\u00fctfen sunucunun do\u011fru \u015fifresini giriniz: {host}"
+            },
+            "user": {
+                "data": {
+                    "host": "Ana Bilgisayar",
+                    "name": "\u0130sim",
+                    "password": "\u015eifre",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

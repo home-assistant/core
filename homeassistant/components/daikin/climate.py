@@ -136,12 +136,10 @@ class DaikinClimate(ClimateEntity):
         values = {}
 
         for attr in (ATTR_TEMPERATURE, ATTR_FAN_MODE, ATTR_SWING_MODE, ATTR_HVAC_MODE):
-            value = settings.get(attr)
-            if value is None:
+            if (value := settings.get(attr)) is None:
                 continue
 
-            daikin_attr = HA_ATTR_TO_DAIKIN.get(attr)
-            if daikin_attr is not None:
+            if (daikin_attr := HA_ATTR_TO_DAIKIN.get(attr)) is not None:
                 if attr == ATTR_HVAC_MODE:
                     values[daikin_attr] = HA_STATE_TO_DAIKIN[value]
                 elif value in self._list[attr]:

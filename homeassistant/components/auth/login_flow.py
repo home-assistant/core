@@ -81,7 +81,6 @@ from homeassistant.components.http.ban import (
 )
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
-from homeassistant.const import HTTP_METHOD_NOT_ALLOWED
 
 from . import indieauth
 
@@ -131,8 +130,7 @@ def _prepare_result_json(result):
 
     data = result.copy()
 
-    schema = data["data_schema"]
-    if schema is None:
+    if (schema := data["data_schema"]) is None:
         data["data_schema"] = []
     else:
         data["data_schema"] = voluptuous_serialize.convert(schema)
@@ -155,7 +153,7 @@ class LoginFlowIndexView(HomeAssistantView):
     async def get(self, request):
         """Do not allow index of flows in progress."""
         # pylint: disable=no-self-use
-        return web.Response(status=HTTP_METHOD_NOT_ALLOWED)
+        return web.Response(status=HTTPStatus.METHOD_NOT_ALLOWED)
 
     @RequestDataValidator(
         vol.Schema(
@@ -233,14 +231,9 @@ class LoginFlowResourceView(HomeAssistantView):
 
         try:
             # do not allow change ip during login flow
-            for flow in self._flow_mgr.async_progress():
-                if flow["flow_id"] == flow_id and flow["context"][
-                    "ip_address"
-                ] != ip_address(request.remote):
-                    return self.json_message(
-                        "IP address changed", HTTPStatus.BAD_REQUEST
-                    )
-
+            flow = self._flow_mgr.async_get(flow_id)
+            if flow["context"]["ip_address"] != ip_address(request.remote):
+                return self.json_message("IP address changed", HTTPStatus.BAD_REQUEST)
             result = await self._flow_mgr.async_configure(flow_id, data)
         except data_entry_flow.UnknownFlow:
             return self.json_message("Invalid flow specified", HTTPStatus.NOT_FOUND)

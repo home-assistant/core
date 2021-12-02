@@ -364,8 +364,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
-        if temperature is None:
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
         self._target_temp = temperature
         await self._async_control_heating(force=True)

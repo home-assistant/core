@@ -30,9 +30,8 @@ CONF_SHOW_INACTIVE = "show_inactive"
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Tile as config entry."""
-    hass.data.setdefault(DOMAIN, {DATA_COORDINATOR: {}, DATA_TILE: {}})
-    hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id] = {}
-    hass.data[DOMAIN][DATA_TILE][entry.entry_id] = {}
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = {}
 
     @callback
     def async_migrate_callback(entity_entry: RegistryEntry) -> dict | None:
@@ -70,7 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry.data[CONF_PASSWORD],
             session=websession,
         )
-        hass.data[DOMAIN][DATA_TILE][entry.entry_id] = await client.async_get_tiles()
+        tiles = await client.async_get_tiles()
     except InvalidAuthError:
         LOGGER.error("Invalid credentials provided")
         return False
@@ -87,11 +86,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except TileError as err:
             raise UpdateFailed(f"Error while retrieving data: {err}") from err
 
+    coordinators = {}
     coordinator_init_tasks = []
-    for tile_uuid, tile in hass.data[DOMAIN][DATA_TILE][entry.entry_id].items():
-        coordinator = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
-            tile_uuid
-        ] = DataUpdateCoordinator(
+
+    for tile_uuid, tile in tiles.items():
+        coordinator = coordinators[tile_uuid] = DataUpdateCoordinator(
             hass,
             LOGGER,
             name=tile.name,
@@ -101,6 +100,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         coordinator_init_tasks.append(coordinator.async_refresh())
 
     await gather_with_concurrency(DEFAULT_INIT_TASK_LIMIT, *coordinator_init_tasks)
+    hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR] = coordinators
+    hass.data[DOMAIN][entry.entry_id][DATA_TILE] = tiles
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
@@ -111,5 +112,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a Tile config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        hass.data[DOMAIN][DATA_COORDINATOR].pop(entry.entry_id)
+        hass.data[DOMAIN].pop(entry.entry_id)
+
     return unload_ok

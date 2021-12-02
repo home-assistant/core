@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiohttp
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.harmony.config_flow import CannotConnect
 from homeassistant.components.harmony.const import DOMAIN, PREVIOUS_ACTIVE_ACTIVITY
 from homeassistant.const import CONF_HOST, CONF_NAME
@@ -21,7 +21,7 @@ def _get_mock_harmonyapi(connect=None, close=None):
 
 async def test_user_form(hass):
     """Test we get the user form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -50,7 +50,6 @@ async def test_user_form(hass):
 
 async def test_form_ssdp(hass):
     """Test we get the form with ssdp source."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch(
         "homeassistant.components.harmony.config_flow.HubConnector.get_remote_id",
@@ -118,7 +117,7 @@ async def test_form_ssdp_fails_to_get_remote_id(hass):
 
 async def test_form_ssdp_aborts_before_checking_remoteid_if_host_known(hass):
     """Test we abort without connecting if the host is already known."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={"host": "2.2.2.2", "name": "any"},

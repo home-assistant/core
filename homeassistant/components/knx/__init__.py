@@ -7,6 +7,7 @@ from typing import Final
 
 import voluptuous as vol
 from xknx import XKNX
+from xknx.core import XknxConnectionState
 from xknx.core.telegram_queue import TelegramQueue
 from xknx.dpt import DPTArray, DPTBase, DPTBinary
 from xknx.exceptions import XKNXException
@@ -238,15 +239,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         # First check for config file. If for some reason it is no longer there
         # or knx is no longer mentioned, stop the reload.
         config = await async_integration_yaml_config(hass, DOMAIN)
-
         if not config or DOMAIN not in config:
             return
-
-        await knx_module.xknx.stop()
 
         await asyncio.gather(
             *(platform.async_reset() for platform in async_get_platforms(hass, DOMAIN))
         )
+        await knx_module.xknx.stop()
 
         await async_setup(hass, config)
 
@@ -270,6 +269,9 @@ class KNXModule:
 
         self.init_xknx()
         self._knx_event_callback: TelegramQueue.Callback = self.register_callback()
+        self.xknx.connection_manager.register_connection_state_changed_cb(
+            self.connection_state_changed_cb
+        )
 
     def init_xknx(self) -> None:
         """Initialize XKNX object."""
@@ -286,7 +288,6 @@ class KNXModule:
         """Start XKNX object. Connect to tunneling or Routing device."""
         await self.xknx.start()
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.stop)
-        self.connected = True
 
     async def stop(self, event: Event) -> None:
         """Stop XKNX object. Disconnect from tunneling or Routing device."""
@@ -351,6 +352,12 @@ class KNXModule:
                 "telegramtype": telegram.payload.__class__.__name__,
             },
         )
+
+    async def connection_state_changed_cb(self, state: XknxConnectionState) -> None:
+        """Call invoked after a KNX connection state change was received."""
+        self.connected = state == XknxConnectionState.CONNECTED
+        if tasks := [device.after_update() for device in self.xknx.devices]:
+            await asyncio.gather(*tasks)
 
     def register_callback(self) -> TelegramQueue.Callback:
         """Register callback within XKNX TelegramQueue."""

@@ -11,11 +11,14 @@ import logging
 import math
 import sys
 from timeit import default_timer as timer
-from typing import Any, TypedDict, final
+from typing import Any, Final, Literal, TypedDict, final
+
+import voluptuous as vol
 
 from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
+    ATTR_ATTRIBUTION,
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_PICTURE,
     ATTR_FRIENDLY_NAME,
@@ -23,6 +26,8 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     ATTR_UNIT_OF_MEASUREMENT,
     DEVICE_DEFAULT_NAME,
+    ENTITY_CATEGORY_CONFIG,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -34,7 +39,6 @@ from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, NoEntitySpecifiedError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import EntityPlatform
-from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.event import Event, async_track_entity_registry_updated_event
 from homeassistant.helpers.typing import StateType
 from homeassistant.loader import bind_hass
@@ -49,6 +53,14 @@ SOURCE_PLATFORM_CONFIG = "platform_config"
 # Used when converting float states to string: limit precision according to machine
 # epsilon to make the string representation readable
 FLOAT_PRECISION = abs(int(math.floor(math.log10(abs(sys.float_info.epsilon))))) - 1
+
+
+ENTITY_CATEGORIES: Final[list[str]] = [
+    ENTITY_CATEGORY_CONFIG,
+    ENTITY_CATEGORY_DIAGNOSTIC,
+]
+
+ENTITY_CATEGORIES_SCHEMA: Final = vol.In(ENTITY_CATEGORIES)
 
 
 @callback
@@ -157,18 +169,19 @@ def get_unit_of_measurement(hass: HomeAssistant, entity_id: str) -> str | None:
 class DeviceInfo(TypedDict, total=False):
     """Entity device information for device registry."""
 
-    name: str | None
+    configuration_url: str | None
     connections: set[tuple[str, str]]
+    default_manufacturer: str
+    default_model: str
+    default_name: str
+    entry_type: str | None
     identifiers: set[tuple[str, str]]
     manufacturer: str | None
     model: str | None
+    name: str | None
     suggested_area: str | None
     sw_version: str | None
     via_device: tuple[str, str]
-    entry_type: str | None
-    default_name: str
-    default_manufacturer: str
-    default_model: str
 
 
 @dataclass
@@ -179,6 +192,7 @@ class EntityDescription:
     key: str
 
     device_class: str | None = None
+    entity_category: Literal["config", "diagnostic"] | None = None
     entity_registry_enabled_default: bool = True
     force_update: bool = False
     icon: str | None = None
@@ -218,7 +232,7 @@ class Entity(ABC):
     parallel_updates: asyncio.Semaphore | None = None
 
     # Entry in the entity registry
-    registry_entry: RegistryEntry | None = None
+    registry_entry: er.RegistryEntry | None = None
 
     # Hold list for functions to call on remove.
     _on_remove: list[CALLBACK_TYPE] | None = None
@@ -232,10 +246,12 @@ class Entity(ABC):
 
     # Entity Properties
     _attr_assumed_state: bool = False
+    _attr_attribution: str | None = None
     _attr_available: bool = True
     _attr_context_recent_time: timedelta = timedelta(seconds=5)
     _attr_device_class: str | None
     _attr_device_info: DeviceInfo | None = None
+    _attr_entity_category: str | None
     _attr_entity_picture: str | None = None
     _attr_entity_registry_enabled_default: bool
     _attr_extra_state_attributes: MutableMapping[str, Any]
@@ -397,6 +413,20 @@ class Entity(ABC):
             return self.entity_description.entity_registry_enabled_default
         return True
 
+    @property
+    def attribution(self) -> str | None:
+        """Return the attribution."""
+        return self._attr_attribution
+
+    @property
+    def entity_category(self) -> str | None:
+        """Return the category of the entity, if any."""
+        if hasattr(self, "_attr_entity_category"):
+            return self._attr_entity_category
+        if hasattr(self, "entity_description"):
+            return self.entity_description.entity_category
+        return None
+
     # DO NOT OVERWRITE
     # These properties and methods are either managed by Home Assistant or they
     # are used to perform a very specific function. Overwriting these may
@@ -519,6 +549,9 @@ class Entity(ABC):
 
         if (device_class := self.device_class) is not None:
             attr[ATTR_DEVICE_CLASS] = str(device_class)
+
+        if (attribution := self.attribution) is not None:
+            attr[ATTR_ATTRIBUTION] = attribution
 
         end = timer()
 
@@ -778,7 +811,7 @@ class Entity(ABC):
         if data["action"] != "update":
             return
 
-        ent_reg = await self.hass.helpers.entity_registry.async_get_registry()
+        ent_reg = er.async_get(self.hass)
         old = self.registry_entry
         self.registry_entry = ent_reg.async_get(data["entity_id"])
         assert self.registry_entry is not None

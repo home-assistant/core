@@ -1,0 +1,16 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "url": "URL"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_url": "Ge\u00e7ersiz URL"
+        }
+    }
+}

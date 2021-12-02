@@ -21,7 +21,6 @@ DOMAIN: Final = "ambee"
 LOGGER = logging.getLogger(__package__)
 SCAN_INTERVAL = timedelta(hours=1)
 
-ATTR_ENTRY_TYPE: Final = "entry_type"
 ENTRY_TYPE_SERVICE: Final = "service"
 
 DEVICE_CLASS_AMBEE_RISK: Final = "ambee__risk"

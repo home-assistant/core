@@ -100,7 +100,7 @@ async def test_unlock_failing(hass, surepetcare) -> None:
     assert await async_setup_component(hass, DOMAIN, MOCK_CONFIG)
     await hass.async_block_till_done()
 
-    entity_id = list(EXPECTED_ENTITY_IDS.keys())[0]
+    entity_id = list(EXPECTED_ENTITY_IDS)[0]
 
     await hass.services.async_call(
         "lock", "lock", {"entity_id": entity_id}, blocking=True

@@ -22,6 +22,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CoreState, HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
@@ -209,13 +210,13 @@ class GoogleTravelTimeSensor(SensorEntity):
         return None
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
-        return {
-            "name": DOMAIN,
-            "identifiers": {(DOMAIN, self._api_key)},
-            "entry_type": "service",
-        }
+        return DeviceInfo(
+            entry_type="service",
+            identifiers={(DOMAIN, self._api_key)},
+            name=DOMAIN,
+        )
 
     @property
     def unique_id(self) -> str:

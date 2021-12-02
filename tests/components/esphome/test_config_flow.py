@@ -33,7 +33,7 @@ def mock_client():
     with patch("homeassistant.components.esphome.config_flow.APIClient") as mock_client:
 
         def mock_constructor(
-            loop, host, port, password, zeroconf_instance=None, noise_psk=None
+            host, port, password, zeroconf_instance=None, noise_psk=None
         ):
             """Fake the client constructor."""
             mock_client.host = host

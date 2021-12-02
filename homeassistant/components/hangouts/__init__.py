@@ -57,8 +57,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up the Hangouts bot component."""
-    config = config.get(DOMAIN)
-    if config is None:
+    if (config := config.get(DOMAIN)) is None:
         hass.data[DOMAIN] = {
             CONF_INTENTS: {},
             CONF_DEFAULT_CONVERSATIONS: [],

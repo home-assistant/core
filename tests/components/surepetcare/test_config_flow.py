@@ -3,7 +3,7 @@ from unittest.mock import NonCallableMagicMock, patch
 
 from surepy.exceptions import SurePetcareAuthenticationError, SurePetcareError
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
 from homeassistant.components.surepetcare.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import (
@@ -22,7 +22,7 @@ INPUT_DATA = {
 
 async def test_form(hass: HomeAssistant, surepetcare: NonCallableMagicMock) -> None:
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )

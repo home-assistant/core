@@ -7,7 +7,13 @@ from xknx import XKNX
 from xknx.devices import Switch as XknxSwitch
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.const import CONF_NAME, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import (
+    CONF_ENTITY_CATEGORY,
+    CONF_NAME,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -52,6 +58,7 @@ class KNXSwitch(KnxEntity, SwitchEntity, RestoreEntity):
                 invert=config[SwitchSchema.CONF_INVERT],
             )
         )
+        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
         self._attr_unique_id = str(self._device.switch.group_address)
 
     async def async_added_to_hass(self) -> None:

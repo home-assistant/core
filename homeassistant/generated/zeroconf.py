@@ -157,6 +157,11 @@ ZEROCONF = {
             "domain": "lutron_caseta"
         }
     ],
+    "_lookin._tcp.local.": [
+        {
+            "domain": "lookin"
+        }
+    ],
     "_mediaremotetv._tcp.local.": [
         {
             "domain": "apple_tv"
@@ -187,6 +192,16 @@ ZEROCONF = {
     "_nut._tcp.local.": [
         {
             "domain": "nut"
+        }
+    ],
+    "_octoprint._tcp.local.": [
+        {
+            "domain": "octoprint"
+        }
+    ],
+    "_plexmediasvr._tcp.local.": [
+        {
+            "domain": "plex"
         }
     ],
     "_plugwise._tcp.local.": [

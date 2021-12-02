@@ -119,12 +119,7 @@ ATTR_ENABLED = "enabled"
 ATTR_INCLUDE_LINKED_ZONES = "include_linked_zones"
 ATTR_MASTER = "master"
 ATTR_WITH_GROUP = "with_group"
-ATTR_BUTTONS_ENABLED = "buttons_enabled"
-ATTR_CROSSFADE = "crossfade"
-ATTR_NIGHT_SOUND = "night_sound"
-ATTR_SPEECH_ENHANCE = "speech_enhance"
 ATTR_QUEUE_POSITION = "queue_position"
-ATTR_STATUS_LIGHT = "status_light"
 ATTR_EQ_BASS = "bass_level"
 ATTR_EQ_TREBLE = "treble_level"
 
@@ -233,11 +228,6 @@ async def async_setup_entry(
     platform.async_register_entity_service(  # type: ignore
         SERVICE_SET_OPTION,
         {
-            vol.Optional(ATTR_BUTTONS_ENABLED): cv.boolean,
-            vol.Optional(ATTR_CROSSFADE): cv.boolean,
-            vol.Optional(ATTR_NIGHT_SOUND): cv.boolean,
-            vol.Optional(ATTR_SPEECH_ENHANCE): cv.boolean,
-            vol.Optional(ATTR_STATUS_LIGHT): cv.boolean,
             vol.Optional(ATTR_EQ_BASS): vol.All(
                 vol.Coerce(int), vol.Range(min=-10, max=10)
             ),
@@ -302,7 +292,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             return STATE_PLAYING
         return STATE_IDLE
 
-    async def async_update(self) -> None:
+    async def _async_poll(self) -> None:
         """Retrieve latest state by polling."""
         await self.hass.data[DATA_SONOS].favorites[
             self.speaker.household_id
@@ -618,30 +608,10 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     @soco_error()
     def set_option(
         self,
-        buttons_enabled: bool | None = None,
-        crossfade: bool | None = None,
-        night_sound: bool | None = None,
-        speech_enhance: bool | None = None,
-        status_light: bool | None = None,
         bass_level: int | None = None,
         treble_level: int | None = None,
     ) -> None:
         """Modify playback options."""
-        if buttons_enabled is not None:
-            self.soco.buttons_enabled = buttons_enabled
-
-        if crossfade is not None:
-            self.soco.cross_fade = crossfade
-
-        if night_sound is not None and self.speaker.night_mode is not None:
-            self.soco.night_mode = night_sound
-
-        if speech_enhance is not None and self.speaker.dialog_mode is not None:
-            self.soco.dialog_mode = speech_enhance
-
-        if status_light is not None:
-            self.soco.status_light = status_light
-
         if bass_level is not None:
             self.soco.bass = bass_level
 
@@ -670,12 +640,6 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
         if self.speaker.treble_level is not None:
             attributes[ATTR_EQ_TREBLE] = self.speaker.treble_level
-
-        if self.speaker.night_mode is not None:
-            attributes[ATTR_NIGHT_SOUND] = self.speaker.night_mode
-
-        if self.speaker.dialog_mode is not None:
-            attributes[ATTR_SPEECH_ENHANCE] = self.speaker.dialog_mode
 
         if self.media.queue_position is not None:
             attributes[ATTR_QUEUE_POSITION] = self.media.queue_position

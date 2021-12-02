@@ -13,7 +13,6 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_CREATE_ENTRY,
     RESULT_TYPE_FORM,
 )
-from homeassistant.setup import async_setup_component
 
 from . import (
     ENTRY_CONFIG,
@@ -28,7 +27,6 @@ from tests.common import MockConfigEntry
 
 async def test_user_form(hass, cfupdate_flow):
     """Test we get the user initiated form."""
-    await async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}

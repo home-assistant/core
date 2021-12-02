@@ -1,0 +1,18 @@
+{
+    "config": {
+        "step": {
+            "broker": {
+                "data": {
+                    "broker": "\u30d6\u30ed\u30fc\u30ab\u30fc",
+                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
+                    "port": "\u30dd\u30fc\u30c8"
+                }
+            },
+            "hassio_confirm": {
+                "data": {
+                    "discovery": "\u691c\u51fa\u3092\u6709\u52b9\u306b\u3059\u308b"
+                }
+            }
+        }
+    }
+}

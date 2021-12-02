@@ -39,7 +39,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers import aiohttp_client, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 from homeassistant.helpers.event import async_track_time_interval
@@ -333,7 +333,7 @@ class UniFiController:
         self._site_role = description[0]["site_role"]
 
         # Restore clients that are not a part of active clients list.
-        entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
+        entity_registry = er.async_get(self.hass)
         for entry in async_entries_for_config_entry(
             entity_registry, self.config_entry.entry_id
         ):

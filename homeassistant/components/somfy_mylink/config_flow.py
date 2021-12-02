@@ -149,8 +149,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             return self.async_abort(reason="cannot_connect")
 
         if user_input is not None:
-            target_id = user_input.get(CONF_TARGET_ID)
-            if target_id:
+            if target_id := user_input.get(CONF_TARGET_ID):
                 return await self.async_step_target_config(None, target_id)
 
             return self.async_create_entry(title="", data=self.options)

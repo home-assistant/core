@@ -11,6 +11,7 @@ from homeassistant.components.cover import (
     CoverEntity,
 )
 from homeassistant.core import callback
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.event import async_track_utc_time_change
 
 from . import DOMAIN
@@ -86,15 +87,15 @@ class DemoCover(CoverEntity):
             self._closed = self.current_cover_position <= 0
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device info."""
-        return {
-            "identifiers": {
+        return DeviceInfo(
+            identifiers={
                 # Serial numbers are unique identifiers within a specific domain
                 (DOMAIN, self.unique_id)
             },
-            "name": self.name,
-        }
+            name=self.name,
+        )
 
     @property
     def unique_id(self):

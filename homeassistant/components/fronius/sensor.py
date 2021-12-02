@@ -6,7 +6,7 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from pyfronius import Fronius
+from pyfronius import Fronius, FroniusError
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -205,19 +205,13 @@ class FroniusAdapter:
         """Retrieve and update latest state."""
         try:
             values = await self._update()
-        except ConnectionError:
+        except FroniusError as err:
             # fronius devices are often powered by self-produced solar energy
             # and henced turned off at night.
             # Therefore we will not print multiple errors when connection fails
             if self._available:
                 self._available = False
-                _LOGGER.error("Failed to update: connection error")
-            return
-        except ValueError:
-            _LOGGER.error(
-                "Failed to update: invalid response returned."
-                "Maybe the configured device is not supported"
-            )
+                _LOGGER.error("Failed to update: %s", err)
             return
 
         self._available = True  # reset connection failure

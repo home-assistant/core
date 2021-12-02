@@ -150,8 +150,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_get_engine(hass, config, discovery_info=None):
     """Set up Google Cloud TTS component."""
-    key_file = config.get(CONF_KEY_FILE)
-    if key_file:
+    if key_file := config.get(CONF_KEY_FILE):
         key_file = hass.config.path(key_file)
         if not os.path.isfile(key_file):
             _LOGGER.error("File %s doesn't exist", key_file)

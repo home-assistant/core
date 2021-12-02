@@ -950,24 +950,24 @@ async def test_discovery_removal(hass, mqtt_mock, caplog):
 
 async def test_discovery_update_light(hass, mqtt_mock, caplog):
     """Test update of discovered light."""
-    data1 = (
-        '{ "name": "Beer",'
-        '  "schema": "template",'
-        '  "state_topic": "test_topic",'
-        '  "command_topic": "test_topic",'
-        '  "command_on_template": "on",'
-        '  "command_off_template": "off"}'
-    )
-    data2 = (
-        '{ "name": "Milk",'
-        '  "schema": "template",'
-        '  "state_topic": "test_topic",'
-        '  "command_topic": "test_topic",'
-        '  "command_on_template": "on",'
-        '  "command_off_template": "off"}'
-    )
+    config1 = {
+        "name": "Beer",
+        "schema": "template",
+        "state_topic": "test_topic",
+        "command_topic": "test_topic",
+        "command_on_template": "on",
+        "command_off_template": "off",
+    }
+    config2 = {
+        "name": "Milk",
+        "schema": "template",
+        "state_topic": "test_topic",
+        "command_topic": "test_topic",
+        "command_on_template": "on",
+        "command_off_template": "off",
+    }
     await help_test_discovery_update(
-        hass, mqtt_mock, caplog, light.DOMAIN, data1, data2
+        hass, mqtt_mock, caplog, light.DOMAIN, config1, config2
     )
 
 

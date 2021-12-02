@@ -326,9 +326,7 @@ class HERETravelTimeSensor(SensorEntity):
 
     async def _get_location_from_entity(self, entity_id: str) -> str | None:
         """Get the location from the entity state or attributes."""
-        entity = self.hass.states.get(entity_id)
-
-        if entity is None:
+        if (entity := self.hass.states.get(entity_id)) is None:
             _LOGGER.error("Unable to find entity %s", entity_id)
             return None
 
@@ -416,11 +414,9 @@ class HERETravelTimeData:
             # Convert location to HERE friendly location
             destination = self.destination.split(",")
             origin = self.origin.split(",")
-            arrival = self.arrival
-            if arrival is not None:
+            if (arrival := self.arrival) is not None:
                 arrival = convert_time_to_isodate(arrival)
-            departure = self.departure
-            if departure is not None:
+            if (departure := self.departure) is not None:
                 departure = convert_time_to_isodate(departure)
 
             if departure is None and arrival is None:
@@ -486,8 +482,7 @@ class HERETravelTimeData:
         if suppliers is not None:
             supplier_titles = []
             for supplier in suppliers:
-                title = supplier.get("title")
-                if title is not None:
+                if (title := supplier.get("title")) is not None:
                     supplier_titles.append(title)
             joined_supplier_titles = ",".join(supplier_titles)
             attribution = f"With the support of {joined_supplier_titles}. All information is provided without warranty of any kind."

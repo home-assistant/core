@@ -6,7 +6,10 @@ import os
 import platform
 import socket
 
+import async_timeout
 import requests
+
+from homeassistant.helpers import aiohttp_client
 
 # AIS HOST
 AIS_HOST = "powiedz.co"
@@ -37,6 +40,7 @@ G_AN_BOOKMARK = "Bookmark"
 G_AN_FAVORITE = "Favorite"
 G_AN_GOOGLE_ASSISTANT = "GoogleAssistant"
 G_LOCAL_EXO_PLAYER_ENTITY_ID = "media_player.wbudowany_glosnik"
+G_LOCAL_ANDROID_PLAYER_ENTITY_ID = "media_player.android_tv_127_0_0_1"
 G_CURR_MEDIA_CONTENT = {}
 
 # actions on remote
@@ -262,6 +266,24 @@ def get_pass_for_ssid(ssid):
 
 
 # say the text without Home Assistant
+async def async_say_direct(hass, text):
+    web_session = aiohttp_client.async_get_clientsession(hass)
+    j_data = {
+        "text": text,
+        "pitch": GLOBAL_TTS_PITCH,
+        "rate": GLOBAL_TTS_RATE,
+        "voice": GLOBAL_TTS_VOICE,
+    }
+    with async_timeout.timeout(10):
+        try:
+            await web_session.post(
+                G_HTTP_REST_SERVICE_BASE_URL.format("127.0.0.1") + "/text_to_speech",
+                json=j_data,
+            )
+        except Exception as e:
+            pass
+
+
 def say_direct(text):
     j_data = {
         "text": text,
@@ -283,7 +305,6 @@ def get_ais_gate_model():
     global G_AIS_GATE_MODEL
     if G_AIS_GATE_MODEL is not None:
         return G_AIS_GATE_MODEL
-
     try:
         ws_resp = requests.get(
             G_HTTP_REST_SERVICE_BASE_URL.format("127.0.0.1"), timeout=10

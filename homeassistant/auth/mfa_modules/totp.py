@@ -18,7 +18,7 @@ from . import (
     SetupFlow,
 )
 
-REQUIREMENTS = ["pyotp==2.3.0", "PyQRCode==1.2.1"]
+REQUIREMENTS = ["pyotp==2.6.0", "PyQRCode==1.2.1"]
 
 CONFIG_SCHEMA = MULTI_FACTOR_AUTH_MODULE_SCHEMA.extend({}, extra=vol.PREVENT_EXTRA)
 
@@ -181,7 +181,7 @@ class TotpSetupFlow(SetupFlow):
         # to fix typing complaint
         self._auth_module: TotpAuthModule = auth_module
         self._user = user
-        self._ota_secret: str | None = None
+        self._ota_secret: str = ""
         self._url = None  # type Optional[str]
         self._image = None  # type Optional[str]
 

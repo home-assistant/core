@@ -9,7 +9,9 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.components.sensor import (
     DEVICE_CLASSES_SCHEMA as SENSOR_DEVICE_CLASSES_SCHEMA,
     DOMAIN as SENSOR_DOMAIN,
+    STATE_CLASSES_SCHEMA,
 )
+from homeassistant.components.sensor.const import CONF_STATE_CLASS
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_DEVICE_CLASS,
@@ -66,6 +68,7 @@ SENSOR_SCHEMA = {
     vol.Optional(CONF_NAME, default=DEFAULT_SENSOR_NAME): cv.string,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     vol.Optional(CONF_DEVICE_CLASS): SENSOR_DEVICE_CLASSES_SCHEMA,
+    vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
     vol.Optional(CONF_JSON_ATTRS, default=[]): cv.ensure_list_csv,
     vol.Optional(CONF_JSON_ATTRS_PATH): cv.string,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,

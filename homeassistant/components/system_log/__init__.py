@@ -197,8 +197,7 @@ class LogErrorHandler(logging.Handler):
 
 async def async_setup(hass, config):
     """Set up the logger component."""
-    conf = config.get(DOMAIN)
-    if conf is None:
+    if (conf := config.get(DOMAIN)) is None:
         conf = CONFIG_SCHEMA({DOMAIN: {}})[DOMAIN]
 
     simple_queue = queue.SimpleQueue()

@@ -1,7 +1,6 @@
 """Support for WeMo humidifier."""
 import asyncio
 from datetime import timedelta
-import logging
 import math
 
 import voluptuous as vol
@@ -25,8 +24,6 @@ from .entity import WemoEntity
 
 SCAN_INTERVAL = timedelta(seconds=10)
 PARALLEL_UPDATES = 0
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_CURRENT_HUMIDITY = "current_humidity"
 ATTR_TARGET_HUMIDITY = "target_humidity"

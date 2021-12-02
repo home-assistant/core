@@ -1,85 +1,86 @@
 - id: '201807081853001'
   alias: 'AIS Asystent domowy Witamy'
-  initial_state: True
+  initial_state: true
   trigger:
-  - event: start
-    platform: homeassistant
+    - event: start
+      platform: homeassistant
   action:
-   - service: ais_shell_command.set_io_scheduler
-     data:
-       scheduler: noop
-   - service: ais_shell_command.start_sip_server
-   - delay: '6'
-   - service: ais_ai_service.publish_command_to_frame
-     data:
-       key: WifiConnectionInfo
-       val: true
-   - service: ais_ai_service.publish_command_to_frame
-     data:
-       key: getAudioStatus
-       val: true
-   - service: ais_ai_service.publish_command_to_frame
-     data:
-       key: getTtsVoice
-       val: true
-   - service: ais_shell_command.init_local_sdcard
-   - service: ais_shell_command.set_ais_secure_android_id_dom
-   - service: ais_updater.check_version
-     data:
-       autoUpdate: false
-       sayIt: false
-   - service: ais_bookmarks.get_favorites
-   - service: ais_bookmarks.get_bookmarks
-   - service: ais_cloud.get_radio_types
-   - service: ais_cloud.get_podcast_types
-   - service: ais_cloud.get_rss_news_category
-   - service: ais_cloud.get_backup_info
-   - service: ais_yt_service.search
-   - service: ais_audiobooks_service.get_authors
-   - service: ais_shell_command.disable_irda_remote
-   - service: ais_ai_service.check_local_ip
-   - service: ais_amplifier_service.get_audio_mono
-   - service: ais_shell_command.hdmi_control_disable
-   - service: ais_usb.stop_devices
-   - service: mqtt.publish
-     data:
-       payload: 1
-       topic: dom/cmnd/SetOption19
-   - service: mqtt.publish
-     data:
-       payload: 1
-       topic: cmnd/dom/SetOption19
-   - service: mqtt.publish
-     data:
-       payload: 0
-       topic: dom/cmnd/state
-   - service: mqtt.publish
-     data:
-       payload: 0
-       topic: cmnd/dom/state
-   - service: ais_ai_service.prepare_remote_menu
-   - service: ais_shell_command.change_remote_access
-   - service: ais_ai_service.check_night_mode
-     data:
-       timer: false
-   - service: ais_usb.check_ais_usb_settings
-   - service: ais_usb.lsusb
-   - service: ais_usb.mount_external_drives
-   - service: ais_usb.ls_flash_drives
-   - service: ais_drives_service.rclone_mount_drives
-   - service: ais_ai_service.welcome_home
-   - delay: '600'
-   - service: ais_shell_command.set_scaling_governor
-     data:
-       scaling: interactive
-   - delay: '6000'
-   - service: ais_updater.check_version
-     data:
-       autoUpdate: true
-       sayIt: false
+    - service: ais_shell_command.set_io_scheduler
+      data:
+        scheduler: noop
+    - service: ais_shell_command.start_sip_server
+    - service: ais_shell_command.start_screen_stream
+    - delay: '6'
+    - service: ais_ai_service.publish_command_to_frame
+      data:
+        key: WifiConnectionInfo
+        val: true
+    - service: ais_ai_service.publish_command_to_frame
+      data:
+        key: getAudioStatus
+        val: true
+    - service: ais_ai_service.publish_command_to_frame
+      data:
+        key: getTtsVoice
+        val: true
+    - service: ais_shell_command.init_local_sdcard
+    - service: ais_shell_command.set_ais_secure_android_id_dom
+    - service: ais_updater.check_version
+      data:
+        autoUpdate: false
+        sayIt: false
+    - service: ais_bookmarks.get_favorites
+    - service: ais_bookmarks.get_bookmarks
+    - service: ais_cloud.get_radio_types
+    - service: ais_cloud.get_podcast_types
+    - service: ais_cloud.get_rss_news_category
+    - service: ais_cloud.get_backup_info
+    - service: ais_yt_service.search
+    - service: ais_audiobooks_service.get_authors
+    - service: ais_shell_command.disable_irda_remote
+    - service: ais_ai_service.check_local_ip
+    - service: ais_amplifier_service.get_audio_mono
+    - service: ais_shell_command.hdmi_control_disable
+    - service: ais_usb.stop_devices
+    - service: mqtt.publish
+      data:
+        payload: 1
+        topic: dom/cmnd/SetOption19
+    - service: mqtt.publish
+      data:
+        payload: 1
+        topic: cmnd/dom/SetOption19
+    - service: mqtt.publish
+      data:
+        payload: 0
+        topic: dom/cmnd/state
+    - service: mqtt.publish
+      data:
+        payload: 0
+        topic: cmnd/dom/state
+    - service: ais_ai_service.prepare_remote_menu
+    - service: ais_shell_command.change_remote_access
+    - service: ais_ai_service.check_night_mode
+      data:
+        timer: false
+    - service: ais_usb.check_ais_usb_settings
+    - service: ais_usb.lsusb
+    - service: ais_usb.mount_external_drives
+    - service: ais_usb.ls_flash_drives
+    - service: ais_drives_service.rclone_mount_drives
+    - service: ais_ai_service.welcome_home
+    - delay: '600'
+    - service: ais_shell_command.set_scaling_governor
+      data:
+        scaling: interactive
+    - delay: '6000'
+    - service: ais_updater.check_version
+      data:
+        autoUpdate: true
+        sayIt: false
 - id: '201807081858006'
   alias: 'AIS Get RSS Help Items For Selected Topic'
-  initial_state: True
+  initial_state: true
   trigger:
     platform: state
     entity_id: input_select.ais_rss_help_topic
@@ -90,7 +91,7 @@
 
 - id: '201807081905011'
   alias: 'AIS Ask The Question'
-  initial_state: True
+  initial_state: true
   trigger:
     platform: state
     entity_id: input_text.ais_knowledge_query
@@ -104,7 +105,7 @@
 
 - id: '201807081905012'
   alias: 'AIS Search YouTube Tracks'
-  initial_state: True
+  initial_state: true
   trigger:
     platform: state
     entity_id: input_text.ais_music_query
@@ -115,7 +116,7 @@
 
 - id: '2018070819050123'
   alias: 'AIS Search Spotify Tracks'
-  initial_state: True
+  initial_state: true
   trigger:
     platform: state
     entity_id: input_text.ais_spotify_query
@@ -126,7 +127,7 @@
 
 - id: '201807081916015'
   alias: 'AIS Get RSS News Channels'
-  initial_state: True
+  initial_state: true
   trigger:
     platform: state
     entity_id: input_select.rss_news_category
@@ -137,7 +138,7 @@
 
 - id: '201807081916016'
   alias: 'AIS Get RSS News Items'
-  initial_state: True
+  initial_state: true
   trigger:
     platform: state
     entity_id: input_select.rss_news_channel
@@ -148,7 +149,7 @@
 
 - id: '201807081919019'
   alias: 'AIS Get Podcast Names'
-  initial_state: True
+  initial_state: true
   trigger:
     platform: state
     entity_id: input_select.podcast_type
@@ -159,7 +160,7 @@
 
 - id: '201807081923022'
   alias: 'AIS Get Radio Names'
-  initial_state: True
+  initial_state: true
   trigger:
     platform: state
     entity_id: input_select.radio_type
@@ -173,7 +174,7 @@
 
 - id: '201807081923025'
   alias: 'AIS Change Player Speed'
-  initial_state: True
+  initial_state: true
   trigger:
     platform: state
     entity_id: input_number.media_player_speed
@@ -185,7 +186,7 @@
 
 - id: '201808231617123'
   alias: 'AIS Select Device To Add'
-  initial_state: True
+  initial_state: true
   trigger:
     platform: state
     entity_id: input_select.ais_iot_devices_in_network
@@ -199,7 +200,7 @@
 
 - id: '201809171610123'
   alias: 'AIS Select Bookmark To Play'
-  initial_state: True
+  initial_state: true
   trigger:
     platform: state
     entity_id: input_select.ais_bookmark_last_played
@@ -213,7 +214,7 @@
 
 - id: '201809291519123'
   alias: 'AIS Flush logs'
-  initial_state: True
+  initial_state: true
   trigger:
     platform: time
     at: '05:15:00'
@@ -222,7 +223,7 @@
 
 - id: '201902030742123'
   alias: 'AIS Change remote web access'
-  initial_state: True
+  initial_state: true
   trigger:
     platform: state
     entity_id: input_boolean.ais_remote_access
@@ -231,7 +232,7 @@
 
 - id: '201994281100123'
   alias: 'AIS Discovery info to dom devices'
-  initial_state: True
+  initial_state: true
   trigger:
     platform: time_pattern
     minutes: '/59'
@@ -247,7 +248,7 @@
 
 - id: '201905201824123'
   alias: 'AIS Check WiFi Connection'
-  initial_state: True
+  initial_state: true
   trigger:
     platform: time_pattern
     minutes: '/15'
@@ -259,7 +260,7 @@
 
 - id: '201906171602001'
   alias: 'AIS Get Books'
-  initial_state: True
+  initial_state: true
   trigger:
     platform: state
     entity_id: input_select.book_autor
@@ -270,7 +271,7 @@
 
 - id: '201906251757001'
   alias: 'AIS Change Equalizer Mode'
-  initial_state: True
+  initial_state: true
   trigger:
     platform: state
     entity_id: input_select.media_player_sound_mode
@@ -280,10 +281,9 @@
         entity_id: "media_player.wbudowany_glosnik"
         sound_mode: "{{ states('input_select.media_player_sound_mode') }}"
 
-
 - id: '20190810123'
   alias: 'AIS Change audio to mono'
-  initial_state: True
+  initial_state: true
   trigger:
     platform: state
     entity_id: input_boolean.ais_audio_mono
@@ -292,7 +292,7 @@
 
 - id: '201911121415123'
   alias: 'AIS set WiFi config for devices'
-  initial_state: True
+  initial_state: true
   trigger:
     platform: time
     at: '18:35:00'
@@ -304,7 +304,7 @@
 
 - id: '201911151800123'
   alias: 'AIS IFTTT info'
-  initial_state: True
+  initial_state: true
   trigger:
     platform: event
     event_type: ifttt_webhook_received
@@ -318,7 +318,7 @@
 
 - id: '20210630144002'
   alias: 'AIS Change Audio Routing'
-  initial_state: True
+  initial_state: true
   trigger:
     platform: state
     entity_id: input_select.ais_audio_routing

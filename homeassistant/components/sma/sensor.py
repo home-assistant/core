@@ -200,18 +200,18 @@ class SMAsensor(CoordinatorEntity, SensorEntity):
         )
 
     @property
-    def device_info(self) -> DeviceInfo:
+    def device_info(self) -> DeviceInfo | None:
         """Return the device information."""
         if not self._device_info:
             return None
 
-        return {
-            "identifiers": {(DOMAIN, self._config_entry_unique_id)},
-            "name": self._device_info["name"],
-            "manufacturer": self._device_info["manufacturer"],
-            "model": self._device_info["type"],
-            "sw_version": self._device_info["sw_version"],
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._config_entry_unique_id)},
+            manufacturer=self._device_info["manufacturer"],
+            model=self._device_info["type"],
+            name=self._device_info["name"],
+            sw_version=self._device_info["sw_version"],
+        )
 
     @property
     def entity_registry_enabled_default(self) -> bool:

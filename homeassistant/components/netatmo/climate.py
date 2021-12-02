@@ -23,6 +23,7 @@ from homeassistant.components.climate.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
+    ATTR_SUGGESTED_AREA,
     ATTR_TEMPERATURE,
     PRECISION_HALVES,
     STATE_OFF,
@@ -52,6 +53,7 @@ from .const import (
     MANUFACTURER,
     SERVICE_SET_SCHEDULE,
     SIGNAL_NAME,
+    TYPE_ENERGY,
 )
 from .data_handler import (
     HOMEDATA_DATA_CLASS_NAME,
@@ -114,8 +116,6 @@ DEFAULT_MAX_TEMP = 30
 
 NA_THERM = "NATherm1"
 NA_VALVE = "NRV"
-
-SUGGESTED_AREA = "suggested_area"
 
 
 async def async_setup_entry(
@@ -209,6 +209,8 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
                 self._model = NA_THERM
                 break
 
+        self._netatmo_type = TYPE_ENERGY
+
         self._device_name = self._data.rooms[home_id][room_id]["name"]
         self._attr_name = f"{MANUFACTURER} {self._device_name}"
         self._current_temperature: float | None = None
@@ -230,6 +232,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         if self._model == NA_THERM:
             self._operation_list.append(HVAC_MODE_OFF)
 
+        self._attr_max_temp = DEFAULT_MAX_TEMP
         self._attr_unique_id = f"{self._id}-{self._model}"
 
     async def async_added_to_hass(self) -> None:
@@ -242,7 +245,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             EVENT_TYPE_CANCEL_SET_POINT,
             EVENT_TYPE_SCHEDULE,
         ):
-            self._listeners.append(
+            self.data_handler.config_entry.async_on_unload(
                 async_dispatcher_connect(
                     self.hass,
                     f"signal-{DOMAIN}-webhook-{event_type}",
@@ -441,11 +444,10 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature for 2 hours."""
-        temp = kwargs.get(ATTR_TEMPERATURE)
-        if temp is None:
+        if (temp := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
         await self._home_status.async_set_room_thermpoint(
-            self._id, STATE_NETATMO_MANUAL, temp
+            self._id, STATE_NETATMO_MANUAL, min(temp, DEFAULT_MAX_TEMP)
         )
 
         self.async_write_ha_state()
@@ -484,7 +486,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             return
 
         self._room_status = self._home_status.rooms.get(self._id)
-        self._room_data = self._data.rooms.get(self._home_id, {}).get(self._id)
+        self._room_data = self._data.rooms.get(self._home_id, {}).get(self._id, {})
 
         if not self._room_status or not self._room_data:
             if self._connected:
@@ -614,5 +616,5 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
     def device_info(self) -> DeviceInfo:
         """Return the device info for the thermostat."""
         device_info: DeviceInfo = super().device_info
-        device_info["suggested_area"] = self._room_data["name"]
+        device_info[ATTR_SUGGESTED_AREA] = self._room_data["name"]
         return device_info

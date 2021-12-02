@@ -103,8 +103,7 @@ async def websocket_delete(hass, connection, msg):
 @websocket_api.async_response
 async def websocket_change_password(hass, connection, msg):
     """Change current user password."""
-    user = connection.user
-    if user is None:
+    if (user := connection.user) is None:
         connection.send_error(msg["id"], "user_not_found", "User not found")
         return
 

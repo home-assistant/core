@@ -1,5 +1,6 @@
 """Support for haveibeenpwned (email breaches) sensor."""
 from datetime import timedelta
+from http import HTTPStatus
 import logging
 
 from aiohttp.hdrs import USER_AGENT
@@ -7,13 +8,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    CONF_API_KEY,
-    CONF_EMAIL,
-    HTTP_NOT_FOUND,
-    HTTP_OK,
-)
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, CONF_EMAIL
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_point_in_time
 from homeassistant.util import Throttle
@@ -163,7 +158,7 @@ class HaveIBeenPwnedData:
             _LOGGER.error("Failed fetching data for %s", self._email)
             return
 
-        if req.status_code == HTTP_OK:
+        if req.status_code == HTTPStatus.OK:
             self.data[self._email] = sorted(
                 req.json(), key=lambda k: k["AddedDate"], reverse=True
             )
@@ -172,7 +167,7 @@ class HaveIBeenPwnedData:
             # the forced updates try this current email again
             self.set_next_email()
 
-        elif req.status_code == HTTP_NOT_FOUND:
+        elif req.status_code == HTTPStatus.NOT_FOUND:
             self.data[self._email] = []
 
             # only goto next email if we had data so that

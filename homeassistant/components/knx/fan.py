@@ -8,7 +8,7 @@ from xknx import XKNX
 from xknx.devices import Fan as XknxFan
 
 from homeassistant.components.fan import SUPPORT_OSCILLATE, SUPPORT_SET_SPEED, FanEntity
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -65,6 +65,7 @@ class KNXFan(KnxEntity, FanEntity):
         )
         # FanSpeedMode.STEP if max_step is set
         self._step_range: tuple[int, int] | None = (1, max_step) if max_step else None
+        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
 
         self._attr_unique_id = str(self._device.speed.group_address)
 

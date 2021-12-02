@@ -3,8 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
-from collections.abc import Mapping
-from typing import Any, NamedTuple, cast
+from typing import NamedTuple, cast
 
 from async_upnp_client import UpnpEventHandler, UpnpFactory, UpnpRequester
 from async_upnp_client.aiohttp import AiohttpNotifyServer, AiohttpSessionRequester
@@ -33,7 +32,6 @@ class DlnaDmrData:
     event_notifiers: dict[EventListenAddr, AiohttpNotifyServer]
     event_notifier_refs: defaultdict[EventListenAddr, int]
     stop_listener_remove: CALLBACK_TYPE | None = None
-    unmigrated_config: dict[str, Mapping[str, Any]]
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize global data."""
@@ -43,11 +41,9 @@ class DlnaDmrData:
         self.upnp_factory = UpnpFactory(self.requester, non_strict=True)
         self.event_notifiers = {}
         self.event_notifier_refs = defaultdict(int)
-        self.unmigrated_config = {}
 
     async def async_cleanup_event_notifiers(self, event: Event) -> None:
         """Clean up resources when Home Assistant is stopped."""
-        del event  # unused
         LOGGER.debug("Cleaning resources in DlnaDmrData")
         async with self.lock:
             tasks = (server.stop_server() for server in self.event_notifiers.values())

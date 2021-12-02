@@ -341,7 +341,7 @@ async def test_websocket_get_bad_condition_capabilities(
         {
             "id": 1,
             "type": "device_automation/condition/capabilities",
-            "condition": {"domain": "beer"},
+            "condition": {"condition": "device", "domain": "beer", "device_id": "1234"},
         }
     )
     msg = await client.receive_json()
@@ -364,7 +364,11 @@ async def test_websocket_get_no_condition_capabilities(
         {
             "id": 1,
             "type": "device_automation/condition/capabilities",
-            "condition": {"domain": "deconz"},
+            "condition": {
+                "condition": "device",
+                "domain": "deconz",
+                "device_id": "abcd",
+            },
         }
     )
     msg = await client.receive_json()
@@ -531,7 +535,7 @@ async def test_websocket_get_bad_trigger_capabilities(
         {
             "id": 1,
             "type": "device_automation/trigger/capabilities",
-            "trigger": {"domain": "beer"},
+            "trigger": {"platform": "device", "domain": "beer", "device_id": "abcd"},
         }
     )
     msg = await client.receive_json()
@@ -554,7 +558,7 @@ async def test_websocket_get_no_trigger_capabilities(
         {
             "id": 1,
             "type": "device_automation/trigger/capabilities",
-            "trigger": {"domain": "deconz"},
+            "trigger": {"platform": "device", "domain": "deconz", "device_id": "abcd"},
         }
     )
     msg = await client.receive_json()

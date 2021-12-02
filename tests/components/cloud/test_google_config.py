@@ -1,4 +1,5 @@
 """Test the Cloud Google Config."""
+from http import HTTPStatus
 from unittest.mock import Mock, patch
 
 import pytest
@@ -6,12 +7,12 @@ import pytest
 from homeassistant.components.cloud import GACTIONS_SCHEMA
 from homeassistant.components.cloud.google_config import CloudGoogleConfig
 from homeassistant.components.google_assistant import helpers as ga_helpers
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, HTTP_NOT_FOUND
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, State
 from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
 from homeassistant.util.dt import utcnow
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_time_changed, mock_registry
 
 
 @pytest.fixture
@@ -71,9 +72,11 @@ async def test_sync_entities(mock_conf, hass, cloud_prefs):
 
     with patch(
         "hass_nabucasa.cloud_api.async_google_actions_request_sync",
-        return_value=Mock(status=HTTP_NOT_FOUND),
+        return_value=Mock(status=HTTPStatus.NOT_FOUND),
     ) as mock_request_sync:
-        assert await mock_conf.async_sync_entities("mock-user-id") == HTTP_NOT_FOUND
+        assert (
+            await mock_conf.async_sync_entities("mock-user-id") == HTTPStatus.NOT_FOUND
+        )
         assert len(mock_conf._store.agent_user_ids) == 0
         assert len(mock_request_sync.mock_calls) == 1
 
@@ -215,8 +218,25 @@ async def test_sync_google_on_home_assistant_start(hass, mock_cloud_login, cloud
         assert len(mock_sync.mock_calls) == 1
 
 
-async def test_google_config_expose_entity_prefs(mock_conf, cloud_prefs):
+async def test_google_config_expose_entity_prefs(hass, mock_conf, cloud_prefs):
     """Test Google config should expose using prefs."""
+    entity_registry = mock_registry(hass)
+
+    entity_entry1 = entity_registry.async_get_or_create(
+        "switch",
+        "test",
+        "switch_config_id",
+        suggested_object_id="config_switch",
+        entity_category="config",
+    )
+    entity_entry2 = entity_registry.async_get_or_create(
+        "switch",
+        "test",
+        "switch_diagnostic_id",
+        suggested_object_id="diagnostic_switch",
+        entity_category="diagnostic",
+    )
+
     entity_conf = {"should_expose": False}
     await cloud_prefs.async_update(
         google_entity_configs={"light.kitchen": entity_conf},
@@ -224,13 +244,24 @@ async def test_google_config_expose_entity_prefs(mock_conf, cloud_prefs):
     )
 
     state = State("light.kitchen", "on")
+    state_config = State(entity_entry1.entity_id, "on")
+    state_diagnostic = State(entity_entry2.entity_id, "on")
 
     assert not mock_conf.should_expose(state)
+    assert not mock_conf.should_expose(state_config)
+    assert not mock_conf.should_expose(state_diagnostic)
+
     entity_conf["should_expose"] = True
     assert mock_conf.should_expose(state)
+    # config and diagnostic entities should not be exposed
+    assert not mock_conf.should_expose(state_config)
+    assert not mock_conf.should_expose(state_diagnostic)
 
     entity_conf["should_expose"] = None
     assert mock_conf.should_expose(state)
+    # config and diagnostic entities should not be exposed
+    assert not mock_conf.should_expose(state_config)
+    assert not mock_conf.should_expose(state_diagnostic)
 
     await cloud_prefs.async_update(
         google_default_expose=["sensor"],

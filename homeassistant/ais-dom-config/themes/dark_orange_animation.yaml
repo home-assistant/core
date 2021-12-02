@@ -1,0 +1,72 @@
+ais-animated-icons:
+  mdc-text-field-fill-color: "#c2c2c2"
+  mdc-select-fill-color: "#c2c2c2"
+  primary-color: "#FF9800"
+  accent-color: "#c66900"
+  light-primary-color: "#ffc947"
+  dark-primary-color: "#c66900"
+  text-primary-color: "#ffffff"
+  primary-background-color: "#4c4c4c"
+  sidebar-text_-_background: "#727272"
+  paper-card-background-color: "#323232"
+  paper-card-header-color: "var(--text-primary-color)"
+  secondary-background-color: "var(--primary-background-color)"
+  primary-text-color: "var(--text-primary-color)"
+  secondary-text-color: "var(--primary-color)"
+  paper-listbox-background-color: "var(--sidebar-text_-_background)"
+  paper-toggle-button-checked-ink-color: "var(--dark-primary-color)"
+  paper-toggle-button-checked-button-color: "var(--dark-primary-color)"
+  paper-toggle-button-checked-bar-color: "var(--dark-primary-color)"
+  paper-slider-knob-color: "var(--primary-color)"
+  paper-slider-knob-start-color: "var(--primary-color)"
+  paper-slider-pin-color: "var(--primary-color)"
+  paper-slider-active-color: "var(--primary-color)"
+  paper-slider-secondary-color: "var(--light-primary-color)"
+  paper-slider-container-color: "var(--sidebar-text_-_background)"
+  paper-progress-secondary-color: "var(--sidebar-text_-_background)"
+  paper-item-selected_-_background-color: "var(--primary-color)"
+  paper-item-icon_-_color: "var(--text-primary-color)"
+  paper-item-icon-color: "var(--sidebar-text_-_background)"
+  paper-item-icon-active-color: "var(--primary-color)"
+  paper-grey-50: "var(--sidebar-text_-_background)"
+  paper-grey-200: "var(--primary-background-color)"
+  label-badge-background-color: "var(--sidebar-text_-_background)"
+  label-badge-text-color: "var(--text-primary-color)"
+  label-badge-red: "#f44336"
+  label-badge-green: "#0da035"
+  label-badge-blue: "#ff9800"
+  label-badge-yellow: "#ffc107"
+  label-badge-gray: "#5f6267"
+  table-row-background-color: "var(--paper-card-background-color)"
+  table-row-alternative-background-color: "var(--sidebar-text_-_background)"
+  ha-card-border-radius: "0px"
+  more-info-header-background: "var(--paper-card-background-color)"
+  card-background-color: "#323232"
+  # zigbee2mqtt
+  zigbee2mqtt-networkmap-node-color: "rgba(198, 105, 0, .7)"
+  zigbee2mqtt-networkmap-node-fill-color: "#FF9800"
+  zigbee2mqtt-networkmap-node-pinned-color: "rgba(190, 56, 93, .6)"
+  zigbee2mqtt-networkmap-link-color: "rgba(198, 105, 0, .5)"
+  zigbee2mqtt-networkmap-hover-color: "#be385d"
+  zigbee2mqtt-networkmap-link-selected-color: "rgba(202, 164, 85, .6)"
+  zigbee2mqtt-networkmap-label-color: "#FF9800"
+  zigbee2mqtt-networkmap-arrow-color: "rgba(198, 105, 0, 0.7)"
+  zigbee2mqtt-networkmap-node-coordinator-color: "rgba(224, 78, 93, .7)"
+  zigbee2mqtt-networkmap-node-router-color: "rgba(0, 165, 255, .7)"
+
+  # Animated icons
+  weather-icon-clear-night: url("/static/ais_dom/themes_pack/animated-icons/clear-night.svg")
+  weather-icon-cloudy: url("/static/ais_dom/themes_pack/animated-icons/cloudy.svg")
+  weather-icon-fog: url("/static/ais_dom/themes_pack/animated-icons/fog.svg")
+  weather-icon-lightning: url("/static/ais_dom/themes_pack/animated-icons/lightning.svg")
+  weather-icon-lightning-rainy: url("/static/ais_dom/themes_pack/animated-icons/lightning-rainy.svg")
+  weather-icon-partlycloudy: url("/static/ais_dom/themes_pack/animated-icons/partlycloudy.svg")
+  weather-icon-pouring: url("/static/ais_dom/themes_pack/animated-icons/pouring.svg")
+  weather-icon-rainy: url("/static/ais_dom/themes_pack/animated-icons/rainy.svg")
+  weather-icon-hail: url("/static/ais_dom/themes_pack/animated-icons/hail.svg")
+  weather-icon-snowy: url("/static/ais_dom/themes_pack/animated-icons/snowy.svg")
+  weather-icon-snowy-rainy: url("/static/ais_dom/themes_pack/animated-icons/snowy-rainy.svg")
+  weather-icon-sunny: url("/static/ais_dom/themes_pack/animated-icons/sunny.svg")
+  weather-icon-windy: url("/static/ais_dom/themes_pack/animated-icons/windy.svg")
+  weather-icon-windy-variant: url("/static/ais_dom/themes_pack/animated-icons/windy-variant.svg")
+  weather-icon-exceptional: url("/static/ais_dom/themes_pack/animated-icons/exceptional.svg")

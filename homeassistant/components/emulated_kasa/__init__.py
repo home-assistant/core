@@ -51,8 +51,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the emulated_kasa component."""
-    conf = config.get(DOMAIN)
-    if not conf:
+    if not (conf := config.get(DOMAIN)):
         return True
     entity_configs = conf[CONF_ENTITIES]
 
@@ -83,13 +82,11 @@ async def validate_configs(hass, entity_configs):
     """Validate that entities exist and ensure templates are ready to use."""
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
     for entity_id, entity_config in entity_configs.items():
-        state = hass.states.get(entity_id)
-        if state is None:
+        if (state := hass.states.get(entity_id)) is None:
             _LOGGER.debug("Entity not found: %s", entity_id)
             continue
 
-        entity = entity_registry.async_get(entity_id)
-        if entity:
+        if entity := entity_registry.async_get(entity_id):
             entity_config[CONF_UNIQUE_ID] = get_system_unique_id(entity)
         else:
             entity_config[CONF_UNIQUE_ID] = entity_id
@@ -122,8 +119,7 @@ def get_system_unique_id(entity: RegistryEntry):
 def get_plug_devices(hass, entity_configs):
     """Produce list of plug devices from config entities."""
     for entity_id, entity_config in entity_configs.items():
-        state = hass.states.get(entity_id)
-        if state is None:
+        if (state := hass.states.get(entity_id)) is None:
             continue
         name = entity_config.get(CONF_NAME, state.name)
 

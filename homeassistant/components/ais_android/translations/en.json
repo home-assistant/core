@@ -1,0 +1,57 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "invalid_unique_id": "Impossible to determine a valid unique id for the device"
+        },
+        "error": {
+            "adbkey_not_file": "ADB key file not found",
+            "cannot_connect": "Failed to connect",
+            "invalid_host": "Invalid hostname or IP address",
+            "key_and_server": "Only provide ADB Key or ADB Server",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "adb_server_ip": "IP address of the ADB server (leave empty to not use)",
+                    "adb_server_port": "Port of the ADB server",
+                    "adbkey": "Path to your ADB key file (leave empty to auto generate)",
+                    "device_class": "The type of device",
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "description": "Set required parameters to connect to your Android TV device",
+                "title": "Android TV"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_det_rules": "Invalid state detection rules"
+        },
+        "step": {
+            "apps": {
+                "data": {
+                    "app_delete": "Check to delete this application",
+                    "app_id": "Application ID",
+                    "app_name": "Application Name"
+                },
+                "description": "Configure application id {app_id}",
+                "title": "Configure Android TV Apps"
+            },
+            "init": {
+                "data": {
+                    "apps": "Configure applications list",
+                    "exclude_unnamed_apps": "Exclude app with unknown name",
+                    "get_sources": "Whether or not to retrieve the running apps as the list of sources",
+                    "screencap": "Determines if album art should be pulled from what is shown on screen",
+                    "state_detection_rules": "Dictionary of state detection rules (see documentation)",
+                    "turn_off_command": "ADB shell command to override default turn_off command",
+                    "turn_on_command": "ADB shell command to override default turn_on command"
+                },
+                "title": "Android TV Options"
+            }
+        }
+    }
+}

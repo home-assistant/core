@@ -10,6 +10,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 
 from .const import DOMAIN as KONNECTED_DOMAIN
 
@@ -66,11 +67,11 @@ class KonnectedBinarySensor(BinarySensorEntity):
         return self._device_class
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        return {
-            "identifiers": {(KONNECTED_DOMAIN, self._device_id)},
-        }
+        return DeviceInfo(
+            identifiers={(KONNECTED_DOMAIN, self._device_id)},
+        )
 
     async def async_added_to_hass(self):
         """Store entity_id and register state change callback."""

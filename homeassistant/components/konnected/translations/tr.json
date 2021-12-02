@@ -9,6 +9,12 @@
             "cannot_connect": "Ba\u011flanma hatas\u0131"
         },
         "step": {
+            "confirm": {
+                "description": "Model: {model}\nID: {id}\nSunucu: {host}\nPort: {port}\n\nIO ve panel davran\u0131\u015f\u0131n\u0131 Ba\u011fl\u0131 Alarm Paneli ayarlar\u0131nda yap\u0131land\u0131rabilirsiniz."
+            },
+            "import_confirm": {
+                "description": "configuration.yaml'de {id} kimli\u011fine sahip Ba\u011fl\u0131 bir Alarm Paneli ke\u015ffedildi. Bu ak\u0131\u015f, onu bir yap\u0131land\u0131rma giri\u015fine aktarman\u0131za olanak tan\u0131r."
+            },
             "user": {
                 "data": {
                     "host": "\u0130p Adresi",

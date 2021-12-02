@@ -4,7 +4,7 @@ import logging
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .api import HomeConnectDevice
 from .const import DOMAIN, SIGNAL_UPDATE_ENTITIES
@@ -51,14 +51,14 @@ class HomeConnectEntity(Entity):
         return f"{self.device.appliance.haId}-{self.desc}"
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return info about the device."""
-        return {
-            "identifiers": {(DOMAIN, self.device.appliance.haId)},
-            "name": self.device.appliance.name,
-            "manufacturer": self.device.appliance.brand,
-            "model": self.device.appliance.vib,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.device.appliance.haId)},
+            manufacturer=self.device.appliance.brand,
+            model=self.device.appliance.vib,
+            name=self.device.appliance.name,
+        )
 
     @callback
     def async_entity_update(self):

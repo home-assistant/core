@@ -17,7 +17,10 @@ import yarl
 
 from homeassistant import config as conf_util, config_entries, core, loader
 from homeassistant.components import http
-from homeassistant.const import REQUIRED_NEXT_PYTHON_DATE, REQUIRED_NEXT_PYTHON_VER
+from homeassistant.const import (
+    REQUIRED_NEXT_PYTHON_HA_RELEASE,
+    REQUIRED_NEXT_PYTHON_VER,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import area_registry, device_registry, entity_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -241,16 +244,20 @@ async def async_from_config_dict(
     ais_global.set_ais_android_id_dom_file_path(
         hass.config.config_dir + "/.dom/.ais_secure_android_id_dom"
     )
-    ais_global.say_direct(
+    await ais_global.async_say_direct(
+        hass,
         "Asystent domowy, inicjalizacja: %.2f sekundy. Trwa uruchamianie konfiguracji. Poczekaj..."
-        % (stop - start)
+        % (stop - start),
     )
 
-    if REQUIRED_NEXT_PYTHON_DATE and sys.version_info[:3] < REQUIRED_NEXT_PYTHON_VER:
+    if (
+        REQUIRED_NEXT_PYTHON_HA_RELEASE
+        and sys.version_info[:3] < REQUIRED_NEXT_PYTHON_VER
+    ):
         msg = (
             "Support for the running Python version "
             f"{'.'.join(str(x) for x in sys.version_info[:3])} is deprecated and will "
-            f"be removed in the first release after {REQUIRED_NEXT_PYTHON_DATE}. "
+            f"be removed in Home Assistant {REQUIRED_NEXT_PYTHON_HA_RELEASE}. "
             "Please upgrade Python to "
             f"{'.'.join(str(x) for x in REQUIRED_NEXT_PYTHON_VER)} or "
             "higher."

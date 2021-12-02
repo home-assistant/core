@@ -1,5 +1,6 @@
 """Test Google Assistant helpers."""
 from datetime import timedelta
+from http import HTTPStatus
 from unittest.mock import Mock, call, patch
 
 import pytest
@@ -112,7 +113,7 @@ async def test_config_local_sdk(hass, hass_client):
             "requestId": "mock-req-id",
         },
     )
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     result = await resp.json()
     assert result["requestId"] == "mock-req-id"
 
@@ -126,7 +127,7 @@ async def test_config_local_sdk(hass, hass_client):
 
     # Webhook is no longer active
     resp = await client.post("/api/webhook/mock-webhook-id")
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert await resp.read() == b""
 
 
@@ -148,7 +149,7 @@ async def test_config_local_sdk_if_disabled(hass, hass_client):
     resp = await client.post(
         "/api/webhook/mock-webhook-id", json={"requestId": "mock-req-id"}
     )
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     result = await resp.json()
     assert result == {
         "payload": {"errorCode": "deviceTurnedOff"},
@@ -159,7 +160,7 @@ async def test_config_local_sdk_if_disabled(hass, hass_client):
 
     # Webhook is no longer active
     resp = await client.post("/api/webhook/mock-webhook-id")
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert await resp.read() == b""
 
 

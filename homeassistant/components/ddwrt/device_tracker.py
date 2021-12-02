@@ -1,4 +1,5 @@
 """Support for DD-WRT routers."""
+from http import HTTPStatus
 import logging
 import re
 
@@ -16,8 +17,6 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
-    HTTP_OK,
-    HTTP_UNAUTHORIZED,
 )
 import homeassistant.helpers.config_validation as cv
 
@@ -88,9 +87,7 @@ class DdWrtDeviceScanner(DeviceScanner):
             if not data:
                 return None
 
-            dhcp_leases = data.get("dhcp_leases")
-
-            if not dhcp_leases:
+            if not (dhcp_leases := data.get("dhcp_leases")):
                 return None
 
             # Remove leading and trailing quotes and spaces
@@ -154,9 +151,9 @@ class DdWrtDeviceScanner(DeviceScanner):
         except requests.exceptions.Timeout:
             _LOGGER.exception("Connection to the router timed out")
             return
-        if response.status_code == HTTP_OK:
+        if response.status_code == HTTPStatus.OK:
             return _parse_ddwrt_response(response.text)
-        if response.status_code == HTTP_UNAUTHORIZED:
+        if response.status_code == HTTPStatus.UNAUTHORIZED:
             # Authentication error
             _LOGGER.exception(
                 "Failed to authenticate, check your username and password"

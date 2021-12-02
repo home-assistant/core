@@ -72,9 +72,7 @@ class KaiterraApiData:
 
                 aqi, main_pollutant = None, None
                 for sensor_name, sensor in device.items():
-                    points = sensor.get("points")
-
-                    if not points:
+                    if not (points := sensor.get("points")):
                         continue
 
                     point = points[0]

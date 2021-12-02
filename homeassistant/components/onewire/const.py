@@ -20,6 +20,10 @@ DOMAIN = "onewire"
 DEVICE_KEYS_0_7 = range(8)
 DEVICE_KEYS_A_B = ("A", "B")
 
+MANUFACTURER_MAXIM = "Maxim Integrated"
+MANUFACTURER_HOBBYBOARDS = "Hobby Boards"
+MANUFACTURER_EDS = "Embedded Data Systems"
+
 PRESSURE_CBAR = "cbar"
 
 READ_MODE_BOOL = "bool"

@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass
 import logging
+from typing import Any, List, cast
 
 import aiotractive
 
@@ -15,7 +16,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -92,7 +93,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
-    async def cancel_listen_task(_):
+    async def cancel_listen_task(_: Event) -> None:
         await tractive.unsubscribe()
 
     entry.async_on_unload(
@@ -102,13 +103,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def _generate_trackables(client, trackable):
+async def _generate_trackables(
+    client: aiotractive.Tractive,
+    trackable: aiotractive.trackable_object.TrackableObject,
+) -> Trackables | None:
     """Generate trackables."""
     trackable = await trackable.details()
 
     # Check that the pet has tracker linked.
     if not trackable["device_id"]:
-        return
+        return None
 
     tracker = client.tracker(trackable["device_id"])
 
@@ -132,37 +136,44 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class TractiveClient:
     """A Tractive client."""
 
-    def __init__(self, hass, client, user_id):
+    def __init__(
+        self, hass: HomeAssistant, client: aiotractive.Tractive, user_id: str
+    ) -> None:
         """Initialize the client."""
         self._hass = hass
         self._client = client
         self._user_id = user_id
-        self._listen_task = None
+        self._listen_task: asyncio.Task | None = None
 
     @property
-    def user_id(self):
+    def user_id(self) -> str:
         """Return user id."""
         return self._user_id
 
-    async def trackable_objects(self):
+    async def trackable_objects(
+        self,
+    ) -> list[aiotractive.trackable_object.TrackableObject]:
         """Get list of trackable objects."""
-        return await self._client.trackable_objects()
+        return cast(
+            List[aiotractive.trackable_object.TrackableObject],
+            await self._client.trackable_objects(),
+        )
 
-    def tracker(self, tracker_id):
+    def tracker(self, tracker_id: str) -> aiotractive.tracker.Tracker:
         """Get tracker by id."""
         return self._client.tracker(tracker_id)
 
-    def subscribe(self):
+    def subscribe(self) -> None:
         """Start event listener coroutine."""
         self._listen_task = asyncio.create_task(self._listen())
 
-    async def unsubscribe(self):
+    async def unsubscribe(self) -> None:
         """Stop event listener coroutine."""
         if self._listen_task:
             self._listen_task.cancel()
         await self._client.close()
 
-    async def _listen(self):
+    async def _listen(self) -> None:
         server_was_unavailable = False
         while True:
             try:
@@ -191,7 +202,7 @@ class TractiveClient:
                 server_was_unavailable = True
                 continue
 
-    def _send_hardware_update(self, event):
+    def _send_hardware_update(self, event: dict[str, Any]) -> None:
         # Sometimes hardware event doesn't contain complete data.
         payload = {
             ATTR_BATTERY_LEVEL: event["hardware"]["battery_level"],
@@ -204,7 +215,7 @@ class TractiveClient:
             TRACKER_HARDWARE_STATUS_UPDATED, event["tracker_id"], payload
         )
 
-    def _send_activity_update(self, event):
+    def _send_activity_update(self, event: dict[str, Any]) -> None:
         payload = {
             ATTR_MINUTES_ACTIVE: event["progress"]["achieved_minutes"],
             ATTR_DAILY_GOAL: event["progress"]["goal_minutes"],
@@ -213,7 +224,7 @@ class TractiveClient:
             TRACKER_ACTIVITY_STATUS_UPDATED, event["pet_id"], payload
         )
 
-    def _send_position_update(self, event):
+    def _send_position_update(self, event: dict[str, Any]) -> None:
         payload = {
             "latitude": event["position"]["latlong"][0],
             "longitude": event["position"]["latlong"][1],
@@ -223,7 +234,9 @@ class TractiveClient:
             TRACKER_POSITION_UPDATED, event["tracker_id"], payload
         )
 
-    def _dispatch_tracker_event(self, event_name, tracker_id, payload):
+    def _dispatch_tracker_event(
+        self, event_name: str, tracker_id: str, payload: dict[str, Any]
+    ) -> None:
         async_dispatcher_send(
             self._hass,
             f"{event_name}-{tracker_id}",

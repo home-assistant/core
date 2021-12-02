@@ -283,9 +283,6 @@ BAD_JSON_SUFFIX = "** and it ends here ^^"
 @pytest.fixture
 def setup_comp(hass, mock_device_tracker_conf, mqtt_mock):
     """Initialize components."""
-    assert hass.loop.run_until_complete(
-        async_setup_component(hass, "persistent_notification", {})
-    )
     hass.loop.run_until_complete(async_setup_component(hass, "device_tracker", {}))
 
     hass.states.async_set("zone.inner", "zoning", INNER_ZONE)

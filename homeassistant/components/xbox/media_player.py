@@ -127,8 +127,7 @@ class XboxMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     @property
     def media_title(self):
         """Title of current playing media."""
-        app_details = self.data.app_details
-        if not app_details:
+        if not (app_details := self.data.app_details):
             return None
         return (
             app_details.localized_properties[0].product_title
@@ -138,8 +137,7 @@ class XboxMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     @property
     def media_image_url(self):
         """Image url of current playing media."""
-        app_details = self.data.app_details
-        if not app_details:
+        if not (app_details := self.data.app_details):
             return None
         image = _find_media_image(app_details.localized_properties[0].images)
 

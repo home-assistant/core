@@ -1,9 +1,11 @@
 """Support for Traccar."""
+from http import HTTPStatus
+
 from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
-from homeassistant.const import ATTR_ID, CONF_WEBHOOK_ID, HTTP_UNPROCESSABLE_ENTITY
+from homeassistant.const import ATTR_ID, CONF_WEBHOOK_ID
 from homeassistant.helpers import config_entry_flow
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -61,7 +63,9 @@ async def handle_webhook(hass, webhook_id, request):
     try:
         data = WEBHOOK_SCHEMA(dict(request.query))
     except vol.MultipleInvalid as error:
-        return web.Response(text=error.error_message, status=HTTP_UNPROCESSABLE_ENTITY)
+        return web.Response(
+            text=error.error_message, status=HTTPStatus.UNPROCESSABLE_ENTITY
+        )
 
     attrs = {
         ATTR_ALTITUDE: data.get(ATTR_ALTITUDE),

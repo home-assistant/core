@@ -192,8 +192,7 @@ def _async_register_clientsession_shutdown(
         EVENT_HOMEASSISTANT_CLOSE, _async_close_websession
     )
 
-    config_entry = config_entries.current_entry.get()
-    if not config_entry:
+    if not (config_entry := config_entries.current_entry.get()):
         return
 
     config_entry.async_on_unload(unsub)

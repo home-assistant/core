@@ -31,6 +31,8 @@
             "is_not_plugged_in": "{entity_name} ist nicht angeschlossen",
             "is_not_powered": "{entity_name} wird nicht mit Strom versorgt",
             "is_not_present": "{entity_name} ist nicht vorhanden",
+            "is_not_running": "{entity_name} wird nicht ausgef\u00fchrt",
+            "is_not_tampered": "{entity_name} erkennt keine Manipulationen",
             "is_not_unsafe": "{entity_name} ist sicher",
             "is_occupied": "{entity_name} ist besch\u00e4ftigt / besetzt",
             "is_off": "{entity_name} ist ausgeschaltet",
@@ -40,8 +42,10 @@
             "is_powered": "{entity_name} wird mit Strom versorgt",
             "is_present": "{entity_name} ist vorhanden",
             "is_problem": "{entity_name} hat ein Problem festgestellt",
+            "is_running": "{entity_name} wird ausgef\u00fchrt",
             "is_smoke": "{entity_name} hat Rauch detektiert",
             "is_sound": "{entity_name} hat Ger\u00e4usche detektiert",
+            "is_tampered": "{entity_name} erkennt Manipulationen",
             "is_unsafe": "{entity_name} ist unsicher",
             "is_update": "{entity_name} hat ein Update verf\u00fcgbar",
             "is_vibration": "{entity_name} erkennt Vibrationen."
@@ -52,6 +56,8 @@
             "connected": "{entity_name} verbunden",
             "gas": "{entity_name} hat Gas detektiert",
             "hot": "{entity_name} wurde hei\u00df",
+            "is_not_tampered": "{entity_name} hat aufgeh\u00f6rt, Manipulationen zu erkennen",
+            "is_tampered": "{entity_name} hat begonnen, Manipulationen zu erkennen",
             "light": "{entity_name} hat Licht detektiert",
             "locked": "{entity_name} gesperrt",
             "moist": "{entity_name} wurde feucht",
@@ -77,6 +83,7 @@
             "not_plugged_in": "{entity_name} ist nicht angeschlossen",
             "not_powered": "{entity_name} nicht mit Strom versorgt",
             "not_present": "{entity_name} nicht anwesend",
+            "not_running": "{entity_name} wird nicht mehr ausgef\u00fchrt",
             "not_unsafe": "{entity_name} wurde sicher",
             "occupied": "{entity_name} wurde besch\u00e4ftigt / besetzt",
             "opened": "{entity_name} ge\u00f6ffnet",
@@ -84,6 +91,7 @@
             "powered": "{entity_name} wird mit Strom versorgt",
             "present": "{entity_name} anwesend",
             "problem": "{entity_name} hat ein Problem festgestellt",
+            "running": "{entity_name} ausgef\u00fchrt",
             "smoke": "{entity_name} detektiert Rauch",
             "sound": "{entity_name} detektiert Ger\u00e4usche",
             "turned_off": "{entity_name} ausgeschaltet",
@@ -92,6 +100,19 @@
             "update": "{entity_name} hat ein Update verf\u00fcgbar",
             "vibration": "{entity_name} detektiert Vibrationen"
         }
+    },
+    "device_class": {
+        "cold": "K\u00e4lte",
+        "gas": "Gas",
+        "heat": "W\u00e4rme",
+        "moisture": "Feuchtigkeit",
+        "motion": "Bewegung",
+        "occupancy": "Belegung",
+        "power": "Energie",
+        "problem": "Problem",
+        "smoke": "Rauch",
+        "sound": "Ton",
+        "vibration": "Vibration"
     },
     "state": {
         "_": {
@@ -169,6 +190,10 @@
         "problem": {
             "off": "OK",
             "on": "Problem"
+        },
+        "running": {
+            "off": "Nicht ausgef\u00fchrt",
+            "on": "L\u00e4uft"
         },
         "safety": {
             "off": "Sicher",

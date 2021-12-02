@@ -1,22 +1,22 @@
 """The tests for the camera component."""
 import asyncio
 import base64
+from http import HTTPStatus
 import io
 from unittest.mock import Mock, PropertyMock, mock_open, patch
 
 import pytest
 
 from homeassistant.components import camera
-from homeassistant.components.camera.const import DOMAIN, PREF_PRELOAD_STREAM
+from homeassistant.components.camera.const import (
+    DOMAIN,
+    PREF_PRELOAD_STREAM,
+    STREAM_TYPE_WEB_RTC,
+)
 from homeassistant.components.camera.prefs import CameraEntityPreferences
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.config import async_process_ha_core_config
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    EVENT_HOMEASSISTANT_START,
-    HTTP_BAD_GATEWAY,
-    HTTP_OK,
-)
+from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_START
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
@@ -36,6 +36,24 @@ async def mock_camera_fixture(hass):
     with patch(
         "homeassistant.components.demo.camera.Path.read_bytes",
         return_value=b"Test",
+    ):
+        yield
+
+
+@pytest.fixture(name="mock_camera_web_rtc")
+async def mock_camera_web_rtc_fixture(hass):
+    """Initialize a demo camera platform."""
+    assert await async_setup_component(
+        hass, "camera", {camera.DOMAIN: {"platform": "demo"}}
+    )
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.camera.Camera.frontend_stream_type",
+        new_callable=PropertyMock(return_value=STREAM_TYPE_WEB_RTC),
+    ), patch(
+        "homeassistant.components.camera.Camera.async_handle_web_rtc_offer",
+        return_value="a=sendonly",
     ):
         yield
 
@@ -459,11 +477,159 @@ async def test_camera_proxy_stream(hass, mock_camera, hass_client):
     client = await hass_client()
 
     response = await client.get("/api/camera_proxy_stream/camera.demo_camera")
-    assert response.status == HTTP_OK
+    assert response.status == HTTPStatus.OK
 
     with patch(
         "homeassistant.components.demo.camera.DemoCamera.handle_async_mjpeg_stream",
         return_value=None,
     ):
         response = await client.get("/api/camera_proxy_stream/camera.demo_camera")
-        assert response.status == HTTP_BAD_GATEWAY
+        assert response.status == HTTPStatus.BAD_GATEWAY
+
+
+async def test_websocket_web_rtc_offer(
+    hass,
+    hass_ws_client,
+    mock_camera_web_rtc,
+):
+    """Test initiating a WebRTC stream with offer and answer."""
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 9,
+            "type": "camera/web_rtc_offer",
+            "entity_id": "camera.demo_camera",
+            "offer": "v=0\r\n",
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["id"] == 9
+    assert response["type"] == TYPE_RESULT
+    assert response["success"]
+    assert response["result"]["answer"] == "a=sendonly"
+
+
+async def test_websocket_web_rtc_offer_invalid_entity(
+    hass,
+    hass_ws_client,
+    mock_camera_web_rtc,
+):
+    """Test WebRTC with a camera entity that does not exist."""
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 9,
+            "type": "camera/web_rtc_offer",
+            "entity_id": "camera.does_not_exist",
+            "offer": "v=0\r\n",
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["id"] == 9
+    assert response["type"] == TYPE_RESULT
+    assert not response["success"]
+
+
+async def test_websocket_web_rtc_offer_missing_offer(
+    hass,
+    hass_ws_client,
+    mock_camera_web_rtc,
+):
+    """Test WebRTC stream with missing required fields."""
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 9,
+            "type": "camera/web_rtc_offer",
+            "entity_id": "camera.demo_camera",
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["id"] == 9
+    assert response["type"] == TYPE_RESULT
+    assert not response["success"]
+    assert response["error"]["code"] == "invalid_format"
+
+
+async def test_websocket_web_rtc_offer_failure(
+    hass,
+    hass_ws_client,
+    mock_camera_web_rtc,
+):
+    """Test WebRTC stream that fails handling the offer."""
+    client = await hass_ws_client(hass)
+
+    with patch(
+        "homeassistant.components.camera.Camera.async_handle_web_rtc_offer",
+        side_effect=HomeAssistantError("offer failed"),
+    ):
+        await client.send_json(
+            {
+                "id": 9,
+                "type": "camera/web_rtc_offer",
+                "entity_id": "camera.demo_camera",
+                "offer": "v=0\r\n",
+            }
+        )
+        response = await client.receive_json()
+
+    assert response["id"] == 9
+    assert response["type"] == TYPE_RESULT
+    assert not response["success"]
+    assert response["error"]["code"] == "web_rtc_offer_failed"
+    assert response["error"]["message"] == "offer failed"
+
+
+async def test_websocket_web_rtc_offer_timeout(
+    hass,
+    hass_ws_client,
+    mock_camera_web_rtc,
+):
+    """Test WebRTC stream with timeout handling the offer."""
+    client = await hass_ws_client(hass)
+
+    with patch(
+        "homeassistant.components.camera.Camera.async_handle_web_rtc_offer",
+        side_effect=asyncio.TimeoutError(),
+    ):
+        await client.send_json(
+            {
+                "id": 9,
+                "type": "camera/web_rtc_offer",
+                "entity_id": "camera.demo_camera",
+                "offer": "v=0\r\n",
+            }
+        )
+        response = await client.receive_json()
+
+    assert response["id"] == 9
+    assert response["type"] == TYPE_RESULT
+    assert not response["success"]
+    assert response["error"]["code"] == "web_rtc_offer_failed"
+    assert response["error"]["message"] == "Timeout handling WebRTC offer"
+
+
+async def test_websocket_web_rtc_offer_invalid_stream_type(
+    hass,
+    hass_ws_client,
+    mock_camera,
+):
+    """Test WebRTC initiating for a camera with a different stream_type."""
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 9,
+            "type": "camera/web_rtc_offer",
+            "entity_id": "camera.demo_camera",
+            "offer": "v=0\r\n",
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["id"] == 9
+    assert response["type"] == TYPE_RESULT
+    assert not response["success"]
+    assert response["error"]["code"] == "web_rtc_offer_failed"

@@ -146,7 +146,7 @@ async def test_template_state_boolean_off(hass, start_ha):
 )
 async def test_template_syntax_error(hass, start_ha):
     """Test templating syntax error."""
-    assert hass.states.async_all() == []
+    assert hass.states.async_all("lock") == []
 
 
 @pytest.mark.parametrize("count,domain", [(1, lock.DOMAIN)])
@@ -376,4 +376,4 @@ async def test_unique_id(hass, start_ha):
     await hass.async_start()
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 1
+    assert len(hass.states.async_all("lock")) == 1

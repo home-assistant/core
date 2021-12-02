@@ -4,7 +4,7 @@ from unittest.mock import patch
 from pynuki.bridge import InvalidCredentialsException
 from requests.exceptions import RequestException
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
 from homeassistant.components.nuki.const import DOMAIN
 from homeassistant.const import CONF_TOKEN
@@ -14,7 +14,7 @@ from .mock import HOST, MAC, MOCK_INFO, NAME, setup_nuki_integration
 
 async def test_form(hass):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -53,7 +53,6 @@ async def test_form(hass):
 
 async def test_import(hass):
     """Test that the import works."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch(
         "homeassistant.components.nuki.config_flow.NukiBridge.info",

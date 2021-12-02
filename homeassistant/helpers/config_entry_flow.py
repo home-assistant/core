@@ -53,8 +53,7 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
             # Get current discovered entries.
             in_progress = self._async_in_progress()
 
-            has_devices = in_progress
-            if not has_devices:
+            if not (has_devices := in_progress):
                 has_devices = await self.hass.async_add_job(  # type: ignore
                     self._discovery_function, self.hass
                 )

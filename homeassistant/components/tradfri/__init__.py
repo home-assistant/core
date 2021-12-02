@@ -58,9 +58,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Tradfri component."""
-    conf = config.get(DOMAIN)
-
-    if conf is None:
+    if (conf := config.get(DOMAIN)) is None:
         return True
 
     configured_hosts = [

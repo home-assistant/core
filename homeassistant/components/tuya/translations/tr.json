@@ -10,11 +10,21 @@
         },
         "flow_title": "Tuya yap\u0131land\u0131rmas\u0131",
         "step": {
+            "login": {
+                "data": {
+                    "country_code": "\u00dclke Kodu",
+                    "password": "\u015eifre",
+                    "tuya_app_type": "Tuya uygulama tipi",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131"
+                },
+                "title": "Tuya"
+            },
             "user": {
                 "data": {
                     "country_code": "Hesap \u00fclke kodunuz (\u00f6r. ABD i\u00e7in 1 veya \u00c7in i\u00e7in 86)",
                     "password": "Parola",
                     "platform": "Hesab\u0131n\u0131z\u0131n kay\u0131tl\u0131 oldu\u011fu uygulama",
+                    "region": "B\u00f6lge",
                     "username": "Kullan\u0131c\u0131 Ad\u0131"
                 },
                 "description": "Tuya kimlik bilgilerinizi girin.",

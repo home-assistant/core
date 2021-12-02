@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from http import HTTPStatus
 import logging
 from typing import Any, Final
 
@@ -13,12 +14,7 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    HTTP_UNAUTHORIZED,
-)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
@@ -155,7 +151,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     self.hass, self.host, self.info, user_input
                 )
             except aiohttp.ClientResponseError as error:
-                if error.status == HTTP_UNAUTHORIZED:
+                if error.status == HTTPStatus.UNAUTHORIZED:
                     errors["base"] = "invalid_auth"
                 else:
                     errors["base"] = "cannot_connect"

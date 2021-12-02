@@ -42,6 +42,12 @@ USB = [
         "description": "*zigbee*"
     },
     {
+        "domain": "zha",
+        "vid": "10C4",
+        "pid": "8B34",
+        "description": "*bv 2010/10*"
+    },
+    {
         "domain": "zwave_js",
         "vid": "0658",
         "pid": "0200"

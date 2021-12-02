@@ -41,11 +41,11 @@ class ToonElectricityMeterDeviceEntity(ToonEntity):
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         agreement_id = self.coordinator.data.agreement.agreement_id
-        return {
-            "name": "Electricity Meter",
-            "identifiers": {(DOMAIN, agreement_id, "electricity")},
-            "via_device": (DOMAIN, agreement_id, "meter_adapter"),
-        }
+        return DeviceInfo(
+            name="Electricity Meter",
+            identifiers={(DOMAIN, agreement_id, "electricity")},
+            via_device=(DOMAIN, agreement_id, "meter_adapter"),
+        )
 
 
 class ToonGasMeterDeviceEntity(ToonEntity):
@@ -55,11 +55,11 @@ class ToonGasMeterDeviceEntity(ToonEntity):
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         agreement_id = self.coordinator.data.agreement.agreement_id
-        return {
-            "name": "Gas Meter",
-            "identifiers": {(DOMAIN, agreement_id, "gas")},
-            "via_device": (DOMAIN, agreement_id, "electricity"),
-        }
+        return DeviceInfo(
+            name="Gas Meter",
+            identifiers={(DOMAIN, agreement_id, "gas")},
+            via_device=(DOMAIN, agreement_id, "electricity"),
+        )
 
 
 class ToonWaterMeterDeviceEntity(ToonEntity):
@@ -69,11 +69,11 @@ class ToonWaterMeterDeviceEntity(ToonEntity):
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         agreement_id = self.coordinator.data.agreement.agreement_id
-        return {
-            "name": "Water Meter",
-            "identifiers": {(DOMAIN, agreement_id, "water")},
-            "via_device": (DOMAIN, agreement_id, "electricity"),
-        }
+        return DeviceInfo(
+            name="Water Meter",
+            identifiers={(DOMAIN, agreement_id, "water")},
+            via_device=(DOMAIN, agreement_id, "electricity"),
+        )
 
 
 class ToonSolarDeviceEntity(ToonEntity):
@@ -83,11 +83,11 @@ class ToonSolarDeviceEntity(ToonEntity):
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         agreement_id = self.coordinator.data.agreement.agreement_id
-        return {
-            "name": "Solar Panels",
-            "identifiers": {(DOMAIN, agreement_id, "solar")},
-            "via_device": (DOMAIN, agreement_id, "meter_adapter"),
-        }
+        return DeviceInfo(
+            name="Solar Panels",
+            identifiers={(DOMAIN, agreement_id, "solar")},
+            via_device=(DOMAIN, agreement_id, "meter_adapter"),
+        )
 
 
 class ToonBoilerModuleDeviceEntity(ToonEntity):
@@ -97,12 +97,12 @@ class ToonBoilerModuleDeviceEntity(ToonEntity):
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         agreement_id = self.coordinator.data.agreement.agreement_id
-        return {
-            "name": "Boiler Module",
-            "manufacturer": "Eneco",
-            "identifiers": {(DOMAIN, agreement_id, "boiler_module")},
-            "via_device": (DOMAIN, agreement_id),
-        }
+        return DeviceInfo(
+            name="Boiler Module",
+            manufacturer="Eneco",
+            identifiers={(DOMAIN, agreement_id, "boiler_module")},
+            via_device=(DOMAIN, agreement_id),
+        )
 
 
 class ToonBoilerDeviceEntity(ToonEntity):
@@ -112,11 +112,11 @@ class ToonBoilerDeviceEntity(ToonEntity):
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         agreement_id = self.coordinator.data.agreement.agreement_id
-        return {
-            "name": "Boiler",
-            "identifiers": {(DOMAIN, agreement_id, "boiler")},
-            "via_device": (DOMAIN, agreement_id, "boiler_module"),
-        }
+        return DeviceInfo(
+            name="Boiler",
+            identifiers={(DOMAIN, agreement_id, "boiler")},
+            via_device=(DOMAIN, agreement_id, "boiler_module"),
+        )
 
 
 @dataclass

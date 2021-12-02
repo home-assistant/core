@@ -21,7 +21,7 @@ fi
 
 CURRENT_BRANCH=`git rev-parse --abbrev-ref HEAD`
 
-if [ "$CURRENT_BRANCH" != "master" ] && [ "$CURRENT_BRANCH" != "beta" ]
+if [ "$CURRENT_BRANCH" != "master" ] && [ "$CURRENT_BRANCH" != "beta" ] && [ "$CURRENT_BRANCH" != "alfa" ]
 then
   echo "You have to be on the master or beta branch to release."
   exit 1

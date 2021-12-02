@@ -172,12 +172,12 @@ class HomematicipCloudConnectionSensor(HomematicipGenericEntity, BinarySensorEnt
     def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
         # Adds a sensor to the existing HAP device
-        return {
-            "identifiers": {
+        return DeviceInfo(
+            identifiers={
                 # Serial numbers of Homematic IP device
                 (HMIPC_DOMAIN, self._home.id)
             }
-        }
+        )
 
     @property
     def icon(self) -> str:
@@ -544,8 +544,8 @@ class HomematicipSecuritySensorGroup(
     @property
     def is_on(self) -> bool:
         """Return true if safety issue detected."""
-        parent_is_on = super().is_on
-        if parent_is_on:
+        if super().is_on:
+            # parent is on
             return True
 
         if (

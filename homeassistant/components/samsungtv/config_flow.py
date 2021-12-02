@@ -159,8 +159,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 raise data_entry_flow.AbortFlow(RESULT_NOT_SUPPORTED)
             return False
         dev_info = info.get("device", {})
-        device_type = dev_info.get("type")
-        if device_type != "Samsung SmartTV":
+        if (device_type := dev_info.get("type")) != "Samsung SmartTV":
             raise data_entry_flow.AbortFlow(RESULT_NOT_SUPPORTED)
         self._model = dev_info.get("modelName")
         name = dev_info.get("name")

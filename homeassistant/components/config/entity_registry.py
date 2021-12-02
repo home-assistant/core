@@ -50,9 +50,8 @@ async def websocket_get_entity(hass, connection, msg):
     Async friendly.
     """
     registry = await async_get_registry(hass)
-    entry = registry.entities.get(msg["entity_id"])
 
-    if entry is None:
+    if (entry := registry.entities.get(msg["entity_id"])) is None:
         connection.send_message(
             websocket_api.error_message(msg["id"], ERR_NOT_FOUND, "Entity not found")
         )
@@ -177,6 +176,7 @@ def _entry_dict(entry):
         "name": entry.name,
         "icon": entry.icon,
         "platform": entry.platform,
+        "entity_category": entry.entity_category,
     }
 
 

@@ -284,7 +284,7 @@ async def test_no_action_scripts(hass, start_ha):
 )
 async def test_template_syntax_error(hass, msg, start_ha, caplog_setup_text):
     """Test templating syntax error."""
-    assert len(hass.states.async_all()) == 0
+    assert len(hass.states.async_all("alarm_control_panel")) == 0
     assert (msg) in caplog_setup_text
 
 

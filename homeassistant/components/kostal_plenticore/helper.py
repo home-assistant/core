@@ -13,6 +13,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, EVENT_HOMEASSISTANT_ST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -84,14 +85,14 @@ class Plenticore:
         prod1 = device_local["Branding:ProductName1"]
         prod2 = device_local["Branding:ProductName2"]
 
-        self.device_info = {
-            "identifiers": {(DOMAIN, device_local["Properties:SerialNo"])},
-            "manufacturer": "Kostal",
-            "model": f"{prod1} {prod2}",
-            "name": settings["scb:network"]["Hostname"],
-            "sw_version": f'IOC: {device_local["Properties:VersionIOC"]}'
+        self.device_info = DeviceInfo(
+            identifiers={(DOMAIN, device_local["Properties:SerialNo"])},
+            manufacturer="Kostal",
+            model=f"{prod1} {prod2}",
+            name=settings["scb:network"]["Hostname"],
+            sw_version=f'IOC: {device_local["Properties:VersionIOC"]}'
             + f' MC: {device_local["Properties:VersionMC"]}',
-        }
+        )
 
         return True
 

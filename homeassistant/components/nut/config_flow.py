@@ -17,7 +17,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
-from . import PyNUTData, find_resources_in_config_entry
+from . import PyNUTData
 from .const import (
     DEFAULT_HOST,
     DEFAULT_PORT,
@@ -88,8 +88,7 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     data = PyNUTData(host, port, alias, username, password)
     await hass.async_add_executor_job(data.update)
-    status = data.status
-    if not status:
+    if not (status := data.status):
         raise CannotConnect
 
     return {"ups_list": data.ups_list, "available_resources": status}
@@ -229,35 +228,17 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        resources = find_resources_in_config_entry(self.config_entry)
         scan_interval = self.config_entry.options.get(
             CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
         )
 
-        errors = {}
-        try:
-            info = await validate_input(self.hass, self.config_entry.data)
-        except CannotConnect:
-            errors[CONF_BASE] = "cannot_connect"
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
-            errors[CONF_BASE] = "unknown"
+        base_schema = {
+            vol.Optional(CONF_SCAN_INTERVAL, default=scan_interval): vol.All(
+                vol.Coerce(int), vol.Clamp(min=10, max=300)
+            )
+        }
 
-        if errors:
-            return self.async_show_form(step_id="abort", errors=errors)
-
-        base_schema = _resource_schema_base(info["available_resources"], resources)
-        base_schema[
-            vol.Optional(CONF_SCAN_INTERVAL, default=scan_interval)
-        ] = cv.positive_int
-
-        return self.async_show_form(
-            step_id="init", data_schema=vol.Schema(base_schema), errors=errors
-        )
-
-    async def async_step_abort(self, user_input=None):
-        """Abort options flow."""
-        return self.async_create_entry(title="", data=self.config_entry.options)
+        return self.async_show_form(step_id="init", data_schema=vol.Schema(base_schema))
 
 
 class CannotConnect(exceptions.HomeAssistantError):

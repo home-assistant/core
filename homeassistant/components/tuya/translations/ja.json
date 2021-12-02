@@ -1,0 +1,21 @@
+{
+    "config": {
+        "step": {
+            "login": {
+                "data": {
+                    "access_id": "\u30a2\u30af\u30bb\u30b9ID",
+                    "country_code": "\u56fd\u5225\u30b3\u30fc\u30c9",
+                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
+                    "tuya_app_type": "\u30e2\u30d0\u30a4\u30eb\u30a2\u30d7\u30ea",
+                    "username": "\u30a2\u30ab\u30a6\u30f3\u30c8"
+                },
+                "title": "Tuya"
+            },
+            "user": {
+                "data": {
+                    "region": "\u30ea\u30fc\u30b8\u30e7\u30f3"
+                }
+            }
+        }
+    }
+}

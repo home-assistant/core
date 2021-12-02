@@ -28,7 +28,7 @@
                 "data": {
                     "access_id": "Tuya IoT-toegangs-ID",
                     "access_secret": "Tuya IoT Access Secret",
-                    "country_code": "De landcode van uw account (bijvoorbeeld 1 voor de VS of 86 voor China)",
+                    "country_code": "Land",
                     "password": "Wachtwoord",
                     "platform": "De app waar uw account is geregistreerd",
                     "region": "Regio",
@@ -36,7 +36,7 @@
                     "username": "Gebruikersnaam"
                 },
                 "description": "Voer uw Tuya-inloggegevens in.",
-                "title": "Tuya"
+                "title": "Tuya-integratie"
             }
         }
     },

@@ -4,19 +4,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 import logging
 import os
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
+from homeassistant.components.onewire.model import OWServerDeviceDescription
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_NAME,
-    CONF_TYPE,
-)
+from homeassistant.const import CONF_TYPE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -84,6 +78,15 @@ DEVICE_SWITCHES: dict[str, tuple[OneWireEntityDescription, ...]] = {
             for id in DEVICE_KEYS_0_7
         ]
     ),
+    "3A": tuple(
+        OneWireSwitchEntityDescription(
+            key=f"PIO.{id}",
+            entity_registry_enabled_default=False,
+            name=f"PIO {id}",
+            read_mode=READ_MODE_BOOL,
+        )
+        for id in DEVICE_KEYS_A_B
+    ),
 }
 
 LOGGER = logging.getLogger(__name__)
@@ -111,23 +114,16 @@ def get_entities(onewirehub: OneWireHub) -> list[SwitchEntity]:
     entities: list[SwitchEntity] = []
 
     for device in onewirehub.devices:
-        family = device["family"]
-        device_type = device["type"]
-        device_id = os.path.split(os.path.split(device["path"])[0])[1]
+        if TYPE_CHECKING:
+            assert isinstance(device, OWServerDeviceDescription)
+        family = device.family
+        device_id = device.id
+        device_info = device.device_info
 
         if family not in DEVICE_SWITCHES:
             continue
-
-        device_info: DeviceInfo = {
-            ATTR_IDENTIFIERS: {(DOMAIN, device_id)},
-            ATTR_MANUFACTURER: "Maxim Integrated",
-            ATTR_MODEL: device_type,
-            ATTR_NAME: device_id,
-        }
         for description in DEVICE_SWITCHES[family]:
-            device_file = os.path.join(
-                os.path.split(device["path"])[0], description.key
-            )
+            device_file = os.path.join(os.path.split(device.path)[0], description.key)
             name = f"{device_id} {description.name}"
             entities.append(
                 OneWireProxySwitch(

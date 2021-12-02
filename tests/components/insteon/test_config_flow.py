@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.insteon.config_flow import (
     HUB1,
     HUB2,
@@ -95,7 +95,7 @@ async def _device_form(hass, flow_id, connection, user_input):
 
 async def test_form_select_modem(hass: HomeAssistant):
     """Test we get a modem form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await _init_form(hass, HUB2)
     assert result["step_id"] == STEP_HUB_V2
     assert result["type"] == "form"
@@ -123,7 +123,7 @@ async def test_fail_on_existing(hass: HomeAssistant):
 
 async def test_form_select_plm(hass: HomeAssistant):
     """Test we set up the PLM correctly."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await _init_form(hass, PLM)
 
     result2, mock_setup, mock_setup_entry = await _device_form(
@@ -138,7 +138,7 @@ async def test_form_select_plm(hass: HomeAssistant):
 
 async def test_form_select_hub_v1(hass: HomeAssistant):
     """Test we set up the Hub v1 correctly."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await _init_form(hass, HUB1)
 
     result2, mock_setup, mock_setup_entry = await _device_form(
@@ -156,7 +156,7 @@ async def test_form_select_hub_v1(hass: HomeAssistant):
 
 async def test_form_select_hub_v2(hass: HomeAssistant):
     """Test we set up the Hub v2 correctly."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await _init_form(hass, HUB2)
 
     result2, mock_setup, mock_setup_entry = await _device_form(
@@ -174,7 +174,7 @@ async def test_form_select_hub_v2(hass: HomeAssistant):
 
 async def test_failed_connection_plm(hass: HomeAssistant):
     """Test a failed connection with the PLM."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await _init_form(hass, PLM)
 
     result2, _, _ = await _device_form(
@@ -186,7 +186,7 @@ async def test_failed_connection_plm(hass: HomeAssistant):
 
 async def test_failed_connection_hub(hass: HomeAssistant):
     """Test a failed connection with a Hub."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await _init_form(hass, HUB2)
 
     result2, _, _ = await _device_form(
@@ -208,7 +208,6 @@ async def _import_config(hass, config):
 
 async def test_import_plm(hass: HomeAssistant):
     """Test importing a minimum PLM config from yaml."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     result = await _import_config(hass, MOCK_IMPORT_CONFIG_PLM)
 
@@ -235,7 +234,6 @@ async def _options_init_form(hass, entry_id, step):
 
 async def test_import_min_hub_v2(hass: HomeAssistant):
     """Test importing a minimum Hub v2 config from yaml."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     result = await _import_config(
         hass, {**MOCK_IMPORT_MINIMUM_HUB_V2, CONF_PORT: 25105, CONF_HUB_VERSION: 2}
@@ -253,7 +251,6 @@ async def test_import_min_hub_v2(hass: HomeAssistant):
 
 async def test_import_min_hub_v1(hass: HomeAssistant):
     """Test importing a minimum Hub v1 config from yaml."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     result = await _import_config(
         hass, {**MOCK_IMPORT_MINIMUM_HUB_V1, CONF_PORT: 9761, CONF_HUB_VERSION: 1}
@@ -287,7 +284,6 @@ async def test_import_existing(hass: HomeAssistant):
 
 async def test_import_failed_connection(hass: HomeAssistant):
     """Test a failed connection on import."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch(PATCH_CONNECTION, new=mock_failed_connection,), patch(
         PATCH_ASYNC_SETUP, return_value=True

@@ -1,7 +1,6 @@
 """The motionEye integration."""
 from __future__ import annotations
 
-import logging
 from types import MappingProxyType
 from typing import Any
 
@@ -48,8 +47,6 @@ from .const import (
     MOTIONEYE_MANUFACTURER,
     TYPE_MOTIONEYE_MJPEG_CAMERA,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["camera"]
 
