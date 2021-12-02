@@ -22,6 +22,17 @@ async def test_waste_pickup_sensors(
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
 
+    state = hass.states.get("sensor.christmas_tree_pickup")
+    entry = entity_registry.async_get("sensor.christmas_tree_pickup")
+    assert entry
+    assert state
+    assert entry.unique_id == "twentemilieu_12345_tree"
+    assert state.state == "2022-01-06"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Christmas Tree Pickup"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.DATE
+    assert state.attributes.get(ATTR_ICON) == "mdi:pine-tree"
+    assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
+
     state = hass.states.get("sensor.non_recyclable_waste_pickup")
     entry = entity_registry.async_get("sensor.non_recyclable_waste_pickup")
     assert entry
