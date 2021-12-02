@@ -4,10 +4,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/elmax",
   "requirements": ["elmax_api==0.0.2"],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
-  "dependencies": [],
   "codeowners": [
     "@albertogeniola"
   ],
