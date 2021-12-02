@@ -52,12 +52,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.loader import bind_hass
-from homeassistant.util import (
-    convert,
-    convert_to_int,
-    dt as dt_util,
-    location as loc_util,
-)
+from homeassistant.util import convert, dt as dt_util, location as loc_util
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.thread import ThreadWithException
 
@@ -1634,18 +1629,14 @@ def regex_findall(value, find="", ignorecase=False):
     return re.findall(find, value, flags)
 
 
-def bitwise_and(first_value, second_value, little_endian=False):
+def bitwise_and(first_value, second_value):
     """Perform a bitwise and operation."""
-    return convert_to_int(first_value, little_endian=little_endian) & convert_to_int(
-        second_value, little_endian=little_endian
-    )
+    return first_value & second_value
 
 
-def bitwise_or(first_value, second_value, little_endian=False):
+def bitwise_or(first_value, second_value):
     """Perform a bitwise or operation."""
-    return convert_to_int(first_value, little_endian=little_endian) | convert_to_int(
-        second_value, little_endian=little_endian
-    )
+    return first_value | second_value
 
 
 def base64_encode(value):
