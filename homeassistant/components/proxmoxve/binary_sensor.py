@@ -157,6 +157,6 @@ class ProxmoxNodeUpdateBinarySensor(ProxmoxEntity, BinarySensorEntity):
         data = {}
 
         for update_item in self.coordinator.data:
-            data[update_item["Package"]] = update_item["Version"]
+            data[" " + update_item["Package"]] = update_item["Version"]
 
         return data
