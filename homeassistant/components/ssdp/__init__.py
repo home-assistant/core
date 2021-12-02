@@ -9,6 +9,7 @@ from enum import Enum
 from ipaddress import IPv4Address, IPv6Address
 import logging
 from typing import Any, Callable
+from urllib.parse import urlparse
 
 from async_upnp_client.aiohttp import AiohttpSessionRequester
 from async_upnp_client.const import DeviceOrServiceType, SsdpHeaders, SsdpSource
@@ -172,6 +173,20 @@ SSDP_SOURCE_SSDP_CHANGE_MAPPING: Mapping[SsdpSource, SsdpChange] = {
     SsdpSource.ADVERTISEMENT_BYEBYE: SsdpChange.BYEBYE,
     SsdpSource.ADVERTISEMENT_UPDATE: SsdpChange.UPDATE,
 }
+
+
+def parse_hostname(url: str | None, default: str | None = None) -> str:
+    """Extract hostname from a url."""
+    if url is None:
+        if default is None:
+            raise ValueError("url is None")
+        return default
+    parsed_url = urlparse(url)
+    if parsed_url.hostname is None:
+        if default is None:
+            raise ValueError("hostname is None")
+        return default
+    return parsed_url.hostname
 
 
 @bind_hass
