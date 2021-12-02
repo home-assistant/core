@@ -225,6 +225,7 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             key=DPCode.SUCTION,
             name="Suction",
             entity_category=ENTITY_CATEGORY_CONFIG,
+            entity_registry_enabled_default=False,
         ),
         SelectEntityDescription(
             key=DPCode.MODE,
@@ -235,6 +236,7 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             key=DPCode.DIRECTION_CONTROL,
             name="Direction Control",
             entity_category=ENTITY_CATEGORY_CONFIG,
+            entity_registry_enabled_default=False,
         ),
     ),
 }
