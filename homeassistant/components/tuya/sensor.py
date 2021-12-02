@@ -603,7 +603,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CLEAN_TIME,
-            name="Clean time",
+            name="Cleaning Time",
         ),
         TuyaSensorEntityDescription(
             key=DPCode.STATUS,
