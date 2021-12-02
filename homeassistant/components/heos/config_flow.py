@@ -1,6 +1,4 @@
 """Config flow to configure Heos."""
-from urllib.parse import urlparse
-
 from pyheos import Heos, HeosError
 import voluptuous as vol
 
@@ -25,7 +23,7 @@ class HeosFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Handle a discovered Heos device."""
         # Store discovered host
-        hostname = urlparse(discovery_info.ssdp_location or "").hostname
+        hostname = ssdp.parse_hostname(discovery_info.ssdp_location)
         friendly_name = (
             f"{discovery_info.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME]} ({hostname})"
         )
