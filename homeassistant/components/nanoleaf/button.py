@@ -8,6 +8,7 @@ from homeassistant.const import ENTITY_CATEGORY_CONFIG
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import NanoleafEntryData
 from .const import DOMAIN
 from .entity import NanoleafEntity
 
@@ -16,8 +17,8 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Nanoleaf button."""
-    nanoleaf: Nanoleaf = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([NanoleafIdentifyButton(nanoleaf)])
+    entry_data: NanoleafEntryData = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities([NanoleafIdentifyButton(entry_data.device)])
 
 
 class NanoleafIdentifyButton(NanoleafEntity, ButtonEntity):
