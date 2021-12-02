@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Final
+from typing import Any, Final, cast
 
 from flux_led.const import ATTR_ID, ATTR_IPADDR, ATTR_MODEL, ATTR_MODEL_DESCRIPTION
+from flux_led.scanner import FluxLEDDiscovery
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -48,8 +49,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._discovered_devices: dict[str, dict[str, Any]] = {}
-        self._discovered_device: dict[str, Any] = {}
+        self._discovered_devices: dict[str, FluxLEDDiscovery] = {}
+        self._discovered_device: FluxLEDDiscovery | None = None
 
     @staticmethod
     @callback
@@ -84,24 +85,32 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle discovery via dhcp."""
-        self._discovered_device = {
-            ATTR_IPADDR: discovery_info.ip,
-            ATTR_MODEL: discovery_info.hostname,
-            ATTR_ID: discovery_info.macaddress.replace(":", ""),
-        }
+        self._discovered_device = FluxLEDDiscovery(
+            ipaddr=discovery_info.ip,
+            model=discovery_info.hostname,
+            id=discovery_info.macaddress.replace(":", ""),
+            model_num=None,
+            version_num=None,
+            firmware_date=None,
+            model_info=None,
+            model_description=None,
+        )
         return await self._async_handle_discovery()
 
     async def async_step_discovery(
         self, discovery_info: DiscoveryInfoType
     ) -> FlowResult:
         """Handle discovery."""
-        self._discovered_device = discovery_info
+        self._discovered_device = cast(FluxLEDDiscovery, discovery_info)
         return await self._async_handle_discovery()
 
     async def _async_handle_discovery(self) -> FlowResult:
         """Handle any discovery."""
         device = self._discovered_device
-        mac = dr.format_mac(device[ATTR_ID])
+        assert device is not None
+        mac_address = device[ATTR_ID]
+        assert mac_address is not None
+        mac = dr.format_mac(mac_address)
         host = device[ATTR_IPADDR]
         await self.async_set_unique_id(mac)
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
@@ -113,13 +122,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         for progress in self._async_in_progress():
             if progress.get("context", {}).get(CONF_HOST) == host:
                 return self.async_abort(reason="already_in_progress")
-        if not device.get(ATTR_MODEL_DESCRIPTION):
+        if not device[ATTR_MODEL_DESCRIPTION]:
             try:
-                device = await self._async_try_connect(host)
+                device = await self._async_try_connect(
+                    host, device[ATTR_ID], device[ATTR_MODEL]
+                )
             except FLUX_LED_EXCEPTIONS:
                 return self.async_abort(reason="cannot_connect")
             else:
-                if device.get(ATTR_MODEL_DESCRIPTION):
+                if device[ATTR_MODEL_DESCRIPTION]:
                     self._discovered_device = device
         return await self.async_step_discovery_confirm()
 
@@ -127,14 +138,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Confirm discovery."""
+        assert self._discovered_device is not None
+        device = self._discovered_device
+        mac_address = device[ATTR_ID]
+        assert mac_address is not None
         if user_input is not None:
             return self._async_create_entry_from_device(self._discovered_device)
 
         self._set_confirm_only()
-        device = self._discovered_device
         placeholders = {
-            "model": device.get(ATTR_MODEL_DESCRIPTION, device[ATTR_MODEL]),
-            "id": device[ATTR_ID][-6:],
+            "model": device[ATTR_MODEL_DESCRIPTION] or device[ATTR_MODEL],
+            "id": mac_address[-6:],
             "ipaddr": device[ATTR_IPADDR],
         }
         self.context["title_placeholders"] = placeholders
@@ -143,7 +157,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     @callback
-    def _async_create_entry_from_device(self, device: dict[str, Any]) -> FlowResult:
+    def _async_create_entry_from_device(self, device: FluxLEDDiscovery) -> FlowResult:
         """Create a config entry from a device."""
         self._async_abort_entries_match({CONF_HOST: device[ATTR_IPADDR]})
         name = async_name_from_discovery(device)
@@ -164,13 +178,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not (host := user_input[CONF_HOST]):
                 return await self.async_step_pick_device()
             try:
-                device = await self._async_try_connect(host)
+                device = await self._async_try_connect(host, None, None)
             except FLUX_LED_EXCEPTIONS:
                 errors["base"] = "cannot_connect"
             else:
-                if device[ATTR_ID]:
+                mac_address = device[ATTR_ID]
+                if mac_address is not None:
                     await self.async_set_unique_id(
-                        dr.format_mac(device[ATTR_ID]), raise_on_progress=False
+                        dr.format_mac(mac_address), raise_on_progress=False
                     )
                     self._abort_if_unique_id_configured(updates={CONF_HOST: host})
                 return self._async_create_entry_from_device(device)
@@ -198,9 +213,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         discovered_devices = await async_discover_devices(
             self.hass, DISCOVER_SCAN_TIMEOUT
         )
-        self._discovered_devices = {
-            dr.format_mac(device[ATTR_ID]): device for device in discovered_devices
-        }
+        self._discovered_devices = {}
+        for device in discovered_devices:
+            mac_address = device[ATTR_ID]
+            assert mac_address is not None
+            self._discovered_devices[dr.format_mac(mac_address)] = device
         devices_name = {
             mac: f"{async_name_from_discovery(device)} ({device[ATTR_IPADDR]})"
             for mac, device in self._discovered_devices.items()
@@ -215,7 +232,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema({vol.Required(CONF_DEVICE): vol.In(devices_name)}),
         )
 
-    async def _async_try_connect(self, host: str) -> dict[str, Any]:
+    async def _async_try_connect(
+        self, host: str, mac_address: str | None, model: str | None
+    ) -> FluxLEDDiscovery:
         """Try to connect."""
         self._async_abort_entries_match({CONF_HOST: host})
         if device := await async_discover_device(self.hass, host):
@@ -225,7 +244,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await bulb.async_setup(lambda: None)
         finally:
             await bulb.async_stop()
-        return {ATTR_ID: None, ATTR_MODEL: None, ATTR_IPADDR: host}
+        return FluxLEDDiscovery(
+            ipaddr=host,
+            model=model,
+            id=mac_address,
+            model_num=bulb.model_num,
+            version_num=bulb.version_num,
+            firmware_date=None,
+            model_info=None,
+            model_description=bulb.model_data.description,
+        )
 
 
 class OptionsFlow(config_entries.OptionsFlow):

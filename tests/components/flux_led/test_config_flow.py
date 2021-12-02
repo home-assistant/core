@@ -29,7 +29,6 @@ from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_FORM
 
 from . import (
     DEFAULT_ENTRY_TITLE,
-    DEFAULT_ENTRY_TITLE_PARTIAL,
     DHCP_DISCOVERY,
     FLUX_DISCOVERY,
     IP_ADDRESS,
@@ -428,7 +427,7 @@ async def test_discovered_by_dhcp_no_udp_response(hass):
     assert result2["type"] == "create_entry"
     assert result2["data"] == {
         CONF_HOST: IP_ADDRESS,
-        CONF_NAME: DEFAULT_ENTRY_TITLE_PARTIAL,
+        CONF_NAME: DEFAULT_ENTRY_TITLE,
     }
     assert mock_async_setup.called
     assert mock_async_setup_entry.called
@@ -509,4 +508,4 @@ async def test_options(hass: HomeAssistant):
     assert result2["type"] == "create_entry"
     assert result2["data"] == user_input
     assert result2["data"] == config_entry.options
-    assert hass.states.get("light.rgbw_controller_ddeeff") is not None
+    assert hass.states.get("light.bulb_rgbcw_ddeeff") is not None
