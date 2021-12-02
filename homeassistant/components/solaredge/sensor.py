@@ -21,7 +21,16 @@ from .coordinator import (
     SolarEdgePowerFlowDataService,
 )
 from .models import SolarEdgeSensorEntityDescription
-
+from homeassistant.const import (
+    DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_POWER,
+    ENERGY_WATT_HOUR,
+    PERCENTAGE,
+    POWER_WATT,
+    ENERGY_KILO_WATT_HOUR,
+    POWER_KILO_WATT,
+    ENERGY_MEGA_WATT_HOUR
+)
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -141,7 +150,13 @@ class SolarEdgeOverviewSensor(SolarEdgeSensorEntity):
     @property
     def native_value(self) -> str | None:
         """Return the state of the sensor."""
-        return self.data_service.data.get(self.entity_description.json_key)
+        res= self.data_service.data.get(self.entity_description.json_key)
+        if self.native_unit_of_measurement == ENERGY_MEGA_WATT_HOUR:
+            return round(res/1000000,3)
+        elif self.native_unit_of_measurement == ENERGY_KILO_WATT_HOUR:
+            return round(res/1000,3)
+        else:
+            return res
 
 
 class SolarEdgeDetailsSensor(SolarEdgeSensorEntity):
