@@ -74,13 +74,9 @@ class NINAMessage(CoordinatorEntity, BinarySensorEntity):
 
         self._coordinator: NINADataUpdateCoordinator = coordinator
 
-        self._attr_name = f"Warning: {self._region_name} {self._slot_id}"
-        self._attr_unique_id = f"{self._region}-{self._slot_id}"
-
-    @property
-    def name(self) -> str | None:
-        """Return the name of the sensor."""
-        return self._attr_name
+        self._attr_name: str = f"Warning: {self._region_name} {self._slot_id}"
+        self._attr_unique_id: str = f"{self._region}-{self._slot_id}"
+        self._attr_device_class: str = DEVICE_CLASS_SAFETY
 
     @property
     def is_on(self) -> bool:
@@ -109,13 +105,3 @@ class NINAMessage(CoordinatorEntity, BinarySensorEntity):
             ATTR_START: data[ATTR_START],
             ATTR_EXPIRES: data[ATTR_EXPIRES],
         }
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return the unique ID of the sensor."""
-        return self._attr_unique_id
-
-    @property
-    def device_class(self) -> str:
-        """Return the device class of this entity."""
-        return DEVICE_CLASS_SAFETY
