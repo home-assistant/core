@@ -53,6 +53,16 @@ SERVICE_NAME_RESET_VALVE_DIAGNOSTICS = "reset_valve_diagnostics"
 SERVICE_NAME_UNPAIR_SENSOR = "unpair_sensor"
 SERVICE_NAME_UPGRADE_FIRMWARE = "upgrade_firmware"
 
+SERVICES = (
+    SERVICE_NAME_DISABLE_AP,
+    SERVICE_NAME_ENABLE_AP,
+    SERVICE_NAME_PAIR_SENSOR,
+    SERVICE_NAME_REBOOT,
+    SERVICE_NAME_RESET_VALVE_DIAGNOSTICS,
+    SERVICE_NAME_UNPAIR_SENSOR,
+    SERVICE_NAME_UPGRADE_FIRMWARE,
+)
+
 SERVICE_PAIR_UNPAIR_SENSOR_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_DEVICE_ID): cv.string,
@@ -252,15 +262,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if len(loaded_entries) == 1:
         # If this is the last loaded instance of Guardian, deregister any services
         # defined during integration setup:
-        for service_name in (
-            SERVICE_NAME_DISABLE_AP,
-            SERVICE_NAME_ENABLE_AP,
-            SERVICE_NAME_PAIR_SENSOR,
-            SERVICE_NAME_REBOOT,
-            SERVICE_NAME_RESET_VALVE_DIAGNOSTICS,
-            SERVICE_NAME_UNPAIR_SENSOR,
-            SERVICE_NAME_UPGRADE_FIRMWARE,
-        ):
+        for service_name in SERVICES:
             hass.services.async_remove(DOMAIN, service_name)
 
     return unload_ok
