@@ -171,7 +171,7 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
 
     def pause(self, **kwargs: Any) -> None:
         """Pause the device."""
-        self._send_command([{"code": DPCode.POWER_GO, "value": True}])
+        self._send_command([{"code": DPCode.POWER_GO, "value": False}])
 
     def return_to_base(self, **kwargs: Any) -> None:
         """Return device to dock."""
@@ -184,3 +184,7 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
     def set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
         self._send_command([{"code": DPCode.SUCTION, "value": fan_speed}])
+
+    def send_command(self, command, params, **kwargs) -> None:
+        """Set raw command."""
+        self._send_command(command)
