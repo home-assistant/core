@@ -1,4 +1,4 @@
-"""Enum related utilities."""
+"""Backports from newer Python versions."""
 from __future__ import annotations
 
 from enum import Enum
