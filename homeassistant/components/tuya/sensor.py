@@ -594,7 +594,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             subkey="voltage",
         ),
     ),
-	# Robot Vacuum
+    # Robot Vacuum
     # https://developer.tuya.com/en/docs/iot/fsd?id=K9gf487ck1tlo
     "sd": (
         TuyaSensorEntityDescription(
