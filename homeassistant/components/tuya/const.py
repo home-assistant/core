@@ -171,9 +171,9 @@ class DPCode(str, Enum):
     CH4_SENSOR_STATE = "ch4_sensor_state"
     CH4_SENSOR_VALUE = "ch4_sensor_value"
     CHILD_LOCK = "child_lock"  # Child lock
-    CLICK_SUSTAIN_TIME = "click_sustain_time"
     CLEAN_AREA = "clean_area"
     CLEAN_TIME = "clean_time"
+    CLICK_SUSTAIN_TIME = "click_sustain_time"
     CO_STATE = "co_state"
     CO_STATUS = "co_status"
     CO_VALUE = "co_value"
