@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 import logging
 from pprint import pformat
-from typing import Any, Mapping, Optional
+from typing import Any, Mapping, Optional, cast
 from urllib.parse import urlparse
 
 from async_upnp_client.client import UpnpError
@@ -38,19 +38,6 @@ from .data import get_domain_data
 LOGGER = logging.getLogger(__name__)
 
 FlowInput = Optional[Mapping[str, Any]]
-
-
-def _parse_hostname(ssdp_location: str | None, default: str | None = None) -> str:
-    if ssdp_location is None:
-        if default is None:
-            raise ValueError("ssdp_location is None")
-        return default
-    url = urlparse(ssdp_location)
-    if url.hostname is None:
-        if default is None:
-            raise ValueError("hostname is None")
-        return default
-    return url.hostname
 
 
 class ConnectError(IntegrationError):
@@ -107,7 +94,7 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         self._discoveries = {
             discovery.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME)
-            or _parse_hostname(discovery.ssdp_location): discovery
+            or cast(str, urlparse(discovery.ssdp_location).hostname): discovery
             for discovery in discoveries
         }
 
