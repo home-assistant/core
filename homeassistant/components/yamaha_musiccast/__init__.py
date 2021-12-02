@@ -39,11 +39,10 @@ SCAN_INTERVAL = timedelta(seconds=60)
 async def get_upnp_desc(hass: HomeAssistant, host: str):
     """Get the upnp description URL for a given host, using the SSPD scanner."""
     ssdp_entries = await ssdp.async_get_discovery_info_by_st(hass, "upnp:rootdevice")
-    matches = [w for w in ssdp_entries if w.get("_host", "") == host]
+    matches = [w for w in ssdp_entries if w.ssdp_headers.get("_host", "") == host]
     upnp_desc = None
     for match in matches:
-        if match.get(ssdp.ATTR_SSDP_LOCATION):
-            upnp_desc = match[ssdp.ATTR_SSDP_LOCATION]
+        if upnp_desc := match.ssdp_location:
             break
 
     if not upnp_desc:
