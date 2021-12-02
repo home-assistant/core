@@ -239,6 +239,7 @@ FLOWS = [
     "ps4",
     "pvpc_hourly_pricing",
     "rachio",
+    "radarr",
     "rainforest_eagle",
     "rainmachine",
     "rdw",

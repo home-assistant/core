@@ -1,20 +1,18 @@
 """Support for Radarr."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta
-from http import HTTPStatus
-import logging
-import time
-from typing import Any
+from typing import cast
 
-import requests
+from aiopyarr.models.radarr import RadarrMovie
 import voluptuous as vol
 
+from homeassistant.components.radarr import RadarrEntity
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     SensorEntity,
     SensorEntityDescription,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -31,23 +29,24 @@ from homeassistant.const import (
     DATA_YOTTABYTES,
     DATA_ZETTABYTES,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import dt as dt_util
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
-_LOGGER = logging.getLogger(__name__)
-
-CONF_DAYS = "days"
-CONF_INCLUDED = "include_paths"
-CONF_UNIT = "unit"
-CONF_URLBASE = "urlbase"
-
-DEFAULT_HOST = "localhost"
-DEFAULT_PORT = 7878
-DEFAULT_URLBASE = ""
-DEFAULT_DAYS = "1"
-DEFAULT_UNIT = DATA_GIGABYTES
-
-SCAN_INTERVAL = timedelta(minutes=10)
+from .const import (
+    CONF_DAYS,
+    CONF_INCLUDED,
+    CONF_UNIT,
+    CONF_URLBASE,
+    DEFAULT_DAYS,
+    DEFAULT_HOST,
+    DEFAULT_PORT,
+    DEFAULT_UNIT,
+    DEFAULT_URLBASE,
+    DOMAIN,
+)
+from .coordinator import RadarrDataUpdateCoordinator
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -63,16 +62,11 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         icon="mdi:television",
     ),
     SensorEntityDescription(
-        key="wanted",
-        name="Wanted",
-        native_unit_of_measurement="Movies",
-        icon="mdi:television",
-    ),
-    SensorEntityDescription(
         key="movies",
         name="Movies",
         native_unit_of_measurement="Movies",
         icon="mdi:television",
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="commands",
@@ -90,15 +84,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 
 SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
-ENDPOINTS = {
-    "diskspace": "{0}://{1}:{2}/{3}api/diskspace",
-    "upcoming": "{0}://{1}:{2}/{3}api/calendar?start={4}&end={5}",
-    "movies": "{0}://{1}:{2}/{3}api/movie",
-    "commands": "{0}://{1}:{2}/{3}api/command",
-    "status": "{0}://{1}:{2}/{3}api/system/status",
-}
-
-# Support to Yottabytes for the future, why not
 BYTE_SIZES = [
     DATA_BYTES,
     DATA_KILOBYTES,
@@ -110,6 +95,7 @@ BYTE_SIZES = [
     DATA_ZETTABYTES,
     DATA_YOTTABYTES,
 ]
+# Deprecated in Home Assistant 2022.1
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
@@ -126,138 +112,137 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
+PARALLEL_UPDATES = 1
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Radarr platform."""
-    conditions = config[CONF_MONITORED_CONDITIONS]
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up Radarr sensors based on a config entry."""
     entities = [
-        RadarrSensor(hass, config, description)
+        RadarrSensor(
+            hass.data[DOMAIN][entry.entry_id],
+            description,
+            entry.entry_id,
+        )
         for description in SENSOR_TYPES
-        if description.key in conditions
     ]
-    add_entities(entities, True)
+
+    async_add_entities(entities, True)
 
 
-class RadarrSensor(SensorEntity):
+class RadarrSensor(RadarrEntity, SensorEntity):
     """Implementation of the Radarr sensor."""
 
-    def __init__(self, hass, conf, description: SensorEntityDescription):
+    def __init__(
+        self,
+        coordinator: RadarrDataUpdateCoordinator,
+        description: SensorEntityDescription,
+        entry_id: str,
+    ) -> None:
         """Create Radarr entity."""
+        super().__init__(coordinator, entry_id)
         self.entity_description = description
-
-        self.conf = conf
-        self.host = conf.get(CONF_HOST)
-        self.port = conf.get(CONF_PORT)
-        self.urlbase = conf.get(CONF_URLBASE)
-        if self.urlbase:
-            self.urlbase = f"{self.urlbase.strip('/')}/"
-        self.apikey = conf.get(CONF_API_KEY)
-        self.included = conf.get(CONF_INCLUDED)
-        self.days = int(conf.get(CONF_DAYS))
-        self.ssl = "https" if conf.get(CONF_SSL) else "http"
-        self.data: list[Any] = []
+        self.coordinator = coordinator
         self._attr_name = f"Radarr {description.name}"
-        if description.key == "diskspace":
-            self._attr_native_unit_of_measurement = conf.get(CONF_UNIT)
-        self._attr_available = False
+        self._attr_unique_id = f"{entry_id}/{description.name}"
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict:
         """Return the state attributes of the sensor."""
         attributes = {}
-        sensor_type = self.entity_description.key
-        if sensor_type == "upcoming":
-            for movie in self.data:
-                attributes[to_key(movie)] = get_release_date(movie)
-        elif sensor_type == "commands":
-            for command in self.data:
-                attributes[command["name"]] = command["state"]
-        elif sensor_type == "diskspace":
-            for data in self.data:
-                free_space = to_unit(data["freeSpace"], self.native_unit_of_measurement)
-                total_space = to_unit(
-                    data["totalSpace"], self.native_unit_of_measurement
-                )
-                percentage_used = (
-                    0 if total_space == 0 else free_space / total_space * 100
-                )
-                attributes[data["path"]] = "{:.2f}/{:.2f}{} ({:.2f}%)".format(
-                    free_space,
-                    total_space,
-                    self.native_unit_of_measurement,
-                    percentage_used,
-                )
-        elif sensor_type == "movies":
-            for movie in self.data:
-                attributes[to_key(movie)] = movie["downloaded"]
-        elif sensor_type == "status":
-            attributes = self.data
-
+        if self.entity_description.key == "upcoming":
+            for movie in self.coordinator.calendar:  # type: ignore
+                attributes[to_key(movie)] = movie.physicalRelease or movie.inCinemas
+        elif self.entity_description.key == "commands":
+            for command in self.coordinator.commands:  # type: ignore
+                attributes[command.name] = command.status
+        elif self.entity_description.key == "diskspace":
+            for key, item in self.get_mapped_capacity().items():
+                attributes[key] = item
+        elif (
+            self.entity_description.key == "movies"
+            and self.coordinator.movies is not None  # type: ignore
+        ):
+            for movie in self.coordinator.movies:  # type: ignore
+                attributes[to_key(movie)] = movie.hasFile
+        elif self.entity_description.key == "status":
+            attributes = self.coordinator.system_status.attributes  # type: ignore
         return attributes
 
-    def update(self):
-        """Update the data for the sensor."""
-        sensor_type = self.entity_description.key
-        time_zone = dt_util.get_time_zone(self.hass.config.time_zone)
-        start = get_date(time_zone)
-        end = get_date(time_zone, self.days)
-        try:
-            res = requests.get(
-                ENDPOINTS[sensor_type].format(
-                    self.ssl, self.host, self.port, self.urlbase, start, end
-                ),
-                headers={"X-Api-Key": self.apikey},
-                timeout=10,
-            )
-        except OSError:
-            _LOGGER.warning("Host %s is not available", self.host)
-            self._attr_available = False
-            self._attr_native_value = None
-            return
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the sensor."""
+        value = None
+        if self.entity_description.key == "diskspace" and self.coordinator.disk_space:  # type: ignore
+            space = 0
+            for mount in self.coordinator.disk_space:  # type: ignore
+                space = space + mount.freeSpace
+            value = f"{to_unit(space, cast(str, self.native_unit_of_measurement)):.2f}"
 
-        if res.status_code == HTTPStatus.OK:
-            if sensor_type in ("upcoming", "movies", "commands"):
-                self.data = res.json()
-                self._attr_native_value = len(self.data)
-            elif sensor_type == "diskspace":
-                # If included paths are not provided, use all data
-                if self.included == []:
-                    self.data = res.json()
-                else:
-                    # Filter to only show lists that are included
-                    self.data = list(
-                        filter(lambda x: x["path"] in self.included, res.json())
-                    )
-                self._attr_native_value = "{:.2f}".format(
-                    to_unit(
-                        sum(data["freeSpace"] for data in self.data),
-                        self.native_unit_of_measurement,
-                    )
-                )
-            elif sensor_type == "status":
-                self.data = res.json()
-                self._attr_native_value = self.data["version"]
-            self._attr_available = True
+        elif self.entity_description.key == "upcoming":
+            value = str(len(self.coordinator.calendar))  # type: ignore
+        elif self.entity_description.key == "commands":
+            value = str(len(self.coordinator.commands))  # type: ignore
+        elif self.entity_description.key == "status":
+            value = self.coordinator.system_status.version  # type: ignore
+        elif self.entity_description.key == "movies":
+            self.coordinator.movies_count_enabled = True  # type: ignore
+            if self.coordinator.movies:  # type: ignore
+                value = str(len(self.coordinator.movies))  # type: ignore
+        return value
 
-
-def get_date(zone, offset=0):
-    """Get date based on timezone and offset of days."""
-    day = 60 * 60 * 24
-    return datetime.date(datetime.fromtimestamp(time.time() + day * offset, tz=zone))
-
-
-def get_release_date(data):
-    """Get release date."""
-    if not (date := data.get("physicalRelease")):
-        date = data.get("inCinemas")
-    return date
+    def get_mapped_capacity(self) -> dict[str, str]:
+        """Get mapped mount capacity."""
+        # The below logic attempts to match total space with free space
+        attrs = {}
+        if (
+            self.coordinator.get_space  # type: ignore
+            and len(self.coordinator.agg_space) != 0  # type: ignore
+            and self.native_unit_of_measurement
+        ):
+            for mount in self.coordinator.disk_space:  # type: ignore
+                for key, item in self.coordinator.agg_space.items():  # type: ignore
+                    if (
+                        item <= mount.freeSpace * 1.01
+                        and item >= mount.freeSpace * 0.99
+                    ):
+                        self.coordinator.agg_space[key] = mount.freeSpace  # type: ignore
+                        attrs[mount.path] = "{:.2f}/{:.2f}{} ({:.2f}%)".format(
+                            to_unit(mount.freeSpace, self.native_unit_of_measurement),
+                            to_unit(key, self.native_unit_of_measurement),
+                            self.native_unit_of_measurement,
+                            0 if key == 0 else mount.freeSpace / key * 100,
+                        )
+                    else:
+                        attrs[mount.path] = "{:.2f} {}".format(
+                            to_unit(mount.freeSpace, self.native_unit_of_measurement),
+                            self.native_unit_of_measurement,
+                        )
+        return attrs
 
 
-def to_key(data):
+def to_key(movie: RadarrMovie) -> str:
     """Get key."""
-    return "{} ({})".format(data["title"], data["year"])
+    return f"{movie.title} ({movie.year})"
 
 
-def to_unit(value, unit):
+def to_unit(value: int, unit: str = DATA_GIGABYTES) -> float:
     """Convert bytes to give unit."""
     return value / 1024 ** BYTE_SIZES.index(unit)

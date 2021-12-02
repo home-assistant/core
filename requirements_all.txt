@@ -236,6 +236,9 @@ aiopvapi==1.6.14
 # homeassistant.components.pvpc_hourly_pricing
 aiopvpc==2.2.4
 
+# homeassistant.components.radarr
+aiopyarr==21.12.0
+
 # homeassistant.components.webostv
 aiopylgtv==0.4.0
 

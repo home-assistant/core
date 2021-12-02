@@ -1,0 +1,93 @@
+[
+  {
+    "title": "string",
+    "originalTitle": "string",
+    "alternateTitles": [],
+    "secondaryYearSourceId": 0,
+    "sortTitle": "string",
+    "sizeOnDisk": 1967709785,
+    "status": "released",
+    "overview": "string",
+    "physicalRelease": "2021-12-03T00:00:00Z",
+    "digitalRelease": "2020-08-11T00:00:00Z",
+    "images": [
+      {
+        "coverType": "poster",
+        "url": "string"
+      }
+    ],
+    "website": "string",
+    "year": 2020,
+    "hasFile": true,
+    "youTubeTrailerId": "string",
+    "studio": "string",
+    "path": "string",
+    "qualityProfileId": 9,
+    "monitored": true,
+    "minimumAvailability": "inCinemas",
+    "isAvailable": true,
+    "folderName": "string",
+    "runtime": 97,
+    "cleanTitle": "string",
+    "imdbId": "string",
+    "tmdbId": 0,
+    "titleSlug": "string",
+    "genres": ["Comedy", "Horror", "Music"],
+    "tags": [],
+    "added": "2020-07-16T13:25:37Z",
+    "ratings": {
+      "votes": 48,
+      "value": 6.1
+    },
+    "movieFile": {
+      "movieId": 0,
+      "relativePath": "string",
+      "path": "string",
+      "size": 1967709785,
+      "dateAdded": "2021-06-01T04:08:20Z",
+      "sceneName": "string",
+      "indexerFlags": 1,
+      "quality": {
+        "quality": {
+          "id": 7,
+          "name": "Bluray-1080p",
+          "source": "bluray",
+          "resolution": 1080,
+          "modifier": "none"
+        },
+        "revision": {
+          "version": 1,
+          "real": 0,
+          "isRepack": false
+        }
+      }, 
+      "mediaInfo": {
+        "audioBitrate": 224000,
+        "audioChannels": 5.1,
+        "audioCodec": "AAC",
+        "audioLanguages": "eng",
+        "audioStreamCount": 1,
+        "videoBitDepth": 8,
+        "videoBitrate": 2500000,
+        "videoCodec": "x264",
+        "videoFps": 23.976,
+        "resolution": "1920x816",
+        "runTime": "1:36:04",
+        "scanType": "Progressive",
+        "subtitles": ""
+      },
+      "originalFilePath": "string",
+      "qualityCutoffNotMet": false,
+      "languages": [
+        {
+          "id": 1,
+          "name": "English"
+        }
+      ],
+      "releaseGroup": "string",
+      "edition": "",
+      "id": 38229
+    },
+    "id": 47353
+  }
+]
