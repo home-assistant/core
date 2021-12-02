@@ -25,7 +25,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -194,7 +194,8 @@ class NanoleafLight(NanoleafEntity, LightEntity):
             _LOGGER.info("Fetching %s data recovered", self.name)
         self._attr_available = True
 
-    async def async_handle_update(self) -> None:
+    @callback
+    def handle_update(self) -> None:
         """Handle state update."""
         self.async_write_ha_state()
         if not self.available:
@@ -208,6 +209,6 @@ class NanoleafLight(NanoleafEntity, LightEntity):
             async_dispatcher_connect(
                 self.hass,
                 f"{DOMAIN}_update_light_{self._nanoleaf.serial_no}",
-                self.async_handle_update,
+                self.handle_update,
             )
         )
