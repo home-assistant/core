@@ -45,7 +45,7 @@ SENSOR_TYPES = [
         name="Lifetime energy",
         icon="mdi:solar-power",
         state_class=STATE_CLASS_TOTAL,
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=ENERGY_MEGA_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
     ),
     SolarEdgeSensorEntityDescription(
@@ -54,7 +54,7 @@ SENSOR_TYPES = [
         name="Energy this year",
         entity_registry_enabled_default=False,
         icon="mdi:solar-power",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=ENERGY_MEGA_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
     ),
     SolarEdgeSensorEntityDescription(
@@ -63,7 +63,7 @@ SENSOR_TYPES = [
         name="Energy this month",
         entity_registry_enabled_default=False,
         icon="mdi:solar-power",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
     ),
     SolarEdgeSensorEntityDescription(
@@ -72,7 +72,7 @@ SENSOR_TYPES = [
         name="Energy today",
         entity_registry_enabled_default=False,
         icon="mdi:solar-power",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
     ),
     SolarEdgeSensorEntityDescription(
