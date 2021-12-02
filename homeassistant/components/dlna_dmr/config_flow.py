@@ -40,6 +40,19 @@ LOGGER = logging.getLogger(__name__)
 FlowInput = Optional[Mapping[str, Any]]
 
 
+def _parse_hostname(ssdp_location: str | None, default: str | None = None) -> str:
+    if ssdp_location is None:
+        if default is None:
+            raise ValueError("ssdp_location is None")
+        return default
+    url = urlparse(ssdp_location)
+    if url.hostname is None:
+        if default is None:
+            raise ValueError("hostname is None")
+        return default
+    return url.hostname
+
+
 class ConnectError(IntegrationError):
     """Error occurred when trying to connect to a device."""
 
@@ -94,8 +107,7 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         self._discoveries = {
             discovery.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME)
-            or urlparse(discovery.ssdp_location or "").hostname
-            or "": discovery
+            or _parse_hostname(discovery.ssdp_location): discovery
             for discovery in discoveries
         }
 
