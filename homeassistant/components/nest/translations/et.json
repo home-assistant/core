@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "authorize_url_timeout": "Tuvastamise URL-i loomise ajal\u00f5pp.",
-            "invalid_access_token": "Vigane juurdep\u00e4\u00e4su t\u00f5end",
+            "invalid_access_token": "Vigane juurdep\u00e4\u00e4sut\u00f5end",
             "missing_configuration": "Osis pole seadistatud. Vaata dokumentatsiooni.",
             "no_url_available": "URL pole saadaval. Selle t\u00f5rke kohta teabe saamiseks vaata [spikrijaotis]({docs_url})",
             "reauth_successful": "Taastuvastamine \u00f5nnestus",
