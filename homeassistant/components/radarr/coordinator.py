@@ -7,7 +7,8 @@ import time
 from typing import cast
 
 from aiopyarr import exceptions
-from aiopyarr.models import host_configuration, radarr
+from aiopyarr.models import radarr
+from aiopyarr.models.host_configuration import PyArrHostConfiguration
 from aiopyarr.radarr_client import RadarrClient
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
@@ -25,7 +26,7 @@ class RadarrDataUpdateCoordinator(DataUpdateCoordinator):
     def __init__(
         self,
         hass: HomeAssistant,
-        host_configuration: host_configuration.PyArrHostConfiguration,
+        host_configuration: PyArrHostConfiguration,
         api_client: RadarrClient,
     ) -> None:
         """Initialize the coordinator."""

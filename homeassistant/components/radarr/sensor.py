@@ -219,10 +219,7 @@ class RadarrSensor(RadarrEntity, SensorEntity):
         ):
             for mount in self.coordinator.disk_space:  # type: ignore
                 for key, item in self.coordinator.agg_space.items():  # type: ignore
-                    if (
-                        item <= mount.freeSpace * 1.01
-                        and item >= mount.freeSpace * 0.99
-                    ):
+                    if mount.freeSpace * 0.99 <= item <= mount.freeSpace * 1.01:
                         self.coordinator.agg_space[key] = mount.freeSpace  # type: ignore
                         attrs[mount.path] = "{:.2f}/{:.2f}{} ({:.2f}%)".format(
                             to_unit(mount.freeSpace, self.native_unit_of_measurement),
