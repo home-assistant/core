@@ -121,7 +121,9 @@ class HassIODiscovery(HomeAssistantView):
 
         # Use config flow
         await self.hass.config_entries.flow.async_init(
-            service, context={"source": config_entries.SOURCE_HASSIO}, data=config_data
+            service,
+            context={"source": config_entries.SOURCE_HASSIO},
+            data=HassioServiceInfo(config=config_data),
         )
 
     async def async_process_del(self, data):
