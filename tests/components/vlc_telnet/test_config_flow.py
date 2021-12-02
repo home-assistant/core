@@ -302,7 +302,7 @@ async def test_hassio_flow(hass: HomeAssistant) -> None:
 
         assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
         assert result2["title"] == test_data["name"]
-        assert result2["data"] == test_data
+        assert result2["data"] == test_data.config
         assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -319,7 +319,7 @@ async def test_hassio_already_configured(hass: HomeAssistant) -> None:
         }
     )
 
-    entry = MockConfigEntry(domain=DOMAIN, data=entry_data, unique_id="hassio")
+    entry = MockConfigEntry(domain=DOMAIN, data=entry_data.config, unique_id="hassio")
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
