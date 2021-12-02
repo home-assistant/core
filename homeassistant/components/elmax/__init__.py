@@ -23,8 +23,6 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
     """Set up elmax-cloud from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
-
     # Create the API client object and attempt a login, so that we immediately know
     # if there is something wrong with user credentials
     coordinator = ElmaxCoordinator(
@@ -42,14 +40,10 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     await coordinator.async_config_entry_first_refresh()
 
     # Store a global reference to the coordinator for later use
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     # Perform platform initialization.
-    # Add the cover feature only if supported by the current panel.
-    plats = ELMAX_PLATFORMS.copy()
-    if coordinator.panel_status is not None and coordinator.panel_status.cover_feature:
-        plats.append("cover")
-    hass.config_entries.async_setup_platforms(entry, plats)
+    hass.config_entries.async_setup_platforms(entry, ELMAX_PLATFORMS)
     return True
 
 
