@@ -218,7 +218,8 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             device_class=DEVICE_CLASS_TUYA_FINGERBOT_MODE,
             entity_category=ENTITY_CATEGORY_CONFIG,
         ),
-    ),    # Robot Vacuum
+    ),
+    # Robot Vacuum
     # https://developer.tuya.com/en/docs/iot/fsd?id=K9gf487ck1tlo
     "sd": (
         SelectEntityDescription(
