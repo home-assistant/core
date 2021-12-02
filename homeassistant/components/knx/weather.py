@@ -93,7 +93,6 @@ class KNXWeather(KnxEntity, WeatherEntity):
     @property
     def pressure(self) -> float | None:
         """Return current air pressure in pA."""
-        # KNX returns pA - HA requires hPa
         return self._device.air_pressure
 
     @property
