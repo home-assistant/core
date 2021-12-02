@@ -41,6 +41,13 @@ class TwenteMilieuSensorDescription(
 
 SENSORS: tuple[TwenteMilieuSensorDescription, ...] = (
     TwenteMilieuSensorDescription(
+        key="tree",
+        waste_type=WasteType.TREE,
+        name="Christmas Tree Pickup",
+        icon="mdi:pine-tree",
+        device_class=SensorDeviceClass.DATE,
+    ),
+    TwenteMilieuSensorDescription(
         key="Non-recyclable",
         waste_type=WasteType.NON_RECYCLABLE,
         name="Non-recyclable Waste Pickup",
