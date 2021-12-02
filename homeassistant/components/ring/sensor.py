@@ -164,7 +164,7 @@ class HistoryRingSensor(RingSensor):
         if self._latest_event is None:
             return None
 
-        return self._latest_event["created_at"].isoformat()
+        return self._latest_event["created_at"]
 
     @property
     def extra_state_attributes(self):
