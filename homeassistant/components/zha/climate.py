@@ -613,10 +613,11 @@ class CentralitePearl(ZenWithinThermostat):
         "_TZE200_ywdxldoj",
         "_TZE200_cwnjrr72",
         "_TZE200_b6wax7g0",
+        "_TZE200_2atgpdho",
         "_TYST11_ckud7u2l",
         "_TYST11_ywdxldoj",
         "_TYST11_cwnjrr72",
-        "_TYST11_b6wax7g0",
+        "_TYST11_2atgpdho",
     },
 )
 class MoesThermostat(Thermostat):
