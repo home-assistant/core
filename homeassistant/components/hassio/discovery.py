@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Mapping
 from dataclasses import dataclass
 import logging
 from typing import Any
@@ -27,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 class HassioServiceInfo(BaseServiceInfo):
     """Prepared info from hassio entries."""
 
-    config: Mapping[str, Any]
+    config: dict[str, Any]
 
     # Used to prevent log flooding. To be removed in 2022.6
     _warning_logged: bool = False

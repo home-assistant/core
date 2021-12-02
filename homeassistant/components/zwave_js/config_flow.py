@@ -14,6 +14,7 @@ from zwave_js_server.version import VersionInfo, get_server_version
 from homeassistant import config_entries, exceptions
 from homeassistant.components import usb
 from homeassistant.components.hassio import is_hassio
+from homeassistant.components.hassio.discovery import HassioServiceInfo
 from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import (
@@ -430,7 +431,7 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
             step_id="manual", data_schema=get_manual_schema(user_input), errors=errors
         )
 
-    async def async_step_hassio(self, discovery_info: dict[str, Any]) -> FlowResult:
+    async def async_step_hassio(self, discovery_info: HassioServiceInfo) -> FlowResult:
         """Receive configuration from add-on discovery info.
 
         This flow is triggered by the Z-Wave JS add-on.

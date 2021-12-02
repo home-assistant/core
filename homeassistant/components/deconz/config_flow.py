@@ -20,6 +20,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.components.deconz.gateway import DeconzGateway
+from homeassistant.components.hassio.discovery import HassioServiceInfo
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
@@ -233,7 +234,7 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_link()
 
-    async def async_step_hassio(self, discovery_info: dict[str, Any]) -> FlowResult:
+    async def async_step_hassio(self, discovery_info: HassioServiceInfo) -> FlowResult:
         """Prepare configuration for a Hass.io deCONZ bridge.
 
         This flow is triggered by the discovery component.

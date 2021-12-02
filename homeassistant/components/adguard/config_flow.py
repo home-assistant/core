@@ -6,6 +6,7 @@ from typing import Any
 from adguardhome import AdGuardHome, AdGuardHomeConnectionError
 import voluptuous as vol
 
+from homeassistant.components.hassio.discovery import HassioServiceInfo
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import (
     CONF_HOST,
@@ -104,7 +105,7 @@ class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_hassio(self, discovery_info: dict[str, Any]) -> FlowResult:
+    async def async_step_hassio(self, discovery_info: HassioServiceInfo) -> FlowResult:
         """Prepare configuration for a Hass.io AdGuard Home add-on.
 
         This flow is triggered by the discovery component.
