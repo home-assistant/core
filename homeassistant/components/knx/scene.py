@@ -13,7 +13,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DATA_KNX_CONFIG, DOMAIN, KNX_ADDRESS, SupportedPlatforms
+from .const import (
+    CONF_SYNC_STATE,
+    DATA_KNX_CONFIG,
+    DOMAIN,
+    KNX_ADDRESS,
+    SupportedPlatforms,
+)
 from .knx_entity import KnxEntity
 from .schema import SceneSchema
 
@@ -43,6 +49,7 @@ class KNXScene(KnxEntity, Scene):
             device=XknxScene(
                 xknx,
                 name=config[CONF_NAME],
+                sync_state=config[CONF_SYNC_STATE],
                 group_address=config[KNX_ADDRESS],
                 scene_number=config[SceneSchema.CONF_SCENE_NUMBER],
             )

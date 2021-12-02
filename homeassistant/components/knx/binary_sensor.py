@@ -24,6 +24,7 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     ATTR_COUNTER,
     ATTR_SOURCE,
+    CONF_SYNC_STATE,
     DATA_KNX_CONFIG,
     DOMAIN,
     SupportedPlatforms,
@@ -60,7 +61,7 @@ class KNXBinarySensor(KnxEntity, BinarySensorEntity, RestoreEntity):
                 name=config[CONF_NAME],
                 group_address_state=config[BinarySensorSchema.CONF_STATE_ADDRESS],
                 invert=config[BinarySensorSchema.CONF_INVERT],
-                sync_state=config[BinarySensorSchema.CONF_SYNC_STATE],
+                sync_state=config[CONF_SYNC_STATE],
                 ignore_internal_state=config[
                     BinarySensorSchema.CONF_IGNORE_INTERNAL_STATE
                 ],

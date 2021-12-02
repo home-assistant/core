@@ -19,7 +19,13 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 
-from .const import DATA_KNX_CONFIG, DOMAIN, KNX_ADDRESS, SupportedPlatforms
+from .const import (
+    CONF_SYNC_STATE,
+    DATA_KNX_CONFIG,
+    DOMAIN,
+    KNX_ADDRESS,
+    SupportedPlatforms,
+)
 from .knx_entity import KnxEntity
 from .schema import FanSchema
 
@@ -50,6 +56,7 @@ class KNXFan(KnxEntity, FanEntity):
             device=XknxFan(
                 xknx,
                 name=config[CONF_NAME],
+                sync_state=config[CONF_SYNC_STATE],
                 group_address_speed=config.get(KNX_ADDRESS),
                 group_address_speed_state=config.get(FanSchema.CONF_STATE_ADDRESS),
                 group_address_oscillation=config.get(

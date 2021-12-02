@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DATA_KNX_CONFIG, DOMAIN, SupportedPlatforms
+from .const import CONF_SYNC_STATE, DATA_KNX_CONFIG, DOMAIN, SupportedPlatforms
 from .knx_entity import KnxEntity
 from .schema import WeatherSchema
 
@@ -35,7 +35,7 @@ def _create_weather(xknx: XKNX, config: ConfigType) -> XknxWeather:
     return XknxWeather(
         xknx,
         name=config[CONF_NAME],
-        sync_state=config[WeatherSchema.CONF_SYNC_STATE],
+        sync_state=config[CONF_SYNC_STATE],
         group_address_temperature=config[WeatherSchema.CONF_KNX_TEMPERATURE_ADDRESS],
         group_address_brightness_south=config.get(
             WeatherSchema.CONF_KNX_BRIGHTNESS_SOUTH_ADDRESS

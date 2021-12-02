@@ -468,7 +468,6 @@ async def test_options_flow(
             ConnectionSchema.CONF_KNX_MCAST_PORT: 3675,
             ConnectionSchema.CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
             ConnectionSchema.CONF_KNX_RATE_LIMIT: 20,
-            ConnectionSchema.CONF_KNX_STATE_UPDATER: True,
         }
 
 
@@ -522,7 +521,6 @@ async def test_tunneling_options_flow(
             ConnectionSchema.CONF_KNX_MCAST_PORT: 3675,
             ConnectionSchema.CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
             ConnectionSchema.CONF_KNX_RATE_LIMIT: 20,
-            ConnectionSchema.CONF_KNX_STATE_UPDATER: True,
             CONF_HOST: "192.168.1.1",
             CONF_PORT: 3675,
             ConnectionSchema.CONF_KNX_ROUTE_BACK: True,

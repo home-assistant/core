@@ -17,7 +17,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, StateType
 
-from .const import ATTR_SOURCE, DATA_KNX_CONFIG, DOMAIN, SupportedPlatforms
+from .const import (
+    ATTR_SOURCE,
+    CONF_SYNC_STATE,
+    DATA_KNX_CONFIG,
+    DOMAIN,
+    SupportedPlatforms,
+)
 from .knx_entity import KnxEntity
 from .schema import SensorSchema
 
@@ -42,7 +48,7 @@ def _create_sensor(xknx: XKNX, config: ConfigType) -> XknxSensor:
         xknx,
         name=config[CONF_NAME],
         group_address_state=config[SensorSchema.CONF_STATE_ADDRESS],
-        sync_state=config[SensorSchema.CONF_SYNC_STATE],
+        sync_state=config[CONF_SYNC_STATE],
         always_callback=config[SensorSchema.CONF_ALWAYS_CALLBACK],
         value_type=config[CONF_TYPE],
     )

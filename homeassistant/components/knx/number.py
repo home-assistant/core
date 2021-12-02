@@ -24,6 +24,7 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     CONF_RESPOND_TO_READ,
     CONF_STATE_ADDRESS,
+    CONF_SYNC_STATE,
     DATA_KNX_CONFIG,
     DOMAIN,
     KNX_ADDRESS,
@@ -51,6 +52,7 @@ def _create_numeric_value(xknx: XKNX, config: ConfigType) -> NumericValue:
     """Return a KNX NumericValue to be used within XKNX."""
     return NumericValue(
         xknx,
+        sync_state=config[CONF_SYNC_STATE],
         name=config[CONF_NAME],
         group_address=config[KNX_ADDRESS],
         group_address_state=config.get(CONF_STATE_ADDRESS),

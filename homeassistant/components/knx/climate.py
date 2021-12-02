@@ -28,6 +28,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    CONF_SYNC_STATE,
     CONTROLLER_MODES,
     CURRENT_HVAC_ACTIONS,
     DATA_KNX_CONFIG,
@@ -62,6 +63,7 @@ def _create_climate(xknx: XKNX, config: ConfigType) -> XknxClimate:
     climate_mode = XknxClimateMode(
         xknx,
         name=f"{config[CONF_NAME]} Mode",
+        sync_state=config[CONF_SYNC_STATE],
         group_address_operation_mode=config.get(
             ClimateSchema.CONF_OPERATION_MODE_ADDRESS
         ),
@@ -103,6 +105,7 @@ def _create_climate(xknx: XKNX, config: ConfigType) -> XknxClimate:
     return XknxClimate(
         xknx,
         name=config[CONF_NAME],
+        sync_state=config[CONF_SYNC_STATE],
         group_address_temperature=config[ClimateSchema.CONF_TEMPERATURE_ADDRESS],
         group_address_target_temperature=config.get(
             ClimateSchema.CONF_TARGET_TEMPERATURE_ADDRESS

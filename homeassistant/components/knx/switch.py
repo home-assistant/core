@@ -22,6 +22,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_RESPOND_TO_READ,
+    CONF_SYNC_STATE,
     DATA_KNX_CONFIG,
     DOMAIN,
     KNX_ADDRESS,
@@ -55,6 +56,7 @@ class KNXSwitch(KnxEntity, SwitchEntity, RestoreEntity):
         super().__init__(
             device=XknxSwitch(
                 xknx,
+                sync_state=config[CONF_SYNC_STATE],
                 name=config[CONF_NAME],
                 group_address=config[KNX_ADDRESS],
                 group_address_state=config.get(SwitchSchema.CONF_STATE_ADDRESS),

@@ -14,6 +14,7 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     CONF_PAYLOAD,
     CONF_PAYLOAD_LENGTH,
+    CONF_SYNC_STATE,
     DATA_KNX_CONFIG,
     DOMAIN,
     KNX_ADDRESS,
@@ -48,6 +49,7 @@ class KNXButton(KnxEntity, ButtonEntity):
             device=XknxRawValue(
                 xknx,
                 name=config[CONF_NAME],
+                sync_state=config[CONF_SYNC_STATE],
                 payload_length=config[CONF_PAYLOAD_LENGTH],
                 group_address=config[KNX_ADDRESS],
             )

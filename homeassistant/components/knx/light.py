@@ -30,6 +30,7 @@ from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.color as color_util
 
 from .const import (
+    CONF_SYNC_STATE,
     DATA_KNX_CONFIG,
     DOMAIN,
     KNX_ADDRESS,
@@ -84,6 +85,7 @@ def _create_light(xknx: XKNX, config: ConfigType) -> XknxLight:
     return XknxLight(
         xknx,
         name=config[CONF_NAME],
+        sync_state=config[CONF_SYNC_STATE],
         group_address_switch=config.get(KNX_ADDRESS),
         group_address_switch_state=config.get(LightSchema.CONF_STATE_ADDRESS),
         group_address_brightness=config.get(LightSchema.CONF_BRIGHTNESS_ADDRESS),

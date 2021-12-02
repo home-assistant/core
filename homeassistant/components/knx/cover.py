@@ -29,7 +29,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_utc_time_change
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DATA_KNX_CONFIG, DOMAIN, SupportedPlatforms
+from .const import CONF_SYNC_STATE, DATA_KNX_CONFIG, DOMAIN, SupportedPlatforms
 from .knx_entity import KnxEntity
 from .schema import CoverSchema
 
@@ -59,6 +59,7 @@ class KNXCover(KnxEntity, CoverEntity):
             device=XknxCover(
                 xknx,
                 name=config[CONF_NAME],
+                sync_state=config[CONF_SYNC_STATE],
                 group_address_long=config.get(CoverSchema.CONF_MOVE_LONG_ADDRESS),
                 group_address_short=config.get(CoverSchema.CONF_MOVE_SHORT_ADDRESS),
                 group_address_stop=config.get(CoverSchema.CONF_STOP_ADDRESS),
