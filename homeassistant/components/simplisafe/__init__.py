@@ -137,6 +137,14 @@ SERVICE_NAME_REMOVE_PIN = "remove_pin"
 SERVICE_NAME_SET_PIN = "set_pin"
 SERVICE_NAME_SET_SYSTEM_PROPERTIES = "set_system_properties"
 
+SERVICES = (
+    SERVICE_NAME_CLEAR_NOTIFICATIONS,
+    SERVICE_NAME_REMOVE_PIN,
+    SERVICE_NAME_SET_PIN,
+    SERVICE_NAME_SET_SYSTEM_PROPERTIES,
+)
+
+
 SERVICE_REMOVE_PIN_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_DEVICE_ID): cv.string,
@@ -408,12 +416,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if len(loaded_entries) == 1:
         # If this is the last loaded instance of SimpliSafe, deregister any services
         # defined during integration setup:
-        for service_name in (
-            SERVICE_NAME_CLEAR_NOTIFICATIONS,
-            SERVICE_NAME_REMOVE_PIN,
-            SERVICE_NAME_SET_PIN,
-            SERVICE_NAME_SET_SYSTEM_PROPERTIES,
-        ):
+        for service_name in SERVICES:
             hass.services.async_remove(DOMAIN, service_name)
 
     return unload_ok
