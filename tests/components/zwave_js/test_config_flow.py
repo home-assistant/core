@@ -8,17 +8,20 @@ from zwave_js_server.version import VersionInfo
 
 from homeassistant import config_entries
 from homeassistant.components import usb
+from homeassistant.components.hassio.discovery import HassioServiceInfo
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.zwave_js.config_flow import SERVER_VERSION_TIMEOUT, TITLE
 from homeassistant.components.zwave_js.const import DOMAIN
 
 from tests.common import MockConfigEntry
 
-ADDON_DISCOVERY_INFO = {
-    "addon": "Z-Wave JS",
-    "host": "host1",
-    "port": 3001,
-}
+ADDON_DISCOVERY_INFO = HassioServiceInfo(
+    config={
+        "addon": "Z-Wave JS",
+        "host": "host1",
+        "port": 3001,
+    }
+)
 
 
 USB_DISCOVERY_INFO = usb.UsbServiceInfo(
