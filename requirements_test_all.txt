@@ -1476,7 +1476,7 @@ youless-api==0.15
 zeroconf==0.37.0
 
 # homeassistant.components.zha
-zha-quirks==0.0.63
+zha-quirks==0.0.64
 
 # homeassistant.components.zha
 zigpy-deconz==0.14.0
@@ -1491,7 +1491,7 @@ zigpy-zigate==0.7.3
 zigpy-znp==0.6.1
 
 # homeassistant.components.zha
-zigpy==0.41.0
+zigpy==0.42.0
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.33.0
