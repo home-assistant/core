@@ -6,6 +6,7 @@ from unittest.mock import patch
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.almond import config_flow
 from homeassistant.components.almond.const import DOMAIN
+from homeassistant.components.hassio.discovery import HassioServiceInfo
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.helpers import config_entry_oauth2_flow
 
@@ -51,7 +52,9 @@ async def test_hassio(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
-        data={"addon": "Almond add-on", "host": "almond-addon", "port": "1234"},
+        data=HassioServiceInfo(
+            config={"addon": "Almond add-on", "host": "almond-addon", "port": "1234"}
+        ),
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
