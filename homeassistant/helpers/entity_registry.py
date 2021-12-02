@@ -9,12 +9,13 @@ timer.
 """
 from __future__ import annotations
 
-from collections import OrderedDict
+from collections import UserDict
 from collections.abc import Callable, Iterable, Mapping
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
 import attr
+import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -161,14 +162,57 @@ class EntityRegistryStore(storage.Store):
         return await _async_migrate(old_major_version, old_minor_version, old_data)
 
 
+class EntityRegistryItems(UserDict):
+    """Container for entity registry items, maps entity_id -> entry.
+
+    Maintains two additional indexes:
+    - id -> entry
+    - (domain, platform, unique_id) -> entry
+    """
+
+    def __init__(self) -> None:
+        """Initialize the container."""
+        super().__init__()
+        self._entry_ids: dict[str, RegistryEntry] = {}
+        self._index: dict[tuple[str, str, str], str] = {}
+
+    def __setitem__(self, key: str, entry: RegistryEntry) -> None:
+        """Add an item."""
+        if key in self:
+            old_entry = self[key]
+            del self._entry_ids[old_entry.id]
+            del self._index[(old_entry.domain, old_entry.platform, old_entry.unique_id)]
+        super().__setitem__(key, entry)
+        self._entry_ids.__setitem__(entry.id, entry)
+        self._index[(entry.domain, entry.platform, entry.unique_id)] = entry.entity_id
+
+    def __delitem__(self, key: str) -> None:
+        """Remove an item."""
+        entry = self[key]
+        self._entry_ids.__delitem__(entry.id)
+        self._index.__delitem__((entry.domain, entry.platform, entry.unique_id))
+        super().__delitem__(key)
+
+    def __getitem__(self, key: str) -> RegistryEntry:
+        """Get an item."""
+        return cast(RegistryEntry, super().__getitem__(key))
+
+    def get_entity_id(self, key: tuple[str, str, str]) -> str | None:
+        """Get entity_id from (domain, platform, unique_id)."""
+        return self._index.get(key)
+
+    def get_entry(self, key: str) -> RegistryEntry | None:
+        """Get entry from id."""
+        return self._entry_ids.get(key)
+
+
 class EntityRegistry:
     """Class to hold a registry of entities."""
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the registry."""
         self.hass = hass
-        self.entities: dict[str, RegistryEntry]
-        self._index: dict[tuple[str, str, str], str] = {}
+        self.entities: EntityRegistryItems
         self._store = EntityRegistryStore(
             hass,
             STORAGE_VERSION_MAJOR,
@@ -218,7 +262,7 @@ class EntityRegistry:
         self, domain: str, platform: str, unique_id: str
     ) -> str | None:
         """Check if an entity_id is currently registered."""
-        return self._index.get((domain, platform, unique_id))
+        return self.entities.get_entity_id((domain, platform, unique_id))
 
     @callback
     def async_generate_entity_id(
@@ -320,7 +364,7 @@ class EntityRegistry:
         ):
             disabled_by = DISABLED_INTEGRATION
 
-        entity = RegistryEntry(
+        entry = RegistryEntry(
             area_id=area_id,
             capabilities=capabilities,
             config_entry_id=config_entry_id,
@@ -336,7 +380,7 @@ class EntityRegistry:
             unique_id=unique_id,
             unit_of_measurement=unit_of_measurement,
         )
-        self._register_entry(entity)
+        self.entities[entity_id] = entry
         _LOGGER.info("Registered new %s.%s entity: %s", domain, platform, entity_id)
         self.async_schedule_save()
 
@@ -344,12 +388,12 @@ class EntityRegistry:
             EVENT_ENTITY_REGISTRY_UPDATED, {"action": "create", "entity_id": entity_id}
         )
 
-        return entity
+        return entry
 
     @callback
     def async_remove(self, entity_id: str) -> None:
         """Remove an entity from registry."""
-        self._unregister_entry(self.entities[entity_id])
+        self.entities.pop(entity_id)
         self.hass.bus.async_fire(
             EVENT_ENTITY_REGISTRY_UPDATED, {"action": "remove", "entity_id": entity_id}
         )
@@ -513,9 +557,7 @@ class EntityRegistry:
         if not new_values:
             return old
 
-        self._remove_index(old)
-        new = attr.evolve(old, **new_values)
-        self._register_entry(new)
+        new = self.entities[entity_id] = attr.evolve(old, **new_values)
 
         self.async_schedule_save()
 
@@ -539,7 +581,7 @@ class EntityRegistry:
             old_conf_load_func=load_yaml,
             old_conf_migrate_func=_async_migrate_yaml_to_json,
         )
-        entities: dict[str, RegistryEntry] = OrderedDict()
+        entities = EntityRegistryItems()
 
         if data is not None:
             for entity in data["entities"]:
@@ -571,7 +613,6 @@ class EntityRegistry:
                 )
 
         self.entities = entities
-        self._rebuild_index()
 
     @callback
     def async_schedule_save(self) -> None:
@@ -625,25 +666,6 @@ class EntityRegistry:
         for entity_id, entry in self.entities.items():
             if area_id == entry.area_id:
                 self._async_update_entity(entity_id, area_id=None)
-
-    def _register_entry(self, entry: RegistryEntry) -> None:
-        self.entities[entry.entity_id] = entry
-        self._add_index(entry)
-
-    def _add_index(self, entry: RegistryEntry) -> None:
-        self._index[(entry.domain, entry.platform, entry.unique_id)] = entry.entity_id
-
-    def _unregister_entry(self, entry: RegistryEntry) -> None:
-        self._remove_index(entry)
-        del self.entities[entry.entity_id]
-
-    def _remove_index(self, entry: RegistryEntry) -> None:
-        del self._index[(entry.domain, entry.platform, entry.unique_id)]
-
-    def _rebuild_index(self) -> None:
-        self._index = {}
-        for entry in self.entities.values():
-            self._add_index(entry)
 
 
 @callback
@@ -841,3 +863,25 @@ async def async_migrate_entries(
 
         if updates is not None:
             ent_reg.async_update_entity(entry.entity_id, **updates)
+
+
+@callback
+def async_resolve_entity_ids(
+    registry: EntityRegistry, entity_ids_or_uuids: list[str]
+) -> list[str]:
+    """Resolve a list of entity ids or UUIDs to a list of entity ids."""
+
+    def resolve_entity(entity_id_or_uuid: str) -> str | None:
+        """Resolve an entity id or UUID to an entity id or None."""
+        if valid_entity_id(entity_id_or_uuid):
+            return entity_id_or_uuid
+        if (entry := registry.entities.get_entry(entity_id_or_uuid)) is None:
+            raise vol.Invalid(f"Unknown entity registry entry {entity_id_or_uuid}")
+        return entry.entity_id
+
+    tmp = [
+        resolved_item
+        for item in entity_ids_or_uuids
+        if (resolved_item := resolve_entity(item)) is not None
+    ]
+    return tmp

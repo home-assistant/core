@@ -38,7 +38,7 @@ async def test_select_schedule_thermostats(hass, config_entry, caplog, netatmo_a
 
     # Test setting a different schedule
     with patch(
-        "pyatmo.thermostat.AsyncHomeData.async_switch_home_schedule"
+        "pyatmo.climate.AsyncClimate.async_switch_home_schedule"
     ) as mock_switch_home_schedule:
         await hass.services.async_call(
             SELECT_DOMAIN,
@@ -51,7 +51,7 @@ async def test_select_schedule_thermostats(hass, config_entry, caplog, netatmo_a
         )
         await hass.async_block_till_done()
         mock_switch_home_schedule.assert_called_once_with(
-            home_id="91763b24c43d3e344f424e8b", schedule_id="591b54a2764ff4d50d8b5795"
+            schedule_id="591b54a2764ff4d50d8b5795"
         )
 
     # Fake backend response changing schedule

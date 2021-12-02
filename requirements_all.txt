@@ -312,7 +312,7 @@ apcaccess==0.0.13
 apns2==0.3.0
 
 # homeassistant.components.apprise
-apprise==0.9.5.1
+apprise==0.9.6
 
 # homeassistant.components.aprs
 aprslib==0.6.46
@@ -658,7 +658,7 @@ fjaraskupan==1.0.2
 flipr-api==1.4.1
 
 # homeassistant.components.flux_led
-flux_led==0.25.2
+flux_led==0.25.10
 
 # homeassistant.components.homekit
 fnvhash==0.1.0
@@ -768,7 +768,7 @@ growattServer==1.1.0
 gstreamer-player==1.1.2
 
 # homeassistant.components.profiler
-guppy3==3.1.0
+guppy3==3.1.2
 
 # homeassistant.components.stream
 ha-av==8.0.4-rc.1
@@ -813,13 +813,13 @@ hkavr==0.0.5
 hlk-sw16==0.0.9
 
 # homeassistant.components.pi_hole
-hole==0.6.0
+hole==0.7.0
 
 # homeassistant.components.workday
 holidays==0.11.3.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20211130.0
+home-assistant-frontend==20211201.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1305,7 +1305,7 @@ py-synologydsm-api==1.0.4
 py-zabbix==1.1.7
 
 # homeassistant.components.seventeentrack
-py17track==3.2.1
+py17track==2021.12.1
 
 # homeassistant.components.hdmi_cec
 pyCEC==0.5.1
@@ -1435,7 +1435,7 @@ pydeconz==85
 pydelijn==0.6.1
 
 # homeassistant.components.dexcom
-pydexcom==0.2.0
+pydexcom==0.2.1
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
@@ -1507,7 +1507,7 @@ pyfreedompro==1.1.0
 pyfritzhome==0.6.2
 
 # homeassistant.components.fronius
-pyfronius==0.7.0
+pyfronius==0.7.1
 
 # homeassistant.components.ifttt
 pyfttt==0.3
@@ -1907,7 +1907,7 @@ python-kasa==0.4.0
 # python-lirc==1.2.3
 
 # homeassistant.components.xiaomi_miio
-python-miio==0.5.9
+python-miio==0.5.9.1
 
 # homeassistant.components.mpd
 python-mpd2==3.0.4
@@ -2274,6 +2274,9 @@ systembridge==2.2.3
 # homeassistant.components.tahoma
 tahoma-api==0.0.16
 
+# homeassistant.components.tailscale
+tailscale==0.1.3
+
 # homeassistant.components.tank_utility
 tank_utility==1.4.0
 
@@ -2302,7 +2305,7 @@ temperusb==1.5.3
 tesla-powerwall==0.3.12
 
 # homeassistant.components.tesla_wall_connector
-tesla-wall-connector==0.2.0
+tesla-wall-connector==1.0.0
 
 # homeassistant.components.tensorflow
 # tf-models-official==2.3.0
@@ -2341,7 +2344,7 @@ transmissionrpc==0.11
 tuya-iot-py-sdk==0.6.3
 
 # homeassistant.components.twentemilieu
-twentemilieu==0.4.2
+twentemilieu==0.5.0
 
 # homeassistant.components.twilio
 twilio==6.32.0
@@ -2375,7 +2378,7 @@ uvcclient==0.11.0
 vallox-websocket-api==2.8.1
 
 # homeassistant.components.rdw
-vehicle==0.2.0
+vehicle==0.2.2
 
 # homeassistant.components.velbus
 velbus-aio==2021.11.7

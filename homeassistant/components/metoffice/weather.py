@@ -1,7 +1,7 @@
 """Support for UK Met Office weather service."""
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_PRECIPITATION,
+    ATTR_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_FORECAST_TEMP,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
@@ -15,6 +15,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import get_device_info
 from .const import (
+    ATTR_FORECAST_DAYTIME,
     ATTRIBUTION,
     CONDITION_CLASSES,
     DEFAULT_NAME,
@@ -46,19 +47,22 @@ async def async_setup_entry(
     )
 
 
-def _build_forecast_data(timestep):
+def _build_forecast_data(timestep, use_3hourly):
     data = {}
     data[ATTR_FORECAST_TIME] = timestep.date.isoformat()
     if timestep.weather:
         data[ATTR_FORECAST_CONDITION] = _get_weather_condition(timestep.weather.value)
     if timestep.precipitation:
-        data[ATTR_FORECAST_PRECIPITATION] = timestep.precipitation.value
+        data[ATTR_FORECAST_PRECIPITATION_PROBABILITY] = timestep.precipitation.value
     if timestep.temperature:
         data[ATTR_FORECAST_TEMP] = timestep.temperature.value
     if timestep.wind_direction:
         data[ATTR_FORECAST_WIND_BEARING] = timestep.wind_direction.value
     if timestep.wind_speed:
         data[ATTR_FORECAST_WIND_SPEED] = timestep.wind_speed.value
+    if not use_3hourly:
+        # if it's close to noon, mark as Day, otherwise as Night
+        data[ATTR_FORECAST_DAYTIME] = abs(timestep.date.hour - 12) < 6
     return data
 
 
@@ -82,6 +86,7 @@ class MetOfficeWeather(CoordinatorEntity, WeatherEntity):
         )
         self._attr_name = f"{DEFAULT_NAME} {hass_data[METOFFICE_NAME]} {mode_label}"
         self._attr_unique_id = hass_data[METOFFICE_COORDINATES]
+        self._use_3hourly = use_3hourly
         if not use_3hourly:
             self._attr_unique_id = f"{self._attr_unique_id}_{MODE_DAILY}"
 
@@ -155,7 +160,7 @@ class MetOfficeWeather(CoordinatorEntity, WeatherEntity):
         if self.coordinator.data.forecast is None:
             return None
         return [
-            _build_forecast_data(timestep)
+            _build_forecast_data(timestep, self._use_3hourly)
             for timestep in self.coordinator.data.forecast
         ]
 

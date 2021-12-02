@@ -79,13 +79,13 @@ class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle dhcp discovery."""
-        mac = _extract_mac_from_name(discovery_info[dhcp.HOSTNAME])
+        mac = _extract_mac_from_name(discovery_info.hostname)
         await self.async_set_unique_id(mac)
         self._abort_if_unique_id_configured(
-            updates={CONF_IP_ADDRESS: discovery_info[dhcp.IP_ADDRESS]}
+            updates={CONF_IP_ADDRESS: discovery_info.ip}
         )
-        self.discovered_ip = discovery_info[dhcp.IP_ADDRESS]
-        self.context["title_placeholders"] = {"name": discovery_info[dhcp.HOSTNAME]}
+        self.discovered_ip = discovery_info.ip
+        self.context["title_placeholders"] = {"name": discovery_info.hostname}
         return await self.async_step_gateway_entry()
 
     async def async_step_gateway_select(self, user_input=None):

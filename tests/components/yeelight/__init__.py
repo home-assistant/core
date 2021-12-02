@@ -182,8 +182,8 @@ def _patch_discovery(no_device=False, capabilities=None):
         info = None
         if not no_device:
             info = ssdp.SsdpServiceInfo(
-                ssdp_usn="mock_usn",
-                ssdp_st="mock_st",
+                ssdp_usn="",
+                ssdp_st=scanner.SSDP_ST,
                 upnp={},
                 ssdp_headers=capabilities or CAPABILITIES,
             )

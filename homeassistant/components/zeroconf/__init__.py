@@ -75,14 +75,6 @@ MAX_PROPERTY_VALUE_LEN = 230
 # Dns label max length
 MAX_NAME_LEN = 63
 
-# Attributes for ZeroconfServiceInfo
-ATTR_HOST: Final = "host"
-ATTR_HOSTNAME: Final = "hostname"
-ATTR_NAME: Final = "name"
-ATTR_PORT: Final = "port"
-ATTR_PROPERTIES: Final = "properties"
-ATTR_TYPE: Final = "type"
-
 # Attributes for ZeroconfServiceInfo[ATTR_PROPERTIES]
 ATTR_PROPERTIES_ID: Final = "id"
 
@@ -129,7 +121,6 @@ class ZeroconfServiceInfo(BaseServiceInfo):
                 f"accessed discovery_info['{name}'] instead of discovery_info.{name}; this will fail in version 2022.6",
                 exclude_integrations={DOMAIN},
                 error_if_core=False,
-                level=logging.DEBUG,
             )
             self._warning_logged = True
         return getattr(self, name)
@@ -145,7 +136,6 @@ class ZeroconfServiceInfo(BaseServiceInfo):
                 f"accessed discovery_info.get('{name}') instead of discovery_info.{name}; this will fail in version 2022.6",
                 exclude_integrations={DOMAIN},
                 error_if_core=False,
-                level=logging.DEBUG,
             )
             self._warning_logged = True
         if hasattr(self, name):
