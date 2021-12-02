@@ -106,12 +106,12 @@ ATTR_PIN_VALUE = "pin"
 ATTR_SYSTEM_ID = "system_id"
 ATTR_TIMESTAMP = "timestamp"
 
+DEFAULT_CONFIG_URL = "https://webapp.simplisafe.com/new/#/dashboard"
 DEFAULT_ENTITY_MODEL = "alarm_control_panel"
 DEFAULT_ENTITY_NAME = "Alarm Control Panel"
 DEFAULT_ERROR_THRESHOLD = 2
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 DEFAULT_SOCKET_MIN_RETRY = 15
-
 
 DISPATCHER_TOPIC_WEBSOCKET_EVENT = "simplisafe_websocket_event_{0}"
 
@@ -650,6 +650,7 @@ class SimpliSafeEntity(CoordinatorEntity):
         }
 
         self._attr_device_info = DeviceInfo(
+            configuration_url=DEFAULT_CONFIG_URL,
             identifiers={(DOMAIN, serial)},
             manufacturer="SimpliSafe",
             model=model,
