@@ -727,6 +727,8 @@ jobs:
       - changes
       - pytest
     steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v2.4.0
       - name: Download all coverage artifacts
         uses: actions/download-artifact@v2
       - name: Upload coverage to Codecov (full coverage)
