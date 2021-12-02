@@ -15,7 +15,6 @@ from typing import Any, TypeVar
 
 import slugify as unicode_slug
 
-from ..helpers.deprecation import deprecated_function
 from .dt import as_local, utcnow
 
 T = TypeVar("T")
@@ -44,38 +43,6 @@ def raise_if_invalid_path(path: str) -> None:
     """
     if RE_SANITIZE_PATH.sub("", path) != path:
         raise ValueError(f"{path} is not a safe path")
-
-
-@deprecated_function(replacement="raise_if_invalid_filename")
-def sanitize_filename(filename: str) -> str:
-    """Check if a filename is safe.
-
-    Only to be used to compare to original filename to check if changed.
-    If result changed, the given path is not safe and should not be used,
-    raise an error.
-
-    DEPRECATED.
-    """
-    # Backwards compatible fix for misuse of method
-    if RE_SANITIZE_FILENAME.sub("", filename) != filename:
-        return ""
-    return filename
-
-
-@deprecated_function(replacement="raise_if_invalid_path")
-def sanitize_path(path: str) -> str:
-    """Check if a path is safe.
-
-    Only to be used to compare to original path to check if changed.
-    If result changed, the given path is not safe and should not be used,
-    raise an error.
-
-    DEPRECATED.
-    """
-    # Backwards compatible fix for misuse of method
-    if RE_SANITIZE_PATH.sub("", path) != path:
-        return ""
-    return path
 
 
 def slugify(text: str | None, *, separator: str = "_") -> str:
