@@ -1,4 +1,5 @@
 """Config flow to configure Heos."""
+from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
 from pyheos import Heos, HeosError
@@ -25,7 +26,9 @@ class HeosFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Handle a discovered Heos device."""
         # Store discovered host
-        hostname = urlparse(discovery_info.ssdp_location or "").hostname
+        if TYPE_CHECKING:
+            assert discovery_info.ssdp_location
+        hostname = urlparse(discovery_info.ssdp_location).hostname
         friendly_name = (
             f"{discovery_info.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME]} ({hostname})"
         )
