@@ -33,6 +33,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
     dispatcher_send,
 )
+from homeassistant.helpers.event import async_track_time_interval, track_time_interval
 from homeassistant.util import dt as dt_util
 
 from .alarms import SonosAlarms
@@ -240,8 +241,8 @@ class SonosSpeaker:
         if battery_info := fetch_battery_info_or_none(self.soco):
             self.battery_info = battery_info
             # Battery events can be infrequent, polling is still necessary
-            self._battery_poll_timer = self.hass.helpers.event.track_time_interval(
-                self.async_poll_battery, BATTERY_SCAN_INTERVAL
+            self._battery_poll_timer = track_time_interval(
+                self.hass, self.async_poll_battery, BATTERY_SCAN_INTERVAL
             )
             dispatcher_send(self.hass, SONOS_CREATE_BATTERY, self)
         else:
@@ -337,7 +338,8 @@ class SonosSpeaker:
 
         # Create a polling task in case subscriptions fail or callback events do not arrive
         if not self._poll_timer:
-            self._poll_timer = self.hass.helpers.event.async_track_time_interval(
+            self._poll_timer = async_track_time_interval(
+                self.hass,
                 partial(
                     async_dispatcher_send,
                     self.hass,
