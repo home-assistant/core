@@ -180,10 +180,8 @@ class EntityRegistryItems(UserDict):
         """Add an item."""
         if key in self:
             old_entry = self[key]
-            self._entry_ids.__delitem__(old_entry.id)
-            self._index.__delitem__(
-                (old_entry.domain, old_entry.platform, old_entry.unique_id)
-            )
+            del self._entry_ids[old_entry.id]
+            del self._index[(old_entry.domain, old_entry.platform, old_entry.unique_id)]
         super().__setitem__(key, entry)
         self._entry_ids.__setitem__(entry.id, entry)
         self._index[(entry.domain, entry.platform, entry.unique_id)] = entry.entity_id
