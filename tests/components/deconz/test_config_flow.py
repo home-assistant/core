@@ -18,6 +18,7 @@ from homeassistant.components.deconz.const import (
     CONF_MASTER_GATEWAY,
     DOMAIN as DECONZ_DOMAIN,
 )
+from homeassistant.components.hassio.discovery import HassioServiceInfo
 from homeassistant.components.ssdp import ATTR_UPNP_MANUFACTURER_URL, ATTR_UPNP_SERIAL
 from homeassistant.config_entries import (
     SOURCE_HASSIO,
@@ -542,13 +543,15 @@ async def test_flow_hassio_discovery(hass):
     """Test hassio discovery flow works."""
     result = await hass.config_entries.flow.async_init(
         DECONZ_DOMAIN,
-        data={
-            "addon": "Mock Addon",
-            CONF_HOST: "mock-deconz",
-            CONF_PORT: 80,
-            CONF_SERIAL: BRIDGEID,
-            CONF_API_KEY: API_KEY,
-        },
+        data=HassioServiceInfo(
+            config={
+                "addon": "Mock Addon",
+                CONF_HOST: "mock-deconz",
+                CONF_PORT: 80,
+                CONF_SERIAL: BRIDGEID,
+                CONF_API_KEY: API_KEY,
+            }
+        ),
         context={"source": SOURCE_HASSIO},
     )
     assert result["type"] == RESULT_TYPE_FORM
@@ -583,12 +586,14 @@ async def test_hassio_discovery_update_configuration(hass, aioclient_mock):
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DECONZ_DOMAIN,
-            data={
-                CONF_HOST: "2.3.4.5",
-                CONF_PORT: 8080,
-                CONF_API_KEY: "updated",
-                CONF_SERIAL: BRIDGEID,
-            },
+            data=HassioServiceInfo(
+                config={
+                    CONF_HOST: "2.3.4.5",
+                    CONF_PORT: 8080,
+                    CONF_API_KEY: "updated",
+                    CONF_SERIAL: BRIDGEID,
+                }
+            ),
             context={"source": SOURCE_HASSIO},
         )
         await hass.async_block_till_done()
@@ -607,12 +612,14 @@ async def test_hassio_discovery_dont_update_configuration(hass, aioclient_mock):
 
     result = await hass.config_entries.flow.async_init(
         DECONZ_DOMAIN,
-        data={
-            CONF_HOST: "1.2.3.4",
-            CONF_PORT: 80,
-            CONF_API_KEY: API_KEY,
-            CONF_SERIAL: BRIDGEID,
-        },
+        data=HassioServiceInfo(
+            config={
+                CONF_HOST: "1.2.3.4",
+                CONF_PORT: 80,
+                CONF_API_KEY: API_KEY,
+                CONF_SERIAL: BRIDGEID,
+            }
+        ),
         context={"source": SOURCE_HASSIO},
     )
 
