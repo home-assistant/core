@@ -12,8 +12,10 @@ from homeassistant.const import (
 from homeassistant.core import callback
 
 from .const import (
+    CONF_IMPORT_BATTERY_SENSOR,
     CONF_IMPORT_SIGNAL_STRENGTH,
     COORDINATOR,
+    DEFAULT_IMPORT_BATTERY_SENSOR,
     DEFAULT_IMPORT_SIGNAL_STRENGTH,
     DEVICE_INFO,
     DOMAIN,
@@ -22,6 +24,8 @@ from .const import (
     PV_SHADE_DATA,
     ROOM_ID_IN_SHADE,
     ROOM_NAME_UNICODE,
+    SHADE_BATTERY_KIND,
+    SHADE_BATTERY_KIND_EXCLUDE,
     SHADE_BATTERY_LEVEL,
     SHADE_BATTERY_LEVEL_MAX,
 )
@@ -40,10 +44,15 @@ async def async_setup_entry(hass, entry, async_add_entities):
     coordinator = pv_data[COORDINATOR]
     device_info = pv_data[DEVICE_INFO]
 
+    battery_sensors = entry.options.get(
+        CONF_IMPORT_BATTERY_SENSOR, DEFAULT_IMPORT_BATTERY_SENSOR
+    )
     signal_sensors = entry.options.get(
         CONF_IMPORT_SIGNAL_STRENGTH, DEFAULT_IMPORT_SIGNAL_STRENGTH
     )
 
+    if battery_sensors is False:
+        _LOGGER.debug("Excluding battery sensors based on config entry")
     if signal_sensors is False:
         _LOGGER.debug("Excluding signal sensors based on config entry")
 
@@ -61,11 +70,15 @@ async def async_setup_entry(hass, entry, async_add_entities):
             )
         if SHADE_BATTERY_LEVEL not in shade.raw_data:
             continue
-        entities.append(
-            PowerViewShadeBatterySensor(
-                coordinator, device_info, room_name, shade, name_before_refresh
+        # skip hardwired blinds
+        if shade.raw_data[SHADE_BATTERY_KIND] in SHADE_BATTERY_KIND_EXCLUDE:
+            continue
+        if battery_sensors is True:
+            entities.append(
+                PowerViewShadeBatterySensor(
+                    coordinator, device_info, room_name, shade, name_before_refresh
+                )
             )
-        )
     async_add_entities(entities)
 
 

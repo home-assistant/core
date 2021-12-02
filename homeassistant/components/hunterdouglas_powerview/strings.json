@@ -25,6 +25,7 @@
       "init": {
         "data": {
           "create_seperate_entities": "Create seperate entities for blinds that allow top/down bottom/up functionality",
+          "import_batterystrength": "Create sensors for batteries",
           "import_signalstrength": "Create sensors for signal strength"
         }
       }

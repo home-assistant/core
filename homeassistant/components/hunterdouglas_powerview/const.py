@@ -54,6 +54,9 @@ ROOM_ID = "id"
 SHADE_RESPONSE = "shade"
 SHADE_BATTERY_LEVEL = "batteryStrength"
 SHADE_BATTERY_LEVEL_MAX = 200
+SHADE_BATTERY_KIND = "batteryKind"
+# 1 Hardwired Power Supply, 2 Battery Wand, 3 Rechargeable Battery
+SHADE_BATTERY_KIND_EXCLUDE = [1]
 
 STATE_ATTRIBUTE_ROOM_NAME = "roomName"
 
@@ -76,6 +79,9 @@ TOPDOWN_SHADES = [8, 47]
 
 CONF_CREATE_TOPDOWN_ENTITIES = "create_seperate_entities"
 DEFAULT_CREATE_TOPDOWN_ENTITIES = True
+
+CONF_IMPORT_BATTERY_SENSOR = "import_batterystrength"
+DEFAULT_IMPORT_BATTERY_SENSOR = True
 
 CONF_IMPORT_SIGNAL_STRENGTH = "import_signalstrength"
 DEFAULT_IMPORT_SIGNAL_STRENGTH = False
