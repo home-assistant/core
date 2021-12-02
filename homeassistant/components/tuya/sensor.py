@@ -613,19 +613,19 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             key=DPCode.TOTAL_CLEAN_AREA,
             name="Total Cleaning Area",
             icon="mdi:texture-box",
-            state_class=SensorStateClass.STATE_CLASS_TOTAL_INCREASING,
+            state_class=SensorStateClass.TOTAL_INCREASING,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.TOTAL_CLEAN_TIME,
             name="Total Cleaning Time",
             icon="mdi:history",
-            state_class=SensorStateClass.STATE_CLASS_TOTAL_INCREASING,
+            state_class=SensorStateClass.TOTAL_INCREASING,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.TOTAL_CLEAN_COUNT,
             name="Total Cleaning Times",
             icon="mdi:counter",
-            state_class=SensorStateClass.STATE_CLASS_TOTAL_INCREASING,
+            state_class=SensorStateClass.TOTAL_INCREASING,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.DUSTER_CLOTH,
