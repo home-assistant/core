@@ -97,7 +97,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Receive a Hass.io discovery."""
         await self._async_handle_discovery_without_unique_id()
 
-        self._hassio_discovery = discovery_info
+        self._hassio_discovery = discovery_info.config
 
         return await self.async_step_hassio_confirm()
 
