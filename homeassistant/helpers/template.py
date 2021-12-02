@@ -17,7 +17,7 @@ from operator import attrgetter
 import random
 import re
 import statistics
-from struct import error as StructError, pack, unpack, unpack_from
+from struct import error as StructError, pack, unpack_from
 import sys
 from typing import Any, cast
 from urllib.parse import urlencode as urllib_urlencode
@@ -1680,11 +1680,7 @@ def struct_pack(value: Any | None, format_string: str) -> bytes | None:
 def struct_unpack(value: bytes, format_string: str, offset: int = 0) -> Any | None:
     """Unpack an object from bytes an return the first native object."""
     try:
-        unpacked_value = (
-            unpack_from(format_string, value, offset)
-            if offset
-            else unpack(format_string, value)
-        )
+        unpacked_value = unpack_from(format_string, value, offset)
         return unpacked_value[0]
     except StructError:
         _LOGGER.warning(
