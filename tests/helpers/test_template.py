@@ -1717,7 +1717,7 @@ def test_unpack(hass, caplog):
     }
     assert tpl.async_render(variables=variables) is None
     assert (
-        "Template warning: 'unpack' unable to unpack object 'b''' with format_string '>I' see https://docs.python.org/3/library/struct.html for more information"
+        "Template warning: 'unpack' unable to unpack object 'b''' with format_string '>I' and offset 0 see https://docs.python.org/3/library/struct.html for more information"
         in caplog.text
     )
 
@@ -1733,7 +1733,7 @@ def test_unpack(hass, caplog):
     }
     assert tpl.async_render(variables=variables) is None
     assert (
-        "Template warning: 'unpack' unable to unpack object 'b''' with format_string 'invalid filter' see https://docs.python.org/3/library/struct.html for more information"
+        "Template warning: 'unpack' unable to unpack object 'b''' with format_string 'invalid filter' and offset 0 see https://docs.python.org/3/library/struct.html for more information"
         in caplog.text
     )
 

@@ -1680,13 +1680,13 @@ def struct_pack(value: Any | None, format_string: str) -> bytes | None:
 def struct_unpack(value: bytes, format_string: str, offset: int = 0) -> Any | None:
     """Unpack an object from bytes an return the first native object."""
     try:
-        unpacked_value = unpack_from(format_string, value, offset)
-        return unpacked_value[0]
+        return unpack_from(format_string, value, offset)[0]
     except StructError:
         _LOGGER.warning(
-            "Template warning: 'unpack' unable to unpack object '%s' with format_string '%s' see https://docs.python.org/3/library/struct.html for more information",
+            "Template warning: 'unpack' unable to unpack object '%s' with format_string '%s' and offset %s see https://docs.python.org/3/library/struct.html for more information",
             value,
             format_string,
+            offset,
         )
         return None
 
