@@ -6,7 +6,7 @@ from collections.abc import Sequence
 import contextlib
 from datetime import datetime, timedelta
 import functools
-from typing import Any, Callable, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Callable, TypeVar, cast
 
 from async_upnp_client import UpnpService, UpnpStateVariable
 from async_upnp_client.const import NotificationSubType
@@ -278,7 +278,9 @@ class DlnaDmrEntity(MediaPlayerEntity):
             await self._device_disconnect()
 
         if change == ssdp.SsdpChange.ALIVE and not self._device:
-            location = info.ssdp_location or ""
+            if TYPE_CHECKING:
+                assert info.ssdp_location
+            location = info.ssdp_location
             try:
                 await self._device_connect(location)
             except UpnpError as err:
