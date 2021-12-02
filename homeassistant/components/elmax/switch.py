@@ -19,8 +19,8 @@ class ElmaxSwitch(ElmaxEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return True if entity is on."""
-        if self._transitory_state is not None:
-            return self._transitory_state
+        if self.transitory_state is not None:
+            return self.transitory_state
         return self._device.opened
 
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -30,6 +30,7 @@ class ElmaxSwitch(ElmaxEntity, SwitchEntity):
             endpoint_id=self._device.endpoint_id, command=SwitchCommand.TURN_ON
         )
         self.transitory_state = True
+        await self.async_update_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
@@ -38,6 +39,7 @@ class ElmaxSwitch(ElmaxEntity, SwitchEntity):
             endpoint_id=self._device.endpoint_id, command=SwitchCommand.TURN_OFF
         )
         self.transitory_state = False
+        await self.async_update_ha_state()
 
     @property
     def assumed_state(self) -> bool:
