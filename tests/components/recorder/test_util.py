@@ -7,8 +7,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 from sqlalchemy import text
 from sqlalchemy.sql.elements import TextClause
-from homeassistant.components import recorder
 
+from homeassistant.components import recorder
 from homeassistant.components.recorder import run_information_with_session, util
 from homeassistant.components.recorder.const import DATA_INSTANCE, SQLITE_URL_PREFIX
 from homeassistant.components.recorder.models import RecorderRuns
