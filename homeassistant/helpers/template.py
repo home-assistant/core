@@ -17,6 +17,7 @@ from operator import attrgetter
 import random
 import re
 import statistics
+from struct import error as StructError, pack, unpack, unpack_from
 import sys
 from typing import Any, cast
 from urllib.parse import urlencode as urllib_urlencode
@@ -1662,6 +1663,38 @@ def bitwise_or(first_value, second_value, little_endian=False):
     )
 
 
+def struct_pack(value: Any | None, format_string: str) -> bytes | None:
+    """Pack an object into a bytes object."""
+    try:
+        return pack(format_string, value)
+    except StructError:
+        _LOGGER.warning(
+            "Template warning: 'pack' unable to pack object '%s' with type '%s' and format_string '%s' see https://docs.python.org/3/library/struct.html for more information",
+            str(value),
+            type(value).__name__,
+            format_string,
+        )
+        return None
+
+
+def struct_unpack(value: bytes, format_string: str, offset: int = 0) -> Any | None:
+    """Unpack an object from bytes an return the first native object."""
+    try:
+        unpacked_value = (
+            unpack_from(format_string, value, offset)
+            if offset
+            else unpack(format_string, value)
+        )
+        return unpacked_value[0]
+    except StructError:
+        _LOGGER.warning(
+            "Template warning: 'unpack' unable to unpack object '%s' with format_string '%s' see https://docs.python.org/3/library/struct.html for more information",
+            value,
+            format_string,
+        )
+        return None
+
+
 def base64_encode(value):
     """Perform base64 encode."""
     return base64.b64encode(value.encode("utf-8")).decode("utf-8")
@@ -1846,6 +1879,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["regex_findall_index"] = regex_findall_index
         self.filters["bitwise_and"] = bitwise_and
         self.filters["bitwise_or"] = bitwise_or
+        self.filters["pack"] = struct_pack
+        self.filters["unpack"] = struct_unpack
         self.filters["ord"] = ord
         self.filters["is_number"] = is_number
         self.filters["float"] = forgiving_float_filter
@@ -1876,6 +1911,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["min"] = min
         self.globals["is_number"] = is_number
         self.globals["int"] = forgiving_int
+        self.globals["pack"] = struct_pack
+        self.globals["unpack"] = struct_unpack
         self.tests["match"] = regex_match
         self.tests["search"] = regex_search
 
