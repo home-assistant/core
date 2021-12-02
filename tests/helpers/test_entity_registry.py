@@ -2,6 +2,7 @@
 from unittest.mock import patch
 
 import pytest
+import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_START, STATE_UNAVAILABLE
@@ -1023,3 +1024,60 @@ async def test_entity_max_length_exceeded(hass, registry):
     assert exc_info.value.property_name == "generated_entity_id"
     assert exc_info.value.max_length == 255
     assert exc_info.value.value == f"sensor.{long_entity_id_name}_2"
+
+
+async def test_resolve_entity_ids(hass, registry):
+    """Test resolving entity IDs."""
+
+    entry1 = registry.async_get_or_create(
+        "light", "hue", "1234", suggested_object_id="beer"
+    )
+    assert entry1.entity_id == "light.beer"
+
+    entry2 = registry.async_get_or_create(
+        "light", "hue", "2345", suggested_object_id="milk"
+    )
+    assert entry2.entity_id == "light.milk"
+
+    expected = ["light.beer", "light.milk"]
+    assert er.async_resolve_entity_ids(registry, [entry1.id, entry2.id]) == expected
+
+    expected = ["light.beer", "light.milk"]
+    assert er.async_resolve_entity_ids(registry, ["light.beer", entry2.id]) == expected
+
+    with pytest.raises(vol.Invalid):
+        er.async_resolve_entity_ids(registry, ["light.beer", "bad_uuid"])
+
+    expected = ["light.unknown"]
+    assert er.async_resolve_entity_ids(registry, ["light.unknown"]) == expected
+
+    with pytest.raises(vol.Invalid):
+        er.async_resolve_entity_ids(registry, ["unknown_uuid"])
+
+
+def test_entity_registry_items():
+    """Test the EntityRegistryItems container."""
+    entities = er.EntityRegistryItems()
+    assert entities.get_entity_id(("a", "b", "c")) is None
+    assert entities.get_entry("abc") is None
+
+    entry1 = er.RegistryEntry("test.entity1", "1234", "hue")
+    entry2 = er.RegistryEntry("test.entity2", "2345", "hue")
+    entities["test.entity1"] = entry1
+    entities["test.entity2"] = entry2
+
+    assert entities["test.entity1"] is entry1
+    assert entities["test.entity2"] is entry2
+
+    assert entities.get_entity_id(("test", "hue", "1234")) is entry1.entity_id
+    assert entities.get_entry(entry1.id) is entry1
+    assert entities.get_entity_id(("test", "hue", "2345")) is entry2.entity_id
+    assert entities.get_entry(entry2.id) is entry2
+
+    entities.pop("test.entity1")
+    del entities["test.entity2"]
+
+    assert entities.get_entity_id(("test", "hue", "1234")) is None
+    assert entities.get_entry(entry1.id) is None
+    assert entities.get_entity_id(("test", "hue", "2345")) is None
+    assert entities.get_entry(entry2.id) is None
