@@ -10,11 +10,11 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
-    ENTITY_CATEGORY_DIAGNOSTIC,
     PERCENTAGE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry
+from homeassistant.helpers.entity import EntityCategory
 
 from .common import (
     init_integration,
@@ -59,7 +59,7 @@ async def test_sensors_diffuser_v1_battery_cartridge(hass: HomeAssistant) -> Non
     entry = registry.async_get("sensor.genie_battery")
     assert entry
     assert entry.unique_id == f"{hublot}{BATTERY_SUFFIX}"
-    assert entry.entity_category == ENTITY_CATEGORY_DIAGNOSTIC
+    assert entry.entity_category == EntityCategory.DIAGNOSTIC
 
     state = hass.states.get("sensor.genie_wifi")
     assert state
@@ -70,7 +70,7 @@ async def test_sensors_diffuser_v1_battery_cartridge(hass: HomeAssistant) -> Non
     entry = registry.async_get("sensor.genie_wifi")
     assert entry
     assert entry.unique_id == f"{hublot}{WIFI_SUFFIX}"
-    assert entry.entity_category == ENTITY_CATEGORY_DIAGNOSTIC
+    assert entry.entity_category == EntityCategory.DIAGNOSTIC
 
 
 async def test_sensors_diffuser_v2_no_battery_no_cartridge(hass: HomeAssistant) -> None:
