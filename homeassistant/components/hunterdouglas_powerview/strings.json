@@ -24,7 +24,8 @@
     "step": {
       "init": {
         "data": {
-          "create_seperate_entities": "Create seperate entities for blinds that allow top/down bottom/up functionality"
+          "create_seperate_entities": "Create seperate entities for blinds that allow top/down bottom/up functionality",
+          "import_signalstrength": "Create sensors for signal strength"
         }
       }
     }

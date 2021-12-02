@@ -17,7 +17,9 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from . import async_get_device_info
 from .const import (
     CONF_CREATE_TOPDOWN_ENTITIES,
+    CONF_IMPORT_SIGNAL_STRENGTH,
     DEFAULT_CREATE_TOPDOWN_ENTITIES,
+    DEFAULT_IMPORT_SIGNAL_STRENGTH,
     DEVICE_NAME,
     DEVICE_SERIAL_NUMBER,
     DOMAIN,
@@ -199,6 +201,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         default=self.config_entry.options.get(
                             CONF_CREATE_TOPDOWN_ENTITIES,
                             DEFAULT_CREATE_TOPDOWN_ENTITIES,
+                        ),
+                    ): bool,
+                    vol.Optional(
+                        CONF_IMPORT_SIGNAL_STRENGTH,
+                        default=self.config_entry.options.get(
+                            CONF_IMPORT_SIGNAL_STRENGTH, DEFAULT_IMPORT_SIGNAL_STRENGTH
                         ),
                     ): bool,
                 }
