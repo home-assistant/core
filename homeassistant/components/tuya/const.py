@@ -200,11 +200,15 @@ class DPCode(str, Enum):
     DOORCONTACT_STATE = "doorcontact_state"  # Status of door window sensor
     DOORCONTACT_STATE_2 = "doorcontact_state_2"
     DOORCONTACT_STATE_3 = "doorcontact_state_3"
+    DUSTER_CLOTH = "duster_cloth"
+    EDGE_BRUSH = "edge_brush"
     ELECTRICITY_LEFT = "electricity_left"
     FAN_DIRECTION = "fan_direction"  # Fan direction
     FAN_SPEED_ENUM = "fan_speed_enum"  # Speed mode
     FAN_SPEED_PERCENT = "fan_speed_percent"  # Stepless speed
+    FAULT = "fault"
     FAR_DETECTION = "far_detection"
+    FILTER_LIFE = "filter"
     FILTER_RESET = "filter_reset"  # Filter (cartridge) reset
     FLOODLIGHT_LIGHTNESS = "floodlight_lightness"
     FLOODLIGHT_SWITCH = "floodlight_switch"
@@ -261,6 +265,7 @@ class DPCode(str, Enum):
     RESET_FILTER = "reset_filter"
     RESET_MAP = "reset_map"
     RESET_ROLL_BRUSH = "reset_roll_brush"
+    ROLL_BRUSH = "roll_brush"
     SEEK = "seek"
     SENSITIVITY = "sensitivity"  # Sensitivity
     SENSOR_HUMIDITY = "sensor_humidity"
@@ -317,6 +322,9 @@ class DPCode(str, Enum):
     TEMP_VALUE = "temp_value"  # Color temperature
     TEMP_VALUE_V2 = "temp_value_v2"
     TEMPER_ALARM = "temper_alarm"  # Tamper alarm
+    TOTAL_CLEAN_AREA = "total_clean_area"
+    TOTAL_CLEAN_COUNT = "total_clean_count"
+    TOTAL_CLEAN_TIME = "total_clean_time"
     UV = "uv"  # UV sterilization
     VA_BATTERY = "va_battery"
     VA_HUMIDITY = "va_humidity"
