@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 @dataclass
 class HassioServiceInfo(BaseServiceInfo):
-    """Prepared info from mqtt entries."""
+    """Prepared info from hassio entries."""
 
     config: Mapping[str, Any]
 
@@ -40,7 +40,7 @@ class HassioServiceInfo(BaseServiceInfo):
         """
         if not self._warning_logged:
             report(
-                f"accessed discovery_info['{name}'] instead of discovery_info.{name}; this will fail in version 2022.6",
+                f"accessed discovery_info['{name}'] instead of discovery_info.config['{name}']; this will fail in version 2022.6",
                 exclude_integrations={"hassio"},
                 error_if_core=False,
                 level=logging.DEBUG,
