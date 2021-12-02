@@ -35,3 +35,30 @@ set_color_mode:
             - sunset
             - thumper
             - white
+set_scg:
+  name: Set Salt Chlorine Generator
+  description: Sets salt chlorine generator runtime percentages for both pool and spa.
+  target:
+    device:
+      integration: screenlogic
+  fields:
+    pool_percent:
+      name: Pool Percentage
+      description: The runtime percentage for the salt chlorine generator when in pool mode
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+      default: 50
+      example: 100
+    spa_percent:
+      name: Spa Percentage
+      description: The runtime percentage for the salt chlorine generator when in spa mode. Value is treated as a percentage of the pool runtime.
+      selector:
+        number:
+          min: 0
+          max: 20
+          unit_of_measurement: "%"
+      default: 0
+      example: 20
