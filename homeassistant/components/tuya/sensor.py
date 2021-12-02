@@ -605,7 +605,48 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         TuyaSensorEntityDescription(
             key=DPCode.CLEAN_TIME,
             name="Cleaning Time",
-            icon="mdi:mdi:progress-clock",
+            icon="mdi:progress-clock",
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.TOTAL_CLEAN_AREA,
+            name="Total Cleaning Area",
+            icon="mdi:texture-box",
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.TOTAL_CLEAN_TIME,
+            name="Total Cleaning Time",
+            icon="mdi:history",
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.TOTAL_CLEAN_COUNT,
+            name="Total Cleaning Times",
+            icon="mdi:counter",
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.DUSTER_CLOTH,
+            name="Duster Cloth Life",
+            icon="mdi:ticket-percent-outline",
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.EDGE_BRUSH,
+            name="Side Brush Life",
+            icon="mdi:ticket-percent-outline",
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.FILTER_LIFE,
+            name="Filter Life",
+            icon="mdi:ticket-percent-outline",
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.ROLL_BRUSH,
+            name="Rolling Brush Life",
+            icon="mdi:ticket-percent-outline",
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.FAULT,
+            name="Fault Reporting",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            icon="mdi:alert-outline",
         ),
         TuyaSensorEntityDescription(
             key=DPCode.STATUS,
