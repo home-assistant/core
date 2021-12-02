@@ -223,6 +223,16 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
     # https://developer.tuya.com/en/docs/iot/fsd?id=K9gf487ck1tlo
     "sd": (
         SelectEntityDescription(
+            key=DPCode.CISTERN,
+            name="Water Tank Adjustment",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SelectEntityDescription(
+            key=DPCode.COLLECTION_MODE,
+            name="Dust Collection Mode",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SelectEntityDescription(
             key=DPCode.SUCTION,
             name="Suction",
             entity_category=EntityCategory.CONFIG,
