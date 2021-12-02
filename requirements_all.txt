@@ -2344,7 +2344,7 @@ transmissionrpc==0.11
 tuya-iot-py-sdk==0.6.3
 
 # homeassistant.components.twentemilieu
-twentemilieu==0.4.2
+twentemilieu==0.5.0
 
 # homeassistant.components.twilio
 twilio==6.32.0
