@@ -19,8 +19,10 @@
             },
             "user": {
                 "data": {
-                    "password": "Wachtwoord"
-                }
+                    "password": "Wachtwoord",
+                    "username": "Gebruikersnaam"
+                },
+                "title": "Stel uw Brunt-integratie in"
             }
         }
     }
