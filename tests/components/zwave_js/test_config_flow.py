@@ -475,7 +475,6 @@ async def test_usb_discovery(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            "usb_path": "/test",
             "s0_legacy_key": "new123",
             "s2_access_control_key": "new456",
             "s2_authenticated_key": "new789",
@@ -488,7 +487,7 @@ async def test_usb_discovery(
         "core_zwave_js",
         {
             "options": {
-                "device": "/test",
+                "device": USB_DISCOVERY_INFO["device"],
                 "s0_legacy_key": "new123",
                 "s2_access_control_key": "new456",
                 "s2_authenticated_key": "new789",
@@ -516,7 +515,7 @@ async def test_usb_discovery(
     assert result["title"] == TITLE
     assert result["data"] == {
         "url": "ws://host1:3001",
-        "usb_path": "/test",
+        "usb_path": USB_DISCOVERY_INFO["device"],
         "s0_legacy_key": "new123",
         "s2_access_control_key": "new456",
         "s2_authenticated_key": "new789",
@@ -557,7 +556,6 @@ async def test_usb_discovery_addon_not_running(
     # Make sure the discovered usb device is preferred.
     data_schema = result["data_schema"]
     assert data_schema({}) == {
-        "usb_path": USB_DISCOVERY_INFO["device"],
         "s0_legacy_key": "",
         "s2_access_control_key": "",
         "s2_authenticated_key": "",
@@ -567,7 +565,6 @@ async def test_usb_discovery_addon_not_running(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            "usb_path": USB_DISCOVERY_INFO["device"],
             "s0_legacy_key": "new123",
             "s2_access_control_key": "new456",
             "s2_authenticated_key": "new789",
