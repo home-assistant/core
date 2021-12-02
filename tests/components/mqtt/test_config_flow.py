@@ -7,7 +7,6 @@ import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import mqtt
-from homeassistant.components.hassio.discovery import HassioServiceInfo
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -111,9 +110,7 @@ async def test_hassio_already_configured(hass):
     MockConfigEntry(domain="mqtt").add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        "mqtt",
-        context={"source": config_entries.SOURCE_HASSIO},
-        data=HassioServiceInfo(config={}),
+        "mqtt", context={"source": config_entries.SOURCE_HASSIO}
     )
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
@@ -127,9 +124,7 @@ async def test_hassio_ignored(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_init(
         mqtt.DOMAIN,
-        data=HassioServiceInfo(
-            config={"addon": "Mosquitto", "host": "mock-mosquitto", "port": "1883"}
-        ),
+        data={"addon": "Mosquitto", "host": "mock-mosquitto", "port": "1883"},
         context={"source": config_entries.SOURCE_HASSIO},
     )
     assert result
@@ -145,16 +140,14 @@ async def test_hassio_confirm(
 
     result = await hass.config_entries.flow.async_init(
         "mqtt",
-        data=HassioServiceInfo(
-            config={
-                "addon": "Mock Addon",
-                "host": "mock-broker",
-                "port": 1883,
-                "username": "mock-user",
-                "password": "mock-pass",
-                "protocol": "3.1.1",
-            }
-        ),
+        data={
+            "addon": "Mock Addon",
+            "host": "mock-broker",
+            "port": 1883,
+            "username": "mock-user",
+            "password": "mock-pass",
+            "protocol": "3.1.1",
+        },
         context={"source": config_entries.SOURCE_HASSIO},
     )
     assert result["type"] == "form"
