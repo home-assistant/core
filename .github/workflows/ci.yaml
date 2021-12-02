@@ -723,7 +723,9 @@ jobs:
   coverage:
     name: Upload test coverage to Codecov
     runs-on: ubuntu-latest
-    needs: ["pytest"]
+    needs:
+      - changes
+      - pytest
     steps:
       - name: Download all coverage artifacts
         uses: actions/download-artifact@v2
