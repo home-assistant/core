@@ -206,12 +206,9 @@ class FroniusSolarNet:
         coordinator: FroniusCoordinatorType,
     ) -> FroniusCoordinatorType | None:
         """Initialize an update coordinator and return it if devices are found."""
-        print(f"coordinator {coordinator}")
         try:
             await coordinator.async_config_entry_first_refresh()
-            print(f"co data {coordinator.data}")
-        except ConfigEntryNotReady as err:
-            print(f"co error {err}")
+        except ConfigEntryNotReady:
             # ConfigEntryNotReady raised form FroniusError / KeyError in
             # DataUpdateCoordinator if request not supported by the Fronius device
             return None
