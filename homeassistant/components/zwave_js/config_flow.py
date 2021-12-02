@@ -301,6 +301,7 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
         super().__init__()
         self.use_addon = False
         self._title: str | None = None
+        self._usb_discovery = False
 
     @property
     def flow_manager(self) -> config_entries.ConfigEntriesFlowManager:
@@ -386,6 +387,8 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
                 description_placeholders={CONF_NAME: self._title},
                 data_schema=vol.Schema({}),
             )
+
+        self._usb_discovery = True
 
         return await self.async_step_on_supervisor({CONF_USE_ADDON: True})
 
@@ -504,7 +507,8 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
             self.s2_access_control_key = user_input[CONF_S2_ACCESS_CONTROL_KEY]
             self.s2_authenticated_key = user_input[CONF_S2_AUTHENTICATED_KEY]
             self.s2_unauthenticated_key = user_input[CONF_S2_UNAUTHENTICATED_KEY]
-            self.usb_path = user_input[CONF_USB_PATH]
+            if not self._usb_discovery:
+                self.usb_path = user_input[CONF_USB_PATH]
 
             new_addon_config = {
                 **addon_config,
@@ -534,21 +538,21 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
             CONF_ADDON_S2_UNAUTHENTICATED_KEY, self.s2_unauthenticated_key or ""
         )
 
-        data_schema = vol.Schema(
-            {
-                vol.Required(CONF_USB_PATH, default=usb_path): str,
-                vol.Optional(CONF_S0_LEGACY_KEY, default=s0_legacy_key): str,
-                vol.Optional(
-                    CONF_S2_ACCESS_CONTROL_KEY, default=s2_access_control_key
-                ): str,
-                vol.Optional(
-                    CONF_S2_AUTHENTICATED_KEY, default=s2_authenticated_key
-                ): str,
-                vol.Optional(
-                    CONF_S2_UNAUTHENTICATED_KEY, default=s2_unauthenticated_key
-                ): str,
-            }
-        )
+        schema = {
+            vol.Optional(CONF_S0_LEGACY_KEY, default=s0_legacy_key): str,
+            vol.Optional(
+                CONF_S2_ACCESS_CONTROL_KEY, default=s2_access_control_key
+            ): str,
+            vol.Optional(CONF_S2_AUTHENTICATED_KEY, default=s2_authenticated_key): str,
+            vol.Optional(
+                CONF_S2_UNAUTHENTICATED_KEY, default=s2_unauthenticated_key
+            ): str,
+        }
+
+        if not self._usb_discovery:
+            schema = {vol.Required(CONF_USB_PATH, default=usb_path): str, **schema}
+
+        data_schema = vol.Schema(schema)
 
         return self.async_show_form(step_id="configure_addon", data_schema=data_schema)
 
