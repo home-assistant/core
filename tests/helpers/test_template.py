@@ -1693,6 +1693,18 @@ def test_unpack(hass, caplog):
     }
     assert tpl.async_render(variables=variables) == 0xDEADBEEF
 
+    # unpack with offset
+    tpl = template.Template(
+        """
+{{ unpack(value, '>H', offset=2) }}
+            """,
+        hass,
+    )
+    variables = {
+        "value": b"\xde\xad\xbe\xef",
+    }
+    assert tpl.async_render(variables=variables) == 0xBEEF
+
     # test with an empty bytes object
     tpl = template.Template(
         """
