@@ -681,7 +681,7 @@ jobs:
             -p no:sugar \
             tests
       - name: Run pytest (partially)
-        if: needs.changes.outputs.test_full_suite == 'false' and matrix.python-version != "3.8"
+        if: needs.changes.outputs.test_full_suite == 'false' && matrix.python-version != '3.8'
         run: |
           . venv/bin/activate
           python3 -X dev -m pytest \
@@ -698,7 +698,7 @@ jobs:
             -p no:sugar \
             tests/components/${{ matrix.group }}
       - name: Run pytest (partially); no coverage
-        if: needs.changes.outputs.test_full_suite == 'false' and matrix.python-version == "3.8"
+        if: needs.changes.outputs.test_full_suite == 'false' && matrix.python-version == '3.8'
         run: |
           . venv/bin/activate
           python3 -X dev -m pytest \
