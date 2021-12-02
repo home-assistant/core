@@ -714,7 +714,7 @@ jobs:
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v2.2.4
         with:
-          name: coverage-${{ matrix.python-version }}-${{ matrix.group }}.xml
+          name: coverage-${{ matrix.python-version }}-${{ matrix.group }}
           path: coverage.xml
       - name: Check dirty
         run: |
