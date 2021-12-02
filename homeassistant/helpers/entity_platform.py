@@ -34,6 +34,7 @@ from homeassistant.exceptions import (
 )
 from homeassistant.setup import async_start_setup
 from homeassistant.util.async_ import run_callback_threadsafe
+from homeassistant.util.enum import StrEnum
 
 from . import (
     config_validation as cv,
@@ -42,7 +43,7 @@ from . import (
     service,
 )
 from .device_registry import DeviceRegistry
-from .entity_registry import DISABLED_INTEGRATION, EntityRegistry
+from .entity_registry import EntityRegistry, RegistryEntryDisabler
 from .event import async_call_later, async_track_time_interval
 from .typing import ConfigType, DiscoveryInfoType
 
@@ -60,6 +61,41 @@ DATA_ENTITY_PLATFORM = "entity_platform"
 PLATFORM_NOT_READY_BASE_WAIT_TIME = 30  # seconds
 
 _LOGGER = getLogger(__name__)
+
+
+class Platform(StrEnum):
+    """Available platforms."""
+
+    AIR_QUALITY = "air_quality"
+    ALARM_CONTROL_PANEL = "alarm_control_panel"
+    BINARY_SENSOR = "binary_sensor"
+    BUTTON = "button"
+    CALENDAR = "calendar"
+    CAMERA = "camera"
+    CLIMATE = "climate"
+    COVER = "cover"
+    DEVICE_TRACKER = "device_tracker"
+    FAN = "fan"
+    GEO_LOCATION = "geo_location"
+    HUMIDIFIER = "humidifier"
+    IMAGE_PROCESSING = "image_processing"
+    LIGHT = "light"
+    LOCK = "lock"
+    MAILBOX = "mailbox"
+    MEDIA_PLAYER = "media_player"
+    NOTIFY = "notify"
+    NUMBER = "number"
+    REMOTE = "remote"
+    SCENE = "scene"
+    SELECT = "select"
+    SENSOR = "sensor"
+    SIREN = "siren"
+    SST = "sst"
+    SWITCH = "switch"
+    TTS = "tts"
+    VACUUM = "vacuum"
+    WATER_HEATER = "water_heater"
+    WEATHER = "weather"
 
 
 class AddEntitiesCallback(Protocol):
@@ -456,6 +492,7 @@ class EntityPlatform:
 
             device_info = entity.device_info
             device_id = None
+            device = None
 
             if config_entry_id is not None and device_info is not None:
                 processed_dev_info: dict[str, str | None] = {
@@ -501,9 +538,9 @@ class EntityPlatform:
                 except RequiredParameterMissing:
                     pass
 
-            disabled_by: str | None = None
+            disabled_by: RegistryEntryDisabler | None = None
             if not entity.entity_registry_enabled_default:
-                disabled_by = DISABLED_INTEGRATION
+                disabled_by = RegistryEntryDisabler.INTEGRATION
 
             entry = entity_registry.async_get_or_create(
                 self.domain,
@@ -522,6 +559,11 @@ class EntityPlatform:
                 supported_features=entity.supported_features,
                 unit_of_measurement=entity.unit_of_measurement,
             )
+
+            if device and device.disabled and not entry.disabled:
+                entry = entity_registry.async_update_entity(
+                    entry.entity_id, disabled_by=RegistryEntryDisabler.DEVICE
+                )
 
             entity.registry_entry = entry
             entity.entity_id = entry.entity_id

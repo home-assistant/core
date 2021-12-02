@@ -312,7 +312,7 @@ apcaccess==0.0.13
 apns2==0.3.0
 
 # homeassistant.components.apprise
-apprise==0.9.5.1
+apprise==0.9.6
 
 # homeassistant.components.aprs
 aprslib==0.6.46
@@ -768,7 +768,7 @@ growattServer==1.1.0
 gstreamer-player==1.1.2
 
 # homeassistant.components.profiler
-guppy3==3.1.0
+guppy3==3.1.2
 
 # homeassistant.components.stream
 ha-av==8.0.4-rc.1
@@ -819,7 +819,7 @@ hole==0.7.0
 holidays==0.11.3.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20211130.0
+home-assistant-frontend==20211201.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1435,7 +1435,7 @@ pydeconz==85
 pydelijn==0.6.1
 
 # homeassistant.components.dexcom
-pydexcom==0.2.0
+pydexcom==0.2.1
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
@@ -1907,7 +1907,7 @@ python-kasa==0.4.0
 # python-lirc==1.2.3
 
 # homeassistant.components.xiaomi_miio
-python-miio==0.5.9
+python-miio==0.5.9.1
 
 # homeassistant.components.mpd
 python-mpd2==3.0.4
@@ -2308,7 +2308,7 @@ temperusb==1.5.3
 tesla-powerwall==0.3.12
 
 # homeassistant.components.tesla_wall_connector
-tesla-wall-connector==0.2.0
+tesla-wall-connector==1.0.0
 
 # homeassistant.components.tensorflow
 # tf-models-official==2.3.0
@@ -2347,7 +2347,7 @@ transmissionrpc==0.11
 tuya-iot-py-sdk==0.6.3
 
 # homeassistant.components.twentemilieu
-twentemilieu==0.4.2
+twentemilieu==0.5.0
 
 # homeassistant.components.twilio
 twilio==6.32.0
@@ -2492,7 +2492,7 @@ zengge==0.2
 zeroconf==0.37.0
 
 # homeassistant.components.zha
-zha-quirks==0.0.63
+zha-quirks==0.0.64
 
 # homeassistant.components.zhong_hong
 zhong_hong_hvac==1.0.9
@@ -2513,7 +2513,7 @@ zigpy-zigate==0.7.3
 zigpy-znp==0.6.1
 
 # homeassistant.components.zha
-zigpy==0.41.0
+zigpy==0.42.0
 
 # homeassistant.components.zoneminder
 zm-py==0.5.2

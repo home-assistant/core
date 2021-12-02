@@ -14,6 +14,9 @@
             "0": "Lage gevoeligheid",
             "1": "Hoge gevoeligheid"
         },
+        "tuya__fingerbot_mode": {
+            "switch": "Schakelaar"
+        },
         "tuya__ipc_work_mode": {
             "0": "Energiezuinige modus",
             "1": "Continue werkmodus:"

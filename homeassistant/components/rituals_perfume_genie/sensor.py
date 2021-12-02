@@ -5,8 +5,9 @@ from pyrituals import Diffuser
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC, PERCENTAGE
+from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RitualsDataUpdateCoordinator
@@ -88,7 +89,7 @@ class DiffuserBatterySensor(DiffuserEntity, SensorEntity):
 
     _attr_device_class = SensorDeviceClass.BATTERY
     _attr_native_unit_of_measurement = PERCENTAGE
-    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(
         self, diffuser: Diffuser, coordinator: RitualsDataUpdateCoordinator
@@ -107,7 +108,7 @@ class DiffuserWifiSensor(DiffuserEntity, SensorEntity):
 
     _attr_device_class = SensorDeviceClass.SIGNAL_STRENGTH
     _attr_native_unit_of_measurement = PERCENTAGE
-    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(
         self, diffuser: Diffuser, coordinator: RitualsDataUpdateCoordinator

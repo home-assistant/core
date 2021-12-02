@@ -63,7 +63,7 @@
             "button_4": "4\u756a\u76ee\u306e\u30dc\u30bf\u30f3",
             "button_5": "5\u756a\u76ee\u306e\u30dc\u30bf\u30f3",
             "button_6": "6\u756a\u76ee\u306e\u30dc\u30bf\u30f3",
-            "close": "\u9589\u3058\u308b",
+            "close": "\u30af\u30ed\u30fc\u30ba",
             "dim_down": "\u8584\u6697\u304f\u3059\u308b",
             "dim_up": "\u5fae\u304b\u306b\u660e\u308b\u304f\u3059\u308b",
             "left": "\u5de6",
@@ -80,10 +80,18 @@
             "device_shaken": "\u30c7\u30d0\u30a4\u30b9\u304c\u63fa\u308c\u308b",
             "device_slid": "\u30c7\u30d0\u30a4\u30b9 \u30b9\u30e9\u30a4\u30c9 \"{subtype}\"",
             "device_tilted": "\u30c7\u30d0\u30a4\u30b9\u304c\u50be\u3044\u3066\u3044\u308b",
+            "remote_button_alt_double_press": "\"{subtype}\" \u30dc\u30bf\u30f3\u3092\u30c0\u30d6\u30eb\u30af\u30ea\u30c3\u30af(\u4ee3\u66ff\u30e2\u30fc\u30c9)",
             "remote_button_alt_long_press": "\"{subtype}\" \u30dc\u30bf\u30f3\u3092\u62bc\u3057\u7d9a\u3051\u308b(\u4ee3\u66ff\u30e2\u30fc\u30c9)",
+            "remote_button_alt_quadruple_press": "\"{subtype}\" \u30dc\u30bf\u30f3\u30924\u56de(quadruple)\u30af\u30ea\u30c3\u30af(\u4ee3\u66ff\u30e2\u30fc\u30c9)",
+            "remote_button_alt_quintuple_press": "\"{subtype}\" \u30dc\u30bf\u30f3\u30925\u56de(quintuple)\u30af\u30ea\u30c3\u30af(\u4ee3\u66ff\u30e2\u30fc\u30c9)",
             "remote_button_alt_short_press": "\"{subtype}\" \u62bc\u3057\u7d9a\u3051\u308b(\u4ee3\u66ff\u30e2\u30fc\u30c9)",
+            "remote_button_alt_triple_press": "\"{subtype}\" \u30dc\u30bf\u30f3\u30923\u56de\u30af\u30ea\u30c3\u30af(\u4ee3\u66ff\u30e2\u30fc\u30c9)",
+            "remote_button_double_press": "\"{subtype}\" \u30dc\u30bf\u30f3\u3092\u30c0\u30d6\u30eb\u30af\u30ea\u30c3\u30af",
             "remote_button_long_press": "\"{subtype}\" \u30dc\u30bf\u30f3\u3092\u62bc\u3057\u7d9a\u3051\u308b",
-            "remote_button_short_press": "\"{subtype}\" \u30dc\u30bf\u30f3\u304c\u62bc\u3055\u308c\u307e\u3057\u305f\u3002"
+            "remote_button_quadruple_press": "\"{subtype}\" \u30dc\u30bf\u30f3\u30924\u56de(quadruple)\u30af\u30ea\u30c3\u30af",
+            "remote_button_quintuple_press": "\"{subtype}\" \u30dc\u30bf\u30f3\u30925\u56de(quintuple)\u30af\u30ea\u30c3\u30af",
+            "remote_button_short_press": "\"{subtype}\" \u30dc\u30bf\u30f3\u304c\u62bc\u3055\u308c\u307e\u3057\u305f\u3002",
+            "remote_button_triple_press": "\"{subtype}\" \u30dc\u30bf\u30f3\u30923\u56de\u30af\u30ea\u30c3\u30af"
         }
     }
 }

@@ -24,6 +24,7 @@ from . import Trackables
 from .const import (
     ATTR_DAILY_GOAL,
     ATTR_MINUTES_ACTIVE,
+    ATTR_TRACKER_STATE,
     CLIENT,
     DOMAIN,
     SERVER_UNAVAILABLE,
@@ -77,7 +78,9 @@ class TractiveHardwareSensor(TractiveSensor):
     @callback
     def handle_hardware_status_update(self, event: dict[str, Any]) -> None:
         """Handle hardware status update."""
-        self._attr_native_value = event[self.entity_description.key]
+        if (_state := event[self.entity_description.key]) is None:
+            return
+        self._attr_native_value = _state
         self._attr_available = True
         self.async_write_ha_state()
 
@@ -139,6 +142,14 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.BATTERY,
         entity_class=TractiveHardwareSensor,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ),
+    TractiveSensorEntityDescription(
+        # Currently, only state operational and not_reporting are used
+        # More states are available by polling the data
+        key=ATTR_TRACKER_STATE,
+        name="Tracker state",
+        device_class="tractive__tracker_state",
+        entity_class=TractiveHardwareSensor,
     ),
     TractiveSensorEntityDescription(
         key=ATTR_MINUTES_ACTIVE,

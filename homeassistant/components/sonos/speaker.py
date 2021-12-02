@@ -33,6 +33,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
     dispatcher_send,
 )
+from homeassistant.helpers.event import async_track_time_interval, track_time_interval
 from homeassistant.util import dt as dt_util
 
 from .alarms import SonosAlarms
@@ -64,6 +65,7 @@ from .const import (
 from .favorites import SonosFavorites
 from .helpers import soco_error
 
+NEVER_TIME = -1200.0
 EVENT_CHARGING = {
     "CHARGING": True,
     "NOT_CHARGING": False,
@@ -166,7 +168,7 @@ class SonosSpeaker:
         self._subscriptions: list[SubscriptionBase] = []
         self._resubscription_lock: asyncio.Lock | None = None
         self._event_dispatchers: dict[str, Callable] = {}
-        self._last_activity: datetime.datetime | None = None
+        self._last_activity: float = NEVER_TIME
 
         # Scheduled callback handles
         self._poll_timer: Callable | None = None
@@ -239,8 +241,8 @@ class SonosSpeaker:
         if battery_info := fetch_battery_info_or_none(self.soco):
             self.battery_info = battery_info
             # Battery events can be infrequent, polling is still necessary
-            self._battery_poll_timer = self.hass.helpers.event.track_time_interval(
-                self.async_poll_battery, BATTERY_SCAN_INTERVAL
+            self._battery_poll_timer = track_time_interval(
+                self.hass, self.async_poll_battery, BATTERY_SCAN_INTERVAL
             )
             dispatcher_send(self.hass, SONOS_CREATE_BATTERY, self)
         else:
@@ -336,7 +338,8 @@ class SonosSpeaker:
 
         # Create a polling task in case subscriptions fail or callback events do not arrive
         if not self._poll_timer:
-            self._poll_timer = self.hass.helpers.event.async_track_time_interval(
+            self._poll_timer = async_track_time_interval(
+                self.hass,
                 partial(
                     async_dispatcher_send,
                     self.hass,
@@ -404,10 +407,12 @@ class SonosSpeaker:
                     self.zone_name,
                 )
             else:
+                exc_info = exception if _LOGGER.isEnabledFor(logging.DEBUG) else None
                 _LOGGER.error(
-                    "Subscription renewals for %s failed",
+                    "Subscription renewals for %s failed: %s",
                     self.zone_name,
-                    exc_info=exception,
+                    exception,
+                    exc_info=exc_info,
                 )
             await self.async_offline()
 
@@ -963,6 +968,7 @@ class SonosSpeaker:
     #
     # Media and playback state handlers
     #
+    @soco_error()
     def update_volume(self) -> None:
         """Update information about current volume settings."""
         self.volume = self.soco.volume
@@ -977,6 +983,7 @@ class SonosSpeaker:
         except SoCoSlaveException:
             pass
 
+    @soco_error()
     def update_media(self, event: SonosEvent | None = None) -> None:
         """Update information about currently playing media."""
         variables = event and event.variables

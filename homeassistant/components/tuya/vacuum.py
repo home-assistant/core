@@ -171,7 +171,7 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
 
     def pause(self, **kwargs: Any) -> None:
         """Pause the device."""
-        self._send_command([{"code": DPCode.POWER_GO, "value": True}])
+        self._send_command([{"code": DPCode.POWER_GO, "value": False}])
 
     def return_to_base(self, **kwargs: Any) -> None:
         """Return device to dock."""

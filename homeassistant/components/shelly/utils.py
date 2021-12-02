@@ -57,7 +57,7 @@ def get_block_device_name(device: BlockDevice) -> str:
 
 def get_rpc_device_name(device: RpcDevice) -> str:
     """Naming for device."""
-    return cast(str, device.config["sys"]["device"]["name"] or device.hostname)
+    return cast(str, device.config["sys"]["device"].get("name") or device.hostname)
 
 
 def get_number_of_channels(device: BlockDevice, block: Block) -> int:

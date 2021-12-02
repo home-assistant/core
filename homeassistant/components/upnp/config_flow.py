@@ -32,9 +32,9 @@ from .const import (
 def _friendly_name_from_discovery(discovery_info: ssdp.SsdpServiceInfo) -> str:
     """Extract user-friendly name from discovery."""
     return (
-        discovery_info.get("friendlyName")
-        or discovery_info.get("modeName")
-        or discovery_info.get("_host", "")
+        discovery_info.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME)
+        or discovery_info.upnp.get(ssdp.ATTR_UPNP_MODEL_NAME)
+        or discovery_info.ssdp_headers.get("_host", "")
     )
 
 
@@ -225,7 +225,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # Ensure not already configuring/configured.
         unique_id = discovery_info.ssdp_usn
         await self.async_set_unique_id(unique_id)
-        hostname = discovery_info["_host"]
+        hostname = discovery_info.ssdp_headers["_host"]
         self._abort_if_unique_id_configured(updates={CONFIG_ENTRY_HOSTNAME: hostname})
 
         # Handle devices changing their UDN, only allow a single host.

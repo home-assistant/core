@@ -16,16 +16,13 @@ from homeassistant.components.dsmr.const import DOMAIN
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     DOMAIN as SENSOR_DOMAIN,
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
+    SensorDeviceClass,
+    SensorStateClass,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_GAS,
-    DEVICE_CLASS_POWER,
     ENERGY_KILO_WATT_HOUR,
     STATE_UNKNOWN,
     VOLUME_CUBIC_METERS,
@@ -134,9 +131,14 @@ async def test_default_setup(hass, dsmr_connection_fixture):
     # make sure entities have been created and return 'unknown' state
     power_consumption = hass.states.get("sensor.power_consumption")
     assert power_consumption.state == STATE_UNKNOWN
-    assert power_consumption.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_POWER
+    assert (
+        power_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.POWER
+    )
     assert power_consumption.attributes.get(ATTR_ICON) is None
-    assert power_consumption.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert (
+        power_consumption.attributes.get(ATTR_STATE_CLASS)
+        == SensorStateClass.MEASUREMENT
+    )
     assert power_consumption.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
 
     # simulate a telegram pushed from the smartmeter and parsed by dsmr_parser
@@ -163,9 +165,10 @@ async def test_default_setup(hass, dsmr_connection_fixture):
     # check if gas consumption is parsed correctly
     gas_consumption = hass.states.get("sensor.gas_consumption")
     assert gas_consumption.state == "745.695"
-    assert gas_consumption.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_GAS
+    assert gas_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
     assert (
-        gas_consumption.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
+        gas_consumption.attributes.get(ATTR_STATE_CLASS)
+        == SensorStateClass.TOTAL_INCREASING
     )
     assert (
         gas_consumption.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == VOLUME_CUBIC_METERS
@@ -261,10 +264,11 @@ async def test_v4_meter(hass, dsmr_connection_fixture):
     # check if gas consumption is parsed correctly
     gas_consumption = hass.states.get("sensor.gas_consumption")
     assert gas_consumption.state == "745.695"
-    assert gas_consumption.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_GAS
+    assert gas_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
     assert gas_consumption.attributes.get("unit_of_measurement") == VOLUME_CUBIC_METERS
     assert (
-        gas_consumption.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
+        gas_consumption.attributes.get(ATTR_STATE_CLASS)
+        == SensorStateClass.TOTAL_INCREASING
     )
     assert (
         gas_consumption.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == VOLUME_CUBIC_METERS
@@ -331,9 +335,10 @@ async def test_v5_meter(hass, dsmr_connection_fixture):
     # check if gas consumption is parsed correctly
     gas_consumption = hass.states.get("sensor.gas_consumption")
     assert gas_consumption.state == "745.695"
-    assert gas_consumption.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_GAS
+    assert gas_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
     assert (
-        gas_consumption.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
+        gas_consumption.attributes.get(ATTR_STATE_CLASS)
+        == SensorStateClass.TOTAL_INCREASING
     )
     assert (
         gas_consumption.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == VOLUME_CUBIC_METERS
@@ -397,9 +402,12 @@ async def test_luxembourg_meter(hass, dsmr_connection_fixture):
 
     power_tariff = hass.states.get("sensor.energy_consumption_total")
     assert power_tariff.state == "123.456"
-    assert power_tariff.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_ENERGY
+    assert power_tariff.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
     assert power_tariff.attributes.get(ATTR_ICON) is None
-    assert power_tariff.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
+    assert (
+        power_tariff.attributes.get(ATTR_STATE_CLASS)
+        == SensorStateClass.TOTAL_INCREASING
+    )
     assert (
         power_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
     )
@@ -411,9 +419,10 @@ async def test_luxembourg_meter(hass, dsmr_connection_fixture):
     # check if gas consumption is parsed correctly
     gas_consumption = hass.states.get("sensor.gas_consumption")
     assert gas_consumption.state == "745.695"
-    assert gas_consumption.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_GAS
+    assert gas_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
     assert (
-        gas_consumption.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
+        gas_consumption.attributes.get(ATTR_STATE_CLASS)
+        == SensorStateClass.TOTAL_INCREASING
     )
     assert (
         gas_consumption.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == VOLUME_CUBIC_METERS
@@ -480,9 +489,10 @@ async def test_belgian_meter(hass, dsmr_connection_fixture):
     # check if gas consumption is parsed correctly
     gas_consumption = hass.states.get("sensor.gas_consumption")
     assert gas_consumption.state == "745.695"
-    assert gas_consumption.attributes.get(ATTR_DEVICE_CLASS) is DEVICE_CLASS_GAS
+    assert gas_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
     assert (
-        gas_consumption.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
+        gas_consumption.attributes.get(ATTR_STATE_CLASS)
+        == SensorStateClass.TOTAL_INCREASING
     )
     assert (
         gas_consumption.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == VOLUME_CUBIC_METERS
@@ -586,16 +596,22 @@ async def test_swedish_meter(hass, dsmr_connection_fixture):
 
     power_tariff = hass.states.get("sensor.energy_consumption_total")
     assert power_tariff.state == "123.456"
-    assert power_tariff.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_ENERGY
+    assert power_tariff.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
     assert power_tariff.attributes.get(ATTR_ICON) is None
-    assert power_tariff.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
+    assert (
+        power_tariff.attributes.get(ATTR_STATE_CLASS)
+        == SensorStateClass.TOTAL_INCREASING
+    )
     assert (
         power_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
     )
 
     power_tariff = hass.states.get("sensor.energy_production_total")
     assert power_tariff.state == "654.321"
-    assert power_tariff.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
+    assert (
+        power_tariff.attributes.get(ATTR_STATE_CLASS)
+        == SensorStateClass.TOTAL_INCREASING
+    )
     assert (
         power_tariff.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
     )
