@@ -52,6 +52,7 @@ if TYPE_CHECKING:
         FroniusInverterUpdateCoordinator,
         FroniusLoggerUpdateCoordinator,
         FroniusMeterUpdateCoordinator,
+        FroniusOhmpilotUpdateCoordinator,
         FroniusPowerFlowUpdateCoordinator,
         FroniusStorageUpdateCoordinator,
     )
@@ -109,6 +110,10 @@ async def async_setup_entry(
     if solar_net.meter_coordinator is not None:
         solar_net.meter_coordinator.add_entities_for_seen_keys(
             async_add_entities, MeterSensor
+        )
+    if solar_net.ohmpilot_coordinator is not None:
+        solar_net.ohmpilot_coordinator.add_entities_for_seen_keys(
+            async_add_entities, OhmpilotSensor
         )
     if solar_net.power_flow_coordinator is not None:
         solar_net.power_flow_coordinator.add_entities_for_seen_keys(
@@ -510,6 +515,45 @@ METER_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
     ),
 ]
 
+OHMPILOT_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
+    SensorEntityDescription(
+        key="energy_real_ac_consumed",
+        name="Energy consumed",
+        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
+    ),
+    SensorEntityDescription(
+        key="power_real_ac",
+        name="Power",
+        native_unit_of_measurement=POWER_WATT,
+        device_class=DEVICE_CLASS_POWER,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="temperature_channel_1",
+        name="Temperature Channel 1",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="error_code",
+        name="Error code",
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key="state_code",
+        name="State code",
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key="state_message",
+        name="State message",
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    ),
+]
+
 POWER_FLOW_ENTITY_DESCRIPTIONS: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="energy_day",
@@ -758,6 +802,33 @@ class MeterSensor(_FroniusSensorEntity):
             via_device=(DOMAIN, coordinator.solar_net.solar_net_device_id),
         )
         self._attr_unique_id = f'{meter_data["serial"]["value"]}-{key}'
+
+
+class OhmpilotSensor(_FroniusSensorEntity):
+    """Defines a Fronius Ohmpilot sensor entity."""
+
+    entity_descriptions = OHMPILOT_ENTITY_DESCRIPTIONS
+
+    def __init__(
+        self,
+        coordinator: FroniusOhmpilotUpdateCoordinator,
+        key: str,
+        solar_net_id: str,
+    ) -> None:
+        """Set up an individual Fronius meter sensor."""
+        self._entity_id_prefix = f"ohmpilot_{solar_net_id}"
+        super().__init__(coordinator, key, solar_net_id)
+        device_data = self._device_data()
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, device_data["serial"]["value"])},
+            manufacturer=device_data["manufacturer"]["value"],
+            model=f"{device_data['model']['value']} {device_data['hardware']['value']}",
+            name=device_data["model"]["value"],
+            sw_version=device_data["software"]["value"],
+            via_device=(DOMAIN, coordinator.solar_net.solar_net_device_id),
+        )
+        self._attr_unique_id = f'{device_data["serial"]["value"]}-{key}'
 
 
 class PowerFlowSensor(_FroniusSensorEntity):
