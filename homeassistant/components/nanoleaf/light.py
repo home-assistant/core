@@ -195,7 +195,7 @@ class NanoleafLight(NanoleafEntity, LightEntity):
         self._attr_available = True
 
     @callback
-    def handle_update(self) -> None:
+    def async_handle_update(self) -> None:
         """Handle state update."""
         self.async_write_ha_state()
         if not self.available:
@@ -209,6 +209,6 @@ class NanoleafLight(NanoleafEntity, LightEntity):
             async_dispatcher_connect(
                 self.hass,
                 f"{DOMAIN}_update_light_{self._nanoleaf.serial_no}",
-                self.handle_update,
+                self.async_handle_update,
             )
         )
