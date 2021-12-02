@@ -793,3 +793,22 @@ async def test_ipv4_does_additional_search_for_sonos(
         ),
     )
     assert ssdp_listener.async_search.call_args[1] == {}
+
+
+def test_parse_hostname(hass):
+    """Test parse_hostname returns."""
+    # Test valid values
+    assert ssdp.parse_hostname("http://this.is.a.url:195/path?args") == "this.is.a.url"
+    assert ssdp.parse_hostname("https://this.is.a.url/path?args") == "this.is.a.url"
+    assert ssdp.parse_hostname("scheme://1.2.3.4") == "1.2.3.4"
+
+    # Test invalid values
+    with pytest.raises(ValueError, match="url is None"):
+        assert ssdp.parse_hostname(None)
+
+    with pytest.raises(ValueError, match="hostname is None"):
+        assert ssdp.parse_hostname("")
+
+    # Test default values
+    assert ssdp.parse_hostname(None, "my.hostname") == "my.hostname"
+    assert ssdp.parse_hostname("", "my.hostname") == "my.hostname"
