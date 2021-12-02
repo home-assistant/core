@@ -14,6 +14,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TailscaleEntity
@@ -24,7 +25,7 @@ from .const import DOMAIN
 class TailscaleSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[TailscaleDevice], datetime | None]
+    value_fn: Callable[[TailscaleDevice], datetime | str | None]
 
 
 @dataclass
@@ -39,7 +40,21 @@ SENSORS: tuple[TailscaleSensorEntityDescription, ...] = (
         key="expires",
         name="Expires",
         device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.expires,
+    ),
+    TailscaleSensorEntityDescription(
+        key="ip",
+        name="IP Address",
+        icon="mdi:ip-network",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda device: device.addresses[0] if device.addresses else None,
+    ),
+    TailscaleSensorEntityDescription(
+        key="last_seen",
+        name="Last Seen",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda device: device.last_seen,
     ),
 )
 
@@ -68,6 +83,6 @@ class TailscaleSensorEntity(TailscaleEntity, SensorEntity):
     entity_description: TailscaleSensorEntityDescription
 
     @property
-    def native_value(self) -> datetime | None:
+    def native_value(self) -> datetime | str | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data[self.device_id])
