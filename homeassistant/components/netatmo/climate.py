@@ -167,7 +167,6 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
     """Representation a Netatmo thermostat."""
 
     _attr_hvac_mode = HVAC_MODE_AUTO
-    _attr_hvac_modes = [HVAC_MODE_AUTO, HVAC_MODE_HEAT]
     _attr_max_temp = DEFAULT_MAX_TEMP
     _attr_preset_modes = SUPPORT_PRESET
     _attr_supported_features = SUPPORT_FLAGS
@@ -209,7 +208,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
 
         self._netatmo_type = TYPE_ENERGY
 
-        self._attr_name = f"{self._room.name}"
+        self._attr_name = self._room.name
         self._away: bool | None = None
         self._connected: bool | None = None
 
@@ -218,6 +217,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         self._boilerstatus: bool | None = None
         self._selected_schedule = None
 
+        self._attr_hvac_modes = [HVAC_MODE_AUTO, HVAC_MODE_HEAT]
         if self._model == NA_THERM:
             self._attr_hvac_modes.append(HVAC_MODE_OFF)
 
