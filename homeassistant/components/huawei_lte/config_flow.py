@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import logging
 from typing import Any
-from urllib.parse import urlparse
 
 from huawei_lte_api.AuthorizedConnection import AuthorizedConnection
 from huawei_lte_api.Client import Client
@@ -217,7 +216,7 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         url = url_normalize(
             discovery_info.upnp.get(
                 ssdp.ATTR_UPNP_PRESENTATION_URL,
-                f"http://{urlparse(discovery_info.ssdp_location or '').hostname}/",
+                f"http://{ssdp.parse_hostname(discovery_info.ssdp_location)}/",
             )
         )
 
