@@ -156,12 +156,16 @@ class SlowPWMEntity(NumberEntity, RestoreEntity):
     async def async_set_value(self, value: float) -> None:
         """Set new value."""
         if value <= self._attr_min_value:
+            self._attr_value = self._attr_min_value
             await self._async_set_all(False)  # Smallest possible value: set all off
+            self.async_write_ha_state()
             return
         if value >= self._attr_max_value:
+            self._attr_value = self._attr_max_value
             await self._async_set_all(
                 True
             )  # Largest possible value: set all continuously on
+            self.async_write_ha_state()
             return
         val_range = self._attr_max_value - self._attr_min_value
         outputs = len(self._outputs)
@@ -201,7 +205,7 @@ class SlowPWMEntity(NumberEntity, RestoreEntity):
         else:
             await self._async_pwm_stop()
         self._attr_value = value
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def _async_set_all(self, value: bool):
         """Set all outputs."""
@@ -344,7 +348,7 @@ class SlowPWMEntity(NumberEntity, RestoreEntity):
                 {ATTR_ENTITY_ID: self._attr_timed_output[0]},
                 False,
             )
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @callback
     async def _async_pwm_off(self, args=None):
@@ -360,4 +364,4 @@ class SlowPWMEntity(NumberEntity, RestoreEntity):
                 False,
             )
         self._listener_off = None
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
