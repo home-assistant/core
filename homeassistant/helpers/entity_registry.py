@@ -39,8 +39,10 @@ from homeassistant.core import (
 from homeassistant.exceptions import MaxLengthExceeded
 from homeassistant.helpers import device_registry as dr, storage
 from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
+from homeassistant.helpers.frame import report
 from homeassistant.loader import bind_hass
 from homeassistant.util import slugify, uuid as uuid_util
+from homeassistant.util.enum import StrEnum
 from homeassistant.util.yaml import load_yaml
 
 from .typing import UNDEFINED, UndefinedType
@@ -53,11 +55,6 @@ DATA_REGISTRY = "entity_registry"
 EVENT_ENTITY_REGISTRY_UPDATED = "entity_registry_updated"
 SAVE_DELAY = 10
 _LOGGER = logging.getLogger(__name__)
-DISABLED_CONFIG_ENTRY = "config_entry"
-DISABLED_DEVICE = "device"
-DISABLED_HASS = "hass"
-DISABLED_INTEGRATION = "integration"
-DISABLED_USER = "user"
 
 STORAGE_VERSION_MAJOR = 1
 STORAGE_VERSION_MINOR = 4
@@ -76,6 +73,24 @@ ENTITY_DESCRIBING_ATTRIBUTES = {
 }
 
 
+class RegistryEntryDisabler(StrEnum):
+    """What disabled a registry entry."""
+
+    CONFIG_ENTRY = "config_entry"
+    DEVICE = "device"
+    HASS = "hass"
+    INTEGRATION = "integration"
+    USER = "user"
+
+
+# DISABLED_* are deprecated, to be removed in 2022.3
+DISABLED_CONFIG_ENTRY = RegistryEntryDisabler.CONFIG_ENTRY.value
+DISABLED_DEVICE = RegistryEntryDisabler.DEVICE.value
+DISABLED_HASS = RegistryEntryDisabler.HASS.value
+DISABLED_INTEGRATION = RegistryEntryDisabler.INTEGRATION.value
+DISABLED_USER = RegistryEntryDisabler.USER.value
+
+
 @attr.s(slots=True, frozen=True)
 class RegistryEntry:
     """Entity Registry Entry."""
@@ -89,19 +104,7 @@ class RegistryEntry:
     device_class: str | None = attr.ib(default=None)
     device_id: str | None = attr.ib(default=None)
     domain: str = attr.ib(init=False, repr=False)
-    disabled_by: str | None = attr.ib(
-        default=None,
-        validator=attr.validators.in_(
-            (
-                DISABLED_CONFIG_ENTRY,
-                DISABLED_DEVICE,
-                DISABLED_HASS,
-                DISABLED_INTEGRATION,
-                DISABLED_USER,
-                None,
-            )
-        ),
-    )
+    disabled_by: RegistryEntryDisabler | None = attr.ib(default=None)
     entity_category: str | None = attr.ib(default=None)
     icon: str | None = attr.ib(default=None)
     id: str = attr.ib(factory=uuid_util.random_uuid_hex)
@@ -311,7 +314,7 @@ class EntityRegistry:
         known_object_ids: Iterable[str] | None = None,
         suggested_object_id: str | None = None,
         # To disable an entity if it gets created
-        disabled_by: str | None = None,
+        disabled_by: RegistryEntryDisabler | None = None,
         # Data that we want entry to have
         area_id: str | None = None,
         capabilities: Mapping[str, Any] | None = None,
@@ -357,12 +360,22 @@ class EntityRegistry:
             domain, suggested_object_id or f"{platform}_{unique_id}", known_object_ids
         )
 
-        if (
+        if isinstance(disabled_by, str) and not isinstance(
+            disabled_by, RegistryEntryDisabler
+        ):
+            report(  # type: ignore[unreachable]
+                "uses str for entity registry disabled_by. This is deprecated and will "
+                "stop working in Home Assistant 2022.3, it should be updated to use "
+                "RegistryEntryDisabler instead",
+                error_if_core=False,
+            )
+            disabled_by = RegistryEntryDisabler(disabled_by)
+        elif (
             disabled_by is None
             and config_entry
             and config_entry.pref_disable_new_entities
         ):
-            disabled_by = DISABLED_INTEGRATION
+            disabled_by = RegistryEntryDisabler.INTEGRATION
 
         entry = RegistryEntry(
             area_id=area_id,
@@ -429,7 +442,7 @@ class EntityRegistry:
                 self, event.data["device_id"], include_disabled_entities=True
             )
             for entity in entities:
-                if entity.disabled_by != DISABLED_DEVICE:
+                if entity.disabled_by is not RegistryEntryDisabler.DEVICE:
                     continue
                 self.async_update_entity(entity.entity_id, disabled_by=None)
             return
@@ -441,7 +454,9 @@ class EntityRegistry:
         # Fetch entities which are not already disabled
         entities = async_entries_for_device(self, event.data["device_id"])
         for entity in entities:
-            self.async_update_entity(entity.entity_id, disabled_by=DISABLED_DEVICE)
+            self.async_update_entity(
+                entity.entity_id, disabled_by=RegistryEntryDisabler.DEVICE
+            )
 
     @callback
     def async_update_entity(
@@ -451,7 +466,7 @@ class EntityRegistry:
         area_id: str | None | UndefinedType = UNDEFINED,
         config_entry_id: str | None | UndefinedType = UNDEFINED,
         device_class: str | None | UndefinedType = UNDEFINED,
-        disabled_by: str | None | UndefinedType = UNDEFINED,
+        disabled_by: RegistryEntryDisabler | None | UndefinedType = UNDEFINED,
         entity_category: str | None | UndefinedType = UNDEFINED,
         icon: str | None | UndefinedType = UNDEFINED,
         name: str | None | UndefinedType = UNDEFINED,
@@ -490,7 +505,7 @@ class EntityRegistry:
         config_entry_id: str | None | UndefinedType = UNDEFINED,
         device_class: str | None | UndefinedType = UNDEFINED,
         device_id: str | None | UndefinedType = UNDEFINED,
-        disabled_by: str | None | UndefinedType = UNDEFINED,
+        disabled_by: RegistryEntryDisabler | None | UndefinedType = UNDEFINED,
         entity_category: str | None | UndefinedType = UNDEFINED,
         icon: str | None | UndefinedType = UNDEFINED,
         name: str | None | UndefinedType = UNDEFINED,
@@ -507,6 +522,17 @@ class EntityRegistry:
 
         new_values = {}  # Dict with new key/value pairs
         old_values = {}  # Dict with old key/value pairs
+
+        if isinstance(disabled_by, str) and not isinstance(
+            disabled_by, RegistryEntryDisabler
+        ):
+            report(  # type: ignore[unreachable]
+                "uses str for entity registry disabled_by. This is deprecated and will "
+                "stop working in Home Assistant 2022.3, it should be updated to use "
+                "RegistryEntryDisabler instead",
+                error_if_core=False,
+            )
+            disabled_by = RegistryEntryDisabler(disabled_by)
 
         for attr_name, value in (
             ("area_id", area_id),
@@ -597,7 +623,9 @@ class EntityRegistry:
                     config_entry_id=entity["config_entry_id"],
                     device_class=entity["device_class"],
                     device_id=entity["device_id"],
-                    disabled_by=entity["disabled_by"],
+                    disabled_by=RegistryEntryDisabler(entity["disabled_by"])
+                    if entity["disabled_by"]
+                    else None,
                     entity_category=entity["entity_category"],
                     entity_id=entity["entity_id"],
                     icon=entity["icon"],
@@ -739,7 +767,7 @@ def async_config_entry_disabled_by_changed(
 
     if not config_entry.disabled_by:
         for entity in entities:
-            if entity.disabled_by != DISABLED_CONFIG_ENTRY:
+            if entity.disabled_by is not RegistryEntryDisabler.CONFIG_ENTRY:
                 continue
             registry.async_update_entity(entity.entity_id, disabled_by=None)
         return
@@ -749,7 +777,7 @@ def async_config_entry_disabled_by_changed(
             # Entity already disabled, do not overwrite
             continue
         registry.async_update_entity(
-            entity.entity_id, disabled_by=DISABLED_CONFIG_ENTRY
+            entity.entity_id, disabled_by=RegistryEntryDisabler.CONFIG_ENTRY
         )
 
 
