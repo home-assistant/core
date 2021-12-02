@@ -171,6 +171,7 @@ class DPCode(str, Enum):
     CH4_SENSOR_STATE = "ch4_sensor_state"
     CH4_SENSOR_VALUE = "ch4_sensor_value"
     CHILD_LOCK = "child_lock"  # Child lock
+    CISTERN = "cistern"
     CLEAN_AREA = "clean_area"
     CLEAN_TIME = "clean_time"
     CLICK_SUSTAIN_TIME = "click_sustain_time"
@@ -179,6 +180,7 @@ class DPCode(str, Enum):
     CO_VALUE = "co_value"
     CO2_STATE = "co2_state"
     CO2_VALUE = "co2_value"  # CO2 concentration
+    COLLECTION_MODE = "collection_mode"
     COLOR_DATA_V2 = "color_data_v2"
     COLOUR_DATA = "colour_data"  # Colored light mode
     COLOUR_DATA_HSV = "colour_data_hsv"  # Colored light mode
