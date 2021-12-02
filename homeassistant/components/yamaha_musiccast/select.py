@@ -50,7 +50,7 @@ class SelectableCapapility(MusicCastCapabilityEntity, SelectEntity):
     @property
     def device_class(self) -> str:
         """Return the ID of the capability, to identify the entity for translations."""
-        return self.capability.id
+        return f"{DOMAIN}__{self.capability.id}"
 
     @property
     def options(self):
