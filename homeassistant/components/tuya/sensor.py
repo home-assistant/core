@@ -598,18 +598,18 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
     # https://developer.tuya.com/en/docs/iot/fsd?id=K9gf487ck1tlo
     "sd": (
         TuyaSensorEntityDescription(
-            key=DPCode.STATUS,
-            name="Status Tuya",
-            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-            entity_registry_enabled_default=False,
-        ),
-        TuyaSensorEntityDescription(
             key=DPCode.CLEAN_AREA,
             name="Clean area",
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CLEAN_TIME,
             name="Clean time",
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.STATUS,
+            name="Status Tuya",
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+            entity_registry_enabled_default=False,
         ),
     ),
 }
