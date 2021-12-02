@@ -8,6 +8,7 @@ from motioneye_client.client import (
 )
 
 from homeassistant import config_entries, data_entry_flow
+from homeassistant.components.hassio.discovery import HassioServiceInfo
 from homeassistant.components.motioneye.const import (
     CONF_ADMIN_PASSWORD,
     CONF_ADMIN_USERNAME,
@@ -74,7 +75,7 @@ async def test_hassio_success(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        data={"addon": "motionEye", "url": TEST_URL},
+        data=HassioServiceInfo(config={"addon": "motionEye", "url": TEST_URL}),
         context={"source": config_entries.SOURCE_HASSIO},
     )
 
@@ -349,7 +350,7 @@ async def test_hassio_already_configured(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        data={"addon": "motionEye", "url": TEST_URL},
+        data=HassioServiceInfo(config={"addon": "motionEye", "url": TEST_URL}),
         context={"source": config_entries.SOURCE_HASSIO},
     )
     assert result.get("type") == data_entry_flow.RESULT_TYPE_ABORT
@@ -364,7 +365,7 @@ async def test_hassio_ignored(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        data={"addon": "motionEye", "url": TEST_URL},
+        data=HassioServiceInfo(config={"addon": "motionEye", "url": TEST_URL}),
         context={"source": config_entries.SOURCE_HASSIO},
     )
     assert result.get("type") == data_entry_flow.RESULT_TYPE_ABORT
@@ -380,7 +381,7 @@ async def test_hassio_abort_if_already_in_progress(hass: HomeAssistant) -> None:
 
     result2 = await hass.config_entries.flow.async_init(
         DOMAIN,
-        data={"addon": "motionEye", "url": TEST_URL},
+        data=HassioServiceInfo(config={"addon": "motionEye", "url": TEST_URL}),
         context={"source": config_entries.SOURCE_HASSIO},
     )
     assert result2.get("type") == data_entry_flow.RESULT_TYPE_ABORT
@@ -392,7 +393,7 @@ async def test_hassio_clean_up_on_user_flow(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        data={"addon": "motionEye", "url": TEST_URL},
+        data=HassioServiceInfo(config={"addon": "motionEye", "url": TEST_URL}),
         context={"source": config_entries.SOURCE_HASSIO},
     )
     assert result.get("type") == data_entry_flow.RESULT_TYPE_FORM
