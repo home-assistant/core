@@ -42,7 +42,7 @@ from . import (
     service,
 )
 from .device_registry import DeviceRegistry
-from .entity_registry import DISABLED_DEVICE, DISABLED_INTEGRATION, EntityRegistry
+from .entity_registry import EntityRegistry, RegistryEntryDisabler
 from .event import async_call_later, async_track_time_interval
 from .typing import ConfigType, DiscoveryInfoType
 
@@ -502,9 +502,9 @@ class EntityPlatform:
                 except RequiredParameterMissing:
                     pass
 
-            disabled_by: str | None = None
+            disabled_by: RegistryEntryDisabler | None = None
             if not entity.entity_registry_enabled_default:
-                disabled_by = DISABLED_INTEGRATION
+                disabled_by = RegistryEntryDisabler.INTEGRATION
 
             entry = entity_registry.async_get_or_create(
                 self.domain,
@@ -526,7 +526,7 @@ class EntityPlatform:
 
             if device and device.disabled and not entry.disabled:
                 entry = entity_registry.async_update_entity(
-                    entry.entity_id, disabled_by=DISABLED_DEVICE
+                    entry.entity_id, disabled_by=RegistryEntryDisabler.DEVICE
                 )
 
             entity.registry_entry = entry
