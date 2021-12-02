@@ -13,6 +13,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TailscaleEntity
@@ -38,7 +39,50 @@ BINARY_SENSORS: tuple[TailscaleBinarySensorEntityDescription, ...] = (
         key="update_available",
         name="Client",
         device_class=BinarySensorDeviceClass.UPDATE,
+        entity_category=EntityCategory.DIAGNOSTIC,
         is_on_fn=lambda device: device.update_available,
+    ),
+    TailscaleBinarySensorEntityDescription(
+        key="client_supports_hair_pinning",
+        name="Supports Hairpinning",
+        icon="mdi:wan",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        is_on_fn=lambda device: device.client_connectivity.client_supports.hair_pinning,
+    ),
+    TailscaleBinarySensorEntityDescription(
+        key="client_supports_ipv6",
+        name="Supports IPv6",
+        icon="mdi:wan",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        is_on_fn=lambda device: device.client_connectivity.client_supports.ipv6,
+    ),
+    TailscaleBinarySensorEntityDescription(
+        key="client_supports_pcp",
+        name="Supports PCP",
+        icon="mdi:wan",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        is_on_fn=lambda device: device.client_connectivity.client_supports.pcp,
+    ),
+    TailscaleBinarySensorEntityDescription(
+        key="client_supports_pmp",
+        name="Supports NAT-PMP",
+        icon="mdi:wan",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        is_on_fn=lambda device: device.client_connectivity.client_supports.pmp,
+    ),
+    TailscaleBinarySensorEntityDescription(
+        key="client_supports_udp",
+        name="Supports UDP",
+        icon="mdi:wan",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        is_on_fn=lambda device: device.client_connectivity.client_supports.udp,
+    ),
+    TailscaleBinarySensorEntityDescription(
+        key="client_supports_upnp",
+        name="Supports UPnP",
+        icon="mdi:wan",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        is_on_fn=lambda device: device.client_connectivity.client_supports.upnp,
     ),
 )
 
