@@ -711,18 +711,31 @@ jobs:
             --durations-min=1 \
             -p no:sugar \
             tests/components/${{ matrix.group }}
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v2.2.4
+        with:
+          name: coverage-${{ matrix.python-version }}-${{ matrix.group }}
+          path: coverage.xml
+      - name: Check dirty
+        run: |
+          ./script/check_dirty
+
+  coverage:
+    name: Upload test coverage to Codecov
+    runs-on: ubuntu-latest
+    needs:
+      - changes
+      - pytest
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v2.4.0
+      - name: Download all coverage artifacts
+        uses: actions/download-artifact@v2
       - name: Upload coverage to Codecov (full coverage)
         if: needs.changes.outputs.test_full_suite == 'true'
         uses: codecov/codecov-action@v2.1.0
         with:
-          files: coverage.xml
           flags: full-suite
       - name: Upload coverage to Codecov (partial coverage)
         if: needs.changes.outputs.test_full_suite == 'false'
         uses: codecov/codecov-action@v2.1.0
-        with:
-          files: coverage.xml
-          flags: ${{ matrix.group }}
-      - name: Check dirty
-        run: |
-          ./script/check_dirty
