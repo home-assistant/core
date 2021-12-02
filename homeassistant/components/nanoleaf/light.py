@@ -1,6 +1,7 @@
 """Support for Nanoleaf Lights."""
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 import math
 from typing import Any
@@ -26,6 +27,7 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.color import (
@@ -33,6 +35,7 @@ from homeassistant.util.color import (
     color_temperature_mired_to_kelvin as mired_to_kelvin,
 )
 
+from . import NanoleafEntryData
 from .const import DOMAIN
 from .entity import NanoleafEntity
 
@@ -48,6 +51,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+SCAN_INTERVAL = timedelta(minutes=5)
 
 
 async def async_setup_platform(
@@ -70,8 +75,8 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Nanoleaf light."""
-    nanoleaf: Nanoleaf = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([NanoleafLight(nanoleaf)])
+    entry_data: NanoleafEntryData = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities([NanoleafLight(entry_data.device)])
 
 
 class NanoleafLight(NanoleafEntity, LightEntity):
@@ -188,3 +193,21 @@ class NanoleafLight(NanoleafEntity, LightEntity):
         if not self.available:
             _LOGGER.info("Fetching %s data recovered", self.name)
         self._attr_available = True
+
+    async def async_handle_update(self) -> None:
+        """Handle state update."""
+        self.async_write_ha_state()
+        if not self.available:
+            _LOGGER.info("Connection to %s recovered", self.name)
+        self._attr_available = True
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity being added to Home Assistant."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{DOMAIN}_update_light_{self._nanoleaf.serial_no}",
+                self.async_handle_update,
+            )
+        )
