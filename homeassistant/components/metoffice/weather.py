@@ -15,6 +15,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import get_device_info
 from .const import (
+    ATTR_FORECAST_DAYTIME,
     ATTRIBUTION,
     CONDITION_CLASSES,
     DEFAULT_NAME,
@@ -46,7 +47,7 @@ async def async_setup_entry(
     )
 
 
-def _build_forecast_data(timestep):
+def _build_forecast_data(timestep, use_3hourly):
     data = {}
     data[ATTR_FORECAST_TIME] = timestep.date.isoformat()
     if timestep.weather:
@@ -59,6 +60,9 @@ def _build_forecast_data(timestep):
         data[ATTR_FORECAST_WIND_BEARING] = timestep.wind_direction.value
     if timestep.wind_speed:
         data[ATTR_FORECAST_WIND_SPEED] = timestep.wind_speed.value
+    if not use_3hourly:
+        # if it's close to noon, mark as Day, otherwise as Night
+        data[ATTR_FORECAST_DAYTIME] = abs(timestep.date.hour - 12) < 6
     return data
 
 
@@ -82,6 +86,7 @@ class MetOfficeWeather(CoordinatorEntity, WeatherEntity):
         )
         self._attr_name = f"{DEFAULT_NAME} {hass_data[METOFFICE_NAME]} {mode_label}"
         self._attr_unique_id = hass_data[METOFFICE_COORDINATES]
+        self._use_3hourly = use_3hourly
         if not use_3hourly:
             self._attr_unique_id = f"{self._attr_unique_id}_{MODE_DAILY}"
 
@@ -155,7 +160,7 @@ class MetOfficeWeather(CoordinatorEntity, WeatherEntity):
         if self.coordinator.data.forecast is None:
             return None
         return [
-            _build_forecast_data(timestep)
+            _build_forecast_data(timestep, self._use_3hourly)
             for timestep in self.coordinator.data.forecast
         ]
 
