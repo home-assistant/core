@@ -245,10 +245,10 @@ def wifi_entities_list(
 ) -> list[FritzBoxWifiSwitch]:
     """Get list of wifi entities."""
     _LOGGER.debug("Setting up %s switches", SWITCH_TYPE_WIFINETWORK)
+    std_table = {"ax": "Wifi6", "ac": "5Ghz", "n": "2.4Ghz"}
     if fritzbox_tools.model == "FRITZ!Box 7390":
         std_table = {"n": "5Ghz"}
-    else:
-        std_table = {"ax": "Wifi6", "ac": "5Ghz", "n": "2.4Ghz"}
+
     networks: dict = {}
     for i in range(4):
         if not ("WLANConfiguration" + str(i)) in fritzbox_tools.connection.services:
