@@ -108,7 +108,6 @@ SERVICE_RESTORE = "restore"
 SERVICE_SET_TIMER = "set_sleep_timer"
 SERVICE_CLEAR_TIMER = "clear_sleep_timer"
 SERVICE_UPDATE_ALARM = "update_alarm"
-SERVICE_SET_OPTION = "set_option"
 SERVICE_PLAY_QUEUE = "play_queue"
 SERVICE_REMOVE_FROM_QUEUE = "remove_from_queue"
 
@@ -120,8 +119,6 @@ ATTR_INCLUDE_LINKED_ZONES = "include_linked_zones"
 ATTR_MASTER = "master"
 ATTR_WITH_GROUP = "with_group"
 ATTR_QUEUE_POSITION = "queue_position"
-ATTR_EQ_BASS = "bass_level"
-ATTR_EQ_TREBLE = "treble_level"
 
 
 async def async_setup_entry(
@@ -223,19 +220,6 @@ async def async_setup_entry(
             vol.Optional(ATTR_INCLUDE_LINKED_ZONES): cv.boolean,
         },
         "set_alarm",
-    )
-
-    platform.async_register_entity_service(  # type: ignore
-        SERVICE_SET_OPTION,
-        {
-            vol.Optional(ATTR_EQ_BASS): vol.All(
-                vol.Coerce(int), vol.Range(min=-10, max=10)
-            ),
-            vol.Optional(ATTR_EQ_TREBLE): vol.All(
-                vol.Coerce(int), vol.Range(min=-10, max=10)
-            ),
-        },
-        "set_option",
     )
 
     platform.async_register_entity_service(  # type: ignore
@@ -606,19 +590,6 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         alarm.save()
 
     @soco_error()
-    def set_option(
-        self,
-        bass_level: int | None = None,
-        treble_level: int | None = None,
-    ) -> None:
-        """Modify playback options."""
-        if bass_level is not None:
-            self.soco.bass = bass_level
-
-        if treble_level is not None:
-            self.soco.treble = treble_level
-
-    @soco_error()
     def play_queue(self, queue_position: int = 0) -> None:
         """Start playing the queue."""
         self.soco.play_from_queue(queue_position)
@@ -634,12 +605,6 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         attributes: dict[str, Any] = {
             ATTR_SONOS_GROUP: self.speaker.sonos_group_entities
         }
-
-        if self.speaker.bass_level is not None:
-            attributes[ATTR_EQ_BASS] = self.speaker.bass_level
-
-        if self.speaker.treble_level is not None:
-            attributes[ATTR_EQ_TREBLE] = self.speaker.treble_level
 
         if self.media.queue_position is not None:
             attributes[ATTR_QUEUE_POSITION] = self.media.queue_position

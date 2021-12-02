@@ -16,6 +16,7 @@ from homeassistant.const import (
     DEVICE_CLASS_TIMESTAMP,
     STATE_UNAVAILABLE,
 )
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.util import dt
 
 from tests.common import (
@@ -210,44 +211,44 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         )
         self._assert_sensor(
             "sensor.picnic_selected_slot_start",
-            "2021-03-03T14:45:00.000+01:00",
+            "2021-03-03T13:45:00+00:00",
             cls=DEVICE_CLASS_TIMESTAMP,
         )
         self._assert_sensor(
             "sensor.picnic_selected_slot_end",
-            "2021-03-03T15:45:00.000+01:00",
+            "2021-03-03T14:45:00+00:00",
             cls=DEVICE_CLASS_TIMESTAMP,
         )
         self._assert_sensor(
             "sensor.picnic_selected_slot_max_order_time",
-            "2021-03-02T22:00:00.000+01:00",
+            "2021-03-02T21:00:00+00:00",
             cls=DEVICE_CLASS_TIMESTAMP,
         )
         self._assert_sensor("sensor.picnic_selected_slot_min_order_value", "35.0")
         self._assert_sensor(
             "sensor.picnic_last_order_slot_start",
-            "2021-02-26T20:15:00.000+01:00",
+            "2021-02-26T19:15:00+00:00",
             cls=DEVICE_CLASS_TIMESTAMP,
         )
         self._assert_sensor(
             "sensor.picnic_last_order_slot_end",
-            "2021-02-26T21:15:00.000+01:00",
+            "2021-02-26T20:15:00+00:00",
             cls=DEVICE_CLASS_TIMESTAMP,
         )
         self._assert_sensor("sensor.picnic_last_order_status", "COMPLETED")
         self._assert_sensor(
             "sensor.picnic_last_order_eta_start",
-            "2021-02-26T20:54:00.000+01:00",
+            "2021-02-26T19:54:00+00:00",
             cls=DEVICE_CLASS_TIMESTAMP,
         )
         self._assert_sensor(
             "sensor.picnic_last_order_eta_end",
-            "2021-02-26T21:14:00.000+01:00",
+            "2021-02-26T20:14:00+00:00",
             cls=DEVICE_CLASS_TIMESTAMP,
         )
         self._assert_sensor(
             "sensor.picnic_last_order_delivery_time",
-            "2021-02-26T20:54:05.221+01:00",
+            "2021-02-26T19:54:05+00:00",
             cls=DEVICE_CLASS_TIMESTAMP,
         )
         self._assert_sensor(
@@ -305,10 +306,10 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         # Assert delivery time is not available, but eta is
         self._assert_sensor("sensor.picnic_last_order_delivery_time", STATE_UNAVAILABLE)
         self._assert_sensor(
-            "sensor.picnic_last_order_eta_start", "2021-02-26T20:54:00.000+01:00"
+            "sensor.picnic_last_order_eta_start", "2021-02-26T19:54:00+00:00"
         )
         self._assert_sensor(
-            "sensor.picnic_last_order_eta_end", "2021-02-26T21:14:00.000+01:00"
+            "sensor.picnic_last_order_eta_end", "2021-02-26T20:14:00+00:00"
         )
 
     async def test_sensors_use_detailed_eta_if_available(self):
@@ -322,8 +323,8 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         self.picnic_mock().get_deliveries.return_value = [delivery_response]
         self.picnic_mock().get_delivery_position.return_value = {
             "eta_window": {
-                "start": "2021-03-05T11:19:20.452+01:00",
-                "end": "2021-03-05T11:39:20.452+01:00",
+                "start": "2021-03-05T10:19:20.452+00:00",
+                "end": "2021-03-05T10:39:20.452+00:00",
             }
         }
         await self._coordinator.async_refresh()
@@ -333,10 +334,10 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
             delivery_response["delivery_id"]
         )
         self._assert_sensor(
-            "sensor.picnic_last_order_eta_start", "2021-03-05T11:19:20.452+01:00"
+            "sensor.picnic_last_order_eta_start", "2021-03-05T10:19:20+00:00"
         )
         self._assert_sensor(
-            "sensor.picnic_last_order_eta_end", "2021-03-05T11:39:20.452+01:00"
+            "sensor.picnic_last_order_eta_end", "2021-03-05T10:39:20+00:00"
         )
 
     async def test_sensors_no_data(self):
@@ -390,7 +391,7 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         )
         assert picnic_service.model == DEFAULT_USER_RESPONSE["user_id"]
         assert picnic_service.name == "Picnic: Commonstreet 123a"
-        assert picnic_service.entry_type == "service"
+        assert picnic_service.entry_type is DeviceEntryType.SERVICE
 
     async def test_auth_token_is_saved_on_update(self):
         """Test that auth-token changes in the session object are reflected by the config entry."""

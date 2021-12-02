@@ -19,7 +19,7 @@ from homeassistant.const import (
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
-    PRESSURE_HPA,
+    PRESSURE_PA,
     TEMP_CELSIUS,
 )
 from homeassistant.core import callback
@@ -68,14 +68,14 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key=SENSOR_PRESSURE,
         name="Pressure",
         icon="mdi:arrow-down-bold",
-        native_unit_of_measurement=PRESSURE_HPA,
+        native_unit_of_measurement=PRESSURE_PA,
         device_class=DEVICE_CLASS_PRESSURE,
     ),
     SensorEntityDescription(
         key=SENSOR_PRESSURE_AT_SEALEVEL,
         name="Pressure at sealevel",
         icon="mdi:download",
-        native_unit_of_measurement=PRESSURE_HPA,
+        native_unit_of_measurement=PRESSURE_PA,
         device_class=DEVICE_CLASS_PRESSURE,
     ),
     SensorEntityDescription(

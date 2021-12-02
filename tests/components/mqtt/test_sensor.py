@@ -8,7 +8,7 @@ import pytest
 
 from homeassistant.components.mqtt.sensor import MQTT_SENSOR_ATTRIBUTES_BLOCKED
 import homeassistant.components.sensor as sensor
-from homeassistant.const import EVENT_STATE_CHANGED, STATE_UNAVAILABLE
+from homeassistant.const import EVENT_STATE_CHANGED, STATE_UNAVAILABLE, STATE_UNKNOWN
 import homeassistant.core as ha
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
@@ -78,6 +78,58 @@ async def test_setting_sensor_value_via_mqtt_message(hass, mqtt_mock):
 
     assert state.state == "100"
     assert state.attributes.get("unit_of_measurement") == "fav unit"
+
+
+@pytest.mark.parametrize(
+    "device_class,native_value,state_value,log",
+    [
+        (sensor.DEVICE_CLASS_DATE, "2021-11-18", "2021-11-18", False),
+        (sensor.DEVICE_CLASS_DATE, "invalid", STATE_UNKNOWN, True),
+        (
+            sensor.DEVICE_CLASS_TIMESTAMP,
+            "2021-11-18T20:25:00+00:00",
+            "2021-11-18T20:25:00+00:00",
+            False,
+        ),
+        (
+            sensor.DEVICE_CLASS_TIMESTAMP,
+            "2021-11-18 20:25:00+00:00",
+            "2021-11-18T20:25:00+00:00",
+            False,
+        ),
+        (
+            sensor.DEVICE_CLASS_TIMESTAMP,
+            "2021-11-18 20:25:00+01:00",
+            "2021-11-18T19:25:00+00:00",
+            False,
+        ),
+        (sensor.DEVICE_CLASS_TIMESTAMP, "invalid", STATE_UNKNOWN, True),
+    ],
+)
+async def test_setting_sensor_native_value_handling_via_mqtt_message(
+    hass, mqtt_mock, caplog, device_class, native_value, state_value, log
+):
+    """Test the setting of the value via MQTT."""
+    assert await async_setup_component(
+        hass,
+        sensor.DOMAIN,
+        {
+            sensor.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "state_topic": "test-topic",
+                "device_class": device_class,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, "test-topic", native_value)
+    state = hass.states.get("sensor.test")
+
+    assert state.state == state_value
+    assert state.attributes.get("device_class") == device_class
+    assert log == ("Invalid state message" in caplog.text)
 
 
 async def test_setting_sensor_value_expires_availability_topic(hass, mqtt_mock, caplog):
@@ -839,6 +891,35 @@ async def test_entity_disabled_by_default(hass, mqtt_mock):
 async def test_entity_category(hass, mqtt_mock):
     """Test entity category."""
     await help_test_entity_category(hass, mqtt_mock, sensor.DOMAIN, DEFAULT_CONFIG)
+
+
+async def test_value_template_with_raw_data(hass, mqtt_mock):
+    """Test processing a raw value via MQTT."""
+    assert await async_setup_component(
+        hass,
+        sensor.DOMAIN,
+        {
+            sensor.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "encoding": "",
+                "state_topic": "test-topic",
+                "unit_of_measurement": "fav unit",
+                "value_template": "{{ value | bitwise_and(255) }}",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, "test-topic", b"\xff")
+    state = hass.states.get("sensor.test")
+
+    assert state.state == "255"
+
+    async_fire_mqtt_message(hass, "test-topic", b"\x01\x10")
+    state = hass.states.get("sensor.test")
+
+    assert state.state == "16"
 
 
 async def test_value_template_with_entity_id(hass, mqtt_mock):

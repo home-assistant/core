@@ -1,7 +1,6 @@
 """Support to serve the Home Assistant API as WSGI application."""
 from __future__ import annotations
 
-from contextvars import ContextVar
 from ipaddress import ip_network
 import logging
 import os
@@ -13,6 +12,7 @@ from aiohttp.typedefs import StrOrURL
 from aiohttp.web_exceptions import HTTPMovedPermanently, HTTPRedirection
 import voluptuous as vol
 
+from homeassistant.components.network import async_get_source_ip
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, SERVER_PORT
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import storage
@@ -20,7 +20,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.setup import async_start_setup, async_when_setup_or_start
-import homeassistant.util as hass_util
 from homeassistant.util import ssl as ssl_util
 
 from .auth import setup_auth
@@ -28,7 +27,7 @@ from .ban import setup_bans
 from .const import KEY_AUTHENTICATED, KEY_HASS, KEY_HASS_USER  # noqa: F401
 from .cors import setup_cors
 from .forwarded import async_setup_forwarded
-from .request_context import setup_request_context
+from .request_context import current_request, setup_request_context
 from .security_filter import setup_security_filter
 from .static import CACHE_HEADERS, CachingStaticResource
 from .view import HomeAssistantView
@@ -190,7 +189,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.http = server
 
-    local_ip = await hass.async_add_executor_job(hass_util.get_local_ip)
+    local_ip = await async_get_source_ip(hass)
 
     host = local_ip
     if server_host is not None:
@@ -401,8 +400,3 @@ async def start_http_server_and_save_config(
         ]
 
     store.async_delay_save(lambda: conf, SAVE_DELAY)
-
-
-current_request: ContextVar[web.Request | None] = ContextVar(
-    "current_request", default=None
-)

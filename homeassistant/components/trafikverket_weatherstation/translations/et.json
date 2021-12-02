@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto on juba h\u00e4\u00e4lestatud"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API v\u00f5ti",
+                    "conditions": "J\u00e4lgitavad elemendid",
+                    "name": "Kasutajanimi",
+                    "station": "Seirejaam"
+                }
+            }
+        }
+    }
+}

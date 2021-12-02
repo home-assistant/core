@@ -251,13 +251,6 @@ def test_check_package_global():
     assert not package.is_installed(f"{installed_package}<{installed_version}")
 
 
-def test_check_package_version_does_not_match():
-    """Test for version mismatch."""
-    installed_package = list(pkg_resources.working_set)[0].project_name
-    assert not package.is_installed(f"{installed_package}==999.999.999")
-    assert not package.is_installed(f"{installed_package}>=999.999.999")
-
-
 def test_check_package_zip():
     """Test for an installed zip package."""
     assert not package.is_installed(TEST_ZIP_REQ)

@@ -33,6 +33,7 @@ from .const import (
     FEATURE_SET_FAN_LEVEL,
     FEATURE_SET_FAVORITE_LEVEL,
     FEATURE_SET_FAVORITE_RPM,
+    FEATURE_SET_LED_BRIGHTNESS,
     FEATURE_SET_LED_BRIGHTNESS_LEVEL,
     FEATURE_SET_MOTOR_SPEED,
     FEATURE_SET_OSCILLATION_ANGLE,
@@ -70,6 +71,7 @@ ATTR_DELAY_OFF_COUNTDOWN = "delay_off_countdown"
 ATTR_FAN_LEVEL = "fan_level"
 ATTR_FAVORITE_LEVEL = "favorite_level"
 ATTR_FAVORITE_RPM = "favorite_rpm"
+ATTR_LED_BRIGHTNESS = "led_brightness"
 ATTR_LED_BRIGHTNESS_LEVEL = "led_brightness_level"
 ATTR_MOTOR_SPEED = "motor_speed"
 ATTR_OSCILLATION_ANGLE = "angle"
@@ -161,6 +163,16 @@ NUMBER_TYPES = {
         method="async_set_delay_off_countdown",
         entity_category=ENTITY_CATEGORY_CONFIG,
     ),
+    FEATURE_SET_LED_BRIGHTNESS: XiaomiMiioNumberDescription(
+        key=ATTR_LED_BRIGHTNESS,
+        name="Led Brightness",
+        icon="mdi:brightness-6",
+        min_value=0,
+        max_value=100,
+        step=1,
+        method="async_set_led_brightness",
+        entity_category=ENTITY_CATEGORY_CONFIG,
+    ),
     FEATURE_SET_LED_BRIGHTNESS_LEVEL: XiaomiMiioNumberDescription(
         key=ATTR_LED_BRIGHTNESS_LEVEL,
         name="Led Brightness",
@@ -177,7 +189,7 @@ NUMBER_TYPES = {
         icon="mdi:star-cog",
         unit_of_measurement="rpm",
         min_value=300,
-        max_value=2300,
+        max_value=2200,
         step=10,
         method="async_set_favorite_rpm",
         entity_category=ENTITY_CATEGORY_CONFIG,
@@ -244,6 +256,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 description.max_value = OSCILLATION_ANGLE_VALUES[model].max_value
                 description.min_value = OSCILLATION_ANGLE_VALUES[model].min_value
                 description.step = OSCILLATION_ANGLE_VALUES[model].step
+
             entities.append(
                 XiaomiNumberEntity(
                     f"{config_entry.title} {description.name}",
@@ -351,6 +364,14 @@ class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
         return await self._try_command(
             "Setting the led brightness level of the miio device failed.",
             self._device.set_led_brightness_level,
+            level,
+        )
+
+    async def async_set_led_brightness(self, level: int):
+        """Set the led brightness level."""
+        return await self._try_command(
+            "Setting the led brightness level of the miio device failed.",
+            self._device.set_led_brightness,
             level,
         )
 

@@ -1,6 +1,9 @@
 """Entity tests for mobile_app."""
 from http import HTTPStatus
 
+import pytest
+
+from homeassistant.components.sensor import DEVICE_CLASS_DATE, DEVICE_CLASS_TIMESTAMP
 from homeassistant.const import PERCENTAGE, STATE_UNKNOWN
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -276,3 +279,54 @@ async def test_update_sensor_no_state(hass, create_registrations, webhook_client
 
     updated_entity = hass.states.get("sensor.test_1_battery_state")
     assert updated_entity.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    "device_class,native_value,state_value",
+    [
+        (DEVICE_CLASS_DATE, "2021-11-18", "2021-11-18"),
+        (
+            DEVICE_CLASS_TIMESTAMP,
+            "2021-11-18T20:25:00+00:00",
+            "2021-11-18T20:25:00+00:00",
+        ),
+        (
+            DEVICE_CLASS_TIMESTAMP,
+            "2021-11-18 20:25:00+01:00",
+            "2021-11-18T19:25:00+00:00",
+        ),
+    ],
+)
+async def test_sensor_datetime(
+    hass, create_registrations, webhook_client, device_class, native_value, state_value
+):
+    """Test that sensors can be registered and updated."""
+    webhook_id = create_registrations[1]["webhook_id"]
+    webhook_url = f"/api/webhook/{webhook_id}"
+
+    reg_resp = await webhook_client.post(
+        webhook_url,
+        json={
+            "type": "register_sensor",
+            "data": {
+                "device_class": device_class,
+                "name": "Datetime sensor test",
+                "state": native_value,
+                "type": "sensor",
+                "unique_id": "super_unique",
+            },
+        },
+    )
+
+    assert reg_resp.status == HTTPStatus.CREATED
+
+    json = await reg_resp.json()
+    assert json == {"success": True}
+    await hass.async_block_till_done()
+
+    entity = hass.states.get("sensor.test_1_datetime_sensor_test")
+    assert entity is not None
+
+    assert entity.attributes["device_class"] == device_class
+    assert entity.domain == "sensor"
+    assert entity.state == state_value

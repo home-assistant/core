@@ -373,6 +373,39 @@ async def test_setting_sensor_value_via_mqtt_message_and_template2(
     assert "template output: 'ILLEGAL'" in caplog.text
 
 
+async def test_setting_sensor_value_via_mqtt_message_and_template_and_raw_state_encoding(
+    hass, mqtt_mock, caplog
+):
+    """Test processing a raw value via MQTT."""
+    assert await async_setup_component(
+        hass,
+        binary_sensor.DOMAIN,
+        {
+            binary_sensor.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "encoding": "",
+                "state_topic": "test-topic",
+                "payload_on": "ON",
+                "payload_off": "OFF",
+                "value_template": "{%if value|bitwise_and(1)-%}ON{%else%}OFF{%-endif-%}",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == STATE_OFF
+
+    async_fire_mqtt_message(hass, "test-topic", b"\x01")
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == STATE_ON
+
+    async_fire_mqtt_message(hass, "test-topic", b"\x00")
+    state = hass.states.get("binary_sensor.test")
+    assert state.state == STATE_OFF
+
+
 async def test_setting_sensor_value_via_mqtt_message_empty_template(
     hass, mqtt_mock, caplog
 ):

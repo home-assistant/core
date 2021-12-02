@@ -16,21 +16,21 @@
             "no_usable_service": "Bir ayg\u0131t bulundu, ancak ba\u011flant\u0131 kurman\u0131n herhangi bir yolunu tan\u0131mlayamad\u0131. Bu iletiyi g\u00f6rmeye devam ederseniz, IP adresini belirtmeye veya Apple TV'nizi yeniden ba\u015flatmaya \u00e7al\u0131\u015f\u0131n.",
             "unknown": "Beklenmeyen hata"
         },
-        "flow_title": "Apple TV: {name}",
+        "flow_title": "{name}",
         "step": {
             "confirm": {
-                "description": "'{name}' adl\u0131 Apple TV'yi Ev Asistan\u0131'na eklemek \u00fczeresiniz.\n\n**\u0130\u015flemi tamamlamak i\u00e7in birden fazla PIN kodu girmeniz gerekebilir.**\n\nBu entegrasyonla Apple TV'nizi kapatamayaca\u011f\u0131n\u0131z\u0131 l\u00fctfen unutmay\u0131n. Yaln\u0131zca Ev Asistan\u0131'ndaki medya oynat\u0131c\u0131 kapan\u0131r!",
+                "description": "{name} ` adl\u0131 Apple TV'yi Ev Asistan\u0131na eklemek \u00fczeresiniz. \n\n **\u0130\u015flemi tamamlamak i\u00e7in birden fazla PIN kodu girmeniz gerekebilir.** \n\n Bu entegrasyonla Apple TV'nizi *kapatamayaca\u011f\u0131n\u0131z\u0131* l\u00fctfen unutmay\u0131n. Yaln\u0131zca Home Assistant'taki medya oynat\u0131c\u0131 kapanacak!",
                 "title": "Apple TV eklemeyi onaylay\u0131n"
             },
             "pair_no_pin": {
-                "description": "'{protocol}' hizmeti i\u00e7in e\u015fle\u015ftirme gerekiyor. Devam etmek i\u00e7in l\u00fctfen Apple TV'nize {pin} PIN'ini girin.",
+                "description": "{protocol} ` hizmeti i\u00e7in e\u015fle\u015ftirme gereklidir. Devam etmek i\u00e7in l\u00fctfen Apple TV'nizde PIN {pin}",
                 "title": "E\u015fle\u015ftirme"
             },
             "pair_with_pin": {
                 "data": {
                     "pin": "PIN Kodu"
                 },
-                "description": "'{protocol}' protokol\u00fc i\u00e7in e\u015fle\u015ftirme gerekiyor. L\u00fctfen ekranda g\u00f6r\u00fcnt\u00fclenen PIN kodunu girin. Ba\u015ftaki s\u0131f\u0131rlar atlan\u0131r, yani g\u00f6r\u00fcnt\u00fclenen kod 0123 ise 123 girin.",
+                "description": "{protocol} ` protokol\u00fc i\u00e7in e\u015fle\u015ftirme gereklidir. L\u00fctfen ekranda g\u00f6r\u00fcnt\u00fclenen PIN kodunu girin. Ba\u015ftaki s\u0131f\u0131rlar atlanmal\u0131d\u0131r, yani g\u00f6r\u00fcnt\u00fclenen kod 0123 ise 123 girin.",
                 "title": "E\u015fle\u015ftirme"
             },
             "reconfigure": {

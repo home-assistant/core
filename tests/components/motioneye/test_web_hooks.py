@@ -77,7 +77,7 @@ async def test_setup_camera_without_webhook(hass: HomeAssistant) -> None:
     expected_camera[KEY_WEB_HOOK_NOTIFICATIONS_ENABLED] = True
     expected_camera[KEY_WEB_HOOK_NOTIFICATIONS_HTTP_METHOD] = KEY_HTTP_METHOD_POST_JSON
     expected_camera[KEY_WEB_HOOK_NOTIFICATIONS_URL] = (
-        "https://example.com"
+        "https://internal.url"
         + URL_WEBHOOK_PATH.format(webhook_id=config_entry.data[CONF_WEBHOOK_ID])
         + f"?{WEB_HOOK_MOTION_DETECTED_QUERY_STRING}&device_id={device.id}"
     )
@@ -85,7 +85,7 @@ async def test_setup_camera_without_webhook(hass: HomeAssistant) -> None:
     expected_camera[KEY_WEB_HOOK_STORAGE_ENABLED] = True
     expected_camera[KEY_WEB_HOOK_STORAGE_HTTP_METHOD] = KEY_HTTP_METHOD_POST_JSON
     expected_camera[KEY_WEB_HOOK_STORAGE_URL] = (
-        "https://example.com"
+        "https://internal.url"
         + URL_WEBHOOK_PATH.format(webhook_id=config_entry.data[CONF_WEBHOOK_ID])
         + f"?{WEB_HOOK_FILE_STORED_QUERY_STRING}&device_id={device.id}"
     )
@@ -132,7 +132,7 @@ async def test_setup_camera_with_wrong_webhook(
     expected_camera[KEY_WEB_HOOK_NOTIFICATIONS_ENABLED] = True
     expected_camera[KEY_WEB_HOOK_NOTIFICATIONS_HTTP_METHOD] = KEY_HTTP_METHOD_POST_JSON
     expected_camera[KEY_WEB_HOOK_NOTIFICATIONS_URL] = (
-        "https://example.com"
+        "https://internal.url"
         + URL_WEBHOOK_PATH.format(webhook_id=config_entry.data[CONF_WEBHOOK_ID])
         + f"?{WEB_HOOK_MOTION_DETECTED_QUERY_STRING}&device_id={device.id}"
     )
@@ -140,7 +140,7 @@ async def test_setup_camera_with_wrong_webhook(
     expected_camera[KEY_WEB_HOOK_STORAGE_ENABLED] = True
     expected_camera[KEY_WEB_HOOK_STORAGE_HTTP_METHOD] = KEY_HTTP_METHOD_POST_JSON
     expected_camera[KEY_WEB_HOOK_STORAGE_URL] = (
-        "https://example.com"
+        "https://internal.url"
         + URL_WEBHOOK_PATH.format(webhook_id=config_entry.data[CONF_WEBHOOK_ID])
         + f"?{WEB_HOOK_FILE_STORED_QUERY_STRING}&device_id={device.id}"
     )
@@ -185,7 +185,7 @@ async def test_setup_camera_with_old_webhook(
     expected_camera[KEY_WEB_HOOK_NOTIFICATIONS_ENABLED] = True
     expected_camera[KEY_WEB_HOOK_NOTIFICATIONS_HTTP_METHOD] = KEY_HTTP_METHOD_POST_JSON
     expected_camera[KEY_WEB_HOOK_NOTIFICATIONS_URL] = (
-        "https://example.com"
+        "https://internal.url"
         + URL_WEBHOOK_PATH.format(webhook_id=config_entry.data[CONF_WEBHOOK_ID])
         + f"?{WEB_HOOK_MOTION_DETECTED_QUERY_STRING}&device_id={device.id}"
     )
@@ -193,7 +193,7 @@ async def test_setup_camera_with_old_webhook(
     expected_camera[KEY_WEB_HOOK_STORAGE_ENABLED] = True
     expected_camera[KEY_WEB_HOOK_STORAGE_HTTP_METHOD] = KEY_HTTP_METHOD_POST_JSON
     expected_camera[KEY_WEB_HOOK_STORAGE_URL] = (
-        "https://example.com"
+        "https://internal.url"
         + URL_WEBHOOK_PATH.format(webhook_id=config_entry.data[CONF_WEBHOOK_ID])
         + f"?{WEB_HOOK_FILE_STORED_QUERY_STRING}&device_id={device.id}"
     )
@@ -223,7 +223,7 @@ async def test_setup_camera_with_correct_webhook(
         KEY_WEB_HOOK_NOTIFICATIONS_HTTP_METHOD
     ] = KEY_HTTP_METHOD_POST_JSON
     cameras[KEY_CAMERAS][0][KEY_WEB_HOOK_NOTIFICATIONS_URL] = (
-        "https://example.com"
+        "https://internal.url"
         + URL_WEBHOOK_PATH.format(webhook_id=config_entry.data[CONF_WEBHOOK_ID])
         + f"?{WEB_HOOK_MOTION_DETECTED_QUERY_STRING}&device_id={device.id}"
     )
@@ -232,7 +232,7 @@ async def test_setup_camera_with_correct_webhook(
         KEY_WEB_HOOK_STORAGE_HTTP_METHOD
     ] = KEY_HTTP_METHOD_POST_JSON
     cameras[KEY_CAMERAS][0][KEY_WEB_HOOK_STORAGE_URL] = (
-        "https://example.com"
+        "https://internal.url"
         + URL_WEBHOOK_PATH.format(webhook_id=config_entry.data[CONF_WEBHOOK_ID])
         + f"?{WEB_HOOK_FILE_STORED_QUERY_STRING}&device_id={device.id}"
     )

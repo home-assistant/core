@@ -9,7 +9,7 @@
             "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
             "project_error": "Proje bilgileri al\u0131namad\u0131."
         },
-        "flow_title": "Azure DevOps: {project_url}",
+        "flow_title": "{project_url}",
         "step": {
             "reauth": {
                 "data": {
