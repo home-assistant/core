@@ -94,10 +94,14 @@ def discover_fixture(soco):
 
     async def do_callback(hass, callback, *args, **kwargs):
         await callback(
-            {
-                ssdp.ATTR_UPNP_UDN: f"uuid:{soco.uid}",
-                ssdp.ATTR_SSDP_LOCATION: f"http://{soco.ip_address}/",
-            },
+            ssdp.SsdpServiceInfo(
+                ssdp_location=f"http://{soco.ip_address}/",
+                ssdp_st="urn:schemas-upnp-org:device:ZonePlayer:1",
+                ssdp_usn=f"uuid:{soco.uid}_MR::urn:schemas-upnp-org:service:GroupRenderingControl:1",
+                upnp={
+                    ssdp.ATTR_UPNP_UDN: f"uuid:{soco.uid}",
+                },
+            ),
             ssdp.SsdpChange.ALIVE,
         )
         return MagicMock()
