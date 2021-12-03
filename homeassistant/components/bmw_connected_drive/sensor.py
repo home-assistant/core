@@ -1,10 +1,10 @@
 """Support for reading vehicle status from BMW connected drive portal."""
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any, cast
+from typing import cast
 
 from bimmer_connected.vehicle import ConnectedDriveVehicle
 
@@ -13,7 +13,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_UNIT_SYSTEM_IMPERIAL,
     DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_TIMESTAMP,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
     PERCENTAGE,
@@ -43,7 +42,6 @@ class BMWSensorEntityDescription(SensorEntityDescription):
     unit_metric: str | None = None
     unit_imperial: str | None = None
     value: Callable = lambda x, y: x
-    extra_attributes: dict | None = None
 
 
 SENSOR_TYPES: dict[str, BMWSensorEntityDescription] = {
@@ -53,12 +51,6 @@ SENSOR_TYPES: dict[str, BMWSensorEntityDescription] = {
         icon="mdi:update",
         unit_metric=TIME_HOURS,
         unit_imperial=TIME_HOURS,
-    ),
-    "charging_end_time": BMWSensorEntityDescription(
-        key="charging_end_time",
-        icon="mdi:update",
-        device_class=DEVICE_CLASS_TIMESTAMP,
-        extra_attributes={"original_value": "charging_end_time_original"},
     ),
     "charging_status": BMWSensorEntityDescription(
         key="charging_status",
@@ -179,13 +171,3 @@ class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, SensorEntity):
         """Return the state."""
         state = getattr(self._vehicle.status, self.entity_description.key)
         return cast(StateType, self.entity_description.value(state, self.hass))
-
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return the attributes."""
-        if self.entity_description.extra_attributes:
-            return {
-                k: getattr(self._vehicle.status, v)
-                for k, v in self.entity_description.extra_attributes.items()
-            }
-        return None
