@@ -10,6 +10,8 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 1
+
 SUPPORTED_SCG_NUMBERS = (
     "scg_level1",
     "scg_level2",
