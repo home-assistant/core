@@ -819,7 +819,7 @@ hole==0.7.0
 holidays==0.11.3.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20211202.0
+home-assistant-frontend==20211203.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -2396,7 +2396,7 @@ vilfo-api-client==0.3.2
 volkszaehler==0.2.1
 
 # homeassistant.components.volvooncall
-volvooncall==0.8.12
+volvooncall==0.9.1
 
 # homeassistant.components.verisure
 vsure==1.7.3
