@@ -42,6 +42,7 @@
             "double": "przycisk \"{subtype}\" zostanie dwukrotnie naci\u015bni\u0119ty",
             "double_push": "przycisk \"{subtype}\" zostanie dwukrotnie naci\u015bni\u0119ty",
             "long": "przycisk \"{subtype}\" zostanie d\u0142ugo naci\u015bni\u0119ty",
+            "long_push": "przycisk {subtype} zostanie d\u0142ugo naci\u015bni\u0119ty",
             "long_single": "przycisk \"{subtype}\" zostanie d\u0142ugo naci\u015bni\u0119ty, a nast\u0119pnie pojedynczo naci\u015bni\u0119ty",
             "single": "przycisk \"{subtype}\" zostanie pojedynczo naci\u015bni\u0119ty",
             "single_long": "przycisk \"{subtype}\" pojedynczo naci\u015bni\u0119ty, a nast\u0119pnie d\u0142ugo naci\u015bni\u0119ty",

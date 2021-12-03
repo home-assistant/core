@@ -4,8 +4,9 @@ import logging
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.data_entry_flow import AbortFlow, FlowResult
 
 from .const import CONF_INTEGRATION_CREATED_ADDON, CONF_USE_ADDON, DOMAIN
 
@@ -48,7 +49,7 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_on_supervisor()
 
-    async def async_step_hassio(self, discovery_info):
+    async def async_step_hassio(self, discovery_info: HassioServiceInfo) -> FlowResult:
         """Receive configuration from add-on discovery info.
 
         This flow is triggered by the OpenZWave add-on.

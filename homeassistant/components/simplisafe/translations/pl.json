@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "To konto SimpliSafe jest ju\u017c w u\u017cyciu",
-            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119",
+            "wrong_account": "Podane dane uwierzytelniaj\u0105ce u\u017cytkownika nie pasuj\u0105 do tego konta SimpliSafe."
         },
         "error": {
             "identifier_exists": "Konto jest ju\u017c zarejestrowane",
@@ -11,6 +12,13 @@
             "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
         "step": {
+            "input_auth_code": {
+                "data": {
+                    "auth_code": "Kod autoryzacji"
+                },
+                "description": "Wprowad\u017a kod autoryzacyjny z adresu URL aplikacji internetowej SimpliSafe:",
+                "title": "Zako\u0144cz autoryzacj\u0119"
+            },
             "mfa": {
                 "description": "Sprawd\u017a e-mail od SimpliSafe. Po zweryfikowaniu linka, wr\u00f3\u0107 tutaj, aby doko\u0144czy\u0107 instalacj\u0119 integracji.",
                 "title": "Uwierzytelnianie wielosk\u0142adnikowe SimpliSafe"
@@ -28,6 +36,7 @@
                     "password": "Has\u0142o",
                     "username": "Adres e-mail"
                 },
+                "description": "Pocz\u0105wszy od 2021 r. SimpliSafe przesz\u0142o na nowy mechanizm uwierzytelniania za po\u015brednictwem swojej aplikacji internetowej. Ze wzgl\u0119du na ograniczenia techniczne, na ko\u0144cu tego procesu znajduje si\u0119 r\u0119czny krok; upewnij si\u0119, \u017ce przed rozpocz\u0119ciem przeczyta\u0142e\u015b [dokumentacj\u0119](http://home-assistant.io/integrations/simplisafe#getting-an-authorization-code).\n\nKiedy b\u0119dziesz gotowy, kliknij [tutaj]( {url} ), aby otworzy\u0107 aplikacj\u0119 internetow\u0105 SimpliSafe i wprowadzi\u0107 swoje dane uwierzytelniaj\u0105ce. Po zako\u0144czeniu procesu wr\u00f3\u0107 tutaj i kliknij \"Zatwierd\u017a\".",
                 "title": "Wprowad\u017a dane"
             }
         }

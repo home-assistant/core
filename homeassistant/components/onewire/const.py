@@ -1,9 +1,7 @@
 """Constants for 1-Wire component."""
 from __future__ import annotations
 
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.const import Platform
 
 CONF_MOUNT_DIR = "mount_dir"
 CONF_NAMES = "names"
@@ -43,14 +41,12 @@ MANUFACTURER_MAXIM = "Maxim Integrated"
 MANUFACTURER_HOBBYBOARDS = "Hobby Boards"
 MANUFACTURER_EDS = "Embedded Data Systems"
 
-PRESSURE_CBAR = "cbar"
-
 READ_MODE_BOOL = "bool"
 READ_MODE_FLOAT = "float"
 READ_MODE_INT = "int"
 
 PLATFORMS = [
-    BINARY_SENSOR_DOMAIN,
-    SENSOR_DOMAIN,
-    SWITCH_DOMAIN,
+    Platform.BINARY_SENSOR,
+    Platform.SENSOR,
+    Platform.SWITCH,
 ]

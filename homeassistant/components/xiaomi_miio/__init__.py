@@ -26,8 +26,8 @@ from miio import (
     FanP10,
     FanP11,
     FanZA5,
+    RoborockVacuum,
     Timer,
-    Vacuum,
     VacuumStatus,
 )
 from miio.gateway.gateway import GatewayException
@@ -212,7 +212,7 @@ class VacuumCoordinatorDataAttributes:
     fan_speeds_reverse: str = "fan_speeds_reverse"
 
 
-def _async_update_data_vacuum(hass, device: Vacuum):
+def _async_update_data_vacuum(hass, device: RoborockVacuum):
     def update() -> VacuumCoordinatorData:
         timer = []
 
@@ -313,7 +313,7 @@ async def async_create_miio_device_and_coordinator(
         or model.startswith(ROBOROCK_GENERIC)
         or model.startswith(ROCKROBO_GENERIC)
     ):
-        device = Vacuum(host, token)
+        device = RoborockVacuum(host, token)
         update_method = _async_update_data_vacuum
         coordinator_class = DataUpdateCoordinator[VacuumCoordinatorData]
     # Pedestal fans

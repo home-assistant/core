@@ -150,6 +150,103 @@ async def test_service_call_without_topic_does_not_publish(hass, mqtt_mock):
     assert not mqtt_mock.async_publish.called
 
 
+async def test_service_call_with_topic_and_topic_template_does_not_publish(
+    hass, mqtt_mock
+):
+    """Test the service call with topic/topic template.
+
+    If both 'topic' and 'topic_template' are provided then fail.
+    """
+    topic = "test/topic"
+    topic_template = "test/{{ 'topic' }}"
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            mqtt.DOMAIN,
+            mqtt.SERVICE_PUBLISH,
+            {
+                mqtt.ATTR_TOPIC: topic,
+                mqtt.ATTR_TOPIC_TEMPLATE: topic_template,
+                mqtt.ATTR_PAYLOAD: "payload",
+            },
+            blocking=True,
+        )
+    assert not mqtt_mock.async_publish.called
+
+
+async def test_service_call_with_invalid_topic_template_does_not_publish(
+    hass, mqtt_mock
+):
+    """Test the service call with a problematic topic template."""
+    await hass.services.async_call(
+        mqtt.DOMAIN,
+        mqtt.SERVICE_PUBLISH,
+        {
+            mqtt.ATTR_TOPIC_TEMPLATE: "test/{{ 1 | no_such_filter }}",
+            mqtt.ATTR_PAYLOAD: "payload",
+        },
+        blocking=True,
+    )
+    assert not mqtt_mock.async_publish.called
+
+
+async def test_service_call_with_template_topic_renders_template(hass, mqtt_mock):
+    """Test the service call with rendered topic template.
+
+    If 'topic_template' is provided and 'topic' is not, then render it.
+    """
+    await hass.services.async_call(
+        mqtt.DOMAIN,
+        mqtt.SERVICE_PUBLISH,
+        {
+            mqtt.ATTR_TOPIC_TEMPLATE: "test/{{ 1+1 }}",
+            mqtt.ATTR_PAYLOAD: "payload",
+        },
+        blocking=True,
+    )
+    assert mqtt_mock.async_publish.called
+    assert mqtt_mock.async_publish.call_args[0][0] == "test/2"
+
+
+async def test_service_call_with_template_topic_renders_invalid_topic(hass, mqtt_mock):
+    """Test the service call with rendered, invalid topic template.
+
+    If a wildcard topic is rendered, then fail.
+    """
+    await hass.services.async_call(
+        mqtt.DOMAIN,
+        mqtt.SERVICE_PUBLISH,
+        {
+            mqtt.ATTR_TOPIC_TEMPLATE: "test/{{ '+' if True else 'topic' }}/topic",
+            mqtt.ATTR_PAYLOAD: "payload",
+        },
+        blocking=True,
+    )
+    assert not mqtt_mock.async_publish.called
+
+
+async def test_service_call_with_invalid_rendered_template_topic_doesnt_render_template(
+    hass, mqtt_mock
+):
+    """Test the service call with unrendered template.
+
+    If both 'payload' and 'payload_template' are provided then fail.
+    """
+    payload = "not a template"
+    payload_template = "a template"
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            mqtt.DOMAIN,
+            mqtt.SERVICE_PUBLISH,
+            {
+                mqtt.ATTR_TOPIC: "test/topic",
+                mqtt.ATTR_PAYLOAD: payload,
+                mqtt.ATTR_PAYLOAD_TEMPLATE: payload_template,
+            },
+            blocking=True,
+        )
+    assert not mqtt_mock.async_publish.called
+
+
 async def test_service_call_with_template_payload_renders_template(hass, mqtt_mock):
     """Test the service call with rendered template.
 
@@ -1715,3 +1812,27 @@ async def test_publish_json_from_template(hass, mqtt_mock):
 
     assert mqtt_mock.async_publish.called
     assert mqtt_mock.async_publish.call_args[0][1] == test_str
+
+
+async def test_service_info_compatibility(hass, caplog):
+    """Test compatibility with old-style dict.
+
+    To be removed in 2022.6
+    """
+    discovery_info = mqtt.MqttServiceInfo(
+        topic="tasmota/discovery/DC4F220848A2/config",
+        payload="",
+        qos=0,
+        retain=False,
+        subscribed_topic="tasmota/discovery/#",
+        timestamp=None,
+    )
+
+    # Ensure first call get logged
+    assert discovery_info["topic"] == "tasmota/discovery/DC4F220848A2/config"
+    assert "Detected code that accessed discovery_info['topic']" in caplog.text
+
+    # Ensure second call doesn't get logged
+    caplog.clear()
+    assert discovery_info["topic"] == "tasmota/discovery/DC4F220848A2/config"
+    assert "Detected code that accessed discovery_info['topic']" not in caplog.text

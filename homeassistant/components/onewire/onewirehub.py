@@ -22,7 +22,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.entity import DeviceInfo
 
 from .const import (
@@ -221,16 +220,6 @@ class OneWireHub:
         if TYPE_CHECKING:
             assert isinstance(device_type, str)
         return device_type
-
-    def has_device_in_cache(self, device: DeviceEntry) -> bool:
-        """Check if device was present in the cache."""
-        if TYPE_CHECKING:
-            assert self.devices
-        for internal_device in self.devices:
-            for identifier in internal_device.device_info[ATTR_IDENTIFIERS]:
-                if identifier in device.identifiers:
-                    return True
-        return False
 
 
 class CannotConnect(HomeAssistantError):

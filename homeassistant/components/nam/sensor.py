@@ -1,7 +1,7 @@
 """Support for the Nettigo Air Monitor service."""
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 from typing import cast
 
@@ -75,7 +75,7 @@ class NAMSensor(CoordinatorEntity, SensorEntity):
         self.entity_description = description
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the state."""
         return cast(
             StateType, getattr(self.coordinator.data, self.entity_description.key)
@@ -99,11 +99,7 @@ class NAMSensorUptime(NAMSensor):
     """Define an Nettigo Air Monitor uptime sensor."""
 
     @property
-    def native_value(self) -> str:
+    def native_value(self) -> datetime:
         """Return the state."""
         uptime_sec = getattr(self.coordinator.data, self.entity_description.key)
-        return (
-            (utcnow() - timedelta(seconds=uptime_sec))
-            .replace(microsecond=0)
-            .isoformat()
-        )
+        return utcnow() - timedelta(seconds=uptime_sec)

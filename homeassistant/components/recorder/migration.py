@@ -220,7 +220,7 @@ def _add_columns(connection, table_name, columns_def):
                 )
             )
         except (InternalError, OperationalError) as err:
-            raise_if_exception_missing_str(err, ["duplicate"])
+            raise_if_exception_missing_str(err, ["already exists", "duplicate"])
             _LOGGER.warning(
                 "Column %s already exists on %s, continuing",
                 column_def.split(" ")[1],

@@ -18,7 +18,7 @@ from .const import MOCK_HOST, MOCK_PORT
 
 from tests.common import MockConfigEntry
 
-MOCK_ZEROCONF_DATA = zeroconf.HaServiceInfo(
+MOCK_ZEROCONF_DATA = zeroconf.ZeroconfServiceInfo(
     host="192.168.0.254",
     port=80,
     hostname="Freebox-Server.local.",

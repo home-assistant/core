@@ -41,7 +41,7 @@
         "trigger_type": {
             "button_double_press": "\" {subtype} \" \u00e7ift t\u0131kland\u0131",
             "button_long_press": "\" {subtype} \" s\u00fcrekli olarak bas\u0131ld\u0131",
-            "button_long_release": "\"{alt t\u00fcr}\" uzun bas\u0131ld\u0131ktan sonra b\u0131rak\u0131ld\u0131",
+            "button_long_release": "\" {subtype} \" uzun bas\u0131\u015ftan sonra \u00e7\u0131kt\u0131",
             "button_quadruple_press": "\" {subtype} \" d\u00f6rt kez t\u0131kland\u0131",
             "button_quintuple_press": "\" {subtype} \" be\u015fli t\u0131kland\u0131",
             "button_short_press": "\" {subtype} \" bas\u0131ld\u0131",

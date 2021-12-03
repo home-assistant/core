@@ -98,6 +98,8 @@ async def test_entity_and_device_attributes(hass, device_factory):
     assert entry.entity_category == ENTITY_CATEGORY_DIAGNOSTIC
     entry = device_registry.async_get_device({(DOMAIN, device.device_id)})
     assert entry
+    assert entry.configuration_url == "https://account.smartthings.com"
+    assert entry.identifiers == {(DOMAIN, device.device_id)}
     assert entry.name == device.label
     assert entry.model == device.device_type_name
     assert entry.manufacturer == "Unavailable"
@@ -125,6 +127,8 @@ async def test_energy_sensors_for_switch_device(hass, device_factory):
     assert entry.entity_category is None
     entry = device_registry.async_get_device({(DOMAIN, device.device_id)})
     assert entry
+    assert entry.configuration_url == "https://account.smartthings.com"
+    assert entry.identifiers == {(DOMAIN, device.device_id)}
     assert entry.name == device.label
     assert entry.model == device.device_type_name
     assert entry.manufacturer == "Unavailable"
@@ -138,6 +142,8 @@ async def test_energy_sensors_for_switch_device(hass, device_factory):
     assert entry.entity_category is None
     entry = device_registry.async_get_device({(DOMAIN, device.device_id)})
     assert entry
+    assert entry.configuration_url == "https://account.smartthings.com"
+    assert entry.identifiers == {(DOMAIN, device.device_id)}
     assert entry.name == device.label
     assert entry.model == device.device_type_name
     assert entry.manufacturer == "Unavailable"
@@ -175,6 +181,8 @@ async def test_power_consumption_sensor(hass, device_factory):
     assert entry.unique_id == f"{device.device_id}.energy_meter"
     entry = device_registry.async_get_device({(DOMAIN, device.device_id)})
     assert entry
+    assert entry.configuration_url == "https://account.smartthings.com"
+    assert entry.identifiers == {(DOMAIN, device.device_id)}
     assert entry.name == device.label
     assert entry.model == device.device_type_name
     assert entry.manufacturer == "Unavailable"
@@ -187,6 +195,8 @@ async def test_power_consumption_sensor(hass, device_factory):
     assert entry.unique_id == f"{device.device_id}.power_meter"
     entry = device_registry.async_get_device({(DOMAIN, device.device_id)})
     assert entry
+    assert entry.configuration_url == "https://account.smartthings.com"
+    assert entry.identifiers == {(DOMAIN, device.device_id)}
     assert entry.name == device.label
     assert entry.model == device.device_type_name
     assert entry.manufacturer == "Unavailable"
@@ -209,6 +219,8 @@ async def test_power_consumption_sensor(hass, device_factory):
     assert entry.unique_id == f"{device.device_id}.energy_meter"
     entry = device_registry.async_get_device({(DOMAIN, device.device_id)})
     assert entry
+    assert entry.configuration_url == "https://account.smartthings.com"
+    assert entry.identifiers == {(DOMAIN, device.device_id)}
     assert entry.name == device.label
     assert entry.model == device.device_type_name
     assert entry.manufacturer == "Unavailable"
