@@ -8,11 +8,11 @@ from aiohttp import web
 from aiohttp.web_exceptions import HTTPServiceUnavailable
 
 from homeassistant import config_entries
-from homeassistant.components import hassio
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import ATTR_NAME, ATTR_SERVICE, EVENT_HOMEASSISTANT_START
 from homeassistant.core import HomeAssistant, callback
 
+from .. import hassio
 from .const import ATTR_ADDON, ATTR_CONFIG, ATTR_DISCOVERY, ATTR_UUID
 from .handler import HassioAPIError
 
