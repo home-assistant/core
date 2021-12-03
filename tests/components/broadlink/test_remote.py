@@ -4,12 +4,11 @@ from unittest.mock import call
 
 from homeassistant.components.broadlink.const import DOMAIN
 from homeassistant.components.remote import (
-    DOMAIN as REMOTE_DOMAIN,
     SERVICE_SEND_COMMAND,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.helpers.entity_registry import async_entries_for_device
 
 from . import get_device
@@ -35,7 +34,7 @@ async def test_remote_setup_works(hass):
             {(DOMAIN, mock_setup.entry.unique_id)}
         )
         entries = async_entries_for_device(entity_registry, device_entry.id)
-        remotes = {entry for entry in entries if entry.domain == REMOTE_DOMAIN}
+        remotes = {entry for entry in entries if entry.domain == Platform.REMOTE}
         assert len(remotes) == 1
 
         remote = remotes.pop()
@@ -55,12 +54,12 @@ async def test_remote_send_command(hass):
             {(DOMAIN, mock_setup.entry.unique_id)}
         )
         entries = async_entries_for_device(entity_registry, device_entry.id)
-        remotes = {entry for entry in entries if entry.domain == REMOTE_DOMAIN}
+        remotes = {entry for entry in entries if entry.domain == Platform.REMOTE}
         assert len(remotes) == 1
 
         remote = remotes.pop()
         await hass.services.async_call(
-            REMOTE_DOMAIN,
+            Platform.REMOTE,
             SERVICE_SEND_COMMAND,
             {"entity_id": remote.entity_id, "command": "b64:" + IR_PACKET},
             blocking=True,
@@ -82,12 +81,12 @@ async def test_remote_turn_off_turn_on(hass):
             {(DOMAIN, mock_setup.entry.unique_id)}
         )
         entries = async_entries_for_device(entity_registry, device_entry.id)
-        remotes = {entry for entry in entries if entry.domain == REMOTE_DOMAIN}
+        remotes = {entry for entry in entries if entry.domain == Platform.REMOTE}
         assert len(remotes) == 1
 
         remote = remotes.pop()
         await hass.services.async_call(
-            REMOTE_DOMAIN,
+            Platform.REMOTE,
             SERVICE_TURN_OFF,
             {"entity_id": remote.entity_id},
             blocking=True,
@@ -95,7 +94,7 @@ async def test_remote_turn_off_turn_on(hass):
         assert hass.states.get(remote.entity_id).state == STATE_OFF
 
         await hass.services.async_call(
-            REMOTE_DOMAIN,
+            Platform.REMOTE,
             SERVICE_SEND_COMMAND,
             {"entity_id": remote.entity_id, "command": "b64:" + IR_PACKET},
             blocking=True,
@@ -103,7 +102,7 @@ async def test_remote_turn_off_turn_on(hass):
         assert mock_setup.api.send_data.call_count == 0
 
         await hass.services.async_call(
-            REMOTE_DOMAIN,
+            Platform.REMOTE,
             SERVICE_TURN_ON,
             {"entity_id": remote.entity_id},
             blocking=True,
@@ -111,7 +110,7 @@ async def test_remote_turn_off_turn_on(hass):
         assert hass.states.get(remote.entity_id).state == STATE_ON
 
         await hass.services.async_call(
-            REMOTE_DOMAIN,
+            Platform.REMOTE,
             SERVICE_SEND_COMMAND,
             {"entity_id": remote.entity_id, "command": "b64:" + IR_PACKET},
             blocking=True,

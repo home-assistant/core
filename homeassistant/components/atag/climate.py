@@ -1,7 +1,7 @@
 """Initialization of ATAG One climate platform."""
 from __future__ import annotations
 
-from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN, ClimateEntity
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
@@ -12,7 +12,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
-from homeassistant.const import ATTR_TEMPERATURE
+from homeassistant.const import ATTR_TEMPERATURE, Platform
 
 from . import DOMAIN, AtagEntity
 
@@ -31,7 +31,7 @@ HVAC_MODES = [HVAC_MODE_AUTO, HVAC_MODE_HEAT]
 async def async_setup_entry(hass, entry, async_add_entities):
     """Load a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([AtagThermostat(coordinator, CLIMATE_DOMAIN)])
+    async_add_entities([AtagThermostat(coordinator, Platform.CLIMATE)])
 
 
 class AtagThermostat(AtagEntity, ClimateEntity):

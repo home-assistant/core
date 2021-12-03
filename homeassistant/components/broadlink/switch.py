@@ -8,7 +8,6 @@ import voluptuous as vol
 from homeassistant.components.switch import (
     DEVICE_CLASS_OUTLET,
     DEVICE_CLASS_SWITCH,
-    DOMAIN as SWITCH_DOMAIN,
     PLATFORM_SCHEMA,
     SwitchEntity,
 )
@@ -23,6 +22,7 @@ from homeassistant.const import (
     CONF_TIMEOUT,
     CONF_TYPE,
     STATE_ON,
+    Platform,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -91,7 +91,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         )
 
     if switches:
-        platform_data = hass.data[DOMAIN].platforms.setdefault(SWITCH_DOMAIN, {})
+        platform_data = hass.data[DOMAIN].platforms.setdefault(Platform.SWITCH, {})
         platform_data.setdefault(mac_addr, []).extend(switches)
 
     else:
@@ -111,7 +111,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     switches = []
 
     if device.api.type in {"RM4MINI", "RM4PRO", "RMMINI", "RMMINIB", "RMPRO"}:
-        platform_data = hass.data[DOMAIN].platforms.get(SWITCH_DOMAIN, {})
+        platform_data = hass.data[DOMAIN].platforms.get(Platform.SWITCH, {})
         user_defined_switches = platform_data.get(device.api.mac, {})
         switches.extend(
             BroadlinkRMSwitch(device, config) for config in user_defined_switches

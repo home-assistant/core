@@ -157,7 +157,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await _async_update_all()
 
     hass.config_entries.async_setup_platforms(
-        entry, [platform for platform in PLATFORMS if platform is not Platform.NOTIFY]
+        entry, [platform for platform in PLATFORMS if platform != Platform.NOTIFY]
     )
 
     # set up notify platform, no entry support for notify platform yet,
@@ -178,7 +178,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(
-        entry, [platform for platform in PLATFORMS if platform is not Platform.NOTIFY]
+        entry, [platform for platform in PLATFORMS if platform != Platform.NOTIFY]
     )
 
     # Only remove services if it is the last account and not read only
