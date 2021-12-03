@@ -14,7 +14,6 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import ATTR_NAME, ATTR_SERVICE, EVENT_HOMEASSISTANT_START
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import BaseServiceInfo
-from homeassistant.helpers.frame import report
 
 from .const import ATTR_ADDON, ATTR_CONFIG, ATTR_DISCOVERY, ATTR_UUID
 from .handler import HassioAPIError
@@ -27,25 +26,6 @@ class HassioServiceInfo(BaseServiceInfo):
     """Prepared info from hassio entries."""
 
     config: dict[str, Any]
-
-    # Used to prevent log flooding. To be removed in 2022.6
-    _warning_logged: bool = False
-
-    def __getitem__(self, name: str) -> Any:
-        """
-        Allow property access by name for compatibility reason.
-
-        Deprecated, and will be removed in version 2022.6.
-        """
-        if not self._warning_logged:
-            report(
-                f"accessed discovery_info['{name}'] instead of discovery_info.config['{name}']; this will fail in version 2022.6",
-                exclude_integrations={"hassio"},
-                error_if_core=False,
-                level=logging.DEBUG,
-            )
-            self._warning_logged = True
-        return self.config[name]
 
 
 @callback
