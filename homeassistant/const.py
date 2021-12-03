@@ -5,8 +5,8 @@ from typing import Final
 
 from homeassistant.backports.enum import StrEnum
 
-MAJOR_VERSION: Final = 2021
-MINOR_VERSION: Final = 12
+MAJOR_VERSION: Final = 2022
+MINOR_VERSION: Final = 1
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
