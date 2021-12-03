@@ -50,11 +50,6 @@ class ScreenLogicNumber(ScreenlogicEntity, NumberEntity):
         return self.sensor["value"]
 
     @property
-    def max_value(self) -> float:
-        """Return the maximum allowed value."""
-        return self._attr_max_value
-
-    @property
     def unit_of_measurement(self) -> str:
         """Return the unit of measurement."""
         return self.sensor["unit"]
