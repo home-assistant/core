@@ -28,7 +28,7 @@ from .base import EnumTypeData, TuyaEntity
 from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode
 
 
-class Mode(str, Enum):
+class Mode(Enum, str):
     """Alarm modes."""
 
     ALARM_ARM = "arm"
