@@ -48,6 +48,38 @@
             "on": "On",
             "power_off": "Off",
             "power_on": "On"
+        },
+        "tuya__vacuum_cistern": {
+            "low": "Low",
+            "middle": "Middle",
+            "high": "High",
+            "closed": "Closed"
+        },
+        "tuya__vacuum_collection": {
+            "small": "Small",
+            "middle": "Middle",
+            "large": "Large"
+        },
+        "tuya__vacuum_mode": {
+            "standby": "Standby",
+            "random": "Random",
+            "smart": "Smart",
+            "wall_follow": "Wall Follow",
+            "mop": "Mop",
+            "spiral": "Spiral",
+            "left_spiral": "Left Spiral",
+            "right_spiral": "Right Spiral",
+            "bow": "Bow",
+            "left_bow": "Lef Bow",
+            "right_bow": "Right Bow",
+            "partial_bow": "Partial Bow",
+            "chargego": "Charge Go",
+            "single": "Single",
+            "zone": "Zone",
+            "pose": "Pose",
+            "point": "Point",
+            "part": "Part",
+            "pick_zone": "Pick Zone"
         }
     }
 }
