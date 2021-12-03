@@ -165,8 +165,8 @@ async def test_setup_api_panel(hass, aioclient_mock):
 
     assert panels.get("hassio").to_response() == {
         "component_name": "custom",
-        "icon": "hass:home-assistant",
-        "title": "Supervisor",
+        "icon": None,
+        "title": None,
         "url_path": "hassio",
         "require_admin": True,
         "config": {
