@@ -38,11 +38,8 @@ class ScreenLogicNumber(ScreenlogicEntity, NumberEntity):
         super().__init__(coordinator, data_key, enabled)
         self._body_type = SUPPORTED_SCG_NUMBERS.index(self._data_key)
         self._attr_max_value = SCG.LIMIT_FOR_BODY[self._body_type]
-
-    @property
-    def name(self) -> str:
-        """Name of the number."""
-        return f"{self.gateway_name} {self.sensor['name']}"
+        self._attr_name = f"{self.gateway_name} {self.sensor['name']}"
+        self._attr_unit_of_measurement = self.sensor["unit"]
 
     @property
     def value(self) -> float:
