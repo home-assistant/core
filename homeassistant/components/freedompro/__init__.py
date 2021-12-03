@@ -5,7 +5,7 @@ import logging
 from pyfreedompro import get_list, get_states
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, Platform
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -15,14 +15,14 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
-    Platform.BINARY_SENSOR,
-    Platform.CLIMATE,
-    Platform.COVER,
-    Platform.FAN,
-    Platform.LIGHT,
-    Platform.LOCK,
-    Platform.SENSOR,
-    Platform.SWITCH,
+    "binary_sensor",
+    "climate",
+    "cover",
+    "fan",
+    "light",
+    "lock",
+    "sensor",
+    "switch",
 ]
 
 
