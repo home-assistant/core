@@ -46,11 +46,6 @@ class ScreenLogicNumber(ScreenlogicEntity, NumberEntity):
         """Return the current value."""
         return self.sensor["value"]
 
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit of measurement."""
-        return self.sensor["unit"]
-
     async def async_set_value(self, value: float) -> None:
         """Update the current value."""
         # Need to set both levels at the same time, so we gather
