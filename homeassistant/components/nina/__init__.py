@@ -8,6 +8,7 @@ from async_timeout import timeout
 from pynina import ApiError, Nina, Warning as NinaWarning
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -25,7 +26,7 @@ from .const import (
     SCAN_INTERVAL,
 )
 
-PLATFORMS: list[str] = ["binary_sensor"]
+PLATFORMS: list[str] = [Platform.BINARY_SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
