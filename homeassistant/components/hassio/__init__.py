@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 import os
@@ -24,6 +25,7 @@ from homeassistant.const import (
     SERVICE_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import DOMAIN as HASS_DOMAIN, HomeAssistant, callback
+from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, recorder
 from homeassistant.helpers.device_registry import (
@@ -181,6 +183,13 @@ MAP_SERVICE_API = {
         True,
     ),
 }
+
+
+@dataclass
+class HassioServiceInfo(BaseServiceInfo):
+    """Prepared info from hassio entries."""
+
+    config: dict[str, Any]
 
 
 @bind_hass

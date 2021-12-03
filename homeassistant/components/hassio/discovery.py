@@ -2,30 +2,21 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
 import logging
-from typing import Any
 
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPServiceUnavailable
 
 from homeassistant import config_entries
+from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import ATTR_NAME, ATTR_SERVICE, EVENT_HOMEASSISTANT_START
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import BaseServiceInfo
 
 from .const import ATTR_ADDON, ATTR_CONFIG, ATTR_DISCOVERY, ATTR_UUID
 from .handler import HassioAPIError
 
 _LOGGER = logging.getLogger(__name__)
-
-
-@dataclass
-class HassioServiceInfo(BaseServiceInfo):
-    """Prepared info from hassio entries."""
-
-    config: dict[str, Any]
 
 
 @callback
