@@ -13,7 +13,7 @@ freezegun==1.1.0
 jsonpickle==1.4.1
 mock-open==1.4.0
 mypy==0.910
-pre-commit==2.15.0
+pre-commit==2.16.0
 pylint==2.12.1
 pipdeptree==2.2.0
 pylint-strict-informational==0.1

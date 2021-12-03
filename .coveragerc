@@ -420,9 +420,6 @@ omit =
     homeassistant/components/harmony/data.py
     homeassistant/components/harmony/remote.py
     homeassistant/components/harmony/util.py
-    homeassistant/components/hassio/binary_sensor.py
-    homeassistant/components/hassio/entity.py
-    homeassistant/components/hassio/sensor.py
     homeassistant/components/haveibeenpwned/sensor.py
     homeassistant/components/hdmi_cec/*
     homeassistant/components/heatmiser/climate.py
@@ -918,6 +915,7 @@ omit =
     homeassistant/components/screenlogic/binary_sensor.py
     homeassistant/components/screenlogic/climate.py
     homeassistant/components/screenlogic/light.py
+    homeassistant/components/screenlogic/number.py
     homeassistant/components/screenlogic/sensor.py
     homeassistant/components/screenlogic/services.py
     homeassistant/components/screenlogic/switch.py
@@ -1098,6 +1096,7 @@ omit =
     homeassistant/components/tolo/binary_sensor.py
     homeassistant/components/tolo/button.py
     homeassistant/components/tolo/climate.py
+    homeassistant/components/tolo/fan.py
     homeassistant/components/tolo/light.py
     homeassistant/components/tolo/select.py
     homeassistant/components/tolo/sensor.py
@@ -1135,6 +1134,7 @@ omit =
     homeassistant/components/tradfri/sensor.py
     homeassistant/components/tradfri/switch.py
     homeassistant/components/trafikverket_train/sensor.py
+    homeassistant/components/trafikverket_weatherstation/__init__.py
     homeassistant/components/trafikverket_weatherstation/sensor.py
     homeassistant/components/transmission/sensor.py
     homeassistant/components/transmission/switch.py

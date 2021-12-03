@@ -84,13 +84,13 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle zeroconf discovery."""
         # Hostname is format: brother.local.
-        self.host = discovery_info[zeroconf.ATTR_HOSTNAME].rstrip(".")
+        self.host = discovery_info.hostname.rstrip(".")
 
         # Do not probe the device if the host is already configured
         self._async_abort_entries_match({CONF_HOST: self.host})
 
         snmp_engine = get_snmp_engine(self.hass)
-        model = discovery_info[zeroconf.ATTR_PROPERTIES].get("product")
+        model = discovery_info.properties.get("product")
 
         try:
             self.brother = Brother(self.host, snmp_engine=snmp_engine, model=model)

@@ -56,11 +56,11 @@ class HueBaseEntity(Entity):
             # creating a pretty name for device-less entities (e.g. groups/scenes)
             # should be handled in the platform instead
             return self.resource.type.value
-        dev_name = self.device.metadata.name
-        # if resource is a light, use the device name
+        # if resource is a light, use the name from metadata
         if self.resource.type == ResourceTypes.LIGHT:
-            return dev_name
+            return self.resource.name
         # for sensors etc, use devicename + pretty name of type
+        dev_name = self.device.metadata.name
         type_title = RESOURCE_TYPE_NAMES.get(
             self.resource.type, self.resource.type.value.replace("_", " ").title()
         )
@@ -76,6 +76,23 @@ class HueBaseEntity(Entity):
                 (EventType.RESOURCE_UPDATED, EventType.RESOURCE_DELETED),
             )
         )
+        # also subscribe to device update event to catch devicer changes (e.g. name)
+        if self.device is None:
+            return
+        self.async_on_remove(
+            self.bridge.api.devices.subscribe(
+                self._handle_event,
+                self.device.id,
+                EventType.RESOURCE_UPDATED,
+            )
+        )
+        # subscribe to zigbee_connectivity to catch availability changes
+        if zigbee := self.bridge.api.devices.get_zigbee_connectivity(self.device.id):
+            self.bridge.api.sensors.zigbee_connectivity.subscribe(
+                self._handle_event,
+                zigbee.id,
+                EventType.RESOURCE_UPDATED,
+            )
 
     @property
     def available(self) -> bool:
@@ -98,7 +115,7 @@ class HueBaseEntity(Entity):
 
     @callback
     def _handle_event(self, event_type: EventType, resource: CLIPResource) -> None:
-        """Handle status event for this resource."""
+        """Handle status event for this resource (or it's parent)."""
         if event_type == EventType.RESOURCE_DELETED and resource.id == self.resource.id:
             self.logger.debug("Received delete for %s", self.entity_id)
             # non-device bound entities like groups and scenes need to be removed here

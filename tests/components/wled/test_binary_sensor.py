@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from homeassistant.components.binary_sensor import DEVICE_CLASS_UPDATE
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ICON,
@@ -25,7 +25,7 @@ async def test_update_available(
 
     state = hass.states.get("binary_sensor.wled_rgb_light_firmware")
     assert state
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_UPDATE
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.UPDATE
     assert state.state == STATE_ON
     assert ATTR_ICON not in state.attributes
 
@@ -44,7 +44,7 @@ async def test_no_update_available(
 
     state = hass.states.get("binary_sensor.wled_websocket_firmware")
     assert state
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_UPDATE
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.UPDATE
     assert state.state == STATE_OFF
     assert ATTR_ICON not in state.attributes
 

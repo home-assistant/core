@@ -843,3 +843,34 @@ async def test_aiodiscover_finds_new_hosts_after_interval(hass):
         hostname="connect",
         macaddress="b8b7f16db533",
     )
+
+
+async def test_service_info_compatibility(hass, caplog):
+    """Test compatibility with old-style dict.
+
+    To be removed in 2022.6
+    """
+    discovery_info = dhcp.DhcpServiceInfo(
+        ip="192.168.210.56",
+        hostname="connect",
+        macaddress="b8b7f16db533",
+    )
+
+    # Ensure first call get logged
+    assert discovery_info["ip"] == "192.168.210.56"
+    assert discovery_info.get("ip") == "192.168.210.56"
+    assert discovery_info.get("ip", "fallback_host") == "192.168.210.56"
+    assert discovery_info.get("invalid_key", "fallback_host") == "fallback_host"
+    assert "Detected code that accessed discovery_info['ip']" in caplog.text
+    assert "Detected code that accessed discovery_info.get('ip')" not in caplog.text
+
+    # Ensure second call doesn't get logged
+    caplog.clear()
+    assert discovery_info["ip"] == "192.168.210.56"
+    assert discovery_info.get("ip") == "192.168.210.56"
+    assert "Detected code that accessed discovery_info['ip']" not in caplog.text
+    assert "Detected code that accessed discovery_info.get('ip')" not in caplog.text
+
+    discovery_info._warning_logged = False  # pylint: disable=[protected-access]
+    assert discovery_info.get("ip") == "192.168.210.56"
+    assert "Detected code that accessed discovery_info.get('ip')" in caplog.text

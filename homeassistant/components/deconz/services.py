@@ -66,7 +66,6 @@ def async_setup_services(hass: HomeAssistant) -> None:
         service = service_call.service
         service_data = service_call.data
 
-        gateway = get_master_gateway(hass)
         if CONF_BRIDGE_ID in service_data:
             found_gateway = False
             bridge_id = normalize_bridge_id(service_data[CONF_BRIDGE_ID])
@@ -79,6 +78,12 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
             if not found_gateway:
                 LOGGER.error("Could not find the gateway %s", bridge_id)
+                return
+        else:
+            try:
+                gateway = get_master_gateway(hass)
+            except ValueError:
+                LOGGER.error("No master gateway available")
                 return
 
         if service == SERVICE_CONFIGURE_DEVICE:

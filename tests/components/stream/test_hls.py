@@ -135,6 +135,7 @@ async def test_hls_stream(hass, hls_stream, stream_worker_sync):
 
     # Request stream
     stream.add_provider(HLS_PROVIDER)
+    assert stream.available
     stream.start()
 
     hls_client = await hls_stream(stream)
@@ -161,6 +162,9 @@ async def test_hls_stream(hass, hls_stream, stream_worker_sync):
 
     stream_worker_sync.resume()
 
+    # The stream worker reported end of stream and exited
+    assert not stream.available
+
     # Stop stream, if it hasn't quit already
     stream.stop()
 
@@ -181,6 +185,7 @@ async def test_stream_timeout(hass, hass_client, stream_worker_sync):
 
     # Request stream
     stream.add_provider(HLS_PROVIDER)
+    assert stream.available
     stream.start()
     url = stream.endpoint_url(HLS_PROVIDER)
 
@@ -267,6 +272,7 @@ async def test_stream_keepalive(hass):
         stream._thread.join()
         stream._thread = None
         assert av_open.call_count == 2
+        assert not stream.available
 
     # Stop stream, if it hasn't quit already
     stream.stop()

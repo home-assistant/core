@@ -38,9 +38,11 @@ TEST_DISCOVERY = ssdp.SsdpServiceInfo(
         ssdp.ATTR_UPNP_UDN: TEST_UDN,
         "usn": TEST_USN,
         "location": TEST_LOCATION,
-        "_host": TEST_HOSTNAME,
         "_udn": TEST_UDN,
         "friendlyName": TEST_FRIENDLY_NAME,
+    },
+    ssdp_headers={
+        "_host": TEST_HOSTNAME,
     },
 )
 

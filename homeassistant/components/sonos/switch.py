@@ -38,6 +38,8 @@ ATTR_CROSSFADE = "cross_fade"
 ATTR_NIGHT_SOUND = "night_mode"
 ATTR_SPEECH_ENHANCEMENT = "dialog_mode"
 ATTR_STATUS_LIGHT = "status_light"
+ATTR_SUB_ENABLED = "sub_enabled"
+ATTR_SURROUND_ENABLED = "surround_enabled"
 ATTR_TOUCH_CONTROLS = "buttons_enabled"
 
 ALL_FEATURES = (
@@ -45,6 +47,8 @@ ALL_FEATURES = (
     ATTR_CROSSFADE,
     ATTR_NIGHT_SOUND,
     ATTR_SPEECH_ENHANCEMENT,
+    ATTR_SUB_ENABLED,
+    ATTR_SURROUND_ENABLED,
     ATTR_STATUS_LIGHT,
 )
 
@@ -60,6 +64,8 @@ FRIENDLY_NAMES = {
     ATTR_NIGHT_SOUND: "Night Sound",
     ATTR_SPEECH_ENHANCEMENT: "Speech Enhancement",
     ATTR_STATUS_LIGHT: "Status Light",
+    ATTR_SUB_ENABLED: "Subwoofer Enabled",
+    ATTR_SURROUND_ENABLED: "Surround Enabled",
     ATTR_TOUCH_CONTROLS: "Touch Controls",
 }
 
@@ -68,6 +74,8 @@ FEATURE_ICONS = {
     ATTR_SPEECH_ENHANCEMENT: "mdi:ear-hearing",
     ATTR_CROSSFADE: "mdi:swap-horizontal",
     ATTR_STATUS_LIGHT: "mdi:led-on",
+    ATTR_SUB_ENABLED: "mdi:dog",
+    ATTR_SURROUND_ENABLED: "mdi:surround-sound",
     ATTR_TOUCH_CONTROLS: "mdi:gesture-tap",
 }
 

@@ -1030,3 +1030,37 @@ async def test_no_name(hass, mock_async_zeroconf):
     register_call = mock_async_zeroconf.async_register_service.mock_calls[-1]
     info = register_call.args[0]
     assert info.name == "Home._home-assistant._tcp.local."
+
+
+async def test_service_info_compatibility(hass, caplog):
+    """Test compatibility with old-style dict.
+
+    To be removed in 2022.6
+    """
+    discovery_info = zeroconf.ZeroconfServiceInfo(
+        host="mock_host",
+        port=None,
+        hostname="mock_hostname",
+        type="mock_type",
+        name="mock_name",
+        properties={},
+    )
+
+    # Ensure first call get logged
+    assert discovery_info["host"] == "mock_host"
+    assert discovery_info.get("host") == "mock_host"
+    assert discovery_info.get("host", "fallback_host") == "mock_host"
+    assert discovery_info.get("invalid_key", "fallback_host") == "fallback_host"
+    assert "Detected code that accessed discovery_info['host']" in caplog.text
+    assert "Detected code that accessed discovery_info.get('host')" not in caplog.text
+
+    # Ensure second call doesn't get logged
+    caplog.clear()
+    assert discovery_info["host"] == "mock_host"
+    assert discovery_info.get("host") == "mock_host"
+    assert "Detected code that accessed discovery_info['host']" not in caplog.text
+    assert "Detected code that accessed discovery_info.get('host')" not in caplog.text
+
+    discovery_info._warning_logged = False
+    assert discovery_info.get("host") == "mock_host"
+    assert "Detected code that accessed discovery_info.get('host')" in caplog.text

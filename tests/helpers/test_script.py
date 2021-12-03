@@ -25,7 +25,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import SERVICE_CALL_LIMIT, Context, CoreState, callback
 from homeassistant.exceptions import ConditionError, ServiceNotFound
-from homeassistant.helpers import config_validation as cv, script, template, trace
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_registry as er,
+    script,
+    template,
+    trace,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -748,6 +754,7 @@ async def test_wait_basic(hass, action_type):
             "to": "off",
         }
     sequence = cv.SCRIPT_SCHEMA(action)
+    sequence = await script.async_validate_actions_config(hass, sequence)
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
     wait_started_flag = async_watch_for_action(script_obj, wait_alias)
 
@@ -848,6 +855,7 @@ async def test_wait_basic_times_out(hass, action_type):
             "to": "off",
         }
     sequence = cv.SCRIPT_SCHEMA(action)
+    sequence = await script.async_validate_actions_config(hass, sequence)
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
     wait_started_flag = async_watch_for_action(script_obj, wait_alias)
     timed_out = False
@@ -904,6 +912,7 @@ async def test_multiple_runs_wait(hass, action_type):
             {"event": event, "event_data": {"value": 2}},
         ]
     )
+    sequence = await script.async_validate_actions_config(hass, sequence)
     script_obj = script.Script(
         hass, sequence, "Test Name", "test_domain", script_mode="parallel", max_runs=2
     )
@@ -952,6 +961,7 @@ async def test_cancel_wait(hass, action_type):
             }
         }
     sequence = cv.SCRIPT_SCHEMA([action, {"event": event}])
+    sequence = await script.async_validate_actions_config(hass, sequence)
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
     wait_started_flag = async_watch_for_action(script_obj, "wait")
 
@@ -1049,6 +1059,7 @@ async def test_wait_timeout(hass, caplog, timeout_param, action_type):
     action["timeout"] = timeout_param
     action["continue_on_timeout"] = True
     sequence = cv.SCRIPT_SCHEMA([action, {"event": event}])
+    sequence = await script.async_validate_actions_config(hass, sequence)
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
     wait_started_flag = async_watch_for_action(script_obj, "wait")
 
@@ -1116,6 +1127,7 @@ async def test_wait_continue_on_timeout(
     if continue_on_timeout is not None:
         action["continue_on_timeout"] = continue_on_timeout
     sequence = cv.SCRIPT_SCHEMA([action, {"event": event}])
+    sequence = await script.async_validate_actions_config(hass, sequence)
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
     wait_started_flag = async_watch_for_action(script_obj, "wait")
 
@@ -1287,6 +1299,7 @@ async def test_wait_variables_out(hass, mode, action_type):
         },
     ]
     sequence = cv.SCRIPT_SCHEMA(sequence)
+    sequence = await script.async_validate_actions_config(hass, sequence)
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
     wait_started_flag = async_watch_for_action(script_obj, "wait")
 
@@ -1326,11 +1339,13 @@ async def test_wait_variables_out(hass, mode, action_type):
 
 async def test_wait_for_trigger_bad(hass, caplog):
     """Test bad wait_for_trigger."""
+    sequence = cv.SCRIPT_SCHEMA(
+        {"wait_for_trigger": {"platform": "state", "entity_id": "sensor.abc"}}
+    )
+    sequence = await script.async_validate_actions_config(hass, sequence)
     script_obj = script.Script(
         hass,
-        cv.SCRIPT_SCHEMA(
-            {"wait_for_trigger": {"platform": "state", "entity_id": "sensor.abc"}}
-        ),
+        sequence,
         "Test Name",
         "test_domain",
     )
@@ -1356,11 +1371,13 @@ async def test_wait_for_trigger_bad(hass, caplog):
 
 async def test_wait_for_trigger_generated_exception(hass, caplog):
     """Test bad wait_for_trigger."""
+    sequence = cv.SCRIPT_SCHEMA(
+        {"wait_for_trigger": {"platform": "state", "entity_id": "sensor.abc"}}
+    )
+    sequence = await script.async_validate_actions_config(hass, sequence)
     script_obj = script.Script(
         hass,
-        cv.SCRIPT_SCHEMA(
-            {"wait_for_trigger": {"platform": "state", "entity_id": "sensor.abc"}}
-        ),
+        sequence,
         "Test Name",
         "test_domain",
     )
@@ -1474,6 +1491,81 @@ async def test_condition_basic(hass, caplog):
                 {
                     "error_type": script._StopScript,
                     "result": {"entities": ["test.entity"], "result": False},
+                }
+            ],
+        },
+        expected_script_execution="aborted",
+    )
+
+
+async def test_condition_validation(hass, caplog):
+    """Test if we can use conditions which validate late in a script."""
+    registry = er.async_get(hass)
+    entry = registry.async_get_or_create(
+        "test", "hue", "1234", suggested_object_id="entity"
+    )
+    assert entry.entity_id == "test.entity"
+    event = "test_event"
+    events = async_capture_events(hass, event)
+    alias = "condition step"
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"event": event},
+            {
+                "alias": alias,
+                "condition": "state",
+                "entity_id": entry.id,
+                "state": "hello",
+            },
+            {"event": event},
+        ]
+    )
+    sequence = await script.async_validate_actions_config(hass, sequence)
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    hass.states.async_set("test.entity", "hello")
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert f"Test condition {alias}: True" in caplog.text
+    caplog.clear()
+    assert len(events) == 2
+
+    assert_action_trace(
+        {
+            "0": [{"result": {"event": "test_event", "event_data": {}}}],
+            "1": [{"result": {"result": True}}],
+            "1/entity_id/0": [
+                {"result": {"result": True, "state": "hello", "wanted_state": "hello"}}
+            ],
+            "2": [{"result": {"event": "test_event", "event_data": {}}}],
+        }
+    )
+
+    hass.states.async_set("test.entity", "goodbye")
+
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert f"Test condition {alias}: False" in caplog.text
+    assert len(events) == 3
+
+    assert_action_trace(
+        {
+            "0": [{"result": {"event": "test_event", "event_data": {}}}],
+            "1": [
+                {
+                    "error_type": script._StopScript,
+                    "result": {"result": False},
+                }
+            ],
+            "1/entity_id/0": [
+                {
+                    "result": {
+                        "result": False,
+                        "state": "goodbye",
+                        "wanted_state": "hello",
+                    }
                 }
             ],
         },

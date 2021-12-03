@@ -7,8 +7,11 @@ import pytest
 
 from homeassistant.components.demo import DOMAIN
 from homeassistant.components.device_tracker.legacy import YAML_DEVICES
+from homeassistant.components.recorder.statistics import list_statistic_ids
 from homeassistant.helpers.json import JSONEncoder
-from homeassistant.setup import async_setup_component
+from homeassistant.setup import async_setup_component, setup_component
+
+from tests.components.recorder.common import wait_recording_done
 
 
 @pytest.fixture(autouse=True)
@@ -40,3 +43,27 @@ async def test_setting_up_demo(hass):
             "Unable to convert all demo entities to JSON. "
             "Wrong data in state machine!"
         )
+
+
+def test_demo_statistics(hass_recorder):
+    """Test that the demo components makes some statistics available."""
+    hass = hass_recorder()
+
+    assert setup_component(hass, DOMAIN, {DOMAIN: {}})
+    hass.block_till_done()
+    hass.start()
+    wait_recording_done(hass)
+
+    statistic_ids = list_statistic_ids(hass)
+    assert {
+        "name": None,
+        "source": "demo",
+        "statistic_id": "demo:temperature_outdoor",
+        "unit_of_measurement": "°C",
+    } in statistic_ids
+    assert {
+        "name": None,
+        "source": "demo",
+        "statistic_id": "demo:energy_consumption",
+        "unit_of_measurement": "kWh",
+    } in statistic_ids

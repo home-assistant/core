@@ -7,38 +7,12 @@ from enum import Enum
 
 from tuya_iot import TuyaCloudOpenAPIEndpoint
 
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
-    DEVICE_CLASS_AQI,
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_CO,
-    DEVICE_CLASS_CO2,
-    DEVICE_CLASS_CURRENT,
-    DEVICE_CLASS_DATE,
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_GAS,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_MONETARY,
-    DEVICE_CLASS_NITROGEN_DIOXIDE,
-    DEVICE_CLASS_NITROGEN_MONOXIDE,
-    DEVICE_CLASS_NITROUS_OXIDE,
-    DEVICE_CLASS_OZONE,
-    DEVICE_CLASS_PM1,
-    DEVICE_CLASS_PM10,
-    DEVICE_CLASS_PM25,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_POWER_FACTOR,
-    DEVICE_CLASS_PRESSURE,
-    DEVICE_CLASS_SIGNAL_STRENGTH,
-    DEVICE_CLASS_SULPHUR_DIOXIDE,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_TIMESTAMP,
-    DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
-    DEVICE_CLASS_VOLTAGE,
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_CURRENT_MILLIAMPERE,
     ELECTRIC_POTENTIAL_MILLIVOLT,
@@ -85,6 +59,7 @@ DEVICE_CLASS_TUYA_MOTION_SENSITIVITY = "tuya__motion_sensitivity"
 DEVICE_CLASS_TUYA_RECORD_MODE = "tuya__record_mode"
 DEVICE_CLASS_TUYA_RELAY_STATUS = "tuya__relay_status"
 DEVICE_CLASS_TUYA_STATUS = "tuya__status"
+DEVICE_CLASS_TUYA_FINGERBOT_MODE = "tuya__fingerbot_mode"
 
 TUYA_DISCOVERY_NEW = "tuya_discovery_new"
 TUYA_HA_SIGNAL_UPDATE_ENTITY = "tuya_entry_update"
@@ -138,6 +113,8 @@ class DPCode(str, Enum):
     ANGLE_HORIZONTAL = "angle_horizontal"
     ANGLE_VERTICAL = "angle_vertical"
     ANION = "anion"  # Ionizer unit
+    ARM_DOWN_PERCENT = "arm_down_percent"
+    ARM_UP_PERCENT = "arm_up_percent"
     BASIC_ANTI_FLICKER = "basic_anti_flicker"
     BASIC_DEVICE_VOLUME = "basic_device_volume"
     BASIC_FLIP = "basic_flip"
@@ -168,6 +145,7 @@ class DPCode(str, Enum):
     CH4_SENSOR_STATE = "ch4_sensor_state"
     CH4_SENSOR_VALUE = "ch4_sensor_value"
     CHILD_LOCK = "child_lock"  # Child lock
+    CLICK_SUSTAIN_TIME = "click_sustain_time"
     CO_STATE = "co_state"
     CO_STATUS = "co_status"
     CO_VALUE = "co_value"
@@ -201,6 +179,7 @@ class DPCode(str, Enum):
     FILTER_RESET = "filter_reset"  # Filter (cartridge) reset
     FLOODLIGHT_LIGHTNESS = "floodlight_lightness"
     FLOODLIGHT_SWITCH = "floodlight_switch"
+    FORWARD_ENERGY_TOTAL = "forward_energy_total"
     GAS_SENSOR_STATE = "gas_sensor_state"
     GAS_SENSOR_STATUS = "gas_sensor_status"
     GAS_SENSOR_VALUE = "gas_sensor_value"
@@ -230,6 +209,9 @@ class DPCode(str, Enum):
     PERCENT_STATE = "percent_state"
     PERCENT_STATE_2 = "percent_state_2"
     PERCENT_STATE_3 = "percent_state_3"
+    PHASE_A = "phase_a"
+    PHASE_B = "phase_b"
+    PHASE_C = "phase_c"
     PIR = "pir"  # Motion sensor
     PM1 = "pm1"
     PM10 = "pm10"
@@ -347,33 +329,33 @@ UNITS = (
         unit="",
         aliases={" "},
         device_classes={
-            DEVICE_CLASS_AQI,
-            DEVICE_CLASS_DATE,
-            DEVICE_CLASS_MONETARY,
-            DEVICE_CLASS_TIMESTAMP,
+            SensorDeviceClass.AQI,
+            SensorDeviceClass.DATE,
+            SensorDeviceClass.MONETARY,
+            SensorDeviceClass.TIMESTAMP,
         },
     ),
     UnitOfMeasurement(
         unit=PERCENTAGE,
         aliases={"pct", "percent"},
         device_classes={
-            DEVICE_CLASS_BATTERY,
-            DEVICE_CLASS_HUMIDITY,
-            DEVICE_CLASS_POWER_FACTOR,
+            SensorDeviceClass.BATTERY,
+            SensorDeviceClass.HUMIDITY,
+            SensorDeviceClass.POWER_FACTOR,
         },
     ),
     UnitOfMeasurement(
         unit=CONCENTRATION_PARTS_PER_MILLION,
         device_classes={
-            DEVICE_CLASS_CO,
-            DEVICE_CLASS_CO2,
+            SensorDeviceClass.CO,
+            SensorDeviceClass.CO2,
         },
     ),
     UnitOfMeasurement(
         unit=CONCENTRATION_PARTS_PER_BILLION,
         device_classes={
-            DEVICE_CLASS_CO,
-            DEVICE_CLASS_CO2,
+            SensorDeviceClass.CO,
+            SensorDeviceClass.CO2,
         },
         conversion_unit=CONCENTRATION_PARTS_PER_MILLION,
         conversion_fn=lambda x: x / 1000,
@@ -381,73 +363,73 @@ UNITS = (
     UnitOfMeasurement(
         unit=ELECTRIC_CURRENT_AMPERE,
         aliases={"a", "ampere"},
-        device_classes={DEVICE_CLASS_CURRENT},
+        device_classes={SensorDeviceClass.CURRENT},
     ),
     UnitOfMeasurement(
         unit=ELECTRIC_CURRENT_MILLIAMPERE,
         aliases={"ma", "milliampere"},
-        device_classes={DEVICE_CLASS_CURRENT},
+        device_classes={SensorDeviceClass.CURRENT},
         conversion_unit=ELECTRIC_CURRENT_AMPERE,
         conversion_fn=lambda x: x / 1000,
     ),
     UnitOfMeasurement(
         unit=ENERGY_WATT_HOUR,
         aliases={"wh", "watthour"},
-        device_classes={DEVICE_CLASS_ENERGY},
+        device_classes={SensorDeviceClass.ENERGY},
     ),
     UnitOfMeasurement(
         unit=ENERGY_KILO_WATT_HOUR,
-        aliases={"kwh", "kilowatt-hour"},
-        device_classes={DEVICE_CLASS_ENERGY},
+        aliases={"kwh", "kilowatt-hour", "kW·h"},
+        device_classes={SensorDeviceClass.ENERGY},
     ),
     UnitOfMeasurement(
         unit=VOLUME_CUBIC_FEET,
         aliases={"ft3"},
-        device_classes={DEVICE_CLASS_GAS},
+        device_classes={SensorDeviceClass.GAS},
     ),
     UnitOfMeasurement(
         unit=VOLUME_CUBIC_METERS,
         aliases={"m3"},
-        device_classes={DEVICE_CLASS_GAS},
+        device_classes={SensorDeviceClass.GAS},
     ),
     UnitOfMeasurement(
         unit=LIGHT_LUX,
         aliases={"lux"},
-        device_classes={DEVICE_CLASS_ILLUMINANCE},
+        device_classes={SensorDeviceClass.ILLUMINANCE},
     ),
     UnitOfMeasurement(
         unit="lm",
         aliases={"lum", "lumen"},
-        device_classes={DEVICE_CLASS_ILLUMINANCE},
+        device_classes={SensorDeviceClass.ILLUMINANCE},
     ),
     UnitOfMeasurement(
         unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         aliases={"ug/m3", "µg/m3", "ug/m³"},
         device_classes={
-            DEVICE_CLASS_NITROGEN_DIOXIDE,
-            DEVICE_CLASS_NITROGEN_MONOXIDE,
-            DEVICE_CLASS_NITROUS_OXIDE,
-            DEVICE_CLASS_OZONE,
-            DEVICE_CLASS_PM1,
-            DEVICE_CLASS_PM25,
-            DEVICE_CLASS_PM10,
-            DEVICE_CLASS_SULPHUR_DIOXIDE,
-            DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
+            SensorDeviceClass.NITROGEN_DIOXIDE,
+            SensorDeviceClass.NITROGEN_MONOXIDE,
+            SensorDeviceClass.NITROUS_OXIDE,
+            SensorDeviceClass.OZONE,
+            SensorDeviceClass.PM1,
+            SensorDeviceClass.PM25,
+            SensorDeviceClass.PM10,
+            SensorDeviceClass.SULPHUR_DIOXIDE,
+            SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
         },
     ),
     UnitOfMeasurement(
         unit=CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
         aliases={"mg/m3"},
         device_classes={
-            DEVICE_CLASS_NITROGEN_DIOXIDE,
-            DEVICE_CLASS_NITROGEN_MONOXIDE,
-            DEVICE_CLASS_NITROUS_OXIDE,
-            DEVICE_CLASS_OZONE,
-            DEVICE_CLASS_PM1,
-            DEVICE_CLASS_PM25,
-            DEVICE_CLASS_PM10,
-            DEVICE_CLASS_SULPHUR_DIOXIDE,
-            DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
+            SensorDeviceClass.NITROGEN_DIOXIDE,
+            SensorDeviceClass.NITROGEN_MONOXIDE,
+            SensorDeviceClass.NITROUS_OXIDE,
+            SensorDeviceClass.OZONE,
+            SensorDeviceClass.PM1,
+            SensorDeviceClass.PM25,
+            SensorDeviceClass.PM10,
+            SensorDeviceClass.SULPHUR_DIOXIDE,
+            SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
         },
         conversion_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         conversion_fn=lambda x: x * 1000,
@@ -455,69 +437,69 @@ UNITS = (
     UnitOfMeasurement(
         unit=POWER_WATT,
         aliases={"watt"},
-        device_classes={DEVICE_CLASS_POWER},
+        device_classes={SensorDeviceClass.POWER},
     ),
     UnitOfMeasurement(
         unit=POWER_KILO_WATT,
         aliases={"kilowatt"},
-        device_classes={DEVICE_CLASS_POWER},
+        device_classes={SensorDeviceClass.POWER},
     ),
     UnitOfMeasurement(
         unit=PRESSURE_BAR,
-        device_classes={DEVICE_CLASS_PRESSURE},
+        device_classes={SensorDeviceClass.PRESSURE},
     ),
     UnitOfMeasurement(
         unit=PRESSURE_MBAR,
         aliases={"millibar"},
-        device_classes={DEVICE_CLASS_PRESSURE},
+        device_classes={SensorDeviceClass.PRESSURE},
     ),
     UnitOfMeasurement(
         unit=PRESSURE_HPA,
         aliases={"hpa", "hectopascal"},
-        device_classes={DEVICE_CLASS_PRESSURE},
+        device_classes={SensorDeviceClass.PRESSURE},
     ),
     UnitOfMeasurement(
         unit=PRESSURE_INHG,
         aliases={"inhg"},
-        device_classes={DEVICE_CLASS_PRESSURE},
+        device_classes={SensorDeviceClass.PRESSURE},
     ),
     UnitOfMeasurement(
         unit=PRESSURE_PSI,
-        device_classes={DEVICE_CLASS_PRESSURE},
+        device_classes={SensorDeviceClass.PRESSURE},
     ),
     UnitOfMeasurement(
         unit=PRESSURE_PA,
-        device_classes={DEVICE_CLASS_PRESSURE},
+        device_classes={SensorDeviceClass.PRESSURE},
     ),
     UnitOfMeasurement(
         unit=SIGNAL_STRENGTH_DECIBELS,
         aliases={"db"},
-        device_classes={DEVICE_CLASS_SIGNAL_STRENGTH},
+        device_classes={SensorDeviceClass.SIGNAL_STRENGTH},
     ),
     UnitOfMeasurement(
         unit=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         aliases={"dbm"},
-        device_classes={DEVICE_CLASS_SIGNAL_STRENGTH},
+        device_classes={SensorDeviceClass.SIGNAL_STRENGTH},
     ),
     UnitOfMeasurement(
         unit=TEMP_CELSIUS,
         aliases={"°c", "c", "celsius"},
-        device_classes={DEVICE_CLASS_TEMPERATURE},
+        device_classes={SensorDeviceClass.TEMPERATURE},
     ),
     UnitOfMeasurement(
         unit=TEMP_FAHRENHEIT,
         aliases={"°f", "f", "fahrenheit"},
-        device_classes={DEVICE_CLASS_TEMPERATURE},
+        device_classes={SensorDeviceClass.TEMPERATURE},
     ),
     UnitOfMeasurement(
         unit=ELECTRIC_POTENTIAL_VOLT,
         aliases={"volt"},
-        device_classes={DEVICE_CLASS_VOLTAGE},
+        device_classes={SensorDeviceClass.VOLTAGE},
     ),
     UnitOfMeasurement(
         unit=ELECTRIC_POTENTIAL_MILLIVOLT,
         aliases={"mv", "millivolt"},
-        device_classes={DEVICE_CLASS_VOLTAGE},
+        device_classes={SensorDeviceClass.VOLTAGE},
         conversion_unit=ELECTRIC_POTENTIAL_VOLT,
         conversion_fn=lambda x: x / 1000,
     ),
