@@ -8,7 +8,6 @@ from tuya_iot.device import TuyaDeviceStatusRange
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_PRESSURE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
@@ -27,6 +26,9 @@ from .const import (
     DEVICE_CLASS_TUYA_MOTION_SENSITIVITY,
     DEVICE_CLASS_TUYA_RECORD_MODE,
     DEVICE_CLASS_TUYA_RELAY_STATUS,
+    DEVICE_CLASS_TUYA_VACUUM_CISTERN,
+    DEVICE_CLASS_TUYA_VACUUM_COLLECTION,
+    DEVICE_CLASS_TUYA_VACUUM_MODE,
     DOMAIN,
     TUYA_DISCOVERY_NEW,
     DPCode,
@@ -227,20 +229,21 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             key=DPCode.CISTERN,
             name="Water Tank Adjustment",
             entity_category=EntityCategory.CONFIG,
-            device_class=DEVICE_CLASS_HUMIDITY,
+            device_class=DEVICE_CLASS_TUYA_VACUUM_CISTERN,
             icon="mdi:water-opacity",
         ),
         SelectEntityDescription(
             key=DPCode.COLLECTION_MODE,
             name="Dust Collection Mode",
             entity_category=EntityCategory.CONFIG,
-            device_class=DEVICE_CLASS_PRESSURE,
+            device_class=DEVICE_CLASS_TUYA_VACUUM_COLLECTION,
             icon="mdi:air-filter",
         ),
         SelectEntityDescription(
             key=DPCode.MODE,
             name="Mode",
             entity_category=EntityCategory.CONFIG,
+            device_class=DEVICE_CLASS_TUYA_VACUUM_MODE,
             icon="mdi:layers-outline",
         ),
     ),
