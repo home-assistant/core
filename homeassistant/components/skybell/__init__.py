@@ -47,7 +47,7 @@ PLATFORMS = [BINARY_SENSOR, CAMERA, LIGHT, SENSOR, SWITCH]
 
 CONFIG_SCHEMA = vol.Schema(
     vol.All(
-        # Deprecated in Home Assistant 2021.12
+        # Deprecated in Home Assistant 2022.1
         cv.deprecated(DOMAIN),
         {
             DOMAIN: vol.Schema(
