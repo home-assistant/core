@@ -456,13 +456,14 @@ async def async_setup_entry(
         hass, f"signal-{DOMAIN}-public-update-{entry.entry_id}", add_public_entities
     )
 
-    async def _async_create_entity(netatmo_device: NetatmoDevice) -> None:
+    @callback
+    def _create_entity(netatmo_device: NetatmoDevice) -> None:
         entity = NetatmoClimateBatterySensor(netatmo_device)
         _LOGGER.debug("Adding climate battery sensor %s", entity)
         async_add_entities([entity])
 
     entry.async_on_unload(
-        async_dispatcher_connect(hass, NETATMO_CREATE_BATTERY, _async_create_entity)
+        async_dispatcher_connect(hass, NETATMO_CREATE_BATTERY, _create_entity)
     )
 
     await add_public_entities(False)
