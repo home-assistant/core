@@ -13,6 +13,8 @@ from google_nest_sdm.exceptions import (
 )
 import voluptuous as vol
 
+from homeassistant.auth.permissions.const import POLICY_READ
+from homeassistant.components.http.const import KEY_HASS_USER
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -28,8 +30,10 @@ from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
     HomeAssistantError,
+    Unauthorized,
 )
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
+from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.helpers.typing import ConfigType
 
 from . import api, config_flow
@@ -295,6 +299,12 @@ class NestEventMediaView(HomeAssistantView):
         self, request: web.Request, device_id: str, event_id: str
     ) -> web.StreamResponse:
         """Start a GET request."""
+        user = request[KEY_HASS_USER]
+        entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
+        for entry in async_entries_for_device(entity_registry, device_id):
+            if not user.permissions.check_entity(entry.entity_id, POLICY_READ):
+                raise Unauthorized(entity_id=entry.entity_id)
+
         devices = await get_media_source_devices(self.hass)
         if not (nest_device := devices.get(device_id)):
             return self._json_error(

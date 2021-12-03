@@ -528,3 +528,42 @@ async def test_event_media_failure(hass, auth, hass_client):
     assert response.status == HTTPStatus.INTERNAL_SERVER_ERROR, (
         "Response not matched: %s" % response
     )
+
+
+async def test_media_permission_unauthorized(hass, auth, hass_client, hass_admin_user):
+    """Test case where user does not have permissions to view media."""
+    event_id = "FWWVQVUdGNUlTU2V4MGV2aTNXV..."
+    event_timestamp = dt_util.now()
+    await async_setup_devices(
+        hass,
+        auth,
+        CAMERA_DEVICE_TYPE,
+        CAMERA_TRAITS,
+        events=[
+            create_event(
+                event_id,
+                PERSON_EVENT,
+                timestamp=event_timestamp,
+            ),
+        ],
+    )
+
+    assert len(hass.states.async_all()) == 1
+    camera = hass.states.get("camera.front")
+    assert camera is not None
+
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get_device({(DOMAIN, DEVICE_ID)})
+    assert device
+    assert device.name == DEVICE_NAME
+
+    media_url = f"/api/nest/event_media/{device.id}/{event_id}"
+
+    # Empty policy with no access to the entity
+    hass_admin_user.mock_policy({})
+
+    client = await hass_client()
+    response = await client.get(media_url)
+    assert response.status == HTTPStatus.UNAUTHORIZED, (
+        "Response not matched: %s" % response
+    )
