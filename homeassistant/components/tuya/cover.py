@@ -231,11 +231,11 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
             )
 
         # Determine current_position DPCodes
-        if self.entity_description.current_position is None:
-            if self.entity_description.set_position is not None:
-                self._position_dpcode = self.entity_description.set_position
-            else:
-                self._position_dpcode = None
+        if (
+            self.entity_description.current_position is None
+            and self.entity_description.set_position is not None
+        ):
+            self._position_dpcode = self.entity_description.set_position
         elif isinstance(self.entity_description.current_position, DPCode):
             self._position_dpcode = self.entity_description.current_position
         elif isinstance(self.entity_description.current_position, tuple):
@@ -254,7 +254,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         if self._current_position_type is None:
             return None
 
-        if not (self._position_dpcode):
+        if not self._position_dpcode:
             return None
 
         if (position := self.device.status.get(self._position_dpcode)) is None:
