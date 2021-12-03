@@ -40,7 +40,7 @@ HEATER_COOLDOWN_DELAY = 6
 # These seem to be constant across all controller models
 PRIMARY_CIRCUIT_IDS = [500, 505]  # [Spa, Pool]
 
-PLATFORMS = ["binary_sensor", "climate", "light", "sensor", "switch"]
+PLATFORMS = ["binary_sensor", "climate", "light", "number", "sensor", "switch"]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
