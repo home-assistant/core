@@ -6,14 +6,13 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN, PLATFORMS
+from .const import PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Sensibo from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
     title = entry.title
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
@@ -30,9 +29,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     title = entry.title
     if unload_ok:
-        del hass.data[DOMAIN][entry.entry_id]
-        if not hass.data[DOMAIN]:
-            del hass.data[DOMAIN]
         _LOGGER.debug("Unloaded entry for %s", title)
         return unload_ok
 
