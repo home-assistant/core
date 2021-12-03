@@ -103,7 +103,6 @@ async def test_import_flow_success(hass: HomeAssistant) -> None:
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
             data={
-                CONF_NAME: "Sensibo@Home",
                 CONF_API_KEY: "1234567890",
             },
         )
@@ -146,9 +145,7 @@ async def test_import_flow_already_exist(hass: HomeAssistant) -> None:
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
             data={
-                CONF_NAME: "Sensibo@Home",
                 CONF_API_KEY: "1234567890",
-                CONF_ID: ["all"],
             },
         )
         await hass.async_block_till_done()
