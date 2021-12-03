@@ -100,7 +100,7 @@ class AlmondFlowHandler(config_entry_oauth2_flow.AbstractOAuth2FlowHandler):
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
-        self.hassio_discovery = discovery_info
+        self.hassio_discovery = discovery_info.config
 
         return await self.async_step_hassio_confirm()
 

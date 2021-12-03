@@ -439,7 +439,9 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
         if self._async_in_progress():
             return self.async_abort(reason="already_in_progress")
 
-        self.ws_address = f"ws://{discovery_info['host']}:{discovery_info['port']}"
+        self.ws_address = (
+            f"ws://{discovery_info.config['host']}:{discovery_info.config['port']}"
+        )
         try:
             version_info = await async_get_version_info(self.hass, self.ws_address)
         except CannotConnect:

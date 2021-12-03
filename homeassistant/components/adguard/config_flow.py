@@ -112,7 +112,7 @@ class AdGuardHomeFlowHandler(ConfigFlow, domain=DOMAIN):
         """
         await self._async_handle_discovery_without_unique_id()
 
-        self._hassio_discovery = discovery_info
+        self._hassio_discovery = discovery_info.config
         return await self.async_step_hassio_confirm()
 
     async def async_step_hassio_confirm(

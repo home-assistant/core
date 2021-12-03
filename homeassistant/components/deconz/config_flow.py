@@ -239,20 +239,20 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
 
         This flow is triggered by the discovery component.
         """
-        LOGGER.debug("deCONZ HASSIO discovery %s", pformat(discovery_info))
+        LOGGER.debug("deCONZ HASSIO discovery %s", pformat(discovery_info.config))
 
-        self.bridge_id = normalize_bridge_id(discovery_info[CONF_SERIAL])
+        self.bridge_id = normalize_bridge_id(discovery_info.config[CONF_SERIAL])
         await self.async_set_unique_id(self.bridge_id)
 
         self._abort_if_unique_id_configured(
             updates={
-                CONF_HOST: discovery_info[CONF_HOST],
-                CONF_PORT: discovery_info[CONF_PORT],
-                CONF_API_KEY: discovery_info[CONF_API_KEY],
+                CONF_HOST: discovery_info.config[CONF_HOST],
+                CONF_PORT: discovery_info.config[CONF_PORT],
+                CONF_API_KEY: discovery_info.config[CONF_API_KEY],
             }
         )
 
-        self._hassio_discovery = discovery_info
+        self._hassio_discovery = discovery_info.config
 
         return await self.async_step_hassio_confirm()
 
