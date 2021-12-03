@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, ValuesView
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
 from types import MappingProxyType
 from typing import Any, TypedDict
@@ -12,6 +12,7 @@ from fritzconnection import FritzConnection
 from fritzconnection.core.exceptions import (
     FritzActionError,
     FritzConnectionException,
+    FritzSecurityError,
     FritzServiceError,
 )
 from fritzconnection.lib.fritzhosts import FritzHosts
@@ -26,6 +27,7 @@ from homeassistant.components.switch import DOMAIN as DEVICE_SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import update_coordinator
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     async_entries_for_config_entry,
@@ -38,7 +40,6 @@ from homeassistant.helpers.entity_registry import (
     RegistryEntry,
     async_entries_for_device,
 )
-from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -50,7 +51,6 @@ from .const import (
     SERVICE_CLEANUP,
     SERVICE_REBOOT,
     SERVICE_RECONNECT,
-    TRACKER_SCAN_INTERVAL,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -116,7 +116,7 @@ class HostInfo(TypedDict):
     status: bool
 
 
-class FritzBoxTools:
+class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
     """FrtizBoxTools class."""
 
     def __init__(
@@ -146,8 +146,9 @@ class FritzBoxTools:
         self._latest_firmware: str | None = None
         self._update_available: bool = False
 
-    async def async_setup(self) -> None:
+    async def async_setup(self, options: MappingProxyType[str, Any]) -> None:
         """Wrap up FritzboxTools class setup."""
+        self._options = options
         await self.hass.async_add_executor_job(self.setup)
 
     def setup(self) -> None:
@@ -175,15 +176,16 @@ class FritzBoxTools:
 
         self._update_available, self._latest_firmware = self._update_device_info()
 
-    async def async_start(self, options: MappingProxyType[str, Any]) -> None:
-        """Start FritzHosts connection."""
-        self.fritz_hosts = FritzHosts(fc=self.connection)
-        self._options = options
-        await self.hass.async_add_executor_job(self.scan_devices)
-
-        self._cancel_scan = async_track_time_interval(
-            self.hass, self.scan_devices, timedelta(seconds=TRACKER_SCAN_INTERVAL)
-        )
+    @callback
+    async def _async_update_data(self) -> None:
+        """Update FritzboxTools data."""
+        try:
+            self.fritz_hosts = FritzHosts(fc=self.connection)
+            self.scan_devices()
+        except FritzSecurityError as ex:
+            raise update_coordinator.UpdateFailed("Error fetching data") from ex
+        except FritzConnectionException as ex:
+            raise update_coordinator.UpdateFailed("Error fetching data") from ex
 
     @callback
     def async_unload(self) -> None:
