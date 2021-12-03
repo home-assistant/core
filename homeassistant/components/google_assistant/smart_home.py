@@ -17,6 +17,8 @@ from .const import (
 from .error import SmartHomeError
 from .helpers import GoogleEntity, RequestData, async_get_entities
 
+EXECUTE_LIMIT = 2  # Wait 2 seconds for execute to finish
+
 HANDLERS = Registry()
 _LOGGER = logging.getLogger(__name__)
 
@@ -207,16 +209,23 @@ async def handle_devices_execute(hass, data, payload):
             entities[entity_id] = GoogleEntity(hass, data.config, state)
             executions[entity_id] = [execution]
 
-    execute_results = await asyncio.gather(
-        *(
-            _entity_execute(entities[entity_id], data, execution)
-            for entity_id, execution in executions.items()
+    try:
+        execute_results = await asyncio.wait_for(
+            asyncio.shield(
+                asyncio.gather(
+                    *(
+                        _entity_execute(entities[entity_id], data, execution)
+                        for entity_id, execution in executions.items()
+                    )
+                )
+            ),
+            EXECUTE_LIMIT,
         )
-    )
-
-    for entity_id, result in zip(executions, execute_results):
-        if result is not None:
-            results[entity_id] = result
+        for entity_id, result in zip(executions, execute_results):
+            if result is not None:
+                results[entity_id] = result
+    except asyncio.TimeoutError:
+        pass
 
     final_results = list(results.values())
 

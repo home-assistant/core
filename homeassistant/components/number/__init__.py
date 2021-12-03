@@ -8,7 +8,9 @@ from typing import Any, final
 
 import voluptuous as vol
 
+from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_MODE
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -37,6 +39,14 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class NumberMode(StrEnum):
+    """Modes for number entities."""
+
+    AUTO = "auto"
+    BOX = "box"
+    SLIDER = "slider"
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -90,6 +100,7 @@ class NumberEntity(Entity):
     _attr_min_value: float = DEFAULT_MIN_VALUE
     _attr_state: None = None
     _attr_step: float
+    _attr_mode: NumberMode = NumberMode.AUTO
     _attr_value: float
 
     @property
@@ -99,6 +110,7 @@ class NumberEntity(Entity):
             ATTR_MIN: self.min_value,
             ATTR_MAX: self.max_value,
             ATTR_STEP: self.step,
+            ATTR_MODE: self.mode,
         }
 
     @property
@@ -122,6 +134,11 @@ class NumberEntity(Entity):
             while value_range <= step:
                 step /= 10.0
         return step
+
+    @property
+    def mode(self) -> NumberMode:
+        """Return the mode of the entity."""
+        return self._attr_mode
 
     @property
     @final

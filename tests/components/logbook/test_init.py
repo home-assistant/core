@@ -2,6 +2,7 @@
 # pylint: disable=protected-access,invalid-name
 import collections
 from datetime import datetime, timedelta
+from http import HTTPStatus
 import json
 from unittest.mock import Mock, patch
 
@@ -314,7 +315,7 @@ async def test_logbook_view(hass, hass_client):
     await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
     client = await hass_client()
     response = await client.get(f"/api/logbook/{dt_util.utcnow().isoformat()}")
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
 
 
 async def test_logbook_view_period_entity(hass, hass_client):
@@ -341,7 +342,7 @@ async def test_logbook_view_period_entity(hass, hass_client):
 
     # Test today entries without filters
     response = await client.get(f"/api/logbook/{start_date.isoformat()}")
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     response_json = await response.json()
     assert len(response_json) == 2
     assert response_json[0]["entity_id"] == entity_id_test
@@ -349,7 +350,7 @@ async def test_logbook_view_period_entity(hass, hass_client):
 
     # Test today entries with filter by period
     response = await client.get(f"/api/logbook/{start_date.isoformat()}?period=1")
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     response_json = await response.json()
     assert len(response_json) == 2
     assert response_json[0]["entity_id"] == entity_id_test
@@ -359,7 +360,7 @@ async def test_logbook_view_period_entity(hass, hass_client):
     response = await client.get(
         f"/api/logbook/{start_date.isoformat()}?entity=switch.test"
     )
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     response_json = await response.json()
     assert len(response_json) == 1
     assert response_json[0]["entity_id"] == entity_id_test
@@ -368,7 +369,7 @@ async def test_logbook_view_period_entity(hass, hass_client):
     response = await client.get(
         f"/api/logbook/{start_date.isoformat()}?period=3&entity=switch.test"
     )
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     response_json = await response.json()
     assert len(response_json) == 1
     assert response_json[0]["entity_id"] == entity_id_test
@@ -379,7 +380,7 @@ async def test_logbook_view_period_entity(hass, hass_client):
 
     # Test tomorrow entries without filters
     response = await client.get(f"/api/logbook/{start_date.isoformat()}")
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     response_json = await response.json()
     assert len(response_json) == 0
 
@@ -387,7 +388,7 @@ async def test_logbook_view_period_entity(hass, hass_client):
     response = await client.get(
         f"/api/logbook/{start_date.isoformat()}?entity=switch.test"
     )
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     response_json = await response.json()
     assert len(response_json) == 0
 
@@ -395,7 +396,7 @@ async def test_logbook_view_period_entity(hass, hass_client):
     response = await client.get(
         f"/api/logbook/{start_date.isoformat()}?period=3&entity=switch.test"
     )
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     response_json = await response.json()
     assert len(response_json) == 1
     assert response_json[0]["entity_id"] == entity_id_test
@@ -539,7 +540,7 @@ async def test_logbook_view_end_time_entity(hass, hass_client):
     response = await client.get(
         f"/api/logbook/{start_date.isoformat()}?end_time={end_time}"
     )
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     response_json = await response.json()
     assert len(response_json) == 2
     assert response_json[0]["entity_id"] == entity_id_test
@@ -550,7 +551,7 @@ async def test_logbook_view_end_time_entity(hass, hass_client):
     response = await client.get(
         f"/api/logbook/{start_date.isoformat()}?end_time={end_time}&entity=switch.test"
     )
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     response_json = await response.json()
     assert len(response_json) == 1
     assert response_json[0]["entity_id"] == entity_id_test
@@ -564,7 +565,7 @@ async def test_logbook_view_end_time_entity(hass, hass_client):
     response = await client.get(
         f"/api/logbook/{start_date.isoformat()}?end_time={end_time}&entity=switch.test"
     )
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     response_json = await response.json()
     assert len(response_json) == 1
     assert response_json[0]["entity_id"] == entity_id_test
@@ -611,7 +612,7 @@ async def test_logbook_entity_filter_with_automations(hass, hass_client):
     response = await client.get(
         f"/api/logbook/{start_date.isoformat()}?end_time={end_time}"
     )
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     json_dict = await response.json()
 
     assert json_dict[0]["entity_id"] == entity_id_test
@@ -625,7 +626,7 @@ async def test_logbook_entity_filter_with_automations(hass, hass_client):
     response = await client.get(
         f"/api/logbook/{start_date.isoformat()}?end_time={end_time}&entity=alarm_control_panel.area_001"
     )
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     json_dict = await response.json()
     assert len(json_dict) == 1
     assert json_dict[0]["entity_id"] == entity_id_test
@@ -639,7 +640,7 @@ async def test_logbook_entity_filter_with_automations(hass, hass_client):
     response = await client.get(
         f"/api/logbook/{start_date.isoformat()}?end_time={end_time}&entity=alarm_control_panel.area_002"
     )
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     json_dict = await response.json()
     assert len(json_dict) == 1
     assert json_dict[0]["entity_id"] == entity_id_second
@@ -673,7 +674,7 @@ async def test_filter_continuous_sensor_values(hass, hass_client):
 
     # Test today entries without filters
     response = await client.get(f"/api/logbook/{start_date.isoformat()}")
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     response_json = await response.json()
 
     assert len(response_json) == 2
@@ -707,7 +708,7 @@ async def test_exclude_new_entities(hass, hass_client):
 
     # Test today entries without filters
     response = await client.get(f"/api/logbook/{start_date.isoformat()}")
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     response_json = await response.json()
 
     assert len(response_json) == 2
@@ -748,7 +749,7 @@ async def test_exclude_removed_entities(hass, hass_client):
 
     # Test today entries without filters
     response = await client.get(f"/api/logbook/{start_date.isoformat()}")
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     response_json = await response.json()
 
     assert len(response_json) == 3
@@ -787,7 +788,7 @@ async def test_exclude_attribute_changes(hass, hass_client):
 
     # Test today entries without filters
     response = await client.get(f"/api/logbook/{start_date.isoformat()}")
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     response_json = await response.json()
 
     assert len(response_json) == 3
@@ -904,7 +905,7 @@ async def test_logbook_entity_context_id(hass, hass_client):
     response = await client.get(
         f"/api/logbook/{start_date.isoformat()}?end_time={end_time}"
     )
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     json_dict = await response.json()
 
     assert json_dict[0]["entity_id"] == "automation.alarm"
@@ -1077,7 +1078,7 @@ async def test_logbook_entity_context_parent_id(hass, hass_client):
     response = await client.get(
         f"/api/logbook/{start_date.isoformat()}?end_time={end_time}"
     )
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     json_dict = await response.json()
 
     assert json_dict[0]["entity_id"] == "automation.alarm"
@@ -1192,7 +1193,7 @@ async def test_logbook_context_from_template(hass, hass_client):
     response = await client.get(
         f"/api/logbook/{start_date.isoformat()}?end_time={end_time}"
     )
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     json_dict = await response.json()
 
     assert json_dict[0]["domain"] == "homeassistant"
@@ -1278,7 +1279,7 @@ async def test_logbook_entity_matches_only(hass, hass_client):
     response = await client.get(
         f"/api/logbook/{start_date.isoformat()}?end_time={end_time}&entity=switch.test_state&entity_matches_only"
     )
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     json_dict = await response.json()
 
     assert len(json_dict) == 2
@@ -1318,7 +1319,7 @@ async def test_custom_log_entry_discoverable_via_entity_matches_only(hass, hass_
     response = await client.get(
         f"/api/logbook/{start_date.isoformat()}?end_time={end_time.isoformat()}&entity=switch.test_switch&entity_matches_only"
     )
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     json_dict = await response.json()
 
     assert len(json_dict) == 1
@@ -1396,7 +1397,7 @@ async def test_logbook_entity_matches_only_multiple(hass, hass_client):
     response = await client.get(
         f"/api/logbook/{start_date.isoformat()}?end_time={end_time}&entity=switch.test_state,light.test_state&entity_matches_only"
     )
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     json_dict = await response.json()
 
     assert len(json_dict) == 4
@@ -1428,7 +1429,7 @@ async def test_logbook_invalid_entity(hass, hass_client):
     response = await client.get(
         f"/api/logbook/{start_date.isoformat()}?end_time={end_time}&entity=invalid&entity_matches_only"
     )
-    assert response.status == 500
+    assert response.status == HTTPStatus.INTERNAL_SERVER_ERROR
 
 
 async def test_icon_and_state(hass, hass_client):
@@ -1870,7 +1871,7 @@ async def test_context_filter(hass, hass_client):
     response = await client.get(
         "/api/logbook", params={"context_id": context.id, "entity": entity_id}
     )
-    assert response.status == 400
+    assert response.status == HTTPStatus.BAD_REQUEST
 
 
 async def _async_fetch_logbook(client, params=None):
@@ -1886,7 +1887,7 @@ async def _async_fetch_logbook(client, params=None):
 
     # Test today entries without filters
     response = await client.get(f"/api/logbook/{start_date.isoformat()}", params=params)
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     return await response.json()
 
 

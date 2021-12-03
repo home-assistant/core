@@ -48,6 +48,7 @@ from homeassistant.const import (
     TIME_SECONDS,
     VOLUME_CUBIC_METERS,
 )
+from homeassistant.core import callback
 
 from . import VacuumCoordinatorDataAttributes
 from .const import (
@@ -80,6 +81,8 @@ from .const import (
     MODELS_PURIFIER_MIIO,
     MODELS_PURIFIER_MIOT,
     MODELS_VACUUM,
+    ROBOROCK_GENERIC,
+    ROCKROBO_GENERIC,
 )
 from .device import XiaomiCoordinatedMiioEntity, XiaomiMiioEntity
 from .gateway import XiaomiGatewayDevice
@@ -298,7 +301,7 @@ HUMIDIFIER_MIOT_SENSORS = (
     ATTR_USE_TIME,
     ATTR_WATER_LEVEL,
 )
-HUMIDIFIER_MJJSQ_SENSORS = (ATTR_HUMIDITY, ATTR_TEMPERATURE, ATTR_USE_TIME)
+HUMIDIFIER_MJJSQ_SENSORS = (ATTR_HUMIDITY, ATTR_TEMPERATURE)
 
 PURIFIER_MIIO_SENSORS = (
     ATTR_FILTER_LIFE_REMAINING,
@@ -307,6 +310,7 @@ PURIFIER_MIIO_SENSORS = (
     ATTR_MOTOR_SPEED,
     ATTR_PM25,
     ATTR_TEMPERATURE,
+    ATTR_USE_TIME,
 )
 PURIFIER_MIOT_SENSORS = (
     ATTR_FILTER_LIFE_REMAINING,
@@ -316,6 +320,7 @@ PURIFIER_MIOT_SENSORS = (
     ATTR_PM25,
     ATTR_PURIFY_VOLUME,
     ATTR_TEMPERATURE,
+    ATTR_USE_TIME,
 )
 PURIFIER_3C_SENSORS = (
     ATTR_FILTER_LIFE_REMAINING,
@@ -331,6 +336,7 @@ PURIFIER_V2_SENSORS = (
     ATTR_PM25,
     ATTR_PURIFY_VOLUME,
     ATTR_TEMPERATURE,
+    ATTR_USE_TIME,
 )
 PURIFIER_V3_SENSORS = (
     ATTR_FILTER_LIFE_REMAINING,
@@ -340,6 +346,7 @@ PURIFIER_V3_SENSORS = (
     ATTR_MOTOR_SPEED,
     ATTR_PM25,
     ATTR_PURIFY_VOLUME,
+    ATTR_USE_TIME,
 )
 PURIFIER_PRO_SENSORS = (
     ATTR_FILTER_LIFE_REMAINING,
@@ -351,6 +358,7 @@ PURIFIER_PRO_SENSORS = (
     ATTR_PM25,
     ATTR_PURIFY_VOLUME,
     ATTR_TEMPERATURE,
+    ATTR_USE_TIME,
 )
 PURIFIER_PRO_V7_SENSORS = (
     ATTR_FILTER_LIFE_REMAINING,
@@ -361,15 +369,16 @@ PURIFIER_PRO_V7_SENSORS = (
     ATTR_MOTOR_SPEED,
     ATTR_PM25,
     ATTR_TEMPERATURE,
+    ATTR_USE_TIME,
 )
 AIRFRESH_SENSORS = (
     ATTR_CARBON_DIOXIDE,
     ATTR_FILTER_LIFE_REMAINING,
     ATTR_FILTER_USE,
     ATTR_HUMIDITY,
-    ATTR_ILLUMINANCE_LUX,
     ATTR_PM25,
     ATTR_TEMPERATURE,
+    ATTR_USE_TIME,
 )
 FAN_V2_V3_SENSORS = (
     ATTR_BATTERY,
@@ -522,17 +531,27 @@ VACUUM_SENSORS = {
 
 
 def _setup_vacuum_sensors(hass, config_entry, async_add_entities):
+    """Set up the Xiaomi vacuum sensors."""
     device = hass.data[DOMAIN][config_entry.entry_id].get(KEY_DEVICE)
+    coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
     entities = []
 
     for sensor, description in VACUUM_SENSORS.items():
+        parent_key_data = getattr(coordinator.data, description.parent_key)
+        if getattr(parent_key_data, description.key, None) is None:
+            _LOGGER.debug(
+                "It seems the %s does not support the %s as the initial value is None",
+                config_entry.data[CONF_MODEL],
+                description.key,
+            )
+            continue
         entities.append(
             XiaomiGenericSensor(
                 f"{config_entry.title} {description.name}",
                 device,
                 config_entry,
                 f"{sensor}_{config_entry.unique_id}",
-                hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR],
+                coordinator,
                 description,
             )
         )
@@ -575,7 +594,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     elif config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
         host = config_entry.data[CONF_HOST]
         token = config_entry.data[CONF_TOKEN]
-        model = config_entry.data[CONF_MODEL]
+        model: str = config_entry.data[CONF_MODEL]
 
         if model in (MODEL_FAN_ZA1, MODEL_FAN_ZA3, MODEL_FAN_ZA4, MODEL_FAN_P5):
             return
@@ -607,7 +626,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 sensors = PURIFIER_MIIO_SENSORS
             elif model in MODELS_PURIFIER_MIOT:
                 sensors = PURIFIER_MIOT_SENSORS
-            elif model in MODELS_VACUUM:
+            elif (
+                model in MODELS_VACUUM
+                or model.startswith(ROBOROCK_GENERIC)
+                or model.startswith(ROCKROBO_GENERIC)
+            ):
                 return _setup_vacuum_sensors(hass, config_entry, async_add_entities)
 
             for sensor, description in SENSOR_TYPES.items():
@@ -630,23 +653,41 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
     """Representation of a Xiaomi generic sensor."""
 
-    def __init__(
-        self,
-        name,
-        device,
-        entry,
-        unique_id,
-        coordinator,
-        description: XiaomiMiioSensorDescription,
-    ):
+    entity_description: XiaomiMiioSensorDescription
+
+    def __init__(self, name, device, entry, unique_id, coordinator, description):
         """Initialize the entity."""
         super().__init__(name, device, entry, unique_id, coordinator)
+        self.entity_description = description
         self._attr_unique_id = unique_id
-        self.entity_description: XiaomiMiioSensorDescription = description
+        self._attr_native_value = self._determine_native_value()
+        self._attr_extra_state_attributes = self._extract_attributes(coordinator.data)
 
-    @property
-    def native_value(self):
-        """Return the state of the device."""
+    @callback
+    def _extract_attributes(self, data):
+        """Return state attributes with valid values."""
+        return {
+            attr: value
+            for attr in self.entity_description.attributes
+            if hasattr(data, attr)
+            and (value := self._extract_value_from_attribute(data, attr)) is not None
+        }
+
+    @callback
+    def _handle_coordinator_update(self):
+        """Fetch state from the device."""
+        native_value = self._determine_native_value()
+        # Sometimes (quite rarely) the device returns None as the sensor value so we
+        # check that the value is not None before updating the state.
+        if native_value is not None:
+            self._attr_native_value = native_value
+            self._attr_extra_state_attributes = self._extract_attributes(
+                self.coordinator.data
+            )
+            self.async_write_ha_state()
+
+    def _determine_native_value(self):
+        """Determine native value."""
         if self.entity_description.parent_key is not None:
             return self._extract_value_from_attribute(
                 getattr(self.coordinator.data, self.entity_description.parent_key),
@@ -656,15 +697,6 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
         return self._extract_value_from_attribute(
             self.coordinator.data, self.entity_description.key
         )
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return {
-            attr: self._extract_value_from_attribute(self.coordinator.data, attr)
-            for attr in self.entity_description.attributes
-            if hasattr(self.coordinator.data, attr)
-        }
 
 
 class XiaomiAirQualityMonitor(XiaomiMiioEntity, SensorEntity):

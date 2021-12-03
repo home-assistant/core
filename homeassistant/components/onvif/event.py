@@ -208,8 +208,7 @@ class EventManager:
                 continue
 
             topic = msg.Topic._value_1
-            parser = PARSERS.get(topic)
-            if not parser:
+            if not (parser := PARSERS.get(topic)):
                 if topic not in UNHANDLED_TOPICS:
                     LOGGER.info(
                         "No registered handler for event from %s: %s",

@@ -5,7 +5,7 @@ from collections.abc import Iterable
 from socket import AddressFamily  # pylint: disable=no-name-in-module
 from unittest.mock import Mock, create_autospec, patch, seal
 
-from async_upnp_client import UpnpDevice, UpnpFactory
+from async_upnp_client import UpnpDevice, UpnpFactory, UpnpService
 import pytest
 
 from homeassistant.components.dlna_dmr.const import DOMAIN as DLNA_DOMAIN
@@ -49,6 +49,26 @@ def domain_data_mock(hass: HomeAssistant) -> Iterable[Mock]:
     upnp_device.parent_device = None
     upnp_device.root_device = upnp_device
     upnp_device.all_devices = [upnp_device]
+    upnp_device.services = {
+        "urn:schemas-upnp-org:service:AVTransport:1": create_autospec(
+            UpnpService,
+            instance=True,
+            service_type="urn:schemas-upnp-org:service:AVTransport:1",
+            service_id="urn:upnp-org:serviceId:AVTransport",
+        ),
+        "urn:schemas-upnp-org:service:ConnectionManager:1": create_autospec(
+            UpnpService,
+            instance=True,
+            service_type="urn:schemas-upnp-org:service:ConnectionManager:1",
+            service_id="urn:upnp-org:serviceId:ConnectionManager",
+        ),
+        "urn:schemas-upnp-org:service:RenderingControl:1": create_autospec(
+            UpnpService,
+            instance=True,
+            service_type="urn:schemas-upnp-org:service:RenderingControl:1",
+            service_id="urn:upnp-org:serviceId:RenderingControl",
+        ),
+    }
     seal(upnp_device)
     domain_data.upnp_factory.async_create_device.return_value = upnp_device
 

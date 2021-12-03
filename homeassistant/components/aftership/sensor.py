@@ -1,6 +1,7 @@
 """Support for non-delivered packages recorded in AfterShip."""
 from __future__ import annotations
 
+from http import HTTPStatus
 import logging
 from typing import Any, Final
 
@@ -11,7 +12,7 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
     SensorEntity,
 )
-from homeassistant.const import CONF_API_KEY, CONF_NAME, HTTP_OK
+from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -64,7 +65,7 @@ async def async_setup_platform(
 
     await aftership.get_trackings()
 
-    if not aftership.meta or aftership.meta["code"] != HTTP_OK:
+    if not aftership.meta or aftership.meta["code"] != HTTPStatus.OK:
         _LOGGER.error(
             "No tracking data found. Check API key is correct: %s", aftership.meta
         )
@@ -151,7 +152,7 @@ class AfterShipSensor(SensorEntity):
         if not self.aftership.meta:
             _LOGGER.error("Unknown errors when querying")
             return
-        if self.aftership.meta["code"] != HTTP_OK:
+        if self.aftership.meta["code"] != HTTPStatus.OK:
             _LOGGER.error(
                 "Errors when querying AfterShip. %s", str(self.aftership.meta)
             )

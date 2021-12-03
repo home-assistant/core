@@ -56,7 +56,7 @@ ATTR_ALL = "all"
 SERVICE_SET = "set"
 SERVICE_REMOVE = "remove"
 
-PLATFORMS = ["light", "cover", "notify", "binary_sensor"]
+PLATFORMS = ["light", "cover", "notify", "fan", "binary_sensor"]
 
 REG_KEY = f"{DOMAIN}_registry"
 
@@ -224,8 +224,7 @@ async def async_setup(hass, config):
         """Remove all user-defined groups and load new ones from config."""
         auto = list(filter(lambda e: not e.user_defined, component.entities))
 
-        conf = await component.async_prepare_reload()
-        if conf is None:
+        if (conf := await component.async_prepare_reload()) is None:
             return
         await _async_process_config(hass, conf, component)
 

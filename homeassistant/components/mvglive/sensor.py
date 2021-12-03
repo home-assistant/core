@@ -115,8 +115,7 @@ class MVGLiveSensor(SensorEntity):
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
-        dep = self.data.departures
-        if not dep:
+        if not (dep := self.data.departures):
             return None
         attr = dep[0]  # next depature attributes
         attr["departures"] = deepcopy(dep)  # all departures dictionary

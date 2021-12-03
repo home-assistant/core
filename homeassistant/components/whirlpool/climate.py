@@ -64,8 +64,7 @@ SUPPORTED_TARGET_TEMPERATURE_STEP = 1
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up entry."""
     auth: Auth = hass.data[DOMAIN][config_entry.entry_id][AUTH_INSTANCE_KEY]
-    said_list = auth.get_said_list()
-    if not said_list:
+    if not (said_list := auth.get_said_list()):
         _LOGGER.debug("No appliances found")
         return
 
@@ -156,8 +155,7 @@ class AirConEntity(ClimateEntity):
             await self._aircon.set_power_on(False)
             return
 
-        mode = HVAC_MODE_TO_AIRCON_MODE.get(hvac_mode)
-        if not mode:
+        if not (mode := HVAC_MODE_TO_AIRCON_MODE.get(hvac_mode)):
             raise ValueError(f"Invalid hvac mode {hvac_mode}")
 
         await self._aircon.set_mode(mode)
@@ -172,8 +170,7 @@ class AirConEntity(ClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode):
         """Set fan mode."""
-        fanspeed = FAN_MODE_TO_AIRCON_FANSPEED.get(fan_mode)
-        if not fanspeed:
+        if not (fanspeed := FAN_MODE_TO_AIRCON_FANSPEED.get(fan_mode)):
             raise ValueError(f"Invalid fan mode {fan_mode}")
         await self._aircon.set_fanspeed(fanspeed)
 

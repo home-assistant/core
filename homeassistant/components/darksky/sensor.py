@@ -13,6 +13,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import (
     DEVICE_CLASS_TEMPERATURE,
     PLATFORM_SCHEMA,
+    STATE_CLASS_MEASUREMENT,
     SensorEntity,
     SensorEntityDescription,
 )
@@ -181,6 +182,7 @@ SENSOR_TYPES: dict[str, DarkskySensorEntityDescription] = {
         key="temperature",
         name="Temperature",
         device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
         si_unit=TEMP_CELSIUS,
         us_unit=TEMP_FAHRENHEIT,
         ca_unit=TEMP_CELSIUS,
@@ -192,6 +194,7 @@ SENSOR_TYPES: dict[str, DarkskySensorEntityDescription] = {
         key="apparent_temperature",
         name="Apparent Temperature",
         device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
         si_unit=TEMP_CELSIUS,
         us_unit=TEMP_FAHRENHEIT,
         ca_unit=TEMP_CELSIUS,
@@ -203,6 +206,7 @@ SENSOR_TYPES: dict[str, DarkskySensorEntityDescription] = {
         key="dew_point",
         name="Dew Point",
         device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
         si_unit=TEMP_CELSIUS,
         us_unit=TEMP_FAHRENHEIT,
         ca_unit=TEMP_CELSIUS,
@@ -258,6 +262,7 @@ SENSOR_TYPES: dict[str, DarkskySensorEntityDescription] = {
         key="humidity",
         name="Humidity",
         device_class=DEVICE_CLASS_HUMIDITY,
+        state_class=STATE_CLASS_MEASUREMENT,
         si_unit=PERCENTAGE,
         us_unit=PERCENTAGE,
         ca_unit=PERCENTAGE,
@@ -754,10 +759,9 @@ class DarkSkySensor(SensorEntity):
         """
         sensor_type = self.entity_description.key
         lookup_type = convert_to_camel(sensor_type)
-        state = getattr(data, lookup_type, None)
 
-        if state is None:
-            return state
+        if (state := getattr(data, lookup_type, None)) is None:
+            return None
 
         if "summary" in sensor_type:
             self._icon = getattr(data, "icon", "")

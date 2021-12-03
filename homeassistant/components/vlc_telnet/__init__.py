@@ -53,7 +53,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry_data = hass.data[DOMAIN].pop(entry.entry_id)
         vlc = entry_data[DATA_VLC]
 
-        await hass.async_add_executor_job(disconnect_vlc, vlc)
+        await disconnect_vlc(vlc)
 
     return unload_ok
 

@@ -35,12 +35,16 @@ MODELS_SUPPORTING_LIGHT_TRANSITION: Final = (
     "SHVIN-1",
 )
 
-# Bulbs that support white & color modes
-DUAL_MODE_LIGHT_MODELS: Final = (
-    "SHBDUO-1",
+MODELS_SUPPORTING_LIGHT_EFFECTS: Final = (
     "SHBLB-1",
     "SHCB-1",
     "SHRGBW2",
+)
+
+# Bulbs that support white & color modes
+DUAL_MODE_LIGHT_MODELS: Final = (
+    "SHBLB-1",
+    "SHCB-1",
 )
 
 # Used in "_async_update_data" as timeout for polling data from devices.
@@ -54,6 +58,7 @@ AIOSHELLY_DEVICE_TIMEOUT_SEC: Final = 10
 
 # Multiplier used to calculate the "update_interval" for sleeping devices.
 SLEEP_PERIOD_MULTIPLIER: Final = 1.2
+CONF_SLEEP_PERIOD: Final = "sleep_period"
 
 # Multiplier used to calculate the "update_interval" for non-sleeping devices.
 UPDATE_PERIOD_MULTIPLIER: Final = 2.2
@@ -85,6 +90,8 @@ ATTR_CHANNEL: Final = "channel"
 ATTR_DEVICE: Final = "device"
 ATTR_GENERATION: Final = "generation"
 CONF_SUBTYPE: Final = "subtype"
+ATTR_BETA: Final = "beta"
+CONF_OTA_BETA_CHANNEL: Final = "ota_beta_channel"
 
 BASIC_INPUTS_EVENTS_TYPES: Final = {"single", "long"}
 
@@ -134,6 +141,12 @@ SHBLB_1_RGB_EFFECTS: Final = {
     4: "Breath",
     5: "On/Off Gradual",
     6: "Red/Green Change",
+}
+
+SHTRV_01_TEMPERATURE_SETTINGS: Final = {
+    "min": 4,
+    "max": 31,
+    "step": 1,
 }
 
 # Kelvin value for colorTemp

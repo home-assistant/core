@@ -109,15 +109,13 @@ async def async_get_or_create_registered_webhook_id_and_url(hass, entry):
     updated_config = False
     webhook_url = None
 
-    webhook_id = config.get(CONF_WEBHOOK_ID)
-    if not webhook_id:
+    if not (webhook_id := config.get(CONF_WEBHOOK_ID)):
         webhook_id = hass.components.webhook.async_generate_id()
         config[CONF_WEBHOOK_ID] = webhook_id
         updated_config = True
 
     if hass.components.cloud.async_active_subscription():
-        cloudhook_url = config.get(CONF_CLOUDHOOK_URL)
-        if not cloudhook_url:
+        if not (cloudhook_url := config.get(CONF_CLOUDHOOK_URL)):
             cloudhook_url = await hass.components.cloud.async_create_cloudhook(
                 webhook_id
             )

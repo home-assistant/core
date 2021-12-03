@@ -567,6 +567,44 @@ async def test_all_sensor(hass, mock_do_cycle, expected):
                 {
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 51,
+                    CONF_SCAN_INTERVAL: 1,
+                },
+            ],
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    "config_addon,register_words",
+    [
+        (
+            {
+                CONF_COUNT: 1,
+                CONF_DATA_TYPE: DataType.INT16,
+            },
+            [7, 9],
+        ),
+        (
+            {
+                CONF_COUNT: 2,
+                CONF_DATA_TYPE: DataType.INT32,
+            },
+            [7],
+        ),
+    ],
+)
+async def test_wrong_unpack(hass, mock_do_cycle):
+    """Run test for sensor."""
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
                     CONF_SCAN_INTERVAL: 10,
                     CONF_LAZY_ERROR: 1,
                 },

@@ -9,6 +9,7 @@ from aiovlc.exceptions import AuthError, ConnectError
 import voluptuous as vol
 
 from homeassistant import core, exceptions
+from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.data_entry_flow import FlowResult
@@ -70,6 +71,7 @@ class VLCTelnetConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     entry: ConfigEntry | None = None
+    hassio_discovery: dict[str, Any] | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -149,6 +151,43 @@ class VLCTelnetConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=STEP_REAUTH_DATA_SCHEMA,
             errors=errors,
         )
+
+    async def async_step_hassio(self, discovery_info: HassioServiceInfo) -> FlowResult:
+        """Handle the discovery step via hassio."""
+        await self.async_set_unique_id("hassio")
+        self._abort_if_unique_id_configured(discovery_info.config)
+
+        self.hassio_discovery = discovery_info.config
+        self.context["title_placeholders"] = {"host": discovery_info.config[CONF_HOST]}
+        return await self.async_step_hassio_confirm()
+
+    async def async_step_hassio_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Confirm Supervisor discovery."""
+        assert self.hassio_discovery
+        if user_input is None:
+            return self.async_show_form(
+                step_id="hassio_confirm",
+                data_schema=vol.Schema({}),
+                description_placeholders={"addon": self.hassio_discovery["addon"]},
+            )
+
+        self.hassio_discovery.pop("addon")
+
+        try:
+            info = await validate_input(self.hass, self.hassio_discovery)
+        except CannotConnect:
+            return self.async_abort(reason="cannot_connect")
+        except InvalidAuth:
+            return self.async_abort(reason="invalid_auth")
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception")
+            return self.async_abort(reason="unknown")
+        else:
+            return self.async_create_entry(
+                title=info["title"], data=self.hassio_discovery
+            )
 
 
 class CannotConnect(exceptions.HomeAssistantError):

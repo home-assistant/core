@@ -180,8 +180,7 @@ class SeventeenTrackPackageSensor(SensorEntity):
     @property
     def name(self):
         """Return the name."""
-        name = self._friendly_name
-        if not name:
+        if not (name := self._friendly_name):
             name = self._tracking_number
         return f"Seventeentrack Package: {name}"
 

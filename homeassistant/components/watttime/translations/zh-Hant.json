@@ -38,5 +38,15 @@
                 "description": "\u8f38\u5165\u4f7f\u7528\u8005\u540d\u7a31\u8207\u5bc6\u78bc\uff1a"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_on_map": "\u65bc\u5730\u5716\u4e0a\u986f\u793a\u76e3\u63a7\u4f4d\u7f6e"
+                },
+                "title": "\u8a2d\u5b9a WattTime"
+            }
+        }
     }
 }

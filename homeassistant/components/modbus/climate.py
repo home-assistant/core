@@ -166,7 +166,8 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
 
         self._lazy_errors = self._lazy_error_count
         self._value = self.unpack_structure_result(result.registers)
-        self._attr_available = True
         if not self._value:
+            self._attr_available = False
             return None
+        self._attr_available = True
         return float(self._value)

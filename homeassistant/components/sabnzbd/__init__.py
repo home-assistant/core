@@ -206,8 +206,7 @@ async def async_setup(hass, config):
 
     discovery.async_listen(hass, SERVICE_SABNZBD, sabnzbd_discovered)
 
-    conf = config.get(DOMAIN)
-    if conf is not None:
+    if (conf := config.get(DOMAIN)) is not None:
         use_ssl = conf[CONF_SSL]
         name = conf.get(CONF_NAME)
         api_key = conf.get(CONF_API_KEY)

@@ -1,0 +1,49 @@
+{
+    "state": {
+        "tuya__basic_anti_flickr": {
+            "0": "Disabilitato",
+            "1": "50 Hz",
+            "2": "60 Hz"
+        },
+        "tuya__basic_nightvision": {
+            "0": "Automatico",
+            "1": "Spento",
+            "2": "Acceso"
+        },
+        "tuya__decibel_sensitivity": {
+            "0": "Bassa sensibilit\u00e0",
+            "1": "Alta sensibilit\u00e0"
+        },
+        "tuya__ipc_work_mode": {
+            "0": "Modalit\u00e0 a basso consumo",
+            "1": "Modalit\u00e0 di lavoro continua"
+        },
+        "tuya__led_type": {
+            "halogen": "Alogena",
+            "incandescent": "Incandescenza",
+            "led": "LED"
+        },
+        "tuya__light_mode": {
+            "none": "Spento",
+            "pos": "Indica la posizione dell'interruttore",
+            "relay": "Indica lo stato di accensione/spegnimento dell'interruttore"
+        },
+        "tuya__motion_sensitivity": {
+            "0": "Bassa sensibilit\u00e0",
+            "1": "Sensibilit\u00e0 media",
+            "2": "Alta sensibilit\u00e0"
+        },
+        "tuya__record_mode": {
+            "1": "Registra solo gli eventi",
+            "2": "Registrazione continua"
+        },
+        "tuya__relay_status": {
+            "last": "Ricorda l'ultimo stato",
+            "memory": "Ricorda l'ultimo stato",
+            "off": "Spento",
+            "on": "Acceso",
+            "power_off": "Spento",
+            "power_on": "Acceso"
+        }
+    }
+}

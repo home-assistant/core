@@ -86,7 +86,7 @@ class AmberPriceSensor(AmberSensor):
         return format_cents_to_dollars(interval.per_kwh)
 
     @property
-    def device_state_attributes(self) -> Mapping[str, Any] | None:
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return additional pieces of information about the price."""
         interval = self.coordinator.data[self.entity_description.key][self.channel_type]
 
@@ -133,7 +133,7 @@ class AmberForecastSensor(AmberSensor):
         return format_cents_to_dollars(interval.per_kwh)
 
     @property
-    def device_state_attributes(self) -> Mapping[str, Any] | None:
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return additional pieces of information about the price."""
         intervals = self.coordinator.data[self.entity_description.key].get(
             self.channel_type

@@ -47,7 +47,8 @@ from homeassistant.util.color import (
     color_temperature_mired_to_kelvin as mired_to_kelvin,
 )
 
-from . import (
+from . import YEELIGHT_FLOW_TRANSITION_SCHEMA
+from .const import (
     ACTION_RECOVER,
     ATTR_ACTION,
     ATTR_COUNT,
@@ -63,10 +64,10 @@ from . import (
     DATA_DEVICE,
     DATA_UPDATED,
     DOMAIN,
+    MODELS_WITH_DELAYED_ON_TRANSITION,
     POWER_STATE_CHANGE_TIME,
-    YEELIGHT_FLOW_TRANSITION_SCHEMA,
-    YeelightEntity,
 )
+from .entity import YeelightEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -180,20 +181,20 @@ SERVICE_SCHEMA_START_FLOW = YEELIGHT_FLOW_TRANSITION_SCHEMA
 
 SERVICE_SCHEMA_SET_COLOR_SCENE = {
     vol.Required(ATTR_RGB_COLOR): vol.All(
-        vol.ExactSequence((cv.byte, cv.byte, cv.byte)), vol.Coerce(tuple)
+        vol.Coerce(tuple), vol.ExactSequence((cv.byte, cv.byte, cv.byte))
     ),
     vol.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
 }
 
 SERVICE_SCHEMA_SET_HSV_SCENE = {
     vol.Required(ATTR_HS_COLOR): vol.All(
+        vol.Coerce(tuple),
         vol.ExactSequence(
             (
                 vol.All(vol.Coerce(float), vol.Range(min=0, max=359)),
                 vol.All(vol.Coerce(float), vol.Range(min=0, max=100)),
             )
         ),
-        vol.Coerce(tuple),
     ),
     vol.Required(ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
 }
@@ -321,7 +322,7 @@ async def async_setup_entry(
             device.name,
         )
 
-    async_add_entities(lights, True)
+    async_add_entities(lights)
     _async_setup_services(hass)
 
 
@@ -410,6 +411,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
 
     _attr_color_mode = COLOR_MODE_BRIGHTNESS
     _attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
+    _attr_should_poll = False
 
     def __init__(self, device, entry, custom_effects=None):
         """Initialize the Yeelight light."""
@@ -464,8 +466,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
     @property
     def color_temp(self) -> int:
         """Return the color temperature."""
-        temp_in_k = self._get_property("ct")
-        if temp_in_k:
+        if temp_in_k := self._get_property("ct"):
             self._color_temp = kelvin_to_mired(int(temp_in_k))
         return self._color_temp
 
@@ -488,7 +489,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         brightness_property = (
             "bright" if self._bulb.music_mode else self._brightness_property
         )
-        brightness = self._get_property(brightness_property)
+        brightness = self._get_property(brightness_property) or 0
         return round(255 * (int(brightness) / 100))
 
     @property
@@ -529,9 +530,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
     @property
     def rgb_color(self) -> tuple:
         """Return the color property."""
-        rgb = self._get_property("rgb")
-
-        if rgb is None:
+        if (rgb := self._get_property("rgb")) is None:
             return None
 
         rgb = int(rgb)
@@ -593,7 +592,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
 
     async def async_update(self):
         """Update light properties."""
-        await self.device.async_update()
+        await self.device.async_update(True)
 
     async def async_set_music_mode(self, music_mode) -> None:
         """Set the music mode on or off."""
@@ -614,7 +613,10 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
         """Set bulb brightness."""
         if not brightness:
             return
-        if math.floor(self.brightness) == math.floor(brightness):
+        if (
+            math.floor(self.brightness) == math.floor(brightness)
+            and self._bulb.model not in MODELS_WITH_DELAYED_ON_TRANSITION
+        ):
             _LOGGER.debug("brightness already set to: %s", brightness)
             # Already set, and since we get pushed updates
             # we avoid setting it again to ensure we do not
@@ -841,6 +843,7 @@ class YeelightGenericLight(YeelightEntity, LightEntity):
     async def async_set_mode(self, mode: str):
         """Set a power mode."""
         await self._bulb.async_set_power_mode(PowerMode[mode.upper()])
+        self._async_schedule_state_check(True)
 
     @_async_cmd
     async def async_start_flow(self, transitions, count=0, action=ACTION_RECOVER):
@@ -1075,9 +1078,7 @@ class YeelightAmbientLight(YeelightColorLightWithoutNightlightSwitch):
         return "bright"
 
     def _get_property(self, prop, default=None):
-        bg_prop = self.PROPERTIES_MAPPING.get(prop)
-
-        if not bg_prop:
+        if not (bg_prop := self.PROPERTIES_MAPPING.get(prop)):
             bg_prop = f"bg_{prop}"
 
         return super()._get_property(bg_prop, default)

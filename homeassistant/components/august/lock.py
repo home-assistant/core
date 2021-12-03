@@ -119,8 +119,7 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
         """Restore ATTR_CHANGED_BY on startup since it is likely no longer in the activity log."""
         await super().async_added_to_hass()
 
-        last_state = await self.async_get_last_state()
-        if not last_state:
+        if not (last_state := await self.async_get_last_state()):
             return
 
         if ATTR_CHANGED_BY in last_state.attributes:

@@ -1,8 +1,9 @@
-"""Base class for UniFi entities."""
+"""Base class for UniFi Network entities."""
 import logging
 from typing import Any
 
 from homeassistant.core import callback
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_registry import async_entries_for_device
@@ -17,7 +18,7 @@ class UniFiBase(Entity):
     TYPE = ""
 
     def __init__(self, item, controller) -> None:
-        """Set up UniFi entity base.
+        """Set up UniFi Network entity base.
 
         Register mac to controller entities to cover disabled entities.
         """
@@ -89,13 +90,13 @@ class UniFiBase(Entity):
         if self.key not in keys:
             return
 
-        entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
+        entity_registry = er.async_get(self.hass)
         entity_entry = entity_registry.async_get(self.entity_id)
         if not entity_entry:
             await self.async_remove(force_remove=True)
             return
 
-        device_registry = await self.hass.helpers.device_registry.async_get_registry()
+        device_registry = dr.async_get(self.hass)
         device_entry = device_registry.async_get(entity_entry.device_id)
         if not device_entry:
             entity_registry.async_remove(self.entity_id)

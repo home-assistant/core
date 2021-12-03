@@ -18,6 +18,7 @@ import xmltodict
 from homeassistant.components.network import async_get_source_ip
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ENTITY_CATEGORY_CONFIG
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -245,6 +246,9 @@ def wifi_entities_list(
     """Get list of wifi entities."""
     _LOGGER.debug("Setting up %s switches", SWITCH_TYPE_WIFINETWORK)
     std_table = {"ax": "Wifi6", "ac": "5Ghz", "n": "2.4Ghz"}
+    if fritzbox_tools.model == "FRITZ!Box 7390":
+        std_table = {"n": "5Ghz"}
+
     networks: dict = {}
     for i in range(4):
         if not ("WLANConfiguration" + str(i)) in fritzbox_tools.connection.services:
@@ -441,6 +445,7 @@ class FritzBoxPortSwitch(FritzBoxBaseSwitch, SwitchEntity):
         self.connection_type = connection_type
         self.port_mapping = port_mapping  # dict in the format as it comes from fritzconnection. eg: {'NewRemoteHost': '0.0.0.0', 'NewExternalPort': 22, 'NewProtocol': 'TCP', 'NewInternalPort': 22, 'NewInternalClient': '192.168.178.31', 'NewEnabled': True, 'NewPortMappingDescription': 'Beast SSH ', 'NewLeaseDuration': 0}
         self._idx = idx  # needed for update routine
+        self._attr_entity_category = ENTITY_CATEGORY_CONFIG
 
         if port_mapping is None:
             return
@@ -519,6 +524,7 @@ class FritzBoxDeflectionSwitch(FritzBoxBaseSwitch, SwitchEntity):
         self.dict_of_deflection = dict_of_deflection
         self._attributes = {}
         self.id = int(self.dict_of_deflection["DeflectionId"])
+        self._attr_entity_category = ENTITY_CATEGORY_CONFIG
 
         switch_info = SwitchInfo(
             description=f"Call deflection {self.id}",
@@ -588,6 +594,7 @@ class FritzBoxProfileSwitch(FritzDeviceBase, SwitchEntity):
         self._attr_is_on: bool = False
         self._name = f"{device.hostname} Internet Access"
         self._attr_unique_id = f"{self._mac}_internet_access"
+        self._attr_entity_category = ENTITY_CATEGORY_CONFIG
 
     async def async_process_update(self) -> None:
         """Update device."""
@@ -648,6 +655,7 @@ class FritzBoxWifiSwitch(FritzBoxBaseSwitch, SwitchEntity):
         self._fritzbox_tools = fritzbox_tools
 
         self._attributes = {}
+        self._attr_entity_category = ENTITY_CATEGORY_CONFIG
         self._network_num = network_num
 
         switch_info = SwitchInfo(

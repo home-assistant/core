@@ -66,16 +66,13 @@ async def async_get_conditions(
 
 @callback
 def async_condition_from_config(
-    config: ConfigType, config_validation: bool
+    hass: HomeAssistant, config: ConfigType
 ) -> condition.ConditionCheckerType:
     """Create a function to test a device condition."""
-    if config_validation:
-        config = CONDITION_SCHEMA(config)
-
     if config[CONF_TYPE] == "is_mode":
         attribute = ATTR_MODE
     else:
-        return toggle_entity.async_condition_from_config(config)
+        return toggle_entity.async_condition_from_config(hass, config)
 
     def test_is_state(hass: HomeAssistant, variables: TemplateVarsType) -> bool:
         """Test if an entity is a certain state."""

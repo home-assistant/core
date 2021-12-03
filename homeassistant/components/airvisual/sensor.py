@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -27,6 +27,7 @@ from homeassistant.const import (
     DEVICE_CLASS_PM25,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     PERCENTAGE,
     TEMP_CELSIUS,
 )
@@ -80,7 +81,7 @@ GEOGRAPHY_SENSOR_DESCRIPTIONS = (
         name="Air Quality Index",
         device_class=DEVICE_CLASS_AQI,
         native_unit_of_measurement="AQI",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_KIND_POLLUTANT,
@@ -97,12 +98,13 @@ NODE_PRO_SENSOR_DESCRIPTIONS = (
         name="Air Quality Index",
         device_class=DEVICE_CLASS_AQI,
         native_unit_of_measurement="AQI",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_KIND_BATTERY_LEVEL,
         name="Battery",
         device_class=DEVICE_CLASS_BATTERY,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
     ),
     SensorEntityDescription(
@@ -110,7 +112,7 @@ NODE_PRO_SENSOR_DESCRIPTIONS = (
         name="C02",
         device_class=DEVICE_CLASS_CO2,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_KIND_HUMIDITY,
@@ -123,35 +125,35 @@ NODE_PRO_SENSOR_DESCRIPTIONS = (
         name="PM 0.1",
         device_class=DEVICE_CLASS_PM1,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_KIND_PM_1_0,
         name="PM 1.0",
         device_class=DEVICE_CLASS_PM10,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_KIND_PM_2_5,
         name="PM 2.5",
         device_class=DEVICE_CLASS_PM25,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_KIND_TEMPERATURE,
         name="Temperature",
         device_class=DEVICE_CLASS_TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_KIND_VOC,
         name="VOC",
         device_class=DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 
@@ -192,7 +194,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up AirVisual sensors based on a config entry."""
-    coordinator = hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id]
+    coordinator = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR]
 
     sensors: list[AirVisualGeographySensor | AirVisualNodeProSensor]
     if entry.data[CONF_INTEGRATION_TYPE] in (
@@ -317,16 +319,16 @@ class AirVisualNodeProSensor(AirVisualEntity, SensorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device registry information for this entity."""
-        return {
-            "identifiers": {(DOMAIN, self.coordinator.data["serial_number"])},
-            "name": self.coordinator.data["settings"]["node_name"],
-            "manufacturer": "AirVisual",
-            "model": f'{self.coordinator.data["status"]["model"]}',
-            "sw_version": (
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.coordinator.data["serial_number"])},
+            manufacturer="AirVisual",
+            model=f'{self.coordinator.data["status"]["model"]}',
+            name=self.coordinator.data["settings"]["node_name"],
+            sw_version=(
                 f'Version {self.coordinator.data["status"]["system_version"]}'
                 f'{self.coordinator.data["status"]["app_version"]}'
             ),
-        }
+        )
 
     @callback
     def update_from_latest_data(self) -> None:

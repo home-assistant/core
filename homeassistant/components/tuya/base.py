@@ -12,6 +12,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import DOMAIN, TUYA_HA_SIGNAL_UPDATE_ENTITY
+from .util import remap_value
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,9 +23,10 @@ class IntegerTypeData:
 
     min: int
     max: int
-    unit: str
     scale: float
     step: float
+    unit: str | None = None
+    type: str | None = None
 
     @property
     def max_scaled(self) -> float:
@@ -45,6 +47,30 @@ class IntegerTypeData:
         """Scale a value."""
         return value * 1.0 / (10 ** self.scale)
 
+    def scale_value_back(self, value: float | int) -> int:
+        """Return raw value for scaled."""
+        return int(value * (10 ** self.scale))
+
+    def remap_value_to(
+        self,
+        value: float,
+        to_min: float | int = 0,
+        to_max: float | int = 255,
+        reverse: bool = False,
+    ) -> float:
+        """Remap a value from this range to a new range."""
+        return remap_value(value, self.min, self.max, to_min, to_max, reverse)
+
+    def remap_value_from(
+        self,
+        value: float,
+        from_min: float | int = 0,
+        from_max: float | int = 255,
+        reverse: bool = False,
+    ) -> float:
+        """Remap a value from its current range to this range."""
+        return remap_value(value, from_min, from_max, self.min, self.max, reverse)
+
     @classmethod
     def from_json(cls, data: str) -> IntegerTypeData:
         """Load JSON string and return a IntegerTypeData object."""
@@ -61,6 +87,20 @@ class EnumTypeData:
     def from_json(cls, data: str) -> EnumTypeData:
         """Load JSON string and return a EnumTypeData object."""
         return cls(**json.loads(data))
+
+
+@dataclass
+class ElectricityTypeData:
+    """Electricity Type Data."""
+
+    electriccurrent: str | None = None
+    power: str | None = None
+    voltage: str | None = None
+
+    @classmethod
+    def from_json(cls, data: str) -> ElectricityTypeData:
+        """Load JSON string and return a ElectricityTypeData object."""
+        return cls(**json.loads(data.lower()))
 
 
 class TuyaEntity(Entity):
@@ -91,7 +131,7 @@ class TuyaEntity(Entity):
             identifiers={(DOMAIN, self.device.id)},
             manufacturer="Tuya",
             name=self.device.name,
-            model=self.device.product_name,
+            model=f"{self.device.product_name} ({self.device.product_id})",
         )
 
     @property

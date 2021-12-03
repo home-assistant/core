@@ -16,11 +16,12 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import ATTRIBUTION, DEFAULT_CACHEDB, DOMAIN, LOGGER
 
@@ -53,14 +54,14 @@ CAPTURE_IMAGE_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids})
 AUTOMATION_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids})
 
 PLATFORMS = [
-    "alarm_control_panel",
-    "binary_sensor",
-    "lock",
-    "switch",
-    "cover",
-    "camera",
-    "light",
-    "sensor",
+    Platform.ALARM_CONTROL_PANEL,
+    Platform.BINARY_SENSOR,
+    Platform.LOCK,
+    Platform.SWITCH,
+    Platform.COVER,
+    Platform.CAMERA,
+    Platform.LIGHT,
+    Platform.SENSOR,
 ]
 
 
@@ -322,14 +323,14 @@ class AbodeDevice(AbodeEntity):
         }
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device registry information for this entity."""
-        return {
-            "identifiers": {(DOMAIN, self._device.device_id)},
-            "manufacturer": "Abode",
-            "name": self._device.name,
-            "device_type": self._device.type,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._device.device_id)},
+            manufacturer="Abode",
+            model=self._device.type,
+            name=self._device.name,
+        )
 
     def _update_callback(self, device):
         """Update the device state."""

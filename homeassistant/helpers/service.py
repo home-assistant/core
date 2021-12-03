@@ -20,8 +20,7 @@ from homeassistant.const import (
     CONF_SERVICE_DATA,
     CONF_SERVICE_TEMPLATE,
     CONF_TARGET,
-    ENTITY_CATEGORY_CONFIG,
-    ENTITY_CATEGORY_DIAGNOSTIC,
+    ENTITY_CATEGORIES,
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_NONE,
 )
@@ -234,7 +233,12 @@ def async_prepare_call_from_config(
             continue
         try:
             template.attach(hass, config[conf])
-            service_data.update(template.render_complex(config[conf], variables))
+            render = template.render_complex(config[conf], variables)
+            if not isinstance(render, dict):
+                raise HomeAssistantError(
+                    "Error rendering data template: Result is not a Dictionary"
+                )
+            service_data.update(render)
         except TemplateError as ex:
             raise HomeAssistantError(f"Error rendering data template: {ex}") from ex
 
@@ -362,10 +366,7 @@ def async_extract_referenced_entity_ids(
 
     for ent_entry in ent_reg.entities.values():
         # Do not add config or diagnostic entities referenced by areas or devices
-        if ent_entry.entity_category in (
-            ENTITY_CATEGORY_CONFIG,
-            ENTITY_CATEGORY_DIAGNOSTIC,
-        ):
+        if ent_entry.entity_category in ENTITY_CATEGORIES:
             continue
 
         if (
@@ -396,10 +397,11 @@ async def async_extract_config_entry_ids(
 
     # Some devices may have no entities
     for device_id in referenced.referenced_devices:
-        if device_id in dev_reg.devices:
-            device = dev_reg.async_get(device_id)
-            if device is not None:
-                config_entry_ids.update(device.config_entries)
+        if (
+            device_id in dev_reg.devices
+            and (device := dev_reg.async_get(device_id)) is not None
+        ):
+            config_entry_ids.update(device.config_entries)
 
     for entity_id in referenced.referenced | referenced.indirectly_referenced:
         entry = ent_reg.async_get(entity_id)

@@ -26,6 +26,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_call_later
 
@@ -129,6 +130,7 @@ SENSOR_TYPES_DOORBELL: tuple[AugustBinarySensorEntityDescription, ...] = (
         key="doorbell_online",
         name="Online",
         device_class=DEVICE_CLASS_CONNECTIVITY,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         value_fn=_retrieve_online_state,
         is_time_based=False,
     ),

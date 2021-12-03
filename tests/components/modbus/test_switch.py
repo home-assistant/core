@@ -52,6 +52,7 @@ from .conftest import (
 from tests.common import async_fire_time_changed
 
 ENTITY_ID = f"{SWITCH_DOMAIN}.{TEST_ENTITY_NAME}"
+ENTITY_ID2 = f"{ENTITY_ID}2"
 
 
 @pytest.mark.parametrize(
@@ -282,7 +283,6 @@ async def test_restore_state_switch(hass, mock_test_state, mock_modbus):
 async def test_switch_service_turn(hass, caplog, mock_pymodbus):
     """Run test for service turn_on/turn_off."""
 
-    ENTITY_ID2 = f"{SWITCH_DOMAIN}.{TEST_ENTITY_NAME}2"
     config = {
         MODBUS_DOMAIN: {
             CONF_TYPE: TCP,

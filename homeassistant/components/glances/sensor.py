@@ -113,8 +113,7 @@ class GlancesSensor(SensorEntity):
 
     async def async_update(self):  # noqa: C901
         """Get the latest data from REST API."""
-        value = self.glances_data.api.data
-        if value is None:
+        if (value := self.glances_data.api.data) is None:
             return
 
         if self.entity_description.type == "fs":

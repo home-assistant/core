@@ -89,8 +89,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up an Arlo IP sensor."""
-    arlo = hass.data.get(DATA_ARLO)
-    if not arlo:
+    if not (arlo := hass.data.get(DATA_ARLO)):
         return
 
     sensors = []

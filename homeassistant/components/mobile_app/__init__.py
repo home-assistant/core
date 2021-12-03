@@ -37,8 +37,7 @@ PLATFORMS = "sensor", "binary_sensor", "device_tracker"
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the mobile app component."""
     store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
-    app_config = await store.async_load()
-    if app_config is None:
+    if (app_config := await store.async_load()) is None:
         app_config = {
             DATA_CONFIG_ENTRIES: {},
             DATA_DELETED_IDS: [],
@@ -77,7 +76,7 @@ async def async_setup_entry(hass, entry):
 
     hass.data[DOMAIN][DATA_CONFIG_ENTRIES][webhook_id] = entry
 
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
 
     device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,

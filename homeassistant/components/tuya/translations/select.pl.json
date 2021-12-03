@@ -1,0 +1,49 @@
+{
+    "state": {
+        "tuya__basic_anti_flickr": {
+            "0": "Wy\u0142\u0105czone",
+            "1": "50 Hz",
+            "2": "60 Hz"
+        },
+        "tuya__basic_nightvision": {
+            "0": "Automatycznie",
+            "1": "wy\u0142.",
+            "2": "w\u0142."
+        },
+        "tuya__decibel_sensitivity": {
+            "0": "Niska czu\u0142o\u015b\u0107",
+            "1": "Wysoka czu\u0142o\u015b\u0107"
+        },
+        "tuya__ipc_work_mode": {
+            "0": "Tryb niskiego poboru mocy",
+            "1": "Tryb pracy ci\u0105g\u0142ej"
+        },
+        "tuya__led_type": {
+            "halogen": "Halogen",
+            "incandescent": "Jarzeni\u00f3wka",
+            "led": "LED"
+        },
+        "tuya__light_mode": {
+            "none": "wy\u0142.",
+            "pos": "Wska\u017c lokalizacj\u0119 prze\u0142\u0105cznika",
+            "relay": "Wska\u017c stan w\u0142./wy\u0142."
+        },
+        "tuya__motion_sensitivity": {
+            "0": "Niska czu\u0142o\u015b\u0107",
+            "1": "\u015arednia czu\u0142o\u015b\u0107",
+            "2": "Wysoka czu\u0142o\u015b\u0107"
+        },
+        "tuya__record_mode": {
+            "1": "Nagrywaj tylko zdarzenia",
+            "2": "Nagrywanie ci\u0105g\u0142e"
+        },
+        "tuya__relay_status": {
+            "last": "Zapami\u0119taj ostatni stan",
+            "memory": "Zapami\u0119taj ostatni stan",
+            "off": "wy\u0142.",
+            "on": "w\u0142.",
+            "power_off": "wy\u0142.",
+            "power_on": "w\u0142."
+        }
+    }
+}

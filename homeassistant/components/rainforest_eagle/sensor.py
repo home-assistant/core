@@ -98,11 +98,11 @@ class EagleSensor(CoordinatorEntity, SensorEntity):
         return self.coordinator.data.get(self.entity_description.key)
 
     @property
-    def device_info(self) -> DeviceInfo | None:
+    def device_info(self) -> DeviceInfo:
         """Return device info."""
-        return {
-            "name": self.coordinator.model,
-            "identifiers": {(DOMAIN, self.coordinator.cloud_id)},
-            "manufacturer": "Rainforest Automation",
-            "model": self.coordinator.model,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.coordinator.cloud_id)},
+            manufacturer="Rainforest Automation",
+            model=self.coordinator.model,
+            name=self.coordinator.model,
+        )

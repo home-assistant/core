@@ -8,14 +8,14 @@ from brother import Brother, DictToObj, SnmpError, UnsupportedModel
 import pysnmp.hlapi.asyncio as SnmpEngine
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_TYPE
+from homeassistant.const import CONF_HOST, CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DATA_CONFIG_ENTRY, DOMAIN, SNMP
 from .utils import get_snmp_engine
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 
 SCAN_INTERVAL = timedelta(seconds=30)
 

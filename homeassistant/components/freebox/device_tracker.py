@@ -114,12 +114,12 @@ class FreeboxDevice(ScannerEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
-        return {
-            "connections": {(CONNECTION_NETWORK_MAC, self._mac)},
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "name": self.name,
-            "manufacturer": self._manufacturer,
-        }
+        return DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, self._mac)},
+            identifiers={(DOMAIN, self.unique_id)},
+            manufacturer=self._manufacturer,
+            name=self.name,
+        )
 
     @property
     def should_poll(self) -> bool:

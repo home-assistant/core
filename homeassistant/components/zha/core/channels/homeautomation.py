@@ -65,6 +65,7 @@ class ElectricalMeasurementChannel(ZigbeeChannel):
     REPORT_CONFIG = (
         {"attr": "active_power", "config": REPORT_CONFIG_OP},
         {"attr": "active_power_max", "config": REPORT_CONFIG_DEFAULT},
+        {"attr": "apparent_power", "config": REPORT_CONFIG_OP},
         {"attr": "rms_current", "config": REPORT_CONFIG_OP},
         {"attr": "rms_current_max", "config": REPORT_CONFIG_DEFAULT},
         {"attr": "rms_voltage", "config": REPORT_CONFIG_OP},
@@ -139,8 +140,7 @@ class ElectricalMeasurementChannel(ZigbeeChannel):
     @property
     def measurement_type(self) -> str | None:
         """Return Measurement type."""
-        meas_type = self.cluster.get("measurement_type")
-        if meas_type is None:
+        if (meas_type := self.cluster.get("measurement_type")) is None:
             return None
 
         meas_type = self.MeasurementType(meas_type)

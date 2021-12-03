@@ -4,10 +4,12 @@ from unittest.mock import patch
 from homeassistant.components import tradfri
 from homeassistant.helpers import device_registry as dr
 
+from . import GATEWAY_ID
+
 from tests.common import MockConfigEntry
 
 
-async def test_entry_setup_unload(hass, api_factory, gateway_id):
+async def test_entry_setup_unload(hass, mock_api_factory):
     """Test config entry setup and unload."""
     entry = MockConfigEntry(
         domain=tradfri.DOMAIN,
@@ -16,7 +18,7 @@ async def test_entry_setup_unload(hass, api_factory, gateway_id):
             tradfri.CONF_IDENTITY: "mock-identity",
             tradfri.CONF_KEY: "mock-key",
             tradfri.CONF_IMPORT_GROUPS: True,
-            tradfri.CONF_GATEWAY_ID: gateway_id,
+            tradfri.CONF_GATEWAY_ID: GATEWAY_ID,
         },
     )
 
@@ -46,4 +48,4 @@ async def test_entry_setup_unload(hass, api_factory, gateway_id):
         assert await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
         assert unload.call_count == len(tradfri.PLATFORMS)
-        assert api_factory.shutdown.call_count == 1
+        assert mock_api_factory.shutdown.call_count == 1

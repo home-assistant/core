@@ -5,6 +5,7 @@ import gammu  # pylint: disable=import-error
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.const import DEVICE_CLASS_SIGNAL_STRENGTH, SIGNAL_STRENGTH_DECIBELS
+from homeassistant.helpers.entity import DeviceInfo
 
 from .const import DOMAIN, SMS_GATEWAY
 
@@ -39,10 +40,10 @@ class GSMSignalSensor(SensorEntity):
 
     def __init__(self, hass, gateway, imei, description):
         """Initialize the GSM Signal sensor."""
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, str(imei))},
-            "name": "SMS Gateway",
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, str(imei))},
+            name="SMS Gateway",
+        )
         self._attr_unique_id = str(imei)
         self._hass = hass
         self._gateway = gateway
