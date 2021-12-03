@@ -2,10 +2,9 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiopyarr import exceptions
-from aiopyarr.models.host_configuration import PyArrHostConfiguration
 from aiopyarr.radarr_client import RadarrClient
 import voluptuous as vol
 
@@ -18,13 +17,13 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
     CONF_BASE_PATH,
     CONF_UPCOMING_DAYS,
     CONF_URLBASE,
+    DEFAULT_HOST,
     DEFAULT_PORT,
     DEFAULT_SSL,
     DEFAULT_UPCOMING_DAYS,
@@ -35,8 +34,11 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+if TYPE_CHECKING:
+    from homeassistant.data_entry_flow import FlowResult
 
-async def validate_input(hass: HomeAssistant, data: dict) -> None:
+
+async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -68,21 +70,13 @@ class RadarrConfigFlow(ConfigFlow, domain=DOMAIN):
                 _msg = f"Radarr yaml config with partial key {_part} has been imported. Please remove it"
                 _LOGGER.warning(_msg)
                 return self.async_abort(reason="already_configured")
-        host_configuration = PyArrHostConfiguration(
-            config[CONF_API_KEY],
-            ipaddress=config[CONF_HOST],
-            port=config.get(CONF_PORT, DEFAULT_PORT),
-            ssl=config.get(CONF_SSL, DEFAULT_SSL),
-            verify_ssl=config.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
-            base_api_path=config.get(CONF_URLBASE, DEFAULT_URLBASE),
-        )
         conf = {}
-        conf[CONF_API_KEY] = host_configuration.api_token
-        conf[CONF_HOST] = host_configuration.ipaddress
-        conf[CONF_PORT] = host_configuration.port
-        conf[CONF_SSL] = host_configuration.ssl
-        conf[CONF_VERIFY_SSL] = host_configuration.verify_ssl
-        conf[CONF_BASE_PATH] = host_configuration.base_api_path
+        conf[CONF_API_KEY] = config[CONF_API_KEY]
+        conf[CONF_HOST] = config.get(CONF_HOST, DEFAULT_HOST)
+        conf[CONF_PORT] = config.get(CONF_PORT, DEFAULT_PORT)
+        conf[CONF_SSL] = config.get(CONF_SSL, DEFAULT_SSL)
+        conf[CONF_VERIFY_SSL] = config.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
+        conf[CONF_BASE_PATH] = config.get(CONF_URLBASE, DEFAULT_URLBASE)
         return await self.async_step_user(conf)
 
     @staticmethod

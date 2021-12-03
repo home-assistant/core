@@ -1,8 +1,9 @@
 """The Radarr component."""
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from aiopyarr.models.host_configuration import PyArrHostConfiguration
-from aiopyarr.models.radarr import RadarrSystemStatus
 from aiopyarr.radarr_client import RadarrClient
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -14,7 +15,6 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
@@ -28,6 +28,9 @@ from .const import (
     DOMAIN,
 )
 from .coordinator import RadarrDataUpdateCoordinator
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
 
 PLATFORMS = [SENSOR_DOMAIN]
 
@@ -90,12 +93,12 @@ class RadarrEntity(CoordinatorEntity):
     ) -> None:
         """Initialize the Radarr entity."""
         super().__init__(coordinator)
-        assert isinstance(coordinator.system_status, RadarrSystemStatus)
         self._attr_device_info = DeviceInfo(
             configuration_url=coordinator.host_configuration.base_url,
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, entry_id)},
             manufacturer=DEFAULT_NAME,
             name=DEFAULT_NAME,
-            sw_version=coordinator.system_status.version,
         )
+        if coordinator.system_status:
+            self._attr_device_info["sw_version"] = coordinator.system_status.version

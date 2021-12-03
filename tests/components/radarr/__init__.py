@@ -3,6 +3,7 @@ from http import HTTPStatus
 from unittest.mock import patch
 
 from aiohttp.client_exceptions import ClientError
+from aiopyarr.exceptions import ArrConnectionException
 
 from homeassistant.components.radarr.const import (
     CONF_BASE_PATH,
@@ -71,6 +72,7 @@ def mock_connection(
     error: bool = False,
     invalid_auth: bool = False,
     server_error: bool = False,
+    diskspace_error: bool = False,
 ) -> None:
     """Mock radarr connection."""
     if error:
@@ -112,12 +114,6 @@ def mock_connection(
     )
 
     aioclient_mock.get(
-        f"{radarr_url}/diskspace",
-        text=load_fixture("radarr/diskspace.json"),
-        headers={"Content-Type": CONTENT_TYPE_JSON},
-    )
-
-    aioclient_mock.get(
         f"{radarr_url}/calendar",
         text=load_fixture("radarr/calendar.json"),
         headers={"Content-Type": CONTENT_TYPE_JSON},
@@ -130,14 +126,23 @@ def mock_connection(
     )
 
     aioclient_mock.get(
-        f"{radarr_url}/movie",
-        text=load_fixture("radarr/movie.json"),
+        f"{radarr_url}/rootfolder",
+        text=load_fixture("radarr/rootfolder.json"),
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
+    if diskspace_error:
+        aioclient_mock.get(f"{radarr_url}/diskspace", exc=ArrConnectionException)
+    else:
+        aioclient_mock.get(
+            f"{radarr_url}/diskspace",
+            text=load_fixture("radarr/diskspace.json"),
+            headers={"Content-Type": CONTENT_TYPE_JSON},
+        )
+
     aioclient_mock.get(
-        f"{radarr_url}/rootfolder",
-        text=load_fixture("radarr/rootfolder.json"),
+        f"{radarr_url}/movie",
+        text=load_fixture("radarr/movie.json"),
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
@@ -212,6 +217,7 @@ async def setup_integration(
     invalid_auth: bool = False,
     server_error: bool = False,
     no_options: bool = False,
+    diskspace_error: bool = False,
 ) -> MockConfigEntry:
     """Set up the radarr integration in Home Assistant."""
     if no_options:
@@ -252,6 +258,7 @@ async def setup_integration(
         error=connection_error,
         invalid_auth=invalid_auth,
         server_error=server_error,
+        diskspace_error=diskspace_error,
     )
 
     if not skip_entry_setup:

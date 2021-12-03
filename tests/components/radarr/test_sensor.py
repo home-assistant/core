@@ -25,7 +25,8 @@ async def test_sensors(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker)
     state = hass.states.get("sensor.radarr_disk_space")
     assert state.state == "263.10"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "GB"
-    assert state.attributes.get("C:\\Downloads\\TV") == "263.10 GB"
+    assert state.attributes.get("D:\\") == "263.10/5216.31GB (5.04%)"
+    assert len(state.attributes) == 4
     state = hass.states.get("sensor.radarr_upcoming")
     assert state.state == "1"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "Movies"

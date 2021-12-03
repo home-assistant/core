@@ -1,9 +1,8 @@
 """Support for Radarr."""
 from __future__ import annotations
 
-from typing import cast
+from typing import TYPE_CHECKING, Any, cast
 
-from aiopyarr.models.radarr import RadarrMovie
 import voluptuous as vol
 
 from homeassistant.components.radarr import RadarrEntity
@@ -12,7 +11,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -29,10 +28,7 @@ from homeassistant.const import (
     DATA_YOTTABYTES,
     DATA_ZETTABYTES,
 )
-from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
 from .const import (
     CONF_DAYS,
@@ -46,7 +42,16 @@ from .const import (
     DEFAULT_URLBASE,
     DOMAIN,
 )
-from .coordinator import RadarrDataUpdateCoordinator
+
+if TYPE_CHECKING:
+    from aiopyarr.models.radarr import RadarrCalendar, RadarrMovie
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
+
+    from .coordinator import RadarrDataUpdateCoordinator
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -150,6 +155,8 @@ async def async_setup_entry(
 class RadarrSensor(RadarrEntity, SensorEntity):
     """Implementation of the Radarr sensor."""
 
+    coordinator: RadarrDataUpdateCoordinator
+
     def __init__(
         self,
         coordinator: RadarrDataUpdateCoordinator,
@@ -159,83 +166,113 @@ class RadarrSensor(RadarrEntity, SensorEntity):
         """Create Radarr entity."""
         super().__init__(coordinator, entry_id)
         self.entity_description = description
-        self.coordinator = coordinator
         self._attr_name = f"Radarr {description.name}"
         self._attr_unique_id = f"{entry_id}/{description.name}"
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, StateType]:
         """Return the state attributes of the sensor."""
-        attributes = {}
-        if self.entity_description.key == "upcoming":
-            for movie in self.coordinator.calendar:  # type: ignore
-                attributes[to_key(movie)] = movie.physicalRelease or movie.inCinemas
-        elif self.entity_description.key == "commands":
-            for command in self.coordinator.commands:  # type: ignore
-                attributes[command.name] = command.status
-        elif self.entity_description.key == "diskspace":
-            for key, item in self.get_mapped_capacity().items():
-                attributes[key] = item
-        elif (
-            self.entity_description.key == "movies"
-            and self.coordinator.movies is not None  # type: ignore
+        attributes: dict = {}
+        if (
+            self.coordinator.calendar
+            and self.coordinator.commands
+            and self.coordinator.system_status
         ):
-            for movie in self.coordinator.movies:  # type: ignore
-                attributes[to_key(movie)] = movie.hasFile
-        elif self.entity_description.key == "status":
-            attributes = self.coordinator.system_status.attributes  # type: ignore
+            if self.entity_description.key == "upcoming":
+                for cmovie in self.coordinator.calendar:
+                    attributes[to_key(cmovie)] = (
+                        cmovie.physicalRelease or cmovie.inCinemas
+                    )
+            elif self.entity_description.key == "commands":
+                for command in self.coordinator.commands:
+                    attributes[command.name] = command.status
+            elif self.entity_description.key == "diskspace":
+                for key, item in self.get_mapped_capacity().items():
+                    attributes[key] = item
+            elif self.entity_description.key == "movies" and isinstance(
+                self.coordinator.movies, list
+            ):
+                for movie in self.coordinator.movies:
+                    attributes[to_key(movie)] = movie.hasFile
+            elif self.entity_description.key == "status":
+                attributes = self.coordinator.system_status.attributes
         return attributes
 
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        value = None
-        if self.entity_description.key == "diskspace" and self.coordinator.disk_space:  # type: ignore
-            space = 0
-            for mount in self.coordinator.disk_space:  # type: ignore
-                space = space + mount.freeSpace
-            value = f"{to_unit(space, cast(str, self.native_unit_of_measurement)):.2f}"
+        if (
+            self.coordinator.calendar
+            and self.coordinator.commands
+            and self.coordinator.rootfolder
+            and self.coordinator.system_status
+        ):
+            value = None
+            if self.entity_description.key == "diskspace":
+                space = 0
+                for mount in self.coordinator.rootfolder:
+                    space = space + mount.freeSpace if mount.freeSpace else space
+                value = (
+                    f"{to_unit(space, cast(str, self.native_unit_of_measurement)):.2f}"
+                )
 
-        elif self.entity_description.key == "upcoming":
-            value = str(len(self.coordinator.calendar))  # type: ignore
-        elif self.entity_description.key == "commands":
-            value = str(len(self.coordinator.commands))  # type: ignore
-        elif self.entity_description.key == "status":
-            value = self.coordinator.system_status.version  # type: ignore
-        elif self.entity_description.key == "movies":
-            self.coordinator.movies_count_enabled = True  # type: ignore
-            if self.coordinator.movies:  # type: ignore
-                value = str(len(self.coordinator.movies))  # type: ignore
+            elif self.entity_description.key == "upcoming":
+                value = str(len(self.coordinator.calendar))
+            elif self.entity_description.key == "commands":
+                value = str(len(self.coordinator.commands))
+            elif self.entity_description.key == "status":
+                value = self.coordinator.system_status.version
+            elif self.entity_description.key == "movies":
+                self.coordinator.movies_count_enabled = True
+                if isinstance(self.coordinator.movies, list):
+                    value = str(len(self.coordinator.movies))
         return value
 
-    def get_mapped_capacity(self) -> dict[str, str]:
+    def get_mapped_capacity(self) -> dict[str | None | Any, str]:
         """Get mapped mount capacity."""
         # The below logic attempts to match total space with free space
         attrs = {}
-        if (
-            self.coordinator.get_space  # type: ignore
-            and len(self.coordinator.agg_space) != 0  # type: ignore
-            and self.native_unit_of_measurement
-        ):
-            for mount in self.coordinator.disk_space:  # type: ignore
-                for key, item in self.coordinator.agg_space.items():  # type: ignore
-                    if mount.freeSpace * 0.99 <= item <= mount.freeSpace * 1.01:
-                        self.coordinator.agg_space[key] = mount.freeSpace  # type: ignore
-                        attrs[mount.path] = "{:.2f}/{:.2f}{} ({:.2f}%)".format(
-                            to_unit(mount.freeSpace, self.native_unit_of_measurement),
-                            to_unit(key, self.native_unit_of_measurement),
-                            self.native_unit_of_measurement,
-                            0 if key == 0 else mount.freeSpace / key * 100,
-                        )
-                    else:
-                        attrs[mount.path] = "{:.2f} {}".format(
-                            to_unit(mount.freeSpace, self.native_unit_of_measurement),
-                            self.native_unit_of_measurement,
-                        )
+        if self.native_unit_of_measurement:
+            attrs = self.get_strings(self.native_unit_of_measurement)
+        return attrs
+
+    def get_strings(self, unit: str) -> dict:
+        """Get diskspace interpolated strings."""
+        attrs = {}
+        last_entry = None
+        if self.coordinator.disk_space and self.coordinator.rootfolder:
+            for mount in self.coordinator.disk_space:
+                for space in self.coordinator.rootfolder:
+                    if (
+                        mount.freeSpace
+                        and space.freeSpace
+                        and mount.totalSpace
+                        and last_entry != space.freeSpace
+                    ):
+                        if (
+                            mount.freeSpace * 0.99
+                            <= space.freeSpace
+                            <= mount.freeSpace * 1.01
+                        ):
+                            last_entry = space.freeSpace
+                            mount.freeSpace = space.freeSpace
+                            attrs[mount.path] = "{:.2f}/{:.2f}{} ({:.2f}%)".format(
+                                to_unit(space.freeSpace, unit),
+                                to_unit(mount.totalSpace, unit),
+                                unit,
+                                0
+                                if mount.totalSpace == 0
+                                else space.freeSpace / mount.totalSpace * 100,
+                            )
+                        else:
+                            attrs[mount.path] = "{:.2f} {}".format(
+                                to_unit(space.freeSpace, unit),
+                                unit,
+                            )
         return attrs
 
 
-def to_key(movie: RadarrMovie) -> str:
+def to_key(movie: RadarrMovie | RadarrCalendar) -> str:
     """Get key."""
     return f"{movie.title} ({movie.year})"
 
