@@ -33,43 +33,7 @@
     "hostname": "lwip*"
   },
   {
-    "hostname": "zengge_0[6789b]_*"
-  },
-  {
-    "hostname": "zengge_1[06789abc]_*"
-  },  
-  {
-    "hostname": "zengge_2[15]_*"
-  },
-  {
-    "hostname": "zengge_3[35]_*"
-  },
-  {
-    "hostname": "zengge_4[14]_*"
-  },
-  {
-    "hostname": "zengge_5[24]_*"
-  }, 
-  {
-    "hostname": "zengge_62_*"
-  },   
-  {
-    "hostname": "zengge_81_*"
-  },
-  {
-    "hostname": "zengge_0[0e]_*"
-  },
-  {
-    "hostname": "zengge_9[34567]_*"
-  },
-  {
-    "hostname": "zengge_a[123]_*"
-  },
-  {
-    "hostname": "zengge_d1_*"
-  },
-  {
-    "hostname": "zengge_e[12]_*"
+    "hostname": "zengge_[0-9a-f][0-9a-f]_*"
   },
   {
     "macaddress": "C82E47*",
