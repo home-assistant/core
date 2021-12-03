@@ -1479,24 +1479,6 @@ def test_bitwise_and(hass):
     )
     assert tpl.async_render() == 8 & 2
 
-    tpl = template.Template(
-        """
-{{ ( value_a ) | bitwise_and(value_b) }}
-            """,
-        hass,
-    )
-    variables = {"value_a": b"\x9b\xc2", "value_b": 0xFF00}
-    assert tpl.async_render(variables=variables) == 0x9B00
-
-    tpl = template.Template(
-        """
-{{ ( value_a ) | bitwise_and(value_b, little_endian=True) }}
-            """,
-        hass,
-    )
-    variables = {"value_a": b"\xc2\x9b", "value_b": 0xFFFF}
-    assert tpl.async_render(variables=variables) == 0x9BC2
-
 
 def test_bitwise_or(hass):
     """Test bitwise_or method."""
@@ -1521,54 +1503,6 @@ def test_bitwise_or(hass):
         hass,
     )
     assert tpl.async_render() == 8 | 2
-
-    tpl = template.Template(
-        """
-{{ value_a | bitwise_or(value_b) }}
-            """,
-        hass,
-    )
-    variables = {
-        "value_a": b"\xc2\x9b",
-        "value_b": 0xFFFF,
-    }
-    assert tpl.async_render(variables=variables) == 65535  # 39874
-
-    tpl = template.Template(
-        """
-{{ ( value_a ) | bitwise_or(value_b) }}
-            """,
-        hass,
-    )
-    variables = {
-        "value_a": 0xFF00,
-        "value_b": b"\xc2\x9b",
-    }
-    assert tpl.async_render(variables=variables) == 0xFF9B
-
-    tpl = template.Template(
-        """
-{{ ( value_a ) | bitwise_or(value_b) }}
-            """,
-        hass,
-    )
-    variables = {
-        "value_a": b"\xc2\x9b",
-        "value_b": 0x0000,
-    }
-    assert tpl.async_render(variables=variables) == 0xC29B
-
-    tpl = template.Template(
-        """
-{{ ( value_a ) | bitwise_or(value_b, little_endian=True) }}
-            """,
-        hass,
-    )
-    variables = {
-        "value_a": b"\xc2\x9b",
-        "value_b": 0,
-    }
-    assert tpl.async_render(variables=variables) == 0x9BC2
 
 
 def test_distance_function_with_1_state(hass):
