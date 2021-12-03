@@ -35,6 +35,10 @@
     },
     "device_automation": {
         "trigger_subtype": {
+            "1": "Eerste knop",
+            "2": "Tweede knop",
+            "3": "Derde knop",
+            "4": "Vierde knop",
             "button_1": "Eerste knop",
             "button_2": "Tweede knop",
             "button_3": "Derde knop",
@@ -47,11 +51,16 @@
             "turn_on": "Inschakelen"
         },
         "trigger_type": {
+            "double_short_release": "Beide \" {subtype} \" losgelaten",
+            "initial_press": "Knop \" {subtype} \" aanvankelijk ingedrukt",
+            "long_release": "Knop \"{subtype}\" losgelaten na lang indrukken",
             "remote_button_long_release": "\"{subtype}\" knop losgelaten na lang drukken",
             "remote_button_short_press": "\"{subtype}\" knop ingedrukt",
             "remote_button_short_release": "\"{subtype}\" knop losgelaten",
             "remote_double_button_long_press": "Beide \"{subtype}\" losgelaten na lang indrukken",
-            "remote_double_button_short_press": "Beide \"{subtype}\" losgelaten"
+            "remote_double_button_short_press": "Beide \"{subtype}\" losgelaten",
+            "repeat": "Knop \" {subtype} \" ingedrukt gehouden",
+            "short_release": "Knop \"{subtype}\" losgelaten na kort indrukken"
         }
     },
     "options": {
@@ -59,6 +68,7 @@
             "init": {
                 "data": {
                     "allow_hue_groups": "Sta Hue-groepen toe",
+                    "allow_hue_scenes": "Sta Hue sc\u00e8nes toe",
                     "allow_unreachable": "Onbereikbare lampen toestaan hun status correct te melden"
                 }
             }

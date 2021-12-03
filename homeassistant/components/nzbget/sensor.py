@@ -127,6 +127,6 @@ class NZBGetSensor(NZBGetEntity, SensorEntity):
 
         if "UpTimeSec" in sensor_type and value > 0:
             uptime = utcnow() - timedelta(seconds=value)
-            return uptime.replace(microsecond=0).isoformat()
+            return uptime.replace(microsecond=0)
 
         return value

@@ -82,6 +82,10 @@ class DeLijnPublicTransportSensor(SensorEntity):
 
         self._attributes["stopname"] = self._name
 
+        if not self.line.passages:
+            self._available = False
+            return
+
         try:
             first = self.line.passages[0]
             if first["due_at_realtime"] is not None:
@@ -97,8 +101,8 @@ class DeLijnPublicTransportSensor(SensorEntity):
             self._attributes["is_realtime"] = first["is_realtime"]
             self._attributes["next_passages"] = self.line.passages
             self._available = True
-        except (KeyError, IndexError):
-            _LOGGER.error("Invalid data received from De Lijn")
+        except (KeyError) as error:
+            _LOGGER.error("Invalid data received from De Lijn: %s", error)
             self._available = False
 
     @property

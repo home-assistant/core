@@ -297,8 +297,7 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
 
         async_dispatcher_connect(self.hass, SIGNAL_RESET_METER, self.async_reset_meter)
 
-        state = await self.async_get_last_state()
-        if state:
+        if state := await self.async_get_last_state():
             try:
                 self._state = Decimal(state.state)
             except InvalidOperation:

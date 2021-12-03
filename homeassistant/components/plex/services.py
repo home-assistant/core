@@ -107,8 +107,7 @@ def lookup_plex_media(hass, content_type, content_id):
     plex_server_name = content.pop("plex_server", None)
     plex_server = get_plex_server(hass, plex_server_name)
 
-    playqueue_id = content.pop("playqueue_id", None)
-    if playqueue_id:
+    if playqueue_id := content.pop("playqueue_id", None):
         try:
             playqueue = plex_server.get_playqueue(playqueue_id)
         except NotFound as err:

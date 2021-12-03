@@ -122,8 +122,7 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
         await super().async_added_to_hass()
-        state = await self.async_get_last_state()
-        if state is not None:
+        if (state := await self.async_get_last_state()) is not None:
             try:
                 self._state = Decimal(state.state)
             except SyntaxError as err:

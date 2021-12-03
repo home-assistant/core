@@ -63,8 +63,8 @@ CONSTRAINT_PATH = os.path.join(
 CONSTRAINT_BASE = """
 pycryptodome>=3.6.6
 
-# Constrain urllib3 to ensure we deal with CVE-2019-11236 & CVE-2019-11324
-urllib3>=1.24.3
+# Constrain urllib3 to ensure we deal with CVE-2020-26137 and CVE-2021-33503
+urllib3>=1.26.5
 
 # Constrain H11 to ensure we get a new enough version to support non-rfc line endings
 h11>=0.12.0

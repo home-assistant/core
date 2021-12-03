@@ -26,8 +26,8 @@ from miio import (
     FanP10,
     FanP11,
     FanZA5,
+    RoborockVacuum,
     Timer,
-    Vacuum,
     VacuumStatus,
 )
 from miio.gateway.gateway import GatewayException
@@ -66,6 +66,8 @@ from .const import (
     MODELS_PURIFIER_MIOT,
     MODELS_SWITCH,
     MODELS_VACUUM,
+    ROBOROCK_GENERIC,
+    ROCKROBO_GENERIC,
     AuthException,
     SetupException,
 )
@@ -210,7 +212,7 @@ class VacuumCoordinatorDataAttributes:
     fan_speeds_reverse: str = "fan_speeds_reverse"
 
 
-def _async_update_data_vacuum(hass, device: Vacuum):
+def _async_update_data_vacuum(hass, device: RoborockVacuum):
     def update() -> VacuumCoordinatorData:
         timer = []
 
@@ -267,7 +269,7 @@ async def async_create_miio_device_and_coordinator(
     hass: core.HomeAssistant, entry: config_entries.ConfigEntry
 ):
     """Set up a data coordinator and one miio device to service multiple entities."""
-    model = entry.data[CONF_MODEL]
+    model: str = entry.data[CONF_MODEL]
     host = entry.data[CONF_HOST]
     token = entry.data[CONF_TOKEN]
     name = entry.title
@@ -280,6 +282,8 @@ async def async_create_miio_device_and_coordinator(
         model not in MODELS_HUMIDIFIER
         and model not in MODELS_FAN
         and model not in MODELS_VACUUM
+        and not model.startswith(ROBOROCK_GENERIC)
+        and not model.startswith(ROCKROBO_GENERIC)
     ):
         return
 
@@ -304,8 +308,12 @@ async def async_create_miio_device_and_coordinator(
         device = AirPurifier(host, token)
     elif model.startswith("zhimi.airfresh."):
         device = AirFresh(host, token)
-    elif model in MODELS_VACUUM:
-        device = Vacuum(host, token)
+    elif (
+        model in MODELS_VACUUM
+        or model.startswith(ROBOROCK_GENERIC)
+        or model.startswith(ROCKROBO_GENERIC)
+    ):
+        device = RoborockVacuum(host, token)
         update_method = _async_update_data_vacuum
         coordinator_class = DataUpdateCoordinator[VacuumCoordinatorData]
     # Pedestal fans

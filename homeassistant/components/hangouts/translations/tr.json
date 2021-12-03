@@ -4,12 +4,27 @@
             "already_configured": "Hizmet zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
             "unknown": "Beklenmeyen hata"
         },
+        "error": {
+            "invalid_2fa": "Ge\u00e7ersiz 2 Fakt\u00f6rl\u00fc Kimlik Do\u011frulama, l\u00fctfen tekrar deneyin.",
+            "invalid_2fa_method": "Ge\u00e7ersiz 2FA Y\u00f6ntemi (Telefonda do\u011frulay\u0131n).",
+            "invalid_login": "Ge\u00e7ersiz Giri\u015f, l\u00fctfen tekrar deneyin."
+        },
         "step": {
+            "2fa": {
+                "data": {
+                    "2fa": "2FA PIN'i"
+                },
+                "description": "Bo\u015f",
+                "title": "2-Fakt\u00f6rl\u00fc Kimlik Do\u011frulama"
+            },
             "user": {
                 "data": {
+                    "authorization_code": "Yetkilendirme Kodu (manuel kimlik do\u011frulama i\u00e7in gereklidir)",
                     "email": "E-posta",
                     "password": "Parola"
-                }
+                },
+                "description": "Bo\u015f",
+                "title": "Google Hangouts Giri\u015fi"
             }
         }
     }

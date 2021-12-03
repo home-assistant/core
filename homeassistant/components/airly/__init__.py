@@ -13,7 +13,7 @@ import async_timeout
 
 from homeassistant.components.air_quality import DOMAIN as AIR_QUALITY_PLATFORM
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -33,7 +33,7 @@ from .const import (
     NO_AIRLY_SENSORS,
 )
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -167,7 +167,7 @@ class AirlyDataUpdateCoordinator(DataUpdateCoordinator):
             measurements = self.airly.create_measurements_session_point(
                 self.latitude, self.longitude
             )
-        with async_timeout.timeout(20):
+        async with async_timeout.timeout(20):
             try:
                 await measurements.update()
             except (AirlyError, ClientConnectorError) as error:

@@ -92,11 +92,11 @@ class SolarEdgeSensorFactory:
             self.services[key] = (SolarEdgeStorageLevelSensor, flow)
 
         for key in (
-            "purchased_power",
-            "production_power",
-            "feedin_power",
-            "consumption_power",
-            "selfconsumption_power",
+            "purchased_energy",
+            "production_energy",
+            "feedin_energy",
+            "consumption_energy",
+            "selfconsumption_energy",
         ):
             self.services[key] = (SolarEdgeEnergyDetailsSensor, energy)
 

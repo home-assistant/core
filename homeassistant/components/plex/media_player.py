@@ -23,6 +23,7 @@ from homeassistant.components.media_player.const import (
 from homeassistant.const import STATE_IDLE, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -481,9 +482,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
         if isinstance(src, int):
             src = {"plex_key": src}
 
-        playqueue_id = src.pop("playqueue_id", None)
-
-        if playqueue_id:
+        if playqueue_id := src.pop("playqueue_id", None):
             try:
                 playqueue = self.plex_server.get_playqueue(playqueue_id)
             except plexapi.exceptions.NotFound as err:
@@ -518,8 +517,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
             "media_summary",
             "username",
         ):
-            value = getattr(self, attr, None)
-            if value:
+            if value := getattr(self, attr, None):
                 attributes[attr] = value
 
         return attributes
@@ -536,7 +534,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
                 name="Plex Client Service",
                 manufacturer="Plex",
                 model="Plex Clients",
-                entry_type="service",
+                entry_type=DeviceEntryType.SERVICE,
             )
 
         return DeviceInfo(

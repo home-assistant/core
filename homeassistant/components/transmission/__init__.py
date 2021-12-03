@@ -441,13 +441,13 @@ class TransmissionData:
 
     def start_torrents(self):
         """Start all torrents."""
-        if len(self._torrents) <= 0:
+        if not self._torrents:
             return
         self._api.start_all()
 
     def stop_torrents(self):
         """Stop all active torrents."""
-        if len(self._torrents) == 0:
+        if not self._torrents:
             return
         torrent_ids = [torrent.id for torrent in self._torrents]
         self._api.stop_torrent(torrent_ids)

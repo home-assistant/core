@@ -2,7 +2,7 @@
   "domain": "yeelight",
   "name": "Yeelight",
   "documentation": "https://www.home-assistant.io/integrations/yeelight",
-  "requirements": ["yeelight==0.7.8", "async-upnp-client==0.22.10"],
+  "requirements": ["yeelight==0.7.8", "async-upnp-client==0.22.12"],
   "codeowners": ["@rytilahti", "@zewelor", "@shenxn", "@starkillerOG"],
   "config_flow": true,
   "dependencies": ["network"],
@@ -16,5 +16,6 @@
   "zeroconf": [{ "type": "_miio._udp.local.", "name": "yeelink-*" }],
   "homekit": {
     "models": ["YL*"]
-  }
+  },
+  "after_dependencies": ["ssdp"]
 }

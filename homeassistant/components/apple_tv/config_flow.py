@@ -9,15 +9,10 @@ from pyatv.convert import protocol_str
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import (
-    CONF_ADDRESS,
-    CONF_NAME,
-    CONF_PIN,
-    CONF_PROTOCOL,
-    CONF_TYPE,
-)
+from homeassistant.components import zeroconf
+from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PIN, CONF_PROTOCOL
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -148,16 +143,18 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders={"devices": self._devices_str()},
         )
 
-    async def async_step_zeroconf(self, discovery_info):
+    async def async_step_zeroconf(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
         """Handle device found via zeroconf."""
-        service_type = discovery_info[CONF_TYPE]
-        properties = discovery_info["properties"]
+        service_type = discovery_info.type
+        properties = discovery_info.properties
 
         if service_type == "_mediaremotetv._tcp.local.":
             identifier = properties["UniqueIdentifier"]
             name = properties["Name"]
         elif service_type == "_touch-able._tcp.local.":
-            identifier = discovery_info["name"].split(".")[0]
+            identifier = discovery_info.name.split(".")[0]
             name = properties["CtlN"]
         else:
             return self.async_abort(reason="unknown")

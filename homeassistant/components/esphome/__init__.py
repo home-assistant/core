@@ -225,7 +225,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             """Forward Home Assistant states updates to ESPHome."""
 
             # Only communicate changes to the state or attribute tracked
-            if (
+            if event.data.get("new_state") is None or (
                 event.data.get("old_state") is not None
                 and "new_state" in event.data
                 and (
@@ -328,9 +328,13 @@ def _async_setup_device_registry(
     sw_version = device_info.esphome_version
     if device_info.compilation_time:
         sw_version += f" ({device_info.compilation_time})"
+    configuration_url = None
+    if device_info.webserver_port > 0:
+        configuration_url = f"http://{entry.data['host']}:{device_info.webserver_port}"
     device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
+        configuration_url=configuration_url,
         connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)},
         name=device_info.name,
         manufacturer="espressif",
@@ -452,8 +456,7 @@ async def _setup_services(
     for service in services:
         if service.key in old_services:
             # Already exists
-            matching = old_services.pop(service.key)
-            if matching != service:
+            if (matching := old_services.pop(service.key)) != service:
                 # Need to re-register
                 to_unregister.append(matching)
                 to_register.append(service)

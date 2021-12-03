@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Iterable
+from collections.abc import Callable, Iterable
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any, cast
 
@@ -14,13 +14,17 @@ from simplipy.errors import (
     SimplipyError,
 )
 from simplipy.system import SystemNotification
-from simplipy.system.v2 import SystemV2
 from simplipy.system.v3 import (
-    VOLUME_HIGH,
-    VOLUME_LOW,
-    VOLUME_MEDIUM,
-    VOLUME_OFF,
+    MAX_ALARM_DURATION,
+    MAX_ENTRY_DELAY_AWAY,
+    MAX_ENTRY_DELAY_HOME,
+    MAX_EXIT_DELAY_AWAY,
+    MAX_EXIT_DELAY_HOME,
+    MIN_ALARM_DURATION,
+    MIN_ENTRY_DELAY_AWAY,
+    MIN_EXIT_DELAY_AWAY,
     SystemV3,
+    Volume,
 )
 from simplipy.websocket import (
     EVENT_AUTOMATIC_TEST,
@@ -40,9 +44,10 @@ from simplipy.websocket import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     ATTR_CODE,
+    ATTR_DEVICE_ID,
     CONF_CODE,
     CONF_TOKEN,
     EVENT_HOMEASSISTANT_STOP,
@@ -80,10 +85,10 @@ from .const import (
     ATTR_LIGHT,
     ATTR_VOICE_PROMPT_VOLUME,
     CONF_USER_ID,
-    DATA_CLIENT,
     DOMAIN,
     LOGGER,
 )
+from .typing import SystemType
 
 ATTR_CATEGORY = "category"
 ATTR_LAST_EVENT_CHANGED_BY = "last_event_changed_by"
@@ -101,8 +106,10 @@ ATTR_PIN_VALUE = "pin"
 ATTR_SYSTEM_ID = "system_id"
 ATTR_TIMESTAMP = "timestamp"
 
+DEFAULT_CONFIG_URL = "https://webapp.simplisafe.com/new/#/dashboard"
 DEFAULT_ENTITY_MODEL = "alarm_control_panel"
 DEFAULT_ENTITY_NAME = "Alarm Control Panel"
+DEFAULT_ERROR_THRESHOLD = 2
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 DEFAULT_SOCKET_MIN_RETRY = 15
 
@@ -118,46 +125,74 @@ PLATFORMS = (
     "sensor",
 )
 
-VOLUMES = [VOLUME_OFF, VOLUME_LOW, VOLUME_MEDIUM, VOLUME_HIGH]
+VOLUME_MAP = {
+    "high": Volume.HIGH,
+    "low": Volume.LOW,
+    "medium": Volume.MEDIUM,
+    "off": Volume.OFF,
+}
 
-SERVICE_BASE_SCHEMA = vol.Schema({vol.Required(ATTR_SYSTEM_ID): cv.positive_int})
+SERVICE_NAME_CLEAR_NOTIFICATIONS = "clear_notifications"
+SERVICE_NAME_REMOVE_PIN = "remove_pin"
+SERVICE_NAME_SET_PIN = "set_pin"
+SERVICE_NAME_SET_SYSTEM_PROPERTIES = "set_system_properties"
 
-SERVICE_REMOVE_PIN_SCHEMA = SERVICE_BASE_SCHEMA.extend(
-    {vol.Required(ATTR_PIN_LABEL_OR_VALUE): cv.string}
+SERVICES = (
+    SERVICE_NAME_CLEAR_NOTIFICATIONS,
+    SERVICE_NAME_REMOVE_PIN,
+    SERVICE_NAME_SET_PIN,
+    SERVICE_NAME_SET_SYSTEM_PROPERTIES,
 )
 
-SERVICE_SET_PIN_SCHEMA = SERVICE_BASE_SCHEMA.extend(
-    {vol.Required(ATTR_PIN_LABEL): cv.string, vol.Required(ATTR_PIN_VALUE): cv.string}
-)
 
-SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA = SERVICE_BASE_SCHEMA.extend(
+SERVICE_REMOVE_PIN_SCHEMA = vol.Schema(
     {
+        vol.Required(ATTR_DEVICE_ID): cv.string,
+        vol.Required(ATTR_PIN_LABEL_OR_VALUE): cv.string,
+    }
+)
+
+SERVICE_SET_PIN_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): cv.string,
+        vol.Required(ATTR_PIN_LABEL): cv.string,
+        vol.Required(ATTR_PIN_VALUE): cv.string,
+    }
+)
+
+SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): cv.string,
         vol.Optional(ATTR_ALARM_DURATION): vol.All(
             cv.time_period,
             lambda value: value.total_seconds(),
-            vol.Range(min=30, max=480),
+            vol.Range(min=MIN_ALARM_DURATION, max=MAX_ALARM_DURATION),
         ),
-        vol.Optional(ATTR_ALARM_VOLUME): vol.All(vol.Coerce(int), vol.In(VOLUMES)),
-        vol.Optional(ATTR_CHIME_VOLUME): vol.All(vol.Coerce(int), vol.In(VOLUMES)),
+        vol.Optional(ATTR_ALARM_VOLUME): vol.All(vol.In(VOLUME_MAP), VOLUME_MAP.get),
+        vol.Optional(ATTR_CHIME_VOLUME): vol.All(vol.In(VOLUME_MAP), VOLUME_MAP.get),
         vol.Optional(ATTR_ENTRY_DELAY_AWAY): vol.All(
             cv.time_period,
             lambda value: value.total_seconds(),
-            vol.Range(min=30, max=255),
+            vol.Range(min=MIN_ENTRY_DELAY_AWAY, max=MAX_ENTRY_DELAY_AWAY),
         ),
         vol.Optional(ATTR_ENTRY_DELAY_HOME): vol.All(
-            cv.time_period, lambda value: value.total_seconds(), vol.Range(max=255)
+            cv.time_period,
+            lambda value: value.total_seconds(),
+            vol.Range(max=MAX_ENTRY_DELAY_HOME),
         ),
         vol.Optional(ATTR_EXIT_DELAY_AWAY): vol.All(
             cv.time_period,
             lambda value: value.total_seconds(),
-            vol.Range(min=45, max=255),
+            vol.Range(min=MIN_EXIT_DELAY_AWAY, max=MAX_EXIT_DELAY_AWAY),
         ),
         vol.Optional(ATTR_EXIT_DELAY_HOME): vol.All(
-            cv.time_period, lambda value: value.total_seconds(), vol.Range(max=255)
+            cv.time_period,
+            lambda value: value.total_seconds(),
+            vol.Range(max=MAX_EXIT_DELAY_HOME),
         ),
         vol.Optional(ATTR_LIGHT): cv.boolean,
         vol.Optional(ATTR_VOICE_PROMPT_VOLUME): vol.All(
-            vol.Coerce(int), vol.In(VOLUMES)
+            vol.In(VOLUME_MAP), VOLUME_MAP.get
         ),
     }
 )
@@ -174,6 +209,58 @@ WEBSOCKET_EVENTS_TO_FIRE_HASS_EVENT = [
 ]
 
 CONFIG_SCHEMA = cv.deprecated(DOMAIN)
+
+
+@callback
+def _async_get_system_for_service_call(
+    hass: HomeAssistant, call: ServiceCall
+) -> SystemType:
+    """Get the SimpliSafe system related to a service call (by device ID)."""
+    device_id = call.data[ATTR_DEVICE_ID]
+    device_registry = dr.async_get(hass)
+
+    if (
+        alarm_control_panel_device_entry := device_registry.async_get(device_id)
+    ) is None:
+        raise vol.Invalid("Invalid device ID specified")
+
+    if TYPE_CHECKING:
+        assert alarm_control_panel_device_entry.via_device_id
+
+    if (
+        base_station_device_entry := device_registry.async_get(
+            alarm_control_panel_device_entry.via_device_id
+        )
+    ) is None:
+        raise ValueError("No base station registered for alarm control panel")
+
+    [system_id] = [
+        identity[1]
+        for identity in base_station_device_entry.identifiers
+        if identity[0] == DOMAIN
+    ]
+
+    for entry_id in base_station_device_entry.config_entries:
+        if (simplisafe := hass.data[DOMAIN].get(entry_id)) is None:
+            continue
+        return cast(SystemType, simplisafe.systems[system_id])
+
+    raise ValueError(f"No system for device ID: {device_id}")
+
+
+@callback
+def _async_register_base_station(
+    hass: HomeAssistant, entry: ConfigEntry, system: SystemType
+) -> None:
+    """Register a new bridge."""
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, system.system_id)},
+        manufacturer="SimpliSafe",
+        model=system.version,
+        name=system.address,
+    )
 
 
 @callback
@@ -201,26 +288,8 @@ def _async_standardize_config_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
         hass.config_entries.async_update_entry(entry, **entry_updates)
 
 
-@callback
-def _async_register_base_station(
-    hass: HomeAssistant, entry: ConfigEntry, system: SystemV2 | SystemV3
-) -> None:
-    """Register a new bridge."""
-    device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, system.system_id)},
-        manufacturer="SimpliSafe",
-        model=system.version,
-        name=system.address,
-    )
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up SimpliSafe as config entry."""
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {}
-
     _async_standardize_config_entry(hass, entry)
 
     _verify_domain_control = verify_domain_control(hass, DOMAIN)
@@ -243,99 +312,90 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except SimplipyError as err:
         raise ConfigEntryNotReady from err
 
-    hass.data[DOMAIN][entry.entry_id][DATA_CLIENT] = simplisafe
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = simplisafe
+
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     @callback
-    def verify_system_exists(
-        coro: Callable[..., Awaitable]
-    ) -> Callable[..., Awaitable]:
-        """Log an error if a service call uses an invalid system ID."""
+    def extract_system(func: Callable) -> Callable:
+        """Define a decorator to get the correct system for a service call."""
 
-        async def decorator(call: ServiceCall) -> None:
-            """Decorate."""
-            system_id = int(call.data[ATTR_SYSTEM_ID])
-            if system_id not in simplisafe.systems:
-                LOGGER.error("Unknown system ID in service call: %s", system_id)
-                return
-            await coro(call)
+        async def wrapper(call: ServiceCall) -> None:
+            """Wrap the service function."""
+            system = _async_get_system_for_service_call(hass, call)
 
-        return decorator
+            try:
+                await func(call, system)
+            except SimplipyError as err:
+                LOGGER.error("Error while executing %s: %s", func.__name__, err)
 
-    @callback
-    def v3_only(coro: Callable[..., Awaitable]) -> Callable[..., Awaitable]:
-        """Log an error if the decorated coroutine is called with a v2 system."""
+        return wrapper
 
-        async def decorator(call: ServiceCall) -> None:
-            """Decorate."""
-            system = simplisafe.systems[int(call.data[ATTR_SYSTEM_ID])]
-            if system.version != 3:
-                LOGGER.error("Service only available on V3 systems")
-                return
-            await coro(call)
-
-        return decorator
-
-    @verify_system_exists
     @_verify_domain_control
-    async def clear_notifications(call: ServiceCall) -> None:
+    @extract_system
+    async def async_clear_notifications(call: ServiceCall, system: SystemType) -> None:
         """Clear all active notifications."""
-        system = simplisafe.systems[call.data[ATTR_SYSTEM_ID]]
-        try:
-            await system.async_clear_notifications()
-        except SimplipyError as err:
-            LOGGER.error("Error during service call: %s", err)
+        await system.async_clear_notifications()
 
-    @verify_system_exists
     @_verify_domain_control
-    async def remove_pin(call: ServiceCall) -> None:
+    @extract_system
+    async def async_remove_pin(call: ServiceCall, system: SystemType) -> None:
         """Remove a PIN."""
-        system = simplisafe.systems[call.data[ATTR_SYSTEM_ID]]
-        try:
-            await system.async_remove_pin(call.data[ATTR_PIN_LABEL_OR_VALUE])
-        except SimplipyError as err:
-            LOGGER.error("Error during service call: %s", err)
+        await system.async_remove_pin(call.data[ATTR_PIN_LABEL_OR_VALUE])
 
-    @verify_system_exists
     @_verify_domain_control
-    async def set_pin(call: ServiceCall) -> None:
+    @extract_system
+    async def async_set_pin(call: ServiceCall, system: SystemType) -> None:
         """Set a PIN."""
-        system = simplisafe.systems[call.data[ATTR_SYSTEM_ID]]
-        try:
-            await system.async_set_pin(
-                call.data[ATTR_PIN_LABEL], call.data[ATTR_PIN_VALUE]
-            )
-        except SimplipyError as err:
-            LOGGER.error("Error during service call: %s", err)
+        await system.async_set_pin(call.data[ATTR_PIN_LABEL], call.data[ATTR_PIN_VALUE])
 
-    @verify_system_exists
-    @v3_only
     @_verify_domain_control
-    async def set_system_properties(call: ServiceCall) -> None:
+    @extract_system
+    async def async_set_system_properties(
+        call: ServiceCall, system: SystemType
+    ) -> None:
         """Set one or more system parameters."""
-        system = cast(SystemV3, simplisafe.systems[call.data[ATTR_SYSTEM_ID]])
-        try:
-            await system.async_set_properties(
-                {
-                    prop: value
-                    for prop, value in call.data.items()
-                    if prop != ATTR_SYSTEM_ID
-                }
-            )
-        except SimplipyError as err:
-            LOGGER.error("Error during service call: %s", err)
+        if not isinstance(system, SystemV3):
+            LOGGER.error("Can only set system properties on V3 systems")
+            return
+
+        await system.async_set_properties(
+            {prop: value for prop, value in call.data.items() if prop != ATTR_DEVICE_ID}
+        )
 
     for service, method, schema in (
-        ("clear_notifications", clear_notifications, None),
-        ("remove_pin", remove_pin, SERVICE_REMOVE_PIN_SCHEMA),
-        ("set_pin", set_pin, SERVICE_SET_PIN_SCHEMA),
+        (SERVICE_NAME_CLEAR_NOTIFICATIONS, async_clear_notifications, None),
+        (SERVICE_NAME_REMOVE_PIN, async_remove_pin, SERVICE_REMOVE_PIN_SCHEMA),
+        (SERVICE_NAME_SET_PIN, async_set_pin, SERVICE_SET_PIN_SCHEMA),
         (
-            "set_system_properties",
-            set_system_properties,
+            SERVICE_NAME_SET_SYSTEM_PROPERTIES,
+            async_set_system_properties,
             SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA,
         ),
     ):
+        if hass.services.has_service(DOMAIN, service):
+            continue
         async_register_admin_service(hass, DOMAIN, service, method, schema=schema)
+
+    current_options = {**entry.options}
+
+    async def async_reload_entry(_: HomeAssistant, updated_entry: ConfigEntry) -> None:
+        """Handle an options update.
+
+        This method will get called in two scenarios:
+          1. When SimpliSafeOptionsFlowHandler is initiated
+          2. When a new refresh token is saved to the config entry data
+
+        We only want #1 to trigger an actual reload.
+        """
+        nonlocal current_options
+        updated_options = {**updated_entry.options}
+
+        if updated_options == current_options:
+            return
+
+        await hass.config_entries.async_reload(entry.entry_id)
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
@@ -348,12 +408,18 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 
+    loaded_entries = [
+        entry
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        if entry.state == ConfigEntryState.LOADED
+    ]
+    if len(loaded_entries) == 1:
+        # If this is the last loaded instance of SimpliSafe, deregister any services
+        # defined during integration setup:
+        for service_name in SERVICES:
+            hass.services.async_remove(DOMAIN, service_name)
+
     return unload_ok
-
-
-async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle an options update."""
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 class SimpliSafe:
@@ -366,13 +432,13 @@ class SimpliSafe:
         self._system_notifications: dict[int, set[SystemNotification]] = {}
         self.entry = entry
         self.initial_event_to_use: dict[int, dict[str, Any]] = {}
-        self.systems: dict[int, SystemV2 | SystemV3] = {}
+        self.systems: dict[int, SystemType] = {}
 
         # This will get filled in by async_init:
         self.coordinator: DataUpdateCoordinator | None = None
 
     @callback
-    def _async_process_new_notifications(self, system: SystemV2 | SystemV3) -> None:
+    def _async_process_new_notifications(self, system: SystemType) -> None:
         """Act on any new system notifications."""
         if self._hass.state != CoreState.running:
             # If HASS isn't fully running yet, it may cause the SIMPLISAFE_NOTIFICATION
@@ -452,8 +518,8 @@ class SimpliSafe:
             assert self._api.refresh_token
             assert self._api.websocket
 
-        self._api.websocket.add_connect_listener(self._async_websocket_on_connect)
-        self._api.websocket.add_event_listener(self._async_websocket_on_event)
+        self._api.websocket.add_connect_callback(self._async_websocket_on_connect)
+        self._api.websocket.add_event_callback(self._async_websocket_on_event)
         asyncio.create_task(self._api.websocket.async_connect())
 
         async def async_websocket_disconnect_listener(_: Event) -> None:
@@ -505,7 +571,7 @@ class SimpliSafe:
             )
 
         self.entry.async_on_unload(
-            self._api.add_refresh_token_listener(async_save_refresh_token)
+            self._api.add_refresh_token_callback(async_save_refresh_token)
         )
 
         async_save_refresh_token(self._api.refresh_token)
@@ -513,7 +579,7 @@ class SimpliSafe:
     async def async_update(self) -> None:
         """Get updated data from SimpliSafe."""
 
-        async def async_update_system(system: SystemV2 | SystemV3) -> None:
+        async def async_update_system(system: SystemType) -> None:
             """Update a system."""
             await system.async_update(cached=system.version != 3)
             self._async_process_new_notifications(system)
@@ -541,7 +607,7 @@ class SimpliSafeEntity(CoordinatorEntity):
     def __init__(
         self,
         simplisafe: SimpliSafe,
-        system: SystemV2 | SystemV3,
+        system: SystemType,
         *,
         device: Device | None = None,
         additional_websocket_events: Iterable[str] | None = None,
@@ -549,6 +615,12 @@ class SimpliSafeEntity(CoordinatorEntity):
         """Initialize."""
         assert simplisafe.coordinator
         super().__init__(simplisafe.coordinator)
+
+        # SimpliSafe can incorrectly return an error state when there isn't any
+        # error. This can lead to entities having an unknown state frequently.
+        # To protect against that, we measure an error count for each entity and only
+        # mark the state as unavailable if we detect a few in a row:
+        self._error_count = 0
 
         if device:
             model = device.type.name
@@ -559,24 +631,26 @@ class SimpliSafeEntity(CoordinatorEntity):
             device_name = DEFAULT_ENTITY_NAME
             serial = system.serial
 
-        try:
-            device_type = DeviceTypes(
-                simplisafe.initial_event_to_use[system.system_id].get("sensorType")
-            )
-        except ValueError:
-            device_type = DeviceTypes.unknown
-
         event = simplisafe.initial_event_to_use[system.system_id]
+
+        if raw_type := event.get("sensorType"):
+            try:
+                device_type = DeviceTypes(raw_type)
+            except ValueError:
+                device_type = DeviceTypes.UNKNOWN
+        else:
+            device_type = DeviceTypes.UNKNOWN
 
         self._attr_extra_state_attributes = {
             ATTR_LAST_EVENT_INFO: event.get("info"),
             ATTR_LAST_EVENT_SENSOR_NAME: event.get("sensorName"),
-            ATTR_LAST_EVENT_SENSOR_TYPE: device_type.name,
+            ATTR_LAST_EVENT_SENSOR_TYPE: device_type.name.lower(),
             ATTR_LAST_EVENT_TIMESTAMP: event.get("eventTimestamp"),
             ATTR_SYSTEM_ID: system.system_id,
         }
 
         self._attr_device_info = DeviceInfo(
+            configuration_url=DEFAULT_CONFIG_URL,
             identifiers={(DOMAIN, serial)},
             manufacturer="SimpliSafe",
             model=model,
@@ -612,11 +686,20 @@ class SimpliSafeEntity(CoordinatorEntity):
         else:
             system_offline = False
 
-        return super().available and self._online and not system_offline
+        return (
+            self._error_count < DEFAULT_ERROR_THRESHOLD
+            and self._online
+            and not system_offline
+        )
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Update the entity with new REST API data."""
+        if self.coordinator.last_update_success:
+            self.async_reset_error_count()
+        else:
+            self.async_increment_error_count()
+
         self.async_update_from_rest_api()
         self.async_write_ha_state()
 
@@ -682,6 +765,21 @@ class SimpliSafeEntity(CoordinatorEntity):
         )
 
         self.async_update_from_rest_api()
+
+    @callback
+    def async_increment_error_count(self) -> None:
+        """Increment this entity's error count."""
+        LOGGER.debug('Error for entity "%s" (total: %s)', self.name, self._error_count)
+        self._error_count += 1
+
+    @callback
+    def async_reset_error_count(self) -> None:
+        """Reset this entity's error count."""
+        if self._error_count == 0:
+            return
+
+        LOGGER.debug('Resetting error count for "%s"', self.name)
+        self._error_count = 0
 
     @callback
     def async_update_from_rest_api(self) -> None:

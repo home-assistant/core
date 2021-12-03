@@ -200,8 +200,7 @@ class PhilipsTVLightEntity(CoordinatorEntity, LightEntity):
         current = self._tv.ambilight_current_configuration
         if current and self._tv.ambilight_mode != "manual":
             if current["isExpert"]:
-                settings = _get_settings(current)
-                if settings:
+                if settings := _get_settings(current):
                     return _get_effect(
                         EFFECT_EXPERT, current["styleName"], settings["algorithm"]
                     )

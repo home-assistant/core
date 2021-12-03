@@ -1,19 +1,21 @@
 """Support for UK Met Office weather service."""
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_PRECIPITATION,
+    ATTR_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_FORECAST_TEMP,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
     ATTR_FORECAST_WIND_SPEED,
     WeatherEntity,
 )
-from homeassistant.const import LENGTH_KILOMETERS, TEMP_CELSIUS
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import get_device_info
 from .const import (
+    ATTR_FORECAST_DAYTIME,
     ATTRIBUTION,
     CONDITION_CLASSES,
     DEFAULT_NAME,
@@ -45,19 +47,22 @@ async def async_setup_entry(
     )
 
 
-def _build_forecast_data(timestep):
+def _build_forecast_data(timestep, use_3hourly):
     data = {}
     data[ATTR_FORECAST_TIME] = timestep.date.isoformat()
     if timestep.weather:
         data[ATTR_FORECAST_CONDITION] = _get_weather_condition(timestep.weather.value)
     if timestep.precipitation:
-        data[ATTR_FORECAST_PRECIPITATION] = timestep.precipitation.value
+        data[ATTR_FORECAST_PRECIPITATION_PROBABILITY] = timestep.precipitation.value
     if timestep.temperature:
         data[ATTR_FORECAST_TEMP] = timestep.temperature.value
     if timestep.wind_direction:
         data[ATTR_FORECAST_WIND_BEARING] = timestep.wind_direction.value
     if timestep.wind_speed:
         data[ATTR_FORECAST_WIND_SPEED] = timestep.wind_speed.value
+    if not use_3hourly:
+        # if it's close to noon, mark as Day, otherwise as Night
+        data[ATTR_FORECAST_DAYTIME] = abs(timestep.date.hour - 12) < 6
     return data
 
 
@@ -76,20 +81,14 @@ class MetOfficeWeather(CoordinatorEntity, WeatherEntity):
         super().__init__(coordinator)
 
         mode_label = MODE_3HOURLY_LABEL if use_3hourly else MODE_DAILY_LABEL
-        self._name = f"{DEFAULT_NAME} {hass_data[METOFFICE_NAME]} {mode_label}"
-        self._unique_id = hass_data[METOFFICE_COORDINATES]
+        self._attr_device_info = get_device_info(
+            coordinates=hass_data[METOFFICE_COORDINATES], name=hass_data[METOFFICE_NAME]
+        )
+        self._attr_name = f"{DEFAULT_NAME} {hass_data[METOFFICE_NAME]} {mode_label}"
+        self._attr_unique_id = hass_data[METOFFICE_COORDINATES]
+        self._use_3hourly = use_3hourly
         if not use_3hourly:
-            self._unique_id = f"{self._unique_id}_{MODE_DAILY}"
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return the unique of the sensor."""
-        return self._unique_id
+            self._attr_unique_id = f"{self._attr_unique_id}_{MODE_DAILY}"
 
     @property
     def condition(self):
@@ -122,11 +121,6 @@ class MetOfficeWeather(CoordinatorEntity, WeatherEntity):
             )
             _visibility = f"{visibility_class} - {visibility_distance}"
         return _visibility
-
-    @property
-    def visibility_unit(self):
-        """Return the unit of measurement."""
-        return LENGTH_KILOMETERS
 
     @property
     def pressure(self):
@@ -166,7 +160,7 @@ class MetOfficeWeather(CoordinatorEntity, WeatherEntity):
         if self.coordinator.data.forecast is None:
             return None
         return [
-            _build_forecast_data(timestep)
+            _build_forecast_data(timestep, self._use_3hourly)
             for timestep in self.coordinator.data.forecast
         ]
 

@@ -20,25 +20,27 @@ class MockConfig(helpers.AbstractConfig):
     def __init__(
         self,
         *,
-        secure_devices_pin=None,
-        should_expose=None,
-        should_2fa=None,
+        agent_user_ids=None,
+        enabled=True,
         entity_config=None,
         hass=None,
-        local_sdk_webhook_id=None,
         local_sdk_user_id=None,
-        enabled=True,
-        agent_user_ids=None,
+        local_sdk_webhook_id=None,
+        secure_devices_pin=None,
+        should_2fa=None,
+        should_expose=None,
+        should_report_state=False,
     ):
         """Initialize config."""
         super().__init__(hass)
-        self._should_expose = should_expose
-        self._should_2fa = should_2fa
-        self._secure_devices_pin = secure_devices_pin
-        self._entity_config = entity_config or {}
-        self._local_sdk_webhook_id = local_sdk_webhook_id
-        self._local_sdk_user_id = local_sdk_user_id
         self._enabled = enabled
+        self._entity_config = entity_config or {}
+        self._local_sdk_user_id = local_sdk_user_id
+        self._local_sdk_webhook_id = local_sdk_webhook_id
+        self._secure_devices_pin = secure_devices_pin
+        self._should_2fa = should_2fa
+        self._should_expose = should_expose
+        self._should_report_state = should_report_state
         self._store = mock_google_config_store(agent_user_ids)
 
     @property
@@ -73,6 +75,11 @@ class MockConfig(helpers.AbstractConfig):
     def should_expose(self, state):
         """Expose it all."""
         return self._should_expose is None or self._should_expose(state)
+
+    @property
+    def should_report_state(self):
+        """Return if states should be proactively reported."""
+        return self._should_report_state
 
     def should_2fa(self, state):
         """Expose it all."""

@@ -275,9 +275,7 @@ def _get_camera_from_entity_id(hass: HomeAssistant, entity_id: str) -> Camera:
     if (component := hass.data.get(DOMAIN)) is None:
         raise HomeAssistantError("Camera integration not set up")
 
-    camera = component.get_entity(entity_id)
-
-    if camera is None:
+    if (camera := component.get_entity(entity_id)) is None:
         raise HomeAssistantError("Camera not found")
 
     if not camera.is_on:
@@ -371,9 +369,21 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class Camera(Entity):
     """The base class for camera entities."""
 
+    # Entity Properties
+    _attr_brand: str | None = None
+    _attr_frame_interval: float = MIN_STREAM_INTERVAL
+    _attr_frontend_stream_type: str | None
+    _attr_is_on: bool = True
+    _attr_is_recording: bool = False
+    _attr_is_streaming: bool = False
+    _attr_model: str | None = None
+    _attr_motion_detection_enabled: bool = False
+    _attr_should_poll: bool = False  # No need to poll cameras
+    _attr_state: None = None  # State is determined by is_on
+    _attr_supported_features: int = 0
+
     def __init__(self) -> None:
         """Initialize a camera."""
-        self.is_streaming: bool = False
         self.stream: Stream | None = None
         self.stream_options: dict[str, str] = {}
         self.content_type: str = DEFAULT_CONTENT_TYPE
@@ -382,44 +392,46 @@ class Camera(Entity):
         self.async_update_token()
 
     @property
-    def should_poll(self) -> bool:
-        """No need to poll cameras."""
-        return False
-
-    @property
     def entity_picture(self) -> str:
         """Return a link to the camera feed as entity picture."""
+        if self._attr_entity_picture is not None:
+            return self._attr_entity_picture
         return ENTITY_IMAGE_URL.format(self.entity_id, self.access_tokens[-1])
 
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
-        return 0
+        return self._attr_supported_features
 
     @property
     def is_recording(self) -> bool:
         """Return true if the device is recording."""
-        return False
+        return self._attr_is_recording
+
+    @property
+    def is_streaming(self) -> bool:
+        """Return true if the device is streaming."""
+        return self._attr_is_streaming
 
     @property
     def brand(self) -> str | None:
         """Return the camera brand."""
-        return None
+        return self._attr_brand
 
     @property
     def motion_detection_enabled(self) -> bool:
         """Return the camera motion detection status."""
-        return False
+        return self._attr_motion_detection_enabled
 
     @property
     def model(self) -> str | None:
         """Return the camera model."""
-        return None
+        return self._attr_model
 
     @property
     def frame_interval(self) -> float:
         """Return the interval between frames of the mjpeg stream."""
-        return MIN_STREAM_INTERVAL
+        return self._attr_frame_interval
 
     @property
     def frontend_stream_type(self) -> str | None:
@@ -429,6 +441,8 @@ class Camera(Entity):
         frontend which camera attributes and player to use. The default type
         is to use HLS, and components can override to change the type.
         """
+        if hasattr(self, "_attr_frontend_stream_type"):
+            return self._attr_frontend_stream_type
         if not self.supported_features & SUPPORT_STREAM:
             return None
         return STREAM_TYPE_HLS
@@ -510,6 +524,7 @@ class Camera(Entity):
         return await self.handle_async_still_stream(request, self.frame_interval)
 
     @property
+    @final
     def state(self) -> str:
         """Return the camera state."""
         if self.is_recording:
@@ -521,7 +536,7 @@ class Camera(Entity):
     @property
     def is_on(self) -> bool:
         """Return true if on."""
-        return True
+        return self._attr_is_on
 
     def turn_off(self) -> None:
         """Turn off camera."""
@@ -572,8 +587,6 @@ class Camera(Entity):
 
         if self.frontend_stream_type:
             attrs["frontend_stream_type"] = self.frontend_stream_type
-            # Remove after home-assistant/frontend#10298 is merged into nightly
-            attrs["stream_type"] = self.frontend_stream_type
 
         return attrs
 
@@ -596,9 +609,7 @@ class CameraView(HomeAssistantView):
 
     async def get(self, request: web.Request, entity_id: str) -> web.StreamResponse:
         """Start a GET request."""
-        camera = self.component.get_entity(entity_id)
-
-        if camera is None:
+        if (camera := self.component.get_entity(entity_id)) is None:
             raise web.HTTPNotFound()
 
         camera = cast(Camera, camera)

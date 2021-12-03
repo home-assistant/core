@@ -4,6 +4,10 @@
             "turn_off": "{entity_name} kapat",
             "turn_on": "{entity_name} a\u00e7\u0131n"
         },
+        "condition_type": {
+            "is_off": "{entity_name} kapal\u0131",
+            "is_on": "{entity_name} a\u00e7\u0131k"
+        },
         "trigger_type": {
             "turned_off": "{entity_name} kapat\u0131ld\u0131",
             "turned_on": "{entity_name} a\u00e7\u0131ld\u0131"
