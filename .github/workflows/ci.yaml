@@ -15,10 +15,9 @@ env:
   PRE_COMMIT_CACHE: ~/.cache/pre-commit
   SQLALCHEMY_WARN_20: 1
 
-# Temporary disabled: https://github.com/actions/runner/issues/1532
-# concurrency:
-#   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-#   cancel-in-progress: true
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   changes:
