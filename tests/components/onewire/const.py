@@ -36,10 +36,12 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     TEMP_CELSIUS,
 )
+from homeassistant.helpers.entity import EntityCategory
 
 ATTR_DEFAULT_DISABLED = "default_disabled"
 ATTR_DEVICE_FILE = "device_file"
 ATTR_DEVICE_INFO = "device_info"
+ATTR_ENTITY_CATEGORY = "entity_category"
 ATTR_INJECT_READS = "inject_reads"
 ATTR_UNIQUE_ID = "unique_id"
 ATTR_UNKNOWN_DEVICE = "unknown_device"
@@ -404,6 +406,7 @@ MOCK_OWPROXY_DEVICES = {
         SWITCH_DOMAIN: [
             {
                 ATTR_DEFAULT_DISABLED: True,
+                ATTR_ENTITY_CATEGORY: EntityCategory.CONFIG,
                 ATTR_ENTITY_ID: "switch.26_111111111111_iad",
                 ATTR_INJECT_READS: b"    1",
                 ATTR_STATE: STATE_ON,
