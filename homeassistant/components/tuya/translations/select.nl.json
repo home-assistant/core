@@ -15,6 +15,7 @@
             "1": "Hoge gevoeligheid"
         },
         "tuya__fingerbot_mode": {
+            "click": "Duw",
             "switch": "Schakelaar"
         },
         "tuya__ipc_work_mode": {
