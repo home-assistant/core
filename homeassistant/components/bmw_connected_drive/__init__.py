@@ -117,6 +117,9 @@ def _async_migrate_options_from_data_if_missing(
         options = dict(DEFAULT_OPTIONS, **options)
         options[CONF_READ_ONLY] = data.pop(CONF_READ_ONLY, False)
 
+        # Remove CONF_USE_LOCATION as we have to use it by default
+        options.pop(CONF_USE_LOCATION, None)
+
         hass.config_entries.async_update_entry(entry, data=data, options=options)
 
 
@@ -215,13 +218,10 @@ def setup_account(
     password: str = entry.data[CONF_PASSWORD]
     region: str = entry.data[CONF_REGION]
     read_only: bool = entry.options[CONF_READ_ONLY]
-    use_location: bool = entry.options[CONF_USE_LOCATION]
 
     _LOGGER.debug("Adding new account %s", name)
 
-    pos = (
-        (hass.config.latitude, hass.config.longitude) if use_location else (None, None)
-    )
+    pos = (hass.config.latitude, hass.config.longitude)
     cd_account = BMWConnectedDriveAccount(
         username, password, region, name, read_only, *pos
     )
