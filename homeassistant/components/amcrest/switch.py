@@ -58,7 +58,7 @@ class AmcrestSwitch(SwitchEntity):
         name: str,
         device: AmcrestDevice,
         entity_description: SwitchEntityDescription,
-    ):
+    ) -> None:
         """Initialize switch."""
         self._api = device.api
         self.entity_description = entity_description
