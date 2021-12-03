@@ -4,6 +4,7 @@ from unittest.mock import patch
 from pyfronius import FroniusError
 
 from homeassistant import config_entries
+from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.components.fronius.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_HOST, CONF_RESOURCE
@@ -28,6 +29,11 @@ INVERTER_INFO_RETURN_VALUE = {
     ]
 }
 LOGGER_INFO_RETURN_VALUE = {"unique_identifier": {"value": "123.4567"}}
+MOCK_DHCP_DATA = DhcpServiceInfo(
+    hostname="fronius",
+    ip="10.2.3.4",
+    macaddress="00:03:ac:11:22:33",
+)
 
 
 async def test_form_with_logger(hass: HomeAssistant) -> None:
@@ -261,3 +267,62 @@ async def test_import(hass, aioclient_mock):
         "host": MOCK_HOST,
         "is_logger": True,
     }
+
+
+async def test_dhcp(hass, aioclient_mock):
+    """Test starting a flow from discovery."""
+    with patch(
+        "homeassistant.components.fronius.config_flow.DHCP_REQUEST_DELAY", 0
+    ), patch(
+        "pyfronius.Fronius.current_logger_info",
+        return_value=LOGGER_INFO_RETURN_VALUE,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=MOCK_DHCP_DATA
+        )
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "confirm_discovery"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == f"SolarNet Datalogger at {MOCK_DHCP_DATA.ip}"
+    assert result["data"] == {
+        "host": MOCK_DHCP_DATA.ip,
+        "is_logger": True,
+    }
+
+
+async def test_dhcp_already_configured(hass, aioclient_mock):
+    """Test starting a flow from discovery."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="123.4567890",
+        data={
+            CONF_HOST: f"http://{MOCK_DHCP_DATA.ip}/",
+            "is_logger": True,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=MOCK_DHCP_DATA
+    )
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_dhcp_invalid(hass, aioclient_mock):
+    """Test starting a flow from discovery."""
+    with patch(
+        "homeassistant.components.fronius.config_flow.DHCP_REQUEST_DELAY", 0
+    ), patch("pyfronius.Fronius.current_logger_info", side_effect=FroniusError,), patch(
+        "pyfronius.Fronius.inverter_info",
+        side_effect=FroniusError,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=MOCK_DHCP_DATA
+        )
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "invalid_host"
