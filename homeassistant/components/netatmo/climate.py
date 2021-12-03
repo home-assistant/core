@@ -31,7 +31,10 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -47,6 +50,7 @@ from .const import (
     EVENT_TYPE_SCHEDULE,
     EVENT_TYPE_SET_POINT,
     EVENT_TYPE_THERM_MODE,
+    NETATMO_CREATE_BATTERY,
     SERVICE_SET_SCHEDULE,
     SIGNAL_NAME,
     TYPE_ENERGY,
@@ -55,6 +59,7 @@ from .data_handler import (
     CLIMATE_STATE_CLASS_NAME,
     CLIMATE_TOPOLOGY_CLASS_NAME,
     NetatmoDataHandler,
+    NetatmoDevice,
 )
 from .netatmo_entity_base import NetatmoBase
 
@@ -239,6 +244,21 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
                     f"signal-{DOMAIN}-webhook-{event_type}",
                     self.handle_event,
                 )
+            )
+
+        for module in self._room.modules.values():
+            if getattr(module.device_type, "value") not in [NA_THERM, NA_VALVE]:
+                continue
+
+            async_dispatcher_send(
+                self.hass,
+                NETATMO_CREATE_BATTERY,
+                NetatmoDevice(
+                    self.data_handler,
+                    module,
+                    self._id,
+                    self._climate_state_class,
+                ),
             )
 
     @callback
