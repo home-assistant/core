@@ -37,6 +37,7 @@ class ScreenLogicNumber(ScreenlogicEntity, NumberEntity):
         """Initialize of the entity."""
         super().__init__(coordinator, data_key, enabled)
         self._body_type = SUPPORTED_SCG_NUMBERS.index(self._data_key)
+        self._attr_max_value = SCG.LIMIT_FOR_BODY[self._body_type]
 
     @property
     def name(self) -> str:
@@ -51,7 +52,7 @@ class ScreenLogicNumber(ScreenlogicEntity, NumberEntity):
     @property
     def max_value(self) -> float:
         """Return the maximum allowed value."""
-        return SCG.LIMIT_FOR_BODY[self._body_type]
+        return self._attr_max_value
 
     @property
     def unit_of_measurement(self) -> str:
