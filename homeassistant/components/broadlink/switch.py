@@ -8,6 +8,7 @@ import voluptuous as vol
 from homeassistant.components.switch import (
     DEVICE_CLASS_OUTLET,
     DEVICE_CLASS_SWITCH,
+    DOMAIN as SWITCH_DOMAIN,
     PLATFORM_SCHEMA,
     SwitchEntity,
 )
@@ -26,7 +27,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import DOMAIN, SWITCH_DOMAIN
+from .const import DOMAIN
 from .entity import BroadlinkEntity
 from .helpers import data_packet, import_device, mac_address
 
