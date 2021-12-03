@@ -1,4 +1,4 @@
-"""Enum backports from stanrd lib."""
+"""Enum backports from standard lib."""
 from __future__ import annotations
 
 from enum import Enum
