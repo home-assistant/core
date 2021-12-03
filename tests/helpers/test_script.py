@@ -3337,7 +3337,9 @@ async def test_validate_action_config(hass):
         },
         cv.SCRIPT_ACTION_FIRE_EVENT: {"event": "my_event"},
         cv.SCRIPT_ACTION_CHECK_CONDITION: {
-            "condition": "{{ states.light.kitchen.state == 'on' }}"
+            "condition": "state",
+            "entity_id": "light.kitchen",
+            "state": "on",
         },
         cv.SCRIPT_ACTION_DEVICE_AUTOMATION: templated_device_action("device"),
         cv.SCRIPT_ACTION_ACTIVATE_SCENE: {"scene": "scene.relax"},
@@ -3350,7 +3352,7 @@ async def test_validate_action_config(hass):
         cv.SCRIPT_ACTION_CHOOSE: {
             "choose": [
                 {
-                    "condition": "{{ states.light.kitchen.state == 'on' }}",
+                    "conditions": "{{ states.light.kitchen.state == 'on' }}",
                     "sequence": [templated_device_action("choose_event")],
                 }
             ],
@@ -3387,8 +3389,9 @@ async def test_validate_action_config(hass):
     for action_type, config in configs.items():
         assert cv.determine_script_action(config) == action_type
         try:
+            validated_config[action_type] = cv.ACTION_TYPE_SCHEMAS[action_type](config)
             validated_config[action_type] = await script.async_validate_action_config(
-                hass, config
+                hass, validated_config[action_type]
             )
         except vol.Invalid as err:
             assert False, f"{action_type} config invalid: {err}"
