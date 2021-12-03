@@ -12,6 +12,7 @@ from homeassistant.components.config import config_entries
 from homeassistant.config_entries import HANDLERS
 from homeassistant.core import callback
 from homeassistant.generated import config_flows
+import homeassistant.helpers.config_validation as cv
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -686,6 +687,81 @@ async def test_two_step_options_flow(hass, client):
             "version": 1,
             "description": None,
             "description_placeholders": None,
+        }
+
+
+async def test_options_flow_with_invalid_data(hass, client):
+    """Test an options flow with invalid_data."""
+    mock_integration(
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+    )
+
+    class TestFlow(core_ce.ConfigFlow):
+        @staticmethod
+        @callback
+        def async_get_options_flow(config_entry):
+            class OptionsFlowHandler(data_entry_flow.FlowHandler):
+                async def async_step_init(self, user_input=None):
+                    return self.async_show_form(
+                        step_id="finish",
+                        data_schema=vol.Schema(
+                            {
+                                vol.Required(
+                                    "choices", default=["invalid", "valid"]
+                                ): cv.multi_select({"valid": "Valid"})
+                            }
+                        ),
+                    )
+
+                async def async_step_finish(self, user_input=None):
+                    return self.async_create_entry(
+                        title="Enable disable", data=user_input
+                    )
+
+            return OptionsFlowHandler()
+
+    MockConfigEntry(
+        domain="test",
+        entry_id="test1",
+        source="bla",
+    ).add_to_hass(hass)
+    entry = hass.config_entries.async_entries()[0]
+
+    with patch.dict(HANDLERS, {"test": TestFlow}):
+        url = "/api/config/config_entries/options/flow"
+        resp = await client.post(url, json={"handler": entry.entry_id})
+
+        assert resp.status == HTTPStatus.OK
+        data = await resp.json()
+        flow_id = data.pop("flow_id")
+        assert data == {
+            "type": "form",
+            "handler": "test1",
+            "step_id": "finish",
+            "data_schema": [
+                {
+                    "default": ["invalid", "valid"],
+                    "name": "choices",
+                    "options": {"valid": "Valid"},
+                    "required": True,
+                    "type": "multi_select",
+                }
+            ],
+            "description_placeholders": None,
+            "errors": None,
+            "last_step": None,
+        }
+
+    with patch.dict(HANDLERS, {"test": TestFlow}):
+        resp = await client.post(
+            f"/api/config/config_entries/options/flow/{flow_id}",
+            json={"choices": ["valid", "invalid"]},
+        )
+        assert resp.status == HTTPStatus.BAD_REQUEST
+        data = await resp.json()
+        assert data == {
+            "message": "User input malformed: invalid is not a valid option for "
+            "dictionary value @ data['choices']"
         }
 
 

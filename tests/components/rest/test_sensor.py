@@ -1,7 +1,6 @@
 """The tests for the REST sensor platform."""
 import asyncio
 from http import HTTPStatus
-from os import path
 from unittest.mock import MagicMock, patch
 
 import httpx
@@ -22,6 +21,8 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.setup import async_setup_component
+
+from tests.common import get_fixture_path
 
 
 async def test_setup_missing_config(hass):
@@ -786,11 +787,7 @@ async def test_reload(hass):
 
     assert hass.states.get("sensor.mockrest")
 
-    yaml_path = path.join(
-        _get_fixtures_base_path(),
-        "fixtures",
-        "rest/configuration.yaml",
-    )
+    yaml_path = get_fixture_path("configuration.yaml", "rest")
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             "rest",
@@ -802,7 +799,3 @@ async def test_reload(hass):
 
     assert hass.states.get("sensor.mockreset") is None
     assert hass.states.get("sensor.rollout")
-
-
-def _get_fixtures_base_path():
-    return path.dirname(path.dirname(path.dirname(__file__)))

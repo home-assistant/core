@@ -6,18 +6,21 @@
         "error": {
             "cannot_connect": "Ba\u011flanma hatas\u0131",
             "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
+            "old_firmware": "Bond cihaz\u0131nda desteklenmeyen eski s\u00fcr\u00fcm - l\u00fctfen devam etmeden \u00f6nce y\u00fckseltin",
             "unknown": "Beklenmeyen hata"
         },
+        "flow_title": "{name} ({host})",
         "step": {
             "confirm": {
                 "data": {
-                    "access_token": "Eri\u015fim Belirteci"
-                }
+                    "access_token": "Eri\u015fim Anahtar\u0131"
+                },
+                "description": "{name} kurmak istiyor musunuz?"
             },
             "user": {
                 "data": {
-                    "access_token": "Eri\u015fim Belirteci",
-                    "host": "Ana Bilgisayar"
+                    "access_token": "Eri\u015fim Anahtar\u0131",
+                    "host": "Ana bilgisayar"
                 }
             }
         }

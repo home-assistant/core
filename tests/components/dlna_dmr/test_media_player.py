@@ -51,6 +51,8 @@ from .conftest import (
 
 from tests.common import MockConfigEntry
 
+MOCK_DEVICE_ST = "mock_st"
+
 # Auto-use the domain_data_mock fixture for every test in this module
 pytestmark = pytest.mark.usefixtures("domain_data_mock")
 
@@ -1052,10 +1054,12 @@ async def test_become_available(
     # Send an SSDP notification from the now alive device
     ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0]
     await ssdp_callback(
-        {
-            ssdp.ATTR_SSDP_USN: MOCK_DEVICE_USN,
-            ssdp.ATTR_SSDP_LOCATION: NEW_DEVICE_LOCATION,
-        },
+        ssdp.SsdpServiceInfo(
+            ssdp_usn=MOCK_DEVICE_USN,
+            ssdp_location=NEW_DEVICE_LOCATION,
+            ssdp_st=MOCK_DEVICE_ST,
+            upnp={},
+        ),
         ssdp.SsdpChange.ALIVE,
     )
     await hass.async_block_till_done()
@@ -1114,10 +1118,12 @@ async def test_alive_but_gone(
     # Send an SSDP notification from the still missing device
     ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0]
     await ssdp_callback(
-        {
-            ssdp.ATTR_SSDP_USN: MOCK_DEVICE_USN,
-            ssdp.ATTR_SSDP_LOCATION: NEW_DEVICE_LOCATION,
-        },
+        ssdp.SsdpServiceInfo(
+            ssdp_usn=MOCK_DEVICE_USN,
+            ssdp_location=NEW_DEVICE_LOCATION,
+            ssdp_st=MOCK_DEVICE_ST,
+            upnp={},
+        ),
         ssdp.SsdpChange.ALIVE,
     )
     await hass.async_block_till_done()
@@ -1153,17 +1159,21 @@ async def test_multiple_ssdp_alive(
     # Send two SSDP notifications with the new device URL
     ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0]
     await ssdp_callback(
-        {
-            ssdp.ATTR_SSDP_USN: MOCK_DEVICE_USN,
-            ssdp.ATTR_SSDP_LOCATION: NEW_DEVICE_LOCATION,
-        },
+        ssdp.SsdpServiceInfo(
+            ssdp_usn=MOCK_DEVICE_USN,
+            ssdp_location=NEW_DEVICE_LOCATION,
+            ssdp_st=MOCK_DEVICE_ST,
+            upnp={},
+        ),
         ssdp.SsdpChange.ALIVE,
     )
     await ssdp_callback(
-        {
-            ssdp.ATTR_SSDP_USN: MOCK_DEVICE_USN,
-            ssdp.ATTR_SSDP_LOCATION: NEW_DEVICE_LOCATION,
-        },
+        ssdp.SsdpServiceInfo(
+            ssdp_usn=MOCK_DEVICE_USN,
+            ssdp_location=NEW_DEVICE_LOCATION,
+            ssdp_st=MOCK_DEVICE_ST,
+            upnp={},
+        ),
         ssdp.SsdpChange.ALIVE,
     )
     await hass.async_block_till_done()
@@ -1189,11 +1199,13 @@ async def test_ssdp_byebye(
     # First byebye will cause a disconnect
     ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0]
     await ssdp_callback(
-        {
-            ssdp.ATTR_SSDP_USN: MOCK_DEVICE_USN,
-            "_udn": MOCK_DEVICE_UDN,
-            "NTS": "ssdp:byebye",
-        },
+        ssdp.SsdpServiceInfo(
+            ssdp_usn=MOCK_DEVICE_USN,
+            ssdp_udn=MOCK_DEVICE_UDN,
+            ssdp_headers={"NTS": "ssdp:byebye"},
+            ssdp_st=MOCK_DEVICE_ST,
+            upnp={},
+        ),
         ssdp.SsdpChange.BYEBYE,
     )
 
@@ -1206,11 +1218,13 @@ async def test_ssdp_byebye(
 
     # Second byebye will do nothing
     await ssdp_callback(
-        {
-            ssdp.ATTR_SSDP_USN: MOCK_DEVICE_USN,
-            "_udn": MOCK_DEVICE_UDN,
-            "NTS": "ssdp:byebye",
-        },
+        ssdp.SsdpServiceInfo(
+            ssdp_usn=MOCK_DEVICE_USN,
+            ssdp_udn=MOCK_DEVICE_UDN,
+            ssdp_headers={"NTS": "ssdp:byebye"},
+            ssdp_st=MOCK_DEVICE_ST,
+            upnp={},
+        ),
         ssdp.SsdpChange.BYEBYE,
     )
 
@@ -1237,24 +1251,30 @@ async def test_ssdp_update_seen_bootid(
     # Send SSDP alive with boot ID
     ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0]
     await ssdp_callback(
-        {
-            ssdp.ATTR_SSDP_USN: MOCK_DEVICE_USN,
-            ssdp.ATTR_SSDP_LOCATION: MOCK_DEVICE_LOCATION,
-            ssdp.ATTR_SSDP_BOOTID: "1",
-        },
+        ssdp.SsdpServiceInfo(
+            ssdp_usn=MOCK_DEVICE_USN,
+            ssdp_location=MOCK_DEVICE_LOCATION,
+            ssdp_headers={ssdp.ATTR_SSDP_BOOTID: "1"},
+            ssdp_st=MOCK_DEVICE_ST,
+            upnp={},
+        ),
         ssdp.SsdpChange.ALIVE,
     )
     await hass.async_block_till_done()
 
     # Send SSDP update with next boot ID
     await ssdp_callback(
-        {
-            ssdp.ATTR_SSDP_USN: MOCK_DEVICE_USN,
-            "_udn": MOCK_DEVICE_UDN,
-            "NTS": "ssdp:update",
-            ssdp.ATTR_SSDP_BOOTID: "1",
-            ssdp.ATTR_SSDP_NEXTBOOTID: "2",
-        },
+        ssdp.SsdpServiceInfo(
+            ssdp_usn=MOCK_DEVICE_USN,
+            ssdp_udn=MOCK_DEVICE_UDN,
+            ssdp_headers={
+                "NTS": "ssdp:update",
+                ssdp.ATTR_SSDP_BOOTID: "1",
+                ssdp.ATTR_SSDP_NEXTBOOTID: "2",
+            },
+            ssdp_st=MOCK_DEVICE_ST,
+            upnp={},
+        ),
         ssdp.SsdpChange.UPDATE,
     )
     await hass.async_block_till_done()
@@ -1269,13 +1289,17 @@ async def test_ssdp_update_seen_bootid(
 
     # Send SSDP update with same next boot ID, again
     await ssdp_callback(
-        {
-            ssdp.ATTR_SSDP_USN: MOCK_DEVICE_USN,
-            "_udn": MOCK_DEVICE_UDN,
-            "NTS": "ssdp:update",
-            ssdp.ATTR_SSDP_BOOTID: "1",
-            ssdp.ATTR_SSDP_NEXTBOOTID: "2",
-        },
+        ssdp.SsdpServiceInfo(
+            ssdp_usn=MOCK_DEVICE_USN,
+            ssdp_udn=MOCK_DEVICE_UDN,
+            ssdp_headers={
+                "NTS": "ssdp:update",
+                ssdp.ATTR_SSDP_BOOTID: "1",
+                ssdp.ATTR_SSDP_NEXTBOOTID: "2",
+            },
+            ssdp_st=MOCK_DEVICE_ST,
+            upnp={},
+        ),
         ssdp.SsdpChange.UPDATE,
     )
     await hass.async_block_till_done()
@@ -1290,13 +1314,17 @@ async def test_ssdp_update_seen_bootid(
 
     # Send SSDP update with bad next boot ID
     await ssdp_callback(
-        {
-            ssdp.ATTR_SSDP_USN: MOCK_DEVICE_USN,
-            "_udn": MOCK_DEVICE_UDN,
-            "NTS": "ssdp:update",
-            ssdp.ATTR_SSDP_BOOTID: "2",
-            ssdp.ATTR_SSDP_NEXTBOOTID: "7c848375-a106-4bd1-ac3c-8e50427c8e4f",
-        },
+        ssdp.SsdpServiceInfo(
+            ssdp_usn=MOCK_DEVICE_USN,
+            ssdp_udn=MOCK_DEVICE_UDN,
+            ssdp_headers={
+                "NTS": "ssdp:update",
+                ssdp.ATTR_SSDP_BOOTID: "2",
+                ssdp.ATTR_SSDP_NEXTBOOTID: "7c848375-a106-4bd1-ac3c-8e50427c8e4f",
+            },
+            ssdp_st=MOCK_DEVICE_ST,
+            upnp={},
+        ),
         ssdp.SsdpChange.UPDATE,
     )
     await hass.async_block_till_done()
@@ -1311,11 +1339,13 @@ async def test_ssdp_update_seen_bootid(
 
     # Send a new SSDP alive with the new boot ID, device should not reconnect
     await ssdp_callback(
-        {
-            ssdp.ATTR_SSDP_USN: MOCK_DEVICE_USN,
-            ssdp.ATTR_SSDP_LOCATION: MOCK_DEVICE_LOCATION,
-            ssdp.ATTR_SSDP_BOOTID: "2",
-        },
+        ssdp.SsdpServiceInfo(
+            ssdp_usn=MOCK_DEVICE_USN,
+            ssdp_location=MOCK_DEVICE_LOCATION,
+            ssdp_headers={ssdp.ATTR_SSDP_BOOTID: "2"},
+            ssdp_st=MOCK_DEVICE_ST,
+            upnp={},
+        ),
         ssdp.SsdpChange.ALIVE,
     )
     await hass.async_block_till_done()
@@ -1348,24 +1378,30 @@ async def test_ssdp_update_missed_bootid(
     # Send SSDP alive with boot ID
     ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0]
     await ssdp_callback(
-        {
-            ssdp.ATTR_SSDP_USN: MOCK_DEVICE_USN,
-            ssdp.ATTR_SSDP_LOCATION: MOCK_DEVICE_LOCATION,
-            ssdp.ATTR_SSDP_BOOTID: "1",
-        },
+        ssdp.SsdpServiceInfo(
+            ssdp_usn=MOCK_DEVICE_USN,
+            ssdp_location=MOCK_DEVICE_LOCATION,
+            ssdp_headers={ssdp.ATTR_SSDP_BOOTID: "1"},
+            ssdp_st=MOCK_DEVICE_ST,
+            upnp={},
+        ),
         ssdp.SsdpChange.ALIVE,
     )
     await hass.async_block_till_done()
 
     # Send SSDP update with skipped boot ID (not previously seen)
     await ssdp_callback(
-        {
-            ssdp.ATTR_SSDP_USN: MOCK_DEVICE_USN,
-            "_udn": MOCK_DEVICE_UDN,
-            "NTS": "ssdp:update",
-            ssdp.ATTR_SSDP_BOOTID: "2",
-            ssdp.ATTR_SSDP_NEXTBOOTID: "3",
-        },
+        ssdp.SsdpServiceInfo(
+            ssdp_usn=MOCK_DEVICE_USN,
+            ssdp_udn=MOCK_DEVICE_UDN,
+            ssdp_headers={
+                "NTS": "ssdp:update",
+                ssdp.ATTR_SSDP_BOOTID: "2",
+                ssdp.ATTR_SSDP_NEXTBOOTID: "3",
+            },
+            ssdp_st=MOCK_DEVICE_ST,
+            upnp={},
+        ),
         ssdp.SsdpChange.UPDATE,
     )
     await hass.async_block_till_done()
@@ -1380,11 +1416,13 @@ async def test_ssdp_update_missed_bootid(
 
     # Send a new SSDP alive with the new boot ID, device should reconnect
     await ssdp_callback(
-        {
-            ssdp.ATTR_SSDP_USN: MOCK_DEVICE_USN,
-            ssdp.ATTR_SSDP_LOCATION: MOCK_DEVICE_LOCATION,
-            ssdp.ATTR_SSDP_BOOTID: "3",
-        },
+        ssdp.SsdpServiceInfo(
+            ssdp_usn=MOCK_DEVICE_USN,
+            ssdp_location=MOCK_DEVICE_LOCATION,
+            ssdp_headers={ssdp.ATTR_SSDP_BOOTID: "3"},
+            ssdp_st=MOCK_DEVICE_ST,
+            upnp={},
+        ),
         ssdp.SsdpChange.ALIVE,
     )
     await hass.async_block_till_done()
@@ -1417,11 +1455,13 @@ async def test_ssdp_bootid(
     # Send SSDP alive with boot ID
     ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0]
     await ssdp_callback(
-        {
-            ssdp.ATTR_SSDP_USN: MOCK_DEVICE_USN,
-            ssdp.ATTR_SSDP_LOCATION: MOCK_DEVICE_LOCATION,
-            ssdp.ATTR_SSDP_BOOTID: "1",
-        },
+        ssdp.SsdpServiceInfo(
+            ssdp_usn=MOCK_DEVICE_USN,
+            ssdp_location=MOCK_DEVICE_LOCATION,
+            ssdp_headers={ssdp.ATTR_SSDP_BOOTID: "1"},
+            ssdp_st=MOCK_DEVICE_ST,
+            upnp={},
+        ),
         ssdp.SsdpChange.ALIVE,
     )
     await hass.async_block_till_done()
@@ -1435,11 +1475,13 @@ async def test_ssdp_bootid(
 
     # Send SSDP alive with same boot ID, nothing should happen
     await ssdp_callback(
-        {
-            ssdp.ATTR_SSDP_USN: MOCK_DEVICE_USN,
-            ssdp.ATTR_SSDP_LOCATION: MOCK_DEVICE_LOCATION,
-            ssdp.ATTR_SSDP_BOOTID: "1",
-        },
+        ssdp.SsdpServiceInfo(
+            ssdp_usn=MOCK_DEVICE_USN,
+            ssdp_location=MOCK_DEVICE_LOCATION,
+            ssdp_headers={ssdp.ATTR_SSDP_BOOTID: "1"},
+            ssdp_st=MOCK_DEVICE_ST,
+            upnp={},
+        ),
         ssdp.SsdpChange.ALIVE,
     )
     await hass.async_block_till_done()
@@ -1453,11 +1495,13 @@ async def test_ssdp_bootid(
 
     # Send a new SSDP alive with an incremented boot ID, device should be dis/reconnected
     await ssdp_callback(
-        {
-            ssdp.ATTR_SSDP_USN: MOCK_DEVICE_USN,
-            ssdp.ATTR_SSDP_LOCATION: MOCK_DEVICE_LOCATION,
-            ssdp.ATTR_SSDP_BOOTID: "2",
-        },
+        ssdp.SsdpServiceInfo(
+            ssdp_usn=MOCK_DEVICE_USN,
+            ssdp_location=MOCK_DEVICE_LOCATION,
+            ssdp_headers={ssdp.ATTR_SSDP_BOOTID: "2"},
+            ssdp_st=MOCK_DEVICE_ST,
+            upnp={},
+        ),
         ssdp.SsdpChange.ALIVE,
     )
     await hass.async_block_till_done()

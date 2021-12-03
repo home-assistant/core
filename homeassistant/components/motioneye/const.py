@@ -80,6 +80,9 @@ EVENT_FILE_STORED_KEYS: Final = [
     KEY_WEB_HOOK_CS_MOTION_VERSION,
 ]
 
+EVENT_FILE_URL: Final = "file_url"
+EVENT_MEDIA_CONTENT_ID: Final = "media_content_id"
+
 MOTIONEYE_MANUFACTURER: Final = "motionEye"
 
 SERVICE_SET_TEXT_OVERLAY: Final = "set_text_overlay"

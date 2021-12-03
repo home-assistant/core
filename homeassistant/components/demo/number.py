@@ -1,10 +1,7 @@
 """Demo platform that offers a fake Number entity."""
 from __future__ import annotations
 
-from typing import Literal
-
-from homeassistant.components.number import NumberEntity
-from homeassistant.components.number.const import MODE_AUTO, MODE_BOX, MODE_SLIDER
+from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.helpers.entity import DeviceInfo
 
@@ -21,7 +18,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 42.0,
                 "mdi:volume-high",
                 False,
-                mode=MODE_SLIDER,
+                mode=NumberMode.SLIDER,
             ),
             DemoNumber(
                 "pwm1",
@@ -32,7 +29,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 0.0,
                 1.0,
                 0.01,
-                MODE_BOX,
+                NumberMode.BOX,
             ),
             DemoNumber(
                 "large_range",
@@ -78,7 +75,7 @@ class DemoNumber(NumberEntity):
         min_value: float | None = None,
         max_value: float | None = None,
         step: float | None = None,
-        mode: Literal["auto", "box", "slider"] = MODE_AUTO,
+        mode: NumberMode = NumberMode.AUTO,
     ) -> None:
         """Initialize the Demo Number entity."""
         self._attr_assumed_state = assumed

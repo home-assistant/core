@@ -78,8 +78,7 @@ class ThomsonDeviceScanner(DeviceScanner):
             return False
 
         _LOGGER.info("Checking ARP")
-        data = self.get_thomson_data()
-        if not data:
+        if not (data := self.get_thomson_data()):
             return False
 
         # Flag C stands for CONNECTED

@@ -138,13 +138,10 @@ class ScreenLogicClimate(ScreenlogicEntity, ClimateEntity, RestoreEntity):
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             raise ValueError(f"Expected attribute {ATTR_TEMPERATURE}")
 
-        async with self.coordinator.api_lock:
-            success = await self.hass.async_add_executor_job(
-                self.gateway.set_heat_temp, int(self._data_key), int(temperature)
-            )
-
-        if success:
-            await self.coordinator.async_request_refresh()
+        if await self.gateway.async_set_heat_temp(
+            int(self._data_key), int(temperature)
+        ):
+            await self._async_refresh()
         else:
             raise HomeAssistantError(
                 f"Failed to set_temperature {temperature} on body {self.body['body_type']['value']}"
@@ -157,13 +154,8 @@ class ScreenLogicClimate(ScreenlogicEntity, ClimateEntity, RestoreEntity):
         else:
             mode = HEAT_MODE.NUM_FOR_NAME[self.preset_mode]
 
-        async with self.coordinator.api_lock:
-            success = await self.hass.async_add_executor_job(
-                self.gateway.set_heat_mode, int(self._data_key), int(mode)
-            )
-
-        if success:
-            await self.coordinator.async_request_refresh()
+        if await self.gateway.async_set_heat_mode(int(self._data_key), int(mode)):
+            await self._async_refresh()
         else:
             raise HomeAssistantError(
                 f"Failed to set_hvac_mode {mode} on body {self.body['body_type']['value']}"
@@ -176,13 +168,8 @@ class ScreenLogicClimate(ScreenlogicEntity, ClimateEntity, RestoreEntity):
         if self.hvac_mode == HVAC_MODE_OFF:
             return
 
-        async with self.coordinator.api_lock:
-            success = await self.hass.async_add_executor_job(
-                self.gateway.set_heat_mode, int(self._data_key), int(mode)
-            )
-
-        if success:
-            await self.coordinator.async_request_refresh()
+        if await self.gateway.async_set_heat_mode(int(self._data_key), int(mode)):
+            await self._async_refresh()
         else:
             raise HomeAssistantError(
                 f"Failed to set_preset_mode {mode} on body {self.body['body_type']['value']}"

@@ -364,20 +364,16 @@ def test_supported_pgsql(caplog, pgsql_version):
     "sqlite_version,message",
     [
         (
-            "3.32.0",
-            "Version 3.32.0 of SQLite is not supported; minimum supported version is 3.32.1.",
-        ),
-        (
-            "3.31.0",
-            "Version 3.31.0 of SQLite is not supported; minimum supported version is 3.32.1.",
+            "3.30.0",
+            "Version 3.30.0 of SQLite is not supported; minimum supported version is 3.31.0.",
         ),
         (
             "2.0.0",
-            "Version 2.0.0 of SQLite is not supported; minimum supported version is 3.32.1.",
+            "Version 2.0.0 of SQLite is not supported; minimum supported version is 3.31.0.",
         ),
         (
             "dogs",
-            "Version dogs of SQLite is not supported; minimum supported version is 3.32.1.",
+            "Version dogs of SQLite is not supported; minimum supported version is 3.31.0.",
         ),
     ],
 )
@@ -410,7 +406,7 @@ def test_warn_outdated_sqlite(caplog, sqlite_version, message):
 @pytest.mark.parametrize(
     "sqlite_version",
     [
-        ("3.32.1"),
+        ("3.31.0"),
         ("3.33.0"),
     ],
 )

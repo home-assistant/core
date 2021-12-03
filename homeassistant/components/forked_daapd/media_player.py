@@ -797,8 +797,7 @@ class ForkedDaapdUpdater:
         if (
             "queue" in update_types
         ):  # update queue, queue before player for async_play_media
-            queue = await self._api.get_request("queue")
-            if queue:
+            if queue := await self._api.get_request("queue"):
                 update_events["queue"] = asyncio.Event()
                 async_dispatcher_send(
                     self.hass,
@@ -808,8 +807,7 @@ class ForkedDaapdUpdater:
                 )
         # order of below don't matter
         if not {"outputs", "volume"}.isdisjoint(update_types):  # update outputs
-            outputs = await self._api.get_request("outputs")
-            if outputs:
+            if outputs := await self._api.get_request("outputs"):
                 outputs = outputs["outputs"]
                 update_events[
                     "outputs"
@@ -838,8 +836,7 @@ class ForkedDaapdUpdater:
         if not {"player", "options", "volume"}.isdisjoint(
             update_types
         ):  # update player
-            player = await self._api.get_request("player")
-            if player:
+            if player := await self._api.get_request("player"):
                 update_events["player"] = asyncio.Event()
                 if update_events.get("queue"):
                     await update_events[

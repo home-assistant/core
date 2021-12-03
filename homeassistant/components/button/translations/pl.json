@@ -1,0 +1,11 @@
+{
+    "device_automation": {
+        "action_type": {
+            "press": "naci\u015bnij przycisk {entity_name}"
+        },
+        "trigger_type": {
+            "pressed": "{entity_name} zosta\u0142 naci\u015bni\u0119ty"
+        }
+    },
+    "title": "Przycisk"
+}

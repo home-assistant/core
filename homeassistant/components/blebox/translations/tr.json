@@ -9,12 +9,15 @@
             "unknown": "Beklenmeyen hata",
             "unsupported_version": "BleBox cihaz\u0131n\u0131n g\u00fcncel olmayan bellenimi var. L\u00fctfen \u00f6nce y\u00fckseltin."
         },
+        "flow_title": "{name} ({host})",
         "step": {
             "user": {
                 "data": {
-                    "host": "\u0130p Adresi",
+                    "host": "IP Adresi",
                     "port": "Port"
-                }
+                },
+                "description": "BleBox'\u0131n\u0131z\u0131 Home Assistant ile entegre olacak \u015fekilde ayarlay\u0131n.",
+                "title": "BleBox cihaz\u0131n\u0131z\u0131 kurun"
             }
         }
     }

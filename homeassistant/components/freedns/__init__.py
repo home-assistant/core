@@ -72,7 +72,7 @@ async def _update_freedns(hass, session, url, auth_token):
         params[auth_token] = ""
 
     try:
-        with async_timeout.timeout(TIMEOUT):
+        async with async_timeout.timeout(TIMEOUT):
             resp = await session.get(url, params=params)
             body = await resp.text()
 

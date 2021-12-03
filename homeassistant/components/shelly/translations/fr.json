@@ -33,14 +33,17 @@
             "button": "Bouton",
             "button1": "Premier bouton",
             "button2": "Deuxi\u00e8me bouton",
-            "button3": "Troisi\u00e8me bouton"
+            "button3": "Troisi\u00e8me bouton",
+            "button4": "Quatri\u00e8me bouton"
         },
         "trigger_type": {
             "double": "{subtype} double-cliqu\u00e9",
-            "long": " {sous-type} long cliqu\u00e9",
+            "long": "{subtype} long cliqu\u00e9",
+            "long_push": "{subtype} appui long",
             "long_single": "{subtype} clic long et simple clic",
             "single": "{subtype} simple clic",
             "single_long": "{subtype} simple clic, puis un clic long",
+            "single_push": "{subtype} simple pression",
             "triple": "{subtype} cliqu\u00e9 trois fois"
         }
     }

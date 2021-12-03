@@ -243,7 +243,12 @@ class TwitterNotificationService(BaseNotificationService):
     def log_error_resp(resp):
         """Log error response."""
         obj = json.loads(resp.text)
-        error_message = obj["errors"]
+        if "errors" in obj:
+            error_message = obj["errors"]
+        elif "error" in obj:
+            error_message = obj["error"]
+        else:
+            error_message = resp.text
         _LOGGER.error("Error %s: %s", resp.status_code, error_message)
 
     @staticmethod

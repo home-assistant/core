@@ -9,6 +9,7 @@ from homeassistant.components import (
     alert,
     automation,
     binary_sensor,
+    button,
     camera,
     cover,
     fan,
@@ -420,6 +421,22 @@ class SwitchCapabilities(AlexaEntity):
         return [
             AlexaPowerController(self.entity),
             AlexaEndpointHealth(self.hass, self.entity),
+            Alexa(self.hass),
+        ]
+
+
+@ENTITY_ADAPTERS.register(button.DOMAIN)
+class ButtonCapabilities(AlexaEntity):
+    """Class to represent Button capabilities."""
+
+    def default_display_categories(self):
+        """Return the display categories for this entity."""
+        return [DisplayCategory.ACTIVITY_TRIGGER]
+
+    def interfaces(self):
+        """Yield the supported interfaces."""
+        return [
+            AlexaSceneController(self.entity, supports_deactivation=False),
             Alexa(self.hass),
         ]
 

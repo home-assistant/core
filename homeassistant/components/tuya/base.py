@@ -26,6 +26,7 @@ class IntegerTypeData:
     scale: float
     step: float
     unit: str | None = None
+    type: str | None = None
 
     @property
     def max_scaled(self) -> float:
@@ -45,6 +46,10 @@ class IntegerTypeData:
     def scale_value(self, value: float | int) -> float:
         """Scale a value."""
         return value * 1.0 / (10 ** self.scale)
+
+    def scale_value_back(self, value: float | int) -> int:
+        """Return raw value for scaled."""
+        return int(value * (10 ** self.scale))
 
     def remap_value_to(
         self,
@@ -82,6 +87,20 @@ class EnumTypeData:
     def from_json(cls, data: str) -> EnumTypeData:
         """Load JSON string and return a EnumTypeData object."""
         return cls(**json.loads(data))
+
+
+@dataclass
+class ElectricityTypeData:
+    """Electricity Type Data."""
+
+    electriccurrent: str | None = None
+    power: str | None = None
+    voltage: str | None = None
+
+    @classmethod
+    def from_json(cls, data: str) -> ElectricityTypeData:
+        """Load JSON string and return a ElectricityTypeData object."""
+        return cls(**json.loads(data.lower()))
 
 
 class TuyaEntity(Entity):

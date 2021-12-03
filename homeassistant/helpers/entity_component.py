@@ -173,9 +173,7 @@ class EntityComponent:
         """Unload a config entry."""
         key = config_entry.entry_id
 
-        platform = self._platforms.pop(key, None)
-
-        if platform is None:
+        if (platform := self._platforms.pop(key, None)) is None:
             raise ValueError("Config entry was never loaded!")
 
         await platform.async_reset()

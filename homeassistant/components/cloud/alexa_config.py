@@ -313,7 +313,7 @@ class AlexaConfig(alexa_config.AbstractConfig):
             )
 
         try:
-            with async_timeout.timeout(10):
+            async with async_timeout.timeout(10):
                 await asyncio.wait(tasks, return_when=asyncio.ALL_COMPLETED)
 
             return True

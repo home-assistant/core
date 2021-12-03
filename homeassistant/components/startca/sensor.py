@@ -193,7 +193,7 @@ class StartcaData:
         """Get the Start.ca bandwidth data from the web service."""
         _LOGGER.debug("Updating Start.ca usage data")
         url = f"https://www.start.ca/support/usage/api?key={self.api_key}"
-        with async_timeout.timeout(REQUEST_TIMEOUT):
+        async with async_timeout.timeout(REQUEST_TIMEOUT):
             req = await self.websession.get(url)
         if req.status != HTTPStatus.OK:
             _LOGGER.error("Request failed with status: %u", req.status)
