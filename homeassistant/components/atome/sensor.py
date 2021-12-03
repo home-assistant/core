@@ -2,7 +2,7 @@
 from datetime import timedelta
 import logging
 
-from pyatome.client import AtomeClient, PyAtomeError
+from pykeyatome.client import AtomeClient, PyAtomeError
 import voluptuous as vol
 
 from homeassistant.components.sensor import (

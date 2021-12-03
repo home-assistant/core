@@ -1365,9 +1365,6 @@ pyatag==0.3.5.3
 # homeassistant.components.netatmo
 pyatmo==6.2.0
 
-# homeassistant.components.atome
-pyatome==0.1.1
-
 # homeassistant.components.apple_tv
 pyatv==0.8.2
 
@@ -1572,6 +1569,9 @@ pyisy==3.0.0
 
 # homeassistant.components.itach
 pyitachip2ir==0.0.7
+
+# homeassistant.components.atome
+pykeyatome==1.1.2
 
 # homeassistant.components.kira
 pykira==0.1.1
