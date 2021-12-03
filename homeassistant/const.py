@@ -46,7 +46,7 @@ class Platform(StrEnum):
     SELECT = "select"
     SENSOR = "sensor"
     SIREN = "siren"
-    SST = "sst"
+    STT = "stt"
     SWITCH = "switch"
     TTS = "tts"
     VACUUM = "vacuum"
