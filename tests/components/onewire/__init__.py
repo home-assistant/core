@@ -87,7 +87,6 @@ def check_entities(
         assert state.attributes[ATTR_DEVICE_FILE] == expected_entity.get(
             ATTR_DEVICE_FILE, registry_entry.unique_id
         )
-        assert state.state == expected_entity[ATTR_STATE]
         for attr in FIXED_ATTRIBUTES:
             assert state.attributes.get(attr) == expected_entity.get(attr)
 
