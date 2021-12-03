@@ -8,7 +8,7 @@ from aiohttp import web
 from aiohttp.web_exceptions import HTTPServiceUnavailable
 
 from homeassistant import config_entries
-from homeassistant.components.hassio import HassioServiceInfo
+from homeassistant.components import hassio
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import ATTR_NAME, ATTR_SERVICE, EVENT_HOMEASSISTANT_START
 from homeassistant.core import HomeAssistant, callback
@@ -93,7 +93,7 @@ class HassIODiscovery(HomeAssistantView):
         await self.hass.config_entries.flow.async_init(
             service,
             context={"source": config_entries.SOURCE_HASSIO},
-            data=HassioServiceInfo(config=config_data),
+            data=hassio.HassioServiceInfo(config=config_data),
         )
 
     async def async_process_del(self, data):
