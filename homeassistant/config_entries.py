@@ -1357,7 +1357,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         self, discovery_info: HassioServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by HASS IO discovery."""
-        return await self.async_step_discovery(dict(discovery_info.config))
+        return await self.async_step_discovery(discovery_info.config)
 
     async def async_step_homekit(
         self, discovery_info: ZeroconfServiceInfo
