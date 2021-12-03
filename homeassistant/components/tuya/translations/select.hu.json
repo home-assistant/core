@@ -14,6 +14,10 @@
             "0": "Alacsony \u00e9rz\u00e9kenys\u00e9g",
             "1": "Magas \u00e9rz\u00e9kenys\u00e9g"
         },
+        "tuya__fingerbot_mode": {
+            "click": "Lenyom\u00e1s",
+            "switch": "Kapcsol\u00e1s"
+        },
         "tuya__ipc_work_mode": {
             "0": "Alacsony fogyaszt\u00e1s\u00fa m\u00f3d",
             "1": "Folyamatos \u00fczemm\u00f3d"

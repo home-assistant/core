@@ -16,5 +16,6 @@
   "zeroconf": [{ "type": "_miio._udp.local.", "name": "yeelink-*" }],
   "homekit": {
     "models": ["YL*"]
-  }
+  },
+  "after_dependencies": ["ssdp"]
 }

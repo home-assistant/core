@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_VOLTAGE,
+    STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
 )
@@ -31,6 +32,16 @@ DEVICE_CLASS_MAPPING = {
     "current": DEVICE_CLASS_POWER,
     "total": DEVICE_CLASS_ENERGY,
     "voltage": DEVICE_CLASS_VOLTAGE,
+}
+
+STATE_CLASS_MAPPING = {
+    "battery": STATE_CLASS_MEASUREMENT,
+    "temperature": STATE_CLASS_MEASUREMENT,
+    "light": STATE_CLASS_MEASUREMENT,
+    "humidity": STATE_CLASS_MEASUREMENT,
+    "current": STATE_CLASS_MEASUREMENT,
+    "total": STATE_CLASS_TOTAL_INCREASING,
+    "voltage": STATE_CLASS_MEASUREMENT,
 }
 
 
@@ -106,6 +117,9 @@ class DevoloGenericMultiLevelDeviceEntity(DevoloMultiLevelDeviceEntity):
         self._attr_device_class = DEVICE_CLASS_MAPPING.get(
             self._multi_level_sensor_property.sensor_type
         )
+        self._attr_state_class = STATE_CLASS_MAPPING.get(
+            self._multi_level_sensor_property.sensor_type
+        )
         self._attr_native_unit_of_measurement = self._multi_level_sensor_property.unit
 
         self._value = self._multi_level_sensor_property.value
@@ -132,6 +146,7 @@ class DevoloBatteryEntity(DevoloMultiLevelDeviceEntity):
         )
 
         self._attr_device_class = DEVICE_CLASS_MAPPING.get("battery")
+        self._attr_state_class = STATE_CLASS_MAPPING.get("battery")
         self._attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
         self._attr_native_unit_of_measurement = PERCENTAGE
 
@@ -158,6 +173,7 @@ class DevoloConsumptionEntity(DevoloMultiLevelDeviceEntity):
 
         self._sensor_type = consumption
         self._attr_device_class = DEVICE_CLASS_MAPPING.get(consumption)
+        self._attr_state_class = STATE_CLASS_MAPPING.get(consumption)
         self._attr_native_unit_of_measurement = getattr(
             device_instance.consumption_property[element_uid], f"{consumption}_unit"
         )

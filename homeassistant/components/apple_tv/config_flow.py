@@ -15,7 +15,6 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import CONF_CREDENTIALS, CONF_IDENTIFIER, CONF_START_OFF, DOMAIN
 
@@ -145,17 +144,17 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_zeroconf(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle device found via zeroconf."""
-        service_type = discovery_info[zeroconf.ATTR_TYPE]
-        properties = discovery_info[zeroconf.ATTR_PROPERTIES]
+        service_type = discovery_info.type
+        properties = discovery_info.properties
 
         if service_type == "_mediaremotetv._tcp.local.":
             identifier = properties["UniqueIdentifier"]
             name = properties["Name"]
         elif service_type == "_touch-able._tcp.local.":
-            identifier = discovery_info[zeroconf.ATTR_NAME].split(".")[0]
+            identifier = discovery_info.name.split(".")[0]
             name = properties["CtlN"]
         else:
             return self.async_abort(reason="unknown")

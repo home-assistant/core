@@ -172,9 +172,10 @@ def test_entity_id():
     assert schema("sensor.LIGHT") == "sensor.light"
 
 
-def test_entity_ids():
+@pytest.mark.parametrize("validator", [cv.entity_ids, cv.entity_ids_or_uuids])
+def test_entity_ids(validator):
     """Test entity ID validation."""
-    schema = vol.Schema(cv.entity_ids)
+    schema = vol.Schema(validator)
 
     options = (
         "invalid_entity",
@@ -192,6 +193,32 @@ def test_entity_ids():
         schema(value)
 
     assert schema("sensor.LIGHT, light.kitchen ") == ["sensor.light", "light.kitchen"]
+
+
+def test_entity_ids_or_uuids():
+    """Test entity ID validation."""
+    schema = vol.Schema(cv.entity_ids_or_uuids)
+
+    valid_uuid = "a266a680b608c32770e6c45bfe6b8411"
+    valid_uuid2 = "a266a680b608c32770e6c45bfe6b8412"
+    invalid_uuid_capital_letters = "A266A680B608C32770E6C45bfE6B8412"
+    options = (
+        "invalid_uuid",
+        invalid_uuid_capital_letters,
+        f"{valid_uuid},invalid_uuid",
+        ["invalid_uuid"],
+        [valid_uuid, "invalid_uuid"],
+        [f"{valid_uuid},invalid_uuid"],
+    )
+    for value in options:
+        with pytest.raises(vol.MultipleInvalid):
+            schema(value)
+
+    options = ([], [valid_uuid], valid_uuid)
+    for value in options:
+        schema(value)
+
+    assert schema(f"{valid_uuid}, {valid_uuid2} ") == [valid_uuid, valid_uuid2]
 
 
 def test_entity_domain():

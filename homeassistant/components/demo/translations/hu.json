@@ -9,7 +9,7 @@
             },
             "options_1": {
                 "data": {
-                    "bool": "Opcion\u00e1lis logikai \u00e9rt\u00e9k",
+                    "bool": "Opcion\u00e1lis logikai v\u00e1lt\u00f3",
                     "constant": "\u00c1lland\u00f3",
                     "int": "Numerikus bemenet"
                 }

@@ -18,7 +18,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.components.climate.const import HVAC_MODE_HEAT, HVAC_MODES
 from homeassistant.components.cover import DEVICE_CLASSES as COVER_DEVICE_CLASSES
-from homeassistant.components.number.const import MODE_AUTO, MODE_BOX, MODE_SLIDER
+from homeassistant.components.number import NumberMode
 from homeassistant.components.sensor import CONF_STATE_CLASS, STATE_CLASSES_SCHEMA
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
@@ -201,7 +201,11 @@ sync_state_validator = vol.Any(
 
 
 class ConnectionSchema:
-    """Voluptuous schema for KNX connection."""
+    """
+    Voluptuous schema for KNX connection.
+
+    DEPRECATED: Migrated to config and options flow. Will be removed in a future version of Home Assistant.
+    """
 
     CONF_KNX_LOCAL_IP = "local_ip"
     CONF_KNX_MCAST_GRP = "multicast_group"
@@ -209,6 +213,9 @@ class ConnectionSchema:
     CONF_KNX_RATE_LIMIT = "rate_limit"
     CONF_KNX_ROUTE_BACK = "route_back"
     CONF_KNX_STATE_UPDATER = "state_updater"
+
+    CONF_KNX_DEFAULT_STATE_UPDATER = True
+    CONF_KNX_DEFAULT_RATE_LIMIT = 20
 
     TUNNELING_SCHEMA = vol.Schema(
         {
@@ -229,8 +236,10 @@ class ConnectionSchema:
         ): ia_validator,
         vol.Optional(CONF_KNX_MCAST_GRP, default=DEFAULT_MCAST_GRP): cv.string,
         vol.Optional(CONF_KNX_MCAST_PORT, default=DEFAULT_MCAST_PORT): cv.port,
-        vol.Optional(CONF_KNX_STATE_UPDATER, default=True): cv.boolean,
-        vol.Optional(CONF_KNX_RATE_LIMIT, default=20): vol.All(
+        vol.Optional(
+            CONF_KNX_STATE_UPDATER, default=CONF_KNX_DEFAULT_STATE_UPDATER
+        ): cv.boolean,
+        vol.Optional(CONF_KNX_RATE_LIMIT, default=CONF_KNX_DEFAULT_RATE_LIMIT): vol.All(
             vol.Coerce(int), vol.Range(min=1, max=100)
         ),
     }
@@ -777,14 +786,14 @@ class NumberSchema(KNXPlatformSchema):
     CONF_STEP = "step"
     DEFAULT_NAME = "KNX Number"
 
-    NUMBER_MODES: Final = [MODE_AUTO, MODE_BOX, MODE_SLIDER]
-
     ENTITY_SCHEMA = vol.All(
         vol.Schema(
             {
                 vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
                 vol.Optional(CONF_RESPOND_TO_READ, default=False): cv.boolean,
-                vol.Optional(CONF_MODE, default=MODE_AUTO): vol.In(NUMBER_MODES),
+                vol.Optional(CONF_MODE, default=NumberMode.AUTO): vol.Coerce(
+                    NumberMode
+                ),
                 vol.Required(CONF_TYPE): numeric_type_validator,
                 vol.Required(KNX_ADDRESS): ga_list_validator,
                 vol.Optional(CONF_STATE_ADDRESS): ga_list_validator,

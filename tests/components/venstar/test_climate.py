@@ -1,5 +1,7 @@
 """The climate tests for the venstar integration."""
 
+from unittest.mock import patch
+
 from homeassistant.components.climate.const import (
     SUPPORT_FAN_MODE,
     SUPPORT_PRESET_MODE,
@@ -18,7 +20,8 @@ EXPECTED_BASE_SUPPORTED_FEATURES = (
 async def test_colortouch(hass):
     """Test interfacing with a venstar colortouch with attached humidifier."""
 
-    await async_init_integration(hass)
+    with patch("homeassistant.components.onewire.sensor.asyncio.sleep"):
+        await async_init_integration(hass)
 
     state = hass.states.get("climate.colortouch")
     assert state.state == "heat"
@@ -53,7 +56,8 @@ async def test_colortouch(hass):
 async def test_t2000(hass):
     """Test interfacing with a venstar T2000 presently turned off."""
 
-    await async_init_integration(hass)
+    with patch("homeassistant.components.onewire.sensor.asyncio.sleep"):
+        await async_init_integration(hass)
 
     state = hass.states.get("climate.t2000")
     assert state.state == "off"

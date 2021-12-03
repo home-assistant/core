@@ -24,7 +24,6 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 import homeassistant.helpers.entity_registry as er
-from homeassistant.helpers.event import async_call_later
 
 from .const import (
     ATTR_LAST_DATA,
@@ -61,25 +60,24 @@ def async_hydrate_station_data(data: dict[str, Any]) -> dict[str, Any]:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Ambient PWS as config entry."""
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {}
-
     if not entry.unique_id:
         hass.config_entries.async_update_entry(
             entry, unique_id=entry.data[CONF_APP_KEY]
         )
 
+    ambient = AmbientStation(
+        hass,
+        entry,
+        Websocket(entry.data[CONF_APP_KEY], entry.data[CONF_API_KEY]),
+    )
+
     try:
-        ambient = AmbientStation(
-            hass,
-            entry,
-            Websocket(entry.data[CONF_APP_KEY], entry.data[CONF_API_KEY]),
-        )
-        hass.loop.create_task(ambient.ws_connect())
-        hass.data[DOMAIN][entry.entry_id] = ambient
+        await ambient.ws_connect()
     except WebsocketError as err:
         LOGGER.error("Config entry failed: %s", err)
         raise ConfigEntryNotReady from err
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = ambient
 
     async def _async_disconnect_websocket(_: Event) -> None:
         await ambient.websocket.disconnect()
@@ -139,20 +137,6 @@ class AmbientStation:
         self.stations: dict[str, dict] = {}
         self.websocket = websocket
 
-    async def _attempt_connect(self) -> None:
-        """Attempt to connect to the socket (retrying later on fail)."""
-
-        async def connect(timestamp: int | None = None) -> None:
-            """Connect."""
-            await self.websocket.connect()
-
-        try:
-            await connect()
-        except WebsocketError as err:
-            LOGGER.error("Error with the websocket connection: %s", err)
-            self._ws_reconnect_delay = min(2 * self._ws_reconnect_delay, 480)
-            async_call_later(self._hass, self._ws_reconnect_delay, connect)
-
     async def ws_connect(self) -> None:
         """Register handlers and connect to the websocket."""
 
@@ -203,7 +187,7 @@ class AmbientStation:
         self.websocket.on_disconnect(on_disconnect)
         self.websocket.on_subscribed(on_subscribed)
 
-        await self._attempt_connect()
+        await self.websocket.connect()
 
     async def ws_disconnect(self) -> None:
         """Disconnect from the websocket."""

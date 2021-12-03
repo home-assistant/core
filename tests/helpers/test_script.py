@@ -3,7 +3,9 @@
 import asyncio
 from contextlib import contextmanager
 from datetime import timedelta
+from functools import reduce
 import logging
+import operator
 from types import MappingProxyType
 from unittest import mock
 from unittest.mock import AsyncMock, patch
@@ -23,7 +25,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import SERVICE_CALL_LIMIT, Context, CoreState, callback
 from homeassistant.exceptions import ConditionError, ServiceNotFound
-from homeassistant.helpers import config_validation as cv, script, trace
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_registry as er,
+    script,
+    template,
+    trace,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -746,6 +754,7 @@ async def test_wait_basic(hass, action_type):
             "to": "off",
         }
     sequence = cv.SCRIPT_SCHEMA(action)
+    sequence = await script.async_validate_actions_config(hass, sequence)
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
     wait_started_flag = async_watch_for_action(script_obj, wait_alias)
 
@@ -846,6 +855,7 @@ async def test_wait_basic_times_out(hass, action_type):
             "to": "off",
         }
     sequence = cv.SCRIPT_SCHEMA(action)
+    sequence = await script.async_validate_actions_config(hass, sequence)
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
     wait_started_flag = async_watch_for_action(script_obj, wait_alias)
     timed_out = False
@@ -902,6 +912,7 @@ async def test_multiple_runs_wait(hass, action_type):
             {"event": event, "event_data": {"value": 2}},
         ]
     )
+    sequence = await script.async_validate_actions_config(hass, sequence)
     script_obj = script.Script(
         hass, sequence, "Test Name", "test_domain", script_mode="parallel", max_runs=2
     )
@@ -950,6 +961,7 @@ async def test_cancel_wait(hass, action_type):
             }
         }
     sequence = cv.SCRIPT_SCHEMA([action, {"event": event}])
+    sequence = await script.async_validate_actions_config(hass, sequence)
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
     wait_started_flag = async_watch_for_action(script_obj, "wait")
 
@@ -1047,6 +1059,7 @@ async def test_wait_timeout(hass, caplog, timeout_param, action_type):
     action["timeout"] = timeout_param
     action["continue_on_timeout"] = True
     sequence = cv.SCRIPT_SCHEMA([action, {"event": event}])
+    sequence = await script.async_validate_actions_config(hass, sequence)
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
     wait_started_flag = async_watch_for_action(script_obj, "wait")
 
@@ -1114,6 +1127,7 @@ async def test_wait_continue_on_timeout(
     if continue_on_timeout is not None:
         action["continue_on_timeout"] = continue_on_timeout
     sequence = cv.SCRIPT_SCHEMA([action, {"event": event}])
+    sequence = await script.async_validate_actions_config(hass, sequence)
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
     wait_started_flag = async_watch_for_action(script_obj, "wait")
 
@@ -1285,6 +1299,7 @@ async def test_wait_variables_out(hass, mode, action_type):
         },
     ]
     sequence = cv.SCRIPT_SCHEMA(sequence)
+    sequence = await script.async_validate_actions_config(hass, sequence)
     script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
     wait_started_flag = async_watch_for_action(script_obj, "wait")
 
@@ -1324,11 +1339,13 @@ async def test_wait_variables_out(hass, mode, action_type):
 
 async def test_wait_for_trigger_bad(hass, caplog):
     """Test bad wait_for_trigger."""
+    sequence = cv.SCRIPT_SCHEMA(
+        {"wait_for_trigger": {"platform": "state", "entity_id": "sensor.abc"}}
+    )
+    sequence = await script.async_validate_actions_config(hass, sequence)
     script_obj = script.Script(
         hass,
-        cv.SCRIPT_SCHEMA(
-            {"wait_for_trigger": {"platform": "state", "entity_id": "sensor.abc"}}
-        ),
+        sequence,
         "Test Name",
         "test_domain",
     )
@@ -1354,11 +1371,13 @@ async def test_wait_for_trigger_bad(hass, caplog):
 
 async def test_wait_for_trigger_generated_exception(hass, caplog):
     """Test bad wait_for_trigger."""
+    sequence = cv.SCRIPT_SCHEMA(
+        {"wait_for_trigger": {"platform": "state", "entity_id": "sensor.abc"}}
+    )
+    sequence = await script.async_validate_actions_config(hass, sequence)
     script_obj = script.Script(
         hass,
-        cv.SCRIPT_SCHEMA(
-            {"wait_for_trigger": {"platform": "state", "entity_id": "sensor.abc"}}
-        ),
+        sequence,
         "Test Name",
         "test_domain",
     )
@@ -1472,6 +1491,81 @@ async def test_condition_basic(hass, caplog):
                 {
                     "error_type": script._StopScript,
                     "result": {"entities": ["test.entity"], "result": False},
+                }
+            ],
+        },
+        expected_script_execution="aborted",
+    )
+
+
+async def test_condition_validation(hass, caplog):
+    """Test if we can use conditions which validate late in a script."""
+    registry = er.async_get(hass)
+    entry = registry.async_get_or_create(
+        "test", "hue", "1234", suggested_object_id="entity"
+    )
+    assert entry.entity_id == "test.entity"
+    event = "test_event"
+    events = async_capture_events(hass, event)
+    alias = "condition step"
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"event": event},
+            {
+                "alias": alias,
+                "condition": "state",
+                "entity_id": entry.id,
+                "state": "hello",
+            },
+            {"event": event},
+        ]
+    )
+    sequence = await script.async_validate_actions_config(hass, sequence)
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    hass.states.async_set("test.entity", "hello")
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert f"Test condition {alias}: True" in caplog.text
+    caplog.clear()
+    assert len(events) == 2
+
+    assert_action_trace(
+        {
+            "0": [{"result": {"event": "test_event", "event_data": {}}}],
+            "1": [{"result": {"result": True}}],
+            "1/entity_id/0": [
+                {"result": {"result": True, "state": "hello", "wanted_state": "hello"}}
+            ],
+            "2": [{"result": {"event": "test_event", "event_data": {}}}],
+        }
+    )
+
+    hass.states.async_set("test.entity", "goodbye")
+
+    await script_obj.async_run(context=Context())
+    await hass.async_block_till_done()
+
+    assert f"Test condition {alias}: False" in caplog.text
+    assert len(events) == 3
+
+    assert_action_trace(
+        {
+            "0": [{"result": {"event": "test_event", "event_data": {}}}],
+            "1": [
+                {
+                    "error_type": script._StopScript,
+                    "result": {"result": False},
+                }
+            ],
+            "1/entity_id/0": [
+                {
+                    "result": {
+                        "result": False,
+                        "state": "goodbye",
+                        "wanted_state": "hello",
+                    }
                 }
             ],
         },
@@ -3021,6 +3115,15 @@ async def test_set_redefines_variable(hass, caplog):
 
 async def test_validate_action_config(hass):
     """Validate action config."""
+
+    def templated_device_action(message):
+        return {
+            "device_id": "abcd",
+            "domain": "mobile_app",
+            "message": f"{message} {{{{ 5 + 5}}}}",
+            "type": "notify",
+        }
+
     configs = {
         cv.SCRIPT_ACTION_CALL_SERVICE: {"service": "light.turn_on"},
         cv.SCRIPT_ACTION_DELAY: {"delay": 5},
@@ -3031,24 +3134,22 @@ async def test_validate_action_config(hass):
         cv.SCRIPT_ACTION_CHECK_CONDITION: {
             "condition": "{{ states.light.kitchen.state == 'on' }}"
         },
-        cv.SCRIPT_ACTION_DEVICE_AUTOMATION: {
-            "domain": "light",
-            "entity_id": "light.kitchen",
-            "device_id": "abcd",
-            "type": "turn_on",
-        },
+        cv.SCRIPT_ACTION_DEVICE_AUTOMATION: templated_device_action("device"),
         cv.SCRIPT_ACTION_ACTIVATE_SCENE: {"scene": "scene.relax"},
         cv.SCRIPT_ACTION_REPEAT: {
-            "repeat": {"count": 3, "sequence": [{"event": "repeat_event"}]}
+            "repeat": {
+                "count": 3,
+                "sequence": [templated_device_action("repeat_event")],
+            }
         },
         cv.SCRIPT_ACTION_CHOOSE: {
             "choose": [
                 {
                     "condition": "{{ states.light.kitchen.state == 'on' }}",
-                    "sequence": [{"event": "choose_event"}],
+                    "sequence": [templated_device_action("choose_event")],
                 }
             ],
-            "default": [{"event": "choose_default_event"}],
+            "default": [templated_device_action("choose_default_event")],
         },
         cv.SCRIPT_ACTION_WAIT_FOR_TRIGGER: {
             "wait_for_trigger": [
@@ -3057,9 +3158,17 @@ async def test_validate_action_config(hass):
         },
         cv.SCRIPT_ACTION_VARIABLES: {"variables": {"hello": "world"}},
     }
+    expected_templates = {
+        cv.SCRIPT_ACTION_CHECK_CONDITION: None,
+        cv.SCRIPT_ACTION_DEVICE_AUTOMATION: [[]],
+        cv.SCRIPT_ACTION_REPEAT: [["repeat", "sequence", 0]],
+        cv.SCRIPT_ACTION_CHOOSE: [["choose", 0, "sequence", 0], ["default", 0]],
+        cv.SCRIPT_ACTION_WAIT_FOR_TRIGGER: None,
+    }
 
     for key in cv.ACTION_TYPE_SCHEMAS:
         assert key in configs, f"No validate config test found for {key}"
+        assert key in expected_templates or key in script.STATIC_VALIDATION_ACTION_TYPES
 
     # Verify we raise if we don't know the action type
     with patch(
@@ -3068,12 +3177,26 @@ async def test_validate_action_config(hass):
     ), pytest.raises(ValueError):
         await script.async_validate_action_config(hass, {})
 
+    # Verify each action can validate
+    validated_config = {}
     for action_type, config in configs.items():
         assert cv.determine_script_action(config) == action_type
         try:
-            await script.async_validate_action_config(hass, config)
+            validated_config[action_type] = await script.async_validate_action_config(
+                hass, config
+            )
         except vol.Invalid as err:
             assert False, f"{action_type} config invalid: {err}"
+
+    # Verify non-static actions have validated
+    for action_type, paths_to_templates in expected_templates.items():
+        if paths_to_templates is None:
+            continue
+        for path_to_template in paths_to_templates:
+            device_action = reduce(
+                operator.getitem, path_to_template, validated_config[action_type]
+            )
+            assert isinstance(device_action["message"], template.Template)
 
 
 async def test_embedded_wait_for_trigger_in_automation(hass):

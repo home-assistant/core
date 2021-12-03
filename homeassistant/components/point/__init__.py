@@ -315,7 +315,7 @@ class MinutPointEntity(Entity):
             connections={
                 (device_registry.CONNECTION_NETWORK_MAC, device["device_mac"])
             },
-            identifiers=device["device_id"],
+            identifiers={(DOMAIN, device["device_id"])},
             manufacturer="Minut",
             model=f"Point v{device['hardware_version']}",
             name=device["description"],

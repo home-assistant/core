@@ -38,7 +38,7 @@
         },
         "trigger_type": {
             "double": "{subtype} double-cliqu\u00e9",
-            "long": " {sous-type} long cliqu\u00e9",
+            "long": "{subtype} long cliqu\u00e9",
             "long_push": "{subtype} appui long",
             "long_single": "{subtype} clic long et simple clic",
             "single": "{subtype} simple clic",

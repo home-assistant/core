@@ -44,6 +44,10 @@
       "on": "[%key:common::state::on%]",
       "power_off": "[%key:common::state::off%]",
       "power_on": "[%key:common::state::on%]"
+    },
+    "tuya__fingerbot_mode": {
+      "click": "Push",
+      "switch": "Switch"
     }
   }
 }

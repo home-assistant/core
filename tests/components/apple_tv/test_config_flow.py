@@ -13,9 +13,12 @@ from homeassistant.components.apple_tv.const import CONF_START_OFF, DOMAIN
 from tests.common import MockConfigEntry
 
 DMAP_SERVICE = zeroconf.ZeroconfServiceInfo(
-    type="_touch-able._tcp.local.",
+    host="mock_host",
+    hostname="mock_hostname",
     name="dmapid.something",
+    port=None,
     properties={"CtlN": "Apple TV"},
+    type="_touch-able._tcp.local.",
 )
 
 
@@ -401,8 +404,12 @@ async def test_zeroconf_unsupported_service_aborts(hass):
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            type="_dummy._tcp.local.",
+            host="mock_host",
+            hostname="mock_hostname",
+            name="mock_name",
+            port=None,
             properties={},
+            type="_dummy._tcp.local.",
         ),
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -415,8 +422,12 @@ async def test_zeroconf_add_mrp_device(hass, mrp_device, pairing):
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            type="_mediaremotetv._tcp.local.",
+            host="mock_host",
+            hostname="mock_hostname",
+            name="mock_name",
+            port=None,
             properties={"UniqueIdentifier": "mrpid", "Name": "Kitchen"},
+            type="_mediaremotetv._tcp.local.",
         ),
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM

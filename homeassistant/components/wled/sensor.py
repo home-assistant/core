@@ -1,23 +1,21 @@
 """Support for WLED sensors."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import timedelta
-from typing import Callable
+from datetime import datetime, timedelta
 
 from wled import Device as WLEDDevice
 
 from homeassistant.components.sensor import (
-    DEVICE_CLASS_CURRENT,
     STATE_CLASS_MEASUREMENT,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DATA_BYTES,
-    DEVICE_CLASS_SIGNAL_STRENGTH,
-    DEVICE_CLASS_TIMESTAMP,
     ELECTRIC_CURRENT_MILLIAMPERE,
     ENTITY_CATEGORY_DIAGNOSTIC,
     PERCENTAGE,
@@ -37,7 +35,7 @@ from .models import WLEDEntity
 class WLEDSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[WLEDDevice], StateType]
+    value_fn: Callable[[WLEDDevice], datetime | StateType]
 
 
 @dataclass
@@ -52,7 +50,7 @@ SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
         key="estimated_current",
         name="Estimated Current",
         native_unit_of_measurement=ELECTRIC_CURRENT_MILLIAMPERE,
-        device_class=DEVICE_CLASS_CURRENT,
+        device_class=SensorDeviceClass.CURRENT,
         state_class=STATE_CLASS_MEASUREMENT,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         value_fn=lambda device: device.info.leds.power,
@@ -68,18 +66,16 @@ SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
         name="Max Current",
         native_unit_of_measurement=ELECTRIC_CURRENT_MILLIAMPERE,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-        device_class=DEVICE_CLASS_CURRENT,
+        device_class=SensorDeviceClass.CURRENT,
         value_fn=lambda device: device.info.leds.max_power,
     ),
     WLEDSensorEntityDescription(
         key="uptime",
         name="Uptime",
-        device_class=DEVICE_CLASS_TIMESTAMP,
+        device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda device: (utcnow() - timedelta(seconds=device.info.uptime))
-        .replace(microsecond=0)
-        .isoformat(),
+        value_fn=lambda device: (utcnow() - timedelta(seconds=device.info.uptime)),
     ),
     WLEDSensorEntityDescription(
         key="free_heap",
@@ -104,7 +100,7 @@ SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
         key="wifi_rssi",
         name="Wi-Fi RSSI",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-        device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda device: device.info.wifi.rssi if device.info.wifi else None,
@@ -157,6 +153,6 @@ class WLEDSensorEntity(WLEDEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.data.info.mac_address}_{description.key}"
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> datetime | StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

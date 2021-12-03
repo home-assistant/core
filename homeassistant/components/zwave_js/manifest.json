@@ -3,7 +3,7 @@
   "name": "Z-Wave JS",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/zwave_js",
-  "requirements": ["zwave-js-server-python==0.31.3"],
+  "requirements": ["zwave-js-server-python==0.33.0"],
   "codeowners": ["@home-assistant/z-wave"],
   "dependencies": ["usb", "http", "websocket_api"],
   "iot_class": "local_push",
