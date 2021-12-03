@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 import logging
+from typing import Any
 
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPServiceUnavailable
@@ -11,12 +13,19 @@ from homeassistant import config_entries
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import ATTR_NAME, ATTR_SERVICE, EVENT_HOMEASSISTANT_START
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import BaseServiceInfo
 
-from .. import hassio
 from .const import ATTR_ADDON, ATTR_CONFIG, ATTR_DISCOVERY, ATTR_UUID
 from .handler import HassioAPIError
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class HassioServiceInfo(BaseServiceInfo):
+    """Prepared info from hassio entries."""
+
+    config: dict[str, Any]
 
 
 @callback
@@ -93,7 +102,7 @@ class HassIODiscovery(HomeAssistantView):
         await self.hass.config_entries.flow.async_init(
             service,
             context={"source": config_entries.SOURCE_HASSIO},
-            data=hassio.HassioServiceInfo(config=config_data),
+            data=HassioServiceInfo(config=config_data),
         )
 
     async def async_process_del(self, data):

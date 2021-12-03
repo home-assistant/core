@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
 from datetime import timedelta
 import logging
 import os
@@ -25,7 +24,6 @@ from homeassistant.const import (
     SERVICE_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import DOMAIN as HASS_DOMAIN, HomeAssistant, callback
-from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, recorder
 from homeassistant.helpers.device_registry import (
@@ -59,7 +57,7 @@ from .const import (
     DOMAIN,
     SupervisorEntityModel,
 )
-from .discovery import async_setup_discovery_view
+from .discovery import HassioServiceInfo, async_setup_discovery_view  # noqa: F401
 from .handler import HassIO, HassioAPIError, api_data
 from .http import HassIOView
 from .ingress import async_setup_ingress_view
@@ -183,13 +181,6 @@ MAP_SERVICE_API = {
         True,
     ),
 }
-
-
-@dataclass
-class HassioServiceInfo(BaseServiceInfo):
-    """Prepared info from hassio entries."""
-
-    config: dict[str, Any]
 
 
 @bind_hass
