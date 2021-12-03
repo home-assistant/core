@@ -1505,6 +1505,140 @@ def test_bitwise_or(hass):
     assert tpl.async_render() == 8 | 2
 
 
+def test_pack(hass, caplog):
+    """Test struct pack method."""
+
+    # render as filter
+    tpl = template.Template(
+        """
+{{ value | pack('>I') }}
+            """,
+        hass,
+    )
+    variables = {
+        "value": 0xDEADBEEF,
+    }
+    assert tpl.async_render(variables=variables) == b"\xde\xad\xbe\xef"
+
+    # render as function
+    tpl = template.Template(
+        """
+{{ pack(value, '>I') }}
+            """,
+        hass,
+    )
+    variables = {
+        "value": 0xDEADBEEF,
+    }
+    assert tpl.async_render(variables=variables) == b"\xde\xad\xbe\xef"
+
+    # test with None value
+    tpl = template.Template(
+        """
+{{ pack(value, '>I') }}
+            """,
+        hass,
+    )
+    variables = {
+        "value": None,
+    }
+    # "Template warning: 'pack' unable to pack object with type '%s' and format_string '%s' see https://docs.python.org/3/library/struct.html for more information"
+    assert tpl.async_render(variables=variables) is None
+    assert (
+        "Template warning: 'pack' unable to pack object 'None' with type 'NoneType' and format_string '>I' see https://docs.python.org/3/library/struct.html for more information"
+        in caplog.text
+    )
+
+    # test with invalid filter
+    tpl = template.Template(
+        """
+{{ pack(value, 'invalid filter') }}
+            """,
+        hass,
+    )
+    variables = {
+        "value": 0xDEADBEEF,
+    }
+    # "Template warning: 'pack' unable to pack object with type '%s' and format_string '%s' see https://docs.python.org/3/library/struct.html for more information"
+    assert tpl.async_render(variables=variables) is None
+    assert (
+        "Template warning: 'pack' unable to pack object '3735928559' with type 'int' and format_string 'invalid filter' see https://docs.python.org/3/library/struct.html for more information"
+        in caplog.text
+    )
+
+
+def test_unpack(hass, caplog):
+    """Test struct unpack method."""
+
+    # render as filter
+    tpl = template.Template(
+        """
+{{ value | unpack('>I') }}
+            """,
+        hass,
+    )
+    variables = {
+        "value": b"\xde\xad\xbe\xef",
+    }
+    assert tpl.async_render(variables=variables) == 0xDEADBEEF
+
+    # render as function
+    tpl = template.Template(
+        """
+{{ unpack(value, '>I') }}
+            """,
+        hass,
+    )
+    variables = {
+        "value": b"\xde\xad\xbe\xef",
+    }
+    assert tpl.async_render(variables=variables) == 0xDEADBEEF
+
+    # unpack with offset
+    tpl = template.Template(
+        """
+{{ unpack(value, '>H', offset=2) }}
+            """,
+        hass,
+    )
+    variables = {
+        "value": b"\xde\xad\xbe\xef",
+    }
+    assert tpl.async_render(variables=variables) == 0xBEEF
+
+    # test with an empty bytes object
+    tpl = template.Template(
+        """
+{{ unpack(value, '>I') }}
+            """,
+        hass,
+    )
+    variables = {
+        "value": b"",
+    }
+    assert tpl.async_render(variables=variables) is None
+    assert (
+        "Template warning: 'unpack' unable to unpack object 'b''' with format_string '>I' and offset 0 see https://docs.python.org/3/library/struct.html for more information"
+        in caplog.text
+    )
+
+    # test with invalid filter
+    tpl = template.Template(
+        """
+{{ unpack(value, 'invalid filter') }}
+            """,
+        hass,
+    )
+    variables = {
+        "value": b"",
+    }
+    assert tpl.async_render(variables=variables) is None
+    assert (
+        "Template warning: 'unpack' unable to unpack object 'b''' with format_string 'invalid filter' and offset 0 see https://docs.python.org/3/library/struct.html for more information"
+        in caplog.text
+    )
+
+
 def test_distance_function_with_1_state(hass):
     """Test distance function with 1 state."""
     _set_up_units(hass)
