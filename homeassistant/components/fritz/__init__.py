@@ -5,14 +5,8 @@ from fritzconnection.core.exceptions import FritzConnectionException, FritzSecur
 from fritzconnection.core.logger import fritzlogger
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_USERNAME,
-    EVENT_HOMEASSISTANT_STOP,
-)
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .common import FritzBoxTools, FritzData
@@ -53,13 +47,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if DATA_FRITZ not in hass.data:
         hass.data[DATA_FRITZ] = FritzData()
 
-    @callback
-    def _async_unload(event: Event) -> None:
-        fritz_tools.async_unload()
-
-    entry.async_on_unload(
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_unload)
-    )
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
     # Load the other platforms like switch
@@ -73,7 +60,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload FRITZ!Box Tools config entry."""
     fritzbox: FritzBoxTools = hass.data[DOMAIN][entry.entry_id]
-    fritzbox.async_unload()
 
     fritz_data = hass.data[DATA_FRITZ]
     fritz_data.tracked.pop(fritzbox.unique_id)

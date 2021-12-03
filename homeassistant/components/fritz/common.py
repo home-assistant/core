@@ -25,7 +25,7 @@ from homeassistant.components.device_tracker.const import (
 )
 from homeassistant.components.switch import DOMAIN as DEVICE_SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import update_coordinator
 from homeassistant.helpers.device_registry import (
@@ -128,9 +128,8 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
         port: int = DEFAULT_PORT,
     ) -> None:
         """Initialize FritzboxTools class."""
-        super().__init__(hass=hass, logger=_LOGGER, name=f"{DOMAIN}-coordinator")
+        super().__init__(hass=hass, logger=_LOGGER, name=f"{DOMAIN}-{host}-coordinator")
 
-        self._cancel_scan: CALLBACK_TYPE | None = None
         self._devices: dict[str, FritzDevice] = {}
         self._options: MappingProxyType[str, Any] | None = None
         self._unique_id: str | None = None
@@ -186,18 +185,8 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
         try:
             self.fritz_hosts = FritzHosts(fc=self.connection)
             await self.async_scan_devices()
-        except FritzSecurityError as ex:
-            raise update_coordinator.UpdateFailed("Error fetching data") from ex
-        except FritzConnectionException as ex:
-            raise update_coordinator.UpdateFailed("Error fetching data") from ex
-
-    @callback
-    def async_unload(self) -> None:
-        """Unload FritzboxTools class."""
-        _LOGGER.debug("Unloading FRITZ!Box router integration")
-        if self._cancel_scan is not None:
-            self._cancel_scan()
-            self._cancel_scan = None
+        except (FritzSecurityError, FritzConnectionException) as ex:
+            raise update_coordinator.UpdateFailed from ex
 
     @property
     def unique_id(self) -> str:
