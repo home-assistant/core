@@ -58,7 +58,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 
 SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
-# Deprecated in Home Assistant 2021.12
+# Deprecated in Home Assistant 2022.1
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,

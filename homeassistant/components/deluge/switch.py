@@ -25,7 +25,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from . import DelugeEntity
 from .const import DATA_KEY_API, DATA_KEY_COORDINATOR, DEFAULT_RPC_PORT, DOMAIN
 
-# Deprecated in Home Assistant 2021.12
+# Deprecated in Home Assistant 2022.1
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
