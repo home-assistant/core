@@ -56,19 +56,19 @@ class ColorTempModes(Enum):
 
 
 SUPPORTED_PLATFORMS: Final = [
-    Platform.BINARY_SENSOR.value,
-    Platform.BUTTON.value,
-    Platform.CLIMATE.value,
-    Platform.COVER.value,
-    Platform.FAN.value,
-    Platform.LIGHT.value,
-    Platform.NOTIFY.value,
-    Platform.NUMBER.value,
-    Platform.SCENE.value,
-    Platform.SELECT.value,
-    Platform.SENSOR.value,
-    Platform.SWITCH.value,
-    Platform.WEATHER.value,
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.FAN,
+    Platform.LIGHT,
+    Platform.NOTIFY,
+    Platform.NUMBER,
+    Platform.SCENE,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.WEATHER,
 ]
 
 # Map KNX controller modes to HA modes. This list might not be complete.
