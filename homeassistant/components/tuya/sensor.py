@@ -642,12 +642,6 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             entity_category=EntityCategory.DIAGNOSTIC,
             icon="mdi:alert-outline",
         ),
-        TuyaSensorEntityDescription(
-            key=DPCode.STATUS,
-            name="Status Tuya",
-            entity_category=EntityCategory.DIAGNOSTIC,
-            entity_registry_enabled_default=False,
-        ),
     ),
 }
 

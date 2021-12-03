@@ -8,6 +8,7 @@ from tuya_iot.device import TuyaDeviceStatusRange
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_PRESSURE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
@@ -226,21 +227,21 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             key=DPCode.CISTERN,
             name="Water Tank Adjustment",
             entity_category=EntityCategory.CONFIG,
+            device_class=DEVICE_CLASS_HUMIDITY,
+            icon="mdi:water-opacity",
         ),
         SelectEntityDescription(
             key=DPCode.COLLECTION_MODE,
             name="Dust Collection Mode",
             entity_category=EntityCategory.CONFIG,
-        ),
-        SelectEntityDescription(
-            key=DPCode.SUCTION,
-            name="Suction",
-            entity_category=EntityCategory.CONFIG,
+            device_class=DEVICE_CLASS_PRESSURE,
+            icon="mdi:air-filter",
         ),
         SelectEntityDescription(
             key=DPCode.MODE,
             name="Mode",
             entity_category=EntityCategory.CONFIG,
+            icon="mdi:layers-outline",
         ),
     ),
 }
