@@ -128,6 +128,8 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
         port: int = DEFAULT_PORT,
     ) -> None:
         """Initialize FritzboxTools class."""
+        super().__init__(hass=hass, logger=_LOGGER, name=f"{DOMAIN}-coordinator")
+
         self._cancel_scan: CALLBACK_TYPE | None = None
         self._devices: dict[str, FritzDevice] = {}
         self._options: MappingProxyType[str, Any] | None = None
@@ -146,7 +148,9 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
         self._latest_firmware: str | None = None
         self._update_available: bool = False
 
-    async def async_setup(self, options: MappingProxyType[str, Any]) -> None:
+    async def async_setup(
+        self, options: MappingProxyType[str, Any] | None = None
+    ) -> None:
         """Wrap up FritzboxTools class setup."""
         self._options = options
         await self.hass.async_add_executor_job(self.setup)
