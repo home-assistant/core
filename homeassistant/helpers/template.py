@@ -1858,6 +1858,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["is_number"] = is_number
         self.filters["float"] = forgiving_float_filter
         self.filters["int"] = forgiving_int_filter
+        self.filters["relative_time"] = relative_time
         self.globals["log"] = logarithm
         self.globals["sin"] = sine
         self.globals["cos"] = cosine
