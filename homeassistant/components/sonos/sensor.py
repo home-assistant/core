@@ -98,7 +98,7 @@ class SonosAudioInputFormatSensorEntity(SonosEntity, SensorEntity):
         return f"{self.speaker.zone_name} Audio Input Format"
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return the current state of the text sensor."""
         return self.speaker.soundbar_audio_input_format
 
