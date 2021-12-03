@@ -112,7 +112,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up ClimaCell API from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
-    params = {}
+    params: dict[str, Any] = {}
     # If config entry options not set up, set them up
     if not entry.options:
         params["options"] = {
@@ -206,7 +206,7 @@ class ClimaCellDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
-        data = {FORECASTS: {}}
+        data: dict[str, Any] = {FORECASTS: {}}
         try:
             if self._api_version == 3:
                 data[CURRENT] = await self._api.realtime(
