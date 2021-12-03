@@ -242,7 +242,6 @@ class SonosSpeaker:
         dispatcher_send(self.hass, SONOS_CREATE_LEVELS, self)
 
         if audio_format := self.soco.soundbar_audio_input_format:
-            self.soundbar_audio_input_format = audio_format
             dispatcher_send(
                 self.hass, SONOS_CREATE_AUDIO_FORMAT_SENSOR, self, audio_format
             )
