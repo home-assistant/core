@@ -103,55 +103,7 @@ DHCP = [
     },
     {
         "domain": "flux_led",
-        "hostname": "zengge_0[6789b]_*"
-    },
-    {
-        "domain": "flux_led",
-        "hostname": "zengge_1[06789abc]_*"
-    },
-    {
-        "domain": "flux_led",
-        "hostname": "zengge_2[15]_*"
-    },
-    {
-        "domain": "flux_led",
-        "hostname": "zengge_3[35]_*"
-    },
-    {
-        "domain": "flux_led",
-        "hostname": "zengge_4[14]_*"
-    },
-    {
-        "domain": "flux_led",
-        "hostname": "zengge_5[24]_*"
-    },
-    {
-        "domain": "flux_led",
-        "hostname": "zengge_62_*"
-    },
-    {
-        "domain": "flux_led",
-        "hostname": "zengge_81_*"
-    },
-    {
-        "domain": "flux_led",
-        "hostname": "zengge_0[0e]_*"
-    },
-    {
-        "domain": "flux_led",
-        "hostname": "zengge_9[34567]_*"
-    },
-    {
-        "domain": "flux_led",
-        "hostname": "zengge_a[123]_*"
-    },
-    {
-        "domain": "flux_led",
-        "hostname": "zengge_d1_*"
-    },
-    {
-        "domain": "flux_led",
-        "hostname": "zengge_e[12]_*"
+        "hostname": "zengge_[0-9a-f][0-9a-f]_*"
     },
     {
         "domain": "flux_led",
