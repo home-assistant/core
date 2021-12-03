@@ -967,6 +967,15 @@ async def async_validate_condition_config(
     return config
 
 
+async def async_validate_conditions_config(
+    hass: HomeAssistant, conditions: list[ConfigType | Template]
+) -> list[ConfigType | Template]:
+    """Validate config."""
+    return await asyncio.gather(
+        *(async_validate_condition_config(hass, cond) for cond in conditions)
+    )
+
+
 @callback
 def async_extract_entities(config: ConfigType | Template) -> set[str]:
     """Extract entities from a condition."""
