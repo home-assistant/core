@@ -12,7 +12,7 @@ from typing import Any, Final, cast, final
 import ciso8601
 import voluptuous as vol
 
-from homeassistant.backports import StrEnum
+from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (  # noqa: F401
     DEVICE_CLASS_AQI,

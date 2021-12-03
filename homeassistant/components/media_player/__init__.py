@@ -22,7 +22,7 @@ import async_timeout
 import voluptuous as vol
 from yarl import URL
 
-from homeassistant.backports import StrEnum
+from homeassistant.backports.enum import StrEnum
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
 from homeassistant.components.websocket_api.const import (

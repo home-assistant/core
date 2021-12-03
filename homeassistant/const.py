@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Final
 
-from homeassistant.backports import StrEnum
+from homeassistant.backports.enum import StrEnum
 
 MAJOR_VERSION: Final = 2021
 MINOR_VERSION: Final = 12

@@ -9,7 +9,7 @@ from typing import Any, final
 
 import voluptuous as vol
 
-from homeassistant.backports import StrEnum
+from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     SERVICE_CLOSE_COVER,

@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any, NamedTuple, cast
 
 import attr
 
-from homeassistant.backports import StrEnum
+from homeassistant.backports.enum import StrEnum
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import RequiredParameterMissing

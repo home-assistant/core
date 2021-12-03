@@ -8,7 +8,7 @@ from typing import Any, final
 
 import voluptuous as vol
 
-from homeassistant.backports import StrEnum
+from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant

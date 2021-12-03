@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING, Any, cast
 import attr
 import voluptuous as vol
 
-from homeassistant.backports import StrEnum
+from homeassistant.backports.enum import StrEnum
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
