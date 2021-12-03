@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING, Any, cast
 import attr
 import voluptuous as vol
 
+from homeassistant.backports.enum import StrEnum
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
@@ -42,7 +43,6 @@ from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from homeassistant.helpers.frame import report
 from homeassistant.loader import bind_hass
 from homeassistant.util import slugify, uuid as uuid_util
-from homeassistant.util.enum import StrEnum
 from homeassistant.util.yaml import load_yaml
 
 from .typing import UNDEFINED, UndefinedType

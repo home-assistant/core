@@ -4,7 +4,7 @@ from enum import auto
 
 import pytest
 
-from homeassistant.util.enum import StrEnum
+from homeassistant.backports.enum import StrEnum
 
 
 def test_strenum():

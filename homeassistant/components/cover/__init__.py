@@ -9,6 +9,7 @@ from typing import Any, final
 
 import voluptuous as vol
 
+from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     SERVICE_CLOSE_COVER,
@@ -34,7 +35,6 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.loader import bind_hass
-from homeassistant.util.enum import StrEnum
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 

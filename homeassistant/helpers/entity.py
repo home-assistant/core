@@ -15,6 +15,7 @@ from typing import Any, Final, Literal, TypedDict, final
 
 import voluptuous as vol
 
+from homeassistant.backports.enum import StrEnum
 from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -43,7 +44,6 @@ from homeassistant.helpers.event import Event, async_track_entity_registry_updat
 from homeassistant.helpers.typing import StateType
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util, ensure_unique_string, slugify
-from homeassistant.util.enum import StrEnum
 
 _LOGGER = logging.getLogger(__name__)
 SLOW_UPDATE_WARNING = 10

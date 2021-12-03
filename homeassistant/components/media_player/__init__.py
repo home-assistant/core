@@ -22,6 +22,7 @@ import async_timeout
 import voluptuous as vol
 from yarl import URL
 
+from homeassistant.backports.enum import StrEnum
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
 from homeassistant.components.websocket_api.const import (
@@ -63,7 +64,6 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.network import get_url
 from homeassistant.loader import bind_hass
-from homeassistant.util.enum import StrEnum
 
 from .const import (
     ATTR_APP_ID,
