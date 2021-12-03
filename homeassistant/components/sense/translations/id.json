@@ -12,7 +12,8 @@
             "user": {
                 "data": {
                     "email": "Email",
-                    "password": "Kata Sandi"
+                    "password": "Kata Sandi",
+                    "timeout": "Tenggang waktu"
                 },
                 "title": "Hubungkan ke Sense Energy Monitor Anda"
             }

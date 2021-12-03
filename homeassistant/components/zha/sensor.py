@@ -30,6 +30,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
     DEVICE_CLASS_ENERGY,
     ELECTRIC_CURRENT_AMPERE,
@@ -38,6 +39,7 @@ from homeassistant.const import (
     ENTITY_CATEGORY_DIAGNOSTIC,
     LIGHT_LUX,
     PERCENTAGE,
+    POWER_VOLT_AMPERE,
     POWER_WATT,
     PRESSURE_HPA,
     TEMP_CELSIUS,
@@ -314,6 +316,23 @@ class ElectricalMeasurement(Sensor):
 
 
 @MULTI_MATCH(channel_names=CHANNEL_ELECTRICAL_MEASUREMENT)
+class ElectricalMeasurementApparentPower(
+    ElectricalMeasurement, id_suffix="apparent_power"
+):
+    """Apparent power measurement."""
+
+    SENSOR_ATTR = "apparent_power"
+    _device_class = DEVICE_CLASS_POWER
+    _unit = POWER_VOLT_AMPERE
+    _div_mul_prefix = "ac_power"
+
+    @property
+    def should_poll(self) -> bool:
+        """Poll indirectly by ElectricalMeasurementSensor."""
+        return False
+
+
+@MULTI_MATCH(channel_names=CHANNEL_ELECTRICAL_MEASUREMENT)
 class ElectricalMeasurementRMSCurrent(ElectricalMeasurement, id_suffix="rms_current"):
     """RMS current measurement."""
 
@@ -521,6 +540,16 @@ class VOCLevel(Sensor):
     _decimals = 0
     _multiplier = 1e6
     _unit = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+
+
+@STRICT_MATCH(channel_names="voc_level", models="lumi.airmonitor.acn01")
+class PPBVOCLevel(Sensor):
+    """VOC Level sensor."""
+
+    SENSOR_ATTR = "measured_value"
+    _decimals = 0
+    _multiplier = 1
+    _unit = CONCENTRATION_PARTS_PER_BILLION
 
 
 @STRICT_MATCH(channel_names="formaldehyde_concentration")

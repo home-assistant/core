@@ -1,6 +1,8 @@
 """Support for Ambient Weather Station sensors."""
 from __future__ import annotations
 
+from datetime import datetime
+
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL_INCREASING,
@@ -643,6 +645,11 @@ class AmbientWeatherSensor(AmbientWeatherEntity, SensorEntity):
     @callback
     def update_from_latest_data(self) -> None:
         """Fetch new state data for the sensor."""
-        self._attr_native_value = self._ambient.stations[self._mac_address][
-            ATTR_LAST_DATA
-        ][self.entity_description.key]
+        raw = self._ambient.stations[self._mac_address][ATTR_LAST_DATA][
+            self.entity_description.key
+        ]
+
+        if self.entity_description.key == TYPE_LASTRAIN:
+            self._attr_native_value = datetime.strptime(raw, "%Y-%m-%dT%H:%M:%S.%f%z")
+        else:
+            self._attr_native_value = raw

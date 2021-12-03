@@ -8,22 +8,6 @@ from homeassistant import util
 import homeassistant.util.dt as dt_util
 
 
-def test_sanitize_filename():
-    """Test sanitize_filename."""
-    assert util.sanitize_filename("test") == "test"
-    assert util.sanitize_filename("/test") == ""
-    assert util.sanitize_filename("..test") == ""
-    assert util.sanitize_filename("\\test") == ""
-    assert util.sanitize_filename("\\../test") == ""
-
-
-def test_sanitize_path():
-    """Test sanitize_path."""
-    assert util.sanitize_path("test/path") == "test/path"
-    assert util.sanitize_path("~test/path") == ""
-    assert util.sanitize_path("~/../test/path") == ""
-
-
 def test_raise_if_invalid_filename():
     """Test raise_if_invalid_filename."""
     assert util.raise_if_invalid_filename("test") is None
@@ -102,47 +86,6 @@ def test_ensure_unique_string():
     """Test ensure_unique_string."""
     assert util.ensure_unique_string("Beer", ["Beer", "Beer_2"]) == "Beer_3"
     assert util.ensure_unique_string("Beer", ["Wine", "Soda"]) == "Beer"
-
-
-def test_ordered_enum():
-    """Test the ordered enum class."""
-
-    class TestEnum(util.OrderedEnum):
-        """Test enum that can be ordered."""
-
-        FIRST = 1
-        SECOND = 2
-        THIRD = 3
-
-    assert TestEnum.SECOND >= TestEnum.FIRST
-    assert TestEnum.SECOND >= TestEnum.SECOND
-    assert TestEnum.SECOND < TestEnum.THIRD
-
-    assert TestEnum.SECOND > TestEnum.FIRST
-    assert TestEnum.SECOND <= TestEnum.SECOND
-    assert TestEnum.SECOND <= TestEnum.THIRD
-
-    assert TestEnum.SECOND > TestEnum.FIRST
-    assert TestEnum.SECOND <= TestEnum.SECOND
-    assert TestEnum.SECOND <= TestEnum.THIRD
-
-    assert TestEnum.SECOND >= TestEnum.FIRST
-    assert TestEnum.SECOND >= TestEnum.SECOND
-    assert TestEnum.SECOND < TestEnum.THIRD
-
-    # Python will raise a TypeError if the <, <=, >, >= methods
-    # raise a NotImplemented error.
-    with pytest.raises(TypeError):
-        TestEnum.FIRST < 1
-
-    with pytest.raises(TypeError):
-        TestEnum.FIRST <= 1
-
-    with pytest.raises(TypeError):
-        TestEnum.FIRST > 1
-
-    with pytest.raises(TypeError):
-        TestEnum.FIRST >= 1
 
 
 def test_throttle():

@@ -1,7 +1,6 @@
 """Sensor platform for local_ip."""
 
 from homeassistant.components.network import async_get_source_ip
-from homeassistant.components.network.const import PUBLIC_TARGET_IP
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
@@ -33,6 +32,4 @@ class IPSensor(SensorEntity):
 
     async def async_update(self) -> None:
         """Fetch new state data for the sensor."""
-        self._attr_native_value = await async_get_source_ip(
-            self.hass, target_ip=PUBLIC_TARGET_IP
-        )
+        self._attr_native_value = await async_get_source_ip(self.hass)

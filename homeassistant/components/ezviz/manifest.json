@@ -4,7 +4,7 @@
   "documentation": "https://www.home-assistant.io/integrations/ezviz",
   "dependencies": ["ffmpeg"],
   "codeowners": ["@RenierM26", "@baqs"],
-  "requirements": ["pyezviz==0.1.9.4"],
+  "requirements": ["pyezviz==0.2.0.5"],
   "config_flow": true,
   "iot_class": "cloud_polling"
 }

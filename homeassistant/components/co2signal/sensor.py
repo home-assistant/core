@@ -21,6 +21,7 @@ from homeassistant.const import (
     PERCENTAGE,
 )
 from homeassistant.helpers import config_validation as cv, update_coordinator
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import StateType
 
@@ -104,7 +105,7 @@ class CO2Sensor(update_coordinator.CoordinatorEntity[CO2SignalResponse], SensorE
         }
         self._attr_device_info = DeviceInfo(
             configuration_url="https://www.electricitymap.org/",
-            entry_type="service",
+            entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, coordinator.entry_id)},
             manufacturer="Tmrow.com",
             name="CO2 signal",

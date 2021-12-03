@@ -4,12 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components.sensor import (
-    DEVICE_CLASS_CURRENT,
-    DEVICE_CLASS_SIGNAL_STRENGTH,
-    DEVICE_CLASS_TIMESTAMP,
-    DOMAIN as SENSOR_DOMAIN,
-)
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.components.wled.const import DOMAIN
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -98,7 +93,7 @@ async def test_sensors(
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ELECTRIC_CURRENT_MILLIAMPERE
     )
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_CURRENT
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.CURRENT
     assert state.state == "470"
 
     entry = registry.async_get("sensor.wled_rgb_light_estimated_current")
@@ -108,7 +103,7 @@ async def test_sensors(
 
     state = hass.states.get("sensor.wled_rgb_light_uptime")
     assert state
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_TIMESTAMP
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TIMESTAMP
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
     assert state.state == "2019-11-11T09:10:00+00:00"
 
@@ -143,7 +138,7 @@ async def test_sensors(
 
     state = hass.states.get("sensor.wled_rgb_light_wifi_rssi")
     assert state
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_SIGNAL_STRENGTH
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.SIGNAL_STRENGTH
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == SIGNAL_STRENGTH_DECIBELS_MILLIWATT

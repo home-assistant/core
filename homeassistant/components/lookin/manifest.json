@@ -3,7 +3,7 @@
   "name": "LOOKin",
   "documentation": "https://www.home-assistant.io/integrations/lookin/",
   "codeowners": ["@ANMalko"],
-  "requirements": ["aiolookin==0.0.3"],
+  "requirements": ["aiolookin==0.0.4"],
   "zeroconf": ["_lookin._tcp.local."],
   "config_flow": true,
   "iot_class": "local_push"

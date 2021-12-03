@@ -13,7 +13,7 @@ import async_timeout
 
 from homeassistant.components.air_quality import DOMAIN as AIR_QUALITY_PLATFORM
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -33,7 +33,7 @@ from .const import (
     NO_AIRLY_SENSORS,
 )
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
