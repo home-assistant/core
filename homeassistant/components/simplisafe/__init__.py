@@ -51,6 +51,7 @@ from homeassistant.const import (
     CONF_CODE,
     CONF_TOKEN,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
 from homeassistant.core import CoreState, Event, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -118,12 +119,12 @@ DISPATCHER_TOPIC_WEBSOCKET_EVENT = "simplisafe_websocket_event_{0}"
 EVENT_SIMPLISAFE_EVENT = "SIMPLISAFE_EVENT"
 EVENT_SIMPLISAFE_NOTIFICATION = "SIMPLISAFE_NOTIFICATION"
 
-PLATFORMS = (
-    "alarm_control_panel",
-    "binary_sensor",
-    "lock",
-    "sensor",
-)
+PLATFORMS = [
+    Platform.ALARM_CONTROL_PANEL,
+    Platform.BINARY_SENSOR,
+    Platform.LOCK,
+    Platform.SENSOR,
+]
 
 VOLUME_MAP = {
     "high": Volume.HIGH,
