@@ -376,7 +376,7 @@ class WaitTask:
 class DatabaseLockTask:
     """An object to insert into the recorder queue to prevent writes to the database."""
 
-    database_locked: threading.Event
+    database_locked: asyncio.Event
     database_unlock: threading.Event
     queue_overflow: bool
 
@@ -802,10 +802,14 @@ class Recorder(threading.Thread):
         # Schedule a new statistics task if this one didn't finish
         self.queue.put(ExternalStatisticsTask(metadata, stats))
 
+    @callback
+    def _async_set_database_locked(self, task: DatabaseLockTask):
+        task.database_locked.set()
+
     def _lock_database(self, task: DatabaseLockTask):
         with write_lock_db(self):
             # Notify that lock is being held, wait until database can be used again.
-            task.database_locked.set()
+            self.hass.add_job(self._async_set_database_locked, task)
             while not task.database_unlock.wait(timeout=1):
                 if self.queue.qsize() > MAX_QUEUE_BACKLOG * 0.9:
                     _LOGGER.warning(
@@ -1024,12 +1028,13 @@ class Recorder(threading.Thread):
             _LOGGER.warning("Database already locked")
             return False
 
-        task = DatabaseLockTask(threading.Event(), threading.Event(), False)
+        database_locked = asyncio.Event()
+        task = DatabaseLockTask(database_locked, threading.Event(), False)
         self.queue.put(task)
         lock_timeout = 30
-        if not await self.hass.async_add_executor_job(
-            task.database_locked.wait, lock_timeout
-        ):
+        try:
+            await asyncio.wait_for(database_locked.wait(), timeout=lock_timeout)
+        except asyncio.TimeoutError:
             raise TimeoutError(
                 f"Could not lock database within {lock_timeout} seconds."
             )
