@@ -4,7 +4,7 @@ import logging
 
 import meteireann
 
-from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE, Platform
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
@@ -15,7 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 
 UPDATE_INTERVAL = timedelta(minutes=60)
 
-PLATFORMS = ["weather"]
+PLATFORMS = [Platform.WEATHER]
 
 
 async def async_setup_entry(hass, config_entry):

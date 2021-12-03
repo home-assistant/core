@@ -40,6 +40,7 @@ from homeassistant.const import (
     SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
     UV_INDEX,
+    Platform,
 )
 
 DOMAIN = "openweathermap"
@@ -70,7 +71,7 @@ ATTR_API_UV_INDEX = "uv_index"
 ATTR_API_WEATHER_CODE = "weather_code"
 ATTR_API_FORECAST = "forecast"
 UPDATE_LISTENER = "update_listener"
-PLATFORMS = ["sensor", "weather"]
+PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
 
 FORECAST_MODE_HOURLY = "hourly"
 FORECAST_MODE_DAILY = "daily"
