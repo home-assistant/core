@@ -20,6 +20,21 @@ def create_switch_with_setup_button(accessory):
     return service
 
 
+def create_switch_with_ecobee_clear_hold_button(accessory):
+    """Define setup button characteristics."""
+    service = accessory.add_service(ServicesTypes.OUTLET)
+
+    setup = service.add_char(CharacteristicsTypes.Vendor.ECOBEE_CLEAR_HOLD)
+
+    setup.value = ""
+    setup.format = "string"
+
+    cur_state = service.add_char(CharacteristicsTypes.ON)
+    cur_state.value = True
+
+    return service
+
+
 async def test_press_button(hass):
     """Test a switch service that has a button characteristic is correctly handled."""
     helper = await setup_test_component(hass, create_switch_with_setup_button)
@@ -43,3 +58,30 @@ async def test_press_button(hass):
         blocking=True,
     )
     assert setup.value == "#HAA@trcmd"
+
+
+async def test_ecobee_clear_hold_press_button(hass):
+    """Test ecobee clear hold button characteristic is correctly handled."""
+    helper = await setup_test_component(
+        hass, create_switch_with_ecobee_clear_hold_button
+    )
+
+    # Helper will be for the primary entity, which is the outlet. Make a helper for the button.
+    energy_helper = Helper(
+        hass,
+        "button.testdevice_clear_hold",
+        helper.pairing,
+        helper.accessory,
+        helper.config_entry,
+    )
+
+    outlet = energy_helper.accessory.services.first(service_type=ServicesTypes.OUTLET)
+    setup = outlet[CharacteristicsTypes.Vendor.ECOBEE_CLEAR_HOLD]
+
+    await hass.services.async_call(
+        "button",
+        "press",
+        {"entity_id": "button.testdevice_clear_hold"},
+        blocking=True,
+    )
+    assert setup.value is True

@@ -25,6 +25,26 @@ def create_switch_with_spray_level(accessory):
     return service
 
 
+def create_switch_with_ecobee_fan_mode(accessory):
+    """Define battery level characteristics."""
+    service = accessory.add_service(ServicesTypes.OUTLET)
+
+    ecobee_fan_mode = service.add_char(
+        CharacteristicsTypes.Vendor.ECOBEE_FAN_WRITE_SPEED
+    )
+
+    ecobee_fan_mode.value = 0
+    ecobee_fan_mode.minStep = 1
+    ecobee_fan_mode.minValue = 0
+    ecobee_fan_mode.maxValue = 100
+    ecobee_fan_mode.format = "float"
+
+    cur_state = service.add_char(CharacteristicsTypes.ON)
+    cur_state.value = True
+
+    return service
+
+
 async def test_read_number(hass, utcnow):
     """Test a switch service that has a sensor characteristic is correctly handled."""
     helper = await setup_test_component(hass, create_switch_with_spray_level)
@@ -85,3 +105,61 @@ async def test_write_number(hass, utcnow):
         blocking=True,
     )
     assert spray_level.value == 3
+
+
+async def test_write_ecobee_fan_mode_number(hass, utcnow):
+    """Test a switch service that has a sensor characteristic is correctly handled."""
+    helper = await setup_test_component(hass, create_switch_with_ecobee_fan_mode)
+    outlet = helper.accessory.services.first(service_type=ServicesTypes.OUTLET)
+
+    # Helper will be for the primary entity, which is the outlet. Make a helper for the sensor.
+    energy_helper = Helper(
+        hass,
+        "number.testdevice_fan_mode",
+        helper.pairing,
+        helper.accessory,
+        helper.config_entry,
+    )
+
+    outlet = energy_helper.accessory.services.first(service_type=ServicesTypes.OUTLET)
+    ecobee_fan_mode = outlet[CharacteristicsTypes.Vendor.ECOBEE_FAN_WRITE_SPEED]
+
+    await hass.services.async_call(
+        "number",
+        "set_value",
+        {"entity_id": "number.testdevice_fan_mode", "value": 1},
+        blocking=True,
+    )
+    assert ecobee_fan_mode.value == 1
+
+    await hass.services.async_call(
+        "number",
+        "set_value",
+        {"entity_id": "number.testdevice_fan_mode", "value": 2},
+        blocking=True,
+    )
+    assert ecobee_fan_mode.value == 2
+
+    await hass.services.async_call(
+        "number",
+        "set_value",
+        {"entity_id": "number.testdevice_fan_mode", "value": 99},
+        blocking=True,
+    )
+    assert ecobee_fan_mode.value == 99
+
+    await hass.services.async_call(
+        "number",
+        "set_value",
+        {"entity_id": "number.testdevice_fan_mode", "value": 100},
+        blocking=True,
+    )
+    assert ecobee_fan_mode.value == 100
+
+    await hass.services.async_call(
+        "number",
+        "set_value",
+        {"entity_id": "number.testdevice_fan_mode", "value": 0},
+        blocking=True,
+    )
+    assert ecobee_fan_mode.value == 0
