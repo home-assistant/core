@@ -593,13 +593,21 @@ DEVICES = [
                 SIG_EP_PROFILE: 260,
             }
         },
-        DEV_SIG_ENTITIES: ["binary_sensor.heiman_warningdevice_77665544_ias_zone"],
+        DEV_SIG_ENTITIES: [
+            "binary_sensor.heiman_warningdevice_77665544_ias_zone",
+            "siren.heiman_warningdevice_77665544_ias_wd",
+        ],
         DEV_SIG_ENT_MAP: {
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
                 DEV_SIG_CHANNELS: ["ias_zone"],
                 DEV_SIG_ENT_MAP_CLASS: "IASZone",
                 DEV_SIG_ENT_MAP_ID: "binary_sensor.heiman_warningdevice_77665544_ias_zone",
-            }
+            },
+            ("siren", "00:11:22:33:44:55:66:77-1"): {
+                DEV_SIG_CHANNELS: ["ias_wd"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHASiren",
+                DEV_SIG_ENT_MAP_ID: "siren.heiman_warningdevice_77665544_ias_wd",
+            },
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0019"],
         SIG_MANUFACTURER: "Heiman",
