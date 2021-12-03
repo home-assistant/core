@@ -585,6 +585,7 @@ homeassistant/components/vizio/* @raman325
 homeassistant/components/vlc_telnet/* @rodripf @dmcc @MartinHjelmare
 homeassistant/components/volkszaehler/* @fabaff
 homeassistant/components/volumio/* @OnFreund
+homeassistant/components/volvooncall/* @molobrakos @decompil3d
 homeassistant/components/wake_on_lan/* @ntilley905
 homeassistant/components/wallbox/* @hesselonline
 homeassistant/components/waqi/* @andrey-git
