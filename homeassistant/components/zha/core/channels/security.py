@@ -256,6 +256,7 @@ class IasAce(ZigbeeChannel):
         """Handle the IAS ACE zone status command."""
 
 
+@registries.CHANNEL_ONLY_CLUSTERS.register(security.IasWd.cluster_id)
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(security.IasWd.cluster_id)
 class IasWd(ZigbeeChannel):
     """IAS Warning Device channel."""
