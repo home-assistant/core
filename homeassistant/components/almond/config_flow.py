@@ -12,6 +12,7 @@ import voluptuous as vol
 from yarl import URL
 
 from homeassistant import config_entries, core, data_entry_flow
+from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
@@ -94,12 +95,12 @@ class AlmondFlowHandler(config_entry_oauth2_flow.AbstractOAuth2FlowHandler):
             data={"type": TYPE_LOCAL, "host": user_input["host"]},
         )
 
-    async def async_step_hassio(self, discovery_info):
+    async def async_step_hassio(self, discovery_info: HassioServiceInfo) -> FlowResult:
         """Receive a Hass.io discovery."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
-        self.hassio_discovery = discovery_info
+        self.hassio_discovery = discovery_info.config
 
         return await self.async_step_hassio_confirm()
 

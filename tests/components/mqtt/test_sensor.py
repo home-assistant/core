@@ -893,35 +893,6 @@ async def test_entity_category(hass, mqtt_mock):
     await help_test_entity_category(hass, mqtt_mock, sensor.DOMAIN, DEFAULT_CONFIG)
 
 
-async def test_value_template_with_raw_data(hass, mqtt_mock):
-    """Test processing a raw value via MQTT."""
-    assert await async_setup_component(
-        hass,
-        sensor.DOMAIN,
-        {
-            sensor.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "encoding": "",
-                "state_topic": "test-topic",
-                "unit_of_measurement": "fav unit",
-                "value_template": "{{ value | bitwise_and(255) }}",
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-    async_fire_mqtt_message(hass, "test-topic", b"\xff")
-    state = hass.states.get("sensor.test")
-
-    assert state.state == "255"
-
-    async_fire_mqtt_message(hass, "test-topic", b"\x01\x10")
-    state = hass.states.get("sensor.test")
-
-    assert state.state == "16"
-
-
 async def test_value_template_with_entity_id(hass, mqtt_mock):
     """Test the access to attributes in value_template via the entity_id."""
     assert await async_setup_component(

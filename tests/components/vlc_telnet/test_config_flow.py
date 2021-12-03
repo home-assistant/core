@@ -8,6 +8,7 @@ from aiovlc.exceptions import AuthError, ConnectError
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.components.vlc_telnet.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import (
@@ -278,13 +279,15 @@ async def test_hassio_flow(hass: HomeAssistant) -> None:
         "homeassistant.components.vlc_telnet.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
-        test_data = {
-            "password": "test-password",
-            "host": "1.1.1.1",
-            "port": 8888,
-            "name": "custom name",
-            "addon": "vlc",
-        }
+        test_data = HassioServiceInfo(
+            config={
+                "password": "test-password",
+                "host": "1.1.1.1",
+                "port": 8888,
+                "name": "custom name",
+                "addon": "vlc",
+            }
+        )
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -298,8 +301,8 @@ async def test_hassio_flow(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
         assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
-        assert result2["title"] == test_data["name"]
-        assert result2["data"] == test_data
+        assert result2["title"] == test_data.config["name"]
+        assert result2["data"] == test_data.config
         assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -320,7 +323,7 @@ async def test_hassio_already_configured(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
-        data=entry_data,
+        data=HassioServiceInfo(config=entry_data),
     )
     await hass.async_block_till_done()
 
@@ -354,13 +357,15 @@ async def test_hassio_errors(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_HASSIO},
-            data={
-                "password": "test-password",
-                "host": "1.1.1.1",
-                "port": 8888,
-                "name": "custom name",
-                "addon": "vlc",
-            },
+            data=HassioServiceInfo(
+                config={
+                    "password": "test-password",
+                    "host": "1.1.1.1",
+                    "port": 8888,
+                    "name": "custom name",
+                    "addon": "vlc",
+                }
+            ),
         )
         await hass.async_block_till_done()
 
