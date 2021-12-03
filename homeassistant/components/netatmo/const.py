@@ -69,6 +69,7 @@ CAMERA_DATA = "netatmo_camera"
 HOME_DATA = "netatmo_home_data"
 DATA_HANDLER = "netatmo_data_handler"
 SIGNAL_NAME = "signal_name"
+NETATMO_CREATE_BATTERY = "netatmo_create_battery"
 
 CONF_CLOUDHOOK_URL = "cloudhook_url"
 CONF_WEATHER_AREAS = "weather_areas"
