@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
+import datetime as dt
 from functools import lru_cache, partial, wraps
 import inspect
 from itertools import groupby
@@ -38,9 +40,11 @@ from homeassistant.core import (
     ServiceCall,
     callback,
 )
+from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.exceptions import HomeAssistantError, TemplateError, Unauthorized
 from homeassistant.helpers import config_validation as cv, event, template
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
+from homeassistant.helpers.frame import report
 from homeassistant.helpers.typing import ConfigType, ServiceDataType
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
@@ -244,6 +248,36 @@ MQTT_PUBLISH_SCHEMA = vol.All(
 
 
 SubscribePayloadType = Union[str, bytes]  # Only bytes if encoding is None
+
+
+@dataclass
+class MqttServiceInfo(BaseServiceInfo):
+    """Prepared info from mqtt entries."""
+
+    topic: str
+    payload: ReceivePayloadType
+    qos: int
+    retain: bool
+    subscribed_topic: str
+    timestamp: dt.datetime
+
+    # Used to prevent log flooding. To be removed in 2022.6
+    _warning_logged: bool = False
+
+    def __getitem__(self, name: str) -> Any:
+        """
+        Allow property access by name for compatibility reason.
+
+        Deprecated, and will be removed in version 2022.6.
+        """
+        if not self._warning_logged:
+            report(
+                f"accessed discovery_info['{name}'] instead of discovery_info.{name}; this will fail in version 2022.6",
+                exclude_integrations={"mqtt"},
+                error_if_core=False,
+            )
+            self._warning_logged = True
+        return getattr(self, name)
 
 
 def _build_publish_data(topic: Any, qos: int, retain: bool) -> ServiceDataType:
