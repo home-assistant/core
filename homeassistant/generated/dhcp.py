@@ -159,6 +159,10 @@ DHCP = [
         "hostname": "sta*"
     },
     {
+        "domain": "fronius",
+        "macaddress": "0003AC*"
+    },
+    {
         "domain": "goalzero",
         "hostname": "yeti*"
     },
