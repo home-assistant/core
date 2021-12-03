@@ -488,7 +488,7 @@ async def test_usb_discovery(
         "core_zwave_js",
         {
             "options": {
-                "device": USB_DISCOVERY_INFO["device"],
+                "device": USB_DISCOVERY_INFO.device,
                 "s0_legacy_key": "new123",
                 "s2_access_control_key": "new456",
                 "s2_authenticated_key": "new789",
@@ -516,7 +516,7 @@ async def test_usb_discovery(
     assert result["title"] == TITLE
     assert result["data"] == {
         "url": "ws://host1:3001",
-        "usb_path": USB_DISCOVERY_INFO["device"],
+        "usb_path": USB_DISCOVERY_INFO.device,
         "s0_legacy_key": "new123",
         "s2_access_control_key": "new456",
         "s2_authenticated_key": "new789",
@@ -578,7 +578,7 @@ async def test_usb_discovery_addon_not_running(
         "core_zwave_js",
         {
             "options": {
-                "device": USB_DISCOVERY_INFO["device"],
+                "device": USB_DISCOVERY_INFO.device,
                 "s0_legacy_key": "new123",
                 "s2_access_control_key": "new456",
                 "s2_authenticated_key": "new789",
@@ -606,7 +606,7 @@ async def test_usb_discovery_addon_not_running(
     assert result["title"] == TITLE
     assert result["data"] == {
         "url": "ws://host1:3001",
-        "usb_path": USB_DISCOVERY_INFO["device"],
+        "usb_path": USB_DISCOVERY_INFO.device,
         "s0_legacy_key": "new123",
         "s2_access_control_key": "new456",
         "s2_authenticated_key": "new789",
