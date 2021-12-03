@@ -8,11 +8,15 @@ from notifications_android_tv.notifications import ConnectError, Notifications
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
+from homeassistant.components.dhcp import (
+    HOSTNAME,
+    IP_ADDRESS,
+    MAC_ADDRESS,
+    DhcpServiceInfo,
+)
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import ANDROID_TV_NAME, DEFAULT_NAME, DOMAIN, FIRE_TV_NAME
 
@@ -26,7 +30,7 @@ class NFAndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize an NFAndroidTV flow."""
         self.ip_address = ""
 
-    async def async_step_dhcp(self, discovery_info: DiscoveryInfoType) -> FlowResult:
+    async def async_step_dhcp(self, discovery_info: DhcpServiceInfo) -> FlowResult:
         """Handle dhcp discovery."""
         self.ip_address = discovery_info[IP_ADDRESS]
         mac = format_mac(discovery_info[MAC_ADDRESS])
