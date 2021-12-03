@@ -14,7 +14,6 @@ from homeassistant.const import (
     ENTITY_CATEGORY_DIAGNOSTIC,
     PERCENTAGE,
     TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
 )
 from homeassistant.core import HomeAssistant
