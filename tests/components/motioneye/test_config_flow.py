@@ -8,7 +8,7 @@ from motioneye_client.client import (
 )
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.hassio.discovery import HassioServiceInfo
+from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.components.motioneye.const import (
     CONF_ADMIN_PASSWORD,
     CONF_ADMIN_USERNAME,

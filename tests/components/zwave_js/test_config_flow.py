@@ -8,20 +8,18 @@ from zwave_js_server.version import VersionInfo
 
 from homeassistant import config_entries
 from homeassistant.components import usb
-from homeassistant.components.hassio.discovery import HassioServiceInfo
+from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.zwave_js.config_flow import SERVER_VERSION_TIMEOUT, TITLE
 from homeassistant.components.zwave_js.const import DOMAIN
 
 from tests.common import MockConfigEntry
 
-ADDON_DISCOVERY_INFO = HassioServiceInfo(
-    config={
-        "addon": "Z-Wave JS",
-        "host": "host1",
-        "port": 3001,
-    }
-)
+ADDON_DISCOVERY_INFO = {
+    "addon": "Z-Wave JS",
+    "host": "host1",
+    "port": 3001,
+}
 
 
 USB_DISCOVERY_INFO = usb.UsbServiceInfo(
@@ -285,7 +283,7 @@ async def test_supervisor_discovery(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
-        data=ADDON_DISCOVERY_INFO,
+        data=HassioServiceInfo(config=ADDON_DISCOVERY_INFO),
     )
 
     with patch(
@@ -325,7 +323,7 @@ async def test_supervisor_discovery_cannot_connect(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
-        data=ADDON_DISCOVERY_INFO,
+        data=HassioServiceInfo(config=ADDON_DISCOVERY_INFO),
     )
 
     assert result["type"] == "abort"
@@ -347,7 +345,7 @@ async def test_clean_discovery_on_user_create(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
-        data=ADDON_DISCOVERY_INFO,
+        data=HassioServiceInfo(config=ADDON_DISCOVERY_INFO),
     )
 
     assert result["type"] == "form"
@@ -410,7 +408,7 @@ async def test_abort_discovery_with_existing_entry(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
-        data=ADDON_DISCOVERY_INFO,
+        data=HassioServiceInfo(config=ADDON_DISCOVERY_INFO),
     )
 
     assert result["type"] == "abort"
@@ -434,7 +432,7 @@ async def test_abort_hassio_discovery_with_existing_flow(
     result2 = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
-        data=ADDON_DISCOVERY_INFO,
+        data=HassioServiceInfo(config=ADDON_DISCOVERY_INFO),
     )
 
     assert result2["type"] == "abort"
@@ -629,7 +627,7 @@ async def test_discovery_addon_not_running(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
-        data=ADDON_DISCOVERY_INFO,
+        data=HassioServiceInfo(config=ADDON_DISCOVERY_INFO),
     )
 
     assert result["step_id"] == "hassio_confirm"
@@ -711,7 +709,7 @@ async def test_discovery_addon_not_installed(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
-        data=ADDON_DISCOVERY_INFO,
+        data=HassioServiceInfo(config=ADDON_DISCOVERY_INFO),
     )
 
     assert result["step_id"] == "hassio_confirm"
@@ -792,7 +790,7 @@ async def test_abort_usb_discovery_with_existing_flow(hass, supervisor, addon_op
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
-        data=ADDON_DISCOVERY_INFO,
+        data=HassioServiceInfo(config=ADDON_DISCOVERY_INFO),
     )
 
     assert result["type"] == "form"

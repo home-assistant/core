@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, loader
+from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CoreState, callback
 from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, BaseServiceInfo
@@ -2356,7 +2357,7 @@ async def test_async_setup_update_entry(hass):
         (config_entries.SOURCE_HOMEKIT, BaseServiceInfo()),
         (config_entries.SOURCE_DHCP, BaseServiceInfo()),
         (config_entries.SOURCE_ZEROCONF, BaseServiceInfo()),
-        (config_entries.SOURCE_HASSIO, {}),
+        (config_entries.SOURCE_HASSIO, HassioServiceInfo(config={})),
     ),
 )
 async def test_flow_with_default_discovery(hass, manager, discovery_source):
