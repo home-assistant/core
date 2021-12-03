@@ -1,10 +1,10 @@
 """Support for reading vehicle status from BMW connected drive portal."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 import logging
-from typing import Any, Mapping, cast
+from typing import Any, cast
 
 from bimmer_connected.vehicle import ConnectedDriveVehicle
 
