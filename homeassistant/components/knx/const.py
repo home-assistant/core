@@ -20,6 +20,7 @@ from homeassistant.components.climate.const import (
     PRESET_NONE,
     PRESET_SLEEP,
 )
+from homeassistant.const import Platform
 
 DOMAIN: Final = "knx"
 
@@ -54,23 +55,21 @@ class ColorTempModes(Enum):
     RELATIVE = "DPT-5.001"
 
 
-class SupportedPlatforms(Enum):
-    """Supported platforms."""
-
-    BINARY_SENSOR = "binary_sensor"
-    BUTTON = "button"
-    CLIMATE = "climate"
-    COVER = "cover"
-    FAN = "fan"
-    LIGHT = "light"
-    NOTIFY = "notify"
-    NUMBER = "number"
-    SCENE = "scene"
-    SELECT = "select"
-    SENSOR = "sensor"
-    SWITCH = "switch"
-    WEATHER = "weather"
-
+SUPPORTED_PLATFORMS: Final = [
+    Platform.BINARY_SENSOR.value,
+    Platform.BUTTON.value,
+    Platform.CLIMATE.value,
+    Platform.COVER.value,
+    Platform.FAN.value,
+    Platform.LIGHT.value,
+    Platform.NOTIFY.value,
+    Platform.NUMBER.value,
+    Platform.SCENE.value,
+    Platform.SELECT.value,
+    Platform.SENSOR.value,
+    Platform.SWITCH.value,
+    Platform.WEATHER.value,
+]
 
 # Map KNX controller modes to HA modes. This list might not be complete.
 CONTROLLER_MODES: Final = {
