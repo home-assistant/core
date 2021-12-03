@@ -67,12 +67,12 @@ from .utils import (
 )
 
 BLOCK_PLATFORMS: Final = [
-    "binary_sensor",
-    "button",
-    "cover",
-    "light",
-    "sensor",
-    "switch",
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.COVER,
+    Platform.LIGHT,
+    Platform.SENSOR,
+    Platform.SWITCH,
 ]
 BLOCK_SLEEPING_PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
