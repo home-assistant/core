@@ -1,8 +1,9 @@
 """Tests for Broadlink sensors."""
 from datetime import timedelta
 
-from homeassistant.components.broadlink.const import DOMAIN, SENSOR_DOMAIN
+from homeassistant.components.broadlink.const import DOMAIN
 from homeassistant.components.broadlink.updater import BroadlinkSP4UpdateManager
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.util import dt
 

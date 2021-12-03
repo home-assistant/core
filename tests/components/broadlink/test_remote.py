@@ -2,8 +2,9 @@
 from base64 import b64decode
 from unittest.mock import call
 
-from homeassistant.components.broadlink.const import DOMAIN, REMOTE_DOMAIN
+from homeassistant.components.broadlink.const import DOMAIN
 from homeassistant.components.remote import (
+    DOMAIN as REMOTE_DOMAIN,
     SERVICE_SEND_COMMAND,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,

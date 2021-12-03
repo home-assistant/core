@@ -1,11 +1,12 @@
 """Tests for the Atag climate platform."""
 from unittest.mock import PropertyMock, patch
 
-from homeassistant.components.atag.climate import CLIMATE, DOMAIN, PRESET_MAP
+from homeassistant.components.atag.climate import DOMAIN, PRESET_MAP
 from homeassistant.components.climate import (
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
+    DOMAIN as CLIMATE_DOMAIN,
     HVAC_MODE_HEAT,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
@@ -21,7 +22,7 @@ from homeassistant.setup import async_setup_component
 from tests.components.atag import UID, init_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-CLIMATE_ID = f"{CLIMATE}.{DOMAIN}"
+CLIMATE_ID = f"{CLIMATE_DOMAIN}.{DOMAIN}"
 
 
 async def test_climate(
@@ -33,7 +34,7 @@ async def test_climate(
 
     assert entity_registry.async_is_registered(CLIMATE_ID)
     entity = entity_registry.async_get(CLIMATE_ID)
-    assert entity.unique_id == f"{UID}-{CLIMATE}"
+    assert entity.unique_id == f"{UID}-{CLIMATE_DOMAIN}"
     assert hass.states.get(CLIMATE_ID).attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
 
 
@@ -44,7 +45,7 @@ async def test_setting_climate(
     await init_integration(hass, aioclient_mock)
     with patch("pyatag.entities.Climate.set_temp") as mock_set_temp:
         await hass.services.async_call(
-            CLIMATE,
+            CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
             {ATTR_ENTITY_ID: CLIMATE_ID, ATTR_TEMPERATURE: 15},
             blocking=True,
@@ -54,7 +55,7 @@ async def test_setting_climate(
 
     with patch("pyatag.entities.Climate.set_preset_mode") as mock_set_preset:
         await hass.services.async_call(
-            CLIMATE,
+            CLIMATE_DOMAIN,
             SERVICE_SET_PRESET_MODE,
             {ATTR_ENTITY_ID: CLIMATE_ID, ATTR_PRESET_MODE: PRESET_AWAY},
             blocking=True,
@@ -64,7 +65,7 @@ async def test_setting_climate(
 
     with patch("pyatag.entities.Climate.set_hvac_mode") as mock_set_hvac:
         await hass.services.async_call(
-            CLIMATE,
+            CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
             {ATTR_ENTITY_ID: CLIMATE_ID, ATTR_HVAC_MODE: HVAC_MODE_HEAT},
             blocking=True,
