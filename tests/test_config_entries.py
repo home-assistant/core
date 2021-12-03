@@ -2356,7 +2356,7 @@ async def test_async_setup_update_entry(hass):
         (config_entries.SOURCE_HOMEKIT, BaseServiceInfo()),
         (config_entries.SOURCE_DHCP, BaseServiceInfo()),
         (config_entries.SOURCE_ZEROCONF, BaseServiceInfo()),
-        (config_entries.SOURCE_HASSIO, {}),
+        (config_entries.SOURCE_HASSIO, BaseServiceInfo()),
     ),
 )
 async def test_flow_with_default_discovery(hass, manager, discovery_source):
