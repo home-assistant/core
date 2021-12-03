@@ -57,7 +57,7 @@ from .const import (
     DOMAIN,
     SupervisorEntityModel,
 )
-from .discovery import async_setup_discovery_view
+from .discovery import HassioServiceInfo, async_setup_discovery_view  # noqa: F401
 from .handler import HassIO, HassioAPIError, api_data
 from .http import HassIOView
 from .ingress import async_setup_ingress_view

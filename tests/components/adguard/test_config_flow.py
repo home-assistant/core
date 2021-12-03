@@ -3,7 +3,7 @@ import aiohttp
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.adguard.const import DOMAIN
-from homeassistant.components.hassio.discovery import HassioServiceInfo
+from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_HOST,
