@@ -2,20 +2,18 @@
 from pi1wire import InvalidCRCException, UnsupportResponseException
 from pyownet.protocol import Error as ProtocolError
 
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.onewire.const import (
     DOMAIN,
     MANUFACTURER_EDS,
     MANUFACTURER_HOBBYBOARDS,
     MANUFACTURER_MAXIM,
+    Platform,
 )
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
-    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorStateClass,
 )
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
@@ -70,7 +68,7 @@ MOCK_OWPROXY_DEVICES = {
             ATTR_MODEL: "DS2405",
             ATTR_NAME: "05.111111111111",
         },
-        SWITCH_DOMAIN: [
+        Platform.SWITCH: [
             {
                 ATTR_DEFAULT_DISABLED: True,
                 ATTR_ENTITY_ID: "switch.05_111111111111_pio",
@@ -90,7 +88,7 @@ MOCK_OWPROXY_DEVICES = {
             ATTR_MODEL: "DS18S20",
             ATTR_NAME: "10.111111111111",
         },
-        SENSOR_DOMAIN: [
+        Platform.SENSOR: [
             {
                 ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
                 ATTR_ENTITY_ID: "sensor.my_ds18b20_temperature",
@@ -112,7 +110,7 @@ MOCK_OWPROXY_DEVICES = {
             ATTR_MODEL: "DS2406",
             ATTR_NAME: "12.111111111111",
         },
-        BINARY_SENSOR_DOMAIN: [
+        Platform.BINARY_SENSOR: [
             {
                 ATTR_DEFAULT_DISABLED: True,
                 ATTR_ENTITY_ID: "binary_sensor.12_111111111111_sensed_a",
@@ -128,7 +126,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_UNIQUE_ID: "/12.111111111111/sensed.B",
             },
         ],
-        SENSOR_DOMAIN: [
+        Platform.SENSOR: [
             {
                 ATTR_DEFAULT_DISABLED: True,
                 ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
@@ -150,7 +148,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_UNIT_OF_MEASUREMENT: PRESSURE_MBAR,
             },
         ],
-        SWITCH_DOMAIN: [
+        Platform.SWITCH: [
             {
                 ATTR_DEFAULT_DISABLED: True,
                 ATTR_ENTITY_ID: "switch.12_111111111111_pio_a",
@@ -191,7 +189,7 @@ MOCK_OWPROXY_DEVICES = {
             ATTR_MODEL: "DS2423",
             ATTR_NAME: "1D.111111111111",
         },
-        SENSOR_DOMAIN: [
+        Platform.SENSOR: [
             {
                 ATTR_ENTITY_ID: "sensor.1d_111111111111_counter_a",
                 ATTR_INJECT_READS: b"    251123",
@@ -236,7 +234,7 @@ MOCK_OWPROXY_DEVICES = {
                     ATTR_INJECT_READS: [
                         b"DS2423",  # read device type
                     ],
-                    SENSOR_DOMAIN: [
+                    Platform.SENSOR: [
                         {
                             ATTR_DEVICE_FILE: "/1F.111111111111/main/1D.111111111111/counter.A",
                             ATTR_ENTITY_ID: "sensor.1d_111111111111_counter_a",
@@ -270,7 +268,7 @@ MOCK_OWPROXY_DEVICES = {
             ATTR_MODEL: "DS1822",
             ATTR_NAME: "22.111111111111",
         },
-        SENSOR_DOMAIN: [
+        Platform.SENSOR: [
             {
                 ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
                 ATTR_ENTITY_ID: "sensor.22_111111111111_temperature",
@@ -292,7 +290,7 @@ MOCK_OWPROXY_DEVICES = {
             ATTR_MODEL: "DS2438",
             ATTR_NAME: "26.111111111111",
         },
-        SENSOR_DOMAIN: [
+        Platform.SENSOR: [
             {
                 ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
                 ATTR_ENTITY_ID: "sensor.26_111111111111_temperature",
@@ -403,7 +401,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_POTENTIAL_VOLT,
             },
         ],
-        SWITCH_DOMAIN: [
+        Platform.SWITCH: [
             {
                 ATTR_DEFAULT_DISABLED: True,
                 ATTR_ENTITY_CATEGORY: EntityCategory.CONFIG,
@@ -424,7 +422,7 @@ MOCK_OWPROXY_DEVICES = {
             ATTR_MODEL: "DS18B20",
             ATTR_NAME: "28.111111111111",
         },
-        SENSOR_DOMAIN: [
+        Platform.SENSOR: [
             {
                 ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
                 ATTR_ENTITY_ID: "sensor.28_111111111111_temperature",
@@ -446,7 +444,7 @@ MOCK_OWPROXY_DEVICES = {
             ATTR_MODEL: "DS2408",
             ATTR_NAME: "29.111111111111",
         },
-        BINARY_SENSOR_DOMAIN: [
+        Platform.BINARY_SENSOR: [
             {
                 ATTR_DEFAULT_DISABLED: True,
                 ATTR_ENTITY_ID: "binary_sensor.29_111111111111_sensed_0",
@@ -504,7 +502,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_UNIQUE_ID: "/29.111111111111/sensed.7",
             },
         ],
-        SWITCH_DOMAIN: [
+        Platform.SWITCH: [
             {
                 ATTR_DEFAULT_DISABLED: True,
                 ATTR_ENTITY_ID: "switch.29_111111111111_pio_0",
@@ -629,7 +627,7 @@ MOCK_OWPROXY_DEVICES = {
             ATTR_MODEL: "DS2413",
             ATTR_NAME: "3A.111111111111",
         },
-        BINARY_SENSOR_DOMAIN: [
+        Platform.BINARY_SENSOR: [
             {
                 ATTR_DEFAULT_DISABLED: True,
                 ATTR_ENTITY_ID: "binary_sensor.3a_111111111111_sensed_a",
@@ -645,7 +643,7 @@ MOCK_OWPROXY_DEVICES = {
                 ATTR_UNIQUE_ID: "/3A.111111111111/sensed.B",
             },
         ],
-        SWITCH_DOMAIN: [
+        Platform.SWITCH: [
             {
                 ATTR_DEFAULT_DISABLED: True,
                 ATTR_ENTITY_ID: "switch.3a_111111111111_pio_a",
@@ -672,7 +670,7 @@ MOCK_OWPROXY_DEVICES = {
             ATTR_MODEL: "DS1825",
             ATTR_NAME: "3B.111111111111",
         },
-        SENSOR_DOMAIN: [
+        Platform.SENSOR: [
             {
                 ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
                 ATTR_ENTITY_ID: "sensor.3b_111111111111_temperature",
@@ -694,7 +692,7 @@ MOCK_OWPROXY_DEVICES = {
             ATTR_MODEL: "DS28EA00",
             ATTR_NAME: "42.111111111111",
         },
-        SENSOR_DOMAIN: [
+        Platform.SENSOR: [
             {
                 ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
                 ATTR_ENTITY_ID: "sensor.42_111111111111_temperature",
@@ -716,7 +714,7 @@ MOCK_OWPROXY_DEVICES = {
             ATTR_MODEL: "HobbyBoards_EF",
             ATTR_NAME: "EF.111111111111",
         },
-        SENSOR_DOMAIN: [
+        Platform.SENSOR: [
             {
                 ATTR_DEVICE_CLASS: SensorDeviceClass.HUMIDITY,
                 ATTR_ENTITY_ID: "sensor.ef_111111111111_humidity",
@@ -760,7 +758,7 @@ MOCK_OWPROXY_DEVICES = {
             ATTR_MODEL: "HB_MOISTURE_METER",
             ATTR_NAME: "EF.111111111112",
         },
-        SENSOR_DOMAIN: [
+        Platform.SENSOR: [
             {
                 ATTR_DEVICE_CLASS: SensorDeviceClass.HUMIDITY,
                 ATTR_ENTITY_ID: "sensor.ef_111111111112_wetness_0",
@@ -810,7 +808,7 @@ MOCK_OWPROXY_DEVICES = {
             ATTR_MODEL: "EDS0068",
             ATTR_NAME: "7E.111111111111",
         },
-        SENSOR_DOMAIN: [
+        Platform.SENSOR: [
             {
                 ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
                 ATTR_ENTITY_ID: "sensor.7e_111111111111_temperature",
@@ -860,7 +858,7 @@ MOCK_OWPROXY_DEVICES = {
             ATTR_MODEL: "EDS0066",
             ATTR_NAME: "7E.222222222222",
         },
-        SENSOR_DOMAIN: [
+        Platform.SENSOR: [
             {
                 ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
                 ATTR_ENTITY_ID: "sensor.7e_222222222222_temperature",
@@ -894,7 +892,7 @@ MOCK_SYSBUS_DEVICES = {
             ATTR_MODEL: "10",
             ATTR_NAME: "10-111111111111",
         },
-        SENSOR_DOMAIN: [
+        Platform.SENSOR: [
             {
                 ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
                 ATTR_ENTITY_ID: "sensor.my_ds18b20_temperature",
@@ -913,7 +911,7 @@ MOCK_SYSBUS_DEVICES = {
             ATTR_MODEL: "22",
             ATTR_NAME: "22-111111111111",
         },
-        SENSOR_DOMAIN: [
+        Platform.SENSOR: [
             {
                 ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
                 ATTR_ENTITY_ID: "sensor.22_111111111111_temperature",
@@ -932,7 +930,7 @@ MOCK_SYSBUS_DEVICES = {
             ATTR_MODEL: "28",
             ATTR_NAME: "28-111111111111",
         },
-        SENSOR_DOMAIN: [
+        Platform.SENSOR: [
             {
                 ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
                 ATTR_ENTITY_ID: "sensor.28_111111111111_temperature",
@@ -951,7 +949,7 @@ MOCK_SYSBUS_DEVICES = {
             ATTR_MODEL: "3B",
             ATTR_NAME: "3B-111111111111",
         },
-        SENSOR_DOMAIN: [
+        Platform.SENSOR: [
             {
                 ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
                 ATTR_ENTITY_ID: "sensor.3b_111111111111_temperature",
@@ -970,7 +968,7 @@ MOCK_SYSBUS_DEVICES = {
             ATTR_MODEL: "42",
             ATTR_NAME: "42-111111111111",
         },
-        SENSOR_DOMAIN: [
+        Platform.SENSOR: [
             {
                 ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
                 ATTR_ENTITY_ID: "sensor.42_111111111111_temperature",
@@ -989,7 +987,7 @@ MOCK_SYSBUS_DEVICES = {
             ATTR_MODEL: "42",
             ATTR_NAME: "42-111111111112",
         },
-        SENSOR_DOMAIN: [
+        Platform.SENSOR: [
             {
                 ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
                 ATTR_ENTITY_ID: "sensor.42_111111111112_temperature",
@@ -1008,7 +1006,7 @@ MOCK_SYSBUS_DEVICES = {
             ATTR_MODEL: "42",
             ATTR_NAME: "42-111111111113",
         },
-        SENSOR_DOMAIN: [
+        Platform.SENSOR: [
             {
                 ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
                 ATTR_ENTITY_ID: "sensor.42_111111111113_temperature",
