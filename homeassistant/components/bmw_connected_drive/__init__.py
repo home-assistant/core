@@ -258,6 +258,13 @@ def setup_account(
         function_call = getattr(vehicle.remote_services, function_name)
         function_call()
 
+        if call.service in [
+            "find_vehicle",
+            "activate_air_conditioning",
+            "deactivate_air_conditioning",
+        ]:
+            cd_account.update()
+
     if not read_only:
         # register the remote services
         for service in _SERVICE_MAP:
