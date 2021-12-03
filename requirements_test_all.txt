@@ -515,7 +515,7 @@ hole==0.7.0
 holidays==0.11.3.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20211201.0
+home-assistant-frontend==20211202.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1178,7 +1178,7 @@ pytile==5.2.4
 pytraccar==0.10.0
 
 # homeassistant.components.tradfri
-pytradfri[async]==7.2.0
+pytradfri[async]==7.2.1
 
 # homeassistant.components.trafikverket_train
 # homeassistant.components.trafikverket_weatherstation
@@ -1294,7 +1294,7 @@ smarthab==0.21
 smhi-pkg==1.0.15
 
 # homeassistant.components.sonos
-soco==0.24.0
+soco==0.25.0
 
 # homeassistant.components.solaredge
 solaredge==0.0.2
@@ -1491,7 +1491,7 @@ zigpy-xbee==0.14.0
 zigpy-zigate==0.7.3
 
 # homeassistant.components.zha
-zigpy-znp==0.6.1
+zigpy-znp==0.6.3
 
 # homeassistant.components.zha
 zigpy==0.42.0

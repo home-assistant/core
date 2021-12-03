@@ -18,6 +18,7 @@ from homeassistant.auth.permissions.const import POLICY_CONTROL
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
 from homeassistant.components.camera import DOMAIN as CAMERA
 from homeassistant.components.sensor import DOMAIN as SENSOR
+from homeassistant.components.switch import DOMAIN as SWITCH
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_AUTHENTICATION,
@@ -28,6 +29,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SCAN_INTERVAL,
     CONF_SENSORS,
+    CONF_SWITCHES,
     CONF_USERNAME,
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_NONE,
@@ -56,6 +58,7 @@ from .const import (
 )
 from .helpers import service_signal
 from .sensor import SENSOR_KEYS
+from .switch import SWITCH_KEYS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -110,6 +113,9 @@ AMCREST_SCHEMA = vol.Schema(
             [vol.In(BINARY_SENSOR_KEYS)],
             vol.Unique(),
             check_binary_sensors,
+        ),
+        vol.Optional(CONF_SWITCHES): vol.All(
+            cv.ensure_list, [vol.In(SWITCH_KEYS)], vol.Unique()
         ),
         vol.Optional(CONF_SENSORS): vol.All(
             cv.ensure_list, [vol.In(SENSOR_KEYS)], vol.Unique()
@@ -273,6 +279,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         resolution = RESOLUTION_LIST[device[CONF_RESOLUTION]]
         binary_sensors = device.get(CONF_BINARY_SENSORS)
         sensors = device.get(CONF_SENSORS)
+        switches = device.get(CONF_SWITCHES)
         stream_source = device[CONF_STREAM_SOURCE]
         control_light = device.get(CONF_CONTROL_LIGHT)
 
@@ -318,6 +325,11 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if sensors:
             discovery.load_platform(
                 hass, SENSOR, DOMAIN, {CONF_NAME: name, CONF_SENSORS: sensors}, config
+            )
+
+        if switches:
+            discovery.load_platform(
+                hass, SWITCH, DOMAIN, {CONF_NAME: name, CONF_SWITCHES: switches}, config
             )
 
     if not hass.data[DATA_AMCREST][DEVICES]:

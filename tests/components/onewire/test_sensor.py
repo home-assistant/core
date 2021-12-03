@@ -4,8 +4,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_validation import ensure_list
 
@@ -29,7 +29,7 @@ from tests.common import mock_device_registry, mock_registry
 @pytest.fixture(autouse=True)
 def override_platforms():
     """Override PLATFORMS."""
-    with patch("homeassistant.components.onewire.PLATFORMS", [SENSOR_DOMAIN]):
+    with patch("homeassistant.components.onewire.PLATFORMS", [Platform.SENSOR]):
         yield
 
 
@@ -48,14 +48,14 @@ async def test_owserver_sensor(
     entity_registry = mock_registry(hass)
 
     mock_device = MOCK_OWPROXY_DEVICES[device_id]
-    expected_entities = mock_device.get(SENSOR_DOMAIN, [])
+    expected_entities = mock_device.get(Platform.SENSOR, [])
     if "branches" in mock_device:
         for branch_details in mock_device["branches"].values():
             for sub_device in branch_details.values():
-                expected_entities += sub_device[SENSOR_DOMAIN]
+                expected_entities += sub_device[Platform.SENSOR]
     expected_devices = ensure_list(mock_device.get(ATTR_DEVICE_INFO))
 
-    setup_owproxy_mock_devices(owproxy, SENSOR_DOMAIN, [device_id])
+    setup_owproxy_mock_devices(owproxy, Platform.SENSOR, [device_id])
     with caplog.at_level(logging.WARNING, logger="homeassistant.components.onewire"):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -68,7 +68,7 @@ async def test_owserver_sensor(
     assert len(entity_registry.entities) == len(expected_entities)
     check_and_enable_disabled_entities(entity_registry, expected_entities)
 
-    setup_owproxy_mock_devices(owproxy, SENSOR_DOMAIN, [device_id])
+    setup_owproxy_mock_devices(owproxy, Platform.SENSOR, [device_id])
     await hass.config_entries.async_reload(config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -88,11 +88,11 @@ async def test_onewiredirect_setup_valid_device(
     entity_registry = mock_registry(hass)
 
     glob_result, read_side_effect = setup_sysbus_mock_devices(
-        SENSOR_DOMAIN, [device_id]
+        Platform.SENSOR, [device_id]
     )
 
     mock_device = MOCK_SYSBUS_DEVICES[device_id]
-    expected_entities = mock_device.get(SENSOR_DOMAIN, [])
+    expected_entities = mock_device.get(Platform.SENSOR, [])
     expected_devices = ensure_list(mock_device.get(ATTR_DEVICE_INFO))
 
     with patch("pi1wire._finder.glob.glob", return_value=glob_result,), patch(

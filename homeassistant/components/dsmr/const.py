@@ -6,6 +6,7 @@ import logging
 from dsmr_parser import obis_references
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
+from homeassistant.const import Platform
 
 from .models import DSMRSensorEntityDescription
 
@@ -13,8 +14,7 @@ DOMAIN = "dsmr"
 
 LOGGER = logging.getLogger(__package__)
 
-PLATFORMS = ["sensor"]
-
+PLATFORMS = [Platform.SENSOR]
 CONF_DSMR_VERSION = "dsmr_version"
 CONF_RECONNECT_INTERVAL = "reconnect_interval"
 CONF_PRECISION = "precision"

@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_SENSORS,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
@@ -33,7 +34,7 @@ from .const import (
 )
 from .router import AsusWrtRouter
 
-PLATFORMS = ["device_tracker", "sensor"]
+PLATFORMS = [Platform.DEVICE_TRACKER, Platform.SENSOR]
 
 CONF_PUB_KEY = "pub_key"
 SECRET_GROUP = "Password or SSH Key"

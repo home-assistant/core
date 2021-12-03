@@ -1028,7 +1028,7 @@ NUMERIC_STATE_CONDITION_SCHEMA = vol.All(
         {
             **CONDITION_BASE_SCHEMA,
             vol.Required(CONF_CONDITION): "numeric_state",
-            vol.Required(CONF_ENTITY_ID): entity_ids,
+            vol.Required(CONF_ENTITY_ID): entity_ids_or_uuids,
             vol.Optional(CONF_ATTRIBUTE): str,
             CONF_BELOW: NUMERIC_STATE_THRESHOLD_SCHEMA,
             CONF_ABOVE: NUMERIC_STATE_THRESHOLD_SCHEMA,
@@ -1041,7 +1041,7 @@ NUMERIC_STATE_CONDITION_SCHEMA = vol.All(
 STATE_CONDITION_BASE_SCHEMA = {
     **CONDITION_BASE_SCHEMA,
     vol.Required(CONF_CONDITION): "state",
-    vol.Required(CONF_ENTITY_ID): entity_ids,
+    vol.Required(CONF_ENTITY_ID): entity_ids_or_uuids,
     vol.Optional(CONF_ATTRIBUTE): str,
     vol.Optional(CONF_FOR): positive_time_period,
     # To support use_trigger_value in automation

@@ -18,7 +18,7 @@ from homeassistant.components.deconz.const import (
     CONF_MASTER_GATEWAY,
     DOMAIN as DECONZ_DOMAIN,
 )
-from homeassistant.components.hassio.discovery import HassioServiceInfo
+from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.components.ssdp import ATTR_UPNP_MANUFACTURER_URL, ATTR_UPNP_SERIAL
 from homeassistant.config_entries import (
     SOURCE_HASSIO,
