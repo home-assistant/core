@@ -1022,7 +1022,7 @@ class Recorder(threading.Thread):
         self.queue.put(WaitTask())
         self._queue_watch.wait()
 
-    async def lock_database(self) -> bool:
+    async def lock_database(self, lock_timeout=30) -> bool:
         """Lock database so it can be backed up safely."""
         if self._database_lock_task:
             _LOGGER.warning("Database already locked")
@@ -1031,10 +1031,10 @@ class Recorder(threading.Thread):
         database_locked = asyncio.Event()
         task = DatabaseLockTask(database_locked, threading.Event(), False)
         self.queue.put(task)
-        lock_timeout = 30
         try:
             await asyncio.wait_for(database_locked.wait(), timeout=lock_timeout)
         except asyncio.TimeoutError:
+            task.database_unlock.set()
             raise TimeoutError(
                 f"Could not lock database within {lock_timeout} seconds."
             )
