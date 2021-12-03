@@ -461,8 +461,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     await hass.components.panel_custom.async_register_panel(
         frontend_url_path="hassio",
         webcomponent_name="hassio-main",
-        sidebar_title="Supervisor",
-        sidebar_icon="hass:home-assistant",
         js_url="/api/hassio/app/entrypoint.js",
         embed_iframe=True,
         require_admin=True,
