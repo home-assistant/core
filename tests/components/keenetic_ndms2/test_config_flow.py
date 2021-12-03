@@ -218,7 +218,7 @@ async def test_ssdp_ignored(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain=keenetic.DOMAIN,
         source=config_entries.SOURCE_IGNORE,
-        unique_id=MOCK_SSDP_DISCOVERY_INFO[ssdp.ATTR_UPNP_UDN],
+        unique_id=MOCK_SSDP_DISCOVERY_INFO.upnp[ssdp.ATTR_UPNP_UDN],
     )
     entry.add_to_hass(hass)
 
@@ -240,7 +240,7 @@ async def test_ssdp_update_host(hass: HomeAssistant) -> None:
         domain=keenetic.DOMAIN,
         data=MOCK_DATA,
         options=MOCK_OPTIONS,
-        unique_id=MOCK_SSDP_DISCOVERY_INFO[ssdp.ATTR_UPNP_UDN],
+        unique_id=MOCK_SSDP_DISCOVERY_INFO.upnp[ssdp.ATTR_UPNP_UDN],
     )
     entry.add_to_hass(hass)
 
