@@ -34,6 +34,7 @@ import homeassistant.util.uuid as uuid_util
 
 if TYPE_CHECKING:
     from homeassistant.components.dhcp import DhcpServiceInfo
+    from homeassistant.components.hassio import HassioServiceInfo
     from homeassistant.components.mqtt.discovery import MqttServiceInfo
     from homeassistant.components.ssdp import SsdpServiceInfo
     from homeassistant.components.usb import UsbServiceInfo
@@ -1353,10 +1354,10 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         )
 
     async def async_step_hassio(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: HassioServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by HASS IO discovery."""
-        return await self.async_step_discovery(discovery_info)
+        return await self.async_step_discovery(discovery_info.config)
 
     async def async_step_homekit(
         self, discovery_info: ZeroconfServiceInfo
