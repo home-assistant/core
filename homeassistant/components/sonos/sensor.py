@@ -45,27 +45,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class SonosBatteryEntity(SonosEntity, SensorEntity):
     """Representation of a Sonos Battery entity."""
 
+    _attr_device_class = DEVICE_CLASS_BATTERY
     _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
+    _attr_native_unit_of_measurement = PERCENTAGE
 
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID of the sensor."""
-        return f"{self.soco.uid}-battery"
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return f"{self.speaker.zone_name} Battery"
-
-    @property
-    def device_class(self) -> str:
-        """Return the entity's device class."""
-        return DEVICE_CLASS_BATTERY
-
-    @property
-    def native_unit_of_measurement(self) -> str:
-        """Get the unit of measurement."""
-        return PERCENTAGE
+    def __init__(self, speaker: SonosSpeaker) -> None:
+        """Initialize the battery sensor."""
+        super().__init__(speaker)
+        self._attr_unique_id = f"{self.soco.uid}-battery"
+        self._attr_name = f"{self.speaker.zone_name} Battery"
 
     async def _async_poll(self) -> None:
         """Poll the device for the current state."""

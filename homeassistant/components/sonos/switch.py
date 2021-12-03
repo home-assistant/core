@@ -195,11 +195,12 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
     """Representation of a Sonos Alarm entity."""
 
     _attr_entity_category = ENTITY_CATEGORY_CONFIG
+    _attr_icon = "mdi:alarm"
 
     def __init__(self, alarm_id: str, speaker: SonosSpeaker) -> None:
         """Initialize the switch."""
         super().__init__(speaker)
-
+        self._attr_unique_id = f"{SONOS_DOMAIN}-{alarm_id}"
         self.alarm_id = alarm_id
         self.household_id = speaker.household_id
         self.entity_id = ENTITY_ID_FORMAT.format(f"sonos_alarm_{self.alarm_id}")
@@ -219,16 +220,6 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
     def alarm(self):
         """Return the alarm instance."""
         return self.hass.data[DATA_SONOS].alarms[self.household_id].get(self.alarm_id)
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID of the switch."""
-        return f"{SONOS_DOMAIN}-{self.alarm_id}"
-
-    @property
-    def icon(self):
-        """Return icon of Sonos alarm switch."""
-        return "mdi:alarm"
 
     @property
     def name(self) -> str:
