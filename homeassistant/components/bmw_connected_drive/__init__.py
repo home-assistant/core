@@ -65,7 +65,6 @@ SERVICE_SCHEMA = vol.Schema(
 
 DEFAULT_OPTIONS = {
     CONF_READ_ONLY: False,
-    CONF_USE_LOCATION: False,
 }
 
 PLATFORMS = [
