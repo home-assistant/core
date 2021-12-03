@@ -17,7 +17,7 @@ async def test_weather(hass: HomeAssistant, knx: KNXTestKit):
 
     await knx.setup_integration(
         {
-            WeatherSchema.PLATFORM_NAME: {
+            WeatherSchema.PLATFORM: {
                 CONF_NAME: "test",
                 WeatherSchema.CONF_KNX_WIND_ALARM_ADDRESS: "1/1/1",
                 WeatherSchema.CONF_KNX_RAIN_ALARM_ADDRESS: "1/1/2",

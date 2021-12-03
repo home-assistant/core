@@ -12,12 +12,12 @@ from homeassistant.components.sensor import (
     DEVICE_CLASSES,
     SensorEntity,
 )
-from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME, CONF_TYPE
+from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME, CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, StateType
 
-from .const import ATTR_SOURCE, DATA_KNX_CONFIG, DOMAIN, SupportedPlatforms
+from .const import ATTR_SOURCE, DATA_KNX_CONFIG, DOMAIN
 from .knx_entity import KnxEntity
 from .schema import SensorSchema
 
@@ -29,9 +29,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensor(s) for KNX platform."""
     xknx: XKNX = hass.data[DOMAIN].xknx
-    config: list[ConfigType] = hass.data[DATA_KNX_CONFIG][
-        SupportedPlatforms.SENSOR.value
-    ]
+    config: list[ConfigType] = hass.data[DATA_KNX_CONFIG][Platform.SENSOR]
 
     async_add_entities(KNXSensor(xknx, entity_config) for entity_config in config)
 

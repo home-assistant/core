@@ -47,7 +47,7 @@ from .const import (
     DATA_KNX_CONFIG,
     DOMAIN,
     KNX_ADDRESS,
-    SupportedPlatforms,
+    SUPPORTED_PLATFORMS,
 )
 from .expose import KNXExposeSensor, KNXExposeTime, create_knx_exposure
 from .schema import (
@@ -251,16 +251,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
 
     hass.config_entries.async_setup_platforms(
-        entry,
-        [platform.value for platform in SupportedPlatforms if platform.value in config],
+        entry, [platform for platform in SUPPORTED_PLATFORMS if platform in config]
     )
 
     # set up notify platform, no entry support for notify component yet,
     # have to use discovery to load platform.
-    if NotifySchema.PLATFORM_NAME in conf:
+    if NotifySchema.PLATFORM in conf:
         hass.async_create_task(
             discovery.async_load_platform(
-                hass, "notify", DOMAIN, conf[NotifySchema.PLATFORM_NAME], config
+                hass, "notify", DOMAIN, conf[NotifySchema.PLATFORM], config
             )
         )
 
@@ -310,9 +309,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(
         entry,
         [
-            platform.value
-            for platform in SupportedPlatforms
-            if platform.value in hass.data[DATA_KNX_CONFIG]
+            platform
+            for platform in SUPPORTED_PLATFORMS
+            if platform in hass.data[DATA_KNX_CONFIG]
         ],
     )
     if unload_ok:
