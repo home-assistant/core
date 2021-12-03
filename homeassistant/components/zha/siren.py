@@ -30,7 +30,6 @@ from .core.channels.security import IasWd
 from .core.const import (
     CHANNEL_IAS_WD,
     DATA_ZHA,
-    DATA_ZHA_DISPATCHERS,
     SIGNAL_ADD_ENTITIES,
     WARNING_DEVICE_MODE_BURGLAR,
     WARNING_DEVICE_MODE_EMERGENCY,
@@ -47,7 +46,7 @@ from .core.typing import ChannelType, ZhaDeviceType
 from .entity import ZhaEntity
 
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
-FIVE_SECONDS = 5
+DEFAULT_DURATION = 5  # seconds
 
 
 async def async_setup_entry(
@@ -68,7 +67,7 @@ async def async_setup_entry(
             update_before_add=False,
         ),
     )
-    hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
+    config_entry.async_on_unload(unsub)
 
 
 @STRICT_MATCH(channel_names=CHANNEL_IAS_WD)
@@ -82,9 +81,7 @@ class ZHASiren(ZhaEntity, SirenEntity):
         channels: list[ChannelType],
         **kwargs,
     ) -> None:
-        """Init this sensor."""
-        super().__init__(unique_id, zha_device, channels, **kwargs)
-        self._channel: IasWd = channels[0]
+        """Init this siren."""
         self._attr_supported_features = (
             SUPPORT_TURN_ON
             | SUPPORT_TURN_OFF
@@ -92,7 +89,6 @@ class ZHASiren(ZhaEntity, SirenEntity):
             | SUPPORT_VOLUME_SET
             | SUPPORT_TONES
         )
-        self._attr_is_on: bool = False
         self._attr_available_tones: list[int | str] | dict[int, str] | None = {
             WARNING_DEVICE_MODE_BURGLAR: "Burglar",
             WARNING_DEVICE_MODE_FIRE: "Fire",
@@ -101,11 +97,18 @@ class ZHASiren(ZhaEntity, SirenEntity):
             WARNING_DEVICE_MODE_FIRE_PANIC: "Fire Panic",
             WARNING_DEVICE_MODE_EMERGENCY_PANIC: "Emergency Panic",
         }
+        super().__init__(unique_id, zha_device, channels, **kwargs)
+        self._channel: IasWd = channels[0]
+        self._attr_is_on: bool = False
+        self._off_listener = None
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on siren."""
+        if self._off_listener:
+            self._off_listener()
+            self._off_listener = None
         siren_tone = WARNING_DEVICE_MODE_EMERGENCY
-        siren_duration = FIVE_SECONDS
+        siren_duration = DEFAULT_DURATION
         siren_level = WARNING_DEVICE_SOUND_HIGH
         if (duration := kwargs.get(ATTR_DURATION)) is not None:
             siren_duration = duration
@@ -117,7 +120,9 @@ class ZHASiren(ZhaEntity, SirenEntity):
             mode=siren_tone, warning_duration=siren_duration, siren_level=siren_level
         )
         self._attr_is_on = True
-        async_call_later(self._zha_device.hass, siren_duration, self.async_set_off)
+        self._off_listener = async_call_later(
+            self._zha_device.hass, siren_duration, self.async_set_off
+        )
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -132,4 +137,5 @@ class ZHASiren(ZhaEntity, SirenEntity):
     def async_set_off(self, _) -> None:
         """Set is_on to False and write HA state."""
         self._attr_is_on = False
+        self._off_listener = None
         self.async_write_ha_state()
