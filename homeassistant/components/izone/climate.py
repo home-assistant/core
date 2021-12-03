@@ -494,7 +494,7 @@ class ZoneDevice(ClimateEntity):
         @callback
         def controller_update(ctrl: Controller) -> None:
             """Handle controller data updates."""
-            if ctrl is not self._controller._controller:
+            if ctrl.device_uid != self._controller.unique_id:
                 return
             if not self.available:
                 return
