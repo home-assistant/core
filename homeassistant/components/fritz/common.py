@@ -185,7 +185,7 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
         """Update FritzboxTools data."""
         try:
             self.fritz_hosts = FritzHosts(fc=self.connection)
-            self.scan_devices()
+            await self.async_scan_devices()
         except FritzSecurityError as ex:
             raise update_coordinator.UpdateFailed("Error fetching data") from ex
         except FritzConnectionException as ex:
@@ -267,6 +267,10 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
             "NewX_AVM-DE_Version"
         )
         return bool(version), version
+
+    async def async_scan_devices(self, now: datetime | None = None) -> None:
+        """Wrap up FritzboxTools class scan."""
+        await self.hass.async_add_executor_job(self.scan_devices, now)
 
     def scan_devices(self, now: datetime | None = None) -> None:
         """Scan for new devices and return a list of found device ids."""
