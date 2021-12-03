@@ -19,8 +19,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Sonos from a config entry."""
 
     @callback
-    def _async_create_audio_format_entity(speaker: SonosSpeaker) -> None:
-        entity = SonosAudioInputFormatSensorEntity(speaker)
+    def _async_create_audio_format_entity(
+        speaker: SonosSpeaker, audio_format: str
+    ) -> None:
+        entity = SonosAudioInputFormatSensorEntity(speaker, audio_format)
         async_add_entities([entity])
 
     @callback
@@ -87,24 +89,16 @@ class SonosAudioInputFormatSensorEntity(SonosEntity, SensorEntity):
     _attr_icon = "mdi:import"
     _attr_should_poll = True
 
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID of the sensor."""
-        return f"{self.soco.uid}-audio-format"
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return f"{self.speaker.zone_name} Audio Input Format"
-
-    @property
-    def native_value(self) -> str:
-        """Return the current state of the text sensor."""
-        return self.speaker.soundbar_audio_input_format
+    def __init__(self, speaker: SonosSpeaker, audio_format: str) -> None:
+        """Initialize the audio input format sensor."""
+        super().__init__(speaker)
+        self._attr_unique_id = f"{self.soco.uid}-audio-format"
+        self._attr_name = f"{self.speaker.zone_name} Audio Input Format"
+        self._attr_native_value = audio_format
 
     def update(self) -> None:
         """Poll the device for the current state."""
-        self.speaker.soundbar_audio_input_format = self.soco.soundbar_audio_input_format
+        self._attr_native_value = self.soco.soundbar_audio_input_format
 
     async def _async_poll(self) -> None:
         """Provide a stub for required ABC method."""
