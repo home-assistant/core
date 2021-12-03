@@ -121,7 +121,7 @@ async def ws_backup_start(
 ) -> None:
     """Backup start notification."""
 
-    _LOGGER.info("Received backup start notification. Locking database for writes.")
+    _LOGGER.info("Backup start notification, locking database for writes")
     instance: Recorder = hass.data[DATA_INSTANCE]
     try:
         await instance.lock_database()
@@ -140,7 +140,7 @@ async def ws_backup_end(
     """Backup end notification."""
 
     instance: Recorder = hass.data[DATA_INSTANCE]
-    _LOGGER.info("Received end of backup, releasing write lock.")
+    _LOGGER.info("Backup end notification, releasing write lock")
     if not instance.unlock_database():
         connection.send_error(
             msg["id"], "database_unlock_failed", "Failed to unlock database."

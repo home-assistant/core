@@ -809,12 +809,12 @@ class Recorder(threading.Thread):
             while not task.database_unlock.wait(timeout=1):
                 if self.queue.qsize() > MAX_QUEUE_BACKLOG * 0.9:
                     _LOGGER.warning(
-                        "Database queue backlog reached more than 90% of maximum queue length. Continue writing. Your Backup might be corrupted."
+                        "Database queue backlog reached more than 90% of maximum queue length. Continue writing to database. Your Backup might be corrupted"
                     )
                     task.queue_overflow = True
                     break
         _LOGGER.info(
-            "Database queue backlog reached %d entries during backup.",
+            "Database queue backlog reached %d entries during backup",
             self.queue.qsize(),
         )
 
@@ -1021,7 +1021,7 @@ class Recorder(threading.Thread):
     async def lock_database(self) -> bool:
         """Lock database so it can be backed up safely."""
         if self._database_lock_task:
-            _LOGGER.warning("Database already locked.")
+            _LOGGER.warning("Database already locked")
             return False
 
         task = DatabaseLockTask(threading.Event(), threading.Event(), False)
@@ -1043,7 +1043,7 @@ class Recorder(threading.Thread):
         Returns true if database lock has been held throughout the process.
         """
         if not self._database_lock_task:
-            _LOGGER.warning("Database currently not locked.")
+            _LOGGER.warning("Database currently not locked")
             return False
 
         self._database_lock_task.database_unlock.set()
