@@ -636,12 +636,6 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             icon="mdi:ticket-percent-outline",
             state_class=SensorStateClass.MEASUREMENT,
         ),
-        TuyaSensorEntityDescription(
-            key=DPCode.FAULT,
-            name="Fault Reporting",
-            entity_category=EntityCategory.DIAGNOSTIC,
-            icon="mdi:alert-outline",
-        ),
     ),
 }
 
