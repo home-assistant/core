@@ -13,6 +13,7 @@ from homeassistant.const import (
     ATTR_NAME,
     CONF_API_KEY,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -34,7 +35,7 @@ from .const import (
     TYPE_SOLARRADIATION_LX,
 )
 
-PLATFORMS = ["binary_sensor", "sensor"]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 DATA_CONFIG = "config"
 
