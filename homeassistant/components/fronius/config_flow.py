@@ -128,7 +128,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await asyncio.sleep(DHCP_REQUEST_DELAY)
         try:
             unique_id, self.info = await validate_host(self.hass, discovery_info.ip)
-        except Exception:  # pylint: disable=broad-except
+        except CannotConnect:
             return self.async_abort(reason="invalid_host")
 
         await self.async_set_unique_id(unique_id, raise_on_progress=False)
