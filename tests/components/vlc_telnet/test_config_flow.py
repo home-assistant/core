@@ -309,23 +309,21 @@ async def test_hassio_flow(hass: HomeAssistant) -> None:
 async def test_hassio_already_configured(hass: HomeAssistant) -> None:
     """Test successful hassio flow."""
 
-    entry_data = HassioServiceInfo(
-        config={
-            "password": "test-password",
-            "host": "1.1.1.1",
-            "port": 8888,
-            "name": "custom name",
-            "addon": "vlc",
-        }
-    )
+    entry_data = {
+        "password": "test-password",
+        "host": "1.1.1.1",
+        "port": 8888,
+        "name": "custom name",
+        "addon": "vlc",
+    }
 
-    entry = MockConfigEntry(domain=DOMAIN, data=entry_data.config, unique_id="hassio")
+    entry = MockConfigEntry(domain=DOMAIN, data=entry_data, unique_id="hassio")
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
-        data=entry_data,
+        data=HassioServiceInfo(config=entry_data),
     )
     await hass.async_block_till_done()
 
