@@ -4,9 +4,9 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.sensor import (
-    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DATA_KILOBYTES, DATA_MEGABYTES, TIME_DAYS
@@ -21,21 +21,21 @@ SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="usedMb",
         name="Data Used",
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=DATA_MEGABYTES,
         icon="mdi:network",
     ),
     SensorEntityDescription(
         key="downloadedMb",
         name="Downloaded",
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=DATA_MEGABYTES,
         icon="mdi:download-network",
     ),
     SensorEntityDescription(
         key="uploadedMb",
         name="Uploaded",
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=DATA_MEGABYTES,
         icon="mdi:upload-network",
     ),
@@ -43,32 +43,32 @@ SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="national",
         name="National Calls",
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:phone",
     ),
     SensorEntityDescription(
         key="mobile",
         name="Mobile Calls",
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:phone",
     ),
     SensorEntityDescription(
         key="international",
         name="International Calls",
         entity_registry_enabled_default=False,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:phone-plus",
     ),
     SensorEntityDescription(
         key="sms",
         name="SMS Sent",
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:message-processing",
     ),
     SensorEntityDescription(
         key="internet",
         name="Data Used",
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=DATA_KILOBYTES,
         icon="mdi:network",
     ),
@@ -76,14 +76,14 @@ SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         key="voicemail",
         name="Voicemail Calls",
         entity_registry_enabled_default=False,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:phone",
     ),
     SensorEntityDescription(
         key="other",
         name="Other Calls",
         entity_registry_enabled_default=False,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:phone",
     ),
     # Generic sensors
