@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_REGION,
     CONF_USERNAME,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -67,7 +68,13 @@ DEFAULT_OPTIONS = {
     CONF_USE_LOCATION: False,
 }
 
-PLATFORMS = ["binary_sensor", "device_tracker", "lock", "notify", "sensor"]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.DEVICE_TRACKER,
+    Platform.LOCK,
+    Platform.NOTIFY,
+    Platform.SENSOR,
+]
 UPDATE_INTERVAL = 5  # in minutes
 
 SERVICE_UPDATE_STATE = "update_state"
@@ -150,7 +157,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await _async_update_all()
 
     hass.config_entries.async_setup_platforms(
-        entry, [platform for platform in PLATFORMS if platform != NOTIFY_DOMAIN]
+        entry, [platform for platform in PLATFORMS if platform != Platform.NOTIFY]
     )
 
     # set up notify platform, no entry support for notify platform yet,
@@ -171,7 +178,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(
-        entry, [platform for platform in PLATFORMS if platform != NOTIFY_DOMAIN]
+        entry, [platform for platform in PLATFORMS if platform != Platform.NOTIFY]
     )
 
     # Only remove services if it is the last account and not read only
