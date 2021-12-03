@@ -4,10 +4,9 @@ from unittest.mock import patch
 import pytest
 from renault_api.kamereon import schemas
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.button.const import SERVICE_PRESS
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 
 from . import check_device_registry, check_entities_no_data
@@ -21,7 +20,7 @@ pytestmark = pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicle
 @pytest.fixture(autouse=True)
 def override_platforms():
     """Override PLATFORMS."""
-    with patch("homeassistant.components.renault.PLATFORMS", [BUTTON_DOMAIN]):
+    with patch("homeassistant.components.renault.PLATFORMS", [Platform.BUTTON]):
         yield
 
 
@@ -40,7 +39,7 @@ async def test_buttons(
     mock_vehicle = MOCK_VEHICLES[vehicle_type]
     check_device_registry(device_registry, mock_vehicle["expected_device"])
 
-    expected_entities = mock_vehicle[BUTTON_DOMAIN]
+    expected_entities = mock_vehicle[Platform.BUTTON]
     assert len(entity_registry.entities) == len(expected_entities)
 
     check_entities_no_data(hass, entity_registry, expected_entities, STATE_UNKNOWN)
@@ -61,7 +60,7 @@ async def test_button_empty(
     mock_vehicle = MOCK_VEHICLES[vehicle_type]
     check_device_registry(device_registry, mock_vehicle["expected_device"])
 
-    expected_entities = mock_vehicle[BUTTON_DOMAIN]
+    expected_entities = mock_vehicle[Platform.BUTTON]
     assert len(entity_registry.entities) == len(expected_entities)
     check_entities_no_data(hass, entity_registry, expected_entities, STATE_UNKNOWN)
 
@@ -81,7 +80,7 @@ async def test_button_errors(
     mock_vehicle = MOCK_VEHICLES[vehicle_type]
     check_device_registry(device_registry, mock_vehicle["expected_device"])
 
-    expected_entities = mock_vehicle[BUTTON_DOMAIN]
+    expected_entities = mock_vehicle[Platform.BUTTON]
     assert len(entity_registry.entities) == len(expected_entities)
 
     check_entities_no_data(hass, entity_registry, expected_entities, STATE_UNKNOWN)
@@ -103,7 +102,7 @@ async def test_button_access_denied(
     mock_vehicle = MOCK_VEHICLES[vehicle_type]
     check_device_registry(device_registry, mock_vehicle["expected_device"])
 
-    expected_entities = mock_vehicle[BUTTON_DOMAIN]
+    expected_entities = mock_vehicle[Platform.BUTTON]
     assert len(entity_registry.entities) == len(expected_entities)
 
     check_entities_no_data(hass, entity_registry, expected_entities, STATE_UNKNOWN)
@@ -125,7 +124,7 @@ async def test_button_not_supported(
     mock_vehicle = MOCK_VEHICLES[vehicle_type]
     check_device_registry(device_registry, mock_vehicle["expected_device"])
 
-    expected_entities = mock_vehicle[BUTTON_DOMAIN]
+    expected_entities = mock_vehicle[Platform.BUTTON]
     assert len(entity_registry.entities) == len(expected_entities)
 
     check_entities_no_data(hass, entity_registry, expected_entities, STATE_UNKNOWN)
@@ -151,7 +150,7 @@ async def test_button_start_charge(hass: HomeAssistant, config_entry: ConfigEntr
         ),
     ) as mock_action:
         await hass.services.async_call(
-            BUTTON_DOMAIN, SERVICE_PRESS, service_data=data, blocking=True
+            Platform.BUTTON, SERVICE_PRESS, service_data=data, blocking=True
         )
     assert len(mock_action.mock_calls) == 1
     assert mock_action.mock_calls[0][1] == ()
@@ -179,7 +178,7 @@ async def test_button_start_air_conditioner(
         ),
     ) as mock_action:
         await hass.services.async_call(
-            BUTTON_DOMAIN, SERVICE_PRESS, service_data=data, blocking=True
+            Platform.BUTTON, SERVICE_PRESS, service_data=data, blocking=True
         )
     assert len(mock_action.mock_calls) == 1
     assert mock_action.mock_calls[0][1] == (21, None)

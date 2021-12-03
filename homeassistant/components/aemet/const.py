@@ -33,11 +33,12 @@ from homeassistant.const import (
     PRESSURE_HPA,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
+    Platform,
 )
 
 ATTRIBUTION = "Powered by AEMET OpenData"
 CONF_STATION_UPDATES = "station_updates"
-PLATFORMS = ["sensor", "weather"]
+PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
 DEFAULT_NAME = "AEMET"
 DOMAIN = "aemet"
 ENTRY_NAME = "name"

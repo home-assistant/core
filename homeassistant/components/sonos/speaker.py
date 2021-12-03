@@ -196,6 +196,8 @@ class SonosSpeaker:
         self.cross_fade: bool | None = None
         self.bass: int | None = None
         self.treble: int | None = None
+        self.sub_enabled: bool | None = None
+        self.surround_enabled: bool | None = None
 
         # Misc features
         self.buttons_enabled: bool | None = None

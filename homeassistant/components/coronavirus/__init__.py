@@ -6,13 +6,14 @@ import async_timeout
 import coronavirus
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client, entity_registry, update_coordinator
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

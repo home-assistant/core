@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
@@ -53,14 +54,14 @@ CAPTURE_IMAGE_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids})
 AUTOMATION_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids})
 
 PLATFORMS = [
-    "alarm_control_panel",
-    "binary_sensor",
-    "lock",
-    "switch",
-    "cover",
-    "camera",
-    "light",
-    "sensor",
+    Platform.ALARM_CONTROL_PANEL,
+    Platform.BINARY_SENSOR,
+    Platform.LOCK,
+    Platform.SWITCH,
+    Platform.COVER,
+    Platform.CAMERA,
+    Platform.LIGHT,
+    Platform.SENSOR,
 ]
 
 
