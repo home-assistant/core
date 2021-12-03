@@ -802,14 +802,14 @@ class Recorder(threading.Thread):
         # Schedule a new statistics task if this one didn't finish
         self.queue.put(ExternalStatisticsTask(metadata, stats))
 
-    @callback
-    def _async_set_database_locked(self, task: DatabaseLockTask):
-        task.database_locked.set()
-
     def _lock_database(self, task: DatabaseLockTask):
+        @callback
+        def _async_set_database_locked(task: DatabaseLockTask):
+            task.database_locked.set()
+
         with write_lock_db(self):
             # Notify that lock is being held, wait until database can be used again.
-            self.hass.add_job(self._async_set_database_locked, task)
+            self.hass.add_job(_async_set_database_locked, task)
             while not task.database_unlock.wait(timeout=1):
                 if self.queue.qsize() > MAX_QUEUE_BACKLOG * 0.9:
                     _LOGGER.warning(
@@ -1033,11 +1033,11 @@ class Recorder(threading.Thread):
         self.queue.put(task)
         try:
             await asyncio.wait_for(database_locked.wait(), timeout=lock_timeout)
-        except asyncio.TimeoutError:
+        except asyncio.TimeoutError as err:
             task.database_unlock.set()
             raise TimeoutError(
                 f"Could not lock database within {lock_timeout} seconds."
-            )
+            ) from err
         self._database_lock_task = task
         return True
 
