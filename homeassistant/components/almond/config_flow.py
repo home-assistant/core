@@ -12,7 +12,7 @@ import voluptuous as vol
 from yarl import URL
 
 from homeassistant import config_entries, core, data_entry_flow
-from homeassistant.components.hassio.discovery import HassioServiceInfo
+from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 

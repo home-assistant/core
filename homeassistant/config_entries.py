@@ -34,7 +34,7 @@ import homeassistant.util.uuid as uuid_util
 
 if TYPE_CHECKING:
     from homeassistant.components.dhcp import DhcpServiceInfo
-    from homeassistant.components.hassio.discovery import HassioServiceInfo
+    from homeassistant.components.hassio import HassioServiceInfo
     from homeassistant.components.mqtt.discovery import MqttServiceInfo
     from homeassistant.components.ssdp import SsdpServiceInfo
     from homeassistant.components.usb import UsbServiceInfo

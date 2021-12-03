@@ -13,8 +13,7 @@ from zwave_js_server.version import VersionInfo, get_server_version
 
 from homeassistant import config_entries, exceptions
 from homeassistant.components import usb
-from homeassistant.components.hassio import is_hassio
-from homeassistant.components.hassio.discovery import HassioServiceInfo
+from homeassistant.components.hassio import HassioServiceInfo, is_hassio
 from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import (

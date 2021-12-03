@@ -6,7 +6,7 @@ from typing import Any
 from adguardhome import AdGuardHome, AdGuardHomeConnectionError
 import voluptuous as vol
 
-from homeassistant.components.hassio.discovery import HassioServiceInfo
+from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import (
     CONF_HOST,

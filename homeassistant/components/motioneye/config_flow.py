@@ -10,7 +10,7 @@ from motioneye_client.client import (
 )
 import voluptuous as vol
 
-from homeassistant.components.hassio.discovery import HassioServiceInfo
+from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     ConfigEntry,

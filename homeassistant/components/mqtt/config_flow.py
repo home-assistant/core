@@ -5,7 +5,7 @@ import queue
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.hassio.discovery import HassioServiceInfo
+from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.const import (
     CONF_DISCOVERY,
     CONF_HOST,

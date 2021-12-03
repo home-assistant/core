@@ -8,7 +8,7 @@ from aiovlc.exceptions import AuthError, ConnectError
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.hassio.discovery import HassioServiceInfo
+from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.components.vlc_telnet.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import (

@@ -9,7 +9,7 @@ from aiovlc.exceptions import AuthError, ConnectError
 import voluptuous as vol
 
 from homeassistant import core, exceptions
-from homeassistant.components.hassio.discovery import HassioServiceInfo
+from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.data_entry_flow import FlowResult
