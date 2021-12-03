@@ -159,7 +159,7 @@ def get_device_discovery_info(
     )
 
     if missing_csharp:
-        del result["properties"]["c#"]
+        del result.properties["c#"]
 
     if upper_case_props:
         result.properties = {
@@ -255,7 +255,7 @@ async def test_pair_already_paired_1(hass, controller):
     discovery_info = get_device_discovery_info(device)
 
     # Flag device as already paired
-    discovery_info["properties"]["sf"] = 0x0
+    discovery_info.properties["sf"] = 0x0
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
@@ -458,8 +458,8 @@ async def test_discovery_already_configured(hass, controller):
     )
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
-    assert entry.data["AccessoryIP"] == discovery_info["host"]
-    assert entry.data["AccessoryPort"] == discovery_info["port"]
+    assert entry.data["AccessoryIP"] == discovery_info.host
+    assert entry.data["AccessoryPort"] == discovery_info.port
 
 
 async def test_discovery_already_configured_update_csharp(hass, controller):
@@ -498,8 +498,8 @@ async def test_discovery_already_configured_update_csharp(hass, controller):
     assert result["reason"] == "already_configured"
     await hass.async_block_till_done()
 
-    assert entry.data["AccessoryIP"] == discovery_info["host"]
-    assert entry.data["AccessoryPort"] == discovery_info["port"]
+    assert entry.data["AccessoryIP"] == discovery_info.host
+    assert entry.data["AccessoryPort"] == discovery_info.port
     assert connection_mock.async_refresh_entity_map.await_count == 1
 
 
