@@ -7,8 +7,8 @@ from typing import Any
 from zigpy.zcl.clusters.general import OnOff
 from zigpy.zcl.foundation import Status
 
-from homeassistant.components.switch import DOMAIN, SwitchEntity
-from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
+from homeassistant.components.switch import SwitchEntity
+from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import State, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -23,13 +23,13 @@ from .core.const import (
 from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity, ZhaGroupEntity
 
-STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
-GROUP_MATCH = functools.partial(ZHA_ENTITIES.group_match, DOMAIN)
+STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.SWITCH)
+GROUP_MATCH = functools.partial(ZHA_ENTITIES.group_match, Platform.SWITCH)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Zigbee Home Automation switch from config entry."""
-    entities_to_create = hass.data[DATA_ZHA][DOMAIN]
+    entities_to_create = hass.data[DATA_ZHA][Platform.SWITCH]
 
     unsub = async_dispatcher_connect(
         hass,

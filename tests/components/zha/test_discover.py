@@ -27,6 +27,7 @@ import homeassistant.components.zha.light
 import homeassistant.components.zha.lock
 import homeassistant.components.zha.sensor
 import homeassistant.components.zha.switch
+from homeassistant.const import Platform
 import homeassistant.helpers.entity_registry
 
 from .common import get_zha_gateway
@@ -150,7 +151,7 @@ async def test_devices(
         ha_comp, ha_unique_id, ha_channels = ha_ent_info[
             (test_unique_id_head, test_ent_class)
         ]
-        assert component is ha_comp
+        assert component is ha_comp.value
         # unique_id used for discover is the same for "multi entities"
         assert unique_id.startswith(ha_unique_id)
         assert {ch.name for ch in ha_channels} == set(ent_info[DEV_SIG_CHANNELS])
@@ -193,9 +194,9 @@ def test_discover_entities(m1, m2):
 @pytest.mark.parametrize(
     "device_type, component, hit",
     [
-        (zigpy.profiles.zha.DeviceType.ON_OFF_LIGHT, zha_const.LIGHT, True),
-        (zigpy.profiles.zha.DeviceType.ON_OFF_BALLAST, zha_const.SWITCH, True),
-        (zigpy.profiles.zha.DeviceType.SMART_PLUG, zha_const.SWITCH, True),
+        (zigpy.profiles.zha.DeviceType.ON_OFF_LIGHT, Platform.LIGHT, True),
+        (zigpy.profiles.zha.DeviceType.ON_OFF_BALLAST, Platform.SWITCH, True),
+        (zigpy.profiles.zha.DeviceType.SMART_PLUG, Platform.SWITCH, True),
         (0xFFFF, None, False),
     ],
 )
@@ -234,7 +235,7 @@ def test_discover_by_device_type_override():
     ep_mock.return_value.device_type = 0x0100
     type(ep_channels).endpoint = ep_mock
 
-    overrides = {ep_channels.unique_id: {"type": zha_const.SWITCH}}
+    overrides = {ep_channels.unique_id: {"type": Platform.SWITCH}}
     get_entity_mock = mock.MagicMock(
         return_value=(mock.sentinel.entity_cls, mock.sentinel.claimed)
     )
@@ -247,7 +248,7 @@ def test_discover_by_device_type_override():
         assert ep_channels.claim_channels.call_count == 1
         assert ep_channels.claim_channels.call_args[0][0] is mock.sentinel.claimed
         assert ep_channels.async_new_entity.call_count == 1
-        assert ep_channels.async_new_entity.call_args[0][0] == zha_const.SWITCH
+        assert ep_channels.async_new_entity.call_args[0][0] == Platform.SWITCH
         assert ep_channels.async_new_entity.call_args[0][1] == mock.sentinel.entity_cls
 
 
@@ -268,13 +269,13 @@ def test_discover_probe_single_cluster():
         "homeassistant.components.zha.core.registries.ZHA_ENTITIES.get_entity",
         get_entity_mock,
     ):
-        disc.PROBE.probe_single_cluster(zha_const.SWITCH, channel_mock, ep_channels)
+        disc.PROBE.probe_single_cluster(Platform.SWITCH, channel_mock, ep_channels)
 
     assert get_entity_mock.call_count == 1
     assert ep_channels.claim_channels.call_count == 1
     assert ep_channels.claim_channels.call_args[0][0] is mock.sentinel.claimed
     assert ep_channels.async_new_entity.call_count == 1
-    assert ep_channels.async_new_entity.call_args[0][0] == zha_const.SWITCH
+    assert ep_channels.async_new_entity.call_args[0][0] == Platform.SWITCH
     assert ep_channels.async_new_entity.call_args[0][1] == mock.sentinel.entity_cls
     assert ep_channels.async_new_entity.call_args[0][3] == mock.sentinel.claimed
 
@@ -320,7 +321,7 @@ async def test_discover_endpoint(device_info, channels_mock, hass):
         ha_comp, ha_unique_id, ha_channels = ha_ent_info[
             (test_unique_id_head, test_ent_class)
         ]
-        assert component is ha_comp
+        assert component is ha_comp.value
         # unique_id used for discover is the same for "multi entities"
         assert unique_id.startswith(ha_unique_id)
         assert {ch.name for ch in ha_channels} == set(ent_info[DEV_SIG_CHANNELS])
@@ -372,11 +373,11 @@ def _test_single_input_cluster_device_class(probe_mock):
     disc.ProbeEndpoint().discover_by_cluster_id(ch_pool)
     assert probe_mock.call_count == len(ch_pool.unclaimed_channels())
     probes = (
-        (zha_const.LOCK, door_ch),
-        (zha_const.COVER, cover_ch),
-        (zha_const.SENSOR, multistate_ch),
-        (zha_const.BINARY_SENSOR, ias_ch),
-        (zha_const.SENSOR, analog_ch),
+        (Platform.LOCK, door_ch),
+        (Platform.COVER, cover_ch),
+        (Platform.SENSOR, multistate_ch),
+        (Platform.BINARY_SENSOR, ias_ch),
+        (Platform.SENSOR, analog_ch),
     )
     for call, details in zip(probe_mock.call_args_list, probes):
         component, ch = details
@@ -392,11 +393,11 @@ def test_single_input_cluster_device_class():
 def test_single_input_cluster_device_class_by_cluster_class():
     """Test SINGLE_INPUT_CLUSTER_DEVICE_CLASS matching by cluster id or class."""
     mock_reg = {
-        zigpy.zcl.clusters.closures.DoorLock.cluster_id: zha_const.LOCK,
-        zigpy.zcl.clusters.closures.WindowCovering.cluster_id: zha_const.COVER,
-        zigpy.zcl.clusters.general.AnalogInput: zha_const.SENSOR,
-        zigpy.zcl.clusters.general.MultistateInput: zha_const.SENSOR,
-        zigpy.zcl.clusters.security.IasZone: zha_const.BINARY_SENSOR,
+        zigpy.zcl.clusters.closures.DoorLock.cluster_id: Platform.LOCK,
+        zigpy.zcl.clusters.closures.WindowCovering.cluster_id: Platform.COVER,
+        zigpy.zcl.clusters.general.AnalogInput: Platform.SENSOR,
+        zigpy.zcl.clusters.general.MultistateInput: Platform.SENSOR,
+        zigpy.zcl.clusters.security.IasZone: Platform.BINARY_SENSOR,
     }
 
     with mock.patch.dict(

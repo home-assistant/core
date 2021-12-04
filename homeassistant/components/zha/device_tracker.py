@@ -2,8 +2,9 @@
 import functools
 import time
 
-from homeassistant.components.device_tracker import DOMAIN, SOURCE_TYPE_ROUTER
+from homeassistant.components.device_tracker import SOURCE_TYPE_ROUTER
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
+from homeassistant.const import Platform
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -19,12 +20,12 @@ from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
 from .sensor import Battery
 
-STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
+STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.DEVICE_TRACKER)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Zigbee Home Automation device tracker from config entry."""
-    entities_to_create = hass.data[DATA_ZHA][DOMAIN]
+    entities_to_create = hass.data[DATA_ZHA][Platform.DEVICE_TRACKER]
 
     unsub = async_dispatcher_connect(
         hass,

@@ -4,7 +4,6 @@ import functools
 from zigpy.zcl.clusters.security import IasAce
 
 from homeassistant.components.alarm_control_panel import (
-    DOMAIN,
     FORMAT_TEXT,
     SUPPORT_ALARM_ARM_AWAY,
     SUPPORT_ALARM_ARM_HOME,
@@ -19,6 +18,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
+    Platform,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -43,7 +43,9 @@ from .core.helpers import async_get_zha_config_value
 from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
 
-STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
+STRICT_MATCH = functools.partial(
+    ZHA_ENTITIES.strict_match, Platform.ALARM_CONTROL_PANEL
+)
 
 IAS_ACE_STATE_MAP = {
     IasAce.PanelStatus.Panel_Disarmed: STATE_ALARM_DISARMED,
@@ -56,7 +58,7 @@ IAS_ACE_STATE_MAP = {
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Zigbee Home Automation alarm control panel from config entry."""
-    entities_to_create = hass.data[DATA_ZHA][DOMAIN]
+    entities_to_create = hass.data[DATA_ZHA][Platform.ALARM_CONTROL_PANEL]
 
     unsub = async_dispatcher_connect(
         hass,

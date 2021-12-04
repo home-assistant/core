@@ -2,7 +2,8 @@
 import functools
 import logging
 
-from homeassistant.components.number import DOMAIN, NumberEntity
+from homeassistant.components.number import NumberEntity
+from homeassistant.const import Platform
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -19,7 +20,7 @@ from .entity import ZhaEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
+STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.NUMBER)
 
 
 UNITS = {
@@ -235,7 +236,7 @@ ICONS = {
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Zigbee Home Automation Analog Output from config entry."""
-    entities_to_create = hass.data[DATA_ZHA][DOMAIN]
+    entities_to_create = hass.data[DATA_ZHA][Platform.NUMBER]
 
     unsub = async_dispatcher_connect(
         hass,
