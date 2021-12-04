@@ -183,7 +183,7 @@ async def async_setup_platform(
             StatisticsSensor(
                 source_entity_id=str(config.get(CONF_ENTITY_ID)),
                 name=str(config.get(CONF_NAME)),
-                unique_id=str(config.get(CONF_UNIQUE_ID)),
+                unique_id=config.get(CONF_UNIQUE_ID),
                 state_characteristic=str(config.get(CONF_STATE_CHARACTERISTIC)),
                 samples_max_buffer_size=cast(
                     int, config.get(CONF_SAMPLES_MAX_BUFFER_SIZE)
@@ -205,7 +205,7 @@ class StatisticsSensor(SensorEntity):
     def __init__(
         self,
         source_entity_id: str,
-        name: str | None,
+        name: str,
         unique_id: str | None,
         state_characteristic: str,
         samples_max_buffer_size: int,
@@ -216,7 +216,7 @@ class StatisticsSensor(SensorEntity):
     ):
         """Initialize the Statistics sensor."""
         self._attr_icon: str = ICON
-        self._attr_name: str | None = name
+        self._attr_name: str = name
         self._attr_should_poll: bool = False
         self._attr_unique_id: str | None = unique_id
         self._source_entity_id: str = source_entity_id
