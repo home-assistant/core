@@ -109,7 +109,7 @@ ICON = "mdi:calculator"
 
 def valid_binary_characteristic_configuration(config: dict[str, Any]) -> dict[str, Any]:
     """Validate that the characteristic selected is valid for the source sensor type, throw if it isn't."""
-    if str(config.get(CONF_ENTITY_ID)).split(".")[0] == "binary_sensor":
+    if str(config.get(CONF_ENTITY_ID)).split(".", maxsplit=1)[0] == "binary_sensor":
         if config.get(CONF_STATE_CHARACTERISTIC) not in STATS_BINARY_SUPPORT:
             raise ValueError(
                 "The configured characteristic '"
@@ -220,7 +220,9 @@ class StatisticsSensor(SensorEntity):
         self._attr_should_poll: bool = False
         self._attr_unique_id: str | None = unique_id
         self._source_entity_id: str = source_entity_id
-        self.is_binary: bool = self._source_entity_id.split(".")[0] == "binary_sensor"
+        self.is_binary: bool = (
+            self._source_entity_id.split(".", maxsplit=1)[0] == "binary_sensor"
+        )
         self._state_characteristic: str = state_characteristic
         if self._state_characteristic == STAT_DEFAULT:
             self._state_characteristic = STAT_COUNT if self.is_binary else STAT_MEAN
