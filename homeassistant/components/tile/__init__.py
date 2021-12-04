@@ -9,7 +9,7 @@ from pytile.errors import InvalidAuthError, SessionExpiredError, TileError
 from pytile.tile import Tile
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
@@ -19,7 +19,7 @@ from homeassistant.util.async_ import gather_with_concurrency
 
 from .const import DATA_COORDINATOR, DATA_TILE, DOMAIN, LOGGER
 
-PLATFORMS = ["device_tracker"]
+PLATFORMS = [Platform.DEVICE_TRACKER]
 DEVICE_TYPES = ["PHONE", "TILE"]
 
 DEFAULT_INIT_TASK_LIMIT = 2

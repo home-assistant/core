@@ -6,7 +6,7 @@ import xml.etree.ElementTree as et
 from env_canada import ECRadar, ECWeather, ec_exc
 
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, Platform
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_LANGUAGE, CONF_STATION, DOMAIN
@@ -14,7 +14,7 @@ from .const import CONF_LANGUAGE, CONF_STATION, DOMAIN
 DEFAULT_RADAR_UPDATE_INTERVAL = timedelta(minutes=5)
 DEFAULT_WEATHER_UPDATE_INTERVAL = timedelta(minutes=5)
 
-PLATFORMS = ["camera", "sensor", "weather"]
+PLATFORMS = [Platform.CAMERA, Platform.SENSOR, Platform.WEATHER]
 
 _LOGGER = logging.getLogger(__name__)
 

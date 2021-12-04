@@ -1,5 +1,6 @@
 """Tests for the devolo Home Network integration."""
 
+import dataclasses
 from typing import Any
 
 from devolo_plc_api.device_api.deviceapi import DeviceApi
@@ -27,5 +28,5 @@ def configure_integration(hass: HomeAssistant) -> MockConfigEntry:
 
 async def async_connect(self, session_instance: Any = None):
     """Give a mocked device the needed properties."""
-    self.plcnet = PlcNetApi(IP, None, DISCOVERY_INFO)
-    self.device = DeviceApi(IP, None, DISCOVERY_INFO)
+    self.plcnet = PlcNetApi(IP, None, dataclasses.asdict(DISCOVERY_INFO))
+    self.device = DeviceApi(IP, None, dataclasses.asdict(DISCOVERY_INFO))

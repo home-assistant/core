@@ -24,6 +24,7 @@ from homeassistant.const import (
     POWER_KILO_WATT,
     VOLUME_CUBIC_METERS,
 )
+from homeassistant.util import dt as dt_util
 
 PRICE_EUR_KWH: Final = f"EUR/{ENERGY_KILO_WATT_HOUR}"
 PRICE_EUR_M3: Final = f"EUR/{VOLUME_CUBIC_METERS}"
@@ -202,6 +203,7 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
         name="Telegram timestamp",
         entity_registry_enabled_default=False,
         device_class=DEVICE_CLASS_TIMESTAMP,
+        state=dt_util.parse_datetime,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/consumption/gas/delivered",
@@ -222,6 +224,7 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
         name="Gas meter read",
         entity_registry_enabled_default=False,
         device_class=DEVICE_CLASS_TIMESTAMP,
+        state=dt_util.parse_datetime,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/day-consumption/electricity1",

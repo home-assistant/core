@@ -244,7 +244,7 @@ async def _async_get_device(
     # Set up device
     bulb = AsyncBulb(host, model=model or None)
 
-    device = YeelightDevice(hass, host, entry.options, bulb)
+    device = YeelightDevice(hass, host, {**entry.options, **entry.data}, bulb)
     # start listening for local pushes
     await device.bulb.async_listen(device.async_update_callback)
 

@@ -69,9 +69,9 @@ STAT_VARIANCE = "variance"
 
 STAT_DEFAULT = "default"
 DEPRECATION_WARNING = (
-    "The configuration parameter 'state_characteristics' will become "
+    "The configuration parameter 'state_characteristic' will become "
     "mandatory in a future release of the statistics integration. "
-    "Please add 'state_characteristics: %s' to the configuration of "
+    "Please add 'state_characteristic: %s' to the configuration of "
     'sensor "%s" to keep the current behavior. Read the documentation '
     "for further details: "
     "https://www.home-assistant.io/integrations/statistics/"
@@ -182,8 +182,8 @@ async def async_setup_platform(
         [
             StatisticsSensor(
                 source_entity_id=str(config.get(CONF_ENTITY_ID)),
-                name=config.get(CONF_NAME),
-                unique_id=config.get(CONF_UNIQUE_ID),
+                name=str(config.get(CONF_NAME)),
+                unique_id=str(config.get(CONF_UNIQUE_ID)),
                 state_characteristic=str(config.get(CONF_STATE_CHARACTERISTIC)),
                 samples_max_buffer_size=cast(
                     int, config.get(CONF_SAMPLES_MAX_BUFFER_SIZE)
@@ -264,8 +264,7 @@ class StatisticsSensor(SensorEntity):
             self._add_state_to_queue(new_state)
             self.async_schedule_update_ha_state(True)
 
-        @callback
-        def async_stats_sensor_startup(_):
+        async def async_stats_sensor_startup(_):
             """Add listener and get recorded state."""
             _LOGGER.debug("Startup for %s", self.entity_id)
 

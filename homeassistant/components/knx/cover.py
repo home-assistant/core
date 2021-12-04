@@ -23,13 +23,18 @@ from homeassistant.components.cover import (
     SUPPORT_STOP_TILT,
     CoverEntity,
 )
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_ENTITY_CATEGORY, CONF_NAME
+from homeassistant.const import (
+    CONF_DEVICE_CLASS,
+    CONF_ENTITY_CATEGORY,
+    CONF_NAME,
+    Platform,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_utc_time_change
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DATA_KNX_CONFIG, DOMAIN, SupportedPlatforms
+from .const import DATA_KNX_CONFIG, DOMAIN
 from .knx_entity import KnxEntity
 from .schema import CoverSchema
 
@@ -41,9 +46,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up cover(s) for KNX platform."""
     xknx: XKNX = hass.data[DOMAIN].xknx
-    config: list[ConfigType] = hass.data[DATA_KNX_CONFIG][
-        SupportedPlatforms.COVER.value
-    ]
+    config: list[ConfigType] = hass.data[DATA_KNX_CONFIG][Platform.COVER]
 
     async_add_entities(KNXCover(xknx, entity_config) for entity_config in config)
 
