@@ -35,7 +35,6 @@ from .const import (
     CONF_ACCOUNT,
     CONF_ALLOWED_REGIONS,
     CONF_READ_ONLY,
-    CONF_USE_LOCATION,
     DATA_ENTRIES,
     DATA_HASS_CONFIG,
 )
@@ -115,9 +114,6 @@ def _async_migrate_options_from_data_if_missing(
     if CONF_READ_ONLY in data or list(options) != list(DEFAULT_OPTIONS):
         options = dict(DEFAULT_OPTIONS, **options)
         options[CONF_READ_ONLY] = data.pop(CONF_READ_ONLY, False)
-
-        # Remove CONF_USE_LOCATION as we have to use it by default
-        options.pop(CONF_USE_LOCATION, None)
 
         hass.config_entries.async_update_entry(entry, data=data, options=options)
 
