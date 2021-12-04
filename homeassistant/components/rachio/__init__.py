@@ -6,7 +6,7 @@ from rachiopy import Rachio
 from requests.exceptions import ConnectTimeout
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
@@ -20,7 +20,7 @@ from .webhooks import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["switch", "binary_sensor"]
+PLATFORMS = [Platform.SWITCH, Platform.BINARY_SENSOR]
 
 CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 

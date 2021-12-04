@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_PIN,
     CONF_SSL,
     CONF_USERNAME,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import update_coordinator
@@ -19,7 +20,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import _LOGGER, DOMAIN, VENSTAR_TIMEOUT
 
-PLATFORMS = ["binary_sensor", "climate", "sensor"]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.CLIMATE, Platform.SENSOR]
 
 
 async def async_setup_entry(hass, config):
