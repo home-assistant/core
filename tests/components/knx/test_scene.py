@@ -19,7 +19,7 @@ async def test_activate_knx_scene(hass: HomeAssistant, knx: KNXTestKit):
     """Test KNX scene."""
     await knx.setup_integration(
         {
-            SceneSchema.PLATFORM_NAME: [
+            SceneSchema.PLATFORM: [
                 {
                     CONF_NAME: "test",
                     SceneSchema.CONF_SCENE_NUMBER: 24,

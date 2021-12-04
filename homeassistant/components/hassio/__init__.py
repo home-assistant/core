@@ -57,7 +57,7 @@ from .const import (
     DOMAIN,
     SupervisorEntityModel,
 )
-from .discovery import async_setup_discovery_view
+from .discovery import HassioServiceInfo, async_setup_discovery_view  # noqa: F401
 from .handler import HassIO, HassioAPIError, api_data
 from .http import HassIOView
 from .ingress import async_setup_ingress_view
@@ -461,8 +461,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     await hass.components.panel_custom.async_register_panel(
         frontend_url_path="hassio",
         webcomponent_name="hassio-main",
-        sidebar_title="Supervisor",
-        sidebar_icon="hass:home-assistant",
         js_url="/api/hassio/app/entrypoint.js",
         embed_iframe=True,
         require_admin=True,

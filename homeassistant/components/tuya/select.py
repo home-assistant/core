@@ -26,6 +26,9 @@ from .const import (
     DEVICE_CLASS_TUYA_MOTION_SENSITIVITY,
     DEVICE_CLASS_TUYA_RECORD_MODE,
     DEVICE_CLASS_TUYA_RELAY_STATUS,
+    DEVICE_CLASS_TUYA_VACUUM_CISTERN,
+    DEVICE_CLASS_TUYA_VACUUM_COLLECTION,
+    DEVICE_CLASS_TUYA_VACUUM_MODE,
     DOMAIN,
     TUYA_DISCOVERY_NEW,
     DPCode,
@@ -217,6 +220,31 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             name="Mode",
             device_class=DEVICE_CLASS_TUYA_FINGERBOT_MODE,
             entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    # Robot Vacuum
+    # https://developer.tuya.com/en/docs/iot/fsd?id=K9gf487ck1tlo
+    "sd": (
+        SelectEntityDescription(
+            key=DPCode.CISTERN,
+            name="Water Tank Adjustment",
+            entity_category=EntityCategory.CONFIG,
+            device_class=DEVICE_CLASS_TUYA_VACUUM_CISTERN,
+            icon="mdi:water-opacity",
+        ),
+        SelectEntityDescription(
+            key=DPCode.COLLECTION_MODE,
+            name="Dust Collection Mode",
+            entity_category=EntityCategory.CONFIG,
+            device_class=DEVICE_CLASS_TUYA_VACUUM_COLLECTION,
+            icon="mdi:air-filter",
+        ),
+        SelectEntityDescription(
+            key=DPCode.MODE,
+            name="Mode",
+            entity_category=EntityCategory.CONFIG,
+            device_class=DEVICE_CLASS_TUYA_VACUUM_MODE,
+            icon="mdi:layers-outline",
         ),
     ),
 }

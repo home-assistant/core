@@ -22,6 +22,7 @@ from homeassistant.const import (
     CONF_ENTITY_CATEGORY,
     CONF_NAME,
     TEMP_CELSIUS,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -33,7 +34,6 @@ from .const import (
     DATA_KNX_CONFIG,
     DOMAIN,
     PRESET_MODES,
-    SupportedPlatforms,
 )
 from .knx_entity import KnxEntity
 from .schema import ClimateSchema
@@ -50,9 +50,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up climate(s) for KNX platform."""
     xknx: XKNX = hass.data[DOMAIN].xknx
-    config: list[ConfigType] = hass.data[DATA_KNX_CONFIG][
-        SupportedPlatforms.CLIMATE.value
-    ]
+    config: list[ConfigType] = hass.data[DATA_KNX_CONFIG][Platform.CLIMATE]
 
     async_add_entities(KNXClimate(xknx, entity_config) for entity_config in config)
 

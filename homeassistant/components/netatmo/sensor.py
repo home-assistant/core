@@ -42,6 +42,7 @@ from .const import (
     DATA_HANDLER,
     DOMAIN,
     MANUFACTURER,
+    NETATMO_CREATE_BATTERY,
     SIGNAL_NAME,
     TYPE_WEATHER,
 )
@@ -50,6 +51,7 @@ from .data_handler import (
     PUBLICDATA_DATA_CLASS_NAME,
     WEATHERSTATION_DATA_CLASS_NAME,
     NetatmoDataHandler,
+    NetatmoDevice,
 )
 from .helper import NetatmoArea
 from .netatmo_entity_base import NetatmoBase
@@ -454,6 +456,16 @@ async def async_setup_entry(
         hass, f"signal-{DOMAIN}-public-update-{entry.entry_id}", add_public_entities
     )
 
+    @callback
+    def _create_entity(netatmo_device: NetatmoDevice) -> None:
+        entity = NetatmoClimateBatterySensor(netatmo_device)
+        _LOGGER.debug("Adding climate battery sensor %s", entity)
+        async_add_entities([entity])
+
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, NETATMO_CREATE_BATTERY, _create_entity)
+    )
+
     await add_public_entities(False)
 
     if platform_not_ready:
@@ -559,6 +571,73 @@ class NetatmoSensor(NetatmoBase, SensorEntity):
             return
 
         self.async_write_ha_state()
+
+
+class NetatmoClimateBatterySensor(NetatmoBase, SensorEntity):
+    """Implementation of a Netatmo sensor."""
+
+    entity_description: NetatmoSensorEntityDescription
+
+    def __init__(
+        self,
+        netatmo_device: NetatmoDevice,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(netatmo_device.data_handler)
+        self.entity_description = NetatmoSensorEntityDescription(
+            key="battery_percent",
+            name="Battery Percent",
+            netatmo_name="battery_percent",
+            entity_registry_enabled_default=True,
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+            native_unit_of_measurement=PERCENTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+            device_class=SensorDeviceClass.BATTERY,
+        )
+
+        self._module = netatmo_device.device
+        self._id = netatmo_device.parent_id
+        self._attr_name = f"{self._module.name} {self.entity_description.name}"
+
+        self._state_class_name = netatmo_device.state_class_name
+        self._room_id = self._module.room_id
+        self._model = getattr(self._module.device_type, "value")
+
+        self._attr_unique_id = (
+            f"{self._id}-{self._module.entity_id}-{self.entity_description.key}"
+        )
+
+    @callback
+    def async_update_callback(self) -> None:
+        """Update the entity's state."""
+        if not self._module.reachable:
+            if self.available:
+                self._attr_available = False
+                self._attr_native_value = None
+            return
+
+        self._attr_available = True
+        self._attr_native_value = self._process_battery_state()
+
+    def _process_battery_state(self) -> int | None:
+        """Construct room status."""
+        if battery_state := self._module.battery_state:
+            return process_battery_percentage(battery_state)
+
+        return None
+
+
+def process_battery_percentage(data: str) -> int:
+    """Process battery data and return percent (int) for display."""
+    mapping = {
+        "max": 100,
+        "full": 90,
+        "high": 75,
+        "medium": 50,
+        "low": 25,
+        "very low": 10,
+    }
+    return mapping[data]
 
 
 def fix_angle(angle: int) -> int:

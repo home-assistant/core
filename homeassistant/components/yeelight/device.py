@@ -7,7 +7,7 @@ import logging
 from yeelight import BulbException
 from yeelight.aio import KEY_CONNECTED
 
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_ID, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
@@ -199,6 +199,8 @@ class YeelightDevice:
         elif self.capabilities:
             # Generate name from model and id when capabilities is available
             self._name = _async_unique_name(self.capabilities)
+        elif self.model and (id_ := self._config.get(CONF_ID)):
+            self._name = f"Yeelight {async_format_model_id(self.model, id_)}"
         else:
             self._name = self._host  # Default name is host
 

@@ -30,6 +30,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
     DEVICE_CLASS_ENERGY,
     ELECTRIC_CURRENT_AMPERE,
@@ -539,6 +540,16 @@ class VOCLevel(Sensor):
     _decimals = 0
     _multiplier = 1e6
     _unit = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+
+
+@STRICT_MATCH(channel_names="voc_level", models="lumi.airmonitor.acn01")
+class PPBVOCLevel(Sensor):
+    """VOC Level sensor."""
+
+    SENSOR_ATTR = "measured_value"
+    _decimals = 0
+    _multiplier = 1
+    _unit = CONCENTRATION_PARTS_PER_BILLION
 
 
 @STRICT_MATCH(channel_names="formaldehyde_concentration")

@@ -8,6 +8,7 @@ from typing import Any, final
 
 import voluptuous as vol
 
+from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_MODE
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -18,7 +19,6 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.enum import StrEnum
 
 from .const import (
     ATTR_MAX,

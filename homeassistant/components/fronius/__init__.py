@@ -9,7 +9,7 @@ from typing import TypeVar
 from pyfronius import Fronius, FroniusError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_MODEL, ATTR_SW_VERSION, CONF_HOST
+from homeassistant.const import ATTR_MODEL, ATTR_SW_VERSION, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -28,7 +28,7 @@ from .coordinator import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-PLATFORMS: list[str] = ["sensor"]
+PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 FroniusCoordinatorType = TypeVar("FroniusCoordinatorType", bound=FroniusCoordinatorBase)
 
