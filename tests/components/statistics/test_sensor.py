@@ -17,6 +17,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     TEMP_CELSIUS,
 )
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component, setup_component
 from homeassistant.util import dt as dt_util
 
@@ -33,6 +34,29 @@ from tests.components.recorder.common import wait_recording_done
 def mock_legacy_time(legacy_patchable_time):
     """Make time patchable for all the tests."""
     yield
+
+
+async def test_unique_id(hass):
+    """Test configuration defined unique_id."""
+    assert await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": [
+                {
+                    "platform": "statistics",
+                    "name": "test",
+                    "entity_id": "sensor.test_monitored",
+                    "unique_id": "uniqueid_sensor_test",
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    entity_reg = er.async_get(hass)
+    entity_id = entity_reg.async_get_entity_id("sensor", DOMAIN, "uniqueid_sensor_test")
+    assert entity_id == "sensor.test"
 
 
 class TestStatisticsSensor(unittest.TestCase):
