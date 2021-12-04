@@ -33,6 +33,12 @@
       "1": "Medium sensitivity",
       "2": "High sensitivity"
     },
+    "tuya__pir_switch": {
+      "0": "Off",
+      "1": "Low sensitivity",
+      "2": "Medium sensitivity"
+      "3": "High sensitivity" 
+    },
     "tuya__record_mode": {
       "1": "Record events only",
       "2": "Continuous recording"
