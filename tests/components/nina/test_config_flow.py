@@ -1,6 +1,8 @@
 """Test the Nina config flow."""
+from __future__ import annotations
+
 import json
-from typing import Any, Dict
+from typing import Any
 from unittest.mock import patch
 
 from pynina import ApiError
@@ -9,7 +11,12 @@ from homeassistant import data_entry_flow
 from homeassistant.components.nina.const import (
     CONF_FILTER_CORONA,
     CONF_MESSAGE_SLOTS,
-    CONF_REGIONS,
+    CONST_REGION_A_TO_D,
+    CONST_REGION_E_TO_H,
+    CONST_REGION_I_TO_L,
+    CONST_REGION_M_TO_Q,
+    CONST_REGION_R_TO_U,
+    CONST_REGION_V_TO_UE,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_USER
@@ -17,18 +24,18 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import load_fixture
 
-DUMMY_DATA: Dict[str, Any] = {
+DUMMY_DATA: dict[str, Any] = {
     CONF_MESSAGE_SLOTS: 5,
-    CONF_REGIONS + "1": ["095760000000_0", "095760000000_1"],
-    CONF_REGIONS + "2": ["010610000000_0", "010610000000_1"],
-    CONF_REGIONS + "3": ["071320000000_0", "071320000000_1"],
-    CONF_REGIONS + "4": ["071380000000_0", "071380000000_1"],
-    CONF_REGIONS + "5": ["072320000000_0", "072320000000_1"],
-    CONF_REGIONS + "6": ["081270000000_0", "081270000000_1"],
+    CONST_REGION_A_TO_D: ["095760000000_0", "095760000000_1"],
+    CONST_REGION_E_TO_H: ["010610000000_0", "010610000000_1"],
+    CONST_REGION_I_TO_L: ["071320000000_0", "071320000000_1"],
+    CONST_REGION_M_TO_Q: ["071380000000_0", "071380000000_1"],
+    CONST_REGION_R_TO_U: ["072320000000_0", "072320000000_1"],
+    CONST_REGION_V_TO_UE: ["081270000000_0", "081270000000_1"],
     CONF_FILTER_CORONA: True,
 }
 
-DUMMY_RESPONSE: Dict[str, Any] = json.loads(load_fixture("nina/sample_regions.json"))
+DUMMY_RESPONSE: dict[str, Any] = json.loads(load_fixture("sample_regions.json", "nina"))
 
 
 async def test_show_set_form(hass: HomeAssistant) -> None:
@@ -38,7 +45,7 @@ async def test_show_set_form(hass: HomeAssistant) -> None:
         return_value=DUMMY_RESPONSE,
     ):
 
-        result: Dict[str, Any] = await hass.config_entries.flow.async_init(
+        result: dict[str, Any] = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
 
@@ -53,7 +60,7 @@ async def test_step_user_connection_error(hass: HomeAssistant) -> None:
         side_effect=ApiError("Could not connect to Api"),
     ):
 
-        result: Dict[str, Any] = await hass.config_entries.flow.async_init(
+        result: dict[str, Any] = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=DUMMY_DATA
         )
 
@@ -68,7 +75,7 @@ async def test_step_user_unexpected_exception(hass: HomeAssistant) -> None:
         side_effect=Exception("DUMMY"),
     ):
 
-        result: Dict[str, Any] = await hass.config_entries.flow.async_init(
+        result: dict[str, Any] = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=DUMMY_DATA
         )
 
@@ -82,7 +89,7 @@ async def test_step_user(hass: HomeAssistant) -> None:
         return_value=DUMMY_RESPONSE,
     ):
 
-        result: Dict[str, Any] = await hass.config_entries.flow.async_init(
+        result: dict[str, Any] = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=DUMMY_DATA
         )
 
@@ -97,7 +104,7 @@ async def test_step_user_no_selection(hass: HomeAssistant) -> None:
         return_value=DUMMY_RESPONSE,
     ):
 
-        result: Dict[str, Any] = await hass.config_entries.flow.async_init(
+        result: dict[str, Any] = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data={}
         )
 
@@ -112,7 +119,7 @@ async def test_step_user_already_configured(hass: HomeAssistant) -> None:
         "pynina.baseApi.BaseAPI._makeRequest",
         return_value=DUMMY_RESPONSE,
     ):
-        result: Dict[str, Any] = await hass.config_entries.flow.async_init(
+        result: dict[str, Any] = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=DUMMY_DATA
         )
 

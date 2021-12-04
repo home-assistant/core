@@ -21,7 +21,7 @@ async def init_integration(hass) -> MockConfigEntry:
     """Set up the NINA integration in Home Assistant."""
 
     dummy_response: Dict[str, Any] = json.loads(
-        load_fixture("nina/sample_warnings.json")
+        load_fixture("sample_warnings.json", "nina")
     )
 
     with patch(

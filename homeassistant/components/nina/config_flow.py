@@ -10,7 +10,26 @@ from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
-from .const import _LOGGER, CONF_FILTER_CORONA, CONF_MESSAGE_SLOTS, CONF_REGIONS, DOMAIN
+from .const import (
+    _LOGGER,
+    CONF_FILTER_CORONA,
+    CONF_MESSAGE_SLOTS,
+    CONF_REGIONS,
+    CONST_LIST_A_TO_D,
+    CONST_LIST_E_TO_H,
+    CONST_LIST_I_TO_L,
+    CONST_LIST_M_TO_Q,
+    CONST_LIST_R_TO_U,
+    CONST_LIST_V_TO_UE,
+    CONST_REGION_A_TO_D,
+    CONST_REGION_E_TO_H,
+    CONST_REGION_I_TO_L,
+    CONST_REGION_M_TO_Q,
+    CONST_REGION_R_TO_U,
+    CONST_REGION_V_TO_UE,
+    CONST_REGIONS,
+    DOMAIN,
+)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -22,12 +41,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize."""
         super().__init__()
         self._all_region_codes_sorted: dict[str, str] = {}
-        self.regions_a: dict[str, Any] = {}
-        self.regions_b: dict[str, Any] = {}
-        self.regions_c: dict[str, Any] = {}
-        self.regions_d: dict[str, Any] = {}
-        self.regions_e: dict[str, Any] = {}
-        self.regions_f: dict[str, Any] = {}
+        self.regions: dict[str, dict[str, Any]] = {}
+
+        for name in CONST_REGIONS:
+            self.regions[name] = {}
 
     async def async_step_user(
         self: ConfigFlow,
@@ -49,6 +66,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     await nina.getAllRegionalCodes()
                 )
 
+                self.split_regions()
+
             except ApiError as err:
                 _LOGGER.warning("NINA setup error: %s", err)
                 errors["base"] = "cannot_connect"
@@ -63,18 +82,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             config[CONF_REGIONS] = []
 
-            if CONF_REGIONS + "1" in user_input:
-                config[CONF_REGIONS] += user_input[CONF_REGIONS + "1"]
-            if CONF_REGIONS + "2" in user_input:
-                config[CONF_REGIONS] += user_input[CONF_REGIONS + "2"]
-            if CONF_REGIONS + "3" in user_input:
-                config[CONF_REGIONS] += user_input[CONF_REGIONS + "3"]
-            if CONF_REGIONS + "4" in user_input:
-                config[CONF_REGIONS] += user_input[CONF_REGIONS + "4"]
-            if CONF_REGIONS + "5" in user_input:
-                config[CONF_REGIONS] += user_input[CONF_REGIONS + "5"]
-            if CONF_REGIONS + "6" in user_input:
-                config[CONF_REGIONS] += user_input[CONF_REGIONS + "6"]
+            for group in CONST_REGIONS:
+                if group_input := user_input.get(group):
+                    config[CONF_REGIONS] += group_input
 
             if len(config[CONF_REGIONS]) > 0:
                 tmp: dict[str, Any] = {}
@@ -96,18 +106,28 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             errors["base"] = "no_selection"
 
-        self.split_regions()
-
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Optional(CONF_REGIONS + "1"): cv.multi_select(self.regions_a),
-                    vol.Optional(CONF_REGIONS + "2"): cv.multi_select(self.regions_b),
-                    vol.Optional(CONF_REGIONS + "3"): cv.multi_select(self.regions_c),
-                    vol.Optional(CONF_REGIONS + "4"): cv.multi_select(self.regions_d),
-                    vol.Optional(CONF_REGIONS + "5"): cv.multi_select(self.regions_e),
-                    vol.Optional(CONF_REGIONS + "6"): cv.multi_select(self.regions_f),
+                    vol.Optional(CONST_REGION_A_TO_D): cv.multi_select(
+                        self.regions[CONST_REGION_A_TO_D]
+                    ),
+                    vol.Optional(CONST_REGION_E_TO_H): cv.multi_select(
+                        self.regions[CONST_REGION_E_TO_H]
+                    ),
+                    vol.Optional(CONST_REGION_I_TO_L): cv.multi_select(
+                        self.regions[CONST_REGION_I_TO_L]
+                    ),
+                    vol.Optional(CONST_REGION_M_TO_Q): cv.multi_select(
+                        self.regions[CONST_REGION_M_TO_Q]
+                    ),
+                    vol.Optional(CONST_REGION_R_TO_U): cv.multi_select(
+                        self.regions[CONST_REGION_R_TO_U]
+                    ),
+                    vol.Optional(CONST_REGION_V_TO_UE): cv.multi_select(
+                        self.regions[CONST_REGION_V_TO_UE]
+                    ),
                     vol.Required(CONF_MESSAGE_SLOTS, default=5): vol.All(
                         int, vol.Range(min=1, max=20)
                     ),
@@ -136,28 +156,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def split_regions(self) -> None:
         """Split regions alphabetical."""
-        for i, name in self._all_region_codes_sorted.items():
-            if name[0] == "A" or name[0] == "B" or name[0] == "C" or name[0] == "D":
-                self.regions_a[i] = name
-            if name[0] == "E" or name[0] == "F" or name[0] == "G" or name[0] == "H":
-                self.regions_b[i] = name
-            if name[0] == "I" or name[0] == "J" or name[0] == "K" or name[0] == "L":
-                self.regions_c[i] = name
-            if (
-                name[0] == "M"
-                or name[0] == "N"
-                or name[0] == "O"
-                or name[0] == "P"
-                or name[0] == "Q"
-            ):
-                self.regions_d[i] = name
-            if name[0] == "R" or name[0] == "S" or name[0] == "T" or name[0] == "U":
-                self.regions_e[i] = name
-            if (
-                name[0] == "V"
-                or name[0] == "W"
-                or name[0] == "X"
-                or name[0] == "Y"
-                or name[0] == "Z"
-            ):
-                self.regions_f[i] = name
+        for index, name in self._all_region_codes_sorted.items():
+            if name[0] in CONST_LIST_A_TO_D:
+                self.regions[CONST_REGION_A_TO_D][index] = name
+            if name[0] in CONST_LIST_E_TO_H:
+                self.regions[CONST_REGION_E_TO_H][index] = name
+            if name[0] in CONST_LIST_I_TO_L:
+                self.regions[CONST_REGION_I_TO_L][index] = name
+            if name[0] in CONST_LIST_M_TO_Q:
+                self.regions[CONST_REGION_M_TO_Q][index] = name
+            if name[0] in CONST_LIST_R_TO_U:
+                self.regions[CONST_REGION_R_TO_U][index] = name
+            if name[0] in CONST_LIST_V_TO_UE:
+                self.regions[CONST_REGION_V_TO_UE][index] = name
