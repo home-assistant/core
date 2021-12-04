@@ -12,5 +12,14 @@
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     }
+  },
+  "options": {
+    "step": {
+        "init": {
+            "data": {
+                "scan_interval": "Update interval in minutes, minimum 2"
+            }
+        }
+    }
   }
 }

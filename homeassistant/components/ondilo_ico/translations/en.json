@@ -12,5 +12,14 @@
                 "title": "Pick Authentication Method"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Update interval in minutes, minimum 2"
+                }
+            }
+        }
     }
 }

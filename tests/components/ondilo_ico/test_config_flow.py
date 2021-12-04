@@ -3,13 +3,14 @@ from unittest.mock import patch
 
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.ondilo_ico.const import (
+    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     OAUTH2_AUTHORIZE,
     OAUTH2_CLIENTID,
     OAUTH2_CLIENTSECRET,
     OAUTH2_TOKEN,
 )
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_SCAN_INTERVAL
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from tests.common import MockConfigEntry
@@ -82,3 +83,37 @@ async def test_full_flow(
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1
+
+
+async def test_options_flow(hass):
+    """Test config flow options."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+    )
+    config_entry.add_to_hass(hass)
+
+    assert config_entry.options == {}
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    # Scan interval
+    # Default
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={},
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert config_entry.options[CONF_SCAN_INTERVAL] == DEFAULT_SCAN_INTERVAL
+
+    # Manual
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_SCAN_INTERVAL: 2},
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert config_entry.options[CONF_SCAN_INTERVAL] == 2
