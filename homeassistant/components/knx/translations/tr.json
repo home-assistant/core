@@ -10,7 +10,7 @@
         "step": {
             "manual_tunnel": {
                 "data": {
-                    "host": "Ana bilgisayar",
+                    "host": "Sunucu",
                     "individual_address": "Ba\u011flant\u0131 i\u00e7in bireysel adres",
                     "port": "Port",
                     "route_back": "Geri Y\u00f6nlendirme / NAT Modu"
@@ -53,7 +53,7 @@
             },
             "tunnel": {
                 "data": {
-                    "host": "Ana bilgisayar",
+                    "host": "Sunucu",
                     "port": "Port",
                     "route_back": "Geri Y\u00f6nlendirme / NAT Modu"
                 }
