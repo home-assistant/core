@@ -1020,7 +1020,7 @@ class TestStatisticsSensor(unittest.TestCase):
 
         # Testing correct retrieval from recorder, thus we do not
         # want purging to occur within the class itself.
-        def mock_purge(self):
+        def mock_purge(self, _):
             return
 
         # enable the recorder
@@ -1030,7 +1030,7 @@ class TestStatisticsSensor(unittest.TestCase):
 
         with patch(
             "homeassistant.components.statistics.sensor.dt_util.utcnow", new=mock_now
-        ), patch.object(StatisticsSensor, "_purge_old", mock_purge):
+        ), patch.object(StatisticsSensor, "_purge_old_states", mock_purge):
             # store some values
             for value in self.values:
                 self.hass.states.set(
