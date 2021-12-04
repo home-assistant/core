@@ -4,13 +4,13 @@ from http import HTTPStatus
 from aiohttp import web
 import voluptuous as vol
 
-from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
 from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     ATTR_NAME,
     CONF_WEBHOOK_ID,
     STATE_NOT_HOME,
+    Platform,
 )
 from homeassistant.helpers import config_entry_flow
 import homeassistant.helpers.config_validation as cv
@@ -19,7 +19,7 @@ from homeassistant.util import slugify
 
 from .const import DOMAIN
 
-PLATFORMS = [DEVICE_TRACKER]
+PLATFORMS = [Platform.DEVICE_TRACKER]
 
 CONF_MOBILE_BEACONS = "mobile_beacons"
 
