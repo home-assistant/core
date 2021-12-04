@@ -7,7 +7,7 @@ import contextlib
 from datetime import datetime, timedelta
 import logging
 import statistics
-from typing import Literal, cast
+from typing import Any, Literal, cast
 
 import voluptuous as vol
 
@@ -26,7 +26,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, State, callback
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
@@ -107,13 +107,13 @@ DEFAULT_QUANTILE_METHOD = "exclusive"
 ICON = "mdi:calculator"
 
 
-def valid_binary_characteristic_configuration(config):
+def valid_binary_characteristic_configuration(config: dict[str, Any]) -> dict[str, Any]:
     """Validate that the characteristic selected is valid for the source sensor type, throw if it isn't."""
-    if config.get(CONF_ENTITY_ID).split(".")[0] == "binary_sensor":
+    if str(config.get(CONF_ENTITY_ID)).split(".")[0] == "binary_sensor":
         if config.get(CONF_STATE_CHARACTERISTIC) not in STATS_BINARY_SUPPORT:
             raise ValueError(
                 "The configured characteristic '"
-                + config.get(CONF_STATE_CHARACTERISTIC)
+                + str(config.get(CONF_STATE_CHARACTERISTIC))
                 + "' is not supported for a binary source sensor."
             )
     return config
@@ -174,13 +174,13 @@ async def async_setup_platform(
     config: ConfigType,
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
-):
+) -> None:
     """Set up the Statistics sensor."""
 
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
     async_add_entities(
-        [
+        new_entities=[
             StatisticsSensor(
                 source_entity_id=str(config.get(CONF_ENTITY_ID)),
                 name=str(config.get(CONF_NAME)),
@@ -195,9 +195,8 @@ async def async_setup_platform(
                 quantile_method=str(config.get(CONF_QUANTILE_METHOD)),
             )
         ],
-        True,
+        update_before_add=True,
     )
-    return True
 
 
 class StatisticsSensor(SensorEntity):
@@ -254,18 +253,18 @@ class StatisticsSensor(SensorEntity):
 
         self._update_listener: CALLBACK_TYPE | None = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
 
         @callback
-        def async_stats_sensor_state_listener(event):
+        def async_stats_sensor_state_listener(event: Event) -> None:
             """Handle the sensor state changes."""
-            if (new_state := cast(State, event.data.get("new_state"))) is None:
+            if (new_state := event.data.get("new_state")) is None:
                 return
             self._add_state_to_queue(new_state)
             self.async_schedule_update_ha_state(True)
 
-        async def async_stats_sensor_startup(_):
+        async def async_stats_sensor_startup(_: HomeAssistant) -> None:
             """Add listener and get recorded state."""
             _LOGGER.debug("Startup for %s", self.entity_id)
 
@@ -282,7 +281,7 @@ class StatisticsSensor(SensorEntity):
 
         async_at_start(self.hass, async_stats_sensor_startup)
 
-    def _add_state_to_queue(self, new_state: State):
+    def _add_state_to_queue(self, new_state: State) -> None:
         """Add the state to the queue."""
         self._available = new_state.state != STATE_UNAVAILABLE
         if new_state.state == STATE_UNAVAILABLE:
@@ -412,7 +411,7 @@ class StatisticsSensor(SensorEntity):
             return self.ages[0] + self._samples_max_age
         return None
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest data and updates the states."""
         _LOGGER.debug("%s: updating statistics", self.entity_id)
         if self._samples_max_age is not None:
@@ -432,7 +431,7 @@ class StatisticsSensor(SensorEntity):
                 self._update_listener = None
 
             @callback
-            def _scheduled_update(now):
+            def _scheduled_update(now: datetime) -> None:
                 """Timer callback for sensor update."""
                 _LOGGER.debug("%s: executing scheduled update", self.entity_id)
                 self.async_schedule_update_ha_state(True)
@@ -442,7 +441,7 @@ class StatisticsSensor(SensorEntity):
                 self.hass, _scheduled_update, next_to_purge_timestamp
             )
 
-    async def _initialize_from_database(self):
+    async def _initialize_from_database(self) -> None:
         """Initialize the list of states from the database.
 
         The query will get the list of states in DESCENDING order so that we
@@ -476,8 +475,9 @@ class StatisticsSensor(SensorEntity):
             )
             states = execute(query, to_native=True, validate_entity_ids=False)
 
-        for state in reversed(states):
-            self._add_state_to_queue(state)
+        if states:
+            for state in reversed(states):
+                self._add_state_to_queue(state)
 
         self.async_schedule_update_ha_state(True)
 
