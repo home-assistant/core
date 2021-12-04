@@ -86,6 +86,10 @@ PLATFORMS = ["sensor", "camera", "climate"]
 WEB_AUTH_DOMAIN = DOMAIN
 INSTALLED_AUTH_DOMAIN = f"{DOMAIN}.installed"
 
+# Media items for events are fetched and cached in memory. This is a few
+# megabytes per camera even for the 10-frame mp4 clips which are ~90kb each
+EVENT_MEDIA_CACHE_SIZE = 64
+
 
 class WebAuth(config_entry_oauth2_flow.LocalOAuth2Implementation):
     """OAuth implementation using OAuth for web applications."""
@@ -226,13 +230,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from err
 
     try:
-        await subscriber.async_get_device_manager()
+        device_manager = await subscriber.async_get_device_manager()
     except GoogleNestException as err:
         if DATA_NEST_UNAVAILABLE not in hass.data[DOMAIN]:
             _LOGGER.error("Device manager error: %s", err)
             hass.data[DOMAIN][DATA_NEST_UNAVAILABLE] = True
         subscriber.stop_async()
         raise ConfigEntryNotReady from err
+
+    # Keep media for last N events in memory
+    device_manager.cache_policy.event_cache_size = EVENT_MEDIA_CACHE_SIZE
+    device_manager.cache_policy.fetch = True
 
     hass.data[DOMAIN].pop(DATA_NEST_UNAVAILABLE, None)
     hass.data[DOMAIN][DATA_SUBSCRIBER] = subscriber
