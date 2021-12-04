@@ -1092,6 +1092,11 @@ async def test_node_model_change(hass, zp3111, client, integration):
     device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
     assert device
     assert device == dev_reg.async_get_device(identifiers={(DOMAIN, device_id_ext)})
+    assert device.manufacturer == "Vision Security"
+    assert device.model == "ZP3111-5"
+    assert device.name == "4-in-1 Sensor"
+    assert not device.name_by_user
+
     dev_id = device.id
 
     motion_entity = "binary_sensor.4_in_1_sensor_home_security_motion_detection"
@@ -1105,9 +1110,10 @@ async def test_node_model_change(hass, zp3111, client, integration):
     assert device
     assert device.id == dev_id
     assert device == dev_reg.async_get_device(identifiers={(DOMAIN, device_id_ext)})
+    assert device.manufacturer == "Vision Security"
+    assert device.model == "ZP3111-5"
     assert device.name == "4-in-1 Sensor"
     assert device.name_by_user == "Custom Device Name"
-    assert device.manufacturer == "Vision Security"
 
     custom_entity = "binary_sensor.custom_motion_sensor"
     er_reg.async_update_entity(
@@ -1139,10 +1145,10 @@ async def test_node_model_change(hass, zp3111, client, integration):
     device = dev_reg.async_get(dev_id)
     assert device
     assert device.id == dev_id
+    assert device.manufacturer == "New Device Manufacturer"
+    assert device.model == "New Device Model"
     assert device.name == "New Device Name"
     assert device.name_by_user == "Custom Device Name"
-    assert device.model == "New Device Model"
-    assert device.manufacturer == "New Device Manufacturer"
 
     assert not hass.states.get(motion_entity)
     state = hass.states.get(custom_entity)
