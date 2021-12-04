@@ -6,14 +6,15 @@ import os
 from typing import TYPE_CHECKING
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_PROBLEM,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
 from homeassistant.components.onewire.model import OWServerDeviceDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_TYPE, ENTITY_CATEGORY_DIAGNOSTIC
+from homeassistant.const import CONF_TYPE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -74,8 +75,8 @@ HOBBYBOARD_EF: dict[str, tuple[OneWireBinarySensorEntityDescription, ...]] = {
             entity_registry_enabled_default=False,
             name=f"Hub Short on Branch {id}",
             read_mode=READ_MODE_BOOL,
-            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-            device_class=DEVICE_CLASS_PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            device_class=BinarySensorDeviceClass.PROBLEM,
         )
         for id in DEVICE_KEYS_0_3
     ),

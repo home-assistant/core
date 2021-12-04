@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any
 from homeassistant.components.onewire.model import OWServerDeviceDescription
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_TYPE, ENTITY_CATEGORY_CONFIG
+from homeassistant.const import CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -109,7 +109,7 @@ HOBBYBOARD_EF: dict[str, tuple[OneWireEntityDescription, ...]] = {
             entity_registry_enabled_default=False,
             name=f"Hub Branch {id} Enable",
             read_mode=READ_MODE_BOOL,
-            entity_category=ENTITY_CATEGORY_CONFIG,
+            entity_category=EntityCategory.CONFIG,
         )
         for id in DEVICE_KEYS_0_3
     ),
@@ -120,7 +120,7 @@ HOBBYBOARD_EF: dict[str, tuple[OneWireEntityDescription, ...]] = {
                 entity_registry_enabled_default=False,
                 name=f"Leaf Sensor {id} Enable",
                 read_mode=READ_MODE_BOOL,
-                entity_category=ENTITY_CATEGORY_CONFIG,
+                entity_category=EntityCategory.CONFIG,
             )
             for id in DEVICE_KEYS_0_3
         ]
@@ -130,7 +130,7 @@ HOBBYBOARD_EF: dict[str, tuple[OneWireEntityDescription, ...]] = {
                 entity_registry_enabled_default=False,
                 name=f"Moisture Sensor {id} Enable",
                 read_mode=READ_MODE_BOOL,
-                entity_category=ENTITY_CATEGORY_CONFIG,
+                entity_category=EntityCategory.CONFIG,
             )
             for id in DEVICE_KEYS_0_3
         ]
