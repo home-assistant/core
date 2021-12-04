@@ -1074,18 +1074,13 @@ async def test_replace_different_node(
     assert hass.states.get("switch.smart_plug_with_two_usb_ports")
 
 
-async def test_node_model_change(hass, zp3111, zp3111_state, client, integration):
+async def test_node_model_change(hass, zp3111, client, integration):
     """Test when a node's model is changed due to an updated device config file.
 
     The device and entities should not be removed.
     """
-    # This is not 100% realistic test,
-    # since the model change would be seen when the integration is loaded,
-    # not via a runtime event.
-    # The same registration code path is used though, so it's practically similar.
     dev_reg = dr.async_get(hass)
     er_reg = er.async_get(hass)
-    zp3111_state = deepcopy(zp3111_state)
 
     device_id = f"{client.driver.controller.home_id}-{zp3111.node_id}"
     device_id_ext = (
@@ -1093,6 +1088,7 @@ async def test_node_model_change(hass, zp3111, zp3111_state, client, integration
         f"{zp3111.product_type}:{zp3111.product_id}"
     )
 
+    # Verify device and entities have default names/ids
     device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
     assert device
     assert device == dev_reg.async_get_device(identifiers={(DOMAIN, device_id_ext)})
@@ -1103,6 +1099,7 @@ async def test_node_model_change(hass, zp3111, zp3111_state, client, integration
     assert state
     assert state.name == "4-in-1 Sensor: Home Security - Motion detection"
 
+    # Customize device and entity names/ids
     dev_reg.async_update_device(device.id, name_by_user="Custom Device Name")
     device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
     assert device
@@ -1110,6 +1107,7 @@ async def test_node_model_change(hass, zp3111, zp3111_state, client, integration
     assert device == dev_reg.async_get_device(identifiers={(DOMAIN, device_id_ext)})
     assert device.name == "4-in-1 Sensor"
     assert device.name_by_user == "Custom Device Name"
+    assert device.manufacturer == "Vision Security"
 
     custom_entity = "binary_sensor.custom_motion_sensor"
     er_reg.async_update_entity(
@@ -1121,30 +1119,30 @@ async def test_node_model_change(hass, zp3111, zp3111_state, client, integration
     assert state
     assert state.name == "Custom Entity Name"
 
-    # simulate device config file changes
-    zp3111_state["deviceConfig"]["label"] = "New Device Model"
-    zp3111_state["deviceConfig"]["description"] = "New Device Description"
+    # Unload the integration
+    assert await hass.config_entries.async_unload(integration.entry_id)
+    await hass.async_block_till_done()
+    assert integration.state is ConfigEntryState.NOT_LOADED
+    assert not hass.data.get(DOMAIN)
 
-    # Trigger a node add event which will call async_on_node_ready. We can't use
-    # a node ready event directly because it's only listened to once. Neither of
-    # these events would occur in real life in this sequence.
-    event = Event(
-        type="node added",
-        data={
-            "source": "controller",
-            "event": "node added",
-            "node": zp3111_state,
-        },
-    )
-    client.driver.receive_event(event)
+    # Simulate changes to the node labels
+    zp3111.device_config.data["description"] = "New Device Name"
+    zp3111.device_config.data["label"] = "New Device Model"
+    zp3111.device_config.data["manufacturer"] = "New Device Manufacturer"
+
+    # Reload integration, it will re-add the nodes
+    integration.add_to_hass(hass)
+    await hass.config_entries.async_setup(integration.entry_id)
     await hass.async_block_till_done()
 
     # Device name changes, but the customization is the same
     device = dev_reg.async_get(dev_id)
     assert device
-    assert device.name == "New Device Description"
+    assert device.id == dev_id
+    assert device.name == "New Device Name"
     assert device.name_by_user == "Custom Device Name"
     assert device.model == "New Device Model"
+    assert device.manufacturer == "New Device Manufacturer"
 
     assert not hass.states.get(motion_entity)
     state = hass.states.get(custom_entity)
