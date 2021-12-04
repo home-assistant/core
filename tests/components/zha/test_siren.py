@@ -137,3 +137,5 @@ async def test_siren(hass, siren):
     now = dt_util.utcnow() + timedelta(seconds=15)
     async_fire_time_changed(hass, now)
     await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_OFF
