@@ -10,7 +10,7 @@ import requests
 from wallbox import Wallbox
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -19,7 +19,7 @@ from .const import CONF_DATA_KEY, CONF_MAX_CHARGING_CURRENT_KEY, CONF_STATION, D
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["sensor", "number"]
+PLATFORMS = [Platform.SENSOR, Platform.NUMBER]
 UPDATE_INTERVAL = 30
 
 

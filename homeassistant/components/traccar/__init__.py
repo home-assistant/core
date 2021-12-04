@@ -4,8 +4,7 @@ from http import HTTPStatus
 from aiohttp import web
 import voluptuous as vol
 
-from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
-from homeassistant.const import ATTR_ID, CONF_WEBHOOK_ID
+from homeassistant.const import ATTR_ID, CONF_WEBHOOK_ID, Platform
 from homeassistant.helpers import config_entry_flow
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -22,7 +21,7 @@ from .const import (
     DOMAIN,
 )
 
-PLATFORMS = [DEVICE_TRACKER]
+PLATFORMS = [Platform.DEVICE_TRACKER]
 
 
 TRACKER_UPDATE = f"{DOMAIN}_tracker_update"
