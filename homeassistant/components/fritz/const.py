@@ -2,9 +2,16 @@
 
 from typing import Literal
 
+from homeassistant.const import Platform
+
 DOMAIN = "fritz"
 
-PLATFORMS = ["binary_sensor", "device_tracker", "sensor", "switch"]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.DEVICE_TRACKER,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 DATA_FRITZ = "fritz_data"
 
