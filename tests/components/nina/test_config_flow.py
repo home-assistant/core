@@ -16,7 +16,7 @@ from homeassistant.components.nina.const import (
     CONST_REGION_I_TO_L,
     CONST_REGION_M_TO_Q,
     CONST_REGION_R_TO_U,
-    CONST_REGION_V_TO_UE,
+    CONST_REGION_V_TO_Z,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_USER
@@ -31,7 +31,7 @@ DUMMY_DATA: dict[str, Any] = {
     CONST_REGION_I_TO_L: ["071320000000_0", "071320000000_1"],
     CONST_REGION_M_TO_Q: ["071380000000_0", "071380000000_1"],
     CONST_REGION_R_TO_U: ["072320000000_0", "072320000000_1"],
-    CONST_REGION_V_TO_UE: ["081270000000_0", "081270000000_1"],
+    CONST_REGION_V_TO_Z: ["081270000000_0", "081270000000_1"],
     CONF_FILTER_CORONA: True,
 }
 

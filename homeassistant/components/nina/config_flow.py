@@ -15,18 +15,7 @@ from .const import (
     CONF_FILTER_CORONA,
     CONF_MESSAGE_SLOTS,
     CONF_REGIONS,
-    CONST_LIST_A_TO_D,
-    CONST_LIST_E_TO_H,
-    CONST_LIST_I_TO_L,
-    CONST_LIST_M_TO_Q,
-    CONST_LIST_R_TO_U,
-    CONST_LIST_V_TO_UE,
-    CONST_REGION_A_TO_D,
-    CONST_REGION_E_TO_H,
-    CONST_REGION_I_TO_L,
-    CONST_REGION_M_TO_Q,
-    CONST_REGION_R_TO_U,
-    CONST_REGION_V_TO_UE,
+    CONST_REGION_MAPPING,
     CONST_REGIONS,
     DOMAIN,
 )
@@ -110,24 +99,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Optional(CONST_REGION_A_TO_D): cv.multi_select(
-                        self.regions[CONST_REGION_A_TO_D]
-                    ),
-                    vol.Optional(CONST_REGION_E_TO_H): cv.multi_select(
-                        self.regions[CONST_REGION_E_TO_H]
-                    ),
-                    vol.Optional(CONST_REGION_I_TO_L): cv.multi_select(
-                        self.regions[CONST_REGION_I_TO_L]
-                    ),
-                    vol.Optional(CONST_REGION_M_TO_Q): cv.multi_select(
-                        self.regions[CONST_REGION_M_TO_Q]
-                    ),
-                    vol.Optional(CONST_REGION_R_TO_U): cv.multi_select(
-                        self.regions[CONST_REGION_R_TO_U]
-                    ),
-                    vol.Optional(CONST_REGION_V_TO_UE): cv.multi_select(
-                        self.regions[CONST_REGION_V_TO_UE]
-                    ),
+                    **{
+                        vol.Optional(region): cv.multi_select(self.regions[region])
+                        for region in CONST_REGIONS
+                    },
                     vol.Required(CONF_MESSAGE_SLOTS, default=5): vol.All(
                         int, vol.Range(min=1, max=20)
                     ),
@@ -157,15 +132,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def split_regions(self) -> None:
         """Split regions alphabetical."""
         for index, name in self._all_region_codes_sorted.items():
-            if name[0] in CONST_LIST_A_TO_D:
-                self.regions[CONST_REGION_A_TO_D][index] = name
-            if name[0] in CONST_LIST_E_TO_H:
-                self.regions[CONST_REGION_E_TO_H][index] = name
-            if name[0] in CONST_LIST_I_TO_L:
-                self.regions[CONST_REGION_I_TO_L][index] = name
-            if name[0] in CONST_LIST_M_TO_Q:
-                self.regions[CONST_REGION_M_TO_Q][index] = name
-            if name[0] in CONST_LIST_R_TO_U:
-                self.regions[CONST_REGION_R_TO_U][index] = name
-            if name[0] in CONST_LIST_V_TO_UE:
-                self.regions[CONST_REGION_V_TO_UE][index] = name
+            for region_name, grouping_letters in CONST_REGION_MAPPING.items():
+                if name[0] in grouping_letters:
+                    self.regions[region_name][index] = name
+                    break

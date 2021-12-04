@@ -9,7 +9,7 @@
                     "_i_to_l": "City/county (I-L)",
                     "_m_to_q": "City/county (M-Q)",
                     "_r_to_u": "City/county (R-U)",
-                    "_v_to_ue": "City/county (V-UE)",
+                    "_v_to_z": "City/county (V-Z)",
                     "slots": "Maximum warnings per city/county",
                     "corona_filter": "Remove Corona Warnings"
                 }
