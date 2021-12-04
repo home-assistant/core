@@ -49,6 +49,7 @@ from homeassistant.const import (
     VOLUME_CUBIC_METERS,
 )
 from homeassistant.core import callback
+from homeassistant.util import dt as dt_util
 
 from . import VacuumCoordinatorDataAttributes
 from .const import (
@@ -689,14 +690,24 @@ class XiaomiGenericSensor(XiaomiCoordinatedMiioEntity, SensorEntity):
     def _determine_native_value(self):
         """Determine native value."""
         if self.entity_description.parent_key is not None:
-            return self._extract_value_from_attribute(
+            native_value = self._extract_value_from_attribute(
                 getattr(self.coordinator.data, self.entity_description.parent_key),
                 self.entity_description.key,
             )
+        else:
+            native_value = self._extract_value_from_attribute(
+                self.coordinator.data, self.entity_description.key
+            )
 
-        return self._extract_value_from_attribute(
-            self.coordinator.data, self.entity_description.key
-        )
+        if (
+            self.device_class == DEVICE_CLASS_TIMESTAMP
+            and native_value is not None
+            and (native_datetime := dt_util.parse_datetime(str(native_value)))
+            is not None
+        ):
+            return native_datetime.astimezone(dt_util.UTC)
+
+        return native_value
 
 
 class XiaomiAirQualityMonitor(XiaomiMiioEntity, SensorEntity):
