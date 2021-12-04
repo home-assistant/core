@@ -11,6 +11,12 @@
             "unknown": "Neznana napaka pri preverjanju kode"
         },
         "step": {
+            "auth": {
+                "data": {
+                    "code": "\u017deton za dostop"
+                },
+                "title": "Pove\u017eite Google Ra\u010dun"
+            },
             "init": {
                 "data": {
                     "flow_impl": "Ponudnik"

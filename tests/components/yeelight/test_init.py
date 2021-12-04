@@ -7,7 +7,7 @@ import pytest
 from yeelight import BulbException, BulbType
 from yeelight.aio import KEY_CONNECTED
 
-from homeassistant.components.yeelight import (
+from homeassistant.components.yeelight.const import (
     CONF_DETECTED_MODEL,
     CONF_NIGHTLIGHT_SWITCH,
     CONF_NIGHTLIGHT_SWITCH_TYPE,
@@ -588,3 +588,25 @@ async def test_non_oserror_exception_on_first_update(
         await hass.async_block_till_done()
 
     assert hass.states.get("light.test_name").state != STATE_UNAVAILABLE
+
+
+async def test_async_setup_with_discovery_not_working(hass: HomeAssistant):
+    """Test we can setup even if discovery is broken."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "127.0.0.1", CONF_ID: ID},
+        options={},
+        unique_id=ID,
+    )
+    config_entry.add_to_hass(hass)
+
+    with _patch_discovery(
+        no_device=True
+    ), _patch_discovery_timeout(), _patch_discovery_interval(), patch(
+        f"{MODULE}.AsyncBulb", return_value=_mocked_bulb()
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert config_entry.state is ConfigEntryState.LOADED
+
+    assert hass.states.get("light.yeelight_color_0x15243f").state == STATE_ON

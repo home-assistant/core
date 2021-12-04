@@ -287,18 +287,13 @@ async def test_update_sensor_no_state(hass, create_registrations, webhook_client
         (DEVICE_CLASS_DATE, "2021-11-18", "2021-11-18"),
         (
             DEVICE_CLASS_TIMESTAMP,
-            "2021-11-18T20:25:00",
-            "2021-11-18T20:25:00",
-        ),
-        (
-            DEVICE_CLASS_TIMESTAMP,
-            "2021-11-18 20:25:00",
-            "2021-11-18T20:25:00",
+            "2021-11-18T20:25:00+00:00",
+            "2021-11-18T20:25:00+00:00",
         ),
         (
             DEVICE_CLASS_TIMESTAMP,
             "2021-11-18 20:25:00+01:00",
-            "2021-11-18T20:25:00+01:00",
+            "2021-11-18T19:25:00+00:00",
         ),
     ],
 )

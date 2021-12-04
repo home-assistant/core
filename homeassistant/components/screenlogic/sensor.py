@@ -34,8 +34,6 @@ SUPPORTED_CHEM_SENSORS = (
 )
 
 SUPPORTED_SCG_SENSORS = (
-    "scg_level1",
-    "scg_level2",
     "scg_salt_ppm",
     "scg_super_chlor_timer",
 )

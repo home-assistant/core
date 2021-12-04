@@ -108,7 +108,12 @@ async def test_form_homekit_unique_id_already_setup(hass):
         DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
-            host="1.2.3.4", properties={"id": MOCK_MAC_ADDR}
+            host="1.2.3.4",
+            hostname="mock_hostname",
+            name="mock_name",
+            port=None,
+            properties={zeroconf.ATTR_PROPERTIES_ID: MOCK_MAC_ADDR},
+            type="mock_type",
         ),
     )
     assert result["type"] == RESULT_TYPE_FORM
@@ -130,7 +135,12 @@ async def test_form_homekit_unique_id_already_setup(hass):
         DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
-            host="1.2.3.4", properties={"id": MOCK_MAC_ADDR}
+            host="1.2.3.4",
+            hostname="mock_hostname",
+            name="mock_name",
+            port=None,
+            properties={zeroconf.ATTR_PROPERTIES_ID: MOCK_MAC_ADDR},
+            type="mock_type",
         ),
     )
     assert result["type"] == RESULT_TYPE_ABORT
@@ -149,7 +159,12 @@ async def test_form_homekit_ip_address_already_setup(hass):
         DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
-            host="1.2.3.4", properties={"id": MOCK_MAC_ADDR}
+            host="1.2.3.4",
+            hostname="mock_hostname",
+            name="mock_name",
+            port=None,
+            properties={zeroconf.ATTR_PROPERTIES_ID: MOCK_MAC_ADDR},
+            type="mock_type",
         ),
     )
     assert result["type"] == RESULT_TYPE_ABORT
@@ -162,7 +177,12 @@ async def test_form_homekit_ip_address(hass):
         DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
-            host="1.2.3.4", properties={"id": MOCK_MAC_ADDR}
+            host="1.2.3.4",
+            hostname="mock_hostname",
+            name="mock_name",
+            port=None,
+            properties={zeroconf.ATTR_PROPERTIES_ID: MOCK_MAC_ADDR},
+            type="mock_type",
         ),
     )
     assert result["type"] == RESULT_TYPE_FORM
@@ -191,7 +211,9 @@ async def test_discovered_dhcp(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
-        data=dhcp.DhcpServiceInfo(ip="1.2.3.4", macaddress=MOCK_MAC_ADDR),
+        data=dhcp.DhcpServiceInfo(
+            ip="1.2.3.4", macaddress=MOCK_MAC_ADDR, hostname="mock_hostname"
+        ),
     )
     assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] == {}
@@ -237,7 +259,12 @@ async def test_discovered_by_homekit_and_dhcp(hass):
         DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
-            host="1.2.3.4", properties={"id": MOCK_MAC_ADDR}
+            host="1.2.3.4",
+            hostname="mock_hostname",
+            name="mock_name",
+            port=None,
+            properties={zeroconf.ATTR_PROPERTIES_ID: MOCK_MAC_ADDR},
+            type="mock_type",
         ),
     )
     assert result["type"] == RESULT_TYPE_FORM
@@ -246,7 +273,9 @@ async def test_discovered_by_homekit_and_dhcp(hass):
     result2 = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
-        data=dhcp.DhcpServiceInfo(ip="1.2.3.4", macaddress=MOCK_MAC_ADDR),
+        data=dhcp.DhcpServiceInfo(
+            ip="1.2.3.4", macaddress=MOCK_MAC_ADDR, hostname="mock_hostname"
+        ),
     )
     assert result2["type"] == RESULT_TYPE_ABORT
     assert result2["reason"] == "already_in_progress"
@@ -254,7 +283,9 @@ async def test_discovered_by_homekit_and_dhcp(hass):
     result3 = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
-        data=dhcp.DhcpServiceInfo(ip="1.2.3.4", macaddress="00:00:00:00:00:00"),
+        data=dhcp.DhcpServiceInfo(
+            ip="1.2.3.4", macaddress="00:00:00:00:00:00", hostname="mock_hostname"
+        ),
     )
     assert result3["type"] == RESULT_TYPE_ABORT
     assert result3["reason"] == "already_in_progress"

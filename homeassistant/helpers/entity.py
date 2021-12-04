@@ -15,6 +15,7 @@ from typing import Any, Final, Literal, TypedDict, final
 
 import voluptuous as vol
 
+from homeassistant.backports.enum import StrEnum
 from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -37,6 +38,7 @@ from homeassistant.const import (
 from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, NoEntitySpecifiedError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.event import Event, async_track_entity_registry_updated_event
 from homeassistant.helpers.typing import StateType
@@ -127,7 +129,7 @@ def get_device_class(hass: HomeAssistant, entity_id: str) -> str | None:
     if not (entry := entity_registry.async_get(entity_id)):
         raise HomeAssistantError(f"Unknown entity {entity_id}")
 
-    return entry.device_class
+    return entry.device_class or entry.original_device_class
 
 
 def get_supported_features(hass: HomeAssistant, entity_id: str) -> int:
@@ -168,7 +170,7 @@ class DeviceInfo(TypedDict, total=False):
     default_manufacturer: str
     default_model: str
     default_name: str
-    entry_type: str | None
+    entry_type: DeviceEntryType | None
     identifiers: set[tuple[str, str]]
     manufacturer: str | None
     model: str | None
@@ -176,6 +178,24 @@ class DeviceInfo(TypedDict, total=False):
     suggested_area: str | None
     sw_version: str | None
     via_device: tuple[str, str]
+
+
+class EntityCategory(StrEnum):
+    """Category of an entity.
+
+    An entity with a category will:
+    - Not be exposed to cloud, Alexa, or Google Assistant components
+    - Not be included in indirect service calls to devices or areas
+    """
+
+    # Config: An entity which allows changing the configuration of a device
+    CONFIG = "config"
+
+    # Diagnostic: An entity exposing some configuration parameter or diagnostics of a device
+    DIAGNOSTIC = "diagnostic"
+
+    # System: An entity which is not useful for the user to interact with
+    SYSTEM = "system"
 
 
 @dataclass
@@ -186,7 +206,9 @@ class EntityDescription:
     key: str
 
     device_class: str | None = None
-    entity_category: Literal["config", "diagnostic", "system"] | None = None
+    entity_category: EntityCategory | Literal[
+        "config", "diagnostic", "system"
+    ] | None = None
     entity_registry_enabled_default: bool = True
     force_update: bool = False
     icon: str | None = None
@@ -245,7 +267,7 @@ class Entity(ABC):
     _attr_context_recent_time: timedelta = timedelta(seconds=5)
     _attr_device_class: str | None
     _attr_device_info: DeviceInfo | None = None
-    _attr_entity_category: str | None
+    _attr_entity_category: EntityCategory | str | None
     _attr_entity_picture: str | None = None
     _attr_entity_registry_enabled_default: bool
     _attr_extra_state_attributes: MutableMapping[str, Any]
@@ -413,7 +435,7 @@ class Entity(ABC):
         return self._attr_attribution
 
     @property
-    def entity_category(self) -> str | None:
+    def entity_category(self) -> EntityCategory | str | None:
         """Return the category of the entity, if any."""
         if hasattr(self, "_attr_entity_category"):
             return self._attr_entity_category
@@ -533,14 +555,16 @@ class Entity(ABC):
             attr[ATTR_UNIT_OF_MEASUREMENT] = unit_of_measurement
 
         entry = self.registry_entry
-        # pylint: disable=consider-using-ternary
+
         if assumed_state := self.assumed_state:
             attr[ATTR_ASSUMED_STATE] = assumed_state
 
         if (attribution := self.attribution) is not None:
             attr[ATTR_ATTRIBUTION] = attribution
 
-        if (device_class := self.device_class) is not None:
+        if (
+            device_class := (entry and entry.device_class) or self.device_class
+        ) is not None:
             attr[ATTR_DEVICE_CLASS] = str(device_class)
 
         if (entity_picture := self.entity_picture) is not None:

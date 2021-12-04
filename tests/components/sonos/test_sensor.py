@@ -123,3 +123,14 @@ async def test_device_payload_without_battery_and_ignored_keys(
     await hass.async_block_till_done()
 
     assert ignored_payload not in caplog.text
+
+
+async def test_audio_input_sensor(hass, config_entry, config, soco):
+    """Test sonos device with battery state."""
+    await setup_platform(hass, config_entry, config)
+
+    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+
+    audio_input_sensor = entity_registry.entities["sensor.zone_a_audio_input_format"]
+    audio_input_state = hass.states.get(audio_input_sensor.entity_id)
+    assert audio_input_state.state == "Dolby 5.1"

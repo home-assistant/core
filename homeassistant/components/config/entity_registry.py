@@ -70,6 +70,7 @@ async def websocket_get_entity(hass, connection, msg):
         vol.Required("entity_id"): cv.entity_id,
         # If passed in, we update value. Passing None will remove old value.
         vol.Optional("area_id"): vol.Any(str, None),
+        vol.Optional("device_class"): vol.Any(str, None),
         vol.Optional("icon"): vol.Any(str, None),
         vol.Optional("name"): vol.Any(str, None),
         vol.Optional("new_entity_id"): str,
@@ -92,7 +93,7 @@ async def websocket_update_entity(hass, connection, msg):
 
     changes = {}
 
-    for key in ("area_id", "disabled_by", "icon", "name"):
+    for key in ("area_id", "device_class", "disabled_by", "icon", "name"):
         if key in msg:
             changes[key] = msg[key]
 
@@ -185,6 +186,8 @@ def _entry_ext_dict(entry):
     """Convert entry to API format."""
     data = _entry_dict(entry)
     data["capabilities"] = entry.capabilities
+    data["device_class"] = entry.device_class
+    data["original_device_class"] = entry.original_device_class
     data["original_icon"] = entry.original_icon
     data["original_name"] = entry.original_name
     data["unique_id"] = entry.unique_id

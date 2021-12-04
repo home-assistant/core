@@ -89,7 +89,7 @@ async def test_setup(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -
 
     assert hass.states.get(MAIN_ENTITY_ID)
     assert main
-    assert main.device_class == DEVICE_CLASS_RECEIVER
+    assert main.original_device_class == DEVICE_CLASS_RECEIVER
     assert main.unique_id == UPNP_SERIAL
 
 
@@ -121,7 +121,7 @@ async def test_tv_setup(
 
     assert hass.states.get(TV_ENTITY_ID)
     assert tv
-    assert tv.device_class == DEVICE_CLASS_TV
+    assert tv.original_device_class == DEVICE_CLASS_TV
     assert tv.unique_id == TV_SERIAL
 
 

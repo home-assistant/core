@@ -147,14 +147,14 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle device found via zeroconf."""
-        service_type = discovery_info[zeroconf.ATTR_TYPE]
-        properties = discovery_info[zeroconf.ATTR_PROPERTIES]
+        service_type = discovery_info.type
+        properties = discovery_info.properties
 
         if service_type == "_mediaremotetv._tcp.local.":
             identifier = properties["UniqueIdentifier"]
             name = properties["Name"]
         elif service_type == "_touch-able._tcp.local.":
-            identifier = discovery_info[zeroconf.ATTR_NAME].split(".")[0]
+            identifier = discovery_info.name.split(".")[0]
             name = properties["CtlN"]
         else:
             return self.async_abort(reason="unknown")

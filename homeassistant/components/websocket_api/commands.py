@@ -495,7 +495,11 @@ async def handle_test_condition(
     # pylint: disable=import-outside-toplevel
     from homeassistant.helpers import condition
 
-    check_condition = await condition.async_from_config(hass, msg["condition"])
+    # Do static + dynamic validation of the condition
+    config = cv.CONDITION_SCHEMA(msg["condition"])
+    config = await condition.async_validate_condition_config(hass, config)
+    # Test the condition
+    check_condition = await condition.async_from_config(hass, config)
     connection.send_result(
         msg["id"], {"result": check_condition(hass, msg.get("variables"))}
     )

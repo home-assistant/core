@@ -31,8 +31,10 @@ async def test_full_user_flow_implementation(
         data=zeroconf.ZeroconfServiceInfo(
             host="127.0.0.1",
             hostname="example.local.",
+            name="mock_name",
             port=9123,
             properties={},
+            type="mock_type",
         ),
     )
 
@@ -74,8 +76,10 @@ async def test_full_zeroconf_flow_implementation(
         data=zeroconf.ZeroconfServiceInfo(
             host="127.0.0.1",
             hostname="example.local.",
+            name="mock_name",
             port=9123,
             properties={},
+            type="mock_type",
         ),
     )
 
@@ -128,7 +132,14 @@ async def test_zeroconf_connection_error(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(host="127.0.0.1", port=9123),
+        data=zeroconf.ZeroconfServiceInfo(
+            host="127.0.0.1",
+            hostname="mock_hostname",
+            name="mock_name",
+            port=9123,
+            properties={},
+            type="mock_type",
+        ),
     )
 
     assert result["reason"] == "cannot_connect"
@@ -159,7 +170,14 @@ async def test_zeroconf_device_exists_abort(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={CONF_SOURCE: SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(host="127.0.0.1", port=9123),
+        data=zeroconf.ZeroconfServiceInfo(
+            host="127.0.0.1",
+            hostname="mock_hostname",
+            name="mock_name",
+            port=9123,
+            properties={},
+            type="mock_type",
+        ),
     )
 
     assert result["reason"] == "already_configured"
@@ -168,7 +186,14 @@ async def test_zeroconf_device_exists_abort(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={CONF_SOURCE: SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(host="127.0.0.2", port=9123),
+        data=zeroconf.ZeroconfServiceInfo(
+            host="127.0.0.2",
+            hostname="mock_hostname",
+            name="mock_name",
+            port=9123,
+            properties={},
+            type="mock_type",
+        ),
     )
 
     assert result["reason"] == "already_configured"
