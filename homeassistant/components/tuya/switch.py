@@ -384,6 +384,12 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             name="Motion Alarm",
             entity_category=EntityCategory.CONFIG,
         ),
+        SwitchEntityDescription(                                 
+            key=DPCode.WIRELESS_AWAKE,
+            icon="mdi:eye-off",
+            name="Wireless Awake",     
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
     ),
     # Fingerbot
     "szjqr": (
