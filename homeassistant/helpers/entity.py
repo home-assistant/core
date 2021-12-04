@@ -241,6 +241,9 @@ class Entity(ABC):
     # If we reported this entity is updated while disabled
     _disabled_reported = False
 
+    # If we reported this entity is using deprecated device_state_attributes
+    _deprecated_device_state_attributes_reported = False
+
     # Protect for multiple updates
     _update_staged = False
 
@@ -538,7 +541,10 @@ class Entity(ABC):
             extra_state_attributes = self.extra_state_attributes
             # Backwards compatibility for "device_state_attributes" deprecated in 2021.4
             # Warning added in 2021.12, will be removed in 2022.4
-            if self.device_state_attributes is not None:
+            if (
+                self.device_state_attributes is not None
+                and not self._deprecated_device_state_attributes_reported
+            ):
                 report_issue = self._suggest_report_issue()
                 _LOGGER.warning(
                     "Entity %s (%s) implements device_state_attributes. Please %s",
@@ -546,6 +552,7 @@ class Entity(ABC):
                     type(self),
                     report_issue,
                 )
+                self._deprecated_device_state_attributes_reported = True
             if extra_state_attributes is None:
                 extra_state_attributes = self.device_state_attributes
             attr.update(extra_state_attributes or {})
