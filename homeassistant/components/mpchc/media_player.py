@@ -106,13 +106,13 @@ class MpcHcDevice(MediaPlayerEntity):
     @property
     def state(self):
         """Return the state of the device."""
-        state = self._player_variables.get("state", None)
+        state = self._player_variables.get("statestring", None)
 
         if state is None:
             return STATE_OFF
-        if state == "2":
+        if state == "playing":
             return STATE_PLAYING
-        if state == "1":
+        if state == "paused":
             return STATE_PAUSED
 
         return STATE_IDLE
