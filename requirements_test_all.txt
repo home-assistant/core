@@ -591,7 +591,7 @@ libsoundtouch==0.8
 logi_circle==0.2.2
 
 # homeassistant.components.luftdaten
-luftdaten==0.6.5
+luftdaten==0.7.1
 
 # homeassistant.components.nmap_tracker
 mac-vendor-lookup==0.1.11
