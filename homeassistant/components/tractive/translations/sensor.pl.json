@@ -1,0 +1,9 @@
+{
+    "state": {
+        "tractive__tracker_state": {
+            "not_reporting": "Nie odpowiada",
+            "operational": "Operacyjny",
+            "system_startup": "Uruchamianie systemu"
+        }
+    }
+}
