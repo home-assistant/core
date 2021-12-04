@@ -2,12 +2,13 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from collections.abc import Sequence
 from typing import NamedTuple
 
 import pyvera as pv
 
-from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import call_later
 
@@ -25,12 +26,12 @@ class ControllerData(NamedTuple):
 
 def get_configured_platforms(controller_data: ControllerData) -> set[str]:
     """Get configured platforms for a controller."""
-    platforms = []
+    platforms: Sequence[str] = []
     for platform in controller_data.devices:
         platforms.append(platform)
 
     if controller_data.scenes:
-        platforms.append(SCENE_DOMAIN)
+        platforms.append(Platform.SCENE)
 
     return set(platforms)
 

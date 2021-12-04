@@ -34,15 +34,17 @@ from pyinsteon.groups import (
     TEST_SENSOR,
 )
 
+from homeassistant.const import Platform
+
 DOMAIN = "insteon"
 
 INSTEON_PLATFORMS = [
-    "binary_sensor",
-    "climate",
-    "cover",
-    "fan",
-    "light",
-    "switch",
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.FAN,
+    Platform.LIGHT,
+    Platform.SWITCH,
 ]
 
 X10_PLATFORMS = [
