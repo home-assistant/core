@@ -243,8 +243,7 @@ class StatisticsSensor(SensorEntity):
             self._add_state_to_queue(new_state)
             self.async_schedule_update_ha_state(True)
 
-        @callback
-        def async_stats_sensor_startup(_):
+        async def async_stats_sensor_startup(_):
             """Add listener and get recorded state."""
             _LOGGER.debug("Startup for %s", self.entity_id)
 
