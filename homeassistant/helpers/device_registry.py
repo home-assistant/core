@@ -173,10 +173,7 @@ class DeviceRegistryStore(storage.Store):
             for device in old_data["devices"]:
                 # Introduced in 0.110
                 try:
-                    if entry_type := device.get("entry_type"):
-                        device["entry_type"] = DeviceEntryType(entry_type)
-                    else:
-                        device["entry_type"] = None
+                    device["entry_type"] = DeviceEntryType(device.get("entry_type"))
                 except ValueError:
                     device["entry_type"] = None
 
