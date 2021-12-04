@@ -49,9 +49,9 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 PLATFORMS = [
+    Platform.BINARY_SENSOR,
     Platform.MEDIA_PLAYER,
     Platform.REMOTE,
-    Platform.BINARY_SENSOR,
     Platform.SENSOR,
 ]
 

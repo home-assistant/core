@@ -33,8 +33,8 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
-    Platform.SENSOR,
     Platform.CLIMATE,
+    Platform.SENSOR,
     Platform.WATER_HEATER,
 ]
 

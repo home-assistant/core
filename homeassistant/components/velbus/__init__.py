@@ -27,12 +27,12 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
-    Platform.SWITCH,
-    Platform.SENSOR,
     Platform.BINARY_SENSOR,
-    Platform.COVER,
     Platform.CLIMATE,
+    Platform.COVER,
     Platform.LIGHT,
+    Platform.SENSOR,
+    Platform.SWITCH,
 ]
 
 

@@ -39,11 +39,11 @@ _LOGGER = logging.getLogger(__name__)
 
 GATEWAY_PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.COVER,
+    Platform.LIGHT,
+    Platform.LOCK,
     Platform.SENSOR,
     Platform.SWITCH,
-    Platform.LIGHT,
-    Platform.COVER,
-    Platform.LOCK,
 ]
 GATEWAY_PLATFORMS_NO_KEY = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
