@@ -36,11 +36,11 @@ def mock_setup_entry() -> Generator[None, None, None]:
 @pytest.fixture
 def mock_open_meteo(request: pytest.FixtureRequest) -> Generator[None, MagicMock, None]:
     """Return a mocked Open-Meteo client."""
-    fixture: str = "open_meteo/forecast.json"
+    fixture: str = "forecast.json"
     if hasattr(request, "param") and request.param:
         fixture = request.param
 
-    forecast = Forecast.parse_raw(load_fixture(fixture))
+    forecast = Forecast.parse_raw(load_fixture(fixture, DOMAIN))
     with patch(
         "homeassistant.components.open_meteo.OpenMeteo", autospec=True
     ) as open_meteo_mock:
