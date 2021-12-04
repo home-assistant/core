@@ -17,7 +17,7 @@ from .const import CONF_SERIAL_NUMBER, DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
-cv.removed(DOMAIN, raise_if_present=False)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 def _get_thermostat(api, serial_number):

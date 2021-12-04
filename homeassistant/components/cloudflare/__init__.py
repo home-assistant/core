@@ -23,7 +23,7 @@ from .const import CONF_RECORDS, DEFAULT_UPDATE_INTERVAL, DOMAIN, SERVICE_UPDATE
 
 _LOGGER = logging.getLogger(__name__)
 
-cv.removed(DOMAIN, raise_if_present=False)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

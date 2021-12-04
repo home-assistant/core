@@ -36,7 +36,7 @@ from .const import (
     ENTITY_COMPONENTS,
 )
 
-cv.removed(DOMAIN, raise_if_present=False)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 LOGGER_INFO_REGEX = re.compile(r"^(\w+)\.?(\w+)?\.?(\w+)?\.?(\w+)?(?:\..*)?$")

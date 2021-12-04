@@ -76,7 +76,7 @@ from .const import (
     SynologyDSMEntityDescription,
 )
 
-cv.removed(DOMAIN, raise_if_present=False)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 ATTRIBUTION = "Data provided by Synology"

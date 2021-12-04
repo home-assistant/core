@@ -55,7 +55,7 @@ DEFAULT_ICON = "mdi:water"
 DEFAULT_SSL = True
 DEFAULT_UPDATE_INTERVAL = timedelta(seconds=15)
 
-cv.removed(DOMAIN, raise_if_present=False)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
 

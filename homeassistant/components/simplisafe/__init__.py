@@ -209,7 +209,7 @@ WEBSOCKET_EVENTS_TO_FIRE_HASS_EVENT = [
     EVENT_USER_INITIATED_TEST,
 ]
 
-cv.removed(DOMAIN, raise_if_present=False)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 @callback

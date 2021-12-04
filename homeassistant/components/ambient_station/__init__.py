@@ -41,7 +41,7 @@ DATA_CONFIG = "config"
 
 DEFAULT_SOCKET_MIN_RETRY = 15
 
-cv.removed(DOMAIN, raise_if_present=False)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 @callback

@@ -12,7 +12,7 @@ from . import home_assistant_cast
 from .const import DOMAIN
 from .media_player import ENTITY_SCHEMA
 
-cv.removed(DOMAIN, raise_if_present=False)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 _LOGGER = logging.getLogger(__name__)
 

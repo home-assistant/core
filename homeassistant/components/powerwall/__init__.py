@@ -36,7 +36,7 @@ from .const import (
     UPDATE_INTERVAL,
 )
 
-cv.removed(DOMAIN, raise_if_present=False)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 

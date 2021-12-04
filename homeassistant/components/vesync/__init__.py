@@ -23,7 +23,7 @@ PLATFORMS = ["switch", "fan", "light"]
 
 _LOGGER = logging.getLogger(__name__)
 
-cv.removed(DOMAIN, raise_if_present=False)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup_entry(hass, config_entry):

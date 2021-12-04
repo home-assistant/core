@@ -53,7 +53,7 @@ from .const import (
 
 PARALLEL_UPDATES = 1
 
-cv.removed(DOMAIN, raise_if_present=False)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 PLATFORMS = ["cover", "scene", "sensor"]
 _LOGGER = logging.getLogger(__name__)
