@@ -24,6 +24,7 @@ from .const import (
     DEVICE_CLASS_TUYA_LED_TYPE,
     DEVICE_CLASS_TUYA_LIGHT_MODE,
     DEVICE_CLASS_TUYA_MOTION_SENSITIVITY,
+    DEVICE_CLASS_TUYA_PIR_SWITCH,
     DEVICE_CLASS_TUYA_RECORD_MODE,
     DEVICE_CLASS_TUYA_RELAY_STATUS,
     DEVICE_CLASS_TUYA_VACUUM_CISTERN,
@@ -145,6 +146,13 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             icon="mdi:motion-sensor",
             device_class=DEVICE_CLASS_TUYA_MOTION_SENSITIVITY,
             entity_category=EntityCategory.CONFIG,
+        ),
+        SelectEntityDescription(     
+            key=DPCode.PIR_SWITCH,                    
+            name="PIR Detection Switch",   
+            icon="mdi:motion-sensor",
+            device_class=DEVICE_CLASS_TUYA_PIR_SWITCH,
+            entity_category=ENTITY_CATEGORY_CONFIG,                    
         ),
     ),
     # IoT Switch?
