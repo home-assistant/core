@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import update_coordinator
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import _LOGGER, DOMAIN, VENSTAR_TIMEOUT
+from .const import _LOGGER, DOMAIN, VENSTAR_SLEEP, VENSTAR_TIMEOUT
 
 PLATFORMS = ["binary_sensor", "climate", "sensor"]
 
@@ -91,7 +91,7 @@ class VenstarDataUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
             ) from ex
 
         # older venstars sometimes cannot handle rapid sequential connections
-        await asyncio.sleep(1)
+        await asyncio.sleep(VENSTAR_SLEEP)
 
         try:
             await self.hass.async_add_executor_job(self.client.update_sensors)
@@ -101,7 +101,7 @@ class VenstarDataUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
             ) from ex
 
         # older venstars sometimes cannot handle rapid sequential connections
-        await asyncio.sleep(1)
+        await asyncio.sleep(VENSTAR_SLEEP)
 
         try:
             await self.hass.async_add_executor_job(self.client.update_alerts)
@@ -111,7 +111,7 @@ class VenstarDataUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
             ) from ex
 
         # older venstars sometimes cannot handle rapid sequential connections
-        await asyncio.sleep(1)
+        await asyncio.sleep(VENSTAR_SLEEP)
 
         try:
             self.runtimes = await self.hass.async_add_executor_job(

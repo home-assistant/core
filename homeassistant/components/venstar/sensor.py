@@ -97,6 +97,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
     async_add_entities(entities)
 
 
+def temperature_unit(coordinator: VenstarDataUpdateCoordinator) -> str:
+    """Return the correct unit for temperature."""
+    unit = TEMP_CELSIUS
+    if coordinator.client.tempunits == coordinator.client.TEMPUNITS_F:
+        unit = TEMP_FAHRENHEIT
+    return unit
+
+
 class VenstarSensor(VenstarEntity, SensorEntity):
     """Base class for a Venstar sensor."""
 
@@ -151,9 +159,7 @@ SENSOR_ENTITIES: tuple[VenstarSensorEntityDescription, ...] = (
         key="temp",
         device_class=DEVICE_CLASS_TEMPERATURE,
         state_class=STATE_CLASS_MEASUREMENT,
-        uom_fn=lambda coordinator: TEMP_FAHRENHEIT
-        if coordinator.client.tempunits == coordinator.client.TEMPUNITS_F
-        else TEMP_CELSIUS,
+        uom_fn=temperature_unit,
         value_fn=lambda coordinator, sensor_name: round(
             float(coordinator.client.get_sensor(sensor_name, "temp")), 1
         ),

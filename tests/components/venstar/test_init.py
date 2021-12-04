@@ -40,7 +40,8 @@ async def test_setup_entry(hass: HomeAssistant):
         "homeassistant.components.venstar.VenstarColorTouch.get_runtimes",
         new=VenstarColorTouchMock.get_runtimes,
     ), patch(
-        "homeassistant.components.venstar.asyncio.sleep"
+        "homeassistant.components.venstar.VENSTAR_SLEEP",
+        new=0,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
