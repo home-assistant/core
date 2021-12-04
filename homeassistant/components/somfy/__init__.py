@@ -6,7 +6,12 @@ from pymfy.api.devices.category import Category
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_OPTIMISTIC
+from homeassistant.const import (
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    CONF_OPTIMISTIC,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     config_entry_oauth2_flow,
@@ -39,7 +44,12 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS = ["climate", "cover", "sensor", "switch"]
+PLATFORMS = [
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 
 async def async_setup(hass, config):
