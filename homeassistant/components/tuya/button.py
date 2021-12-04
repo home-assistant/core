@@ -24,33 +24,78 @@ BUTTONS: dict[str, tuple[ButtonEntityDescription, ...]] = {
     "sd": (
         ButtonEntityDescription(
             key=DPCode.RESET_DUSTER_CLOTH,
+            action=DPCode.RESET_DUSTER_CLOTH,
+            action_value=True,
             name="Reset Duster Cloth",
             icon="mdi:restart",
             entity_category=EntityCategory.CONFIG,
         ),
         ButtonEntityDescription(
             key=DPCode.RESET_EDGE_BRUSH,
+            action=DPCode.RESET_EDGE_BRUSH,
+            action_value=True,
             name="Reset Edge Brush",
             icon="mdi:restart",
             entity_category=EntityCategory.CONFIG,
         ),
         ButtonEntityDescription(
             key=DPCode.RESET_FILTER,
+            action=DPCode.RESET_FILTER,
+            action_value=True,
             name="Reset Filter",
             icon="mdi:air-filter",
             entity_category=EntityCategory.CONFIG,
         ),
         ButtonEntityDescription(
             key=DPCode.RESET_MAP,
+            action=DPCode.RESET_MAP,
+            action_value=True,
             name="Reset Map",
             icon="mdi:map-marker-remove",
             entity_category=EntityCategory.CONFIG,
         ),
         ButtonEntityDescription(
             key=DPCode.RESET_ROLL_BRUSH,
+            action=DPCode.RESET_ROLL_BRUSH,
+            action_value=True,
             name="Reset Roll Brush",
             icon="mdi:restart",
             entity_category=EntityCategory.CONFIG,
+        ),
+        ButtonEntityDescription(
+            key=DPCode.DIRECTION_CONTROL,
+            action=DPCode.DIRECTION_CONTROL,
+            action_value="forward",
+            name="Direction Forward",
+            icon="mdi:arrow-up",
+        ),
+        ButtonEntityDescription(
+            key=DPCode.DIRECTION_CONTROL,
+            action=DPCode.DIRECTION_CONTROL,
+            action_value="backward",
+            name="Direction Backward",
+            icon="mdi:arrow-down",
+        ),
+        ButtonEntityDescription(
+            key=DPCode.DIRECTION_CONTROL,
+            action=DPCode.DIRECTION_CONTROL,
+            action_value="turn_left",
+            name="Direction Left",
+            icon="mdi:arrow-u-down-left",
+        ),
+        ButtonEntityDescription(
+            key=DPCode.DIRECTION_CONTROL,
+            action=DPCode.DIRECTION_CONTROL,
+            action_value="turn_right",
+            name="Direction Right",
+            icon="mdi:arrow-u-down-right",
+        ),
+        ButtonEntityDescription(
+            key=DPCode.DIRECTION_CONTROL,
+            action=DPCode.DIRECTION_CONTROL,
+            action_value="stop",
+            name="Direction Stop",
+            icon="mdi:stop",
         ),
     ),
 }
@@ -98,8 +143,15 @@ class TuyaButtonEntity(TuyaEntity, ButtonEntity):
         """Init Tuya button."""
         super().__init__(device, device_manager)
         self.entity_description = description
-        self._attr_unique_id = f"{super().unique_id}{description.key}"
+        self._attr_unique_id = f"{super().unique_id}{description.key}{description.name}"
 
     def press(self, **kwargs: Any) -> None:
         """Press the button."""
-        self._send_command([{"code": self.entity_description.key, "value": True}])
+        self._send_command(
+            [
+                {
+                    "code": self.entity_description.action,
+                    "value": self.entity_description.action_value,
+                }
+            ]
+        )

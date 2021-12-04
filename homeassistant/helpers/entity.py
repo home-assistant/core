@@ -215,6 +215,9 @@ class EntityDescription:
     name: str | None = None
     unit_of_measurement: str | None = None
 
+    action: str | None = None
+    action_value: Any | None = None
+
 
 class Entity(ABC):
     """An abstract class for Home Assistant entities."""
