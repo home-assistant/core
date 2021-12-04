@@ -2,18 +2,19 @@
 from __future__ import annotations
 
 from collections import deque
+from collections.abc import Callable
 import contextlib
 from datetime import datetime, timedelta
 import logging
 import statistics
-from typing import Callable, Literal, cast
+from typing import Literal, cast
 
 import voluptuous as vol
 
 from homeassistant.components.recorder.models import States
 from homeassistant.components.recorder.util import execute, session_scope
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA as PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA,
     STATE_CLASS_MEASUREMENT,
     SensorEntity,
 )
@@ -213,7 +214,7 @@ class StatisticsSensor(SensorEntity):
         precision: int,
         quantile_intervals: int,
         quantile_method: str,
-    ):
+    ) -> None:
         """Initialize the Statistics sensor."""
         self._attr_icon: str = ICON
         self._attr_name: str = name
