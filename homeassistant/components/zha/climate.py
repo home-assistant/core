@@ -55,7 +55,6 @@ from .core.const import (
     CHANNEL_FAN,
     CHANNEL_THERMOSTAT,
     DATA_ZHA,
-    DATA_ZHA_DISPATCHERS,
     PRESET_COMPLEX,
     PRESET_SCHEDULE,
     SIGNAL_ADD_ENTITIES,
@@ -164,7 +163,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             discovery.async_add_entities, async_add_entities, entities_to_create
         ),
     )
-    hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
+    config_entry.async_on_unload(unsub)
 
 
 @MULTI_MATCH(channel_names=CHANNEL_THERMOSTAT, aux_channels=CHANNEL_FAN)

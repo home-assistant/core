@@ -27,7 +27,6 @@ from .core.const import (
     CONF_ZIGPY,
     DATA_ZHA,
     DATA_ZHA_CONFIG,
-    DATA_ZHA_DISPATCHERS,
     DATA_ZHA_GATEWAY,
     DATA_ZHA_PLATFORM_LOADED,
     DATA_ZHA_SHUTDOWN_TASK,
@@ -101,7 +100,6 @@ async def async_setup_entry(hass, config_entry):
     zha_gateway = ZHAGateway(hass, config, config_entry)
     await zha_gateway.async_initialize()
 
-    zha_data[DATA_ZHA_DISPATCHERS] = []
     zha_data[DATA_ZHA_PLATFORM_LOADED] = []
     for platform in PLATFORMS:
         coro = hass.config_entries.async_forward_entry_setup(config_entry, platform)
@@ -138,10 +136,6 @@ async def async_unload_entry(hass, config_entry):
 
     GROUP_PROBE.cleanup()
     api.async_unload_api(hass)
-
-    dispatchers = hass.data[DATA_ZHA].get(DATA_ZHA_DISPATCHERS, [])
-    for unsub_dispatcher in dispatchers:
-        unsub_dispatcher()
 
     # our components don't have unload methods so no need to look at return values
     await asyncio.gather(

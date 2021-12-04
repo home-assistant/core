@@ -52,7 +52,6 @@ from .core.const import (
     CHANNEL_ON_OFF,
     CONF_DEFAULT_LIGHT_TRANSITION,
     DATA_ZHA,
-    DATA_ZHA_DISPATCHERS,
     EFFECT_BLINK,
     EFFECT_BREATHE,
     EFFECT_DEFAULT_VARIANT,
@@ -116,7 +115,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             discovery.async_add_entities, async_add_entities, entities_to_create
         ),
     )
-    hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
+    config_entry.async_on_unload(unsub)
 
 
 class BaseLight(LogMixin, light.LightEntity):

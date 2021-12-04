@@ -11,7 +11,6 @@ from .core import discovery
 from .core.const import (
     CHANNEL_ANALOG_OUTPUT,
     DATA_ZHA,
-    DATA_ZHA_DISPATCHERS,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
 )
@@ -248,7 +247,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             update_before_add=False,
         ),
     )
-    hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
+    config_entry.async_on_unload(unsub)
 
 
 @STRICT_MATCH(channel_names=CHANNEL_ANALOG_OUTPUT)

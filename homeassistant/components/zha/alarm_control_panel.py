@@ -35,7 +35,6 @@ from .core.const import (
     CONF_ALARM_FAILED_TRIES,
     CONF_ALARM_MASTER_CODE,
     DATA_ZHA,
-    DATA_ZHA_DISPATCHERS,
     SIGNAL_ADD_ENTITIES,
     ZHA_ALARM_OPTIONS,
 )
@@ -67,7 +66,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             discovery.async_add_entities, async_add_entities, entities_to_create
         ),
     )
-    hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
+    config_entry.async_on_unload(unsub)
 
 
 @STRICT_MATCH(channel_names=CHANNEL_IAS_ACE)
