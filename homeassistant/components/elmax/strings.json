@@ -6,8 +6,8 @@
         "title": "Account Login",
         "description": "Please login to the Elmax cloud using your credentials",
         "data": {
-          "password": "Password",
-          "username": "Username"
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
         }
       },
       "panels": {
