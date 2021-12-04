@@ -3,16 +3,15 @@ from __future__ import annotations
 
 from open_meteo import Forecast, OpenMeteo, OpenMeteoError
 
-from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_ZONE
+from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_ZONE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL
 
-PLATFORMS = (WEATHER_DOMAIN,)
+PLATFORMS = [Platform.WEATHER]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -37,7 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator: DataUpdateCoordinator[Forecast] = DataUpdateCoordinator(
         hass,
         LOGGER,
-        name=f"{DOMAIN}",
+        name=f"{DOMAIN}_{entry.data[CONF_ZONE]}",
         update_interval=SCAN_INTERVAL,
         update_method=async_update_forecast,
     )

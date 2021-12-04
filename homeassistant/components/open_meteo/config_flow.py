@@ -35,8 +35,7 @@ class OpenMeteoFlowHandler(ConfigFlow, domain=DOMAIN):
         zones: dict[str, str] = {
             entity_id: state.name
             for entity_id in self.hass.states.async_entity_ids(ZONE_DOMAIN)
-            if entity_id != ENTITY_ID_HOME
-            and (state := self.hass.states.get(entity_id)) is not None
+            if (state := self.hass.states.get(entity_id)) is not None
         }
         zones = dict(sorted(zones.items(), key=lambda x: x[1], reverse=True))
 
@@ -46,7 +45,7 @@ class OpenMeteoFlowHandler(ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_ZONE): vol.In(
                         {
-                            ENTITY_ID_HOME: "Home Assistant Configuration Location",
+                            ENTITY_ID_HOME: zones.pop(ENTITY_ID_HOME),
                             **zones,
                         }
                     ),
