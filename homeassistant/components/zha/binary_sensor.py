@@ -12,9 +12,11 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_VIBRATION,
     BinarySensorEntity,
 )
-from homeassistant.const import STATE_ON, Platform
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_ON
+from homeassistant.core import HomeAssistant, Platform, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .core import discovery
 from .core.const import (
@@ -43,7 +45,11 @@ CLASS_MAPPING = {
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.BINARY_SENSOR)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+):
     """Set up the Zigbee Home Automation binary sensor from config entry."""
     entities_to_create = hass.data[DATA_ZHA][Platform.BINARY_SENSOR]
 

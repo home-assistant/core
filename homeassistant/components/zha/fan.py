@@ -15,9 +15,11 @@ from homeassistant.components.fan import (
     FanEntity,
     NotValidPresetModeError,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNAVAILABLE, Platform
-from homeassistant.core import State, callback
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
     int_states_in_range,
     percentage_to_ranged_value,
@@ -50,7 +52,11 @@ STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.FAN)
 GROUP_MATCH = functools.partial(ZHA_ENTITIES.group_match, Platform.FAN)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+):
     """Set up the Zigbee Home Automation fan from config entry."""
     entities_to_create = hass.data[DATA_ZHA][Platform.FAN]
 

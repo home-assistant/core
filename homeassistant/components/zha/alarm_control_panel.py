@@ -12,6 +12,7 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
 )
 from homeassistant.components.zha.core.typing import ZhaDeviceType
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
@@ -20,8 +21,9 @@ from homeassistant.const import (
     STATE_ALARM_TRIGGERED,
     Platform,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .core import discovery
 from .core.channels.security import (
@@ -55,7 +57,11 @@ IAS_ACE_STATE_MAP = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+):
     """Set up the Zigbee Home Automation alarm control panel from config entry."""
     entities_to_create = hass.data[DATA_ZHA][Platform.ALARM_CONTROL_PANEL]
 
