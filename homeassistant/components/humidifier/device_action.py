@@ -1,6 +1,8 @@
 """Provides device actions for Humidifier."""
 from __future__ import annotations
 
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant.components.device_automation import toggle_entity
@@ -70,7 +72,10 @@ async def async_get_actions(
 
 
 async def async_call_action_from_config(
-    hass: HomeAssistant, config: dict, variables: dict, context: Context | None
+    hass: HomeAssistant,
+    config: dict[str, Any],
+    variables: dict[str, Any],
+    context: Context | None,
 ) -> None:
     """Execute a device action."""
     service_data = {ATTR_ENTITY_ID: config[CONF_ENTITY_ID]}
