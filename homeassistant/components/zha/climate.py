@@ -614,6 +614,8 @@ class CentralitePearl(ZenWithinThermostat):
         "_TZE200_cwnjrr72",
         "_TZE200_b6wax7g0",
         "_TZE200_2atgpdho",
+        "_TZE200_pvvbommb",
+        "_TZE200_4eeyebrt",
         "_TYST11_ckud7u2l",
         "_TYST11_ywdxldoj",
         "_TYST11_cwnjrr72",
