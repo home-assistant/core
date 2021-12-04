@@ -45,19 +45,17 @@ class BMWSensorEntityDescription(SensorEntityDescription):
     unit_metric: str | None = None
     unit_imperial: str | None = None
     value: Callable = lambda x, y: x
-    extra_attributes: dict | None = None
 
 
 SENSOR_TYPES: dict[str, BMWSensorEntityDescription] = {
     # --- Generic ---
     "charging_end_time": BMWSensorEntityDescription(
         key="charging_end_time",
-        icon="mdi:update",
         device_class=DEVICE_CLASS_TIMESTAMP,
     ),
     "charging_end_time_mybmw": BMWSensorEntityDescription(
         key="charging_end_time_original",
-        icon="mdi:update",
+        entity_registry_enabled_default=False,
     ),
     "charging_status": BMWSensorEntityDescription(
         key="charging_status",
