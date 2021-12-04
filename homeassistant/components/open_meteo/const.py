@@ -21,8 +21,6 @@ DOMAIN: Final = "open_meteo"
 LOGGER = logging.getLogger(__package__)
 SCAN_INTERVAL = timedelta(minutes=30)
 
-ENTRY_TYPE_SERVICE: Final = "service"
-
 # World Meteorological Organization Weather Code
 # mapped to Home Assistant weather conditions.
 # https://www.weather.gov/tg/wmo
