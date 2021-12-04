@@ -364,7 +364,7 @@ class AsusWrtRouter:
             SENSORS_TYPE_RATES: SENSORS_RATES,
         }
         sensors_types[SENSORS_TYPE_TEMPERATURES] = await self._get_available_temperature_sensors()
-        
+
         for sensor_type, sensor_names in sensors_types.items():
             if not sensor_names:
                 continue
