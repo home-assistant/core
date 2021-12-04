@@ -31,10 +31,10 @@ _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
-    Platform.CLIMATE,
-    Platform.CAMERA,
-    Platform.SENSOR,
     Platform.BINARY_SENSOR,
+    Platform.CAMERA,
+    Platform.CLIMATE,
+    Platform.SENSOR,
 ]
 
 # Configuration for the legacy nest API

@@ -103,8 +103,8 @@ PLATFORMS = [
     Platform.CLIMATE,
     Platform.COVER,
     Platform.FAN,
-    Platform.LOCK,
     Platform.LIGHT,
+    Platform.LOCK,
     Platform.SENSOR,
     Platform.SWITCH,
 ]
