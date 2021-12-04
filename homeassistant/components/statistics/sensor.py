@@ -295,6 +295,7 @@ class StatisticsSensor(SensorEntity):
 
         try:
             if self.is_binary:
+                assert new_state.state in ("on", "off")
                 self.states.append(new_state.state == "on")
             else:
                 self.states.append(float(new_state.state))
