@@ -4,7 +4,6 @@ import statistics
 from unittest.mock import patch
 
 from homeassistant import config as hass_config
-from homeassistant.components import recorder
 from homeassistant.components.sensor import ATTR_STATE_CLASS, STATE_CLASS_MEASUREMENT
 from homeassistant.components.statistics import DOMAIN as STATISTICS_DOMAIN
 from homeassistant.components.statistics.sensor import StatisticsSensor
@@ -24,7 +23,7 @@ from tests.common import (
     async_init_recorder_component,
     get_fixture_path,
 )
-from tests.components.recorder.common import async_wait_recording_done
+from tests.components.recorder.common import async_wait_recording_done_without_instance
 
 VALUES_BINARY = ["on", "off", "on", "off", "on", "off", "on", "off", "on"]
 VALUES_NUMERIC = [17, 20, 15.2, 5, 3.8, 9.2, 6.7, 14, 6]
@@ -911,13 +910,12 @@ async def test_invalid_state_characteristic(hass):
 
 
 async def test_initialize_from_database(hass):
-    """Test initializing the statistics from the database."""
-    # enable the recorder
-    async_init_recorder_component(hass)
+    """Test initializing the statistics from the recorder database."""
+    # enable and pre-fill the recorder
+    await async_init_recorder_component(hass)
     await hass.async_block_till_done()
-    async_wait_recording_done(hass)
-    hass.data[recorder.DATA_INSTANCE].block_till_done()
-    # store some values
+    await async_wait_recording_done_without_instance(hass)
+
     for value in VALUES_NUMERIC:
         hass.states.async_set(
             "sensor.test_monitored",
@@ -925,10 +923,9 @@ async def test_initialize_from_database(hass):
             {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
         )
         await hass.async_block_till_done()
-    # wait for the recorder to really store the data
-    async_wait_recording_done(hass)
-    # only now create the statistics component, so that it must read the
-    # data from the database
+    await async_wait_recording_done_without_instance(hass)
+
+    # create the statistics component, get filled from database
     assert await async_setup_component(
         hass,
         "sensor",
@@ -946,7 +943,6 @@ async def test_initialize_from_database(hass):
     )
     await hass.async_block_till_done()
 
-    # check if the result is as in test_sensor_source()
     state = hass.states.get("sensor.test")
     assert state.state == str(round(sum(VALUES_NUMERIC) / len(VALUES_NUMERIC), 2))
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
@@ -967,15 +963,14 @@ async def test_initialize_from_database_with_maxage(hass):
     def mock_purge(self):
         return
 
-    # enable the recorder
-    async_init_recorder_component(hass)
+    # enable and pre-fill the recorder
+    await async_init_recorder_component(hass)
     await hass.async_block_till_done()
-    hass.data[recorder.DATA_INSTANCE].block_till_done()
+    await async_wait_recording_done_without_instance(hass)
 
     with patch(
         "homeassistant.components.statistics.sensor.dt_util.utcnow", new=mock_now
     ), patch.object(StatisticsSensor, "_purge_old", mock_purge):
-        # store some values
         for value in VALUES_NUMERIC:
             hass.states.async_set(
                 "sensor.test_monitored",
@@ -983,13 +978,9 @@ async def test_initialize_from_database_with_maxage(hass):
                 {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
             )
             await hass.async_block_till_done()
-            # insert the next value 1 hour later
             mock_data["return_time"] += timedelta(hours=1)
-
-        # wait for the recorder to really store the data
-        async_wait_recording_done(hass)
-        # only now create the statistics component, so that it must read
-        # the data from the database
+        await async_wait_recording_done_without_instance(hass)
+        # create the statistics component, get filled from database
         assert await async_setup_component(
             hass,
             "sensor",
@@ -1008,9 +999,7 @@ async def test_initialize_from_database_with_maxage(hass):
         )
         await hass.async_block_till_done()
 
-        # check if the result is as in test_sensor_source()
-        state = hass.states.get("sensor.test")
-
+    state = hass.states.get("sensor.test")
     assert state.attributes.get("age_coverage_ratio") == round(2 / 3, 2)
     # The max_age timestamp should be 1 hour before what we have right
     # now in mock_data['return_time'].
