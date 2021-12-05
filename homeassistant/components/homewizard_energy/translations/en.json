@@ -1,26 +1,22 @@
 {
-    "title": "Homewizard Energy",
     "config": {
-        "flow_title": "{name}",
         "abort": {
-            "no_devices_found": "No devices found on the network",
-            "single_instance_allowed": "Already configured. Only a single configuration possible.",
-            "api_not_enabled": "Device API not activated. API can be enabled in the HomeWizard Energy app.",
-            "unknown_error": "Could not connect to device. Check the IP address and that the Energy device is reachable.",
-            "unsupported_api_version": "API version not supported",
-            "invalid_discovery_parameters": "Error: invalid_discovery_parameters"
+            "already_configured": "Device is already configured",
+            "api_not_enabled": "The API is not enabled. Enable API in the HomeWizard Energy App under settings",
+            "device_not_supported": "This device is not supported",
+            "invalid_discovery_parameters": "unsupported_api_version",
+            "unknown_error": "Unexpected error"
         },
         "step": {
-            "user":
-            {
+            "confirm": {
+                "description": "Do you want to start set up?"
+            },
+            "user": {
                 "data": {
                     "ip_address": "IP Address"
                 },
                 "description": "Enter the IP address of your HomeWizard Energy device to integrate with Home Assistant.",
                 "title": "Configure device"
-            },
-            "discovery_confirm": {
-                "description": "Please enter a name for your {name}:"
             }
         }
     }
