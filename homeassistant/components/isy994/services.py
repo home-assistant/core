@@ -274,9 +274,10 @@ def async_setup_services(hass: HomeAssistant):  # noqa: C901
                 return
         _LOGGER.error("Could not set variable value; not found or enabled on the ISY")
 
-    async def async_cleanup_registry_entries(service) -> None:
+    @callback
+    def async_cleanup_registry_entries(service) -> None:
         """Remove extra entities that are no longer part of the integration."""
-        entity_registry = await er.async_get_registry(hass)
+        entity_registry = er.async_get(hass)
         config_ids = []
         current_unique_ids = []
 

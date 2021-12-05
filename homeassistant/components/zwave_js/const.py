@@ -109,7 +109,6 @@ ENTITY_DESC_KEY_PRESSURE = "pressure"
 ENTITY_DESC_KEY_SIGNAL_STRENGTH = "signal_strength"
 ENTITY_DESC_KEY_TEMPERATURE = "temperature"
 ENTITY_DESC_KEY_TARGET_TEMPERATURE = "target_temperature"
-ENTITY_DESC_KEY_TIMESTAMP = "timestamp"
 ENTITY_DESC_KEY_MEASUREMENT = "measurement"
 ENTITY_DESC_KEY_TOTAL_INCREASING = "total_increasing"
 
@@ -133,4 +132,5 @@ VALUE_SCHEMA = vol.Any(
     vol.Coerce(float),
     BITMASK_SCHEMA,
     cv.string,
+    dict,
 )

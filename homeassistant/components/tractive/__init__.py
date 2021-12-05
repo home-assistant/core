@@ -27,6 +27,7 @@ from .const import (
     ATTR_LED,
     ATTR_LIVE_TRACKING,
     ATTR_MINUTES_ACTIVE,
+    ATTR_TRACKER_STATE,
     CLIENT,
     DOMAIN,
     RECONNECT_INTERVAL,
@@ -143,6 +144,8 @@ class TractiveClient:
         self._hass = hass
         self._client = client
         self._user_id = user_id
+        self._last_hw_time = 0
+        self._last_pos_time = 0
         self._listen_task: asyncio.Task | None = None
 
     @property
@@ -181,20 +184,29 @@ class TractiveClient:
                     if server_was_unavailable:
                         _LOGGER.debug("Tractive is back online")
                         server_was_unavailable = False
-
                     if event["message"] == "activity_update":
                         self._send_activity_update(event)
-                    else:
-                        if "hardware" in event:
-                            self._send_hardware_update(event)
+                        continue
+                    if (
+                        "hardware" in event
+                        and self._last_hw_time != event["hardware"]["time"]
+                    ):
+                        self._last_hw_time = event["hardware"]["time"]
+                        self._send_hardware_update(event)
 
-                        if "position" in event:
-                            self._send_position_update(event)
+                    if (
+                        "position" in event
+                        and self._last_pos_time != event["position"]["time"]
+                    ):
+                        self._last_pos_time = event["position"]["time"]
+                        self._send_position_update(event)
             except aiotractive.exceptions.TractiveError:
                 _LOGGER.debug(
                     "Tractive is not available. Internet connection is down? Sleeping %i seconds and retrying",
                     RECONNECT_INTERVAL.total_seconds(),
                 )
+                self._last_hw_time = 0
+                self._last_pos_time = 0
                 async_dispatcher_send(
                     self._hass, f"{SERVER_UNAVAILABLE}-{self._user_id}"
                 )
@@ -206,6 +218,7 @@ class TractiveClient:
         # Sometimes hardware event doesn't contain complete data.
         payload = {
             ATTR_BATTERY_LEVEL: event["hardware"]["battery_level"],
+            ATTR_TRACKER_STATE: event["tracker_state"].lower(),
             ATTR_BATTERY_CHARGING: event["charging_state"] == "CHARGING",
             ATTR_LIVE_TRACKING: event.get("live_tracking", {}).get("active"),
             ATTR_BUZZER: event.get("buzzer_control", {}).get("active"),
@@ -229,6 +242,7 @@ class TractiveClient:
             "latitude": event["position"]["latlong"][0],
             "longitude": event["position"]["latlong"][1],
             "accuracy": event["position"]["accuracy"],
+            "sensor_used": event["position"]["sensor_used"],
         }
         self._dispatch_tracker_event(
             TRACKER_POSITION_UPDATED, event["tracker_id"], payload

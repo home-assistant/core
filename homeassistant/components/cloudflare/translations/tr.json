@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu",
             "single_instance_allowed": "Zaten yap\u0131land\u0131r\u0131lm\u0131\u015f. Yaln\u0131zca tek bir konfig\u00fcrasyon m\u00fcmk\u00fcnd\u00fcr.",
             "unknown": "Beklenmeyen hata"
         },
@@ -9,8 +10,14 @@
             "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
             "invalid_zone": "Ge\u00e7ersiz b\u00f6lge"
         },
-        "flow_title": "Cloudflare: {name}",
+        "flow_title": "{name}",
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_token": "API Anahtar\u0131",
+                    "description": "Cloudflare hesab\u0131n\u0131zla yeniden kimlik do\u011frulamas\u0131 yap\u0131n."
+                }
+            },
             "records": {
                 "data": {
                     "records": "Kay\u0131tlar"
@@ -19,8 +26,9 @@
             },
             "user": {
                 "data": {
-                    "api_token": "API Belirteci"
+                    "api_token": "API Anahtar\u0131"
                 },
+                "description": "Bu entegrasyon, hesab\u0131n\u0131zdaki t\u00fcm b\u00f6lgeler i\u00e7in Zone:Zone:Read ve Zone:DNS:Edit izinleriyle olu\u015fturulmu\u015f bir API Simgesi gerektirir.",
                 "title": "Cloudflare'ye ba\u011flan\u0131n"
             },
             "zone": {

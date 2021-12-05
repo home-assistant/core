@@ -65,9 +65,7 @@ class CiscoDeviceScanner(DeviceScanner):
 
         Returns boolean if scanning successful.
         """
-        string_result = self._get_arp_data()
-
-        if string_result:
+        if string_result := self._get_arp_data():
             self.last_results = []
             last_results = []
 

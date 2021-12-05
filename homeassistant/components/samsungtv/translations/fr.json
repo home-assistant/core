@@ -17,7 +17,7 @@
         "flow_title": "Samsung TV: {model}",
         "step": {
             "confirm": {
-                "description": "Voulez vous installer la TV {model} Samsung? Si vous n'avez jamais connect\u00e9 Home Assistant avant, vous devriez voir une fen\u00eatre contextuelle sur votre t\u00e9l\u00e9viseur demandant une authentification. Les configurations manuelles de ce t\u00e9l\u00e9viseur seront \u00e9cras\u00e9es.",
+                "description": "Voulez vous installer la TV {device} Samsung? Si vous n'avez jamais connect\u00e9 Home Assistant avant, vous devriez voir une fen\u00eatre contextuelle sur votre t\u00e9l\u00e9viseur demandant une authentification. Les configurations manuelles de ce t\u00e9l\u00e9viseur seront \u00e9cras\u00e9es.",
                 "title": "TV Samsung"
             },
             "reauth_confirm": {

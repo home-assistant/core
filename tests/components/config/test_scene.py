@@ -3,13 +3,22 @@ from http import HTTPStatus
 import json
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import config
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.yaml import dump
 
 
-async def test_create_scene(hass, hass_client):
+@pytest.fixture
+async def setup_scene(hass, scene_config):
+    """Set up scene integration."""
+    assert await async_setup_component(hass, "scene", {"scene": scene_config})
+
+
+@pytest.mark.parametrize("scene_config", ({},))
+async def test_create_scene(hass, hass_client, setup_scene):
     """Test creating a scene."""
     with patch.object(config, "SECTIONS", ["scene"]):
         await async_setup_component(hass, "config", {})
@@ -58,7 +67,8 @@ async def test_create_scene(hass, hass_client):
     )
 
 
-async def test_update_scene(hass, hass_client):
+@pytest.mark.parametrize("scene_config", ({},))
+async def test_update_scene(hass, hass_client, setup_scene):
     """Test updating a scene."""
     with patch.object(config, "SECTIONS", ["scene"]):
         await async_setup_component(hass, "config", {})
@@ -110,7 +120,8 @@ async def test_update_scene(hass, hass_client):
     )
 
 
-async def test_bad_formatted_scene(hass, hass_client):
+@pytest.mark.parametrize("scene_config", ({},))
+async def test_bad_formatted_scene(hass, hass_client, setup_scene):
     """Test that we handle scene without ID."""
     with patch.object(config, "SECTIONS", ["scene"]):
         await async_setup_component(hass, "config", {})
@@ -163,20 +174,18 @@ async def test_bad_formatted_scene(hass, hass_client):
     }
 
 
-async def test_delete_scene(hass, hass_client):
+@pytest.mark.parametrize(
+    "scene_config",
+    (
+        [
+            {"id": "light_on", "name": "Light on", "entities": {}},
+            {"id": "light_off", "name": "Light off", "entities": {}},
+        ],
+    ),
+)
+async def test_delete_scene(hass, hass_client, setup_scene):
     """Test deleting a scene."""
     ent_reg = er.async_get(hass)
-
-    assert await async_setup_component(
-        hass,
-        "scene",
-        {
-            "scene": [
-                {"id": "light_on", "name": "Light on", "entities": {}},
-                {"id": "light_off", "name": "Light off", "entities": {}},
-            ]
-        },
-    )
 
     assert len(ent_reg.entities) == 2
 

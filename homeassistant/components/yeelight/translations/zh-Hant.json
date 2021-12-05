@@ -29,7 +29,7 @@
         "step": {
             "init": {
                 "data": {
-                    "model": "\u578b\u865f\uff08\u9078\u9805\uff09",
+                    "model": "\u578b\u865f",
                     "nightlight_switch": "\u4f7f\u7528\u591c\u71c8\u958b\u95dc",
                     "save_on_change": "\u65bc\u8b8a\u66f4\u6642\u5132\u5b58\u72c0\u614b",
                     "transition": "\u8f49\u63db\u6642\u9593\uff08\u6beb\u79d2\uff09",

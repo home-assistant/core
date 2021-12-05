@@ -4,6 +4,7 @@ import logging
 from pyhap.accessory import Accessory, Bridge
 from pyhap.accessory_driver import AccessoryDriver
 from pyhap.const import CATEGORY_OTHER
+from pyhap.util import callback as pyhap_callback
 
 from homeassistant.components import cover
 from homeassistant.components.cover import (
@@ -80,10 +81,10 @@ from .const import (
 )
 from .util import (
     accessory_friendly_name,
+    async_dismiss_setup_message,
+    async_show_setup_message,
     convert_to_float,
-    dismiss_setup_message,
     format_sw_version,
-    show_setup_message,
     validate_media_player_features,
 )
 
@@ -195,7 +196,14 @@ def get_accessory(hass, driver, state, aid, config):  # noqa: C901
     elif state.domain == "remote" and features & SUPPORT_ACTIVITY:
         a_type = "ActivityRemote"
 
-    elif state.domain in ("automation", "input_boolean", "remote", "scene", "script"):
+    elif state.domain in (
+        "automation",
+        "button",
+        "input_boolean",
+        "remote",
+        "scene",
+        "script",
+    ):
         a_type = "Switch"
 
     elif state.domain in ("input_select", "select"):
@@ -543,13 +551,15 @@ class HomeDriver(AccessoryDriver):
         self._bridge_name = bridge_name
         self._entry_title = entry_title
 
+    @pyhap_callback
     def pair(self, client_uuid, client_public, client_permissions):
         """Override super function to dismiss setup message if paired."""
         success = super().pair(client_uuid, client_public, client_permissions)
         if success:
-            dismiss_setup_message(self.hass, self._entry_id)
+            async_dismiss_setup_message(self.hass, self._entry_id)
         return success
 
+    @pyhap_callback
     def unpair(self, client_uuid):
         """Override super function to show setup message if unpaired."""
         super().unpair(client_uuid)
@@ -557,7 +567,7 @@ class HomeDriver(AccessoryDriver):
         if self.state.paired:
             return
 
-        show_setup_message(
+        async_show_setup_message(
             self.hass,
             self._entry_id,
             accessory_friendly_name(self._entry_title, self.accessory),

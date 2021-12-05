@@ -17,7 +17,7 @@ async def test_switch_simple(hass: HomeAssistant, knx: KNXTestKit):
     """Test simple KNX switch."""
     await knx.setup_integration(
         {
-            SwitchSchema.PLATFORM_NAME: {
+            SwitchSchema.PLATFORM: {
                 CONF_NAME: "test",
                 KNX_ADDRESS: "1/2/3",
             }
@@ -59,7 +59,7 @@ async def test_switch_state(hass: HomeAssistant, knx: KNXTestKit):
 
     await knx.setup_integration(
         {
-            SwitchSchema.PLATFORM_NAME: {
+            SwitchSchema.PLATFORM: {
                 CONF_NAME: "test",
                 KNX_ADDRESS: _ADDRESS,
                 CONF_STATE_ADDRESS: _STATE_ADDRESS,
@@ -122,7 +122,7 @@ async def test_switch_restore_and_respond(hass, knx):
     ):
         await knx.setup_integration(
             {
-                SwitchSchema.PLATFORM_NAME: {
+                SwitchSchema.PLATFORM: {
                     CONF_NAME: "test",
                     KNX_ADDRESS: _ADDRESS,
                     CONF_RESPOND_TO_READ: True,

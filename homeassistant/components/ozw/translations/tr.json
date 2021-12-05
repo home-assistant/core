@@ -9,10 +9,16 @@
             "mqtt_required": "MQTT entegrasyonu kurulmam\u0131\u015f",
             "single_instance_allowed": "Zaten yap\u0131land\u0131r\u0131lm\u0131\u015f. Yaln\u0131zca tek bir konfig\u00fcrasyon m\u00fcmk\u00fcnd\u00fcr."
         },
+        "error": {
+            "addon_start_failed": "OpenZWave eklentisi ba\u015flat\u0131lamad\u0131. Yap\u0131land\u0131rmay\u0131 kontrol edin."
+        },
         "progress": {
             "install_addon": "OpenZWave eklenti kurulumu bitene kadar l\u00fctfen bekleyin. Bu birka\u00e7 dakika s\u00fcrebilir."
         },
         "step": {
+            "hassio_confirm": {
+                "title": "OpenZWave eklentisi ile OpenZWave entegrasyonunu kurun"
+            },
             "install_addon": {
                 "title": "OpenZWave eklenti kurulumu ba\u015flad\u0131"
             },
@@ -25,8 +31,10 @@
             },
             "start_addon": {
                 "data": {
-                    "network_key": "A\u011f Anahtar\u0131"
-                }
+                    "network_key": "A\u011f Anahtar\u0131",
+                    "usb_path": "USB Cihaz Yolu"
+                },
+                "title": "OpenZWave eklenti yap\u0131land\u0131rmas\u0131n\u0131 girin"
             }
         }
     }

@@ -36,6 +36,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
@@ -103,7 +105,7 @@ def catch_vlc_errors(func: Func) -> Func:
     """Catch VLC errors."""
 
     @wraps(func)
-    async def wrapper(self, *args: Any, **kwargs: Any) -> Any:
+    async def wrapper(self: VlcDevice, *args: Any, **kwargs: Any) -> Any:
         """Catch VLC errors and modify availability."""
         try:
             await func(self, *args, **kwargs)
@@ -140,12 +142,12 @@ class VlcDevice(MediaPlayerEntity):
         self._media_title: str | None = None
         config_entry_id = config_entry.entry_id
         self._attr_unique_id = config_entry_id
-        self._attr_device_info = {
-            "name": name,
-            "identifiers": {(DOMAIN, config_entry_id)},
-            "manufacturer": "VideoLAN",
-            "entry_type": "service",
-        }
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, config_entry_id)},
+            manufacturer="VideoLAN",
+            name=name,
+        )
 
     @catch_vlc_errors
     async def async_update(self) -> None:
@@ -205,12 +207,12 @@ class VlcDevice(MediaPlayerEntity):
                 self._media_title = data_info["filename"]
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the device."""
         return self._name
 
     @property
-    def state(self):
+    def state(self) -> str | None:
         """Return the state of the device."""
         return self._state
 
@@ -225,42 +227,42 @@ class VlcDevice(MediaPlayerEntity):
         return self._volume
 
     @property
-    def is_volume_muted(self):
+    def is_volume_muted(self) -> bool | None:
         """Boolean if volume is currently muted."""
         return self._muted
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Flag media player features that are supported."""
         return SUPPORT_VLC
 
     @property
-    def media_content_type(self):
+    def media_content_type(self) -> str:
         """Content type of current playing media."""
         return MEDIA_TYPE_MUSIC
 
     @property
-    def media_duration(self):
+    def media_duration(self) -> int | None:
         """Duration of current playing media in seconds."""
         return self._media_duration
 
     @property
-    def media_position(self):
+    def media_position(self) -> int | None:
         """Position of current playing media in seconds."""
         return self._media_position
 
     @property
-    def media_position_updated_at(self):
+    def media_position_updated_at(self) -> datetime | None:
         """When was the position of the current playing media valid."""
         return self._media_position_updated_at
 
     @property
-    def media_title(self):
+    def media_title(self) -> str | None:
         """Title of current playing media."""
         return self._media_title
 
     @property
-    def media_artist(self):
+    def media_artist(self) -> str | None:
         """Artist of current playing media, music track only."""
         return self._media_artist
 

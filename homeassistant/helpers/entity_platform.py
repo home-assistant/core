@@ -42,7 +42,7 @@ from . import (
     service,
 )
 from .device_registry import DeviceRegistry
-from .entity_registry import DISABLED_INTEGRATION, EntityRegistry
+from .entity_registry import EntityRegistry, RegistryEntryDisabler
 from .event import async_call_later, async_track_time_interval
 from .typing import ConfigType, DiscoveryInfoType
 
@@ -456,6 +456,7 @@ class EntityPlatform:
 
             device_info = entity.device_info
             device_id = None
+            device = None
 
             if config_entry_id is not None and device_info is not None:
                 processed_dev_info: dict[str, str | None] = {
@@ -501,27 +502,32 @@ class EntityPlatform:
                 except RequiredParameterMissing:
                     pass
 
-            disabled_by: str | None = None
+            disabled_by: RegistryEntryDisabler | None = None
             if not entity.entity_registry_enabled_default:
-                disabled_by = DISABLED_INTEGRATION
+                disabled_by = RegistryEntryDisabler.INTEGRATION
 
             entry = entity_registry.async_get_or_create(
                 self.domain,
                 self.platform_name,
                 entity.unique_id,
-                suggested_object_id=suggested_object_id,
+                capabilities=entity.capability_attributes,
                 config_entry=self.config_entry,
                 device_id=device_id,
-                known_object_ids=self.entities.keys(),
                 disabled_by=disabled_by,
-                capabilities=entity.capability_attributes,
-                supported_features=entity.supported_features,
-                device_class=entity.device_class,
-                unit_of_measurement=entity.unit_of_measurement,
-                original_name=entity.name,
-                original_icon=entity.icon,
                 entity_category=entity.entity_category,
+                known_object_ids=self.entities.keys(),
+                original_device_class=entity.device_class,
+                original_icon=entity.icon,
+                original_name=entity.name,
+                suggested_object_id=suggested_object_id,
+                supported_features=entity.supported_features,
+                unit_of_measurement=entity.unit_of_measurement,
             )
+
+            if device and device.disabled and not entry.disabled:
+                entry = entity_registry.async_update_entity(
+                    entry.entity_id, disabled_by=RegistryEntryDisabler.DEVICE
+                )
 
             entity.registry_entry = entry
             entity.entity_id = entry.entity_id

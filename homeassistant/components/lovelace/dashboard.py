@@ -248,9 +248,7 @@ class DashboardsCollection(collection.StorageCollection):
 
     async def _async_load_data(self) -> dict | None:
         """Load the data."""
-        data = await self.store.async_load()
-
-        if data is None:
+        if (data := await self.store.async_load()) is None:
             return cast(Optional[dict], data)
 
         updated = False

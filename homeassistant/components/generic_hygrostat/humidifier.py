@@ -171,8 +171,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_startup)
 
-        old_state = await self.async_get_last_state()
-        if old_state is not None:
+        if (old_state := await self.async_get_last_state()) is not None:
             if old_state.attributes.get(ATTR_MODE) == MODE_AWAY:
                 self._is_away = True
                 self._saved_target_humidity = self._target_humidity

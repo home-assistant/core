@@ -260,8 +260,7 @@ class DSMREntity(SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state of sensor, if available, translate if needed."""
-        value = self.get_dsmr_object_attr("value")
-        if value is None:
+        if (value := self.get_dsmr_object_attr("value")) is None:
             return None
 
         if self.entity_description.key == obis_ref.ELECTRICITY_ACTIVE_TARIFF:

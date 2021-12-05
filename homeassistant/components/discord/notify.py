@@ -62,7 +62,7 @@ class DiscordNotificationService(BaseNotificationService):
         embed = None
         if ATTR_EMBED in data:
             embedding = data[ATTR_EMBED]
-            fields = embedding.get(ATTR_EMBED_FIELDS)
+            fields = embedding.get(ATTR_EMBED_FIELDS) or []
 
             if embedding:
                 embed = discord.Embed(**embedding)

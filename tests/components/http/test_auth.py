@@ -2,14 +2,18 @@
 from datetime import timedelta
 from http import HTTPStatus
 from ipaddress import ip_network
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from aiohttp import BasicAuth, web
 from aiohttp.web_exceptions import HTTPUnauthorized
 import pytest
 
 from homeassistant.auth.providers import trusted_networks
-from homeassistant.components.http.auth import async_sign_path, setup_auth
+from homeassistant.components.http.auth import (
+    async_sign_path,
+    async_user_not_allowed_do_auth,
+    setup_auth,
+)
 from homeassistant.components.http.const import KEY_AUTHENTICATED
 from homeassistant.components.http.forwarded import async_setup_forwarded
 from homeassistant.setup import async_setup_component
@@ -26,7 +30,8 @@ TRUSTED_NETWORKS = [
     ip_network("FD01:DB8::1"),
 ]
 TRUSTED_ADDRESSES = ["100.64.0.1", "192.0.2.100", "FD01:DB8::1", "2001:DB8:ABCD::1"]
-UNTRUSTED_ADDRESSES = ["198.51.100.1", "2001:DB8:FA1::1", "127.0.0.1", "::1"]
+EXTERNAL_ADDRESSES = ["198.51.100.1", "2001:DB8:FA1::1"]
+UNTRUSTED_ADDRESSES = [*EXTERNAL_ADDRESSES, "127.0.0.1", "::1"]
 
 
 async def mock_handler(request):
@@ -270,3 +275,68 @@ async def test_auth_access_signed_path(hass, app, aiohttp_client, hass_access_to
     await hass.auth.async_remove_refresh_token(refresh_token)
     req = await client.get(signed_path)
     assert req.status == HTTPStatus.UNAUTHORIZED
+
+
+async def test_local_only_user_rejected(hass, app, aiohttp_client, hass_access_token):
+    """Test access with access token in header."""
+    token = hass_access_token
+    setup_auth(hass, app)
+    set_mock_ip = mock_real_ip(app)
+    client = await aiohttp_client(app)
+    refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
+
+    req = await client.get("/", headers={"Authorization": f"Bearer {token}"})
+    assert req.status == HTTPStatus.OK
+    assert await req.json() == {"user_id": refresh_token.user.id}
+
+    refresh_token.user.local_only = True
+
+    for remote_addr in EXTERNAL_ADDRESSES:
+        set_mock_ip(remote_addr)
+        req = await client.get("/", headers={"Authorization": f"Bearer {token}"})
+        assert req.status == HTTPStatus.UNAUTHORIZED
+
+
+async def test_async_user_not_allowed_do_auth(hass, app):
+    """Test for not allowing auth."""
+    user = await hass.auth.async_create_user("Hello")
+    user.is_active = False
+
+    # User not active
+    assert async_user_not_allowed_do_auth(hass, user) == "User is not active"
+
+    user.is_active = True
+    user.local_only = True
+
+    # No current request
+    assert (
+        async_user_not_allowed_do_auth(hass, user)
+        == "No request available to validate local access"
+    )
+
+    trusted_request = Mock(remote="192.168.1.123")
+    untrusted_request = Mock(remote=UNTRUSTED_ADDRESSES[0])
+
+    # Is Remote IP and local only (cloud not loaded)
+    assert async_user_not_allowed_do_auth(hass, user, trusted_request) is None
+    assert (
+        async_user_not_allowed_do_auth(hass, user, untrusted_request)
+        == "User cannot authenticate remotely"
+    )
+
+    # Mimic cloud loaded and validate local IP again
+    hass.config.components.add("cloud")
+    assert async_user_not_allowed_do_auth(hass, user, trusted_request) is None
+    assert (
+        async_user_not_allowed_do_auth(hass, user, untrusted_request)
+        == "User cannot authenticate remotely"
+    )
+
+    # Is Cloud request and local only, even a local IP will fail
+    with patch(
+        "hass_nabucasa.remote.is_cloud_request", Mock(get=Mock(return_value=True))
+    ):
+        assert (
+            async_user_not_allowed_do_auth(hass, user, trusted_request)
+            == "User is local only"
+        )

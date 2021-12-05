@@ -43,8 +43,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     dev = []
     for droplet in droplets:
-        droplet_id = digital.get_droplet_id(droplet)
-        if droplet_id is None:
+        if (droplet_id := digital.get_droplet_id(droplet)) is None:
             _LOGGER.error("Droplet %s is not available", droplet)
             return False
         dev.append(DigitalOceanBinarySensor(digital, droplet_id))
@@ -55,7 +54,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class DigitalOceanBinarySensor(BinarySensorEntity):
     """Representation of a Digital Ocean droplet sensor."""
 
-    def __init__(self, do, droplet_id):
+    def __init__(self, do, droplet_id):  # pylint: disable=invalid-name
         """Initialize a new Digital Ocean sensor."""
         self._digital_ocean = do
         self._droplet_id = droplet_id

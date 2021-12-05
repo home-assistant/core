@@ -135,7 +135,7 @@ async def async_restore_block_attribute_entities(
             name="",
             icon=entry.original_icon,
             unit=entry.unit_of_measurement,
-            device_class=entry.device_class,
+            device_class=entry.original_device_class,
         )
 
         entities.append(
@@ -437,9 +437,7 @@ class ShellyBlockAttributeEntity(ShellyBlockEntity, entity.Entity):
     @property
     def attribute_value(self) -> StateType:
         """Value of sensor."""
-        value = getattr(self.block, self.attribute)
-
-        if value is None:
+        if (value := getattr(self.block, self.attribute)) is None:
             return None
 
         return cast(StateType, self.description.value(value))

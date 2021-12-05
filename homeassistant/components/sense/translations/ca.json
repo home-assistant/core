@@ -12,7 +12,8 @@
             "user": {
                 "data": {
                     "email": "Correu electr\u00f2nic",
-                    "password": "Contrasenya"
+                    "password": "Contrasenya",
+                    "timeout": "Temps d'espera"
                 },
                 "title": "Connexi\u00f3 amb Sense Energy Monitor"
             }

@@ -23,15 +23,13 @@ class ToonDisplayDeviceEntity(ToonEntity):
     def device_info(self) -> DeviceInfo:
         """Return device information about this thermostat."""
         agreement = self.coordinator.data.agreement
-        model = agreement.display_hardware_version.rpartition("/")[0]
-        sw_version = agreement.display_software_version.rpartition("/")[-1]
-        return {
-            "identifiers": {(DOMAIN, agreement.agreement_id)},
-            "name": "Toon Display",
-            "manufacturer": "Eneco",
-            "model": model,
-            "sw_version": sw_version,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, agreement.agreement_id)},
+            manufacturer="Eneco",
+            model=agreement.display_hardware_version.rpartition("/")[0],
+            name="Toon Display",
+            sw_version=agreement.display_software_version.rpartition("/")[-1],
+        )
 
 
 class ToonElectricityMeterDeviceEntity(ToonEntity):

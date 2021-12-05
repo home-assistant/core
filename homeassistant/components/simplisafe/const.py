@@ -16,5 +16,3 @@ ATTR_LIGHT = "light"
 ATTR_VOICE_PROMPT_VOLUME = "voice_prompt_volume"
 
 CONF_USER_ID = "user_id"
-
-DATA_CLIENT = "client"
