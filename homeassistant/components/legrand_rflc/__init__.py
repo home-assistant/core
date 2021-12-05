@@ -10,7 +10,7 @@ from typing import Final
 import lc7001.aio
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_AUTHENTICATION, CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_AUTHENTICATION, CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
@@ -28,8 +28,6 @@ async def async_setup_entry(
     kwargs = {}
     if CONF_AUTHENTICATION in data:
         kwargs["key"] = bytes.fromhex(data[CONF_AUTHENTICATION])
-    if CONF_PORT in data:  # for testing only (server emulation on localhost)
-        kwargs["port"] = data[CONF_PORT]
     hass.data.setdefault(DOMAIN, {})[entry_id] = hub = lc7001.aio.Hub(host, **kwargs)
 
     async def setup_platforms() -> None:
@@ -44,13 +42,20 @@ async def async_setup_entry(
 
     async def reload(message: Mapping) -> None:
         hass.async_create_task(hass.config_entries.async_reload(entry_id))
+        raise asyncio.CancelledError("reload")
 
     hub.once(hub.EVENT_AUTHENTICATED, setup_platforms)
     hub.once(hub.EVENT_UNAUTHENTICATED, reauth)
     hub.once(hub.EVENT_ZONE_ADDED, reload)
     hub.once(hub.EVENT_ZONE_DELETED, reload)
 
-    asyncio.create_task(hub.loop())  # not hass.async_create_task
+    async def loop():
+        try:
+            await hub.loop()
+        except lc7001.aio.Authenticator.Error:
+            pass
+
+    hass.async_create_task(loop())
 
     return True
 

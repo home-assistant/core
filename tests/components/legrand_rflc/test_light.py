@@ -1,32 +1,20 @@
 """Tests for the Legrand RFLC component light platform."""
 import asyncio
-import logging
 from typing import Final
 
 import lc7001.aio
 
-from homeassistant.components.legrand_rflc.const import DOMAIN
 from homeassistant.components.light import ATTR_BRIGHTNESS
-from homeassistant.const import (
-    CONF_AUTHENTICATION,
-    CONF_HOST,
-    CONF_PORT,
-    EVENT_STATE_CHANGED,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import EVENT_STATE_CHANGED, STATE_OFF, STATE_ON
 
 from .emulation import Server
 
-from tests.common import MockConfigEntry
 from tests.components.light import common
-
-_LOGGER: Final = logging.getLogger(__name__)
 
 COMPOSER: Final = lc7001.aio.Composer()
 
 
-async def test_light(hass, socket_enabled):
+async def test_light(hass):
     """Test light platform."""
     sessions = [
         [
@@ -111,25 +99,4 @@ async def test_light(hass, socket_enabled):
 
     hass.async_create_task(EventAuditor().start())
 
-    # start an emulated server for our client's session
-    server_port = await Server(hass, sessions).start(False)
-
-    # create a mock config entry referencing emulated server
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_AUTHENTICATION: Server.AUTHENTICATION,
-            CONF_HOST: Server.HOST,
-            CONF_PORT: server_port,
-        },
-    )
-    entry.add_to_hass(hass)
-
-    # setup config entry (this will start our client)
-    hass.async_create_task(hass.config_entries.async_setup(entry.entry_id))
-
-    # wait until our client's session with the server is complete
-    await hass.async_block_till_done()
-
-    # unload the client
-    await hass.config_entries.async_unload(entry.entry_id)
+    await Server(hass, sessions).start()

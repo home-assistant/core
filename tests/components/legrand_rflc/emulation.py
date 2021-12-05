@@ -1,11 +1,35 @@
 """Emulation of Legrand RFLC LC7001."""
+from __future__ import annotations
+
 import asyncio
+from collections.abc import Sequence
+import contextlib
 from typing import Final
+from unittest.mock import patch
 
 from homeassistant.components.legrand_rflc.const import DOMAIN
-from homeassistant.const import CONF_AUTHENTICATION, CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_AUTHENTICATION, CONF_HOST
 
 from tests.common import MockConfigEntry
+
+
+async def _session(
+    reader: asyncio.StreamReader,
+    writer: asyncio.StreamWriter,
+    messages: Sequence[bytes],
+    write=True,
+    prefix: str = "",
+):
+    # alternate between writing and reading expected lines
+    for message in messages:
+        if write:
+            writer.write(message)
+            await writer.drain()
+        else:
+            assert message == await reader.readexactly(len(message))
+        write ^= True
+    writer.close()
+    await writer.wait_closed()
 
 
 class Server:
@@ -34,78 +58,107 @@ class Server:
         b"[INVALID]\x00",
     ]
 
-    def __init__(self, hass, sessions):
-        """Each session is an alternating sequence of lines to write and lines we expect to read."""
+    class _Relay(asyncio.StreamWriter):
+        class _Transport(asyncio.WriteTransport):
+            def __init__(self, reader: asyncio.StreamReader):
+                super().__init__()
+                self._reader = reader
+                self._is_closing = False
+
+            def write(self, data):
+                self._reader.feed_data(data)
+
+            def write_eof(self):
+                self._reader.feed_eof()  # will raise EOFError when read
+
+            def close(self):
+                self.write_eof()
+                self._is_closing = True
+
+            def is_closing(self):
+                return self._is_closing
+
+        class _Protocol(asyncio.Protocol):
+            async def _get_close_waiter(self, writer: asyncio.StreamWriter):
+                pass
+
+            async def _drain_helper(self):
+                pass
+
+        def __init__(self):
+            reader = asyncio.StreamReader()
+            super().__init__(
+                self._Transport(reader),
+                self._Protocol(),
+                reader,
+                asyncio.get_running_loop(),
+            )
+
+    def __init__(self, hass, sessions: Sequence[Sequence[str]]):
+        """Each session is an alternating sequence of messages to write and messages we expect to read."""
         self._hass = hass
         self._sessions = sessions
-        if 0 == len(sessions):
-            raise ValueError("Server has no sessions")
-        self._listener = None
-        self._entry = None
-        self._session = None
+        self._queue = asyncio.Queue(1)
 
-    async def start(self, start_client: bool = True):
-        """Start serving sessions and, possibly, a client."""
+    async def _accept(self) -> tuple[asyncio.StreamReader, asyncio.StreamWriter]:
+        await self._queue.get()
+        self._relays = [self._Relay(), self._Relay()]
+        self._queue.task_done()
+        return (self._relays[1]._reader, self._relays[0])
 
-        def session(reader, writer):
-            async def _session(lines, last):
+    async def _connect(self) -> tuple[asyncio.StreamReader, asyncio.StreamWriter]:
+        if self._queue is None:
+            raise asyncio.CancelledError from ConnectionError
+        await self._queue.put(None)
+        await self._queue.join()
+        return (self._relays[0]._reader, self._relays[1])
 
-                # wait for completion of any previous session
-                if self._session is not None:
-                    await self._session
-                self._session = asyncio.current_task()
+    async def _loop(self):
+        for messages in self._sessions:
+            await _session(*await self._accept(), messages)
+        self._queue = None
 
-                # cancel listener if we are the last session
-                if last:
-                    self._listener.cancel()
-                    try:
-                        await self._listener
-                    except asyncio.CancelledError:
-                        pass
+    class Context(contextlib.AbstractAsyncContextManager):
+        """Manage a Context for the lifetime of a Server."""
 
-                # alternate between writing and reading expected lines
-                write = False
-                for line in lines:
-                    write ^= True
-                    if write:
-                        writer.write(line)
-                        await writer.drain()
-                    else:
-                        assert line == await reader.readexactly(len(line))
+        def __init__(self, server: Server):
+            """Initialize the context of a Server."""
+            self._server = server
+            self._patcher = patch("lc7001.aio._ConnectionContext")
 
-                # unload our config entry if we have one and this is the last session
-                if self._entry and last:
-                    await self._hass.config_entries.async_unload(self._entry.entry_id)
+        async def __aenter__(self):
+            """Enter the context of a Server."""
+            self._task = asyncio.create_task(self._server._loop())
+            mock = self._patcher.start()
 
-            lines = self._sessions.pop(0)
-            last = 0 == len(self._sessions)
-            self._hass.async_create_task(_session(lines, last))
+            async def _aenter(
+                instance,
+            ) -> tuple[asyncio.StreamReader, asyncio.StreamWriter]:
+                return await self._server._connect()
 
-        # start emulated server that will listen on ephemeral port of HOST
-        server = await asyncio.start_server(session, host=self.HOST)
-        port = server.sockets[0].getsockname()[1]
-        self._listener = self._hass.async_create_task(server.serve_forever())
+            instance = mock.return_value
+            instance.__aenter__ = _aenter
 
-        if not start_client:
-            return port
+        async def __aexit__(self, et, ev, tb):
+            """Exit the context of a Server."""
+            await self._server._hass.async_block_till_done()
+            self._patcher.stop()
+            await self._task
 
-        else:
-            # create a mock config entry referencing emulated server
-            self._entry = entry = MockConfigEntry(
+    async def start(self):
+        """Manage a Context for the lifetime of a mocked ConfigEntry."""
+        async with self.Context(self):
+            # mock a config entry bound in our self.Context
+            entry = MockConfigEntry(
                 domain=DOMAIN,
                 unique_id=self.MAC.lower(),
                 data={
                     CONF_AUTHENTICATION: self.AUTHENTICATION,
                     CONF_HOST: self.HOST,
-                    CONF_PORT: port,
                 },
             )
             entry.add_to_hass(self._hass)
-
-            # setup config entry (this will start a client)
+            # ... and setup
             self._hass.async_create_task(
                 self._hass.config_entries.async_setup(entry.entry_id)
             )
-
-            # wait until the sessions are complete
-            await self._hass.async_block_till_done()

@@ -12,7 +12,7 @@ import voluptuous
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.dhcp import IP_ADDRESS, MAC_ADDRESS, DhcpServiceInfo
-from homeassistant.const import CONF_AUTHENTICATION, CONF_HOST, CONF_PASSWORD, CONF_PORT
+from homeassistant.const import CONF_AUTHENTICATION, CONF_HOST, CONF_PASSWORD
 
 from .const import DOMAIN
 
@@ -84,10 +84,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 key = kwargs["key"] = lc7001.aio.hash_password(
                     user_input[CONF_PASSWORD].encode()
                 )
-            if (
-                CONF_PORT in user_input
-            ):  # for testing using server emulation on localhost
-                kwargs["port"] = user_input[CONF_PORT]
             try:
                 mac = await lc7001.aio.Connector(host, **kwargs).loop()
             except OSError:
@@ -127,8 +123,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 host = user_input[CONF_HOST]
             if CONF_AUTHENTICATION in user_input:
                 key = kwargs["key"] = bytes.fromhex(user_input[CONF_AUTHENTICATION])
-            if CONF_PORT in user_input:  # for testing server emulation on localhost
-                kwargs["port"] = user_input[CONF_PORT]
             if CONF_PASSWORD in user_input:
                 key = kwargs["key"] = lc7001.aio.hash_password(
                     user_input[CONF_PASSWORD].encode()
@@ -150,10 +144,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     errors[CONF_HOST] = self.ERROR_INVALID_HOST
                 else:
                     data = {CONF_HOST: host}
-                    if (
-                        CONF_PORT in user_input
-                    ):  # for testing server emulation on localhost
-                        data[CONF_PORT] = user_input[CONF_PORT]
                     if key is not None:
                         data[CONF_AUTHENTICATION] = key.hex()
                     entry_id = self.context["entry_id"]
