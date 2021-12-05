@@ -13,7 +13,7 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
 from . import DOMAIN
-from .const import CONF_ALLOWED_REGIONS, CONF_READ_ONLY, CONF_USE_LOCATION
+from .const import CONF_ALLOWED_REGIONS, CONF_READ_ONLY
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -114,10 +114,6 @@ class BMWConnectedDriveOptionsFlow(config_entries.OptionsFlow):
                     vol.Optional(
                         CONF_READ_ONLY,
                         default=self.config_entry.options.get(CONF_READ_ONLY, False),
-                    ): bool,
-                    vol.Optional(
-                        CONF_USE_LOCATION,
-                        default=self.config_entry.options.get(CONF_USE_LOCATION, False),
                     ): bool,
                 }
             ),
