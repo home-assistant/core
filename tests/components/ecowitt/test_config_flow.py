@@ -46,7 +46,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.ecowitt.config_flow.EcoWittListener",
-        return_value=await _init_ecowitt(TEST_DATA),
+        return_value=_init_ecowitt(TEST_DATA),
     ), patch(
         "homeassistant.components.ecowitt.async_setup_entry",
         return_value=True,
@@ -83,7 +83,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.ecowitt.config_flow.EcoWittListener",
-        return_value=await _init_ecowitt(TEST_DATA),
+        return_value=_init_ecowitt(TEST_DATA),
     ), patch(
         "homeassistant.components.ecowitt.async_setup_entry",
         return_value=True,
@@ -117,7 +117,7 @@ async def test_form_exception(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.ecowitt.config_flow.EcoWittListener",
-        return_value=await _init_ecowitt(TEST_DATA),
+        return_value=_init_ecowitt(TEST_DATA),
     ), patch(
         "homeassistant.components.ecowitt.async_setup_entry",
         return_value=True,
@@ -155,7 +155,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.ecowitt.EcoWittListener",
-        return_value=await _init_ecowitt(TEST_DATA),
+        return_value=_init_ecowitt(TEST_DATA),
     ), patch(
         "homeassistant.components.ecowitt.async_setup_entry",
         return_value=True,
