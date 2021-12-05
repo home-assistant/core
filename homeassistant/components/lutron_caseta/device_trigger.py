@@ -50,6 +50,10 @@ PICO_2_BUTTON_BUTTON_TYPES = {
     "on": 2,
     "off": 4,
 }
+LEAP_PICO_2_BUTTON_BUTTON_TYPES = {
+    "on": 1,
+    "off": 2,
+}
 PICO_2_BUTTON_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
     {
         vol.Required(CONF_SUBTYPE): vol.In(PICO_2_BUTTON_BUTTON_TYPES),
@@ -63,6 +67,12 @@ PICO_2_BUTTON_RAISE_LOWER_BUTTON_TYPES = {
     "raise": 5,
     "lower": 6,
 }
+LEAP_PICO_2_BUTTON_RAISE_LOWER_BUTTON_TYPES = {
+    "on": 1,
+    "off": 2,
+    "raise": 3,
+    "lower": 4,
+}
 PICO_2_BUTTON_RAISE_LOWER_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
     {
         vol.Required(CONF_SUBTYPE): vol.In(PICO_2_BUTTON_RAISE_LOWER_BUTTON_TYPES),
@@ -74,6 +84,11 @@ PICO_3_BUTTON_BUTTON_TYPES = {
     "on": 2,
     "stop": 3,
     "off": 4,
+}
+LEAP_PICO_3_BUTTON_BUTTON_TYPES = {
+    "on": 1,
+    "stop": 2,
+    "off": 3,
 }
 PICO_3_BUTTON_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
     {
@@ -88,6 +103,13 @@ PICO_3_BUTTON_RAISE_LOWER_BUTTON_TYPES = {
     "raise": 5,
     "lower": 6,
 }
+LEAP_PICO_3_BUTTON_RAISE_LOWER_BUTTON_TYPES = {
+    "on": 0,
+    "stop": 1,
+    "off": 2,
+    "raise": 3,
+    "lower": 4,
+}
 PICO_3_BUTTON_RAISE_LOWER_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
     {
         vol.Required(CONF_SUBTYPE): vol.In(PICO_3_BUTTON_RAISE_LOWER_BUTTON_TYPES),
@@ -99,6 +121,12 @@ PICO_4_BUTTON_BUTTON_TYPES = {
     "button_2": 9,
     "button_3": 10,
     "button_4": 11,
+}
+LEAP_PICO_4_BUTTON_BUTTON_TYPES = {
+    "button_1": 1,
+    "button_2": 2,
+    "button_3": 3,
+    "button_4": 4,
 }
 PICO_4_BUTTON_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
     {
@@ -113,6 +141,12 @@ PICO_4_BUTTON_ZONE_BUTTON_TYPES = {
     "lower": 10,
     "off": 11,
 }
+LEAP_PICO_4_BUTTON_ZONE_BUTTON_TYPES = {
+    "on": 1,
+    "raise": 2,
+    "lower": 3,
+    "off": 4,
+}
 PICO_4_BUTTON_ZONE_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
     {
         vol.Required(CONF_SUBTYPE): vol.In(PICO_4_BUTTON_ZONE_BUTTON_TYPES),
@@ -126,6 +160,12 @@ PICO_4_BUTTON_SCENE_BUTTON_TYPES = {
     "button_3": 10,
     "off": 11,
 }
+LEAP_PICO_4_BUTTON_SCENE_BUTTON_TYPES = {
+    "button_1": 1,
+    "button_2": 2,
+    "button_3": 3,
+    "off": 4,
+}
 PICO_4_BUTTON_SCENE_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
     {
         vol.Required(CONF_SUBTYPE): vol.In(PICO_4_BUTTON_SCENE_BUTTON_TYPES),
@@ -138,6 +178,12 @@ PICO_4_BUTTON_2_GROUP_BUTTON_TYPES = {
     "group_1_button_2": 9,
     "group_2_button_1": 10,
     "group_2_button_2": 11,
+}
+LEAP_PICO_4_BUTTON_2_GROUP_BUTTON_TYPES = {
+    "group_1_button_1": 1,
+    "group_1_button_2": 2,
+    "group_2_button_1": 3,
+    "group_2_button_2": 4,
 }
 PICO_4_BUTTON_2_GROUP_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
     {
@@ -172,6 +218,33 @@ FOUR_GROUP_REMOTE_BUTTON_TYPES = {
     "raise_4": 37,
     "lower_4": 38,
 }
+LEAP_FOUR_GROUP_REMOTE_BUTTON_TYPES = {
+    "open_all": 1,
+    "stop_all": 2,
+    "close_all": 3,
+    "raise_all": 4,
+    "lower_all": 5,
+    "open_1": 6,
+    "stop_1": 7,
+    "close_1": 8,
+    "raise_1": 9,
+    "lower_1": 10,
+    "open_2": 11,
+    "stop_2": 12,
+    "close_2": 13,
+    "raise_2": 14,
+    "lower_2": 15,
+    "open_3": 16,
+    "stop_3": 17,
+    "close_3": 18,
+    "raise_3": 19,
+    "lower_3": 20,
+    "open_4": 21,
+    "stop_4": 22,
+    "close_4": 23,
+    "raise_4": 24,
+    "lower_4": 25,
+}
 FOUR_GROUP_REMOTE_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
     {
         vol.Required(CONF_SUBTYPE): vol.In(FOUR_GROUP_REMOTE_BUTTON_TYPES),
@@ -200,6 +273,19 @@ DEVICE_TYPE_SUBTYPE_MAP = {
     "Pico4ButtonZone": PICO_4_BUTTON_ZONE_BUTTON_TYPES,
     "Pico4Button2Group": PICO_4_BUTTON_2_GROUP_BUTTON_TYPES,
     "FourGroupRemote": FOUR_GROUP_REMOTE_BUTTON_TYPES,
+}
+
+
+LEAP_DEVICE_TYPE_SUBTYPE_MAP = {
+    "Pico2Button": LEAP_PICO_2_BUTTON_BUTTON_TYPES,
+    "Pico2ButtonRaiseLower": LEAP_PICO_2_BUTTON_RAISE_LOWER_BUTTON_TYPES,
+    "Pico3Button": LEAP_PICO_3_BUTTON_BUTTON_TYPES,
+    "Pico3ButtonRaiseLower": LEAP_PICO_3_BUTTON_RAISE_LOWER_BUTTON_TYPES,
+    "Pico4Button": LEAP_PICO_4_BUTTON_BUTTON_TYPES,
+    "Pico4ButtonScene": LEAP_PICO_4_BUTTON_SCENE_BUTTON_TYPES,
+    "Pico4ButtonZone": LEAP_PICO_4_BUTTON_ZONE_BUTTON_TYPES,
+    "Pico4Button2Group": LEAP_PICO_4_BUTTON_2_GROUP_BUTTON_TYPES,
+    "FourGroupRemote": LEAP_FOUR_GROUP_REMOTE_BUTTON_TYPES,
 }
 
 TRIGGER_SCHEMA = vol.Any(
