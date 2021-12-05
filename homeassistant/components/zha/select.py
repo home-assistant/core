@@ -95,7 +95,7 @@ class ZHAEnumSelectEntity(ZhaEntity, SelectEntity):
 class ZHADefaultToneSelectEntity(
     ZHAEnumSelectEntity, id_suffix=IasWd.Warning.WarningMode.__name__
 ):
-    """Representation of a ZHA default tone select entity."""
+    """Representation of a ZHA default siren tone select entity."""
 
     _enum: Enum = IasWd.Warning.WarningMode
 
@@ -104,7 +104,7 @@ class ZHADefaultToneSelectEntity(
 class ZHADefaultSirenLevelSelectEntity(
     ZHAEnumSelectEntity, id_suffix=IasWd.Warning.SirenLevel.__name__
 ):
-    """Representation of a ZHA default tone select entity."""
+    """Representation of a ZHA default siren level select entity."""
 
     _enum: Enum = IasWd.Warning.SirenLevel
 
@@ -113,13 +113,13 @@ class ZHADefaultSirenLevelSelectEntity(
 class ZHADefaultStrobeLevelSelectEntity(
     ZHAEnumSelectEntity, id_suffix=IasWd.StrobeLevel.__name__
 ):
-    """Representation of a ZHA default tone select entity."""
+    """Representation of a ZHA default siren strobe level select entity."""
 
     _enum: Enum = IasWd.StrobeLevel
 
 
 @MULTI_MATCH(channel_names=CHANNEL_IAS_WD)
 class ZHADefaultStrobeSelectEntity(ZHAEnumSelectEntity, id_suffix=Strobe.__name__):
-    """Representation of a ZHA default tone select entity."""
+    """Representation of a ZHA default siren strobe select entity."""
 
     _enum: Enum = Strobe
