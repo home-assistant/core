@@ -126,11 +126,14 @@ async def async_setup_entry(
     devices = bridge.get_devices()
     bridge_device = devices[BRIDGE_DEVICE_ID]
     buttons = bridge.buttons
+    import pprint
+
+    pprint.pprint(buttons)
     _async_register_bridge_device(hass, entry_id, bridge_device)
     button_devices = _async_register_button_devices(
         hass, entry_id, bridge_device, buttons
     )
-    _async_subscribe_pico_remote_events(hass, bridge, bridge.buttons)
+    _async_subscribe_pico_remote_events(hass, bridge, buttons)
 
     # Store this bridge (keyed by entry_id) so it can be retrieved by the
     # platforms we're setting up.
@@ -222,7 +225,7 @@ def _async_subscribe_pico_remote_events(
         leap_to_lip_button_numbers = list(DEVICE_TYPE_SUBTYPE_MAP[type_])
         pprint.pprint(
             [
-                device["button_number"],
+                device,
                 DEVICE_TYPE_SUBTYPE_MAP[type_],
                 leap_to_lip_button_numbers,
             ]
@@ -241,10 +244,13 @@ def _async_subscribe_pico_remote_events(
         )
 
     for button_id in button_devices_by_id:
-        bridge_device.add_button_subscriber(
-            str(button_id),
-            lambda event_type: _async_button_event(button_id, event_type),
-        )
+
+        @callback
+        def _async_wrapped_button_event(event_type):
+            """Create a function to capture the button_id cell variable."""
+            _async_button_event(button_id, event_type)
+
+        bridge_device.add_button_subscriber(str(button_id), _async_wrapped_button_event)
 
 
 async def async_unload_entry(
