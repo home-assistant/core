@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any
 
-from pytradfri import Gateway, PytradfriError, RequestError
+from pytradfri import Gateway, PytradfriError
 from pytradfri.api.aiocoap_api import APIFactory
 from pytradfri.command import Command
 from pytradfri.device import Device
@@ -206,15 +206,17 @@ async def async_setup_entry(
 
         gw_status = True
         try:
-            await api(gateway.get_gateway_info())
-        except RequestError:
+            await api(gateway.get_gateway_info(), timeout=TIMEOUT_API)
+        except PytradfriError:
             _LOGGER.error("Keep-alive failed")
             gw_status = False
 
         async_dispatcher_send(hass, SIGNAL_GW, gw_status)
 
     listeners.append(
-        async_track_time_interval(hass, async_keep_alive, timedelta(seconds=60))
+        async_track_time_interval(
+            hass, async_keep_alive, timedelta(seconds=2 * TIMEOUT_API)
+        )
     )
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)

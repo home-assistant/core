@@ -2,10 +2,7 @@
 from typing import Final
 
 from homeassistant.components.light import SUPPORT_BRIGHTNESS, SUPPORT_TRANSITION
-from homeassistant.const import (  # noqa: F401 pylint: disable=unused-import
-    CONF_HOST,
-    Platform,
-)
+from homeassistant.const import CONF_HOST  # noqa: F401 pylint: disable=unused-import
 
 ATTR_AUTO = "Auto"
 ATTR_DIMMER = "dimmer"
@@ -30,13 +27,7 @@ SIGNAL_GW = "tradfri.gw_status"
 KEY_SECURITY_CODE = "security_code"
 SUPPORTED_GROUP_FEATURES = SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
 SUPPORTED_LIGHT_FEATURES = SUPPORT_TRANSITION
-PLATFORMS = [
-    Platform.COVER,
-    Platform.FAN,
-    Platform.LIGHT,
-    Platform.SENSOR,
-    Platform.SWITCH,
-]
+PLATFORMS = ["cover", "fan", "light", "sensor", "switch"]
 TIMEOUT_API = 30
 ATTR_MAX_FAN_STEPS = 49
 
