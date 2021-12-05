@@ -225,7 +225,6 @@ def _async_subscribe_pico_remote_events(
         leap_to_lip_button_numbers = list(DEVICE_TYPE_SUBTYPE_MAP[type_])
         pprint.pprint(
             [
-                button_id,
                 device,
                 DEVICE_TYPE_SUBTYPE_MAP[type_],
                 leap_to_lip_button_numbers,
@@ -245,13 +244,12 @@ def _async_subscribe_pico_remote_events(
         )
 
     for button_id in button_devices_by_id:
-
-        @callback
-        def _async_wrapped_button_event(event_type):
-            """Create a function to capture the button_id cell variable."""
-            _async_button_event(button_id, event_type)
-
-        bridge_device.add_button_subscriber(str(button_id), _async_wrapped_button_event)
+        bridge_device.add_button_subscriber(
+            str(button_id),
+            lambda event_type, button_id=button_id: _async_button_event(
+                button_id, event_type
+            ),
+        )
 
 
 async def async_unload_entry(
