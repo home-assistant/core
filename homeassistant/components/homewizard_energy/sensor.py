@@ -160,8 +160,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
             entities.append(HWEnergySensor(coordinator, entry.data, description))
     async_add_entities(entities, update_before_add=True)
 
-    return True
-
 
 class HWEnergySensor(CoordinatorEntity, SensorEntity):
     """Representation of a HomeWizard Energy Sensor."""
