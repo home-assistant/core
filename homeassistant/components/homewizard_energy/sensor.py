@@ -209,11 +209,6 @@ class HWEnergySensor(CoordinatorEntity, SensorEntity):
         return self.coordinator.data
 
     @property
-    def icon(self):
-        """Return the icon."""
-        return self.entity_description.icon
-
-    @property
     def state(self):
         """Return state of meter."""
         return self.data[CONF_DATA][self.data_type]
