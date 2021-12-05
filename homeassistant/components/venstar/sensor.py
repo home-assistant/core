@@ -75,8 +75,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
     if not sensors:
         return
 
-    entities = []
-
     for sensor_name in sensors:
         entities.extend(
             [
