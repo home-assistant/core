@@ -48,7 +48,7 @@ async def test_coordinator_calculates_update_interval(aioclient_mock, hass):
     meter.data.smr_version = 50
 
     coordinator = Coordinator(hass, meter)
-    assert coordinator.update_interval == timedelta(seconds=1)
+    assert coordinator.update_interval == timedelta(seconds=5)
 
     # KWH 1 phase
     meter = get_mock_device(product_type=MODEL_KWH_1)

@@ -17,7 +17,6 @@ from .const import (
     CONF_DATA,
     CONF_MODEL,
     CONF_SW_VERSION,
-    MODEL_P1,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,21 +38,7 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator):
         super().__init__(hass, _LOGGER, name="", update_interval=update_interval)
 
     def get_update_interval(self) -> timedelta:
-        """Return best interval for product type."""
-        try:
-            product_type = self.api.device.product_type
-        except AttributeError:
-            product_type = "Unknown"
-
-        if product_type == MODEL_P1:
-            try:
-                smr_version = self.api.data.smr_version
-                if smr_version == 50:
-                    return timedelta(seconds=1)
-
-            except AttributeError:
-                pass
-
+        """Return interval for product type."""
         return timedelta(seconds=5)
 
     async def _async_update_data(self) -> dict:
