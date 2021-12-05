@@ -1,6 +1,5 @@
 """Update coordinator for HomeWizard Energy."""
 
-from datetime import timedelta
 import logging
 
 import aiohwenergy
@@ -17,6 +16,7 @@ from .const import (
     CONF_DATA,
     CONF_MODEL,
     CONF_SW_VERSION,
+    UPDATE_INTERVAL,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,13 +33,7 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator):
         """Initialize Update Coordinator."""
 
         self.api = api
-
-        update_interval = self.get_update_interval()
-        super().__init__(hass, _LOGGER, name="", update_interval=update_interval)
-
-    def get_update_interval(self) -> timedelta:
-        """Return interval for product type."""
-        return timedelta(seconds=5)
+        super().__init__(hass, _LOGGER, name="", update_interval=UPDATE_INTERVAL)
 
     async def _async_update_data(self) -> dict:
         """Fetch all device and sensor data from api."""

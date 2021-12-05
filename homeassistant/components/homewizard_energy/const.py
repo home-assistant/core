@@ -1,6 +1,8 @@
 """Constants for the Homewizard Energy integration."""
 
 # Set up.
+from datetime import timedelta
+
 DOMAIN = "homewizard_energy"
 COORDINATOR = "coordinator"
 MANUFACTURER_NAME = "HomeWizard"
@@ -12,6 +14,8 @@ CONF_API = "api"
 CONF_MODEL = "model"
 CONF_SW_VERSION = "sw_ver"
 CONF_DATA = "data"
+
+UPDATE_INTERVAL = timedelta(seconds=5)
 
 # Service attributes.
 ATTR_ACTIVE_POWER_L1_W = "active_power_l1_w"
