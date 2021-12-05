@@ -223,11 +223,16 @@ def _async_subscribe_pico_remote_events(
         # The original implementation used LIP instead of LEAP
         # so we need to convert the button number to maintain compat
         leap_to_lip_button_numbers = list(DEVICE_TYPE_SUBTYPE_MAP[type_].values())
+        button_num_to_name = {v: k for k, v in DEVICE_TYPE_SUBTYPE_MAP[type_].items()}
+        lip_button = leap_to_lip_button_numbers[device["button_number"]]
         pprint.pprint(
             [
                 device,
                 DEVICE_TYPE_SUBTYPE_MAP[type_],
                 leap_to_lip_button_numbers,
+                "lip_button",
+                lip_button,
+                button_num_to_name[lip_button],
             ]
         )
 
@@ -236,7 +241,7 @@ def _async_subscribe_pico_remote_events(
             {
                 ATTR_SERIAL: device["serial"],
                 ATTR_TYPE: type_,
-                ATTR_BUTTON_NUMBER: leap_to_lip_button_numbers[device["button_number"]],
+                ATTR_BUTTON_NUMBER: lip_button,
                 ATTR_DEVICE_NAME: name,
                 ATTR_AREA_NAME: name.split("_")[0],
                 ATTR_ACTION: action,
