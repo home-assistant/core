@@ -17,7 +17,7 @@ from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from .common import FakeDeviceManager, FakeSubscriber, MockConfigEntry
+from .common import FakeSubscriber, MockConfigEntry
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
@@ -43,15 +43,9 @@ APP_REDIRECT_URL = "urn:ietf:wg:oauth:2.0:oob"
 
 
 @pytest.fixture
-def device_manager() -> FakeDeviceManager:
-    """Create FakeDeviceManager."""
-    return FakeDeviceManager(devices={}, structures={})
-
-
-@pytest.fixture
-def subscriber(device_manager: FakeDeviceManager) -> FakeSubscriber:
+def subscriber() -> FakeSubscriber:
     """Create FakeSubscriber."""
-    return FakeSubscriber(device_manager)
+    return FakeSubscriber()
 
 
 def get_config_entry(hass):
