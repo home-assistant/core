@@ -267,11 +267,13 @@ class SonosDiscoveryManager:
         if change == ssdp.SsdpChange.BYEBYE:
             return
 
+        uid = info.get(ssdp.ATTR_UPNP_UDN)
+        if not uid.startswith("uuid:RINCON_"):
+            return
+
+        uid = uid[5:]
         discovered_ip = urlparse(info[ssdp.ATTR_SSDP_LOCATION]).hostname
         boot_seqnum = info.get("X-RINCON-BOOTSEQ")
-        uid = info.get(ssdp.ATTR_UPNP_UDN)
-        if uid.startswith("uuid:"):
-            uid = uid[5:]
         self.async_discovered_player(
             "SSDP", info, discovered_ip, uid, boot_seqnum, info.get("modelName"), None
         )

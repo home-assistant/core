@@ -93,7 +93,7 @@ def discover_fixture(soco):
     async def do_callback(hass, callback, *args, **kwargs):
         await callback(
             {
-                ssdp.ATTR_UPNP_UDN: soco.uid,
+                ssdp.ATTR_UPNP_UDN: f"uuid:{soco.uid}",
                 ssdp.ATTR_SSDP_LOCATION: f"http://{soco.ip_address}/",
             },
             ssdp.SsdpChange.ALIVE,
