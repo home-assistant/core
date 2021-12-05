@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from flux_led.aio import AIOWifiLedBulb
-from flux_led.const import COLOR_MODE_DIM as FLUX_COLOR_MODE_DIM
+from flux_led.const import COLOR_MODE_DIM as FLUX_COLOR_MODE_DIM, MultiColorEffects
 
 from homeassistant.components.light import (
     COLOR_MODE_BRIGHTNESS,
@@ -34,3 +34,10 @@ def _flux_color_mode_to_hass(
 def _effect_brightness(brightness: int) -> int:
     """Convert hass brightness to effect brightness."""
     return round(brightness / 255 * 100)
+
+
+def _str_to_multi_color_effect(effect_str: str) -> MultiColorEffects:
+    for effect in MultiColorEffects:
+        if effect.name.lower() == effect_str:
+            return effect
+    return MultiColorEffects.STATIC
