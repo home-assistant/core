@@ -12,7 +12,7 @@ import async_timeout
 import slugify as unicode_slug
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import ssdp, zeroconf
 from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.core import callback
@@ -48,7 +48,10 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         config_entry: config_entries.ConfigEntry,
     ) -> HueOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return HueOptionsFlowHandler(config_entry)
+        if config_entry.data.get(CONF_API_VERSION, 1) == 1:
+            # Options for Hue are only applicable to V1 bridges.
+            return HueOptionsFlowHandler(config_entry)
+        raise data_entry_flow.UnknownHandler
 
     def __init__(self) -> None:
         """Initialize the Hue flow."""
@@ -291,10 +294,6 @@ class HueOptionsFlowHandler(config_entries.OptionsFlow):
         """Manage Hue options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
-
-        if self.config_entry.data.get(CONF_API_VERSION, 1) > 1:
-            # Options for Hue are only applicable to V1 bridges.
-            return self.async_show_form(step_id="init")
 
         return self.async_show_form(
             step_id="init",
