@@ -17,6 +17,7 @@ from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.components.media_source import const
 from homeassistant.components.media_source.error import Unresolvable
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.template import DATE_STR_FORMAT
 import homeassistant.util.dt as dt_util
 
 from .common import async_setup_sdm_platform
@@ -211,7 +212,7 @@ async def test_camera_event(hass, auth, hass_client):
     assert len(browse.children) == 1
     assert browse.children[0].domain == DOMAIN
     assert browse.children[0].identifier == f"{device.id}/{event_id}"
-    event_timestamp_string = event_timestamp.isoformat(timespec="seconds", sep=" ")
+    event_timestamp_string = event_timestamp.strftime(DATE_STR_FORMAT)
     assert browse.children[0].title == f"Person @ {event_timestamp_string}"
     assert not browse.children[0].can_expand
     assert len(browse.children[0].children) == 0
@@ -291,7 +292,7 @@ async def test_event_order(hass, auth):
     assert len(browse.children) == 2
     assert browse.children[0].domain == DOMAIN
     assert browse.children[0].identifier == f"{device.id}/{event_id2}"
-    event_timestamp_string = event_timestamp2.isoformat(timespec="seconds", sep=" ")
+    event_timestamp_string = event_timestamp2.strftime(DATE_STR_FORMAT)
     assert browse.children[0].title == f"Motion @ {event_timestamp_string}"
     assert not browse.children[0].can_expand
 
@@ -299,7 +300,7 @@ async def test_event_order(hass, auth):
     assert browse.children[1].domain == DOMAIN
 
     assert browse.children[1].identifier == f"{device.id}/{event_id1}"
-    event_timestamp_string = event_timestamp1.isoformat(timespec="seconds", sep=" ")
+    event_timestamp_string = event_timestamp1.strftime(DATE_STR_FORMAT)
     assert browse.children[1].title == f"Person @ {event_timestamp_string}"
     assert not browse.children[1].can_expand
 
@@ -435,7 +436,7 @@ async def test_camera_event_clip_preview(hass, auth, hass_client):
     assert len(browse.children) == 1
     assert browse.children[0].domain == DOMAIN
     actual_event_id = browse.children[0].identifier
-    event_timestamp_string = event_timestamp.isoformat(timespec="seconds", sep=" ")
+    event_timestamp_string = event_timestamp.strftime(DATE_STR_FORMAT)
     assert browse.children[0].title == f"Event @ {event_timestamp_string}"
     assert not browse.children[0].can_expand
     assert len(browse.children[0].children) == 0
