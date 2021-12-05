@@ -130,7 +130,7 @@ async def async_setup_entry(
     button_devices = _async_register_button_devices(
         hass, entry_id, bridge_device, buttons
     )
-    _async_subscribe_pico_remote_events(hass, bridge, button_devices)
+    _async_subscribe_pico_remote_events(hass, bridge, bridge.buttons)
 
     # Store this bridge (keyed by entry_id) so it can be retrieved by the
     # platforms we're setting up.
