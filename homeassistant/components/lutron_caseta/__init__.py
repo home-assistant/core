@@ -225,6 +225,7 @@ def _async_subscribe_pico_remote_events(
         leap_to_lip_button_numbers = list(DEVICE_TYPE_SUBTYPE_MAP[type_])
         pprint.pprint(
             [
+                button_id,
                 device,
                 DEVICE_TYPE_SUBTYPE_MAP[type_],
                 leap_to_lip_button_numbers,
