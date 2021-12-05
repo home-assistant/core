@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Final
 
 import voluptuous as vol
 
@@ -48,11 +48,11 @@ if TYPE_CHECKING:
         FroniusStorageUpdateCoordinator,
     )
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER: Final = logging.getLogger(__name__)
 
-ELECTRIC_CHARGE_AMPERE_HOURS = "Ah"
-ENERGY_VOLT_AMPERE_REACTIVE_HOUR = "varh"
-POWER_VOLT_AMPERE_REACTIVE = "var"
+ELECTRIC_CHARGE_AMPERE_HOURS: Final = "Ah"
+ENERGY_VOLT_AMPERE_REACTIVE_HOUR: Final = "varh"
+POWER_VOLT_AMPERE_REACTIVE: Final = "var"
 
 PLATFORM_SCHEMA = vol.All(
     PLATFORM_SCHEMA.extend(
