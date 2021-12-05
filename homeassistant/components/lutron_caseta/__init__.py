@@ -212,17 +212,19 @@ def _async_subscribe_pico_remote_events(
         else:
             action = ACTION_RELEASE
 
+        type_ = device["type"]
+        name = device["name"]
         # The original implementation used LIP instead of LEAP
         # so we need to convert the button number to maintain compat
-        leap_to_lip_button_numbers = list(DEVICE_TYPE_SUBTYPE_MAP[device["type"]])
+        leap_to_lip_button_numbers = list(DEVICE_TYPE_SUBTYPE_MAP[type_])
         hass.bus.async_fire(
             LUTRON_CASETA_BUTTON_EVENT,
             {
                 ATTR_SERIAL: device["serial"],
-                ATTR_TYPE: device["type"],
+                ATTR_TYPE: type_,
                 ATTR_BUTTON_NUMBER: leap_to_lip_button_numbers[device["button_number"]],
-                ATTR_DEVICE_NAME: device["Name"],
-                ATTR_AREA_NAME: device["name"].split("_")[0],
+                ATTR_DEVICE_NAME: name,
+                ATTR_AREA_NAME: name.split("_")[0],
                 ATTR_ACTION: action,
             },
         )
