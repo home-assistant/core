@@ -158,7 +158,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     for description in SENSORS:
         if description.key in energy_api.data.available_datapoints:
             entities.append(HWEnergySensor(coordinator, entry.data, description))
-    async_add_entities(entities, update_before_add=True)
+    async_add_entities(entities)
 
 
 class HWEnergySensor(CoordinatorEntity, SensorEntity):
