@@ -37,36 +37,33 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> dict:
         """Fetch all device and sensor data from api."""
-        try:
-            async with async_timeout.timeout(10):
-                # Update all properties
-                status = await self.api.update()
 
-                if not status:
-                    raise UpdateFailed("Failed to communicate with device")
+        async with async_timeout.timeout(10):
+            # Update all properties
+            status = await self.api.update()
 
-                data = {
-                    CONF_NAME: self.api.device.product_name,
-                    CONF_MODEL: self.api.device.product_type,
-                    CONF_ID: self.api.device.serial,
-                    CONF_SW_VERSION: self.api.device.firmware_version,
-                    CONF_API_VERSION: self.api.device.api_version,
-                    CONF_DATA: {},
-                    CONF_STATE: None,
+            if not status:
+                raise UpdateFailed("Failed to communicate with device")
+
+            data = {
+                CONF_NAME: self.api.device.product_name,
+                CONF_MODEL: self.api.device.product_type,
+                CONF_ID: self.api.device.serial,
+                CONF_SW_VERSION: self.api.device.firmware_version,
+                CONF_API_VERSION: self.api.device.api_version,
+                CONF_DATA: {},
+                CONF_STATE: None,
+            }
+
+            for datapoint in self.api.data.available_datapoints:
+                data[CONF_DATA][datapoint] = getattr(self.api.data, datapoint)
+
+            if self.api.state is not None:
+                data[CONF_STATE] = {
+                    ATTR_POWER_ON: self.api.state.power_on,
+                    ATTR_SWITCHLOCK: self.api.state.switch_lock,
+                    ATTR_BRIGHTNESS: self.api.state.brightness,
                 }
-
-                for datapoint in self.api.data.available_datapoints:
-                    data[CONF_DATA][datapoint] = getattr(self.api.data, datapoint)
-
-                if self.api.state is not None:
-                    data[CONF_STATE] = {
-                        ATTR_POWER_ON: self.api.state.power_on,
-                        ATTR_SWITCHLOCK: self.api.state.switch_lock,
-                        ATTR_BRIGHTNESS: self.api.state.brightness,
-                    }
-
-        except TimeoutError as ex:
-            raise UpdateFailed(ex) from ex
 
         self.name = data[CONF_NAME]
         return data
