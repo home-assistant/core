@@ -95,13 +95,12 @@ async def handle_v2_migration(hass: core.HomeAssistant, entry: ConfigEntry) -> N
         # handle entities attached to device
         for hue_dev in api.devices:
             zigbee = api.devices.get_zigbee_connectivity(hue_dev.id)
-            if not zigbee:
-                # not a zigbee device
+            if not zigbee or not zigbee.mac_address:
+                # not a zigbee device or invalid mac
                 continue
-            mac = zigbee.mac_address
             # get/update existing device by V1 identifier (mac address)
             # the device will now have both the old and the new identifier
-            identifiers = {(DOMAIN, hue_dev.id), (DOMAIN, mac)}
+            identifiers = {(DOMAIN, hue_dev.id), (DOMAIN, zigbee.mac_address)}
             hass_dev = dev_reg.async_get_or_create(
                 config_entry_id=entry.entry_id, identifiers=identifiers
             )
