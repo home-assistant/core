@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from google_nest_sdm.device_manager import DeviceManager
 from google_nest_sdm.event import EventMessage
+from google_nest_sdm.event_media import CachePolicy
 from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 
 from homeassistant.components.nest import DOMAIN
@@ -97,6 +98,11 @@ class FakeSubscriber(GoogleNestSubscriber):
     async def async_get_device_manager(self) -> DeviceManager:
         """Return the fake device manager."""
         return self._device_manager
+
+    @property
+    def cache_policy(self) -> CachePolicy:
+        """Return the cache policy."""
+        return self._device_manager.cache_policy
 
     def stop_async(self):
         """No-op to stop the subscriber."""
