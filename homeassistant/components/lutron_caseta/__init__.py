@@ -4,9 +4,8 @@ import contextlib
 import logging
 import ssl
 
-from aiolip.data import LIPMode
-from aiolip.protocol import LIP_BUTTON_PRESS
 import async_timeout
+from pylutron_caseta import BUTTON_STATUS_PRESSED
 from pylutron_caseta.smartbridge import Smartbridge
 import voluptuous as vol
 
@@ -40,6 +39,7 @@ from .const import (
     LUTRON_CASETA_BUTTON_EVENT,
     MANUFACTURER,
 )
+from .device_trigger import DEVICE_TYPE_SUBTYPE_MAP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -149,36 +149,8 @@ async def async_setup_button_devices(hass, config_entry, button_devices):
     button_devices_by_dr_id = _async_register_button_devices(
         hass, config_entry_id, bridge_device, button_devices
     )
-    _async_subscribe_pico_remote_events(hass, button_devices)
+    _async_subscribe_pico_remote_events(hass, bridge_device, button_devices)
     data[BUTTON_DEVICES] = button_devices_by_dr_id
-
-
-@callback
-def _async_merge_lip_leap_data(lip_devices, bridge):
-    """Merge the leap data into the lip data."""
-    sensor_devices = bridge.get_devices_by_domain("sensor")
-
-    button_devices_by_id = {
-        id: device for id, device in lip_devices.items() if "Buttons" in device
-    }
-    sensor_devices_by_name = {device["name"]: device for device in sensor_devices}
-
-    # Add the leap data into the lip data
-    # so we know the type, model, and serial
-    for device in button_devices_by_id.values():
-        area = device.get("Area", {}).get("Name", "")
-        name = device["Name"]
-        leap_name = f"{area}_{name}"
-        device["leap_name"] = leap_name
-        leap_device_data = sensor_devices_by_name.get(leap_name)
-        if leap_device_data is None:
-            continue
-        for key in ("type", "model", "serial"):
-            if (val := leap_device_data.get(key)) is not None:
-                device[key] = val
-
-    _LOGGER.debug("Button Devices: %s", button_devices_by_id)
-    return button_devices_by_id
 
 
 @callback
@@ -201,14 +173,16 @@ def _async_register_button_devices(
     """Register button devices (Pico Remotes) in the device registry."""
     device_registry = dr.async_get(hass)
     button_devices_by_dr_id = {}
+    seen = set()
 
     for device in button_devices_by_id.values():
-        if "serial" not in device:
+        if "serial" not in device or device["serial"] in seen:
             continue
+        seen.add(device["serial"])
 
         dr_device = device_registry.async_get_or_create(
-            name=device["leap_name"],
-            suggested_area=device["leap_name"].split("_")[0],
+            name=device["name"],
+            suggested_area=device["name"].split("_")[0],
             manufacturer=MANUFACTURER,
             config_entry_id=config_entry_id,
             identifiers={(DOMAIN, device["serial"])},
@@ -222,39 +196,40 @@ def _async_register_button_devices(
 
 
 @callback
-def _async_subscribe_pico_remote_events(hass, lip, button_devices_by_id):
+def _async_subscribe_pico_remote_events(hass, bridge_device, button_devices_by_id):
     """Subscribe to lutron events."""
 
     @callback
-    def _async_lip_event(lip_message):
-        if lip_message.mode != LIPMode.DEVICE:
-            return
-
-        device = button_devices_by_id.get(lip_message.integration_id)
+    def _async_button_event(button_id, event_type):
+        device = button_devices_by_id.get(button_id)
 
         if not device:
             return
 
-        if lip_message.value == LIP_BUTTON_PRESS:
+        if event_type == BUTTON_STATUS_PRESSED:
             action = ACTION_PRESS
         else:
             action = ACTION_RELEASE
 
+        # The original implementation used LIP instead of LEAP
+        # so we need to convert the button number to maintain compat
+        leap_to_lip_button_numbers = list(DEVICE_TYPE_SUBTYPE_MAP[device["type"]])
         hass.bus.async_fire(
             LUTRON_CASETA_BUTTON_EVENT,
             {
-                ATTR_SERIAL: device.get("serial"),
-                ATTR_TYPE: device.get("type"),
-                ATTR_BUTTON_NUMBER: lip_message.action_number,
+                ATTR_SERIAL: device["serial"],
+                ATTR_TYPE: device["type"],
+                ATTR_BUTTON_NUMBER: leap_to_lip_button_numbers[device["button_number"]],
                 ATTR_DEVICE_NAME: device["Name"],
-                ATTR_AREA_NAME: device.get("Area", {}).get("Name"),
+                ATTR_AREA_NAME: device["name"].split("_")[0],
                 ATTR_ACTION: action,
             },
         )
 
-    lip.subscribe(_async_lip_event)
-
-    asyncio.create_task(lip.async_run())
+    for button_id in button_devices_by_id:
+        bridge_device.add_button_subscriber(
+            button_id, lambda event_type: _async_button_event(button_id, event_type)
+        )
 
 
 async def async_unload_entry(hass, config_entry):
