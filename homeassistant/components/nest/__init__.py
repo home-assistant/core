@@ -6,7 +6,7 @@ from http import HTTPStatus
 import logging
 
 from aiohttp import web
-from google_nest_sdm.event import EventMessage
+from google_nest_sdm.event import EventImageType, EventMessage
 from google_nest_sdm.exceptions import (
     ApiException,
     AuthException,
@@ -17,6 +17,7 @@ from google_nest_sdm.exceptions import (
 import voluptuous as vol
 
 from homeassistant.auth.permissions.const import POLICY_READ
+from homeassistant.components.camera import Image, img_util
 from homeassistant.components.http.const import KEY_HASS_USER
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
@@ -347,7 +348,18 @@ class NestEventMediaView(HomeAssistantView):
             return self._json_error(
                 f"No event found for event_id '{event_token}'", HTTPStatus.NOT_FOUND
             )
-        return web.Response(body=media.contents, content_type=media.content_type)
+        contents = media.contents
+
+        width = request.query.get("width")
+        height = request.query.get("height")
+        if (
+            media.event_image_type == EventImageType.IMAGE
+            and width is not None
+            and height is not None
+        ):
+            image = Image(media.event_image_type.content_type, contents)
+            contents = img_util.scale_jpeg_camera_image(image, int(width), int(height))
+        return web.Response(body=contents, content_type=media.content_type)
 
     def _json_error(self, message: str, status: HTTPStatus) -> web.StreamResponse:
         """Return a json error message with additional logging."""

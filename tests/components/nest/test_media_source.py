@@ -730,6 +730,8 @@ async def test_camera_event_clip_preview(hass, auth, hass_client):
     assert browse.identifier == device.id
     assert browse.title == "Front: Recent Events"
     assert browse.can_expand
+    # No thumbnail support for mp4 clips yet
+    assert browse.thumbnail is None
     # The device expands recent events
     assert len(browse.children) == 1
     assert browse.children[0].domain == DOMAIN
@@ -739,6 +741,8 @@ async def test_camera_event_clip_preview(hass, auth, hass_client):
     assert not browse.children[0].can_expand
     assert len(browse.children[0].children) == 0
     assert browse.children[0].can_play
+    # No thumbnail support for mp4 clips yet
+    assert browse.children[0].thumbnail is None
 
     # Verify received event and media ids match
     assert browse.children[0].identifier == f"{device.id}/{event_identifier}"
@@ -1270,3 +1274,64 @@ async def test_camera_event_media_eviction(hass, auth, hass_client):
         contents = await response.read()
         assert contents == f"image-bytes-{i}".encode()
         await hass.async_block_till_done()
+
+
+async def test_camera_image_resize(hass, auth, hass_client):
+    """Test scaling a thumbnail for an event image."""
+    event_timestamp = dt_util.now()
+    await async_setup_devices(
+        hass,
+        auth,
+        CAMERA_DEVICE_TYPE,
+        CAMERA_TRAITS,
+        events=[
+            create_event(
+                EVENT_SESSION_ID,
+                EVENT_ID,
+                PERSON_EVENT,
+                timestamp=event_timestamp,
+            ),
+        ],
+    )
+
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get_device({(DOMAIN, DEVICE_ID)})
+    assert device
+    assert device.name == DEVICE_NAME
+
+    browse = await media_source.async_browse_media(
+        hass, f"{const.URI_SCHEME}{DOMAIN}/{device.id}/{EVENT_SESSION_ID}"
+    )
+    assert browse.domain == DOMAIN
+    assert browse.identifier == f"{device.id}/{EVENT_SESSION_ID}"
+    assert "Person" in browse.title
+    assert not browse.can_expand
+    assert not browse.children
+    assert (
+        browse.thumbnail
+        == f"/api/nest/event_media/{device.id}/{EVENT_SESSION_ID}?width=175&height=175"
+    )
+
+    auth.responses = [
+        aiohttp.web.json_response(GENERATE_IMAGE_URL_RESPONSE),
+        aiohttp.web.Response(body=IMAGE_BYTES_FROM_EVENT),
+    ]
+
+    client = await hass_client()
+    response = await client.get(
+        f"/api/nest/event_media/{device.id}/{EVENT_SESSION_ID}?width=175&height=175"
+    )
+    assert response.status == HTTPStatus.OK, "Response not matched: %s" % response
+    contents = await response.read()
+    assert contents == IMAGE_BYTES_FROM_EVENT
+
+    # The event thumbnail is used for the device thumbnail
+    browse = await media_source.async_browse_media(
+        hass, f"{const.URI_SCHEME}{DOMAIN}/{device.id}"
+    )
+    assert browse.domain == DOMAIN
+    assert browse.identifier == device.id
+    assert (
+        browse.thumbnail
+        == f"/api/nest/event_media/{device.id}/{EVENT_SESSION_ID}?width=175&height=175"
+    )
