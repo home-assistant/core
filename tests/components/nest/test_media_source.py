@@ -1327,6 +1327,7 @@ async def test_camera_image_resize(hass, auth, hass_client):
         hass, f"{const.URI_SCHEME}{DOMAIN}/{device.id}/{event_identifier}"
     )
     assert browse.domain == DOMAIN
+    assert browse.identifier == f"{device.id}/{event_identifier}"
     assert "Person" in browse.title
     assert not browse.can_expand
     assert not browse.children
@@ -1335,8 +1336,15 @@ async def test_camera_image_resize(hass, auth, hass_client):
         == f"/api/nest/event_media/{device.id}/{event_identifier}/thumbnail"
     )
 
+    auth.responses = [
+        aiohttp.web.json_response(GENERATE_IMAGE_URL_RESPONSE),
+        aiohttp.web.Response(body=IMAGE_BYTES_FROM_EVENT),
+    ]
+
     client = await hass_client()
-    response = await client.get(browse.thumbnail)
+    response = await client.get(
+        f"/api/nest/event_media/{device.id}/{EVENT_SESSION_ID}?width=175&height=175"
+    )
     assert response.status == HTTPStatus.OK, "Response not matched: %s" % response
     contents = await response.read()
     assert contents == IMAGE_BYTES_FROM_EVENT
