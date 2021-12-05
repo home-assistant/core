@@ -202,6 +202,7 @@ FLOWS = [
     "nexia",
     "nfandroidtv",
     "nightscout",
+    "nina",
     "nmap_tracker",
     "notion",
     "nuheat",

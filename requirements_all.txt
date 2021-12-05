@@ -1669,6 +1669,9 @@ pynetgear==0.7.0
 # homeassistant.components.netio
 pynetio==0.1.9.1
 
+# homeassistant.components.nina
+pynina==0.1.4
+
 # homeassistant.components.nuki
 pynuki==1.4.1
 
