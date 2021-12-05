@@ -236,17 +236,22 @@ async def test_form_updates_host(hass, aioclient_mock):
     )
 
     mock_responses(aioclient_mock, host=new_host)
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            "host": new_host,
-        },
-    )
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.fronius.async_unload_entry",
+        return_value=True,
+    ) as mock_unload_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": new_host,
+            },
+        )
+        await hass.async_block_till_done()
 
     assert result2["type"] == RESULT_TYPE_ABORT
     assert result2["reason"] == "already_configured"
 
+    mock_unload_entry.assert_called_with(hass, entry)
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].data == {
