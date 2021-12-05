@@ -1,7 +1,9 @@
 """Helper methods for various modules."""
 from __future__ import annotations
 
+from ast import literal_eval
 import asyncio
+from codecs import encode
 from collections.abc import Callable, Coroutine, Iterable, KeysView
 from datetime import datetime, timedelta
 import enum
@@ -74,6 +76,26 @@ def convert(
     except (ValueError, TypeError):
         # If value could not be converted
         return default
+
+
+def ensure_encoding(rendered_value: str, encoding: str | None = "utf-8") -> str | bytes:
+    """Ensure correct encoding or pass-through as a binary object if no encoding is None.
+
+    If encoding is not set to utf-8, the encoded to bytes to ensure the correct encoding.
+    If encoding is None, and rendered_value is a literal bytes string, rendered_value will casted to bytes.
+    Default action is to return rendered_value as a string.
+    """
+    if encoding is None:
+        try:
+            native_object = literal_eval(rendered_value)
+            if isinstance(native_object, bytes) and encoding is None:
+                return native_object
+
+        except (ValueError, TypeError, SyntaxError, MemoryError):
+            pass
+        return rendered_value
+
+    return rendered_value if encoding == "utf-8" else encode(rendered_value, encoding)
 
 
 def ensure_unique_string(

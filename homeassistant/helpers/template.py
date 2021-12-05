@@ -4,7 +4,6 @@ from __future__ import annotations
 from ast import literal_eval
 import asyncio
 import base64
-from codecs import encode
 import collections.abc
 from collections.abc import Callable, Generator, Iterable
 from contextlib import contextmanager, suppress
@@ -54,7 +53,12 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.loader import bind_hass
-from homeassistant.util import convert, dt as dt_util, location as loc_util
+from homeassistant.util import (
+    convert,
+    dt as dt_util,
+    ensure_encoding,
+    location as loc_util,
+)
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.thread import ThreadWithException
 
@@ -564,7 +568,7 @@ class Template:
             variables["value_json"] = json.loads(value)
 
         try:
-            return _ensure_encoding(
+            return ensure_encoding(
                 _render_with_context(
                     self.template, self._compiled, **variables
                 ).strip(),
@@ -1762,27 +1766,6 @@ def set_template(template_str: str, action: str) -> Generator:
         yield
     finally:
         template_cv.set(None)
-
-
-def _ensure_encoding(
-    rendered_value: str, encoding: str | None = "utf-8"
-) -> str | bytes:
-    """Ensure correct encoding or pass-through as a binary object if no encoding is set."""
-    if encoding is None:
-        try:
-            native_object = literal_eval(rendered_value)
-            if isinstance(native_object, bytes) and encoding is None:
-                return native_object
-
-        except (ValueError, TypeError, SyntaxError, MemoryError):
-            pass
-        _LOGGER.warning(
-            "Unable to encode '%s' with no encoding set, expected 'bytes', got 'str'",
-            rendered_value,
-        )
-        return rendered_value
-
-    return rendered_value if encoding == "utf-8" else encode(rendered_value, encoding)
 
 
 def _render_with_context(

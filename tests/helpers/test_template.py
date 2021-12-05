@@ -1054,8 +1054,8 @@ def test_render_with_possible_json_value_raw_encoding(hass):
     assert tpl.async_render_with_possible_json_value(value, encoding=None) == expected
 
 
-def test_render_with_possible_json_value_raw_encoding_warning(hass, caplog):
-    """Render with possible JSON value with raw encoding and invalid input."""
+def test_render_with_possible_json_value_raw_encoding_flag(hass, caplog):
+    """Render with possible JSON value with raw encoding set and utf-8 pass-through."""
     tpl = template.Template(
         """
 {{ value }}
@@ -1068,11 +1068,6 @@ def test_render_with_possible_json_value_raw_encoding_warning(hass, caplog):
     expected = value
     assert (
         tpl.async_render_with_possible_json_value(value, encoding=encoding) == expected
-    )
-
-    assert (
-        "Unable to encode 'àáäèëéèëéòöóùüú' with no encoding set, expected 'bytes', got 'str'"
-        in caplog.text
     )
 
 
@@ -1091,10 +1086,6 @@ def test_render_with_possible_json_value_alternative_encoding(hass):
     assert (
         tpl.async_render_with_possible_json_value(value, encoding=encoding) == expected
     )
-
-    # b'\xe0\xe1\xe4\xe8\xeb\xe9\xe8\xeb\xe9\xf2\xf6\xf3\xf9\xfc\xfa' (latin_1)
-    # b'\xc3\xa0\xc3\xa1\xc3\xa4\xc3\xa8\xc3\xab\xc3\xa9\xc3\xa8\xc3\xab\xc3\xa9\xc3\xb2\xc3\xb6\xc3\xb3\xc3\xb9\xc3\xbc\xc3\xba' (utf-8)
-    # 'àáäèëéèëéòöóùüú' (str)
 
 
 def test_if_state_exists(hass):

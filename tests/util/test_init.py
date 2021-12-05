@@ -82,6 +82,38 @@ def test_convert():
     assert util.convert(object, int, 1) == 1
 
 
+def test_ensure_unique_encoding():
+    """Test ensure_unique_encoding."""
+    encoding = "latin_1"
+    value = "àáäèëéèëéòöóùüú"
+    expected = b"\xe0\xe1\xe4\xe8\xeb\xe9\xe8\xeb\xe9\xf2\xf6\xf3\xf9\xfc\xfa"
+    assert util.ensure_encoding(value, encoding) == expected
+
+    encoding = None
+    value = "àáäèëéèëéòöóùüú"
+    expected = value
+    assert util.ensure_encoding(value, encoding) == expected
+
+    encoding = None
+    value = (
+        "b'\\xe0\\xe1\\xe4\\xe8\\xeb\\xe9\\xe8\\xeb\\xe9\\xf2\\xf6\\xf3\\xf9\\xfc\\xfa'"
+    )
+    expected = b"\xe0\xe1\xe4\xe8\xeb\xe9\xe8\xeb\xe9\xf2\xf6\xf3\xf9\xfc\xfa"
+    assert util.ensure_encoding(value, encoding) == expected
+
+    encoding = "utf-8"
+    value = "àáäèëéèëéòöóùüú"
+    expected = value
+    assert util.ensure_encoding(value, encoding) == expected
+
+    encoding = "utf-8"
+    value = (
+        "b'\\xe0\\xe1\\xe4\\xe8\\xeb\\xe9\\xe8\\xeb\\xe9\\xf2\\xf6\\xf3\\xf9\\xfc\\xfa'"
+    )
+    expected = value
+    assert util.ensure_encoding(value, encoding) == expected
+
+
 def test_ensure_unique_string():
     """Test ensure_unique_string."""
     assert util.ensure_unique_string("Beer", ["Beer", "Beer_2"]) == "Beer_3"
