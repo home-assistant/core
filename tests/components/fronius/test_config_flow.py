@@ -21,6 +21,17 @@ from . import MOCK_HOST, mock_responses
 
 from tests.common import MockConfigEntry
 
+
+@pytest.fixture(autouse=True)
+def no_setup():
+    """Disable setting up the whole integration in config_flow tests."""
+    with patch(
+        "homeassistant.components.fronius.async_setup_entry",
+        return_value=True,
+    ):
+        yield
+
+
 INVERTER_INFO_RETURN_VALUE = {
     "inverters": [
         {
@@ -37,17 +48,7 @@ MOCK_DHCP_DATA = DhcpServiceInfo(
 )
 
 
-@pytest.fixture()
-def no_setup():
-    """Disable setting up the whole integration."""
-    with patch(
-        "homeassistant.components.fronius.async_setup_entry",
-        return_value=True,
-    ):
-        yield
-
-
-async def test_form_with_logger(no_setup, hass: HomeAssistant) -> None:
+async def test_form_with_logger(hass: HomeAssistant) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -79,7 +80,7 @@ async def test_form_with_logger(no_setup, hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_with_inverter(no_setup, hass: HomeAssistant) -> None:
+async def test_form_with_inverter(hass: HomeAssistant) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -114,7 +115,7 @@ async def test_form_with_inverter(no_setup, hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_cannot_connect(no_setup, hass: HomeAssistant) -> None:
+async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -138,7 +139,7 @@ async def test_form_cannot_connect(no_setup, hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_no_device(no_setup, hass: HomeAssistant) -> None:
+async def test_form_no_device(hass: HomeAssistant) -> None:
     """Test we handle no device found error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -162,7 +163,7 @@ async def test_form_no_device(no_setup, hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_unexpected(no_setup, hass: HomeAssistant) -> None:
+async def test_form_unexpected(hass: HomeAssistant) -> None:
     """Test we handle unexpected error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -183,7 +184,7 @@ async def test_form_unexpected(no_setup, hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_form_already_existing(no_setup, hass: HomeAssistant) -> None:
+async def test_form_already_existing(hass: HomeAssistant) -> None:
     """Test existing entry."""
     MockConfigEntry(
         domain=DOMAIN,
@@ -254,7 +255,7 @@ async def test_form_updates_host(hass, aioclient_mock):
     }
 
 
-async def test_import(no_setup, hass, aioclient_mock):
+async def test_import(hass, aioclient_mock):
     """Test import step."""
     mock_responses(aioclient_mock)
     assert await async_setup_component(
@@ -280,7 +281,7 @@ async def test_import(no_setup, hass, aioclient_mock):
     }
 
 
-async def test_dhcp(no_setup, hass, aioclient_mock):
+async def test_dhcp(hass, aioclient_mock):
     """Test starting a flow from discovery."""
     with patch(
         "homeassistant.components.fronius.config_flow.DHCP_REQUEST_DELAY", 0
@@ -305,7 +306,7 @@ async def test_dhcp(no_setup, hass, aioclient_mock):
     }
 
 
-async def test_dhcp_already_configured(no_setup, hass, aioclient_mock):
+async def test_dhcp_already_configured(hass, aioclient_mock):
     """Test starting a flow from discovery."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -324,7 +325,7 @@ async def test_dhcp_already_configured(no_setup, hass, aioclient_mock):
     assert result["reason"] == "already_configured"
 
 
-async def test_dhcp_invalid(no_setup, hass, aioclient_mock):
+async def test_dhcp_invalid(hass, aioclient_mock):
     """Test starting a flow from discovery."""
     with patch(
         "homeassistant.components.fronius.config_flow.DHCP_REQUEST_DELAY", 0
