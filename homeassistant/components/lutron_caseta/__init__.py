@@ -232,7 +232,8 @@ def _async_subscribe_pico_remote_events(
 
     for button_id in button_devices_by_id:
         bridge_device.add_button_subscriber(
-            button_id, lambda event_type: _async_button_event(button_id, event_type)
+            str(button_id),
+            lambda event_type: _async_button_event(button_id, event_type),
         )
 
 
