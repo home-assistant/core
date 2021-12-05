@@ -167,6 +167,9 @@ async def handle_v2_migration(hass: core.HomeAssistant, entry: ConfigEntry) -> N
             v1_id = f"/groups/{ent.unique_id}"
             hue_group = api.groups.room.get_by_v1_id(v1_id)
             if hue_group is None or hue_group.grouped_light is None:
+                # try again with zone
+                hue_group = api.groups.zone.get_by_v1_id(v1_id)
+            if hue_group is None or hue_group.grouped_light is None:
                 # this may happen if we're looking at some orphaned entity
                 LOGGER.warning(
                     "Skip migration of %s because it no longer exist on the bridge",
