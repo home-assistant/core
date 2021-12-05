@@ -132,6 +132,7 @@ class ZHADevice(LogMixin):
         self._ha_device_id = None
         self.status = DeviceStatus.CREATED
         self._channels = channels.Channels(self)
+        self.data_cache = {}
 
     @property
     def device_id(self):
