@@ -1,6 +1,6 @@
 """The Balboa Spa Client integration."""
 import asyncio
-from datetime import timedelta
+from datetime import datetime, timedelta
 import time
 
 from pybalboa import BalboaSpaWifi
@@ -52,7 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     spa.new_data_cb = _async_balboa_update_cb
 
     _LOGGER.debug("Starting listener and monitor tasks")
-    hass.loop.create_task(spa.listen())
+    asyncio.create_task(spa.listen())
     await spa.spa_configured()
     asyncio.create_task(spa.check_connection_status())
 
@@ -92,11 +92,11 @@ async def async_setup_time_sync(hass: HomeAssistant, entry: ConfigEntry) -> None
     _LOGGER.debug("Setting up daily time sync")
     spa = hass.data[DOMAIN][entry.entry_id]
 
-    async def sync_time():
+    async def sync_time(now: datetime):
         _LOGGER.debug("Syncing time with Home Assistant")
         await spa.set_time(time.strptime(str(dt_util.now()), "%Y-%m-%d %H:%M:%S.%f%z"))
 
-    await sync_time()
+    await sync_time(dt_util.utcnow())
     entry.async_on_unload(
         async_track_time_interval(hass, sync_time, SYNC_TIME_INTERVAL)
     )
