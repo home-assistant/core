@@ -37,7 +37,9 @@ def _effect_brightness(brightness: int) -> int:
 
 
 def _str_to_multi_color_effect(effect_str: str) -> MultiColorEffects:
+    """Convert an multicolor effect string to MultiColorEffects."""
     for effect in MultiColorEffects:
         if effect.name.lower() == effect_str:
             return effect
-    return MultiColorEffects.STATIC
+    # unreachable due to schema validation
+    assert False  # pragma: no cover

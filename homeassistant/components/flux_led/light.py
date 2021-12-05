@@ -122,7 +122,7 @@ SET_ZONES_DICT: Final = {
     vol.Optional(CONF_SPEED_PCT, default=50): vol.All(
         vol.Range(min=0, max=100), vol.Coerce(int)
     ),
-    vol.Optional(CONF_EFFECT, default=str(MultiColorEffects.STATIC.name)): vol.All(
+    vol.Optional(CONF_EFFECT, default=MultiColorEffects.STATIC.name.lower()): vol.All(
         cv.string, vol.In([effect.name.lower() for effect in MultiColorEffects])
     ),
 }
