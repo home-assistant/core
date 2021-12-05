@@ -25,7 +25,6 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.exceptions import HomeAssistantError
 
 from .const import CLIMATE, CLIMATE_SUPPORTED_FANSTATES, CLIMATE_SUPPORTED_MODES, DOMAIN
 from .entity import BalboaEntity
@@ -36,7 +35,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(
         [
             BalboaSpaClimate(
-                hass,
                 entry,
                 hass.data[DOMAIN][entry.entry_id],
                 CLIMATE,
@@ -52,9 +50,9 @@ class BalboaSpaClimate(BalboaEntity, ClimateEntity):
     _attr_fan_modes = CLIMATE_SUPPORTED_FANSTATES
     _attr_hvac_modes = CLIMATE_SUPPORTED_MODES
 
-    def __init__(self, hass, entry, client, devtype, num=None):
+    def __init__(self, entry, client, devtype, num=None):
         """Initialize the climate entity."""
-        super().__init__(hass, entry, client, devtype, num)
+        super().__init__(entry, client, devtype, num)
         self._balboa_to_ha_blower_map = {
             self._client.BLOWER_OFF: FAN_OFF,
             self._client.BLOWER_LOW: FAN_LOW,
@@ -137,7 +135,7 @@ class BalboaSpaClimate(BalboaEntity, ClimateEntity):
         modelist = self._client.get_heatmode_stringlist()
         self._async_validate_mode_or_raise(preset_mode)
         if preset_mode not in modelist:
-            raise HomeAssistantError(f"{preset_mode} is not a valid preset mode")
+            raise ValueError(f"{preset_mode} is not a valid preset mode")
         await self._client.change_heatmode(modelist.index(preset_mode))
 
     async def async_set_fan_mode(self, fan_mode):
@@ -147,7 +145,7 @@ class BalboaSpaClimate(BalboaEntity, ClimateEntity):
     def _async_validate_mode_or_raise(self, mode):
         """Check that the mode can be set."""
         if mode == self._client.HEATMODE_RNR:
-            raise HomeAssistantError(f"{mode} can only be reported but not set")
+            raise ValueError(f"{mode} can only be reported but not set")
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode.

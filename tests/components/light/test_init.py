@@ -898,16 +898,6 @@ async def test_light_brightness_pct_conversion(hass, enable_custom_integrations)
     assert data["brightness"] == 255
 
 
-def test_deprecated_base_class(caplog):
-    """Test deprecated base class."""
-
-    class CustomLight(light.Light):
-        pass
-
-    CustomLight()
-    assert "Light is deprecated, modify CustomLight" in caplog.text
-
-
 async def test_profiles(hass):
     """Test profiles loading."""
     profiles = orig_Profiles(hass)

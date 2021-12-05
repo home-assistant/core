@@ -384,7 +384,7 @@ beautifulsoup4==4.10.0
 bellows==0.29.0
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.8.2
+bimmer_connected==0.8.5
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
@@ -735,7 +735,7 @@ google-cloud-pubsub==2.1.0
 google-cloud-texttospeech==0.4.0
 
 # homeassistant.components.nest
-google-nest-sdm==0.4.0
+google-nest-sdm==0.4.2
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -1613,7 +1613,7 @@ pylitterbot==2021.11.0
 pyloopenergy==0.2.1
 
 # homeassistant.components.lutron_caseta
-pylutron-caseta==0.12.0
+pylutron-caseta==0.13.0
 
 # homeassistant.components.lutron
 pylutron==0.2.8
@@ -1665,6 +1665,9 @@ pynetgear==0.7.0
 
 # homeassistant.components.netio
 pynetio==0.1.9.1
+
+# homeassistant.components.nina
+pynina==0.1.4
 
 # homeassistant.components.nuki
 pynuki==1.4.1

@@ -131,7 +131,6 @@ async def async_setup_entry(
     devices = bridge.get_devices()
     bridge_device = devices[BRIDGE_DEVICE_ID]
     buttons = bridge.buttons
-    _LOGGER.debug("Buttons: %s", buttons)
     _async_register_bridge_device(hass, entry_id, bridge_device)
     button_devices = _async_register_button_devices(
         hass, entry_id, bridge_device, buttons
