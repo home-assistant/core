@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_token": "Token",
+                    "name": "Name"
+                },
+                "description": "Refer to the documentation on getting your Discord bot key.\n\nhttps://www.home-assistant.io/integrations/discord",
+                "title": "Discord Notifications"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "api_token": "Token"
+                },
+                "description": "Refer to the documentation on getting your Discord bot key.\n\nhttps://www.home-assistant.io/integrations/discord",
+                "title": "Discord Notifications"
+            }
+        }
+    }
+}

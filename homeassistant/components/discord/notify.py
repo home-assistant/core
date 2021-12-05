@@ -1,4 +1,6 @@
 """Discord platform for notify component."""
+from __future__ import annotations
+
 import logging
 import os.path
 
@@ -12,7 +14,9 @@ from homeassistant.components.notify import (
     BaseNotificationService,
 )
 from homeassistant.const import CONF_TOKEN
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,13 +27,19 @@ ATTR_EMBED_FOOTER = "footer"
 ATTR_EMBED_THUMBNAIL = "thumbnail"
 ATTR_IMAGES = "images"
 
+# Deprecated in Home Assistant 2022.1
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_TOKEN): cv.string})
 
 
-def get_service(hass, config, discovery_info=None):
-    """Get the Discord notification service."""
-    token = config[CONF_TOKEN]
-    return DiscordNotificationService(hass, token)
+async def async_get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> DiscordNotificationService:
+    """Get the NFAndroidTV notification service."""
+    if discovery_info is not None:
+        return DiscordNotificationService(hass, discovery_info[CONF_TOKEN])
+    return DiscordNotificationService(hass, config[CONF_TOKEN])
 
 
 class DiscordNotificationService(BaseNotificationService):
@@ -103,6 +113,6 @@ class DiscordNotificationService(BaseNotificationService):
                 # Must create new instances of File for each channel.
                 files = [discord.File(image) for image in images] if images else None
                 await channel.send(message, files=files, embed=embed)
-        except (discord.HTTPException, discord.NotFound) as error:
-            _LOGGER.warning("Communication error: %s", error)
+        except (discord.HTTPException, discord.NotFound) as ex:
+            _LOGGER.warning("Communication error: %s", ex)
         await discord_bot.close()

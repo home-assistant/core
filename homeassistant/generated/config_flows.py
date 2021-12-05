@@ -66,6 +66,7 @@ FLOWS = [
     "dexcom",
     "dialogflow",
     "directv",
+    "discord",
     "dlna_dmr",
     "doorbird",
     "dsmr",
