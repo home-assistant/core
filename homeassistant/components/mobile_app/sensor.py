@@ -8,6 +8,7 @@ from homeassistant.const import (
     CONF_WEBHOOK_ID,
     DEVICE_CLASS_DATE,
     DEVICE_CLASS_TIMESTAMP,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import callback
 from homeassistant.helpers import entity_registry as er
@@ -88,9 +89,11 @@ class MobileAppSensor(MobileAppEntity, SensorEntity):
     @property
     def native_value(self):
         """Return the state of the sensor."""
+        if (state := self._config[ATTR_SENSOR_STATE]) in (None, STATE_UNKNOWN):
+            return None
+
         if (
-            (state := self._config[ATTR_SENSOR_STATE]) is not None
-            and self.device_class
+            self.device_class
             in (
                 DEVICE_CLASS_DATE,
                 DEVICE_CLASS_TIMESTAMP,
