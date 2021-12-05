@@ -1613,7 +1613,7 @@ pylitterbot==2021.11.0
 pyloopenergy==0.2.1
 
 # homeassistant.components.lutron_caseta
-pylutron-caseta==0.12.0
+pylutron-caseta==0.13.0
 
 # homeassistant.components.lutron
 pylutron==0.2.8
