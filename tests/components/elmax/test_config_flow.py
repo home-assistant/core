@@ -101,6 +101,28 @@ async def test_connection_error(hass):
         assert result["errors"] == {"base": "network_error"}
 
 
+async def test_unhandled_error(hass):
+    """Test unhandled exceptions."""
+    conf = {
+        CONF_ELMAX_PANEL_NAME: MOCK_PANEL_NAME,
+        CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
+    }
+
+    flow = config_flow.ConfigFlow()
+    flow.hass = hass
+
+    # Perform first step (user) to set up ConfigFlow internal state objects.
+    user_input = {CONF_ELMAX_USERNAME: MOCK_USERNAME, CONF_ELMAX_PASSWORD: "password"}
+    await flow.async_step_user(user_input=user_input)
+
+    with patch(
+        "elmax_api.http.Elmax.get_panel_status",
+        side_effect=Exception(),
+    ):
+        result = await flow.async_step_panels(user_input=conf)
+        assert result["errors"] == {"base": "unknown_error"}
+
+
 async def test_invalid_pin(hass):
     """Test error is thrown when a wrong pin is used to pair a panel."""
     flow = config_flow.ConfigFlow()
@@ -121,6 +143,25 @@ async def test_invalid_pin(hass):
         }
         step_panels_result = await flow.async_step_panels(user_input=user_input)
         assert step_panels_result["errors"] == {"base": "invalid_pin"}
+
+
+async def test_no_online_panel(hass):
+    """Test no-online panel is available."""
+    flow = config_flow.ConfigFlow()
+    flow.hass = hass
+
+    # Simulate low-level api returns no panels.
+    with patch(
+        "elmax_api.http.Elmax.list_control_panels",
+        return_value=[],
+    ):
+        # Perform first step (user) to setup ConfigFlow internal state objects.
+        user_input = {
+            CONF_ELMAX_USERNAME: MOCK_USERNAME,
+            CONF_ELMAX_PASSWORD: "password",
+        }
+        result = await flow.async_step_user(user_input=user_input)
+        assert result["errors"] == {"base": "no_panel_online"}
 
 
 async def test_step_user(hass):
@@ -146,6 +187,16 @@ async def test_step_user(hass):
         CONF_ELMAX_USERNAME: MOCK_USERNAME,
         CONF_ELMAX_PASSWORD: "password",
     }
+
+
+async def test_step_panels_missing_input(hass):
+    """Test that the user step works."""
+    flow = config_flow.ConfigFlow()
+    flow.hass = hass
+
+    step_panels_result = await flow.async_step_panels(user_input=None)
+    assert step_panels_result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert step_panels_result["step_id"] == "user"
 
 
 async def test_step_reauth(hass):
