@@ -157,6 +157,7 @@ def _async_register_bridge_device(
         config_entry_id=config_entry_id,
         identifiers={(DOMAIN, bridge_device["serial"])},
         model=f"{bridge_device['model']} ({bridge_device['type']})",
+        configuration_url="https://device-login.lutron.com",
     )
 
 
