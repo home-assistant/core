@@ -215,9 +215,19 @@ def _async_subscribe_pico_remote_events(
 
         type_ = device["type"]
         name = device["name"]
+        import pprint
+
         # The original implementation used LIP instead of LEAP
         # so we need to convert the button number to maintain compat
         leap_to_lip_button_numbers = list(DEVICE_TYPE_SUBTYPE_MAP[type_])
+        pprint.pprint(
+            [
+                device["button_number"],
+                DEVICE_TYPE_SUBTYPE_MAP[type_],
+                leap_to_lip_button_numbers,
+            ]
+        )
+
         hass.bus.async_fire(
             LUTRON_CASETA_BUTTON_EVENT,
             {
