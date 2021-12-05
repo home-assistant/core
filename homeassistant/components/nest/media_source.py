@@ -46,7 +46,7 @@ from homeassistant.components.nest.const import DATA_SUBSCRIBER, DOMAIN
 from homeassistant.components.nest.device_info import NestDeviceInfo
 from homeassistant.components.nest.events import MEDIA_SOURCE_EVENT_TITLE_MAP
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers.template import DATE_STR_FORMAT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -250,7 +250,7 @@ def _browse_event(
         media_content_type=MEDIA_TYPE_IMAGE,
         title=CLIP_TITLE_FORMAT.format(
             event_name=MEDIA_SOURCE_EVENT_TITLE_MAP.get(event.event_type, "Event"),
-            event_time=dt_util.as_local(event.timestamp),
+            event_time=event.timestamp.strftime(DATE_STR_FORMAT),
         ),
         can_play=True,
         can_expand=False,
