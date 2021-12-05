@@ -255,6 +255,7 @@ omit =
     homeassistant/components/eliqonline/sensor.py
     homeassistant/components/elkm1/*
     homeassistant/components/elmax/__init__.py
+    homeassistant/components/elmax/common.py
     homeassistant/components/elmax/const.py
     homeassistant/components/elmax/switch.py
     homeassistant/components/elv/*
