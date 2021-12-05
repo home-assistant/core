@@ -353,6 +353,7 @@ homeassistant/components/nextcloud/* @meichthys
 homeassistant/components/nfandroidtv/* @tkdrob
 homeassistant/components/nightscout/* @marciogranzotto
 homeassistant/components/nilu/* @hfurubotten
+homeassistant/components/nina/* @DeerMaximum
 homeassistant/components/nissan_leaf/* @filcole
 homeassistant/components/nmap_tracker/* @bdraco
 homeassistant/components/nmbs/* @thibmaek
