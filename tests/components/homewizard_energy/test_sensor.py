@@ -33,7 +33,6 @@ from homeassistant.const import (
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TIMESTAMP,
     ENERGY_KILO_WATT_HOUR,
-    PERCENTAGE,
     POWER_WATT,
     VOLUME_CUBIC_METERS,
 )
@@ -178,18 +177,10 @@ async def test_sensor_entity_wifi_strength(
 
     entity_registry = er.async_get(hass)
 
-    state = hass.states.get("sensor.custom_name_wifi_strength")
     entry = entity_registry.async_get("sensor.custom_name_wifi_strength")
     assert entry
-    assert state
     assert entry.unique_id == "aabbccddeeff_wifi_strength"
-    assert not entry.disabled
-    assert state.state == "42"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Custom Name Wifi Strength"
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
-    assert ATTR_DEVICE_CLASS not in state.attributes
-    assert state.attributes.get(ATTR_ICON) == "mdi:wifi"
+    assert entry.disabled
 
 
 async def test_sensor_entity_total_power_import_t1_kwh(

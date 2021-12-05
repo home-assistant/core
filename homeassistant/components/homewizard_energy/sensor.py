@@ -76,6 +76,7 @@ SENSORS: Final[tuple[SensorEntityDescription, ...]] = (
         native_unit_of_measurement=PERCENTAGE,
         state_class=STATE_CLASS_MEASUREMENT,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key=ATTR_TOTAL_ENERGY_IMPORT_T1_KWH,
