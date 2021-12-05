@@ -4,6 +4,7 @@ Support for interacting with Ais Files.
 For more details about this platform, please refer to the documentation at
 https://www.ai-speaker.com/
 """
+from http import HTTPStatus
 import json
 import logging
 import os
@@ -12,15 +13,15 @@ from PIL import Image
 from aiohttp.web import FileResponse, Request, Response
 from sqlalchemy import create_engine
 from sqlalchemy.pool import StaticPool
+import voluptuous as vol
 
 import homeassistant.components.ais_dom.ais_global as ais_global
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.const import HTTP_BAD_REQUEST
-import voluptuous as vol
-from . import sensor
-from .const import DOMAIN
 from homeassistant.const import CONF_DOMAINS, CONF_ENTITIES
 from homeassistant.helpers import config_validation as cv
+
+from . import sensor
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -302,7 +303,7 @@ class FileReadView(HomeAssistantView):
         try:
             data = await request.json()
         except ValueError:
-            return self.json_message("Invalid JSON", HTTP_BAD_REQUEST)
+            return self.json_message("Invalid JSON", HTTPStatus.BAD_REQUEST)
         file_path = data["filePath"]
         if file_path == "/data/data/pl.sviete.dom/files/home/AIS/ais_welcome.txt":
             if not os.path.isfile(file_path):
@@ -323,7 +324,7 @@ class FileWriteView(HomeAssistantView):
         try:
             data = await request.json()
         except ValueError:
-            return self.json_message("Invalid JSON", HTTP_BAD_REQUEST)
+            return self.json_message("Invalid JSON", HTTPStatus.BAD_REQUEST)
 
         file_path = data["filePath"]
         file_body = data["fileBody"]
@@ -362,21 +363,35 @@ class AisDbConfigView(HomeAssistantView):
             "dbShowHistory": message.get("dbShowHistory", False),
             "dbUrl": "",
             "dbInclude": message.get("dbInclude", ais_global.G_AIS_INCLUDE_DB_DEFAULT),
-            "dbExclude": message.get("dbExclude", ais_global.G_AIS_EXCLUDE_DB_DEFAULT_EMPTY),
+            "dbExclude": message.get(
+                "dbExclude", ais_global.G_AIS_EXCLUDE_DB_DEFAULT_EMPTY
+            ),
         }
 
         # 0 validate filters
-        filter_schema_include = vol.Schema({
-            vol.Optional(CONF_DOMAINS, default=[]): vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional("entity_globs", default=[]): vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional("entities", default=[]): cv.entity_ids,
-        }
-        )
-        filter_schema_exclude = vol.Schema({
-                vol.Optional(CONF_DOMAINS, default=[]): vol.All(cv.ensure_list, [cv.string]),
-                vol.Optional("entity_globs", default=[]): vol.All(cv.ensure_list, [cv.string]),
+        filter_schema_include = vol.Schema(
+            {
+                vol.Optional(CONF_DOMAINS, default=[]): vol.All(
+                    cv.ensure_list, [cv.string]
+                ),
+                vol.Optional("entity_globs", default=[]): vol.All(
+                    cv.ensure_list, [cv.string]
+                ),
                 vol.Optional("entities", default=[]): cv.entity_ids,
-                vol.Optional("event_types", default=[]): vol.All(cv.ensure_list, [cv.string]),
+            }
+        )
+        filter_schema_exclude = vol.Schema(
+            {
+                vol.Optional(CONF_DOMAINS, default=[]): vol.All(
+                    cv.ensure_list, [cv.string]
+                ),
+                vol.Optional("entity_globs", default=[]): vol.All(
+                    cv.ensure_list, [cv.string]
+                ),
+                vol.Optional("entities", default=[]): cv.entity_ids,
+                vol.Optional("event_types", default=[]): vol.All(
+                    cv.ensure_list, [cv.string]
+                ),
             }
         )
         try:
@@ -436,9 +451,7 @@ class AisDbConfigView(HomeAssistantView):
                         + " selected for recording!"
                     )
             elif db_connection["dbEngine"] == "PostgreSQL (local)":
-                db_connection["dbUrl"] = (
-                        "postgresql://ais:dom@127.0.0.1/ha"
-                    )
+                db_connection["dbUrl"] = "postgresql://ais:dom@127.0.0.1/ha"
                 db_connection["dbPassword"] = "dom"
                 db_connection["dbUser"] = "ais"
                 db_connection["dbServerIp"] = "127.0.0.1"
@@ -447,7 +460,10 @@ class AisDbConfigView(HomeAssistantView):
                 db_user_pass = ""
                 if db_connection["dbUser"] + db_connection["dbPassword"] != "":
                     db_user_pass = (
-                        db_connection["dbUser"] + ":" + db_connection["dbPassword"] + "@"
+                        db_connection["dbUser"]
+                        + ":"
+                        + db_connection["dbPassword"]
+                        + "@"
                     )
 
                 if db_connection["dbEngine"] == "MariaDB":
@@ -499,9 +515,14 @@ class AisDbConfigView(HomeAssistantView):
             except Exception as e:
                 _LOGGER.warning("Exception:" + str(e))
                 if db_connection["dbEngine"] == "PostgreSQL (local)":
-                    _LOGGER.warning("Install the PostgreSQL. See the instruction on AI-Speaker.com page.")
-                    error_info = "Problem z połączeniem do bazy. Sprawdź/wykonaj instalację bazy PostgreSQL. " \
-                                 "Szczegółowa instrukcja na stronie AI-Speaker.com. Komunikat błędu: " + str(e)
+                    _LOGGER.warning(
+                        "Install the PostgreSQL. See the instruction on AI-Speaker.com page."
+                    )
+                    error_info = (
+                        "Problem z połączeniem do bazy. Sprawdź/wykonaj instalację bazy PostgreSQL. "
+                        "Szczegółowa instrukcja na stronie AI-Speaker.com. Komunikat błędu: "
+                        + str(e)
+                    )
                 else:
                     error_info = "Błąd konfiguracji zapisu do bazy " + str(e)
 
@@ -549,6 +570,7 @@ class AisDbConfigView(HomeAssistantView):
 
 class AisUsbConfigView(HomeAssistantView):
     """View to write the usb settings."""
+
     requires_auth = False
 
     url = "/api/ais_file/ais_usb_view"
@@ -577,7 +599,7 @@ class AisUsbConfigView(HomeAssistantView):
                 "usbVoiceNotification": voice_notification,
             }
             with open(
-                    hass.config.config_dir + ais_global.G_USB_SETTINGS_INFO_FILE, "w"
+                hass.config.config_dir + ais_global.G_USB_SETTINGS_INFO_FILE, "w"
             ) as outfile:
                 json.dump(usb_settings, outfile)
 

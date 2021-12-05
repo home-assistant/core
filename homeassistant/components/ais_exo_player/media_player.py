@@ -418,7 +418,7 @@ class ExoPlayerDevice(MediaPlayerEntity):
         return int(position)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the specific state attributes of the player."""
         attr = {
             "device_ip": self._device_ip,
