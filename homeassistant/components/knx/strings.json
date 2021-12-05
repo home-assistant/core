@@ -19,7 +19,8 @@
           "port": "[%key:common::config_flow::data::port%]",
           "host": "[%key:common::config_flow::data::host%]",
           "individual_address": "Individual address for the connection",
-          "route_back": "Route Back / NAT Mode"
+          "route_back": "Route Back / NAT Mode",
+          "local_ip": "Local IP (leave empty if unsure)"
         }
       },
       "routing": {
@@ -55,7 +56,8 @@
         "data": {
           "port": "[%key:common::config_flow::data::port%]",
           "host": "[%key:common::config_flow::data::host%]",
-          "route_back": "Route Back / NAT Mode"
+          "route_back": "Route Back / NAT Mode",
+          "local_ip": "Local IP (leave empty if unsure)"
         }
       }
     }
