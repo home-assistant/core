@@ -18,8 +18,6 @@ from homeassistant.components.elmax.const import (
     CONF_ELMAX_USERNAME,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_USER, ConfigEntry
-from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
@@ -60,25 +58,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._password: str = None
         self._panels_schema = None
         self._panel_names = None
-
-    @callback
-    def _async_current_entries(
-        self, include_ignore: bool | None = None
-    ) -> list[ConfigEntry]:
-        """Return current entries.
-
-        If the flow is user initiated, filter out ignored entries unless include_ignore is True.
-        """
-        conf_entries = self.hass.config_entries.async_entries(self.handler)
-
-        if (
-            include_ignore is True
-            or include_ignore is None
-            and self.source != SOURCE_USER
-        ):
-            return conf_entries
-
-        return [entry for entry in conf_entries if entry.source != SOURCE_IGNORE]
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
