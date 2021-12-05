@@ -76,7 +76,7 @@
             "device_flipped": "\u30c7\u30d0\u30a4\u30b9\u304c\u53cd\u8ee2\u3057\u307e\u3057\u305f \"{subtype}\"",
             "device_knocked": "\u30c7\u30d0\u30a4\u30b9\u304c\u30ce\u30c3\u30af\u3055\u308c\u307e\u3057\u305f \"{subtype}\"",
             "device_offline": "\u30c7\u30d0\u30a4\u30b9\u304c\u30aa\u30d5\u30e9\u30a4\u30f3",
-            "device_rotated": "\u30c7\u30d0\u30a4\u30b9\u304c\u56de\u8ee2\u3057\u307e\u3057\u305f \"{subtype}\"",
+            "device_rotated": "\u30c7\u30d0\u30a4\u30b9\u304c\u56de\u8ee2\u3057\u305f \"{subtype}\"",
             "device_shaken": "\u30c7\u30d0\u30a4\u30b9\u304c\u63fa\u308c\u308b",
             "device_slid": "\u30c7\u30d0\u30a4\u30b9 \u30b9\u30e9\u30a4\u30c9 \"{subtype}\"",
             "device_tilted": "\u30c7\u30d0\u30a4\u30b9\u304c\u50be\u3044\u3066\u3044\u308b",
