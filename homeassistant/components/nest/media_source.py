@@ -137,7 +137,7 @@ class NestMediaSource(MediaSource):
             raise Unresolvable(
                 "Unable to find device with identifier: %s" % item.identifier
             )
-        events = _get_events(device)
+        events = await _get_events(device)
         if media_id.event_id not in events:
             raise Unresolvable(
                 "Unable to find event with identifier: %s" % item.identifier
@@ -180,7 +180,7 @@ class NestMediaSource(MediaSource):
             # Browse a specific device and return child events
             browse_device = _browse_device(media_id, device)
             browse_device.children = []
-            events = _get_events(device)
+            events = await _get_events(device)
             for child_event in events.values():
                 event_id = MediaId(media_id.device_id, child_event.event_id)
                 browse_device.children.append(
@@ -189,7 +189,7 @@ class NestMediaSource(MediaSource):
             return browse_device
 
         # Browse a specific event
-        events = _get_events(device)
+        events = await _get_events(device)
         if not (event := events.get(media_id.event_id)):
             raise BrowseError(
                 "Unable to find event with identiifer: %s" % item.identifier
@@ -201,9 +201,10 @@ class NestMediaSource(MediaSource):
         return await get_media_source_devices(self.hass)
 
 
-def _get_events(device: Device) -> Mapping[str, ImageEventBase]:
+async def _get_events(device: Device) -> Mapping[str, ImageEventBase]:
     """Return relevant events for the specified device."""
-    return OrderedDict({e.event_id: e for e in device.event_media_manager.events})
+    events = await device.event_media_manager.async_events()
+    return OrderedDict({e.event_id: e for e in events})
 
 
 def _browse_root() -> BrowseMediaSource:
