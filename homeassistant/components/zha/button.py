@@ -1,0 +1,82 @@
+"""Support for WLED button."""
+from __future__ import annotations
+
+import functools
+from typing import Any
+
+from homeassistant.components.button import DOMAIN, ButtonDeviceClass, ButtonEntity
+from homeassistant.components.zha.core.registries import ZHA_ENTITIES
+from homeassistant.components.zha.core.typing import ChannelType, ZhaDeviceType
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from .core import discovery
+from .core.const import CHANNEL_IDENTIFY, DATA_ZHA, SIGNAL_ADD_ENTITIES
+from .entity import ZhaEntity
+
+MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, DOMAIN)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the Zigbee Home Automation button from config entry."""
+    entities_to_create = hass.data[DATA_ZHA][DOMAIN]
+
+    unsub = async_dispatcher_connect(
+        hass,
+        SIGNAL_ADD_ENTITIES,
+        functools.partial(
+            discovery.async_add_entities,
+            async_add_entities,
+            entities_to_create,
+            update_before_add=False,
+        ),
+    )
+    config_entry.async_on_unload(unsub)
+
+
+class ZHAButton(ZhaEntity, ButtonEntity):
+    """Defines a ZHA button."""
+
+    _attr_device_class = ButtonDeviceClass.UPDATE
+    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
+    _command_name = None
+
+    def __init__(
+        self,
+        unique_id: str,
+        zha_device: ZhaDeviceType,
+        channels: list[ChannelType],
+        **kwargs,
+    ) -> None:
+        """Init this button."""
+        super().__init__(unique_id, zha_device, channels, **kwargs)
+        self._channel = channels[0]
+
+    def get_args(self) -> list[Any]:
+        """Return the arguments to use in the command."""
+
+    async def async_press(self) -> None:
+        """Send out a update command."""
+        if self._command_name:
+            command = getattr(self._channel, self._command_name)
+            if command is not None:
+                await command(*self.get_args())
+
+
+@MULTI_MATCH(channel_names=CHANNEL_IDENTIFY)
+class ZHAIdentifyButton(ZHAButton):
+    """Defines a ZHA identify button."""
+
+    _command_name = "identify"
+
+    def get_args(self) -> list[Any]:
+        """Return the arguments to use in the command."""
+
+        return [5]
