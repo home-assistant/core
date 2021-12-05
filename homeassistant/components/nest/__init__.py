@@ -86,8 +86,9 @@ PLATFORMS = ["sensor", "camera", "climate"]
 WEB_AUTH_DOMAIN = DOMAIN
 INSTALLED_AUTH_DOMAIN = f"{DOMAIN}.installed"
 
-# Media items for events are fetched and cached in memory. This is a few
-# megabytes per camera even for the 10-frame mp4 clips which are ~90kb each
+# Fetch media for events with an in memory cache. The largest media items
+# are mp4 clips at ~90kb each, so this totals a few MB per camera.
+# Note: Media for events can only be published within 30 seconds of the event
 EVENT_MEDIA_CACHE_SIZE = 64
 
 
