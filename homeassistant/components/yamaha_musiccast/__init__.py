@@ -30,7 +30,7 @@ from .const import (
     ENTITY_CATEGORY_MAPPING,
 )
 
-PLATFORMS = [Platform.MEDIA_PLAYER, Platform.NUMBER]
+PLATFORMS = [Platform.MEDIA_PLAYER, Platform.NUMBER, Platform.SELECT]
 
 _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=60)
