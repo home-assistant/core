@@ -34,7 +34,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     regions: dict[str, str] = entry.data[CONF_REGIONS]
 
-    coordinator = NINADataUpdateCoordinator(hass, regions, entry.data[CONF_FILTER_CORONA])
+    coordinator = NINADataUpdateCoordinator(
+        hass, regions, entry.data[CONF_FILTER_CORONA]
+    )
 
     await coordinator.async_config_entry_first_refresh()
 
