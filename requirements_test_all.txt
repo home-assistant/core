@@ -139,9 +139,6 @@ aiohue==3.0.1
 # homeassistant.components.apache_kafka
 aiokafka==0.6.0
 
-# homeassistant.components.lutron_caseta
-aiolip==1.1.6
-
 # homeassistant.components.lookin
 aiolookin==0.0.4
 
