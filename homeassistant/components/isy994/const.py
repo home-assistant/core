@@ -128,19 +128,19 @@ KEY_STATUS = "status"
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
-    Platform.SENSOR,
-    Platform.LOCK,
-    Platform.FAN,
-    Platform.COVER,
-    Platform.LIGHT,
-    Platform.SWITCH,
     Platform.CLIMATE,
+    Platform.COVER,
+    Platform.FAN,
+    Platform.LIGHT,
+    Platform.LOCK,
+    Platform.SENSOR,
+    Platform.SWITCH,
 ]
 PROGRAM_PLATFORMS = [
     Platform.BINARY_SENSOR,
-    Platform.LOCK,
-    Platform.FAN,
     Platform.COVER,
+    Platform.FAN,
+    Platform.LOCK,
     Platform.SWITCH,
 ]
 

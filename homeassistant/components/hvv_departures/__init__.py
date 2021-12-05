@@ -8,7 +8,7 @@ from homeassistant.helpers import aiohttp_client
 from .const import DOMAIN
 from .hub import GTIHub
 
-PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

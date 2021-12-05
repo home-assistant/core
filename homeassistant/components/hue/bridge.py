@@ -26,12 +26,12 @@ from .v2.hue_event import async_setup_hue_events
 # How long should we sleep if the hub is busy
 HUB_BUSY_SLEEP = 0.5
 
-PLATFORMS_v1 = [Platform.LIGHT, Platform.BINARY_SENSOR, Platform.SENSOR]
+PLATFORMS_v1 = [Platform.BINARY_SENSOR, Platform.LIGHT, Platform.SENSOR]
 PLATFORMS_v2 = [
-    Platform.LIGHT,
     Platform.BINARY_SENSOR,
-    Platform.SENSOR,
+    Platform.LIGHT,
     Platform.SCENE,
+    Platform.SENSOR,
     Platform.SWITCH,
 ]
 
