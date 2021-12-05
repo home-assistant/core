@@ -41,7 +41,10 @@ from .const import (
     LUTRON_CASETA_BUTTON_EVENT,
     MANUFACTURER,
 )
-from .device_trigger import DEVICE_TYPE_SUBTYPE_MAP, LEAP_DEVICE_TYPE_SUBTYPE_MAP
+from .device_trigger import (
+    DEVICE_TYPE_SUBTYPE_MAP_TO_LIP,
+    LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -221,19 +224,18 @@ def _async_subscribe_pico_remote_events(
         button_number = device["button_number"]
         # The original implementation used LIP instead of LEAP
         # so we need to convert the button number to maintain compat
-        lip_buttons = DEVICE_TYPE_SUBTYPE_MAP[type_]
-        leap_buttons = LEAP_DEVICE_TYPE_SUBTYPE_MAP[type_]
-        leap_button_number_to_name = {v: k for k, v in leap_buttons.items()}
-        if (button_name := leap_button_number_to_name.get(button_number)) is None:
+        sub_type_to_lip_button = DEVICE_TYPE_SUBTYPE_MAP_TO_LIP[type_]
+        leap_button_to_sub_type = LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP[type_]
+        if (sub_type := leap_button_to_sub_type.get(button_number)) is None:
             _LOGGER.error(
                 "Unknown LEAP button number %s is not in %s for %s (%s)",
                 button_number,
-                leap_button_number_to_name,
+                leap_button_to_sub_type,
                 name,
                 type_,
             )
             return
-        lip_button_number = lip_buttons[button_name]
+        lip_button_number = sub_type_to_lip_button[sub_type]
 
         hass.bus.async_fire(
             LUTRON_CASETA_BUTTON_EVENT,
