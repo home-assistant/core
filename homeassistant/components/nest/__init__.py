@@ -210,6 +210,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     subscriber = await api.new_subscriber(hass, entry)
     if not subscriber:
         return False
+    # Keep media for last N events in memory
+    subscriber.cache_policy.event_cache_size = EVENT_MEDIA_CACHE_SIZE
+    subscriber.cache_policy.fetch = True
 
     callback = SignalUpdateCallback(hass)
     subscriber.set_update_callback(callback.async_handle_event)
@@ -230,17 +233,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from err
 
     try:
-        device_manager = await subscriber.async_get_device_manager()
+        await subscriber.async_get_device_manager()
     except GoogleNestException as err:
         if DATA_NEST_UNAVAILABLE not in hass.data[DOMAIN]:
             _LOGGER.error("Device manager error: %s", err)
             hass.data[DOMAIN][DATA_NEST_UNAVAILABLE] = True
         subscriber.stop_async()
         raise ConfigEntryNotReady from err
-
-    # Keep media for last N events in memory
-    device_manager.cache_policy.event_cache_size = EVENT_MEDIA_CACHE_SIZE
-    device_manager.cache_policy.fetch = True
 
     hass.data[DOMAIN].pop(DATA_NEST_UNAVAILABLE, None)
     hass.data[DOMAIN][DATA_SUBSCRIBER] = subscriber
