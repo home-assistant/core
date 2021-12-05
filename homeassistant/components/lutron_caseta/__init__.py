@@ -39,6 +39,7 @@ from .const import (
     LUTRON_CASETA_BUTTON_EVENT,
     MANUFACTURER,
 )
+from .device_trigger import DEVICE_TYPE_SUBTYPE_MAP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -212,13 +213,31 @@ def _async_subscribe_pico_remote_events(
         else:
             action = ACTION_RELEASE
 
+        type_ = device["type"]
         name = device["name"]
+        button_idx = device["button_number"]
+        # The original implementation used LIP instead of LEAP
+        # so we need to convert the button number to maintain compat
+        lip_buttons = DEVICE_TYPE_SUBTYPE_MAP[type_]
+        leap_to_lip_button_numbers = list(lip_buttons.values())
+
+        if button_idx >= len(leap_to_lip_button_numbers):
+            _LOGGER.error(
+                "Could not translate leap button index %s to lip button number: %s for %s (%s)",
+                button_idx,
+                lip_buttons,
+                name,
+                type_,
+            )
+            return
+        lip_button = leap_to_lip_button_numbers[button_idx]
+
         hass.bus.async_fire(
             LUTRON_CASETA_BUTTON_EVENT,
             {
                 ATTR_SERIAL: device["serial"],
-                ATTR_TYPE: device["type"],
-                ATTR_BUTTON_NUMBER: device["button_number"],
+                ATTR_TYPE: type_,
+                ATTR_BUTTON_NUMBER: lip_button,
                 ATTR_DEVICE_NAME: name,
                 ATTR_AREA_NAME: name.split("_")[0],
                 ATTR_ACTION: action,

@@ -47,8 +47,8 @@ LUTRON_BUTTON_TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 
 
 PICO_2_BUTTON_BUTTON_TYPES = {
-    "on": 1,
-    "off": 2,
+    "on": 2,
+    "off": 4,
 }
 PICO_2_BUTTON_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
     {
@@ -58,10 +58,10 @@ PICO_2_BUTTON_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
 
 
 PICO_2_BUTTON_RAISE_LOWER_BUTTON_TYPES = {
-    "on": 1,
-    "off": 2,
-    "raise": 3,
-    "lower": 4,
+    "on": 2,
+    "off": 4,
+    "raise": 5,
+    "lower": 6,
 }
 PICO_2_BUTTON_RAISE_LOWER_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
     {
@@ -71,9 +71,9 @@ PICO_2_BUTTON_RAISE_LOWER_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
 
 
 PICO_3_BUTTON_BUTTON_TYPES = {
-    "on": 1,
-    "stop": 2,
-    "off": 3,
+    "on": 2,
+    "stop": 3,
+    "off": 4,
 }
 PICO_3_BUTTON_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
     {
@@ -82,11 +82,11 @@ PICO_3_BUTTON_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
 )
 
 PICO_3_BUTTON_RAISE_LOWER_BUTTON_TYPES = {
-    "on": 0,
-    "stop": 1,
-    "off": 2,
-    "raise": 3,
-    "lower": 4,
+    "on": 2,
+    "stop": 3,
+    "off": 4,
+    "raise": 5,
+    "lower": 6,
 }
 PICO_3_BUTTON_RAISE_LOWER_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
     {
@@ -95,10 +95,10 @@ PICO_3_BUTTON_RAISE_LOWER_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
 )
 
 PICO_4_BUTTON_BUTTON_TYPES = {
-    "button_1": 1,
-    "button_2": 2,
-    "button_3": 3,
-    "button_4": 4,
+    "button_1": 8,
+    "button_2": 9,
+    "button_3": 10,
+    "button_4": 11,
 }
 PICO_4_BUTTON_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
     {
@@ -108,10 +108,10 @@ PICO_4_BUTTON_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
 
 
 PICO_4_BUTTON_ZONE_BUTTON_TYPES = {
-    "on": 1,
-    "raise": 2,
-    "lower": 3,
-    "off": 4,
+    "on": 8,
+    "raise": 9,
+    "lower": 10,
+    "off": 11,
 }
 PICO_4_BUTTON_ZONE_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
     {
@@ -121,10 +121,10 @@ PICO_4_BUTTON_ZONE_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
 
 
 PICO_4_BUTTON_SCENE_BUTTON_TYPES = {
-    "button_1": 1,
-    "button_2": 2,
-    "button_3": 3,
-    "off": 4,
+    "button_1": 8,
+    "button_2": 9,
+    "button_3": 10,
+    "off": 11,
 }
 PICO_4_BUTTON_SCENE_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
     {
@@ -134,10 +134,10 @@ PICO_4_BUTTON_SCENE_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
 
 
 PICO_4_BUTTON_2_GROUP_BUTTON_TYPES = {
-    "group_1_button_1": 1,
-    "group_1_button_2": 2,
-    "group_2_button_1": 3,
-    "group_2_button_2": 4,
+    "group_1_button_1": 8,
+    "group_1_button_2": 9,
+    "group_2_button_1": 10,
+    "group_2_button_2": 11,
 }
 PICO_4_BUTTON_2_GROUP_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
     {
@@ -146,31 +146,31 @@ PICO_4_BUTTON_2_GROUP_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
 )
 
 FOUR_GROUP_REMOTE_BUTTON_TYPES = {
-    "open_all": 1,
-    "stop_all": 2,
-    "close_all": 3,
-    "raise_all": 4,
-    "lower_all": 5,
-    "open_1": 6,
-    "stop_1": 7,
-    "close_1": 8,
-    "raise_1": 9,
-    "lower_1": 10,
-    "open_2": 11,
-    "stop_2": 12,
-    "close_2": 13,
-    "raise_2": 14,
-    "lower_2": 15,
-    "open_3": 16,
-    "stop_3": 17,
-    "close_3": 18,
-    "raise_3": 19,
-    "lower_3": 20,
-    "open_4": 21,
-    "stop_4": 22,
-    "close_4": 23,
-    "raise_4": 24,
-    "lower_4": 25,
+    "open_all": 2,
+    "stop_all": 3,
+    "close_all": 4,
+    "raise_all": 5,
+    "lower_all": 6,
+    "open_1": 10,
+    "stop_1": 11,
+    "close_1": 12,
+    "raise_1": 13,
+    "lower_1": 14,
+    "open_2": 18,
+    "stop_2": 19,
+    "close_2": 20,
+    "raise_2": 21,
+    "lower_2": 22,
+    "open_3": 26,
+    "stop_3": 27,
+    "close_3": 28,
+    "raise_3": 29,
+    "lower_3": 30,
+    "open_4": 34,
+    "stop_4": 35,
+    "close_4": 36,
+    "raise_4": 37,
+    "lower_4": 38,
 }
 FOUR_GROUP_REMOTE_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
     {
