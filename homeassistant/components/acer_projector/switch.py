@@ -111,8 +111,7 @@ class AcerSwitch(SwitchEntity):
         """Write msg, obtain answer and format output."""
         # answers are formatted as ***\answer\r***
         awns = self._write_read(msg)
-        match = re.search(r"\r(.+)\r", awns)
-        if match:
+        if match := re.search(r"\r(.+)\r", awns):
             return match.group(1)
         return STATE_UNKNOWN
 

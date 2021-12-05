@@ -30,8 +30,6 @@ CONF_SHOW_INACTIVE = "show_inactive"
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Tile as config entry."""
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {}
 
     @callback
     def async_migrate_callback(entity_entry: RegistryEntry) -> dict | None:
@@ -100,8 +98,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         coordinator_init_tasks.append(coordinator.async_refresh())
 
     await gather_with_concurrency(DEFAULT_INIT_TASK_LIMIT, *coordinator_init_tasks)
-    hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR] = coordinators
-    hass.data[DOMAIN][entry.entry_id][DATA_TILE] = tiles
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = {
+        DATA_COORDINATOR: coordinators,
+        DATA_TILE: tiles,
+    }
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 

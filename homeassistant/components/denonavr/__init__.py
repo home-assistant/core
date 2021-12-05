@@ -4,7 +4,7 @@ import logging
 from denonavr.exceptions import AvrNetworkError, AvrTimoutError
 
 from homeassistant import config_entries, core
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, Platform
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.httpx_client import get_async_client
@@ -23,7 +23,7 @@ from .receiver import ConnectDenonAVR
 
 CONF_RECEIVER = "receiver"
 UNDO_UPDATE_LISTENER = "undo_update_listener"
-PLATFORMS = ["media_player"]
+PLATFORMS = [Platform.MEDIA_PLAYER]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,7 +72,7 @@ async def async_unload_entry(
     hass.data[DOMAIN][config_entry.entry_id][UNDO_UPDATE_LISTENER]()
 
     # Remove zone2 and zone3 entities if needed
-    entity_registry = await er.async_get_registry(hass)
+    entity_registry = er.async_get(hass)
     entries = er.async_entries_for_config_entry(entity_registry, config_entry.entry_id)
     unique_id = config_entry.unique_id or config_entry.entry_id
     zone2_id = f"{unique_id}-Zone2"

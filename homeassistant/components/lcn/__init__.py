@@ -8,6 +8,8 @@ import pypck
 
 from homeassistant import config_entries
 from homeassistant.const import (
+    CONF_ADDRESS,
+    CONF_DOMAIN,
     CONF_IP_ADDRESS,
     CONF_NAME,
     CONF_PASSWORD,
@@ -16,16 +18,27 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_DIM_MODE, CONF_SK_NUM_TRIES, CONNECTION, DOMAIN, PLATFORMS
+from .const import (
+    CONF_DIM_MODE,
+    CONF_DOMAIN_DATA,
+    CONF_SK_NUM_TRIES,
+    CONNECTION,
+    DOMAIN,
+    PLATFORMS,
+)
 from .helpers import (
+    AddressType,
     DeviceConnectionType,
     InputType,
+    async_update_config_entry,
     generate_unique_id,
+    get_device_model,
     import_lcn_config,
+    register_lcn_address_devices,
+    register_lcn_host_device,
 )
 from .schemas import CONFIG_SCHEMA  # noqa: F401
 from .services import SERVICES
@@ -96,12 +109,12 @@ async def async_setup_entry(
     hass.data[DOMAIN][config_entry.entry_id] = {
         CONNECTION: lcn_connection,
     }
+    # Update config_entry with LCN device serials
+    await async_update_config_entry(hass, config_entry)
 
-    # remove orphans from entity registry which are in ConfigEntry but were removed
-    # from configuration.yaml
-    if config_entry.source == config_entries.SOURCE_IMPORT:
-        entity_registry = await er.async_get_registry(hass)
-        entity_registry.async_clear_config_entry(config_entry.entry_id)
+    # register/update devices for host, modules and groups in device registry
+    register_lcn_host_device(hass, config_entry)
+    register_lcn_address_devices(hass, config_entry)
 
     # forward config_entry to components
     hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
@@ -151,16 +164,37 @@ class LcnEntity(Entity):
         self._name: str = config[CONF_NAME]
 
     @property
+    def address(self) -> AddressType:
+        """Return LCN address."""
+        return (
+            self.device_connection.seg_id,
+            self.device_connection.addr_id,
+            self.device_connection.is_group,
+        )
+
+    @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        unique_device_id = generate_unique_id(
-            (
-                self.device_connection.seg_id,
-                self.device_connection.addr_id,
-                self.device_connection.is_group,
-            )
+        return generate_unique_id(
+            self.entry_id, self.address, self.config[CONF_RESOURCE]
         )
-        return f"{self.entry_id}-{unique_device_id}-{self.config[CONF_RESOURCE]}"
+
+    @property
+    def device_info(self) -> DeviceInfo | None:
+        """Return device specific attributes."""
+        address = f"{'g' if self.address[2] else 'm'}{self.address[0]:03d}{self.address[1]:03d}"
+        model = f"LCN {get_device_model(self.config[CONF_DOMAIN], self.config[CONF_DOMAIN_DATA])}"
+
+        return {
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "name": f"{address}.{self.config[CONF_RESOURCE]}",
+            "model": model,
+            "manufacturer": "Issendorff",
+            "via_device": (
+                DOMAIN,
+                generate_unique_id(self.entry_id, self.config[CONF_ADDRESS]),
+            ),
+        }
 
     @property
     def should_poll(self) -> bool:

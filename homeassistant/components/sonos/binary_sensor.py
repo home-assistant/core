@@ -33,21 +33,13 @@ class SonosPowerEntity(SonosEntity, BinarySensorEntity):
     """Representation of a Sonos power entity."""
 
     _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
+    _attr_device_class = DEVICE_CLASS_BATTERY_CHARGING
 
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID of the sensor."""
-        return f"{self.soco.uid}-power"
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return f"{self.speaker.zone_name} Power"
-
-    @property
-    def device_class(self) -> str:
-        """Return the entity's device class."""
-        return DEVICE_CLASS_BATTERY_CHARGING
+    def __init__(self, speaker: SonosSpeaker) -> None:
+        """Initialize the power entity binary sensor."""
+        super().__init__(speaker)
+        self._attr_unique_id = f"{self.soco.uid}-power"
+        self._attr_name = f"{self.speaker.zone_name} Power"
 
     async def _async_poll(self) -> None:
         """Poll the device for the current state."""

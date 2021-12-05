@@ -56,7 +56,7 @@ class ProwlNotificationService(BaseNotificationService):
         session = async_get_clientsession(self._hass)
 
         try:
-            with async_timeout.timeout(10):
+            async with async_timeout.timeout(10):
                 response = await session.post(url, data=payload)
                 result = await response.text()
 

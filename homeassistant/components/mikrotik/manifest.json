@@ -3,7 +3,7 @@
   "name": "Mikrotik",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/mikrotik",
-  "requirements": ["librouteros==3.0.0"],
+  "requirements": ["librouteros==3.2.0"],
   "codeowners": ["@engrbm87"],
   "iot_class": "local_polling"
 }

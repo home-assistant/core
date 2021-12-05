@@ -7,6 +7,7 @@ import pytest
 from homeassistant.components import (
     alarm_control_panel,
     binary_sensor,
+    button,
     camera,
     cover,
     fan,
@@ -146,7 +147,7 @@ async def test_camera_stream(hass):
 
     assert trt.query_attributes() == {
         "cameraStreamAccessUrl": "https://example.com/api/streams/bla",
-        "cameraStreamReceiverAppId": "B12CE3CA",
+        "cameraStreamReceiverAppId": "B45F4572",
     }
 
 
@@ -765,6 +766,26 @@ async def test_light_modes(hass):
         "entity_id": "light.living_room",
         "effect": "colorloop",
     }
+
+
+async def test_scene_button(hass):
+    """Test Scene trait support for the button domain."""
+    assert helpers.get_google_type(button.DOMAIN, None) is not None
+    assert trait.SceneTrait.supported(button.DOMAIN, 0, None, None)
+
+    trt = trait.SceneTrait(hass, State("button.bla", STATE_UNKNOWN), BASIC_CONFIG)
+    assert trt.sync_attributes() == {}
+    assert trt.query_attributes() == {}
+    assert trt.can_execute(trait.COMMAND_ACTIVATE_SCENE, {})
+
+    calls = async_mock_service(hass, button.DOMAIN, button.SERVICE_PRESS)
+    await trt.execute(trait.COMMAND_ACTIVATE_SCENE, BASIC_DATA, {}, {})
+
+    # We don't wait till button press is done.
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert calls[0].data == {ATTR_ENTITY_ID: "button.bla"}
 
 
 async def test_scene_scene(hass):

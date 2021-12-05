@@ -8,7 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import API, DOMAIN, HOST, PORT
 
@@ -89,13 +89,13 @@ class SomaEntity(Entity):
         return self.device["name"]
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device specific attributes.
 
         Implemented by platform classes.
         """
-        return {
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "name": self.name,
-            "manufacturer": "Wazombi Labs",
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.unique_id)},
+            manufacturer="Wazombi Labs",
+            name=self.name,
+        )

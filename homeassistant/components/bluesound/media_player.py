@@ -358,7 +358,7 @@ class BluesoundPlayer(MediaPlayerEntity):
 
         try:
             websession = async_get_clientsession(self._hass)
-            with async_timeout.timeout(10):
+            async with async_timeout.timeout(10):
                 response = await websession.get(url)
 
             if response.status == HTTPStatus.OK:
@@ -400,7 +400,7 @@ class BluesoundPlayer(MediaPlayerEntity):
 
         try:
 
-            with async_timeout.timeout(125):
+            async with async_timeout.timeout(125):
                 response = await self._polling_session.get(
                     url, headers={CONNECTION: KEEP_ALIVE}
                 )

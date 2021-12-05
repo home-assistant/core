@@ -226,8 +226,7 @@ async def async_setup(hass, config):
         # fix for ais-dom groups defined in packages
         auto = list(component.entities)
 
-        conf = await component.async_prepare_reload()
-        if conf is None:
+        if (conf := await component.async_prepare_reload()) is None:
             return
         await _async_process_config(hass, conf, component)
 

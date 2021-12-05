@@ -144,8 +144,7 @@ class HarmonyRemote(HarmonyEntity, remote.RemoteEntity, RestoreEntity):
         # Restore the last activity so we know
         # how what to turn on if nothing
         # is specified
-        last_state = await self.async_get_last_state()
-        if not last_state:
+        if not (last_state := await self.async_get_last_state()):
             return
         if ATTR_LAST_ACTIVITY not in last_state.attributes:
             return

@@ -28,12 +28,12 @@ class SwitchbotEntity(CoordinatorEntity, Entity):
         self._idx = idx
         self._mac = mac
         self._attr_name = name
-        self._attr_device_info: DeviceInfo = {
-            "connections": {(dr.CONNECTION_NETWORK_MAC, self._mac)},
-            "name": name,
-            "model": self.data["modelName"],
-            "manufacturer": MANUFACTURER,
-        }
+        self._attr_device_info = DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, self._mac)},
+            manufacturer=MANUFACTURER,
+            model=self.data["modelName"],
+            name=name,
+        )
 
     @property
     def data(self) -> dict[str, Any]:

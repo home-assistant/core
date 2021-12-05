@@ -8,6 +8,7 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -96,7 +97,7 @@ class MeteoFranceSensor(CoordinatorEntity, SensorEntity):
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
         return DeviceInfo(
-            entry_type="service",
+            entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, self.platform.config_entry.unique_id)},
             manufacturer=MANUFACTURER,
             model=MODEL,

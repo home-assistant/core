@@ -10,7 +10,13 @@
         },
         "step": {
             "user": {
-                "description": "Bir Evrensel Elektrik Hatt\u0131 Veriyolu Elektrik Hatt\u0131 Aray\u00fcz Mod\u00fcl\u00fc (UPB PIM) ba\u011flay\u0131n. Adres dizesi 'tcp' i\u00e7in 'adres[:port]' bi\u00e7iminde olmal\u0131d\u0131r. Ba\u011flant\u0131 noktas\u0131 iste\u011fe ba\u011fl\u0131d\u0131r ve varsay\u0131lan olarak 2101'dir. \u00d6rnek: '192.168.1.42'. Seri protokol i\u00e7in adres 'tty[:baud]' bi\u00e7iminde olmal\u0131d\u0131r. Baud iste\u011fe ba\u011fl\u0131d\u0131r ve varsay\u0131lan olarak 4800'd\u00fcr. \u00d6rnek: '/dev/ttyS1'."
+                "data": {
+                    "address": "Adres (yukar\u0131daki a\u00e7\u0131klamaya bak\u0131n)",
+                    "file_path": "UPSStart UPB d\u0131\u015fa aktarma dosyas\u0131n\u0131n yolu ve ad\u0131.",
+                    "protocol": "Protokol"
+                },
+                "description": "Bir Evrensel Elektrik Hatt\u0131 Veriyolu Elektrik Hatt\u0131 Aray\u00fcz Mod\u00fcl\u00fc (UPB PIM) ba\u011flay\u0131n. Adres dizesi 'tcp' i\u00e7in 'adres[:port]' bi\u00e7iminde olmal\u0131d\u0131r. Ba\u011flant\u0131 noktas\u0131 iste\u011fe ba\u011fl\u0131d\u0131r ve varsay\u0131lan olarak 2101'dir. \u00d6rnek: '192.168.1.42'. Seri protokol i\u00e7in adres 'tty[:baud]' bi\u00e7iminde olmal\u0131d\u0131r. Baud iste\u011fe ba\u011fl\u0131d\u0131r ve varsay\u0131lan olarak 4800'd\u00fcr. \u00d6rnek: '/dev/ttyS1'.",
+                "title": "UPB PIM'e ba\u011flan\u0131n"
             }
         }
     }

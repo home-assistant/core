@@ -3,9 +3,9 @@ import json
 
 import voluptuous as vol
 
+from homeassistant.components import mqtt
 from homeassistant.components.mqtt import valid_publish_topic
 from homeassistant.const import MATCH_ALL
-from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import (
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
@@ -44,8 +44,7 @@ async def async_setup(hass, config):
     if not base_topic.endswith("/"):
         base_topic = f"{base_topic}/"
 
-    @callback
-    def _state_publisher(entity_id, old_state, new_state):
+    async def _state_publisher(entity_id, old_state, new_state):
         if new_state is None:
             return
 
@@ -55,22 +54,30 @@ async def async_setup(hass, config):
         payload = new_state.state
 
         mybase = f"{base_topic}{entity_id.replace('.', '/')}/"
-        hass.components.mqtt.async_publish(f"{mybase}state", payload, 1, True)
+        await mqtt.async_publish(hass, f"{mybase}state", payload, 1, True)
 
         if publish_timestamps:
             if new_state.last_updated:
-                hass.components.mqtt.async_publish(
-                    f"{mybase}last_updated", new_state.last_updated.isoformat(), 1, True
+                await mqtt.async_publish(
+                    hass,
+                    f"{mybase}last_updated",
+                    new_state.last_updated.isoformat(),
+                    1,
+                    True,
                 )
             if new_state.last_changed:
-                hass.components.mqtt.async_publish(
-                    f"{mybase}last_changed", new_state.last_changed.isoformat(), 1, True
+                await mqtt.async_publish(
+                    hass,
+                    f"{mybase}last_changed",
+                    new_state.last_changed.isoformat(),
+                    1,
+                    True,
                 )
 
         if publish_attributes:
             for key, val in new_state.attributes.items():
                 encoded_val = json.dumps(val, cls=JSONEncoder)
-                hass.components.mqtt.async_publish(mybase + key, encoded_val, 1, True)
+                await mqtt.async_publish(hass, mybase + key, encoded_val, 1, True)
 
     async_track_state_change(hass, MATCH_ALL, _state_publisher)
     return True

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
-import datetime
+from datetime import datetime, timedelta
 from functools import lru_cache
 import logging
 import os
@@ -315,9 +315,9 @@ class SensorData:
     """Data for a sensor."""
 
     argument: Any
-    state: str | None
+    state: str | datetime | None
     value: Any | None
-    update_time: datetime.datetime | None
+    update_time: datetime | None
     last_exception: BaseException | None
 
 
@@ -367,7 +367,7 @@ async def async_setup_platform(
 async def async_setup_sensor_registry_updates(
     hass: HomeAssistant,
     sensor_registry: dict[tuple[str, str], SensorData],
-    scan_interval: datetime.timedelta,
+    scan_interval: timedelta,
 ) -> None:
     """Update the registry and create polling."""
 
@@ -439,7 +439,7 @@ class SystemMonitorSensor(SensorEntity):
         self._argument: str = argument
 
     @property
-    def native_value(self) -> str | None:
+    def native_value(self) -> str | datetime | None:
         """Return the state of the device."""
         return self.data.state
 
@@ -465,7 +465,7 @@ class SystemMonitorSensor(SensorEntity):
 
 def _update(  # noqa: C901
     type_: str, data: SensorData
-) -> tuple[str | None, str | None, datetime.datetime | None]:
+) -> tuple[str | datetime | None, str | None, datetime | None]:
     """Get the latest system information."""
     state = None
     value = None
@@ -549,7 +549,7 @@ def _update(  # noqa: C901
     elif type_ == "last_boot":
         # Only update on initial setup
         if data.state is None:
-            state = dt_util.utc_from_timestamp(psutil.boot_time()).isoformat()
+            state = dt_util.utc_from_timestamp(psutil.boot_time())
         else:
             state = data.state
     elif type_ == "load_1m":
