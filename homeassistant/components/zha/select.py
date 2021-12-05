@@ -16,7 +16,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .core import discovery
-from .core.const import CHANNEL_IAS_WD, DATA_ZHA, SIGNAL_ADD_ENTITIES
+from .core.const import CHANNEL_IAS_WD, DATA_ZHA, SIGNAL_ADD_ENTITIES, Strobe
 from .entity import ZhaEntity
 
 MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, SELECT_DOMAIN)
@@ -116,3 +116,10 @@ class ZHADefaultStrobeLevelSelectEntity(
     """Representation of a ZHA default tone select entity."""
 
     _enum: Enum = IasWd.StrobeLevel
+
+
+@MULTI_MATCH(channel_names=CHANNEL_IAS_WD)
+class ZHADefaultStrobeSelectEntity(ZHAEnumSelectEntity, id_suffix=Strobe.__name__):
+    """Representation of a ZHA default tone select entity."""
+
+    _enum: Enum = Strobe
