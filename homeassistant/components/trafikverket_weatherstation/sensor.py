@@ -5,6 +5,7 @@ import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import Any
 
 import aiohttp
 from pytrafikverket.trafikverket_weather import TrafikverketWeather, WeatherStationInfo
@@ -221,17 +222,21 @@ class TrafikverketWeatherStation(SensorEntity):
         self._station = sensor_station
         self._weather_api = weather_api
         self._weather: WeatherStationInfo | None = None
-        self._active: bool = False
-        self._measure_time: str = "1970-01-01T00:00:00"
+        self._active: bool | None = None
+        self._measure_time: str | None = None
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of Trafikverket Weatherstation."""
-        return {
+        _additional_attributes: dict[str, Any] = {
             ATTR_ATTRIBUTION: ATTRIBUTION,
-            ATTR_ACTIVE: self._active,
-            ATTR_MEASURE_TIME: self._measure_time,
         }
+        if self._active:
+            _additional_attributes[ATTR_ACTIVE] = self._active
+        if self._measure_time:
+            _additional_attributes[ATTR_MEASURE_TIME] = self._measure_time
+
+        return _additional_attributes
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self) -> None:
