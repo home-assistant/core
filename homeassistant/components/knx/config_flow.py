@@ -121,6 +121,9 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     ConnectionSchema.CONF_KNX_ROUTE_BACK: user_input[
                         ConnectionSchema.CONF_KNX_ROUTE_BACK
                     ],
+                    ConnectionSchema.CONF_KNX_LOCAL_IP: user_input.get(
+                        ConnectionSchema.CONF_KNX_LOCAL_IP
+                    ),
                     CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING,
                 },
             )
@@ -134,6 +137,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Required(
                 ConnectionSchema.CONF_KNX_ROUTE_BACK, default=False
             ): vol.Coerce(bool),
+            vol.Optional(ConnectionSchema.CONF_KNX_LOCAL_IP): str,
         }
 
         return self.async_show_form(
@@ -243,6 +247,9 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     **DEFAULT_ENTRY_DATA,
                     CONF_HOST: config[CONF_KNX_TUNNELING][CONF_HOST],
                     CONF_PORT: config[CONF_KNX_TUNNELING][CONF_PORT],
+                    ConnectionSchema.CONF_KNX_LOCAL_IP: config[CONF_KNX_TUNNELING].get(
+                        ConnectionSchema.CONF_KNX_LOCAL_IP
+                    ),
                     ConnectionSchema.CONF_KNX_ROUTE_BACK: config[CONF_KNX_TUNNELING][
                         ConnectionSchema.CONF_KNX_ROUTE_BACK
                     ],
@@ -299,6 +306,7 @@ class KNXOptionsFlowHandler(OptionsFlow):
                         vol.Required(
                             CONF_PORT, default=self.current_config.get(CONF_PORT, 3671)
                         ): cv.port,
+                        vol.Optional(ConnectionSchema.CONF_KNX_LOCAL_IP): str,
                         vol.Required(
                             ConnectionSchema.CONF_KNX_ROUTE_BACK,
                             default=self.current_config.get(

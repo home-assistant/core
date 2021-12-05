@@ -41,7 +41,7 @@ async def test_flow_non_encrypted(hass):
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            MOCK_BASIC_DATA,
+            {**MOCK_BASIC_DATA},
         )
 
     assert result["type"] == "create_entry"
@@ -65,7 +65,7 @@ async def test_flow_not_connected_error(hass):
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            MOCK_BASIC_DATA,
+            {**MOCK_BASIC_DATA},
         )
 
     assert result["type"] == "form"
@@ -89,7 +89,7 @@ async def test_flow_unknown_abort(hass):
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            MOCK_BASIC_DATA,
+            {**MOCK_BASIC_DATA},
         )
 
     assert result["type"] == "abort"
@@ -114,7 +114,7 @@ async def test_flow_encrypted_not_connected_pin_code_request(hass):
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            MOCK_BASIC_DATA,
+            {**MOCK_BASIC_DATA},
         )
 
     assert result["type"] == "abort"
@@ -139,7 +139,7 @@ async def test_flow_encrypted_unknown_pin_code_request(hass):
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            MOCK_BASIC_DATA,
+            {**MOCK_BASIC_DATA},
         )
 
     assert result["type"] == "abort"
@@ -168,7 +168,7 @@ async def test_flow_encrypted_valid_pin_code(hass):
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            MOCK_BASIC_DATA,
+            {**MOCK_BASIC_DATA},
         )
 
     assert result["type"] == "form"
@@ -206,7 +206,7 @@ async def test_flow_encrypted_invalid_pin_code_error(hass):
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            MOCK_BASIC_DATA,
+            {**MOCK_BASIC_DATA},
         )
 
     assert result["type"] == "form"
@@ -244,7 +244,7 @@ async def test_flow_encrypted_not_connected_abort(hass):
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            MOCK_BASIC_DATA,
+            {**MOCK_BASIC_DATA},
         )
 
     assert result["type"] == "form"
@@ -277,7 +277,7 @@ async def test_flow_encrypted_unknown_abort(hass):
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            MOCK_BASIC_DATA,
+            {**MOCK_BASIC_DATA},
         )
 
     assert result["type"] == "form"
@@ -304,7 +304,7 @@ async def test_flow_non_encrypted_already_configured_abort(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
-        data=MOCK_BASIC_DATA,
+        data={**MOCK_BASIC_DATA},
     )
 
     assert result["type"] == "abort"
@@ -323,7 +323,7 @@ async def test_flow_encrypted_already_configured_abort(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
-        data=MOCK_BASIC_DATA,
+        data={**MOCK_BASIC_DATA},
     )
 
     assert result["type"] == "abort"
@@ -342,7 +342,7 @@ async def test_imported_flow_non_encrypted(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
-            data=MOCK_CONFIG_DATA,
+            data={**MOCK_CONFIG_DATA},
         )
 
     assert result["type"] == "create_entry"
@@ -366,7 +366,7 @@ async def test_imported_flow_encrypted_valid_pin_code(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
-            data=MOCK_CONFIG_DATA,
+            data={**MOCK_CONFIG_DATA},
         )
 
     assert result["type"] == "form"
@@ -398,7 +398,7 @@ async def test_imported_flow_encrypted_invalid_pin_code_error(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
-            data=MOCK_CONFIG_DATA,
+            data={**MOCK_CONFIG_DATA},
         )
 
     assert result["type"] == "form"
@@ -430,7 +430,7 @@ async def test_imported_flow_encrypted_not_connected_abort(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
-            data=MOCK_CONFIG_DATA,
+            data={**MOCK_CONFIG_DATA},
         )
 
     assert result["type"] == "form"
@@ -457,7 +457,7 @@ async def test_imported_flow_encrypted_unknown_abort(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
-            data=MOCK_CONFIG_DATA,
+            data={**MOCK_CONFIG_DATA},
         )
 
     assert result["type"] == "form"
@@ -482,7 +482,7 @@ async def test_imported_flow_not_connected_error(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
-            data=MOCK_CONFIG_DATA,
+            data={**MOCK_CONFIG_DATA},
         )
 
     assert result["type"] == "form"
@@ -500,7 +500,7 @@ async def test_imported_flow_unknown_abort(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
-            data=MOCK_CONFIG_DATA,
+            data={**MOCK_CONFIG_DATA},
         )
 
     assert result["type"] == "abort"
@@ -519,7 +519,7 @@ async def test_imported_flow_non_encrypted_already_configured_abort(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_IMPORT},
-        data=MOCK_BASIC_DATA,
+        data={**MOCK_BASIC_DATA},
     )
 
     assert result["type"] == "abort"
@@ -538,7 +538,7 @@ async def test_imported_flow_encrypted_already_configured_abort(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_IMPORT},
-        data=MOCK_BASIC_DATA,
+        data={**MOCK_BASIC_DATA},
     )
 
     assert result["type"] == "abort"

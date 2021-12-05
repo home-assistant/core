@@ -5,24 +5,24 @@
             "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
         },
         "error": {
-            "invalid_auth": "Autenticazione non valida"
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_auth": "Autenticazione non valida",
+            "unknown": "Errore imprevisto"
         },
         "step": {
             "reauth_confirm": {
                 "data": {
-                    "area_id": "ID area",
-                    "name": "Nome",
-                    "password": "Password",
-                    "username": "Nome utente"
-                }
+                    "password": "Password"
+                },
+                "description": "Reinserisci la password per: {username}",
+                "title": "Autenticare nuovamente l'integrazione"
             },
             "user": {
                 "data": {
-                    "area_id": "ID area",
-                    "name": "Nome",
                     "password": "Password",
                     "username": "Nome utente"
-                }
+                },
+                "title": "Configura la tua integrazione Brunt"
             }
         }
     }
