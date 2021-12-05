@@ -86,6 +86,11 @@ PLATFORMS = ["sensor", "camera", "climate"]
 WEB_AUTH_DOMAIN = DOMAIN
 INSTALLED_AUTH_DOMAIN = f"{DOMAIN}.installed"
 
+# Fetch media for events with an in memory cache. The largest media items
+# are mp4 clips at ~90kb each, so this totals a few MB per camera.
+# Note: Media for events can only be published within 30 seconds of the event
+EVENT_MEDIA_CACHE_SIZE = 64
+
 
 class WebAuth(config_entry_oauth2_flow.LocalOAuth2Implementation):
     """OAuth implementation using OAuth for web applications."""
@@ -206,6 +211,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     subscriber = await api.new_subscriber(hass, entry)
     if not subscriber:
         return False
+    # Keep media for last N events in memory
+    subscriber.cache_policy.event_cache_size = EVENT_MEDIA_CACHE_SIZE
+    subscriber.cache_policy.fetch = True
 
     callback = SignalUpdateCallback(hass)
     subscriber.set_update_callback(callback.async_handle_event)
