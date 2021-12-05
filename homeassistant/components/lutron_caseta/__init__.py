@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
@@ -89,8 +89,11 @@ async def async_setup(hass, base_config):
     return True
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: config_entries.ConfigEntry
+) -> bool:
     """Set up a bridge from a config entry."""
+    entry_id = config_entry.entry_id
     host = config_entry.data[CONF_HOST]
     keyfile = hass.config.path(config_entry.data[CONF_KEYFILE])
     certfile = hass.config.path(config_entry.data[CONF_CERTFILE])
@@ -122,39 +125,30 @@ async def async_setup_entry(hass, config_entry):
 
     devices = bridge.get_devices()
     bridge_device = devices[BRIDGE_DEVICE_ID]
-    _async_register_bridge_device(hass, config_entry.entry_id, bridge_device)
+    buttons = bridge.buttons
+    _async_register_bridge_device(hass, entry_id, bridge_device)
+    button_devices = _async_register_button_devices(
+        hass, entry_id, bridge_device, buttons
+    )
+    _async_subscribe_pico_remote_events(hass, bridge, button_devices)
+
     # Store this bridge (keyed by entry_id) so it can be retrieved by the
     # platforms we're setting up.
-    hass.data[DOMAIN][config_entry.entry_id] = {
+    hass.data[DOMAIN][entry_id] = {
         BRIDGE_LEAP: bridge,
         BRIDGE_DEVICE: bridge_device,
-        BUTTON_DEVICES: {},
+        BUTTON_DEVICES: button_devices,
     }
-
-    import pprint
-
-    pprint.pprint(bridge.buttons)
-    await async_setup_button_devices(hass, config_entry, bridge.buttons)
 
     hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     return True
 
 
-async def async_setup_button_devices(hass, config_entry, button_devices):
-    """Connect to the bridge via Lutron Integration Protocol to watch for pico remotes."""
-    config_entry_id = config_entry.entry_id
-    data = hass.data[DOMAIN][config_entry_id]
-    bridge_device = data[BRIDGE_DEVICE]
-    button_devices_by_dr_id = _async_register_button_devices(
-        hass, config_entry_id, bridge_device, button_devices
-    )
-    _async_subscribe_pico_remote_events(hass, bridge_device, button_devices)
-    data[BUTTON_DEVICES] = button_devices_by_dr_id
-
-
 @callback
-def _async_register_bridge_device(hass, config_entry_id, bridge_device):
+def _async_register_bridge_device(
+    hass: HomeAssistant, config_entry_id: str, bridge_device: dict
+) -> None:
     """Register the bridge device in the device registry."""
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
@@ -168,8 +162,11 @@ def _async_register_bridge_device(hass, config_entry_id, bridge_device):
 
 @callback
 def _async_register_button_devices(
-    hass, config_entry_id, bridge_device, button_devices_by_id
-):
+    hass: HomeAssistant,
+    config_entry_id: str,
+    bridge_device,
+    button_devices_by_id: dict[int, dict],
+) -> dict[str, dr.DeviceEntry]:
     """Register button devices (Pico Remotes) in the device registry."""
     device_registry = dr.async_get(hass)
     button_devices_by_dr_id = {}
@@ -196,7 +193,11 @@ def _async_register_button_devices(
 
 
 @callback
-def _async_subscribe_pico_remote_events(hass, bridge_device, button_devices_by_id):
+def _async_subscribe_pico_remote_events(
+    hass: HomeAssistant,
+    bridge_device: Smartbridge,
+    button_devices_by_id: dict[int, dict],
+):
     """Subscribe to lutron events."""
 
     @callback
@@ -232,7 +233,9 @@ def _async_subscribe_pico_remote_events(hass, bridge_device, button_devices_by_i
         )
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: config_entries.ConfigEntry
+) -> bool:
     """Unload the bridge bridge from a config entry."""
     data = hass.data[DOMAIN][config_entry.entry_id]
     data[BRIDGE_LEAP].close()
