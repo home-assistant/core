@@ -49,7 +49,7 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator):
                 status = await self.api.update()
 
                 if not status:
-                    raise Exception("Failed to fetch data")
+                    raise UpdateFailed("Failed to communicate with device")
 
                 data = {
                     CONF_NAME: self.api.device.product_name,
@@ -71,7 +71,7 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator):
                         ATTR_BRIGHTNESS: self.api.state.brightness,
                     }
 
-        except Exception as ex:
+        except TimeoutError as ex:
             raise UpdateFailed(ex) from ex
 
         self.name = data[CONF_NAME]
