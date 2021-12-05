@@ -4,7 +4,6 @@ import contextlib
 import logging
 import ssl
 
-from aiolip import LIP
 from aiolip.data import LIPMode
 from aiolip.protocol import LIP_BUTTON_PRESS
 import async_timeout
@@ -130,46 +129,28 @@ async def async_setup_entry(hass, config_entry):
         BRIDGE_LEAP: bridge,
         BRIDGE_DEVICE: bridge_device,
         BUTTON_DEVICES: {},
-        BRIDGE_LIP: None,
     }
 
-    if bridge.lip_devices:
-        # If the bridge also supports LIP (Lutron Integration Protocol)
-        # we can fire events when pico buttons are pressed to allow
-        # pico remotes to control other devices.
-        await async_setup_lip(hass, config_entry, bridge.lip_devices)
+    import pprint
+
+    pprint.pprint(bridge.buttons)
+    await async_setup_button_devices(hass, config_entry, bridge.buttons)
 
     hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     return True
 
 
-async def async_setup_lip(hass, config_entry, lip_devices):
+async def async_setup_button_devices(hass, config_entry, button_devices):
     """Connect to the bridge via Lutron Integration Protocol to watch for pico remotes."""
-    host = config_entry.data[CONF_HOST]
     config_entry_id = config_entry.entry_id
     data = hass.data[DOMAIN][config_entry_id]
     bridge_device = data[BRIDGE_DEVICE]
-    bridge = data[BRIDGE_LEAP]
-    lip = LIP()
-    try:
-        await lip.async_connect(host)
-    except asyncio.TimeoutError:
-        _LOGGER.warning(
-            "Failed to connect to via LIP at %s:23, Pico and Shade remotes will not be available; "
-            "Enable Telnet Support in the Lutron app under Settings >> Advanced >> Integration",
-            host,
-        )
-        return
-
-    _LOGGER.debug("Connected to Lutron Caseta bridge via LIP at %s:23", host)
-    button_devices_by_lip_id = _async_merge_lip_leap_data(lip_devices, bridge)
     button_devices_by_dr_id = _async_register_button_devices(
-        hass, config_entry_id, bridge_device, button_devices_by_lip_id
+        hass, config_entry_id, bridge_device, button_devices
     )
-    _async_subscribe_pico_remote_events(hass, lip, button_devices_by_lip_id)
+    _async_subscribe_pico_remote_events(hass, button_devices)
     data[BUTTON_DEVICES] = button_devices_by_dr_id
-    data[BRIDGE_LIP] = lip
 
 
 @callback
