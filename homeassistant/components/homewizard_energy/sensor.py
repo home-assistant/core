@@ -172,7 +172,6 @@ class HWEnergySensor(CoordinatorEntity, SensorEntity):
 
         super().__init__(coordinator)
         self.entity_description = description
-        self.coordinator = coordinator
         self.entry_data = entry_data
 
         # Config attributes.
