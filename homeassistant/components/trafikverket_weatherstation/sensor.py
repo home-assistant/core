@@ -220,19 +220,17 @@ class TrafikverketWeatherStation(SensorEntity):
         self._attr_unique_id = f"trafikverket_{name}_{description.key}"
         self._station = sensor_station
         self._weather_api = weather_api
-        self._weather: WeatherStationInfo = None
+        self._weather: WeatherStationInfo | None = None
+        self._active: bool = False
+        self._measure_time: str = "1970-01-01T00:00:00"
 
     @property
     def extra_state_attributes(self) -> dict:
         """Return the state attributes of Trafikverket Weatherstation."""
-        if self._weather.active:
-            _active = self._weather.active
-        if self._weather.measure_time:
-            _measure_time = self._weather.measure_time
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,
-            ATTR_ACTIVE: _active,
-            ATTR_MEASURE_TIME: _measure_time,
+            ATTR_ACTIVE: self._active,
+            ATTR_MEASURE_TIME: self._measure_time,
         }
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
@@ -245,3 +243,6 @@ class TrafikverketWeatherStation(SensorEntity):
             )
         except (asyncio.TimeoutError, aiohttp.ClientError, ValueError) as error:
             _LOGGER.error("Could not fetch weather data: %s", error)
+            return
+        self._active = self._weather.active
+        self._measure_time = self._weather.measure_time
