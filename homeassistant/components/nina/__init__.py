@@ -20,8 +20,8 @@ from .const import (
     ATTR_ID,
     ATTR_SENT,
     ATTR_START,
+    CONF_FILTER_CORONA,
     CONF_REGIONS,
-    CORONA_FILTER,
     DOMAIN,
     SCAN_INTERVAL,
 )
@@ -34,7 +34,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     regions: dict[str, str] = entry.data[CONF_REGIONS]
 
-    coordinator = NINADataUpdateCoordinator(hass, regions)
+    filter_corona: bool = entry.data[CONF_FILTER_CORONA]
+
+    coordinator = NINADataUpdateCoordinator(hass, regions, filter_corona)
 
     await coordinator.async_config_entry_first_refresh()
 
@@ -48,11 +50,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class NINADataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching NINA data API."""
 
-    def __init__(self, hass: HomeAssistant, regions: dict[str, str]) -> None:
+    def __init__(
+        self, hass: HomeAssistant, regions: dict[str, str], corona_filter: bool
+    ) -> None:
         """Initialize."""
         self._regions: dict[str, str] = regions
         self._nina: Nina = Nina(async_get_clientsession(hass))
         self.warnings: dict[str, Any] = {}
+        self.corona_filter: bool = corona_filter
 
         for region in regions.keys():
             self._nina.addRegion(region)
@@ -84,13 +89,15 @@ class NINADataUpdateCoordinator(DataUpdateCoordinator):
             warnings_for_regions: list[Any] = []
 
             for raw_warn in raw_warnings:
+                if "corona" in raw_warn.headline.lower() and self.corona_filter:
+                    continue
+
                 warn_obj: dict[str, Any] = {
                     ATTR_ID: raw_warn.id,
                     ATTR_HEADLINE: raw_warn.headline,
                     ATTR_SENT: raw_warn.sent or "",
                     ATTR_START: raw_warn.start or "",
                     ATTR_EXPIRES: raw_warn.expires or "",
-                    CORONA_FILTER: ("corona" in raw_warn.headline.lower()),
                 }
                 warnings_for_regions.append(warn_obj)
 

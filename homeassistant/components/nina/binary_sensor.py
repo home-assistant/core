@@ -19,10 +19,8 @@ from .const import (
     ATTR_ID,
     ATTR_SENT,
     ATTR_START,
-    CONF_FILTER_CORONA,
     CONF_MESSAGE_SLOTS,
     CONF_REGIONS,
-    CORONA_FILTER,
     DOMAIN,
 )
 
@@ -36,7 +34,6 @@ async def async_setup_entry(
 
     coordinator: NINADataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    filter_corona: bool = config_entry.data[CONF_FILTER_CORONA]
     regions: dict[str, str] = config_entry.data[CONF_REGIONS]
     message_slots: int = config_entry.data[CONF_MESSAGE_SLOTS]
 
@@ -44,9 +41,7 @@ async def async_setup_entry(
 
     for ent in coordinator.data:
         for i in range(0, message_slots):
-            entities.append(
-                NINAMessage(coordinator, ent, regions[ent], i + 1, filter_corona)
-            )
+            entities.append(NINAMessage(coordinator, ent, regions[ent], i + 1))
 
     async_add_entities(entities)
 
@@ -60,7 +55,6 @@ class NINAMessage(CoordinatorEntity, BinarySensorEntity):
         region: str,
         regionName: str,
         slotID: int,
-        filter_corona: bool,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
@@ -69,8 +63,6 @@ class NINAMessage(CoordinatorEntity, BinarySensorEntity):
         self._region_name: str = regionName
         self._slot_id: int = slotID
         self._warning_index: int = slotID - 1
-
-        self._filter_corona: bool = filter_corona
 
         self._coordinator: NINADataUpdateCoordinator = coordinator
 
@@ -81,12 +73,7 @@ class NINAMessage(CoordinatorEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return the state of the sensor."""
-        if not len(self._coordinator.data[self._region]) > self._warning_index:
-            return False
-
-        data: dict[str, Any] = self._coordinator.data[self._region][self._warning_index]
-
-        return not (data[CORONA_FILTER] and self._filter_corona)
+        return len(self._coordinator.data[self._region]) > self._warning_index
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

@@ -21,8 +21,6 @@ ATTR_SENT: str = "Sent"
 ATTR_START: str = "Start"
 ATTR_EXPIRES: str = "Expires"
 
-CORONA_FILTER: str = "Corona Filter"
-
 CONST_LIST_A_TO_D: list[str] = ["A", "Ä", "B", "C", "D"]
 CONST_LIST_E_TO_H: list[str] = ["E", "F", "G", "H"]
 CONST_LIST_I_TO_L: list[str] = ["I", "J", "K", "L"]

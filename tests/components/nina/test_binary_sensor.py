@@ -61,12 +61,12 @@ async def test_sensors(hass: HomeAssistant) -> None:
         state_w1 = hass.states.get("binary_sensor.warning_aach_stadt_1")
         entry_w1 = entity_registry.async_get("binary_sensor.warning_aach_stadt_1")
 
-        assert state_w1.state == STATE_OFF
-        assert state_w1.attributes.get(ATTR_HEADLINE) is None
-        assert state_w1.attributes.get(ATTR_ID) is None
-        assert state_w1.attributes.get(ATTR_SENT) is None
-        assert state_w1.attributes.get(ATTR_START) is None
-        assert state_w1.attributes.get(ATTR_EXPIRES) is None
+        assert state_w1.state == STATE_ON
+        assert state_w1.attributes.get(ATTR_HEADLINE) == "Ausfall Notruf 112"
+        assert state_w1.attributes.get(ATTR_ID) == "mow.DE-NW-BN-SE030-20201014-30-000"
+        assert state_w1.attributes.get(ATTR_SENT) == "2021-10-11T05:20:00+01:00"
+        assert state_w1.attributes.get(ATTR_START) == "2021-11-01T05:20:00+01:00"
+        assert state_w1.attributes.get(ATTR_EXPIRES) == "3021-11-22T05:19:00+01:00"
 
         assert entry_w1.unique_id == "083350000000-1"
         assert state_w1.attributes.get("device_class") == BinarySensorDeviceClass.SAFETY
@@ -74,12 +74,12 @@ async def test_sensors(hass: HomeAssistant) -> None:
         state_w2 = hass.states.get("binary_sensor.warning_aach_stadt_2")
         entry_w2 = entity_registry.async_get("binary_sensor.warning_aach_stadt_2")
 
-        assert state_w2.state == STATE_ON
-        assert state_w2.attributes.get(ATTR_HEADLINE) == "Ausfall Notruf 112"
-        assert state_w2.attributes.get(ATTR_ID) == "mow.DE-NW-BN-SE030-20201014-30-000"
-        assert state_w2.attributes.get(ATTR_SENT) == "2021-10-11T05:20:00+01:00"
-        assert state_w2.attributes.get(ATTR_START) == "2021-11-01T05:20:00+01:00"
-        assert state_w2.attributes.get(ATTR_EXPIRES) == "3021-11-22T05:19:00+01:00"
+        assert state_w2.state == STATE_OFF
+        assert state_w2.attributes.get(ATTR_HEADLINE) is None
+        assert state_w2.attributes.get(ATTR_ID) is None
+        assert state_w2.attributes.get(ATTR_SENT) is None
+        assert state_w2.attributes.get(ATTR_START) is None
+        assert state_w2.attributes.get(ATTR_EXPIRES) is None
 
         assert entry_w2.unique_id == "083350000000-2"
         assert state_w2.attributes.get("device_class") == BinarySensorDeviceClass.SAFETY
