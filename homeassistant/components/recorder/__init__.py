@@ -125,6 +125,8 @@ KEEPALIVE_TIME = 30
 # States and Events objects
 EXPIRE_AFTER_COMMITS = 120
 
+DB_LOCK_QUEUE_CHECK_TIMEOUT = 1
+
 CONF_AUTO_PURGE = "auto_purge"
 CONF_DB_URL = "db_url"
 CONF_DB_MAX_RETRIES = "db_max_retries"
@@ -810,7 +812,7 @@ class Recorder(threading.Thread):
         with write_lock_db(self):
             # Notify that lock is being held, wait until database can be used again.
             self.hass.add_job(_async_set_database_locked, task)
-            while not task.database_unlock.wait(timeout=1):
+            while not task.database_unlock.wait(timeout=DB_LOCK_QUEUE_CHECK_TIMEOUT):
                 if self.queue.qsize() > MAX_QUEUE_BACKLOG * 0.9:
                     _LOGGER.warning(
                         "Database queue backlog reached more than 90% of maximum queue length. Continue writing to database. Your Backup might be corrupted"

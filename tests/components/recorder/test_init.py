@@ -1169,6 +1169,35 @@ async def test_database_lock_and_unlock(hass: HomeAssistant, tmp_path):
         assert len(db_events) == 1
 
 
+async def test_database_lock_and_overflow(hass: HomeAssistant, tmp_path):
+    """Test writing events during lock leading to overflow the queue causes the database to unlock."""
+    # Use file DB, in memory DB cannot do write locks.
+    config = {recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db")}
+    await async_init_recorder_component(hass, config)
+    await hass.async_block_till_done()
+
+    instance: Recorder = hass.data[DATA_INSTANCE]
+
+    with patch.object(recorder, "MAX_QUEUE_BACKLOG", 1), patch.object(
+        recorder, "DB_LOCK_QUEUE_CHECK_TIMEOUT", 0.1
+    ):
+        await instance.lock_database()
+
+        event_type = "EVENT_TEST"
+        event_data = {"test_attr": 5, "test_attr_10": "nice"}
+        hass.bus.fire(event_type, event_data)
+
+        # Check that this causes the queue to overflow and write succeeds
+        # even before unlocking.
+        await async_wait_recording_done(hass, instance)
+
+        with session_scope(hass=hass) as session:
+            db_events = list(session.query(Events).filter_by(event_type=event_type))
+            assert len(db_events) == 1
+
+        assert not instance.unlock_database()
+
+
 async def test_database_lock_timeout(hass):
     """Test locking database timeout when recorder stopped."""
     await async_init_recorder_component(hass)
