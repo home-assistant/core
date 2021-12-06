@@ -671,12 +671,12 @@ async def test_info_from_service_non_utf8(hass):
     info = zeroconf.info_from_service(
         get_service_info_mock(service_type, f"test.{service_type}")
     )
-    raw_info = info["properties"].pop("_raw", False)
+    raw_info = info.properties.pop("_raw", False)
     assert raw_info
     assert len(raw_info) == len(PROPERTIES) - 1
     assert NON_ASCII_KEY not in raw_info
-    assert len(info["properties"]) <= len(raw_info)
-    assert "non-utf8-value" not in info["properties"]
+    assert len(info.properties) <= len(raw_info)
+    assert "non-utf8-value" not in info.properties
     assert raw_info["non-utf8-value"] is NON_UTF8_VALUE
 
 
@@ -695,7 +695,7 @@ async def test_info_from_service_with_link_local_address_first(hass):
     service_info = get_service_info_mock(service_type, f"test.{service_type}")
     service_info.addresses = ["169.254.12.3", "192.168.66.12"]
     info = zeroconf.info_from_service(service_info)
-    assert info["host"] == "192.168.66.12"
+    assert info.host == "192.168.66.12"
 
 
 async def test_info_from_service_with_link_local_address_second(hass):
@@ -704,7 +704,7 @@ async def test_info_from_service_with_link_local_address_second(hass):
     service_info = get_service_info_mock(service_type, f"test.{service_type}")
     service_info.addresses = ["192.168.66.12", "169.254.12.3"]
     info = zeroconf.info_from_service(service_info)
-    assert info["host"] == "192.168.66.12"
+    assert info.host == "192.168.66.12"
 
 
 async def test_info_from_service_with_link_local_address_only(hass):
@@ -722,7 +722,7 @@ async def test_info_from_service_prefers_ipv4(hass):
     service_info = get_service_info_mock(service_type, f"test.{service_type}")
     service_info.addresses = ["2001:db8:3333:4444:5555:6666:7777:8888", "192.168.66.12"]
     info = zeroconf.info_from_service(service_info)
-    assert info["host"] == "192.168.66.12"
+    assert info.host == "192.168.66.12"
 
 
 async def test_get_instance(hass, mock_async_zeroconf):
