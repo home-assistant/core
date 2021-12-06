@@ -164,7 +164,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         _LOGGER.debug("config_flow async_helper_check")
         await self.async_set_unique_id(
-            f"{entry_info[CONF_PRODUCT_TYPE]}_{entry_info[CONF_PRODUCT_TYPE]}"
+            f"{entry_info[CONF_PRODUCT_TYPE]}_{entry_info[CONF_SERIAL]}"
         )
         self._abort_if_unique_id_configured(
             updates={CONF_IP_ADDRESS: entry_info[CONF_IP_ADDRESS]}
@@ -172,7 +172,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         entry_info[
             CONF_NAME
-        ] = f"{entry_info[CONF_PRODUCT_NAME]} ({entry_info[CONF_PRODUCT_TYPE]})"
+        ] = f"{entry_info[CONF_PRODUCT_NAME]} ({entry_info[CONF_SERIAL]})"
 
         return self.async_create_entry(
             title=entry_info[CONF_NAME],

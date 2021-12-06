@@ -24,14 +24,13 @@ from homeassistant.components.homewizard_energy.const import (
     ATTR_WIFI_SSID,
     ATTR_WIFI_STRENGTH,
     CONF_DATA,
-    CONF_MODEL,
-    CONF_SW_VERSION,
+    CONF_DEVICE,
     MODEL_P1,
 )
 from homeassistant.components.homewizard_energy.coordinator import (
     HWEnergyDeviceUpdateCoordinator as Coordinator,
 )
-from homeassistant.const import CONF_API_VERSION, CONF_ID, CONF_NAME, CONF_STATE
+from homeassistant.const import CONF_STATE
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .generator import get_mock_device
@@ -73,11 +72,7 @@ async def test_coordinator_fetches_data(aioclient_mock, hass):
     coordinator = Coordinator(hass, meter)
     data = await coordinator._async_update_data()
 
-    assert data[CONF_NAME] == meter.device.product_name
-    assert data[CONF_MODEL] == meter.device.product_type
-    assert data[CONF_ID] == meter.device.serial
-    assert data[CONF_SW_VERSION] == meter.device.firmware_version
-    assert data[CONF_API_VERSION] == meter.device.api_version
+    assert data[CONF_DEVICE] == meter.device
 
     for datapoint in meter.data.available_datapoints:
         assert datapoint in data[CONF_DATA]
@@ -112,11 +107,7 @@ async def test_coordinator_fetches_data(aioclient_mock, hass):
     coordinator = Coordinator(hass, meter)
     data = await coordinator._async_update_data()
 
-    assert data[CONF_NAME] == meter.device.product_name
-    assert data[CONF_MODEL] == meter.device.product_type
-    assert data[CONF_ID] == meter.device.serial
-    assert data[CONF_SW_VERSION] == meter.device.firmware_version
-    assert data[CONF_API_VERSION] == meter.device.api_version
+    assert data[CONF_DEVICE] == meter.device
 
     for datapoint in meter.data.available_datapoints:
         assert datapoint in data[CONF_DATA]
