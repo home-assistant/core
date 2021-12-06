@@ -17,6 +17,7 @@ homeassistant.components.ambee.*
 homeassistant.components.ambient_station.*
 homeassistant.components.amcrest.*
 homeassistant.components.ampio.*
+homeassistant.components.aseko_pool_live.*
 homeassistant.components.automation.*
 homeassistant.components.binary_sensor.*
 homeassistant.components.bluetooth_tracker.*
