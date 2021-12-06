@@ -370,6 +370,24 @@ async def test_backup_start_no_recorder(hass, hass_ws_client):
     assert response["error"]["code"] == "unknown_command"
 
 
+async def test_backup_start_timeout(hass, hass_ws_client):
+    """Test getting backup start when recorder is not present."""
+    client = await hass_ws_client()
+    await async_init_recorder_component(hass)
+
+    # Ensure there are no queued events
+    await async_wait_recording_done_without_instance(hass)
+
+    with patch.object(recorder, "DB_LOCK_TIMEOUT", 0):
+        try:
+            await client.send_json({"id": 1, "type": "backup/start"})
+            response = await client.receive_json()
+            assert not response["success"]
+            assert response["error"]["code"] == "timeout_error"
+        finally:
+            await client.send_json({"id": 2, "type": "backup/end"})
+
+
 async def test_backup_end(hass, hass_ws_client):
     """Test backup start."""
     client = await hass_ws_client()
