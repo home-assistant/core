@@ -1146,7 +1146,9 @@ async def test_database_lock_and_unlock(hass: HomeAssistant, tmp_path):
 
     instance: Recorder = hass.data[DATA_INSTANCE]
 
-    await instance.lock_database()
+    assert await instance.lock_database()
+
+    assert not await instance.lock_database()
 
     event_type = "EVENT_TEST"
     event_data = {"test_attr": 5, "test_attr_10": "nice"}
