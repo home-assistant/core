@@ -89,7 +89,7 @@ async def test_get_conditions(
             "domain": DOMAIN,
             "type": condition,
             "device_id": device_entry.id,
-            "entity_id": entity_entry.entity_id,
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         }
         for condition in expected_condition_types
@@ -206,7 +206,7 @@ async def test_if_state(
                             "condition": "device",
                             "domain": DOMAIN,
                             "device_id": "",
-                            "entity_id": entry.entity_id,
+                            "entity_id": entry.id,
                             "type": "is_mode",
                             "mode": "away",
                         }
@@ -251,6 +251,53 @@ async def test_if_state(
     hass.bus.async_fire("test_event3")
     await hass.async_block_till_done()
     assert len(calls) == 3
+
+
+async def test_if_state_legacy(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, calls
+) -> None:
+    """Test for turn_on and turn_off conditions."""
+    entry = entity_registry.async_get_or_create(DOMAIN, "test", "5678")
+
+    hass.states.async_set(entry.entity_id, STATE_ON, {ATTR_MODE: const.MODE_AWAY})
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event1"},
+                    "condition": [
+                        {
+                            "condition": "device",
+                            "domain": DOMAIN,
+                            "device_id": "",
+                            "entity_id": entry.entity_id,
+                            "type": "is_mode",
+                            "mode": "away",
+                        }
+                    ],
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": "is_mode - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                        },
+                    },
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    hass.states.async_set(entry.entity_id, STATE_ON, {ATTR_MODE: const.MODE_AWAY})
+
+    hass.bus.async_fire("test_event1")
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert calls[0].data["some"] == "is_mode - event - test_event1"
 
 
 @pytest.mark.parametrize(
@@ -408,6 +455,176 @@ async def test_capabilities(
         {
             "domain": DOMAIN,
             "device_id": "abcdefgh",
+            "entity_id": entity_entry.id,
+            "type": condition,
+        },
+    )
+
+    assert capabilities and "extra_fields" in capabilities
+
+    assert (
+        voluptuous_serialize.convert(
+            capabilities["extra_fields"], custom_serializer=cv.custom_serializer
+        )
+        == expected_capabilities
+    )
+
+
+@pytest.mark.parametrize(
+    (
+        "set_state",
+        "capabilities_reg",
+        "capabilities_state",
+        "condition",
+        "expected_capabilities",
+    ),
+    [
+        (
+            False,
+            {},
+            {},
+            "is_mode",
+            [
+                {
+                    "name": "mode",
+                    "options": [],
+                    "required": True,
+                    "type": "select",
+                }
+            ],
+        ),
+        (
+            False,
+            {const.ATTR_AVAILABLE_MODES: [const.MODE_HOME, const.MODE_AWAY]},
+            {},
+            "is_mode",
+            [
+                {
+                    "name": "mode",
+                    "options": [("home", "home"), ("away", "away")],
+                    "required": True,
+                    "type": "select",
+                }
+            ],
+        ),
+        (
+            False,
+            {},
+            {},
+            "is_off",
+            [
+                {
+                    "name": "for",
+                    "optional": True,
+                    "type": "positive_time_period_dict",
+                }
+            ],
+        ),
+        (
+            False,
+            {},
+            {},
+            "is_on",
+            [
+                {
+                    "name": "for",
+                    "optional": True,
+                    "type": "positive_time_period_dict",
+                }
+            ],
+        ),
+        (
+            True,
+            {},
+            {},
+            "is_mode",
+            [
+                {
+                    "name": "mode",
+                    "options": [],
+                    "required": True,
+                    "type": "select",
+                }
+            ],
+        ),
+        (
+            True,
+            {},
+            {const.ATTR_AVAILABLE_MODES: [const.MODE_HOME, const.MODE_AWAY]},
+            "is_mode",
+            [
+                {
+                    "name": "mode",
+                    "options": [("home", "home"), ("away", "away")],
+                    "required": True,
+                    "type": "select",
+                }
+            ],
+        ),
+        (
+            True,
+            {},
+            {},
+            "is_off",
+            [
+                {
+                    "name": "for",
+                    "optional": True,
+                    "type": "positive_time_period_dict",
+                }
+            ],
+        ),
+        (
+            True,
+            {},
+            {},
+            "is_on",
+            [
+                {
+                    "name": "for",
+                    "optional": True,
+                    "type": "positive_time_period_dict",
+                }
+            ],
+        ),
+    ],
+)
+async def test_capabilities_legacy(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    set_state,
+    capabilities_reg,
+    capabilities_state,
+    condition,
+    expected_capabilities,
+) -> None:
+    """Test getting capabilities."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_entry = entity_registry.async_get_or_create(
+        DOMAIN,
+        "test",
+        "5678",
+        device_id=device_entry.id,
+        capabilities=capabilities_reg,
+    )
+    if set_state:
+        hass.states.async_set(
+            entity_entry.entity_id,
+            STATE_ON,
+            capabilities_state,
+        )
+
+    capabilities = await device_condition.async_get_condition_capabilities(
+        hass,
+        {
+            "domain": DOMAIN,
+            "device_id": "abcdefgh",
             "entity_id": entity_entry.entity_id,
             "type": condition,
         },
@@ -441,7 +658,7 @@ async def test_capabilities_missing_entity(
         {
             "domain": DOMAIN,
             "device_id": "abcdefgh",
-            "entity_id": f"{DOMAIN}.test_5678",
+            "entity_id": "0123456789",
             "type": condition,
         },
     )
