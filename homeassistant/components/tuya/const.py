@@ -226,7 +226,7 @@ class DPCode(str, Enum):
     PHASE_B = "phase_b"
     PHASE_C = "phase_c"
     PIR = "pir"  # Motion sensor
-    PIR_SWITCH = "pir_switch" # pir sensitivity
+    PIR_SWITCH = "pir_switch"  # pir sensitivity
     PM1 = "pm1"
     PM10 = "pm10"
     PM25_STATE = "pm25_state"
@@ -320,7 +320,7 @@ class DPCode(str, Enum):
     WATER_SET = "water_set"  # Water level
     WATERSENSOR_STATE = "watersensor_state"
     WET = "wet"  # Humidification
-    WIRELESS_AWAKE = "wireless_awake" # wireless awake status
+    WIRELESS_AWAKE = "wireless_awake"  # wireless awake status
     WIRELESS_BATTERYLOCK = "wireless_batterylock"
     WIRELESS_ELECTRICITY = "wireless_electricity"
     WORK_MODE = "work_mode"  # Working mode
