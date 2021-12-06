@@ -89,9 +89,6 @@ def check_entities(
         )
         for attr in FIXED_ATTRIBUTES:
             assert state.attributes.get(attr) == expected_entity.get(attr)
-        assert registry_entry.entity_category == expected_entity.get(
-            ATTR_ENTITY_CATEGORY
-        )
 
 
 def setup_owproxy_mock_devices(
