@@ -296,6 +296,20 @@ async def test_service_call_with_template_payload_renders_template(hass, mqtt_mo
     )
     assert mqtt_mock.async_publish.called
     assert mqtt_mock.async_publish.call_args[0][1] == "8"
+    mqtt_mock.reset_mock()
+
+    await hass.services.async_call(
+        mqtt.DOMAIN,
+        mqtt.SERVICE_PUBLISH,
+        {
+            mqtt.ATTR_TOPIC: "test/topic",
+            mqtt.ATTR_PAYLOAD_TEMPLATE: "{{ (4+4) | pack('B') }}",
+        },
+        blocking=True,
+    )
+    assert mqtt_mock.async_publish.called
+    assert mqtt_mock.async_publish.call_args[0][1] == b"\x08"
+    mqtt_mock.reset_mock()
 
 
 async def test_service_call_with_bad_template(hass, mqtt_mock):
