@@ -65,6 +65,13 @@ async def test_get_triggers(hass, device_reg, entity_reg):
             "device_id": device_entry.id,
             "entity_id": f"{DOMAIN}.test_5678",
         },
+        {
+            "platform": "device",
+            "domain": DOMAIN,
+            "type": "changed_states",
+            "device_id": device_entry.id,
+            "entity_id": f"{DOMAIN}.test_5678",
+        },
     ]
     triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
     assert_lists_same(triggers, expected_triggers)
@@ -139,6 +146,25 @@ async def test_if_fires_on_state_change(hass, calls):
                         },
                     },
                 },
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": "",
+                        "entity_id": "fan.entity",
+                        "type": "changed_states",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": (
+                                "turn_on_or_off - {{ trigger.platform}} - "
+                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
+                                "{{ trigger.to_state.state}} - {{ trigger.for }}"
+                            )
+                        },
+                    },
+                },
             ]
         },
     )
@@ -146,14 +172,20 @@ async def test_if_fires_on_state_change(hass, calls):
     # Fake that the entity is turning on.
     hass.states.async_set("fan.entity", STATE_ON)
     await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0].data["some"] == "turn_on - device - fan.entity - off - on - None"
+    assert len(calls) == 2
+    assert {calls[0].data["some"], calls[1].data["some"]} == {
+        "turn_on - device - fan.entity - off - on - None",
+        "turn_on_or_off - device - fan.entity - off - on - None",
+    }
 
     # Fake that the entity is turning off.
     hass.states.async_set("fan.entity", STATE_OFF)
     await hass.async_block_till_done()
-    assert len(calls) == 2
-    assert calls[1].data["some"] == "turn_off - device - fan.entity - on - off - None"
+    assert len(calls) == 4
+    assert {calls[2].data["some"], calls[3].data["some"]} == {
+        "turn_off - device - fan.entity - on - off - None",
+        "turn_on_or_off - device - fan.entity - on - off - None",
+    }
 
 
 async def test_if_fires_on_state_change_with_for(hass, calls):
