@@ -209,7 +209,7 @@ class HWEnergySensor(CoordinatorEntity, SensorEntity):
         return self.coordinator.data
 
     @property
-    def state(self):
+    def native_value(self):
         """Return state of meter."""
         return self.data[CONF_DATA][self.data_type]
 
