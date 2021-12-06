@@ -10,6 +10,8 @@ PLATFORMS = ["sensor"]
 
 # Platform config.
 CONF_SERIAL = "serial"
+CONF_PRODUCT_NAME = "product_name"
+CONF_PRODUCT_TYPE = "product_type"
 CONF_API = "api"
 CONF_MODEL = "model"
 CONF_SW_VERSION = "sw_ver"

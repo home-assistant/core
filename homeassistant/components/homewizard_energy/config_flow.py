@@ -10,10 +10,10 @@ import async_timeout
 from voluptuous import Required, Schema
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
+from homeassistant.const import CONF_IP_ADDRESS, CONF_NAME, CONF_PORT
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 
-from .const import DOMAIN
+from .const import CONF_PRODUCT_NAME, CONF_PRODUCT_TYPE, CONF_SERIAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,9 +52,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         entry_info = {
             CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS],
             CONF_PORT: 80,
-            "product_type": device_info["product_type"],
-            "product_name": device_info["product_name"],
-            "serial": device_info["serial"],
+            CONF_PRODUCT_TYPE: device_info[CONF_PRODUCT_TYPE],
+            CONF_PRODUCT_NAME: device_info[CONF_PRODUCT_NAME],
+            CONF_SERIAL: device_info[CONF_SERIAL],
         }
 
         # Add entry
@@ -88,9 +88,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.context["entry_info"] = {
             CONF_IP_ADDRESS: discovery_info["host"],
             CONF_PORT: discovery_info["port"],
-            "product_type": device_info["product_type"],
-            "product_name": device_info["product_name"],
-            "serial": device_info["serial"],
+            CONF_PRODUCT_TYPE: device_info[CONF_PRODUCT_TYPE],
+            CONF_PRODUCT_NAME: device_info[CONF_PRODUCT_NAME],
+            CONF_SERIAL: device_info[CONF_SERIAL],
         }
         return await self.async_step_discovery_confirm()
 
@@ -104,9 +104,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._set_confirm_only()
 
         placeholders = {
-            "product_type": self.context["entry_info"]["product_type"],
-            "serial": self.context["entry_info"]["serial"],
-            "host": self.context["entry_info"][CONF_IP_ADDRESS],
+            CONF_PRODUCT_TYPE: self.context["entry_info"][CONF_PRODUCT_TYPE],
+            CONF_SERIAL: self.context["entry_info"][CONF_SERIAL],
+            CONF_IP_ADDRESS: self.context["entry_info"][CONF_IP_ADDRESS],
         }
         return self.async_show_form(
             step_id="discovery_confirm", description_placeholders=placeholders
@@ -125,15 +125,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if energy_api.device is not None:
                     initialized = True
 
-        except aiohwenergy.DisabledError:
+        except aiohwenergy.DisabledError as ex:
             _LOGGER.error("API disabled, API must be enabled in the app")
-            raise AbortFlow("api_not_enabled")
+            raise AbortFlow("api_not_enabled") from ex
 
-        except Exception:  # pylint: disable=broad-except
+        except Exception as ex:  # pylint: disable=broad-except
             _LOGGER.error(
                 f"Error connecting with Energy Device at {ip_address}",
             )
-            raise AbortFlow("unknown_error")
+            raise AbortFlow("unknown_error") from ex
 
         finally:
             await energy_api.close()
@@ -154,9 +154,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             raise AbortFlow("device_not_supported")
 
         return {
-            "product_name": energy_api.device.product_name,
-            "product_type": energy_api.device.product_type,
-            "serial": energy_api.device.serial,
+            CONF_PRODUCT_NAME: energy_api.device.product_name,
+            CONF_PRODUCT_TYPE: energy_api.device.product_type,
+            CONF_SERIAL: energy_api.device.serial,
         }
 
     async def _async_create_entry(self, entry_info):
@@ -164,15 +164,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         _LOGGER.debug("config_flow async_helper_check")
         await self.async_set_unique_id(
-            f"{entry_info['product_type']}_{entry_info['serial']}"
+            f"{entry_info[CONF_PRODUCT_TYPE]}_{entry_info[CONF_PRODUCT_TYPE]}"
         )
         self._abort_if_unique_id_configured(
             updates={CONF_IP_ADDRESS: entry_info[CONF_IP_ADDRESS]}
         )
 
-        entry_info["name"] = f"{entry_info['product_name']} ({entry_info['serial']})"
+        entry_info[
+            CONF_NAME
+        ] = f"{entry_info[CONF_PRODUCT_NAME]} ({entry_info[CONF_PRODUCT_TYPE]})"
 
         return self.async_create_entry(
-            title=entry_info["name"],
+            title=entry_info[CONF_NAME],
             data=entry_info,
         )
