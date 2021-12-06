@@ -12,6 +12,8 @@ from homeassistant.exceptions import HomeAssistantError
 
 _LOGGER = logging.getLogger(__name__)
 
+_REPORTED_INTEGRATIONS: list[str] = []
+
 CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)  # pylint: disable=invalid-name
 
 
@@ -84,6 +86,11 @@ def report_integration(
     Async friendly.
     """
     found_frame, integration, path = integration_frame
+
+    key = f"{integration}:{what}"
+    if key in _REPORTED_INTEGRATIONS:
+        return
+    _REPORTED_INTEGRATIONS.append(key)
 
     index = found_frame.filename.index(path)
     if path == "custom_components/":
