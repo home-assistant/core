@@ -4,6 +4,7 @@ import logging
 
 from aiohue import HueBridgeV2
 from aiohue.discovery import is_v2_bridge
+from aiohue.v2.models.device import DeviceArchetypes
 from aiohue.v2.models.resource import ResourceTypes
 
 from homeassistant import core
@@ -18,7 +19,10 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
 )
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.device_registry import async_get as async_get_device_registry
+from homeassistant.helpers.device_registry import (
+    async_entries_for_config_entry as devices_for_config_entries,
+    async_get as async_get_device_registry,
+)
 from homeassistant.helpers.entity_registry import (
     async_entries_for_config_entry as entities_for_config_entry,
     async_entries_for_device,
@@ -82,6 +86,18 @@ async def handle_v2_migration(hass: core.HomeAssistant, entry: ConfigEntry) -> N
     dev_reg = async_get_device_registry(hass)
     ent_reg = async_get_entity_registry(hass)
     LOGGER.info("Start of migration of devices and entities to support API schema 2")
+
+    # Create mapping of mac address to HA device id's.
+    # Identifier in dev reg should be mac-address,
+    # but in some cases it has a postfix like `-0b` or `-01`.
+    dev_ids = {}
+    for hass_dev in devices_for_config_entries(dev_reg, entry.entry_id):
+        for domain, mac in hass_dev.identifiers:
+            if domain != DOMAIN:
+                continue
+            normalized_mac = mac.split("-")[0]
+            dev_ids[normalized_mac] = hass_dev.id
+
     # initialize bridge connection just for the migration
     async with HueBridgeV2(host, api_key, websession) as api:
 
@@ -98,21 +114,27 @@ async def handle_v2_migration(hass: core.HomeAssistant, entry: ConfigEntry) -> N
             if not zigbee or not zigbee.mac_address:
                 # not a zigbee device or invalid mac
                 continue
-            # get/update existing device by V1 identifier (mac address)
-            # the device will now have both the old and the new identifier(s)
-            identifiers = {
-                (DOMAIN, hue_dev.id),
-                (DOMAIN, zigbee.mac_address),
-                (DOMAIN, f"{zigbee.mac_address}-0b"),
-            }
-            hass_dev = dev_reg.async_get_or_create(
-                config_entry_id=entry.entry_id, identifiers=identifiers
+
+            # get existing device by V1 identifier (mac address)
+            if hue_dev.product_data.product_archetype == DeviceArchetypes.BRIDGE_V2:
+                hass_dev_id = dev_ids.get(api.config.bridge_id.upper())
+            else:
+                hass_dev_id = dev_ids.get(zigbee.mac_address)
+            if hass_dev_id is None:
+                # can be safely ignored, this device does not exist in current config
+                LOGGER.debug(
+                    "Ignoring device %s (%s) as it does not (yet) exist in the device registry.",
+                    hue_dev.metadata.name,
+                    hue_dev.id,
+                )
+                continue
+            dev_reg.async_update_device(
+                hass_dev_id, new_identifiers={(DOMAIN, hue_dev.id)}
             )
-            dev_name = hass_dev.name or hue_dev.metadata.name
-            LOGGER.info("Migrated device %s (%s)", dev_name, hass_dev.id)
+            LOGGER.info("Migrated device %s (%s)", hue_dev.metadata.name, hass_dev_id)
 
             # loop through all entities for device and find match
-            for ent in async_entries_for_device(ent_reg, hass_dev.id, True):
+            for ent in async_entries_for_device(ent_reg, hass_dev_id, True):
 
                 if ent.entity_id.startswith("light"):
                     # migrate light
