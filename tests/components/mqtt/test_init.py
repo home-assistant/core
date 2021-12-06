@@ -137,6 +137,42 @@ async def test_publish_(hass, mqtt_mock):
     )
     mqtt_mock.reset_mock()
 
+    # test binary pass-through
+    mqtt.publish(
+        hass,
+        "test-topic3",
+        b"\xde\xad\xbe\xef",
+        0,
+        False,
+    )
+    await hass.async_block_till_done()
+    assert mqtt_mock.async_publish.called
+    assert mqtt_mock.async_publish.call_args[0] == (
+        "test-topic3",
+        b"\xde\xad\xbe\xef",
+        0,
+        False,
+    )
+    mqtt_mock.reset_mock()
+
+    # test binary literal string conversion to bytes
+    mqtt.publish(
+        hass,
+        "test-topic3",
+        "b'\\xde\\xad\\xbe\\xef'",
+        0,
+        False,
+    )
+    await hass.async_block_till_done()
+    assert mqtt_mock.async_publish.called
+    assert mqtt_mock.async_publish.call_args[0] == (
+        "test-topic3",
+        b"\xde\xad\xbe\xef",
+        0,
+        False,
+    )
+    mqtt_mock.reset_mock()
+
 
 async def test_service_call_without_topic_does_not_publish(hass, mqtt_mock):
     """Test the service call if topic is missing."""

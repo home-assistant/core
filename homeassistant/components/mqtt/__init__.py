@@ -297,10 +297,12 @@ def publish(hass: HomeAssistant, topic, payload, qos=0, retain=False) -> None:
 
 
 def prepare_publish_payload(payload: PublishPayloadType) -> str | bytes:
-    """Ensure correct payload type for publishing."""
+    """Ensure correct MQTT payload type for publishing."""
+    # pass-through for bytes type object
     if isinstance(payload, bytes):
         return payload
 
+    # cast bytes literal string to bytes type object
     if isinstance(payload, str):
         try:
             native_object = literal_eval(payload)
