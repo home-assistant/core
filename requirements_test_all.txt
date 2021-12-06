@@ -86,6 +86,9 @@ aio_georss_gdacs==0.5
 # homeassistant.components.ambient_station
 aioambient==2021.11.0
 
+# homeassistant.components.aseko_pool_live
+aioaseko==0.0.1
+
 # homeassistant.components.asuswrt
 aioasuswrt==1.4.0
 
