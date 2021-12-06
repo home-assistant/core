@@ -181,7 +181,7 @@ class NestMediaSource(MediaSource):
             browse_device.children = []
             events = await _get_events(device)
             for child_event in events.values():
-                event_id = MediaId(media_id.device_id, child_event.event_id)
+                event_id = MediaId(media_id.device_id, child_event.event_session_id)
                 browse_device.children.append(
                     _browse_event(event_id, device, child_event)
                 )
@@ -203,7 +203,7 @@ class NestMediaSource(MediaSource):
 async def _get_events(device: Device) -> Mapping[str, ImageEventBase]:
     """Return relevant events for the specified device."""
     events = await device.event_media_manager.async_events()
-    return {e.event_id: e for e in events}
+    return {e.event_session_id: e for e in events}
 
 
 def _browse_root() -> BrowseMediaSource:
