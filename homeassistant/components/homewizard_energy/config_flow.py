@@ -27,6 +27,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Set up the instance."""
         _LOGGER.debug("config_flow __init__")
 
+        self.entry_info = None
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -85,7 +87,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         device_info = await self._async_try_connect_and_fetch(discovery_info["host"])
 
         # Pass parameters
-        self.context["entry_info"] = {
+        self.entry_info = {
             CONF_IP_ADDRESS: discovery_info["host"],
             CONF_PORT: discovery_info["port"],
             CONF_PRODUCT_TYPE: device_info[CONF_PRODUCT_TYPE],
@@ -99,7 +101,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Confirm discovery."""
         if entry_info is not None:
-            return await self._async_create_entry(self.context["entry_info"])
+            return await self._async_create_entry(self.entry_info)
 
         self._set_confirm_only()
 
