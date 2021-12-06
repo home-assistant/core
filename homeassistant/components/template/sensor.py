@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from datetime import date, datetime
-import logging
 from typing import Any
 
 import voluptuous as vol
@@ -55,8 +54,6 @@ LEGACY_FIELDS = {
     CONF_FRIENDLY_NAME: CONF_NAME,
     CONF_VALUE_TEMPLATE: CONF_STATE,
 }
-
-_LOGGER = logging.getLogger(__name__)
 
 SENSOR_SCHEMA = vol.Schema(
     {
