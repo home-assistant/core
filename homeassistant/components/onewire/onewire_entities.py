@@ -43,7 +43,6 @@ class OneWireBaseEntity(Entity):
         self._attr_name = name
         self._device_file = device_file
         self._state: StateType = None
-        self._value_raw: float | None = None
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
@@ -87,14 +86,14 @@ class OneWireProxyEntity(OneWireBaseEntity):
     def update(self) -> None:
         """Get the latest data from the device."""
         try:
-            self._value_raw = float(self._read_value_ownet())
+            raw_value = float(self._read_value_ownet())
         except protocol.Error as exc:
             _LOGGER.error("Owserver failure in read(), got: %s", exc)
             self._state = None
         else:
             if self.entity_description.read_mode == READ_MODE_INT:
-                self._state = int(self._value_raw)
+                self._state = int(raw_value)
             elif self.entity_description.read_mode == READ_MODE_BOOL:
-                self._state = int(self._value_raw) == 1
+                self._state = int(raw_value) == 1
             else:
-                self._state = round(self._value_raw, 1)
+                self._state = round(raw_value, 1)

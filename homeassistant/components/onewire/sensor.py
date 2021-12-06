@@ -511,8 +511,7 @@ class OneWireDirectSensor(OneWireSensor):
     async def async_update(self) -> None:
         """Get the latest data from the device."""
         try:
-            self._value_raw = await self.get_temperature()
-            self._state = round(self._value_raw, 1)
+            self._state = round(await self.get_temperature(), 1)
         except (
             FileNotFoundError,
             InvalidCRCException,
