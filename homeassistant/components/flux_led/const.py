@@ -39,7 +39,6 @@ DEFAULT_SCAN_INTERVAL: Final = 5
 DEFAULT_EFFECT_SPEED: Final = 50
 
 FLUX_LED_DISCOVERY: Final = "flux_led_discovery"
-FLUX_LED_DISCOVERY_LOCK: Final = "flux_led_discovery_lock"
 
 FLUX_LED_EXCEPTIONS: Final = (
     asyncio.TimeoutError,
