@@ -1205,5 +1205,8 @@ async def test_database_lock_timeout(hass):
     await hass.async_block_till_done()
 
     instance: Recorder = hass.data[DATA_INSTANCE]
-    with pytest.raises(TimeoutError):
-        await instance.lock_database(lock_timeout=0.1)
+    try:
+        with pytest.raises(TimeoutError):
+            await instance.lock_database(lock_timeout=0.1)
+    finally:
+        instance.unlock_database()
