@@ -18,12 +18,13 @@ from homeassistant.const import (
     POWER_WATT,
     TEMP_CELSIUS,
     TIME_SECONDS,
+    Platform,
 )
 from homeassistant.helpers.entity import EntityCategory
 
 DOMAIN = "nut"
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 
 UNDO_UPDATE_LISTENER = "undo_update_listener"
 
