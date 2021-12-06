@@ -9,6 +9,7 @@ from aiovlc.exceptions import AuthError, ConnectError
 import voluptuous as vol
 
 from homeassistant import core, exceptions
+from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.data_entry_flow import FlowResult
@@ -151,13 +152,13 @@ class VLCTelnetConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_hassio(self, discovery_info: dict[str, Any]) -> FlowResult:
+    async def async_step_hassio(self, discovery_info: HassioServiceInfo) -> FlowResult:
         """Handle the discovery step via hassio."""
         await self.async_set_unique_id("hassio")
-        self._abort_if_unique_id_configured(discovery_info)
+        self._abort_if_unique_id_configured(discovery_info.config)
 
-        self.hassio_discovery = discovery_info
-        self.context["title_placeholders"] = {"host": discovery_info[CONF_HOST]}
+        self.hassio_discovery = discovery_info.config
+        self.context["title_placeholders"] = {"host": discovery_info.config[CONF_HOST]}
         return await self.async_step_hassio_confirm()
 
     async def async_step_hassio_confirm(

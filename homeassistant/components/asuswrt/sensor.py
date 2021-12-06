@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from numbers import Real
 
 from homeassistant.components.sensor import (
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
@@ -13,9 +14,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DATA_GIGABYTES,
     DATA_RATE_MEGABITS_PER_SECOND,
-    ENTITY_CATEGORY_DIAGNOSTIC,
+    TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -28,6 +30,7 @@ from .const import (
     SENSORS_CONNECTED_DEVICE,
     SENSORS_LOAD_AVG,
     SENSORS_RATES,
+    SENSORS_TEMPERATURES,
 )
 from .router import KEY_COORDINATOR, KEY_SENSORS, AsusWrtRouter
 
@@ -92,7 +95,7 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
         name="Load Avg (1m)",
         icon="mdi:cpu-32-bit",
         state_class=SensorStateClass.MEASUREMENT,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         factor=1,
         precision=1,
@@ -102,7 +105,7 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
         name="Load Avg (5m)",
         icon="mdi:cpu-32-bit",
         state_class=SensorStateClass.MEASUREMENT,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         factor=1,
         precision=1,
@@ -112,7 +115,40 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
         name="Load Avg (15m)",
         icon="mdi:cpu-32-bit",
         state_class=SensorStateClass.MEASUREMENT,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        factor=1,
+        precision=1,
+    ),
+    AsusWrtSensorEntityDescription(
+        key=SENSORS_TEMPERATURES[0],
+        name="2.4GHz Temperature",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=TEMP_CELSIUS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        factor=1,
+        precision=1,
+    ),
+    AsusWrtSensorEntityDescription(
+        key=SENSORS_TEMPERATURES[1],
+        name="5GHz Temperature",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=TEMP_CELSIUS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        factor=1,
+        precision=1,
+    ),
+    AsusWrtSensorEntityDescription(
+        key=SENSORS_TEMPERATURES[2],
+        name="CPU Temperature",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=TEMP_CELSIUS,
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         factor=1,
         precision=1,

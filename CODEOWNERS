@@ -52,6 +52,7 @@ homeassistant/components/arcam_fmj/* @elupus
 homeassistant/components/arduino/* @fabaff
 homeassistant/components/arest/* @fabaff
 homeassistant/components/arris_tg2492lg/* @vanbalken
+homeassistant/components/aseko_pool_live/* @milanmeu
 homeassistant/components/asuswrt/* @kennedyshead @ollo69
 homeassistant/components/atag/* @MatsNL
 homeassistant/components/aten_pe/* @mtdcr
@@ -353,6 +354,7 @@ homeassistant/components/nextcloud/* @meichthys
 homeassistant/components/nfandroidtv/* @tkdrob
 homeassistant/components/nightscout/* @marciogranzotto
 homeassistant/components/nilu/* @hfurubotten
+homeassistant/components/nina/* @DeerMaximum
 homeassistant/components/nissan_leaf/* @filcole
 homeassistant/components/nmap_tracker/* @bdraco
 homeassistant/components/nmbs/* @thibmaek
@@ -378,6 +380,7 @@ homeassistant/components/onboarding/* @home-assistant/core
 homeassistant/components/ondilo_ico/* @JeromeHXP
 homeassistant/components/onewire/* @garbled1 @epenet
 homeassistant/components/onvif/* @hunterjm
+homeassistant/components/open_meteo/* @frenck
 homeassistant/components/openerz/* @misialq
 homeassistant/components/opengarage/* @danielhiversen
 homeassistant/components/openhome/* @bazwilliams
@@ -586,6 +589,7 @@ homeassistant/components/vizio/* @raman325
 homeassistant/components/vlc_telnet/* @rodripf @dmcc @MartinHjelmare
 homeassistant/components/volkszaehler/* @fabaff
 homeassistant/components/volumio/* @OnFreund
+homeassistant/components/volvooncall/* @molobrakos @decompil3d
 homeassistant/components/wake_on_lan/* @ntilley905
 homeassistant/components/wallbox/* @hesselonline
 homeassistant/components/waqi/* @andrey-git

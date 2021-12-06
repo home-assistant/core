@@ -12,6 +12,7 @@
                 "data": {
                     "host": "Host",
                     "individual_address": "Individuelle Adresse f\u00fcr die Verbindung",
+                    "local_ip": "Lokale IP (leer lassen, wenn unsicher)",
                     "port": "Port",
                     "route_back": "Route Back / NAT-Modus"
                 },
@@ -54,6 +55,7 @@
             "tunnel": {
                 "data": {
                     "host": "Host",
+                    "local_ip": "Lokale IP (leer lassen, wenn unsicher)",
                     "port": "Port",
                     "route_back": "Route Back / NAT-Modus"
                 }

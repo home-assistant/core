@@ -1,9 +1,5 @@
 """Constants used by the Netatmo component."""
-from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
-from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import Platform
 
 API = "api"
 
@@ -11,7 +7,13 @@ DOMAIN = "netatmo"
 MANUFACTURER = "Netatmo"
 DEFAULT_ATTRIBUTION = f"Data provided by {MANUFACTURER}"
 
-PLATFORMS = [CAMERA_DOMAIN, CLIMATE_DOMAIN, LIGHT_DOMAIN, SELECT_DOMAIN, SENSOR_DOMAIN]
+PLATFORMS = [
+    Platform.CAMERA,
+    Platform.CLIMATE,
+    Platform.LIGHT,
+    Platform.SELECT,
+    Platform.SENSOR,
+]
 
 NETATMO_SCOPES = [
     "access_camera",
@@ -69,6 +71,7 @@ CAMERA_DATA = "netatmo_camera"
 HOME_DATA = "netatmo_home_data"
 DATA_HANDLER = "netatmo_data_handler"
 SIGNAL_NAME = "signal_name"
+NETATMO_CREATE_BATTERY = "netatmo_create_battery"
 
 CONF_CLOUDHOOK_URL = "cloudhook_url"
 CONF_WEATHER_AREAS = "weather_areas"

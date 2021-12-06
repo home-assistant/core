@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_STRUCTURE,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
@@ -29,7 +30,12 @@ from .const import DATA_NEST, DATA_NEST_CONFIG, DOMAIN, SIGNAL_NEST_UPDATE
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["climate", "camera", "sensor", "binary_sensor"]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.CAMERA,
+    Platform.CLIMATE,
+    Platform.SENSOR,
+]
 
 # Configuration for the legacy nest API
 SERVICE_CANCEL_ETA = "cancel_eta"
@@ -134,10 +140,7 @@ async def async_setup_legacy_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
     if not await hass.async_add_executor_job(hass.data[DATA_NEST].initialize):
         return False
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     def validate_structures(target_structures):
         all_structures = [structure.name for structure in nest.structures]

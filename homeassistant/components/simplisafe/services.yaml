@@ -1,15 +1,28 @@
 # Describes the format for available SimpliSafe services
+clear_notifications:
+  name: Clear notifications
+  description: Clear any active SimpliSafe notifications
+  fields:
+    device_id:
+      name: System
+      description: The system to remove the PIN from
+      required: true
+      selector:
+        device:
+          integration: simplisafe
+          model: alarm_control_panel
 remove_pin:
   name: Remove PIN
   description: Remove a PIN by its label or value.
   fields:
-    system_id:
-      name: System ID
-      description: The SimpliSafe system ID to affect.
+    device_id:
+      name: System
+      description: The system to remove the PIN from
       required: true
-      example: 123987
       selector:
-        text:
+        device:
+          integration: simplisafe
+          model: alarm_control_panel
     label_or_pin:
       name: Label/PIN
       description: The label/value to remove.
@@ -21,13 +34,14 @@ set_pin:
   name: Set PIN
   description: Set/update a PIN
   fields:
-    system_id:
-      name: System ID
-      description: The SimpliSafe system ID to affect
+    device_id:
+      name: System
+      description: The system to set the PIN on
       required: true
-      example: 123987
       selector:
-        text:
+        device:
+          integration: simplisafe
+          model: alarm_control_panel
     label:
       name: Label
       description: The label of the PIN
@@ -46,6 +60,14 @@ set_system_properties:
   name: Set system properties
   description: Set one or more system properties
   fields:
+    device_id:
+      name: System
+      description: The system whose properties should be set
+      required: true
+      selector:
+        device:
+          integration: simplisafe
+          model: alarm_control_panel
     alarm_duration:
       name: Alarm duration
       description: The length of a triggered alarm
