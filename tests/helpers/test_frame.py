@@ -1,4 +1,5 @@
 """Test the frame helper."""
+# pylint: disable=protected-access
 from unittest.mock import Mock, patch
 
 import pytest
@@ -70,3 +71,21 @@ async def test_extract_frame_no_integration(caplog):
         ],
     ), pytest.raises(frame.MissingIntegrationFrame):
         frame.get_integration_frame()
+
+
+@pytest.mark.usefixtures("mock_integration_frame")
+@patch.object(frame, "_REPORTED_INTEGRATIONS", [])
+async def test_prevent_flooding(caplog):
+    """Test to ensure a report is only written once to the log."""
+
+    frame.report("accessed hi instead of hello", error_if_core=False)
+    assert "accessed hi instead of hello" in caplog.text
+    assert "hue:accessed hi instead of hello" in frame._REPORTED_INTEGRATIONS
+    assert len(frame._REPORTED_INTEGRATIONS) == 1
+
+    caplog.clear()
+
+    frame.report("accessed hi instead of hello", error_if_core=False)
+    assert "accessed hi instead of hello" not in caplog.text
+    assert "hue:accessed hi instead of hello" in frame._REPORTED_INTEGRATIONS
+    assert len(frame._REPORTED_INTEGRATIONS) == 1
