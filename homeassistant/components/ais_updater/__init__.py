@@ -662,10 +662,6 @@ async def get_newest_version(hass, include_components, go_to_download):
 
 
 def get_package_version(package) -> str:
-    # import pkg_resources
-    # from importlib_metadata import version, PackageNotFoundError
-    # req = pkg_resources.Requirement.parse(package)
-    #
     # get version from manifest.json
     if package == "youtube_dl":
         path = (
@@ -866,7 +862,7 @@ def do_download_upgrade(hass, call):
         grant_write_to_sdcard()
 
     # download release script
-    _LOGGER.info("We have release_script dependencies " + str(release_script))
+    _LOGGER.info("Release script " + str(release_script))
     try:
         file_script = str(os.path.dirname(__file__))
         file_script += "/scripts/release_script.sh"
@@ -916,6 +912,12 @@ def do_install_upgrade(hass, call):
         )
         apt_process.wait()
         _LOGGER.info("release_script, return: " + str(apt_process.returncode))
+        if apt_process.returncode != 0:
+            _set_update_status(hass, UPDATE_STATUS_UNKNOWN)
+            _LOGGER.error(
+                "Can't install release_script, returncode: "
+                + str(apt_process.returncode)
+            )
     except Exception as e:
         _LOGGER.error("Can't install release_script, error: " + str(e))
 
