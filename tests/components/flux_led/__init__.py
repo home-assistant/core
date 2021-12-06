@@ -66,6 +66,7 @@ def _mocked_bulb() -> AIOWifiLedBulb:
         bulb.data_receive_callback = callback
 
     bulb.device_type = DeviceType.Bulb
+    bulb.requires_turn_on = True
     bulb.async_setup = AsyncMock(side_effect=_save_setup_callback)
     bulb.effect_list = ["some_effect"]
     bulb.async_set_custom_pattern = AsyncMock()
@@ -115,6 +116,7 @@ def _mocked_switch() -> AIOWifiLedBulb:
         switch.data_receive_callback = callback
 
     switch.device_type = DeviceType.Switch
+    switch.requires_turn_on = True
     switch.async_setup = AsyncMock(side_effect=_save_setup_callback)
     switch.async_stop = AsyncMock()
     switch.async_update = AsyncMock()
