@@ -59,7 +59,7 @@ async def test_light_entity_migration(
     ent_reg.async_get_or_create(
         "light",
         hue.DOMAIN,
-        "00:17:88:01:09:aa:bb:65-b0",
+        "00:17:88:01:09:aa:bb:65-0b",
         suggested_object_id="migrated_light_1",
         device_id=device.id,
     )
