@@ -1,21 +1,20 @@
 """Support for Radarr."""
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from http import HTTPStatus
 import logging
 import time
 from typing import Any
+
 import requests
 import voluptuous as vol
-from .coordinator import RadarrDataUpdateCoordinator
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -32,15 +31,23 @@ from homeassistant.const import (
     DATA_YOTTABYTES,
     DATA_ZETTABYTES,
 )
-from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_DAYS, CONF_INCLUDED, CONF_UNIT, CONF_URLBASE, DEFAULT_DAYS, DEFAULT_HOST, DEFAULT_PORT, DEFAULT_UNIT, DEFAULT_URLBASE, DOMAIN
-
 _LOGGER = logging.getLogger(__name__)
+
+CONF_DAYS = "days"
+CONF_INCLUDED = "include_paths"
+CONF_UNIT = "unit"
+CONF_URLBASE = "urlbase"
+
+DEFAULT_HOST = "localhost"
+DEFAULT_PORT = 7878
+DEFAULT_URLBASE = ""
+DEFAULT_DAYS = "1"
+DEFAULT_UNIT = DATA_GIGABYTES
+
+SCAN_INTERVAL = timedelta(minutes=10)
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -103,7 +110,6 @@ BYTE_SIZES = [
     DATA_ZETTABYTES,
     DATA_YOTTABYTES,
 ]
-# Deprecated in Home Assistant 2022.1
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
@@ -121,66 +127,45 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Radarr platform."""
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
-    )
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up Radarr sensors based on a config entry."""
-    options: dict[str, Any] = dict(entry.options)
-
+    conditions = config[CONF_MONITORED_CONDITIONS]
     entities = [
-        RadarrSensor(
-            hass.data[DOMAIN][entry.entry_id],
-            entry.entry_id,
-            description,
-            options,
-        )
+        RadarrSensor(hass, config, description)
         for description in SENSOR_TYPES
+        if description.key in conditions
     ]
-
-    async_add_entities(entities, True)
+    add_entities(entities, True)
 
 
 class RadarrSensor(SensorEntity):
     """Implementation of the Radarr sensor."""
 
-    def __init__(
-        self,
-        conf: RadarrDataUpdateCoordinator,
-        entry_id: str,
-        description: SensorEntityDescription,
-        options: dict[str, Any],
-    ) -> None:
+    def __init__(self, hass, conf, description: SensorEntityDescription):
         """Create Radarr entity."""
         self.entity_description = description
-        self.coordinator = conf
-        self.days = 7
+
+        self.conf = conf
+        self.host = conf.get(CONF_HOST)
+        self.port = conf.get(CONF_PORT)
+        self.urlbase = conf.get(CONF_URLBASE)
+        if self.urlbase:
+            self.urlbase = f"{self.urlbase.strip('/')}/"
+        self.apikey = conf.get(CONF_API_KEY)
+        self.included = conf.get(CONF_INCLUDED)
+        self.days = int(conf.get(CONF_DAYS))
+        self.ssl = "https" if conf.get(CONF_SSL) else "http"
         self.data: list[Any] = []
         self._attr_name = f"Radarr {description.name}"
-        self._attr_unique_id = f"{entry_id}/{description.name}"
-        #self._attr_available = False
+        if description.key == "diskspace":
+            self._attr_native_unit_of_measurement = conf.get(CONF_UNIT)
+        self._attr_available = False
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         attributes = {}
         sensor_type = self.entity_description.key
-        #TODO: fix 
         if sensor_type == "upcoming":
             for movie in self.data:
                 attributes[to_key(movie)] = get_release_date(movie)
@@ -210,72 +195,69 @@ class RadarrSensor(SensorEntity):
 
         return attributes
 
-    @property
-    def native_value(self):
+    def update(self):
+        """Update the data for the sensor."""
         sensor_type = self.entity_description.key
-        #time_zone = dt_util.get_time_zone(self.hass.config.time_zone)
-        #start = get_date(time_zone)
-        #end = get_date(time_zone, self.days)
-        if self.entity_description.key == "diskspace":
-            # If included paths are not provided, use all data
-            space = 0
-            last = None
-            #We assume each mapping with the same freespace as the same physical drive
-            #for mount in self.coordinator.disk_space:
-            #    if mount.freeSpace != last:
-            #        space = space + mount.freeSpace
-            #        last = mount.freeSpace
-            #self._attr_native_value = "{:.2f}".format(to_unit(space, self.native_unit_of_measurement))
+        time_zone = dt_util.get_time_zone(self.hass.config.time_zone)
+        start = get_date(time_zone)
+        end = get_date(time_zone, self.days)
+        try:
+            res = requests.get(
+                ENDPOINTS[sensor_type].format(
+                    self.ssl, self.host, self.port, self.urlbase, start, end
+                ),
+                headers={"X-Api-Key": self.apikey},
+                timeout=10,
+            )
+        except OSError:
+            _LOGGER.warning("Host %s is not available", self.host)
+            self._attr_available = False
+            self._attr_native_value = None
+            return
 
-        if self.entity_description.key == "upcoming":
-            if self.coordinator.calendar is not None:
-                return len(self.coordinator.calendar)
-        if self.entity_description.key == "movies":
-            return len(self.coordinator.movies)
-        if self.entity_description.key == "commands":
-            if self.coordinator.commands is not None:
-                return len(self.coordinator.commands)
-        if self.entity_description.key == "status":
-            _LOGGER.warning("TESTSENSOR")
-            return self.coordinator.system_status.version
-
-        #if res.status_code == HTTPStatus.OK:
-        #    if sensor_type in ("upcoming", "movies", "commands"):
-        #        self.data = res.json()
-        #        self._attr_native_value = len(self.data)
-        #    elif sensor_type == "diskspace":
-        #        # If included paths are not provided, use all data
-        #        if self.included == []:
-        #            self.data = res.json()
-        #        else:
-        #            # Filter to only show lists that are included
-        #            self.data = list(
-        #                filter(lambda x: x["path"] in self.included, res.json())
-        #            )
-        #        self._attr_native_value = "{:.2f}".format(
-        #            to_unit(
-        #                sum(data["freeSpace"] for data in self.data),
-        #                self.native_unit_of_measurement,
-        #            )
-        #        )
-        #    elif sensor_type == "status":
-        #        self.data = res.json()
-        #        self._attr_native_value = self.data["version"]
-        #    self._attr_available = True
+        if res.status_code == HTTPStatus.OK:
+            if sensor_type in ("upcoming", "movies", "commands"):
+                self.data = res.json()
+                self._attr_native_value = len(self.data)
+            elif sensor_type == "diskspace":
+                # If included paths are not provided, use all data
+                if self.included == []:
+                    self.data = res.json()
+                else:
+                    # Filter to only show lists that are included
+                    self.data = list(
+                        filter(lambda x: x["path"] in self.included, res.json())
+                    )
+                self._attr_native_value = "{:.2f}".format(
+                    to_unit(
+                        sum(data["freeSpace"] for data in self.data),
+                        self.native_unit_of_measurement,
+                    )
+                )
+            elif sensor_type == "status":
+                self.data = res.json()
+                self._attr_native_value = self.data["version"]
+            self._attr_available = True
 
 
-def get_release_date(data: dict) -> str:
+def get_date(zone, offset=0):
+    """Get date based on timezone and offset of days."""
+    day = 60 * 60 * 24
+    return datetime.date(datetime.fromtimestamp(time.time() + day * offset, tz=zone))
+
+
+def get_release_date(data):
     """Get release date."""
     if not (date := data.get("physicalRelease")):
         date = data.get("inCinemas")
     return date
 
 
-def to_key(data: dict) -> str:
+def to_key(data):
     """Get key."""
     return "{} ({})".format(data["title"], data["year"])
 
 
-def to_unit(value: int, unit: str) -> int:
+def to_unit(value, unit):
     """Convert bytes to give unit."""
     return value / 1024 ** BYTE_SIZES.index(unit)
