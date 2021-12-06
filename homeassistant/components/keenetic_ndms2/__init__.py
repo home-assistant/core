@@ -3,10 +3,8 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry, entity_registry
 
@@ -25,7 +23,7 @@ from .const import (
 )
 from .router import KeeneticRouter
 
-PLATFORMS = [BINARY_SENSOR_DOMAIN, DEVICE_TRACKER_DOMAIN]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.DEVICE_TRACKER]
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -80,7 +78,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
         for entity_entry in list(ent_reg.entities.values()):
             if (
                 entity_entry.config_entry_id == config_entry.entry_id
-                and entity_entry.domain == DEVICE_TRACKER_DOMAIN
+                and entity_entry.domain == Platform.DEVICE_TRACKER
             ):
                 mac = entity_entry.unique_id.partition("_")[0]
                 if mac not in keep_devices:
