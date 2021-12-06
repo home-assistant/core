@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from aionanoleaf import EffectsEvent, InvalidToken, Nanoleaf, StateEvent, Unavailable
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_TOKEN
+from homeassistant.const import CONF_HOST, CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -15,7 +15,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import DOMAIN
 
-PLATFORMS = ["button", "light"]
+PLATFORMS = [Platform.BUTTON, Platform.LIGHT]
 
 
 @dataclass
