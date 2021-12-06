@@ -117,7 +117,7 @@ async def test_doorbell_chime_event(hass):
         "device_id": entry.device_id,
         "type": "doorbell_chime",
         "timestamp": event_time,
-        "nest_event_id": EVENT_ID,
+        "nest_event_id": EVENT_SESSION_ID,
     }
 
 
@@ -145,7 +145,7 @@ async def test_camera_motion_event(hass):
         "device_id": entry.device_id,
         "type": "camera_motion",
         "timestamp": event_time,
-        "nest_event_id": EVENT_ID,
+        "nest_event_id": EVENT_SESSION_ID,
     }
 
 
@@ -173,7 +173,7 @@ async def test_camera_sound_event(hass):
         "device_id": entry.device_id,
         "type": "camera_sound",
         "timestamp": event_time,
-        "nest_event_id": EVENT_ID,
+        "nest_event_id": EVENT_SESSION_ID,
     }
 
 
@@ -201,7 +201,7 @@ async def test_camera_person_event(hass):
         "device_id": entry.device_id,
         "type": "camera_person",
         "timestamp": event_time,
-        "nest_event_id": EVENT_ID,
+        "nest_event_id": EVENT_SESSION_ID,
     }
 
 
@@ -238,13 +238,13 @@ async def test_camera_multiple_event(hass):
         "device_id": entry.device_id,
         "type": "camera_motion",
         "timestamp": event_time,
-        "nest_event_id": EVENT_ID,
+        "nest_event_id": EVENT_SESSION_ID,
     }
     assert events[1].data == {
         "device_id": entry.device_id,
         "type": "camera_person",
         "timestamp": event_time,
-        "nest_event_id": EVENT_ID,
+        "nest_event_id": EVENT_SESSION_ID,
     }
 
 
