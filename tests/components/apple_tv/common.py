@@ -49,7 +49,7 @@ def create_conf(name, address, *services):
     return atv
 
 
-def mrp_service():
+def mrp_service(enabled=True):
     """Create example MRP service."""
     return conf.ManualService(
         "mrpid",
@@ -57,6 +57,7 @@ def mrp_service():
         5555,
         {},
         pairing_requirement=const.PairingRequirement.Mandatory,
+        enabled=enabled,
     )
 
 

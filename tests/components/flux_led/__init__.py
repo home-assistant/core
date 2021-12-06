@@ -166,7 +166,8 @@ def _patch_discovery(device=None, no_device=False):
         return [FLUX_DISCOVERY]
 
     return patch(
-        "homeassistant.components.flux_led.AIOBulbScanner.async_scan", new=_discovery
+        "homeassistant.components.flux_led.discovery.AIOBulbScanner.async_scan",
+        new=_discovery,
     )
 
 

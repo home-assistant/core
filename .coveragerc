@@ -767,6 +767,7 @@ omit =
     homeassistant/components/onvif/event.py
     homeassistant/components/onvif/parsers.py
     homeassistant/components/onvif/sensor.py
+    homeassistant/components/open_meteo/weather.py
     homeassistant/components/opencv/*
     homeassistant/components/openevse/sensor.py
     homeassistant/components/openexchangerates/sensor.py
@@ -1293,6 +1294,7 @@ omit =
     homeassistant/components/yamaha_musiccast/__init__.py
     homeassistant/components/yamaha_musiccast/media_player.py
     homeassistant/components/yamaha_musiccast/number.py
+    homeassistant/components/yamaha_musiccast/select.py
     homeassistant/components/yandex_transport/*
     homeassistant/components/yeelightsunflower/light.py
     homeassistant/components/yi/camera.py

@@ -189,7 +189,7 @@ aiohomekit==0.6.4
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==3.0.1
+aiohue==3.0.2
 
 # homeassistant.components.imap
 aioimaplib==0.9.0
@@ -267,7 +267,7 @@ aiovlc==0.1.0
 aiowatttime==0.1.1
 
 # homeassistant.components.yandex_transport
-aioymaps==1.2.1
+aioymaps==1.2.2
 
 # homeassistant.components.airly
 airly==1.1.0
@@ -658,7 +658,7 @@ fjaraskupan==1.0.2
 flipr-api==1.4.1
 
 # homeassistant.components.flux_led
-flux_led==0.25.17
+flux_led==0.25.18
 
 # homeassistant.components.homekit
 fnvhash==0.1.0
@@ -1131,6 +1131,9 @@ onvif-zeep-async==1.2.0
 # homeassistant.components.opengarage
 open-garage==0.2.0
 
+# homeassistant.components.open_meteo
+open-meteo==0.2.0
+
 # homeassistant.components.opencv
 # opencv-python-headless==4.5.2.54
 
@@ -1369,7 +1372,7 @@ pyatmo==6.2.0
 pyatome==0.1.1
 
 # homeassistant.components.apple_tv
-pyatv==0.8.2
+pyatv==0.9.7
 
 # homeassistant.components.balboa
 pybalboa==0.13

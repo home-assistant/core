@@ -107,6 +107,26 @@ def mrp_device(mock_scan):
 
 
 @pytest.fixture
+def airplay_with_disabled_mrp(mock_scan):
+    """Mock pyatv.scan."""
+    mock_scan.result.append(
+        create_conf(
+            "127.0.0.1",
+            "AirPlay Device",
+            mrp_service(enabled=False),
+            conf.ManualService(
+                "airplayid",
+                Protocol.AirPlay,
+                7777,
+                {},
+                pairing_requirement=PairingRequirement.Mandatory,
+            ),
+        )
+    )
+    yield mock_scan
+
+
+@pytest.fixture
 def dmap_device(mock_scan):
     """Mock pyatv.scan."""
     mock_scan.result.append(
