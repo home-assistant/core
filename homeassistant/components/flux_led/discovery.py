@@ -55,7 +55,12 @@ async def async_discover_devices(
             _LOGGER.debug("Scanning %s failed with error: %s", targets[idx], discovered)
             continue
 
-    return scanner.getBulbInfo()
+    if not address:
+        return scanner.getBulbInfo()
+
+    return [
+        device for device in scanner.getBulbInfo() if device[ATTR_IPADDR] == address
+    ]
 
 
 async def async_discover_device(
