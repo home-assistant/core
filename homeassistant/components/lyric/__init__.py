@@ -93,6 +93,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def async_update_data() -> Lyric:
         """Fetch data from Lyric."""
+        await oauth_session.async_ensure_token_valid()
         try:
             async with async_timeout.timeout(60):
                 await lyric.get_locations()

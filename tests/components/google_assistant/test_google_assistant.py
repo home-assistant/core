@@ -144,10 +144,18 @@ async def test_sync_request(hass_fixture, assistant_client, auth_header):
         suggested_object_id="diagnostic_switch",
         entity_category="diagnostic",
     )
+    entity_entry3 = entity_registry.async_get_or_create(
+        "switch",
+        "test",
+        "switch_system_id",
+        suggested_object_id="system_switch",
+        entity_category="system",
+    )
 
     # These should not show up in the sync request
     hass_fixture.states.async_set(entity_entry1.entity_id, "on")
     hass_fixture.states.async_set(entity_entry2.entity_id, "something_else")
+    hass_fixture.states.async_set(entity_entry3.entity_id, "blah")
 
     reqid = "5711642932632160983"
     data = {"requestId": reqid, "inputs": [{"intent": "action.devices.SYNC"}]}

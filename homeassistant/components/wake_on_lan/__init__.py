@@ -8,9 +8,9 @@ import wakeonlan
 from homeassistant.const import CONF_BROADCAST_ADDRESS, CONF_BROADCAST_PORT, CONF_MAC
 import homeassistant.helpers.config_validation as cv
 
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN
 
-DOMAIN = "wake_on_lan"
+_LOGGER = logging.getLogger(__name__)
 
 SERVICE_SEND_MAGIC_PACKET = "send_magic_packet"
 

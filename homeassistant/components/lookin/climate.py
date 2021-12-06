@@ -1,10 +1,10 @@
 """The lookin integration climate platform."""
 from __future__ import annotations
 
-from collections.abc import Coroutine
+from collections.abc import Callable, Coroutine
 from datetime import timedelta
 import logging
-from typing import Any, Callable, Final, cast
+from typing import Any, Final, cast
 
 from aiolookin import Climate, MeteoSensor, SensorID
 

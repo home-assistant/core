@@ -175,13 +175,13 @@ PLATFORM_SCHEMA = vol.All(
     # CONF_SPEED_COMMAND_TOPIC, CONF_SPEED_LIST, CONF_SPEED_STATE_TOPIC, CONF_SPEED_VALUE_TEMPLATE and
     # Speeds SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH SPEED_OFF,
     # are deprecated, support will be removed with release 2021.9
-    cv.deprecated(CONF_PAYLOAD_HIGH_SPEED),
-    cv.deprecated(CONF_PAYLOAD_LOW_SPEED),
-    cv.deprecated(CONF_PAYLOAD_MEDIUM_SPEED),
-    cv.deprecated(CONF_SPEED_COMMAND_TOPIC),
-    cv.deprecated(CONF_SPEED_LIST),
-    cv.deprecated(CONF_SPEED_STATE_TOPIC),
-    cv.deprecated(CONF_SPEED_VALUE_TEMPLATE),
+    cv.removed(CONF_PAYLOAD_HIGH_SPEED),
+    cv.removed(CONF_PAYLOAD_LOW_SPEED),
+    cv.removed(CONF_PAYLOAD_MEDIUM_SPEED),
+    cv.removed(CONF_SPEED_COMMAND_TOPIC),
+    cv.removed(CONF_SPEED_LIST),
+    cv.removed(CONF_SPEED_STATE_TOPIC),
+    cv.removed(CONF_SPEED_VALUE_TEMPLATE),
     _PLATFORM_SCHEMA_BASE,
     valid_speed_range_configuration,
     valid_preset_mode_configuration,
@@ -191,13 +191,13 @@ DISCOVERY_SCHEMA = vol.All(
     # CONF_SPEED_COMMAND_TOPIC, CONF_SPEED_LIST, CONF_SPEED_STATE_TOPIC, CONF_SPEED_VALUE_TEMPLATE and
     # Speeds SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH SPEED_OFF,
     # are deprecated, support will be removed with release 2021.9
-    cv.deprecated(CONF_PAYLOAD_HIGH_SPEED),
-    cv.deprecated(CONF_PAYLOAD_LOW_SPEED),
-    cv.deprecated(CONF_PAYLOAD_MEDIUM_SPEED),
-    cv.deprecated(CONF_SPEED_COMMAND_TOPIC),
-    cv.deprecated(CONF_SPEED_LIST),
-    cv.deprecated(CONF_SPEED_STATE_TOPIC),
-    cv.deprecated(CONF_SPEED_VALUE_TEMPLATE),
+    cv.removed(CONF_PAYLOAD_HIGH_SPEED),
+    cv.removed(CONF_PAYLOAD_LOW_SPEED),
+    cv.removed(CONF_PAYLOAD_MEDIUM_SPEED),
+    cv.removed(CONF_SPEED_COMMAND_TOPIC),
+    cv.removed(CONF_SPEED_LIST),
+    cv.removed(CONF_SPEED_STATE_TOPIC),
+    cv.removed(CONF_SPEED_VALUE_TEMPLATE),
     _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
     valid_speed_range_configuration,
     valid_preset_mode_configuration,
@@ -230,6 +230,7 @@ async def _async_setup_entity(
 class MqttFan(MqttEntity, FanEntity):
     """A MQTT fan component."""
 
+    _entity_id_format = fan.ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_FAN_ATTRIBUTES_BLOCKED
 
     def __init__(self, hass, config, config_entry, discovery_data):
@@ -520,7 +521,7 @@ class MqttFan(MqttEntity, FanEntity):
         This method is a coroutine.
         """
         mqtt_payload = self._command_templates[CONF_STATE](self._payload["STATE_ON"])
-        mqtt.async_publish(
+        await mqtt.async_publish(
             self.hass,
             self._topic[CONF_COMMAND_TOPIC],
             mqtt_payload,
@@ -541,7 +542,7 @@ class MqttFan(MqttEntity, FanEntity):
         This method is a coroutine.
         """
         mqtt_payload = self._command_templates[CONF_STATE](self._payload["STATE_OFF"])
-        mqtt.async_publish(
+        await mqtt.async_publish(
             self.hass,
             self._topic[CONF_COMMAND_TOPIC],
             mqtt_payload,
@@ -561,7 +562,7 @@ class MqttFan(MqttEntity, FanEntity):
             percentage_to_ranged_value(self._speed_range, percentage)
         )
         mqtt_payload = self._command_templates[ATTR_PERCENTAGE](percentage_payload)
-        mqtt.async_publish(
+        await mqtt.async_publish(
             self.hass,
             self._topic[CONF_PERCENTAGE_COMMAND_TOPIC],
             mqtt_payload,
@@ -584,7 +585,7 @@ class MqttFan(MqttEntity, FanEntity):
 
         mqtt_payload = self._command_templates[ATTR_PRESET_MODE](preset_mode)
 
-        mqtt.async_publish(
+        await mqtt.async_publish(
             self.hass,
             self._topic[CONF_PRESET_MODE_COMMAND_TOPIC],
             mqtt_payload,
@@ -610,7 +611,7 @@ class MqttFan(MqttEntity, FanEntity):
                 self._payload["OSCILLATE_OFF_PAYLOAD"]
             )
 
-        mqtt.async_publish(
+        await mqtt.async_publish(
             self.hass,
             self._topic[CONF_OSCILLATION_COMMAND_TOPIC],
             mqtt_payload,

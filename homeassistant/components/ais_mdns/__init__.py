@@ -11,7 +11,6 @@ import subprocess
 import voluptuous as vol
 from zeroconf import NonUniqueNameException
 
-from homeassistant import util
 from homeassistant.components.ais_dom import ais_global
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
@@ -31,14 +30,18 @@ def setup(hass, config):
     """Set up Zeroconf and make AIS dom discoverable."""
     if not ais_global.has_root():
         return True
-    from zeroconf import Zeroconf, ServiceInfo
+    from zeroconf import ServiceInfo, Zeroconf
 
     zero_config = Zeroconf()
-    host_ip = util.get_local_ip()
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("8.8.8.8", 80))
+    host_ip = s.getsockname()[0]
 
     try:
         return_value = subprocess.check_output(
-            "getprop net.hostname", timeout=15, shell=True,  # nosec
+            "getprop net.hostname",
+            timeout=15,
+            shell=True,  # nosec
         )
         host_name = return_value.strip().decode("utf-8")
     except subprocess.CalledProcessError:
@@ -48,9 +51,7 @@ def setup(hass, config):
         import uuid
 
         host_name = "".join(
-            ["{:02x}".format((uuid.getnode() >> i) & 0xFF) for i in range(0, 8 * 6, 8)][
-                ::-1
-            ]
+            [f"{(uuid.getnode() >> i) & 0xFF:02x}" for i in range(0, 8 * 6, 8)][::-1]
         )
     if host_name.endswith(".local"):
         host_name = host_name[: -len(".local")]

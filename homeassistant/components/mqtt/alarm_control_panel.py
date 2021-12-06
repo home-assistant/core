@@ -12,6 +12,7 @@ from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_HOME,
     SUPPORT_ALARM_ARM_NIGHT,
     SUPPORT_ALARM_ARM_VACATION,
+    SUPPORT_ALARM_TRIGGER,
 )
 from homeassistant.const import (
     CONF_CODE,
@@ -43,12 +44,14 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_CODE_ARM_REQUIRED = "code_arm_required"
 CONF_CODE_DISARM_REQUIRED = "code_disarm_required"
+CONF_CODE_TRIGGER_REQUIRED = "code_trigger_required"
 CONF_PAYLOAD_DISARM = "payload_disarm"
 CONF_PAYLOAD_ARM_HOME = "payload_arm_home"
 CONF_PAYLOAD_ARM_AWAY = "payload_arm_away"
 CONF_PAYLOAD_ARM_NIGHT = "payload_arm_night"
 CONF_PAYLOAD_ARM_VACATION = "payload_arm_vacation"
 CONF_PAYLOAD_ARM_CUSTOM_BYPASS = "payload_arm_custom_bypass"
+CONF_PAYLOAD_TRIGGER = "payload_trigger"
 CONF_COMMAND_TEMPLATE = "command_template"
 
 MQTT_ALARM_ATTRIBUTES_BLOCKED = frozenset(
@@ -66,6 +69,7 @@ DEFAULT_ARM_AWAY = "ARM_AWAY"
 DEFAULT_ARM_HOME = "ARM_HOME"
 DEFAULT_ARM_CUSTOM_BYPASS = "ARM_CUSTOM_BYPASS"
 DEFAULT_DISARM = "DISARM"
+DEFAULT_TRIGGER = "TRIGGER"
 DEFAULT_NAME = "MQTT Alarm"
 
 REMOTE_CODE = "REMOTE_CODE"
@@ -76,6 +80,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_CODE): cv.string,
         vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
         vol.Optional(CONF_CODE_DISARM_REQUIRED, default=True): cv.boolean,
+        vol.Optional(CONF_CODE_TRIGGER_REQUIRED, default=True): cv.boolean,
         vol.Optional(
             CONF_COMMAND_TEMPLATE, default=DEFAULT_COMMAND_TEMPLATE
         ): cv.template,
@@ -91,6 +96,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
             CONF_PAYLOAD_ARM_CUSTOM_BYPASS, default=DEFAULT_ARM_CUSTOM_BYPASS
         ): cv.string,
         vol.Optional(CONF_PAYLOAD_DISARM, default=DEFAULT_DISARM): cv.string,
+        vol.Optional(CONF_PAYLOAD_TRIGGER, default=DEFAULT_TRIGGER): cv.string,
         vol.Optional(CONF_RETAIN, default=mqtt.DEFAULT_RETAIN): cv.boolean,
         vol.Required(CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
@@ -126,6 +132,7 @@ async def _async_setup_entity(
 class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
     """Representation of a MQTT alarm status."""
 
+    _entity_id_format = alarm.ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_ALARM_ATTRIBUTES_BLOCKED
 
     def __init__(self, hass, config, config_entry, discovery_data):
@@ -202,6 +209,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
             | SUPPORT_ALARM_ARM_NIGHT
             | SUPPORT_ALARM_ARM_VACATION
             | SUPPORT_ALARM_ARM_CUSTOM_BYPASS
+            | SUPPORT_ALARM_TRIGGER
         )
 
     @property
@@ -228,7 +236,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         if code_required and not self._validate_code(code, "disarming"):
             return
         payload = self._config[CONF_PAYLOAD_DISARM]
-        self._publish(code, payload)
+        await self._publish(code, payload)
 
     async def async_alarm_arm_home(self, code=None):
         """Send arm home command.
@@ -239,7 +247,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         if code_required and not self._validate_code(code, "arming home"):
             return
         action = self._config[CONF_PAYLOAD_ARM_HOME]
-        self._publish(code, action)
+        await self._publish(code, action)
 
     async def async_alarm_arm_away(self, code=None):
         """Send arm away command.
@@ -250,7 +258,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         if code_required and not self._validate_code(code, "arming away"):
             return
         action = self._config[CONF_PAYLOAD_ARM_AWAY]
-        self._publish(code, action)
+        await self._publish(code, action)
 
     async def async_alarm_arm_night(self, code=None):
         """Send arm night command.
@@ -261,7 +269,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         if code_required and not self._validate_code(code, "arming night"):
             return
         action = self._config[CONF_PAYLOAD_ARM_NIGHT]
-        self._publish(code, action)
+        await self._publish(code, action)
 
     async def async_alarm_arm_vacation(self, code=None):
         """Send arm vacation command.
@@ -272,7 +280,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         if code_required and not self._validate_code(code, "arming vacation"):
             return
         action = self._config[CONF_PAYLOAD_ARM_VACATION]
-        self._publish(code, action)
+        await self._publish(code, action)
 
     async def async_alarm_arm_custom_bypass(self, code=None):
         """Send arm custom bypass command.
@@ -283,14 +291,25 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         if code_required and not self._validate_code(code, "arming custom bypass"):
             return
         action = self._config[CONF_PAYLOAD_ARM_CUSTOM_BYPASS]
-        self._publish(code, action)
+        await self._publish(code, action)
 
-    def _publish(self, code, action):
+    async def async_alarm_trigger(self, code=None):
+        """Send trigger command.
+
+        This method is a coroutine.
+        """
+        code_required = self._config[CONF_CODE_TRIGGER_REQUIRED]
+        if code_required and not self._validate_code(code, "triggering"):
+            return
+        action = self._config[CONF_PAYLOAD_TRIGGER]
+        await self._publish(code, action)
+
+    async def _publish(self, code, action):
         """Publish via mqtt."""
         command_template = self._config[CONF_COMMAND_TEMPLATE]
         values = {"action": action, "code": code}
         payload = command_template.async_render(**values, parse_result=False)
-        mqtt.async_publish(
+        await mqtt.async_publish(
             self.hass,
             self._config[CONF_COMMAND_TOPIC],
             payload,

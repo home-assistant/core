@@ -275,7 +275,7 @@ class TasmotaLight(
         if ATTR_EFFECT in kwargs:
             attributes["effect"] = kwargs[ATTR_EFFECT]
 
-        self._tasmota_entity.set_state(True, attributes)
+        await self._tasmota_entity.set_state(True, attributes)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
@@ -284,4 +284,4 @@ class TasmotaLight(
         if ATTR_TRANSITION in kwargs:
             attributes["transition"] = kwargs[ATTR_TRANSITION]
 
-        self._tasmota_entity.set_state(False, attributes)
+        await self._tasmota_entity.set_state(False, attributes)

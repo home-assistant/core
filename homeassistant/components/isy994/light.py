@@ -117,8 +117,7 @@ class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
         await super().async_added_to_hass()
 
         self._last_brightness = self.brightness or 255
-        last_state = await self.async_get_last_state()
-        if not last_state:
+        if not (last_state := await self.async_get_last_state()):
             return
 
         if (

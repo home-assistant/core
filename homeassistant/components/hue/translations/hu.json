@@ -35,6 +35,10 @@
     },
     "device_automation": {
         "trigger_subtype": {
+            "1": "1. gomb",
+            "2": "2. gomb",
+            "3": "3. gomb",
+            "4": "4. gomb",
             "button_1": "Els\u0151 gomb",
             "button_2": "M\u00e1sodik gomb",
             "button_3": "Harmadik gomb",
@@ -47,11 +51,16 @@
             "turn_on": "Bekapcsol\u00e1s"
         },
         "trigger_type": {
+            "double_short_release": "Mindk\u00e9t \"{subtype}\" felengedve",
+            "initial_press": "\"{subtype}\" lenyomva el\u0151sz\u00f6r",
+            "long_release": "\"{subtype}\" felengedve hossz\u00fa nyomva tart\u00e1s ut\u00e1n",
             "remote_button_long_release": "A \"{subtype}\" gomb hossz\u00fa megnyom\u00e1s ut\u00e1n elengedve",
             "remote_button_short_press": "\"{subtype}\" gomb lenyomva",
             "remote_button_short_release": "\"{subtype}\" gomb elengedve",
             "remote_double_button_long_press": "Mindk\u00e9t \"{subtype}\" hossz\u00fa megnyom\u00e1st k\u00f6vet\u0151en megjelent",
-            "remote_double_button_short_press": "Mindk\u00e9t \"{subtype}\" megjelent"
+            "remote_double_button_short_press": "Mindk\u00e9t \"{subtype}\" megjelent",
+            "repeat": "\"{subtype}\"gomb lenyomva tartava",
+            "short_release": "\"{subtype}\" felengedve r\u00f6vid nyomva tart\u00e1s ut\u00e1n"
         }
     },
     "options": {
@@ -59,6 +68,7 @@
             "init": {
                 "data": {
                     "allow_hue_groups": "Hue csoportok enged\u00e9lyez\u00e9se",
+                    "allow_hue_scenes": "Hue jelenetek enged\u00e9lyez\u00e9se",
                     "allow_unreachable": "Hagyja, hogy az el\u00e9rhetetlen izz\u00f3k helyesen jelents\u00e9k \u00e1llapotukat"
                 }
             }

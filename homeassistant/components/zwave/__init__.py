@@ -56,7 +56,7 @@ from .const import (
     DOMAIN,
 )
 from .discovery_schemas import DISCOVERY_SCHEMAS
-from .migration import (  # noqa: F401 pylint: disable=unused-import
+from .migration import (  # noqa: F401
     async_add_migration_entity_value,
     async_get_migration_data,
     async_is_ozw_migrated,

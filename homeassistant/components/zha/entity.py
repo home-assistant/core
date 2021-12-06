@@ -206,8 +206,7 @@ class ZhaEntity(BaseZhaEntity, RestoreEntity):
 
         if not self.zha_device.is_mains_powered:
             # mains powered devices will get real time state
-            last_state = await self.async_get_last_state()
-            if last_state:
+            if last_state := await self.async_get_last_state():
                 self.async_restore_last_state(last_state)
 
         self.async_accept_signal(

@@ -42,12 +42,12 @@ class SpiderPowerPlugEnergy(SensorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device_info of the device."""
-        return {
-            "identifiers": {(DOMAIN, self.power_plug.id)},
-            "name": self.power_plug.name,
-            "manufacturer": self.power_plug.manufacturer,
-            "model": self.power_plug.model,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.power_plug.id)},
+            manufacturer=self.power_plug.manufacturer,
+            model=self.power_plug.model,
+            name=self.power_plug.name,
+        )
 
     @property
     def unique_id(self) -> str:
@@ -84,12 +84,12 @@ class SpiderPowerPlugPower(SensorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device_info of the device."""
-        return {
-            "identifiers": {(DOMAIN, self.power_plug.id)},
-            "name": self.power_plug.name,
-            "manufacturer": self.power_plug.manufacturer,
-            "model": self.power_plug.model,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.power_plug.id)},
+            manufacturer=self.power_plug.manufacturer,
+            model=self.power_plug.model,
+            name=self.power_plug.name,
+        )
 
     @property
     def unique_id(self) -> str:

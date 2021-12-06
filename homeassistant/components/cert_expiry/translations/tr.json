@@ -1,15 +1,24 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Hizmet zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+            "already_configured": "Hizmet zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "import_failed": "Yap\u0131land\u0131rmadan i\u00e7e aktarma ba\u015far\u0131s\u0131z oldu"
+        },
+        "error": {
+            "connection_refused": "Ana bilgisayara ba\u011flan\u0131rken ba\u011flant\u0131 reddedildi",
+            "connection_timeout": "Bu ana bilgisayara ba\u011flan\u0131rken zaman a\u015f\u0131m\u0131",
+            "resolve_failed": "Bu ana bilgisayar \u00e7\u00f6z\u00fcmlenemedi"
         },
         "step": {
             "user": {
                 "data": {
-                    "host": "Ana Bilgisayar",
+                    "host": "Ana bilgisayar",
+                    "name": "Sertifikan\u0131n ad\u0131",
                     "port": "Port"
-                }
+                },
+                "title": "Test edilecek sertifikay\u0131 tan\u0131mlay\u0131n"
             }
         }
-    }
+    },
+    "title": "Sertifikan\u0131n Sona Erme Tarihi"
 }

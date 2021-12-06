@@ -1,6 +1,12 @@
 """A entity class for mobile_app."""
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ICON, CONF_NAME, CONF_UNIQUE_ID, CONF_WEBHOOK_ID
+from homeassistant.const import (
+    ATTR_ICON,
+    CONF_NAME,
+    CONF_UNIQUE_ID,
+    CONF_WEBHOOK_ID,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -44,9 +50,8 @@ class MobileAppEntity(RestoreEntity):
                 self.hass, SIGNAL_SENSOR_UPDATE, self._handle_update
             )
         )
-        state = await self.async_get_last_state()
 
-        if state is None:
+        if (state := await self.async_get_last_state()) is None:
             return
 
         self.async_restore_last_state(state)
@@ -101,6 +106,11 @@ class MobileAppEntity(RestoreEntity):
     def device_info(self):
         """Return device registry information for this entity."""
         return device_info(self._registration)
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._config.get(ATTR_SENSOR_STATE) != STATE_UNAVAILABLE
 
     @callback
     def _handle_update(self, data):

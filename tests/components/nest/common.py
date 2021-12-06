@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from google_nest_sdm.device_manager import DeviceManager
 from google_nest_sdm.event import EventMessage
+from google_nest_sdm.event_media import CachePolicy
 from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 
 from homeassistant.components.nest import DOMAIN
@@ -32,7 +33,7 @@ FAKE_TOKEN = "some-token"
 FAKE_REFRESH_TOKEN = "some-refresh-token"
 
 
-def create_config_entry(hass, token_expiration_time=None):
+def create_config_entry(hass, token_expiration_time=None) -> MockConfigEntry:
     """Create a ConfigEntry and add it to Home Assistant."""
     if token_expiration_time is None:
         token_expiration_time = time.time() + 86400
@@ -47,7 +48,9 @@ def create_config_entry(hass, token_expiration_time=None):
             "expires_at": token_expiration_time,
         },
     }
-    MockConfigEntry(domain=DOMAIN, data=config_entry_data).add_to_hass(hass)
+    config_entry = MockConfigEntry(domain=DOMAIN, data=config_entry_data)
+    config_entry.add_to_hass(hass)
+    return config_entry
 
 
 class FakeDeviceManager(DeviceManager):
@@ -80,6 +83,14 @@ class FakeSubscriber(GoogleNestSubscriber):
         """Capture the callback set by Home Assistant."""
         self._callback = callback
 
+    async def create_subscription(self):
+        """Create the subscription."""
+        return
+
+    async def delete_subscription(self):
+        """Delete the subscription."""
+        return
+
     async def start_async(self):
         """Return the fake device manager."""
         return self._device_manager
@@ -87,6 +98,11 @@ class FakeSubscriber(GoogleNestSubscriber):
     async def async_get_device_manager(self) -> DeviceManager:
         """Return the fake device manager."""
         return self._device_manager
+
+    @property
+    def cache_policy(self) -> CachePolicy:
+        """Return the cache policy."""
+        return self._device_manager.cache_policy
 
     def stop_async(self):
         """No-op to stop the subscriber."""
@@ -99,15 +115,19 @@ class FakeSubscriber(GoogleNestSubscriber):
         await self._callback(event_message)
 
 
-async def async_setup_sdm_platform(hass, platform, devices={}, structures={}):
+async def async_setup_sdm_platform(
+    hass, platform, devices={}, structures={}, with_config=True
+):
     """Set up the platform and prerequisites."""
-    create_config_entry(hass)
+    if with_config:
+        create_config_entry(hass)
     device_manager = FakeDeviceManager(devices=devices, structures=structures)
     subscriber = FakeSubscriber(device_manager)
     with patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation"
     ), patch("homeassistant.components.nest.PLATFORMS", [platform]), patch(
-        "homeassistant.components.nest.GoogleNestSubscriber", return_value=subscriber
+        "homeassistant.components.nest.api.GoogleNestSubscriber",
+        return_value=subscriber,
     ):
         assert await async_setup_component(hass, DOMAIN, CONFIG)
         await hass.async_block_till_done()

@@ -141,9 +141,8 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
         ais_command = None
         if "ais_command" in call.data:
             ais_command = call.data["ais_command"]
-        if (
-            call.service in SHUTDOWN_SERVICES
-            and await recorder.async_migration_in_progress(hass)
+        if call.service in SHUTDOWN_SERVICES and recorder.async_migration_in_progress(
+            hass
         ):
             _LOGGER.error(
                 "The system cannot %s while a database upgrade is in progress",

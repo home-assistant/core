@@ -28,7 +28,7 @@ async def async_setup_ha_cast(
 
     if user is None:
         user = await hass.auth.async_create_system_user(
-            "Home Assistant Cast", [auth.GROUP_ID_ADMIN]
+            "Home Assistant Cast", group_ids=[auth.GROUP_ID_ADMIN]
         )
         hass.config_entries.async_update_entry(
             entry, data={**entry.data, "user_id": user.id}
@@ -80,7 +80,5 @@ async def async_remove_user(
     """Remove Home Assistant Cast user."""
     user_id: str | None = entry.data.get("user_id")
 
-    if user_id is not None:
-        user = await hass.auth.async_get_user(user_id)
-        if user:
-            await hass.auth.async_remove_user(user)
+    if user_id is not None and (user := await hass.auth.async_get_user(user_id)):
+        await hass.auth.async_remove_user(user)

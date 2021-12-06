@@ -57,9 +57,7 @@ def get_block_device_name(device: BlockDevice) -> str:
 
 def get_rpc_device_name(device: RpcDevice) -> str:
     """Naming for device."""
-    # Gen2 does not support setting device name
-    # AP SSID name is used as a nicely formatted device name
-    return cast(str, device.config["wifi"]["ap"]["ssid"] or device.hostname)
+    return cast(str, device.config["sys"]["device"].get("name") or device.hostname)
 
 
 def get_number_of_channels(device: BlockDevice, block: Block) -> int:
@@ -153,16 +151,15 @@ def is_block_momentary_input(settings: dict[str, Any], block: Block) -> bool:
     return button_type in ["momentary", "momentary_on_release"]
 
 
-def get_device_uptime(uptime: float, last_uptime: str | None) -> str:
+def get_device_uptime(uptime: float, last_uptime: datetime | None) -> datetime:
     """Return device uptime string, tolerate up to 5 seconds deviation."""
     delta_uptime = utcnow() - timedelta(seconds=uptime)
 
     if (
         not last_uptime
-        or abs((delta_uptime - datetime.fromisoformat(last_uptime)).total_seconds())
-        > UPTIME_DEVIATION
+        or abs((delta_uptime - last_uptime).total_seconds()) > UPTIME_DEVIATION
     ):
-        return delta_uptime.replace(microsecond=0).isoformat()
+        return delta_uptime
 
     return last_uptime
 

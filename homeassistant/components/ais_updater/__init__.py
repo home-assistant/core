@@ -311,7 +311,9 @@ async def async_setup(hass, config):
 
     # register services
     hass.services.async_register(DOMAIN, SERVICE_SET_UPDATE_STATUS, set_update_status)
-    hass.services.async_register(DOMAIN, SERVICE_SET_UPDATE_PROGRESS, set_update_progress)
+    hass.services.async_register(
+        DOMAIN, SERVICE_SET_UPDATE_PROGRESS, set_update_progress
+    )
     hass.services.async_register(DOMAIN, SERVICE_CHECK_VERSION, check_version)
     hass.services.async_register(DOMAIN, SERVICE_UPGRADE_PACKAGE, upgrade_package)
     hass.services.async_register(DOMAIN, SERVICE_EXECUTE_UPGRADE, execute_upgrade)
@@ -524,7 +526,7 @@ async def get_newest_version(hass, include_components, go_to_download):
     fix_script = ""
 
     try:
-        with async_timeout.timeout(10, loop=hass.loop):
+        with async_timeout.timeout(10):
             req = await session.post(UPDATER_URL, json=info_object)
     except (asyncio.TimeoutError, aiohttp.ClientError):
         _LOGGER.error("Could not contact AIS dom to check " "for updates")
