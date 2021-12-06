@@ -31,6 +31,7 @@ ENTITY_PLATFORMS = {
     Platform.HUMIDIFIER.value,
     Platform.LIGHT.value,
     Platform.REMOTE.value,
+    Platform.SELECT.value,
     Platform.SWITCH.value,
 }
 
