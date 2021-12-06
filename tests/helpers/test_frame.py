@@ -78,14 +78,17 @@ async def test_extract_frame_no_integration(caplog):
 async def test_prevent_flooding(caplog):
     """Test to ensure a report is only written once to the log."""
 
-    frame.report("accessed hi instead of hello", error_if_core=False)
-    assert "accessed hi instead of hello" in caplog.text
-    assert "hue:accessed hi instead of hello" in frame._REPORTED_INTEGRATIONS
+    what = "accessed hi instead of hello"
+    key = f"hue:/home/paulus/homeassistant/components/hue/light.py:23:{what}"
+
+    frame.report(what, error_if_core=False)
+    assert what in caplog.text
+    assert key in frame._REPORTED_INTEGRATIONS
     assert len(frame._REPORTED_INTEGRATIONS) == 1
 
     caplog.clear()
 
-    frame.report("accessed hi instead of hello", error_if_core=False)
-    assert "accessed hi instead of hello" not in caplog.text
-    assert "hue:accessed hi instead of hello" in frame._REPORTED_INTEGRATIONS
+    frame.report(what, error_if_core=False)
+    assert what not in caplog.text
+    assert key in frame._REPORTED_INTEGRATIONS
     assert len(frame._REPORTED_INTEGRATIONS) == 1
