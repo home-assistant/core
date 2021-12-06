@@ -78,9 +78,7 @@ async def test_light_entity_migration(
     migrated_device = dev_reg.async_get(device.id)
     assert migrated_device is not None
     assert migrated_device.identifiers == {
-        (hue.DOMAIN, "0b216218-d811-4c95-8c55-bbcda50f9d50"),
-        (hue.DOMAIN, "00:17:88:01:09:aa:bb:65"),
-        (hue.DOMAIN, "00:17:88:01:09:aa:bb:65-0b"),
+        (hue.DOMAIN, "0b216218-d811-4c95-8c55-bbcda50f9d50")
     }
     # the entity should have the new identifier (guid)
     migrated_entity = ent_reg.async_get("light.migrated_light_1")
@@ -136,9 +134,7 @@ async def test_sensor_entity_migration(
     migrated_device = dev_reg.async_get(device.id)
     assert migrated_device is not None
     assert migrated_device.identifiers == {
-        (hue.DOMAIN, "2330b45d-6079-4c6e-bba6-1b68afb1a0d6"),
-        (hue.DOMAIN, device_mac),
-        (hue.DOMAIN, f"{device_mac}-0b"),
+        (hue.DOMAIN, "2330b45d-6079-4c6e-bba6-1b68afb1a0d6")
     }
     # the entities should have the correct V2 identifier (guid)
     for dev_class, platform, new_id in sensor_mappings:
