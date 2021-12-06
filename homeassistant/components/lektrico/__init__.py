@@ -13,9 +13,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DATA_LEKTRICO_CLIENT, DOMAIN
 
-# from homeassistant.components.lektrico.sensor import LektricoSensor
-
-
 # List the platforms that you want to support.
 PLATFORMS = ["sensor"]
 
