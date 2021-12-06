@@ -189,7 +189,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle zeroconf discovery."""
-        host = discovery_info[zeroconf.ATTR_HOST]
+        host = discovery_info.host
         try:
             self.info = await self._async_get_info(host)
         except HTTP_CONNECT_ERRORS:
@@ -201,9 +201,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured({CONF_HOST: host})
         self.host = host
 
-        self.context["title_placeholders"] = {
-            "name": discovery_info.get("name", "").split(".")[0]
-        }
+        self.context["title_placeholders"] = {"name": discovery_info.name.split(".")[0]}
 
         if get_info_auth(self.info):
             return await self.async_step_credentials()

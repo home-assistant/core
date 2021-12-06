@@ -7,6 +7,7 @@ import pytest
 from zwave_js_server.version import VersionInfo
 
 from homeassistant import config_entries
+from homeassistant.components import usb
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.zwave_js.config_flow import SERVER_VERSION_TIMEOUT, TITLE
 from homeassistant.components.zwave_js.const import DOMAIN
@@ -20,32 +21,32 @@ ADDON_DISCOVERY_INFO = {
 }
 
 
-USB_DISCOVERY_INFO = {
-    "device": "/dev/zwave",
-    "pid": "AAAA",
-    "vid": "AAAA",
-    "serial_number": "1234",
-    "description": "zwave radio",
-    "manufacturer": "test",
-}
+USB_DISCOVERY_INFO = usb.UsbServiceInfo(
+    device="/dev/zwave",
+    pid="AAAA",
+    vid="AAAA",
+    serial_number="1234",
+    description="zwave radio",
+    manufacturer="test",
+)
 
-NORTEK_ZIGBEE_DISCOVERY_INFO = {
-    "device": "/dev/zigbee",
-    "pid": "8A2A",
-    "vid": "10C4",
-    "serial_number": "1234",
-    "description": "nortek zigbee radio",
-    "manufacturer": "nortek",
-}
+NORTEK_ZIGBEE_DISCOVERY_INFO = usb.UsbServiceInfo(
+    device="/dev/zigbee",
+    pid="8A2A",
+    vid="10C4",
+    serial_number="1234",
+    description="nortek zigbee radio",
+    manufacturer="nortek",
+)
 
-CP2652_ZIGBEE_DISCOVERY_INFO = {
-    "device": "/dev/zigbee",
-    "pid": "EA60",
-    "vid": "10C4",
-    "serial_number": "",
-    "description": "cp2652",
-    "manufacturer": "generic",
-}
+CP2652_ZIGBEE_DISCOVERY_INFO = usb.UsbServiceInfo(
+    device="/dev/zigbee",
+    pid="EA60",
+    vid="10C4",
+    serial_number="",
+    description="cp2652",
+    manufacturer="generic",
+)
 
 
 @pytest.fixture(name="setup_entry")
@@ -474,7 +475,6 @@ async def test_usb_discovery(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            "usb_path": "/test",
             "s0_legacy_key": "new123",
             "s2_access_control_key": "new456",
             "s2_authenticated_key": "new789",
@@ -487,7 +487,7 @@ async def test_usb_discovery(
         "core_zwave_js",
         {
             "options": {
-                "device": "/test",
+                "device": USB_DISCOVERY_INFO["device"],
                 "s0_legacy_key": "new123",
                 "s2_access_control_key": "new456",
                 "s2_authenticated_key": "new789",
@@ -515,7 +515,7 @@ async def test_usb_discovery(
     assert result["title"] == TITLE
     assert result["data"] == {
         "url": "ws://host1:3001",
-        "usb_path": "/test",
+        "usb_path": USB_DISCOVERY_INFO["device"],
         "s0_legacy_key": "new123",
         "s2_access_control_key": "new456",
         "s2_authenticated_key": "new789",
@@ -556,7 +556,6 @@ async def test_usb_discovery_addon_not_running(
     # Make sure the discovered usb device is preferred.
     data_schema = result["data_schema"]
     assert data_schema({}) == {
-        "usb_path": USB_DISCOVERY_INFO["device"],
         "s0_legacy_key": "",
         "s2_access_control_key": "",
         "s2_authenticated_key": "",
@@ -566,7 +565,6 @@ async def test_usb_discovery_addon_not_running(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            "usb_path": USB_DISCOVERY_INFO["device"],
             "s0_legacy_key": "new123",
             "s2_access_control_key": "new456",
             "s2_authenticated_key": "new789",

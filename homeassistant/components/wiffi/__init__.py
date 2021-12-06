@@ -148,6 +148,7 @@ class WiffiEntity(Entity):
             model=device.moduletype,
             name=f"{device.moduletype} {device.mac_address}",
             sw_version=device.sw_version,
+            configuration_url=device.configuration_url,
         )
         self._name = metric.description
         self._expiration_date = None

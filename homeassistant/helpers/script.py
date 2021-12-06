@@ -262,11 +262,7 @@ async def async_validate_action_config(
             config = platform.ACTION_SCHEMA(config)  # type: ignore
 
     elif action_type == cv.SCRIPT_ACTION_CHECK_CONDITION:
-        if config[CONF_CONDITION] == "device":
-            platform = await device_automation.async_get_device_automation_platform(
-                hass, config[CONF_DOMAIN], "condition"
-            )
-            config = platform.CONDITION_SCHEMA(config)  # type: ignore
+        config = await condition.async_validate_condition_config(hass, config)  # type: ignore
 
     elif action_type == cv.SCRIPT_ACTION_WAIT_FOR_TRIGGER:
         config[CONF_WAIT_FOR_TRIGGER] = await async_validate_trigger_config(
@@ -274,7 +270,7 @@ async def async_validate_action_config(
         )
 
     elif action_type == cv.SCRIPT_ACTION_REPEAT:
-        config[CONF_SEQUENCE] = await async_validate_actions_config(
+        config[CONF_REPEAT][CONF_SEQUENCE] = await async_validate_actions_config(
             hass, config[CONF_REPEAT][CONF_SEQUENCE]
         )
 
@@ -1279,7 +1275,7 @@ class Script:
         else:
             config_cache_key = frozenset((k, str(v)) for k, v in config.items())
         if not (cond := self._config_cache.get(config_cache_key)):
-            cond = await condition.async_from_config(self._hass, config, False)
+            cond = await condition.async_from_config(self._hass, config)
             self._config_cache[config_cache_key] = cond
         return cond
 

@@ -7,11 +7,11 @@ import pytest
 
 
 @pytest.fixture()
-def dial_mock():
+def get_multizone_status_mock():
     """Mock pychromecast dial."""
-    dial_mock = MagicMock()
-    dial_mock.get_multizone_status.return_value.dynamic_groups = []
-    return dial_mock
+    mock = MagicMock(spec_set=pychromecast.dial.get_multizone_status)
+    mock.return_value.dynamic_groups = []
+    return mock
 
 
 @pytest.fixture()
@@ -23,7 +23,7 @@ def castbrowser_mock():
 @pytest.fixture()
 def mz_mock():
     """Mock pychromecast MultizoneManager."""
-    return MagicMock()
+    return MagicMock(spec_set=pychromecast.controllers.multizone.MultizoneManager)
 
 
 @pytest.fixture()
@@ -40,7 +40,11 @@ def get_chromecast_mock():
 
 @pytest.fixture(autouse=True)
 def cast_mock(
-    dial_mock, mz_mock, quick_play_mock, castbrowser_mock, get_chromecast_mock
+    mz_mock,
+    quick_play_mock,
+    castbrowser_mock,
+    get_chromecast_mock,
+    get_multizone_status_mock,
 ):
     """Mock pychromecast."""
     ignore_cec_orig = list(pychromecast.IGNORE_CEC)
@@ -48,7 +52,10 @@ def cast_mock(
     with patch(
         "homeassistant.components.cast.discovery.pychromecast.discovery.CastBrowser",
         castbrowser_mock,
-    ), patch("homeassistant.components.cast.helpers.dial", dial_mock), patch(
+    ), patch(
+        "homeassistant.components.cast.helpers.dial.get_multizone_status",
+        get_multizone_status_mock,
+    ), patch(
         "homeassistant.components.cast.media_player.MultizoneManager",
         return_value=mz_mock,
     ), patch(

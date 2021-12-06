@@ -1,0 +1,23 @@
+{
+    "config": {
+        "step": {
+            "cloud": {
+                "data": {
+                    "password": "Geslo",
+                    "username": "Uporabni\u0161ko ime"
+                }
+            },
+            "local": {
+                "data": {
+                    "ip_address": "IP naslov"
+                },
+                "description": "Lokalni naslov IP naprave."
+            },
+            "user": {
+                "data": {
+                    "connection_type": "Izberite vrsto povezave"
+                }
+            }
+        }
+    }
+}

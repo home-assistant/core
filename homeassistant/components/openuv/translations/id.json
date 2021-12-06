@@ -21,6 +21,10 @@
     "options": {
         "step": {
             "init": {
+                "data": {
+                    "from_window": "Indeks UV awal untuk jendela perlindungan",
+                    "to_window": "Indeks UV akhir untuk jendela perlindungan"
+                },
                 "title": "Konfigurasikan OpenUV"
             }
         }

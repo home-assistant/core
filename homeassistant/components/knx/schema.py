@@ -18,7 +18,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.components.climate.const import HVAC_MODE_HEAT, HVAC_MODES
 from homeassistant.components.cover import DEVICE_CLASSES as COVER_DEVICE_CLASSES
-from homeassistant.components.number.const import MODE_AUTO, MODE_BOX, MODE_SLIDER
+from homeassistant.components.number import NumberMode
 from homeassistant.components.sensor import CONF_STATE_CLASS, STATE_CLASSES_SCHEMA
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
@@ -786,14 +786,14 @@ class NumberSchema(KNXPlatformSchema):
     CONF_STEP = "step"
     DEFAULT_NAME = "KNX Number"
 
-    NUMBER_MODES: Final = [MODE_AUTO, MODE_BOX, MODE_SLIDER]
-
     ENTITY_SCHEMA = vol.All(
         vol.Schema(
             {
                 vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
                 vol.Optional(CONF_RESPOND_TO_READ, default=False): cv.boolean,
-                vol.Optional(CONF_MODE, default=MODE_AUTO): vol.In(NUMBER_MODES),
+                vol.Optional(CONF_MODE, default=NumberMode.AUTO): vol.Coerce(
+                    NumberMode
+                ),
                 vol.Required(CONF_TYPE): numeric_type_validator,
                 vol.Required(KNX_ADDRESS): ga_list_validator,
                 vol.Optional(CONF_STATE_ADDRESS): ga_list_validator,

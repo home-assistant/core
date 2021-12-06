@@ -90,6 +90,8 @@ ATTR_CHANNEL: Final = "channel"
 ATTR_DEVICE: Final = "device"
 ATTR_GENERATION: Final = "generation"
 CONF_SUBTYPE: Final = "subtype"
+ATTR_BETA: Final = "beta"
+CONF_OTA_BETA_CHANNEL: Final = "ota_beta_channel"
 
 BASIC_INPUTS_EVENTS_TYPES: Final = {"single", "long"}
 

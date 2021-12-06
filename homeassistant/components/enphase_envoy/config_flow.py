@@ -104,9 +104,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle a flow initialized by zeroconf discovery."""
-        self.serial = discovery_info[zeroconf.ATTR_PROPERTIES]["serialnum"]
+        self.serial = discovery_info.properties["serialnum"]
         await self.async_set_unique_id(self.serial)
-        self.ip_address = discovery_info[zeroconf.ATTR_HOST]
+        self.ip_address = discovery_info.host
         self._abort_if_unique_id_configured({CONF_HOST: self.ip_address})
         for entry in self._async_current_entries(include_ignore=False):
             if (

@@ -11,6 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_SSL, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -64,7 +65,7 @@ class TautulliEntity(CoordinatorEntity):
         self._attr_unique_id = f"{entry_id}/{description.name}"
         self._attr_device_info = DeviceInfo(
             configuration_url=coordinator.host_configuration.base_url,
-            entry_type="service",
+            entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, entry_id)},
             manufacturer=DEFAULT_NAME,
             name=DEFAULT_NAME,

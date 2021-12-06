@@ -1,0 +1,20 @@
+image: homeassistant/{arch}-homeassistant
+shadow_repository: ghcr.io/home-assistant
+build_from:
+  aarch64: ghcr.io/home-assistant/aarch64-homeassistant-base:2021.09.0
+  armhf: ghcr.io/home-assistant/armhf-homeassistant-base:2021.09.0
+  armv7: ghcr.io/home-assistant/armv7-homeassistant-base:2021.09.0
+  amd64: ghcr.io/home-assistant/amd64-homeassistant-base:2021.09.0
+  i386: ghcr.io/home-assistant/i386-homeassistant-base:2021.09.0
+codenotary:
+  signer: notary@home-assistant.io
+  base_image: notary@home-assistant.io
+labels:
+  io.hass.type: core
+  org.opencontainers.image.title: Home Assistant
+  org.opencontainers.image.description: Open-source home automation platform running on Python 3
+  org.opencontainers.image.source: https://github.com/home-assistant/core
+  org.opencontainers.image.authors: The Home Assistant Authors
+  org.opencontainers.image.url: https://www.home-assistant.io/
+  org.opencontainers.image.documentation: https://www.home-assistant.io/docs/
+  org.opencontainers.image.licenses: Apache License 2.0

@@ -394,8 +394,11 @@ async def test_zeroconf_gateway_success(hass):
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host=TEST_HOST,
+            hostname="mock_hostname",
             name=TEST_ZEROCONF_NAME,
+            port=None,
             properties={ZEROCONF_MAC: TEST_MAC},
+            type="mock_type",
         ),
     )
 
@@ -433,8 +436,11 @@ async def test_zeroconf_unknown_device(hass):
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host=TEST_HOST,
+            hostname="mock_hostname",
             name="not-a-xiaomi-miio-device",
+            port=None,
             properties={ZEROCONF_MAC: TEST_MAC},
+            type="mock_type",
         ),
     )
 
@@ -447,7 +453,14 @@ async def test_zeroconf_no_data(hass):
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(host=None, name=None, properties={}),
+        data=zeroconf.ZeroconfServiceInfo(
+            host=None,
+            hostname="mock_hostname",
+            name=None,
+            port=None,
+            properties={},
+            type="mock_type",
+        ),
     )
 
     assert result["type"] == "abort"
@@ -460,7 +473,12 @@ async def test_zeroconf_missing_data(hass):
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host=TEST_HOST, name=TEST_ZEROCONF_NAME, properties={}
+            host=TEST_HOST,
+            hostname="mock_hostname",
+            name=TEST_ZEROCONF_NAME,
+            port=None,
+            properties={},
+            type="mock_type",
         ),
     )
 
@@ -753,8 +771,11 @@ async def zeroconf_device_success(hass, zeroconf_name_to_test, model_to_test):
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host=TEST_HOST,
+            hostname="mock_hostname",
             name=zeroconf_name_to_test,
+            port=None,
             properties={"poch": f"0:mac={TEST_MAC_DEVICE}\x00"},
+            type="mock_type",
         ),
     )
 

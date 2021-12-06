@@ -5,6 +5,7 @@ import math
 import random
 from unittest.mock import patch
 
+from freezegun import freeze_time
 import pytest
 import voluptuous as vol
 
@@ -251,7 +252,7 @@ def test_float_filter(hass):
     assert render(hass, "{{ 'bad' | float(default=1) }}") == 1
 
 
-def test_int_filter(hass):
+def test_int_filter(hass, caplog):
     """Test int filter."""
     hass.states.async_set("sensor.temperature", "12.2")
     assert render(hass, "{{ states.sensor.temperature.state | int }}") == 12
@@ -264,8 +265,25 @@ def test_int_filter(hass):
     assert render(hass, "{{ 'bad' | int(1) }}") == 1
     assert render(hass, "{{ 'bad' | int(default=1) }}") == 1
 
+    # Test with bytes based integer
+    variables = {"value": b"\xde\xad\xbe\xef"}
+    assert (render(hass, "{{ value | int }}", variables=variables)) == 0xDEADBEEF
+    assert (
+        render(hass, "{{ value | int(little_endian=True) }}", variables=variables)
+        == 0xEFBEADDE
+    )
 
-def test_int_function(hass):
+    # Test with base and base parameter set
+    assert (
+        render(hass, "{{ value | int(base=16) }}", variables=variables)
+    ) == 0xDEADBEEF
+    assert (
+        "Template warning: 'int' got 'bytes' type input, ignoring base=16 parameter"
+        in caplog.text
+    )
+
+
+def test_int_function(hass, caplog):
     """Test int filter."""
     hass.states.async_set("sensor.temperature", "12.2")
     assert render(hass, "{{ int(states.sensor.temperature.state) }}") == 12
@@ -277,6 +295,22 @@ def test_int_function(hass):
     assert render(hass, "{{ int('bad') }}") == "bad"
     assert render(hass, "{{ int('bad', 1) }}") == 1
     assert render(hass, "{{ int('bad', default=1) }}") == 1
+
+    # Test with base and base parameter set
+    variables = {"value": b"\xde\xad\xbe\xef"}
+    assert (render(hass, "{{ int(value) }}", variables=variables)) == 0xDEADBEEF
+    assert (
+        render(hass, "{{ int(value, little_endian=True) }}", variables=variables)
+        == 0xEFBEADDE
+    )
+
+    assert (
+        render(hass, "{{ int(value, base=16) }}", variables=variables)
+    ) == 0xDEADBEEF
+    assert (
+        "Template warning: 'int' got 'bytes' type input, ignoring base=16 parameter"
+        in caplog.text
+    )
 
 
 @pytest.mark.parametrize(
@@ -692,7 +726,7 @@ def test_timestamp_custom(hass):
 
 def test_timestamp_local(hass):
     """Test the timestamps to local filter."""
-    tests = {None: None, 1469119144: "2016-07-21 16:39:04"}
+    tests = {None: None, 1469119144: "2016-07-21T16:39:04+00:00"}
 
     for inp, out in tests.items():
         assert (
@@ -730,6 +764,36 @@ def test_as_datetime(hass, input):
         template.Template(f"{{{{ '{input}' | as_datetime }}}}", hass).async_render()
         == expected
     )
+
+
+def test_as_datetime_from_timestamp(hass):
+    """Test converting a UNIX timestamp to a date object."""
+    tests = [
+        (1469119144, "2016-07-21 16:39:04+00:00"),
+        (1469119144.0, "2016-07-21 16:39:04+00:00"),
+        (-1, "1969-12-31 23:59:59+00:00"),
+    ]
+    for input, output in tests:
+        # expected = dt_util.parse_datetime(input)
+        if output is not None:
+            output = str(output)
+
+        assert (
+            template.Template(f"{{{{ as_datetime({input}) }}}}", hass).async_render()
+            == output
+        )
+        assert (
+            template.Template(f"{{{{ {input} | as_datetime }}}}", hass).async_render()
+            == output
+        )
+        assert (
+            template.Template(f"{{{{ as_datetime('{input}') }}}}", hass).async_render()
+            == output
+        )
+        assert (
+            template.Template(f"{{{{ '{input}' | as_datetime }}}}", hass).async_render()
+            == output
+        )
 
 
 def test_as_local(hass):
@@ -859,8 +923,8 @@ def test_timestamp_utc(hass):
     now = dt_util.utcnow()
     tests = {
         None: None,
-        1469119144: "2016-07-21 16:39:04",
-        dt_util.as_timestamp(now): now.strftime("%Y-%m-%d %H:%M:%S"),
+        1469119144: "2016-07-21T16:39:04+00:00",
+        dt_util.as_timestamp(now): now.isoformat(),
     }
 
     for inp, out in tests.items():
@@ -1119,42 +1183,68 @@ def test_utcnow(mock_is_safe, hass):
     assert info.has_time is True
 
 
+@pytest.mark.parametrize(
+    "now, expected, expected_midnight, timezone_str",
+    [
+        # Host clock in UTC
+        (
+            "2021-11-24 03:00:00+00:00",
+            "2021-11-23T10:00:00-08:00",
+            "2021-11-23T00:00:00-08:00",
+            "America/Los_Angeles",
+        ),
+        # Host clock in local time
+        (
+            "2021-11-23 19:00:00-08:00",
+            "2021-11-23T10:00:00-08:00",
+            "2021-11-23T00:00:00-08:00",
+            "America/Los_Angeles",
+        ),
+    ],
+)
 @patch(
     "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
     return_value=True,
 )
-def test_today_at(mock_is_safe, hass):
+def test_today_at(mock_is_safe, hass, now, expected, expected_midnight, timezone_str):
     """Test today_at method."""
-    now = dt_util.now()
-    with patch("homeassistant.util.dt.now", return_value=now):
-        now = now.replace(hour=10, minute=0, second=0, microsecond=0)
-        result = template.Template(
-            "{{ today_at('10:00').isoformat() }}",
-            hass,
-        ).async_render()
-        assert result == now.isoformat()
+    freezer = freeze_time(now)
+    freezer.start()
 
-        result = template.Template(
-            "{{ today_at('10:00:00').isoformat() }}",
-            hass,
-        ).async_render()
-        assert result == now.isoformat()
+    original_tz = dt_util.DEFAULT_TIME_ZONE
 
-        result = template.Template(
-            "{{ ('10:00:00' | today_at).isoformat() }}",
-            hass,
-        ).async_render()
-        assert result == now.isoformat()
+    timezone = dt_util.get_time_zone(timezone_str)
+    dt_util.set_default_time_zone(timezone)
 
-        now = now.replace(hour=0)
-        result = template.Template(
-            "{{ today_at().isoformat() }}",
-            hass,
-        ).async_render()
-        assert result == now.isoformat()
+    result = template.Template(
+        "{{ today_at('10:00').isoformat() }}",
+        hass,
+    ).async_render()
+    assert result == expected
 
-        with pytest.raises(TemplateError):
-            template.Template("{{ today_at('bad') }}", hass).async_render()
+    result = template.Template(
+        "{{ today_at('10:00:00').isoformat() }}",
+        hass,
+    ).async_render()
+    assert result == expected
+
+    result = template.Template(
+        "{{ ('10:00:00' | today_at).isoformat() }}",
+        hass,
+    ).async_render()
+    assert result == expected
+
+    result = template.Template(
+        "{{ today_at().isoformat() }}",
+        hass,
+    ).async_render()
+    assert result == expected_midnight
+
+    with pytest.raises(TemplateError):
+        template.Template("{{ today_at('bad') }}", hass).async_render()
+
+    freezer.stop()
+    dt_util.set_default_time_zone(original_tz)
 
 
 @patch(
@@ -1422,6 +1512,24 @@ def test_bitwise_and(hass):
     )
     assert tpl.async_render() == 8 & 2
 
+    tpl = template.Template(
+        """
+{{ ( value_a ) | bitwise_and(value_b) }}
+            """,
+        hass,
+    )
+    variables = {"value_a": b"\x9b\xc2", "value_b": 0xFF00}
+    assert tpl.async_render(variables=variables) == 0x9B00
+
+    tpl = template.Template(
+        """
+{{ ( value_a ) | bitwise_and(value_b, little_endian=True) }}
+            """,
+        hass,
+    )
+    variables = {"value_a": b"\xc2\x9b", "value_b": 0xFFFF}
+    assert tpl.async_render(variables=variables) == 0x9BC2
+
 
 def test_bitwise_or(hass):
     """Test bitwise_or method."""
@@ -1446,6 +1554,54 @@ def test_bitwise_or(hass):
         hass,
     )
     assert tpl.async_render() == 8 | 2
+
+    tpl = template.Template(
+        """
+{{ value_a | bitwise_or(value_b) }}
+            """,
+        hass,
+    )
+    variables = {
+        "value_a": b"\xc2\x9b",
+        "value_b": 0xFFFF,
+    }
+    assert tpl.async_render(variables=variables) == 65535  # 39874
+
+    tpl = template.Template(
+        """
+{{ ( value_a ) | bitwise_or(value_b) }}
+            """,
+        hass,
+    )
+    variables = {
+        "value_a": 0xFF00,
+        "value_b": b"\xc2\x9b",
+    }
+    assert tpl.async_render(variables=variables) == 0xFF9B
+
+    tpl = template.Template(
+        """
+{{ ( value_a ) | bitwise_or(value_b) }}
+            """,
+        hass,
+    )
+    variables = {
+        "value_a": b"\xc2\x9b",
+        "value_b": 0x0000,
+    }
+    assert tpl.async_render(variables=variables) == 0xC29B
+
+    tpl = template.Template(
+        """
+{{ ( value_a ) | bitwise_or(value_b, little_endian=True) }}
+            """,
+        hass,
+    )
+    variables = {
+        "value_a": b"\xc2\x9b",
+        "value_b": 0,
+    }
+    assert tpl.async_render(variables=variables) == 0x9BC2
 
 
 def test_distance_function_with_1_state(hass):

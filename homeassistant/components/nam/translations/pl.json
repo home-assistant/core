@@ -3,14 +3,15 @@
         "abort": {
             "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
             "device_unsupported": "Urz\u0105dzenie nie jest obs\u0142ugiwane",
-            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119",
+            "reauth_unsuccessful": "B\u0142\u0105d ponownego uwierzytelnienia. Usu\u0144 intergracj\u0119 i skonfiguruj j\u0105 ponownie. "
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
             "invalid_auth": "Niepoprawne uwierzytelnienie",
             "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
-        "flow_title": "{name}",
+        "flow_title": "{host}",
         "step": {
             "confirm_discovery": {
                 "description": "Czy chcesz skonfigurowa\u0107 Nettigo Air Monitor {host}?"

@@ -15,7 +15,6 @@ from homeassistant.util.dt import utcnow
 
 from . import (
     DEFAULT_ENTRY_TITLE,
-    DEFAULT_ENTRY_TITLE_PARTIAL,
     FLUX_DISCOVERY,
     FLUX_DISCOVERY_PARTIAL,
     IP_ADDRESS,
@@ -75,7 +74,7 @@ async def test_config_entry_retry(hass: HomeAssistant) -> None:
     "discovery,title",
     [
         (FLUX_DISCOVERY, DEFAULT_ENTRY_TITLE),
-        (FLUX_DISCOVERY_PARTIAL, DEFAULT_ENTRY_TITLE_PARTIAL),
+        (FLUX_DISCOVERY_PARTIAL, "AZ120444 ddeeff"),
     ],
 )
 async def test_config_entry_fills_unique_id_with_directed_discovery(

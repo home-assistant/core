@@ -45,7 +45,7 @@ async def test_number_unique_id(hass: HomeAssistant) -> None:
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "number.rgbw_controller_ddeeff_effect_speed"
+    entity_id = "number.bulb_rgbcw_ddeeff_effect_speed"
     entity_registry = er.async_get(hass)
     assert entity_registry.async_get(entity_id).unique_id == MAC_ADDRESS
 
@@ -70,8 +70,8 @@ async def test_rgb_light_effect_speed(hass: HomeAssistant) -> None:
 
     await async_mock_device_turn_on(hass, bulb)
 
-    light_entity_id = "light.rgbw_controller_ddeeff"
-    number_entity_id = "number.rgbw_controller_ddeeff_effect_speed"
+    light_entity_id = "light.bulb_rgbcw_ddeeff"
+    number_entity_id = "number.bulb_rgbcw_ddeeff_effect_speed"
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             NUMBER_DOMAIN,
@@ -95,7 +95,7 @@ async def test_rgb_light_effect_speed(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: number_entity_id, ATTR_VALUE: 100},
         blocking=True,
     )
-    bulb.async_set_effect.assert_called_with("colorloop", 100)
+    bulb.async_set_effect.assert_called_with("colorloop", 100, 50)
     bulb.async_set_effect.reset_mock()
 
     await async_mock_effect_speed(hass, bulb, "red_fade", 50)
@@ -105,7 +105,7 @@ async def test_rgb_light_effect_speed(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: number_entity_id, ATTR_VALUE: 50},
         blocking=True,
     )
-    bulb.async_set_effect.assert_called_with("red_fade", 50)
+    bulb.async_set_effect.assert_called_with("red_fade", 50, 50)
     bulb.async_set_effect.reset_mock()
 
     state = hass.states.get(number_entity_id)
@@ -121,7 +121,7 @@ async def test_original_addressable_light_effect_speed(hass: HomeAssistant) -> N
     )
     config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
-    bulb.original_addressable = True
+    bulb.speed_adjust_off = False
     bulb.raw_state = bulb.raw_state._replace(
         model_num=0xA1
     )  # Original addressable model
@@ -135,8 +135,8 @@ async def test_original_addressable_light_effect_speed(hass: HomeAssistant) -> N
 
     await async_mock_device_turn_on(hass, bulb)
 
-    light_entity_id = "light.rgbw_controller_ddeeff"
-    number_entity_id = "number.rgbw_controller_ddeeff_effect_speed"
+    light_entity_id = "light.bulb_rgbcw_ddeeff"
+    number_entity_id = "number.bulb_rgbcw_ddeeff_effect_speed"
 
     state = hass.states.get(light_entity_id)
     assert state.state == STATE_ON
@@ -161,7 +161,7 @@ async def test_original_addressable_light_effect_speed(hass: HomeAssistant) -> N
         {ATTR_ENTITY_ID: number_entity_id, ATTR_VALUE: 100},
         blocking=True,
     )
-    bulb.async_set_effect.assert_called_with("7 colors change gradually", 100)
+    bulb.async_set_effect.assert_called_with("7 colors change gradually", 100, 50)
     bulb.async_set_effect.reset_mock()
     await async_mock_effect_speed(hass, bulb, "7 colors run in olivary", 100)
 
@@ -192,8 +192,8 @@ async def test_addressable_light_effect_speed(hass: HomeAssistant) -> None:
 
     await async_mock_device_turn_on(hass, bulb)
 
-    light_entity_id = "light.rgbw_controller_ddeeff"
-    number_entity_id = "number.rgbw_controller_ddeeff_effect_speed"
+    light_entity_id = "light.bulb_rgbcw_ddeeff"
+    number_entity_id = "number.bulb_rgbcw_ddeeff_effect_speed"
 
     state = hass.states.get(light_entity_id)
     assert state.state == STATE_ON
@@ -209,7 +209,7 @@ async def test_addressable_light_effect_speed(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: number_entity_id, ATTR_VALUE: 100},
         blocking=True,
     )
-    bulb.async_set_effect.assert_called_with("RBM 1", 100)
+    bulb.async_set_effect.assert_called_with("RBM 1", 100, 50)
     bulb.async_set_effect.reset_mock()
 
     await async_mock_device_turn_on(hass, bulb)
@@ -219,7 +219,7 @@ async def test_addressable_light_effect_speed(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: number_entity_id, ATTR_VALUE: 100},
         blocking=True,
     )
-    bulb.async_set_effect.assert_called_with("RBM 1", 100)
+    bulb.async_set_effect.assert_called_with("RBM 1", 100, 50)
     bulb.async_set_effect.reset_mock()
     await async_mock_effect_speed(hass, bulb, "RBM 2", 100)
 

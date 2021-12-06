@@ -57,6 +57,7 @@ from .const import (
     CONF_BIRTH_MESSAGE,
     CONF_BROKER,
     CONF_COMMAND_TOPIC,
+    CONF_ENCODING,
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
@@ -65,6 +66,7 @@ from .const import (
     DATA_MQTT_CONFIG,
     DEFAULT_BIRTH,
     DEFAULT_DISCOVERY,
+    DEFAULT_ENCODING,
     DEFAULT_PREFIX,
     DEFAULT_QOS,
     DEFAULT_RETAIN,
@@ -200,7 +202,10 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-SCHEMA_BASE = {vol.Optional(CONF_QOS, default=DEFAULT_QOS): _VALID_QOS_SCHEMA}
+SCHEMA_BASE = {
+    vol.Optional(CONF_QOS, default=DEFAULT_QOS): _VALID_QOS_SCHEMA,
+    vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
+}
 
 MQTT_BASE_PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(SCHEMA_BASE)
 

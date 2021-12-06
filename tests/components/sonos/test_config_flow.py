@@ -46,9 +46,11 @@ async def test_zeroconf_form(hass: core.HomeAssistant):
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="192.168.4.2",
-            name="Sonos-aaa@Living Room._sonos._tcp.local.",
             hostname="Sonos-aaa",
+            name="Sonos-aaa@Living Room._sonos._tcp.local.",
+            port=None,
             properties={"bootseq": "1234"},
+            type="mock_type",
         ),
     )
     assert result["type"] == "form"
@@ -136,7 +138,10 @@ async def test_zeroconf_form_not_sonos(hass: core.HomeAssistant):
         data=zeroconf.ZeroconfServiceInfo(
             host="192.168.4.2",
             hostname="not-aaa",
+            name="mock_name",
+            port=None,
             properties={"bootseq": "1234"},
+            type="mock_type",
         ),
     )
     assert result["type"] == "abort"

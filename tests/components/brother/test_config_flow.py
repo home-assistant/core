@@ -145,7 +145,12 @@ async def test_zeroconf_snmp_error(hass):
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
-                hostname="example.local.", name="Brother Printer", properties={}
+                host="mock_host",
+                hostname="example.local.",
+                name="Brother Printer",
+                port=None,
+                properties={},
+                type="mock_type",
             ),
         )
 
@@ -160,9 +165,12 @@ async def test_zeroconf_unsupported_model(hass):
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
+                host="mock_host",
                 hostname="example.local.",
                 name="Brother Printer",
+                port=None,
                 properties={"product": "MFC-8660DN"},
+                type="mock_type",
             ),
         )
 
@@ -185,7 +193,12 @@ async def test_zeroconf_device_exists_abort(hass):
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
-                hostname="example.local.", name="Brother Printer", properties={}
+                host="mock_host",
+                hostname="example.local.",
+                name="Brother Printer",
+                port=None,
+                properties={},
+                type="mock_type",
             ),
         )
 
@@ -202,7 +215,12 @@ async def test_zeroconf_no_probe_existing_device(hass):
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
-                hostname="localhost", name="Brother Printer"
+                host="mock_host",
+                hostname="localhost",
+                name="Brother Printer",
+                port=None,
+                properties={},
+                type="mock_type",
             ),
         )
         await hass.async_block_till_done()
@@ -223,7 +241,12 @@ async def test_zeroconf_confirm_create_entry(hass):
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
-                hostname="example.local.", name="Brother Printer", properties={}
+                host="mock_host",
+                hostname="example.local.",
+                name="Brother Printer",
+                port=None,
+                properties={},
+                type="mock_type",
             ),
         )
 

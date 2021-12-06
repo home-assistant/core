@@ -5,7 +5,7 @@ import pytest
 import respx
 
 from homeassistant import data_entry_flow
-from homeassistant.components import dhcp, zeroconf
+from homeassistant.components import dhcp, ssdp, zeroconf
 from homeassistant.components.axis import config_flow
 from homeassistant.components.axis.const import (
     CONF_EVENTS,
@@ -263,32 +263,36 @@ async def test_reauth_flow_update_configuration(hass):
         ),
         (
             SOURCE_SSDP,
-            {
-                "st": "urn:axis-com:service:BasicService:1",
-                "usn": f"uuid:Upnp-BasicDevice-1_0-{MAC}::urn:axis-com:service:BasicService:1",
-                "ext": "",
-                "server": "Linux/4.14.173-axis8, UPnP/1.0, Portable SDK for UPnP devices/1.8.7",
-                "deviceType": "urn:schemas-upnp-org:device:Basic:1",
-                "friendlyName": f"AXIS M1065-LW - {MAC}",
-                "manufacturer": "AXIS",
-                "manufacturerURL": "http://www.axis.com/",
-                "modelDescription": "AXIS M1065-LW Network Camera",
-                "modelName": "AXIS M1065-LW",
-                "modelNumber": "M1065-LW",
-                "modelURL": "http://www.axis.com/",
-                "serialNumber": MAC,
-                "UDN": f"uuid:Upnp-BasicDevice-1_0-{MAC}",
-                "serviceList": {
-                    "service": {
-                        "serviceType": "urn:axis-com:service:BasicService:1",
-                        "serviceId": "urn:axis-com:serviceId:BasicServiceId",
-                        "controlURL": "/upnp/control/BasicServiceId",
-                        "eventSubURL": "/upnp/event/BasicServiceId",
-                        "SCPDURL": "/scpd_basic.xml",
-                    }
+            ssdp.SsdpServiceInfo(
+                ssdp_usn="mock_usn",
+                ssdp_st="mock_st",
+                upnp={
+                    "st": "urn:axis-com:service:BasicService:1",
+                    "usn": f"uuid:Upnp-BasicDevice-1_0-{MAC}::urn:axis-com:service:BasicService:1",
+                    "ext": "",
+                    "server": "Linux/4.14.173-axis8, UPnP/1.0, Portable SDK for UPnP devices/1.8.7",
+                    "deviceType": "urn:schemas-upnp-org:device:Basic:1",
+                    "friendlyName": f"AXIS M1065-LW - {MAC}",
+                    "manufacturer": "AXIS",
+                    "manufacturerURL": "http://www.axis.com/",
+                    "modelDescription": "AXIS M1065-LW Network Camera",
+                    "modelName": "AXIS M1065-LW",
+                    "modelNumber": "M1065-LW",
+                    "modelURL": "http://www.axis.com/",
+                    "serialNumber": MAC,
+                    "UDN": f"uuid:Upnp-BasicDevice-1_0-{MAC}",
+                    "serviceList": {
+                        "service": {
+                            "serviceType": "urn:axis-com:service:BasicService:1",
+                            "serviceId": "urn:axis-com:serviceId:BasicServiceId",
+                            "controlURL": "/upnp/control/BasicServiceId",
+                            "eventSubURL": "/upnp/event/BasicServiceId",
+                            "SCPDURL": "/scpd_basic.xml",
+                        }
+                    },
+                    "presentationURL": f"http://{DEFAULT_HOST}:80/",
                 },
-                "presentationURL": f"http://{DEFAULT_HOST}:80/",
-            },
+            ),
         ),
         (
             SOURCE_ZEROCONF,
@@ -354,19 +358,25 @@ async def test_discovery_flow(hass, source: str, discovery_info: dict):
         ),
         (
             SOURCE_SSDP,
-            {
-                "friendlyName": f"AXIS M1065-LW - {MAC}",
-                "serialNumber": MAC,
-                "presentationURL": f"http://{DEFAULT_HOST}:80/",
-            },
+            ssdp.SsdpServiceInfo(
+                ssdp_usn="mock_usn",
+                ssdp_st="mock_st",
+                upnp={
+                    "friendlyName": f"AXIS M1065-LW - {MAC}",
+                    "serialNumber": MAC,
+                    "presentationURL": f"http://{DEFAULT_HOST}:80/",
+                },
+            ),
         ),
         (
             SOURCE_ZEROCONF,
             zeroconf.ZeroconfServiceInfo(
                 host=DEFAULT_HOST,
-                port=80,
+                hostname="mock_hostname",
                 name=f"AXIS M1065-LW - {MAC}._axis-video._tcp.local.",
+                port=80,
                 properties={"macaddress": MAC},
+                type="mock_type",
             ),
         ),
     ],
@@ -401,20 +411,26 @@ async def test_discovered_device_already_configured(
         ),
         (
             SOURCE_SSDP,
-            {
-                "friendlyName": f"AXIS M1065-LW - {MAC}",
-                "serialNumber": MAC,
-                "presentationURL": "http://2.3.4.5:8080/",
-            },
+            ssdp.SsdpServiceInfo(
+                ssdp_usn="mock_usn",
+                ssdp_st="mock_st",
+                upnp={
+                    "friendlyName": f"AXIS M1065-LW - {MAC}",
+                    "serialNumber": MAC,
+                    "presentationURL": "http://2.3.4.5:8080/",
+                },
+            ),
             8080,
         ),
         (
             SOURCE_ZEROCONF,
             zeroconf.ZeroconfServiceInfo(
                 host="2.3.4.5",
-                port=8080,
+                hostname="mock_hostname",
                 name=f"AXIS M1065-LW - {MAC}._axis-video._tcp.local.",
+                port=8080,
                 properties={"macaddress": MAC},
+                type="mock_type",
             ),
             8080,
         ),
@@ -470,19 +486,25 @@ async def test_discovery_flow_updated_configuration(
         ),
         (
             SOURCE_SSDP,
-            {
-                "friendlyName": "",
-                "serialNumber": "01234567890",
-                "presentationURL": "",
-            },
+            ssdp.SsdpServiceInfo(
+                ssdp_usn="mock_usn",
+                ssdp_st="mock_st",
+                upnp={
+                    "friendlyName": "",
+                    "serialNumber": "01234567890",
+                    "presentationURL": "",
+                },
+            ),
         ),
         (
             SOURCE_ZEROCONF,
             zeroconf.ZeroconfServiceInfo(
                 host="",
-                port=0,
+                hostname="mock_hostname",
                 name="",
+                port=0,
                 properties={"macaddress": "01234567890"},
+                type="mock_type",
             ),
         ),
     ],
@@ -512,19 +534,25 @@ async def test_discovery_flow_ignore_non_axis_device(
         ),
         (
             SOURCE_SSDP,
-            {
-                "friendlyName": f"AXIS M1065-LW - {MAC}",
-                "serialNumber": MAC,
-                "presentationURL": "http://169.254.3.4:80/",
-            },
+            ssdp.SsdpServiceInfo(
+                ssdp_usn="mock_usn",
+                ssdp_st="mock_st",
+                upnp={
+                    "friendlyName": f"AXIS M1065-LW - {MAC}",
+                    "serialNumber": MAC,
+                    "presentationURL": "http://169.254.3.4:80/",
+                },
+            ),
         ),
         (
             SOURCE_ZEROCONF,
             zeroconf.ZeroconfServiceInfo(
                 host="169.254.3.4",
-                port=80,
+                hostname="mock_hostname",
                 name=f"AXIS M1065-LW - {MAC}._axis-video._tcp.local.",
+                port=80,
                 properties={"macaddress": MAC},
+                type="mock_type",
             ),
         ),
     ],

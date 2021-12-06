@@ -10,13 +10,12 @@ from tuya_iot import TuyaDevice, TuyaDeviceManager
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    DEVICE_CLASS_CURTAIN,
-    DEVICE_CLASS_GARAGE,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
     SUPPORT_SET_TILT_POSITION,
     SUPPORT_STOP,
+    CoverDeviceClass,
     CoverEntity,
     CoverEntityDescription,
 )
@@ -52,21 +51,30 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
             current_state=DPCode.SITUATION_SET,
             current_position=DPCode.PERCENT_STATE,
             set_position=DPCode.PERCENT_CONTROL,
-            device_class=DEVICE_CLASS_CURTAIN,
+            device_class=CoverDeviceClass.CURTAIN,
         ),
         TuyaCoverEntityDescription(
             key=DPCode.CONTROL_2,
             name="Curtain 2",
             current_position=DPCode.PERCENT_STATE_2,
             set_position=DPCode.PERCENT_CONTROL_2,
-            device_class=DEVICE_CLASS_CURTAIN,
+            device_class=CoverDeviceClass.CURTAIN,
         ),
         TuyaCoverEntityDescription(
             key=DPCode.CONTROL_3,
             name="Curtain 3",
             current_position=DPCode.PERCENT_STATE_3,
             set_position=DPCode.PERCENT_CONTROL_3,
-            device_class=DEVICE_CLASS_CURTAIN,
+            device_class=CoverDeviceClass.CURTAIN,
+        ),
+        # switch_1 is an undocumented code that behaves identically to control
+        # It is used by the Kogan Smart Blinds Driver
+        TuyaCoverEntityDescription(
+            key=DPCode.SWITCH_1,
+            name="Blind",
+            current_position=DPCode.PERCENT_CONTROL,
+            set_position=DPCode.PERCENT_CONTROL,
+            device_class=CoverDeviceClass.BLIND,
         ),
     ),
     # Garage Door Opener
@@ -77,21 +85,21 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
             name="Door",
             current_state=DPCode.DOORCONTACT_STATE,
             current_state_inverse=True,
-            device_class=DEVICE_CLASS_GARAGE,
+            device_class=CoverDeviceClass.GARAGE,
         ),
         TuyaCoverEntityDescription(
             key=DPCode.SWITCH_2,
             name="Door 2",
             current_state=DPCode.DOORCONTACT_STATE_2,
             current_state_inverse=True,
-            device_class=DEVICE_CLASS_GARAGE,
+            device_class=CoverDeviceClass.GARAGE,
         ),
         TuyaCoverEntityDescription(
             key=DPCode.SWITCH_3,
             name="Door 3",
             current_state=DPCode.DOORCONTACT_STATE_3,
             current_state_inverse=True,
-            device_class=DEVICE_CLASS_GARAGE,
+            device_class=CoverDeviceClass.GARAGE,
         ),
     ),
     # Curtain Switch
@@ -102,14 +110,14 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
             name="Curtain",
             current_position=DPCode.PERCENT_CONTROL,
             set_position=DPCode.PERCENT_CONTROL,
-            device_class=DEVICE_CLASS_CURTAIN,
+            device_class=CoverDeviceClass.CURTAIN,
         ),
         TuyaCoverEntityDescription(
             key=DPCode.CONTROL_2,
             name="Curtain 2",
             current_position=DPCode.PERCENT_CONTROL_2,
             set_position=DPCode.PERCENT_CONTROL_2,
-            device_class=DEVICE_CLASS_CURTAIN,
+            device_class=CoverDeviceClass.CURTAIN,
         ),
     ),
     # Curtain Robot
@@ -119,7 +127,7 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
             key=DPCode.CONTROL,
             current_position=DPCode.PERCENT_STATE,
             set_position=DPCode.PERCENT_CONTROL,
-            device_class=DEVICE_CLASS_CURTAIN,
+            device_class=CoverDeviceClass.CURTAIN,
         ),
     ),
 }
@@ -183,9 +191,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         if device.function[description.key].type == "Boolean":
             self._attr_supported_features |= SUPPORT_OPEN | SUPPORT_CLOSE
         elif device.function[description.key].type == "Enum":
-            data_type = EnumTypeData.from_json(
-                device.status_range[description.key].values
-            )
+            data_type = EnumTypeData.from_json(device.function[description.key].values)
             if "open" in data_type.range:
                 self._attr_supported_features |= SUPPORT_OPEN
             if "close" in data_type.range:

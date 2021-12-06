@@ -176,7 +176,9 @@ async def test_dhcp(hass: HomeAssistant) -> None:
     """Test that DHCP discovery works."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        data=dhcp.DhcpServiceInfo(macaddress="01:23:45:67:89:ab"),
+        data=dhcp.DhcpServiceInfo(
+            ip="1.2.3.4", macaddress="01:23:45:67:89:ab", hostname="mock_hostname"
+        ),
         context={"source": config_entries.SOURCE_DHCP},
     )
 

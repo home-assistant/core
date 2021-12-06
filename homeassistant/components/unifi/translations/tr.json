@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Denetleyici sitesi zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "already_configured": "UniFi Network sitesi zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
             "configuration_updated": "Yap\u0131land\u0131rma g\u00fcncellendi.",
             "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu"
         },

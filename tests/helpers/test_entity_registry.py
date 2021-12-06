@@ -2,6 +2,7 @@
 from unittest.mock import patch
 
 import pytest
+import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_START, STATE_UNAVAILABLE
@@ -96,6 +97,7 @@ def test_get_or_create_updates_data(registry):
         disabled_by=er.DISABLED_HASS,
         entity_category="config",
         icon=None,
+        id=orig_entry.id,
         name=None,
         original_device_class="mock-device-class",
         original_icon="initial-original_icon",
@@ -135,6 +137,7 @@ def test_get_or_create_updates_data(registry):
         disabled_by=er.DISABLED_HASS,  # Should not be updated
         entity_category="config",
         icon=None,
+        id=orig_entry.id,
         name=None,
         original_device_class="new-mock-device-class",
         original_icon="updated-original_icon",
@@ -418,8 +421,8 @@ async def test_migration_yaml_to_json(hass):
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_migration_1_1_to_1_2(hass, hass_storage):
-    """Test migration from version 1.1 to 1.2."""
+async def test_migration_1_1(hass, hass_storage):
+    """Test migration from version 1.1."""
     hass_storage[er.STORAGE_KEY] = {
         "version": 1,
         "minor_version": 1,
@@ -848,7 +851,9 @@ async def test_disable_device_disables_entities(hass, registry):
     assert entry2.disabled
     assert entry3.disabled
 
-    device_registry.async_update_device(device_entry.id, disabled_by=er.DISABLED_USER)
+    device_registry.async_update_device(
+        device_entry.id, disabled_by=dr.DeviceEntryDisabler.USER
+    )
     await hass.async_block_till_done()
 
     entry1 = registry.async_get(entry1.entity_id)
@@ -1019,3 +1024,73 @@ async def test_entity_max_length_exceeded(hass, registry):
     assert exc_info.value.property_name == "generated_entity_id"
     assert exc_info.value.max_length == 255
     assert exc_info.value.value == f"sensor.{long_entity_id_name}_2"
+
+
+async def test_resolve_entity_ids(hass, registry):
+    """Test resolving entity IDs."""
+
+    entry1 = registry.async_get_or_create(
+        "light", "hue", "1234", suggested_object_id="beer"
+    )
+    assert entry1.entity_id == "light.beer"
+
+    entry2 = registry.async_get_or_create(
+        "light", "hue", "2345", suggested_object_id="milk"
+    )
+    assert entry2.entity_id == "light.milk"
+
+    expected = ["light.beer", "light.milk"]
+    assert er.async_resolve_entity_ids(registry, [entry1.id, entry2.id]) == expected
+
+    expected = ["light.beer", "light.milk"]
+    assert er.async_resolve_entity_ids(registry, ["light.beer", entry2.id]) == expected
+
+    with pytest.raises(vol.Invalid):
+        er.async_resolve_entity_ids(registry, ["light.beer", "bad_uuid"])
+
+    expected = ["light.unknown"]
+    assert er.async_resolve_entity_ids(registry, ["light.unknown"]) == expected
+
+    with pytest.raises(vol.Invalid):
+        er.async_resolve_entity_ids(registry, ["unknown_uuid"])
+
+
+def test_entity_registry_items():
+    """Test the EntityRegistryItems container."""
+    entities = er.EntityRegistryItems()
+    assert entities.get_entity_id(("a", "b", "c")) is None
+    assert entities.get_entry("abc") is None
+
+    entry1 = er.RegistryEntry("test.entity1", "1234", "hue")
+    entry2 = er.RegistryEntry("test.entity2", "2345", "hue")
+    entities["test.entity1"] = entry1
+    entities["test.entity2"] = entry2
+
+    assert entities["test.entity1"] is entry1
+    assert entities["test.entity2"] is entry2
+
+    assert entities.get_entity_id(("test", "hue", "1234")) is entry1.entity_id
+    assert entities.get_entry(entry1.id) is entry1
+    assert entities.get_entity_id(("test", "hue", "2345")) is entry2.entity_id
+    assert entities.get_entry(entry2.id) is entry2
+
+    entities.pop("test.entity1")
+    del entities["test.entity2"]
+
+    assert entities.get_entity_id(("test", "hue", "1234")) is None
+    assert entities.get_entry(entry1.id) is None
+    assert entities.get_entity_id(("test", "hue", "2345")) is None
+    assert entities.get_entry(entry2.id) is None
+
+
+async def test_deprecated_disabled_by_str(hass, registry, caplog):
+    """Test deprecated str use of disabled_by converts to enum and logs a warning."""
+    entry = registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        disabled_by=er.RegistryEntryDisabler.USER.value,
+    )
+
+    assert entry.disabled_by is er.RegistryEntryDisabler.USER
+    assert " str for entity registry disabled_by. This is deprecated " in caplog.text

@@ -1,4 +1,4 @@
-"""UniFi switch platform tests."""
+"""UniFi Network switch platform tests."""
 from copy import deepcopy
 from unittest.mock import patch
 

@@ -101,8 +101,11 @@ async def test_zeroconf_updates_title(hass, config_entry):
     assert len(hass.config_entries.async_entries(DOMAIN)) == 2
     discovery_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.1.1",
+        hostname="mock_hostname",
+        name="mock_name",
         port=23,
         properties={"mtd-version": "27.0", "Machine Name": "zeroconf_test"},
+        type="mock_type",
     )
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
@@ -131,7 +134,12 @@ async def test_config_flow_zeroconf_invalid(hass):
     """Test that an invalid zeroconf entry doesn't work."""
     # test with no discovery properties
     discovery_info = zeroconf.ZeroconfServiceInfo(
-        host="127.0.0.1", port=23, properties={}
+        host="127.0.0.1",
+        hostname="mock_hostname",
+        name="mock_name",
+        port=23,
+        properties={},
+        type="mock_type",
     )
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
@@ -141,8 +149,11 @@ async def test_config_flow_zeroconf_invalid(hass):
     # test with forked-daapd version < 27
     discovery_info = zeroconf.ZeroconfServiceInfo(
         host="127.0.0.1",
+        hostname="mock_hostname",
+        name="mock_name",
         port=23,
         properties={"mtd-version": "26.3", "Machine Name": "forked-daapd"},
+        type="mock_type",
     )
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
@@ -152,8 +163,11 @@ async def test_config_flow_zeroconf_invalid(hass):
     # test with verbose mtd-version from Firefly
     discovery_info = zeroconf.ZeroconfServiceInfo(
         host="127.0.0.1",
+        hostname="mock_hostname",
+        name="mock_name",
         port=23,
         properties={"mtd-version": "0.2.4.1", "Machine Name": "firefly"},
+        type="mock_type",
     )
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
@@ -163,8 +177,11 @@ async def test_config_flow_zeroconf_invalid(hass):
     # test with svn mtd-version from Firefly
     discovery_info = zeroconf.ZeroconfServiceInfo(
         host="127.0.0.1",
+        hostname="mock_hostname",
+        name="mock_name",
         port=23,
         properties={"mtd-version": "svn-1676", "Machine Name": "firefly"},
+        type="mock_type",
     )
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
@@ -177,12 +194,15 @@ async def test_config_flow_zeroconf_valid(hass):
     """Test that a valid zeroconf entry works."""
     discovery_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.1.1",
+        hostname="mock_hostname",
+        name="mock_name",
         port=23,
         properties={
             "mtd-version": "27.0",
             "Machine Name": "zeroconf_test",
             "Machine ID": "5E55EEFF",
         },
+        type="mock_type",
     )
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
