@@ -89,7 +89,7 @@ def report_integration(
     found_frame, integration, path = integration_frame
 
     # Keep track of integrations already reported to prevent flooding
-    key = f"{integration}:{what}"
+    key = f"{integration}:{found_frame.filename}:{found_frame.lineno}:{what}"
     if key in _REPORTED_INTEGRATIONS:
         return
     _REPORTED_INTEGRATIONS.append(key)
