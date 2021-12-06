@@ -149,6 +149,8 @@ class TemplateNumber(TemplateEntity, NumberEntity):
         self._attr_unique_id = unique_id
         self._attr_value = None
         self._attr_step = None
+        self._attr_min_value = None
+        self._attr_max_value = None
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
