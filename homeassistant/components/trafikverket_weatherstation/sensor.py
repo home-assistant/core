@@ -185,17 +185,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Trafikverket sensor entry."""
 
-    sensor_name = entry.data[CONF_STATION]
-    sensor_api = entry.data[CONF_API_KEY]
-    sensor_station = entry.data[CONF_STATION]
-
     web_session = async_get_clientsession(hass)
-
-    weather_api = TrafikverketWeather(web_session, sensor_api)
+    weather_api = TrafikverketWeather(web_session, entry.data[CONF_API_KEY])
 
     entities = [
         TrafikverketWeatherStation(
-            weather_api, sensor_name, sensor_station, description
+            weather_api, entry.entry_id, entry.data[CONF_STATION], description
         )
         for description in SENSOR_TYPES
     ]
@@ -211,14 +206,14 @@ class TrafikverketWeatherStation(SensorEntity):
     def __init__(
         self,
         weather_api: TrafikverketWeather,
-        name: str,
+        entry_id: str,
         sensor_station: str,
         description: TrafikverketSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
-        self._attr_name = f"{name} {description.name}"
-        self._attr_unique_id = f"trafikverket_{name}_{description.key}"
+        self._attr_name = f"{sensor_station} {description.name}"
+        self._attr_unique_id = f"{entry_id}_{description.key}"
         self._station = sensor_station
         self._weather_api = weather_api
         self._weather: WeatherStationInfo | None = None
