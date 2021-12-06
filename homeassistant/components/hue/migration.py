@@ -123,7 +123,7 @@ async def handle_v2_migration(hass: core.HomeAssistant, entry: ConfigEntry) -> N
             if hass_dev_id is None:
                 # can be safely ignored, this device does not exist in current config
                 LOGGER.debug(
-                    "Ignoring device %s (%s) as it does not (yet) exist in the device registry.",
+                    "Ignoring device %s (%s) as it does not (yet) exist in the device registry",
                     hue_dev.metadata.name,
                     hue_dev.id,
                 )
