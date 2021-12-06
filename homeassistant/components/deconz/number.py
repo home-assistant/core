@@ -29,9 +29,6 @@ class DeconzNumberEntityDescriptionBase:
     device_property: str
     suffix: str
     update_key: str
-    max_value: int
-    min_value: int
-    step: int
 
 
 @dataclass
@@ -122,9 +119,6 @@ class DeconzNumber(DeconzDevice, NumberEntity):
         super().__init__(device, gateway)
 
         self._attr_name = f"{device.name} {description.suffix}"
-        self._attr_max_value = description.max_value
-        self._attr_min_value = description.min_value
-        self._attr_step = description.step
 
     @callback
     def async_update_callback(self) -> None:
