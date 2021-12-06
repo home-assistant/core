@@ -125,6 +125,7 @@ KEEPALIVE_TIME = 30
 # States and Events objects
 EXPIRE_AFTER_COMMITS = 120
 
+DB_LOCK_TIMEOUT = 30
 DB_LOCK_QUEUE_CHECK_TIMEOUT = 1
 
 CONF_AUTO_PURGE = "auto_purge"
@@ -1024,7 +1025,7 @@ class Recorder(threading.Thread):
         self.queue.put(WaitTask())
         self._queue_watch.wait()
 
-    async def lock_database(self, lock_timeout=30) -> bool:
+    async def lock_database(self) -> bool:
         """Lock database so it can be backed up safely."""
         if self._database_lock_task:
             _LOGGER.warning("Database already locked")
@@ -1034,11 +1035,11 @@ class Recorder(threading.Thread):
         task = DatabaseLockTask(database_locked, threading.Event(), False)
         self.queue.put(task)
         try:
-            await asyncio.wait_for(database_locked.wait(), timeout=lock_timeout)
+            await asyncio.wait_for(database_locked.wait(), timeout=DB_LOCK_TIMEOUT)
         except asyncio.TimeoutError as err:
             task.database_unlock.set()
             raise TimeoutError(
-                f"Could not lock database within {lock_timeout} seconds."
+                f"Could not lock database within {DB_LOCK_TIMEOUT} seconds."
             ) from err
         self._database_lock_task = task
         return True
