@@ -233,7 +233,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Protocols supported by the device are prospects for pairing
         self.protocols_to_pair = deque(
-            service.protocol for service in self.atv.services
+            service.protocol for service in self.atv.services if service.enabled
         )
 
         dev_info = self.atv.device_info

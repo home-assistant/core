@@ -231,8 +231,8 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
         """Send the play_media command to the media player."""
         # If input (file) has a file format supported by pyatv, then stream it with
         # RAOP. Otherwise try to play it with regular AirPlay.
-        if self._is_feature_available(FeatureName.StreamFile) and await is_streamable(
-            media_id
+        if self._is_feature_available(FeatureName.StreamFile) and (
+            await is_streamable(media_id) or media_type == MEDIA_TYPE_MUSIC
         ):
             _LOGGER.debug("Streaming %s via RAOP", media_id)
             await self.atv.stream.stream_file(media_id)

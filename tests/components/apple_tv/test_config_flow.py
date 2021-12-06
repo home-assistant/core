@@ -463,6 +463,41 @@ async def test_user_pair_begin_unexpected_error(hass, mrp_device, pairing_mock):
     assert result2["reason"] == "unknown"
 
 
+async def test_ignores_disabled_service(hass, airplay_with_disabled_mrp, pairing):
+    """Test adding device with only DMAP service."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    # Find based on mrpid (but do not pair that service since it's disabled)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"device_input": "mrpid"},
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["description_placeholders"] == {
+        "name": "AirPlay Device",
+        "type": "Unknown",
+    }
+
+    result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["description_placeholders"] == {"protocol": "AirPlay"}
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"pin": 1111}
+    )
+    assert result3["type"] == "create_entry"
+    assert result3["data"] == {
+        "address": "127.0.0.1",
+        "credentials": {
+            Protocol.AirPlay.value: "airplay_creds",
+        },
+        "identifiers": ["mrpid", "airplayid"],
+        "name": "AirPlay Device",
+    }
+
+
 # Zeroconf
 
 
