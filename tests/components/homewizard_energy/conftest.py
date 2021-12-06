@@ -10,8 +10,10 @@ from tests.common import MockConfigEntry
 def mock_config_entry_data():
     """Return the default mocked config entry data."""
     return {
-        "custom_name": "Custom Name",
-        "unique_id": "aabbccddeeff",
+        "product_name": "Product Name",
+        "product_type": "product_type",
+        "serial": "aabbccddeeff",
+        "name": "Product Name",
     }
 
 

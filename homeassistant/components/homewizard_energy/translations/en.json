@@ -8,8 +8,8 @@
             "unknown_error": "Unexpected error"
         },
         "step": {
-            "confirm": {
-                "description": "Do you want to start set up?"
+            "discovery_confirm": {
+                "description": "Do you want to setup {product_type} ({serial}) at {host}?"
             },
             "user": {
                 "data": {

@@ -151,13 +151,13 @@ SENSORS: Final[tuple[SensorEntityDescription, ...]] = (
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Config entry example."""
-    energy_api = hass.data[DOMAIN][entry.data["unique_id"]][CONF_API]
-    coordinator = hass.data[DOMAIN][entry.data["unique_id"]][COORDINATOR]
+    energy_api = hass.data[DOMAIN][entry.unique_id][CONF_API]
+    coordinator = hass.data[DOMAIN][entry.unique_id][COORDINATOR]
 
     entities = []
     for description in SENSORS:
         if description.key in energy_api.data.available_datapoints:
-            entities.append(HWEnergySensor(coordinator, entry.data, description))
+            entities.append(HWEnergySensor(coordinator, entry, description))
     async_add_entities(entities)
 
 
@@ -167,17 +167,17 @@ class HWEnergySensor(CoordinatorEntity, SensorEntity):
     unique_id = None
     name = None
 
-    def __init__(self, coordinator, entry_data, description):
+    def __init__(self, coordinator, entry, description):
         """Initialize Sensor Domain."""
 
         super().__init__(coordinator)
         self.entity_description = description
-        self.entry_data = entry_data
+        self.entry_data = entry.data
 
         # Config attributes.
-        self.name = "{} {}".format(entry_data["custom_name"], description.name)
+        self.name = "{} {}".format(entry.data["name"], description.name)
         self.data_type = description.key
-        self.unique_id = "{}_{}".format(entry_data["unique_id"], description.key)
+        self.unique_id = f"{entry.unique_id}_{description.key}"
 
         # Some values are given, but set to NULL (eg. gas_timestamp when no gas meter is connected)
         if self.data[CONF_DATA][self.data_type] is None:
@@ -196,7 +196,7 @@ class HWEnergySensor(CoordinatorEntity, SensorEntity):
     def device_info(self) -> DeviceInfo:
         """Return device information."""
         return {
-            "name": self.entry_data["custom_name"],
+            "name": self.entry_data["name"],
             "manufacturer": "HomeWizard",
             "sw_version": self.data[CONF_SW_VERSION],
             "model": self.data[CONF_MODEL],

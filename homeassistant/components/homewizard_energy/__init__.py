@@ -6,6 +6,7 @@ import aiohwenergy
 import async_timeout
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
@@ -21,7 +22,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("__init__ async_setup_entry")
 
     # Get api and do a initialization
-    energy_api = aiohwenergy.HomeWizardEnergy(entry.data.get("host"))
+    energy_api = aiohwenergy.HomeWizardEnergy(entry.data.get(CONF_IP_ADDRESS))
 
     # Validate connection
     initialized = False
@@ -62,7 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Finalize
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.data["unique_id"]] = {
+    hass.data[DOMAIN][entry.unique_id] = {
         COORDINATOR: coordinator,
         CONF_API: energy_api,
     }
@@ -89,7 +90,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     if unload_ok:
-        config_data = hass.data[DOMAIN].pop(entry.data["unique_id"])
+        config_data = hass.data[DOMAIN].pop(entry.unique_id)
         if "api" in config_data:
             energy_api = config_data[CONF_API]
             await energy_api.close()

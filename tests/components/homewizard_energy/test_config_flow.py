@@ -1,14 +1,17 @@
 """Test the homewizard energy config flow."""
+import logging
 from unittest.mock import patch
 
 from aiohwenergy import DisabledError
 
 from homeassistant import config_entries
 from homeassistant.components.homewizard_energy.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_IP_ADDRESS, CONF_PORT
+from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_CREATE_ENTRY
 
 from .generator import get_mock_device
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def test_manual_flow_works(hass, aioclient_mock):
@@ -31,24 +34,10 @@ async def test_manual_flow_works(hass, aioclient_mock):
             result["flow_id"], {CONF_IP_ADDRESS: "2.2.2.2"}
         )
 
-    assert result["type"] == "form"
-    assert result["step_id"] == "confirm"
-    assert result["errors"] is None
+    assert result["type"] == "create_entry"
 
-    with patch(
-        "homeassistant.components.homewizard_energy.async_setup_entry",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"name": "CustomName"}
-        )
-
-    assert result["title"] == f"{device.device.product_name} (CustomName)"
-    assert result["data"]["host"] == "2.2.2.2"
-    assert (
-        result["data"]["unique_id"]
-        == f"{device.device.product_type}_{device.device.serial}"
-    )
+    assert result["title"] == f"{device.device.product_name} (aabbccddeeff)"
+    assert result["data"][CONF_IP_ADDRESS] == "2.2.2.2"
     assert result["data"]["product_name"] == device.device.product_name
     assert result["data"]["product_type"] == device.device.product_type
     assert result["data"]["serial"] == device.device.serial
@@ -63,7 +52,7 @@ async def test_manual_flow_works(hass, aioclient_mock):
     entry = entries[0]
     assert entry.unique_id == f"{device.device.product_type}_{device.device.serial}"
 
-    assert len(device.initialize.mock_calls) == 1
+    assert len(device.initialize.mock_calls) == 2
     assert len(device.close.mock_calls) == 1
 
 
@@ -102,8 +91,8 @@ async def test_discovery_flow_works(hass, aioclient_mock):
         )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "P1 meter"
-    assert result["data"][CONF_HOST] == "192.168.43.183"
+    assert result["title"] == "P1 meter (aabbccddeeff)"
+    assert result["data"][CONF_IP_ADDRESS] == "192.168.43.183"
     assert result["data"][CONF_PORT] == 80
 
     assert result["result"]
