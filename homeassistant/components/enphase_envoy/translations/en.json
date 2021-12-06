@@ -16,7 +16,8 @@
                     "host": "Host",
                     "password": "Password",
                     "username": "Username"
-                }
+                },
+                "description": "For newer models, enter username `envoy` without a password. For older models, enter username `installer` without a password. For all other models, enter a valid username and password."
             }
         }
     }
