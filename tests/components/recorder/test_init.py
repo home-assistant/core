@@ -1155,7 +1155,7 @@ async def test_database_lock_and_unlock(hass: HomeAssistant, tmp_path):
 
     # Recording can't be finished while lock is held
     with pytest.raises(asyncio.TimeoutError):
-        await asyncio.wait_for(asyncio.shield(task), timeout=5)
+        await asyncio.wait_for(asyncio.shield(task), timeout=1)
 
     with session_scope(hass=hass) as session:
         db_events = list(session.query(Events).filter_by(event_type=event_type))
@@ -1177,4 +1177,4 @@ async def test_database_lock_timeout(hass):
 
     instance: Recorder = hass.data[DATA_INSTANCE]
     with pytest.raises(TimeoutError):
-        await instance.lock_database(lock_timeout=1)
+        await instance.lock_database(lock_timeout=0.1)
