@@ -104,7 +104,8 @@ async def handle_v2_migration(hass: core.HomeAssistant, entry: ConfigEntry) -> N
             hass_dev = dev_reg.async_get_or_create(
                 config_entry_id=entry.entry_id, identifiers=identifiers
             )
-            LOGGER.info("Migrated device %s (%s)", hass_dev.name, hass_dev.id)
+            dev_name = hass_dev.name or hue_dev.metadata.name
+            LOGGER.info("Migrated device %s (%s)", dev_name, hass_dev.id)
             # loop through al entities for device and find match
             for ent in async_entries_for_device(ent_reg, hass_dev.id, True):
                 # migrate light
