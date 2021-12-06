@@ -7,6 +7,7 @@ from requests.exceptions import ConnectionError as ConnError
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.const import Platform
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -23,7 +24,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 
 CONFIG_SCHEMA = vol.Schema(
     vol.All(
