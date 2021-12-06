@@ -838,7 +838,7 @@ pyatag==0.3.5.3
 pyatmo==6.2.0
 
 # homeassistant.components.apple_tv
-pyatv==0.8.2
+pyatv==0.9.7
 
 # homeassistant.components.balboa
 pybalboa==0.13
