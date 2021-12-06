@@ -7,7 +7,6 @@
           "data": {
             "api_key": "Api Key",
             "url": "URL",
-            "ssl": "Uses an SSL certificate",
             "verify_ssl": "Verify SSL certificate"
           }
         },

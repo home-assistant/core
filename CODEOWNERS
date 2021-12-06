@@ -425,7 +425,6 @@ homeassistant/components/quantum_gateway/* @cisasteelersfan
 homeassistant/components/qvr_pro/* @oblogic7
 homeassistant/components/qwikswitch/* @kellerza
 homeassistant/components/rachio/* @bdraco
-homeassistant/components/radarr/* @tkdrob
 homeassistant/components/radiotherm/* @vinnyfuria
 homeassistant/components/rainbird/* @konikvranik
 homeassistant/components/raincloud/* @vanstinator
