@@ -3,6 +3,6 @@
     "name": "AIS Speaker",
     "config_flow": true,
     "documentation": "https://www.ai-speaker.com",
-    "requirements": ["aisapi==0.1.0"],
+    "requirements": ["aisapi==0.1.1"],
     "codeowners": ["@asystentka-jolka"]
 }
