@@ -25,7 +25,7 @@ DMAP_SERVICE = zeroconf.ZeroconfServiceInfo(
 
 
 @pytest.fixture(autouse=True)
-def use_mocked_zeroconf(mock_zeroconf):
+def use_mocked_zeroconf(mock_async_zeroconf):
     """Mock zeroconf in all tests."""
 
 
