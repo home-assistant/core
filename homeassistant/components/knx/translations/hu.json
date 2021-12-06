@@ -12,6 +12,7 @@
                 "data": {
                     "host": "C\u00edm",
                     "individual_address": "A kapcsolat egy\u00e9ni c\u00edme",
+                    "local_ip": "Helyi IP c\u00edm (hagyja \u00fcresen, ha nem biztos benne)",
                     "port": "Port",
                     "route_back": "\u00datvonal (route) vissza / NAT m\u00f3d"
                 },
@@ -54,6 +55,7 @@
             "tunnel": {
                 "data": {
                     "host": "C\u00edm",
+                    "local_ip": "Helyi IP c\u00edm (hagyja \u00fcresen, ha nem biztos benne)",
                     "port": "Port",
                     "route_back": "\u00datvonal (route) vissza / NAT m\u00f3d"
                 }

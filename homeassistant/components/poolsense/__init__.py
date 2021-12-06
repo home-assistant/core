@@ -7,7 +7,7 @@ from poolsense import PoolSense
 from poolsense.exceptions import PoolSenseError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_EMAIL, CONF_PASSWORD
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity import EntityDescription
@@ -19,7 +19,7 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import ATTRIBUTION, DOMAIN
 
-PLATFORMS = ["sensor", "binary_sensor"]
+PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR]
 
 
 _LOGGER = logging.getLogger(__name__)

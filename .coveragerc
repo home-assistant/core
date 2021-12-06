@@ -73,6 +73,9 @@ omit =
     homeassistant/components/arris_tg2492lg/*
     homeassistant/components/aruba/device_tracker.py
     homeassistant/components/arwn/sensor.py
+    homeassistant/components/aseko_pool_live/__init__.py
+    homeassistant/components/aseko_pool_live/entity.py
+    homeassistant/components/aseko_pool_live/sensor.py
     homeassistant/components/asterisk_cdr/mailbox.py
     homeassistant/components/asterisk_mbox/*
     homeassistant/components/asuswrt/__init__.py

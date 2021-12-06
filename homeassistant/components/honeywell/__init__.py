@@ -4,7 +4,7 @@ from datetime import timedelta
 
 import somecomfort
 
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.util import Throttle
 
@@ -12,7 +12,7 @@ from .const import _LOGGER, CONF_DEV_ID, CONF_LOC_ID, DOMAIN
 
 UPDATE_LOOP_SLEEP_TIME = 5
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=300)
-PLATFORMS = ["climate"]
+PLATFORMS = [Platform.CLIMATE]
 
 
 async def async_setup_entry(hass, config):

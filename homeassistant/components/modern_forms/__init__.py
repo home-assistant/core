@@ -11,13 +11,8 @@ from aiomodernforms import (
 )
 from aiomodernforms.models import Device as ModernFormsDeviceState
 
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
@@ -31,11 +26,11 @@ from .const import DOMAIN
 
 SCAN_INTERVAL = timedelta(seconds=5)
 PLATFORMS = [
-    BINARY_SENSOR_DOMAIN,
-    LIGHT_DOMAIN,
-    FAN_DOMAIN,
-    SENSOR_DOMAIN,
-    SWITCH_DOMAIN,
+    Platform.BINARY_SENSOR,
+    Platform.LIGHT,
+    Platform.FAN,
+    Platform.SENSOR,
+    Platform.SWITCH,
 ]
 _LOGGER = logging.getLogger(__name__)
 

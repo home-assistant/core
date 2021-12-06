@@ -17,6 +17,7 @@ from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.components.media_source import const
 from homeassistant.components.media_source.error import Unresolvable
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.template import DATE_STR_FORMAT
 import homeassistant.util.dt as dt_util
 
 from .common import async_setup_sdm_platform
@@ -80,7 +81,7 @@ async def async_setup_devices(hass, auth, device_type, traits={}, events=[]):
     return subscriber
 
 
-def create_event(event_id, event_type, timestamp=None):
+def create_event(event_id, event_type, timestamp=None, device_id=None):
     """Create an EventMessage for a single event type."""
     if not timestamp:
         timestamp = dt_util.now()
@@ -90,17 +91,19 @@ def create_event(event_id, event_type, timestamp=None):
             "eventId": event_id,
         },
     }
-    return create_event_message(event_id, event_data, timestamp)
+    return create_event_message(event_id, event_data, timestamp, device_id=device_id)
 
 
-def create_event_message(event_id, event_data, timestamp):
+def create_event_message(event_id, event_data, timestamp, device_id=None):
     """Create an EventMessage for a single event type."""
+    if device_id is None:
+        device_id = DEVICE_ID
     return EventMessage(
         {
             "eventId": f"{event_id}-{timestamp}",
             "timestamp": timestamp.isoformat(timespec="seconds"),
             "resourceUpdate": {
-                "name": DEVICE_ID,
+                "name": device_id,
                 "events": event_data,
             },
         },
@@ -211,7 +214,7 @@ async def test_camera_event(hass, auth, hass_client):
     assert len(browse.children) == 1
     assert browse.children[0].domain == DOMAIN
     assert browse.children[0].identifier == f"{device.id}/{event_id}"
-    event_timestamp_string = event_timestamp.isoformat(timespec="seconds", sep=" ")
+    event_timestamp_string = event_timestamp.strftime(DATE_STR_FORMAT)
     assert browse.children[0].title == f"Person @ {event_timestamp_string}"
     assert not browse.children[0].can_expand
     assert len(browse.children[0].children) == 0
@@ -291,7 +294,7 @@ async def test_event_order(hass, auth):
     assert len(browse.children) == 2
     assert browse.children[0].domain == DOMAIN
     assert browse.children[0].identifier == f"{device.id}/{event_id2}"
-    event_timestamp_string = event_timestamp2.isoformat(timespec="seconds", sep=" ")
+    event_timestamp_string = event_timestamp2.strftime(DATE_STR_FORMAT)
     assert browse.children[0].title == f"Motion @ {event_timestamp_string}"
     assert not browse.children[0].can_expand
 
@@ -299,7 +302,7 @@ async def test_event_order(hass, auth):
     assert browse.children[1].domain == DOMAIN
 
     assert browse.children[1].identifier == f"{device.id}/{event_id1}"
-    event_timestamp_string = event_timestamp1.isoformat(timespec="seconds", sep=" ")
+    event_timestamp_string = event_timestamp1.strftime(DATE_STR_FORMAT)
     assert browse.children[1].title == f"Person @ {event_timestamp_string}"
     assert not browse.children[1].can_expand
 
@@ -435,7 +438,7 @@ async def test_camera_event_clip_preview(hass, auth, hass_client):
     assert len(browse.children) == 1
     assert browse.children[0].domain == DOMAIN
     actual_event_id = browse.children[0].identifier
-    event_timestamp_string = event_timestamp.isoformat(timespec="seconds", sep=" ")
+    event_timestamp_string = event_timestamp.strftime(DATE_STR_FORMAT)
     assert browse.children[0].title == f"Event @ {event_timestamp_string}"
     assert not browse.children[0].can_expand
     assert len(browse.children[0].children) == 0
@@ -567,3 +570,75 @@ async def test_media_permission_unauthorized(hass, auth, hass_client, hass_admin
     assert response.status == HTTPStatus.UNAUTHORIZED, (
         "Response not matched: %s" % response
     )
+
+
+async def test_multiple_devices(hass, auth, hass_client):
+    """Test events received for multiple devices."""
+    device_id1 = f"{DEVICE_ID}-1"
+    device_id2 = f"{DEVICE_ID}-2"
+
+    devices = {
+        device_id1: Device.MakeDevice(
+            {
+                "name": device_id1,
+                "type": CAMERA_DEVICE_TYPE,
+                "traits": CAMERA_TRAITS,
+            },
+            auth=auth,
+        ),
+        device_id2: Device.MakeDevice(
+            {
+                "name": device_id2,
+                "type": CAMERA_DEVICE_TYPE,
+                "traits": CAMERA_TRAITS,
+            },
+            auth=auth,
+        ),
+    }
+    subscriber = await async_setup_sdm_platform(hass, PLATFORM, devices=devices)
+
+    device_registry = dr.async_get(hass)
+    device1 = device_registry.async_get_device({(DOMAIN, device_id1)})
+    assert device1
+    device2 = device_registry.async_get_device({(DOMAIN, device_id2)})
+    assert device2
+
+    # Very no events have been received yet
+    browse = await media_source.async_browse_media(
+        hass, f"{const.URI_SCHEME}{DOMAIN}/{device1.id}"
+    )
+    assert len(browse.children) == 0
+    browse = await media_source.async_browse_media(
+        hass, f"{const.URI_SCHEME}{DOMAIN}/{device2.id}"
+    )
+    assert len(browse.children) == 0
+
+    # Send events for device #1
+    for i in range(0, 5):
+        await subscriber.async_receive_event(
+            create_event(f"event-id-{i}", PERSON_EVENT, device_id=device_id1)
+        )
+
+    browse = await media_source.async_browse_media(
+        hass, f"{const.URI_SCHEME}{DOMAIN}/{device1.id}"
+    )
+    assert len(browse.children) == 5
+    browse = await media_source.async_browse_media(
+        hass, f"{const.URI_SCHEME}{DOMAIN}/{device2.id}"
+    )
+    assert len(browse.children) == 0
+
+    # Send events for device #2
+    for i in range(0, 3):
+        await subscriber.async_receive_event(
+            create_event(f"other-id-{i}", PERSON_EVENT, device_id=device_id2)
+        )
+
+    browse = await media_source.async_browse_media(
+        hass, f"{const.URI_SCHEME}{DOMAIN}/{device1.id}"
+    )
+    assert len(browse.children) == 5
+    browse = await media_source.async_browse_media(
+        hass, f"{const.URI_SCHEME}{DOMAIN}/{device2.id}"
+    )
+    assert len(browse.children) == 3

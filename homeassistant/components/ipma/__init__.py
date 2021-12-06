@@ -1,10 +1,12 @@
 """Component for the Portuguese weather service - IPMA."""
+from homeassistant.const import Platform
+
 from .config_flow import IpmaFlowHandler  # noqa: F401
 from .const import DOMAIN  # noqa: F401
 
 DEFAULT_NAME = "ipma"
 
-PLATFORMS = ["weather"]
+PLATFORMS = [Platform.WEATHER]
 
 
 async def async_setup_entry(hass, entry):

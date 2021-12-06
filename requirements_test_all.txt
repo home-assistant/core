@@ -86,6 +86,9 @@ aio_georss_gdacs==0.5
 # homeassistant.components.ambient_station
 aioambient==2021.11.0
 
+# homeassistant.components.aseko_pool_live
+aioaseko==0.0.1
+
 # homeassistant.components.asuswrt
 aioasuswrt==1.4.0
 
@@ -257,7 +260,7 @@ base36==0.1.1
 bellows==0.29.0
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.8.2
+bimmer_connected==0.8.5
 
 # homeassistant.components.blebox
 blebox_uniapi==1.3.3
@@ -399,7 +402,7 @@ fjaraskupan==1.0.2
 flipr-api==1.4.1
 
 # homeassistant.components.flux_led
-flux_led==0.25.12
+flux_led==0.25.17
 
 # homeassistant.components.homekit
 fnvhash==0.1.0
@@ -461,7 +464,7 @@ google-api-python-client==1.6.4
 google-cloud-pubsub==2.1.0
 
 # homeassistant.components.nest
-google-nest-sdm==0.4.0
+google-nest-sdm==0.4.3
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -1020,6 +1023,9 @@ pymysensors==0.22.1
 
 # homeassistant.components.netgear
 pynetgear==0.7.0
+
+# homeassistant.components.nina
+pynina==0.1.4
 
 # homeassistant.components.nuki
 pynuki==1.4.1

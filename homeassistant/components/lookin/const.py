@@ -3,8 +3,7 @@ from __future__ import annotations
 
 from typing import Final
 
+from homeassistant.const import Platform
+
 DOMAIN: Final = "lookin"
-PLATFORMS: Final = [
-    "sensor",
-    "climate",
-]
+PLATFORMS: Final = [Platform.CLIMATE, Platform.SENSOR]
