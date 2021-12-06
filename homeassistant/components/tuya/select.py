@@ -147,12 +147,12 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             device_class=DEVICE_CLASS_TUYA_MOTION_SENSITIVITY,
             entity_category=EntityCategory.CONFIG,
         ),
-        SelectEntityDescription(     
-            key=DPCode.PIR_SWITCH,                    
-            name="PIR Detection Switch",   
+        SelectEntityDescription(
+            key=DPCode.PIR_SWITCH,
+            name="PIR Detection Switch",
             icon="mdi:motion-sensor",
             device_class=DEVICE_CLASS_TUYA_PIR_SWITCH,
-            entity_category=EntityCategory.CONFIG,                    
+            entity_category=EntityCategory.CONFIG,
         ),
     ),
     # IoT Switch?
