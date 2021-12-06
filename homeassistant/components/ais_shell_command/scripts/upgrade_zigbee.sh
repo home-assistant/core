@@ -2,7 +2,7 @@
 echo "Stopping zigbee2mqtt..."
 pm2 stop zigbee
 
-echo "Creating backup of configuration..."
+echo "Creating backup of existing"
 cp -R ~/zigbee2mqtt/data/configuration.yaml ~/configuration.yaml
 
 echo "Delete old version..."

@@ -121,6 +121,9 @@ rm -rf /data/data/pl.sviete.dom/files/usr/tmp/*
 # 18. drop tunnel
 rm -rf ~/.cloudflared
 
+# 19. remove the global gitconfig
+rm  .gitconfig
+
 # ON THE END -> create new bootstrap
 cd /data/data/pl.sviete.dom
 # su -c "tar -cvzf /sdcard/files.tar files"

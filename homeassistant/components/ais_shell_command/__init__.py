@@ -118,6 +118,8 @@ async def async_setup(hass, config):
     hass.services.async_register(DOMAIN, "set_io_scheduler", set_io_scheduler)
     hass.services.async_register(DOMAIN, "install_zwave", install_zwave)
     hass.services.async_register(DOMAIN, "start_sip_server", start_sip_server)
+    hass.services.async_register(DOMAIN, "start_screen_stream", start_screen_stream)
+
     if ais_global.has_front_clock():
         hass.services.async_register(
             DOMAIN, "set_clock_display_text", set_clock_display_text
