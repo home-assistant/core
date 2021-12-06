@@ -79,7 +79,7 @@ async def test_prevent_flooding(caplog):
     """Test to ensure a report is only written once to the log."""
 
     what = "accessed hi instead of hello"
-    key = f"hue:/home/paulus/homeassistant/components/hue/light.py:23:{what}"
+    key = "/home/paulus/homeassistant/components/hue/light.py:23"
 
     frame.report(what, error_if_core=False)
     assert what in caplog.text
