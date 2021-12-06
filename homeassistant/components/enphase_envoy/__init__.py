@@ -76,8 +76,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await coordinator.async_config_entry_first_refresh()
 
     if not entry.unique_id:
-        if unique_id := await envoy_reader.get_full_serial_number():
-            hass.config_entries.async_update_entry(entry, unique_id=unique_id)
+        try:
+            serial = await envoy_reader.get_full_serial_number()
+        except httpx.HTTPError:
+            pass
+        else:
+            hass.config_entries.async_update_entry(entry, unique_id=serial)
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         COORDINATOR: coordinator,
