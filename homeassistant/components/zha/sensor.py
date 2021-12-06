@@ -61,6 +61,7 @@ from .core import discovery
 from .core.const import (
     CHANNEL_ANALOG_INPUT,
     CHANNEL_ELECTRICAL_MEASUREMENT,
+    CHANNEL_FAN,
     CHANNEL_HUMIDITY,
     CHANNEL_ILLUMINANCE,
     CHANNEL_LEAF_WETNESS,
@@ -636,6 +637,13 @@ class ThermostatHVACAction(Sensor, id_suffix="hvac_action"):
         self.async_write_ha_state()
 
 
+@MULTI_MATCH(
+    channel_names=CHANNEL_THERMOSTAT,
+    aux_channels=CHANNEL_FAN,
+    manufacturers="Centralite",
+    models={"3157100", "3157100-E"},
+    stop_on_match=True,
+)
 @MULTI_MATCH(
     channel_names=CHANNEL_THERMOSTAT,
     manufacturers="Zen Within",
