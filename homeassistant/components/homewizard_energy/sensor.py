@@ -11,7 +11,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.const import (
-    CONF_ID,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_GAS,
     DEVICE_CLASS_POWER,
@@ -42,8 +41,7 @@ from .const import (
     ATTR_WIFI_STRENGTH,
     CONF_API,
     CONF_DATA,
-    CONF_MODEL,
-    CONF_SW_VERSION,
+    CONF_DEVICE,
     COORDINATOR,
     DOMAIN,
 )
@@ -198,9 +196,9 @@ class HWEnergySensor(CoordinatorEntity, SensorEntity):
         return {
             "name": self.entry_data["name"],
             "manufacturer": "HomeWizard",
-            "sw_version": self.data[CONF_SW_VERSION],
-            "model": self.data[CONF_MODEL],
-            "identifiers": {(DOMAIN, self.data[CONF_ID])},
+            "sw_version": self.data[CONF_DEVICE].firmware_version,
+            "model": self.data[CONF_DEVICE].product_type,
+            "identifiers": {(DOMAIN, self.data[CONF_DEVICE].serial)},
         }
 
     @property

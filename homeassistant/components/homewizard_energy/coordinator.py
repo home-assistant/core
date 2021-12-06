@@ -5,7 +5,7 @@ import logging
 import aiohwenergy
 import async_timeout
 
-from homeassistant.const import CONF_API_VERSION, CONF_ID, CONF_NAME, CONF_STATE
+from homeassistant.const import CONF_STATE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -14,8 +14,7 @@ from .const import (
     ATTR_POWER_ON,
     ATTR_SWITCHLOCK,
     CONF_DATA,
-    CONF_MODEL,
-    CONF_SW_VERSION,
+    CONF_DEVICE,
     UPDATE_INTERVAL,
 )
 
@@ -46,11 +45,7 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator):
                 raise UpdateFailed("Failed to communicate with device")
 
             data = {
-                CONF_NAME: self.api.device.product_name,
-                CONF_MODEL: self.api.device.product_type,
-                CONF_ID: self.api.device.serial,
-                CONF_SW_VERSION: self.api.device.firmware_version,
-                CONF_API_VERSION: self.api.device.api_version,
+                CONF_DEVICE: self.api.device,
                 CONF_DATA: {},
                 CONF_STATE: None,
             }
@@ -65,5 +60,5 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator):
                     ATTR_BRIGHTNESS: self.api.state.brightness,
                 }
 
-        self.name = data[CONF_NAME]
+        # self.name = data[CONF_NAME]
         return data
