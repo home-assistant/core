@@ -57,7 +57,6 @@ class TautulliConfigFlow(ConfigFlow, domain=DOMAIN):
         data_schema = {
             vol.Required(CONF_API_KEY, default=user_input.get(CONF_API_KEY, "")): str,
             vol.Required(CONF_URL, default=user_input.get(CONF_URL, "")): str,
-            vol.Optional(CONF_SSL, default=user_input.get(CONF_SSL, False)): bool,
             vol.Optional(
                 CONF_VERIFY_SSL, default=user_input.get(CONF_VERIFY_SSL, True)
             ): bool,
@@ -120,7 +119,6 @@ class TautulliConfigFlow(ConfigFlow, domain=DOMAIN):
         conf = {}
         conf[CONF_API_KEY] = host_configuration.api_token
         conf[CONF_URL] = host_configuration.base_url
-        conf[CONF_SSL] = host_configuration.ssl
         conf[CONF_VERIFY_SSL] = host_configuration.verify_ssl
         return await self.async_step_user(conf)
 
@@ -136,7 +134,6 @@ class TautulliConfigFlow(ConfigFlow, domain=DOMAIN):
                     self.hass, user_input.get(CONF_VERIFY_SSL, True)
                 ),
                 verify_ssl=user_input.get(CONF_VERIFY_SSL, True),
-                ssl=user_input[CONF_SSL],
             )
             return await api_client.async_get_server_info(), None
         except exceptions.PyTautulliConnectionException:
