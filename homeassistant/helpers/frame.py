@@ -12,6 +12,7 @@ from homeassistant.exceptions import HomeAssistantError
 
 _LOGGER = logging.getLogger(__name__)
 
+# Keep track of integrations already reported to prevent flooding
 _REPORTED_INTEGRATIONS: list[str] = []
 
 CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)  # pylint: disable=invalid-name
@@ -87,6 +88,7 @@ def report_integration(
     """
     found_frame, integration, path = integration_frame
 
+    # Keep track of integrations already reported to prevent flooding
     key = f"{integration}:{what}"
     if key in _REPORTED_INTEGRATIONS:
         return
