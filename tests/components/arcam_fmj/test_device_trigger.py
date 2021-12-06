@@ -38,7 +38,7 @@ async def test_get_triggers(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, "host", 1234)},
     )
-    entity_registry.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         "media_player", DOMAIN, "5678", device_id=device_entry.id
     )
     expected_triggers = [
@@ -47,7 +47,7 @@ async def test_get_triggers(
             "domain": DOMAIN,
             "type": "turn_on",
             "device_id": device_entry.id,
-            "entity_id": "media_player.arcam_fmj_5678",
+            "entity_id": entity_entry.id,
             "metadata": {"secondary": False},
         },
     ]
@@ -66,9 +66,11 @@ async def test_get_triggers(
 
 
 async def test_if_fires_on_turn_on_request(
-    hass: HomeAssistant, calls, player_setup, state
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, calls, player_setup, state
 ) -> None:
     """Test for turn_on and turn_off triggers firing."""
+    entry = entity_registry.async_get(player_setup)
+
     state.get_power.return_value = None
 
     assert await async_setup_component(
@@ -81,7 +83,7 @@ async def test_if_fires_on_turn_on_request(
                         "platform": "device",
                         "domain": DOMAIN,
                         "device_id": "",
-                        "entity_id": player_setup,
+                        "entity_id": entry.id,
                         "type": "turn_on",
                     },
                     "action": {
