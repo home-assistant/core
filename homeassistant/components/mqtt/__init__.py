@@ -1,6 +1,7 @@
 """Support for MQTT message handling."""
 from __future__ import annotations
 
+from ast import literal_eval
 import asyncio
 from dataclasses import dataclass
 import datetime as dt
@@ -295,11 +296,31 @@ def publish(hass: HomeAssistant, topic, payload, qos=0, retain=False) -> None:
     hass.add_job(async_publish, hass, topic, payload, qos, retain)
 
 
+def prepare_publish_payload(payload: PublishPayloadType) -> str | bytes:
+    """Ensure correct payload type for publishing."""
+    if isinstance(payload, bytes):
+        return payload
+
+    if isinstance(payload, str):
+        try:
+            native_object = literal_eval(payload)
+            if isinstance(native_object, bytes):
+                return native_object
+
+        except (ValueError, TypeError, SyntaxError, MemoryError):
+            pass
+        return payload
+
+    return str(payload)
+
+
 async def async_publish(
     hass: HomeAssistant, topic: Any, payload, qos=0, retain=False
 ) -> None:
     """Publish message to an MQTT topic."""
-    await hass.data[DATA_MQTT].async_publish(topic, str(payload), qos, retain)
+    await hass.data[DATA_MQTT].async_publish(
+        topic, prepare_publish_payload(payload), qos, retain
+    )
 
 
 AsyncDeprecatedMessageCallbackType = Callable[
@@ -540,7 +561,9 @@ async def async_setup_entry(hass, entry):
                 )
                 return
 
-        await hass.data[DATA_MQTT].async_publish(msg_topic, payload, qos, retain)
+        await hass.data[DATA_MQTT].async_publish(
+            msg_topic, prepare_publish_payload(payload), qos, retain
+        )
 
     hass.services.async_register(
         DOMAIN, SERVICE_PUBLISH, async_publish_service, schema=MQTT_PUBLISH_SCHEMA
