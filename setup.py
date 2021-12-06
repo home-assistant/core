@@ -57,7 +57,7 @@ REQUIRES = [
     "ais-dom-frontend==20211203.1",
     "yarl==1.6.3",
     # AIS
-    "aisapi==0.1.0",
+    "aisapi==0.1.1",
     "tzdata",
 ]
 
