@@ -150,9 +150,7 @@ def calculate_configuration(username, password, meter_id, days_before=2):
 class TauronAmiplusSensor(Entity):
     url_login = "https://logowanie.tauron-dystrybucja.pl/login"
     url_charts = "https://elicznik.tauron-dystrybucja.pl/index/charts"
-    headers = {
-        "cache-control": "no-cache",
-    }
+    headers = {"cache-control": "no-cache"}
     payload_charts = {"dane[cache]": 0, "dane[chartType]": 2}
 
     def __init__(self, name, username, password, meter_id, generation, sensor_type):
@@ -206,7 +204,7 @@ class TauronAmiplusSensor(Entity):
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         _params = {
             "tariff": self.mode,
             "updated": self.power_zones_last_update,

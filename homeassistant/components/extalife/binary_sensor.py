@@ -28,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """"setup via configuration.yaml not supported anymore"""
+    """ "setup via configuration.yaml not supported anymore"""
     pass
 
 
@@ -98,9 +98,9 @@ class ExtaLifeBinarySensor(ExtaLifeChannel, BinarySensorEntity):
         return self._dev_class
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
-        attr = super().device_state_attributes
+        attr = super().extra_state_attributes
         data = self.channel_data
         # general sensor attributes
         if data.get("sync_time") is not None:
@@ -118,7 +118,7 @@ class ExtaLifeBinarySensor(ExtaLifeChannel, BinarySensorEntity):
         return attr
 
     def on_state_notification(self, data):
-        """ React on state notification from controller """
+        """React on state notification from controller"""
         state = data.get("state")
         ch_data = self.channel_data.copy()
 

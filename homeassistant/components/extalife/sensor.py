@@ -141,8 +141,8 @@ class ExtaLifeSensor(ExtaLifeChannel):
         return self._unit
 
     @property
-    def device_state_attributes(self):
-        attr = super().device_state_attributes
+    def extra_state_attributes(self):
+        attr = super().extra_state_attributes
         """Return device specific state attributes."""
         data = self.channel_data
         if data.get("sync_time") is not None:
@@ -178,7 +178,7 @@ class ExtaLifeSensor(ExtaLifeChannel):
         return attr
 
     def on_state_notification(self, data):
-        """ React on state notification from controller """
+        """React on state notification from controller"""
 
         self.channel_data.update(data)
 

@@ -2,6 +2,7 @@ from datetime import timedelta
 import glob
 import logging
 import os
+
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -96,7 +97,7 @@ class FilesSensor(Entity):
         return self.ICON
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return other details about the sensor state."""
         attr = {
             "path": self._folder_path,

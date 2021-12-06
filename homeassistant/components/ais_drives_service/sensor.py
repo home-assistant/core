@@ -1,11 +1,12 @@
 """Support for Drive sensors."""
+from datetime import timedelta
 import logging
 
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
+
 from .config_flow import configured_drivers
-from datetime import timedelta
 
 _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(minutes=600)
@@ -19,8 +20,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up a drive sensor based on a rclone config entry."""
     from homeassistant.components.ais_drives_service import (
-        rclone_get_remotes_long,
         DRIVES_TYPES,
+        rclone_get_remotes_long,
     )
 
     remotes = rclone_get_remotes_long()
@@ -86,7 +87,7 @@ class DriveSensor(Entity):
         return self._name
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return
 
@@ -105,16 +106,16 @@ class DriveSensor(Entity):
     async def async_update(self):
         """Get the latest data and update the state."""
         try:
-            from homeassistant.components.ais_drives_service import G_RCLONE_CONF
             import subprocess
+
+            from homeassistant.components.ais_drives_service import G_RCLONE_CONF
 
             self._state = ""
             rclone_cmd = ["rclone", "size", self._name + ":", G_RCLONE_CONF]
             proc = subprocess.run(
                 rclone_cmd,
                 encoding="utf-8",
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                capture_output=True,
                 timeout=3,
             )
             #  will wait for the process to complete and then we are going to return the output

@@ -67,7 +67,7 @@ class AisSensor(Entity):
         return DATA_RATE_KILOBITS_PER_SECOND
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the attributes of the device."""
         return {
             "ais_id": self._ais_id,

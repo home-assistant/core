@@ -84,19 +84,19 @@ OPTIONS_CONF_SCHEMA = {
         vol.Optional(
             OPTIONS_GENERAL_POLL_INTERVAL,
             default=OPTIONS_DEFAULTS[OPTIONS_GENERAL][OPTIONS_GENERAL_POLL_INTERVAL],
-        ): cv.positive_int,
+        ): cv.positive_int
     },
     vol.Optional(OPTIONS_LIGHT, default=OPTIONS_DEFAULTS[OPTIONS_LIGHT]): {
         vol.Optional(
             OPTIONS_LIGHT_ICONS_LIST,
             default=OPTIONS_DEFAULTS[OPTIONS_LIGHT][OPTIONS_LIGHT_ICONS_LIST],
-        ): cv.ensure_list,
+        ): cv.ensure_list
     },
     vol.Optional(OPTIONS_COVER, default=OPTIONS_DEFAULTS[OPTIONS_COVER]): {
         vol.Optional(
             OPTIONS_COVER_INV_CONTROL,
             default=OPTIONS_DEFAULTS[OPTIONS_COVER][OPTIONS_COVER_INVERTED_CONTROL],
-        ): cv.boolean,
+        ): cv.boolean
     },
 }
 
@@ -198,7 +198,7 @@ async def async_unload_entry(hass: HomeAssistantType, config_entry: ConfigEntry)
 
 
 async def initialize(hass: HomeAssistantType, config_entry: ConfigEntry):
-    """ Initialize Exta Life integration based on a Config Entry """
+    """Initialize Exta Life integration based on a Config Entry"""
 
     def init_options(hass: HomeAssistantType, config_entry: ConfigEntry):
         """Populate default options for Exta Life."""
@@ -362,7 +362,7 @@ class ChannelDataManager:
             await self.async_execute_status_polling()
 
     async def async_execute_status_polling(self):
-        """ Executes status polling triggered externally, not via periodic callback + resets next poll time """
+        """Executes status polling triggered externally, not via periodic callback + resets next poll time"""
         if self._poller_callback_remove is not None:
             self._poller_callback_remove()
 
@@ -371,7 +371,7 @@ class ChannelDataManager:
         self.setup_periodic_callback()
 
     async def async_stop_polling(self):
-        """ Turn off periodic callbacks for status update """
+        """Turn off periodic callbacks for status update"""
 
         if self._poller_callback_remove is not None:
             self._poller_callback_remove()
@@ -412,7 +412,7 @@ class ChannelDataManager:
             self.initial_channels = self.channels_indx.copy()
 
     def setup_periodic_callback(self):
-        """ (Re)set periodic callback period based on options """
+        """(Re)set periodic callback period based on options"""
 
         # register callback for periodic status update polling + device discovery
         interval = self._config_entry.options.get(OPTIONS_GENERAL).get(
@@ -552,12 +552,12 @@ class ExtaLifeChannel(Entity):
         await super().async_will_remove_from_hass()
 
     async def async_update_callback(self):
-        """ Inform HA of state update from status poller"""
+        """Inform HA of state update from status poller"""
         _LOGGER.debug("Update callback for entty id: %s", self.entity_id)
         self.async_schedule_update_ha_state(True)
 
     async def async_state_notif_update_callback(self, *args):
-        """ Inform HA of state change received from controller status notification """
+        """Inform HA of state change received from controller status notification"""
         data = args[0]
         _LOGGER.debug(
             "State update notification callback for entity id: %s, data: %s",
@@ -568,11 +568,11 @@ class ExtaLifeChannel(Entity):
         self.on_state_notification(data)
 
     def on_state_notification(self, data):
-        """ must be overriden in entity subclasses """
+        """must be overriden in entity subclasses"""
         pass
 
     def get_unique_id(self):
-        """ Provide unique id for HA entity registry """
+        """Provide unique id for HA entity registry"""
         return f"extalife-{str(self.channel_data.get('serial'))}-{self.channel_id}"
 
     @property
@@ -604,17 +604,17 @@ class ExtaLifeChannel(Entity):
 
     @property
     def model(self) -> str:
-        """ Return model """
+        """Return model"""
         return DEVICE_MAP_TYPE_TO_MODEL.get(self.channel_data.get("type"))
 
     @property
     def is_exta_free(self) -> bool:
-        """ Returns boolean if entity represents Exta Free device """
+        """Returns boolean if entity represents Exta Free device"""
         return self.channel_data.get("exta_free_device")
 
     @property
     def assumed_state(self) -> bool:
-        """ Returns boolean if entity status is assumed status """
+        """Returns boolean if entity status is assumed status"""
         ret = self.is_exta_free
         _LOGGER.debug("Assumed state for entity: %s, %s", self.entity_id, ret)
         return ret
@@ -707,8 +707,8 @@ class ExtaLifeChannel(Entity):
         self.async_schedule_update_ha_state(True)
 
     @property
-    def device_state_attributes(self):
-        """" Return state atributes """
+    def extra_state_attributes(self):
+        """ " Return state atributes"""
         return {
             "channel_id": self.channel_id,
             "not_responding": self.channel_data.get("is_timeout"),
@@ -768,7 +768,7 @@ class ExtaLifeController(Entity):
         )
 
     async def async_added_to_hass(self):
-        """ When entity added to HA """
+        """When entity added to HA"""
 
         # let the Core know about the controller entity
         self._core.controller_entity_added_to_hass(self)
@@ -779,7 +779,7 @@ class ExtaLifeController(Entity):
 
     @property
     def mac(self):
-        """ controller's MAC address """
+        """controller's MAC address"""
         return self.api.mac
 
     @property
@@ -788,7 +788,7 @@ class ExtaLifeController(Entity):
 
     @property
     def should_poll(self):
-        """ Turn off HA status polling """
+        """Turn off HA status polling"""
         return False
 
     @property
@@ -802,7 +802,7 @@ class ExtaLifeController(Entity):
 
     @property
     def device_info(self):
-        """ Register controller in Device Registry """
+        """Register controller in Device Registry"""
         return {
             "connections": {(dr.CONNECTION_NETWORK_MAC, self.mac)},
             "identifiers": {(DOMAIN, self.mac)},
@@ -822,17 +822,17 @@ class ExtaLifeController(Entity):
 
     @property
     def available(self):
-        """ Entity available? """
+        """Entity available?"""
         # for lost api connection this should return False, so entity status changes to 'unavailable'
         return self.api.is_connected
 
     @property
     def state(self) -> str:
-        """Return the controller state. it will be either 'ready' or 'unavailable' """
+        """Return the controller state. it will be either 'ready' or 'unavailable'"""
         return "ready"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         return {
             "type": "gateway",
             "mac_address": self.mac,
@@ -842,6 +842,6 @@ class ExtaLifeController(Entity):
         }
 
     async def async_update(self):
-        """ Entity update callback """
+        """Entity update callback"""
         # not necessary for the controller entity; will be updated on demand, externally
         pass

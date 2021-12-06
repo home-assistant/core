@@ -3,6 +3,7 @@ import logging
 
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
+
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -63,7 +64,7 @@ class GHSensor(Entity):
         return self._name
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return
 

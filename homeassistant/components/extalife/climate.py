@@ -28,16 +28,10 @@ _LOGGER = logging.getLogger(__name__)
 # set auto: set state to 0. Controller returns state = 1. State = 1 means work_mode should be set to true
 
 # map Exta Life "work_mode" field
-EXTA_HVAC_MODE = {
-    True: HVAC_MODE_AUTO,
-    False: HVAC_MODE_HEAT,
-}
+EXTA_HVAC_MODE = {True: HVAC_MODE_AUTO, False: HVAC_MODE_HEAT}
 
 # map Exta Life notification "state" field
-EXTA_STATE_HVAC_MODE = {
-    1: HVAC_MODE_AUTO,
-    0: HVAC_MODE_HEAT,
-}
+EXTA_STATE_HVAC_MODE = {1: HVAC_MODE_AUTO, 0: HVAC_MODE_HEAT}
 
 # map Exta Life "work_mode" field
 HVAC_MODE_EXTA = {HVAC_MODE_AUTO: True, HVAC_MODE_HEAT: False}
@@ -63,7 +57,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def async_setup_entry(
     hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities
 ):
-    """Set up an Exta Life heat controllers """
+    """Set up an Exta Life heat controllers"""
     # channels = hass.data[DOMAIN][config_entry.entry_id][DATA_PLATFORMS][DOMAIN_CLIMATE]
     core = Core.get(config_entry.entry_id)
     channels = core.get_channels(DOMAIN_CLIMATE)
@@ -148,9 +142,9 @@ class ExtaLifeClimate(ExtaLifeChannel, ClimateEntity):
             self.async_schedule_update_ha_state()
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return device specific state attributes."""
-        attr = super().device_state_attributes
+        attr = super().extra_state_attributes
 
         data = self.channel_data
         attr.update(
@@ -164,7 +158,7 @@ class ExtaLifeClimate(ExtaLifeChannel, ClimateEntity):
         return attr
 
     def on_state_notification(self, data):
-        """ React on state notification from controller """
+        """React on state notification from controller"""
         state = data.get("state")
 
         ch_data = self.channel_data.copy()

@@ -247,7 +247,7 @@ class AisPlayerDevice(MediaPlayerEntity):
         return int(position)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the specific state attributes of the player."""
         return {
             "ais_id": self._ais_id,
@@ -334,9 +334,7 @@ class AisPlayerDevice(MediaPlayerEntity):
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
         """Implement the media browsing helper."""
         result = await async_browse_media(
-            media_content_type,
-            media_content_id,
-            self._ais_gate,
+            media_content_type, media_content_id, self._ais_gate
         )
         await self._ais_gate.cache_browse_media(result.as_dict())
         return result

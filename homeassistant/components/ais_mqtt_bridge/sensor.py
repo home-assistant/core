@@ -146,7 +146,7 @@ class AisMqttSoftBridge(Entity):
         return ""
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the attributes of the device."""
         return {
             "MQTT packets sent": self._ais_cloud_published,

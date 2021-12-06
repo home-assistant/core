@@ -118,12 +118,9 @@ class SuplaMqttSoftBridge(Entity):
         return ""
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the attributes of the device."""
-        return {
-            "MQTT packets OUT": self._supla_out,
-            "MQTT packets IN": self._supla_in,
-        }
+        return {"MQTT packets OUT": self._supla_out, "MQTT packets IN": self._supla_in}
 
     @property
     def icon(self):
