@@ -1,6 +1,8 @@
 """Allows the creation of a sensor that breaks out state_attributes."""
 from __future__ import annotations
 
+from datetime import date, datetime
+import logging
 from typing import Any
 
 import voluptuous as vol
@@ -13,6 +15,7 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     STATE_CLASSES_SCHEMA,
     SensorEntity,
+    SensorEntityDeviceClass,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -32,6 +35,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_ATTRIBUTE_TEMPLATES,
@@ -52,6 +56,7 @@ LEGACY_FIELDS = {
     CONF_VALUE_TEMPLATE: CONF_STATE,
 }
 
+_LOGGER = logging.getLogger(__name__)
 
 SENSOR_SCHEMA = vol.Schema(
     {
@@ -227,7 +232,21 @@ class SensorTemplate(TemplateEntity, SensorEntity):
     @callback
     def _update_state(self, result):
         super()._update_state(result)
-        self._attr_native_value = None if isinstance(result, TemplateError) else result
+        if isinstance(result, TemplateError):
+            self._attr_native_value = None
+            return
+
+        if (
+            self.device_class
+            in (
+                SensorEntityDeviceClass.DATE,
+                SensorEntityDeviceClass.DATETIME,
+            )
+            and (result := dt_util.parse_datetime(result)) is not None
+        ) and self.device_class == SensorEntityDeviceClass.DATE:
+            result = result.date()
+
+        self._attr_native_value = result
 
 
 class TriggerSensorEntity(TriggerEntity, SensorEntity):
@@ -237,9 +256,23 @@ class TriggerSensorEntity(TriggerEntity, SensorEntity):
     extra_template_keys = (CONF_STATE,)
 
     @property
-    def native_value(self) -> str | None:
+    def native_value(self) -> str | datetime | date | None:
         """Return state of the sensor."""
-        return self._rendered.get(CONF_STATE)
+        state = self._rendered.get(CONF_STATE)
+        if (
+            state is not None
+            and self.device_class
+            in (
+                SensorEntityDeviceClass.DATE,
+                SensorEntityDeviceClass.DATETIME,
+            )
+            and (parsed_state := dt_util.parse_datetime(state)) is not None
+        ):
+            if self.device_class == SensorEntityDeviceClass.DATE:
+                return parsed_state.date()
+            return parsed_state
+
+        return state
 
     @property
     def state_class(self) -> str | None:
