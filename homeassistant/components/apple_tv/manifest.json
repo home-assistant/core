@@ -7,7 +7,10 @@
   "zeroconf": [
     "_mediaremotetv._tcp.local.",
     "_touch-able._tcp.local.",
-    {"type":"_airplay._tcp.local.","model":"appletv*"}
+    "_appletv-v2._tcp.local.",
+    "_airplay._tcp.local.",
+    "_raop._tcp.local.",
+    "_hscp._tcp.local."
   ],
   "codeowners": ["@postlund"],
   "iot_class": "local_push"

@@ -13,8 +13,7 @@ ZEROCONF = {
     ],
     "_airplay._tcp.local.": [
         {
-            "domain": "apple_tv",
-            "model": "appletv*"
+            "domain": "apple_tv"
         },
         {
             "domain": "samsungtv",
@@ -24,6 +23,11 @@ ZEROCONF = {
     "_api._udp.local.": [
         {
             "domain": "guardian"
+        }
+    ],
+    "_appletv-v2._tcp.local.": [
+        {
+            "domain": "apple_tv"
         }
     ],
     "_axis-video._tcp.local.": [
@@ -110,6 +114,11 @@ ZEROCONF = {
     "_homekit._tcp.local.": [
         {
             "domain": "homekit"
+        }
+    ],
+    "_hscp._tcp.local.": [
+        {
+            "domain": "apple_tv"
         }
     ],
     "_http._tcp.local.": [
@@ -225,6 +234,11 @@ ZEROCONF = {
         {
             "domain": "brother",
             "name": "brother*"
+        }
+    ],
+    "_raop._tcp.local.": [
+        {
+            "domain": "apple_tv"
         }
     ],
     "_sonos._tcp.local.": [
