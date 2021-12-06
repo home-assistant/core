@@ -31,19 +31,21 @@ async def test_configuring_flux_led_causes_discovery(hass: HomeAssistant) -> Non
     """Test that specifying empty config does discovery."""
     with patch(
         "homeassistant.components.flux_led.discovery.AIOBulbScanner.async_scan"
+    ) as scan, patch(
+        "homeassistant.components.flux_led.discovery.AIOBulbScanner.getBulbInfo"
     ) as discover:
         discover.return_value = [FLUX_DISCOVERY]
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
 
-        assert len(discover.mock_calls) == 1
+        assert len(scan.mock_calls) == 1
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
-        assert len(discover.mock_calls) == 2
+        assert len(scan.mock_calls) == 2
 
         async_fire_time_changed(hass, utcnow() + flux_led.DISCOVERY_INTERVAL)
         await hass.async_block_till_done()
-        assert len(discover.mock_calls) == 3
+        assert len(scan.mock_calls) == 3
 
 
 @pytest.mark.usefixtures("mock_multiple_broadcast_addresses")
@@ -53,19 +55,21 @@ async def test_configuring_flux_led_causes_discovery_multiple_addresses(
     """Test that specifying empty config does discovery."""
     with patch(
         "homeassistant.components.flux_led.discovery.AIOBulbScanner.async_scan"
+    ) as scan, patch(
+        "homeassistant.components.flux_led.discovery.AIOBulbScanner.getBulbInfo"
     ) as discover:
         discover.return_value = [FLUX_DISCOVERY]
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
 
-        assert len(discover.mock_calls) == 2
+        assert len(scan.mock_calls) == 2
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
-        assert len(discover.mock_calls) == 4
+        assert len(scan.mock_calls) == 4
 
         async_fire_time_changed(hass, utcnow() + flux_led.DISCOVERY_INTERVAL)
         await hass.async_block_till_done()
-        assert len(discover.mock_calls) == 6
+        assert len(scan.mock_calls) == 6
 
 
 async def test_config_entry_reload(hass: HomeAssistant) -> None:
@@ -116,6 +120,9 @@ async def test_config_entry_fills_unique_id_with_directed_discovery(
     with patch(
         "homeassistant.components.flux_led.discovery.AIOBulbScanner.async_scan",
         new=_discovery,
+    ), patch(
+        "homeassistant.components.flux_led.discovery.AIOBulbScanner.getBulbInfo",
+        return_value=[discovery],
     ), _patch_wifibulb():
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
