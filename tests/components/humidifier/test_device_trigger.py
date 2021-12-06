@@ -87,7 +87,7 @@ async def test_get_triggers(hass, device_reg, entity_reg):
         {
             "platform": "device",
             "domain": DOMAIN,
-            "type": "changed_states",
+            "type": "toggled",
             "device_id": device_entry.id,
             "entity_id": f"{DOMAIN}.test_5678",
         },
@@ -213,7 +213,7 @@ async def test_if_fires_on_state_change(hass, calls):
                         "domain": DOMAIN,
                         "device_id": "",
                         "entity_id": "humidifier.entity",
-                        "type": "changed_states",
+                        "type": "toggled",
                     },
                     "action": {
                         "service": "test.automation",
