@@ -74,7 +74,7 @@ async def test_extract_frame_no_integration(caplog):
 
 
 @pytest.mark.usefixtures("mock_integration_frame")
-@patch.object(frame, "_REPORTED_INTEGRATIONS", [])
+@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
 async def test_prevent_flooding(caplog):
     """Test to ensure a report is only written once to the log."""
 

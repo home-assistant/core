@@ -13,7 +13,7 @@ from homeassistant.exceptions import HomeAssistantError
 _LOGGER = logging.getLogger(__name__)
 
 # Keep track of integrations already reported to prevent flooding
-_REPORTED_INTEGRATIONS: list[str] = []
+_REPORTED_INTEGRATIONS: set[str] = set()
 
 CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)  # pylint: disable=invalid-name
 
@@ -92,7 +92,7 @@ def report_integration(
     key = f"{found_frame.filename}:{found_frame.lineno}"
     if key in _REPORTED_INTEGRATIONS:
         return
-    _REPORTED_INTEGRATIONS.append(key)
+    _REPORTED_INTEGRATIONS.add(key)
 
     index = found_frame.filename.index(path)
     if path == "custom_components/":
