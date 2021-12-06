@@ -53,7 +53,7 @@ SENSOR_TYPES: dict[str, BMWSensorEntityDescription] = {
         key="charging_end_time",
         device_class=DEVICE_CLASS_TIMESTAMP,
     ),
-    "charging_end_time_mybmw": BMWSensorEntityDescription(
+    "charging_end_time_original": BMWSensorEntityDescription(
         key="charging_end_time_original",
         entity_registry_enabled_default=False,
     ),
