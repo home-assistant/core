@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_SENSORS,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -48,7 +49,7 @@ SERVICE_LIVESTREAM_RECORD = "livestream_record"
 ATTR_VALUE = "value"
 ATTR_DURATION = "duration"
 
-PLATFORMS = ["camera", "sensor"]
+PLATFORMS = [Platform.CAMERA, Platform.SENSOR]
 
 SENSOR_KEYS = [desc.key for desc in SENSOR_TYPES]
 

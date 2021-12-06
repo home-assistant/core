@@ -21,6 +21,7 @@ from homeassistant.const import (
     PERCENTAGE,
     PRESSURE_PA,
     TEMP_CELSIUS,
+    Platform,
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -38,7 +39,7 @@ DATA_LUFTDATEN_CLIENT = "data_luftdaten_client"
 DATA_LUFTDATEN_LISTENER = "data_luftdaten_listener"
 DEFAULT_ATTRIBUTION = "Data provided by luftdaten.info"
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 
 SENSOR_HUMIDITY = "humidity"
 SENSOR_PM10 = "P1"
