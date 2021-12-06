@@ -24,6 +24,7 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_SENSORS,
     CONF_STRUCTURE,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
@@ -82,7 +83,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 # Platforms for SDM API
-PLATFORMS = ["sensor", "camera", "climate"]
+PLATFORMS = [Platform.SENSOR, Platform.CAMERA, Platform.CLIMATE]
 WEB_AUTH_DOMAIN = DOMAIN
 INSTALLED_AUTH_DOMAIN = f"{DOMAIN}.installed"
 
