@@ -147,7 +147,7 @@ SENSORS: Final[tuple[SensorEntityDescription, ...]] = (
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    """Config entry example."""
+    """Initialize sensors."""
     coordinator = hass.data[DOMAIN][entry.unique_id][COORDINATOR]
 
     entities = []
@@ -160,9 +160,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class HWEnergySensor(CoordinatorEntity, SensorEntity):
     """Representation of a HomeWizard Energy Sensor."""
 
-    unique_id = None
-    name = None
-
     def __init__(self, coordinator, entry, description):
         """Initialize Sensor Domain."""
 
@@ -173,7 +170,7 @@ class HWEnergySensor(CoordinatorEntity, SensorEntity):
         # Config attributes.
         self._attr_name = f"{entry.data['name']} {description.name}"
         self.data_type = description.key
-        self.unique_id = f"{entry.unique_id}_{description.key}"
+        self._attr_unique_id = f"{entry.unique_id}_{description.key}"
 
         # Some values are given, but set to NULL (eg. gas_timestamp when no gas meter is connected)
         if self.data[CONF_DATA][self.data_type] is None:
