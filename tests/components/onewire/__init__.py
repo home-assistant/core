@@ -26,6 +26,7 @@ from .const import (
     ATTR_DEVICE_FILE,
     ATTR_ENTITY_CATEGORY,
     ATTR_INJECT_READS,
+    ATTR_STATE_CLONE,
     ATTR_UNIQUE_ID,
     FIXED_ATTRIBUTES,
     MOCK_OWPROXY_DEVICES,
@@ -81,9 +82,13 @@ def check_entities(
         assert registry_entry.entity_category == expected_entity.get(
             ATTR_ENTITY_CATEGORY
         )
-        assert registry_entry.unique_id == expected_entity[ATTR_UNIQUE_ID]
+        assert (
+            registry_entry.unique_id == expected_entity[ATTR_UNIQUE_ID]
+        ), f"{registry_entry.unique_id} != {expected_entity[ATTR_UNIQUE_ID]}"
         state = hass.states.get(entity_id)
-        assert state.state == expected_entity[ATTR_STATE]
+        assert (
+            state.state == expected_entity[ATTR_STATE]
+        ), f"{state.state} != {expected_entity[ATTR_STATE]}"
         assert state.attributes[ATTR_DEVICE_FILE] == expected_entity.get(
             ATTR_DEVICE_FILE, registry_entry.unique_id
         )
@@ -181,6 +186,8 @@ def _setup_owproxy_mock_device_reads(
     device_sensors = mock_device.get(platform, [])
     for expected_sensor in device_sensors:
         sub_read_side_effect.append(expected_sensor[ATTR_INJECT_READS])
+        if ATTR_STATE_CLONE in expected_sensor:
+            sub_read_side_effect.append(expected_sensor[ATTR_INJECT_READS])
 
 
 def setup_sysbus_mock_devices(
@@ -201,7 +208,9 @@ def setup_sysbus_mock_devices(
         for expected_sensor in device_sensors:
             if isinstance(expected_sensor[ATTR_INJECT_READS], list):
                 read_side_effect += expected_sensor[ATTR_INJECT_READS]
+                read_side_effect += expected_sensor[ATTR_INJECT_READS]
             else:
+                read_side_effect.append(expected_sensor[ATTR_INJECT_READS])
                 read_side_effect.append(expected_sensor[ATTR_INJECT_READS])
 
     # Ensure enough read side effect
