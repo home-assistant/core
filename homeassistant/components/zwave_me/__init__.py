@@ -108,9 +108,6 @@ class ZWaveMeDevice(Entity):
         """Return true if device is online."""
         return self.get_available()
 
-    def update(self):
-        """Update device state."""
-
     @property
     def unique_id(self) -> str:
         """If the switch is currently on or off."""
