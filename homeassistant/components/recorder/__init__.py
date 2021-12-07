@@ -328,11 +328,15 @@ def _async_register_services(hass, instance):
     )
 
 
-@dataclass  # type: ignore[misc] # mypy bug #5374
-class RecorderTask(abc.ABC):
-    """ABC for recorder tasks."""
+@dataclass
+class RecorderTaskMixin:
+    """Recorder task dataclass mixin, workaround for mypy bug #5374."""
 
     instance: Recorder
+
+
+class RecorderTask(abc.ABC, RecorderTaskMixin):
+    """ABC for recorder tasks."""
 
     @abc.abstractmethod
     def handler(self) -> None:
