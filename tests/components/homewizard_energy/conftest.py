@@ -21,7 +21,7 @@ def mock_config_entry_data():
 def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
-        title="HomeWizard Energy",
+        title="Product Name (aabbccddeeff)",
         domain=DOMAIN,
         data={},
         unique_id="aabbccddeeff",

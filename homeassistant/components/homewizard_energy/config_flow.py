@@ -10,7 +10,7 @@ import async_timeout
 from voluptuous import Required, Schema
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_IP_ADDRESS, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 
 from .const import CONF_PRODUCT_NAME, CONF_PRODUCT_TYPE, CONF_SERIAL, DOMAIN
@@ -194,11 +194,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         _LOGGER.debug("config_flow _async_create_entry")
 
-        entry_info[
-            CONF_NAME
-        ] = f"{entry_info[CONF_PRODUCT_NAME]} ({entry_info[CONF_SERIAL]})"
-
         return self.async_create_entry(
-            title=entry_info[CONF_NAME],
-            data=entry_info,
+            title=f"{entry_info[CONF_PRODUCT_NAME]} ({entry_info[CONF_SERIAL]})",
+            data={
+                CONF_IP_ADDRESS: entry_info[CONF_IP_ADDRESS],
+            },
         )

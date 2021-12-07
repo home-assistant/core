@@ -65,14 +65,17 @@ async def test_sensor_entity_smr_version(
 
     entity_registry = er.async_get(hass)
 
-    state = hass.states.get("sensor.product_name_smr_version")
-    entry = entity_registry.async_get("sensor.product_name_smr_version")
+    state = hass.states.get("sensor.product_name_aabbccddeeff_smr_version")
+    entry = entity_registry.async_get("sensor.product_name_aabbccddeeff_smr_version")
     assert entry
     assert state
     assert entry.unique_id == "aabbccddeeff_smr_version"
     assert not entry.disabled
     assert state.state == "50"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Product Name SMR Version"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == "Product Name (aabbccddeeff) SMR Version"
+    )
     assert ATTR_STATE_CLASS not in state.attributes
     assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
     assert ATTR_DEVICE_CLASS not in state.attributes
@@ -103,14 +106,16 @@ async def test_sensor_entity_meter_model(
 
     entity_registry = er.async_get(hass)
 
-    state = hass.states.get("sensor.product_name_model")
-    entry = entity_registry.async_get("sensor.product_name_model")
+    state = hass.states.get("sensor.product_name_aabbccddeeff_model")
+    entry = entity_registry.async_get("sensor.product_name_aabbccddeeff_model")
     assert entry
     assert state
     assert entry.unique_id == "aabbccddeeff_meter_model"
     assert not entry.disabled
     assert state.state == "Model X"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Product Name Model"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME) == "Product Name (aabbccddeeff) Model"
+    )
     assert ATTR_STATE_CLASS not in state.attributes
     assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
     assert ATTR_DEVICE_CLASS not in state.attributes
@@ -139,14 +144,17 @@ async def test_sensor_entity_wifi_ssid(hass, mock_config_entry_data, mock_config
 
     entity_registry = er.async_get(hass)
 
-    state = hass.states.get("sensor.product_name_wifi_ssid")
-    entry = entity_registry.async_get("sensor.product_name_wifi_ssid")
+    state = hass.states.get("sensor.product_name_aabbccddeeff_wifi_ssid")
+    entry = entity_registry.async_get("sensor.product_name_aabbccddeeff_wifi_ssid")
     assert entry
     assert state
     assert entry.unique_id == "aabbccddeeff_wifi_ssid"
     assert not entry.disabled
     assert state.state == "My Wifi"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Product Name Wifi SSID"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == "Product Name (aabbccddeeff) Wifi SSID"
+    )
     assert ATTR_STATE_CLASS not in state.attributes
     assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
     assert ATTR_DEVICE_CLASS not in state.attributes
@@ -177,7 +185,7 @@ async def test_sensor_entity_wifi_strength(
 
     entity_registry = er.async_get(hass)
 
-    entry = entity_registry.async_get("sensor.product_name_wifi_strength")
+    entry = entity_registry.async_get("sensor.product_name_aabbccddeeff_wifi_strength")
     assert entry
     assert entry.unique_id == "aabbccddeeff_wifi_strength"
     assert entry.disabled
@@ -207,15 +215,18 @@ async def test_sensor_entity_total_power_import_t1_kwh(
 
     entity_registry = er.async_get(hass)
 
-    state = hass.states.get("sensor.product_name_total_power_import_t1")
-    entry = entity_registry.async_get("sensor.product_name_total_power_import_t1")
+    state = hass.states.get("sensor.product_name_aabbccddeeff_total_power_import_t1")
+    entry = entity_registry.async_get(
+        "sensor.product_name_aabbccddeeff_total_power_import_t1"
+    )
     assert entry
     assert state
     assert entry.unique_id == "aabbccddeeff_total_power_import_t1_kwh"
     assert not entry.disabled
     assert state.state == "1234.123"
     assert (
-        state.attributes.get(ATTR_FRIENDLY_NAME) == "Product Name Total Power Import T1"
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == "Product Name (aabbccddeeff) Total Power Import T1"
     )
     assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
@@ -247,15 +258,18 @@ async def test_sensor_entity_total_power_import_t2_kwh(
 
     entity_registry = er.async_get(hass)
 
-    state = hass.states.get("sensor.product_name_total_power_import_t2")
-    entry = entity_registry.async_get("sensor.product_name_total_power_import_t2")
+    state = hass.states.get("sensor.product_name_aabbccddeeff_total_power_import_t2")
+    entry = entity_registry.async_get(
+        "sensor.product_name_aabbccddeeff_total_power_import_t2"
+    )
     assert entry
     assert state
     assert entry.unique_id == "aabbccddeeff_total_power_import_t2_kwh"
     assert not entry.disabled
     assert state.state == "1234.123"
     assert (
-        state.attributes.get(ATTR_FRIENDLY_NAME) == "Product Name Total Power Import T2"
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == "Product Name (aabbccddeeff) Total Power Import T2"
     )
     assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
@@ -287,15 +301,18 @@ async def test_sensor_entity_total_power_export_t1_kwh(
 
     entity_registry = er.async_get(hass)
 
-    state = hass.states.get("sensor.product_name_total_power_export_t1")
-    entry = entity_registry.async_get("sensor.product_name_total_power_export_t1")
+    state = hass.states.get("sensor.product_name_aabbccddeeff_total_power_export_t1")
+    entry = entity_registry.async_get(
+        "sensor.product_name_aabbccddeeff_total_power_export_t1"
+    )
     assert entry
     assert state
     assert entry.unique_id == "aabbccddeeff_total_power_export_t1_kwh"
     assert not entry.disabled
     assert state.state == "1234.123"
     assert (
-        state.attributes.get(ATTR_FRIENDLY_NAME) == "Product Name Total Power Export T1"
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == "Product Name (aabbccddeeff) Total Power Export T1"
     )
     assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
@@ -327,15 +344,18 @@ async def test_sensor_entity_total_power_export_t2_kwh(
 
     entity_registry = er.async_get(hass)
 
-    state = hass.states.get("sensor.product_name_total_power_export_t2")
-    entry = entity_registry.async_get("sensor.product_name_total_power_export_t2")
+    state = hass.states.get("sensor.product_name_aabbccddeeff_total_power_export_t2")
+    entry = entity_registry.async_get(
+        "sensor.product_name_aabbccddeeff_total_power_export_t2"
+    )
     assert entry
     assert state
     assert entry.unique_id == "aabbccddeeff_total_power_export_t2_kwh"
     assert not entry.disabled
     assert state.state == "1234.123"
     assert (
-        state.attributes.get(ATTR_FRIENDLY_NAME) == "Product Name Total Power Export T2"
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == "Product Name (aabbccddeeff) Total Power Export T2"
     )
     assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
@@ -367,14 +387,17 @@ async def test_sensor_entity_active_power(
 
     entity_registry = er.async_get(hass)
 
-    state = hass.states.get("sensor.product_name_active_power")
-    entry = entity_registry.async_get("sensor.product_name_active_power")
+    state = hass.states.get("sensor.product_name_aabbccddeeff_active_power")
+    entry = entity_registry.async_get("sensor.product_name_aabbccddeeff_active_power")
     assert entry
     assert state
     assert entry.unique_id == "aabbccddeeff_active_power_w"
     assert not entry.disabled
     assert state.state == "123.123"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Product Name Active Power"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == "Product Name (aabbccddeeff) Active Power"
+    )
     assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == POWER_WATT
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_POWER
@@ -405,14 +428,19 @@ async def test_sensor_entity_active_power_l1(
 
     entity_registry = er.async_get(hass)
 
-    state = hass.states.get("sensor.product_name_active_power_l1")
-    entry = entity_registry.async_get("sensor.product_name_active_power_l1")
+    state = hass.states.get("sensor.product_name_aabbccddeeff_active_power_l1")
+    entry = entity_registry.async_get(
+        "sensor.product_name_aabbccddeeff_active_power_l1"
+    )
     assert entry
     assert state
     assert entry.unique_id == "aabbccddeeff_active_power_l1_w"
     assert not entry.disabled
     assert state.state == "123.123"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Product Name Active Power L1"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == "Product Name (aabbccddeeff) Active Power L1"
+    )
     assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == POWER_WATT
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_POWER
@@ -443,14 +471,19 @@ async def test_sensor_entity_active_power_l2(
 
     entity_registry = er.async_get(hass)
 
-    state = hass.states.get("sensor.product_name_active_power_l2")
-    entry = entity_registry.async_get("sensor.product_name_active_power_l2")
+    state = hass.states.get("sensor.product_name_aabbccddeeff_active_power_l2")
+    entry = entity_registry.async_get(
+        "sensor.product_name_aabbccddeeff_active_power_l2"
+    )
     assert entry
     assert state
     assert entry.unique_id == "aabbccddeeff_active_power_l2_w"
     assert not entry.disabled
     assert state.state == "456.456"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Product Name Active Power L2"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == "Product Name (aabbccddeeff) Active Power L2"
+    )
     assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == POWER_WATT
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_POWER
@@ -481,14 +514,19 @@ async def test_sensor_entity_active_power_l3(
 
     entity_registry = er.async_get(hass)
 
-    state = hass.states.get("sensor.product_name_active_power_l3")
-    entry = entity_registry.async_get("sensor.product_name_active_power_l3")
+    state = hass.states.get("sensor.product_name_aabbccddeeff_active_power_l3")
+    entry = entity_registry.async_get(
+        "sensor.product_name_aabbccddeeff_active_power_l3"
+    )
     assert entry
     assert state
     assert entry.unique_id == "aabbccddeeff_active_power_l3_w"
     assert not entry.disabled
     assert state.state == "789.789"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Product Name Active Power L3"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == "Product Name (aabbccddeeff) Active Power L3"
+    )
     assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == POWER_WATT
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_POWER
@@ -517,14 +555,17 @@ async def test_sensor_entity_total_gas(hass, mock_config_entry_data, mock_config
 
     entity_registry = er.async_get(hass)
 
-    state = hass.states.get("sensor.product_name_total_gas")
-    entry = entity_registry.async_get("sensor.product_name_total_gas")
+    state = hass.states.get("sensor.product_name_aabbccddeeff_total_gas")
+    entry = entity_registry.async_get("sensor.product_name_aabbccddeeff_total_gas")
     assert entry
     assert state
     assert entry.unique_id == "aabbccddeeff_total_gas_m3"
     assert not entry.disabled
     assert state.state == "50"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Product Name Total Gas"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == "Product Name (aabbccddeeff) Total Gas"
+    )
     assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == VOLUME_CUBIC_METERS
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_GAS
@@ -555,14 +596,17 @@ async def test_sensor_entity_gas_timestamp(
 
     entity_registry = er.async_get(hass)
 
-    state = hass.states.get("sensor.product_name_gas_timestamp")
-    entry = entity_registry.async_get("sensor.product_name_gas_timestamp")
+    state = hass.states.get("sensor.product_name_aabbccddeeff_gas_timestamp")
+    entry = entity_registry.async_get("sensor.product_name_aabbccddeeff_gas_timestamp")
     assert entry
     assert state
     assert entry.unique_id == "aabbccddeeff_gas_timestamp"
     assert not entry.disabled
     assert state.state == "50"
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Product Name Gas Timestamp"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == "Product Name (aabbccddeeff) Gas Timestamp"
+    )
     assert ATTR_STATE_CLASS not in state.attributes
     assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_TIMESTAMP
@@ -599,19 +643,23 @@ async def test_sensor_entity_disabled_when_null(
 
     entity_registry = er.async_get(hass)
 
-    entry = entity_registry.async_get("sensor.product_name_active_power_l2")
+    entry = entity_registry.async_get(
+        "sensor.product_name_aabbccddeeff_active_power_l2"
+    )
     assert entry
     assert entry.disabled
 
-    entry = entity_registry.async_get("sensor.product_name_active_power_l3")
+    entry = entity_registry.async_get(
+        "sensor.product_name_aabbccddeeff_active_power_l3"
+    )
     assert entry
     assert entry.disabled
 
-    entry = entity_registry.async_get("sensor.product_name_total_gas")
+    entry = entity_registry.async_get("sensor.product_name_aabbccddeeff_total_gas")
     assert entry
     assert entry.disabled
 
-    entry = entity_registry.async_get("sensor.product_name_gas_timestamp")
+    entry = entity_registry.async_get("sensor.product_name_aabbccddeeff_gas_timestamp")
     assert entry
     assert entry.disabled
 
@@ -642,10 +690,14 @@ async def test_sensor_entity_export_disabled_when_unused(
 
     entity_registry = er.async_get(hass)
 
-    entry = entity_registry.async_get("sensor.product_name_total_power_export_t1")
+    entry = entity_registry.async_get(
+        "sensor.product_name_aabbccddeeff_total_power_export_t1"
+    )
     assert entry
     assert entry.disabled
 
-    entry = entity_registry.async_get("sensor.product_name_total_power_export_t2")
+    entry = entity_registry.async_get(
+        "sensor.product_name_aabbccddeeff_total_power_export_t2"
+    )
     assert entry
     assert entry.disabled

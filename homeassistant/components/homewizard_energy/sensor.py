@@ -165,10 +165,10 @@ class HWEnergySensor(CoordinatorEntity, SensorEntity):
 
         super().__init__(coordinator)
         self.entity_description = description
-        self.entry_data = entry.data
+        self.entry = entry
 
         # Config attributes.
-        self._attr_name = f"{entry.data['name']} {description.name}"
+        self._attr_name = f"{entry.title} {description.name}"
         self.data_type = description.key
         self._attr_unique_id = f"{entry.unique_id}_{description.key}"
 
@@ -189,7 +189,7 @@ class HWEnergySensor(CoordinatorEntity, SensorEntity):
     def device_info(self) -> DeviceInfo:
         """Return device information."""
         return {
-            "name": self.entry_data["name"],
+            "name": self.entry.title,
             "manufacturer": "HomeWizard",
             "sw_version": self.data[CONF_DEVICE].firmware_version,
             "model": self.data[CONF_DEVICE].product_type,
