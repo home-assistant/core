@@ -3,14 +3,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
-from typing import Any
 
 from pyownet import protocol
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 from homeassistant.helpers.typing import StateType
 
-from .const import READ_MODE_BOOL, READ_MODE_INT
+from .const import CONF_TRACK_RAW_VALUE, READ_MODE_BOOL, READ_MODE_INT
 
 
 @dataclass
@@ -30,6 +30,7 @@ class OneWireBaseEntity(Entity):
 
     def __init__(
         self,
+        config_entry: ConfigEntry,
         description: OneWireEntityDescription,
         device_id: str,
         device_info: DeviceInfo,
@@ -40,16 +41,12 @@ class OneWireBaseEntity(Entity):
         self.entity_description = description
         self._attr_unique_id = f"/{device_id}/{description.key}"
         self._attr_device_info = device_info
+        self._attr_extra_state_attributes = {"device_file": device_file}
         self._attr_name = name
+        self._config_entry = config_entry
         self._device_file = device_file
         self._state: StateType = None
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return the state attributes of the entity."""
-        return {
-            "device_file": self._device_file,
-        }
+        self._value_raw: float | None = None
 
 
 class OneWireProxyEntity(OneWireBaseEntity):
@@ -57,6 +54,7 @@ class OneWireProxyEntity(OneWireBaseEntity):
 
     def __init__(
         self,
+        config_entry: ConfigEntry,
         description: OneWireEntityDescription,
         device_id: str,
         device_info: DeviceInfo,
@@ -66,6 +64,7 @@ class OneWireProxyEntity(OneWireBaseEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(
+            config_entry=config_entry,
             description=description,
             device_id=device_id,
             device_info=device_info,
@@ -91,6 +90,9 @@ class OneWireProxyEntity(OneWireBaseEntity):
             _LOGGER.error("Owserver failure in read(), got: %s", exc)
             self._state = None
         else:
+            if self._config_entry.options.get(CONF_TRACK_RAW_VALUE, True):
+                self._attr_extra_state_attributes["raw_value"] = raw_value
+
             if self.entity_description.read_mode == READ_MODE_INT:
                 self._state = int(raw_value)
             elif self.entity_description.read_mode == READ_MODE_BOOL:

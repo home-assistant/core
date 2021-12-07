@@ -102,11 +102,15 @@ async def async_setup_entry(
     if config_entry.data[CONF_TYPE] == CONF_TYPE_OWSERVER:
         onewirehub = hass.data[DOMAIN][config_entry.entry_id]
 
-        entities = await hass.async_add_executor_job(get_entities, onewirehub)
+        entities = await hass.async_add_executor_job(
+            get_entities, onewirehub, config_entry
+        )
         async_add_entities(entities, True)
 
 
-def get_entities(onewirehub: OneWireHub) -> list[BinarySensorEntity]:
+def get_entities(
+    onewirehub: OneWireHub, config_entry: ConfigEntry
+) -> list[BinarySensorEntity]:
     """Get a list of entities."""
     if not onewirehub.devices:
         return []
@@ -131,6 +135,7 @@ def get_entities(onewirehub: OneWireHub) -> list[BinarySensorEntity]:
             name = f"{device_id} {description.name}"
             entities.append(
                 OneWireProxyBinarySensor(
+                    config_entry=config_entry,
                     description=description,
                     device_id=device_id,
                     device_file=device_file,
