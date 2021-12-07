@@ -482,7 +482,7 @@ co2signal==0.4.2
 coinbase==2.1.0
 
 # homeassistant.scripts.check_config
-colorlog==6.6.0
+colorlog==6.4.1
 
 # homeassistant.components.color_extractor
 colorthief==0.2.1
@@ -1612,9 +1612,6 @@ pylitejet==0.3.0
 # homeassistant.components.litterrobot
 pylitterbot==2021.11.0
 
-# homeassistant.components.loopenergy
-pyloopenergy==0.2.1
-
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.11.0
 
@@ -1710,6 +1707,8 @@ pyotgw==1.1b1
 
 # homeassistant.auth.mfa_modules.notify
 # homeassistant.auth.mfa_modules.totp
+pyotp==2.3.0
+
 # homeassistant.components.otp
 pyotp==2.6.0
 
