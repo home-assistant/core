@@ -264,17 +264,14 @@ def _async_subscribe_pico_remote_events(
 
 
 async def async_unload_entry(
-    hass: HomeAssistant, config_entry: config_entries.ConfigEntry
+    hass: HomeAssistant, entry: config_entries.ConfigEntry
 ) -> bool:
     """Unload the bridge bridge from a config entry."""
-    data = hass.data[DOMAIN][config_entry.entry_id]
-    data[BRIDGE_LEAP].close()
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
-    if unload_ok:
-        hass.data[DOMAIN].pop(config_entry.entry_id)
-
+    data = hass.data[DOMAIN][entry.entry_id]
+    smartbridge: Smartbridge = data[BRIDGE_LEAP]
+    await smartbridge.close()
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
 
 
