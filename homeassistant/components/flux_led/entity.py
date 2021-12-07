@@ -13,7 +13,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import FluxLedUpdateCoordinator
-from .const import SIGNAL_STATE_UPDATED
+from .const import CONF_MINOR_VERSION, SIGNAL_STATE_UPDATED
 
 
 class FluxEntity(CoordinatorEntity):
@@ -33,13 +33,19 @@ class FluxEntity(CoordinatorEntity):
         self._responding = True
         self._attr_name = name
         self._attr_unique_id = unique_id
+        version_num = self._device.version_num
+        if minor_version := coordinator.entry.data.get(CONF_MINOR_VERSION):
+            sw_version = version_num + int(hex(minor_version)[2:]) / 100
+        else:
+            sw_version = self._device.version_num
+
         if self.unique_id:
             self._attr_device_info = DeviceInfo(
                 connections={(dr.CONNECTION_NETWORK_MAC, self.unique_id)},
                 manufacturer="FluxLED/Magic Home",
                 model=self._device.model,
                 name=self.name,
-                sw_version=str(self._device.version_num),
+                sw_version=str(sw_version),
             )
 
     @property

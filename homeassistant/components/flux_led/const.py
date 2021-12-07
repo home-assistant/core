@@ -54,6 +54,7 @@ DISCOVER_SCAN_TIMEOUT: Final = 10
 CONF_DEVICES: Final = "devices"
 CONF_CUSTOM_EFFECT: Final = "custom_effect"
 CONF_MODEL: Final = "model"
+CONF_MINOR_VERSION: Final = "minor_version"
 
 MODE_AUTO: Final = "auto"
 MODE_RGB: Final = "rgb"
