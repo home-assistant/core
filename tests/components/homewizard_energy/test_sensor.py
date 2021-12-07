@@ -1,5 +1,6 @@
 """Test the update coordinator for HomeWizard Energy."""
 
+from datetime import datetime
 from unittest.mock import patch
 
 from homeassistant.components.homewizard_energy.const import (
@@ -581,7 +582,12 @@ async def test_sensor_entity_gas_timestamp(
     api.data.available_datapoints = [
         ATTR_GAS_TIMESTAMP,
     ]
-    api.data.gas_timestamp = 50
+
+    # Generate timestamp
+    api.data.gas_timestamp = datetime.strptime(
+        "210606140010", "%y%m%d%H%M%S"
+    ).isoformat()
+    assert api.data.gas_timestamp == "2021-06-06T14:00:10"
 
     with patch(
         "aiohwenergy.HomeWizardEnergy",
@@ -602,7 +608,7 @@ async def test_sensor_entity_gas_timestamp(
     assert state
     assert entry.unique_id == "aabbccddeeff_gas_timestamp"
     assert not entry.disabled
-    assert state.state == "50"
+    assert state.state == "2021-06-06T14:00:10"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == "Product Name (aabbccddeeff) Gas Timestamp"
