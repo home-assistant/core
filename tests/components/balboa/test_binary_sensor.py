@@ -1,11 +1,8 @@
 """Tests of the climate entity of the balboa integration."""
+from unittest.mock import MagicMock
 
-from unittest.mock import patch
-
-from homeassistant.components.balboa.const import DOMAIN as BALBOA_DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from . import init_integration
 
@@ -19,10 +16,10 @@ FILTER_MAP = [
 ]
 
 
-async def test_filters(hass: HomeAssistant, client):
+async def test_filters(hass: HomeAssistant, client: MagicMock) -> None:
     """Test spa filters."""
 
-    config_entry = await _setup_binary_sensor_test(hass)
+    config_entry = await init_integration(hass)
 
     for filter_mode in range(4):
         for spa_filter in range(1, 3):
@@ -32,13 +29,10 @@ async def test_filters(hass: HomeAssistant, client):
             assert state.state == FILTER_MAP[filter_mode][spa_filter - 1]
 
 
-async def test_circ_pump(hass: HomeAssistant, client):
+async def test_circ_pump(hass: HomeAssistant, client: MagicMock) -> None:
     """Test spa circ pump."""
-    with patch(
-        "homeassistant.components.balboa.BalboaSpaWifi.have_circ_pump",
-        return_value=True,
-    ):
-        config_entry = await _setup_binary_sensor_test(hass)
+    client.have_circ_pump.return_value = (True,)
+    config_entry = await init_integration(hass)
 
     state = await _patch_circ_pump(hass, config_entry, True, client)
     assert state.state == STATE_ON
@@ -60,12 +54,3 @@ async def _patch_filter(hass, config_entry, filter_mode, num, client):
     await client.new_data_cb()
     await hass.async_block_till_done()
     return hass.states.get(f"{ENTITY_BINARY_SENSOR}filter{num}")
-
-
-async def _setup_binary_sensor_test(hass):
-    """Prepare the test."""
-    config_entry = await init_integration(hass)
-    await async_setup_component(hass, BALBOA_DOMAIN, config_entry)
-    await hass.async_block_till_done()
-
-    return config_entry
