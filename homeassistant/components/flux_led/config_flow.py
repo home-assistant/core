@@ -115,8 +115,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(mac)
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
         for entry in self._async_current_entries(include_ignore=False):
-            if entry.data[CONF_HOST] == host and not entry.unique_id:
-                async_update_entry_from_discovery(self.hass, entry, device)
+            if entry.data[CONF_HOST] == host:
+                if not entry.unique_id:
+                    async_update_entry_from_discovery(self.hass, entry, device)
                 return self.async_abort(reason="already_configured")
         self.context[CONF_HOST] = host
         for progress in self._async_in_progress():

@@ -24,6 +24,91 @@ async def test_form(hass: HomeAssistant) -> None:
         "homeassistant.components.enphase_envoy.config_flow.EnvoyReader.getData",
         return_value=True,
     ), patch(
+        "homeassistant.components.enphase_envoy.config_flow.EnvoyReader.get_full_serial_number",
+        return_value="1234",
+    ), patch(
+        "homeassistant.components.enphase_envoy.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+                "username": "test-username",
+                "password": "test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "create_entry"
+    assert result2["title"] == "Envoy 1234"
+    assert result2["data"] == {
+        "host": "1.1.1.1",
+        "name": "Envoy 1234",
+        "username": "test-username",
+        "password": "test-password",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_user_no_serial_number(hass: HomeAssistant) -> None:
+    """Test user setup without a serial number."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.enphase_envoy.config_flow.EnvoyReader.getData",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.enphase_envoy.config_flow.EnvoyReader.get_full_serial_number",
+        return_value=None,
+    ), patch(
+        "homeassistant.components.enphase_envoy.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+                "username": "test-username",
+                "password": "test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "create_entry"
+    assert result2["title"] == "Envoy"
+    assert result2["data"] == {
+        "host": "1.1.1.1",
+        "name": "Envoy",
+        "username": "test-username",
+        "password": "test-password",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_user_fetching_serial_fails(hass: HomeAssistant) -> None:
+    """Test user setup without a serial number."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.enphase_envoy.config_flow.EnvoyReader.getData",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.enphase_envoy.config_flow.EnvoyReader.get_full_serial_number",
+        side_effect=httpx.HTTPStatusError(
+            "any", request=MagicMock(), response=MagicMock()
+        ),
+    ), patch(
         "homeassistant.components.enphase_envoy.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -125,6 +210,9 @@ async def test_import(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.enphase_envoy.config_flow.EnvoyReader.getData",
         return_value=True,
+    ), patch(
+        "homeassistant.components.enphase_envoy.config_flow.EnvoyReader.get_full_serial_number",
+        return_value="1234",
     ), patch(
         "homeassistant.components.enphase_envoy.async_setup_entry",
         return_value=True,
