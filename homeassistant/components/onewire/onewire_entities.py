@@ -6,7 +6,6 @@ import logging
 
 from pyownet import protocol
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 from homeassistant.helpers.typing import StateType
 
@@ -30,7 +29,6 @@ class OneWireBaseEntity(Entity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
         description: OneWireEntityDescription,
         device_id: str,
         device_info: DeviceInfo,
@@ -45,7 +43,6 @@ class OneWireBaseEntity(Entity):
         self._attr_device_info = device_info
         self._attr_extra_state_attributes = {"device_file": device_file}
         self._attr_name = name
-        self._config_entry = config_entry
         self._device_file = device_file
         self._state: StateType = None
         self._rounding = rounding
@@ -56,7 +53,6 @@ class OneWireProxyEntity(OneWireBaseEntity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
         description: OneWireEntityDescription,
         device_id: str,
         device_info: DeviceInfo,
@@ -67,7 +63,6 @@ class OneWireProxyEntity(OneWireBaseEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(
-            config_entry=config_entry,
             description=description,
             device_id=device_id,
             device_info=device_info,

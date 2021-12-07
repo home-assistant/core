@@ -6,7 +6,8 @@ import copy
 from dataclasses import dataclass
 import logging
 import os
-from typing import TYPE_CHECKING
+from types import MappingProxyType
+from typing import TYPE_CHECKING, Any
 
 from pi1wire import InvalidCRCException, OneWireInterface, UnsupportResponseException
 from pyownet import protocol
@@ -349,12 +350,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up 1-Wire platform."""
     onewirehub = hass.data[DOMAIN][config_entry.entry_id]
-    entities = await hass.async_add_executor_job(get_entities, onewirehub, config_entry)
+    entities = await hass.async_add_executor_job(
+        get_entities, onewirehub, config_entry.data
+    )
     async_add_entities(entities, True)
 
 
 def get_entities(
-    onewirehub: OneWireHub, config_entry: ConfigEntry
+    onewirehub: OneWireHub, config: MappingProxyType[str, Any]
 ) -> list[SensorEntity]:
     """Get a list of entities."""
     if not onewirehub.devices:
@@ -362,7 +365,6 @@ def get_entities(
 
     entities: list[SensorEntity] = []
     device_names = {}
-    config = config_entry.data
     if CONF_NAMES in config and isinstance(config[CONF_NAMES], dict):
         device_names = config[CONF_NAMES]
 
@@ -407,7 +409,6 @@ def get_entities(
                 name = f"{device_names.get(device_id, device_id)} {description.name}"
                 entities.extend(
                     OneWireProxySensor(
-                        config_entry=config_entry,
                         description=description,
                         device_id=device_id,
                         device_file=device_file,
@@ -433,7 +434,6 @@ def get_entities(
             name = f"{device_names.get(device_id, device_id)} {description.name}"
             entities.extend(
                 OneWireDirectSensor(
-                    config_entry=config_entry,
                     description=description,
                     device_id=device_id,
                     device_file=device_file,
@@ -461,7 +461,6 @@ class OneWireProxySensor(OneWireProxyEntity, OneWireSensor):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
         description: OneWireEntityDescription,
         device_id: str,
         device_info: DeviceInfo,
@@ -472,7 +471,6 @@ class OneWireProxySensor(OneWireProxyEntity, OneWireSensor):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(
-            config_entry=config_entry,
             description=description,
             device_id=device_id,
             device_info=device_info,
@@ -497,7 +495,6 @@ class OneWireDirectSensor(OneWireSensor):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
         description: OneWireSensorEntityDescription,
         device_id: str,
         device_info: DeviceInfo,
@@ -508,7 +505,6 @@ class OneWireDirectSensor(OneWireSensor):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(
-            config_entry=config_entry,
             description=description,
             device_id=device_id,
             device_info=device_info,
