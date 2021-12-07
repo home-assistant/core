@@ -335,10 +335,7 @@ def find_duplicates(
 
 
 def delete_duplicates(session: scoped_session) -> None:
-    """Identify and delete duplicated statistics.
-
-    A backup will be made of duplicated statistics before it is deleted.
-    """
+    """Identify and delete duplicated statistics."""
     all_duplicates: list[dict] = []
     total_deleted_rows = 0
     with contextlib.suppress(HomeAssistantError):
