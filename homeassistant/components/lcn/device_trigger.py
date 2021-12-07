@@ -91,3 +91,16 @@ async def async_attach_trigger(
     return await event.async_attach_trigger(
         hass, event_config, action, automation_info, platform_type="device"
     )
+
+
+async def async_get_trigger_capabilities(hass: HomeAssistant, config: dict) -> dict:
+    """List trigger capabilities."""
+    if config[CONF_TYPE] == "transmitter":
+        return {"extra_fields": vol.Schema(TRANSMITTER_SCHEMA)}
+    if config[CONF_TYPE] == "transponder":
+        return {"extra_fields": vol.Schema(ACCESS_CONTROL_SCHEMA)}
+    if config[CONF_TYPE] == "fingerprint":
+        return {"extra_fields": vol.Schema(ACCESS_CONTROL_SCHEMA)}
+    if config[CONF_TYPE] == "send_keys":
+        return {"extra_fields": vol.Schema(SENDKEYS_SCHEMA)}
+    return {}
