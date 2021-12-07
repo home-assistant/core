@@ -1,4 +1,4 @@
-"""Utils for FluxLED/MagicHome."""
+"""Utils for Magic Home."""
 from __future__ import annotations
 
 from flux_led.aio import AIOWifiLedBulb
