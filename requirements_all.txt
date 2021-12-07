@@ -2522,4 +2522,4 @@ zm-py==0.5.2
 zwave-js-server-python==0.33.0
 
 # homeassistant.components.zwave_me
-zwave_me_ws==0.1.7
+zwave_me_ws==0.1.8

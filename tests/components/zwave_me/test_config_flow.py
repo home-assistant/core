@@ -1,12 +1,12 @@
 """Test the zwave_me config flow."""
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 from homeassistant import config_entries
+from homeassistant.components import zeroconf
 from homeassistant.components.zwave_me.const import DOMAIN
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
-from homeassistant.const import CONF_HOST
-from homeassistant.components import zeroconf
 
 MOCK_ZEROCONF_DATA = zeroconf.ZeroconfServiceInfo(
     host="fake_host",

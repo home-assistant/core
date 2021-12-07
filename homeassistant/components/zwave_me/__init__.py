@@ -3,15 +3,12 @@ import logging
 
 from zwave_me_ws import ZWaveMe, ZWaveMeData
 
-from homeassistant.helpers.entity import Entity
-from .const import (
-    DOMAIN,
-    PLATFORMS,
-    ZWAVEPLATFORMS,
-)
-from homeassistant.helpers.dispatcher import dispatcher_send, async_dispatcher_connect
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
+from homeassistant.helpers.entity import Entity
+
+from .const import DOMAIN, PLATFORMS, ZWAVEPLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,9 +29,9 @@ async def async_unload_entry(hass, entry):
 class ZWaveMeController:
     """Main ZWave-Me API class."""
 
-    def __init__(self, hass: HomeAssistant, config: ConfigEntry):
+    def __init__(self, hass: HomeAssistant, config: ConfigEntry) -> None:
         """Create the API instance."""
-        self.device_ids = []
+        self.device_ids: list[str] = []
         self._hass = hass
         self._config = config
         self.zwave_api = ZWaveMe(
@@ -59,6 +56,8 @@ class ZWaveMeController:
 
     def on_device_create(self, devices: list[ZWaveMeData]):
         """Create multiple devices."""
+        if devices is None:
+            return
         for device in devices:
             self.add_device(device)
 
@@ -116,7 +115,6 @@ class ZWaveMeDevice(Entity):
 
     def update(self):
         """Update device state."""
-        pass
 
     @property
     def unique_id(self) -> str:

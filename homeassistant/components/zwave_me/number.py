@@ -1,12 +1,12 @@
 """Representation of a switchMultilevel."""
-import logging
 from datetime import timedelta
+import logging
 
 from homeassistant.components.number import NumberEntity
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .__init__ import ZWaveMeDevice
 from .const import DOMAIN
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 SCAN_INTERVAL = timedelta(seconds=10)
 

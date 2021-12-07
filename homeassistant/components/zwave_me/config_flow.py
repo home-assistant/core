@@ -1,11 +1,13 @@
 """Config flow to configure ZWaveMe integration."""
 
-import logging
 from dataclasses import asdict
+import logging
+
 import voluptuous as vol
+
 from homeassistant import config_entries
 
-from .const import CONF_URL, CONF_TOKEN, DOMAIN
+from .const import CONF_TOKEN, CONF_URL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -83,5 +85,4 @@ class ZWaveMeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """
         if isinstance(discovery_info, dict):
             return await self.async_step_user(discovery_info)
-        else:
-            return await self.async_step_user(asdict(discovery_info))
+        return await self.async_step_user(asdict(discovery_info))
