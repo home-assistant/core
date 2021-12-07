@@ -1,1 +1,1 @@
-"""Tests for the HomeWizard Energy integration."""
+"""Tests for the HomeWizard integration."""

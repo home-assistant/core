@@ -1,4 +1,4 @@
-"""Test the homewizard energy config flow."""
+"""Test the homewizard config flow."""
 import logging
 from unittest.mock import patch
 

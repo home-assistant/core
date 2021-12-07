@@ -1,4 +1,4 @@
-"""Test the update coordinator for HomeWizard Energy."""
+"""Test the update coordinator for HomeWizard."""
 
 from datetime import timedelta
 from unittest.mock import patch

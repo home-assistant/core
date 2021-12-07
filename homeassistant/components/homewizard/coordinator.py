@@ -1,4 +1,4 @@
-"""Update coordinator for HomeWizard Energy."""
+"""Update coordinator for HomeWizard."""
 import asyncio
 import logging
 

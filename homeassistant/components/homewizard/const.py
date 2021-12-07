@@ -1,4 +1,4 @@
-"""Constants for the Homewizard Energy integration."""
+"""Constants for the Homewizard integration."""
 
 # Set up.
 from datetime import timedelta

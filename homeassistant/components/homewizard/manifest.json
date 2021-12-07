@@ -1,6 +1,6 @@
 {
   "domain": "homewizard",
-  "name": "HomeWizard Energy",
+  "name": "HomeWizard",
   "documentation": "https://www.home-assistant.io/integrations/homewizard",
   "codeowners": ["@DCSBL"],
   "dependencies": [],

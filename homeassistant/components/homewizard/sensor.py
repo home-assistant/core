@@ -1,4 +1,4 @@
-"""Creates Homewizard Energy sensor entities."""
+"""Creates Homewizard sensor entities."""
 from __future__ import annotations
 
 import logging
@@ -158,7 +158,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
 
 class HWEnergySensor(CoordinatorEntity, SensorEntity):
-    """Representation of a HomeWizard Energy Sensor."""
+    """Representation of a HomeWizard Sensor."""
 
     def __init__(self, coordinator, entry, description):
         """Initialize Sensor Domain."""

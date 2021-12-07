@@ -1,4 +1,4 @@
-"""Tests for the homewizard energy component."""
+"""Tests for the homewizard component."""
 from asyncio import TimeoutError
 from unittest.mock import patch
 

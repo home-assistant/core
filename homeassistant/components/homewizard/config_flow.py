@@ -1,4 +1,4 @@
-"""Config flow for Homewizard Energy."""
+"""Config flow for Homewizard."""
 from __future__ import annotations
 
 import logging

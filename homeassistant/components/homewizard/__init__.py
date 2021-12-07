@@ -1,4 +1,4 @@
-"""The Homewizard Energy integration."""
+"""The Homewizard integration."""
 import asyncio
 import logging
 
@@ -13,7 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Homewizard Energy from a config entry."""
+    """Set up Homewizard from a config entry."""
 
     _LOGGER.debug("__init__ async_setup_entry")
 
