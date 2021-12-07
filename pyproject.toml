@@ -133,6 +133,7 @@ runtime-typing = false
 max-line-length-suggestions = 72
 
 [tool.pytest.ini_options]
+addopts = "-p no:nose"
 testpaths = [
     "tests",
 ]
