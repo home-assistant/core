@@ -37,6 +37,7 @@ from homeassistant.const import (
     VOLUME_CUBIC_METERS,
 )
 from homeassistant.helpers import entity_registry as er
+import homeassistant.util.dt as dt_util
 
 from .generator import get_mock_device
 
@@ -540,7 +541,7 @@ async def test_sensor_entity_gas_timestamp(
     api.data.available_datapoints = [
         ATTR_GAS_TIMESTAMP,
     ]
-    api.data.gas_timestamp = 50
+    api.data.gas_timestamp = "2021-12-05T20:05:23+01:00"
 
     with patch(
         "aiohwenergy.HomeWizardEnergy",
@@ -561,7 +562,7 @@ async def test_sensor_entity_gas_timestamp(
     assert state
     assert entry.unique_id == "aabbccddeeff_gas_timestamp"
     assert not entry.disabled
-    assert state.state == "50"
+    assert state.state == dt_util.parse_datetime(api.data.gas_timestamp)
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Product Name Gas Timestamp"
     assert ATTR_STATE_CLASS not in state.attributes
     assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes

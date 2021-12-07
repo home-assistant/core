@@ -106,9 +106,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._set_confirm_only()
 
         placeholders = {
-            CONF_PRODUCT_TYPE: self.context["entry_info"][CONF_PRODUCT_TYPE],
-            CONF_SERIAL: self.context["entry_info"][CONF_SERIAL],
-            CONF_IP_ADDRESS: self.context["entry_info"][CONF_IP_ADDRESS],
+            CONF_PRODUCT_TYPE: self.entry_info[CONF_PRODUCT_TYPE],
+            CONF_SERIAL: self.entry_info[CONF_SERIAL],
+            CONF_IP_ADDRESS: self.entry_info[CONF_IP_ADDRESS],
         }
         return self.async_show_form(
             step_id="discovery_confirm", description_placeholders=placeholders

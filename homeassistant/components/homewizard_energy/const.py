@@ -36,11 +36,6 @@ ATTR_TOTAL_GAS_M3 = "total_gas_m3"
 ATTR_WIFI_SSID = "wifi_ssid"
 ATTR_WIFI_STRENGTH = "wifi_strength"
 
-# State attributes
-ATTR_POWER_ON = "power_on"
-ATTR_SWITCHLOCK = "switch_lock"
-ATTR_BRIGHTNESS = "brightness"
-
 # Default values.
 DEFAULT_STR_VALUE = "undefined"
 DEVICE_DEFAULT_NAME = "P1 Meter"
@@ -49,4 +44,3 @@ DEVICE_DEFAULT_NAME = "P1 Meter"
 MODEL_P1 = "HWE-P1"
 MODEL_KWH_1 = "SDM230-wifi"
 MODEL_KWH_3 = "SDM630-wifi"
-MODEL_SOCKET = "HWE-SKT"

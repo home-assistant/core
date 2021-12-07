@@ -39,7 +39,6 @@ from .const import (
     ATTR_TOTAL_GAS_M3,
     ATTR_WIFI_SSID,
     ATTR_WIFI_STRENGTH,
-    CONF_API,
     CONF_DATA,
     CONF_DEVICE,
     COORDINATOR,
@@ -149,12 +148,11 @@ SENSORS: Final[tuple[SensorEntityDescription, ...]] = (
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Config entry example."""
-    energy_api = hass.data[DOMAIN][entry.unique_id][CONF_API]
     coordinator = hass.data[DOMAIN][entry.unique_id][COORDINATOR]
 
     entities = []
     for description in SENSORS:
-        if description.key in energy_api.data.available_datapoints:
+        if description.key in coordinator.api.data.available_datapoints:
             entities.append(HWEnergySensor(coordinator, entry, description))
     async_add_entities(entities)
 

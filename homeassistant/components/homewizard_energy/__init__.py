@@ -2,15 +2,11 @@
 import asyncio
 import logging
 
-import aiohwenergy
-import async_timeout
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import CONF_API, COORDINATOR, DOMAIN, PLATFORMS
+from .const import COORDINATOR, DOMAIN, PLATFORMS
 from .coordinator import HWEnergyDeviceUpdateCoordinator as Coordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -21,51 +17,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     _LOGGER.debug("__init__ async_setup_entry")
 
-    # Get api and do a initialization
-    energy_api = aiohwenergy.HomeWizardEnergy(entry.data.get(CONF_IP_ADDRESS))
-
-    # Validate connection
-    initialized = False
-    try:
-        with async_timeout.timeout(10):
-            await energy_api.initialize()
-            initialized = True
-
-    except (asyncio.TimeoutError, aiohwenergy.RequestError) as ex:
-        _LOGGER.error(
-            "Error connecting to the Energy device at %s",
-            energy_api.host,
-        )
-        raise ConfigEntryNotReady from ex
-
-    except aiohwenergy.DisabledError as ex:
-        _LOGGER.error("API disabled, API must be enabled in the app")
-        raise ConfigEntryNotReady from ex
-
-    except aiohwenergy.AiohwenergyException as ex:
-        _LOGGER.error("Unknown Energy API error occurred")
-        raise ConfigEntryNotReady from ex
-
-    except Exception as ex:  # pylint: disable=broad-except
-        _LOGGER.error(
-            "Unknown error connecting with Energy Device at %s",
-            energy_api.host,
-        )
-        raise ConfigEntryNotReady from ex
-
-    finally:
-        if not initialized:
-            await energy_api.close()
-
     # Create coordinator
-    coordinator = Coordinator(hass, energy_api)
+    coordinator = Coordinator(hass, entry.data.get(CONF_IP_ADDRESS))
     await coordinator.async_config_entry_first_refresh()
 
     # Finalize
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.unique_id] = {
         COORDINATOR: coordinator,
-        CONF_API: energy_api,
     }
 
     for component in PLATFORMS:
@@ -91,8 +50,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if unload_ok:
         config_data = hass.data[DOMAIN].pop(entry.unique_id)
-        if "api" in config_data:
-            energy_api = config_data[CONF_API]
-            await energy_api.close()
+        await config_data[COORDINATOR].api.close()
+        config_data[COORDINATOR].api = None
 
     return unload_ok
