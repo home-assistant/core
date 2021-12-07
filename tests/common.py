@@ -902,8 +902,9 @@ def init_recorder_component(hass, add_config=None):
 
 async def async_init_recorder_component(hass, add_config=None):
     """Initialize the recorder asynchronously."""
-    config = dict(add_config) if add_config else {}
-    config[recorder.CONF_DB_URL] = "sqlite://"
+    config = add_config or {}
+    if recorder.CONF_DB_URL not in config:
+        config[recorder.CONF_DB_URL] = "sqlite://"
 
     with patch("homeassistant.components.recorder.migration.migrate_schema"):
         assert await async_setup_component(
