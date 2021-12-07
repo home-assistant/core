@@ -16,6 +16,7 @@ from .const import READ_MODE_BOOL, READ_MODE_INT
 class OneWireEntityDescription(EntityDescription):
     """Class describing OneWire entities."""
 
+    decimal_places: int | None = None
     read_mode: str | None = None
 
 
@@ -96,6 +97,9 @@ class OneWireProxyEntity(OneWireBaseEntity):
             elif self.entity_description.read_mode == READ_MODE_BOOL:
                 self._state = int(raw_value) == 1
             else:
-                if not self._is_raw_clone:
+                if (
+                    self.entity_description.decimal_places is not None
+                    and not self._is_raw_clone
+                ):
                     raw_value = round(raw_value, 1)
                 self._state = raw_value
