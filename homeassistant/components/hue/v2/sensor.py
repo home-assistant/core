@@ -17,13 +17,14 @@ from aiohue.v2.models.device_power import DevicePower
 from aiohue.v2.models.light_level import LightLevel
 from aiohue.v2.models.temperature import Temperature
 
-from homeassistant.components.binary_sensor import DEVICE_CLASS_CONNECTIVITY
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    SensorDeviceClass,
+    SensorEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_TEMPERATURE,
     ENTITY_CATEGORY_DIAGNOSTIC,
     LIGHT_LUX,
     PERCENTAGE,
@@ -101,7 +102,7 @@ class HueTemperatureSensor(HueSensorBase):
     """Representation of a Hue Temperature sensor."""
 
     _attr_native_unit_of_measurement = TEMP_CELSIUS
-    _attr_device_class = DEVICE_CLASS_TEMPERATURE
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
 
     @property
     def native_value(self) -> float:
@@ -118,7 +119,7 @@ class HueLightLevelSensor(HueSensorBase):
     """Representation of a Hue LightLevel (illuminance) sensor."""
 
     _attr_native_unit_of_measurement = LIGHT_LUX
-    _attr_device_class = DEVICE_CLASS_ILLUMINANCE
+    _attr_device_class = SensorDeviceClass.ILLUMINANCE
 
     @property
     def native_value(self) -> int:
@@ -142,7 +143,7 @@ class HueBatterySensor(HueSensorBase):
     """Representation of a Hue Battery sensor."""
 
     _attr_native_unit_of_measurement = PERCENTAGE
-    _attr_device_class = DEVICE_CLASS_BATTERY
+    _attr_device_class = SensorDeviceClass.BATTERY
     _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
 
     @property
@@ -159,7 +160,7 @@ class HueBatterySensor(HueSensorBase):
 class HueZigbeeConnectivitySensor(HueSensorBase):
     """Representation of a Hue ZigbeeConnectivity sensor."""
 
-    _attr_device_class = DEVICE_CLASS_CONNECTIVITY
+    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
     _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
     _attr_entity_registry_enabled_default = False
 
