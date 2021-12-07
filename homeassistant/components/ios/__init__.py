@@ -150,10 +150,13 @@ ACTION_LIST_SCHEMA = vol.All(cv.ensure_list, [ACTION_SCHEMA])
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: {
-            CONF_PUSH: {CONF_PUSH_CATEGORIES: PUSH_CATEGORY_LIST_SCHEMA},
-            CONF_ACTIONS: ACTION_LIST_SCHEMA,
-        }
+        DOMAIN: vol.All(
+            cv.deprecated(CONF_PUSH),
+            {
+                CONF_PUSH: {CONF_PUSH_CATEGORIES: PUSH_CATEGORY_LIST_SCHEMA},
+                CONF_ACTIONS: ACTION_LIST_SCHEMA,
+            },
+        )
     },
     extra=vol.ALLOW_EXTRA,
 )
