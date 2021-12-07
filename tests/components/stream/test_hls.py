@@ -135,7 +135,6 @@ async def test_hls_stream(hass, hls_stream, stream_worker_sync):
 
     # Request stream
     stream.add_provider(HLS_PROVIDER)
-    assert stream.available
     stream.start()
 
     hls_client = await hls_stream(stream)
@@ -162,9 +161,6 @@ async def test_hls_stream(hass, hls_stream, stream_worker_sync):
 
     stream_worker_sync.resume()
 
-    # The stream worker reported end of stream and exited
-    assert not stream.available
-
     # Stop stream, if it hasn't quit already
     stream.stop()
 
@@ -185,7 +181,6 @@ async def test_stream_timeout(hass, hass_client, stream_worker_sync):
 
     # Request stream
     stream.add_provider(HLS_PROVIDER)
-    assert stream.available
     stream.start()
     url = stream.endpoint_url(HLS_PROVIDER)
 
@@ -247,6 +242,7 @@ async def test_stream_keepalive(hass):
     # Setup demo HLS track
     source = "test_stream_keepalive_source"
     stream = create_stream(hass, source, {})
+    assert stream.available
     track = stream.add_provider(HLS_PROVIDER)
     track.num_segments = 2
 
@@ -276,6 +272,7 @@ async def test_stream_keepalive(hass):
 
     # Stop stream, if it hasn't quit already
     stream.stop()
+    assert not stream.available
 
 
 async def test_hls_playlist_view_no_output(hass, hls_stream):
