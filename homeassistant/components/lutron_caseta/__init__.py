@@ -31,7 +31,6 @@ from .const import (
     BRIDGE_DEVICE,
     BRIDGE_DEVICE_ID,
     BRIDGE_LEAP,
-    BRIDGE_LIP,
     BRIDGE_TIMEOUT,
     BUTTON_DEVICES,
     CONF_CA_CERTS,
@@ -270,9 +269,6 @@ async def async_unload_entry(
     """Unload the bridge bridge from a config entry."""
     data = hass.data[DOMAIN][config_entry.entry_id]
     data[BRIDGE_LEAP].close()
-    if data[BRIDGE_LIP]:
-        await data[BRIDGE_LIP].async_stop()
-
     unload_ok = await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
     )
