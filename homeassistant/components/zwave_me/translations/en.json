@@ -1,0 +1,17 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "ZWaveMe Creation",
+                "description": "Input you WebSocket URL and Token here: TODO Where get token",
+                "data": {
+                    "url": "URL",
+                    "token": "Token"
+                }
+            }
+        },
+        "abort": {
+            "single_instance_allowed": "Only a single instance is allowed."
+        }
+    }
+}
