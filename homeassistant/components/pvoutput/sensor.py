@@ -44,8 +44,8 @@ SCAN_INTERVAL = timedelta(minutes=2)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_SYSTEM_ID): cv.string,
+        vol.Required(CONF_API_KEY): cv.template,
+        vol.Required(CONF_SYSTEM_ID): cv.template,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
@@ -55,7 +55,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up the PVOutput sensor."""
     name = config.get(CONF_NAME)
     api_key = config.get(CONF_API_KEY)
+    api_key.hass = hass
     system_id = config.get(CONF_SYSTEM_ID)
+    system_id.hass = hass
     method = "GET"
     payload = auth = None
     verify_ssl = DEFAULT_VERIFY_SSL
