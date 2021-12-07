@@ -15,6 +15,7 @@ DEFAULT_SYSBUS_MOUNT_DIR = "/sys/bus/w1/devices/"
 
 DOMAIN = "onewire"
 
+DEVICE_KEYS_0_3 = range(4)
 DEVICE_KEYS_0_7 = range(8)
 DEVICE_KEYS_A_B = ("A", "B")
 
