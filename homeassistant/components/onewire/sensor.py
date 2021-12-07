@@ -57,9 +57,12 @@ from .onewirehub import OneWireHub
 class OneWireSensorEntityDescription(OneWireEntityDescription, SensorEntityDescription):
     """Class describing OneWire sensor entities."""
 
+    clone_raw_value: bool = False
+
 
 SIMPLE_TEMPERATURE_SENSOR_DESCRIPTION = OneWireSensorEntityDescription(
     key="temperature",
+    clone_raw_value=True,
     device_class=SensorDeviceClass.TEMPERATURE,
     name="Temperature",
     native_unit_of_measurement=TEMP_CELSIUS,
@@ -75,6 +78,7 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
     "12": (
         OneWireSensorEntityDescription(
             key="TAI8570/temperature",
+            clone_raw_value=True,
             device_class=SensorDeviceClass.TEMPERATURE,
             entity_registry_enabled_default=False,
             name="Temperature",
@@ -84,6 +88,7 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
         ),
         OneWireSensorEntityDescription(
             key="TAI8570/pressure",
+            clone_raw_value=True,
             device_class=SensorDeviceClass.PRESSURE,
             entity_registry_enabled_default=False,
             name="Pressure",
@@ -97,6 +102,7 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
         SIMPLE_TEMPERATURE_SENSOR_DESCRIPTION,
         OneWireSensorEntityDescription(
             key="humidity",
+            clone_raw_value=True,
             device_class=SensorDeviceClass.HUMIDITY,
             entity_registry_enabled_default=False,
             name="Humidity",
@@ -106,6 +112,7 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
         ),
         OneWireSensorEntityDescription(
             key="HIH3600/humidity",
+            clone_raw_value=True,
             device_class=SensorDeviceClass.HUMIDITY,
             entity_registry_enabled_default=False,
             name="Humidity HIH3600",
@@ -115,6 +122,7 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
         ),
         OneWireSensorEntityDescription(
             key="HIH4000/humidity",
+            clone_raw_value=True,
             device_class=SensorDeviceClass.HUMIDITY,
             entity_registry_enabled_default=False,
             name="Humidity HIH4000",
@@ -124,6 +132,7 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
         ),
         OneWireSensorEntityDescription(
             key="HIH5030/humidity",
+            clone_raw_value=True,
             device_class=SensorDeviceClass.HUMIDITY,
             entity_registry_enabled_default=False,
             name="Humidity HIH5030",
@@ -133,6 +142,7 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
         ),
         OneWireSensorEntityDescription(
             key="HTM1735/humidity",
+            clone_raw_value=True,
             device_class=SensorDeviceClass.HUMIDITY,
             entity_registry_enabled_default=False,
             name="Humidity HTM1735",
@@ -142,6 +152,7 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
         ),
         OneWireSensorEntityDescription(
             key="B1-R1-A/pressure",
+            clone_raw_value=True,
             device_class=SensorDeviceClass.PRESSURE,
             entity_registry_enabled_default=False,
             name="Pressure",
@@ -151,6 +162,7 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
         ),
         OneWireSensorEntityDescription(
             key="S3-R1-A/illuminance",
+            clone_raw_value=True,
             device_class=SensorDeviceClass.ILLUMINANCE,
             entity_registry_enabled_default=False,
             name="Illuminance",
@@ -160,6 +172,7 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
         ),
         OneWireSensorEntityDescription(
             key="VAD",
+            clone_raw_value=True,
             device_class=SensorDeviceClass.VOLTAGE,
             entity_registry_enabled_default=False,
             name="Voltage VAD",
@@ -169,6 +182,7 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
         ),
         OneWireSensorEntityDescription(
             key="VDD",
+            clone_raw_value=True,
             device_class=SensorDeviceClass.VOLTAGE,
             entity_registry_enabled_default=False,
             name="Voltage VDD",
@@ -178,6 +192,7 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
         ),
         OneWireSensorEntityDescription(
             key="vis",
+            clone_raw_value=True,
             device_class=SensorDeviceClass.VOLTAGE,
             entity_registry_enabled_default=False,
             name="vis",
@@ -215,6 +230,7 @@ HOBBYBOARD_EF: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
     "HobbyBoards_EF": (
         OneWireSensorEntityDescription(
             key="humidity/humidity_corrected",
+            clone_raw_value=True,
             device_class=SensorDeviceClass.HUMIDITY,
             name="Humidity",
             native_unit_of_measurement=PERCENTAGE,
@@ -223,6 +239,7 @@ HOBBYBOARD_EF: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
         ),
         OneWireSensorEntityDescription(
             key="humidity/humidity_raw",
+            clone_raw_value=True,
             device_class=SensorDeviceClass.HUMIDITY,
             name="Humidity Raw",
             native_unit_of_measurement=PERCENTAGE,
@@ -231,6 +248,7 @@ HOBBYBOARD_EF: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
         ),
         OneWireSensorEntityDescription(
             key="humidity/temperature",
+            clone_raw_value=True,
             device_class=SensorDeviceClass.TEMPERATURE,
             name="Temperature",
             native_unit_of_measurement=TEMP_CELSIUS,
@@ -241,6 +259,7 @@ HOBBYBOARD_EF: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
     "HB_MOISTURE_METER": (
         OneWireSensorEntityDescription(
             key="moisture/sensor.0",
+            clone_raw_value=True,
             device_class=SensorDeviceClass.PRESSURE,
             name="Moisture 0",
             native_unit_of_measurement=PRESSURE_CBAR,
@@ -249,6 +268,7 @@ HOBBYBOARD_EF: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
         ),
         OneWireSensorEntityDescription(
             key="moisture/sensor.1",
+            clone_raw_value=True,
             device_class=SensorDeviceClass.PRESSURE,
             name="Moisture 1",
             native_unit_of_measurement=PRESSURE_CBAR,
@@ -257,6 +277,7 @@ HOBBYBOARD_EF: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
         ),
         OneWireSensorEntityDescription(
             key="moisture/sensor.2",
+            clone_raw_value=True,
             device_class=SensorDeviceClass.PRESSURE,
             name="Moisture 2",
             native_unit_of_measurement=PRESSURE_CBAR,
@@ -265,6 +286,7 @@ HOBBYBOARD_EF: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
         ),
         OneWireSensorEntityDescription(
             key="moisture/sensor.3",
+            clone_raw_value=True,
             device_class=SensorDeviceClass.PRESSURE,
             name="Moisture 3",
             native_unit_of_measurement=PRESSURE_CBAR,
@@ -280,6 +302,7 @@ EDS_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
     "EDS0066": (
         OneWireSensorEntityDescription(
             key="EDS0066/temperature",
+            clone_raw_value=True,
             device_class=SensorDeviceClass.TEMPERATURE,
             name="Temperature",
             native_unit_of_measurement=TEMP_CELSIUS,
@@ -288,6 +311,7 @@ EDS_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
         ),
         OneWireSensorEntityDescription(
             key="EDS0066/pressure",
+            clone_raw_value=True,
             device_class=SensorDeviceClass.PRESSURE,
             name="Pressure",
             native_unit_of_measurement=PRESSURE_MBAR,
@@ -298,6 +322,7 @@ EDS_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
     "EDS0068": (
         OneWireSensorEntityDescription(
             key="EDS0068/temperature",
+            clone_raw_value=True,
             device_class=SensorDeviceClass.TEMPERATURE,
             name="Temperature",
             native_unit_of_measurement=TEMP_CELSIUS,
@@ -306,6 +331,7 @@ EDS_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
         ),
         OneWireSensorEntityDescription(
             key="EDS0068/pressure",
+            clone_raw_value=True,
             device_class=SensorDeviceClass.PRESSURE,
             name="Pressure",
             native_unit_of_measurement=PRESSURE_MBAR,
@@ -314,6 +340,7 @@ EDS_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
         ),
         OneWireSensorEntityDescription(
             key="EDS0068/light",
+            clone_raw_value=True,
             device_class=SensorDeviceClass.ILLUMINANCE,
             name="Illuminance",
             native_unit_of_measurement=LIGHT_LUX,
@@ -322,6 +349,7 @@ EDS_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
         ),
         OneWireSensorEntityDescription(
             key="EDS0068/humidity",
+            clone_raw_value=True,
             device_class=SensorDeviceClass.HUMIDITY,
             name="Humidity",
             native_unit_of_measurement=PERCENTAGE,
@@ -407,7 +435,7 @@ def get_entities(
                     os.path.split(device.path)[0], description.key
                 )
                 name = f"{device_names.get(device_id, device_id)} {description.name}"
-                entities.extend(
+                entities.append(
                     OneWireProxySensor(
                         description=description,
                         device_id=device_id,
@@ -415,10 +443,21 @@ def get_entities(
                         device_info=device_info,
                         name=name,
                         owproxy=onewirehub.owproxy,
-                        rounding=rounding,
+                        rounding=1,
                     )
-                    for rounding in (1, None)
                 )
+                if description.clone_raw_value:
+                    entities.append(
+                        OneWireProxySensor(
+                            description=description,
+                            device_id=device_id,
+                            device_file=device_file,
+                            device_info=device_info,
+                            name=name,
+                            owproxy=onewirehub.owproxy,
+                            rounding=None,
+                        )
+                    )
 
     # We have a raw GPIO ow sensor on a Pi
     elif conf_type == CONF_TYPE_SYSBUS:
@@ -481,8 +520,8 @@ class OneWireProxySensor(OneWireProxyEntity, OneWireSensor):
         )
         if self._rounding is None:
             self._attr_entity_registry_enabled_default = False
-            self._attr_name = f"{self._attr_name} (raw)"
-            self._attr_unique_id = f"{self._attr_unique_id}_raw"
+            self._attr_name = f"{self._attr_name} (raw value)"
+            self._attr_unique_id = f"{self._attr_unique_id}_raw_value"
 
     @property
     def native_value(self) -> StateType:
@@ -515,8 +554,8 @@ class OneWireDirectSensor(OneWireSensor):
         self._attr_unique_id = device_file
         if self._rounding is None:
             self._attr_entity_registry_enabled_default = False
-            self._attr_name = f"{self._attr_name} (raw)"
-            self._attr_unique_id = f"{self._attr_unique_id}_raw"
+            self._attr_name = f"{self._attr_name} (raw value)"
+            self._attr_unique_id = f"{self._attr_unique_id}_raw_value"
         self._owsensor = owsensor
 
     @property
