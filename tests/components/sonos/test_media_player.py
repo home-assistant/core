@@ -11,37 +11,6 @@ from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import device_registry as dr
 
 
-async def setup_platform(hass, config_entry, config):
-    """Set up the media player platform for testing."""
-    config_entry.add_to_hass(hass)
-    assert await async_setup_component(hass, DOMAIN, config)
-    await hass.async_block_till_done()
-
-
-async def test_async_setup_entry_hosts(hass, config_entry, config, soco):
-    """Test static setup."""
-    await setup_platform(hass, config_entry, config)
-
-    speakers = list(hass.data[DATA_SONOS].discovered.values())
-    speaker = speakers[0]
-    assert speaker.soco == soco
-
-    media_player = hass.states.get("media_player.zone_a")
-    assert media_player.state == STATE_IDLE
-
-
-async def test_async_setup_entry_discover(hass, config_entry, discover):
-    """Test discovery setup."""
-    await setup_platform(hass, config_entry, {})
-
-    speakers = list(hass.data[DATA_SONOS].discovered.values())
-    speaker = speakers[0]
-    assert speaker.soco.uid == "RINCON_test"
-
-    media_player = hass.states.get("media_player.zone_a")
-    assert media_player.state == STATE_IDLE
-
-
 async def test_discovery_ignore_unsupported_device(
     hass, async_setup_sonos, soco, caplog
 ):
