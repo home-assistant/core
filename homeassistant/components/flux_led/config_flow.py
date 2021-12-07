@@ -113,6 +113,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_handle_discovery(self) -> FlowResult:
         """Handle any discovery."""
         device = self._discovered_device
+        _LOGGER.debug("_async_handle_discovery: %s", device)
         assert device is not None
         mac_address = device[ATTR_ID]
         assert mac_address is not None
@@ -134,16 +135,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         for progress in self._async_in_progress():
             if progress.get("context", {}).get(CONF_HOST) == host:
                 return self.async_abort(reason="already_in_progress")
+        _LOGGER.debug("About to check description: %s", device)
         if not device[ATTR_MODEL_DESCRIPTION]:
             try:
                 device = await self._async_try_connect(
                     host, device[ATTR_ID], device[ATTR_MODEL]
                 )
             except FLUX_LED_EXCEPTIONS:
+                _LOGGER.debug("About to abort: %s", device)
                 return self.async_abort(reason="cannot_connect")
             else:
                 if device[ATTR_MODEL_DESCRIPTION]:
                     self._discovered_device = device
+        _LOGGER.debug("About to confirm: %s", device)
         return await self.async_step_discovery_confirm()
 
     async def async_step_discovery_confirm(
