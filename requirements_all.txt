@@ -590,6 +590,9 @@ eliqonline==1.2.2
 # homeassistant.components.elkm1
 elkm1-lib==1.0.0
 
+# homeassistant.components.elmax
+elmax_api==0.0.2
+
 # homeassistant.components.mobile_app
 emoji==1.5.0
 
