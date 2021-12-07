@@ -1167,8 +1167,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
     @callback
     def async_supports_options_flow(cls, config_entry: ConfigEntry) -> bool:
         """Return options flow support for this handler."""
-        # pylint: disable=comparison-with-callable
-        return cls.async_get_options_flow != ConfigFlow.async_get_options_flow
+        return cls.async_get_options_flow is not ConfigFlow.async_get_options_flow
 
     @callback
     def _async_abort_entries_match(
