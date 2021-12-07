@@ -39,11 +39,20 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator):
                 self.api = await self.initialize_api()
 
             # Update all properties
-            status = await self.api.update()
+            try:
+                if not await self.api.update():
+                    self.api = None
+                    raise UpdateFailed("Failed to communicate with device")
 
-            if not status:
-                self.api = None
-                raise UpdateFailed("Failed to communicate with device")
+            except aiohwenergy.DisabledError as ex:
+                raise UpdateFailed(
+                    "API disabled, API must be enabled in the app"
+                ) from ex
+
+            except Exception as ex:  # pylint: disable=broad-except
+                raise UpdateFailed(
+                    f"Error connecting with Energy Device at {self.host}"
+                ) from ex
 
             data = {
                 CONF_DEVICE: self.api.device,
