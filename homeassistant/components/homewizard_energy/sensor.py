@@ -148,7 +148,7 @@ SENSORS: Final[tuple[SensorEntityDescription, ...]] = (
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Initialize sensors."""
-    coordinator = hass.data[DOMAIN][entry.unique_id][COORDINATOR]
+    coordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR]
 
     entities = []
     for description in SENSORS:

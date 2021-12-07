@@ -23,7 +23,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Finalize
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.unique_id] = {
+    hass.data[DOMAIN][entry.entry_id] = {
         COORDINATOR: coordinator,
     }
 
@@ -49,7 +49,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     if unload_ok:
-        config_data = hass.data[DOMAIN].pop(entry.unique_id)
+        config_data = hass.data[DOMAIN].pop(entry.entry_id)
         await config_data[COORDINATOR].api.close()
         config_data[COORDINATOR].api = None
 
