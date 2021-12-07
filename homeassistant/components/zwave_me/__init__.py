@@ -66,20 +66,20 @@ class ZWaveMeController:
         dispatcher_send(self._hass, "ZWAVE_ME_INFO_" + new_info.id, new_info)
 
 
-class ZWaveMeDevice(Entity):
+class ZWaveMeEntity(Entity):
     """Representation of a ZWaveMe device."""
 
     def __init__(self, device):
         """Initialize the device."""
         self._attr_name = device.title
-        self._outlet = None
+        self._attr_should_poll = False
         self.device = device
 
     async def async_added_to_hass(self) -> None:
         """Connect to an updater."""
-        async_dispatcher_connect(
+        self.async_on_remove(async_dispatcher_connect(
             self.hass, f"ZWAVE_ME_INFO_{self.device.id}", self.get_new_data
-        )
+        ))
 
     def get_device(self):
         """Get device info by id."""
@@ -99,16 +99,6 @@ class ZWaveMeDevice(Entity):
     def get_available(self):
         """Get availability of a generic device."""
         return not self.device.isFailed
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return True
-
-    @property
-    def available(self):
-        """Return true if device is online."""
-        return self.get_available()
 
     @property
     def unique_id(self) -> str:

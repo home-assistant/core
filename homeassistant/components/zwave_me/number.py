@@ -5,7 +5,7 @@ import logging
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .__init__ import ZWaveMeDevice
+from .__init__ import ZWaveMeEntity
 from .const import DOMAIN
 
 SCAN_INTERVAL = timedelta(seconds=10)
@@ -34,12 +34,12 @@ async def async_setup_entry(hass, config, add_entities, discovery_info=None):
     )
 
 
-class ZWaveMeNumber(ZWaveMeDevice, NumberEntity):
+class ZWaveMeNumber(ZWaveMeEntity, NumberEntity):
     """Representation of a ZWaveMe Multilevel Switch."""
 
     def __init__(self, device):
         """Initialize the device."""
-        ZWaveMeDevice.__init__(self, device)
+        ZWaveMeEntity.__init__(self, device)
 
     @property
     def value(self):
@@ -51,8 +51,3 @@ class ZWaveMeNumber(ZWaveMeDevice, NumberEntity):
         self.hass.data[DOMAIN].zwave_api.send_command(
             self.device.id, "exact?level=" + str(round(value))
         )
-
-    @property
-    def name(self):
-        """Return the state of the sensor."""
-        return self._name

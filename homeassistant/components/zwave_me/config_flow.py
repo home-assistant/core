@@ -16,7 +16,6 @@ class ZWaveMeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """ZWaveMe integration config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
         """Initialize flow."""
@@ -42,16 +41,13 @@ class ZWaveMeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.token = user_input["token"]
 
                 if not user_input["url"].startswith(("ws://", "wss://")):
-                    user_input["url"] = "ws://" + user_input["url"] + ":8083"
-                    self.url = "ws://" + self.url + ":8083"
+                    user_input["url"] = f"ws://{user_input['url']}:8083"
+                    self.url = f"ws://{self.url}:8083"
 
                 await self.async_set_unique_id(DOMAIN + self.url)
                 return self.async_create_entry(
                     title=self.url,
                     data=user_input,
-                    description_placeholders={
-                        "docs_url": "https://zwayhomeautomation.docs.apiary.io/"
-                    },
                 )
         if self.url != vol.UNDEFINED:
             schema = vol.Schema(
