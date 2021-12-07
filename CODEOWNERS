@@ -146,6 +146,7 @@ homeassistant/components/egardia/* @jeroenterheerdt
 homeassistant/components/eight_sleep/* @mezz64 @raman325
 homeassistant/components/elgato/* @frenck
 homeassistant/components/elkm1/* @gwww @bdraco
+homeassistant/components/elmax/* @albertogeniola
 homeassistant/components/elv/* @majuss
 homeassistant/components/emby/* @mezz64
 homeassistant/components/emoncms/* @borpin
