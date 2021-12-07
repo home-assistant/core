@@ -59,6 +59,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_SERIAL: device_info[CONF_SERIAL],
         }
 
+        # Sets unique ID and aborts if it is already exists
+        await self._async_set_and_check_unique_id(entry_info)
+
         # Add entry
         return await self._async_create_entry(entry_info)
 
@@ -84,6 +87,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if (discovery_info["properties"]["api_enabled"]) != "1":
             return self.async_abort(reason="api_not_enabled")
 
+        # Sets unique ID and aborts if it is already exists
+        await self._async_set_and_check_unique_id(
+            {
+                CONF_IP_ADDRESS: discovery_info["host"],
+                CONF_PRODUCT_TYPE: discovery_info["properties"]["product_type"],
+                CONF_SERIAL: discovery_info["properties"]["serial"],
+            }
+        )
+
+        # Check connection and fetch
         device_info = await self._async_try_connect_and_fetch(discovery_info["host"])
 
         # Pass parameters
@@ -116,6 +129,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_try_connect_and_fetch(self, ip_address: str) -> dict[str, Any]:
         """Try to connect."""
+
+        _LOGGER.debug("config_flow _async_try_connect_and_fetch")
+
         # Make connection with device
         # This is to test the connection and to get info for unique_id
         energy_api = aiohwenergy.HomeWizardEnergy(ip_address)
@@ -161,16 +177,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_SERIAL: energy_api.device.serial,
         }
 
-    async def _async_create_entry(self, entry_info):
-        """Validate uniqueness and add entry."""
+    async def _async_set_and_check_unique_id(self, entry_info):
+        """Validate if entry exists."""
 
-        _LOGGER.debug("config_flow async_helper_check")
+        _LOGGER.debug("config_flow _async_set_and_check_unique_id")
+
         await self.async_set_unique_id(
             f"{entry_info[CONF_PRODUCT_TYPE]}_{entry_info[CONF_SERIAL]}"
         )
         self._abort_if_unique_id_configured(
             updates={CONF_IP_ADDRESS: entry_info[CONF_IP_ADDRESS]}
         )
+
+    async def _async_create_entry(self, entry_info):
+        """Add entry."""
+
+        _LOGGER.debug("config_flow _async_create_entry")
 
         entry_info[
             CONF_NAME
