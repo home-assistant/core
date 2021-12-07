@@ -1112,7 +1112,7 @@ def test_delete_duplicates_short_term(hass_recorder, caplog):
         delete_duplicates(session)
     assert "duplicated statistics rows" not in caplog.text
     assert "Found non identical" not in caplog.text
-    assert "Found more than 1 duplicated statistic rows" in caplog.text
+    assert "Found more than 1 duplicated statistic rows" not in caplog.text
     assert "Found duplicated short term statistic rows" in caplog.text
 
 
