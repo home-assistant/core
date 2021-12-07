@@ -3,6 +3,7 @@
 from datetime import timedelta
 from unittest.mock import patch
 
+from aiohwenergy import errors
 from pytest import raises
 
 from homeassistant.components.homewizard.const import (
@@ -66,7 +67,7 @@ async def test_coordinator_fetches_data(aioclient_mock, hass):
         ATTR_WIFI_STRENGTH,
     ]
 
-    coordinator = Coordinator(hass, meter)
+    coordinator = Coordinator(hass, "1.2.3.4")
 
     with patch(
         "aiohwenergy.HomeWizardEnergy",
@@ -75,6 +76,12 @@ async def test_coordinator_fetches_data(aioclient_mock, hass):
         data = await coordinator._async_update_data()
 
     assert data[CONF_DEVICE] == meter.device
+    assert coordinator.host == "1.2.3.4"
+    assert coordinator.api == meter
+
+    assert len(coordinator.api.initialize.mock_calls) == 1
+    assert len(coordinator.api.update.mock_calls) == 2  # Init and update
+    assert len(coordinator.api.close.mock_calls) == 0
 
     for datapoint in meter.data.available_datapoints:
         assert datapoint in data[CONF_DATA]
@@ -93,6 +100,36 @@ async def test_coordinator_failed_to_update(aioclient_mock, hass):
 
     meter.update = _failed_update
 
+    coordinator = Coordinator(hass, "1.2.3.4")
+
     with raises(UpdateFailed):
-        coordinator = Coordinator(hass, meter)
-        await coordinator._async_update_data()
+        with patch(
+            "aiohwenergy.HomeWizardEnergy",
+            return_value=meter,
+        ):
+            await coordinator._async_update_data()
+
+    assert coordinator.api is None
+
+
+async def test_coordinator_detected_disabled_api(aioclient_mock, hass):
+    """Test coordinator handles disabled api correctly."""
+
+    # Update failed by internal error
+    meter = get_mock_device(product_type=MODEL_P1)
+
+    async def _failed_update() -> bool:
+        raise errors.DisabledError()
+
+    meter.update = _failed_update
+
+    coordinator = Coordinator(hass, "1.2.3.4")
+
+    with raises(UpdateFailed):
+        with patch(
+            "aiohwenergy.HomeWizardEnergy",
+            return_value=meter,
+        ):
+            await coordinator._async_update_data()
+
+    assert coordinator.api is None
