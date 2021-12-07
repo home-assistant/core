@@ -367,14 +367,9 @@ def entry_json(entry: config_entries.ConfigEntry) -> dict:
     """Return JSON value of a config entry."""
     handler = config_entries.HANDLERS.get(entry.domain)
     # work out if handler has support for options flow
-    supports_options = False
-    if handler is not None:
-        try:
-            handler.async_get_options_flow(entry)
-        except data_entry_flow.UnknownHandler:
-            supports_options = False
-        else:
-            supports_options = True
+    supports_options = handler is not None and handler.async_supports_options_flow(
+        entry
+    )
 
     return {
         "entry_id": entry.entry_id,
