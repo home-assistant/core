@@ -71,7 +71,7 @@ PICO_2_BUTTON_RAISE_LOWER_BUTTON_TYPES_TO_LIP = {
     "lower": 6,
 }
 PICO_2_BUTTON_RAISE_LOWER_BUTTON_TYPES_TO_LEAP = {
-    "on": 1,
+    "on": 0,
     "off": 2,
     "raise": 3,
     "lower": 4,
@@ -94,9 +94,9 @@ PICO_3_BUTTON_BUTTON_TYPES_TO_LIP = {
     "off": 4,
 }
 PICO_3_BUTTON_BUTTON_TYPES_TO_LEAP = {
-    "on": 1,
-    "stop": 2,
-    "off": 3,
+    "on": 0,
+    "stop": 1,
+    "off": 2,
 }
 LEAP_TO_PICO_3_BUTTON_BUTTON_TYPES = {
     v: k for k, v in PICO_3_BUTTON_BUTTON_TYPES_TO_LEAP.items()
