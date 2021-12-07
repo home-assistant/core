@@ -127,7 +127,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="discovery_confirm", description_placeholders=placeholders
         )
 
-    async def _async_try_connect_and_fetch(self, ip_address: str) -> dict[str, Any]:
+    @staticmethod
+    async def _async_try_connect_and_fetch(ip_address: str) -> dict[str, Any]:
         """Try to connect."""
 
         _LOGGER.debug("config_flow _async_try_connect_and_fetch")
@@ -149,7 +150,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         except Exception as ex:  # pylint: disable=broad-except
             _LOGGER.error(
-                f"Error connecting with Energy Device at {ip_address}",
+                "Error connecting with Energy Device at %s",
+                ip_address,
             )
             raise AbortFlow("unknown_error") from ex
 
