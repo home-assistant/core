@@ -1163,6 +1163,12 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         """Get the options flow for this handler."""
         raise data_entry_flow.UnknownHandler
 
+    @classmethod
+    @callback
+    def async_supports_options_flow(cls, config_entry: ConfigEntry) -> bool:
+        """Return options flow support for this handler."""
+        return cls.async_get_options_flow is not ConfigFlow.async_get_options_flow
+
     @callback
     def _async_abort_entries_match(
         self, match_dict: dict[str, Any] | None = None
