@@ -1207,6 +1207,40 @@ CONDITION_SCHEMA: vol.Schema = vol.Schema(
     )
 )
 
+
+def dynamic_template_condition_action(config: dict) -> dict:
+    """Validate and convert a shorthand template condition to a template condition."""
+    schema = vol.Schema(
+        {**CONDITION_BASE_SCHEMA, vol.Required(CONF_CONDITION): dynamic_template}
+    )
+    config = schema(config)
+    config[CONF_VALUE_TEMPLATE] = config[CONF_CONDITION]
+    config[CONF_CONDITION] = "template"
+    return config
+
+
+CONDITION_ACTION_SCHEMA: vol.Schema = vol.Schema(
+    vol.Any(
+        key_value_schemas(
+            CONF_CONDITION,
+            {
+                "and": AND_CONDITION_SCHEMA,
+                "device": DEVICE_CONDITION_SCHEMA,
+                "not": NOT_CONDITION_SCHEMA,
+                "numeric_state": NUMERIC_STATE_CONDITION_SCHEMA,
+                "or": OR_CONDITION_SCHEMA,
+                "state": STATE_CONDITION_SCHEMA,
+                "sun": SUN_CONDITION_SCHEMA,
+                "template": TEMPLATE_CONDITION_SCHEMA,
+                "time": TIME_CONDITION_SCHEMA,
+                "trigger": TRIGGER_CONDITION_SCHEMA,
+                "zone": ZONE_CONDITION_SCHEMA,
+            },
+        ),
+        dynamic_template_condition_action,
+    )
+)
+
 TRIGGER_BASE_SCHEMA = vol.Schema(
     {vol.Required(CONF_PLATFORM): str, vol.Optional(CONF_ID): str}
 )
@@ -1352,7 +1386,7 @@ ACTION_TYPE_SCHEMAS: dict[str, Callable[[Any], dict]] = {
     SCRIPT_ACTION_DELAY: _SCRIPT_DELAY_SCHEMA,
     SCRIPT_ACTION_WAIT_TEMPLATE: _SCRIPT_WAIT_TEMPLATE_SCHEMA,
     SCRIPT_ACTION_FIRE_EVENT: EVENT_SCHEMA,
-    SCRIPT_ACTION_CHECK_CONDITION: CONDITION_SCHEMA,
+    SCRIPT_ACTION_CHECK_CONDITION: CONDITION_ACTION_SCHEMA,
     SCRIPT_ACTION_DEVICE_AUTOMATION: DEVICE_ACTION_SCHEMA,
     SCRIPT_ACTION_ACTIVATE_SCENE: _SCRIPT_SCENE_SCHEMA,
     SCRIPT_ACTION_REPEAT: _SCRIPT_REPEAT_SCHEMA,
