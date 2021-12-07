@@ -73,16 +73,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         password = user_input[CONF_ELMAX_PASSWORD]
 
         # Otherwise, it means we are handling now the "submission" of the user form.
-        # In this case, let's try to login to the Elmax cloud and retrieve the available panels.
+        # In this case, let's try to log in to the Elmax cloud and retrieve the available panels.
         try:
             client = Elmax(username=username, password=password)
             await client.login()
 
-            # If the login succeeded, retrieve the list of available panels.
-            panels = await client.list_control_panels()
-
-            # Filter the online panels
-            online_panels = filter(lambda x: x.online, panels)
+            # If the login succeeded, retrieve the list of available panels and filter the online ones
+            online_panels = [x for x in await client.list_control_panels() if x.online]
 
             # If no online panel was found, we display an error in the next UI.
             panels = list(online_panels)
@@ -90,7 +87,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 raise NoOnlinePanelsError()
 
             # Show the panel selection.
-            # We want the user to chose the panel using the associated name, we we set-up a mapping
+            # We want the user to choose the panel using the associated name, we set up a mapping
             # dictionary to handle that case.
             panel_names: dict[str, str] = {}
             username = client.get_authenticated_username()
@@ -190,11 +187,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await client.login()
 
                 # Make sure the panel we are authenticating to is still available.
-                panels = await client.list_control_panels()
-                if (
-                    next(filter(lambda p: p.hash == self._reauth_panelid, panels), None)
-                    is None
-                ):
+                panels = [
+                    p
+                    for p in await client.list_control_panels()
+                    if p.hash == self._reauth_panelid
+                ]
+                if len(panels) < 1:
                     raise NoOnlinePanelsError()
 
                 # Verify the pin is still valid.from
