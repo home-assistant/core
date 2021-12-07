@@ -310,8 +310,8 @@ def find_duplicates(
         """Compare two statistics rows, ignoring id and created."""
         ignore_keys = ["id", "created"]
         keys1 = set(row1).difference(ignore_keys)
-        keys2 = set(row1).difference(ignore_keys)
-        return keys1 == keys2 and all(row1[k] == row1[k] for k in keys1)
+        keys2 = set(row2).difference(ignore_keys)
+        return keys1 == keys2 and all(row1[k] == row2[k] for k in keys1)
 
     for duplicate in duplicates:
         if start != duplicate.start or metadata_id != duplicate.metadata_id:
