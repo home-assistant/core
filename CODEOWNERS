@@ -627,7 +627,7 @@ homeassistant/components/zone/* @home-assistant/core
 homeassistant/components/zoneminder/* @rohankapoorcom
 homeassistant/components/zwave/* @home-assistant/z-wave
 homeassistant/components/zwave_js/* @home-assistant/z-wave
-homeassistant/components/zwave_me/* @lawfulchaos
+homeassistant/components/zwave_me/* @Z-Wave-Me @lawfulchaos
 
 # Individual files
 homeassistant/components/demo/weather @fabaff
