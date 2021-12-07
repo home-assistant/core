@@ -89,10 +89,12 @@ class ZWaveMeDevice(Entity):
 
         return None
 
+    @callback
     def get_new_data(self, new_data):
         """Update info in the HAss."""
         self.device = new_data
-        self.schedule_update_ha_state()
+        self._attr_available = not newdata.isFailed
+        self.async_schedule_update_ha_state()
 
     def get_available(self):
         """Get availability of a generic device."""

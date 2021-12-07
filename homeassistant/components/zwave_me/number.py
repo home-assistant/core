@@ -17,6 +17,7 @@ DEVICE_NAME = "switchMultilevel"
 async def async_setup_entry(hass, config, add_entities, discovery_info=None):
     """Set up the sensor platform."""
 
+    @callback
     def add_new_device(new_device):
         switch = ZWaveMeNumber(new_device)
         add_entities(
@@ -25,8 +26,11 @@ async def async_setup_entry(hass, config, add_entities, discovery_info=None):
             ]
         )
 
-    async_dispatcher_connect(
-        hass, "ZWAVE_ME_NEW_" + DEVICE_NAME.upper(), add_new_device
+
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, f"ZWAVE_ME_NEW_{DEVICE_NAME.upper()}", add_new_device
+        )   
     )
 
 
