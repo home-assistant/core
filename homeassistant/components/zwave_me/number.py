@@ -2,7 +2,7 @@
 from datetime import timedelta
 import logging
 
-from homeassistant.components.number import NumberEntity
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .__init__ import ZWaveMeDevice

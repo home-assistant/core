@@ -41,9 +41,7 @@ class ZWaveMeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     user_input["url"] = self.url
                 self.token = user_input["token"]
 
-                if not user_input["url"].startswith("ws://") and not user_input[
-                    "url"
-                ].startswith("wss://"):
+                if not user_input["url"].startswith(("ws://", "wss://")):
                     user_input["url"] = "ws://" + user_input["url"] + ":8083"
                     self.url = "ws://" + self.url + ":8083"
 

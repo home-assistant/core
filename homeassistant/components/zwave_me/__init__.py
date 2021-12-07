@@ -78,7 +78,7 @@ class ZWaveMeDevice(Entity):
     async def async_added_to_hass(self) -> None:
         """Connect to an updater."""
         async_dispatcher_connect(
-            self.hass, "ZWAVE_ME_INFO_" + self.device.id, self.get_new_data
+            self.hass, f"ZWAVE_ME_INFO_{self.device.id}", self.get_new_data
         )
 
     def get_device(self):
