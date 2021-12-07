@@ -173,7 +173,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(
             str(ex) or f"Timed out trying to connect to {device.ipaddr}"
         ) from ex
-    coordinator = FluxLedUpdateCoordinator(hass, device)
+
+    coordinator = FluxLedUpdateCoordinator(hass, device, entry)
     hass.data[DOMAIN][entry.entry_id] = coordinator
     hass.config_entries.async_setup_platforms(
         entry, PLATFORMS_BY_TYPE[device.device_type]
@@ -197,12 +198,11 @@ class FluxLedUpdateCoordinator(DataUpdateCoordinator):
     """DataUpdateCoordinator to gather data for a specific flux_led device."""
 
     def __init__(
-        self,
-        hass: HomeAssistant,
-        device: AIOWifiLedBulb,
+        self, hass: HomeAssistant, device: AIOWifiLedBulb, entry: ConfigEntry
     ) -> None:
         """Initialize DataUpdateCoordinator to gather data for specific device."""
         self.device = device
+        self.entry = entry
         super().__init__(
             hass,
             _LOGGER,
