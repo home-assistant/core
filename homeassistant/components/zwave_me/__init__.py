@@ -71,7 +71,7 @@ class ZWaveMeDevice(Entity):
 
     def __init__(self, device):
         """Initialize the device."""
-        self._name = device.title
+        self._attr_name = device.title
         self._outlet = None
         self.device = device
 
