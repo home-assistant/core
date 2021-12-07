@@ -22,12 +22,8 @@ async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.balboa.BalboaSpaWifi",
-        new=BalboaMock,
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     return config_entry
 
