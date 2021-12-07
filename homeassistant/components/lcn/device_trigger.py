@@ -19,7 +19,7 @@ from homeassistant.helpers.typing import ConfigType
 from . import DOMAIN
 from .const import KEY_ACTIONS, SENDKEYS
 
-TRIGGER_TYPES = {"transmitter", "transponder", "fingerprint", "sendkeys"}
+TRIGGER_TYPES = {"transmitter", "transponder", "fingerprint", "send_keys"}
 
 LCN_DEVICE_TRIGGER_BASE_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES)}
@@ -52,9 +52,8 @@ async def async_get_triggers(
     device_registry = dr.async_get(hass)
     device = device_registry.async_get(device_id)
 
-    triggers: list[dict] = []
     if device.model.startswith(("LCN host", "LCN group", "LCN resource")):  # type: ignore[union-attr]
-        return triggers
+        return []
 
     base_trigger = {
         CONF_PLATFORM: "device",
@@ -62,12 +61,7 @@ async def async_get_triggers(
         CONF_DEVICE_ID: device_id,
     }
 
-    triggers.append({**base_trigger, CONF_TYPE: "transmitter"})
-    triggers.append({**base_trigger, CONF_TYPE: "transponder"})
-    triggers.append({**base_trigger, CONF_TYPE: "fingerprint"})
-    triggers.append({**base_trigger, CONF_TYPE: "sendkeys"})
-
-    return triggers
+    return [{**base_trigger, CONF_TYPE: type_} for type_ in TRIGGER_TYPES]
 
 
 async def async_attach_trigger(

@@ -44,7 +44,7 @@ async def test_get_triggers_module_device(hass, entry):
         {
             CONF_PLATFORM: "device",
             CONF_DOMAIN: DOMAIN,
-            CONF_TYPE: "sendkeys",
+            CONF_TYPE: "send_keys",
             CONF_DEVICE_ID: device.id,
         },
     ]
@@ -56,7 +56,7 @@ async def test_get_triggers_module_device(hass, entry):
 @patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
 async def test_get_triggers_non_module_device(hass, entry):
     """Test we get the expected triggers from a LCN non-module device."""
-    not_included_types = ("transmitter", "transponder", "fingerprint", "sendkeys")
+    not_included_types = ("transmitter", "transponder", "fingerprint", "send_keys")
 
     await init_integration(hass, entry)
     device_registry = dr.async_get(hass)
@@ -222,8 +222,8 @@ async def test_if_fires_on_transmitter_event(hass, calls, entry):
 
 
 @patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
-async def test_if_fires_on_sendkeys_event(hass, calls, entry):
-    """Test for sendkeys event triggers firing."""
+async def test_if_fires_on_send_keys_event(hass, calls, entry):
+    """Test for send_keys event triggers firing."""
     await init_integration(hass, entry)
     address = (0, 7, False)
     device = get_device(hass, entry, address)
@@ -238,12 +238,12 @@ async def test_if_fires_on_sendkeys_event(hass, calls, entry):
                         CONF_PLATFORM: "device",
                         CONF_DOMAIN: DOMAIN,
                         CONF_DEVICE_ID: device.id,
-                        CONF_TYPE: "sendkeys",
+                        CONF_TYPE: "send_keys",
                     },
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "test": "test_trigger_sendkeys",
+                            "test": "test_trigger_send_keys",
                             "key": "{{ trigger.event.data.key }}",
                             "action": "{{ trigger.event.data.action }}",
                         },
@@ -265,7 +265,7 @@ async def test_if_fires_on_sendkeys_event(hass, calls, entry):
 
     assert len(calls) == 1
     assert calls[0].data == {
-        "test": "test_trigger_sendkeys",
+        "test": "test_trigger_send_keys",
         "key": "a1",
         "action": "hit",
     }

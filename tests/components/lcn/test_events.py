@@ -86,10 +86,10 @@ async def test_fire_transmitter_event(hass, entry):
 
 @patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
 async def test_fire_sendkeys_event(hass, entry):
-    """Test the sendkeys event is fired."""
+    """Test the send_keys event is fired."""
     await init_integration(hass, entry)
 
-    events = async_capture_events(hass, "lcn_sendkeys")
+    events = async_capture_events(hass, "lcn_send_keys")
 
     inp = ModSendKeysHost(
         LcnAddr(0, 7, False),
@@ -102,16 +102,16 @@ async def test_fire_sendkeys_event(hass, entry):
     await hass.async_block_till_done()
 
     assert len(events) == 4
-    assert events[0].event_type == "lcn_sendkeys"
+    assert events[0].event_type == "lcn_send_keys"
     assert events[0].data["key"] == "a1"
     assert events[0].data["action"] == "hit"
-    assert events[1].event_type == "lcn_sendkeys"
+    assert events[1].event_type == "lcn_send_keys"
     assert events[1].data["key"] == "a2"
     assert events[1].data["action"] == "hit"
-    assert events[2].event_type == "lcn_sendkeys"
+    assert events[2].event_type == "lcn_send_keys"
     assert events[2].data["key"] == "b1"
     assert events[2].data["action"] == "make"
-    assert events[3].event_type == "lcn_sendkeys"
+    assert events[3].event_type == "lcn_send_keys"
     assert events[3].data["key"] == "b2"
     assert events[3].data["action"] == "make"
 
@@ -128,7 +128,7 @@ async def test_dont_fire_on_non_module_input(hass, entry):
         "lcn_transponder",
         "lcn_fingerprint",
         "lcn_transmitter",
-        "lcn_sendkeys",
+        "lcn_send_keys",
     ):
         events = async_capture_events(hass, event_name)
         await lcn_connection.async_process_input(inp)

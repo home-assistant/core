@@ -124,7 +124,9 @@ async def async_setup_entry(
 
     # register for LCN bus messages
     device_registry = dr.async_get(hass)
-    input_received = partial(host_input_received, hass, config_entry, device_registry)
+    input_received = partial(
+        async_host_input_received, hass, config_entry, device_registry
+    )
     lcn_connection.register_for_inputs(input_received)
 
     # register service calls
@@ -158,7 +160,7 @@ async def async_unload_entry(
     return unload_ok
 
 
-def host_input_received(
+def async_host_input_received(
     hass: HomeAssistant,
     config_entry: config_entries.ConfigEntry,
     device_registry: dr.DeviceRegistry,
@@ -177,46 +179,59 @@ def host_input_received(
     )
     identifiers = {(DOMAIN, generate_unique_id(config_entry.entry_id, address))}
     device = device_registry.async_get_device(identifiers, set())
+    if device is None:
+        return
 
-    # fire event: lcn_transmitter, lcn_transponder or lcn_fingerprint
     if isinstance(inp, pypck.inputs.ModStatusAccessControl):
-        event_data = {
-            "segment_id": address[0],
-            "module_id": address[1],
-            "code": inp.code,
-        }
-
-        if device is not None:
-            event_data.update({CONF_DEVICE_ID: device.id})
-
-        if inp.periphery == pypck.lcn_defs.AccessControlPeriphery.TRANSMITTER:
-            event_data.update(
-                {"level": inp.level, "key": inp.key, "action": inp.action.value}
-            )
-
-        event_name = f"lcn_{inp.periphery.value.lower()}"
-        hass.bus.async_fire(event_name, event_data)
-
-    # fire event: lcn_sendkeys
+        _async_fire_access_control_event(hass, device, address, inp)
     elif isinstance(inp, pypck.inputs.ModSendKeysHost):
-        for table, action in enumerate(inp.actions):
-            if action == pypck.lcn_defs.SendKeyCommand.DONTSEND:
+        _async_fire_send_keys_event(hass, device, address, inp)
+
+
+def _async_fire_access_control_event(
+    hass: HomeAssistant, device: dr.DeviceEntry, address: AddressType, inp: InputType
+) -> None:
+    """Fire access control event (transponder, transmitter, fingerprint)."""
+    event_data = {
+        "segment_id": address[0],
+        "module_id": address[1],
+        "code": inp.code,
+    }
+
+    if device is not None:
+        event_data.update({CONF_DEVICE_ID: device.id})
+
+    if inp.periphery == pypck.lcn_defs.AccessControlPeriphery.TRANSMITTER:
+        event_data.update(
+            {"level": inp.level, "key": inp.key, "action": inp.action.value}
+        )
+
+    event_name = f"lcn_{inp.periphery.value.lower()}"
+    hass.bus.async_fire(event_name, event_data)
+
+
+def _async_fire_send_keys_event(
+    hass: HomeAssistant, device: dr.DeviceEntry, address: AddressType, inp: InputType
+) -> None:
+    """Fire send_keys event."""
+    for table, action in enumerate(inp.actions):
+        if action == pypck.lcn_defs.SendKeyCommand.DONTSEND:
+            continue
+
+        for key, selected in enumerate(inp.keys):
+            if not selected:
                 continue
+            event_data = {
+                "segment_id": address[0],
+                "module_id": address[1],
+                "key": pypck.lcn_defs.Key(table * 8 + key).name.lower(),
+                "action": action.name.lower(),
+            }
 
-            for key, selected in enumerate(inp.keys):
-                if not selected:
-                    continue
-                event_data = {
-                    "segment_id": address[0],
-                    "module_id": address[1],
-                    "key": pypck.lcn_defs.Key(table * 8 + key).name.lower(),
-                    "action": action.name.lower(),
-                }
+            if device is not None:
+                event_data.update({CONF_DEVICE_ID: device.id})
 
-                if device is not None:
-                    event_data.update({CONF_DEVICE_ID: device.id})
-
-                hass.bus.async_fire("lcn_sendkeys", event_data)
+            hass.bus.async_fire("lcn_send_keys", event_data)
 
 
 class LcnEntity(Entity):

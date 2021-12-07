@@ -2,7 +2,7 @@
     "device_automation": {
         "trigger_type": {
             "fingerprint": "fingerprint code received",
-            "sendkeys": "sent key received",
+            "send_keys": "sent key received",
             "transmitter": "transmitter code received",
             "transponder": "transpoder code received"
         }
