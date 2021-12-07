@@ -11,6 +11,7 @@ from homeassistant.components.flux_led.const import (
     CONF_CUSTOM_EFFECT_COLORS,
     CONF_CUSTOM_EFFECT_SPEED_PCT,
     CONF_CUSTOM_EFFECT_TRANSITION,
+    CONF_MINOR_VERSION,
     DOMAIN,
     MODE_RGB,
     TRANSITION_JUMP,
@@ -87,7 +88,11 @@ async def test_discovery(hass: HomeAssistant):
 
     assert result3["type"] == "create_entry"
     assert result3["title"] == DEFAULT_ENTRY_TITLE
-    assert result3["data"] == {CONF_HOST: IP_ADDRESS, CONF_NAME: DEFAULT_ENTRY_TITLE}
+    assert result3["data"] == {
+        CONF_MINOR_VERSION: 4,
+        CONF_HOST: IP_ADDRESS,
+        CONF_NAME: DEFAULT_ENTRY_TITLE,
+    }
     mock_setup.assert_called_once()
     mock_setup_entry.assert_called_once()
 
@@ -159,6 +164,7 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant):
         assert result3["type"] == "create_entry"
         assert result3["title"] == DEFAULT_ENTRY_TITLE
         assert result3["data"] == {
+            CONF_MINOR_VERSION: 4,
             CONF_HOST: IP_ADDRESS,
             CONF_NAME: DEFAULT_ENTRY_TITLE,
         }
@@ -277,7 +283,11 @@ async def test_manual_working_discovery(hass: HomeAssistant):
         await hass.async_block_till_done()
     assert result4["type"] == "create_entry"
     assert result4["title"] == DEFAULT_ENTRY_TITLE
-    assert result4["data"] == {CONF_HOST: IP_ADDRESS, CONF_NAME: DEFAULT_ENTRY_TITLE}
+    assert result4["data"] == {
+        CONF_MINOR_VERSION: 4,
+        CONF_HOST: IP_ADDRESS,
+        CONF_NAME: DEFAULT_ENTRY_TITLE,
+    }
 
     # Duplicate
     result = await hass.config_entries.flow.async_init(
@@ -375,7 +385,11 @@ async def test_discovered_by_discovery(hass):
         await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
-    assert result2["data"] == {CONF_HOST: IP_ADDRESS, CONF_NAME: DEFAULT_ENTRY_TITLE}
+    assert result2["data"] == {
+        CONF_MINOR_VERSION: 4,
+        CONF_HOST: IP_ADDRESS,
+        CONF_NAME: DEFAULT_ENTRY_TITLE,
+    }
     assert mock_async_setup.called
     assert mock_async_setup_entry.called
 
@@ -401,7 +415,11 @@ async def test_discovered_by_dhcp_udp_responds(hass):
         await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
-    assert result2["data"] == {CONF_HOST: IP_ADDRESS, CONF_NAME: DEFAULT_ENTRY_TITLE}
+    assert result2["data"] == {
+        CONF_MINOR_VERSION: 4,
+        CONF_HOST: IP_ADDRESS,
+        CONF_NAME: DEFAULT_ENTRY_TITLE,
+    }
     assert mock_async_setup.called
     assert mock_async_setup_entry.called
 
