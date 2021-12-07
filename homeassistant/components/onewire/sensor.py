@@ -10,7 +10,6 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING, Any
 
 from pi1wire import InvalidCRCException, OneWireInterface, UnsupportResponseException
-from pyownet import protocol
 
 from homeassistant.components.onewire.model import (
     OWDirectDeviceDescription,
@@ -443,7 +442,7 @@ def get_entities(
                         device_info=device_info,
                         name=name,
                         owproxy=onewirehub.owproxy,
-                        rounding=1,
+                        is_raw_clone=False,
                     )
                 )
                 if description.clone_raw_value:
@@ -455,7 +454,7 @@ def get_entities(
                             device_info=device_info,
                             name=name,
                             owproxy=onewirehub.owproxy,
-                            rounding=None,
+                            is_raw_clone=True,
                         )
                     )
 
@@ -479,9 +478,9 @@ def get_entities(
                     device_info=device_info,
                     name=name,
                     owsensor=p1sensor,
-                    rounding=rounding,
+                    is_raw_clone=is_raw_clone,
                 )
-                for rounding in (1, None)
+                for is_raw_clone in (False, True)
             )
 
     return entities
@@ -497,31 +496,6 @@ class OneWireProxySensor(OneWireProxyEntity, OneWireSensor):
     """Implementation of a 1-Wire sensor connected through owserver."""
 
     entity_description: OneWireSensorEntityDescription
-
-    def __init__(
-        self,
-        description: OneWireEntityDescription,
-        device_id: str,
-        device_info: DeviceInfo,
-        device_file: str,
-        name: str,
-        owproxy: protocol._Proxy,
-        rounding: int | None,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(
-            description=description,
-            device_id=device_id,
-            device_info=device_info,
-            device_file=device_file,
-            name=name,
-            owproxy=owproxy,
-            rounding=rounding,
-        )
-        if self._rounding is None:
-            self._attr_entity_registry_enabled_default = False
-            self._attr_name = f"{self._attr_name} (raw value)"
-            self._attr_unique_id = f"{self._attr_unique_id}_raw_value"
 
     @property
     def native_value(self) -> StateType:
@@ -540,7 +514,7 @@ class OneWireDirectSensor(OneWireSensor):
         device_file: str,
         name: str,
         owsensor: OneWireInterface,
-        rounding: int | None,
+        is_raw_clone: bool,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(
@@ -549,10 +523,10 @@ class OneWireDirectSensor(OneWireSensor):
             device_info=device_info,
             device_file=device_file,
             name=name,
-            rounding=rounding,
         )
         self._attr_unique_id = device_file
-        if self._rounding is None:
+        self._is_raw_clone = is_raw_clone
+        if is_raw_clone:
             self._attr_entity_registry_enabled_default = False
             self._attr_name = f"{self._attr_name} (raw value)"
             self._attr_unique_id = f"{self._attr_unique_id}_raw_value"
@@ -599,7 +573,7 @@ class OneWireDirectSensor(OneWireSensor):
             )
             self._state = None
         else:
-            if self._rounding is not None:
-                raw_value = round(raw_value, self._rounding)
+            if not self._is_raw_clone:
+                raw_value = round(raw_value, 1)
 
             self._state = raw_value

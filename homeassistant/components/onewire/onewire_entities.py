@@ -34,8 +34,6 @@ class OneWireBaseEntity(Entity):
         device_info: DeviceInfo,
         device_file: str,
         name: str,
-        *,
-        rounding: int | None = None,
     ) -> None:
         """Initialize the entity."""
         self.entity_description = description
@@ -45,7 +43,6 @@ class OneWireBaseEntity(Entity):
         self._attr_name = name
         self._device_file = device_file
         self._state: StateType = None
-        self._rounding = rounding
 
 
 class OneWireProxyEntity(OneWireBaseEntity):
@@ -59,7 +56,7 @@ class OneWireProxyEntity(OneWireBaseEntity):
         device_file: str,
         name: str,
         owproxy: protocol._Proxy,
-        rounding: int | None = None,
+        is_raw_clone: bool = False,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(
@@ -68,9 +65,14 @@ class OneWireProxyEntity(OneWireBaseEntity):
             device_info=device_info,
             device_file=device_file,
             name=name,
-            rounding=rounding,
         )
         self._owproxy = owproxy
+        self._is_raw_clone = is_raw_clone
+
+        if is_raw_clone:
+            self._attr_entity_registry_enabled_default = False
+            self._attr_name = f"{self._attr_name} (raw value)"
+            self._attr_unique_id = f"{self._attr_unique_id}_raw_value"
 
     def _read_value_ownet(self) -> str:
         """Read a value from the owserver."""
@@ -94,6 +96,6 @@ class OneWireProxyEntity(OneWireBaseEntity):
             elif self.entity_description.read_mode == READ_MODE_BOOL:
                 self._state = int(raw_value) == 1
             else:
-                if self._rounding is not None:
-                    raw_value = round(raw_value, self._rounding)
+                if not self._is_raw_clone:
+                    raw_value = round(raw_value, 1)
                 self._state = raw_value
