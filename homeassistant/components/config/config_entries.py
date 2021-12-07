@@ -366,13 +366,14 @@ async def ignore_config_flow(hass, connection, msg):
 def entry_json(entry: config_entries.ConfigEntry) -> dict:
     """Return JSON value of a config entry."""
     handler = config_entries.HANDLERS.get(entry.domain)
-    supports_options = (
-        # Guard in case handler is no longer registered (custom component etc)
-        handler is not None
-        # pylint: disable=comparison-with-callable
-        and handler.async_get_options_flow
-        != config_entries.ConfigFlow.async_get_options_flow
-    )
+    # work out if handler has support for options flow
+    supports_options = False
+    if handler is not None:
+        try:
+            handler.async_get_options_flow(entry)
+            supports_options = True
+        except data_entry_flow.UnknownHandler:
+            pass
     return {
         "entry_id": entry.entry_id,
         "domain": entry.domain,
