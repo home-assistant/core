@@ -91,7 +91,7 @@ async def test_mqtt_disconnects_on_home_assistant_stop(hass, mqtt_mock):
     assert mqtt_mock.async_disconnect.called
 
 
-async def test_publish_(hass, mqtt_mock):
+async def test_publish(hass, mqtt_mock):
     """Test the publish function."""
     await mqtt.async_publish(hass, "test-topic", "test-payload")
     await hass.async_block_till_done()
@@ -155,23 +155,14 @@ async def test_publish_(hass, mqtt_mock):
     )
     mqtt_mock.reset_mock()
 
-    # test binary literal string conversion to bytes
-    mqtt.publish(
-        hass,
-        "test-topic3",
-        "b'\\xde\\xad\\xbe\\xef'",
-        0,
-        False,
+
+async def test_render_outgoing_payload(hass):
+    """Test the rendering of outgoing MQTT payloads."""
+    assert mqtt.render_outgoing_payload(b"\xde\xad\xbe\xef") == b"\xde\xad\xbe\xef"
+
+    assert (
+        mqtt.render_outgoing_payload("b'\\xde\\xad\\xbe\\xef'") == b"\xde\xad\xbe\xef"
     )
-    await hass.async_block_till_done()
-    assert mqtt_mock.async_publish.called
-    assert mqtt_mock.async_publish.call_args[0] == (
-        "test-topic3",
-        b"\xde\xad\xbe\xef",
-        0,
-        False,
-    )
-    mqtt_mock.reset_mock()
 
 
 async def test_service_call_without_topic_does_not_publish(hass, mqtt_mock):

@@ -34,7 +34,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType
 
-from . import PLATFORMS, subscription
+from . import PLATFORMS, render_outgoing_payload, subscription
 from .. import mqtt
 from .const import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC, DOMAIN
 from .debug_info import log_messages
@@ -312,7 +312,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         await mqtt.async_publish(
             self.hass,
             self._config[CONF_COMMAND_TOPIC],
-            payload,
+            render_outgoing_payload(payload),
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
         )

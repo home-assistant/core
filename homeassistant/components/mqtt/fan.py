@@ -36,7 +36,7 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 
-from . import PLATFORMS, subscription
+from . import PLATFORMS, render_outgoing_payload, subscription
 from .. import mqtt
 from .const import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC, DOMAIN
 from .debug_info import log_messages
@@ -524,7 +524,7 @@ class MqttFan(MqttEntity, FanEntity):
         await mqtt.async_publish(
             self.hass,
             self._topic[CONF_COMMAND_TOPIC],
-            mqtt_payload,
+            render_outgoing_payload(mqtt_payload),
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
         )
@@ -545,7 +545,7 @@ class MqttFan(MqttEntity, FanEntity):
         await mqtt.async_publish(
             self.hass,
             self._topic[CONF_COMMAND_TOPIC],
-            mqtt_payload,
+            render_outgoing_payload(mqtt_payload),
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
         )
@@ -565,7 +565,7 @@ class MqttFan(MqttEntity, FanEntity):
         await mqtt.async_publish(
             self.hass,
             self._topic[CONF_PERCENTAGE_COMMAND_TOPIC],
-            mqtt_payload,
+            render_outgoing_payload(mqtt_payload),
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
         )
@@ -588,7 +588,7 @@ class MqttFan(MqttEntity, FanEntity):
         await mqtt.async_publish(
             self.hass,
             self._topic[CONF_PRESET_MODE_COMMAND_TOPIC],
-            mqtt_payload,
+            render_outgoing_payload(mqtt_payload),
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
         )
@@ -614,7 +614,7 @@ class MqttFan(MqttEntity, FanEntity):
         await mqtt.async_publish(
             self.hass,
             self._topic[CONF_OSCILLATION_COMMAND_TOPIC],
-            mqtt_payload,
+            render_outgoing_payload(mqtt_payload),
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
         )

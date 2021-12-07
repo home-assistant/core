@@ -296,8 +296,8 @@ def publish(hass: HomeAssistant, topic, payload, qos=0, retain=False) -> None:
     hass.add_job(async_publish, hass, topic, payload, qos, retain)
 
 
-def prepare_publish_payload(payload: PublishPayloadType) -> str | bytes:
-    """Ensure correct MQTT payload type for publishing."""
+def render_outgoing_payload(payload: PublishPayloadType) -> PublishPayloadType:
+    """Ensure correct raw MQTT payload is passed as bytes for publishing."""
     # pass-through for bytes type object
     if isinstance(payload, bytes):
         return payload
@@ -313,7 +313,7 @@ def prepare_publish_payload(payload: PublishPayloadType) -> str | bytes:
             pass
         return payload
 
-    return str(payload)
+    return payload
 
 
 async def async_publish(
@@ -321,7 +321,7 @@ async def async_publish(
 ) -> None:
     """Publish message to an MQTT topic."""
     await hass.data[DATA_MQTT].async_publish(
-        topic, prepare_publish_payload(payload), qos, retain
+        topic, str(payload) if not isinstance(payload, bytes) else payload, qos, retain
     )
 
 
@@ -564,7 +564,7 @@ async def async_setup_entry(hass, entry):
                 return
 
         await hass.data[DATA_MQTT].async_publish(
-            msg_topic, prepare_publish_payload(payload), qos, retain
+            msg_topic, render_outgoing_payload(payload), qos, retain
         )
 
     hass.services.async_register(

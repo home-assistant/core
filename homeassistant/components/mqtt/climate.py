@@ -52,7 +52,12 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType
 
-from . import MQTT_BASE_PLATFORM_SCHEMA, PLATFORMS, subscription
+from . import (
+    MQTT_BASE_PLATFORM_SCHEMA,
+    PLATFORMS,
+    render_outgoing_payload,
+    subscription,
+)
 from .. import mqtt
 from .const import CONF_QOS, CONF_RETAIN, DOMAIN
 from .debug_info import log_messages
@@ -690,7 +695,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
                 or self._current_operation != HVAC_MODE_OFF
             ):
                 payload = self._command_templates[cmnd_template](temp)
-                await self._publish(cmnd_topic, payload)
+                await self._publish(cmnd_topic, render_outgoing_payload(payload))
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperatures."""
@@ -731,7 +736,9 @@ class MqttClimate(MqttEntity, ClimateEntity):
             payload = self._command_templates[CONF_SWING_MODE_COMMAND_TEMPLATE](
                 swing_mode
             )
-            await self._publish(CONF_SWING_MODE_COMMAND_TOPIC, payload)
+            await self._publish(
+                CONF_SWING_MODE_COMMAND_TOPIC, render_outgoing_payload(payload)
+            )
 
         if self._topic[CONF_SWING_MODE_STATE_TOPIC] is None:
             self._current_swing_mode = swing_mode
@@ -741,7 +748,9 @@ class MqttClimate(MqttEntity, ClimateEntity):
         """Set new target temperature."""
         if self._config[CONF_SEND_IF_OFF] or self._current_operation != HVAC_MODE_OFF:
             payload = self._command_templates[CONF_FAN_MODE_COMMAND_TEMPLATE](fan_mode)
-            await self._publish(CONF_FAN_MODE_COMMAND_TOPIC, payload)
+            await self._publish(
+                CONF_FAN_MODE_COMMAND_TOPIC, render_outgoing_payload(payload)
+            )
 
         if self._topic[CONF_FAN_MODE_STATE_TOPIC] is None:
             self._current_fan_mode = fan_mode
@@ -757,7 +766,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
             )
 
         payload = self._command_templates[CONF_MODE_COMMAND_TEMPLATE](hvac_mode)
-        await self._publish(CONF_MODE_COMMAND_TOPIC, payload)
+        await self._publish(CONF_MODE_COMMAND_TOPIC, render_outgoing_payload(payload))
 
         if self._topic[CONF_MODE_STATE_TOPIC] is None:
             self._current_operation = hvac_mode
@@ -822,7 +831,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
         payload = self._command_templates[CONF_HOLD_COMMAND_TEMPLATE](
             hold_mode or "off"
         )
-        await self._publish(CONF_HOLD_COMMAND_TOPIC, payload)
+        await self._publish(CONF_HOLD_COMMAND_TOPIC, render_outgoing_payload(payload))
 
         if self._topic[CONF_HOLD_STATE_TOPIC] is not None:
             return False
