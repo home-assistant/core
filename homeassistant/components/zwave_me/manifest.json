@@ -9,6 +9,7 @@
   "zeroconf": [{"type":"_hap._tcp.local.", "name": "*z.wave-me*"}],
   "config_flow": true,
   "codeowners": [
-    "@lawfulchaos"
+    "@lawfulchaos",
+    "@Z-Wave-Me"
   ]
 }
