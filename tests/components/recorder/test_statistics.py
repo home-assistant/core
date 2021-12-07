@@ -6,7 +6,7 @@ from unittest.mock import patch, sentinel
 import pytest
 from pytest import approx
 
-from homeassistant.components.recorder import history
+from homeassistant.components.recorder import history, statistics
 from homeassistant.components.recorder.const import DATA_INSTANCE
 from homeassistant.components.recorder.models import (
     StatisticsShortTerm,
@@ -14,11 +14,13 @@ from homeassistant.components.recorder.models import (
 )
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
+    delete_duplicates,
     get_last_statistics,
     get_metadata,
     list_statistic_ids,
     statistics_during_period,
 )
+from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import setup_component
@@ -631,6 +633,499 @@ def test_monthly_statistics(hass_recorder, caplog, timezone):
     }
 
     dt_util.set_default_time_zone(dt_util.get_time_zone("UTC"))
+
+
+def test_delete_duplicates(hass_recorder, caplog):
+    """Test removal of duplicated statistics."""
+    hass = hass_recorder()
+    wait_recording_done(hass)
+
+    period1 = dt_util.as_utc(dt_util.parse_datetime("2021-09-01 00:00:00"))
+    period2 = dt_util.as_utc(dt_util.parse_datetime("2021-09-30 23:00:00"))
+    period3 = dt_util.as_utc(dt_util.parse_datetime("2021-10-01 00:00:00"))
+    period4 = dt_util.as_utc(dt_util.parse_datetime("2021-10-31 23:00:00"))
+
+    external_energy_statistics_1 = (
+        {
+            "start": period1,
+            "last_reset": None,
+            "state": 0,
+            "sum": 2,
+        },
+        {
+            "start": period2,
+            "last_reset": None,
+            "state": 1,
+            "sum": 3,
+        },
+        {
+            "start": period3,
+            "last_reset": None,
+            "state": 2,
+            "sum": 4,
+        },
+        {
+            "start": period4,
+            "last_reset": None,
+            "state": 3,
+            "sum": 5,
+        },
+        {
+            "start": period4,
+            "last_reset": None,
+            "state": 3,
+            "sum": 5,
+        },
+    )
+    external_energy_metadata_1 = {
+        "has_mean": False,
+        "has_sum": True,
+        "name": "Total imported energy",
+        "source": "test",
+        "statistic_id": "test:total_energy_import_tariff_1",
+        "unit_of_measurement": "kWh",
+    }
+    external_energy_statistics_2 = (
+        {
+            "start": period1,
+            "last_reset": None,
+            "state": 0,
+            "sum": 20,
+        },
+        {
+            "start": period2,
+            "last_reset": None,
+            "state": 1,
+            "sum": 30,
+        },
+        {
+            "start": period3,
+            "last_reset": None,
+            "state": 2,
+            "sum": 40,
+        },
+        {
+            "start": period4,
+            "last_reset": None,
+            "state": 3,
+            "sum": 50,
+        },
+        {
+            "start": period4,
+            "last_reset": None,
+            "state": 3,
+            "sum": 50,
+        },
+    )
+    external_energy_metadata_2 = {
+        "has_mean": False,
+        "has_sum": True,
+        "name": "Total imported energy",
+        "source": "test",
+        "statistic_id": "test:total_energy_import_tariff_2",
+        "unit_of_measurement": "kWh",
+    }
+    external_co2_statistics = (
+        {
+            "start": period1,
+            "last_reset": None,
+            "mean": 10,
+        },
+        {
+            "start": period2,
+            "last_reset": None,
+            "mean": 30,
+        },
+        {
+            "start": period3,
+            "last_reset": None,
+            "mean": 60,
+        },
+        {
+            "start": period4,
+            "last_reset": None,
+            "mean": 90,
+        },
+    )
+    external_co2_metadata = {
+        "has_mean": True,
+        "has_sum": False,
+        "name": "Fossil percentage",
+        "source": "test",
+        "statistic_id": "test:fossil_percentage",
+        "unit_of_measurement": "%",
+    }
+
+    with patch.object(
+        statistics, "_statistics_exists", return_value=False
+    ), patch.object(
+        statistics, "_insert_statistics", wraps=statistics._insert_statistics
+    ) as insert_statistics_mock:
+        async_add_external_statistics(
+            hass, external_energy_metadata_1, external_energy_statistics_1
+        )
+        async_add_external_statistics(
+            hass, external_energy_metadata_2, external_energy_statistics_2
+        )
+        async_add_external_statistics(
+            hass, external_co2_metadata, external_co2_statistics
+        )
+        wait_recording_done(hass)
+        assert insert_statistics_mock.call_count == 14
+
+    with session_scope(hass=hass) as session:
+        delete_duplicates(session)
+    assert "Deleted 2 duplicated statistics rows" in caplog.text
+    assert "Found non identical" not in caplog.text
+    assert "Found more than" not in caplog.text
+    assert "Found duplicated" not in caplog.text
+
+
+def test_delete_duplicates_non_identical(hass_recorder, caplog):
+    """Test removal of duplicated statistics."""
+    hass = hass_recorder()
+    wait_recording_done(hass)
+
+    period1 = dt_util.as_utc(dt_util.parse_datetime("2021-09-01 00:00:00"))
+    period2 = dt_util.as_utc(dt_util.parse_datetime("2021-09-30 23:00:00"))
+    period3 = dt_util.as_utc(dt_util.parse_datetime("2021-10-01 00:00:00"))
+    period4 = dt_util.as_utc(dt_util.parse_datetime("2021-10-31 23:00:00"))
+
+    external_energy_statistics_1 = (
+        {
+            "start": period1,
+            "last_reset": None,
+            "state": 0,
+            "sum": 2,
+        },
+        {
+            "start": period2,
+            "last_reset": None,
+            "state": 1,
+            "sum": 3,
+        },
+        {
+            "start": period3,
+            "last_reset": None,
+            "state": 2,
+            "sum": 4,
+        },
+        {
+            "start": period4,
+            "last_reset": None,
+            "state": 3,
+            "sum": 5,
+        },
+        {
+            "start": period4,
+            "last_reset": None,
+            "state": 3,
+            "sum": 6,
+        },
+    )
+    external_energy_metadata_1 = {
+        "has_mean": False,
+        "has_sum": True,
+        "name": "Total imported energy",
+        "source": "test",
+        "statistic_id": "test:total_energy_import_tariff_1",
+        "unit_of_measurement": "kWh",
+    }
+    external_energy_statistics_2 = (
+        {
+            "start": period1,
+            "last_reset": None,
+            "state": 0,
+            "sum": 20,
+        },
+        {
+            "start": period2,
+            "last_reset": None,
+            "state": 1,
+            "sum": 30,
+        },
+        {
+            "start": period3,
+            "last_reset": None,
+            "state": 2,
+            "sum": 40,
+        },
+        {
+            "start": period4,
+            "last_reset": None,
+            "state": 3,
+            "sum": 50,
+        },
+        {
+            "start": period4,
+            "last_reset": None,
+            "state": 3,
+            "sum": 50,
+        },
+    )
+    external_energy_metadata_2 = {
+        "has_mean": False,
+        "has_sum": True,
+        "name": "Total imported energy",
+        "source": "test",
+        "statistic_id": "test:total_energy_import_tariff_2",
+        "unit_of_measurement": "kWh",
+    }
+    external_co2_statistics = (
+        {
+            "start": period1,
+            "last_reset": None,
+            "mean": 10,
+        },
+        {
+            "start": period2,
+            "last_reset": None,
+            "mean": 30,
+        },
+        {
+            "start": period3,
+            "last_reset": None,
+            "mean": 60,
+        },
+        {
+            "start": period4,
+            "last_reset": None,
+            "mean": 90,
+        },
+    )
+    external_co2_metadata = {
+        "has_mean": True,
+        "has_sum": False,
+        "name": "Fossil percentage",
+        "source": "test",
+        "statistic_id": "test:fossil_percentage",
+        "unit_of_measurement": "%",
+    }
+
+    with patch.object(
+        statistics, "_statistics_exists", return_value=False
+    ), patch.object(
+        statistics, "_insert_statistics", wraps=statistics._insert_statistics
+    ) as insert_statistics_mock:
+        async_add_external_statistics(
+            hass, external_energy_metadata_1, external_energy_statistics_1
+        )
+        async_add_external_statistics(
+            hass, external_energy_metadata_2, external_energy_statistics_2
+        )
+        async_add_external_statistics(
+            hass, external_co2_metadata, external_co2_statistics
+        )
+        wait_recording_done(hass)
+        assert insert_statistics_mock.call_count == 14
+
+    with session_scope(hass=hass) as session:
+        delete_duplicates(session)
+    assert "Deleted" not in caplog.text
+    assert "Found non identical" in caplog.text
+    assert "Found more than" not in caplog.text
+    assert "Found duplicated" not in caplog.text
+
+
+@patch.object(statistics, "MAX_DUPLICATES", 2)
+def test_delete_duplicates_too_many(hass_recorder, caplog):
+    """Test removal of duplicated statistics."""
+    hass = hass_recorder()
+    wait_recording_done(hass)
+
+    period1 = dt_util.as_utc(dt_util.parse_datetime("2021-09-01 00:00:00"))
+    period2 = dt_util.as_utc(dt_util.parse_datetime("2021-09-30 23:00:00"))
+    period3 = dt_util.as_utc(dt_util.parse_datetime("2021-10-01 00:00:00"))
+    period4 = dt_util.as_utc(dt_util.parse_datetime("2021-10-31 23:00:00"))
+
+    external_energy_statistics_1 = (
+        {
+            "start": period1,
+            "last_reset": None,
+            "state": 0,
+            "sum": 2,
+        },
+        {
+            "start": period2,
+            "last_reset": None,
+            "state": 1,
+            "sum": 3,
+        },
+        {
+            "start": period3,
+            "last_reset": None,
+            "state": 2,
+            "sum": 4,
+        },
+        {
+            "start": period4,
+            "last_reset": None,
+            "state": 3,
+            "sum": 5,
+        },
+        {
+            "start": period4,
+            "last_reset": None,
+            "state": 3,
+            "sum": 5,
+        },
+    )
+    external_energy_metadata_1 = {
+        "has_mean": False,
+        "has_sum": True,
+        "name": "Total imported energy",
+        "source": "test",
+        "statistic_id": "test:total_energy_import_tariff_1",
+        "unit_of_measurement": "kWh",
+    }
+    external_energy_statistics_2 = (
+        {
+            "start": period1,
+            "last_reset": None,
+            "state": 0,
+            "sum": 20,
+        },
+        {
+            "start": period2,
+            "last_reset": None,
+            "state": 1,
+            "sum": 30,
+        },
+        {
+            "start": period3,
+            "last_reset": None,
+            "state": 2,
+            "sum": 40,
+        },
+        {
+            "start": period4,
+            "last_reset": None,
+            "state": 3,
+            "sum": 50,
+        },
+        {
+            "start": period4,
+            "last_reset": None,
+            "state": 3,
+            "sum": 50,
+        },
+    )
+    external_energy_metadata_2 = {
+        "has_mean": False,
+        "has_sum": True,
+        "name": "Total imported energy",
+        "source": "test",
+        "statistic_id": "test:total_energy_import_tariff_2",
+        "unit_of_measurement": "kWh",
+    }
+    external_co2_statistics = (
+        {
+            "start": period1,
+            "last_reset": None,
+            "mean": 10,
+        },
+        {
+            "start": period2,
+            "last_reset": None,
+            "mean": 30,
+        },
+        {
+            "start": period3,
+            "last_reset": None,
+            "mean": 60,
+        },
+        {
+            "start": period4,
+            "last_reset": None,
+            "mean": 90,
+        },
+    )
+    external_co2_metadata = {
+        "has_mean": True,
+        "has_sum": False,
+        "name": "Fossil percentage",
+        "source": "test",
+        "statistic_id": "test:fossil_percentage",
+        "unit_of_measurement": "%",
+    }
+
+    with patch.object(
+        statistics, "_statistics_exists", return_value=False
+    ), patch.object(
+        statistics, "_insert_statistics", wraps=statistics._insert_statistics
+    ) as insert_statistics_mock:
+        async_add_external_statistics(
+            hass, external_energy_metadata_1, external_energy_statistics_1
+        )
+        async_add_external_statistics(
+            hass, external_energy_metadata_2, external_energy_statistics_2
+        )
+        async_add_external_statistics(
+            hass, external_co2_metadata, external_co2_statistics
+        )
+        wait_recording_done(hass)
+        assert insert_statistics_mock.call_count == 14
+
+    with session_scope(hass=hass) as session:
+        delete_duplicates(session)
+    assert "Deleted 2 duplicated statistics rows" in caplog.text
+    assert "Found non identical" not in caplog.text
+    assert "Found more than 1 duplicated statistic rows" in caplog.text
+    assert "Found duplicated" not in caplog.text
+
+
+@patch.object(statistics, "MAX_DUPLICATES", 2)
+def test_delete_duplicates_short_term(hass_recorder, caplog):
+    """Test removal of duplicated statistics."""
+    hass = hass_recorder()
+    wait_recording_done(hass)
+
+    period4 = dt_util.as_utc(dt_util.parse_datetime("2021-10-31 23:00:00"))
+
+    external_energy_metadata_1 = {
+        "has_mean": False,
+        "has_sum": True,
+        "name": "Total imported energy",
+        "source": "test",
+        "statistic_id": "test:total_energy_import_tariff_1",
+        "unit_of_measurement": "kWh",
+    }
+
+    with session_scope(hass=hass) as session:
+        metadata_id = statistics._update_or_add_metadata(
+            hass, session, external_energy_metadata_1
+        )
+        statistic_row = {
+            "start": period4,
+            "last_reset": None,
+            "state": 3,
+            "sum": 5,
+        }
+        statistics._insert_statistics(
+            session, StatisticsShortTerm, metadata_id, statistic_row
+        )
+        statistics._insert_statistics(
+            session, StatisticsShortTerm, metadata_id, statistic_row
+        )
+
+    with session_scope(hass=hass) as session:
+        delete_duplicates(session)
+    assert "duplicated statistics rows" not in caplog.text
+    assert "Found non identical" not in caplog.text
+    assert "Found more than 1 duplicated statistic rows" in caplog.text
+    assert "Found duplicated short term statistic rows" in caplog.text
+
+
+def test_delete_duplicates_no_duplicates(hass_recorder, caplog):
+    """Test removal of duplicated statistics."""
+    hass = hass_recorder()
+    wait_recording_done(hass)
+    with session_scope(hass=hass) as session:
+        delete_duplicates(session)
+    assert "duplicated statistics rows" not in caplog.text
+    assert "Found non identical" not in caplog.text
+    assert "Found more than" not in caplog.text
+    assert "Found duplicated" not in caplog.text
 
 
 def record_states(hass):

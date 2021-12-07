@@ -25,7 +25,7 @@ from .models import (
     StatisticsShortTerm,
     process_timestamp,
 )
-from .statistics import get_start_time
+from .statistics import delete_duplicates, get_start_time
 from .util import session_scope
 
 _LOGGER = logging.getLogger(__name__)
@@ -587,6 +587,9 @@ def _apply_update(instance, session, new_version, old_version):  # noqa: C901
     elif new_version == 23:
         # Add name column to StatisticsMeta
         _add_columns(session, "statistics_meta", ["name VARCHAR(255)"])
+    elif new_version == 24:
+        # Purge duplicated statistics
+        delete_duplicates(session)
 
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")

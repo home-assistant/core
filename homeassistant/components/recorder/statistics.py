@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from collections.abc import Callable, Iterable
+import contextlib
 import dataclasses
 from datetime import datetime, timedelta
 from itertools import chain, groupby
@@ -15,7 +16,7 @@ from sqlalchemy import bindparam, func
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext import baked
 from sqlalchemy.orm.scoping import scoped_session
-from sqlalchemy.sql.expression import true
+from sqlalchemy.sql.expression import literal_column, true
 
 from homeassistant.const import (
     PRESSURE_PA,
@@ -32,7 +33,7 @@ import homeassistant.util.temperature as temperature_util
 from homeassistant.util.unit_system import UnitSystem
 import homeassistant.util.volume as volume_util
 
-from .const import DATA_INSTANCE, DOMAIN
+from .const import DATA_INSTANCE, DOMAIN, MAX_ROWS_TO_PURGE
 from .models import (
     StatisticData,
     StatisticMetaData,
@@ -113,6 +114,8 @@ QUERY_STATISTIC_META_ID = [
     StatisticsMeta.id,
     StatisticsMeta.statistic_id,
 ]
+
+MAX_DUPLICATES = 100000
 
 STATISTICS_BAKERY = "recorder_statistics_bakery"
 STATISTICS_META_BAKERY = "recorder_statistics_meta_bakery"
@@ -260,6 +263,112 @@ def _update_or_add_metadata(
         )
 
     return metadata_id
+
+
+def find_duplicates(
+    session: scoped_session, table: type[Statistics | StatisticsShortTerm]
+) -> list[dict]:
+    """Find duplicated statistics."""
+    subquery = (
+        session.query(
+            table.start,
+            table.metadata_id,
+            literal_column("1").label("is_duplicate"),
+        )
+        .group_by(table.metadata_id, table.start)
+        .having(func.count() > 1)
+        .subquery()
+    )
+    query = (
+        session.query(table)
+        .outerjoin(
+            subquery,
+            (subquery.c.metadata_id == table.metadata_id)
+            & (subquery.c.start == table.start),
+        )
+        .filter(subquery.c.is_duplicate == 1)
+        .order_by(table.metadata_id, table.start)
+        .limit(MAX_ROWS_TO_PURGE)
+    )
+    duplicates = execute(query)
+    original_as_dict = {}
+    start = None
+    metadata_id = None
+    duplicates_as_dict: list[dict] = []
+
+    if not duplicates:
+        return duplicates_as_dict
+
+    def columns_to_dict(duplicate: type[Statistics | StatisticsShortTerm]) -> dict:
+        """Convert a SQLAlchemy row to dict."""
+        dict_ = {}
+        for key in duplicate.__mapper__.c.keys():
+            dict_[key] = getattr(duplicate, key)
+        return dict_
+
+    def compare_statistic_rows(a: dict, b: dict) -> bool:
+        """Compare two statistics rows, ignoring id and created."""
+        ignore_keys = ["id", "created"]
+        ka = set(a).difference(ignore_keys)
+        kb = set(b).difference(ignore_keys)
+        return ka == kb and all(a[k] == b[k] for k in ka)
+
+    for duplicate in duplicates:
+        if start != duplicate.start or metadata_id != duplicate.metadata_id:
+            original_as_dict = columns_to_dict(duplicate)
+            start = duplicate.start
+            metadata_id = duplicate.metadata_id
+            continue
+        duplicate_as_dict = columns_to_dict(duplicate)
+        if not compare_statistic_rows(original_as_dict, duplicate_as_dict):
+            _LOGGER.warning(
+                "Found non identical duplicated %s rows %s != %s, please report at "
+                'https://github.com/home-assistant/core/issues?q=is%%3Aissue+label%%3A"integration%%3A+recorder"+',
+                table.__tablename__,
+                original_as_dict,
+                duplicate_as_dict,
+            )
+            raise HomeAssistantError
+        duplicates_as_dict.append(duplicate_as_dict)
+
+    return duplicates_as_dict
+
+
+def delete_duplicates(session: scoped_session) -> None:
+    """Identify and delete duplicated statistics.
+
+    A backup will be made of duplicated statistics before it is deleted.
+    """
+    all_duplicates: list[dict] = []
+    total_deleted_rows = 0
+    with contextlib.suppress(HomeAssistantError):
+        while (duplicates := find_duplicates(session, Statistics)) and len(
+            all_duplicates
+        ) < MAX_DUPLICATES:
+            all_duplicates.extend(duplicates)
+            ids_to_remove = [duplicate["id"] for duplicate in duplicates]
+            deleted_rows = (
+                session.query(Statistics)
+                .filter(Statistics.id.in_(ids_to_remove))
+                .delete(synchronize_session=False)
+            )
+            total_deleted_rows += deleted_rows
+    if total_deleted_rows:
+        _LOGGER.info("Deleted %s duplicated statistics rows", total_deleted_rows)
+
+    if len(all_duplicates) >= MAX_DUPLICATES:
+        _LOGGER.warning(
+            "Found more than %s duplicated statistic rows, please report at "
+            'https://github.com/home-assistant/core/issues?q=is%%3Aissue+label%%3A"integration%%3A+recorder"+',
+            MAX_DUPLICATES - 1,
+        )
+
+    with contextlib.suppress(HomeAssistantError):
+        if find_duplicates(session, StatisticsShortTerm):
+            _LOGGER.warning(
+                "Found duplicated short term statistic rows, please report at "
+                'https://github.com/home-assistant/core/issues?q=is%%3Aissue+label%%3A"integration%%3A+recorder"+'
+            )
 
 
 def compile_hourly_statistics(
