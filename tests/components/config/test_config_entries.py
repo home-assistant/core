@@ -51,6 +51,12 @@ async def test_get_entries(hass, client):
                 """Get options flow."""
                 pass
 
+            @classmethod
+            @callback
+            def async_supports_options_flow(cls, config_entry):
+                """Return options flow support for this handler."""
+                return True
+
         hass.helpers.config_entry_flow.register_discovery_flow(
             "comp2", "Comp 2", lambda: None
         )
