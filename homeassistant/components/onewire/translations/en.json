@@ -22,14 +22,5 @@
                 "title": "Set up 1-Wire"
             }
         }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "track_raw_value": "Track raw value"
-                }
-            }
-        }
     }
 }
