@@ -371,9 +371,11 @@ def entry_json(entry: config_entries.ConfigEntry) -> dict:
     if handler is not None:
         try:
             handler.async_get_options_flow(entry)
-            supports_options = True
         except data_entry_flow.UnknownHandler:
-            pass
+            supports_options = False
+        else:
+            supports_options = True
+
     return {
         "entry_id": entry.entry_id,
         "domain": entry.domain,
