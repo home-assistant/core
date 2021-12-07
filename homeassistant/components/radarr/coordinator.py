@@ -54,7 +54,7 @@ class RadarrDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> None:
         """Get the latest data from Radarr."""
         time_zone = cast(tzinfo, dt_util.get_time_zone(self.hass.config.time_zone))
-        upcoming = self.config_entry.options.get(CONF_UPCOMING_DAYS, 7)
+        upcoming = self.config_entry.options[CONF_UPCOMING_DAYS]
         start = get_date(time_zone)
         end = get_date(time_zone, upcoming)
         try:

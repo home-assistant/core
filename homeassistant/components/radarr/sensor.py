@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING, Any, cast
 
 import voluptuous as vol
 
-from homeassistant.components.radarr import RadarrEntity
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     SensorEntity,
@@ -30,6 +29,7 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 
+from . import RadarrEntity
 from .const import (
     CONF_DAYS,
     CONF_INCLUDED,
