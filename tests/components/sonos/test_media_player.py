@@ -9,7 +9,6 @@ from homeassistant.const import STATE_IDLE
 from homeassistant.core import Context
 from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import device_registry as dr
-from homeassistant.setup import async_setup_component
 
 
 async def setup_platform(hass, config_entry, config):
@@ -43,20 +42,21 @@ async def test_async_setup_entry_discover(hass, config_entry, discover):
     assert media_player.state == STATE_IDLE
 
 
-async def test_discovery_ignore_unsupported_device(hass, config_entry, soco, caplog):
+async def test_discovery_ignore_unsupported_device(
+    hass, async_setup_sonos, soco, caplog
+):
     """Test discovery setup."""
     message = f"GetVolume not supported on {soco.ip_address}"
     type(soco).volume = PropertyMock(side_effect=NotSupportedException(message))
-    await setup_platform(hass, config_entry, {})
+
+    await async_setup_sonos()
 
     assert message in caplog.text
     assert not hass.data[DATA_SONOS].discovered
 
 
-async def test_services(hass, config_entry, config, hass_read_only_user):
+async def test_services(hass, async_autosetup_sonos, hass_read_only_user):
     """Test join/unjoin requires control access."""
-    await setup_platform(hass, config_entry, config)
-
     with pytest.raises(Unauthorized):
         await hass.services.async_call(
             DOMAIN,
@@ -67,10 +67,8 @@ async def test_services(hass, config_entry, config, hass_read_only_user):
         )
 
 
-async def test_device_registry(hass, config_entry, config, soco):
+async def test_device_registry(hass, async_autosetup_sonos, soco):
     """Test sonos device registered in the device registry."""
-    await setup_platform(hass, config_entry, config)
-
     device_registry = dr.async_get(hass)
     reg_device = device_registry.async_get_device(
         identifiers={("sonos", "RINCON_test")}
@@ -86,10 +84,8 @@ async def test_device_registry(hass, config_entry, config, soco):
     assert reg_device.name == "Zone A"
 
 
-async def test_entity_basic(hass, config_entry, discover):
+async def test_entity_basic(hass, async_autosetup_sonos, discover):
     """Test basic state and attributes."""
-    await setup_platform(hass, config_entry, {})
-
     state = hass.states.get("media_player.zone_a")
     assert state.state == STATE_IDLE
     attributes = state.attributes

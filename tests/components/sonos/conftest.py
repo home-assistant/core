@@ -42,6 +42,24 @@ class SonosMockEvent:
         return self.variables[var_name]
 
 
+@pytest.fixture
+async def async_autosetup_sonos(async_setup_sonos):
+    """Set up a Sonos integration instance on test run."""
+    await async_setup_sonos()
+
+
+@pytest.fixture
+def async_setup_sonos(hass, config_entry):
+    """Return a coroutine to set up a Sonos integration instance on demand."""
+
+    async def _wrapper():
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    return _wrapper
+
+
 @pytest.fixture(name="config_entry")
 def config_entry_fixture():
     """Create a mock Sonos config entry."""
