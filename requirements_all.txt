@@ -2084,6 +2084,9 @@ roombapy==1.6.4
 # homeassistant.components.roon
 roonapi==0.0.38
 
+# homeassistant.components.mikrotik_firewall
+routeros-api==0.17.0
+
 # homeassistant.components.rova
 rova==0.2.1
 

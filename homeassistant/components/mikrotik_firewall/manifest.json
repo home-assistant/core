@@ -1,0 +1,17 @@
+{
+  "domain": "mikrotik_firewall",
+  "name": "Mikrotik firewall manager",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/mikrotik_firewall",
+  "requirements": [
+    "routeros-api==0.17.0"
+  ],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@emes30"
+  ],
+  "iot_class": "local_polling"
+}

@@ -181,6 +181,7 @@ FLOWS = [
     "meteoclimatic",
     "metoffice",
     "mikrotik",
+    "mikrotik_firewall",
     "mill",
     "minecraft_server",
     "mobile_app",
