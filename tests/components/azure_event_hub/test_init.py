@@ -1,21 +1,37 @@
-"""The tests for the Azure Event Hub component."""
+"""Test the init functions for AEH."""
 from dataclasses import dataclass
-from unittest.mock import MagicMock, patch
+from datetime import timedelta
+import logging
+from unittest.mock import patch
 
+from azure.eventhub.exceptions import EventHubError
 import pytest
 
-import homeassistant.components.azure_event_hub as azure_event_hub
+from homeassistant.components import azure_event_hub
+from homeassistant.components.azure_event_hub import AzureEventHub
+from homeassistant.components.azure_event_hub.const import (
+    CONF_MAX_DELAY,
+    CONF_SEND_INTERVAL,
+    DATA_FILTER,
+    DOMAIN,
+)
 from homeassistant.const import STATE_ON
+from homeassistant.helpers.entityfilter import FILTER_SCHEMA
 from homeassistant.setup import async_setup_component
+from homeassistant.util.dt import utcnow
 
-AZURE_EVENT_HUB_PATH = "homeassistant.components.azure_event_hub"
-PRODUCER_PATH = f"{AZURE_EVENT_HUB_PATH}.EventHubProducerClient"
-MIN_CONFIG = {
-    "event_hub_namespace": "namespace",
-    "event_hub_instance_name": "name",
-    "event_hub_sas_policy": "policy",
-    "event_hub_sas_key": "key",
-}
+from .const import (
+    AZURE_EVENT_HUB_PATH,
+    BASIC_OPTIONS,
+    CS_CONFIG_FULL,
+    PRODUCER_PATH,
+    SAS_CONFIG_FULL,
+    UPDATE_OPTIONS,
+)
+
+from tests.common import MockConfigEntry
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -26,56 +42,8 @@ class FilterTest:
     should_pass: bool
 
 
-@pytest.fixture(autouse=True, name="mock_client", scope="module")
-def mock_client_fixture():
-    """Mock the azure event hub producer client."""
-    with patch(f"{PRODUCER_PATH}.send_batch") as mock_send_batch, patch(
-        f"{PRODUCER_PATH}.close"
-    ) as mock_close, patch(f"{PRODUCER_PATH}.__init__", return_value=None) as mock_init:
-        yield (
-            mock_init,
-            mock_send_batch,
-            mock_close,
-        )
-
-
-@pytest.fixture(autouse=True, name="mock_batch")
-def mock_batch_fixture():
-    """Mock batch creator and return mocked batch object."""
-    mock_batch = MagicMock()
-    with patch(f"{PRODUCER_PATH}.create_batch", return_value=mock_batch):
-        yield mock_batch
-
-
-@pytest.fixture(autouse=True, name="mock_policy")
-def mock_policy_fixture():
-    """Mock azure shared key credential."""
-    with patch(f"{AZURE_EVENT_HUB_PATH}.EventHubSharedKeyCredential") as policy:
-        yield policy
-
-
-@pytest.fixture(autouse=True, name="mock_event_data")
-def mock_event_data_fixture():
-    """Mock the azure event data component."""
-    with patch(f"{AZURE_EVENT_HUB_PATH}.EventData") as event_data:
-        yield event_data
-
-
-@pytest.fixture(autouse=True, name="mock_call_later")
-def mock_call_later_fixture():
-    """Mock async_call_later to allow queue processing on demand."""
-    with patch(f"{AZURE_EVENT_HUB_PATH}.async_call_later") as mock_call_later:
-        yield mock_call_later
-
-
-async def test_minimal_config(hass):
-    """Test the minimal config and defaults of component."""
-    config = {azure_event_hub.DOMAIN: MIN_CONFIG}
-    assert await async_setup_component(hass, azure_event_hub.DOMAIN, config)
-
-
-async def test_full_config(hass):
-    """Test the full config of component."""
+async def test_import(hass):
+    """Test the popping of the filter and further import of the config."""
     config = {
         azure_event_hub.DOMAIN: {
             "send_interval": 10,
@@ -90,16 +58,112 @@ async def test_full_config(hass):
             },
         }
     }
-    config[azure_event_hub.DOMAIN].update(MIN_CONFIG)
+    config[azure_event_hub.DOMAIN].update(CS_CONFIG_FULL)
     assert await async_setup_component(hass, azure_event_hub.DOMAIN, config)
+
+
+async def test_filter_only_config(hass):
+    """Test the popping of the filter and further import of the config."""
+    config = {
+        azure_event_hub.DOMAIN: {
+            "filter": {
+                "include_domains": ["light"],
+                "include_entity_globs": ["sensor.included_*"],
+                "include_entities": ["binary_sensor.included"],
+                "exclude_domains": ["light"],
+                "exclude_entity_globs": ["sensor.excluded_*"],
+                "exclude_entities": ["binary_sensor.excluded"],
+            },
+        }
+    }
+    assert await async_setup_component(hass, azure_event_hub.DOMAIN, config)
+
+
+async def test_setup(hass, mock_hub):
+    """Test the async_setup function."""
+    entry = MockConfigEntry(
+        domain=azure_event_hub.DOMAIN,
+        data=SAS_CONFIG_FULL,
+        title="test-instance",
+        options=BASIC_OPTIONS,
+    )
+    entry.add_to_hass(hass)
+    assert await azure_event_hub.async_setup_entry(hass, entry)
+    assert hass.data[azure_event_hub.DOMAIN]["hub"] is not None
+    assert isinstance(hass.data[azure_event_hub.DOMAIN]["hub"], AzureEventHub)
+
+
+async def test_unload_entry(hass, mock_hub):
+    """Test being able to unload an entry."""
+    entry = MockConfigEntry(
+        domain=azure_event_hub.DOMAIN,
+        data=SAS_CONFIG_FULL,
+        title="test-instance",
+        options=BASIC_OPTIONS,
+    )
+    entry.add_to_hass(hass)
+    assert await azure_event_hub.async_setup_entry(hass, entry)
+    assert hass.data[azure_event_hub.DOMAIN].get("hub") is not None
+    assert await azure_event_hub.async_unload_entry(hass, entry)
+    assert hass.data[azure_event_hub.DOMAIN].get("hub") is None
+
+
+async def test_failed_test_connection(hass):
+    """Test being able to unload an entry."""
+    entry = MockConfigEntry(
+        domain=azure_event_hub.DOMAIN,
+        data=SAS_CONFIG_FULL,
+        title="test-instance",
+        options=BASIC_OPTIONS,
+    )
+    entry.add_to_hass(hass)
+    with patch(
+        f"{PRODUCER_PATH}.get_eventhub_properties",
+        side_effect=EventHubError("test"),
+    ):
+        try:
+            await azure_event_hub.async_setup_entry(hass, entry)
+        except azure_event_hub.ConfigEntryNotReady:
+            pass
+        assert hass.data[azure_event_hub.DOMAIN].get("hub") is None
+
+
+async def test_update_listener(hass, mock_hub):
+    """Test being able to update options."""
+    entry = MockConfigEntry(
+        domain=azure_event_hub.DOMAIN,
+        data=SAS_CONFIG_FULL,
+        title="test-instance",
+        options=BASIC_OPTIONS,
+    )
+    entry.add_to_hass(hass)
+    assert await azure_event_hub.async_setup_entry(hass, entry)
+    entry.options = UPDATE_OPTIONS
+    await azure_event_hub.async_update_listener(hass, entry)
+    assert (
+        hass.data[azure_event_hub.DOMAIN]["hub"].send_interval
+        == UPDATE_OPTIONS[CONF_SEND_INTERVAL]
+    )
 
 
 async def _setup(hass, mock_call_later, filter_config):
     """Shared set up for filtering tests."""
-    config = {azure_event_hub.DOMAIN: {"filter": filter_config}}
-    config[azure_event_hub.DOMAIN].update(MIN_CONFIG)
-
-    assert await async_setup_component(hass, azure_event_hub.DOMAIN, config)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=SAS_CONFIG_FULL,
+        title="test-instance",
+        options=BASIC_OPTIONS,
+    )
+    hass.data[DOMAIN] = {DATA_FILTER: FILTER_SCHEMA(filter_config)}
+    hub = AzureEventHub(
+        hass,
+        azure_event_hub.client.AzureEventHubClient.from_input(**entry.data),
+        hass.data[DOMAIN][DATA_FILTER],
+        entry.options[CONF_SEND_INTERVAL],
+        entry.options[CONF_MAX_DELAY],
+    )
+    entry.add_to_hass(hass)
+    await hub.async_start()
     await hass.async_block_till_done()
     mock_call_later.assert_called_once()
     return mock_call_later.call_args[0][2]
@@ -117,6 +181,74 @@ async def _run_filter_tests(hass, tests, process_queue, mock_batch):
             mock_batch.add.reset_mock()
         else:
             mock_batch.add.assert_not_called()
+
+
+@pytest.fixture(name="hub")
+async def setup_fixture(hass, mock_call_later):
+    """Create the setup."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=SAS_CONFIG_FULL,
+        title="test-instance",
+        options=BASIC_OPTIONS,
+    )
+    hass.data[DOMAIN] = {DATA_FILTER: FILTER_SCHEMA({})}
+    hub = AzureEventHub(
+        hass,
+        azure_event_hub.client.AzureEventHubClient.from_input(**entry.data),
+        hass.data[DOMAIN][DATA_FILTER],
+        entry.options[CONF_SEND_INTERVAL],
+        entry.options[CONF_MAX_DELAY],
+    )
+    entry.add_to_hass(hass)
+    await hub.async_start()
+    await hass.async_block_till_done()
+    mock_call_later.assert_called_once()
+    return hub
+
+
+async def test_stop(hass, hub):
+    """Test stopping the hub, which empties the queue."""
+    hass.states.async_set("sensor.test", STATE_ON)
+    await hass.async_block_till_done()
+    assert hub._queue.qsize() == 1  # pylint: disable=protected-access
+    assert await hub.async_stop()
+    assert hub._queue.empty()  # pylint: disable=protected-access
+
+
+async def test_send_batch_error(hass, hub):
+    """Test stopping the hub, which empties the queue."""
+    hass.states.async_set("sensor.test", STATE_ON)
+    await hass.async_block_till_done()
+    assert hub._queue.qsize() == 1  # pylint: disable=protected-access
+    with patch(
+        f"{PRODUCER_PATH}.send_batch", side_effect=EventHubError("test")
+    ) as mock_send_batch:
+        await hub.async_send(None)  # pylint: disable=protected-access
+        mock_send_batch.assert_called_once()
+
+
+async def test_late_event(hass, hub, mock_batch):
+    """Test the on_time function."""
+    with patch(
+        f"{AZURE_EVENT_HUB_PATH}.utcnow",
+        return_value=utcnow() + timedelta(hours=1),
+    ):
+        hass.states.async_set("sensor.test", STATE_ON)
+        await hass.async_block_till_done()
+        await hub.async_send(None)
+        assert mock_batch.add.call_count == 0
+
+
+async def test_full_batch(hass, hub, mock_batch):
+    """Test the full batch behaviour."""
+    mock_batch.add.side_effect = ValueError
+
+    hass.states.async_set("sensor.test", STATE_ON)
+    await hass.async_block_till_done()
+    async with hub._client.client as client:  # pylint: disable=protected-access
+        await hub.fill_batch(client)
+    assert hub._queue.qsize() == 1  # pylint: disable=protected-access
 
 
 async def test_allowlist(hass, mock_batch, mock_call_later):

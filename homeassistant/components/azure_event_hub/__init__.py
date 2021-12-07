@@ -152,7 +152,7 @@ class AzureEventHub:
         )
         return True
 
-    async def async_stop(self, _: Event) -> bool:
+    async def async_stop(self) -> bool:
         """Shut down the AEH by queueing None and calling send."""
         if self._next_send_remover:
             self._next_send_remover()
