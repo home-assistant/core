@@ -482,7 +482,7 @@ co2signal==0.4.2
 coinbase==2.1.0
 
 # homeassistant.scripts.check_config
-colorlog==6.4.1
+colorlog==6.6.0
 
 # homeassistant.components.color_extractor
 colorthief==0.2.1
@@ -1707,8 +1707,6 @@ pyotgw==1.1b1
 
 # homeassistant.auth.mfa_modules.notify
 # homeassistant.auth.mfa_modules.totp
-pyotp==2.3.0
-
 # homeassistant.components.otp
 pyotp==2.6.0
 
