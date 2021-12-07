@@ -36,6 +36,7 @@ FLOWS = [
     "awair",
     "axis",
     "azure_devops",
+    "azure_event_hub",
     "balboa",
     "blebox",
     "blink",
