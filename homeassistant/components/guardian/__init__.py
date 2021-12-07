@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable, Callable
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from aioguardian import Client
 from aioguardian.errors import GuardianError
@@ -11,6 +11,8 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
+    ATTR_DEVICE_ID,
+    ATTR_ENTITY_ID,
     CONF_DEVICE_ID,
     CONF_FILENAME,
     CONF_IP_ADDRESS,
@@ -18,7 +20,11 @@ from homeassistant.const import (
     CONF_URL,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import (
@@ -63,20 +69,41 @@ SERVICES = (
     SERVICE_NAME_UPGRADE_FIRMWARE,
 )
 
-SERVICE_PAIR_UNPAIR_SENSOR_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_DEVICE_ID): cv.string,
-        vol.Required(CONF_UID): cv.string,
-    }
+SERVICE_BASE_SCHEMA = vol.All(
+    cv.deprecated(ATTR_ENTITY_ID),
+    vol.Schema(
+        {
+            vol.Optional(ATTR_DEVICE_ID): cv.string,
+            vol.Optional(ATTR_ENTITY_ID): cv.entity_id,
+        }
+    ),
+    cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
 )
 
-SERVICE_UPGRADE_FIRMWARE_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_DEVICE_ID): cv.string,
-        vol.Optional(CONF_URL): cv.url,
-        vol.Optional(CONF_PORT): cv.port,
-        vol.Optional(CONF_FILENAME): cv.string,
-    },
+SERVICE_PAIR_UNPAIR_SENSOR_SCHEMA = vol.All(
+    cv.deprecated(ATTR_ENTITY_ID),
+    vol.Schema(
+        {
+            vol.Optional(ATTR_DEVICE_ID): cv.string,
+            vol.Optional(ATTR_ENTITY_ID): cv.entity_id,
+            vol.Required(CONF_UID): cv.string,
+        }
+    ),
+    cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
+)
+
+SERVICE_UPGRADE_FIRMWARE_SCHEMA = vol.All(
+    cv.deprecated(ATTR_ENTITY_ID),
+    vol.Schema(
+        {
+            vol.Optional(ATTR_DEVICE_ID): cv.string,
+            vol.Optional(ATTR_ENTITY_ID): cv.entity_id,
+            vol.Optional(CONF_URL): cv.url,
+            vol.Optional(CONF_PORT): cv.port,
+            vol.Optional(CONF_FILENAME): cv.string,
+        },
+    ),
+    cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
 )
 
 
@@ -86,6 +113,14 @@ PLATFORMS = ["binary_sensor", "sensor", "switch"]
 @callback
 def async_get_entry_id_for_service_call(hass: HomeAssistant, call: ServiceCall) -> str:
     """Get the entry ID related to a service call (by device ID)."""
+    if ATTR_ENTITY_ID in call.data:
+        entity_registry = er.async_get(hass)
+        entity_registry_entry = entity_registry.async_get(call.data[ATTR_ENTITY_ID])
+        if TYPE_CHECKING:
+            assert entity_registry_entry
+            assert entity_registry_entry.config_entry_id
+        return entity_registry_entry.config_entry_id
+
     device_id = call.data[CONF_DEVICE_ID]
     device_registry = dr.async_get(hass)
 
@@ -221,15 +256,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     for service_name, schema, method in (
-        (SERVICE_NAME_DISABLE_AP, None, async_disable_ap),
-        (SERVICE_NAME_ENABLE_AP, None, async_enable_ap),
+        (SERVICE_NAME_DISABLE_AP, SERVICE_BASE_SCHEMA, async_disable_ap),
+        (SERVICE_NAME_ENABLE_AP, SERVICE_BASE_SCHEMA, async_enable_ap),
         (
             SERVICE_NAME_PAIR_SENSOR,
             SERVICE_PAIR_UNPAIR_SENSOR_SCHEMA,
             async_pair_sensor,
         ),
-        (SERVICE_NAME_REBOOT, None, async_reboot),
-        (SERVICE_NAME_RESET_VALVE_DIAGNOSTICS, None, async_reset_valve_diagnostics),
+        (SERVICE_NAME_REBOOT, SERVICE_BASE_SCHEMA, async_reboot),
+        (
+            SERVICE_NAME_RESET_VALVE_DIAGNOSTICS,
+            SERVICE_BASE_SCHEMA,
+            async_reset_valve_diagnostics,
+        ),
         (
             SERVICE_NAME_UNPAIR_SENSOR,
             SERVICE_PAIR_UNPAIR_SENSOR_SCHEMA,

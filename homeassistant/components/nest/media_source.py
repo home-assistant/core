@@ -18,7 +18,6 @@ https://developers.google.com/nest/device-access/api/camera#handle_camera_events
 
 from __future__ import annotations
 
-from collections import OrderedDict
 from collections.abc import Mapping
 from dataclasses import dataclass
 import logging
@@ -182,7 +181,7 @@ class NestMediaSource(MediaSource):
             browse_device.children = []
             events = await _get_events(device)
             for child_event in events.values():
-                event_id = MediaId(media_id.device_id, child_event.event_id)
+                event_id = MediaId(media_id.device_id, child_event.event_session_id)
                 browse_device.children.append(
                     _browse_event(event_id, device, child_event)
                 )
@@ -204,7 +203,7 @@ class NestMediaSource(MediaSource):
 async def _get_events(device: Device) -> Mapping[str, ImageEventBase]:
     """Return relevant events for the specified device."""
     events = await device.event_media_manager.async_events()
-    return OrderedDict({e.event_id: e for e in events})
+    return {e.event_session_id: e for e in events}
 
 
 def _browse_root() -> BrowseMediaSource:

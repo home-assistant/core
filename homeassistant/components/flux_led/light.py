@@ -280,10 +280,11 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
 
     async def _async_turn_on(self, **kwargs: Any) -> None:
         """Turn the specified or all lights on."""
-        if not self.is_on:
-            await self._device.async_turn_on()
-        if not kwargs:
-            return
+        if self._device.requires_turn_on or not kwargs:
+            if not self.is_on:
+                await self._device.async_turn_on()
+            if not kwargs:
+                return
 
         if MODE_ATTRS.intersection(kwargs):
             await self._async_set_mode(**kwargs)
