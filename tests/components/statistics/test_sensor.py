@@ -29,6 +29,31 @@ VALUES_BINARY = ["on", "off", "on", "off", "on", "off", "on", "off", "on"]
 VALUES_NUMERIC = [17, 20, 15.2, 5, 3.8, 9.2, 6.7, 14, 6]
 
 
+async def test_unique_id(hass):
+    """Test configuration defined unique_id."""
+    assert await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": [
+                {
+                    "platform": "statistics",
+                    "name": "test",
+                    "entity_id": "sensor.test_monitored",
+                    "unique_id": "uniqueid_sensor_test",
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    entity_reg = er.async_get(hass)
+    entity_id = entity_reg.async_get_entity_id(
+        "sensor", STATISTICS_DOMAIN, "uniqueid_sensor_test"
+    )
+    assert entity_id == "sensor.test"
+
+
 async def test_sensor_defaults_numeric(hass):
     """Test the general behavior of the sensor, with numeric source sensor."""
     assert await async_setup_component(
@@ -52,10 +77,9 @@ async def test_sensor_defaults_numeric(hass):
             value,
             {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
         )
-        await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.test")
     await hass.async_block_till_done()
+    state = hass.states.get("sensor.test")
     assert state.state == str(round(sum(VALUES_NUMERIC) / len(VALUES_NUMERIC), 2))
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
     assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
@@ -139,8 +163,8 @@ async def test_sensor_defaults_binary(hass):
             value,
             {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
         )
-        await hass.async_block_till_done()
 
+    await hass.async_block_till_done()
     state = hass.states.get("sensor.test")
     assert state.state == str(len(VALUES_BINARY))
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
@@ -148,135 +172,6 @@ async def test_sensor_defaults_binary(hass):
     assert state.attributes.get("buffer_usage_ratio") == round(9 / 20, 2)
     assert state.attributes.get("source_value_valid") is True
     assert "age_coverage_ratio" not in state.attributes
-
-
-async def test_unique_id(hass):
-    """Test configuration defined unique_id."""
-    assert await async_setup_component(
-        hass,
-        "sensor",
-        {
-            "sensor": [
-                {
-                    "platform": "statistics",
-                    "name": "test",
-                    "entity_id": "sensor.test_monitored",
-                    "unique_id": "uniqueid_sensor_test",
-                },
-            ]
-        },
-    )
-    await hass.async_block_till_done()
-
-    entity_reg = er.async_get(hass)
-    entity_id = entity_reg.async_get_entity_id(
-        "sensor", STATISTICS_DOMAIN, "uniqueid_sensor_test"
-    )
-    assert entity_id == "sensor.test"
-
-
-async def test_state_class(hass):
-    """Test state class, which depends on the characteristic configured."""
-    assert await async_setup_component(
-        hass,
-        "sensor",
-        {
-            "sensor": [
-                {
-                    "platform": "statistics",
-                    "name": "test_normal",
-                    "entity_id": "sensor.test_monitored",
-                    "state_characteristic": "count",
-                },
-                {
-                    "platform": "statistics",
-                    "name": "test_nan",
-                    "entity_id": "sensor.test_monitored",
-                    "state_characteristic": "datetime_oldest",
-                },
-            ]
-        },
-    )
-    await hass.async_block_till_done()
-
-    for value in VALUES_NUMERIC:
-        hass.states.async_set(
-            "sensor.test_monitored",
-            value,
-            {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
-        )
-        await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.test_normal")
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
-    state = hass.states.get("sensor.test_nan")
-    assert state.attributes.get(ATTR_STATE_CLASS) is None
-
-
-async def test_unitless_source_sensor(hass):
-    """Statistics for a unitless source sensor should never have a unit."""
-    assert await async_setup_component(
-        hass,
-        "sensor",
-        {
-            "sensor": [
-                {
-                    "platform": "statistics",
-                    "name": "test_unitless_1",
-                    "entity_id": "sensor.test_monitored_unitless",
-                    "state_characteristic": "count",
-                },
-                {
-                    "platform": "statistics",
-                    "name": "test_unitless_2",
-                    "entity_id": "sensor.test_monitored_unitless",
-                    "state_characteristic": "mean",
-                },
-                {
-                    "platform": "statistics",
-                    "name": "test_unitless_3",
-                    "entity_id": "sensor.test_monitored_unitless",
-                    "state_characteristic": "change_second",
-                },
-                {
-                    "platform": "statistics",
-                    "name": "test_unitless_4",
-                    "entity_id": "binary_sensor.test_monitored_unitless",
-                },
-                {
-                    "platform": "statistics",
-                    "name": "test_unitless_5",
-                    "entity_id": "binary_sensor.test_monitored_unitless",
-                    "state_characteristic": "mean",
-                },
-            ]
-        },
-    )
-    await hass.async_block_till_done()
-
-    for value in VALUES_NUMERIC:
-        hass.states.async_set(
-            "sensor.test_monitored_unitless",
-            value,
-        )
-        await hass.async_block_till_done()
-    for value in VALUES_BINARY:
-        hass.states.async_set(
-            "binary_sensor.test_monitored_unitless",
-            value,
-        )
-        await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.test_unitless_1")
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
-    state = hass.states.get("sensor.test_unitless_2")
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
-    state = hass.states.get("sensor.test_unitless_3")
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
-    state = hass.states.get("sensor.test_unitless_4")
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
-    state = hass.states.get("sensor.test_unitless_5")
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "%"
 
 
 async def test_sensor_source_with_force_update(hass):
@@ -316,8 +211,7 @@ async def test_sensor_source_with_force_update(hass):
             {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
             force_update=True,
         )
-        await hass.async_block_till_done()
-
+    await hass.async_block_till_done()
     state_normal = hass.states.get("sensor.test_normal")
     state_force = hass.states.get("sensor.test_force")
     assert state_normal.state == str(round(sum(repeating_values) / 3, 2))
@@ -351,8 +245,7 @@ async def test_sampling_size_non_default(hass):
             value,
             {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
         )
-        await hass.async_block_till_done()
-
+    await hass.async_block_till_done()
     state = hass.states.get("sensor.test")
     new_mean = round(sum(VALUES_NUMERIC[-5:]) / len(VALUES_NUMERIC[-5:]), 2)
     assert state.state == str(new_mean)
@@ -384,8 +277,7 @@ async def test_sampling_size_1(hass):
             value,
             {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
         )
-        await hass.async_block_till_done()
-
+    await hass.async_block_till_done()
     state = hass.states.get("sensor.test")
     new_mean = float(VALUES_NUMERIC[-1])
     assert state.state == str(new_mean)
@@ -508,13 +400,114 @@ async def test_precision(hass):
             value,
             {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
         )
-        await hass.async_block_till_done()
-
+    await hass.async_block_till_done()
     mean = sum(VALUES_NUMERIC) / len(VALUES_NUMERIC)
     state = hass.states.get("sensor.test_precision_0")
     assert state.state == str(int(round(mean, 0)))
     state = hass.states.get("sensor.test_precision_3")
     assert state.state == str(round(mean, 3))
+
+
+async def test_state_class(hass):
+    """Test state class, which depends on the characteristic configured."""
+    assert await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": [
+                {
+                    "platform": "statistics",
+                    "name": "test_normal",
+                    "entity_id": "sensor.test_monitored",
+                    "state_characteristic": "count",
+                },
+                {
+                    "platform": "statistics",
+                    "name": "test_nan",
+                    "entity_id": "sensor.test_monitored",
+                    "state_characteristic": "datetime_oldest",
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    for value in VALUES_NUMERIC:
+        hass.states.async_set(
+            "sensor.test_monitored",
+            value,
+            {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+        )
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.test_normal")
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    state = hass.states.get("sensor.test_nan")
+    assert state.attributes.get(ATTR_STATE_CLASS) is None
+
+
+async def test_unitless_source_sensor(hass):
+    """Statistics for a unitless source sensor should never have a unit."""
+    assert await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": [
+                {
+                    "platform": "statistics",
+                    "name": "test_unitless_1",
+                    "entity_id": "sensor.test_monitored_unitless",
+                    "state_characteristic": "count",
+                },
+                {
+                    "platform": "statistics",
+                    "name": "test_unitless_2",
+                    "entity_id": "sensor.test_monitored_unitless",
+                    "state_characteristic": "mean",
+                },
+                {
+                    "platform": "statistics",
+                    "name": "test_unitless_3",
+                    "entity_id": "sensor.test_monitored_unitless",
+                    "state_characteristic": "change_second",
+                },
+                {
+                    "platform": "statistics",
+                    "name": "test_unitless_4",
+                    "entity_id": "binary_sensor.test_monitored_unitless",
+                },
+                {
+                    "platform": "statistics",
+                    "name": "test_unitless_5",
+                    "entity_id": "binary_sensor.test_monitored_unitless",
+                    "state_characteristic": "mean",
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    for value in VALUES_NUMERIC:
+        hass.states.async_set(
+            "sensor.test_monitored_unitless",
+            value,
+        )
+    for value in VALUES_BINARY:
+        hass.states.async_set(
+            "binary_sensor.test_monitored_unitless",
+            value,
+        )
+
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.test_unitless_1")
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
+    state = hass.states.get("sensor.test_unitless_2")
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
+    state = hass.states.get("sensor.test_unitless_3")
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
+    state = hass.states.get("sensor.test_unitless_4")
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
+    state = hass.states.get("sensor.test_unitless_5")
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "%"
 
 
 async def test_state_characteristics(hass):
@@ -922,7 +915,7 @@ async def test_initialize_from_database(hass):
             value,
             {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
         )
-        await hass.async_block_till_done()
+    await hass.async_block_till_done()
     await async_wait_recording_done_without_instance(hass)
 
     # create the statistics component, get filled from database
@@ -942,7 +935,6 @@ async def test_initialize_from_database(hass):
         },
     )
     await hass.async_block_till_done()
-
     state = hass.states.get("sensor.test")
     assert state.state == str(round(sum(VALUES_NUMERIC) / len(VALUES_NUMERIC), 2))
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
@@ -1042,7 +1034,7 @@ async def test_reload(hass):
             {},
             blocking=True,
         )
-        await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 2
 
