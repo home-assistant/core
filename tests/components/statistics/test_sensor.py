@@ -77,8 +77,8 @@ async def test_sensor_defaults_numeric(hass):
             value,
             {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
         )
-
     await hass.async_block_till_done()
+
     state = hass.states.get("sensor.test")
     assert state.state == str(round(sum(VALUES_NUMERIC) / len(VALUES_NUMERIC), 2))
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
@@ -156,15 +156,14 @@ async def test_sensor_defaults_binary(hass):
     )
     await hass.async_block_till_done()
 
-    await hass.async_block_till_done()
     for value in VALUES_BINARY:
         hass.states.async_set(
             "binary_sensor.test_monitored",
             value,
             {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
         )
-
     await hass.async_block_till_done()
+
     state = hass.states.get("sensor.test")
     assert state.state == str(len(VALUES_BINARY))
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
@@ -212,6 +211,7 @@ async def test_sensor_source_with_force_update(hass):
             force_update=True,
         )
     await hass.async_block_till_done()
+
     state_normal = hass.states.get("sensor.test_normal")
     state_force = hass.states.get("sensor.test_force")
     assert state_normal.state == str(round(sum(repeating_values) / 3, 2))
@@ -246,6 +246,7 @@ async def test_sampling_size_non_default(hass):
             {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
         )
     await hass.async_block_till_done()
+
     state = hass.states.get("sensor.test")
     new_mean = round(sum(VALUES_NUMERIC[-5:]) / len(VALUES_NUMERIC[-5:]), 2)
     assert state.state == str(new_mean)
@@ -278,6 +279,7 @@ async def test_sampling_size_1(hass):
             {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
         )
     await hass.async_block_till_done()
+
     state = hass.states.get("sensor.test")
     new_mean = float(VALUES_NUMERIC[-1])
     assert state.state == str(new_mean)
@@ -315,14 +317,14 @@ async def test_age_limit_expiry(hass):
         await hass.async_block_till_done()
 
         for value in VALUES_NUMERIC:
+            mock_data["return_time"] += timedelta(minutes=1)
+            async_fire_time_changed(hass, mock_data["return_time"])
             hass.states.async_set(
                 "sensor.test_monitored",
                 value,
                 {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
             )
-            await hass.async_block_till_done()
-            mock_data["return_time"] += timedelta(minutes=1)
-            async_fire_time_changed(hass, mock_data["return_time"])
+        await hass.async_block_till_done()
 
         # After adding all values, we should only see 5 values in memory
 
@@ -334,7 +336,7 @@ async def test_age_limit_expiry(hass):
 
         # Values expire over time. Only two are left
 
-        mock_data["return_time"] += timedelta(minutes=2)
+        mock_data["return_time"] += timedelta(minutes=3)
         async_fire_time_changed(hass, mock_data["return_time"])
         await hass.async_block_till_done()
 
@@ -356,7 +358,7 @@ async def test_age_limit_expiry(hass):
         assert state.attributes.get("buffer_usage_ratio") == round(1 / 20, 2)
         assert state.attributes.get("age_coverage_ratio") == 0
 
-        # Values expire over time. Memory is empty
+        # Values expire over time. Buffer is empty
 
         mock_data["return_time"] += timedelta(minutes=1)
         async_fire_time_changed(hass, mock_data["return_time"])
@@ -401,6 +403,7 @@ async def test_precision(hass):
             {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
         )
     await hass.async_block_till_done()
+
     mean = sum(VALUES_NUMERIC) / len(VALUES_NUMERIC)
     state = hass.states.get("sensor.test_precision_0")
     assert state.state == str(int(round(mean, 0)))
@@ -439,6 +442,7 @@ async def test_state_class(hass):
             {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
         )
     await hass.async_block_till_done()
+
     state = hass.states.get("sensor.test_normal")
     assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
     state = hass.states.get("sensor.test_nan")
@@ -496,8 +500,8 @@ async def test_unitless_source_sensor(hass):
             "binary_sensor.test_monitored_unitless",
             value,
         )
-
     await hass.async_block_till_done()
+
     state = hass.states.get("sensor.test_unitless_1")
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
     state = hass.states.get("sensor.test_unitless_2")
@@ -513,14 +517,11 @@ async def test_unitless_source_sensor(hass):
 async def test_state_characteristics(hass):
     """Test configured state characteristic for value and unit."""
     now = dt_util.utcnow()
-    mock_data = {
-        "return_time": datetime(now.year + 1, 8, 2, 12, 23, 42, tzinfo=dt_util.UTC)
-    }
+    start_datetime = datetime(now.year + 1, 8, 2, 12, 23, 42, tzinfo=dt_util.UTC)
+    mock_data = {"return_time": start_datetime}
 
     def mock_now():
         return mock_data["return_time"]
-
-    value_spacing_minutes = 1
 
     characteristics = (
         {
@@ -543,7 +544,7 @@ async def test_state_characteristics(hass):
             "source_sensor_domain": "sensor",
             "name": "average_timeless",
             "value_0": STATE_UNKNOWN,
-            "value_1": float(VALUES_NUMERIC[0]),
+            "value_1": float(VALUES_NUMERIC[-1]),
             "value_9": float(round(sum(VALUES_NUMERIC) / len(VALUES_NUMERIC), 2)),
             "unit": "°C",
         },
@@ -588,47 +589,23 @@ async def test_state_characteristics(hass):
             "name": "count",
             "value_0": 0,
             "value_1": 1,
-            "value_9": len(VALUES_NUMERIC),
+            "value_9": 9,
             "unit": None,
         },
         {
             "source_sensor_domain": "sensor",
             "name": "datetime_newest",
             "value_0": STATE_UNKNOWN,
-            "value_1": datetime(
-                now.year + 1,
-                8,
-                2,
-                12,
-                23 + len(VALUES_NUMERIC) + 10,
-                42,
-                tzinfo=dt_util.UTC,
-            ),
-            "value_9": datetime(
-                now.year + 1,
-                8,
-                2,
-                12,
-                23 + len(VALUES_NUMERIC) - 1,
-                42,
-                tzinfo=dt_util.UTC,
-            ),
+            "value_1": start_datetime + timedelta(minutes=9),
+            "value_9": start_datetime + timedelta(minutes=9),
             "unit": None,
         },
         {
             "source_sensor_domain": "sensor",
             "name": "datetime_oldest",
             "value_0": STATE_UNKNOWN,
-            "value_1": datetime(
-                now.year + 1,
-                8,
-                2,
-                12,
-                23 + len(VALUES_NUMERIC) + 10,
-                42,
-                tzinfo=dt_util.UTC,
-            ),
-            "value_9": datetime(now.year + 1, 8, 2, 12, 23, 42, tzinfo=dt_util.UTC),
+            "value_1": start_datetime + timedelta(minutes=9),
+            "value_9": start_datetime + timedelta(minutes=1),
             "unit": None,
         },
         {
@@ -659,7 +636,7 @@ async def test_state_characteristics(hass):
             "source_sensor_domain": "sensor",
             "name": "mean",
             "value_0": STATE_UNKNOWN,
-            "value_1": float(VALUES_NUMERIC[0]),
+            "value_1": float(VALUES_NUMERIC[-1]),
             "value_9": float(round(sum(VALUES_NUMERIC) / len(VALUES_NUMERIC), 2)),
             "unit": "°C",
         },
@@ -667,7 +644,7 @@ async def test_state_characteristics(hass):
             "source_sensor_domain": "sensor",
             "name": "median",
             "value_0": STATE_UNKNOWN,
-            "value_1": float(VALUES_NUMERIC[0]),
+            "value_1": float(VALUES_NUMERIC[-1]),
             "value_9": float(round(statistics.median(VALUES_NUMERIC), 2)),
             "unit": "°C",
         },
@@ -701,7 +678,7 @@ async def test_state_characteristics(hass):
             "source_sensor_domain": "sensor",
             "name": "total",
             "value_0": STATE_UNKNOWN,
-            "value_1": float(VALUES_NUMERIC[0]),
+            "value_1": float(VALUES_NUMERIC[-1]),
             "value_9": float(sum(VALUES_NUMERIC)),
             "unit": "°C",
         },
@@ -709,7 +686,7 @@ async def test_state_characteristics(hass):
             "source_sensor_domain": "sensor",
             "name": "value_max",
             "value_0": STATE_UNKNOWN,
-            "value_1": float(VALUES_NUMERIC[0]),
+            "value_1": float(VALUES_NUMERIC[-1]),
             "value_9": float(max(VALUES_NUMERIC)),
             "unit": "°C",
         },
@@ -717,7 +694,7 @@ async def test_state_characteristics(hass):
             "source_sensor_domain": "sensor",
             "name": "value_min",
             "value_0": STATE_UNKNOWN,
-            "value_1": float(VALUES_NUMERIC[0]),
+            "value_1": float(VALUES_NUMERIC[-1]),
             "value_9": float(min(VALUES_NUMERIC)),
             "unit": "°C",
         },
@@ -774,7 +751,7 @@ async def test_state_characteristics(hass):
                 "name": f"test_{characteristic['source_sensor_domain']}_{characteristic['name']}",
                 "entity_id": f"{characteristic['source_sensor_domain']}.test_monitored",
                 "state_characteristic": characteristic["name"],
-                "max_age": {"minutes": 10},
+                "max_age": {"minutes": 8},  # 9 values spaces by one minute
             }
         )
 
@@ -791,6 +768,8 @@ async def test_state_characteristics(hass):
         # With all values in buffer
 
         for i in range(len(VALUES_NUMERIC)):
+            mock_data["return_time"] += timedelta(minutes=1)
+            async_fire_time_changed(hass, mock_data["return_time"])
             hass.states.async_set(
                 "sensor.test_monitored",
                 VALUES_NUMERIC[i],
@@ -801,9 +780,7 @@ async def test_state_characteristics(hass):
                 VALUES_BINARY[i],
                 {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
             )
-            await hass.async_block_till_done()
-            mock_data["return_time"] += timedelta(minutes=value_spacing_minutes)
-            async_fire_time_changed(hass, mock_data["return_time"])
+        await hass.async_block_till_done()
 
         for characteristic in characteristics:
             state = hass.states.get(
@@ -819,37 +796,9 @@ async def test_state_characteristics(hass):
                 state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == characteristic["unit"]
             ), f"unit mismatch for characteristic '{characteristic['name']}'"
 
-        # With empty buffer
-
-        mock_data["return_time"] += timedelta(minutes=10)
-        async_fire_time_changed(hass, mock_data["return_time"])
-        await hass.async_block_till_done()
-
-        for characteristic in characteristics:
-            state = hass.states.get(
-                f"sensor.test_{characteristic['source_sensor_domain']}_{characteristic['name']}"
-            )
-            assert state.state == str(characteristic["value_0"]), (
-                f"value mismatch for characteristic "
-                f"'{characteristic['source_sensor_domain']}/{characteristic['name']}' "
-                f"(buffer empty) - "
-                f"assert {state.state} == {str(characteristic['value_0'])}"
-            )
-
         # With single value in buffer
 
-        hass.states.async_set(
-            "sensor.test_monitored",
-            VALUES_NUMERIC[0],
-            {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
-        )
-        hass.states.async_set(
-            "binary_sensor.test_monitored",
-            VALUES_BINARY[0],
-            {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
-            force_update=True,
-        )
-        mock_data["return_time"] += timedelta(minutes=1)
+        mock_data["return_time"] += timedelta(minutes=8)
         async_fire_time_changed(hass, mock_data["return_time"])
         await hass.async_block_till_done()
 
@@ -862,6 +811,23 @@ async def test_state_characteristics(hass):
                 f"'{characteristic['source_sensor_domain']}/{characteristic['name']}' "
                 f"(one stored value) - "
                 f"assert {state.state} == {str(characteristic['value_1'])}"
+            )
+
+        # With empty buffer
+
+        mock_data["return_time"] += timedelta(minutes=1)
+        async_fire_time_changed(hass, mock_data["return_time"])
+        await hass.async_block_till_done()
+
+        for characteristic in characteristics:
+            state = hass.states.get(
+                f"sensor.test_{characteristic['source_sensor_domain']}_{characteristic['name']}"
+            )
+            assert state.state == str(characteristic["value_0"]), (
+                f"value mismatch for characteristic "
+                f"'{characteristic['source_sensor_domain']}/{characteristic['name']}' "
+                f"(buffer empty) - "
+                f"assert {state.state} == {str(characteristic['value_0'])}"
             )
 
 
@@ -935,6 +901,7 @@ async def test_initialize_from_database(hass):
         },
     )
     await hass.async_block_till_done()
+
     state = hass.states.get("sensor.test")
     assert state.state == str(round(sum(VALUES_NUMERIC) / len(VALUES_NUMERIC), 2))
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
@@ -1020,6 +987,7 @@ async def test_reload(hass):
         },
     )
     await hass.async_block_till_done()
+
     hass.states.async_set("sensor.test_monitored", 12345)
     await hass.async_block_till_done()
 
