@@ -83,3 +83,10 @@ def client() -> Generator[None, MagicMock, None]:
 
         client.get_heatmode.side_effect = get_heatmode
         yield client
+
+
+@pytest.fixture(autouse=True)
+def set_temperature_wait():
+    """Mock set temperature wait time."""
+    with patch("homeassistant.components.balboa.climate.SET_TEMPERATURE_WAIT", new=0):
+        yield
