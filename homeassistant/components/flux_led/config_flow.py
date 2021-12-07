@@ -4,7 +4,13 @@ from __future__ import annotations
 import logging
 from typing import Any, Final, cast
 
-from flux_led.const import ATTR_ID, ATTR_IPADDR, ATTR_MODEL, ATTR_MODEL_DESCRIPTION
+from flux_led.const import (
+    ATTR_ID,
+    ATTR_IPADDR,
+    ATTR_MODEL,
+    ATTR_MODEL_DESCRIPTION,
+    ATTR_VERSION_NUM,
+)
 from flux_led.scanner import FluxLEDDiscovery
 import voluptuous as vol
 
@@ -21,6 +27,7 @@ from .const import (
     CONF_CUSTOM_EFFECT_COLORS,
     CONF_CUSTOM_EFFECT_SPEED_PCT,
     CONF_CUSTOM_EFFECT_TRANSITION,
+    CONF_MINOR_VERSION,
     DEFAULT_EFFECT_SPEED,
     DISCOVER_SCAN_TIMEOUT,
     DOMAIN,
@@ -112,7 +119,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         mac = dr.format_mac(mac_address)
         host = device[ATTR_IPADDR]
         await self.async_set_unique_id(mac)
-        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+        updates: dict[str, Any] = {CONF_HOST: host}
+        if device[ATTR_VERSION_NUM]:
+            updates[CONF_MINOR_VERSION] = device[ATTR_VERSION_NUM]
+        self._abort_if_unique_id_configured(updates=updates)
         for entry in self._async_current_entries(include_ignore=False):
             if entry.data[CONF_HOST] == host:
                 if not entry.unique_id:

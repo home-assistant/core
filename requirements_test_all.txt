@@ -515,7 +515,7 @@ hole==0.7.0
 holidays==0.11.3.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20211203.0
+home-assistant-frontend==20211206.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -695,9 +695,6 @@ onvif-zeep-async==1.2.0
 
 # homeassistant.components.opengarage
 open-garage==0.2.0
-
-# homeassistant.components.open_meteo
-open-meteo==0.2.0
 
 # homeassistant.components.openerz
 openerz-api==0.1.0
@@ -1282,7 +1279,7 @@ sharkiqpy==0.1.8
 simplehound==0.3
 
 # homeassistant.components.simplisafe
-simplisafe-python==2021.11.2
+simplisafe-python==2021.12.0
 
 # homeassistant.components.slack
 slackclient==2.5.0
