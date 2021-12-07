@@ -1,4 +1,5 @@
 {
+  "disabled": "Library has incompatible requirements.",
   "domain": "lupusec",
   "name": "Lupus Electronics LUPUSEC",
   "documentation": "https://www.home-assistant.io/integrations/lupusec",
