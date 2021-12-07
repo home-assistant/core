@@ -5,7 +5,7 @@ from homeassistant.const import Platform
 
 CONF_MOUNT_DIR = "mount_dir"
 CONF_NAMES = "names"
-CONF_TRACK_RAW_VALUE = "track_raw_value"
+CONF_ROUNDING = "rounding"
 
 CONF_TYPE_OWSERVER = "OWServer"
 CONF_TYPE_SYSBUS = "SysBus"

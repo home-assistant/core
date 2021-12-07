@@ -9,6 +9,7 @@ import os
 from typing import TYPE_CHECKING
 
 from pi1wire import InvalidCRCException, OneWireInterface, UnsupportResponseException
+from pyownet import protocol
 
 from homeassistant.components.onewire.model import (
     OWDirectDeviceDescription,
@@ -37,7 +38,6 @@ from homeassistant.helpers.typing import StateType
 
 from .const import (
     CONF_NAMES,
-    CONF_TRACK_RAW_VALUE,
     CONF_TYPE_OWSERVER,
     CONF_TYPE_SYSBUS,
     DOMAIN,
@@ -405,7 +405,7 @@ def get_entities(
                     os.path.split(device.path)[0], description.key
                 )
                 name = f"{device_names.get(device_id, device_id)} {description.name}"
-                entities.append(
+                entities.extend(
                     OneWireProxySensor(
                         config_entry=config_entry,
                         description=description,
@@ -414,7 +414,9 @@ def get_entities(
                         device_info=device_info,
                         name=name,
                         owproxy=onewirehub.owproxy,
+                        rounding=rounding,
                     )
+                    for rounding in (1, None)
                 )
 
     # We have a raw GPIO ow sensor on a Pi
@@ -429,7 +431,7 @@ def get_entities(
             description = SIMPLE_TEMPERATURE_SENSOR_DESCRIPTION
             device_file = f"/sys/bus/w1/devices/{device_id}/w1_slave"
             name = f"{device_names.get(device_id, device_id)} {description.name}"
-            entities.append(
+            entities.extend(
                 OneWireDirectSensor(
                     config_entry=config_entry,
                     description=description,
@@ -438,7 +440,9 @@ def get_entities(
                     device_info=device_info,
                     name=name,
                     owsensor=p1sensor,
+                    rounding=rounding,
                 )
+                for rounding in (1, None)
             )
 
     return entities
@@ -454,6 +458,33 @@ class OneWireProxySensor(OneWireProxyEntity, OneWireSensor):
     """Implementation of a 1-Wire sensor connected through owserver."""
 
     entity_description: OneWireSensorEntityDescription
+
+    def __init__(
+        self,
+        config_entry: ConfigEntry,
+        description: OneWireEntityDescription,
+        device_id: str,
+        device_info: DeviceInfo,
+        device_file: str,
+        name: str,
+        owproxy: protocol._Proxy,
+        rounding: int | None,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(
+            config_entry=config_entry,
+            description=description,
+            device_id=device_id,
+            device_info=device_info,
+            device_file=device_file,
+            name=name,
+            owproxy=owproxy,
+            rounding=rounding,
+        )
+        if self._rounding is None:
+            self._attr_entity_registry_enabled_default = False
+            self._attr_name = f"{self._attr_name} (raw)"
+            self._attr_unique_id = f"{self._attr_unique_id}_raw"
 
     @property
     def native_value(self) -> StateType:
@@ -473,6 +504,7 @@ class OneWireDirectSensor(OneWireSensor):
         device_file: str,
         name: str,
         owsensor: OneWireInterface,
+        rounding: int | None,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(
@@ -482,8 +514,13 @@ class OneWireDirectSensor(OneWireSensor):
             device_info=device_info,
             device_file=device_file,
             name=name,
+            rounding=rounding,
         )
         self._attr_unique_id = device_file
+        if self._rounding is None:
+            self._attr_entity_registry_enabled_default = False
+            self._attr_name = f"{self._attr_name} (raw)"
+            self._attr_unique_id = f"{self._attr_unique_id}_raw"
         self._owsensor = owsensor
 
     @property
@@ -527,7 +564,7 @@ class OneWireDirectSensor(OneWireSensor):
             )
             self._state = None
         else:
-            if self._config_entry.options.get(CONF_TRACK_RAW_VALUE, True):
-                self._attr_extra_state_attributes["raw_value"] = raw_value
+            if self._rounding is not None:
+                raw_value = round(raw_value, self._rounding)
 
-            self._state = round(raw_value, 1)
+            self._state = raw_value
