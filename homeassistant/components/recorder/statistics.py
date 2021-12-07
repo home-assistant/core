@@ -306,12 +306,12 @@ def find_duplicates(
             dict_[key] = getattr(duplicate, key)
         return dict_
 
-    def compare_statistic_rows(a: dict, b: dict) -> bool:
+    def compare_statistic_rows(row1: dict, row2: dict) -> bool:
         """Compare two statistics rows, ignoring id and created."""
         ignore_keys = ["id", "created"]
-        ka = set(a).difference(ignore_keys)
-        kb = set(b).difference(ignore_keys)
-        return ka == kb and all(a[k] == b[k] for k in ka)
+        keys1 = set(row1).difference(ignore_keys)
+        keys2 = set(row1).difference(ignore_keys)
+        return keys1 == keys2 and all(row1[k] == row1[k] for k in keys1)
 
     for duplicate in duplicates:
         if start != duplicate.start or metadata_id != duplicate.metadata_id:
