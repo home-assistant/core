@@ -104,11 +104,6 @@ class ZWaveMeDevice(Entity):
         return True
 
     @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
     def available(self):
         """Return true if device is online."""
         return self.get_available()
