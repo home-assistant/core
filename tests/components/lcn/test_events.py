@@ -134,3 +134,22 @@ async def test_dont_fire_on_non_module_input(hass, entry):
         await lcn_connection.async_process_input(inp)
         await hass.async_block_till_done()
         assert len(events) == 0
+
+
+@patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
+async def test_dont_fire_on_unknown_module(hass, entry):
+    """Test for no event is fired if an input from an unknown module is received."""
+    await init_integration(hass, entry)
+
+    inp = ModStatusAccessControl(
+        LcnAddr(0, 10, False),  # unknown module
+        periphery=AccessControlPeriphery.FINGERPRINT,
+        code="aabbcc",
+    )
+
+    lcn_connection = hass.data[DOMAIN][entry.entry_id][CONNECTION]
+
+    events = async_capture_events(hass, "lcn_transmitter")
+    await lcn_connection.async_process_input(inp)
+    await hass.async_block_till_done()
+    assert len(events) == 0

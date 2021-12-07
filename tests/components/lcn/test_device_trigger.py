@@ -4,11 +4,13 @@ from unittest.mock import patch
 from pypck.inputs import ModSendKeysHost, ModStatusAccessControl
 from pypck.lcn_addr import LcnAddr
 from pypck.lcn_defs import AccessControlPeriphery, KeyAction, SendKeyCommand
+import voluptuous_serialize
 
 from homeassistant.components import automation
-from homeassistant.components.lcn.const import CONNECTION, DOMAIN
+from homeassistant.components.lcn import device_trigger
+from homeassistant.components.lcn.const import CONNECTION, DOMAIN, KEY_ACTIONS, SENDKEYS
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from .conftest import MockPchkConnectionManager, get_device, init_integration
@@ -269,3 +271,139 @@ async def test_if_fires_on_send_keys_event(hass, calls, entry):
         "key": "a1",
         "action": "hit",
     }
+
+
+@patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
+async def test_get_transponder_trigger_capabilities(hass, entry):
+    """Test we get the expected capabilities from a transponder device trigger."""
+    await init_integration(hass, entry)
+    address = (0, 7, False)
+    device = get_device(hass, entry, address)
+
+    capabilities = await device_trigger.async_get_trigger_capabilities(
+        hass,
+        {
+            CONF_PLATFORM: "device",
+            CONF_DOMAIN: DOMAIN,
+            CONF_TYPE: "transponder",
+            CONF_DEVICE_ID: device.id,
+        },
+    )
+    assert capabilities and "extra_fields" in capabilities
+
+    assert voluptuous_serialize.convert(
+        capabilities["extra_fields"], custom_serializer=cv.custom_serializer
+    ) == [{"name": "code", "optional": True, "type": "string", "lower": True}]
+
+
+@patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
+async def test_get_fingerprint_trigger_capabilities(hass, entry):
+    """Test we get the expected capabilities from a fingerprint device trigger."""
+    await init_integration(hass, entry)
+    address = (0, 7, False)
+    device = get_device(hass, entry, address)
+
+    capabilities = await device_trigger.async_get_trigger_capabilities(
+        hass,
+        {
+            CONF_PLATFORM: "device",
+            CONF_DOMAIN: DOMAIN,
+            CONF_TYPE: "fingerprint",
+            CONF_DEVICE_ID: device.id,
+        },
+    )
+    assert capabilities and "extra_fields" in capabilities
+
+    assert voluptuous_serialize.convert(
+        capabilities["extra_fields"], custom_serializer=cv.custom_serializer
+    ) == [{"name": "code", "optional": True, "type": "string", "lower": True}]
+
+
+@patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
+async def test_get_transmitter_trigger_capabilities(hass, entry):
+    """Test we get the expected capabilities from a transmitter device trigger."""
+    await init_integration(hass, entry)
+    address = (0, 7, False)
+    device = get_device(hass, entry, address)
+
+    capabilities = await device_trigger.async_get_trigger_capabilities(
+        hass,
+        {
+            CONF_PLATFORM: "device",
+            CONF_DOMAIN: DOMAIN,
+            CONF_TYPE: "transmitter",
+            CONF_DEVICE_ID: device.id,
+        },
+    )
+    assert capabilities and "extra_fields" in capabilities
+
+    assert voluptuous_serialize.convert(
+        capabilities["extra_fields"], custom_serializer=cv.custom_serializer
+    ) == [
+        {"name": "code", "type": "string", "optional": True, "lower": True},
+        {"name": "level", "type": "integer", "optional": True, "valueMin": 0},
+        {"name": "key", "type": "integer", "optional": True, "valueMin": 0},
+        {
+            "name": "action",
+            "type": "select",
+            "optional": True,
+            "options": [("hit", "hit"), ("make", "make"), ("break", "break")],
+        },
+    ]
+
+
+@patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
+async def test_get_send_keys_trigger_capabilities(hass, entry):
+    """Test we get the expected capabilities from a send_keys device trigger."""
+    await init_integration(hass, entry)
+    address = (0, 7, False)
+    device = get_device(hass, entry, address)
+
+    capabilities = await device_trigger.async_get_trigger_capabilities(
+        hass,
+        {
+            CONF_PLATFORM: "device",
+            CONF_DOMAIN: DOMAIN,
+            CONF_TYPE: "send_keys",
+            CONF_DEVICE_ID: device.id,
+        },
+    )
+    assert capabilities and "extra_fields" in capabilities
+
+    assert voluptuous_serialize.convert(
+        capabilities["extra_fields"], custom_serializer=cv.custom_serializer
+    ) == [
+        {
+            "name": "key",
+            "type": "select",
+            "optional": True,
+            "options": [(send_key.lower(), send_key.lower()) for send_key in SENDKEYS],
+        },
+        {
+            "name": "action",
+            "type": "select",
+            "options": [
+                (key_action.lower(), key_action.lower()) for key_action in KEY_ACTIONS
+            ],
+            "optional": True,
+        },
+    ]
+
+
+@patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
+async def test_unknown_trigger_capabilities(hass, entry):
+    """Test we get empty capabilities if trigger is unknown."""
+    await init_integration(hass, entry)
+    address = (0, 7, False)
+    device = get_device(hass, entry, address)
+
+    capabilities = await device_trigger.async_get_trigger_capabilities(
+        hass,
+        {
+            CONF_PLATFORM: "device",
+            CONF_DOMAIN: DOMAIN,
+            CONF_TYPE: "dummy",
+            CONF_DEVICE_ID: device.id,
+        },
+    )
+    assert capabilities == {}
