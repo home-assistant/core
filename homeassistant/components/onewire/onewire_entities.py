@@ -101,5 +101,5 @@ class OneWireProxyEntity(OneWireBaseEntity):
                     self.entity_description.decimal_places is not None
                     and not self._is_raw_clone
                 ):
-                    raw_value = round(raw_value, 1)
+                    raw_value = round(raw_value, self.entity_description.decimal_places)
                 self._state = raw_value
