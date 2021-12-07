@@ -373,8 +373,20 @@ class PurgeTask(RecorderTask):
     apply_filter: bool
 
     def handler(self) -> None:
-        """Handle the task."""
-        self.instance._run_purge(self.purge_before, self.repack, self.apply_filter)
+        """Purge the database."""
+        instance = self.instance
+        if purge.purge_old_data(
+            instance, self.purge_before, self.repack, self.apply_filter
+        ):
+            # We always need to do the db cleanups after a purge
+            # is finished to ensure the WAL checkpoint and other
+            # tasks happen after a vacuum.
+            perodic_db_cleanups(self.instance)
+            return
+        # Schedule a new purge task if this one didn't finish
+        instance.queue.put(
+            PurgeTask(instance, self.purge_before, self.repack, self.apply_filter)
+        )
 
 
 @dataclass
@@ -384,8 +396,12 @@ class PurgeEntitiesTask(RecorderTask):
     entity_filter: Callable[[str], bool]
 
     def handler(self) -> None:
-        """Handle the task."""
-        self.instance._run_purge_entities(self.entity_filter)
+        """Purge entities from the database."""
+        instance = self.instance
+        if purge.purge_entity_data(instance, self.entity_filter):
+            return
+        # Schedule a new purge task if this one didn't finish
+        instance.queue.put(PurgeEntitiesTask(instance, self.entity_filter))
 
 
 @dataclass
@@ -404,8 +420,12 @@ class StatisticsTask(RecorderTask):
     start: datetime
 
     def handler(self) -> None:
-        """Handle the task."""
-        self.instance._run_statistics(self.start)
+        """Run statistics task."""
+        instance = self.instance
+        if statistics.compile_statistics(instance, self.start):
+            return
+        # Schedule a new statistics task if this one didn't finish
+        instance.queue.put(StatisticsTask(instance, self.start))
 
 
 @dataclass
@@ -416,8 +436,14 @@ class ExternalStatisticsTask(RecorderTask):
     statistics: Iterable[dict]
 
     def handler(self) -> None:
-        """Handle the task."""
-        self.instance._run_external_statistics(self.metadata, self.statistics)
+        """Run statistics task."""
+        instance = self.instance
+        if statistics.add_external_statistics(instance, self.metadata, self.statistics):
+            return
+        # Schedule a new statistics task if this one didn't finish
+        instance.queue.put(
+            ExternalStatisticsTask(instance, self.metadata, self.statistics)
+        )
 
 
 @dataclass
@@ -426,7 +452,7 @@ class WaitTask(RecorderTask):
 
     def handler(self) -> None:
         """Handle the task."""
-        self.instance._queue_watch.set()
+        self.instance._queue_watch.set()  # pylint: disable=[protected-access]
 
 
 @dataclass
@@ -439,7 +465,7 @@ class DatabaseLockTask(RecorderTask):
 
     def handler(self) -> None:
         """Handle the task."""
-        self.instance._lock_database(self)
+        self.instance._lock_database(self)  # pylint: disable=[protected-access]
 
 
 @dataclass
@@ -459,6 +485,7 @@ class EventTask(RecorderTask):
 
     def handler(self) -> None:
         """Handle the task."""
+        # pylint: disable-next=[protected-access]
         self.instance._process_one_event(self.event)
 
 
@@ -853,38 +880,6 @@ class Recorder(threading.Thread):
         finally:
             self.migration_in_progress = False
             persistent_notification.dismiss(self.hass, "recorder_database_migration")
-
-    def _run_purge(self, purge_before, repack, apply_filter):
-        """Purge the database."""
-        if purge.purge_old_data(self, purge_before, repack, apply_filter):
-            # We always need to do the db cleanups after a purge
-            # is finished to ensure the WAL checkpoint and other
-            # tasks happen after a vacuum.
-            perodic_db_cleanups(self)
-            return
-        # Schedule a new purge task if this one didn't finish
-        self.queue.put(PurgeTask(self, purge_before, repack, apply_filter))
-
-    def _run_purge_entities(self, entity_filter):
-        """Purge entities from the database."""
-        if purge.purge_entity_data(self, entity_filter):
-            return
-        # Schedule a new purge task if this one didn't finish
-        self.queue.put(PurgeEntitiesTask(self, entity_filter))
-
-    def _run_statistics(self, start):
-        """Run statistics task."""
-        if statistics.compile_statistics(self, start):
-            return
-        # Schedule a new statistics task if this one didn't finish
-        self.queue.put(StatisticsTask(self, start))
-
-    def _run_external_statistics(self, metadata, stats):
-        """Run statistics task."""
-        if statistics.add_external_statistics(self, metadata, stats):
-            return
-        # Schedule a new statistics task if this one didn't finish
-        self.queue.put(ExternalStatisticsTask(self, metadata, stats))
 
     def _lock_database(self, task: DatabaseLockTask):
         @callback
