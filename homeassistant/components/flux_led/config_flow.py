@@ -122,6 +122,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(mac)
         updates: dict[str, Any] = {CONF_HOST: host}
         if device[ATTR_VERSION_NUM]:
+            # If the version changes, the config entry will get reloaded
+            # which should handle any changes as a result of the software update
             updates[CONF_MINOR_VERSION] = device[ATTR_VERSION_NUM]
         self._abort_if_unique_id_configured(updates=updates)
         for entry in self._async_current_entries(include_ignore=False):
