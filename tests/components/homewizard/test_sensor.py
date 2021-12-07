@@ -3,7 +3,7 @@
 from datetime import datetime
 from unittest.mock import patch
 
-from homeassistant.components.homewizard_energy.const import (
+from homeassistant.components.homewizard.const import (
     ATTR_ACTIVE_POWER_L1_W,
     ATTR_ACTIVE_POWER_L2_W,
     ATTR_ACTIVE_POWER_L3_W,

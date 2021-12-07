@@ -1,7 +1,7 @@
 {
-  "domain": "homewizard_energy",
+  "domain": "homewizard",
   "name": "HomeWizard Energy",
-  "documentation": "https://www.home-assistant.io/integrations/homewizard_energy",
+  "documentation": "https://www.home-assistant.io/integrations/homewizard",
   "codeowners": ["@DCSBL"],
   "dependencies": [],
   "requirements": ["aiohwenergy==0.4.0"],

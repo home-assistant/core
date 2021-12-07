@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from pytest import raises
 
-from homeassistant.components.homewizard_energy.const import (
+from homeassistant.components.homewizard.const import (
     ATTR_ACTIVE_POWER_L1_W,
     ATTR_ACTIVE_POWER_L2_W,
     ATTR_ACTIVE_POWER_L3_W,
@@ -24,7 +24,7 @@ from homeassistant.components.homewizard_energy.const import (
     CONF_DEVICE,
     MODEL_P1,
 )
-from homeassistant.components.homewizard_energy.coordinator import (
+from homeassistant.components.homewizard.coordinator import (
     HWEnergyDeviceUpdateCoordinator as Coordinator,
 )
 from homeassistant.const import CONF_STATE

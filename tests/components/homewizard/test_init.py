@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from aiohwenergy import AiohwenergyException, DisabledError
 
-from homeassistant.components.homewizard_energy.const import DOMAIN
+from homeassistant.components.homewizard.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 
 from .generator import get_mock_device

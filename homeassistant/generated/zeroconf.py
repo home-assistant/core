@@ -181,7 +181,7 @@ ZEROCONF = {
     ],
     "_hwenergy._tcp.local.": [
         {
-            "domain": "homewizard_energy"
+            "domain": "homewizard"
         }
     ],
     "_ipp._tcp.local.": [

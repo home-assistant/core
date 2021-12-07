@@ -3,7 +3,7 @@
 # Set up.
 from datetime import timedelta
 
-DOMAIN = "homewizard_energy"
+DOMAIN = "homewizard"
 COORDINATOR = "coordinator"
 MANUFACTURER_NAME = "HomeWizard"
 PLATFORMS = ["sensor"]

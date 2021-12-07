@@ -1,7 +1,7 @@
 """Fixtures for HomeWizard integration tests."""
 import pytest
 
-from homeassistant.components.homewizard_energy.const import DOMAIN
+from homeassistant.components.homewizard.const import DOMAIN
 
 from tests.common import MockConfigEntry
 

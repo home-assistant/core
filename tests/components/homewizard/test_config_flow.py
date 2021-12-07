@@ -5,7 +5,7 @@ from unittest.mock import patch
 from aiohwenergy import DisabledError
 
 from homeassistant import config_entries
-from homeassistant.components.homewizard_energy.const import DOMAIN
+from homeassistant.components.homewizard.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_CREATE_ENTRY
 
@@ -70,7 +70,7 @@ async def test_discovery_flow_works(hass, aioclient_mock):
     }
 
     with patch("aiohwenergy.HomeWizardEnergy", return_value=get_mock_device()), patch(
-        "homeassistant.components.homewizard_energy.async_setup_entry",
+        "homeassistant.components.homewizard.async_setup_entry",
         return_value=True,
     ):
         flow = await hass.config_entries.flow.async_init(
@@ -80,7 +80,7 @@ async def test_discovery_flow_works(hass, aioclient_mock):
         )
 
     with patch(
-        "homeassistant.components.homewizard_energy.async_setup_entry",
+        "homeassistant.components.homewizard.async_setup_entry",
         return_value=True,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -112,7 +112,7 @@ async def test_discovery_disabled_api(hass, aioclient_mock):
     }
 
     with patch("aiohwenergy.HomeWizardEnergy", return_value=get_mock_device()), patch(
-        "homeassistant.components.homewizard_energy.async_setup_entry",
+        "homeassistant.components.homewizard.async_setup_entry",
         return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -142,7 +142,7 @@ async def test_discovery_missing_data_in_service_info(hass, aioclient_mock):
     }
 
     with patch("aiohwenergy.HomeWizardEnergy", return_value=get_mock_device()), patch(
-        "homeassistant.components.homewizard_energy.async_setup_entry",
+        "homeassistant.components.homewizard.async_setup_entry",
         return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -168,7 +168,7 @@ async def test_discovery_missing_data_in_service_info(hass, aioclient_mock):
     }
 
     with patch("aiohwenergy.HomeWizardEnergy", return_value=get_mock_device()), patch(
-        "homeassistant.components.homewizard_energy.async_setup_entry",
+        "homeassistant.components.homewizard.async_setup_entry",
         return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -198,7 +198,7 @@ async def test_discovery_invalid_api(hass, aioclient_mock):
     }
 
     with patch("aiohwenergy.HomeWizardEnergy", return_value=get_mock_device()), patch(
-        "homeassistant.components.homewizard_energy.async_setup_entry",
+        "homeassistant.components.homewizard.async_setup_entry",
         return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
