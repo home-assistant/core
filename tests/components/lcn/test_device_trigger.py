@@ -1,8 +1,12 @@
 """Tests for LCN device triggers."""
 from unittest.mock import patch
 
+from pypck.inputs import ModSendKeysHost, ModStatusAccessControl
+from pypck.lcn_addr import LcnAddr
+from pypck.lcn_defs import AccessControlPeriphery, KeyAction, SendKeyCommand
+
 from homeassistant.components import automation
-from homeassistant.components.lcn.const import DOMAIN
+from homeassistant.components.lcn.const import CONNECTION, DOMAIN
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
@@ -68,7 +72,8 @@ async def test_get_triggers_non_module_device(hass, entry):
 async def test_if_fires_on_transponder_event(hass, calls, entry):
     """Test for transponder event triggers firing."""
     await init_integration(hass, entry)
-    device = get_device(hass, entry, (0, 7, False))
+    address = (0, 7, False)
+    device = get_device(hass, entry, address)
 
     assert await async_setup_component(
         hass,
@@ -94,8 +99,14 @@ async def test_if_fires_on_transponder_event(hass, calls, entry):
         },
     )
 
-    event_data = {CONF_DEVICE_ID: device.id, "code": "aabbcc"}
-    hass.bus.async_fire("lcn_transponder", event_data)
+    inp = ModStatusAccessControl(
+        LcnAddr(*address),
+        periphery=AccessControlPeriphery.TRANSPONDER,
+        code="aabbcc",
+    )
+
+    lcn_connection = hass.data[DOMAIN][entry.entry_id][CONNECTION]
+    await lcn_connection.async_process_input(inp)
     await hass.async_block_till_done()
 
     assert len(calls) == 1
@@ -109,7 +120,8 @@ async def test_if_fires_on_transponder_event(hass, calls, entry):
 async def test_if_fires_on_fingerprint_event(hass, calls, entry):
     """Test for fingerprint event triggers firing."""
     await init_integration(hass, entry)
-    device = get_device(hass, entry, (0, 7, False))
+    address = (0, 7, False)
+    device = get_device(hass, entry, address)
 
     assert await async_setup_component(
         hass,
@@ -135,8 +147,14 @@ async def test_if_fires_on_fingerprint_event(hass, calls, entry):
         },
     )
 
-    event_data = {CONF_DEVICE_ID: device.id, "code": "aabbcc"}
-    hass.bus.async_fire("lcn_fingerprint", event_data)
+    inp = ModStatusAccessControl(
+        LcnAddr(*address),
+        periphery=AccessControlPeriphery.FINGERPRINT,
+        code="aabbcc",
+    )
+
+    lcn_connection = hass.data[DOMAIN][entry.entry_id][CONNECTION]
+    await lcn_connection.async_process_input(inp)
     await hass.async_block_till_done()
 
     assert len(calls) == 1
@@ -150,7 +168,8 @@ async def test_if_fires_on_fingerprint_event(hass, calls, entry):
 async def test_if_fires_on_transmitter_event(hass, calls, entry):
     """Test for transmitter event triggers firing."""
     await init_integration(hass, entry)
-    device = get_device(hass, entry, (0, 7, False))
+    address = (0, 7, False)
+    device = get_device(hass, entry, address)
 
     assert await async_setup_component(
         hass,
@@ -179,15 +198,17 @@ async def test_if_fires_on_transmitter_event(hass, calls, entry):
         },
     )
 
-    event_data = {
-        CONF_DEVICE_ID: device.id,
-        "code": "aabbcc",
-        "level": 0,
-        "key": 0,
-        "action": "hit",
-    }
+    inp = ModStatusAccessControl(
+        LcnAddr(*address),
+        periphery=AccessControlPeriphery.TRANSMITTER,
+        code="aabbcc",
+        level=0,
+        key=0,
+        action=KeyAction.HIT,
+    )
 
-    hass.bus.async_fire("lcn_transmitter", event_data)
+    lcn_connection = hass.data[DOMAIN][entry.entry_id][CONNECTION]
+    await lcn_connection.async_process_input(inp)
     await hass.async_block_till_done()
 
     assert len(calls) == 1
@@ -204,7 +225,8 @@ async def test_if_fires_on_transmitter_event(hass, calls, entry):
 async def test_if_fires_on_sendkeys_event(hass, calls, entry):
     """Test for sendkeys event triggers firing."""
     await init_integration(hass, entry)
-    device = get_device(hass, entry, (0, 7, False))
+    address = (0, 7, False)
+    device = get_device(hass, entry, address)
 
     assert await async_setup_component(
         hass,
@@ -231,13 +253,14 @@ async def test_if_fires_on_sendkeys_event(hass, calls, entry):
         },
     )
 
-    event_data = {
-        CONF_DEVICE_ID: device.id,
-        "key": "a1",
-        "action": "hit",
-    }
+    inp = ModSendKeysHost(
+        LcnAddr(*address),
+        actions=[SendKeyCommand.HIT, SendKeyCommand.DONTSEND, SendKeyCommand.DONTSEND],
+        keys=[True, False, False, False, False, False, False, False],
+    )
 
-    hass.bus.async_fire("lcn_sendkeys", event_data)
+    lcn_connection = hass.data[DOMAIN][entry.entry_id][CONNECTION]
+    await lcn_connection.async_process_input(inp)
     await hass.async_block_till_done()
 
     assert len(calls) == 1

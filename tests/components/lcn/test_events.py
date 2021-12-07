@@ -5,8 +5,7 @@ from pypck.inputs import Input, ModSendKeysHost, ModStatusAccessControl
 from pypck.lcn_addr import LcnAddr
 from pypck.lcn_defs import AccessControlPeriphery, KeyAction, SendKeyCommand
 
-from homeassistant.components.lcn import host_input_received
-from homeassistant.helpers import device_registry as dr
+from homeassistant.components.lcn.const import CONNECTION, DOMAIN
 
 from .conftest import MockPchkConnectionManager, init_integration
 
@@ -17,7 +16,6 @@ from tests.common import async_capture_events
 async def test_fire_transponder_event(hass, entry):
     """Test the transponder event is fired."""
     await init_integration(hass, entry)
-    device_registry = dr.async_get(hass)
 
     events = async_capture_events(hass, "lcn_transponder")
 
@@ -27,7 +25,8 @@ async def test_fire_transponder_event(hass, entry):
         code="aabbcc",
     )
 
-    host_input_received(hass, entry, device_registry, inp)
+    lcn_connection = hass.data[DOMAIN][entry.entry_id][CONNECTION]
+    await lcn_connection.async_process_input(inp)
     await hass.async_block_till_done()
 
     assert len(events) == 1
@@ -39,7 +38,6 @@ async def test_fire_transponder_event(hass, entry):
 async def test_fire_fingerprint_event(hass, entry):
     """Test the fingerprint event is fired."""
     await init_integration(hass, entry)
-    device_registry = dr.async_get(hass)
 
     events = async_capture_events(hass, "lcn_fingerprint")
 
@@ -49,7 +47,8 @@ async def test_fire_fingerprint_event(hass, entry):
         code="aabbcc",
     )
 
-    host_input_received(hass, entry, device_registry, inp)
+    lcn_connection = hass.data[DOMAIN][entry.entry_id][CONNECTION]
+    await lcn_connection.async_process_input(inp)
     await hass.async_block_till_done()
 
     assert len(events) == 1
@@ -61,7 +60,6 @@ async def test_fire_fingerprint_event(hass, entry):
 async def test_fire_transmitter_event(hass, entry):
     """Test the transmitter event is fired."""
     await init_integration(hass, entry)
-    device_registry = dr.async_get(hass)
 
     events = async_capture_events(hass, "lcn_transmitter")
 
@@ -74,7 +72,8 @@ async def test_fire_transmitter_event(hass, entry):
         action=KeyAction.HIT,
     )
 
-    host_input_received(hass, entry, device_registry, inp)
+    lcn_connection = hass.data[DOMAIN][entry.entry_id][CONNECTION]
+    await lcn_connection.async_process_input(inp)
     await hass.async_block_till_done()
 
     assert len(events) == 1
@@ -89,7 +88,6 @@ async def test_fire_transmitter_event(hass, entry):
 async def test_fire_sendkeys_event(hass, entry):
     """Test the sendkeys event is fired."""
     await init_integration(hass, entry)
-    device_registry = dr.async_get(hass)
 
     events = async_capture_events(hass, "lcn_sendkeys")
 
@@ -99,7 +97,8 @@ async def test_fire_sendkeys_event(hass, entry):
         keys=[True, True, False, False, False, False, False, False],
     )
 
-    host_input_received(hass, entry, device_registry, inp)
+    lcn_connection = hass.data[DOMAIN][entry.entry_id][CONNECTION]
+    await lcn_connection.async_process_input(inp)
     await hass.async_block_till_done()
 
     assert len(events) == 4
@@ -121,12 +120,17 @@ async def test_fire_sendkeys_event(hass, entry):
 async def test_dont_fire_on_non_module_input(hass, entry):
     """Test for no event is fired if a non-module input is received."""
     await init_integration(hass, entry)
-    device_registry = dr.async_get(hass)
 
     inp = Input()
+    lcn_connection = hass.data[DOMAIN][entry.entry_id][CONNECTION]
 
-    with patch.object(hass.bus, "async_fire") as async_fire:
-        host_input_received(hass, entry, device_registry, inp)
+    for event_name in (
+        "lcn_transponder",
+        "lcn_fingerprint",
+        "lcn_transmitter",
+        "lcn_sendkeys",
+    ):
+        events = async_capture_events(hass, event_name)
+        await lcn_connection.async_process_input(inp)
         await hass.async_block_till_done()
-
-    assert async_fire.called is False
+        assert len(events) == 0

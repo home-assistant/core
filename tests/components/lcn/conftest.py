@@ -1,6 +1,6 @@
 """Test configuration and mocks for LCN component."""
 import json
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, patch
 
 import pypck
 from pypck.connection import PchkConnectionManager
@@ -57,7 +57,6 @@ class MockPchkConnectionManager(PchkConnectionManager):
         return super().get_address_conn(addr, request_serials=False)
 
     send_command = AsyncMock()
-    register_for_inputs = Mock()
 
 
 def create_config_entry(name):
