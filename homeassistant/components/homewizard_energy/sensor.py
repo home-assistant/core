@@ -171,7 +171,7 @@ class HWEnergySensor(CoordinatorEntity, SensorEntity):
         self.entry_data = entry.data
 
         # Config attributes.
-        self.name = "{} {}".format(entry.data["name"], description.name)
+        self._attr_name = f"{entry.data['name']} {description.name}"
         self.data_type = description.key
         self.unique_id = f"{entry.unique_id}_{description.key}"
 
