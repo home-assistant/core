@@ -172,12 +172,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Create a config entry from a device."""
         self._async_abort_entries_match({CONF_HOST: device[ATTR_IPADDR]})
         name = async_name_from_discovery(device)
+        data: dict[str, Any] = {
+            CONF_HOST: device[ATTR_IPADDR],
+            CONF_NAME: name,
+        }
+        if minor_version := device[ATTR_VERSION_NUM]:
+            data[CONF_MINOR_VERSION] = minor_version
         return self.async_create_entry(
             title=name,
-            data={
-                CONF_HOST: device[ATTR_IPADDR],
-                CONF_NAME: name,
-            },
+            data=data,
         )
 
     async def async_step_user(
@@ -260,7 +263,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             model=model,
             id=mac_address,
             model_num=bulb.model_num,
-            version_num=bulb.version_num,
+            version_num=None,  # This is the minor version number
             firmware_date=None,
             model_info=None,
             model_description=bulb.model_data.description,
