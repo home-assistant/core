@@ -41,6 +41,7 @@ from .const import (
     PLATFORMS,
 )
 
+USELESS_CONSTANT = "123"
 _LOGGER = logging.getLogger(__name__)
 
 
