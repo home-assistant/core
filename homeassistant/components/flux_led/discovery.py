@@ -55,6 +55,8 @@ async def async_discover_devices(
             _LOGGER.debug("Scanning %s failed with error: %s", targets[idx], discovered)
             continue
 
+    _LOGGER.debug("Bulb Info (%s): %s", address, scanner.getBulbInfo())
+
     if not address:
         return scanner.getBulbInfo()
 
