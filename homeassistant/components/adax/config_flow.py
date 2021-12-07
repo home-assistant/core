@@ -86,7 +86,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except adax_local.HeaterNotFound:
             return self.async_abort(reason="heater_not_found")
         except adax_local.InvalidWifiCred:
-            return self.async_abort(reason="invalid_wifi_cred")
+            return self.async_abort(reason="invalid_auth")
 
         unique_id = configurator.mac_id
         await self.async_set_unique_id(unique_id)

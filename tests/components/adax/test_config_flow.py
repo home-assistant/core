@@ -148,7 +148,9 @@ async def test_local_create_entry(hass):
     with patch(
         "homeassistant.components.adax.async_setup_entry",
         return_value=True,
-    ), patch("adax_local.AdaxConfig", autospec=True) as mock_client_class:
+    ), patch(
+        "homeassistant.components.adax.config_flow.adax_local.AdaxConfig", autospec=True
+    ) as mock_client_class:
         client = mock_client_class.return_value
         client.configure_device.return_value = True
         client.device_ip = "192.168.1.4"
@@ -243,7 +245,7 @@ async def test_local_connection_error(hass):
     }
 
     with patch(
-        "adax_local.AdaxConfig.configure_device",
+        "homeassistant.components.adax.config_flow.adax_local.AdaxConfig.configure_device",
         return_value=False,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -278,7 +280,7 @@ async def test_local_heater_not_available(hass):
     }
 
     with patch(
-        "adax_local.AdaxConfig.configure_device",
+        "homeassistant.components.adax.config_flow.adax_local.AdaxConfig.configure_device",
         side_effect=adax_local.HeaterNotAvailable,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -313,7 +315,7 @@ async def test_local_heater_not_found(hass):
     }
 
     with patch(
-        "adax_local.AdaxConfig.configure_device",
+        "homeassistant.components.adax.config_flow.adax_local.AdaxConfig.configure_device",
         side_effect=adax_local.HeaterNotFound,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -348,7 +350,7 @@ async def test_local_invalid_wifi_cred(hass):
     }
 
     with patch(
-        "adax_local.AdaxConfig.configure_device",
+        "homeassistant.components.adax.config_flow.adax_local.AdaxConfig.configure_device",
         side_effect=adax_local.InvalidWifiCred,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -357,4 +359,4 @@ async def test_local_invalid_wifi_cred(hass):
         )
 
     assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == "invalid_wifi_cred"
+    assert result["reason"] == "invalid_auth"

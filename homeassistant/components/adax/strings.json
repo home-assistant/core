@@ -28,7 +28,7 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "heater_not_available": "Heater not available. Try to reset the heater by pressing + and OK for some seconds.",
       "heater_not_found": "Heater not found. Try to move the heater closer to Home Assistant computer.",
-      "invalid_wifi_cred": "Wifi credentials are invalid."
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     }
   }
 }
