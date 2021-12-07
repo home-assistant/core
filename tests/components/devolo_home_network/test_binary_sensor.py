@@ -87,41 +87,46 @@ async def test_update_attached_to_router(hass: HomeAssistant):
     """Test state change of a attached_to_router binary sensor device."""
     state_key = f"{DOMAIN}.{CONNECTED_TO_ROUTER}"
     entry = configure_integration(hass)
+
+    er = entity_registry.async_get(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Enable entity
+    er.async_update_entity(state_key, disabled_by=None)
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, dt.utcnow() + LONG_UPDATE_INTERVAL)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(state_key)
+    assert state is not None
+    assert state.state == STATE_OFF
+
+    assert er.async_get(state_key).entity_category == ENTITY_CATEGORY_DIAGNOSTIC
+
+    # Emulate device failure
     with patch(
-        "homeassistant.helpers.entity.Entity.entity_registry_enabled_default",
-        return_value=True,
+        "devolo_plc_api.plcnet_api.plcnetapi.PlcNetApi.async_get_network_overview",
+        side_effect=DeviceUnavailable,
     ):
-        await hass.config_entries.async_setup(entry.entry_id)
+        async_fire_time_changed(hass, dt.utcnow() + LONG_UPDATE_INTERVAL)
         await hass.async_block_till_done()
+
         state = hass.states.get(state_key)
         assert state is not None
-        assert state.state == STATE_OFF
+        assert state.state == STATE_UNAVAILABLE
 
-        er = entity_registry.async_get(hass)
-        assert er.async_get(state_key).entity_category == ENTITY_CATEGORY_DIAGNOSTIC
+    # Emulate state change
+    with patch(
+        "devolo_plc_api.plcnet_api.plcnetapi.PlcNetApi.async_get_network_overview",
+        new=AsyncMock(return_value=PLCNET_ATTACHED),
+    ):
+        async_fire_time_changed(hass, dt.utcnow() + LONG_UPDATE_INTERVAL)
+        await hass.async_block_till_done()
 
-        # Emulate device failure
-        with patch(
-            "devolo_plc_api.plcnet_api.plcnetapi.PlcNetApi.async_get_network_overview",
-            side_effect=DeviceUnavailable,
-        ):
-            async_fire_time_changed(hass, dt.utcnow() + LONG_UPDATE_INTERVAL)
-            await hass.async_block_till_done()
+        state = hass.states.get(state_key)
+        assert state is not None
+        assert state.state == STATE_ON
 
-            state = hass.states.get(state_key)
-            assert state is not None
-            assert state.state == STATE_UNAVAILABLE
-
-        # Emulate state change
-        with patch(
-            "devolo_plc_api.plcnet_api.plcnetapi.PlcNetApi.async_get_network_overview",
-            new=AsyncMock(return_value=PLCNET_ATTACHED),
-        ):
-            async_fire_time_changed(hass, dt.utcnow() + LONG_UPDATE_INTERVAL)
-            await hass.async_block_till_done()
-
-            state = hass.states.get(state_key)
-            assert state is not None
-            assert state.state == STATE_ON
-
-        await hass.config_entries.async_unload(entry.entry_id)
+    await hass.config_entries.async_unload(entry.entry_id)
