@@ -368,6 +368,9 @@ elgato==2.2.0
 # homeassistant.components.elkm1
 elkm1-lib==1.0.0
 
+# homeassistant.components.elmax
+elmax_api==0.0.2
+
 # homeassistant.components.mobile_app
 emoji==1.5.0
 
@@ -464,7 +467,7 @@ google-api-python-client==1.6.4
 google-cloud-pubsub==2.1.0
 
 # homeassistant.components.nest
-google-nest-sdm==0.4.4
+google-nest-sdm==0.4.5
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -795,7 +798,7 @@ py-nightscout==1.2.2
 py-synologydsm-api==1.0.4
 
 # homeassistant.components.seventeentrack
-py17track==2021.12.1
+py17track==2021.12.2
 
 # homeassistant.components.control4
 pyControl4==0.0.6
@@ -1115,7 +1118,7 @@ pysignalclirestapi==0.3.4
 pysma==0.6.9
 
 # homeassistant.components.smappee
-pysmappee==0.2.27
+pysmappee==0.2.29
 
 # homeassistant.components.smartthings
 pysmartapp==0.3.3

@@ -257,6 +257,10 @@ omit =
     homeassistant/components/eight_sleep/*
     homeassistant/components/eliqonline/sensor.py
     homeassistant/components/elkm1/*
+    homeassistant/components/elmax/__init__.py
+    homeassistant/components/elmax/common.py
+    homeassistant/components/elmax/const.py
+    homeassistant/components/elmax/switch.py
     homeassistant/components/elv/*
     homeassistant/components/emby/media_player.py
     homeassistant/components/emoncms/sensor.py
@@ -600,7 +604,6 @@ omit =
     homeassistant/components/lookin/models.py
     homeassistant/components/lookin/sensor.py
     homeassistant/components/lookin/climate.py
-    homeassistant/components/loopenergy/sensor.py
     homeassistant/components/luci/device_tracker.py
     homeassistant/components/luftdaten/__init__.py
     homeassistant/components/luftdaten/sensor.py
