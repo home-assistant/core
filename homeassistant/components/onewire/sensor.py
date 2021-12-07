@@ -258,7 +258,6 @@ HOBBYBOARD_EF: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
     "HB_MOISTURE_METER": (
         OneWireSensorEntityDescription(
             key="moisture/sensor.0",
-            clone_raw_value=True,
             device_class=SensorDeviceClass.PRESSURE,
             name="Moisture 0",
             native_unit_of_measurement=PRESSURE_CBAR,
@@ -267,7 +266,6 @@ HOBBYBOARD_EF: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
         ),
         OneWireSensorEntityDescription(
             key="moisture/sensor.1",
-            clone_raw_value=True,
             device_class=SensorDeviceClass.PRESSURE,
             name="Moisture 1",
             native_unit_of_measurement=PRESSURE_CBAR,
@@ -276,7 +274,6 @@ HOBBYBOARD_EF: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
         ),
         OneWireSensorEntityDescription(
             key="moisture/sensor.2",
-            clone_raw_value=True,
             device_class=SensorDeviceClass.PRESSURE,
             name="Moisture 2",
             native_unit_of_measurement=PRESSURE_CBAR,
@@ -285,7 +282,6 @@ HOBBYBOARD_EF: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
         ),
         OneWireSensorEntityDescription(
             key="moisture/sensor.3",
-            clone_raw_value=True,
             device_class=SensorDeviceClass.PRESSURE,
             name="Moisture 3",
             native_unit_of_measurement=PRESSURE_CBAR,
