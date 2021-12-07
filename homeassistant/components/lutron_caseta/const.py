@@ -11,7 +11,6 @@ ERROR_CANNOT_CONNECT = "cannot_connect"
 ABORT_REASON_CANNOT_CONNECT = "cannot_connect"
 
 BRIDGE_LEAP = "leap"
-BRIDGE_LIP = "lip"
 BRIDGE_DEVICE = "bridge_device"
 BUTTON_DEVICES = "button_devices"
 LUTRON_CASETA_BUTTON_EVENT = "lutron_caseta_button_event"
