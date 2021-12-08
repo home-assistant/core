@@ -18,7 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CoreState, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, template
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
@@ -163,6 +163,33 @@ async def test_render_outgoing_payload(hass):
     assert (
         mqtt.render_outgoing_payload("b'\\xde\\xad\\xbe\\xef'") == b"\xde\xad\xbe\xef"
     )
+
+
+async def test_command_template_value(hass):
+    """Test the rendering of MQTT command template."""
+
+    variables = {"id": 1234, "some_var": "beer"}
+    variables2 = {"color": "yellow"}
+
+    # test rendering value
+    tpl = template.Template("{{ value + 1 }}", hass)
+    cmd_tpl = mqtt.MqttCommandTemplate(tpl, hass)
+    assert cmd_tpl.async_render(4321) == "4322"
+
+    # test rendering initial variables
+    tpl = template.Template("{{ id + 1 }}", hass)
+    cmd_tpl = mqtt.MqttCommandTemplate(tpl, hass, variables=variables)
+    assert cmd_tpl.async_render(None) == "1235"
+
+    # test variables at rendering
+    tpl = template.Template("{{ some_var }}", hass)
+    cmd_tpl = mqtt.MqttCommandTemplate(tpl, hass)
+    assert cmd_tpl.async_render(None, variables=variables) == "beer"
+
+    # test combination
+    tpl = template.Template("{{ value }} {{ color }} {{ some_var }}", hass)
+    cmd_tpl = mqtt.MqttCommandTemplate(tpl, hass, variables=variables2)
+    assert cmd_tpl.async_render(1234, variables=variables) == "1234 yellow beer"
 
 
 async def test_service_call_without_topic_does_not_publish(hass, mqtt_mock):
