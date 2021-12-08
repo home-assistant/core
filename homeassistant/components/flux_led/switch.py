@@ -1,4 +1,4 @@
-"""Support for FluxLED/MagicHome switches."""
+"""Support for Magic Home switches."""
 from __future__ import annotations
 
 from typing import Any

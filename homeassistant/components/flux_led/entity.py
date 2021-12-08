@@ -1,4 +1,4 @@
-"""Support for FluxLED/MagicHome lights."""
+"""Support for Magic Home lights."""
 from __future__ import annotations
 
 from abc import abstractmethod
@@ -36,7 +36,7 @@ class FluxEntity(CoordinatorEntity):
         if self.unique_id:
             self._attr_device_info = DeviceInfo(
                 connections={(dr.CONNECTION_NETWORK_MAC, self.unique_id)},
-                manufacturer="FluxLED/Magic Home",
+                manufacturer="Magic Home (Zengge)",
                 model=self._device.model,
                 name=self.name,
                 sw_version=str(self._device.version_num),
