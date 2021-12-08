@@ -261,7 +261,7 @@ def test_saving_state_with_sqlalchemy_exception(hass, hass_recorder, caplog):
         hass.states.set(entity_id, "fail", attributes)
         wait_recording_done(hass)
 
-    assert "SQLAlchemyError error processing event" in caplog.text
+    assert "SQLAlchemyError error processing task" in caplog.text
 
     caplog.clear()
     hass.states.set(entity_id, state, attributes)
@@ -273,7 +273,7 @@ def test_saving_state_with_sqlalchemy_exception(hass, hass_recorder, caplog):
 
     assert "Error executing query" not in caplog.text
     assert "Error saving events" not in caplog.text
-    assert "SQLAlchemyError error processing event" not in caplog.text
+    assert "SQLAlchemyError error processing task" not in caplog.text
 
 
 async def test_force_shutdown_with_queue_of_writes_that_generate_exceptions(
