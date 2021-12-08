@@ -75,18 +75,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         configurator = adax_local.AdaxConfig(wifi_ssid, wifi_pswd)
 
         try:
-            if not await configurator.configure_device():
-                return self.async_show_form(
-                    step_id="local",
-                    data_schema=data_schema,
-                    errors={"base": "cannot_connect"},
-                )
+            device_configured = await configurator.configure_device()
         except adax_local.HeaterNotAvailable:
             return self.async_abort(reason="heater_not_available")
         except adax_local.HeaterNotFound:
             return self.async_abort(reason="heater_not_found")
         except adax_local.InvalidWifiCred:
             return self.async_abort(reason="invalid_auth")
+
+        if not device_configured:
+            return self.async_show_form(
+                step_id="local",
+                data_schema=data_schema,
+                errors={"base": "cannot_connect"},
+            )
 
         unique_id = configurator.mac_id
         await self.async_set_unique_id(unique_id)
