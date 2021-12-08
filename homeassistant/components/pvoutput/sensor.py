@@ -25,9 +25,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.template import Template
 
 _LOGGER = logging.getLogger(__name__)
-_ENDPOINT = "http://pvoutput.org/service/r2/getstatus.jsp"
+_ENDPOINT = "https://pvoutput.org/service/r2/getstatus.jsp"
 
 ATTR_ENERGY_GENERATION = "energy_generation"
 ATTR_POWER_GENERATION = "power_generation"
@@ -59,7 +60,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     method = "GET"
     payload = auth = None
     verify_ssl = DEFAULT_VERIFY_SSL
-    headers = {"X-Pvoutput-Apikey": api_key, "X-Pvoutput-SystemId": system_id}
+    headers = {
+        "X-Pvoutput-Apikey": Template(api_key, hass),
+        "X-Pvoutput-SystemId": Template(system_id, hass),
+    }
 
     rest = RestData(hass, method, _ENDPOINT, auth, headers, None, payload, verify_ssl)
     await rest.async_update()
