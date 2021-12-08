@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Final
 
-from homeassistant.components.sensor import SensorStateClass
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_CLOUDY,
@@ -22,7 +22,6 @@ from homeassistant.components.weather import (
 )
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_CUBIC_METER,
-    DEVICE_CLASS_TEMPERATURE,
     LENGTH_FEET,
     LENGTH_INCHES,
     LENGTH_METERS,
@@ -123,21 +122,21 @@ FORECAST_SENSOR_TYPES: Final[tuple[AccuWeatherSensorDescription, ...]] = (
     ),
     AccuWeatherSensorDescription(
         key="RealFeelTemperatureMax",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         name="RealFeel Temperature Max",
         unit_metric=TEMP_CELSIUS,
         unit_imperial=TEMP_FAHRENHEIT,
     ),
     AccuWeatherSensorDescription(
         key="RealFeelTemperatureMin",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         name="RealFeel Temperature Min",
         unit_metric=TEMP_CELSIUS,
         unit_imperial=TEMP_FAHRENHEIT,
     ),
     AccuWeatherSensorDescription(
         key="RealFeelTemperatureShadeMax",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         name="RealFeel Temperature Shade Max",
         unit_metric=TEMP_CELSIUS,
         unit_imperial=TEMP_FAHRENHEIT,
@@ -145,7 +144,7 @@ FORECAST_SENSOR_TYPES: Final[tuple[AccuWeatherSensorDescription, ...]] = (
     ),
     AccuWeatherSensorDescription(
         key="RealFeelTemperatureShadeMin",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         name="RealFeel Temperature Shade Min",
         unit_metric=TEMP_CELSIUS,
         unit_imperial=TEMP_FAHRENHEIT,
@@ -215,7 +214,7 @@ FORECAST_SENSOR_TYPES: Final[tuple[AccuWeatherSensorDescription, ...]] = (
 SENSOR_TYPES: Final[tuple[AccuWeatherSensorDescription, ...]] = (
     AccuWeatherSensorDescription(
         key="ApparentTemperature",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         name="Apparent Temperature",
         unit_metric=TEMP_CELSIUS,
         unit_imperial=TEMP_FAHRENHEIT,
@@ -241,7 +240,7 @@ SENSOR_TYPES: Final[tuple[AccuWeatherSensorDescription, ...]] = (
     ),
     AccuWeatherSensorDescription(
         key="DewPoint",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         name="Dew Point",
         unit_metric=TEMP_CELSIUS,
         unit_imperial=TEMP_FAHRENHEIT,
@@ -250,7 +249,7 @@ SENSOR_TYPES: Final[tuple[AccuWeatherSensorDescription, ...]] = (
     ),
     AccuWeatherSensorDescription(
         key="RealFeelTemperature",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         name="RealFeel Temperature",
         unit_metric=TEMP_CELSIUS,
         unit_imperial=TEMP_FAHRENHEIT,
@@ -258,7 +257,7 @@ SENSOR_TYPES: Final[tuple[AccuWeatherSensorDescription, ...]] = (
     ),
     AccuWeatherSensorDescription(
         key="RealFeelTemperatureShade",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         name="RealFeel Temperature Shade",
         unit_metric=TEMP_CELSIUS,
         unit_imperial=TEMP_FAHRENHEIT,
@@ -291,7 +290,7 @@ SENSOR_TYPES: Final[tuple[AccuWeatherSensorDescription, ...]] = (
     ),
     AccuWeatherSensorDescription(
         key="WetBulbTemperature",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         name="Wet Bulb Temperature",
         unit_metric=TEMP_CELSIUS,
         unit_imperial=TEMP_FAHRENHEIT,
@@ -300,7 +299,7 @@ SENSOR_TYPES: Final[tuple[AccuWeatherSensorDescription, ...]] = (
     ),
     AccuWeatherSensorDescription(
         key="WindChillTemperature",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         name="Wind Chill Temperature",
         unit_metric=TEMP_CELSIUS,
         unit_imperial=TEMP_FAHRENHEIT,
