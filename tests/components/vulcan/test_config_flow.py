@@ -1,17 +1,87 @@
 """Test the Uonet+ Vulcan config flow."""
+from unittest import mock
 from unittest.mock import patch
 
+from vulcan import Account
 from vulcan.model import Student
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.vulcan import config_flow, const, register
 from homeassistant.components.vulcan.config_flow import (
     ClientConnectionError,
+    Keystore,
     VulcanAPIException,
 )
 from homeassistant.const import CONF_PIN, CONF_REGION, CONF_SCAN_INTERVAL, CONF_TOKEN
 
 from tests.common import MockConfigEntry
+
+fake_keystore = Keystore("", "", "MA==", "", "")
+fake_account = Account(
+    login_id=1,
+    user_login="jan@fakelog.cf",
+    user_name="jan@fakelog.cf",
+    rest_url="http://api.fakelog.tk/powiatwulkanowy/",
+)
+fake_student_1 = {
+    "TopLevelPartition": "",
+    "Partition": "",
+    "ClassDisplay": "",
+    "Unit": {
+        "Id": 1,
+        "Symbol": "",
+        "Short": "",
+        "RestURL": "",
+        "Name": "",
+        "DisplayName": "",
+    },
+    "ConstituentUnit": {
+        "Id": 1,
+        "Short": "",
+        "Name": "",
+        "Address": "",
+    },
+    "Pupil": {
+        "Id": 0,
+        "LoginId": 0,
+        "LoginValue": "",
+        "FirstName": "Jan",
+        "SecondName": "Maciej",
+        "Surname": "Kowalski",
+        "Sex": True,
+    },
+    "Periods": [],
+}
+
+fake_student_2 = {
+    "TopLevelPartition": "",
+    "Partition": "",
+    "ClassDisplay": "",
+    "Unit": {
+        "Id": 1,
+        "Symbol": "",
+        "Short": "",
+        "RestURL": "",
+        "Name": "",
+        "DisplayName": "",
+    },
+    "ConstituentUnit": {
+        "Id": 1,
+        "Short": "",
+        "Name": "",
+        "Address": "",
+    },
+    "Pupil": {
+        "Id": 1,
+        "LoginId": 1,
+        "LoginValue": "",
+        "FirstName": "Magda",
+        "SecondName": "",
+        "Surname": "Kowalska",
+        "Sex": False,
+    },
+    "Periods": [],
+}
 
 
 async def test_show_form(hass):
@@ -25,8 +95,44 @@ async def test_show_form(hass):
     assert result["step_id"] == "auth"
 
 
-async def test_config_flow_auth_success(hass):
+@mock.patch("homeassistant.components.vulcan.config_flow.Vulcan.get_students")
+@mock.patch("homeassistant.components.vulcan.config_flow.Account.register")
+@mock.patch("homeassistant.components.vulcan.config_flow.Keystore.create")
+async def test_config_flow_auth_success(
+    mock_keystore, mock_account, mock_student, hass
+):
     """Test a successful config flow initialized by the user."""
+    mock_keystore.return_value = fake_keystore
+    mock_account.return_value = fake_account
+    mock_student.return_value = [Student.load(fake_student_1)]
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "auth"
+    assert result["errors"] == {}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_TOKEN: "FK10000", CONF_REGION: "powiatwulkanowy", CONF_PIN: "000000"},
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == "Jan Kowalski"
+
+
+@mock.patch("homeassistant.components.vulcan.config_flow.Vulcan.get_students")
+@mock.patch("homeassistant.components.vulcan.config_flow.Account.register")
+@mock.patch("homeassistant.components.vulcan.config_flow.Keystore.create")
+async def test_config_flow_auth_success_with_multiple_students(
+    mock_keystore, mock_account, mock_student, hass
+):
+    """Test a successful config flow with multiple students."""
+    mock_keystore.return_value = fake_keystore
+    mock_account.return_value = fake_account
+    mock_student.return_value = [
+        Student.load(student) for student in [fake_student_1] + [fake_student_2]
+    ]
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -40,108 +146,33 @@ async def test_config_flow_auth_success(hass):
         {CONF_TOKEN: "FK10000", CONF_REGION: "powiatwulkanowy", CONF_PIN: "000000"},
     )
 
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "select_student"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"student": "0"},
+    )
+
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "Jan Kowalski"
 
 
-async def test_config_flow_auth_success_with_multiple_students(hass):
-    """Test a successful config flow with multiple students."""
-    result = await hass.config_entries.flow.async_init(
-        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "auth"
-    assert result["errors"] == {}
-    data = [
-        {
-            "TopLevelPartition": "region",
-            "Partition": "region-001000",
-            "ClassDisplay": "Class",
-            "Unit": {
-                "Id": 10,
-                "Symbol": "001000",
-                "Short": "I LO",
-                "RestURL": "https://lekcjaplus.vulcan.net.pl/zielonagora/001000/api",
-                "Name": "School",
-                "DisplayName": "School",
-            },
-            "ConstituentUnit": {
-                "Id": 25,
-                "Short": "I LO",
-                "Name": "School",
-                "Address": "Address",
-            },
-            "Pupil": {
-                "Id": 39447,
-                "LoginId": 36976,
-                "LoginValue": "example@mail.com",
-                "FirstName": "FirstName",
-                "SecondName": "SecondName",
-                "Surname": "Surname",
-                "Sex": True,
-            },
-            "Periods": [],
-        },
-        {
-            "TopLevelPartition": "powiatwulkanowy",
-            "Partition": "powiatwulkanowy-123456",
-            "ClassDisplay": "Class",
-            "Unit": {
-                "Id": 10,
-                "Symbol": "123456",
-                "Short": "I LO",
-                "RestURL": "https://api.fakelog.tk/powiatwulkanowy/123456/api",
-                "Name": "School",
-                "DisplayName": "School",
-            },
-            "ConstituentUnit": {
-                "Id": 25,
-                "Short": "I",
-                "Name": "School",
-                "Address": "Idk",
-            },
-            "Pupil": {
-                "Id": 111,
-                "LoginId": 111,
-                "LoginValue": "jan@fakelog.tk",
-                "FirstName": "Jan",
-                "SecondName": None,
-                "Surname": "Kowalski",
-                "Sex": True,
-            },
-            "Periods": [],
-        },
-    ]
-    with patch(
-        "homeassistant.components.vulcan.config_flow.Vulcan.get_students",
-        return_value=[Student.load(student) for student in data],
-    ):
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_TOKEN: "FK10000", CONF_REGION: "powiatwulkanowy", CONF_PIN: "000000"},
-        )
-
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["step_id"] == "select_student"
-        assert result["errors"] == {}
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"student": "111"},
-        )
-
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == "Jan Kowalski"
-
-
-async def test_config_flow_reauth_success(hass):
+@mock.patch("homeassistant.components.vulcan.config_flow.Vulcan.get_students")
+@mock.patch("homeassistant.components.vulcan.config_flow.Keystore.create")
+@mock.patch("homeassistant.components.vulcan.config_flow.Account.register")
+async def test_config_flow_reauth_success(
+    mock_account, mock_keystore, mock_student, hass
+):
     """Test a successful config flow reauth."""
+    mock_keystore.return_value = fake_keystore
+    mock_account.return_value = fake_account
+    mock_student.return_value = [Student.load(fake_student_1)]
     MockConfigEntry(
         domain=const.DOMAIN,
-        unique_id="111",
-        data={"student_id": "111", "login": "jan@fakelog.cf"},
+        unique_id="0",
+        data={"student_id": "0", "login": "jan@fakelog.cf"},
     ).add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_REAUTH}
@@ -160,8 +191,12 @@ async def test_config_flow_reauth_success(hass):
     assert result["reason"] == "reauth_successful"
 
 
-async def test_config_flow_reauth_with_errors(hass):
+@mock.patch("homeassistant.components.vulcan.config_flow.Keystore.create")
+@mock.patch("homeassistant.components.vulcan.config_flow.Account.register")
+async def test_config_flow_reauth_with_errors(mock_account, mock_keystore, hass):
     """Test reauth config flow with errors."""
+    mock_keystore.return_value = fake_keystore
+    mock_account.return_value = fake_account
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_REAUTH}
     )
@@ -281,13 +316,19 @@ async def test_config_flow_reauth_with_errors(hass):
         assert result["errors"] == {"base": "unknown"}
 
 
-async def test_multiple_config_entries(hass):
+@mock.patch("homeassistant.components.vulcan.config_flow.Vulcan.get_students")
+@mock.patch("homeassistant.components.vulcan.config_flow.Keystore.create")
+@mock.patch("homeassistant.components.vulcan.config_flow.Account.register")
+async def test_multiple_config_entries(mock_account, mock_keystore, mock_student, hass):
     """Test a successful config flow for multiple config entries."""
+    mock_keystore.return_value = fake_keystore
+    mock_account.return_value = fake_account
+    mock_student.return_value = [Student.load(fake_student_1)]
     MockConfigEntry(
         domain=const.DOMAIN,
         unique_id="123456",
         data={
-            "student_id": "111",
+            "student_id": "0",
             "keystore": {
                 "Certificate": "MIICyzCCAbOgAwIBAgIBATANBgkqhkiG9w0BAQsFADApMScwJQYDVQQDDB5BUFBfQ0VSVElGSUNBVEUgQ0EgQ2VydGlmaWNhdGUwHhcNMjEwNjE2MTcwOTUwWhcNNDEwNjExMTcwOTUwWjApMScwJQYDVQQDDB5BUFBfQ0VSVElGSUNBVEUgQ0EgQ2VydGlmaWNhdGUwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCvabkxJnd2jqKhwklGRsC1cSwqptdBXoQGYx6/L0zj18rtYfP00YM8SaVZwCMESjeVHGdQjXUh2xNigO/woq38B6Ho7BBZcpuH/clAnsZt5o4mL3YYJanlI2kzqnXqAZ/etz/ZxTKZeKkdzRrGnW+qHn9q13A/eyV6fCUy9s3KcB4xwu0lQLrGrpnP1LKdD4MuCcy5ZPegVJKwNtq0sc9NbzoNu+h7VWE4dLPcXSmMdr2aYTJ4cNIGEouj318jwu8MXpKLlsuXOQPNzNJ5mr5uQn3FF+e4dVNER2Z1M8RIFxwNqPlke5PgbUqwM5PeUTy4RnBeGJeUNwQKwXGgqovBAgMBAAEwDQYJKoZIhvcNAQELBQADggEBADQ8K9b45zTs1LT1fYFhXli4GeSquiJlMwYMoEKBh4Vt++5KLriIIilKxQ4OwXoA56CxCBDjryb9uAgINbzM4QUTGl5ewvJ1JM4LnfompOSjbac+DQ4X4ayTfYuSE0Q0Cvt2uzBBw5xPdEwQ9KH8UBtum72BkMlx/v4iUSjgzyvm9o9IR7S6l9pfEa2hOlxToRtTsXg3BZZTp+pGQQsPYPafsyvnqQWRDXLnPYWhG1D38zQ5YkwG/1/vyrhaaPv4YoKPcjoePi/z3h0RfUfpPpFIsNe9uybcJ2dnysPyVL1sCdMLytr6B/I6pWuej9onyaL+5dRl1hxfzc4pBo8dOA0=",
                 "DeviceModel": "Home Assistant",
@@ -330,8 +371,10 @@ async def test_multiple_config_entries(hass):
     assert result["title"] == "Jan Kowalski"
 
 
-async def test_multiple_config_entries_using_saved_credentials(hass):
+@mock.patch("homeassistant.components.vulcan.config_flow.Vulcan.get_students")
+async def test_multiple_config_entries_using_saved_credentials(mock_student, hass):
     """Test a successful config flow for multiple config entries using saved credentials."""
+    mock_student.return_value = [Student.load(fake_student_1)]
     MockConfigEntry(
         domain=const.DOMAIN,
         unique_id="123456",
@@ -370,8 +413,12 @@ async def test_multiple_config_entries_using_saved_credentials(hass):
     assert result["title"] == "Jan Kowalski"
 
 
-async def test_multiple_config_entries_using_saved_credentials_2(hass):
+@mock.patch("homeassistant.components.vulcan.config_flow.Vulcan.get_students")
+async def test_multiple_config_entries_using_saved_credentials_2(mock_student, hass):
     """Test a successful config flow for multiple config entries using saved credentials (different situation)."""
+    mock_student.return_value = [Student.load(fake_student_1)] + [
+        Student.load(fake_student_2)
+    ]
     MockConfigEntry(
         domain=const.DOMAIN,
         unique_id="123456",
@@ -400,91 +447,29 @@ async def test_multiple_config_entries_using_saved_credentials_2(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "add_next_config_entry"
     assert result["errors"] == {}
-    data = [
-        {
-            "TopLevelPartition": "region",
-            "Partition": "region-001000",
-            "ClassDisplay": "Class",
-            "Unit": {
-                "Id": 10,
-                "Symbol": "001000",
-                "Short": "I LO",
-                "RestURL": "https://lekcjaplus.vulcan.net.pl/zielonagora/001000/api",
-                "Name": "School",
-                "DisplayName": "School",
-            },
-            "ConstituentUnit": {
-                "Id": 25,
-                "Short": "I LO",
-                "Name": "School",
-                "Address": "Address",
-            },
-            "Pupil": {
-                "Id": 39447,
-                "LoginId": 36976,
-                "LoginValue": "example@mail.com",
-                "FirstName": "FirstName",
-                "SecondName": "SecondName",
-                "Surname": "Surname",
-                "Sex": True,
-            },
-            "Periods": [],
-        },
-        {
-            "TopLevelPartition": "powiatwulkanowy",
-            "Partition": "powiatwulkanowy-123456",
-            "ClassDisplay": "Class",
-            "Unit": {
-                "Id": 10,
-                "Symbol": "123456",
-                "Short": "I LO",
-                "RestURL": "https://api.fakelog.cf/powiatwulkanowy/123456/api",
-                "Name": "School",
-                "DisplayName": "School",
-            },
-            "ConstituentUnit": {
-                "Id": 25,
-                "Short": "I",
-                "Name": "School",
-                "Address": "Idk",
-            },
-            "Pupil": {
-                "Id": 111,
-                "LoginId": 111,
-                "LoginValue": "jan@fakelog.cf",
-                "FirstName": "Jan",
-                "SecondName": None,
-                "Surname": "Kowalski",
-                "Sex": True,
-            },
-            "Periods": [],
-        },
-    ]
-    with patch(
-        "homeassistant.components.vulcan.config_flow.Vulcan.get_students",
-        return_value=[Student.load(student) for student in data],
-    ):
 
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"use_saved_credentials": True},
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"use_saved_credentials": True},
+    )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["step_id"] == "select_student"
-        assert result["errors"] == {}
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "select_student"
+    assert result["errors"] == {}
 
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"student": "111"},
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"student": "0"},
+    )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == "Jan Kowalski"
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == "Jan Kowalski"
 
 
-async def test_multiple_config_entries_using_saved_credentials_3(hass):
+@mock.patch("homeassistant.components.vulcan.config_flow.Vulcan.get_students")
+async def test_multiple_config_entries_using_saved_credentials_3(mock_student, hass):
     """Test a successful config flow for multiple config entries using saved credentials."""
+    mock_student.return_value = [Student.load(fake_student_1)]
     MockConfigEntry(
         entry_id="456",
         domain=const.DOMAIN,
@@ -554,8 +539,12 @@ async def test_multiple_config_entries_using_saved_credentials_3(hass):
     assert result["title"] == "Jan Kowalski"
 
 
-async def test_multiple_config_entries_using_saved_credentials_4(hass):
+@mock.patch("homeassistant.components.vulcan.config_flow.Vulcan.get_students")
+async def test_multiple_config_entries_using_saved_credentials_4(mock_student, hass):
     """Test a successful config flow for multiple config entries using saved credentials (different situation)."""
+    mock_student.return_value = [Student.load(fake_student_1)] + [
+        Student.load(fake_student_2)
+    ]
     MockConfigEntry(
         entry_id="456",
         domain=const.DOMAIN,
@@ -606,96 +595,32 @@ async def test_multiple_config_entries_using_saved_credentials_4(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "add_next_config_entry"
     assert result["errors"] == {}
-    data = [
-        {
-            "TopLevelPartition": "region",
-            "Partition": "region-001000",
-            "ClassDisplay": "Class",
-            "Unit": {
-                "Id": 10,
-                "Symbol": "001000",
-                "Short": "I LO",
-                "RestURL": "https://lekcjaplus.vulcan.net.pl/zielonagora/001000/api",
-                "Name": "School",
-                "DisplayName": "School",
-            },
-            "ConstituentUnit": {
-                "Id": 25,
-                "Short": "I LO",
-                "Name": "School",
-                "Address": "Address",
-            },
-            "Pupil": {
-                "Id": 39447,
-                "LoginId": 36976,
-                "LoginValue": "example@mail.com",
-                "FirstName": "FirstName",
-                "SecondName": "SecondName",
-                "Surname": "Surname",
-                "Sex": True,
-            },
-            "Periods": [],
-        },
-        {
-            "TopLevelPartition": "powiatwulkanowy",
-            "Partition": "powiatwulkanowy-123456",
-            "ClassDisplay": "Class",
-            "Unit": {
-                "Id": 10,
-                "Symbol": "123456",
-                "Short": "I LO",
-                "RestURL": "https://api.fakelog.cf/powiatwulkanowy/123456/api",
-                "Name": "School",
-                "DisplayName": "School",
-            },
-            "ConstituentUnit": {
-                "Id": 25,
-                "Short": "I",
-                "Name": "School",
-                "Address": "Idk",
-            },
-            "Pupil": {
-                "Id": 111,
-                "LoginId": 111,
-                "LoginValue": "jan@fakelog.cf",
-                "FirstName": "Jan",
-                "SecondName": None,
-                "Surname": "Kowalski",
-                "Sex": True,
-            },
-            "Periods": [],
-        },
-    ]
-    with patch(
-        "homeassistant.components.vulcan.config_flow.Vulcan.get_students",
-        return_value=[Student.load(student) for student in data],
-    ):
 
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"use_saved_credentials": True},
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"use_saved_credentials": True},
+    )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["step_id"] == "select_saved_credentials"
-        assert result["errors"] == {}
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "select_saved_credentials"
+    assert result["errors"] == {}
 
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"credentials": "123"},
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"credentials": "123"},
+    )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["step_id"] == "select_student"
-        assert result["errors"] == {}
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "select_student"
+    assert result["errors"] == {}
 
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"student": "111"},
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"student": "0"},
+    )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == "Jan Kowalski"
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == "Jan Kowalski"
 
 
 async def test_multiple_config_entries_without_valid_saved_credentials(hass):
@@ -1002,13 +927,19 @@ async def test_multiple_config_entries_using_saved_credentials_with_unknown_api_
         assert result["errors"] == {"base": "unknown"}
 
 
-async def test_student_already_exists(hass):
+@mock.patch("homeassistant.components.vulcan.config_flow.Vulcan.get_students")
+@mock.patch("homeassistant.components.vulcan.config_flow.Keystore.create")
+@mock.patch("homeassistant.components.vulcan.config_flow.Account.register")
+async def test_student_already_exists(mock_account, mock_keystore, mock_student, hass):
     """Test config entry when student's entry already exists."""
+    mock_keystore.return_value = fake_keystore
+    mock_account.return_value = fake_account
+    mock_student.return_value = [Student.load(fake_student_1)]
     MockConfigEntry(
         domain=const.DOMAIN,
-        unique_id="111",
+        unique_id="0",
         data={
-            "student_id": "111",
+            "student_id": "0",
             "keystore": {
                 "Certificate": "MIICyzCCAbOgAwIBAgIBATANBgkqhkiG9w0BAQsFADApMScwJQYDVQQDDB5BUFBfQ0VSVElGSUNBVEUgQ0EgQ2VydGlmaWNhdGUwHhcNMjEwNjE2MTcwOTUwWhcNNDEwNjExMTcwOTUwWjApMScwJQYDVQQDDB5BUFBfQ0VSVElGSUNBVEUgQ0EgQ2VydGlmaWNhdGUwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCvabkxJnd2jqKhwklGRsC1cSwqptdBXoQGYx6/L0zj18rtYfP00YM8SaVZwCMESjeVHGdQjXUh2xNigO/woq38B6Ho7BBZcpuH/clAnsZt5o4mL3YYJanlI2kzqnXqAZ/etz/ZxTKZeKkdzRrGnW+qHn9q13A/eyV6fCUy9s3KcB4xwu0lQLrGrpnP1LKdD4MuCcy5ZPegVJKwNtq0sc9NbzoNu+h7VWE4dLPcXSmMdr2aYTJ4cNIGEouj318jwu8MXpKLlsuXOQPNzNJ5mr5uQn3FF+e4dVNER2Z1M8RIFxwNqPlke5PgbUqwM5PeUTy4RnBeGJeUNwQKwXGgqovBAgMBAAEwDQYJKoZIhvcNAQELBQADggEBADQ8K9b45zTs1LT1fYFhXli4GeSquiJlMwYMoEKBh4Vt++5KLriIIilKxQ4OwXoA56CxCBDjryb9uAgINbzM4QUTGl5ewvJ1JM4LnfompOSjbac+DQ4X4ayTfYuSE0Q0Cvt2uzBBw5xPdEwQ9KH8UBtum72BkMlx/v4iUSjgzyvm9o9IR7S6l9pfEa2hOlxToRtTsXg3BZZTp+pGQQsPYPafsyvnqQWRDXLnPYWhG1D38zQ5YkwG/1/vyrhaaPv4YoKPcjoePi/z3h0RfUfpPpFIsNe9uybcJ2dnysPyVL1sCdMLytr6B/I6pWuej9onyaL+5dRl1hxfzc4pBo8dOA0=",
                 "DeviceModel": "Home Assistant",
@@ -1044,8 +975,10 @@ async def test_student_already_exists(hass):
     assert result["reason"] == "all_student_already_configured"
 
 
-async def test_config_flow_auth_invalid_token(hass):
+@mock.patch("homeassistant.components.vulcan.config_flow.Keystore.create")
+async def test_config_flow_auth_invalid_token(mock_keystore, hass):
     """Test a config flow initialized by the user using invalid token."""
+    mock_keystore.return_value = fake_keystore
     with patch(
         "homeassistant.components.vulcan.config_flow.Account.register",
         side_effect=VulcanAPIException("Invalid token."),
@@ -1068,8 +1001,10 @@ async def test_config_flow_auth_invalid_token(hass):
         assert result["errors"] == {"base": "invalid_token"}
 
 
-async def test_config_flow_auth_invalid_region(hass):
+@mock.patch("homeassistant.components.vulcan.config_flow.Keystore.create")
+async def test_config_flow_auth_invalid_region(mock_keystore, hass):
     """Test a config flow initialized by the user using invalid region."""
+    mock_keystore.return_value = fake_keystore
     with patch(
         "homeassistant.components.vulcan.config_flow.Account.register",
         side_effect=RuntimeError("Internal Server Error (ArgumentException)"),
@@ -1092,8 +1027,10 @@ async def test_config_flow_auth_invalid_region(hass):
         assert result["errors"] == {"base": "invalid_symbol"}
 
 
-async def test_config_flow_auth_invalid_pin(hass):
+@mock.patch("homeassistant.components.vulcan.config_flow.Keystore.create")
+async def test_config_flow_auth_invalid_pin(mock_keystore, hass):
     """Test a config flow initialized by the with invalid pin."""
+    mock_keystore.return_value = fake_keystore
     with patch(
         "homeassistant.components.vulcan.config_flow.Account.register",
         side_effect=VulcanAPIException("Invalid PIN."),
@@ -1116,8 +1053,10 @@ async def test_config_flow_auth_invalid_pin(hass):
         assert result["errors"] == {"base": "invalid_pin"}
 
 
-async def test_config_flow_auth_expired_token(hass):
+@mock.patch("homeassistant.components.vulcan.config_flow.Keystore.create")
+async def test_config_flow_auth_expired_token(mock_keystore, hass):
     """Test a config flow initialized by the with expired token."""
+    mock_keystore.return_value = fake_keystore
     with patch(
         "homeassistant.components.vulcan.config_flow.Account.register",
         side_effect=VulcanAPIException("Expired token."),
@@ -1140,8 +1079,10 @@ async def test_config_flow_auth_expired_token(hass):
         assert result["errors"] == {"base": "expired_token"}
 
 
-async def test_config_flow_auth_api_unknown_error(hass):
+@mock.patch("homeassistant.components.vulcan.config_flow.Keystore.create")
+async def test_config_flow_auth_api_unknown_error(mock_keystore, hass):
     """Test a config flow with unknown API error."""
+    mock_keystore.return_value = fake_keystore
     with patch(
         "homeassistant.components.vulcan.config_flow.Account.register",
         side_effect=VulcanAPIException("Unknown error"),
@@ -1164,8 +1105,10 @@ async def test_config_flow_auth_api_unknown_error(hass):
         assert result["errors"] == {"base": "unknown"}
 
 
-async def test_config_flow_auth_api_unknown_runtime_error(hass):
+@mock.patch("homeassistant.components.vulcan.config_flow.Keystore.create")
+async def test_config_flow_auth_api_unknown_runtime_error(mock_keystore, hass):
     """Test a config flow with runtime error."""
+    mock_keystore.return_value = fake_keystore
     with patch(
         "homeassistant.components.vulcan.config_flow.Account.register",
         side_effect=RuntimeError("Unknown error"),
@@ -1188,8 +1131,10 @@ async def test_config_flow_auth_api_unknown_runtime_error(hass):
         assert result["errors"] == {"base": "unknown"}
 
 
-async def test_config_flow_auth_connection_error(hass):
+@mock.patch("homeassistant.components.vulcan.config_flow.Keystore.create")
+async def test_config_flow_auth_connection_error(mock_keystore, hass):
     """Test a config flow with connection error."""
+    mock_keystore.return_value = fake_keystore
     with patch(
         "homeassistant.components.vulcan.config_flow.Account.register",
         side_effect=ClientConnectionError,
@@ -1212,8 +1157,10 @@ async def test_config_flow_auth_connection_error(hass):
         assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_config_flow_auth_unknown_error(hass):
+@mock.patch("homeassistant.components.vulcan.config_flow.Keystore.create")
+async def test_config_flow_auth_unknown_error(mock_keystore, hass):
     """Test a config flow with unknown error."""
+    mock_keystore.return_value = fake_keystore
     with patch(
         "homeassistant.components.vulcan.config_flow.Account.register",
         side_effect=Exception,
@@ -1236,13 +1183,15 @@ async def test_config_flow_auth_unknown_error(hass):
         assert result["errors"] == {"base": "unknown"}
 
 
-async def test_options_flow(hass):
+@mock.patch("homeassistant.components.vulcan.Vulcan.get_students")
+async def test_options_flow(mock_student, hass):
     """Test config flow options."""
+    mock_student.return_value = [Student.load(fake_student_1)]
     config_entry = MockConfigEntry(
         domain=const.DOMAIN,
-        unique_id="111",
+        unique_id="0",
         data={
-            "student_id": "111",
+            "student_id": "0",
             "keystore": {
                 "Certificate": "MIICyzCCAbOgAwIBAgIBATANBgkqhkiG9w0BAQsFADApMScwJQYDVQQDDB5BUFBfQ0VSVElGSUNBVEUgQ0EgQ2VydGlmaWNhdGUwHhcNMjEwNjE2MTcwOTUwWhcNNDEwNjExMTcwOTUwWjApMScwJQYDVQQDDB5BUFBfQ0VSVElGSUNBVEUgQ0EgQ2VydGlmaWNhdGUwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCvabkxJnd2jqKhwklGRsC1cSwqptdBXoQGYx6/L0zj18rtYfP00YM8SaVZwCMESjeVHGdQjXUh2xNigO/woq38B6Ho7BBZcpuH/clAnsZt5o4mL3YYJanlI2kzqnXqAZ/etz/ZxTKZeKkdzRrGnW+qHn9q13A/eyV6fCUy9s3KcB4xwu0lQLrGrpnP1LKdD4MuCcy5ZPegVJKwNtq0sc9NbzoNu+h7VWE4dLPcXSmMdr2aYTJ4cNIGEouj318jwu8MXpKLlsuXOQPNzNJ5mr5uQn3FF+e4dVNER2Z1M8RIFxwNqPlke5PgbUqwM5PeUTy4RnBeGJeUNwQKwXGgqovBAgMBAAEwDQYJKoZIhvcNAQELBQADggEBADQ8K9b45zTs1LT1fYFhXli4GeSquiJlMwYMoEKBh4Vt++5KLriIIilKxQ4OwXoA56CxCBDjryb9uAgINbzM4QUTGl5ewvJ1JM4LnfompOSjbac+DQ4X4ayTfYuSE0Q0Cvt2uzBBw5xPdEwQ9KH8UBtum72BkMlx/v4iUSjgzyvm9o9IR7S6l9pfEa2hOlxToRtTsXg3BZZTp+pGQQsPYPafsyvnqQWRDXLnPYWhG1D38zQ5YkwG/1/vyrhaaPv4YoKPcjoePi/z3h0RfUfpPpFIsNe9uybcJ2dnysPyVL1sCdMLytr6B/I6pWuej9onyaL+5dRl1hxfzc4pBo8dOA0=",
                 "DeviceModel": "Home Assistant",

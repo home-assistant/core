@@ -77,7 +77,7 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
-            if errors == {}:
+            if not errors:
                 account = credentials["account"]
                 keystore = credentials["keystore"]
                 client = Vulcan(keystore, account)
