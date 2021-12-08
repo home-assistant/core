@@ -261,22 +261,17 @@ class MqttServiceInfo(BaseServiceInfo):
     subscribed_topic: str
     timestamp: dt.datetime
 
-    # Used to prevent log flooding. To be removed in 2022.6
-    _warning_logged: bool = False
-
     def __getitem__(self, name: str) -> Any:
         """
         Allow property access by name for compatibility reason.
 
         Deprecated, and will be removed in version 2022.6.
         """
-        if not self._warning_logged:
-            report(
-                f"accessed discovery_info['{name}'] instead of discovery_info.{name}; this will fail in version 2022.6",
-                exclude_integrations={"mqtt"},
-                error_if_core=False,
-            )
-            self._warning_logged = True
+        report(
+            f"accessed discovery_info['{name}'] instead of discovery_info.{name}; this will fail in version 2022.6",
+            exclude_integrations={DOMAIN},
+            error_if_core=False,
+        )
         return getattr(self, name)
 
 
