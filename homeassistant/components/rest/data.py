@@ -65,6 +65,7 @@ class RestData:
                 auth=self._auth,
                 data=self._request_data,
                 timeout=self._timeout,
+                follow_redirects=True,
             )
             self.data = response.text
             self.headers = response.headers
