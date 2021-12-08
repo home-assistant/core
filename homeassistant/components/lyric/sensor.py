@@ -47,7 +47,7 @@ LYRIC_SETPOINT_STATUS_NAMES = {
 class LyricSensorEntityDescription(SensorEntityDescription):
     """Class describing Honeywell Lyric sensor entities."""
 
-    value: Callable[[LyricDevice], StateType] = round
+    value: Callable[[LyricDevice], StateType | datetime] = round
 
 
 def get_datetime_from_future_time(time: str) -> datetime:
