@@ -8,6 +8,7 @@ from vulcan._utils import VulcanAPIException
 
 from homeassistant.components.calendar import ENTITY_ID_FORMAT, CalendarEventDevice
 from homeassistant.const import CONF_SCAN_INTERVAL
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.template import DATE_STR_FORMAT
 from homeassistant.util import Throttle, dt
@@ -84,10 +85,11 @@ class VulcanCalendarEventDevice(CalendarEventDevice):
         """Return device info."""
         return {
             "identifiers": {(DOMAIN, f"calendar_{self.student_info['id']}")},
-            "manufacturer": "Uonet +",
-            "model": f"{self.student_info['class']} {self.student_info['school']}",
+            "entry_type": DeviceEntryType.SERVICE,
             "name": self.device_name,
-            "entry_type": "service",
+            "model": f"{self.student_info['full_name']} - {self.student_info['class']} {self.student_info['school']}",
+            "manufacturer": "Uonet +",
+            "configuration_url": f"https://uonetplus.vulcan.net.pl/{self.student_info['symbol']}",
         }
 
     @property

@@ -224,7 +224,7 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     for student in _students:
                         if str(student.pupil.id) not in existing_entry_ids:
                             new_students.append(student)
-                    if new_students == []:
+                    if not new_students:
                         return self.async_abort(reason="all_student_already_configured")
                     if len(new_students) == 1:
                         await self.async_set_unique_id(str(new_students[0].pupil.id))
@@ -287,7 +287,7 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
-            if errors == {}:
+            if not errors:
                 account = credentials["account"]
                 keystore = credentials["keystore"]
                 client = Vulcan(keystore, account)

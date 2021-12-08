@@ -93,4 +93,5 @@ async def get_student_info(client, student_id):
             student_info["id"] = student.pupil.id
             student_info["class"] = student.class_
             student_info["school"] = student.school.name
+            student_info["symbol"] = student.symbol
     return student_info
