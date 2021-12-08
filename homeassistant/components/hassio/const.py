@@ -54,6 +54,8 @@ ATTR_REPOSITORY = "repository"
 DATA_KEY_ADDONS = "addons"
 DATA_KEY_OS = "os"
 
+HASSIO_USER_NAME = "Supervisor"
+
 
 class SupervisorEntityModel(str, Enum):
     """Supervisor entity model."""

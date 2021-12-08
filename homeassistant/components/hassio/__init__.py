@@ -56,6 +56,7 @@ from .const import (
     ATTR_VERSION,
     DATA_KEY_ADDONS,
     DOMAIN,
+    HASSIO_USER_NAME,
     SupervisorEntityModel,
 )
 from .discovery import HassioServiceInfo, async_setup_discovery_view  # noqa: F401
@@ -440,11 +441,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
             # Migrate old name
             if user.name == "Hass.io":
-                await hass.auth.async_update_user(user, name="Supervisor")
+                await hass.auth.async_update_user(user, name=HASSIO_USER_NAME)
 
     if refresh_token is None:
         user = await hass.auth.async_create_system_user(
-            "Supervisor", group_ids=[GROUP_ID_ADMIN]
+            HASSIO_USER_NAME, group_ids=[GROUP_ID_ADMIN]
         )
         refresh_token = await hass.auth.async_create_refresh_token(user)
         data["hassio_user"] = user.id
