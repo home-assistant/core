@@ -683,9 +683,8 @@ async def _start_screen_stream(hass, call):
 
 
 async def _screen_stream_command(hass, call):
-    # if not ais_global.has_root():
-    #     return
-
+    if not ais_global.has_root():
+        return
     name = call.data["name"]
     sX = call.data["sX"]
     sY = call.data["sY"]
@@ -712,5 +711,8 @@ async def _screen_stream_command(hass, call):
     elif name == "back":
         comm = "http://127.0.0.1:9966/ais-back"
     web_session = aiohttp_client.async_get_clientsession(hass)
-    with async_timeout.timeout(1):
-        await web_session.get(comm)
+    try:
+        async with async_timeout.timeout(1):
+            await web_session.get(comm)
+    except asyncio.TimeoutError:
+        _LOGGER.debug("Timeout during screen stream command")
