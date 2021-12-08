@@ -18,6 +18,18 @@ RUN \
         libavfilter-dev \
         libpcap-dev \
         git \
+        libasound2 \
+        libasound2-plugins \
+        libasound2-doc \
+        alsa-utils \
+        alsa-oss \
+        alsamixergui \
+        apulse \
+        alsa-firmware-loaders \
+        pulseaudio \
+        portaudio19-dev \
+        python-all-dev \
+        python3-all-dev \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
