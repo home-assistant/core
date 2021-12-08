@@ -36,7 +36,10 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator):
         async with async_timeout.timeout(10):
 
             if self.api is None:
-                self.api = await self._initialize_api()
+                await self.initialize_api()
+
+            # Tell MyPi that self.api is set (silence attr-defined)
+            assert self.api is not None
 
             # Update all properties
             try:
@@ -69,14 +72,14 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator):
 
         return data
 
-    async def _initialize_api(self):
+    async def initialize_api(self):
         """Initialize API and validate connection."""
 
         api = aiohwenergy.HomeWizardEnergy(self.host)
 
         try:
             await api.initialize()
-            return api
+            self.api = api
 
         except (asyncio.TimeoutError, aiohwenergy.RequestError) as ex:
             raise UpdateFailed(
@@ -84,7 +87,7 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator):
             ) from ex
 
         except aiohwenergy.DisabledError as ex:
-            raise UpdateFailed("API disabled, API must be enabled in the app") from ex
+            raise ex
 
         except aiohwenergy.AiohwenergyException as ex:
             raise UpdateFailed("Unknown Energy API error occurred") from ex
