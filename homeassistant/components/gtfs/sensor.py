@@ -544,7 +544,7 @@ class GTFSDepartureSensor(SensorEntity):
         self._available = False
         self._icon = ICON
         self._name = ""
-        self._state: str | None = None
+        self._state: datetime.datetime | None = None
         self._attributes: dict[str, Any] = {}
 
         self._agency = None
@@ -563,7 +563,7 @@ class GTFSDepartureSensor(SensorEntity):
         return self._name
 
     @property
-    def native_value(self) -> str | None:
+    def native_value(self) -> datetime.datetime | None:
         """Return the state of the sensor."""
         return self._state
 
@@ -619,9 +619,7 @@ class GTFSDepartureSensor(SensorEntity):
             if not self._departure:
                 self._state = None
             else:
-                self._state = dt_util.as_utc(
-                    self._departure["departure_time"]
-                ).isoformat()
+                self._state = dt_util.as_utc(self._departure["departure_time"])
 
             # Fetch trip and route details once, unless updated
             if not self._departure:
