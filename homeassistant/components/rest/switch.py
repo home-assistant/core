@@ -24,10 +24,8 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
-
-from .utils import inject_hass_in_templates_list, render_templates
 
 _LOGGER = logging.getLogger(__name__)
 CONF_BODY_OFF = "body_off"
@@ -92,7 +90,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         body_on.hass = hass
     if body_off is not None:
         body_off.hass = hass
-    inject_hass_in_templates_list(hass, [headers, params])
+
+    template.attach(hass, headers)
+    template.attach(hass, params)
     timeout = config.get(CONF_TIMEOUT)
 
     try:
@@ -207,8 +207,8 @@ class RestSwitch(SwitchEntity):
         """Send a state update to the device."""
         websession = async_get_clientsession(self.hass, self._verify_ssl)
 
-        rendered_headers = render_templates(self._headers, False)
-        rendered_params = render_templates(self._params, True)
+        rendered_headers = template.render_complex(self._headers, parse_result=False)
+        rendered_params = template.render_complex(self._params)
 
         async with async_timeout.timeout(self._timeout):
             req = await getattr(websession, self._method)(
@@ -233,8 +233,8 @@ class RestSwitch(SwitchEntity):
         """Get the latest data from REST API and update the state."""
         websession = async_get_clientsession(hass, self._verify_ssl)
 
-        rendered_headers = render_templates(self._headers, False)
-        rendered_params = render_templates(self._params, True)
+        rendered_headers = template.render_complex(self._headers, parse_result=False)
+        rendered_params = template.render_complex(self._params)
 
         async with async_timeout.timeout(self._timeout):
             req = await websession.get(

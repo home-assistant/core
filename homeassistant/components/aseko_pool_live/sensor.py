@@ -3,9 +3,12 @@ from __future__ import annotations
 
 from aioaseko import Unit, Variable
 
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DEVICE_CLASS_TEMPERATURE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -33,7 +36,7 @@ async def async_setup_entry(
 class VariableSensorEntity(AsekoEntity, SensorEntity):
     """Representation of a unit variable sensor entity."""
 
-    attr_state_class = STATE_CLASS_MEASUREMENT
+    attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
         self, unit: Unit, variable: Variable, coordinator: AsekoDataUpdateCoordinator
@@ -61,8 +64,8 @@ class VariableSensorEntity(AsekoEntity, SensorEntity):
         }.get(self._variable.type)
 
         self._attr_device_class = {
-            "airTemp": DEVICE_CLASS_TEMPERATURE,
-            "waterTemp": DEVICE_CLASS_TEMPERATURE,
+            "airTemp": SensorDeviceClass.TEMPERATURE,
+            "waterTemp": SensorDeviceClass.TEMPERATURE,
         }.get(self._variable.type)
 
     @property
