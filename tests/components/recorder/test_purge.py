@@ -474,9 +474,7 @@ async def test_purge_cutoff_date(
         assert events.filter(Events.event_type == "PURGE").count() == rows - 1
         assert events.filter(Events.event_type == "KEEP").count() == 1
 
-        instance.queue.put(
-            PurgeTask(instance, cutoff, repack=False, apply_filter=False)
-        )
+        instance.queue.put(PurgeTask(cutoff, repack=False, apply_filter=False))
         await hass.async_block_till_done()
         await async_recorder_block_till_done(hass, instance)
         await async_wait_purge_done(hass, instance)
