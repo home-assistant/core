@@ -1,8 +1,6 @@
 """Sensor platform for the Flipr's pool_sensor."""
 from __future__ import annotations
 
-from datetime import datetime
-
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
@@ -60,7 +58,4 @@ class FliprSensor(FliprEntity, SensorEntity):
     @property
     def native_value(self):
         """State of the sensor."""
-        state = self.coordinator.data[self.entity_description.key]
-        if isinstance(state, datetime):
-            return state.isoformat()
-        return state
+        return self.coordinator.data[self.entity_description.key]
