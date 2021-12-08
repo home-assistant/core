@@ -11,6 +11,7 @@ from typing import Any, Literal, cast
 
 import voluptuous as vol
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.recorder.models import States
 from homeassistant.components.recorder.util import execute, session_scope
 from homeassistant.components.sensor import (
@@ -26,7 +27,14 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, State, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    HomeAssistant,
+    State,
+    callback,
+    split_entity_id,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
@@ -109,7 +117,7 @@ ICON = "mdi:calculator"
 
 def valid_binary_characteristic_configuration(config: dict[str, Any]) -> dict[str, Any]:
     """Validate that the characteristic selected is valid for the source sensor type, throw if it isn't."""
-    if str(config.get(CONF_ENTITY_ID)).split(".", maxsplit=1)[0] == "binary_sensor":
+    if split_entity_id(str(config.get(CONF_ENTITY_ID)))[0] == BINARY_SENSOR_DOMAIN:
         if config.get(CONF_STATE_CHARACTERISTIC) not in STATS_BINARY_SUPPORT:
             raise ValueError(
                 "The configured characteristic '"
@@ -221,7 +229,7 @@ class StatisticsSensor(SensorEntity):
         self._attr_unique_id: str | None = unique_id
         self._source_entity_id: str = source_entity_id
         self.is_binary: bool = (
-            self._source_entity_id.split(".", maxsplit=1)[0] == "binary_sensor"
+            split_entity_id(self._source_entity_id)[0] == BINARY_SENSOR_DOMAIN
         )
         self._state_characteristic: str = state_characteristic
         if self._state_characteristic == STAT_DEFAULT:
@@ -625,7 +633,7 @@ class StatisticsSensor(SensorEntity):
 
     def _stat_standard_deviation(self) -> StateType:
         if len(self.states) >= 2:
-            return float(statistics.stdev(self.states))
+            return statistics.stdev(self.states)
         return None
 
     def _stat_total(self) -> StateType:
@@ -645,7 +653,7 @@ class StatisticsSensor(SensorEntity):
 
     def _stat_variance(self) -> StateType:
         if len(self.states) >= 2:
-            return float(statistics.variance(self.states))
+            return statistics.variance(self.states)
         return None
 
     # Statistics for binary sensor
