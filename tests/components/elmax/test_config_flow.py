@@ -156,7 +156,7 @@ async def test_unhandled_error(hass):
         result = await _bootstrap(hass)
         assert result["step_id"] == "panels"
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["errors"] == {"base": "unknown_error"}
+        assert result["errors"] == {"base": "unknown"}
 
 
 async def test_invalid_pin(hass):

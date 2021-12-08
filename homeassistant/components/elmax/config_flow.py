@@ -157,7 +157,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "invalid_pin"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Error occurred")
-            errors["base"] = "unknown_error"
+            errors["base"] = "unknown"
 
         return self.async_show_form(
             step_id="panels", data_schema=self._panels_schema, errors=errors
