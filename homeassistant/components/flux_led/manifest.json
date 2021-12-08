@@ -3,7 +3,7 @@
   "name": "Magic Home",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/flux_led",
-  "requirements": ["flux_led==0.26.2"],
+  "requirements": ["flux_led==0.26.3"],
   "quality_scale": "platinum",
   "codeowners": ["@icemanch"],
   "iot_class": "local_push",
