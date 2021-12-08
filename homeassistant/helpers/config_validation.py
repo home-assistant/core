@@ -11,7 +11,6 @@ from datetime import (
 )
 from enum import Enum
 import inspect
-from itertools import chain
 import logging
 from numbers import Number
 import os
@@ -863,8 +862,8 @@ def removed(
 def key_value_schemas(
     key: str,
     value_schemas: dict[Hashable, vol.Schema],
-    default_schema: vol.Schema | None,
-    default_description: str,
+    default_schema: vol.Schema | None = None,
+    default_description: str | None = None,
 ) -> Callable[[Any], dict[Hashable, Any]]:
     """Create a validator that validates based on a value for specific key.
 
@@ -884,9 +883,9 @@ def key_value_schemas(
             with contextlib.suppress(vol.Invalid):
                 return cast(Dict[Hashable, Any], default_schema(value))
 
-        alternatives = ", ".join(
-            str(key) for key in chain(value_schemas, (default_description,))
-        )
+        alternatives = ", ".join(str(key) for key in value_schemas)
+        if default_description:
+            alternatives += ", " + default_description
         raise vol.Invalid(
             f"Unexpected value for {key}: '{key_value}'. Expected {alternatives}"
         )
@@ -1197,23 +1196,24 @@ DEVICE_CONDITION_BASE_SCHEMA = vol.Schema(
 DEVICE_CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
 
 CONDITION_SCHEMA: vol.Schema = vol.Schema(
-    key_value_schemas(
-        CONF_CONDITION,
-        {
-            "and": AND_CONDITION_SCHEMA,
-            "device": DEVICE_CONDITION_SCHEMA,
-            "not": NOT_CONDITION_SCHEMA,
-            "numeric_state": NUMERIC_STATE_CONDITION_SCHEMA,
-            "or": OR_CONDITION_SCHEMA,
-            "state": STATE_CONDITION_SCHEMA,
-            "sun": SUN_CONDITION_SCHEMA,
-            "template": TEMPLATE_CONDITION_SCHEMA,
-            "time": TIME_CONDITION_SCHEMA,
-            "trigger": TRIGGER_CONDITION_SCHEMA,
-            "zone": ZONE_CONDITION_SCHEMA,
-        },
+    vol.Any(
+        key_value_schemas(
+            CONF_CONDITION,
+            {
+                "and": AND_CONDITION_SCHEMA,
+                "device": DEVICE_CONDITION_SCHEMA,
+                "not": NOT_CONDITION_SCHEMA,
+                "numeric_state": NUMERIC_STATE_CONDITION_SCHEMA,
+                "or": OR_CONDITION_SCHEMA,
+                "state": STATE_CONDITION_SCHEMA,
+                "sun": SUN_CONDITION_SCHEMA,
+                "template": TEMPLATE_CONDITION_SCHEMA,
+                "time": TIME_CONDITION_SCHEMA,
+                "trigger": TRIGGER_CONDITION_SCHEMA,
+                "zone": ZONE_CONDITION_SCHEMA,
+            },
+        ),
         dynamic_template,
-        "a valid template",
     )
 )
 
@@ -1224,8 +1224,8 @@ dynamic_template_condition_action = vol.All(
     ),
     lambda config: {
         **config,
-        config[CONF_VALUE_TEMPLATE]: config[CONF_CONDITION],
-        config[CONF_CONDITION]: "template",
+        CONF_VALUE_TEMPLATE: config[CONF_CONDITION],
+        CONF_CONDITION: "template",
     },
 )
 
@@ -1246,7 +1246,7 @@ CONDITION_ACTION_SCHEMA: vol.Schema = vol.Schema(
             "trigger": TRIGGER_CONDITION_SCHEMA,
             "zone": ZONE_CONDITION_SCHEMA,
         },
-        dynamic_template,
+        dynamic_template_condition_action,
         "a valid template",
     )
 )
