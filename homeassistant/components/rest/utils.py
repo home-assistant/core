@@ -15,13 +15,13 @@ def inject_hass_in_templates_list(
                 tpl.hass = hass
 
 
-def render_templates(tpl_dict: dict[str, Template] | None):
+def render_templates(tpl_dict: dict[str, Template] | None, parse_result: bool):
     """Render a dict of templates."""
     if tpl_dict is None:
         return None
 
     rendered_items = {}
-    for item_name, template_header in tpl_dict.items():
-        if (value := template_header.async_render()) is not None:
-            rendered_items[item_name] = str(value)
+    for item_name, template in tpl_dict.items():
+        if (value := template.async_render(parse_result=parse_result)) is not None:
+            rendered_items[item_name] = value
     return rendered_items

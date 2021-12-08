@@ -52,8 +52,8 @@ class RestData:
                 self._hass, verify_ssl=self._verify_ssl
             )
 
-        rendered_headers = render_templates(self._headers)
-        rendered_params = render_templates(self._params)
+        rendered_headers = render_templates(self._headers, False)
+        rendered_params = render_templates(self._params, True)
 
         _LOGGER.debug("Updating from %s", self._resource)
         try:
