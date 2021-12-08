@@ -266,7 +266,12 @@ def _normalize_states(
                 hass.data[WARN_UNSUPPORTED_UNIT] = set()
             if entity_id not in hass.data[WARN_UNSUPPORTED_UNIT]:
                 hass.data[WARN_UNSUPPORTED_UNIT].add(entity_id)
-                _LOGGER.warning("%s has unknown unit %s", entity_id, unit)
+                _LOGGER.warning(
+                    "%s has unit %s which is unsupported for device_class %s",
+                    entity_id,
+                    unit,
+                    device_class,
+                )
             continue
 
         fstates.append((UNIT_CONVERSIONS[device_class][unit](fstate), state))

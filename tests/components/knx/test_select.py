@@ -28,7 +28,7 @@ async def test_select_dpt_2_simple(hass: HomeAssistant, knx: KNXTestKit):
     test_address = "1/1/1"
     await knx.setup_integration(
         {
-            SelectSchema.PLATFORM_NAME: {
+            SelectSchema.PLATFORM: {
                 CONF_NAME: "test",
                 KNX_ADDRESS: test_address,
                 CONF_SYNC_STATE: False,
@@ -105,7 +105,7 @@ async def test_select_dpt_2_restore(hass: HomeAssistant, knx: KNXTestKit):
     ):
         await knx.setup_integration(
             {
-                SelectSchema.PLATFORM_NAME: {
+                SelectSchema.PLATFORM: {
                     CONF_NAME: "test",
                     KNX_ADDRESS: [test_address, test_passive_address],
                     CONF_RESPOND_TO_READ: True,
@@ -143,7 +143,7 @@ async def test_select_dpt_20_103_all_options(hass: HomeAssistant, knx: KNXTestKi
 
     await knx.setup_integration(
         {
-            SelectSchema.PLATFORM_NAME: {
+            SelectSchema.PLATFORM: {
                 CONF_NAME: "test",
                 KNX_ADDRESS: [test_address, test_passive_address],
                 CONF_STATE_ADDRESS: test_state_address,

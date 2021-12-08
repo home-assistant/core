@@ -2,13 +2,14 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 import logging
-from typing import Callable, TypeVar
+from typing import Final, TypeVar
 
 from pyfronius import Fronius, FroniusError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_MODEL, ATTR_SW_VERSION, CONF_HOST
+from homeassistant.const import ATTR_MODEL, ATTR_SW_VERSION, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -21,12 +22,13 @@ from .coordinator import (
     FroniusInverterUpdateCoordinator,
     FroniusLoggerUpdateCoordinator,
     FroniusMeterUpdateCoordinator,
+    FroniusOhmpilotUpdateCoordinator,
     FroniusPowerFlowUpdateCoordinator,
     FroniusStorageUpdateCoordinator,
 )
 
-_LOGGER = logging.getLogger(__name__)
-PLATFORMS: list[str] = ["sensor"]
+_LOGGER: Final = logging.getLogger(__name__)
+PLATFORMS: Final = [Platform.SENSOR]
 
 FroniusCoordinatorType = TypeVar("FroniusCoordinatorType", bound=FroniusCoordinatorBase)
 
@@ -40,8 +42,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = solar_net
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
-    # reload on config_entry update
-    entry.async_on_unload(entry.add_update_listener(async_update_entry))
     return True
 
 
@@ -54,11 +54,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             solar_net.cleanup_callbacks.pop()()
 
     return unload_ok
-
-
-async def async_update_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Update a given config entry."""
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 class FroniusSolarNet:
@@ -82,6 +77,7 @@ class FroniusSolarNet:
         self.inverter_coordinators: list[FroniusInverterUpdateCoordinator] = []
         self.logger_coordinator: FroniusLoggerUpdateCoordinator | None = None
         self.meter_coordinator: FroniusMeterUpdateCoordinator | None = None
+        self.ohmpilot_coordinator: FroniusOhmpilotUpdateCoordinator | None = None
         self.power_flow_coordinator: FroniusPowerFlowUpdateCoordinator | None = None
         self.storage_coordinator: FroniusStorageUpdateCoordinator | None = None
 
@@ -120,6 +116,15 @@ class FroniusSolarNet:
             )
         )
 
+        self.ohmpilot_coordinator = await self._init_optional_coordinator(
+            FroniusOhmpilotUpdateCoordinator(
+                hass=self.hass,
+                solar_net=self,
+                logger=_LOGGER,
+                name=f"{DOMAIN}_ohmpilot_{self.host}",
+            )
+        )
+
         self.power_flow_coordinator = await self._init_optional_coordinator(
             FroniusPowerFlowUpdateCoordinator(
                 hass=self.hass,
@@ -141,7 +146,7 @@ class FroniusSolarNet:
     async def _create_solar_net_device(self) -> DeviceInfo:
         """Create a device for the Fronius SolarNet system."""
         solar_net_device: DeviceInfo = DeviceInfo(
-            configuration_url=self.host,
+            configuration_url=self.fronius.url,
             identifiers={(DOMAIN, self.solar_net_device_id)},
             manufacturer="Fronius",
             name="SolarNet",
@@ -197,8 +202,10 @@ class FroniusSolarNet:
         try:
             await coordinator.async_config_entry_first_refresh()
         except ConfigEntryNotReady:
+            # ConfigEntryNotReady raised form FroniusError / KeyError in
+            # DataUpdateCoordinator if request not supported by the Fronius device
             return None
-        # keep coordinator only if devices are found
-        # else ConfigEntryNotReady raised form KeyError
-        # in FroniusMeterUpdateCoordinator._get_fronius_device_data
+        # if no device for the request is installed an empty dict is returned
+        if not coordinator.data:
+            return None
         return coordinator

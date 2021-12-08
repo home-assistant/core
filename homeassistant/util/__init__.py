@@ -15,7 +15,6 @@ from typing import Any, TypeVar
 
 import slugify as unicode_slug
 
-from ..helpers.deprecation import deprecated_function
 from .dt import as_local, utcnow
 
 T = TypeVar("T")
@@ -44,38 +43,6 @@ def raise_if_invalid_path(path: str) -> None:
     """
     if RE_SANITIZE_PATH.sub("", path) != path:
         raise ValueError(f"{path} is not a safe path")
-
-
-@deprecated_function(replacement="raise_if_invalid_filename")
-def sanitize_filename(filename: str) -> str:
-    """Check if a filename is safe.
-
-    Only to be used to compare to original filename to check if changed.
-    If result changed, the given path is not safe and should not be used,
-    raise an error.
-
-    DEPRECATED.
-    """
-    # Backwards compatible fix for misuse of method
-    if RE_SANITIZE_FILENAME.sub("", filename) != filename:
-        return ""
-    return filename
-
-
-@deprecated_function(replacement="raise_if_invalid_path")
-def sanitize_path(path: str) -> str:
-    """Check if a path is safe.
-
-    Only to be used to compare to original path to check if changed.
-    If result changed, the given path is not safe and should not be used,
-    raise an error.
-
-    DEPRECATED.
-    """
-    # Backwards compatible fix for misuse of method
-    if RE_SANITIZE_PATH.sub("", path) != path:
-        return ""
-    return path
 
 
 def slugify(text: str | None, *, separator: str = "_") -> str:
@@ -109,31 +76,6 @@ def convert(
         return default
 
 
-def convert_to_int(
-    value: Any, default: int | None = None, little_endian: bool = False
-) -> int | None:
-    """Convert value or bytes to int, returns default if fails.
-
-    This supports bitwise integer operations on `bytes` objects.
-    By default the conversion is in Big-endian style (The last byte contains the least significant bit).
-    In Little-endian style the first byte contains the least significant bit.
-    """
-    if isinstance(value, int):
-        return value
-    if isinstance(value, bytes) and value:
-        bytes_value = bytearray(value)
-        return_value = 0
-        while len(bytes_value):
-            return_value <<= 8
-            if little_endian:
-                return_value |= bytes_value.pop(len(bytes_value) - 1)
-            else:
-                return_value |= bytes_value.pop(0)
-
-        return return_value
-    return convert(value, int, default=default)
-
-
 def ensure_unique_string(
     preferred_string: str, current_strings: Iterable[str] | KeysView[str]
 ) -> str:
@@ -160,34 +102,6 @@ def get_random_string(length: int = 10) -> str:
     source_chars = string.ascii_letters + string.digits
 
     return "".join(generator.choice(source_chars) for _ in range(length))
-
-
-class OrderedEnum(enum.Enum):
-    """Taken from Python 3.4.0 docs."""
-
-    def __ge__(self, other: ENUM_T) -> bool:
-        """Return the greater than element."""
-        if self.__class__ is other.__class__:
-            return bool(self.value >= other.value)
-        return NotImplemented
-
-    def __gt__(self, other: ENUM_T) -> bool:
-        """Return the greater element."""
-        if self.__class__ is other.__class__:
-            return bool(self.value > other.value)
-        return NotImplemented
-
-    def __le__(self, other: ENUM_T) -> bool:
-        """Return the lower than element."""
-        if self.__class__ is other.__class__:
-            return bool(self.value <= other.value)
-        return NotImplemented
-
-    def __lt__(self, other: ENUM_T) -> bool:
-        """Return the lower element."""
-        if self.__class__ is other.__class__:
-            return bool(self.value < other.value)
-        return NotImplemented
 
 
 class Throttle:

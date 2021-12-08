@@ -17,6 +17,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_ENTITY_ID,
     CONF_NAME,
+    CONF_UNIQUE_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -60,10 +61,28 @@ STAT_VALUE_MAX = "value_max"
 STAT_VALUE_MIN = "value_min"
 STAT_VARIANCE = "variance"
 
+STAT_DEFAULT = "default"
+DEPRECATION_WARNING = (
+    "The configuration parameter 'state_characteristic' will become "
+    "mandatory in a future release of the statistics integration. "
+    "Please add 'state_characteristic: %s' to the configuration of "
+    'sensor "%s" to keep the current behavior. Read the documentation '
+    "for further details: "
+    "https://www.home-assistant.io/integrations/statistics/"
+)
+
 STATS_NOT_A_NUMBER = (
     STAT_DATETIME_OLDEST,
     STAT_DATETIME_NEWEST,
     STAT_QUANTILES,
+)
+
+STATS_BINARY_SUPPORT = (
+    STAT_AVERAGE_STEP,
+    STAT_AVERAGE_TIMELESS,
+    STAT_COUNT,
+    STAT_MEAN,
+    STAT_DEFAULT,
 )
 
 CONF_STATE_CHARACTERISTIC = "state_characteristic"
@@ -80,11 +99,25 @@ DEFAULT_QUANTILE_INTERVALS = 4
 DEFAULT_QUANTILE_METHOD = "exclusive"
 ICON = "mdi:calculator"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+
+def valid_binary_characteristic_configuration(config):
+    """Validate that the characteristic selected is valid for the source sensor type, throw if it isn't."""
+    if config.get(CONF_ENTITY_ID).split(".")[0] == "binary_sensor":
+        if config.get(CONF_STATE_CHARACTERISTIC) not in STATS_BINARY_SUPPORT:
+            raise ValueError(
+                "The configured characteristic '"
+                + config.get(CONF_STATE_CHARACTERISTIC)
+                + "' is not supported for a binary source sensor."
+            )
+    return config
+
+
+_PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_STATE_CHARACTERISTIC, default=STAT_MEAN): vol.In(
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
+        vol.Optional(CONF_STATE_CHARACTERISTIC, default=STAT_DEFAULT): vol.In(
             [
                 STAT_AVERAGE_LINEAR,
                 STAT_AVERAGE_STEP,
@@ -107,6 +140,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                 STAT_VALUE_MAX,
                 STAT_VALUE_MIN,
                 STAT_VARIANCE,
+                STAT_DEFAULT,
             ]
         ),
         vol.Optional(
@@ -122,6 +156,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         ),
     }
 )
+PLATFORM_SCHEMA = vol.All(
+    _PLATFORM_SCHEMA_BASE,
+    valid_binary_characteristic_configuration,
+)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -134,6 +172,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             StatisticsSensor(
                 source_entity_id=config.get(CONF_ENTITY_ID),
                 name=config.get(CONF_NAME),
+                unique_id=config.get(CONF_UNIQUE_ID),
                 state_characteristic=config.get(CONF_STATE_CHARACTERISTIC),
                 samples_max_buffer_size=config.get(CONF_SAMPLES_MAX_BUFFER_SIZE),
                 samples_max_age=config.get(CONF_MAX_AGE),
@@ -154,6 +193,7 @@ class StatisticsSensor(SensorEntity):
         self,
         source_entity_id,
         name,
+        unique_id,
         state_characteristic,
         samples_max_buffer_size,
         samples_max_age,
@@ -165,7 +205,11 @@ class StatisticsSensor(SensorEntity):
         self._source_entity_id = source_entity_id
         self.is_binary = self._source_entity_id.split(".")[0] == "binary_sensor"
         self._name = name
+        self._unique_id = unique_id
         self._state_characteristic = state_characteristic
+        if self._state_characteristic == STAT_DEFAULT:
+            self._state_characteristic = STAT_COUNT if self.is_binary else STAT_MEAN
+            _LOGGER.warning(DEPRECATION_WARNING, self._state_characteristic, name)
         self._samples_max_buffer_size = samples_max_buffer_size
         self._samples_max_age = samples_max_age
         self._precision = precision
@@ -177,13 +221,19 @@ class StatisticsSensor(SensorEntity):
         self.states = deque(maxlen=self._samples_max_buffer_size)
         self.ages = deque(maxlen=self._samples_max_buffer_size)
         self.attributes = {
-            STAT_AGE_COVERAGE_RATIO: STATE_UNKNOWN,
-            STAT_BUFFER_USAGE_RATIO: STATE_UNKNOWN,
-            STAT_SOURCE_VALUE_VALID: STATE_UNKNOWN,
+            STAT_AGE_COVERAGE_RATIO: None,
+            STAT_BUFFER_USAGE_RATIO: None,
+            STAT_SOURCE_VALUE_VALID: None,
         }
-        self._state_characteristic_fn = getattr(
-            self, f"_stat_{self._state_characteristic}"
-        )
+
+        if self.is_binary:
+            self._state_characteristic_fn = getattr(
+                self, f"_stat_binary_{self._state_characteristic}"
+            )
+        else:
+            self._state_characteristic_fn = getattr(
+                self, f"_stat_{self._state_characteristic}"
+            )
 
         self._update_listener = None
 
@@ -198,8 +248,7 @@ class StatisticsSensor(SensorEntity):
             self._add_state_to_queue(new_state)
             self.async_schedule_update_ha_state(True)
 
-        @callback
-        def async_stats_sensor_startup(_):
+        async def async_stats_sensor_startup(_):
             """Add listener and get recorded state."""
             _LOGGER.debug("Startup for %s", self.entity_id)
 
@@ -246,9 +295,13 @@ class StatisticsSensor(SensorEntity):
 
     def _derive_unit_of_measurement(self, new_state):
         base_unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        if not base_unit:
-            unit = None
-        elif self.is_binary:
+        if self.is_binary and self._state_characteristic in (
+            STAT_AVERAGE_STEP,
+            STAT_AVERAGE_TIMELESS,
+            STAT_MEAN,
+        ):
+            unit = "%"
+        elif not base_unit:
             unit = None
         elif self._state_characteristic in (
             STAT_AVERAGE_LINEAR,
@@ -288,10 +341,13 @@ class StatisticsSensor(SensorEntity):
         return self._name
 
     @property
+    def unique_id(self):
+        """Return the unique id of the sensor."""
+        return self._unique_id
+
+    @property
     def state_class(self):
         """Return the state class of this entity."""
-        if self.is_binary:
-            return STATE_CLASS_MEASUREMENT
         if self._state_characteristic in STATS_NOT_A_NUMBER:
             return None
         return STATE_CLASS_MEASUREMENT
@@ -319,15 +375,8 @@ class StatisticsSensor(SensorEntity):
     @property
     def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
-        extra_attr = {}
-        if self._samples_max_age is not None:
-            extra_attr = {
-                STAT_AGE_COVERAGE_RATIO: self.attributes[STAT_AGE_COVERAGE_RATIO]
-            }
         return {
-            **extra_attr,
-            STAT_BUFFER_USAGE_RATIO: self.attributes[STAT_BUFFER_USAGE_RATIO],
-            STAT_SOURCE_VALUE_VALID: self.attributes[STAT_SOURCE_VALUE_VALID],
+            key: value for key, value in self.attributes.items() if value is not None
         }
 
     @property
@@ -449,17 +498,13 @@ class StatisticsSensor(SensorEntity):
                 2,
             )
         else:
-            self.attributes[STAT_AGE_COVERAGE_RATIO] = STATE_UNKNOWN
+            self.attributes[STAT_AGE_COVERAGE_RATIO] = None
 
     def _update_value(self):
         """Front to call the right statistical characteristics functions.
 
         One of the _stat_*() functions is represented by self._state_characteristic_fn().
         """
-
-        if self.is_binary:
-            self._value = len(self.states)
-            return
 
         value = self._state_characteristic_fn()
 
@@ -469,6 +514,8 @@ class StatisticsSensor(SensorEntity):
                 if self._precision == 0:
                     value = int(value)
         self._value = value
+
+    # Statistics for numeric sensor
 
     def _stat_average_linear(self):
         if len(self.states) >= 2:
@@ -481,7 +528,7 @@ class StatisticsSensor(SensorEntity):
                 )
             age_range_seconds = (self.ages[-1] - self.ages[0]).total_seconds()
             return area / age_range_seconds
-        return STATE_UNKNOWN
+        return None
 
     def _stat_average_step(self):
         if len(self.states) >= 2:
@@ -493,7 +540,7 @@ class StatisticsSensor(SensorEntity):
                 )
             age_range_seconds = (self.ages[-1] - self.ages[0]).total_seconds()
             return area / age_range_seconds
-        return STATE_UNKNOWN
+        return None
 
     def _stat_average_timeless(self):
         return self._stat_mean()
@@ -501,19 +548,19 @@ class StatisticsSensor(SensorEntity):
     def _stat_change(self):
         if len(self.states) > 0:
             return self.states[-1] - self.states[0]
-        return STATE_UNKNOWN
+        return None
 
     def _stat_change_sample(self):
         if len(self.states) > 1:
             return (self.states[-1] - self.states[0]) / (len(self.states) - 1)
-        return STATE_UNKNOWN
+        return None
 
     def _stat_change_second(self):
         if len(self.states) > 1:
             age_range_seconds = (self.ages[-1] - self.ages[0]).total_seconds()
             if age_range_seconds > 0:
                 return (self.states[-1] - self.states[0]) / age_range_seconds
-        return STATE_UNKNOWN
+        return None
 
     def _stat_count(self):
         return len(self.states)
@@ -521,37 +568,37 @@ class StatisticsSensor(SensorEntity):
     def _stat_datetime_newest(self):
         if len(self.states) > 0:
             return self.ages[-1]
-        return STATE_UNKNOWN
+        return None
 
     def _stat_datetime_oldest(self):
         if len(self.states) > 0:
             return self.ages[0]
-        return STATE_UNKNOWN
+        return None
 
     def _stat_distance_95_percent_of_values(self):
         if len(self.states) >= 2:
             return 2 * 1.96 * self._stat_standard_deviation()
-        return STATE_UNKNOWN
+        return None
 
     def _stat_distance_99_percent_of_values(self):
         if len(self.states) >= 2:
             return 2 * 2.58 * self._stat_standard_deviation()
-        return STATE_UNKNOWN
+        return None
 
     def _stat_distance_absolute(self):
         if len(self.states) > 0:
             return max(self.states) - min(self.states)
-        return STATE_UNKNOWN
+        return None
 
     def _stat_mean(self):
         if len(self.states) > 0:
             return statistics.mean(self.states)
-        return STATE_UNKNOWN
+        return None
 
     def _stat_median(self):
         if len(self.states) > 0:
             return statistics.median(self.states)
-        return STATE_UNKNOWN
+        return None
 
     def _stat_noisiness(self):
         if len(self.states) >= 2:
@@ -559,7 +606,7 @@ class StatisticsSensor(SensorEntity):
                 abs(j - i) for i, j in zip(list(self.states), list(self.states)[1:])
             )
             return diff_sum / (len(self.states) - 1)
-        return STATE_UNKNOWN
+        return None
 
     def _stat_quantiles(self):
         if len(self.states) > self._quantile_intervals:
@@ -571,29 +618,52 @@ class StatisticsSensor(SensorEntity):
                     method=self._quantile_method,
                 )
             ]
-        return STATE_UNKNOWN
+        return None
 
     def _stat_standard_deviation(self):
         if len(self.states) >= 2:
             return statistics.stdev(self.states)
-        return STATE_UNKNOWN
+        return None
 
     def _stat_total(self):
         if len(self.states) > 0:
             return sum(self.states)
-        return STATE_UNKNOWN
+        return None
 
     def _stat_value_max(self):
         if len(self.states) > 0:
             return max(self.states)
-        return STATE_UNKNOWN
+        return None
 
     def _stat_value_min(self):
         if len(self.states) > 0:
             return min(self.states)
-        return STATE_UNKNOWN
+        return None
 
     def _stat_variance(self):
         if len(self.states) >= 2:
             return statistics.variance(self.states)
-        return STATE_UNKNOWN
+        return None
+
+    # Statistics for binary sensor
+
+    def _stat_binary_average_step(self):
+        if len(self.states) >= 2:
+            on_seconds = 0
+            for i in range(1, len(self.states)):
+                if self.states[i - 1] == "on":
+                    on_seconds += (self.ages[i] - self.ages[i - 1]).total_seconds()
+            age_range_seconds = (self.ages[-1] - self.ages[0]).total_seconds()
+            return 100 / age_range_seconds * on_seconds
+        return None
+
+    def _stat_binary_average_timeless(self):
+        return self._stat_binary_mean()
+
+    def _stat_binary_count(self):
+        return len(self.states)
+
+    def _stat_binary_mean(self):
+        if len(self.states) > 0:
+            return 100.0 / len(self.states) * self.states.count("on")
+        return None

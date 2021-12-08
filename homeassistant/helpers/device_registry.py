@@ -8,13 +8,13 @@ from typing import TYPE_CHECKING, Any, NamedTuple, cast
 
 import attr
 
+from homeassistant.backports.enum import StrEnum
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import RequiredParameterMissing
 from homeassistant.helpers import storage
 from homeassistant.helpers.frame import report
 from homeassistant.loader import bind_hass
-from homeassistant.util.enum import StrEnum
 import homeassistant.util.uuid as uuid_util
 
 from .debounce import Debouncer
@@ -41,16 +41,26 @@ CONNECTION_NETWORK_MAC = "mac"
 CONNECTION_UPNP = "upnp"
 CONNECTION_ZIGBEE = "zigbee"
 
-DISABLED_CONFIG_ENTRY = "config_entry"
-DISABLED_INTEGRATION = "integration"
-DISABLED_USER = "user"
-
 ORPHANED_DEVICE_KEEP_SECONDS = 86400 * 30
 
 
 class _DeviceIndex(NamedTuple):
     identifiers: dict[tuple[str, str], str]
     connections: dict[tuple[str, str], str]
+
+
+class DeviceEntryDisabler(StrEnum):
+    """What disabled a device entry."""
+
+    CONFIG_ENTRY = "config_entry"
+    INTEGRATION = "integration"
+    USER = "user"
+
+
+# DISABLED_* are deprecated, to be removed in 2022.3
+DISABLED_CONFIG_ENTRY = DeviceEntryDisabler.CONFIG_ENTRY.value
+DISABLED_INTEGRATION = DeviceEntryDisabler.INTEGRATION.value
+DISABLED_USER = DeviceEntryDisabler.USER.value
 
 
 class DeviceEntryType(StrEnum):
@@ -67,17 +77,7 @@ class DeviceEntry:
     config_entries: set[str] = attr.ib(converter=set, factory=set)
     configuration_url: str | None = attr.ib(default=None)
     connections: set[tuple[str, str]] = attr.ib(converter=set, factory=set)
-    disabled_by: str | None = attr.ib(
-        default=None,
-        validator=attr.validators.in_(
-            (
-                DISABLED_CONFIG_ENTRY,
-                DISABLED_INTEGRATION,
-                DISABLED_USER,
-                None,
-            )
-        ),
-    )
+    disabled_by: DeviceEntryDisabler | None = attr.ib(default=None)
     entry_type: DeviceEntryType | None = attr.ib(default=None)
     id: str = attr.ib(factory=uuid_util.random_uuid_hex)
     identifiers: set[tuple[str, str]] = attr.ib(converter=set, factory=set)
@@ -172,7 +172,11 @@ class DeviceRegistryStore(storage.Store):
             # From version 1.1
             for device in old_data["devices"]:
                 # Introduced in 0.110
-                device["entry_type"] = device.get("entry_type")
+                try:
+                    device["entry_type"] = DeviceEntryType(device.get("entry_type"))
+                except ValueError:
+                    device["entry_type"] = None
+
                 # Introduced in 0.79
                 # renamed in 0.95
                 device["via_device_id"] = device.get("via_device_id") or device.get(
@@ -302,7 +306,7 @@ class DeviceRegistry:
         default_model: str | None | UndefinedType = UNDEFINED,
         default_name: str | None | UndefinedType = UNDEFINED,
         # To disable a device if it gets created
-        disabled_by: str | None | UndefinedType = UNDEFINED,
+        disabled_by: DeviceEntryDisabler | None | UndefinedType = UNDEFINED,
         entry_type: DeviceEntryType | None | UndefinedType = UNDEFINED,
         identifiers: set[tuple[str, str]] | None = None,
         manufacturer: str | None | UndefinedType = UNDEFINED,
@@ -354,8 +358,9 @@ class DeviceRegistry:
 
         if isinstance(entry_type, str) and not isinstance(entry_type, DeviceEntryType):
             report(  # type: ignore[unreachable]
-                "uses str for device registry entry_type. This is deprecated, "
-                "it should be updated to use DeviceEntryType instead",
+                "uses str for device registry entry_type. This is deprecated and will "
+                "stop working in Home Assistant 2022.3, it should be updated to use "
+                "DeviceEntryType instead",
                 error_if_core=False,
             )
             entry_type = DeviceEntryType(entry_type)
@@ -389,7 +394,7 @@ class DeviceRegistry:
         add_config_entry_id: str | UndefinedType = UNDEFINED,
         area_id: str | None | UndefinedType = UNDEFINED,
         configuration_url: str | None | UndefinedType = UNDEFINED,
-        disabled_by: str | None | UndefinedType = UNDEFINED,
+        disabled_by: DeviceEntryDisabler | None | UndefinedType = UNDEFINED,
         manufacturer: str | None | UndefinedType = UNDEFINED,
         model: str | None | UndefinedType = UNDEFINED,
         name_by_user: str | None | UndefinedType = UNDEFINED,
@@ -426,7 +431,7 @@ class DeviceRegistry:
         add_config_entry_id: str | UndefinedType = UNDEFINED,
         area_id: str | None | UndefinedType = UNDEFINED,
         configuration_url: str | None | UndefinedType = UNDEFINED,
-        disabled_by: str | None | UndefinedType = UNDEFINED,
+        disabled_by: DeviceEntryDisabler | None | UndefinedType = UNDEFINED,
         entry_type: DeviceEntryType | None | UndefinedType = UNDEFINED,
         manufacturer: str | None | UndefinedType = UNDEFINED,
         merge_connections: set[tuple[str, str]] | UndefinedType = UNDEFINED,
@@ -446,6 +451,17 @@ class DeviceRegistry:
         changes: dict[str, Any] = {}
 
         config_entries = old.config_entries
+
+        if isinstance(disabled_by, str) and not isinstance(
+            disabled_by, DeviceEntryDisabler
+        ):
+            report(  # type: ignore[unreachable]
+                "uses str for device registry disabled_by. This is deprecated and will "
+                "stop working in Home Assistant 2022.3, it should be updated to use "
+                "DeviceEntryDisabler instead",
+                error_if_core=False,
+            )
+            disabled_by = DeviceEntryDisabler(disabled_by)
 
         if (
             suggested_area not in (UNDEFINED, None, "")
@@ -737,7 +753,7 @@ def async_config_entry_disabled_by_changed(
     Disable devices in the registry that are associated with a config entry when
     the config entry is disabled, enable devices in the registry that are associated
     with a config entry when the config entry is enabled and the devices are marked
-    DISABLED_CONFIG_ENTRY.
+    DeviceEntryDisabler.CONFIG_ENTRY.
     Only disable a device if all associated config entries are disabled.
     """
 
@@ -745,7 +761,7 @@ def async_config_entry_disabled_by_changed(
 
     if not config_entry.disabled_by:
         for device in devices:
-            if device.disabled_by != DISABLED_CONFIG_ENTRY:
+            if device.disabled_by is not DeviceEntryDisabler.CONFIG_ENTRY:
                 continue
             registry.async_update_device(device.id, disabled_by=None)
         return
@@ -764,7 +780,9 @@ def async_config_entry_disabled_by_changed(
             enabled_config_entries
         ):
             continue
-        registry.async_update_device(device.id, disabled_by=DISABLED_CONFIG_ENTRY)
+        registry.async_update_device(
+            device.id, disabled_by=DeviceEntryDisabler.CONFIG_ENTRY
+        )
 
 
 @callback

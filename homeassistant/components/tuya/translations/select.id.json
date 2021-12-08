@@ -14,6 +14,10 @@
             "0": "Sensitivitas rendah",
             "1": "Sensitivitas tinggi"
         },
+        "tuya__fingerbot_mode": {
+            "click": "Dorong",
+            "switch": "Sakelar"
+        },
         "tuya__ipc_work_mode": {
             "0": "Mode daya rendah",
             "1": "Mode kerja terus menerus"

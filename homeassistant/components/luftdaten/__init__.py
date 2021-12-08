@@ -21,10 +21,10 @@ from homeassistant.const import (
     PERCENTAGE,
     PRESSURE_PA,
     TEMP_CELSIUS,
+    Platform,
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
@@ -39,7 +39,7 @@ DATA_LUFTDATEN_CLIENT = "data_luftdaten_client"
 DATA_LUFTDATEN_LISTENER = "data_luftdaten_listener"
 DEFAULT_ATTRIBUTION = "Data provided by luftdaten.info"
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 
 SENSOR_HUMIDITY = "humidity"
 SENSOR_PM10 = "P1"
@@ -175,11 +175,9 @@ async def async_setup_entry(hass, config_entry):
         hass.async_create_task(hass.config_entries.async_remove(config_entry.entry_id))
         return False
 
-    session = async_get_clientsession(hass)
-
     try:
         luftdaten = LuftDatenData(
-            Luftdaten(config_entry.data[CONF_SENSOR_ID], hass.loop, session),
+            Luftdaten(config_entry.data[CONF_SENSOR_ID]),
             config_entry.data.get(CONF_SENSORS, {}).get(
                 CONF_MONITORED_CONDITIONS, SENSOR_KEYS
             ),

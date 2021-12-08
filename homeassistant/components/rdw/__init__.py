@@ -3,16 +3,15 @@ from __future__ import annotations
 
 from vehicle import RDW, Vehicle
 
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONF_LICENSE_PLATE, DOMAIN, LOGGER, SCAN_INTERVAL
 
-PLATFORMS = (BINARY_SENSOR_DOMAIN, SENSOR_DOMAIN)
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

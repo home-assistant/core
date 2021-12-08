@@ -2,7 +2,6 @@
 import dataclasses
 from unittest.mock import patch
 
-from homeassistant.components import zeroconf
 from homeassistant.components.ipp.const import CONF_BASE_PATH, CONF_UUID, DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_SSL
@@ -282,7 +281,7 @@ async def test_zeroconf_with_uuid_device_exists_abort(
 
     discovery_info = dataclasses.replace(MOCK_ZEROCONF_IPP_SERVICE_INFO)
     discovery_info.properties = {
-        **MOCK_ZEROCONF_IPP_SERVICE_INFO[zeroconf.ATTR_PROPERTIES],
+        **MOCK_ZEROCONF_IPP_SERVICE_INFO.properties,
         "UUID": "cfe92100-67c4-11d4-a45f-f8d027761251",
     }
 
@@ -304,7 +303,7 @@ async def test_zeroconf_empty_unique_id(
 
     discovery_info = dataclasses.replace(MOCK_ZEROCONF_IPP_SERVICE_INFO)
     discovery_info.properties = {
-        **MOCK_ZEROCONF_IPP_SERVICE_INFO[zeroconf.ATTR_PROPERTIES],
+        **MOCK_ZEROCONF_IPP_SERVICE_INFO.properties,
         "UUID": "",
     }
     result = await hass.config_entries.flow.async_init(
