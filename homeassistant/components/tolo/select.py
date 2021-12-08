@@ -27,7 +27,6 @@ async def async_setup_entry(
 class ToloLampModeSelect(ToloSaunaCoordinatorEntity, SelectEntity):
     """TOLO Sauna lamp mode select."""
 
-    _attr_device_class = "tolo__lamp_mode"
     _attr_entity_category = ENTITY_CATEGORY_CONFIG
     _attr_icon = "mdi:lightbulb-multiple-outline"
     _attr_name = "Lamp Mode"
