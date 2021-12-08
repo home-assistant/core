@@ -68,7 +68,7 @@ class ValloxProfileSensor(ValloxSensor):
     """Child class for profile reporting."""
 
     @property
-    def native_value(self) -> StateType | datetime:
+    def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         vallox_profile = self.coordinator.data.profile
         return VALLOX_PROFILE_TO_STR_REPORTABLE.get(vallox_profile)
@@ -114,7 +114,7 @@ class ValloxCellStateSensor(ValloxSensor):
     """Child class for cell state reporting."""
 
     @property
-    def native_value(self) -> StateType | datetime:
+    def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         super_native_value = super().native_value
 
