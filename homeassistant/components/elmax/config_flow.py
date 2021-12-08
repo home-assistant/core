@@ -65,7 +65,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(step_id="user", data_schema=LOGIN_FORM_SCHEMA)
 
-        errors: dict[str, str] = {}
         username = user_input[CONF_ELMAX_USERNAME]
         password = user_input[CONF_ELMAX_PASSWORD]
 
@@ -75,55 +74,57 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             client = Elmax(username=username, password=password)
             await client.login()
 
-            # If the login succeeded, retrieve the list of available panels and filter the online ones
-            online_panels = [x for x in await client.list_control_panels() if x.online]
-
-            # If no online panel was found, we display an error in the next UI.
-            panels = list(online_panels)
-            if len(panels) < 1:
-                raise NoOnlinePanelsError()
-
-            # Show the panel selection.
-            # We want the user to choose the panel using the associated name, we set up a mapping
-            # dictionary to handle that case.
-            panel_names: dict[str, str] = {}
-            username = client.get_authenticated_username()
-            for panel in panels:
-                _store_panel_by_name(
-                    panel=panel, username=username, panel_names=panel_names
-                )
-
-            self._client = client
-            self._panel_names = panel_names
-            schema = vol.Schema(
-                {
-                    vol.Required(CONF_ELMAX_PANEL_NAME): vol.In(
-                        self._panel_names.keys()
-                    ),
-                    vol.Required(CONF_ELMAX_PANEL_PIN, default="000000"): str,
-                }
-            )
-            self._panels_schema = schema
-            self._username = username
-            self._password = password
-            return self.async_show_form(
-                step_id="panels", data_schema=schema, errors=errors
-            )
-
         except ElmaxBadLoginError:
             _LOGGER.error("Wrong credentials or failed login")
-            errors["base"] = "bad_auth"
-        except NoOnlinePanelsError:
-            _LOGGER.warning("No online device panel was found")
-            errors["base"] = "no_panel_online"
+            return self.async_show_form(
+                step_id="user",
+                data_schema=LOGIN_FORM_SCHEMA,
+                errors={"base": "bad_auth"},
+            )
         except ElmaxNetworkError:
             _LOGGER.exception("A network error occurred")
-            errors["base"] = "network_error"
+            return self.async_show_form(
+                step_id="user",
+                data_schema=LOGIN_FORM_SCHEMA,
+                errors={"base": "network_error"},
+            )
 
-        # If an error occurred, show back the login form.
-        return self.async_show_form(
-            step_id="user", data_schema=LOGIN_FORM_SCHEMA, errors=errors
+        # If the login succeeded, retrieve the list of available panels and filter the online ones
+        online_panels = [x for x in await client.list_control_panels() if x.online]
+
+        # If no online panel was found, we display an error in the next UI.
+        panels = list(online_panels)
+        if len(panels) < 1:
+            _LOGGER.warning("No online device panel was found")
+            return self.async_show_form(
+                step_id="user",
+                data_schema=LOGIN_FORM_SCHEMA,
+                errors={"base": "no_panel_online"},
+            )
+
+        # Show the panel selection.
+        # We want the user to choose the panel using the associated name, we set up a mapping
+        # dictionary to handle that case.
+        panel_names: dict[str, str] = {}
+        username = client.get_authenticated_username()
+        for panel in panels:
+            _store_panel_by_name(
+                panel=panel, username=username, panel_names=panel_names
+            )
+
+        self._client = client
+        self._panel_names = panel_names
+        schema = vol.Schema(
+            {
+                vol.Required(CONF_ELMAX_PANEL_NAME): vol.In(self._panel_names.keys()),
+                vol.Required(CONF_ELMAX_PANEL_PIN, default="000000"): str,
+            }
         )
+        self._panels_schema = schema
+        self._username = username
+        self._password = password
+        # If everything went OK, proceed to panel selection.
+        return self.async_show_form(step_id="panels", data_schema=schema)
 
     async def async_step_panels(self, user_input: dict[str, Any]) -> FlowResult:
         """Handle Panel selection step."""
