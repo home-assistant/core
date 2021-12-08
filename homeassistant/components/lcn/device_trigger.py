@@ -44,6 +44,13 @@ TRIGGER_SCHEMA = vol.Any(
     LCN_DEVICE_TRIGGER_BASE_SCHEMA.extend(SENDKEYS_SCHEMA),
 )
 
+TYPE_SCHEMAS = {
+    "transmitter": {"extra_fields": vol.Schema(TRANSMITTER_SCHEMA)},
+    "transponder": {"extra_fields": vol.Schema(ACCESS_CONTROL_SCHEMA)},
+    "fingerprint": {"extra_fields": vol.Schema(ACCESS_CONTROL_SCHEMA)},
+    "send_keys": {"extra_fields": vol.Schema(SENDKEYS_SCHEMA)},
+}
+
 
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str
@@ -95,10 +102,4 @@ async def async_attach_trigger(
 
 async def async_get_trigger_capabilities(hass: HomeAssistant, config: dict) -> dict:
     """List trigger capabilities."""
-    TYPE_SCHEMAS = {
-        "transmitter": {"extra_fields": vol.Schema(TRANSMITTER_SCHEMA)},
-        "transponder": {"extra_fields": vol.Schema(ACCESS_CONTROL_SCHEMA)},
-        "fingerprint": {"extra_fields": vol.Schema(ACCESS_CONTROL_SCHEMA)},
-        "send_keys": {"extra_fields": vol.Schema(SENDKEYS_SCHEMA)},
-    }
     return TYPE_SCHEMAS.get(config[CONF_TYPE], {})
