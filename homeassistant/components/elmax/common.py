@@ -139,6 +139,8 @@ class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
 class ElmaxEntity(CoordinatorEntity):
     """Wrapper for Elmax entities."""
 
+    coordinator: ElmaxCoordinator
+
     def __init__(
         self,
         panel: PanelEntry,
@@ -153,19 +155,6 @@ class ElmaxEntity(CoordinatorEntity):
         self._panel_version = panel_version
         self._client = coordinator.http_client
         self._transitory_state: Any = None
-        # Keep a local reference to the coordinator to better deal with type checking ad avoid
-        # casting.
-        self._elmax_coordinator = coordinator
-
-    @property
-    def elmax_coordinator(self) -> ElmaxCoordinator:
-        """Return the Elmax coordinator."""
-        return self._elmax_coordinator
-
-    @property
-    def elmax_client(self):
-        """Return the Elmax HTTP client."""
-        return self._client
 
     @property
     def panel_id(self) -> str:
@@ -194,7 +183,7 @@ class ElmaxEntity(CoordinatorEntity):
         return {
             "identifiers": {(DOMAIN, self._panel.hash)},
             "name": self._panel.get_name_by_user(
-                self.elmax_client.get_authenticated_username()
+                self.coordinator.http_client.get_authenticated_username()
             ),
             "manufacturer": "Elmax",
             "model": self._panel_version,
