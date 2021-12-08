@@ -1814,6 +1814,7 @@ async def test_publish_json_from_template(hass, mqtt_mock):
     assert mqtt_mock.async_publish.call_args[0][1] == test_str
 
 
+@pytest.mark.usefixtures("mock_integration_frame")
 async def test_service_info_compatibility(hass, caplog):
     """Test compatibility with old-style dict.
 
@@ -1828,11 +1829,6 @@ async def test_service_info_compatibility(hass, caplog):
         timestamp=None,
     )
 
-    # Ensure first call get logged
-    assert discovery_info["topic"] == "tasmota/discovery/DC4F220848A2/config"
-    assert "Detected code that accessed discovery_info['topic']" in caplog.text
-
-    # Ensure second call doesn't get logged
-    caplog.clear()
-    assert discovery_info["topic"] == "tasmota/discovery/DC4F220848A2/config"
-    assert "Detected code that accessed discovery_info['topic']" not in caplog.text
+    with patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set()):
+        assert discovery_info["topic"] == "tasmota/discovery/DC4F220848A2/config"
+    assert "Detected integration that accessed discovery_info['topic']" in caplog.text
