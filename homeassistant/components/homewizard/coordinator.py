@@ -9,7 +9,7 @@ from homeassistant.const import CONF_STATE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_DATA, CONF_DEVICE, UPDATE_INTERVAL
+from .const import CONF_DATA, CONF_DEVICE, DOMAIN, UPDATE_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator):
         """Initialize Update Coordinator."""
 
         self.host = host
-        super().__init__(hass, _LOGGER, name="", update_interval=UPDATE_INTERVAL)
+        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL)
 
     async def _async_update_data(self) -> dict:
         """Fetch all device and sensor data from api."""
