@@ -129,9 +129,7 @@ class DiscoverYandexTransport(SensorEntity):
         if closer_time is None:
             self._state = None
         else:
-            self._state = dt_util.utc_from_timestamp(closer_time).isoformat(
-                timespec="seconds"
-            )
+            self._state = dt_util.utc_from_timestamp(closer_time).replace(microsecond=0)
         self._attrs = attrs
 
     @property
