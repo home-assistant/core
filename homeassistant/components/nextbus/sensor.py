@@ -214,7 +214,7 @@ class NextBusDepartureSensor(SensorEntity):
 
         # Generate list of upcoming times
         self._attributes["upcoming"] = ", ".join(
-            sorted(p["minutes"] for p in predictions)
+            str(m) for m in sorted(int(p["minutes"]) for p in predictions)
         )
 
         latest_prediction = maybe_first(predictions)
