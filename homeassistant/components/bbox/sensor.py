@@ -134,7 +134,7 @@ class BboxUptimeSensor(SensorEntity):
         uptime = utcnow() - timedelta(
             seconds=self.bbox_data.router_infos["device"]["uptime"]
         )
-        self._attr_native_value = uptime.replace(microsecond=0).isoformat()
+        self._attr_native_value = uptime.replace(microsecond=0)
 
 
 class BboxSensor(SensorEntity):
