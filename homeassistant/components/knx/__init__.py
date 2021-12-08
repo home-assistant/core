@@ -390,6 +390,7 @@ class KNXModule:
                 connection_type=ConnectionType.TUNNELING,
                 gateway_ip=self.config[CONF_HOST],
                 gateway_port=self.config[CONF_PORT],
+                local_ip=self.config.get(ConnectionSchema.CONF_KNX_LOCAL_IP),
                 route_back=self.config.get(ConnectionSchema.CONF_KNX_ROUTE_BACK, False),
                 auto_reconnect=True,
             )

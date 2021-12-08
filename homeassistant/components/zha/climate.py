@@ -599,7 +599,7 @@ class ZenWithinThermostat(Thermostat):
     channel_names=CHANNEL_THERMOSTAT,
     aux_channels=CHANNEL_FAN,
     manufacturers="Centralite",
-    models="3157100",
+    models={"3157100", "3157100-E"},
     stop_on_match=True,
 )
 class CentralitePearl(ZenWithinThermostat):

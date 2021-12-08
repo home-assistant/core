@@ -19,8 +19,6 @@ from .const import CONF_MAX_AVAILABLE_POWER_KEY, CONF_MAX_CHARGING_CURRENT_KEY, 
 class WallboxNumberEntityDescription(NumberEntityDescription):
     """Describes Wallbox sensor entity."""
 
-    min_value: float = 0
-
 
 NUMBER_TYPES: dict[str, WallboxNumberEntityDescription] = {
     CONF_MAX_CHARGING_CURRENT_KEY: WallboxNumberEntityDescription(
@@ -71,7 +69,6 @@ class WallboxNumber(CoordinatorEntity, NumberEntity):
         self.entity_description = description
         self._coordinator = coordinator
         self._attr_name = f"{entry.title} {description.name}"
-        self._attr_min_value = description.min_value
 
     @property
     def max_value(self) -> float:

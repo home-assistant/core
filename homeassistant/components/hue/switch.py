@@ -8,7 +8,7 @@ from aiohue.v2.controllers.events import EventType
 from aiohue.v2.controllers.sensors import LightLevelController, MotionController
 from aiohue.v2.models.resource import SensingService
 
-from homeassistant.components.switch import DEVICE_CLASS_SWITCH, SwitchEntity
+from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ENTITY_CATEGORY_CONFIG
 from homeassistant.core import HomeAssistant, callback
@@ -63,7 +63,7 @@ class HueSensingServiceEnabledEntity(HueBaseEntity, SwitchEntity):
     """Representation of a Switch entity from Hue SensingService."""
 
     _attr_entity_category = ENTITY_CATEGORY_CONFIG
-    _attr_device_class = DEVICE_CLASS_SWITCH
+    _attr_device_class = SwitchDeviceClass.SWITCH
 
     def __init__(
         self,

@@ -18,11 +18,9 @@ FILTER_STATES = [
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the spa's binary sensors."""
     spa = hass.data[DOMAIN][entry.entry_id]
-    entities = [
-        BalboaSpaFilter(hass, entry, spa, FILTER, index) for index in range(1, 3)
-    ]
+    entities = [BalboaSpaFilter(entry, spa, FILTER, index) for index in range(1, 3)]
     if spa.have_circ_pump():
-        entities.append(BalboaSpaCircPump(hass, entry, spa, CIRC_PUMP))
+        entities.append(BalboaSpaCircPump(entry, spa, CIRC_PUMP))
 
     async_add_entities(entities)
 

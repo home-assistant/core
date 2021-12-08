@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 import logging
-from typing import TypeVar
+from typing import Final, TypeVar
 
 from pyfronius import Fronius, FroniusError
 
@@ -27,8 +27,8 @@ from .coordinator import (
     FroniusStorageUpdateCoordinator,
 )
 
-_LOGGER = logging.getLogger(__name__)
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+_LOGGER: Final = logging.getLogger(__name__)
+PLATFORMS: Final = [Platform.SENSOR]
 
 FroniusCoordinatorType = TypeVar("FroniusCoordinatorType", bound=FroniusCoordinatorBase)
 
@@ -42,8 +42,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = solar_net
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
-    # reload on config_entry update
-    entry.async_on_unload(entry.add_update_listener(async_update_entry))
     return True
 
 
@@ -56,11 +54,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             solar_net.cleanup_callbacks.pop()()
 
     return unload_ok
-
-
-async def async_update_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Update a given config entry."""
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 class FroniusSolarNet:

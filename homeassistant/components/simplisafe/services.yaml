@@ -1,7 +1,7 @@
 # Describes the format for available SimpliSafe services
 clear_notifications:
   name: Clear notifications
-  description: Clear any active SimpliSafe notificiations
+  description: Clear any active SimpliSafe notifications
   fields:
     device_id:
       name: System

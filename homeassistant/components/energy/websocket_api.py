@@ -274,14 +274,16 @@ async def ws_get_fossil_energy_consumption(
     ) -> dict[datetime, float]:
         """Combine multiple statistics, returns a dict indexed by start time."""
         result: defaultdict[datetime, float] = defaultdict(float)
+        seen: defaultdict[datetime, set[str]] = defaultdict(set)
 
         for statistics_id, stat in stats.items():
             if statistics_id not in statistic_ids:
                 continue
             for period in stat:
-                if period["sum"] is None:
+                if period["sum"] is None or statistics_id in seen[period["start"]]:
                     continue
                 result[period["start"]] += period["sum"]
+                seen[period["start"]].add(statistics_id)
 
         return {key: result[key] for key in sorted(result)}
 
@@ -303,6 +305,8 @@ async def ws_get_fossil_energy_consumption(
         """Reduce hourly deltas to daily or monthly deltas."""
         result: list[dict[str, Any]] = []
         deltas: list[float] = []
+        if not stat_list:
+            return result
         prev_stat: dict[str, Any] = stat_list[0]
 
         # Loop over the hourly deltas + a fake entry to end the period

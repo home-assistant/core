@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any, final
+from typing import final
 
 import voluptuous as vol
 
@@ -203,15 +203,3 @@ class BinarySensorEntity(Entity):
     def state(self) -> StateType:
         """Return the state of the binary sensor."""
         return STATE_ON if self.is_on else STATE_OFF
-
-
-class BinarySensorDevice(BinarySensorEntity):
-    """Represent a binary sensor (for backwards compatibility)."""
-
-    def __init_subclass__(cls, **kwargs: Any):
-        """Print deprecation warning."""
-        super().__init_subclass__(**kwargs)  # type: ignore[call-arg]
-        _LOGGER.warning(
-            "BinarySensorDevice is deprecated, modify %s to extend BinarySensorEntity",
-            cls.__name__,
-        )
