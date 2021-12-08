@@ -131,10 +131,9 @@ class BboxUptimeSensor(SensorEntity):
     def update(self):
         """Get the latest data from Bbox and update the state."""
         self.bbox_data.update()
-        uptime = utcnow() - timedelta(
+        self._attr_native_value = utcnow() - timedelta(
             seconds=self.bbox_data.router_infos["device"]["uptime"]
         )
-        self._attr_native_value = uptime.replace(microsecond=0)
 
 
 class BboxSensor(SensorEntity):
