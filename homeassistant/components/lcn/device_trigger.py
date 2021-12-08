@@ -71,14 +71,14 @@ async def async_attach_trigger(
     automation_info: AutomationTriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    event_data = {CONF_DEVICE_ID: config[CONF_DEVICE_ID]}
-    event_data.update(
-        {
+    event_data = {
+        CONF_DEVICE_ID: config[CONF_DEVICE_ID],
+        **{
             key: config[key]
             for key in ("code", "level", "key", "action")
             if key in config
-        }
-    )
+        },
+    }
 
     event_config = event.TRIGGER_SCHEMA(
         {
@@ -95,12 +95,10 @@ async def async_attach_trigger(
 
 async def async_get_trigger_capabilities(hass: HomeAssistant, config: dict) -> dict:
     """List trigger capabilities."""
-    if config[CONF_TYPE] == "transmitter":
-        return {"extra_fields": vol.Schema(TRANSMITTER_SCHEMA)}
-    if config[CONF_TYPE] == "transponder":
-        return {"extra_fields": vol.Schema(ACCESS_CONTROL_SCHEMA)}
-    if config[CONF_TYPE] == "fingerprint":
-        return {"extra_fields": vol.Schema(ACCESS_CONTROL_SCHEMA)}
-    if config[CONF_TYPE] == "send_keys":
-        return {"extra_fields": vol.Schema(SENDKEYS_SCHEMA)}
-    return {}
+    TYPE_SCHEMAS = {
+        "transmitter": {"extra_fields": vol.Schema(TRANSMITTER_SCHEMA)},
+        "transponder": {"extra_fields": vol.Schema(ACCESS_CONTROL_SCHEMA)},
+        "fingerprint": {"extra_fields": vol.Schema(ACCESS_CONTROL_SCHEMA)},
+        "send_keys": {"extra_fields": vol.Schema(SENDKEYS_SCHEMA)},
+    }
+    return TYPE_SCHEMAS.get(config[CONF_TYPE], {})
