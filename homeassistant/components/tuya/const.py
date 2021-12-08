@@ -77,6 +77,8 @@ TUYA_RESPONSE_PLATFORM_URL = "platform_url"
 TUYA_SMART_APP = "tuyaSmart"
 SMARTLIFE_APP = "smartlife"
 
+TUYA_EVENT = "tuya_event"
+
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import NamedTuple
+from typing import Any, NamedTuple
 
 from tuya_iot import (
     AuthType,
@@ -34,6 +34,7 @@ from .const import (
     DOMAIN,
     PLATFORMS,
     TUYA_DISCOVERY_NEW,
+    TUYA_EVENT,
     TUYA_HA_SIGNAL_UPDATE_ENTITY,
     DPCode,
 )
@@ -105,8 +106,10 @@ async def _init_tuya_sdk(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     device_ids: set[str] = set()
     device_manager = TuyaDeviceManager(api, tuya_mq)
     home_manager = TuyaHomeManager(api, tuya_mq, device_manager)
-    listener = DeviceListener(hass, device_manager, device_ids)
+    message_listener = MessageListener(hass, device_manager, device_ids)
+    listener = DeviceListener(hass, device_manager, device_ids, message_listener)
     device_manager.add_device_listener(listener)
+    tuya_mq.add_message_listener(message_listener.handle_message)
 
     hass.data[DOMAIN][entry.entry_id] = HomeAssistantTuyaData(
         device_listener=listener,
@@ -249,11 +252,13 @@ class DeviceListener(TuyaDeviceListener):
         hass: HomeAssistant,
         device_manager: TuyaDeviceManager,
         device_ids: set[str],
+        message_listener: MessageListener,
     ) -> None:
         """Init DeviceListener."""
         self.hass = hass
         self.device_manager = device_manager
         self.device_ids = device_ids
+        self.message_listener = message_listener
 
     def update_device(self, device: TuyaDevice) -> None:
         """Update device status."""
@@ -280,6 +285,7 @@ class DeviceListener(TuyaDeviceListener):
 
         device_manager.mq = tuya_mq
         tuya_mq.add_message_listener(device_manager.on_message)
+        tuya_mq.add_message_listener(self.message_listener.handle_message)
 
     def remove_device(self, device_id: str) -> None:
         """Add device removed listener."""
@@ -296,3 +302,30 @@ class DeviceListener(TuyaDeviceListener):
         if device_entry is not None:
             device_registry.async_remove_device(device_entry.id)
             self.device_ids.discard(device_id)
+
+
+class MessageListener:
+    """Generic Update Listener."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        device_manager: TuyaDeviceManager,
+        device_ids: set[str],
+    ) -> None:
+        """Init DeviceListener."""
+        self.hass = hass
+        self.device_manager = device_manager
+        self.device_ids = device_ids
+
+    def handle_message(self, msg: dict[str, Any]):
+        """Update device status."""
+        data = msg.get("data", {})
+        device_id = data.get("devId", "")
+        if device_id in self.device_ids:
+            _LOGGER.debug(
+                "Received message for device %s: %s",
+                device_id,
+                data,
+            )
+            self.hass.bus.fire(TUYA_EVENT, data)
