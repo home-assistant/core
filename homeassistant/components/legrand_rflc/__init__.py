@@ -5,6 +5,7 @@ https://www.legrand.us/solutions/smart-lighting/radio-frequency-lighting-control
 
 import asyncio
 from collections.abc import Mapping
+import logging
 from typing import Final
 
 import lc7001.aio
@@ -16,6 +17,7 @@ from homeassistant.core import HomeAssistant
 from .const import DOMAIN
 
 PLATFORMS: Final = ["light"]
+_LOGGER: Final = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -30,8 +32,18 @@ async def async_setup_entry(
         kwargs["key"] = bytes.fromhex(data[CONF_AUTHENTICATION])
     hass.data.setdefault(DOMAIN, {})[entry_id] = hub = lc7001.aio.Hub(host, **kwargs)
 
-    async def setup_platforms() -> None:
-        hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    async def authenticated(mac) -> None:
+        if mac.lower() != entry.unique_id:
+            _LOGGER.warning(
+                "Expected %s but found %s at %s",
+                entry.unique_id,
+                mac.lower(),
+                host,
+            )
+            hass.async_create_task(_reauth())
+            raise asyncio.CancelledError("reauth")
+        else:
+            hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     async def _reauth() -> None:
         await hass.config_entries.async_unload(entry_id)
@@ -44,7 +56,7 @@ async def async_setup_entry(
         hass.async_create_task(hass.config_entries.async_reload(entry_id))
         raise asyncio.CancelledError("reload")
 
-    hub.once(hub.EVENT_AUTHENTICATED, setup_platforms)
+    hub.once(hub.EVENT_AUTHENTICATED, authenticated)
     hub.once(hub.EVENT_UNAUTHENTICATED, reauth)
     hub.once(hub.EVENT_ZONE_ADDED, reload)
     hub.once(hub.EVENT_ZONE_DELETED, reload)

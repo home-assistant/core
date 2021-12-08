@@ -91,12 +91,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except lc7001.aio.Authenticator.Error:
                 errors[CONF_PASSWORD] = self.ERROR_INVALID_AUTH
             else:
-                await self.async_set_unique_id(mac.lower())  # already_in_progress
+                unique_id = mac.lower()
+                await self.async_set_unique_id(unique_id)  # already_in_progress
                 self._abort_if_unique_id_configured()  # already_configured
                 data = {CONF_HOST: host}
                 if key is not None:
                     data[CONF_AUTHENTICATION] = key.hex()
-                return self.async_create_entry(title=host, data=data)
+                return self.async_create_entry(title=unique_id, data=data)
 
         # get user_input
         return self.async_show_form(
@@ -111,12 +112,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reauth(
+        self, user_input: dict[str, Any]
+    ) -> data_entry_flow.FlowResult:
+        """Perform reauth upon an API authentication error."""
+        self._data = user_input
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> data_entry_flow.FlowResult:
         """Handle configuration by reauth."""
         host = self.HOST
         errors = {CONF_PASSWORD: self.ERROR_INVALID_AUTH}
-        if user_input is not None:
+        if user_input is None:
+            host = self._data[CONF_HOST]
+        else:
             key: bytes | None = None
             kwargs = {"key": key, "loop_timeout": -1}
             if CONF_HOST in user_input:
@@ -157,7 +167,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # get user_input
         return self.async_show_form(
-            step_id="reauth",
+            step_id="reauth_confirm",
             data_schema=voluptuous.Schema(
                 {
                     voluptuous.Required(CONF_HOST, default=host): str,

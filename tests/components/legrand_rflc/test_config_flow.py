@@ -5,6 +5,7 @@ from unittest.mock import PropertyMock, patch
 
 import lc7001.aio
 
+from homeassistant import data_entry_flow
 from homeassistant.components.dhcp import IP_ADDRESS, MAC_ADDRESS
 from homeassistant.components.legrand_rflc.config_flow import ConfigFlow
 from homeassistant.components.legrand_rflc.const import DOMAIN
@@ -133,20 +134,47 @@ async def test_step_user_create_entry(hass):
         assert result["type"] == RESULT_TYPE_CREATE_ENTRY
 
 
+async def _reauth_confirm(self: ConfigFlow, user_input) -> data_entry_flow.FlowResult:
+    self._data = user_input
+    return await self.async_step_reauth_confirm(user_input)
+
+
 async def test_step_reauth(hass):
     """Test reauth step in configuration flow."""
     sessions = [Server.SECURITY_HELLO_AUTHENTICATION_OK]
     async with Server.Context(Server(hass, sessions)):
         entry = MockConfigEntry(domain=DOMAIN)
         entry.add_to_hass(hass)
-        with patch(
-            "homeassistant.components.legrand_rflc.async_setup_entry", return_value=True
-        ):
+        with patch.object(ConfigFlow, "async_step_reauth", _reauth_confirm):
+            with patch(
+                "homeassistant.components.legrand_rflc.async_setup_entry",
+                return_value=True,
+            ):
+                result = await hass.config_entries.flow.async_init(
+                    DOMAIN,
+                    context={
+                        "source": SOURCE_REAUTH,
+                        "entry_id": entry.entry_id,
+                        "unique_id": Server.MAC.lower(),
+                    },
+                    data={
+                        CONF_HOST: Server.HOST,
+                        CONF_PASSWORD: Server.PASSWORD,
+                    },
+                )
+                assert result["type"] == RESULT_TYPE_ABORT
+                assert result["reason"] == ConfigFlow.ABORT_REAUTH_SUCCESSFUL
+
+
+async def test_step_reauth_invalid_authentication(hass):
+    """Test invalid authentication reauth step in configuration flow."""
+    sessions = [Server.SECURITY_HELLO_AUTHENTICATION_INVALID]
+    async with Server.Context(Server(hass, sessions)):
+        with patch.object(ConfigFlow, "async_step_reauth", _reauth_confirm):
             result = await hass.config_entries.flow.async_init(
                 DOMAIN,
                 context={
                     "source": SOURCE_REAUTH,
-                    "entry_id": entry.entry_id,
                     "unique_id": Server.MAC.lower(),
                 },
                 data={
@@ -154,56 +182,39 @@ async def test_step_reauth(hass):
                     CONF_PASSWORD: Server.PASSWORD,
                 },
             )
-            assert result["type"] == RESULT_TYPE_ABORT
-            assert result["reason"] == ConfigFlow.ABORT_REAUTH_SUCCESSFUL
-
-
-async def test_step_reauth_invalid_authentication(hass):
-    """Test invalid authentication reauth step in configuration flow."""
-    sessions = [Server.SECURITY_HELLO_AUTHENTICATION_INVALID]
-    async with Server.Context(Server(hass, sessions)):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": SOURCE_REAUTH,
-                "unique_id": Server.MAC.lower(),
-            },
-            data={
-                CONF_HOST: Server.HOST,
-                CONF_PASSWORD: Server.PASSWORD,
-            },
-        )
-        assert result["type"] == RESULT_TYPE_FORM
+            assert result["type"] == RESULT_TYPE_FORM
 
 
 async def test_step_reauth_invalid_host(hass):
     """Test invalid host reauth step in configuration flow."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "unique_id": INVALID_HOST,
-        },
-        data={
-            CONF_HOST: INVALID_HOST,
-        },
-    )
-    assert result["type"] == RESULT_TYPE_FORM
+    with patch.object(ConfigFlow, "async_step_reauth", _reauth_confirm):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": SOURCE_REAUTH,
+                "unique_id": INVALID_HOST,
+            },
+            data={
+                CONF_HOST: INVALID_HOST,
+            },
+        )
+        assert result["type"] == RESULT_TYPE_FORM
 
 
 async def test_step_reauth_invalid_host_mac(hass):
     """Test invalid host mac reauth step in configuration flow."""
     sessions = [Server.SECURITY_HELLO_AUTHENTICATION_OK]
     async with Server.Context(Server(hass, sessions)):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": SOURCE_REAUTH,
-                "unique_id": Server.MAC.upper(),
-            },
-            data={
-                CONF_HOST: Server.HOST,
-                CONF_PASSWORD: Server.PASSWORD,
-            },
-        )
-        assert result["type"] == RESULT_TYPE_FORM
+        with patch.object(ConfigFlow, "async_step_reauth", _reauth_confirm):
+            result = await hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={
+                    "source": SOURCE_REAUTH,
+                    "unique_id": Server.MAC.upper(),
+                },
+                data={
+                    CONF_HOST: Server.HOST,
+                    CONF_PASSWORD: Server.PASSWORD,
+                },
+            )
+            assert result["type"] == RESULT_TYPE_FORM

@@ -604,7 +604,7 @@ kostal_plenticore==0.2.0
 krakenex==2.1.0
 
 # homeassistant.components.legrand_rflc
-lc7001==1.0.4
+lc7001==1.0.5
 
 # homeassistant.components.foscam
 libpyfoscam==1.0

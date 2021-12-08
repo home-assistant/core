@@ -1,13 +1,13 @@
 """Tests for the Legrand RFLC component."""
-import logging
 from typing import Final
+from unittest.mock import patch
 
 import lc7001.aio
 
+from homeassistant import data_entry_flow
+from homeassistant.components.legrand_rflc.config_flow import ConfigFlow
+
 from .emulation import Server
-
-_LOGGER: Final = logging.getLogger(__name__)
-
 
 COMPOSER: Final = lc7001.aio.Composer()
 
@@ -16,7 +16,7 @@ async def test_security_setkey(hass):
     """Test security compliant LC7001 in [SETKEY] mode (factory reset)."""
     sessions = [
         [
-            b'[SETKEY]\x00{"MAC":" 0026EC000000"}',
+            b'[SETKEY]\x00{"MAC":"0026EC000000"}',
             COMPOSER.wrap(
                 1,
                 COMPOSER.compose_keys(
@@ -73,15 +73,36 @@ async def test_security_hello_reload(hass):
     await Server(hass, sessions).start()
 
 
+async def _reauth_confirm(self: ConfigFlow, user_input) -> data_entry_flow.FlowResult:
+    self._data = user_input
+    return await self.async_step_reauth_confirm(user_input)
+
+
 async def test_security_hello_reauth(hass):
     """Test security compliant LC7001 "Hello" challenge with reauth."""
-    sessions = [
-        Server.SECURITY_HELLO_AUTHENTICATION_INVALID,
-        Server.SECURITY_HELLO_AUTHENTICATION_OK,
-        Server.SECURITY_HELLO_AUTHENTICATION_OK
-        + [
-            COMPOSER.wrap(1, COMPOSER.compose_list_zones()),
-            b'{"ID":1,"Service":"ListZones","ZoneList":[],"Status":"Success"}\x00',
-        ],
-    ]
-    await Server(hass, sessions).start()
+    with patch.object(ConfigFlow, "async_step_reauth", _reauth_confirm):
+        sessions = [
+            Server.SECURITY_HELLO_AUTHENTICATION_INVALID,
+            Server.SECURITY_HELLO_AUTHENTICATION_OK,
+            Server.SECURITY_HELLO_AUTHENTICATION_OK
+            + [
+                COMPOSER.wrap(1, COMPOSER.compose_list_zones()),
+                b'{"ID":1,"Service":"ListZones","ZoneList":[],"Status":"Success"}\x00',
+            ],
+        ]
+        await Server(hass, sessions).start()
+
+
+async def test_security_hello_reauth_invalid_mac(hass):
+    """Test security compliant LC7001 "Hello" challenge with reauth for invalid mac."""
+    with patch.object(ConfigFlow, "async_step_reauth", _reauth_confirm):
+        sessions = [
+            Server.SECURITY_HELLO_AUTHENTICATION_INVALID_MAC,
+            Server.SECURITY_HELLO_AUTHENTICATION_OK,
+            Server.SECURITY_HELLO_AUTHENTICATION_OK
+            + [
+                COMPOSER.wrap(1, COMPOSER.compose_list_zones()),
+                b'{"ID":1,"Service":"ListZones","ZoneList":[],"Status":"Success"}\x00',
+            ],
+        ]
+        await Server(hass, sessions).start()

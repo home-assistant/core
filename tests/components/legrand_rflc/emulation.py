@@ -57,6 +57,11 @@ class Server:
         b"3437872f1912fe9fb06ddf50eb5bf535",
         b"[INVALID]\x00",
     ]
+    SECURITY_HELLO_AUTHENTICATION_INVALID_MAC: Final = [
+        b"Hello V1 \x009158E315149BEF9F2179D79C58F0F422 0026ECFFFFFF",
+        b"3437872f1912fe9fb06ddf50eb5bf535",
+        b"[OK]\x00",
+    ]
 
     class _Relay(asyncio.StreamWriter):
         class _Transport(asyncio.WriteTransport):
