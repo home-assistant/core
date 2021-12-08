@@ -8,7 +8,7 @@ import voluptuous_serialize
 
 from homeassistant.components import automation
 from homeassistant.components.lcn import device_trigger
-from homeassistant.components.lcn.const import CONNECTION, DOMAIN, KEY_ACTIONS, SENDKEYS
+from homeassistant.components.lcn.const import DOMAIN, KEY_ACTIONS, SENDKEYS
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.setup import async_setup_component
@@ -107,7 +107,7 @@ async def test_if_fires_on_transponder_event(hass, calls, entry):
         code="aabbcc",
     )
 
-    lcn_connection = hass.data[DOMAIN][entry.entry_id][CONNECTION]
+    lcn_connection = MockPchkConnectionManager.return_value
     await lcn_connection.async_process_input(inp)
     await hass.async_block_till_done()
 
@@ -155,7 +155,7 @@ async def test_if_fires_on_fingerprint_event(hass, calls, entry):
         code="aabbcc",
     )
 
-    lcn_connection = hass.data[DOMAIN][entry.entry_id][CONNECTION]
+    lcn_connection = MockPchkConnectionManager.return_value
     await lcn_connection.async_process_input(inp)
     await hass.async_block_till_done()
 
@@ -209,7 +209,7 @@ async def test_if_fires_on_transmitter_event(hass, calls, entry):
         action=KeyAction.HIT,
     )
 
-    lcn_connection = hass.data[DOMAIN][entry.entry_id][CONNECTION]
+    lcn_connection = MockPchkConnectionManager.return_value
     await lcn_connection.async_process_input(inp)
     await hass.async_block_till_done()
 
@@ -261,7 +261,7 @@ async def test_if_fires_on_send_keys_event(hass, calls, entry):
         keys=[True, False, False, False, False, False, False, False],
     )
 
-    lcn_connection = hass.data[DOMAIN][entry.entry_id][CONNECTION]
+    lcn_connection = MockPchkConnectionManager.return_value
     await lcn_connection.async_process_input(inp)
     await hass.async_block_till_done()
 

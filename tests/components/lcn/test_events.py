@@ -5,8 +5,6 @@ from pypck.inputs import Input, ModSendKeysHost, ModStatusAccessControl
 from pypck.lcn_addr import LcnAddr
 from pypck.lcn_defs import AccessControlPeriphery, KeyAction, SendKeyCommand
 
-from homeassistant.components.lcn.const import CONNECTION, DOMAIN
-
 from .conftest import MockPchkConnectionManager, init_integration
 
 from tests.common import async_capture_events
@@ -25,7 +23,7 @@ async def test_fire_transponder_event(hass, entry):
         code="aabbcc",
     )
 
-    lcn_connection = hass.data[DOMAIN][entry.entry_id][CONNECTION]
+    lcn_connection = MockPchkConnectionManager.return_value
     await lcn_connection.async_process_input(inp)
     await hass.async_block_till_done()
 
@@ -47,7 +45,7 @@ async def test_fire_fingerprint_event(hass, entry):
         code="aabbcc",
     )
 
-    lcn_connection = hass.data[DOMAIN][entry.entry_id][CONNECTION]
+    lcn_connection = MockPchkConnectionManager.return_value
     await lcn_connection.async_process_input(inp)
     await hass.async_block_till_done()
 
@@ -72,7 +70,7 @@ async def test_fire_transmitter_event(hass, entry):
         action=KeyAction.HIT,
     )
 
-    lcn_connection = hass.data[DOMAIN][entry.entry_id][CONNECTION]
+    lcn_connection = MockPchkConnectionManager.return_value
     await lcn_connection.async_process_input(inp)
     await hass.async_block_till_done()
 
@@ -97,7 +95,7 @@ async def test_fire_sendkeys_event(hass, entry):
         keys=[True, True, False, False, False, False, False, False],
     )
 
-    lcn_connection = hass.data[DOMAIN][entry.entry_id][CONNECTION]
+    lcn_connection = MockPchkConnectionManager.return_value
     await lcn_connection.async_process_input(inp)
     await hass.async_block_till_done()
 
@@ -122,7 +120,7 @@ async def test_dont_fire_on_non_module_input(hass, entry):
     await init_integration(hass, entry)
 
     inp = Input()
-    lcn_connection = hass.data[DOMAIN][entry.entry_id][CONNECTION]
+    lcn_connection = MockPchkConnectionManager.return_value
 
     for event_name in (
         "lcn_transponder",
@@ -147,7 +145,7 @@ async def test_dont_fire_on_unknown_module(hass, entry):
         code="aabbcc",
     )
 
-    lcn_connection = hass.data[DOMAIN][entry.entry_id][CONNECTION]
+    lcn_connection = MockPchkConnectionManager.return_value
 
     events = async_capture_events(hass, "lcn_transmitter")
     await lcn_connection.async_process_input(inp)

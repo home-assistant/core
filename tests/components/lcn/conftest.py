@@ -41,6 +41,13 @@ class MockGroupConnection(GroupConnection):
 class MockPchkConnectionManager(PchkConnectionManager):
     """Fake connection handler."""
 
+    return_value = None
+
+    def __init__(self, *args, **kwargs):
+        """Initialize MockPchkCOnnectionManager."""
+        super().__init__(*args, **kwargs)
+        self.__class__.return_value = self
+
     async def async_connect(self, timeout=30):
         """Mock establishing a connection to PCHK."""
         self.authentication_completed_future.set_result(True)
