@@ -55,6 +55,31 @@ async def test_unique_id(hass: HomeAssistant):
     assert entity_id == "sensor.test"
 
 
+async def test_empty_string_config(hass: HomeAssistant):
+    """Test configuration with empty strings."""
+    assert await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": [
+                {
+                    "platform": "statistics",
+                    "name": "",
+                    "entity_id": "a.b",
+                    "unique_id": "",
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    hass.states.async_set("sensor.statistics", "0")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.statistics")
+    assert state is not None
+
+
 async def test_sensor_defaults_numeric(hass: HomeAssistant):
     """Test the general behavior of the sensor, with numeric source sensor."""
     assert await async_setup_component(
