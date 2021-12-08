@@ -738,7 +738,7 @@ google-cloud-pubsub==2.1.0
 google-cloud-texttospeech==0.4.0
 
 # homeassistant.components.nest
-google-nest-sdm==0.4.4
+google-nest-sdm==0.4.5
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -792,7 +792,7 @@ hass-nabucasa==0.50.0
 hass_splunk==0.1.1
 
 # homeassistant.components.tasmota
-hatasmota==0.3.0
+hatasmota==0.3.1
 
 # homeassistant.components.jewish_calendar
 hdate==0.10.4
@@ -1308,7 +1308,7 @@ py-synologydsm-api==1.0.4
 py-zabbix==1.1.7
 
 # homeassistant.components.seventeentrack
-py17track==2021.12.1
+py17track==2021.12.2
 
 # homeassistant.components.hdmi_cec
 pyCEC==0.5.1
@@ -1614,9 +1614,6 @@ pylitejet==0.3.0
 
 # homeassistant.components.litterrobot
 pylitterbot==2021.11.0
-
-# homeassistant.components.loopenergy
-pyloopenergy==0.2.1
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.11.0

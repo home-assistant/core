@@ -9,6 +9,7 @@ from hatasmota.utils import (
     get_topic_tele_sensor,
     get_topic_tele_will,
 )
+import pytest
 
 from homeassistant.components import cover
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX
@@ -32,6 +33,35 @@ from tests.common import async_fire_mqtt_message
 
 async def test_missing_relay(hass, mqtt_mock, setup_tasmota):
     """Test no cover is discovered if relays are missing."""
+
+
+@pytest.mark.parametrize(
+    "relay_config, num_covers",
+    [
+        ([3, 3, 3, 3, 3, 3, 1, 1, 3, 3], 4),
+        ([3, 3, 3, 3, 0, 0, 0, 0], 2),
+        ([3, 3, 1, 1, 0, 0, 0, 0], 1),
+        ([3, 3, 3, 1, 0, 0, 0, 0], 0),
+    ],
+)
+async def test_multiple_covers(
+    hass, mqtt_mock, setup_tasmota, relay_config, num_covers
+):
+    """Test discovery of multiple covers."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    config["rl"] = relay_config
+    mac = config["mac"]
+
+    assert len(hass.states.async_all("cover")) == 0
+
+    async_fire_mqtt_message(
+        hass,
+        f"{DEFAULT_PREFIX}/{mac}/config",
+        json.dumps(config),
+    )
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all("cover")) == num_covers
 
 
 async def test_controlling_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
