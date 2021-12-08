@@ -45,10 +45,8 @@ class IslamicPrayerTimeSensor(SensorEntity):
     @property
     def native_value(self):
         """Return the state of the sensor."""
-        return (
-            self.client.prayer_times_info.get(self.sensor_type)
-            .astimezone(dt_util.UTC)
-            .isoformat()
+        return self.client.prayer_times_info.get(self.sensor_type).astimezone(
+            dt_util.UTC
         )
 
     async def async_added_to_hass(self):
