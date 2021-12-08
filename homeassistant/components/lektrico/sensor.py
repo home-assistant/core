@@ -194,13 +194,12 @@ class LektricoDevice:
 
     async def async_device_update(self) -> lektricowifi.Info:
         """Async Update device state."""
-        a_data = await self._hass.async_add_executor_job(self._device.charger_info)
+        a_data = self._hass.async_add_job(self._device.charger_info)
         data = await a_data
         print(data)  # Info(charger_state='A', session_energy=0.0, charging_time=0,
         # instant_power=0.0, current=0.0, voltage=0.0, temperature=32.4,
         # dynamic_current=32, headless=False, install_current=32, led_max_brightness=20,
         # total_charged_energy=0, fw_version='1.31')
-
         ############################################################################
         # print(f"SENSORS[0].key= {SENSORS[0].key}") #charger_state
         entity_reg = er.async_get(self._hass)
