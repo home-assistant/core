@@ -29,6 +29,7 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockEntity,
+    async_mock_service,
     get_test_home_assistant,
     mock_device_registry,
     mock_registry,
@@ -279,25 +280,6 @@ class TestServiceHelpers(unittest.TestCase):
             "entity_id": ["light.static"],
         }
 
-    def test_service_call_entry_id(self):
-        """Test service call with entity specified by entity registry ID."""
-        registry = ent_reg.async_get(self.hass)
-        entry = registry.async_get_or_create(
-            "hello", "hue", "1234", suggested_object_id="world"
-        )
-
-        assert entry.entity_id == "hello.world"
-
-        config = {
-            "service": "test_domain.test_service",
-            "target": {"entity_id": entry.id},
-        }
-
-        service.call_from_config(self.hass, config)
-        self.hass.block_till_done()
-
-        assert dict(self.calls[0].data) == {"entity_id": ["hello.world"]}
-
     def test_service_template_service_call(self):
         """Test legacy service_template call with templating."""
         config = {
@@ -392,6 +374,27 @@ class TestServiceHelpers(unittest.TestCase):
 
         service.call_from_config(self.hass, {"service": "invalid"})
         assert mock_log.call_count == 3
+
+
+async def test_service_call_entry_id(hass):
+    """Test service call with entity specified by entity registry ID."""
+    registry = ent_reg.async_get(hass)
+    calls = async_mock_service(hass, "test_domain", "test_service")
+    entry = registry.async_get_or_create(
+        "hello", "hue", "1234", suggested_object_id="world"
+    )
+
+    assert entry.entity_id == "hello.world"
+
+    config = {
+        "service": "test_domain.test_service",
+        "target": {"entity_id": entry.id},
+    }
+
+    await service.async_call_from_config(hass, config)
+    await hass.async_block_till_done()
+
+    assert dict(calls[0].data) == {"entity_id": ["hello.world"]}
 
 
 async def test_extract_entity_ids(hass):
