@@ -6,7 +6,7 @@ from unittest.mock import patch
 from aiohwenergy import errors
 from pytest import raises
 
-from homeassistant.components.homewizard.const import CONF_DATA, CONF_DEVICE, MODEL_P1
+from homeassistant.components.homewizard.const import CONF_DATA, CONF_DEVICE
 from homeassistant.components.homewizard.coordinator import (
     HWEnergyDeviceUpdateCoordinator as Coordinator,
 )
@@ -20,7 +20,7 @@ async def test_coordinator_sets_update_interval(aioclient_mock, hass):
     """Test coordinator calculates correct update interval."""
 
     # P1 meter
-    meter = get_mock_device(product_type=MODEL_P1)
+    meter = get_mock_device(product_type="p1_meter")
 
     coordinator = Coordinator(hass, meter)
     assert coordinator.update_interval == timedelta(seconds=5)
@@ -30,7 +30,7 @@ async def test_coordinator_fetches_data(aioclient_mock, hass):
     """Test coordinator fetches data."""
 
     # P1 meter and (very advanced kWh meter)
-    meter = get_mock_device(product_type=MODEL_P1)
+    meter = get_mock_device(product_type="p1_meter")
     meter.data.smr_version = 50
     meter.data.available_datapoints = [
         "active_power_l1_w",
@@ -75,7 +75,7 @@ async def test_coordinator_failed_to_update(aioclient_mock, hass):
     """Test coordinator handles failed update correctly."""
 
     # Update failed by internal error
-    meter = get_mock_device(product_type=MODEL_P1)
+    meter = get_mock_device(product_type="p1_meter")
 
     async def _failed_update() -> bool:
         return False
@@ -98,7 +98,7 @@ async def test_coordinator_detected_disabled_api(aioclient_mock, hass):
     """Test coordinator handles disabled api correctly."""
 
     # Update failed by internal error
-    meter = get_mock_device(product_type=MODEL_P1)
+    meter = get_mock_device(product_type="p1_meter")
 
     async def _failed_update() -> bool:
         raise errors.DisabledError()
