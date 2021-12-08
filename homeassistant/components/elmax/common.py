@@ -19,10 +19,10 @@ from elmax_api.model.endpoint import DeviceEndpoint
 from elmax_api.model.panel import PanelEntry, PanelStatus
 
 from homeassistant.components.elmax.const import DEFAULT_TIMEOUT, DOMAIN
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -114,16 +114,14 @@ class ElmaxCoordinator(DataUpdateCoordinator):
             _LOGGER.error("Refused username/password")
             raise ConfigEntryAuthFailed from err
         except ElmaxApiError as err:
-            raise HomeAssistantError(
-                f"Error communicating with ELMAX API: {err}"
-            ) from err
+            raise UpdateFailed(f"Error communicating with ELMAX API: {err}") from err
         except ElmaxNetworkError as err:
-            raise HomeAssistantError(
+            raise UpdateFailed(
                 "Network error occurred while contacting ELMAX cloud"
             ) from err
         except Exception as err:
             _LOGGER.exception("Unexpected exception")
-            raise HomeAssistantError("An unexpected error occurred") from err
+            raise UpdateFailed("An unexpected error occurred") from err
 
 
 class ElmaxEntity(Entity):
