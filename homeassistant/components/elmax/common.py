@@ -1,7 +1,6 @@
 """Elmax integration common classes and utilities."""
 from __future__ import annotations
 
-from collections.abc import Mapping
 from datetime import timedelta
 import logging
 from logging import Logger
@@ -165,13 +164,6 @@ class ElmaxEntity(Entity):
     def name(self) -> str | None:
         """Return the entity name."""
         return self._device.name
-
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return extra attributes."""
-        return {
-            "visible": self._device.visible,
-        }
 
     @property
     def device_info(self):
