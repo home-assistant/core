@@ -6,13 +6,17 @@ https://www.legrand.us/solutions/smart-lighting/radio-frequency-lighting-control
 import asyncio
 from collections.abc import Mapping
 import logging
-from typing import Final
+from typing import Any, Final
 
 import lc7001.aio
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_AUTHENTICATION, CONF_HOST
-from homeassistant.core import HomeAssistant
+from homeassistant.const import (
+    CONF_AUTHENTICATION,
+    CONF_HOST,
+    EVENT_HOMEASSISTANT_STARTED,
+)
+from homeassistant.core import CoreState, HomeAssistant
 
 from .const import DOMAIN
 
@@ -61,13 +65,20 @@ async def async_setup_entry(
     hub.once(hub.EVENT_ZONE_ADDED, reload)
     hub.once(hub.EVENT_ZONE_DELETED, reload)
 
-    async def loop():
-        try:
-            await hub.loop()
-        except lc7001.aio.Authenticator.Error:
-            pass
+    async def start(*_: Any) -> None:
+        async def loop():
+            try:
+                await hub.loop()
+            except lc7001.aio.Authenticator.Error:
+                pass
 
-    hass.async_create_task(loop())
+        hass.async_create_task(loop())
+
+    # don't start (hass.async_create_task) unless/until hass is running
+    if hass.state == CoreState.running:
+        await start()
+    else:
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, start)
 
     return True
 

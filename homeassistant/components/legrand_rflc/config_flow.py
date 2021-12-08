@@ -97,7 +97,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data = {CONF_HOST: host}
                 if key is not None:
                     data[CONF_AUTHENTICATION] = key.hex()
-                return self.async_create_entry(title=unique_id, data=data)
+                return self.async_create_entry(title=f"LC7001 [{unique_id}]", data=data)
 
         # get user_input
         return self.async_show_form(
