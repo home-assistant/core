@@ -170,7 +170,6 @@ class ElmaxEntity(Entity):
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return extra attributes."""
         return {
-            "index": self._device.index,
             "visible": self._device.visible,
         }
 
@@ -211,17 +210,3 @@ class ElmaxEntity(Entity):
         False if entity pushes its state to HA.
         """
         return False
-
-    async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added to hass.
-
-        To be extended by integrations.
-        """
-        self._coordinator.async_add_listener(self._http_data_changed)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Run when entity will be removed from hass.
-
-        To be extended by integrations.
-        """
-        self._coordinator.async_remove_listener(self._http_data_changed)
