@@ -3,6 +3,7 @@
 from aiomusiccast.capabilities import OptionSetter
 
 from homeassistant.components.select import SelectEntity
+from homeassistant.components.yamaha_musiccast.const import DEVICE_CLASS_MAPPING
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -45,9 +46,9 @@ class SelectableCapapility(MusicCastCapabilityEntity, SelectEntity):
         await self.capability.set(value)
 
     @property
-    def device_class(self) -> str:
-        """Return the ID of the capability, to identify the entity for translations."""
-        return f"{DOMAIN}__{self.capability.id.lower()}"
+    def device_class(self) -> str | None:
+        """Return the device class, to identify the entity for translations."""
+        return DEVICE_CLASS_MAPPING.get(self.capability.id)
 
     @property
     def options(self):
