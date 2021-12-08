@@ -218,6 +218,4 @@ class NextBusDepartureSensor(SensorEntity):
         )
 
         latest_prediction = maybe_first(predictions)
-        self._state = utc_from_timestamp(
-            int(latest_prediction["epochTime"]) / 1000
-        ).isoformat()
+        self._state = utc_from_timestamp(int(latest_prediction["epochTime"]) / 1000)
