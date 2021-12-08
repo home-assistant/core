@@ -20,6 +20,7 @@ from homeassistant.const import (
     ATTR_MANUFACTURER,
     ATTR_NAME,
     EVENT_CORE_CONFIG_UPDATE,
+    HASSIO_USER_NAME,
     SERVICE_HOMEASSISTANT_RESTART,
     SERVICE_HOMEASSISTANT_STOP,
     Platform,
@@ -56,7 +57,6 @@ from .const import (
     ATTR_VERSION,
     DATA_KEY_ADDONS,
     DOMAIN,
-    HASSIO_USER_NAME,
     SupervisorEntityModel,
 )
 from .discovery import HassioServiceInfo, async_setup_discovery_view  # noqa: F401
