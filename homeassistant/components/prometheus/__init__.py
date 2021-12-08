@@ -210,7 +210,12 @@ class PrometheusMetrics:
             full_metric_name = self._sanitize_metric_name(
                 f"{self.metrics_prefix}{metric}"
             )
-            self._metrics[metric] = factory(full_metric_name, documentation, labels)
+            self._metrics[metric] = factory(
+                full_metric_name,
+                documentation,
+                labels,
+                registry=self.prometheus_cli.REGISTRY,
+            )
             return self._metrics[metric]
 
     @staticmethod
@@ -524,6 +529,6 @@ class PrometheusView(HomeAssistantView):
         _LOGGER.debug("Received Prometheus metrics request")
 
         return web.Response(
-            body=self.prometheus_cli.generate_latest(),
+            body=self.prometheus_cli.generate_latest(self.prometheus_cli.REGISTRY),
             content_type=CONTENT_TYPE_TEXT_PLAIN,
         )
