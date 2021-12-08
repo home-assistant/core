@@ -116,7 +116,7 @@ class HVVDepartureSensor(SensorEntity):
             departure_time
             + timedelta(minutes=departure["timeOffset"])
             + timedelta(seconds=delay)
-        ).isoformat()
+        )
 
         self.attr.update(
             {
