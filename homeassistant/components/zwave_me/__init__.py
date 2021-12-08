@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN, PLATFORMS, ZWAVEPLATFORMS
+from .const import DOMAIN, PLATFORMS, ZWAVE_PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,12 +40,12 @@ class ZWaveMeController:
             on_new_device=self.add_device,
             token=self._config.data["token"],
             url=self._config.data["url"],
-            platforms=ZWAVEPLATFORMS,
+            platforms=ZWAVE_PLATFORMS,
         )
 
     def add_device(self, device: ZWaveMeData):
         """Send signal to create device."""
-        if device.deviceType in ZWAVEPLATFORMS:
+        if device.deviceType in ZWAVE_PLATFORMS:
             if device.id in self.device_ids:
                 dispatcher_send(self._hass, "ZWAVE_ME_INFO_" + device.id, device)
             else:
@@ -93,12 +93,8 @@ class ZWaveMeEntity(Entity):
     def get_new_data(self, new_data):
         """Update info in the HAss."""
         self.device = new_data
-        self._attr_available = not newdata.isFailed
+        self._attr_available = not new_data.isFailed
         self.async_schedule_update_ha_state()
-
-    def get_available(self):
-        """Get availability of a generic device."""
-        return not self.device.isFailed
 
     @property
     def unique_id(self) -> str:
