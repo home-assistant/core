@@ -590,6 +590,9 @@ eliqonline==1.2.2
 # homeassistant.components.elkm1
 elkm1-lib==1.0.0
 
+# homeassistant.components.elmax
+elmax_api==0.0.2
+
 # homeassistant.components.mobile_app
 emoji==1.5.0
 
@@ -741,7 +744,7 @@ google-cloud-pubsub==2.1.0
 google-cloud-texttospeech==0.4.0
 
 # homeassistant.components.nest
-google-nest-sdm==0.4.4
+google-nest-sdm==0.4.5
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -1305,7 +1308,7 @@ py-synologydsm-api==1.0.4
 py-zabbix==1.1.7
 
 # homeassistant.components.seventeentrack
-py17track==2021.12.1
+py17track==2021.12.2
 
 # homeassistant.components.hdmi_cec
 pyCEC==0.5.1
@@ -1612,9 +1615,6 @@ pylitejet==0.3.0
 # homeassistant.components.litterrobot
 pylitterbot==2021.11.0
 
-# homeassistant.components.loopenergy
-pyloopenergy==0.2.1
-
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.11.0
 
@@ -1811,7 +1811,7 @@ pyskyqhub==0.1.3
 pysma==0.6.9
 
 # homeassistant.components.smappee
-pysmappee==0.2.27
+pysmappee==0.2.29
 
 # homeassistant.components.smartthings
 pysmartapp==0.3.3

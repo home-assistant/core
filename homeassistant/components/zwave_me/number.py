@@ -1,26 +1,22 @@
 """Representation of a switchMultilevel."""
-from datetime import timedelta
-import logging
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .__init__ import ZWaveMeEntity
+from . import ZWaveMeEntity
 from .const import DOMAIN
 
-SCAN_INTERVAL = timedelta(seconds=10)
 
-_LOGGER = logging.getLogger(__name__)
 DEVICE_NAME = "switchMultilevel"
 
 
-async def async_setup_entry(hass, config, add_entities, discovery_info=None):
-    """Set up the sensor platform."""
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the number platform."""
 
     @callback
     def add_new_device(new_device):
         switch = ZWaveMeNumber(new_device)
-        add_entities(
+        async_add_entities(
             [
                 switch,
             ]

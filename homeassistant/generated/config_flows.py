@@ -78,6 +78,7 @@ FLOWS = [
     "efergy",
     "elgato",
     "elkm1",
+    "elmax",
     "emonitor",
     "emulated_roku",
     "enocean",

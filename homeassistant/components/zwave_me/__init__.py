@@ -43,7 +43,7 @@ class ZWaveMeController:
             platforms=ZWAVE_PLATFORMS,
         )
 
-    def add_device(self, device: ZWaveMeData):
+    def add_device(self, device: ZWaveMeData) -> None:
         """Send signal to create device."""
         if device.deviceType in ZWAVE_PLATFORMS:
             if device.id in self.device_ids:
@@ -54,14 +54,14 @@ class ZWaveMeController:
                 )
                 self.device_ids.append(device.id)
 
-    def on_device_create(self, devices: list[ZWaveMeData]):
+    def on_device_create(self, devices: list[ZWaveMeData]) -> None:
         """Create multiple devices."""
         if devices is None:
             return
         for device in devices:
             self.add_device(device)
 
-    def on_device_update(self, new_info: ZWaveMeData):
+    def on_device_update(self, new_info: ZWaveMeData) -> None:
         """Send signal to update device."""
         dispatcher_send(self._hass, "ZWAVE_ME_INFO_" + new_info.id, new_info)
 
@@ -94,7 +94,7 @@ class ZWaveMeEntity(Entity):
         """Update info in the HAss."""
         self.device = new_data
         self._attr_available = not new_data.isFailed
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state
 
     @property
     def unique_id(self) -> str:
