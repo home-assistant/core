@@ -1,5 +1,5 @@
 """Configuration for Sonos tests."""
-from unittest.mock import AsyncMock, MagicMock, Mock, patch as patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 
