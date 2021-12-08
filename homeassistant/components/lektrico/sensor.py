@@ -50,7 +50,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import DATA_LEKTRICO_CLIENT, DOMAIN  # , SERVICE_IDENTIFY
+from .const import DOMAIN  # , SERVICE_IDENTIFY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -238,9 +238,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Lektrico charger based on a config entry."""
-    charger: lektricowifi.Charger = hass.data[DOMAIN][entry.entry_id][
-        DATA_LEKTRICO_CLIENT
-    ]
+    charger: lektricowifi.Charger = hass.data[DOMAIN][entry.entry_id]
     # print(f"hass= {hass}")
     # print(f"hass.data= {hass.data}")   #f.f.f.f. mare
     # print(f"hass.data[DOMAIN]= {hass.data[DOMAIN]}")
