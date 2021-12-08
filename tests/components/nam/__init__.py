@@ -1,5 +1,5 @@
 """Tests for the Nettigo Air Monitor integration."""
-from unittest.mock import patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from homeassistant.components.nam.const import DOMAIN
 
@@ -24,6 +24,8 @@ nam_data = {
         {"value_type": "BME280_temperature", "value": "7.56"},
         {"value_type": "BME280_humidity", "value": "45.69"},
         {"value_type": "BME280_pressure", "value": "101101.17"},
+        {"value_type": "BMP_temperature", "value": "7.56"},
+        {"value_type": "BMP_pressure", "value": "103201.18"},
         {"value_type": "BMP280_temperature", "value": "5.56"},
         {"value_type": "BMP280_pressure", "value": "102201.18"},
         {"value_type": "SHT3X_temperature", "value": "6.28"},
@@ -50,9 +52,11 @@ async def init_integration(hass, co2_sensor=True) -> MockConfigEntry:
         # Remove conc_co2_ppm value
         nam_data["sensordatavalues"].pop(6)
 
-    with patch(
-        "homeassistant.components.nam.NettigoAirMonitor._async_get_data",
-        return_value=nam_data,
+    update_response = Mock(json=AsyncMock(return_value=nam_data))
+
+    with patch("homeassistant.components.nam.NettigoAirMonitor.initialize"), patch(
+        "homeassistant.components.nam.NettigoAirMonitor._async_http_request",
+        return_value=update_response,
     ):
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)

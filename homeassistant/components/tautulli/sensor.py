@@ -1,4 +1,8 @@
 """A platform which allows you to get information from Tautulli."""
+from __future__ import annotations
+
+from typing import Any
+
 from pytautulli import PyTautulli
 import voluptuous as vol
 
@@ -13,8 +17,11 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_VERIFY_SSL,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import TautulliDataUpdateCoordinator
@@ -42,20 +49,26 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Create the Tautulli sensor."""
 
-    name = config.get(CONF_NAME)
+    name = config[CONF_NAME]
     host = config[CONF_HOST]
-    port = config.get(CONF_PORT)
-    path = config.get(CONF_PATH)
+    port = config[CONF_PORT]
+    path = config[CONF_PATH]
     api_key = config[CONF_API_KEY]
-    monitored_conditions = config.get(CONF_MONITORED_CONDITIONS)
-    user = config.get(CONF_MONITORED_USERS)
+    monitored_conditions = config.get(CONF_MONITORED_CONDITIONS, [])
+    users = config.get(CONF_MONITORED_USERS, [])
     use_ssl = config[CONF_SSL]
-    verify_ssl = config.get(CONF_VERIFY_SSL)
+    verify_ssl = config[CONF_VERIFY_SSL]
 
-    session = async_get_clientsession(hass, verify_ssl)
+    session = async_get_clientsession(hass=hass, verify_ssl=verify_ssl)
+
     api_client = PyTautulli(
         api_token=api_key,
         hostname=host,
@@ -68,9 +81,17 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     coordinator = TautulliDataUpdateCoordinator(hass=hass, api_client=api_client)
 
-    entities = [TautulliSensor(coordinator, name, monitored_conditions, user)]
-
-    async_add_entities(entities, True)
+    async_add_entities(
+        new_entities=[
+            TautulliSensor(
+                coordinator=coordinator,
+                name=name,
+                monitored_conditions=monitored_conditions,
+                usernames=users,
+            )
+        ],
+        update_before_add=True,
+    )
 
 
 class TautulliSensor(CoordinatorEntity, SensorEntity):
@@ -78,37 +99,43 @@ class TautulliSensor(CoordinatorEntity, SensorEntity):
 
     coordinator: TautulliDataUpdateCoordinator
 
-    def __init__(self, coordinator, name, monitored_conditions, users):
+    def __init__(
+        self,
+        coordinator: TautulliDataUpdateCoordinator,
+        name: str,
+        monitored_conditions: list[str],
+        usernames: list[str],
+    ) -> None:
         """Initialize the Tautulli sensor."""
         super().__init__(coordinator)
         self.monitored_conditions = monitored_conditions
-        self.usernames = users
+        self.usernames = usernames
         self._name = name
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the sensor."""
         return self._name
 
     @property
-    def native_value(self):
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
         if not self.coordinator.activity:
             return 0
-        return self.coordinator.activity.stream_count
+        return self.coordinator.activity.stream_count or 0
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return the icon of the sensor."""
         return "mdi:plex"
 
     @property
-    def native_unit_of_measurement(self):
+    def native_unit_of_measurement(self) -> str:
         """Return the unit this state is expressed in."""
         return "Watching"
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return attributes for the sensor."""
         if (
             not self.coordinator.activity
@@ -149,8 +176,7 @@ class TautulliSensor(CoordinatorEntity, SensorEntity):
                 continue
 
             _attributes[session.username]["Activity"] = session.state
-            if self.monitored_conditions:
-                for key in self.monitored_conditions:
-                    _attributes[session.username][key] = getattr(session, key)
+            for key in self.monitored_conditions:
+                _attributes[session.username][key] = getattr(session, key)
 
         return _attributes

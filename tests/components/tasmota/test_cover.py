@@ -9,6 +9,7 @@ from hatasmota.utils import (
     get_topic_tele_sensor,
     get_topic_tele_will,
 )
+import pytest
 
 from homeassistant.components import cover
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX
@@ -34,6 +35,35 @@ async def test_missing_relay(hass, mqtt_mock, setup_tasmota):
     """Test no cover is discovered if relays are missing."""
 
 
+@pytest.mark.parametrize(
+    "relay_config, num_covers",
+    [
+        ([3, 3, 3, 3, 3, 3, 1, 1, 3, 3], 4),
+        ([3, 3, 3, 3, 0, 0, 0, 0], 2),
+        ([3, 3, 1, 1, 0, 0, 0, 0], 1),
+        ([3, 3, 3, 1, 0, 0, 0, 0], 0),
+    ],
+)
+async def test_multiple_covers(
+    hass, mqtt_mock, setup_tasmota, relay_config, num_covers
+):
+    """Test discovery of multiple covers."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    config["rl"] = relay_config
+    mac = config["mac"]
+
+    assert len(hass.states.async_all("cover")) == 0
+
+    async_fire_mqtt_message(
+        hass,
+        f"{DEFAULT_PREFIX}/{mac}/config",
+        json.dumps(config),
+    )
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all("cover")) == num_covers
+
+
 async def test_controlling_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
     """Test state update via MQTT."""
     config = copy.deepcopy(DEFAULT_CONFIG)
@@ -53,6 +83,7 @@ async def test_controlling_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
+    await hass.async_block_till_done()
     state = hass.states.get("cover.tasmota_cover_1")
     assert state.state == STATE_UNKNOWN
     assert (
@@ -215,6 +246,7 @@ async def test_controlling_state_via_mqtt_inverted(hass, mqtt_mock, setup_tasmot
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
+    await hass.async_block_till_done()
     state = hass.states.get("cover.tasmota_cover_1")
     assert state.state == STATE_UNKNOWN
     assert (
@@ -383,6 +415,7 @@ async def test_sending_mqtt_commands(hass, mqtt_mock, setup_tasmota):
     await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
+    await hass.async_block_till_done()
     state = hass.states.get("cover.test_cover_1")
     assert state.state == STATE_UNKNOWN
     await hass.async_block_till_done()
@@ -446,6 +479,7 @@ async def test_sending_mqtt_commands_inverted(hass, mqtt_mock, setup_tasmota):
     await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
+    await hass.async_block_till_done()
     state = hass.states.get("cover.test_cover_1")
     assert state.state == STATE_UNKNOWN
     await hass.async_block_till_done()

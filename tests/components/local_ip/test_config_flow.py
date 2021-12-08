@@ -6,7 +6,7 @@ from homeassistant.config_entries import SOURCE_USER
 from tests.common import MockConfigEntry
 
 
-async def test_config_flow(hass):
+async def test_config_flow(hass, mock_get_source_ip):
     """Test we can finish a config flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -21,7 +21,7 @@ async def test_config_flow(hass):
     assert state
 
 
-async def test_already_setup(hass):
+async def test_already_setup(hass, mock_get_source_ip):
     """Test we abort if already setup."""
     MockConfigEntry(
         domain=DOMAIN,

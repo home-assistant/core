@@ -1,11 +1,12 @@
-"""Test UniFi config flow."""
+"""Test UniFi Network config flow."""
 
 import socket
 from unittest.mock import patch
 
 import aiounifi
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, data_entry_flow
+from homeassistant.components import ssdp
 from homeassistant.components.unifi.config_flow import async_discover_unifi
 from homeassistant.components.unifi.const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
@@ -543,17 +544,20 @@ async def test_simple_option_flow(hass, aioclient_mock):
 
 async def test_form_ssdp(hass):
     """Test we get the form with ssdp source."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
         UNIFI_DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
-        data={
-            "friendlyName": "UniFi Dream Machine",
-            "modelDescription": "UniFi Dream Machine Pro",
-            "ssdp_location": "http://192.168.208.1:41417/rootDesc.xml",
-            "serialNumber": "e0:63:da:20:14:a9",
-        },
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="http://192.168.208.1:41417/rootDesc.xml",
+            upnp={
+                "friendlyName": "UniFi Dream Machine",
+                "modelDescription": "UniFi Dream Machine Pro",
+                "serialNumber": "e0:63:da:20:14:a9",
+            },
+        ),
     )
     assert result["type"] == "form"
     assert result["step_id"] == "user"
@@ -571,7 +575,7 @@ async def test_form_ssdp(hass):
 
 async def test_form_ssdp_aborts_if_host_already_exists(hass):
     """Test we abort if the host is already configured."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     entry = MockConfigEntry(
         domain=UNIFI_DOMAIN,
         data={"host": "192.168.208.1", "site": "site_id"},
@@ -580,12 +584,16 @@ async def test_form_ssdp_aborts_if_host_already_exists(hass):
     result = await hass.config_entries.flow.async_init(
         UNIFI_DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
-        data={
-            "friendlyName": "UniFi Dream Machine",
-            "modelDescription": "UniFi Dream Machine Pro",
-            "ssdp_location": "http://192.168.208.1:41417/rootDesc.xml",
-            "serialNumber": "e0:63:da:20:14:a9",
-        },
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="http://192.168.208.1:41417/rootDesc.xml",
+            upnp={
+                "friendlyName": "UniFi Dream Machine",
+                "modelDescription": "UniFi Dream Machine Pro",
+                "serialNumber": "e0:63:da:20:14:a9",
+            },
+        ),
     )
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
@@ -593,7 +601,7 @@ async def test_form_ssdp_aborts_if_host_already_exists(hass):
 
 async def test_form_ssdp_aborts_if_serial_already_exists(hass):
     """Test we abort if the serial is already configured."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     entry = MockConfigEntry(
         domain=UNIFI_DOMAIN,
         data={"controller": {"host": "1.2.3.4", "site": "site_id"}},
@@ -603,12 +611,16 @@ async def test_form_ssdp_aborts_if_serial_already_exists(hass):
     result = await hass.config_entries.flow.async_init(
         UNIFI_DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
-        data={
-            "friendlyName": "UniFi Dream Machine",
-            "modelDescription": "UniFi Dream Machine Pro",
-            "ssdp_location": "http://192.168.208.1:41417/rootDesc.xml",
-            "serialNumber": "e0:63:da:20:14:a9",
-        },
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="http://192.168.208.1:41417/rootDesc.xml",
+            upnp={
+                "friendlyName": "UniFi Dream Machine",
+                "modelDescription": "UniFi Dream Machine Pro",
+                "serialNumber": "e0:63:da:20:14:a9",
+            },
+        ),
     )
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
@@ -616,7 +628,7 @@ async def test_form_ssdp_aborts_if_serial_already_exists(hass):
 
 async def test_form_ssdp_gets_form_with_ignored_entry(hass):
     """Test we can still setup if there is an ignored entry."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     entry = MockConfigEntry(
         domain=UNIFI_DOMAIN,
         data={"not_controller_key": None},
@@ -626,12 +638,16 @@ async def test_form_ssdp_gets_form_with_ignored_entry(hass):
     result = await hass.config_entries.flow.async_init(
         UNIFI_DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
-        data={
-            "friendlyName": "UniFi Dream Machine New",
-            "modelDescription": "UniFi Dream Machine Pro",
-            "ssdp_location": "http://1.2.3.4:41417/rootDesc.xml",
-            "serialNumber": "e0:63:da:20:14:a9",
-        },
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="http://1.2.3.4:41417/rootDesc.xml",
+            upnp={
+                "friendlyName": "UniFi Dream Machine New",
+                "modelDescription": "UniFi Dream Machine Pro",
+                "serialNumber": "e0:63:da:20:14:a9",
+            },
+        ),
     )
     assert result["type"] == "form"
     assert result["step_id"] == "user"

@@ -19,6 +19,7 @@ from homeassistant.const import (
     DEVICE_CLASS_CO2,
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_FREQUENCY,
     DEVICE_CLASS_GAS,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
@@ -54,6 +55,7 @@ CONF_CO = "carbon_monoxide"
 CONF_CO2 = "carbon_dioxide"
 CONF_CURRENT = "current"
 CONF_ENERGY = "energy"
+CONF_FREQUENCY = "frequency"
 CONF_GAS = "gas"
 CONF_HUMIDITY = "humidity"
 CONF_ILLUMINANCE = "illuminance"
@@ -80,6 +82,7 @@ ENTITY_TRIGGERS = {
     DEVICE_CLASS_CO2: [{CONF_TYPE: CONF_CO2}],
     DEVICE_CLASS_CURRENT: [{CONF_TYPE: CONF_CURRENT}],
     DEVICE_CLASS_ENERGY: [{CONF_TYPE: CONF_ENERGY}],
+    DEVICE_CLASS_FREQUENCY: [{CONF_TYPE: CONF_FREQUENCY}],
     DEVICE_CLASS_GAS: [{CONF_TYPE: CONF_GAS}],
     DEVICE_CLASS_HUMIDITY: [{CONF_TYPE: CONF_HUMIDITY}],
     DEVICE_CLASS_ILLUMINANCE: [{CONF_TYPE: CONF_ILLUMINANCE}],
@@ -115,6 +118,7 @@ TRIGGER_SCHEMA = vol.All(
                     CONF_CO2,
                     CONF_CURRENT,
                     CONF_ENERGY,
+                    CONF_FREQUENCY,
                     CONF_GAS,
                     CONF_HUMIDITY,
                     CONF_ILLUMINANCE,
@@ -158,7 +162,9 @@ async def async_attach_trigger(hass, config, action, automation_info):
     if CONF_FOR in config:
         numeric_state_config[CONF_FOR] = config[CONF_FOR]
 
-    numeric_state_config = numeric_state_trigger.TRIGGER_SCHEMA(numeric_state_config)
+    numeric_state_config = await numeric_state_trigger.async_validate_trigger_config(
+        hass, numeric_state_config
+    )
     return await numeric_state_trigger.async_attach_trigger(
         hass, numeric_state_config, action, automation_info, platform_type="device"
     )

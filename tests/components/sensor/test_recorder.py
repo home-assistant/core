@@ -8,25 +8,39 @@ from unittest.mock import patch
 import pytest
 from pytest import approx
 
+from homeassistant import loader
 from homeassistant.components.recorder import history
 from homeassistant.components.recorder.const import DATA_INSTANCE
-from homeassistant.components.recorder.models import process_timestamp_to_utc_isoformat
+from homeassistant.components.recorder.models import (
+    StatisticsMeta,
+    process_timestamp_to_utc_isoformat,
+)
 from homeassistant.components.recorder.statistics import (
     get_metadata,
     list_statistic_ids,
     statistics_during_period,
 )
+from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 
+from tests.common import async_setup_component, init_recorder_component
 from tests.components.recorder.common import wait_recording_done
 
+BATTERY_SENSOR_ATTRIBUTES = {
+    "device_class": "battery",
+    "state_class": "measurement",
+    "unit_of_measurement": "%",
+}
 ENERGY_SENSOR_ATTRIBUTES = {
     "device_class": "energy",
     "state_class": "measurement",
     "unit_of_measurement": "kWh",
+}
+NONE_SENSOR_ATTRIBUTES = {
+    "state_class": "measurement",
 }
 POWER_SENSOR_ATTRIBUTES = {
     "device_class": "power",
@@ -48,6 +62,16 @@ GAS_SENSOR_ATTRIBUTES = {
     "state_class": "measurement",
     "unit_of_measurement": "m³",
 }
+
+
+@pytest.fixture(autouse=True)
+def set_time_zone():
+    """Set the time zone for the tests."""
+    # Set our timezone to CST/Regina so we can check calculations
+    # This keeps UTC-6 all year round
+    dt_util.set_default_time_zone(dt_util.get_time_zone("America/Regina"))
+    yield
+    dt_util.set_default_time_zone(dt_util.get_time_zone("UTC"))
 
 
 @pytest.mark.parametrize(
@@ -88,7 +112,12 @@ def test_compile_hourly_statistics(
     wait_recording_done(hass)
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
-        {"statistic_id": "sensor.test1", "unit_of_measurement": native_unit}
+        {
+            "statistic_id": "sensor.test1",
+            "name": None,
+            "source": "recorder",
+            "unit_of_measurement": native_unit,
+        }
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
     assert stats == {
@@ -103,8 +132,69 @@ def test_compile_hourly_statistics(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "sum_decrease": None,
-                "sum_increase": None,
+            }
+        ]
+    }
+    assert "Error while processing event StatisticsTask" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    "device_class,unit,native_unit",
+    [
+        (None, "%", "%"),
+    ],
+)
+def test_compile_hourly_statistics_purged_state_changes(
+    hass_recorder, caplog, device_class, unit, native_unit
+):
+    """Test compiling hourly statistics."""
+    zero = dt_util.utcnow()
+    hass = hass_recorder()
+    recorder = hass.data[DATA_INSTANCE]
+    setup_component(hass, "sensor", {})
+    attributes = {
+        "device_class": device_class,
+        "state_class": "measurement",
+        "unit_of_measurement": unit,
+    }
+    four, states = record_states(hass, zero, "sensor.test1", attributes)
+    hist = history.get_significant_states(hass, zero, four)
+    assert dict(states) == dict(hist)
+
+    mean = min = max = float(hist["sensor.test1"][-1].state)
+
+    # Purge all states from the database
+    with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=four):
+        hass.services.call("recorder", "purge", {"keep_days": 0})
+        hass.block_till_done()
+        wait_recording_done(hass)
+    hist = history.get_significant_states(hass, zero, four)
+    assert not hist
+
+    recorder.do_adhoc_statistics(start=zero)
+    wait_recording_done(hass)
+    statistic_ids = list_statistic_ids(hass)
+    assert statistic_ids == [
+        {
+            "statistic_id": "sensor.test1",
+            "name": None,
+            "source": "recorder",
+            "unit_of_measurement": native_unit,
+        }
+    ]
+    stats = statistics_during_period(hass, zero, period="5minute")
+    assert stats == {
+        "sensor.test1": [
+            {
+                "statistic_id": "sensor.test1",
+                "start": process_timestamp_to_utc_isoformat(zero),
+                "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=5)),
+                "mean": approx(mean),
+                "min": approx(min),
+                "max": approx(max),
+                "last_reset": None,
+                "state": None,
+                "sum": None,
             }
         ]
     }
@@ -151,9 +241,24 @@ def test_compile_hourly_statistics_unsupported(hass_recorder, caplog, attributes
     wait_recording_done(hass)
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
-        {"statistic_id": "sensor.test1", "unit_of_measurement": "°C"},
-        {"statistic_id": "sensor.test6", "unit_of_measurement": "°C"},
-        {"statistic_id": "sensor.test7", "unit_of_measurement": "°C"},
+        {
+            "statistic_id": "sensor.test1",
+            "name": None,
+            "source": "recorder",
+            "unit_of_measurement": "°C",
+        },
+        {
+            "statistic_id": "sensor.test6",
+            "name": None,
+            "source": "recorder",
+            "unit_of_measurement": "°C",
+        },
+        {
+            "statistic_id": "sensor.test7",
+            "name": None,
+            "source": "recorder",
+            "unit_of_measurement": "°C",
+        },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
     assert stats == {
@@ -168,8 +273,6 @@ def test_compile_hourly_statistics_unsupported(hass_recorder, caplog, attributes
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "sum_decrease": None,
-                "sum_increase": None,
             }
         ],
         "sensor.test6": [
@@ -183,8 +286,6 @@ def test_compile_hourly_statistics_unsupported(hass_recorder, caplog, attributes
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "sum_decrease": None,
-                "sum_increase": None,
             }
         ],
         "sensor.test7": [
@@ -198,8 +299,6 @@ def test_compile_hourly_statistics_unsupported(hass_recorder, caplog, attributes
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "sum_decrease": None,
-                "sum_increase": None,
             }
         ],
     }
@@ -260,10 +359,15 @@ def test_compile_hourly_sum_statistics_amount(
     wait_recording_done(hass)
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
-        {"statistic_id": "sensor.test1", "unit_of_measurement": display_unit}
+        {
+            "statistic_id": "sensor.test1",
+            "name": None,
+            "source": "recorder",
+            "unit_of_measurement": display_unit,
+        }
     ]
     stats = statistics_during_period(hass, period0, period="5minute")
-    assert stats == {
+    expected_stats = {
         "sensor.test1": [
             {
                 "statistic_id": "sensor.test1",
@@ -275,8 +379,6 @@ def test_compile_hourly_sum_statistics_amount(
                 "last_reset": process_timestamp_to_utc_isoformat(period0),
                 "state": approx(factor * seq[2]),
                 "sum": approx(factor * 10.0),
-                "sum_decrease": approx(factor * 0.0),
-                "sum_increase": approx(factor * 10.0),
             },
             {
                 "statistic_id": "sensor.test1",
@@ -288,8 +390,6 @@ def test_compile_hourly_sum_statistics_amount(
                 "last_reset": process_timestamp_to_utc_isoformat(four),
                 "state": approx(factor * seq[5]),
                 "sum": approx(factor * 40.0),
-                "sum_decrease": approx(factor * 10.0),
-                "sum_increase": approx(factor * 50.0),
             },
             {
                 "statistic_id": "sensor.test1",
@@ -301,11 +401,30 @@ def test_compile_hourly_sum_statistics_amount(
                 "last_reset": process_timestamp_to_utc_isoformat(four),
                 "state": approx(factor * seq[8]),
                 "sum": approx(factor * 70.0),
-                "sum_decrease": approx(factor * 10.0),
-                "sum_increase": approx(factor * 80.0),
             },
         ]
     }
+    assert stats == expected_stats
+
+    # With an offset of 1 minute, we expect to get all periods
+    stats = statistics_during_period(
+        hass, period0 + timedelta(minutes=1), period="5minute"
+    )
+    assert stats == expected_stats
+
+    # With an offset of 5 minutes, we expect to get the 2nd and 3rd periods
+    stats = statistics_during_period(
+        hass, period0 + timedelta(minutes=5), period="5minute"
+    )
+    expected_stats["sensor.test1"] = expected_stats["sensor.test1"][1:3]
+    assert stats == expected_stats
+
+    # With an offset of 6 minutes, we expect to get the 2nd and 3rd periods
+    stats = statistics_during_period(
+        hass, period0 + timedelta(minutes=6), period="5minute"
+    )
+    assert stats == expected_stats
+
     assert "Error while processing event StatisticsTask" not in caplog.text
     assert "Detected new cycle for sensor.test1, last_reset set to" in caplog.text
     assert "Compiling initial sum statistics for sensor.test1" in caplog.text
@@ -338,14 +457,122 @@ def test_compile_hourly_sum_statistics_amount_reset_every_state_change(
         "unit_of_measurement": unit,
         "last_reset": None,
     }
-    seq = [10, 15, 15, 15, 20, 20, 20, 10]
+    seq = [10, 15, 15, 15, 20, 20, 20, 25]
     # Make sure the sequence has consecutive equal states
     assert seq[1] == seq[2] == seq[3]
 
+    # Make sure the first and last state differ
+    assert seq[0] != seq[-1]
+
     states = {"sensor.test1": []}
+
+    # Insert states for a 1st statistics period
     one = zero
     for i in range(len(seq)):
         one = one + timedelta(seconds=5)
+        attributes = dict(attributes)
+        attributes["last_reset"] = dt_util.as_local(one).isoformat()
+        _states = record_meter_state(
+            hass, one, "sensor.test1", attributes, seq[i : i + 1]
+        )
+        states["sensor.test1"].extend(_states["sensor.test1"])
+
+    # Insert states for a 2nd statistics period
+    two = zero + timedelta(minutes=5)
+    for i in range(len(seq)):
+        two = two + timedelta(seconds=5)
+        attributes = dict(attributes)
+        attributes["last_reset"] = dt_util.as_local(two).isoformat()
+        _states = record_meter_state(
+            hass, two, "sensor.test1", attributes, seq[i : i + 1]
+        )
+        states["sensor.test1"].extend(_states["sensor.test1"])
+
+    hist = history.get_significant_states(
+        hass,
+        zero - timedelta.resolution,
+        two + timedelta.resolution,
+        significant_changes_only=False,
+    )
+    assert dict(states)["sensor.test1"] == dict(hist)["sensor.test1"]
+
+    recorder.do_adhoc_statistics(start=zero)
+    recorder.do_adhoc_statistics(start=zero + timedelta(minutes=5))
+    wait_recording_done(hass)
+    statistic_ids = list_statistic_ids(hass)
+    assert statistic_ids == [
+        {
+            "statistic_id": "sensor.test1",
+            "name": None,
+            "source": "recorder",
+            "unit_of_measurement": native_unit,
+        }
+    ]
+    stats = statistics_during_period(hass, zero, period="5minute")
+    assert stats == {
+        "sensor.test1": [
+            {
+                "statistic_id": "sensor.test1",
+                "start": process_timestamp_to_utc_isoformat(zero),
+                "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=5)),
+                "max": None,
+                "mean": None,
+                "min": None,
+                "last_reset": process_timestamp_to_utc_isoformat(dt_util.as_local(one)),
+                "state": approx(factor * seq[7]),
+                "sum": approx(factor * (sum(seq) - seq[0])),
+            },
+            {
+                "statistic_id": "sensor.test1",
+                "start": process_timestamp_to_utc_isoformat(
+                    zero + timedelta(minutes=5)
+                ),
+                "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=10)),
+                "max": None,
+                "mean": None,
+                "min": None,
+                "last_reset": process_timestamp_to_utc_isoformat(dt_util.as_local(two)),
+                "state": approx(factor * seq[7]),
+                "sum": approx(factor * (2 * sum(seq) - seq[0])),
+            },
+        ]
+    }
+    assert "Error while processing event StatisticsTask" not in caplog.text
+
+
+@pytest.mark.parametrize("state_class", ["measurement"])
+@pytest.mark.parametrize(
+    "device_class,unit,native_unit,factor",
+    [
+        ("energy", "kWh", "kWh", 1),
+    ],
+)
+def test_compile_hourly_sum_statistics_amount_invalid_last_reset(
+    hass_recorder, caplog, state_class, device_class, unit, native_unit, factor
+):
+    """Test compiling hourly statistics."""
+    zero = dt_util.utcnow()
+    hass = hass_recorder()
+    recorder = hass.data[DATA_INSTANCE]
+    setup_component(hass, "sensor", {})
+    attributes = {
+        "device_class": device_class,
+        "state_class": state_class,
+        "unit_of_measurement": unit,
+        "last_reset": None,
+    }
+    seq = [10, 15, 15, 15, 20, 20, 20, 25]
+
+    states = {"sensor.test1": []}
+
+    # Insert states
+    one = zero
+    for i in range(len(seq)):
+        one = one + timedelta(seconds=5)
+        attributes = dict(attributes)
+        attributes["last_reset"] = dt_util.as_local(one).isoformat()
+        if i == 3:
+            attributes["last_reset"] = "festivus"  # not a valid time
         _states = record_meter_state(
             hass, one, "sensor.test1", attributes, seq[i : i + 1]
         )
@@ -363,7 +590,12 @@ def test_compile_hourly_sum_statistics_amount_reset_every_state_change(
     wait_recording_done(hass)
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
-        {"statistic_id": "sensor.test1", "unit_of_measurement": native_unit}
+        {
+            "statistic_id": "sensor.test1",
+            "name": None,
+            "source": "recorder",
+            "unit_of_measurement": native_unit,
+        }
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
     assert stats == {
@@ -375,15 +607,14 @@ def test_compile_hourly_sum_statistics_amount_reset_every_state_change(
                 "max": None,
                 "mean": None,
                 "min": None,
-                "last_reset": process_timestamp_to_utc_isoformat(one),
+                "last_reset": process_timestamp_to_utc_isoformat(dt_util.as_local(one)),
                 "state": approx(factor * seq[7]),
-                "sum": approx(factor * (sum(seq) - seq[0])),
-                "sum_decrease": approx(factor * 0.0),
-                "sum_increase": approx(factor * (sum(seq) - seq[0])),
+                "sum": approx(factor * (sum(seq) - seq[0] - seq[3])),
             },
         ]
     }
     assert "Error while processing event StatisticsTask" not in caplog.text
+    assert "Ignoring invalid last reset 'festivus' for sensor.test1" in caplog.text
 
 
 @pytest.mark.parametrize("state_class", ["measurement"])
@@ -413,6 +644,8 @@ def test_compile_hourly_sum_statistics_nan_inf_state(
     one = zero
     for i in range(len(seq)):
         one = one + timedelta(seconds=5)
+        attributes = dict(attributes)
+        attributes["last_reset"] = dt_util.as_local(one).isoformat()
         _states = record_meter_state(
             hass, one, "sensor.test1", attributes, seq[i : i + 1]
         )
@@ -430,7 +663,12 @@ def test_compile_hourly_sum_statistics_nan_inf_state(
     wait_recording_done(hass)
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
-        {"statistic_id": "sensor.test1", "unit_of_measurement": native_unit}
+        {
+            "statistic_id": "sensor.test1",
+            "name": None,
+            "source": "recorder",
+            "unit_of_measurement": native_unit,
+        }
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
     assert stats == {
@@ -445,14 +683,125 @@ def test_compile_hourly_sum_statistics_nan_inf_state(
                 "last_reset": process_timestamp_to_utc_isoformat(one),
                 "state": approx(factor * seq[7]),
                 "sum": approx(factor * (seq[2] + seq[3] + seq[4] + seq[6] + seq[7])),
-                "sum_decrease": approx(factor * 0.0),
-                "sum_increase": approx(
-                    factor * (seq[2] + seq[3] + seq[4] + seq[6] + seq[7])
-                ),
             },
         ]
     }
     assert "Error while processing event StatisticsTask" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    "entity_id,warning_1,warning_2",
+    [
+        (
+            "sensor.test1",
+            "",
+            "bug report at https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue",
+        ),
+        (
+            "sensor.today_energy",
+            "from integration demo ",
+            "bug report at https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+demo%22",
+        ),
+        (
+            "sensor.custom_sensor",
+            "from integration test ",
+            "report it to the custom component author",
+        ),
+    ],
+)
+@pytest.mark.parametrize("state_class", ["total_increasing"])
+@pytest.mark.parametrize(
+    "device_class,unit,native_unit,factor",
+    [
+        ("energy", "kWh", "kWh", 1),
+    ],
+)
+def test_compile_hourly_sum_statistics_negative_state(
+    hass_recorder,
+    caplog,
+    entity_id,
+    warning_1,
+    warning_2,
+    state_class,
+    device_class,
+    unit,
+    native_unit,
+    factor,
+):
+    """Test compiling hourly statistics with negative states."""
+    zero = dt_util.utcnow()
+    hass = hass_recorder()
+    hass.data.pop(loader.DATA_CUSTOM_COMPONENTS)
+    recorder = hass.data[DATA_INSTANCE]
+
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+    mocksensor = platform.MockSensor(name="custom_sensor")
+    mocksensor._attr_should_poll = False
+    platform.ENTITIES["custom_sensor"] = mocksensor
+
+    setup_component(
+        hass, "sensor", {"sensor": [{"platform": "demo"}, {"platform": "test"}]}
+    )
+    hass.block_till_done()
+    attributes = {
+        "device_class": device_class,
+        "state_class": state_class,
+        "unit_of_measurement": unit,
+    }
+    seq = [15, 16, 15, 16, 20, -20, 20, 10]
+
+    states = {entity_id: []}
+    offending_state = 5
+    if state := hass.states.get(entity_id):
+        states[entity_id].append(state)
+        offending_state = 6
+    one = zero
+    for i in range(len(seq)):
+        one = one + timedelta(seconds=5)
+        _states = record_meter_state(hass, one, entity_id, attributes, seq[i : i + 1])
+        states[entity_id].extend(_states[entity_id])
+
+    hist = history.get_significant_states(
+        hass,
+        zero - timedelta.resolution,
+        one + timedelta.resolution,
+        significant_changes_only=False,
+    )
+    assert dict(states)[entity_id] == dict(hist)[entity_id]
+
+    recorder.do_adhoc_statistics(start=zero)
+    wait_recording_done(hass)
+    statistic_ids = list_statistic_ids(hass)
+    assert {
+        "name": None,
+        "source": "recorder",
+        "statistic_id": entity_id,
+        "unit_of_measurement": native_unit,
+    } in statistic_ids
+    stats = statistics_during_period(hass, zero, period="5minute")
+    assert stats[entity_id] == [
+        {
+            "statistic_id": entity_id,
+            "start": process_timestamp_to_utc_isoformat(zero),
+            "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=5)),
+            "max": None,
+            "mean": None,
+            "min": None,
+            "last_reset": None,
+            "state": approx(factor * seq[7]),
+            "sum": approx(factor * 15),  # (15 - 10) + (10 - 0)
+        },
+    ]
+    assert "Error while processing event StatisticsTask" not in caplog.text
+    state = states[entity_id][offending_state].state
+    last_updated = states[entity_id][offending_state].last_updated.isoformat()
+    assert (
+        f"Entity {entity_id} {warning_1}has state class total_increasing, but its state "
+        f"is negative. Triggered by state {state} with last_updated set to {last_updated}."
+        in caplog.text
+    )
+    assert warning_2 in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -500,7 +849,12 @@ def test_compile_hourly_sum_statistics_total_no_reset(
     wait_recording_done(hass)
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
-        {"statistic_id": "sensor.test1", "unit_of_measurement": native_unit}
+        {
+            "statistic_id": "sensor.test1",
+            "name": None,
+            "source": "recorder",
+            "unit_of_measurement": native_unit,
+        }
     ]
     stats = statistics_during_period(hass, period0, period="5minute")
     assert stats == {
@@ -515,8 +869,6 @@ def test_compile_hourly_sum_statistics_total_no_reset(
                 "last_reset": None,
                 "state": approx(factor * seq[2]),
                 "sum": approx(factor * 10.0),
-                "sum_decrease": approx(factor * 0.0),
-                "sum_increase": approx(factor * 10.0),
             },
             {
                 "statistic_id": "sensor.test1",
@@ -528,8 +880,6 @@ def test_compile_hourly_sum_statistics_total_no_reset(
                 "last_reset": None,
                 "state": approx(factor * seq[5]),
                 "sum": approx(factor * 30.0),
-                "sum_decrease": approx(factor * 10.0),
-                "sum_increase": approx(factor * 40.0),
             },
             {
                 "statistic_id": "sensor.test1",
@@ -541,8 +891,6 @@ def test_compile_hourly_sum_statistics_total_no_reset(
                 "last_reset": None,
                 "state": approx(factor * seq[8]),
                 "sum": approx(factor * 60.0),
-                "sum_decrease": approx(factor * 10.0),
-                "sum_increase": approx(factor * 70.0),
             },
         ]
     }
@@ -592,7 +940,12 @@ def test_compile_hourly_sum_statistics_total_increasing(
     wait_recording_done(hass)
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
-        {"statistic_id": "sensor.test1", "unit_of_measurement": native_unit}
+        {
+            "statistic_id": "sensor.test1",
+            "name": None,
+            "source": "recorder",
+            "unit_of_measurement": native_unit,
+        }
     ]
     stats = statistics_during_period(hass, period0, period="5minute")
     assert stats == {
@@ -607,8 +960,6 @@ def test_compile_hourly_sum_statistics_total_increasing(
                 "last_reset": None,
                 "state": approx(factor * seq[2]),
                 "sum": approx(factor * 10.0),
-                "sum_decrease": approx(factor * 0.0),
-                "sum_increase": approx(factor * 10.0),
             },
             {
                 "statistic_id": "sensor.test1",
@@ -620,8 +971,6 @@ def test_compile_hourly_sum_statistics_total_increasing(
                 "last_reset": None,
                 "state": approx(factor * seq[5]),
                 "sum": approx(factor * 50.0),
-                "sum_decrease": approx(factor * 0.0),
-                "sum_increase": approx(factor * 50.0),
             },
             {
                 "statistic_id": "sensor.test1",
@@ -633,8 +982,6 @@ def test_compile_hourly_sum_statistics_total_increasing(
                 "last_reset": None,
                 "state": approx(factor * seq[8]),
                 "sum": approx(factor * 80.0),
-                "sum_decrease": approx(factor * 0.0),
-                "sum_increase": approx(factor * 80.0),
             },
         ]
     }
@@ -680,21 +1027,26 @@ def test_compile_hourly_sum_statistics_total_increasing_small_dip(
     wait_recording_done(hass)
     assert (
         "Entity sensor.test1 has state class total_increasing, but its state is not "
-        "strictly increasing. Please create a bug report at https://github.com/"
-        "home-assistant/core/issues?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A"
-        "+recorder%22"
+        "strictly increasing."
     ) not in caplog.text
     recorder.do_adhoc_statistics(start=period2)
     wait_recording_done(hass)
+    state = states["sensor.test1"][6].state
+    last_updated = states["sensor.test1"][6].last_updated.isoformat()
     assert (
         "Entity sensor.test1 has state class total_increasing, but its state is not "
-        "strictly increasing. Please create a bug report at https://github.com/"
-        "home-assistant/core/issues?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A"
-        "+recorder%22"
+        f"strictly increasing. Triggered by state {state} with last_updated set to "
+        f"{last_updated}. Please create a bug report at https://github.com/home-assistant"
+        "/core/issues?q=is%3Aopen+is%3Aissue"
     ) in caplog.text
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
-        {"statistic_id": "sensor.test1", "unit_of_measurement": native_unit}
+        {
+            "statistic_id": "sensor.test1",
+            "name": None,
+            "source": "recorder",
+            "unit_of_measurement": native_unit,
+        }
     ]
     stats = statistics_during_period(hass, period0, period="5minute")
     assert stats == {
@@ -709,8 +1061,6 @@ def test_compile_hourly_sum_statistics_total_increasing_small_dip(
                 "min": None,
                 "state": approx(factor * seq[2]),
                 "sum": approx(factor * 10.0),
-                "sum_decrease": approx(factor * 0.0),
-                "sum_increase": approx(factor * 10.0),
             },
             {
                 "last_reset": None,
@@ -722,8 +1072,6 @@ def test_compile_hourly_sum_statistics_total_increasing_small_dip(
                 "min": None,
                 "state": approx(factor * seq[5]),
                 "sum": approx(factor * 30.0),
-                "sum_decrease": approx(factor * 1.0),
-                "sum_increase": approx(factor * 31.0),
             },
             {
                 "last_reset": None,
@@ -735,8 +1083,6 @@ def test_compile_hourly_sum_statistics_total_increasing_small_dip(
                 "min": None,
                 "state": approx(factor * seq[8]),
                 "sum": approx(factor * 60.0),
-                "sum_decrease": approx(factor * 2.0),
-                "sum_increase": approx(factor * 62.0),
             },
         ]
     }
@@ -793,7 +1139,12 @@ def test_compile_hourly_energy_statistics_unsupported(hass_recorder, caplog):
     wait_recording_done(hass)
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
-        {"statistic_id": "sensor.test1", "unit_of_measurement": "kWh"}
+        {
+            "statistic_id": "sensor.test1",
+            "name": None,
+            "source": "recorder",
+            "unit_of_measurement": "kWh",
+        }
     ]
     stats = statistics_during_period(hass, period0, period="5minute")
     assert stats == {
@@ -808,8 +1159,6 @@ def test_compile_hourly_energy_statistics_unsupported(hass_recorder, caplog):
                 "last_reset": process_timestamp_to_utc_isoformat(period0),
                 "state": approx(20.0),
                 "sum": approx(10.0),
-                "sum_decrease": approx(0.0),
-                "sum_increase": approx(10.0),
             },
             {
                 "statistic_id": "sensor.test1",
@@ -821,8 +1170,6 @@ def test_compile_hourly_energy_statistics_unsupported(hass_recorder, caplog):
                 "last_reset": process_timestamp_to_utc_isoformat(four),
                 "state": approx(40.0),
                 "sum": approx(40.0),
-                "sum_decrease": approx(10.0),
-                "sum_increase": approx(50.0),
             },
             {
                 "statistic_id": "sensor.test1",
@@ -834,8 +1181,6 @@ def test_compile_hourly_energy_statistics_unsupported(hass_recorder, caplog):
                 "last_reset": process_timestamp_to_utc_isoformat(four),
                 "state": approx(70.0),
                 "sum": approx(70.0),
-                "sum_decrease": approx(10.0),
-                "sum_increase": approx(80.0),
             },
         ]
     }
@@ -886,9 +1231,24 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
     wait_recording_done(hass)
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
-        {"statistic_id": "sensor.test1", "unit_of_measurement": "kWh"},
-        {"statistic_id": "sensor.test2", "unit_of_measurement": "kWh"},
-        {"statistic_id": "sensor.test3", "unit_of_measurement": "kWh"},
+        {
+            "statistic_id": "sensor.test1",
+            "name": None,
+            "source": "recorder",
+            "unit_of_measurement": "kWh",
+        },
+        {
+            "statistic_id": "sensor.test2",
+            "name": None,
+            "source": "recorder",
+            "unit_of_measurement": "kWh",
+        },
+        {
+            "statistic_id": "sensor.test3",
+            "name": None,
+            "source": "recorder",
+            "unit_of_measurement": "kWh",
+        },
     ]
     stats = statistics_during_period(hass, period0, period="5minute")
     assert stats == {
@@ -903,8 +1263,6 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
                 "last_reset": process_timestamp_to_utc_isoformat(period0),
                 "state": approx(20.0),
                 "sum": approx(10.0),
-                "sum_decrease": approx(0.0),
-                "sum_increase": approx(10.0),
             },
             {
                 "statistic_id": "sensor.test1",
@@ -916,8 +1274,6 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
                 "last_reset": process_timestamp_to_utc_isoformat(four),
                 "state": approx(40.0),
                 "sum": approx(40.0),
-                "sum_decrease": approx(10.0),
-                "sum_increase": approx(50.0),
             },
             {
                 "statistic_id": "sensor.test1",
@@ -929,8 +1285,6 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
                 "last_reset": process_timestamp_to_utc_isoformat(four),
                 "state": approx(70.0),
                 "sum": approx(70.0),
-                "sum_decrease": approx(10.0),
-                "sum_increase": approx(80.0),
             },
         ],
         "sensor.test2": [
@@ -944,8 +1298,6 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
                 "last_reset": process_timestamp_to_utc_isoformat(period0),
                 "state": approx(130.0),
                 "sum": approx(20.0),
-                "sum_decrease": approx(0.0),
-                "sum_increase": approx(20.0),
             },
             {
                 "statistic_id": "sensor.test2",
@@ -957,8 +1309,6 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
                 "last_reset": process_timestamp_to_utc_isoformat(four),
                 "state": approx(45.0),
                 "sum": approx(-65.0),
-                "sum_decrease": approx(130.0),
-                "sum_increase": approx(65.0),
             },
             {
                 "statistic_id": "sensor.test2",
@@ -970,8 +1320,6 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
                 "last_reset": process_timestamp_to_utc_isoformat(four),
                 "state": approx(75.0),
                 "sum": approx(-35.0),
-                "sum_decrease": approx(130.0),
-                "sum_increase": approx(95.0),
             },
         ],
         "sensor.test3": [
@@ -985,8 +1333,6 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
                 "last_reset": process_timestamp_to_utc_isoformat(period0),
                 "state": approx(5.0 / 1000),
                 "sum": approx(5.0 / 1000),
-                "sum_decrease": approx(0.0 / 1000),
-                "sum_increase": approx(5.0 / 1000),
             },
             {
                 "statistic_id": "sensor.test3",
@@ -998,8 +1344,6 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
                 "last_reset": process_timestamp_to_utc_isoformat(four),
                 "state": approx(50.0 / 1000),
                 "sum": approx(60.0 / 1000),
-                "sum_decrease": approx(0.0 / 1000),
-                "sum_increase": approx(60.0 / 1000),
             },
             {
                 "statistic_id": "sensor.test3",
@@ -1011,8 +1355,6 @@ def test_compile_hourly_energy_statistics_multiple(hass_recorder, caplog):
                 "last_reset": process_timestamp_to_utc_isoformat(four),
                 "state": approx(90.0 / 1000),
                 "sum": approx(100.0 / 1000),
-                "sum_decrease": approx(0.0 / 1000),
-                "sum_increase": approx(100.0 / 1000),
             },
         ],
     }
@@ -1067,8 +1409,6 @@ def test_compile_hourly_statistics_unchanged(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "sum_decrease": None,
-                "sum_increase": None,
             }
         ]
     }
@@ -1102,8 +1442,6 @@ def test_compile_hourly_statistics_partially_unavailable(hass_recorder, caplog):
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "sum_decrease": None,
-                "sum_increase": None,
             }
         ]
     }
@@ -1162,8 +1500,6 @@ def test_compile_hourly_statistics_unavailable(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "sum_decrease": None,
-                "sum_increase": None,
             }
         ]
     }
@@ -1222,13 +1558,23 @@ def test_list_statistic_ids(
     hass.states.set("sensor.test1", 0, attributes=attributes)
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
-        {"statistic_id": "sensor.test1", "unit_of_measurement": native_unit}
+        {
+            "statistic_id": "sensor.test1",
+            "name": None,
+            "source": "recorder",
+            "unit_of_measurement": native_unit,
+        },
     ]
     for stat_type in ["mean", "sum", "dogs"]:
         statistic_ids = list_statistic_ids(hass, statistic_type=stat_type)
         if statistic_type == stat_type:
             assert statistic_ids == [
-                {"statistic_id": "sensor.test1", "unit_of_measurement": native_unit}
+                {
+                    "statistic_id": "sensor.test1",
+                    "name": None,
+                    "source": "recorder",
+                    "unit_of_measurement": native_unit,
+                },
             ]
         else:
             assert statistic_ids == []
@@ -1300,7 +1646,12 @@ def test_compile_hourly_statistics_changing_units_1(
     assert "does not match the unit of already compiled" not in caplog.text
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
-        {"statistic_id": "sensor.test1", "unit_of_measurement": native_unit}
+        {
+            "statistic_id": "sensor.test1",
+            "name": None,
+            "source": "recorder",
+            "unit_of_measurement": native_unit,
+        },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
     assert stats == {
@@ -1315,8 +1666,6 @@ def test_compile_hourly_statistics_changing_units_1(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "sum_decrease": None,
-                "sum_increase": None,
             }
         ]
     }
@@ -1329,7 +1678,12 @@ def test_compile_hourly_statistics_changing_units_1(
     )
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
-        {"statistic_id": "sensor.test1", "unit_of_measurement": native_unit}
+        {
+            "statistic_id": "sensor.test1",
+            "name": None,
+            "source": "recorder",
+            "unit_of_measurement": native_unit,
+        },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
     assert stats == {
@@ -1344,8 +1698,6 @@ def test_compile_hourly_statistics_changing_units_1(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "sum_decrease": None,
-                "sum_increase": None,
             }
         ]
     }
@@ -1389,7 +1741,12 @@ def test_compile_hourly_statistics_changing_units_2(
     assert "and matches the unit of already compiled statistics" not in caplog.text
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
-        {"statistic_id": "sensor.test1", "unit_of_measurement": "cats"}
+        {
+            "statistic_id": "sensor.test1",
+            "name": None,
+            "source": "recorder",
+            "unit_of_measurement": "cats",
+        },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
     assert stats == {}
@@ -1437,7 +1794,12 @@ def test_compile_hourly_statistics_changing_units_3(
     assert "does not match the unit of already compiled" not in caplog.text
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
-        {"statistic_id": "sensor.test1", "unit_of_measurement": native_unit}
+        {
+            "statistic_id": "sensor.test1",
+            "name": None,
+            "source": "recorder",
+            "unit_of_measurement": native_unit,
+        },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
     assert stats == {
@@ -1452,8 +1814,6 @@ def test_compile_hourly_statistics_changing_units_3(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "sum_decrease": None,
-                "sum_increase": None,
             }
         ]
     }
@@ -1464,7 +1824,12 @@ def test_compile_hourly_statistics_changing_units_3(
     assert f"matches the unit of already compiled statistics ({unit})" in caplog.text
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
-        {"statistic_id": "sensor.test1", "unit_of_measurement": native_unit}
+        {
+            "statistic_id": "sensor.test1",
+            "name": None,
+            "source": "recorder",
+            "unit_of_measurement": native_unit,
+        },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
     assert stats == {
@@ -1479,8 +1844,205 @@ def test_compile_hourly_statistics_changing_units_3(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "sum_decrease": None,
-                "sum_increase": None,
+            }
+        ]
+    }
+    assert "Error while processing event StatisticsTask" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    "device_class,state_unit,statistic_unit,mean,min,max",
+    [
+        ("power", "kW", "W", 13.050847, -10, 30),
+    ],
+)
+def test_compile_hourly_statistics_changing_device_class_1(
+    hass_recorder, caplog, device_class, state_unit, statistic_unit, mean, min, max
+):
+    """Test compiling hourly statistics where device class changes from one hour to the next."""
+    zero = dt_util.utcnow()
+    hass = hass_recorder()
+    recorder = hass.data[DATA_INSTANCE]
+    setup_component(hass, "sensor", {})
+
+    # Record some states for an initial period, the entity has no device class
+    attributes = {
+        "state_class": "measurement",
+        "unit_of_measurement": state_unit,
+    }
+    four, states = record_states(hass, zero, "sensor.test1", attributes)
+
+    recorder.do_adhoc_statistics(start=zero)
+    wait_recording_done(hass)
+    assert "does not match the unit of already compiled" not in caplog.text
+    statistic_ids = list_statistic_ids(hass)
+    assert statistic_ids == [
+        {
+            "statistic_id": "sensor.test1",
+            "name": None,
+            "source": "recorder",
+            "unit_of_measurement": state_unit,
+        },
+    ]
+    stats = statistics_during_period(hass, zero, period="5minute")
+    assert stats == {
+        "sensor.test1": [
+            {
+                "statistic_id": "sensor.test1",
+                "start": process_timestamp_to_utc_isoformat(zero),
+                "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=5)),
+                "mean": approx(mean),
+                "min": approx(min),
+                "max": approx(max),
+                "last_reset": None,
+                "state": None,
+                "sum": None,
+            }
+        ]
+    }
+
+    # Update device class and record additional states
+    attributes["device_class"] = device_class
+    four, _states = record_states(
+        hass, zero + timedelta(minutes=5), "sensor.test1", attributes
+    )
+    states["sensor.test1"] += _states["sensor.test1"]
+    four, _states = record_states(
+        hass, zero + timedelta(minutes=10), "sensor.test1", attributes
+    )
+    states["sensor.test1"] += _states["sensor.test1"]
+    hist = history.get_significant_states(hass, zero, four)
+    assert dict(states) == dict(hist)
+
+    # Run statistics again, we get a warning, and no additional statistics is generated
+    recorder.do_adhoc_statistics(start=zero + timedelta(minutes=10))
+    wait_recording_done(hass)
+    assert (
+        f"The normalized unit of sensor.test1 ({statistic_unit}) does not match the "
+        f"unit of already compiled statistics ({state_unit})" in caplog.text
+    )
+    statistic_ids = list_statistic_ids(hass)
+    assert statistic_ids == [
+        {
+            "statistic_id": "sensor.test1",
+            "name": None,
+            "source": "recorder",
+            "unit_of_measurement": state_unit,
+        },
+    ]
+    stats = statistics_during_period(hass, zero, period="5minute")
+    assert stats == {
+        "sensor.test1": [
+            {
+                "statistic_id": "sensor.test1",
+                "start": process_timestamp_to_utc_isoformat(zero),
+                "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=5)),
+                "mean": approx(mean),
+                "min": approx(min),
+                "max": approx(max),
+                "last_reset": None,
+                "state": None,
+                "sum": None,
+            }
+        ]
+    }
+    assert "Error while processing event StatisticsTask" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    "device_class,state_unit,statistic_unit,mean,min,max",
+    [
+        ("power", "kW", "W", 13050.847, -10000, 30000),
+    ],
+)
+def test_compile_hourly_statistics_changing_device_class_2(
+    hass_recorder, caplog, device_class, state_unit, statistic_unit, mean, min, max
+):
+    """Test compiling hourly statistics where device class changes from one hour to the next."""
+    zero = dt_util.utcnow()
+    hass = hass_recorder()
+    recorder = hass.data[DATA_INSTANCE]
+    setup_component(hass, "sensor", {})
+
+    # Record some states for an initial period, the entity has a device class
+    attributes = {
+        "device_class": device_class,
+        "state_class": "measurement",
+        "unit_of_measurement": state_unit,
+    }
+    four, states = record_states(hass, zero, "sensor.test1", attributes)
+
+    recorder.do_adhoc_statistics(start=zero)
+    wait_recording_done(hass)
+    assert "does not match the unit of already compiled" not in caplog.text
+    statistic_ids = list_statistic_ids(hass)
+    assert statistic_ids == [
+        {
+            "statistic_id": "sensor.test1",
+            "name": None,
+            "source": "recorder",
+            "unit_of_measurement": statistic_unit,
+        },
+    ]
+    stats = statistics_during_period(hass, zero, period="5minute")
+    assert stats == {
+        "sensor.test1": [
+            {
+                "statistic_id": "sensor.test1",
+                "start": process_timestamp_to_utc_isoformat(zero),
+                "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=5)),
+                "mean": approx(mean),
+                "min": approx(min),
+                "max": approx(max),
+                "last_reset": None,
+                "state": None,
+                "sum": None,
+            }
+        ]
+    }
+
+    # Remove device class and record additional states
+    attributes.pop("device_class")
+    four, _states = record_states(
+        hass, zero + timedelta(minutes=5), "sensor.test1", attributes
+    )
+    states["sensor.test1"] += _states["sensor.test1"]
+    four, _states = record_states(
+        hass, zero + timedelta(minutes=10), "sensor.test1", attributes
+    )
+    states["sensor.test1"] += _states["sensor.test1"]
+    hist = history.get_significant_states(hass, zero, four)
+    assert dict(states) == dict(hist)
+
+    # Run statistics again, we get a warning, and no additional statistics is generated
+    recorder.do_adhoc_statistics(start=zero + timedelta(minutes=10))
+    wait_recording_done(hass)
+    assert (
+        f"The unit of sensor.test1 ({state_unit}) does not match the "
+        f"unit of already compiled statistics ({statistic_unit})" in caplog.text
+    )
+    statistic_ids = list_statistic_ids(hass)
+    assert statistic_ids == [
+        {
+            "statistic_id": "sensor.test1",
+            "name": None,
+            "source": "recorder",
+            "unit_of_measurement": statistic_unit,
+        },
+    ]
+    stats = statistics_during_period(hass, zero, period="5minute")
+    assert stats == {
+        "sensor.test1": [
+            {
+                "statistic_id": "sensor.test1",
+                "start": process_timestamp_to_utc_isoformat(zero),
+                "end": process_timestamp_to_utc_isoformat(zero + timedelta(minutes=5)),
+                "mean": approx(mean),
+                "min": approx(min),
+                "max": approx(max),
+                "last_reset": None,
+                "state": None,
+                "sum": None,
             }
         ]
     }
@@ -1518,14 +2080,26 @@ def test_compile_hourly_statistics_changing_statistics(
     wait_recording_done(hass)
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
-        {"statistic_id": "sensor.test1", "unit_of_measurement": None}
+        {
+            "statistic_id": "sensor.test1",
+            "name": None,
+            "source": "recorder",
+            "unit_of_measurement": None,
+        },
     ]
-    metadata = get_metadata(hass, "sensor.test1")
+    metadata = get_metadata(hass, statistic_ids=("sensor.test1",))
     assert metadata == {
-        "has_mean": True,
-        "has_sum": False,
-        "statistic_id": "sensor.test1",
-        "unit_of_measurement": None,
+        "sensor.test1": (
+            1,
+            {
+                "has_mean": True,
+                "has_sum": False,
+                "name": None,
+                "source": "recorder",
+                "statistic_id": "sensor.test1",
+                "unit_of_measurement": None,
+            },
+        )
     }
 
     # Add more states, with changed state class
@@ -1538,14 +2112,26 @@ def test_compile_hourly_statistics_changing_statistics(
     wait_recording_done(hass)
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
-        {"statistic_id": "sensor.test1", "unit_of_measurement": None}
+        {
+            "statistic_id": "sensor.test1",
+            "name": None,
+            "source": "recorder",
+            "unit_of_measurement": None,
+        },
     ]
-    metadata = get_metadata(hass, "sensor.test1")
+    metadata = get_metadata(hass, statistic_ids=("sensor.test1",))
     assert metadata == {
-        "has_mean": False,
-        "has_sum": True,
-        "statistic_id": "sensor.test1",
-        "unit_of_measurement": None,
+        "sensor.test1": (
+            1,
+            {
+                "has_mean": False,
+                "has_sum": True,
+                "name": None,
+                "source": "recorder",
+                "statistic_id": "sensor.test1",
+                "unit_of_measurement": None,
+            },
+        )
     }
     stats = statistics_during_period(hass, period0, period="5minute")
     assert stats == {
@@ -1560,8 +2146,6 @@ def test_compile_hourly_statistics_changing_statistics(
                 "last_reset": None,
                 "state": None,
                 "sum": None,
-                "sum_decrease": None,
-                "sum_increase": None,
             },
             {
                 "statistic_id": "sensor.test1",
@@ -1573,8 +2157,6 @@ def test_compile_hourly_statistics_changing_statistics(
                 "last_reset": None,
                 "state": approx(30.0),
                 "sum": approx(30.0),
-                "sum_decrease": approx(10.0),
-                "sum_increase": approx(40.0),
             },
         ]
     }
@@ -1582,15 +2164,25 @@ def test_compile_hourly_statistics_changing_statistics(
     assert "Error while processing event StatisticsTask" not in caplog.text
 
 
-def test_compile_statistics_hourly_summary(hass_recorder, caplog):
-    """Test compiling hourly statistics."""
+@pytest.mark.parametrize(
+    "db_supports_row_number,in_log,not_in_log",
+    [(True, "row_number", None), (False, None, "row_number")],
+)
+def test_compile_statistics_hourly_daily_monthly_summary(
+    hass_recorder, caplog, db_supports_row_number, in_log, not_in_log
+):
+    """Test compiling hourly statistics + monthly and daily summary."""
     zero = dt_util.utcnow()
-    zero = zero.replace(minute=0, second=0, microsecond=0)
-    # Travel to the future, recorder gets confused otherwise because states are added
-    # before the start of the recorder_run
-    zero += timedelta(hours=1)
-    hass = hass_recorder()
+    # August 31st, 23:00 local time
+    zero = zero.replace(
+        year=2021, month=9, day=1, hour=5, minute=0, second=0, microsecond=0
+    )
+    with patch(
+        "homeassistant.components.recorder.models.dt_util.utcnow", return_value=zero
+    ):
+        hass = hass_recorder()
     recorder = hass.data[DATA_INSTANCE]
+    recorder._db_supports_row_number = db_supports_row_number
     setup_component(hass, "sensor", {})
     attributes = {
         "device_class": None,
@@ -1643,8 +2235,6 @@ def test_compile_statistics_hourly_summary(hass_recorder, caplog):
     expected_averages = {"sensor.test1": [], "sensor.test2": [], "sensor.test3": []}
     expected_states = {"sensor.test4": []}
     expected_sums = {"sensor.test4": []}
-    expected_decreases = {"sensor.test4": []}
-    expected_increases = {"sensor.test4": []}
     last_states = {
         "sensor.test1": None,
         "sensor.test2": None,
@@ -1685,7 +2275,11 @@ def test_compile_statistics_hourly_summary(hass_recorder, caplog):
         start_meter = start
         for j in range(len(seq)):
             _states = record_meter_state(
-                hass, start_meter, "sensor.test4", sum_attributes, seq[j : j + 1]
+                hass,
+                start_meter,
+                "sensor.test4",
+                sum_attributes,
+                seq[j : j + 1],
             )
             start_meter = start + timedelta(minutes=1)
             states["sensor.test4"] += _states["sensor.test4"]
@@ -1693,10 +2287,6 @@ def test_compile_statistics_hourly_summary(hass_recorder, caplog):
         expected_states["sensor.test4"].append(seq[-1])
         expected_sums["sensor.test4"].append(
             _sum(seq, last_state, expected_sums["sensor.test4"])
-        )
-        expected_decreases["sensor.test4"].append(0)
-        expected_increases["sensor.test4"].append(
-            _sum(seq, last_state, expected_increases["sensor.test4"])
         )
         last_states["sensor.test4"] = seq[-1]
 
@@ -1716,10 +2306,30 @@ def test_compile_statistics_hourly_summary(hass_recorder, caplog):
 
     statistic_ids = list_statistic_ids(hass)
     assert statistic_ids == [
-        {"statistic_id": "sensor.test1", "unit_of_measurement": "%"},
-        {"statistic_id": "sensor.test2", "unit_of_measurement": "%"},
-        {"statistic_id": "sensor.test3", "unit_of_measurement": "%"},
-        {"statistic_id": "sensor.test4", "unit_of_measurement": "EUR"},
+        {
+            "statistic_id": "sensor.test1",
+            "name": None,
+            "source": "recorder",
+            "unit_of_measurement": "%",
+        },
+        {
+            "statistic_id": "sensor.test2",
+            "name": None,
+            "source": "recorder",
+            "unit_of_measurement": "%",
+        },
+        {
+            "statistic_id": "sensor.test3",
+            "name": None,
+            "source": "recorder",
+            "unit_of_measurement": "%",
+        },
+        {
+            "statistic_id": "sensor.test4",
+            "name": None,
+            "source": "recorder",
+            "unit_of_measurement": "EUR",
+        },
     ]
 
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -1755,16 +2365,6 @@ def test_compile_statistics_hourly_summary(hass_recorder, caplog):
             expected_sum = (
                 expected_sums[entity_id][i] if entity_id in expected_sums else None
             )
-            expected_decrease = (
-                expected_decreases[entity_id][i]
-                if entity_id in expected_decreases
-                else None
-            )
-            expected_increase = (
-                expected_increases[entity_id][i]
-                if entity_id in expected_increases
-                else None
-            )
             expected_stats[entity_id].append(
                 {
                     "statistic_id": entity_id,
@@ -1776,8 +2376,6 @@ def test_compile_statistics_hourly_summary(hass_recorder, caplog):
                     "last_reset": None,
                     "state": expected_state,
                     "sum": expected_sum,
-                    "sum_decrease": expected_decrease,
-                    "sum_increase": expected_increase,
                 }
             )
         start += timedelta(minutes=5)
@@ -1825,14 +2423,62 @@ def test_compile_statistics_hourly_summary(hass_recorder, caplog):
                 if entity_id in expected_sums
                 else None
             )
-            expected_decrease = (
-                expected_decreases[entity_id][(i + 1) * 12 - 1]
-                if entity_id in expected_decreases
+            expected_stats[entity_id].append(
+                {
+                    "statistic_id": entity_id,
+                    "start": process_timestamp_to_utc_isoformat(start),
+                    "end": process_timestamp_to_utc_isoformat(end),
+                    "mean": approx(expected_average),
+                    "min": approx(expected_minimum),
+                    "max": approx(expected_maximum),
+                    "last_reset": None,
+                    "state": expected_state,
+                    "sum": expected_sum,
+                }
+            )
+        start += timedelta(hours=1)
+        end += timedelta(hours=1)
+    assert stats == expected_stats
+
+    stats = statistics_during_period(hass, zero, period="day")
+    expected_stats = {
+        "sensor.test1": [],
+        "sensor.test2": [],
+        "sensor.test3": [],
+        "sensor.test4": [],
+    }
+    start = dt_util.parse_datetime("2021-08-31T06:00:00+00:00")
+    end = start + timedelta(days=1)
+    for i in range(2):
+        for entity_id in [
+            "sensor.test1",
+            "sensor.test2",
+            "sensor.test3",
+            "sensor.test4",
+        ]:
+            expected_average = (
+                mean(expected_averages[entity_id][i * 12 : (i + 1) * 12])
+                if entity_id in expected_averages
                 else None
             )
-            expected_increase = (
-                expected_increases[entity_id][(i + 1) * 12 - 1]
-                if entity_id in expected_increases
+            expected_minimum = (
+                min(expected_minima[entity_id][i * 12 : (i + 1) * 12])
+                if entity_id in expected_minima
+                else None
+            )
+            expected_maximum = (
+                max(expected_maxima[entity_id][i * 12 : (i + 1) * 12])
+                if entity_id in expected_maxima
+                else None
+            )
+            expected_state = (
+                expected_states[entity_id][(i + 1) * 12 - 1]
+                if entity_id in expected_states
+                else None
+            )
+            expected_sum = (
+                expected_sums[entity_id][(i + 1) * 12 - 1]
+                if entity_id in expected_sums
                 else None
             )
             expected_stats[entity_id].append(
@@ -1846,14 +2492,75 @@ def test_compile_statistics_hourly_summary(hass_recorder, caplog):
                     "last_reset": None,
                     "state": expected_state,
                     "sum": expected_sum,
-                    "sum_decrease": expected_decrease,
-                    "sum_increase": expected_increase,
                 }
             )
-        start += timedelta(hours=1)
-        end += timedelta(hours=1)
+        start += timedelta(days=1)
+        end += timedelta(days=1)
     assert stats == expected_stats
+
+    stats = statistics_during_period(hass, zero, period="month")
+    expected_stats = {
+        "sensor.test1": [],
+        "sensor.test2": [],
+        "sensor.test3": [],
+        "sensor.test4": [],
+    }
+    start = dt_util.parse_datetime("2021-08-01T06:00:00+00:00")
+    end = dt_util.parse_datetime("2021-09-01T06:00:00+00:00")
+    for i in range(2):
+        for entity_id in [
+            "sensor.test1",
+            "sensor.test2",
+            "sensor.test3",
+            "sensor.test4",
+        ]:
+            expected_average = (
+                mean(expected_averages[entity_id][i * 12 : (i + 1) * 12])
+                if entity_id in expected_averages
+                else None
+            )
+            expected_minimum = (
+                min(expected_minima[entity_id][i * 12 : (i + 1) * 12])
+                if entity_id in expected_minima
+                else None
+            )
+            expected_maximum = (
+                max(expected_maxima[entity_id][i * 12 : (i + 1) * 12])
+                if entity_id in expected_maxima
+                else None
+            )
+            expected_state = (
+                expected_states[entity_id][(i + 1) * 12 - 1]
+                if entity_id in expected_states
+                else None
+            )
+            expected_sum = (
+                expected_sums[entity_id][(i + 1) * 12 - 1]
+                if entity_id in expected_sums
+                else None
+            )
+            expected_stats[entity_id].append(
+                {
+                    "statistic_id": entity_id,
+                    "start": process_timestamp_to_utc_isoformat(start),
+                    "end": process_timestamp_to_utc_isoformat(end),
+                    "mean": approx(expected_average),
+                    "min": approx(expected_minimum),
+                    "max": approx(expected_maximum),
+                    "last_reset": None,
+                    "state": expected_state,
+                    "sum": expected_sum,
+                }
+            )
+        start = (start + timedelta(days=31)).replace(day=1)
+        end = (end + timedelta(days=31)).replace(day=1)
+    assert stats == expected_stats
+
     assert "Error while processing event StatisticsTask" not in caplog.text
+    if in_log:
+        assert in_log in caplog.text
+    if not_in_log:
+        assert not_in_log not in caplog.text
 
 
 def record_states(hass, zero, entity_id, attributes, seq=None):
@@ -1893,6 +2600,562 @@ def record_states(hass, zero, entity_id, attributes, seq=None):
         )
 
     return four, states
+
+
+@pytest.mark.parametrize(
+    "units, attributes, unit",
+    [
+        (IMPERIAL_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W"),
+        (METRIC_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W"),
+        (IMPERIAL_SYSTEM, TEMPERATURE_SENSOR_ATTRIBUTES, "°F"),
+        (METRIC_SYSTEM, TEMPERATURE_SENSOR_ATTRIBUTES, "°C"),
+        (IMPERIAL_SYSTEM, PRESSURE_SENSOR_ATTRIBUTES, "psi"),
+        (METRIC_SYSTEM, PRESSURE_SENSOR_ATTRIBUTES, "Pa"),
+    ],
+)
+async def test_validate_statistics_supported_device_class(
+    hass, hass_ws_client, units, attributes, unit
+):
+    """Test validate_statistics."""
+    id = 1
+
+    def next_id():
+        nonlocal id
+        id += 1
+        return id
+
+    async def assert_validation_result(client, expected_result):
+        await client.send_json(
+            {"id": next_id(), "type": "recorder/validate_statistics"}
+        )
+        response = await client.receive_json()
+        assert response["success"]
+        assert response["result"] == expected_result
+
+    now = dt_util.utcnow()
+
+    hass.config.units = units
+    await hass.async_add_executor_job(init_recorder_component, hass)
+    await async_setup_component(hass, "sensor", {})
+    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    client = await hass_ws_client()
+
+    # No statistics, no state - empty response
+    await assert_validation_result(client, {})
+
+    # No statistics, valid state - empty response
+    hass.states.async_set(
+        "sensor.test", 10, attributes={**attributes, **{"unit_of_measurement": unit}}
+    )
+    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await assert_validation_result(client, {})
+
+    # No statistics, invalid state - expect error
+    hass.states.async_set(
+        "sensor.test", 11, attributes={**attributes, **{"unit_of_measurement": "dogs"}}
+    )
+    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    expected = {
+        "sensor.test": [
+            {
+                "data": {
+                    "device_class": attributes["device_class"],
+                    "state_unit": "dogs",
+                    "statistic_id": "sensor.test",
+                },
+                "type": "unsupported_unit_state",
+            }
+        ],
+    }
+    await assert_validation_result(client, expected)
+
+    # Statistics has run, invalid state - expect error
+    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    hass.data[DATA_INSTANCE].do_adhoc_statistics(start=now)
+    hass.states.async_set(
+        "sensor.test", 12, attributes={**attributes, **{"unit_of_measurement": "dogs"}}
+    )
+    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await assert_validation_result(client, expected)
+
+    # Valid state - empty response
+    hass.states.async_set(
+        "sensor.test", 13, attributes={**attributes, **{"unit_of_measurement": unit}}
+    )
+    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await assert_validation_result(client, {})
+
+    # Valid state, statistic runs again - empty response
+    hass.data[DATA_INSTANCE].do_adhoc_statistics(start=now)
+    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await assert_validation_result(client, {})
+
+    # Remove the state - empty response
+    hass.states.async_remove("sensor.test")
+    expected = {
+        "sensor.test": [
+            {
+                "data": {"statistic_id": "sensor.test"},
+                "type": "no_state",
+            }
+        ],
+    }
+    await assert_validation_result(client, expected)
+
+
+@pytest.mark.parametrize(
+    "units, attributes, unit",
+    [
+        (IMPERIAL_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W"),
+    ],
+)
+async def test_validate_statistics_supported_device_class_2(
+    hass, hass_ws_client, units, attributes, unit
+):
+    """Test validate_statistics."""
+    id = 1
+
+    def next_id():
+        nonlocal id
+        id += 1
+        return id
+
+    async def assert_validation_result(client, expected_result):
+        await client.send_json(
+            {"id": next_id(), "type": "recorder/validate_statistics"}
+        )
+        response = await client.receive_json()
+        assert response["success"]
+        assert response["result"] == expected_result
+
+    now = dt_util.utcnow()
+
+    hass.config.units = units
+    await hass.async_add_executor_job(init_recorder_component, hass)
+    await async_setup_component(hass, "sensor", {})
+    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    client = await hass_ws_client()
+
+    # No statistics, no state - empty response
+    await assert_validation_result(client, {})
+
+    # No statistics, valid state - empty response
+    initial_attributes = {"state_class": "measurement"}
+    hass.states.async_set("sensor.test", 10, attributes=initial_attributes)
+    await hass.async_block_till_done()
+    await assert_validation_result(client, {})
+
+    # Statistics has run, device class set - expect error
+    hass.data[DATA_INSTANCE].do_adhoc_statistics(start=now)
+    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    hass.states.async_set("sensor.test", 12, attributes=attributes)
+    await hass.async_block_till_done()
+    expected = {
+        "sensor.test": [
+            {
+                "data": {
+                    "device_class": attributes["device_class"],
+                    "metadata_unit": None,
+                    "statistic_id": "sensor.test",
+                    "supported_unit": unit,
+                },
+                "type": "unsupported_unit_metadata",
+            }
+        ],
+    }
+    await assert_validation_result(client, expected)
+
+    # Invalid state too, expect double errors
+    hass.states.async_set(
+        "sensor.test", 13, attributes={**attributes, **{"unit_of_measurement": "dogs"}}
+    )
+    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    expected = {
+        "sensor.test": [
+            {
+                "data": {
+                    "device_class": attributes["device_class"],
+                    "metadata_unit": None,
+                    "statistic_id": "sensor.test",
+                    "supported_unit": unit,
+                },
+                "type": "unsupported_unit_metadata",
+            },
+            {
+                "data": {
+                    "device_class": attributes["device_class"],
+                    "state_unit": "dogs",
+                    "statistic_id": "sensor.test",
+                },
+                "type": "unsupported_unit_state",
+            },
+        ],
+    }
+    await assert_validation_result(client, expected)
+
+
+@pytest.mark.parametrize(
+    "units, attributes, unit",
+    [
+        (IMPERIAL_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W"),
+    ],
+)
+async def test_validate_statistics_unsupported_state_class(
+    hass, hass_ws_client, units, attributes, unit
+):
+    """Test validate_statistics."""
+    id = 1
+
+    def next_id():
+        nonlocal id
+        id += 1
+        return id
+
+    async def assert_validation_result(client, expected_result):
+        await client.send_json(
+            {"id": next_id(), "type": "recorder/validate_statistics"}
+        )
+        response = await client.receive_json()
+        assert response["success"]
+        assert response["result"] == expected_result
+
+    now = dt_util.utcnow()
+
+    hass.config.units = units
+    await hass.async_add_executor_job(init_recorder_component, hass)
+    await async_setup_component(hass, "sensor", {})
+    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    client = await hass_ws_client()
+
+    # No statistics, no state - empty response
+    await assert_validation_result(client, {})
+
+    # No statistics, valid state - empty response
+    hass.states.async_set("sensor.test", 10, attributes=attributes)
+    await hass.async_block_till_done()
+    await assert_validation_result(client, {})
+
+    # Statistics has run, empty response
+    hass.data[DATA_INSTANCE].do_adhoc_statistics(start=now)
+    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await assert_validation_result(client, {})
+
+    # State update with invalid state class, expect error
+    _attributes = dict(attributes)
+    _attributes.pop("state_class")
+    hass.states.async_set("sensor.test", 12, attributes=_attributes)
+    await hass.async_block_till_done()
+    expected = {
+        "sensor.test": [
+            {
+                "data": {
+                    "state_class": None,
+                    "statistic_id": "sensor.test",
+                },
+                "type": "unsupported_state_class",
+            }
+        ],
+    }
+    await assert_validation_result(client, expected)
+
+
+@pytest.mark.parametrize(
+    "units, attributes, unit",
+    [
+        (IMPERIAL_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W"),
+    ],
+)
+async def test_validate_statistics_sensor_no_longer_recorded(
+    hass, hass_ws_client, units, attributes, unit
+):
+    """Test validate_statistics."""
+    id = 1
+
+    def next_id():
+        nonlocal id
+        id += 1
+        return id
+
+    async def assert_validation_result(client, expected_result):
+        await client.send_json(
+            {"id": next_id(), "type": "recorder/validate_statistics"}
+        )
+        response = await client.receive_json()
+        assert response["success"]
+        assert response["result"] == expected_result
+
+    now = dt_util.utcnow()
+
+    hass.config.units = units
+    await hass.async_add_executor_job(init_recorder_component, hass)
+    await async_setup_component(hass, "sensor", {})
+    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    client = await hass_ws_client()
+
+    # No statistics, no state - empty response
+    await assert_validation_result(client, {})
+
+    # No statistics, valid state - empty response
+    hass.states.async_set("sensor.test", 10, attributes=attributes)
+    await hass.async_block_till_done()
+    await assert_validation_result(client, {})
+
+    # Statistics has run, empty response
+    hass.data[DATA_INSTANCE].do_adhoc_statistics(start=now)
+    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await assert_validation_result(client, {})
+
+    # Sensor no longer recorded, expect error
+    expected = {
+        "sensor.test": [
+            {
+                "data": {"statistic_id": "sensor.test"},
+                "type": "entity_no_longer_recorded",
+            }
+        ],
+    }
+    with patch(
+        "homeassistant.components.sensor.recorder.is_entity_recorded",
+        return_value=False,
+    ):
+        await assert_validation_result(client, expected)
+
+
+@pytest.mark.parametrize(
+    "units, attributes, unit",
+    [
+        (IMPERIAL_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W"),
+    ],
+)
+async def test_validate_statistics_sensor_not_recorded(
+    hass, hass_ws_client, units, attributes, unit
+):
+    """Test validate_statistics."""
+    id = 1
+
+    def next_id():
+        nonlocal id
+        id += 1
+        return id
+
+    async def assert_validation_result(client, expected_result):
+        await client.send_json(
+            {"id": next_id(), "type": "recorder/validate_statistics"}
+        )
+        response = await client.receive_json()
+        assert response["success"]
+        assert response["result"] == expected_result
+
+    now = dt_util.utcnow()
+
+    hass.config.units = units
+    await hass.async_add_executor_job(init_recorder_component, hass)
+    await async_setup_component(hass, "sensor", {})
+    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    client = await hass_ws_client()
+
+    # No statistics, no state - empty response
+    await assert_validation_result(client, {})
+
+    # Sensor not recorded, expect error
+    expected = {
+        "sensor.test": [
+            {
+                "data": {"statistic_id": "sensor.test"},
+                "type": "entity_not_recorded",
+            }
+        ],
+    }
+    with patch(
+        "homeassistant.components.sensor.recorder.is_entity_recorded",
+        return_value=False,
+    ):
+        hass.states.async_set("sensor.test", 10, attributes=attributes)
+        await hass.async_block_till_done()
+        await assert_validation_result(client, expected)
+
+        # Statistics has run, expect same error
+        hass.data[DATA_INSTANCE].do_adhoc_statistics(start=now)
+        await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+        await assert_validation_result(client, expected)
+
+
+@pytest.mark.parametrize(
+    "units, attributes, unit",
+    [
+        (IMPERIAL_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W"),
+    ],
+)
+async def test_validate_statistics_sensor_removed(
+    hass, hass_ws_client, units, attributes, unit
+):
+    """Test validate_statistics."""
+    id = 1
+
+    def next_id():
+        nonlocal id
+        id += 1
+        return id
+
+    async def assert_validation_result(client, expected_result):
+        await client.send_json(
+            {"id": next_id(), "type": "recorder/validate_statistics"}
+        )
+        response = await client.receive_json()
+        assert response["success"]
+        assert response["result"] == expected_result
+
+    now = dt_util.utcnow()
+
+    hass.config.units = units
+    await hass.async_add_executor_job(init_recorder_component, hass)
+    await async_setup_component(hass, "sensor", {})
+    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    client = await hass_ws_client()
+
+    # No statistics, no state - empty response
+    await assert_validation_result(client, {})
+
+    # No statistics, valid state - empty response
+    hass.states.async_set("sensor.test", 10, attributes=attributes)
+    await hass.async_block_till_done()
+    await assert_validation_result(client, {})
+
+    # Statistics has run, empty response
+    hass.data[DATA_INSTANCE].do_adhoc_statistics(start=now)
+    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await assert_validation_result(client, {})
+
+    # Sensor removed, expect error
+    hass.states.async_remove("sensor.test")
+    expected = {
+        "sensor.test": [
+            {
+                "data": {"statistic_id": "sensor.test"},
+                "type": "no_state",
+            }
+        ],
+    }
+    await assert_validation_result(client, expected)
+
+
+@pytest.mark.parametrize(
+    "attributes",
+    [BATTERY_SENSOR_ATTRIBUTES, NONE_SENSOR_ATTRIBUTES],
+)
+async def test_validate_statistics_unsupported_device_class(
+    hass, hass_ws_client, attributes
+):
+    """Test validate_statistics."""
+    id = 1
+
+    def next_id():
+        nonlocal id
+        id += 1
+        return id
+
+    async def assert_validation_result(client, expected_result):
+        await client.send_json(
+            {"id": next_id(), "type": "recorder/validate_statistics"}
+        )
+        response = await client.receive_json()
+        assert response["success"]
+        assert response["result"] == expected_result
+
+    async def assert_statistic_ids(expected_result):
+        with session_scope(hass=hass) as session:
+            db_states = list(session.query(StatisticsMeta))
+            assert len(db_states) == len(expected_result)
+            for i in range(len(db_states)):
+                assert db_states[i].statistic_id == expected_result[i]["statistic_id"]
+                assert (
+                    db_states[i].unit_of_measurement
+                    == expected_result[i]["unit_of_measurement"]
+                )
+
+    now = dt_util.utcnow()
+
+    await hass.async_add_executor_job(init_recorder_component, hass)
+    await async_setup_component(hass, "sensor", {})
+    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    client = await hass_ws_client()
+    rec = hass.data[DATA_INSTANCE]
+
+    # No statistics, no state - empty response
+    await assert_validation_result(client, {})
+
+    # No statistics, original unit - empty response
+    hass.states.async_set("sensor.test", 10, attributes=attributes)
+    await assert_validation_result(client, {})
+
+    # No statistics, changed unit - empty response
+    hass.states.async_set(
+        "sensor.test", 11, attributes={**attributes, **{"unit_of_measurement": "dogs"}}
+    )
+    await assert_validation_result(client, {})
+
+    # Run statistics, no statistics will be generated because of conflicting units
+    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    rec.do_adhoc_statistics(start=now)
+    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await assert_statistic_ids([])
+
+    # No statistics, changed unit - empty response
+    hass.states.async_set(
+        "sensor.test", 12, attributes={**attributes, **{"unit_of_measurement": "dogs"}}
+    )
+    await assert_validation_result(client, {})
+
+    # Run statistics one hour later, only the "dogs" state will be considered
+    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    rec.do_adhoc_statistics(start=now + timedelta(hours=1))
+    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await assert_statistic_ids(
+        [{"statistic_id": "sensor.test", "unit_of_measurement": "dogs"}]
+    )
+    await assert_validation_result(client, {})
+
+    # Change back to original unit - expect error
+    hass.states.async_set("sensor.test", 13, attributes=attributes)
+    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    expected = {
+        "sensor.test": [
+            {
+                "data": {
+                    "metadata_unit": "dogs",
+                    "state_unit": attributes.get("unit_of_measurement"),
+                    "statistic_id": "sensor.test",
+                },
+                "type": "units_changed",
+            }
+        ],
+    }
+    await assert_validation_result(client, expected)
+
+    # Changed unit - empty response
+    hass.states.async_set(
+        "sensor.test", 14, attributes={**attributes, **{"unit_of_measurement": "dogs"}}
+    )
+    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await assert_validation_result(client, {})
+
+    # Valid state, statistic runs again - empty response
+    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    hass.data[DATA_INSTANCE].do_adhoc_statistics(start=now)
+    await hass.async_add_executor_job(hass.data[DATA_INSTANCE].block_till_done)
+    await assert_validation_result(client, {})
+
+    # Remove the state - empty response
+    hass.states.async_remove("sensor.test")
+    expected = {
+        "sensor.test": [
+            {
+                "data": {"statistic_id": "sensor.test"},
+                "type": "no_state",
+            }
+        ],
+    }
+    await assert_validation_result(client, expected)
 
 
 def record_meter_states(hass, zero, entity_id, _attributes, seq):
@@ -1955,7 +3218,7 @@ def record_meter_states(hass, zero, entity_id, _attributes, seq):
     return four, eight, states
 
 
-def record_meter_state(hass, zero, entity_id, _attributes, seq):
+def record_meter_state(hass, zero, entity_id, attributes, seq):
     """Record test state.
 
     We inject a state update for meter sensor.
@@ -1966,10 +3229,6 @@ def record_meter_state(hass, zero, entity_id, _attributes, seq):
         hass.states.set(entity_id, state, **kwargs)
         wait_recording_done(hass)
         return hass.states.get(entity_id)
-
-    attributes = dict(_attributes)
-    if "last_reset" in _attributes:
-        attributes["last_reset"] = zero.isoformat()
 
     states = {entity_id: []}
     with patch("homeassistant.components.recorder.dt_util.utcnow", return_value=zero):

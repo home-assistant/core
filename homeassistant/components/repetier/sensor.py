@@ -106,8 +106,7 @@ class RepetierSensor(SensorEntity):
 
     def update(self):
         """Update the sensor."""
-        data = self._get_data()
-        if data is None:
+        if (data := self._get_data()) is None:
             return
         state = data.pop("state")
         _LOGGER.debug("Printer %s State %s", self.name, state)
@@ -127,8 +126,7 @@ class RepetierTempSensor(RepetierSensor):
 
     def update(self):
         """Update the sensor."""
-        data = self._get_data()
-        if data is None:
+        if (data := self._get_data()) is None:
             return
         state = data.pop("state")
         temp_set = data["temp_set"]
@@ -155,15 +153,14 @@ class RepetierJobEndSensor(RepetierSensor):
 
     def update(self):
         """Update the sensor."""
-        data = self._get_data()
-        if data is None:
+        if (data := self._get_data()) is None:
             return
         job_name = data["job_name"]
         start = data["start"]
         print_time = data["print_time"]
         from_start = data["from_start"]
         time_end = start + round(print_time, 0)
-        self._state = datetime.utcfromtimestamp(time_end).isoformat()
+        self._state = datetime.utcfromtimestamp(time_end)
         remaining = print_time - from_start
         remaining_secs = int(round(remaining, 0))
         _LOGGER.debug(
@@ -180,13 +177,12 @@ class RepetierJobStartSensor(RepetierSensor):
 
     def update(self):
         """Update the sensor."""
-        data = self._get_data()
-        if data is None:
+        if (data := self._get_data()) is None:
             return
         job_name = data["job_name"]
         start = data["start"]
         from_start = data["from_start"]
-        self._state = datetime.utcfromtimestamp(start).isoformat()
+        self._state = datetime.utcfromtimestamp(start)
         elapsed_secs = int(round(from_start, 0))
         _LOGGER.debug(
             "Job %s elapsed %s",

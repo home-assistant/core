@@ -73,7 +73,7 @@ class ModernFormsLightTimerRemainingTimeSensor(ModernFormsSensor):
         self._attr_device_class = DEVICE_CLASS_TIMESTAMP
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         sleep_time: datetime = dt_util.utc_from_timestamp(
             self.coordinator.data.state.light_sleep_timer
@@ -83,7 +83,7 @@ class ModernFormsLightTimerRemainingTimeSensor(ModernFormsSensor):
             or (sleep_time - dt_util.utcnow()).total_seconds() < 0
         ):
             return None
-        return sleep_time.isoformat()
+        return sleep_time
 
 
 class ModernFormsFanTimerRemainingTimeSensor(ModernFormsSensor):
@@ -103,7 +103,7 @@ class ModernFormsFanTimerRemainingTimeSensor(ModernFormsSensor):
         self._attr_device_class = DEVICE_CLASS_TIMESTAMP
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         sleep_time: datetime = dt_util.utc_from_timestamp(
             self.coordinator.data.state.fan_sleep_timer
@@ -115,4 +115,4 @@ class ModernFormsFanTimerRemainingTimeSensor(ModernFormsSensor):
         ):
             return None
 
-        return sleep_time.isoformat()
+        return sleep_time

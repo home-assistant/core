@@ -1,4 +1,4 @@
-"""The Uptime Robot integration."""
+"""The UptimeRobot integration."""
 from __future__ import annotations
 
 from pyuptimerobot import (
@@ -24,7 +24,7 @@ from .const import API_ATTR_OK, COORDINATOR_UPDATE_INTERVAL, DOMAIN, LOGGER, PLA
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Uptime Robot from a config entry."""
+    """Set up UptimeRobot from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     uptime_robot_api = UptimeRobot(
         entry.data[CONF_API_KEY], async_get_clientsession(hass)
@@ -55,7 +55,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 class UptimeRobotDataUpdateCoordinator(DataUpdateCoordinator):
-    """Data update coordinator for Uptime Robot."""
+    """Data update coordinator for UptimeRobot."""
 
     def __init__(
         self,

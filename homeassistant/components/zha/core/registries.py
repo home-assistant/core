@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 import collections
-from typing import Callable, Dict
+from collections.abc import Callable
+import dataclasses
+from typing import Dict, List
 
 import attr
 from zigpy import zcl
@@ -19,6 +21,7 @@ from homeassistant.components.light import DOMAIN as LIGHT
 from homeassistant.components.lock import DOMAIN as LOCK
 from homeassistant.components.number import DOMAIN as NUMBER
 from homeassistant.components.sensor import DOMAIN as SENSOR
+from homeassistant.components.siren import DOMAIN as SIREN
 from homeassistant.components.switch import DOMAIN as SWITCH
 
 # importing channels updates registries
@@ -72,7 +75,6 @@ SINGLE_INPUT_CLUSTER_DEVICE_CLASS = {
     zcl.clusters.general.MultistateInput.cluster_id: SENSOR,
     zcl.clusters.general.OnOff.cluster_id: SWITCH,
     zcl.clusters.general.PowerConfiguration.cluster_id: SENSOR,
-    zcl.clusters.homeautomation.ElectricalMeasurement.cluster_id: SENSOR,
     zcl.clusters.hvac.Fan.cluster_id: FAN,
     zcl.clusters.measurement.CarbonDioxideConcentration.cluster_id: SENSOR,
     zcl.clusters.measurement.CarbonMonoxideConcentration.cluster_id: SENSOR,
@@ -81,9 +83,10 @@ SINGLE_INPUT_CLUSTER_DEVICE_CLASS = {
     zcl.clusters.measurement.OccupancySensing.cluster_id: BINARY_SENSOR,
     zcl.clusters.measurement.PressureMeasurement.cluster_id: SENSOR,
     zcl.clusters.measurement.RelativeHumidity.cluster_id: SENSOR,
+    zcl.clusters.measurement.SoilMoisture.cluster_id: SENSOR,
+    zcl.clusters.measurement.LeafWetness.cluster_id: SENSOR,
     zcl.clusters.measurement.TemperatureMeasurement.cluster_id: SENSOR,
     zcl.clusters.security.IasZone.cluster_id: BINARY_SENSOR,
-    zcl.clusters.smartenergy.Metering.cluster_id: SENSOR,
 }
 
 SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS = {
@@ -111,6 +114,7 @@ DEVICE_CLASS = {
         zigpy.profiles.zha.DeviceType.SHADE: COVER,
         zigpy.profiles.zha.DeviceType.SMART_PLUG: SWITCH,
         zigpy.profiles.zha.DeviceType.IAS_ANCILLARY_CONTROL: ALARM,
+        zigpy.profiles.zha.DeviceType.IAS_WARNING_DEVICE: SIREN,
     },
     zigpy.profiles.zll.PROFILE_ID: {
         zigpy.profiles.zll.DeviceType.COLOR_LIGHT: LIGHT,
@@ -158,6 +162,8 @@ class MatchRule:
     aux_channels: Callable | set[str] | str = attr.ib(
         factory=frozenset, converter=set_or_callable
     )
+    # for multi entities, stop further processing on a match for a component
+    stop_on_match: bool = attr.ib(default=False)
 
     @property
     def weight(self) -> int:
@@ -235,8 +241,16 @@ class MatchRule:
         return matches
 
 
-RegistryDictType = Dict[str, Dict[MatchRule, CALLABLE_T]]
+@dataclasses.dataclass
+class EntityClassAndChannels:
+    """Container for entity class and corresponding channels."""
 
+    entity_class: CALLABLE_T
+    claimed_channel: list[ChannelType]
+
+
+RegistryDictType = Dict[str, Dict[MatchRule, CALLABLE_T]]
+MultiRegistryDictType = Dict[str, Dict[MatchRule, List[CALLABLE_T]]]
 GroupRegistryDictType = Dict[str, CALLABLE_T]
 
 
@@ -246,7 +260,9 @@ class ZHAEntityRegistry:
     def __init__(self):
         """Initialize Registry instance."""
         self._strict_registry: RegistryDictType = collections.defaultdict(dict)
-        self._loose_registry: RegistryDictType = collections.defaultdict(dict)
+        self._multi_entity_registry: MultiRegistryDictType = collections.defaultdict(
+            lambda: collections.defaultdict(list)
+        )
         self._group_registry: GroupRegistryDictType = {}
 
     def get_entity(
@@ -265,6 +281,31 @@ class ZHAEntityRegistry:
                 return self._strict_registry[component][match], claimed
 
         return default, []
+
+    def get_multi_entity(
+        self,
+        manufacturer: str,
+        model: str,
+        channels: list[ChannelType],
+        components: set | None = None,
+    ) -> tuple[dict[str, list[EntityClassAndChannels]], list[ChannelType]]:
+        """Match ZHA Channels to potentially multiple ZHA Entity classes."""
+        result: dict[str, list[EntityClassAndChannels]] = collections.defaultdict(list)
+        all_claimed: set[ChannelType] = set()
+        for component in components or self._multi_entity_registry:
+            matches = self._multi_entity_registry[component]
+            sorted_matches = sorted(matches, key=lambda x: x.weight, reverse=True)
+            for match in sorted_matches:
+                if match.strict_matched(manufacturer, model, channels):
+                    claimed = match.claim_channels(channels)
+                    for ent_class in self._multi_entity_registry[component][match]:
+                        ent_n_channels = EntityClassAndChannels(ent_class, claimed)
+                        result[component].append(ent_n_channels)
+                    all_claimed |= set(claimed)
+                    if match.stop_on_match:
+                        break
+
+        return result, list(all_claimed)
 
     def get_group_entity(self, component: str) -> CALLABLE_T:
         """Match a ZHA group to a ZHA Entity class."""
@@ -295,7 +336,7 @@ class ZHAEntityRegistry:
 
         return decorator
 
-    def loose_match(
+    def multipass_match(
         self,
         component: str,
         channel_names: Callable | set[str] | str = None,
@@ -303,11 +344,17 @@ class ZHAEntityRegistry:
         manufacturers: Callable | set[str] | str = None,
         models: Callable | set[str] | str = None,
         aux_channels: Callable | set[str] | str = None,
+        stop_on_match: bool = False,
     ) -> Callable[[CALLABLE_T], CALLABLE_T]:
         """Decorate a loose match rule."""
 
         rule = MatchRule(
-            channel_names, generic_ids, manufacturers, models, aux_channels
+            channel_names,
+            generic_ids,
+            manufacturers,
+            models,
+            aux_channels,
+            stop_on_match,
         )
 
         def decorator(zha_entity: CALLABLE_T) -> CALLABLE_T:
@@ -315,7 +362,7 @@ class ZHAEntityRegistry:
 
             All non empty fields of a match rule must match.
             """
-            self._loose_registry[component][rule] = zha_entity
+            self._multi_entity_registry[component][rule].append(zha_entity)
             return zha_entity
 
         return decorator

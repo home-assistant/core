@@ -33,10 +33,11 @@ from homeassistant.const import (
     PRESSURE_HPA,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
+    Platform,
 )
 
 DOMAIN = "meteoclimatic"
-PLATFORMS = ["sensor", "weather"]
+PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
 ATTRIBUTION = "Data provided by Meteoclimatic"
 MODEL = "Meteoclimatic RSS feed"
 MANUFACTURER = "Meteoclimatic"

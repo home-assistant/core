@@ -35,6 +35,16 @@
             }
         }
     },
+    "device_automation": {
+        "action_type": {
+            "send_command": "Kirim perintah: {subtype}",
+            "send_status": "Kirim pembaruan status: {subtype}"
+        },
+        "trigger_type": {
+            "command": "Perintah yang diterima: {subtype}",
+            "status": "Status yang diterima: {subtype}"
+        }
+    },
     "options": {
         "error": {
             "already_configured_device": "Perangkat sudah dikonfigurasi",

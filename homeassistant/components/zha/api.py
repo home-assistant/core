@@ -1145,10 +1145,8 @@ def async_load_api(hass):
         strobe = service.data.get(ATTR_WARNING_DEVICE_STROBE)
         level = service.data.get(ATTR_LEVEL)
 
-        zha_device = zha_gateway.get_device(ieee)
-        if zha_device is not None:
-            channel = _get_ias_wd_channel(zha_device)
-            if channel:
+        if (zha_device := zha_gateway.get_device(ieee)) is not None:
+            if channel := _get_ias_wd_channel(zha_device):
                 await channel.issue_squawk(mode, strobe, level)
             else:
                 _LOGGER.error(
@@ -1189,10 +1187,8 @@ def async_load_api(hass):
         duty_mode = service.data.get(ATTR_WARNING_DEVICE_STROBE_DUTY_CYCLE)
         intensity = service.data.get(ATTR_WARNING_DEVICE_STROBE_INTENSITY)
 
-        zha_device = zha_gateway.get_device(ieee)
-        if zha_device is not None:
-            channel = _get_ias_wd_channel(zha_device)
-            if channel:
+        if (zha_device := zha_gateway.get_device(ieee)) is not None:
+            if channel := _get_ias_wd_channel(zha_device):
                 await channel.issue_start_warning(
                     mode, strobe, level, duration, duty_mode, intensity
                 )

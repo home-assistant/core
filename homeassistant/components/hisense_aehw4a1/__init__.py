@@ -8,14 +8,14 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
-from homeassistant.const import CONF_IP_ADDRESS
+from homeassistant.const import CONF_IP_ADDRESS, Platform
 import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [CLIMATE_DOMAIN]
+PLATFORMS = [Platform.CLIMATE]
 
 
 def coerce_ip(value):

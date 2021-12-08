@@ -786,8 +786,7 @@ class BrSensor(SensorEntity):
 
         if sensor_type == SYMBOL or sensor_type.startswith(CONDITION):
             # update weather symbol & status text
-            condition = data.get(CONDITION)
-            if condition:
+            if condition := data.get(CONDITION):
                 if sensor_type == SYMBOL:
                     new_state = condition.get(EXACTNL)
                 if sensor_type == CONDITION:

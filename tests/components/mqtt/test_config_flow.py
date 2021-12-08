@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import mqtt
+from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -29,7 +30,9 @@ def mock_try_connection():
         yield mock_try
 
 
-async def test_user_connection_works(hass, mock_try_connection, mock_finish_setup):
+async def test_user_connection_works(
+    hass, mock_try_connection, mock_finish_setup, mqtt_client_mock
+):
     """Test we can finish a config flow."""
     mock_try_connection.return_value = True
 
@@ -76,7 +79,9 @@ async def test_user_connection_fails(hass, mock_try_connection, mock_finish_setu
     assert len(mock_finish_setup.mock_calls) == 0
 
 
-async def test_manual_config_set(hass, mock_try_connection, mock_finish_setup):
+async def test_manual_config_set(
+    hass, mock_try_connection, mock_finish_setup, mqtt_client_mock
+):
     """Test we ignore entry if manual config available."""
     assert await async_setup_component(hass, "mqtt", {"mqtt": {"broker": "bla"}})
     await hass.async_block_till_done()
@@ -120,7 +125,9 @@ async def test_hassio_ignored(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_init(
         mqtt.DOMAIN,
-        data={"addon": "Mosquitto", "host": "mock-mosquitto", "port": "1883"},
+        data=HassioServiceInfo(
+            config={"addon": "Mosquitto", "host": "mock-mosquitto", "port": "1883"}
+        ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
     assert result
@@ -128,20 +135,24 @@ async def test_hassio_ignored(hass: HomeAssistant) -> None:
     assert result.get("reason") == "already_configured"
 
 
-async def test_hassio_confirm(hass, mock_try_connection, mock_finish_setup):
+async def test_hassio_confirm(
+    hass, mock_try_connection, mock_finish_setup, mqtt_client_mock
+):
     """Test we can finish a config flow."""
     mock_try_connection.return_value = True
 
     result = await hass.config_entries.flow.async_init(
         "mqtt",
-        data={
-            "addon": "Mock Addon",
-            "host": "mock-broker",
-            "port": 1883,
-            "username": "mock-user",
-            "password": "mock-pass",
-            "protocol": "3.1.1",
-        },
+        data=HassioServiceInfo(
+            config={
+                "addon": "Mock Addon",
+                "host": "mock-broker",
+                "port": 1883,
+                "username": "mock-user",
+                "password": "mock-pass",
+                "protocol": "3.1.1",
+            }
+        ),
         context={"source": config_entries.SOURCE_HASSIO},
     )
     assert result["type"] == "form"
@@ -463,6 +474,9 @@ async def test_option_flow_default_suggested_values(
         },
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+    # Make sure all MQTT related jobs are done before ending the test
+    await hass.async_block_till_done()
 
 
 async def test_options_user_connection_fails(hass, mock_try_connection):

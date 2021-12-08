@@ -1,4 +1,5 @@
 """The tests for the SleepIQ component."""
+from http import HTTPStatus
 from unittest.mock import MagicMock, patch
 
 from homeassistant import setup
@@ -41,7 +42,7 @@ async def test_setup_login_failed(hass, requests_mock):
     mock_responses(requests_mock)
     requests_mock.put(
         "https://prod-api.sleepiq.sleepnumber.com/rest/login",
-        status_code=401,
+        status_code=HTTPStatus.UNAUTHORIZED,
         json=load_fixture("sleepiq-login-failed.json"),
     )
 

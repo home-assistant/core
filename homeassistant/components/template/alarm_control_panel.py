@@ -1,4 +1,5 @@
 """Support for Template alarm control panels."""
+from enum import Enum
 import logging
 
 import voluptuous as vol
@@ -6,6 +7,7 @@ import voluptuous as vol
 from homeassistant.components.alarm_control_panel import (
     ENTITY_ID_FORMAT,
     FORMAT_NUMBER,
+    FORMAT_TEXT,
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     AlarmControlPanelEntity,
 )
@@ -34,6 +36,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.script import Script
 
+from .const import DOMAIN
 from .template_entity import TemplateEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,6 +57,16 @@ CONF_ARM_NIGHT_ACTION = "arm_night"
 CONF_DISARM_ACTION = "disarm"
 CONF_ALARM_CONTROL_PANELS = "panels"
 CONF_CODE_ARM_REQUIRED = "code_arm_required"
+CONF_CODE_FORMAT = "code_format"
+
+
+class CodeFormat(Enum):
+    """Class to represent different code formats."""
+
+    no_code = None
+    number = FORMAT_NUMBER
+    text = FORMAT_TEXT
+
 
 ALARM_CONTROL_PANEL_SCHEMA = vol.Schema(
     {
@@ -63,6 +76,9 @@ ALARM_CONTROL_PANEL_SCHEMA = vol.Schema(
         vol.Optional(CONF_ARM_HOME_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_ARM_NIGHT_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
+        vol.Optional(CONF_CODE_FORMAT, default=CodeFormat.number.name): cv.enum(
+            CodeFormat
+        ),
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
@@ -89,6 +105,7 @@ async def _async_create_entities(hass, config):
         arm_home_action = device_config.get(CONF_ARM_HOME_ACTION)
         arm_night_action = device_config.get(CONF_ARM_NIGHT_ACTION)
         code_arm_required = device_config[CONF_CODE_ARM_REQUIRED]
+        code_format = device_config[CONF_CODE_FORMAT]
         unique_id = device_config.get(CONF_UNIQUE_ID)
 
         alarm_control_panels.append(
@@ -102,6 +119,7 @@ async def _async_create_entities(hass, config):
                 arm_home_action,
                 arm_night_action,
                 code_arm_required,
+                code_format,
                 unique_id,
             )
         )
@@ -128,6 +146,7 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity):
         arm_home_action,
         arm_night_action,
         code_arm_required,
+        code_format,
         unique_id,
     ):
         """Initialize the panel."""
@@ -139,18 +158,18 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity):
         self._template = state_template
         self._disarm_script = None
         self._code_arm_required = code_arm_required
-        domain = __name__.split(".")[-2]
+        self._code_format = code_format
         if disarm_action is not None:
-            self._disarm_script = Script(hass, disarm_action, name, domain)
+            self._disarm_script = Script(hass, disarm_action, name, DOMAIN)
         self._arm_away_script = None
         if arm_away_action is not None:
-            self._arm_away_script = Script(hass, arm_away_action, name, domain)
+            self._arm_away_script = Script(hass, arm_away_action, name, DOMAIN)
         self._arm_home_script = None
         if arm_home_action is not None:
-            self._arm_home_script = Script(hass, arm_home_action, name, domain)
+            self._arm_home_script = Script(hass, arm_home_action, name, DOMAIN)
         self._arm_night_script = None
         if arm_night_action is not None:
-            self._arm_night_script = Script(hass, arm_night_action, name, domain)
+            self._arm_night_script = Script(hass, arm_night_action, name, DOMAIN)
 
         self._state = None
         self._unique_id = unique_id
@@ -187,8 +206,8 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity):
 
     @property
     def code_format(self):
-        """Return one or more digits/characters."""
-        return FORMAT_NUMBER
+        """Regex for code format or None if no code is required."""
+        return self._code_format.value
 
     @property
     def code_arm_required(self):

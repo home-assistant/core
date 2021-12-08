@@ -1,6 +1,7 @@
 """The tests for notify services that change targets."""
 from homeassistant.components import notify
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 
 async def test_same_targets(hass: HomeAssistant):
@@ -81,3 +82,18 @@ class NotificationService(notify.BaseNotificationService):
     def targets(self):
         """Return a dictionary of devices."""
         return self.target_list
+
+
+async def test_warn_template(hass, caplog):
+    """Test warning when template used."""
+    assert await async_setup_component(hass, "notify", {})
+
+    await hass.services.async_call(
+        "notify",
+        "persistent_notification",
+        {"message": "{{ 1 + 1 }}", "title": "Test notif {{ 1 + 1 }}"},
+        blocking=True,
+    )
+    # We should only log it once
+    assert caplog.text.count("Passing templates to notify service is deprecated") == 1
+    assert hass.states.get("persistent_notification.notification") is not None

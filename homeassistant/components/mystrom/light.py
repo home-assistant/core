@@ -49,8 +49,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     bulb = MyStromBulb(host, mac)
     try:
         await bulb.get_state()
-        if bulb.bulb_type != "rgblamp":
-            _LOGGER.error("Device %s (%s) is not a myStrom bulb", host, mac)
+        if bulb.bulb_type not in ["rgblamp", "strip"]:
+            _LOGGER.error(
+                "Device %s (%s) is not a myStrom bulb nor myStrom LED Strip", host, mac
+            )
             return
     except MyStromConnectionError as err:
         _LOGGER.warning("No route to myStrom bulb: %s", host)

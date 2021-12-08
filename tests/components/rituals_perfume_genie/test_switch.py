@@ -25,7 +25,7 @@ from .common import (
 
 async def test_switch_entity(hass: HomeAssistant) -> None:
     """Test the creation and values of the Rituals Perfume Genie diffuser switch."""
-    config_entry = mock_config_entry(uniqe_id="id_123_switch_set_state_test")
+    config_entry = mock_config_entry(unique_id="id_123_switch_test")
     diffuser = mock_diffuser_v1_battery_cartridge()
     await init_integration(hass, config_entry, [diffuser])
 
@@ -43,7 +43,7 @@ async def test_switch_entity(hass: HomeAssistant) -> None:
 
 async def test_switch_handle_coordinator_update(hass: HomeAssistant) -> None:
     """Test handling a coordinator update."""
-    config_entry = mock_config_entry(uniqe_id="id_123_switch_set_state_test")
+    config_entry = mock_config_entry(unique_id="switch_handle_coordinator_update_test")
     diffuser = mock_diffuser_v1_battery_cartridge()
     await init_integration(hass, config_entry, [diffuser])
     await async_setup_component(hass, "homeassistant", {})
@@ -74,7 +74,7 @@ async def test_switch_handle_coordinator_update(hass: HomeAssistant) -> None:
 
 async def test_set_switch_state(hass: HomeAssistant) -> None:
     """Test changing the diffuser switch entity state."""
-    config_entry = mock_config_entry(uniqe_id="id_123_switch_set_state_test")
+    config_entry = mock_config_entry(unique_id="id_123_switch_set_state_test")
     await init_integration(hass, config_entry, [mock_diffuser_v1_battery_cartridge()])
 
     state = hass.states.get("switch.genie")

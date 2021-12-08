@@ -5,8 +5,8 @@ import phone_modem
 import serial.tools.list_ports
 
 from homeassistant.components import usb
-from homeassistant.components.modem_callerid.const import DEFAULT_NAME, DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USB, SOURCE_USER
+from homeassistant.components.modem_callerid.const import DOMAIN
+from homeassistant.config_entries import SOURCE_USB, SOURCE_USER
 from homeassistant.const import CONF_DEVICE, CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import (
@@ -15,16 +15,16 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_FORM,
 )
 
-from . import CONF_DATA, IMPORT_DATA, _patch_config_flow_modem
+from . import _patch_config_flow_modem
 
-DISCOVERY_INFO = {
-    "device": phone_modem.DEFAULT_PORT,
-    "pid": "1340",
-    "vid": "0572",
-    "serial_number": "1234",
-    "description": "modem",
-    "manufacturer": "Connexant",
-}
+DISCOVERY_INFO = usb.UsbServiceInfo(
+    device=phone_modem.DEFAULT_PORT,
+    pid="1340",
+    vid="0572",
+    serial_number="1234",
+    description="modem",
+    manufacturer="Connexant",
+)
 
 
 def _patch_setup():
@@ -171,34 +171,3 @@ async def test_abort_user_with_existing_flow(hass: HomeAssistant):
 
         assert result2["type"] == RESULT_TYPE_ABORT
         assert result2["reason"] == "already_in_progress"
-
-
-@patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
-async def test_flow_import(hass: HomeAssistant):
-    """Test import step."""
-    with _patch_config_flow_modem(AsyncMock()):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={CONF_SOURCE: SOURCE_IMPORT}, data=IMPORT_DATA
-        )
-
-        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == DEFAULT_NAME
-        assert result["data"] == CONF_DATA
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={CONF_SOURCE: SOURCE_IMPORT}, data=IMPORT_DATA
-        )
-
-        assert result["type"] == RESULT_TYPE_ABORT
-        assert result["reason"] == "already_configured"
-
-
-async def test_flow_import_cannot_connect(hass: HomeAssistant):
-    """Test import connection error."""
-    with _patch_config_flow_modem(AsyncMock()) as modemmock:
-        modemmock.side_effect = phone_modem.exceptions.SerialError
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={CONF_SOURCE: SOURCE_IMPORT}, data=IMPORT_DATA
-        )
-        assert result["type"] == RESULT_TYPE_ABORT
-        assert result["reason"] == "cannot_connect"

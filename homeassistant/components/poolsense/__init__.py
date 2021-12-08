@@ -7,7 +7,7 @@ from poolsense import PoolSense
 from poolsense.exceptions import PoolSenseError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_EMAIL, CONF_PASSWORD
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity import EntityDescription
@@ -19,7 +19,7 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import ATTRIBUTION, DOMAIN
 
-PLATFORMS = ["sensor", "binary_sensor"]
+PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR]
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,7 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
@@ -90,7 +90,7 @@ class PoolSenseDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Update data via library."""
         data = {}
-        with async_timeout.timeout(10):
+        async with async_timeout.timeout(10):
             try:
                 data = await self.poolsense.get_poolsense_data()
             except (PoolSenseError) as error:

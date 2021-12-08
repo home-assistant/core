@@ -1,4 +1,5 @@
 """Test configuration for the ZHA component."""
+import itertools
 import time
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
@@ -116,6 +117,7 @@ def zigpy_device_mock(zigpy_app_controller):
         node_descriptor=b"\x02@\x807\x10\x7fd\x00\x00*d\x00\x00",
         nwk=0xB79C,
         patch_cluster=True,
+        quirk=None,
     ):
         """Make a fake device using the specified cluster classes."""
         device = zigpy.device.Device(
@@ -133,13 +135,20 @@ def zigpy_device_mock(zigpy_app_controller):
             endpoint.request = AsyncMock(return_value=[0])
 
             for cluster_id in ep.get(SIG_EP_INPUT, []):
-                cluster = endpoint.add_input_cluster(cluster_id)
-                if patch_cluster:
-                    common.patch_cluster(cluster)
+                endpoint.add_input_cluster(cluster_id)
 
             for cluster_id in ep.get(SIG_EP_OUTPUT, []):
-                cluster = endpoint.add_output_cluster(cluster_id)
-                if patch_cluster:
+                endpoint.add_output_cluster(cluster_id)
+
+        if quirk:
+            device = quirk(zigpy_app_controller, device.ieee, device.nwk, device)
+
+        if patch_cluster:
+            for endpoint in (ep for epid, ep in device.endpoints.items() if epid):
+                endpoint.request = AsyncMock(return_value=[0])
+                for cluster in itertools.chain(
+                    endpoint.in_clusters.values(), endpoint.out_clusters.values()
+                ):
                     common.patch_cluster(cluster)
 
         return device

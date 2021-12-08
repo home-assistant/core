@@ -18,10 +18,12 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceRegistry
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
@@ -29,7 +31,6 @@ from .const import (
     COMMAND_GROUP_LIST,
     CONF_AUTOMATIC_ADD,
     CONF_DATA_BITS,
-    CONF_FIRE_EVENT,
     CONF_REMOVE_DEVICE,
     DATA_CLEANUP_CALLBACKS,
     DATA_LISTENER,
@@ -60,7 +61,13 @@ def _bytearray_string(data):
 
 SERVICE_SEND_SCHEMA = vol.Schema({ATTR_EVENT: _bytearray_string})
 
-PLATFORMS = ["switch", "sensor", "light", "binary_sensor", "cover"]
+PLATFORMS = [
+    Platform.SWITCH,
+    Platform.SENSOR,
+    Platform.LIGHT,
+    Platform.BINARY_SENSOR,
+    Platform.COVER,
+]
 
 
 async def async_setup_entry(hass, entry: config_entries.ConfigEntry):
@@ -123,8 +130,7 @@ def _get_device_lookup(devices):
     """Get a lookup structure for devices."""
     lookup = {}
     for event_code, event_config in devices.items():
-        event = get_rfx_object(event_code)
-        if event is None:
+        if (event := get_rfx_object(event_code)) is None:
             continue
         device_id = get_device_id(
             event.device, data_bits=event_config.get(CONF_DATA_BITS)
@@ -186,9 +192,7 @@ async def async_setup_internal(hass, entry: config_entries.ConfigEntry):
         hass.helpers.dispatcher.async_dispatcher_send(SIGNAL_EVENT, event, device_id)
 
         # Signal event to any other listeners
-        fire_event = devices.get(device_id, {}).get(CONF_FIRE_EVENT)
-        if fire_event:
-            hass.bus.async_fire(EVENT_RFXTRX_EVENT, event_data)
+        hass.bus.async_fire(EVENT_RFXTRX_EVENT, event_data)
 
     @callback
     def _add_device(event, device_id):
@@ -312,10 +316,12 @@ def find_possible_pt2262_device(device_ids, device_id):
 def get_device_id(device, data_bits=None):
     """Calculate a device id for device."""
     id_string = device.id_string
-    if data_bits and device.packettype == DEVICE_PACKET_TYPE_LIGHTING4:
-        masked_id = get_pt2262_deviceid(id_string, data_bits)
-        if masked_id:
-            id_string = masked_id.decode("ASCII")
+    if (
+        data_bits
+        and device.packettype == DEVICE_PACKET_TYPE_LIGHTING4
+        and (masked_id := get_pt2262_deviceid(id_string, data_bits))
+    ):
+        id_string = masked_id.decode("ASCII")
 
     return (f"{device.packettype:x}", f"{device.subtype:x}", id_string)
 
@@ -393,11 +399,11 @@ class RfxtrxEntity(RestoreEntity):
     @property
     def device_info(self):
         """Return the device info."""
-        return {
-            "identifiers": {(DOMAIN, *self._device_id)},
-            "name": f"{self._device.type_string} {self._device.id_string}",
-            "model": self._device.type_string,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, *self._device_id)},
+            model=self._device.type_string,
+            name=f"{self._device.type_string} {self._device.id_string}",
+        )
 
     def _event_applies(self, event, device_id):
         """Check if event applies to me."""

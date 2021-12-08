@@ -6,12 +6,18 @@ import pytest
 from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
     SERVICE_LOCK,
+    SERVICE_OPEN,
     SERVICE_UNLOCK,
     STATE_LOCKED,
     STATE_UNLOCKED,
+    SUPPORT_OPEN,
 )
 from homeassistant.components.mqtt.lock import MQTT_LOCK_ATTRIBUTES_BLOCKED
-from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID
+from homeassistant.const import (
+    ATTR_ASSUMED_STATE,
+    ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
+)
 from homeassistant.setup import async_setup_component
 
 from .test_common import (
@@ -69,6 +75,7 @@ async def test_controlling_state_via_topic(hass, mqtt_mock):
     state = hass.states.get("lock.test")
     assert state.state is STATE_UNLOCKED
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
+    assert not state.attributes.get(ATTR_SUPPORTED_FEATURES)
 
     async_fire_mqtt_message(hass, "state-topic", "LOCKED")
 
@@ -278,6 +285,122 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock):
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
 
+async def test_sending_mqtt_commands_support_open_and_optimistic(hass, mqtt_mock):
+    """Test open function of the lock without state topic."""
+    assert await async_setup_component(
+        hass,
+        LOCK_DOMAIN,
+        {
+            LOCK_DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "command_topic": "command-topic",
+                "payload_lock": "LOCK",
+                "payload_unlock": "UNLOCK",
+                "payload_open": "OPEN",
+                "state_locked": "LOCKED",
+                "state_unlocked": "UNLOCKED",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("lock.test")
+    assert state.state is STATE_UNLOCKED
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == SUPPORT_OPEN
+
+    await hass.services.async_call(
+        LOCK_DOMAIN, SERVICE_LOCK, {ATTR_ENTITY_ID: "lock.test"}, blocking=True
+    )
+
+    mqtt_mock.async_publish.assert_called_once_with("command-topic", "LOCK", 0, False)
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("lock.test")
+    assert state.state is STATE_LOCKED
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await hass.services.async_call(
+        LOCK_DOMAIN, SERVICE_UNLOCK, {ATTR_ENTITY_ID: "lock.test"}, blocking=True
+    )
+
+    mqtt_mock.async_publish.assert_called_once_with("command-topic", "UNLOCK", 0, False)
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("lock.test")
+    assert state.state is STATE_UNLOCKED
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await hass.services.async_call(
+        LOCK_DOMAIN, SERVICE_OPEN, {ATTR_ENTITY_ID: "lock.test"}, blocking=True
+    )
+
+    mqtt_mock.async_publish.assert_called_once_with("command-topic", "OPEN", 0, False)
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("lock.test")
+    assert state.state is STATE_UNLOCKED
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+
+async def test_sending_mqtt_commands_support_open_and_explicit_optimistic(
+    hass, mqtt_mock
+):
+    """Test open function of the lock without state topic."""
+    assert await async_setup_component(
+        hass,
+        LOCK_DOMAIN,
+        {
+            LOCK_DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "state_topic": "state-topic",
+                "command_topic": "command-topic",
+                "payload_lock": "LOCK",
+                "payload_unlock": "UNLOCK",
+                "payload_open": "OPEN",
+                "state_locked": "LOCKED",
+                "state_unlocked": "UNLOCKED",
+                "optimistic": True,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("lock.test")
+    assert state.state is STATE_UNLOCKED
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == SUPPORT_OPEN
+
+    await hass.services.async_call(
+        LOCK_DOMAIN, SERVICE_LOCK, {ATTR_ENTITY_ID: "lock.test"}, blocking=True
+    )
+
+    mqtt_mock.async_publish.assert_called_once_with("command-topic", "LOCK", 0, False)
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("lock.test")
+    assert state.state is STATE_LOCKED
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await hass.services.async_call(
+        LOCK_DOMAIN, SERVICE_UNLOCK, {ATTR_ENTITY_ID: "lock.test"}, blocking=True
+    )
+
+    mqtt_mock.async_publish.assert_called_once_with("command-topic", "UNLOCK", 0, False)
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("lock.test")
+    assert state.state is STATE_UNLOCKED
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await hass.services.async_call(
+        LOCK_DOMAIN, SERVICE_OPEN, {ATTR_ENTITY_ID: "lock.test"}, blocking=True
+    )
+
+    mqtt_mock.async_publish.assert_called_once_with("command-topic", "OPEN", 0, False)
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get("lock.test")
+    assert state.state is STATE_UNLOCKED
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+
 async def test_availability_when_connection_lost(hass, mqtt_mock):
     """Test availability after MQTT disconnection."""
     await help_test_availability_when_connection_lost(
@@ -379,19 +502,21 @@ async def test_discovery_removal_lock(hass, mqtt_mock, caplog):
 
 async def test_discovery_update_lock(hass, mqtt_mock, caplog):
     """Test update of discovered lock."""
-    data1 = (
-        '{ "name": "Beer",'
-        '  "state_topic": "test_topic",'
-        '  "command_topic": "command_topic",'
-        '  "availability_topic": "availability_topic1" }'
+    config1 = {
+        "name": "Beer",
+        "state_topic": "test_topic",
+        "command_topic": "command_topic",
+        "availability_topic": "availability_topic1",
+    }
+    config2 = {
+        "name": "Milk",
+        "state_topic": "test_topic2",
+        "command_topic": "command_topic",
+        "availability_topic": "availability_topic2",
+    }
+    await help_test_discovery_update(
+        hass, mqtt_mock, caplog, LOCK_DOMAIN, config1, config2
     )
-    data2 = (
-        '{ "name": "Milk",'
-        '  "state_topic": "test_topic2",'
-        '  "command_topic": "command_topic",'
-        '  "availability_topic": "availability_topic2" }'
-    )
-    await help_test_discovery_update(hass, mqtt_mock, caplog, LOCK_DOMAIN, data1, data2)
 
 
 async def test_discovery_update_unchanged_lock(hass, mqtt_mock, caplog):

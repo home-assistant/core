@@ -3,16 +3,15 @@ import logging
 
 from elgato import Elgato, ElgatoConnectionError
 
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DATA_ELGATO_CLIENT, DOMAIN
+from .const import DOMAIN
 
-PLATFORMS = [LIGHT_DOMAIN]
+PLATFORMS = [Platform.BUTTON, Platform.LIGHT]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -31,8 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         logging.getLogger(__name__).debug("Unable to connect: %s", exception)
         raise ConfigEntryNotReady from exception
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {DATA_ELGATO_CLIENT: elgato}
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = elgato
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True

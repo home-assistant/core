@@ -1,16 +1,16 @@
 """Support for Geofency."""
+from http import HTTPStatus
+
 from aiohttp import web
 import voluptuous as vol
 
-from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
 from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     ATTR_NAME,
     CONF_WEBHOOK_ID,
-    HTTP_OK,
-    HTTP_UNPROCESSABLE_ENTITY,
     STATE_NOT_HOME,
+    Platform,
 )
 from homeassistant.helpers import config_entry_flow
 import homeassistant.helpers.config_validation as cv
@@ -19,7 +19,7 @@ from homeassistant.util import slugify
 
 from .const import DOMAIN
 
-PLATFORMS = [DEVICE_TRACKER]
+PLATFORMS = [Platform.DEVICE_TRACKER]
 
 CONF_MOBILE_BEACONS = "mobile_beacons"
 
@@ -89,7 +89,9 @@ async def handle_webhook(hass, webhook_id, request):
     try:
         data = WEBHOOK_SCHEMA(dict(await request.post()))
     except vol.MultipleInvalid as error:
-        return web.Response(text=error.error_message, status=HTTP_UNPROCESSABLE_ENTITY)
+        return web.Response(
+            text=error.error_message, status=HTTPStatus.UNPROCESSABLE_ENTITY
+        )
 
     if _is_mobile_beacon(data, hass.data[DOMAIN]["beacons"]):
         return _set_location(hass, data, None)
@@ -129,7 +131,7 @@ def _set_location(hass, data, location_name):
         data,
     )
 
-    return web.Response(text=f"Setting location for {device}", status=HTTP_OK)
+    return web.Response(text=f"Setting location for {device}")
 
 
 async def async_setup_entry(hass, entry):

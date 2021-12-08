@@ -10,7 +10,7 @@ from synology_dsm.exceptions import (
     SynologyDSMRequestException,
 )
 
-from homeassistant import data_entry_flow, setup
+from homeassistant import data_entry_flow
 from homeassistant.components import ssdp
 from homeassistant.components.synology_dsm.config_flow import CONF_OTP_CODE
 from homeassistant.components.synology_dsm.const import (
@@ -383,16 +383,19 @@ async def test_missing_data_after_login(hass: HomeAssistant, service_failed: Mag
 
 async def test_form_ssdp(hass: HomeAssistant, service: MagicMock):
     """Test we can setup from ssdp."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_SSDP},
-        data={
-            ssdp.ATTR_SSDP_LOCATION: "http://192.168.1.5:5000",
-            ssdp.ATTR_UPNP_FRIENDLY_NAME: "mydsm",
-            ssdp.ATTR_UPNP_SERIAL: "001132XXXX99",  # MAC address, but SSDP does not have `-`
-        },
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="http://192.168.1.5:5000",
+            upnp={
+                ssdp.ATTR_UPNP_FRIENDLY_NAME: "mydsm",
+                ssdp.ATTR_UPNP_SERIAL: "001132XXXX99",  # MAC address, but SSDP does not have `-`
+            },
+        ),
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "link"
@@ -419,12 +422,12 @@ async def test_form_ssdp(hass: HomeAssistant, service: MagicMock):
 
 async def test_reconfig_ssdp(hass: HomeAssistant, service: MagicMock):
     """Test re-configuration of already existing entry by ssdp."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     MockConfigEntry(
         domain=DOMAIN,
         data={
             CONF_HOST: "wrong_host",
+            CONF_VERIFY_SSL: VERIFY_SSL,
             CONF_USERNAME: USERNAME,
             CONF_PASSWORD: PASSWORD,
             CONF_MAC: MACS,
@@ -435,24 +438,28 @@ async def test_reconfig_ssdp(hass: HomeAssistant, service: MagicMock):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_SSDP},
-        data={
-            ssdp.ATTR_SSDP_LOCATION: "http://192.168.1.5:5000",
-            ssdp.ATTR_UPNP_FRIENDLY_NAME: "mydsm",
-            ssdp.ATTR_UPNP_SERIAL: "001132XXXX59",  # Existing in MACS[0], but SSDP does not have `-`
-        },
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="http://192.168.1.5:5000",
+            upnp={
+                ssdp.ATTR_UPNP_FRIENDLY_NAME: "mydsm",
+                ssdp.ATTR_UPNP_SERIAL: "001132XXXX59",  # Existing in MACS[0], but SSDP does not have `-`
+            },
+        ),
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "reconfigure_successful"
 
 
-async def test_existing_ssdp(hass: HomeAssistant, service: MagicMock):
-    """Test abort of already existing entry by ssdp."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+async def test_skip_reconfig_ssdp(hass: HomeAssistant, service: MagicMock):
+    """Test re-configuration of already existing entry by ssdp."""
 
     MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_HOST: "192.168.1.5",
+            CONF_HOST: "wrong_host",
+            CONF_VERIFY_SSL: True,
             CONF_USERNAME: USERNAME,
             CONF_PASSWORD: PASSWORD,
             CONF_MAC: MACS,
@@ -463,11 +470,47 @@ async def test_existing_ssdp(hass: HomeAssistant, service: MagicMock):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_SSDP},
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="http://192.168.1.5:5000",
+            upnp={
+                ssdp.ATTR_UPNP_FRIENDLY_NAME: "mydsm",
+                ssdp.ATTR_UPNP_SERIAL: "001132XXXX59",  # Existing in MACS[0], but SSDP does not have `-`
+            },
+        ),
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_existing_ssdp(hass: HomeAssistant, service: MagicMock):
+    """Test abort of already existing entry by ssdp."""
+
+    MockConfigEntry(
+        domain=DOMAIN,
         data={
-            ssdp.ATTR_SSDP_LOCATION: "http://192.168.1.5:5000",
-            ssdp.ATTR_UPNP_FRIENDLY_NAME: "mydsm",
-            ssdp.ATTR_UPNP_SERIAL: "001132XXXX59",  # Existing in MACS[0], but SSDP does not have `-`
+            CONF_HOST: "192.168.1.5",
+            CONF_VERIFY_SSL: VERIFY_SSL,
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
+            CONF_MAC: MACS,
         },
+        unique_id=SERIAL,
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_SSDP},
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="http://192.168.1.5:5000",
+            upnp={
+                ssdp.ATTR_UPNP_FRIENDLY_NAME: "mydsm",
+                ssdp.ATTR_UPNP_SERIAL: "001132XXXX59",  # Existing in MACS[0], but SSDP does not have `-`
+            },
+        ),
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"

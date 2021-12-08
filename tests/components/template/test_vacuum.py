@@ -92,7 +92,7 @@ _BATTERY_LEVEL_INPUT_NUMBER = "input_number.battery_level"
 )
 async def test_valid_configs(hass, count, parm1, parm2, start_ha):
     """Test: configs."""
-    assert len(hass.states.async_all()) == count
+    assert len(hass.states.async_all("vacuum")) == count
     _verify(hass, parm1, parm2)
 
 
@@ -114,7 +114,7 @@ async def test_valid_configs(hass, count, parm1, parm2, start_ha):
 )
 async def test_invalid_configs(hass, count, start_ha):
     """Test: configs."""
-    assert len(hass.states.async_all()) == count
+    assert len(hass.states.async_all("vacuum")) == count
 
 
 @pytest.mark.parametrize(
@@ -276,7 +276,7 @@ async def test_attribute_templates(hass, start_ha):
 )
 async def test_invalid_attribute_template(hass, start_ha, caplog_setup_text):
     """Test that errors are logged if rendering template fails."""
-    assert len(hass.states.async_all()) == 1
+    assert len(hass.states.async_all("vacuum")) == 1
     assert "test_attribute" in caplog_setup_text
     assert "TemplateError" in caplog_setup_text
 
@@ -309,7 +309,7 @@ async def test_invalid_attribute_template(hass, start_ha, caplog_setup_text):
 )
 async def test_unique_id(hass, start_ha):
     """Test unique_id option only creates one vacuum per id."""
-    assert len(hass.states.async_all()) == 1
+    assert len(hass.states.async_all("vacuum")) == 1
 
 
 async def test_unused_services(hass):

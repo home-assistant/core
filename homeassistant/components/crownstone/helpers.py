@@ -31,8 +31,8 @@ def list_ports_as_str(
                 port.serial_number,
                 port.manufacturer,
                 port.description,
-                f"{hex(port.vid)[2:]:0>4}".upper(),
-                f"{hex(port.pid)[2:]:0>4}".upper(),
+                f"{hex(port.vid)[2:]:0>4}".upper() if port.vid else None,
+                f"{hex(port.pid)[2:]:0>4}".upper() if port.pid else None,
             )
         )
     ports_as_string.append(MANUAL_PATH)

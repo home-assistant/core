@@ -1,12 +1,14 @@
 """The jewish_calendar component."""
 from __future__ import annotations
 
-import hdate
+from hdate import Location
 import voluptuous as vol
 
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "jewish_calendar"
 
@@ -43,7 +45,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 def get_unique_prefix(
-    location: hdate.Location,
+    location: Location,
     language: str,
     candle_lighting_offset: int | None,
     havdalah_offset: int | None,
@@ -63,7 +65,7 @@ def get_unique_prefix(
     return f"{prefix}"
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Jewish Calendar component."""
     name = config[DOMAIN][CONF_NAME]
     language = config[DOMAIN][CONF_LANGUAGE]
@@ -75,7 +77,7 @@ async def async_setup(hass, config):
     candle_lighting_offset = config[DOMAIN][CONF_CANDLE_LIGHT_MINUTES]
     havdalah_offset = config[DOMAIN][CONF_HAVDALAH_OFFSET_MINUTES]
 
-    location = hdate.Location(
+    location = Location(
         latitude=latitude,
         longitude=longitude,
         timezone=hass.config.time_zone,

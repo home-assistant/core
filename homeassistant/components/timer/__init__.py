@@ -1,9 +1,9 @@
 """Support for Timers."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
-from typing import Callable
 
 import voluptuous as vol
 
@@ -271,7 +271,7 @@ class Timer(RestoreEntity):
             newduration = duration
 
         event = EVENT_TIMER_STARTED
-        if self._state == STATUS_ACTIVE or self._state == STATUS_PAUSED:
+        if self._state in (STATUS_ACTIVE, STATUS_PAUSED):
             event = EVENT_TIMER_RESTARTED
 
         self._state = STATUS_ACTIVE

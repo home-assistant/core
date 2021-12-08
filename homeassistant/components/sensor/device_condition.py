@@ -16,6 +16,7 @@ from homeassistant.const import (
     DEVICE_CLASS_CO2,
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_FREQUENCY,
     DEVICE_CLASS_GAS,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
@@ -55,6 +56,7 @@ CONF_IS_CO = "is_carbon_monoxide"
 CONF_IS_CO2 = "is_carbon_dioxide"
 CONF_IS_CURRENT = "is_current"
 CONF_IS_ENERGY = "is_energy"
+CONF_IS_FREQUENCY = "is_frequency"
 CONF_IS_HUMIDITY = "is_humidity"
 CONF_IS_GAS = "is_gas"
 CONF_IS_ILLUMINANCE = "is_illuminance"
@@ -81,6 +83,7 @@ ENTITY_CONDITIONS = {
     DEVICE_CLASS_CO2: [{CONF_TYPE: CONF_IS_CO2}],
     DEVICE_CLASS_CURRENT: [{CONF_TYPE: CONF_IS_CURRENT}],
     DEVICE_CLASS_ENERGY: [{CONF_TYPE: CONF_IS_ENERGY}],
+    DEVICE_CLASS_FREQUENCY: [{CONF_TYPE: CONF_IS_FREQUENCY}],
     DEVICE_CLASS_GAS: [{CONF_TYPE: CONF_IS_GAS}],
     DEVICE_CLASS_HUMIDITY: [{CONF_TYPE: CONF_IS_HUMIDITY}],
     DEVICE_CLASS_ILLUMINANCE: [{CONF_TYPE: CONF_IS_ILLUMINANCE}],
@@ -115,6 +118,7 @@ CONDITION_SCHEMA = vol.All(
                     CONF_IS_CO2,
                     CONF_IS_CURRENT,
                     CONF_IS_ENERGY,
+                    CONF_IS_FREQUENCY,
                     CONF_IS_GAS,
                     CONF_IS_HUMIDITY,
                     CONF_IS_ILLUMINANCE,
@@ -183,11 +187,9 @@ async def async_get_conditions(
 
 @callback
 def async_condition_from_config(
-    config: ConfigType, config_validation: bool
+    hass: HomeAssistant, config: ConfigType
 ) -> condition.ConditionCheckerType:
     """Evaluate state based on configuration."""
-    if config_validation:
-        config = CONDITION_SCHEMA(config)
     numeric_state_config = {
         condition.CONF_CONDITION: "numeric_state",
         condition.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
@@ -197,6 +199,10 @@ def async_condition_from_config(
     if CONF_BELOW in config:
         numeric_state_config[condition.CONF_BELOW] = config[CONF_BELOW]
 
+    numeric_state_config = cv.NUMERIC_STATE_CONDITION_SCHEMA(numeric_state_config)
+    numeric_state_config = condition.numeric_state_validate_config(
+        hass, numeric_state_config
+    )
     return condition.async_numeric_state_from_config(numeric_state_config)
 
 

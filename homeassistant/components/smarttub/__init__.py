@@ -1,12 +1,16 @@
 """SmartTub integration."""
-import logging
+from homeassistant.const import Platform
 
 from .const import DOMAIN, SMARTTUB_CONTROLLER
 from .controller import SmartTubController
 
-_LOGGER = logging.getLogger(__name__)
-
-PLATFORMS = ["binary_sensor", "climate", "light", "sensor", "switch"]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.LIGHT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 
 async def async_setup_entry(hass, entry):

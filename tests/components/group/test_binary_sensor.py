@@ -1,6 +1,4 @@
 """The tests for the Group Binary Sensor platform."""
-from os import path
-
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.group import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
@@ -42,7 +40,7 @@ async def test_default_state(hass):
     assert entry
     assert entry.unique_id == "unique_identifier"
     assert entry.original_name == "Bedroom Group"
-    assert entry.device_class == "presence"
+    assert entry.original_device_class == "presence"
 
 
 async def test_state_reporting_all(hass):
@@ -145,7 +143,3 @@ async def test_state_reporting_any(hass):
     entry = entity_registry.async_get("binary_sensor.binary_sensor_group")
     assert entry
     assert entry.unique_id == "unique_identifier"
-
-
-def _get_fixtures_base_path():
-    return path.dirname(path.dirname(path.dirname(__file__)))

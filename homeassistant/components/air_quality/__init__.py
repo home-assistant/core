@@ -6,10 +6,7 @@ import logging
 from typing import Final, final
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-)
+from homeassistant.const import CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -41,7 +38,6 @@ SCAN_INTERVAL: Final = timedelta(seconds=30)
 
 PROP_TO_ATTR: Final[dict[str, str]] = {
     "air_quality_index": ATTR_AQI,
-    "attribution": ATTR_ATTRIBUTION,
     "carbon_dioxide": ATTR_CO2,
     "carbon_monoxide": ATTR_CO,
     "nitrogen_oxide": ATTR_N2O,
@@ -115,11 +111,6 @@ class AirQualityEntity(Entity):
         return None
 
     @property
-    def attribution(self) -> StateType:
-        """Return the attribution."""
-        return None
-
-    @property
     def sulphur_dioxide(self) -> StateType:
         """Return the SO2 (sulphur dioxide) level."""
         return None
@@ -146,8 +137,7 @@ class AirQualityEntity(Entity):
         data: dict[str, str | int | float] = {}
 
         for prop, attr in PROP_TO_ATTR.items():
-            value = getattr(self, prop)
-            if value is not None:
+            if (value := getattr(self, prop)) is not None:
                 data[attr] = value
 
         return data

@@ -34,9 +34,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     file_path = config.get(CONF_FILE_PATH)
     name = config.get(CONF_NAME)
     unit = config.get(CONF_UNIT_OF_MEASUREMENT)
-    value_template = config.get(CONF_VALUE_TEMPLATE)
 
-    if value_template is not None:
+    if (value_template := config.get(CONF_VALUE_TEMPLATE)) is not None:
         value_template.hass = hass
 
     if hass.config.is_allowed_path(file_path):

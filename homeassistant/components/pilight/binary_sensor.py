@@ -39,8 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Pilight Binary Sensor."""
-    disarm = config.get(CONF_DISARM_AFTER_TRIGGER)
-    if disarm:
+    if config.get(CONF_DISARM_AFTER_TRIGGER):
         add_entities(
             [
                 PilightTriggerSensor(

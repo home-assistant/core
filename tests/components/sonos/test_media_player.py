@@ -77,7 +77,10 @@ async def test_device_registry(hass, config_entry, config, soco):
     )
     assert reg_device.model == "Model Name"
     assert reg_device.sw_version == "13.1"
-    assert reg_device.connections == {(dr.CONNECTION_NETWORK_MAC, "00:11:22:33:44:55")}
+    assert reg_device.connections == {
+        (dr.CONNECTION_NETWORK_MAC, "00:11:22:33:44:55"),
+        (dr.CONNECTION_UPNP, "uuid:RINCON_test"),
+    }
     assert reg_device.manufacturer == "Sonos"
     assert reg_device.suggested_area == "Zone A"
     assert reg_device.name == "Zone A"
@@ -92,6 +95,4 @@ async def test_entity_basic(hass, config_entry, discover):
     attributes = state.attributes
     assert attributes["friendly_name"] == "Zone A"
     assert attributes["is_volume_muted"] is False
-    assert attributes["night_sound"] is True
-    assert attributes["speech_enhance"] is True
     assert attributes["volume_level"] == 0.19

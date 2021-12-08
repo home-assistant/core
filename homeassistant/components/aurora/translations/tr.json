@@ -12,5 +12,15 @@
                 }
             }
         }
-    }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "threshold": "E\u015fik (%)"
+                }
+            }
+        }
+    },
+    "title": "NOAA Aurora Sens\u00f6r\u00fc"
 }

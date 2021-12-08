@@ -1,4 +1,6 @@
 """Config flow for the Abode Security System component."""
+from http import HTTPStatus
+
 from abodepy import Abode
 from abodepy.exceptions import AbodeAuthenticationException, AbodeException
 from abodepy.helpers.errors import MFA_CODE_REQUIRED
@@ -6,7 +8,7 @@ from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, HTTP_BAD_REQUEST
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from .const import DEFAULT_CACHEDB, DOMAIN, LOGGER
 
@@ -51,7 +53,7 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             LOGGER.error("Unable to connect to Abode: %s", ex)
 
-            if ex.errcode == HTTP_BAD_REQUEST:
+            if ex.errcode == HTTPStatus.BAD_REQUEST:
                 errors = {"base": "invalid_auth"}
 
             else:

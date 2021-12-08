@@ -1,7 +1,5 @@
 """The generic_hygrostat component."""
 
-import logging
-
 import voluptuous as vol
 
 from homeassistant.components.humidifier.const import (
@@ -12,8 +10,6 @@ from homeassistant.const import CONF_NAME
 from homeassistant.helpers import config_validation as cv, discovery
 
 DOMAIN = "generic_hygrostat"
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_HUMIDIFIER = "humidifier"
 CONF_SENSOR = "target_sensor"

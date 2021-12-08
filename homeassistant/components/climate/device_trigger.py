@@ -118,9 +118,7 @@ async def async_attach_trigger(
     automation_info: AutomationTriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    trigger_type = config[CONF_TYPE]
-
-    if trigger_type == "hvac_mode_changed":
+    if (trigger_type := config[CONF_TYPE]) == "hvac_mode_changed":
         state_config = {
             state_trigger.CONF_PLATFORM: "state",
             state_trigger.CONF_ENTITY_ID: config[CONF_ENTITY_ID],
@@ -133,7 +131,9 @@ async def async_attach_trigger(
         }
         if CONF_FOR in config:
             state_config[CONF_FOR] = config[CONF_FOR]
-        state_config = state_trigger.TRIGGER_SCHEMA(state_config)
+        state_config = await state_trigger.async_validate_trigger_config(
+            hass, state_config
+        )
         return await state_trigger.async_attach_trigger(
             hass, state_config, action, automation_info, platform_type="device"
         )
@@ -159,7 +159,9 @@ async def async_attach_trigger(
     if CONF_FOR in config:
         numeric_state_config[CONF_FOR] = config[CONF_FOR]
 
-    numeric_state_config = numeric_state_trigger.TRIGGER_SCHEMA(numeric_state_config)
+    numeric_state_config = await numeric_state_trigger.async_validate_trigger_config(
+        hass, numeric_state_config
+    )
     return await numeric_state_trigger.async_attach_trigger(
         hass, numeric_state_config, action, automation_info, platform_type="device"
     )

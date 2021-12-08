@@ -1,4 +1,4 @@
-config/*
+/config
 config2/*
 
 tests/testing_config/deps

@@ -1,7 +1,9 @@
 """Support for Ambiclimate devices."""
 import voluptuous as vol
 
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 
 from . import config_flow
@@ -19,6 +21,8 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+PLATFORMS = [Platform.CLIMATE]
+
 
 async def async_setup(hass, config) -> bool:
     """Set up Ambiclimate components."""
@@ -34,10 +38,7 @@ async def async_setup(hass, config) -> bool:
     return True
 
 
-async def async_setup_entry(hass, entry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Ambiclimate from a config entry."""
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "climate")
-    )
-
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True

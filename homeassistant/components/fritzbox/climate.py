@@ -88,6 +88,8 @@ class FritzboxThermostat(FritzBoxEntity, ClimateEntity):
     @property
     def current_temperature(self) -> float:
         """Return the current temperature."""
+        if self.device.has_temperature_sensor and self.device.temperature is not None:
+            return self.device.temperature  # type: ignore [no-any-return]
         return self.device.actual_temperature  # type: ignore [no-any-return]
 
     @property
@@ -114,9 +116,9 @@ class FritzboxThermostat(FritzBoxEntity, ClimateEntity):
     @property
     def hvac_mode(self) -> str:
         """Return the current operation mode."""
-        if (
-            self.device.target_temperature == OFF_REPORT_SET_TEMPERATURE
-            or self.device.target_temperature == OFF_API_TEMPERATURE
+        if self.device.target_temperature in (
+            OFF_REPORT_SET_TEMPERATURE,
+            OFF_API_TEMPERATURE,
         ):
             return HVAC_MODE_OFF
 
@@ -185,7 +187,7 @@ class FritzboxThermostat(FritzBoxEntity, ClimateEntity):
             attrs[ATTR_STATE_HOLIDAY_MODE] = self.device.holiday_active
         if self.device.summer_active is not None:
             attrs[ATTR_STATE_SUMMER_MODE] = self.device.summer_active
-        if ATTR_STATE_WINDOW_OPEN is not None:
+        if self.device.window_open is not None:
             attrs[ATTR_STATE_WINDOW_OPEN] = self.device.window_open
 
         return attrs

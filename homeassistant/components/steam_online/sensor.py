@@ -145,13 +145,10 @@ class SteamSensor(SensorEntity):
 
     def _get_current_game(self):
         """Gather current game name from APP ID."""
-        game_id = self._profile.current_game[0]
-        game_extra_info = self._profile.current_game[2]
-
-        if game_extra_info:
+        if game_extra_info := self._profile.current_game[2]:
             return game_extra_info
 
-        if not game_id:
+        if not (game_id := self._profile.current_game[0]):
             return None
 
         app_list = self.hass.data[APP_LIST_KEY]
@@ -174,8 +171,7 @@ class SteamSensor(SensorEntity):
         return repr(game_id)
 
     def _get_game_info(self):
-        game_id = self._profile.current_game[0]
-        if game_id is not None:
+        if (game_id := self._profile.current_game[0]) is not None:
 
             for game in self._owned_games["response"]["games"]:
                 if game["appid"] == game_id:

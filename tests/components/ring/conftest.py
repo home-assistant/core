@@ -18,38 +18,39 @@ def requests_mock_fixture():
 
         # Mocks the response for authenticating
         mock.post(
-            "https://oauth.ring.com/oauth/token", text=load_fixture("ring_oauth.json")
+            "https://oauth.ring.com/oauth/token",
+            text=load_fixture("oauth.json", "ring"),
         )
         # Mocks the response for getting the login session
         mock.post(
             "https://api.ring.com/clients_api/session",
-            text=load_fixture("ring_session.json"),
+            text=load_fixture("session.json", "ring"),
         )
         # Mocks the response for getting all the devices
         mock.get(
             "https://api.ring.com/clients_api/ring_devices",
-            text=load_fixture("ring_devices.json"),
+            text=load_fixture("devices.json", "ring"),
         )
         mock.get(
             "https://api.ring.com/clients_api/dings/active",
-            text=load_fixture("ring_ding_active.json"),
+            text=load_fixture("ding_active.json", "ring"),
         )
         # Mocks the response for getting the history of a device
         mock.get(
             re.compile(
                 r"https:\/\/api\.ring\.com\/clients_api\/doorbots\/\d+\/history"
             ),
-            text=load_fixture("ring_doorbots.json"),
+            text=load_fixture("doorbots.json", "ring"),
         )
         # Mocks the response for getting the health of a device
         mock.get(
             re.compile(r"https:\/\/api\.ring\.com\/clients_api\/doorbots\/\d+\/health"),
-            text=load_fixture("ring_doorboot_health_attrs.json"),
+            text=load_fixture("doorboot_health_attrs.json", "ring"),
         )
         # Mocks the response for getting a chimes health
         mock.get(
             re.compile(r"https:\/\/api\.ring\.com\/clients_api\/chimes\/\d+\/health"),
-            text=load_fixture("ring_chime_health_attrs.json"),
+            text=load_fixture("chime_health_attrs.json", "ring"),
         )
 
         yield mock

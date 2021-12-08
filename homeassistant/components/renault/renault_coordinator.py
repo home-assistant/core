@@ -1,10 +1,10 @@
 """Proxy to handle account communication with Renault servers."""
 from __future__ import annotations
 
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import logging
-from typing import Callable, TypeVar
+from typing import TypeVar
 
 from renault_api.kamereon.exceptions import (
     AccessDeniedException,

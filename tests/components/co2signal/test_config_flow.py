@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
 from homeassistant.components.co2signal import DOMAIN, config_flow
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
@@ -16,7 +16,7 @@ from tests.common import MockConfigEntry
 
 async def test_form_home(hass: HomeAssistant) -> None:
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -46,7 +46,7 @@ async def test_form_home(hass: HomeAssistant) -> None:
 
 async def test_form_coordinates(hass: HomeAssistant) -> None:
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -87,7 +87,7 @@ async def test_form_coordinates(hass: HomeAssistant) -> None:
 
 async def test_form_country(hass: HomeAssistant) -> None:
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -200,7 +200,6 @@ async def test_form_error_unexpected_data(hass: HomeAssistant) -> None:
 
 async def test_import(hass: HomeAssistant) -> None:
     """Test we import correctly."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch(
         "CO2Signal.get_latest",
@@ -230,7 +229,7 @@ async def test_import(hass: HomeAssistant) -> None:
 
 async def test_import_abort_existing_home(hass: HomeAssistant) -> None:
     """Test we abort if home entry found."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     MockConfigEntry(domain="co2signal", data={"api_key": "abcd"}).add_to_hass(hass)
 
     with patch(
@@ -247,7 +246,7 @@ async def test_import_abort_existing_home(hass: HomeAssistant) -> None:
 
 async def test_import_abort_existing_country(hass: HomeAssistant) -> None:
     """Test we abort if existing country found."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     MockConfigEntry(
         domain="co2signal", data={"api_key": "abcd", "country_code": "nl"}
     ).add_to_hass(hass)
@@ -274,7 +273,7 @@ async def test_import_abort_existing_country(hass: HomeAssistant) -> None:
 
 async def test_import_abort_existing_coordinates(hass: HomeAssistant) -> None:
     """Test we abort if existing coordinates found."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     MockConfigEntry(
         domain="co2signal", data={"api_key": "abcd", "latitude": 1, "longitude": 2}
     ).add_to_hass(hass)

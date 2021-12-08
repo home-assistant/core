@@ -2,8 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Netgear",
-        "description": "Default host: {host}\n Default port: {port}\n Default username: {username}",
+        "description": "Default host: {host}\nDefault port: {port}\nDefault username: {username}",
         "data": {
           "host": "[%key:common::config_flow::data::host%] (Optional)",
           "port": "[%key:common::config_flow::data::port%] (Optional)",
@@ -23,7 +22,6 @@
   "options": {
     "step": {
       "init": {
-        "title": "Netgear",
         "description": "Specify optional settings",
         "data": {
           "consider_home": "Consider home time (seconds)"

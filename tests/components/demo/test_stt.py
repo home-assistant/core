@@ -1,4 +1,6 @@
 """The tests for the demo stt component."""
+from http import HTTPStatus
+
 import pytest
 
 from homeassistant.components import stt
@@ -19,7 +21,7 @@ async def test_demo_settings(hass_client):
     response = await client.get("/api/stt/demo")
     response_data = await response.json()
 
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     assert response_data == {
         "languages": ["en", "de"],
         "bit_rates": [16],
@@ -35,7 +37,7 @@ async def test_demo_speech_no_metadata(hass_client):
     client = await hass_client()
 
     response = await client.post("/api/stt/demo", data=b"Test")
-    assert response.status == 400
+    assert response.status == HTTPStatus.BAD_REQUEST
 
 
 async def test_demo_speech_wrong_metadata(hass_client):
@@ -49,7 +51,7 @@ async def test_demo_speech_wrong_metadata(hass_client):
         },
         data=b"Test",
     )
-    assert response.status == 415
+    assert response.status == HTTPStatus.UNSUPPORTED_MEDIA_TYPE
 
 
 async def test_demo_speech(hass_client):
@@ -65,5 +67,5 @@ async def test_demo_speech(hass_client):
     )
     response_data = await response.json()
 
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     assert response_data == {"text": "Turn the Kitchen Lights on", "result": "success"}

@@ -27,7 +27,11 @@
             "configure_addon": {
                 "data": {
                     "network_key": "Clau de xarxa",
-                    "usb_path": "Ruta del port USB del dispositiu"
+                    "s0_legacy_key": "Clau d'S0 (est\u00e0ndard)",
+                    "s2_access_control_key": "Clau de control d'acc\u00e9s d'S2",
+                    "s2_authenticated_key": "Clau d'S2 autenticat",
+                    "s2_unauthenticated_key": "Clau d'S2 no autenticat",
+                    "usb_path": "Ruta del dispositiu USB"
                 },
                 "title": "Introdueix la configuraci\u00f3 del complement Z-Wave JS"
             },
@@ -58,6 +62,15 @@
         }
     },
     "device_automation": {
+        "action_type": {
+            "clear_lock_usercode": "Esborra codi d'usuari de {entity_name}",
+            "ping": "Sondeja dispositiu",
+            "refresh_value": "Actualitza el/s valor/s de {entity_name}",
+            "reset_meter": "Reinicialitza comptadors de {subtype}",
+            "set_config_parameter": "Estableix el valor del par\u00e0metre de configuraci\u00f3 {subtype}",
+            "set_lock_usercode": "Estableix codi d'usuari a {entity_name}",
+            "set_value": "Estableix el valor d'un valor Z-Wave"
+        },
         "condition_type": {
             "config_parameter": "Configura el valor del par\u00e0metre {subtype}",
             "node_status": "Estat del node",
@@ -100,7 +113,11 @@
                     "emulate_hardware": "Emula maquinari",
                     "log_level": "Nivell dels registres",
                     "network_key": "Clau de xarxa",
-                    "usb_path": "Ruta del port USB del dispositiu"
+                    "s0_legacy_key": "Clau d'S0 (est\u00e0ndard)",
+                    "s2_access_control_key": "Clau de control d'acc\u00e9s d'S2",
+                    "s2_authenticated_key": "Clau d'S2 autenticat",
+                    "s2_unauthenticated_key": "Clau d'S2 no autenticat",
+                    "usb_path": "Ruta del dispositiu USB"
                 },
                 "title": "Introdueix la configuraci\u00f3 del complement Z-Wave JS"
             },

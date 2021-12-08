@@ -112,8 +112,7 @@ class SynologySrmDeviceScanner(DeviceScanner):
         if not device:
             return filtered_attributes
         for attribute, alias in ATTRIBUTE_ALIAS.items():
-            value = device.get(attribute)
-            if value is None:
+            if (value := device.get(attribute)) is None:
                 continue
             attr = alias or attribute
             filtered_attributes[attr] = value

@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "No se encontraron dispositivos en la red",
+            "single_instance_allowed": "Ya est\u00e1 configurado. Solo es posible una \u00fanica configuraci\u00f3n."
+        },
+        "step": {
+            "confirm": {
+                "description": "\u00bfQuieres iniciar la configuraci\u00f3n?"
+            }
+        }
+    }
+}

@@ -27,8 +27,8 @@
                     "armed_home": "\u00c9les\u00edtve (otthon)",
                     "armed_night": "\u00c9les\u00edtve  (\u00e9jszakai)"
                 },
-                "description": "V\u00e1lassza ki, hogy milyen \u00e1llapotba \u00e1ll\u00edtsa a Risco riaszt\u00e1st a Home Assistant riaszt\u00e1s \u00e9les\u00edt\u00e9sekor",
-                "title": "A Home Assistant \u00e1llapotok megjelen\u00edt\u00e9se Risco \u00e1llapotokba"
+                "description": "V\u00e1lassza ki, hogy milyen \u00e1llapotba \u00e1ll\u00edtsa a Risco riaszt\u00e1st Home Assistant riaszt\u00e1s \u00e9les\u00edt\u00e9sekor",
+                "title": "Home Assistant \u00e1llapotok megjelen\u00edt\u00e9se Risco \u00e1llapotokba"
             },
             "init": {
                 "data": {

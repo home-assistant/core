@@ -6,19 +6,37 @@
             "single_instance_allowed": "Ju\u017c skonfigurowano. Mo\u017cliwa jest tylko jedna konfiguracja."
         },
         "error": {
-            "invalid_auth": "Niepoprawne uwierzytelnienie"
+            "invalid_auth": "Niepoprawne uwierzytelnienie",
+            "login_error": "B\u0142\u0105d logowania ({code}): {msg}"
         },
         "flow_title": "Konfiguracja integracji Tuya",
         "step": {
+            "login": {
+                "data": {
+                    "access_id": "Identyfikator dost\u0119pu",
+                    "access_secret": "Has\u0142o dost\u0119pu",
+                    "country_code": "Kod kraju",
+                    "endpoint": "Strefa dost\u0119pno\u015bci",
+                    "password": "Has\u0142o",
+                    "tuya_app_type": "Aplikacja mobilna",
+                    "username": "Konto"
+                },
+                "description": "Wprowad\u017a dane uwierzytelniaj\u0105ce Tuya",
+                "title": "Tuya"
+            },
             "user": {
                 "data": {
-                    "country_code": "Kod kraju twojego konta (np. 1 dla USA lub 86 dla Chin)",
+                    "access_id": "Identyfikator dost\u0119pu do Tuya IoT",
+                    "access_secret": "Has\u0142o dost\u0119pu do Tuya IoT",
+                    "country_code": "Kraj",
                     "password": "Has\u0142o",
                     "platform": "Aplikacja, w kt\u00f3rej zarejestrowane jest Twoje konto",
-                    "username": "Nazwa u\u017cytkownika"
+                    "region": "Region",
+                    "tuya_project_type": "Typ projektu chmury Tuya",
+                    "username": "Konto"
                 },
-                "description": "Wprowad\u017a dane uwierzytelniaj\u0105ce",
-                "title": "Tuya"
+                "description": "Wprowad\u017a dane uwierzytelniaj\u0105ce Tuya",
+                "title": "Integracja Tuya"
             }
         }
     },

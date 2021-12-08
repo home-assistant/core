@@ -27,6 +27,10 @@
             "configure_addon": {
                 "data": {
                     "network_key": "Chiave di rete",
+                    "s0_legacy_key": "Chiave S0 (Obsoleta)",
+                    "s2_access_control_key": "Chiave di controllo di accesso S2",
+                    "s2_authenticated_key": "Chiave S2 autenticata",
+                    "s2_unauthenticated_key": "Chiave S2 non autenticata",
                     "usb_path": "Percorso del dispositivo USB"
                 },
                 "title": "Accedi alla configurazione del componente aggiuntivo Z-Wave JS"
@@ -58,6 +62,15 @@
         }
     },
     "device_automation": {
+        "action_type": {
+            "clear_lock_usercode": "Cancella codice utente su {entity_name}",
+            "ping": "Dispositivo ping",
+            "refresh_value": "Aggiorna il/i valore/i per {entity_name}",
+            "reset_meter": "Azzerare i contatori su {subtype}",
+            "set_config_parameter": "Imposta il valore del parametro di configurazione {subtype}",
+            "set_lock_usercode": "Imposta un codice utente su {entity_name}",
+            "set_value": "Imposta un valore Z-Wave"
+        },
         "condition_type": {
             "config_parameter": "Valore del parametro di configurazione {subtype}",
             "node_status": "Stato del nodo",
@@ -100,6 +113,10 @@
                     "emulate_hardware": "Emulare l'hardware",
                     "log_level": "Livello di registro",
                     "network_key": "Chiave di rete",
+                    "s0_legacy_key": "Chiave S0 (Obsoleta)",
+                    "s2_access_control_key": "Chiave di controllo di accesso S2",
+                    "s2_authenticated_key": "Chiave S2 autenticata",
+                    "s2_unauthenticated_key": "Chiave S2 non autenticata",
                     "usb_path": "Percorso del dispositivo USB"
                 },
                 "title": "Entra nella configurazione del componente aggiuntivo Z-Wave JS"

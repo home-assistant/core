@@ -92,7 +92,6 @@ class SmartMeterTexasSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
         if self.coordinator.last_update_success:
             return
 
-        last_state = await self.async_get_last_state()
-        if last_state:
+        if last_state := await self.async_get_last_state():
             self._state = last_state.state
             self._available = True

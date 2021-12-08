@@ -25,12 +25,17 @@ from .const import CONF_AUTO_CONFIGURE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PROTOCOL_MAP = {"secure": "elks://", "non-secure": "elk://", "serial": "serial://"}
+PROTOCOL_MAP = {
+    "secure": "elks://",
+    "TLS 1.2": "elksv1_2://",
+    "non-secure": "elk://",
+    "serial": "serial://",
+}
 
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_PROTOCOL, default="secure"): vol.In(
-            ["secure", "non-secure", "serial"]
+            ["secure", "TLS 1.2", "non-secure", "serial"]
         ),
         vol.Required(CONF_ADDRESS): str,
         vol.Optional(CONF_USERNAME, default=""): str,
@@ -55,7 +60,7 @@ async def validate_input(data):
 
     prefix = data[CONF_PREFIX]
     url = _make_url_from_data(data)
-    requires_password = url.startswith("elks://")
+    requires_password = url.startswith("elks://") or url.startswith("elksv1_2")
 
     if requires_password and (not userid or not password):
         raise InvalidAuth
@@ -74,8 +79,7 @@ async def validate_input(data):
 
 
 def _make_url_from_data(data):
-    host = data.get(CONF_HOST)
-    if host:
+    if host := data.get(CONF_HOST):
         return host
 
     protocol = PROTOCOL_MAP[data[CONF_PROTOCOL]]

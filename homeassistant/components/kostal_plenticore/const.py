@@ -1,4 +1,5 @@
 """Constants for the Kostal Plenticore Solar Inverter integration."""
+from typing import NamedTuple
 
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
@@ -10,8 +11,12 @@ from homeassistant.const import (
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
+    DEVICE_CLASS_VOLTAGE,
+    ELECTRIC_CURRENT_AMPERE,
+    ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
     POWER_WATT,
@@ -136,6 +141,28 @@ SENSOR_PROCESS_DATA = [
         "format_round",
     ),
     (
+        "devices:local:pv1",
+        "U",
+        "DC1 Voltage",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_POTENTIAL_VOLT,
+            ATTR_DEVICE_CLASS: DEVICE_CLASS_VOLTAGE,
+            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        },
+        "format_round",
+    ),
+    (
+        "devices:local:pv1",
+        "I",
+        "DC1 Current",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_CURRENT_AMPERE,
+            ATTR_DEVICE_CLASS: DEVICE_CLASS_CURRENT,
+            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        },
+        "format_float",
+    ),
+    (
         "devices:local:pv2",
         "P",
         "DC2 Power",
@@ -147,6 +174,28 @@ SENSOR_PROCESS_DATA = [
         "format_round",
     ),
     (
+        "devices:local:pv2",
+        "U",
+        "DC2 Voltage",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_POTENTIAL_VOLT,
+            ATTR_DEVICE_CLASS: DEVICE_CLASS_VOLTAGE,
+            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        },
+        "format_round",
+    ),
+    (
+        "devices:local:pv2",
+        "I",
+        "DC2 Current",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_CURRENT_AMPERE,
+            ATTR_DEVICE_CLASS: DEVICE_CLASS_CURRENT,
+            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        },
+        "format_float",
+    ),
+    (
         "devices:local:pv3",
         "P",
         "DC3 Power",
@@ -156,6 +205,28 @@ SENSOR_PROCESS_DATA = [
             ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
         },
         "format_round",
+    ),
+    (
+        "devices:local:pv3",
+        "U",
+        "DC3 Voltage",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_POTENTIAL_VOLT,
+            ATTR_DEVICE_CLASS: DEVICE_CLASS_VOLTAGE,
+            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        },
+        "format_round",
+    ),
+    (
+        "devices:local:pv3",
+        "I",
+        "DC3 Current",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_CURRENT_AMPERE,
+            ATTR_DEVICE_CLASS: DEVICE_CLASS_CURRENT,
+            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        },
+        "format_float",
     ),
     (
         "devices:local",
@@ -618,11 +689,70 @@ SENSOR_SETTINGS_DATA = [
         {ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE, ATTR_ICON: "mdi:battery-negative"},
         "format_round",
     ),
-    (
+]
+
+
+class SwitchData(NamedTuple):
+    """Representation of a SelectData tuple."""
+
+    module_id: str
+    data_id: str
+    name: str
+    is_on: str
+    on_value: str
+    on_label: str
+    off_value: str
+    off_label: str
+
+
+# Defines all entities for switches.
+#
+# Each entry is defined with a tuple of these values:
+#  - module id (str)
+#  - process data id (str)
+#  - entity name suffix (str)
+#  - on Value (str)
+#  - on Label (str)
+#  - off Value (str)
+#  - off Label (str)
+SWITCH_SETTINGS_DATA = [
+    SwitchData(
         "devices:local",
         "Battery:Strategy",
-        "Battery Strategy",
-        {},
-        "format_round",
+        "Battery Strategy:",
+        "1",
+        "1",
+        "Automatic",
+        "2",
+        "Automatic economical",
     ),
+]
+
+
+class SelectData(NamedTuple):
+    """Representation of a SelectData tuple."""
+
+    module_id: str
+    data_id: str
+    name: str
+    options: list
+    is_on: str
+
+
+# Defines all entities for select widgets.
+#
+# Each entry is defined with a tuple of these values:
+#  - module id (str)
+#  - process data id (str)
+#  - entity name suffix (str)
+#  - options
+#  - entity is enabled by default (bool)
+SELECT_SETTINGS_DATA = [
+    SelectData(
+        "devices:local",
+        "battery_charge",
+        "Battery Charging / Usage mode",
+        ["None", "Battery:SmartBatteryControl:Enable", "Battery:TimeControl:Enable"],
+        "1",
+    )
 ]

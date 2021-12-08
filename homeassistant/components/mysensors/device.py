@@ -121,16 +121,20 @@ class MySensorsDevice:
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        return {
-            "identifiers": {(DOMAIN, f"{self.gateway_id}-{self.node_id}")},
-            "name": self.node_name,
-            "manufacturer": DOMAIN,
-            "sw_version": self.sketch_version,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, f"{self.gateway_id}-{self.node_id}")},
+            manufacturer=DOMAIN,
+            name=self.node_name,
+            sw_version=self.sketch_version,
+        )
 
     @property
     def name(self) -> str:
         """Return the name of this entity."""
+        child = self._child
+
+        if child.description:
+            return str(child.description)
         return f"{self.node_name} {self.child_id}"
 
     @property

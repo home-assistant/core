@@ -1,5 +1,5 @@
 """Test Modem Caller ID integration."""
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 from phone_modem import exceptions
 
@@ -19,8 +19,7 @@ async def test_setup_config(hass: HomeAssistant):
         data=CONF_DATA,
     )
     entry.add_to_hass(hass)
-    mocked_modem = AsyncMock()
-    with _patch_init_modem(mocked_modem):
+    with _patch_init_modem():
         await hass.config_entries.async_setup(entry.entry_id)
     assert entry.state == ConfigEntryState.LOADED
 
@@ -50,8 +49,7 @@ async def test_unload_config_entry(hass: HomeAssistant):
         data=CONF_DATA,
     )
     entry.add_to_hass(hass)
-    mocked_modem = AsyncMock()
-    with _patch_init_modem(mocked_modem):
+    with _patch_init_modem():
         await hass.config_entries.async_setup(entry.entry_id)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert entry.state is ConfigEntryState.LOADED

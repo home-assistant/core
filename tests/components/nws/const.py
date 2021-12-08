@@ -25,11 +25,14 @@ from homeassistant.const import (
     PRESSURE_HPA,
     PRESSURE_INHG,
     PRESSURE_PA,
+    SPEED_KILOMETERS_PER_HOUR,
+    SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
 from homeassistant.util.distance import convert as convert_distance
 from homeassistant.util.pressure import convert as convert_pressure
+from homeassistant.util.speed import convert as convert_speed
 from homeassistant.util.temperature import convert as convert_temperature
 
 NWS_CONFIG = {
@@ -80,8 +83,12 @@ SENSOR_EXPECTED_OBSERVATION_IMPERIAL = {
     "windChill": str(round(convert_temperature(5, TEMP_CELSIUS, TEMP_FAHRENHEIT))),
     "heatIndex": str(round(convert_temperature(15, TEMP_CELSIUS, TEMP_FAHRENHEIT))),
     "relativeHumidity": "10",
-    "windSpeed": str(round(convert_distance(10, LENGTH_KILOMETERS, LENGTH_MILES))),
-    "windGust": str(round(convert_distance(20, LENGTH_KILOMETERS, LENGTH_MILES))),
+    "windSpeed": str(
+        round(convert_speed(10, SPEED_KILOMETERS_PER_HOUR, SPEED_MILES_PER_HOUR))
+    ),
+    "windGust": str(
+        round(convert_speed(20, SPEED_KILOMETERS_PER_HOUR, SPEED_MILES_PER_HOUR))
+    ),
     "windDirection": "180",
     "barometricPressure": str(
         round(convert_pressure(100000, PRESSURE_PA, PRESSURE_INHG), 2)
@@ -98,7 +105,7 @@ WEATHER_EXPECTED_OBSERVATION_IMPERIAL = {
     ),
     ATTR_WEATHER_WIND_BEARING: 180,
     ATTR_WEATHER_WIND_SPEED: round(
-        convert_distance(10, LENGTH_KILOMETERS, LENGTH_MILES)
+        convert_speed(10, SPEED_KILOMETERS_PER_HOUR, SPEED_MILES_PER_HOUR)
     ),
     ATTR_WEATHER_PRESSURE: round(
         convert_pressure(100000, PRESSURE_PA, PRESSURE_INHG), 2
@@ -152,7 +159,7 @@ EXPECTED_FORECAST_METRIC = {
     ATTR_FORECAST_TIME: "2019-08-12T20:00:00-04:00",
     ATTR_FORECAST_TEMP: round(convert_temperature(10, TEMP_FAHRENHEIT, TEMP_CELSIUS)),
     ATTR_FORECAST_WIND_SPEED: round(
-        convert_distance(10, LENGTH_MILES, LENGTH_KILOMETERS)
+        convert_speed(10, SPEED_MILES_PER_HOUR, SPEED_KILOMETERS_PER_HOUR)
     ),
     ATTR_FORECAST_WIND_BEARING: 180,
     ATTR_FORECAST_PRECIPITATION_PROBABILITY: 90,

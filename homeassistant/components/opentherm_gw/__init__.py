@@ -6,9 +6,6 @@ import pyotgw
 import pyotgw.vars as gw_vars
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import DOMAIN as COMP_BINARY_SENSOR
-from homeassistant.components.climate import DOMAIN as COMP_CLIMATE
-from homeassistant.components.sensor import DOMAIN as COMP_SENSOR
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_DATE,
@@ -23,6 +20,7 @@ from homeassistant.const import (
     PRECISION_HALVES,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
+    Platform,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import (
@@ -80,7 +78,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS = [COMP_BINARY_SENSOR, COMP_CLIMATE, COMP_SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.CLIMATE, Platform.SENSOR]
 
 
 async def options_updated(hass, entry):
@@ -156,8 +154,9 @@ def register_services(hass):
             vol.Required(ATTR_GW_ID): vol.All(
                 cv.string, vol.In(hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS])
             ),
-            vol.Optional(ATTR_DATE, default=date.today()): cv.date,
-            vol.Optional(ATTR_TIME, default=datetime.now().time()): cv.time,
+            # pylint: disable=unnecessary-lambda
+            vol.Optional(ATTR_DATE, default=lambda: date.today()): cv.date,
+            vol.Optional(ATTR_TIME, default=lambda: datetime.now().time()): cv.time,
         }
     )
     service_set_control_setpoint_schema = vol.Schema(

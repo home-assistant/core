@@ -6,13 +6,14 @@ import async_timeout
 import garages_amsterdam
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
 
-PLATFORMS = ["binary_sensor", "sensor"]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -39,7 +40,7 @@ async def get_coordinator(
         return hass.data[DOMAIN]
 
     async def async_get_garages():
-        with async_timeout.timeout(10):
+        async with async_timeout.timeout(10):
             return {
                 garage.garage_name: garage
                 for garage in await garages_amsterdam.get_garages(
