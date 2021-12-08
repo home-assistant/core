@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 
-from homeassistant.components import ssdp
+from homeassistant.components import ssdp, zeroconf
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.sonos import DOMAIN
 from homeassistant.const import CONF_HOSTS
@@ -40,6 +40,19 @@ class SonosMockEvent:
         newcount = int(count) + 1
         self.variables[var_name] = ":".join([base, str(newcount)])
         return self.variables[var_name]
+
+
+@pytest.fixture
+def zeroconf_payload():
+    """Return a default zeroconf payload."""
+    return zeroconf.ZeroconfServiceInfo(
+        host="192.168.4.2",
+        hostname="Sonos-aaa",
+        name="Sonos-aaa@Living Room._sonos._tcp.local.",
+        port=None,
+        properties={"bootseq": "1234"},
+        type="mock_type",
+    )
 
 
 @pytest.fixture
