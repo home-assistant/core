@@ -24,50 +24,31 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    ATTR_ACTIVE_POWER_L1_W,
-    ATTR_ACTIVE_POWER_L2_W,
-    ATTR_ACTIVE_POWER_L3_W,
-    ATTR_ACTIVE_POWER_W,
-    ATTR_GAS_TIMESTAMP,
-    ATTR_METER_MODEL,
-    ATTR_SMR_VERSION,
-    ATTR_TOTAL_ENERGY_EXPORT_T1_KWH,
-    ATTR_TOTAL_ENERGY_EXPORT_T2_KWH,
-    ATTR_TOTAL_ENERGY_IMPORT_T1_KWH,
-    ATTR_TOTAL_ENERGY_IMPORT_T2_KWH,
-    ATTR_TOTAL_GAS_M3,
-    ATTR_WIFI_SSID,
-    ATTR_WIFI_STRENGTH,
-    CONF_DATA,
-    CONF_DEVICE,
-    COORDINATOR,
-    DOMAIN,
-)
+from .const import CONF_DATA, CONF_DEVICE, COORDINATOR, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 SENSORS: Final[tuple[SensorEntityDescription, ...]] = (
     SensorEntityDescription(
-        key=ATTR_SMR_VERSION,
+        key="smr_version",
         name="SMR Version",
         icon="mdi:counter",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
-        key=ATTR_METER_MODEL,
+        key="meter_model",
         name="Model",
         icon="mdi:gauge",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
-        key=ATTR_WIFI_SSID,
+        key="wifi_ssid",
         name="Wifi SSID",
         icon="mdi:wifi",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
-        key=ATTR_WIFI_STRENGTH,
+        key="wifi_strength",
         name="Wifi Strength",
         icon="mdi:wifi",
         native_unit_of_measurement=PERCENTAGE,
@@ -76,70 +57,70 @@ SENSORS: Final[tuple[SensorEntityDescription, ...]] = (
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
-        key=ATTR_TOTAL_ENERGY_IMPORT_T1_KWH,
+        key="total_power_import_t1_kwh",
         name="Total Power Import T1",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
         state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     SensorEntityDescription(
-        key=ATTR_TOTAL_ENERGY_IMPORT_T2_KWH,
+        key="total_power_import_t2_kwh",
         name="Total Power Import T2",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
         state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     SensorEntityDescription(
-        key=ATTR_TOTAL_ENERGY_EXPORT_T1_KWH,
+        key="total_power_export_t1_kwh",
         name="Total Power Export T1",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
         state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     SensorEntityDescription(
-        key=ATTR_TOTAL_ENERGY_EXPORT_T2_KWH,
+        key="total_power_export_t2_kwh",
         name="Total Power Export T2",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
         state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     SensorEntityDescription(
-        key=ATTR_ACTIVE_POWER_W,
+        key="active_power_w",
         name="Active Power",
         native_unit_of_measurement=POWER_WATT,
         device_class=DEVICE_CLASS_POWER,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
-        key=ATTR_ACTIVE_POWER_L1_W,
+        key="active_power_l1_w",
         name="Active Power L1",
         native_unit_of_measurement=POWER_WATT,
         device_class=DEVICE_CLASS_POWER,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
-        key=ATTR_ACTIVE_POWER_L2_W,
+        key="active_power_l2_w",
         name="Active Power L2",
         native_unit_of_measurement=POWER_WATT,
         device_class=DEVICE_CLASS_POWER,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
-        key=ATTR_ACTIVE_POWER_L3_W,
+        key="active_power_l3_w",
         name="Active Power L3",
         native_unit_of_measurement=POWER_WATT,
         device_class=DEVICE_CLASS_POWER,
         state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
-        key=ATTR_TOTAL_GAS_M3,
+        key="total_gas_m3",
         name="Total Gas",
         native_unit_of_measurement=VOLUME_CUBIC_METERS,
         device_class=DEVICE_CLASS_GAS,
         state_class=STATE_CLASS_TOTAL_INCREASING,
     ),
     SensorEntityDescription(
-        key=ATTR_GAS_TIMESTAMP,
+        key="gas_timestamp",
         name="Gas Timestamp",
         device_class=DEVICE_CLASS_TIMESTAMP,
     ),
@@ -179,8 +160,8 @@ class HWEnergySensor(CoordinatorEntity, SensorEntity):
         # Special case for export, not everyone has solarpanels
         # The change that 'export' is non-zero when you have solar panels is nil
         if self.data_type in [
-            ATTR_TOTAL_ENERGY_EXPORT_T1_KWH,
-            ATTR_TOTAL_ENERGY_EXPORT_T2_KWH,
+            "total_power_export_t1_kwh",
+            "total_power_export_t2_kwh",
         ]:
             if self.data[CONF_DATA][self.data_type] == 0:
                 self.entity_description.entity_registry_enabled_default = False

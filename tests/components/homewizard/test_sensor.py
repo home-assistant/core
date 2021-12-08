@@ -3,22 +3,6 @@
 from datetime import datetime
 from unittest.mock import patch
 
-from homeassistant.components.homewizard.const import (
-    ATTR_ACTIVE_POWER_L1_W,
-    ATTR_ACTIVE_POWER_L2_W,
-    ATTR_ACTIVE_POWER_L3_W,
-    ATTR_ACTIVE_POWER_W,
-    ATTR_GAS_TIMESTAMP,
-    ATTR_METER_MODEL,
-    ATTR_SMR_VERSION,
-    ATTR_TOTAL_ENERGY_EXPORT_T1_KWH,
-    ATTR_TOTAL_ENERGY_EXPORT_T2_KWH,
-    ATTR_TOTAL_ENERGY_IMPORT_T1_KWH,
-    ATTR_TOTAL_ENERGY_IMPORT_T2_KWH,
-    ATTR_TOTAL_GAS_M3,
-    ATTR_WIFI_SSID,
-    ATTR_WIFI_STRENGTH,
-)
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     STATE_CLASS_MEASUREMENT,
@@ -49,7 +33,7 @@ async def test_sensor_entity_smr_version(
 
     api = get_mock_device()
     api.data.available_datapoints = [
-        ATTR_SMR_VERSION,
+        "smr_version",
     ]
     api.data.smr_version = 50
 
@@ -90,7 +74,7 @@ async def test_sensor_entity_meter_model(
 
     api = get_mock_device()
     api.data.available_datapoints = [
-        ATTR_METER_MODEL,
+        "meter_model",
     ]
     api.data.meter_model = "Model X"
 
@@ -128,7 +112,7 @@ async def test_sensor_entity_wifi_ssid(hass, mock_config_entry_data, mock_config
 
     api = get_mock_device()
     api.data.available_datapoints = [
-        ATTR_WIFI_SSID,
+        "wifi_ssid",
     ]
     api.data.wifi_ssid = "My Wifi"
 
@@ -169,7 +153,7 @@ async def test_sensor_entity_wifi_strength(
 
     api = get_mock_device()
     api.data.available_datapoints = [
-        ATTR_WIFI_STRENGTH,
+        "wifi_strength",
     ]
     api.data.wifi_strength = 42
 
@@ -199,7 +183,7 @@ async def test_sensor_entity_total_power_import_t1_kwh(
 
     api = get_mock_device()
     api.data.available_datapoints = [
-        ATTR_TOTAL_ENERGY_IMPORT_T1_KWH,
+        "total_power_import_t1_kwh",
     ]
     api.data.total_power_import_t1_kwh = 1234.123
 
@@ -242,7 +226,7 @@ async def test_sensor_entity_total_power_import_t2_kwh(
 
     api = get_mock_device()
     api.data.available_datapoints = [
-        ATTR_TOTAL_ENERGY_IMPORT_T2_KWH,
+        "total_power_import_t2_kwh",
     ]
     api.data.total_power_import_t2_kwh = 1234.123
 
@@ -285,7 +269,7 @@ async def test_sensor_entity_total_power_export_t1_kwh(
 
     api = get_mock_device()
     api.data.available_datapoints = [
-        ATTR_TOTAL_ENERGY_EXPORT_T1_KWH,
+        "total_power_export_t1_kwh",
     ]
     api.data.total_power_export_t1_kwh = 1234.123
 
@@ -328,7 +312,7 @@ async def test_sensor_entity_total_power_export_t2_kwh(
 
     api = get_mock_device()
     api.data.available_datapoints = [
-        ATTR_TOTAL_ENERGY_EXPORT_T2_KWH,
+        "total_power_export_t2_kwh",
     ]
     api.data.total_power_export_t2_kwh = 1234.123
 
@@ -371,7 +355,7 @@ async def test_sensor_entity_active_power(
 
     api = get_mock_device()
     api.data.available_datapoints = [
-        ATTR_ACTIVE_POWER_W,
+        "active_power_w",
     ]
     api.data.active_power_w = 123.123
 
@@ -412,7 +396,7 @@ async def test_sensor_entity_active_power_l1(
 
     api = get_mock_device()
     api.data.available_datapoints = [
-        ATTR_ACTIVE_POWER_L1_W,
+        "active_power_l1_w",
     ]
     api.data.active_power_l1_w = 123.123
 
@@ -455,7 +439,7 @@ async def test_sensor_entity_active_power_l2(
 
     api = get_mock_device()
     api.data.available_datapoints = [
-        ATTR_ACTIVE_POWER_L2_W,
+        "active_power_l2_w",
     ]
     api.data.active_power_l2_w = 456.456
 
@@ -498,7 +482,7 @@ async def test_sensor_entity_active_power_l3(
 
     api = get_mock_device()
     api.data.available_datapoints = [
-        ATTR_ACTIVE_POWER_L3_W,
+        "active_power_l3_w",
     ]
     api.data.active_power_l3_w = 789.789
 
@@ -539,7 +523,7 @@ async def test_sensor_entity_total_gas(hass, mock_config_entry_data, mock_config
 
     api = get_mock_device()
     api.data.available_datapoints = [
-        ATTR_TOTAL_GAS_M3,
+        "total_gas_m3",
     ]
     api.data.total_gas_m3 = 50
 
@@ -580,7 +564,7 @@ async def test_sensor_entity_gas_timestamp(
 
     api = get_mock_device()
     api.data.available_datapoints = [
-        ATTR_GAS_TIMESTAMP,
+        "gas_timestamp",
     ]
 
     # Generate timestamp
@@ -626,10 +610,10 @@ async def test_sensor_entity_disabled_when_null(
 
     api = get_mock_device()
     api.data.available_datapoints = [
-        ATTR_ACTIVE_POWER_L2_W,
-        ATTR_ACTIVE_POWER_L3_W,
-        ATTR_TOTAL_GAS_M3,
-        ATTR_GAS_TIMESTAMP,
+        "active_power_l2_w",
+        "active_power_l3_w",
+        "total_gas_m3",
+        "gas_timestamp",
     ]
     api.data.active_power_l2_w = None
     api.data.active_power_l3_w = None
@@ -677,8 +661,8 @@ async def test_sensor_entity_export_disabled_when_unused(
 
     api = get_mock_device()
     api.data.available_datapoints = [
-        ATTR_TOTAL_ENERGY_EXPORT_T1_KWH,
-        ATTR_TOTAL_ENERGY_EXPORT_T2_KWH,
+        "total_power_export_t1_kwh",
+        "total_power_export_t2_kwh",
     ]
     api.data.total_power_export_t1_kwh = 0
     api.data.total_power_export_t2_kwh = 0

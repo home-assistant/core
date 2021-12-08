@@ -6,25 +6,7 @@ from unittest.mock import patch
 from aiohwenergy import errors
 from pytest import raises
 
-from homeassistant.components.homewizard.const import (
-    ATTR_ACTIVE_POWER_L1_W,
-    ATTR_ACTIVE_POWER_L2_W,
-    ATTR_ACTIVE_POWER_L3_W,
-    ATTR_ACTIVE_POWER_W,
-    ATTR_GAS_TIMESTAMP,
-    ATTR_METER_MODEL,
-    ATTR_SMR_VERSION,
-    ATTR_TOTAL_ENERGY_EXPORT_T1_KWH,
-    ATTR_TOTAL_ENERGY_EXPORT_T2_KWH,
-    ATTR_TOTAL_ENERGY_IMPORT_T1_KWH,
-    ATTR_TOTAL_ENERGY_IMPORT_T2_KWH,
-    ATTR_TOTAL_GAS_M3,
-    ATTR_WIFI_SSID,
-    ATTR_WIFI_STRENGTH,
-    CONF_DATA,
-    CONF_DEVICE,
-    MODEL_P1,
-)
+from homeassistant.components.homewizard.const import CONF_DATA, CONF_DEVICE, MODEL_P1
 from homeassistant.components.homewizard.coordinator import (
     HWEnergyDeviceUpdateCoordinator as Coordinator,
 )
@@ -51,20 +33,20 @@ async def test_coordinator_fetches_data(aioclient_mock, hass):
     meter = get_mock_device(product_type=MODEL_P1)
     meter.data.smr_version = 50
     meter.data.available_datapoints = [
-        ATTR_ACTIVE_POWER_L1_W,
-        ATTR_ACTIVE_POWER_L2_W,
-        ATTR_ACTIVE_POWER_L3_W,
-        ATTR_ACTIVE_POWER_W,
-        ATTR_GAS_TIMESTAMP,
-        ATTR_METER_MODEL,
-        ATTR_SMR_VERSION,
-        ATTR_TOTAL_ENERGY_EXPORT_T1_KWH,
-        ATTR_TOTAL_ENERGY_EXPORT_T2_KWH,
-        ATTR_TOTAL_ENERGY_IMPORT_T1_KWH,
-        ATTR_TOTAL_ENERGY_IMPORT_T2_KWH,
-        ATTR_TOTAL_GAS_M3,
-        ATTR_WIFI_SSID,
-        ATTR_WIFI_STRENGTH,
+        "active_power_l1_w",
+        "active_power_l2_w",
+        "active_power_l3_w",
+        "active_power_w",
+        "gas_timestamp",
+        "meter_model",
+        "smr_version",
+        "total_power_export_t1_kwh",
+        "total_power_export_t2_kwh",
+        "total_power_import_t1_kwh",
+        "total_power_import_t2_kwh",
+        "total_gas_m3",
+        "wifi_ssid",
+        "wifi_strength",
     ]
 
     coordinator = Coordinator(hass, "1.2.3.4")
