@@ -25,9 +25,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.template import Template
 
 _LOGGER = logging.getLogger(__name__)
-_ENDPOINT = "http://pvoutput.org/service/r2/getstatus.jsp"
+_ENDPOINT = "https://pvoutput.org/service/r2/getstatus.jsp"
 
 ATTR_ENERGY_GENERATION = "energy_generation"
 ATTR_POWER_GENERATION = "power_generation"
@@ -44,8 +45,8 @@ SCAN_INTERVAL = timedelta(minutes=2)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_API_KEY): cv.template,
-        vol.Required(CONF_SYSTEM_ID): cv.template,
+        vol.Required(CONF_API_KEY): cv.string,
+        vol.Required(CONF_SYSTEM_ID): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
@@ -55,13 +56,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up the PVOutput sensor."""
     name = config.get(CONF_NAME)
     api_key = config.get(CONF_API_KEY)
-    api_key.hass = hass
     system_id = config.get(CONF_SYSTEM_ID)
-    system_id.hass = hass
     method = "GET"
     payload = auth = None
     verify_ssl = DEFAULT_VERIFY_SSL
-    headers = {"X-Pvoutput-Apikey": api_key, "X-Pvoutput-SystemId": system_id}
+    headers = {
+        "X-Pvoutput-Apikey": Template(api_key, hass),
+        "X-Pvoutput-SystemId": Template(system_id, hass),
+    }
 
     rest = RestData(hass, method, _ENDPOINT, auth, headers, None, payload, verify_ssl)
     await rest.async_update()
