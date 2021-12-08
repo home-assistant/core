@@ -25,6 +25,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import EntityCategory
 
 from .aurora_device import AuroraEntity
 from .const import DEFAULT_ADDRESS, DOMAIN
@@ -42,6 +43,7 @@ SENSOR_TYPES = [
     SensorEntityDescription(
         key="temp",
         device_class=SensorDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=TEMP_CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         name="Temperature",
