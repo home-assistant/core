@@ -47,7 +47,7 @@ LYRIC_SETPOINT_STATUS_NAMES = {
 class LyricSensorEntityDescription(SensorEntityDescription):
     """Class describing Honeywell Lyric sensor entities."""
 
-    value: Callable[[LyricDevice], StateType] = round
+    value: Callable[[LyricDevice], StateType | datetime] = round
 
 
 def get_datetime_from_future_time(time: str) -> datetime:
@@ -133,7 +133,7 @@ async def async_setup_entry(
                                 device_class=DEVICE_CLASS_TIMESTAMP,
                                 value=lambda device: get_datetime_from_future_time(
                                     device.changeableValues.nextPeriodTime
-                                ).isoformat(),
+                                ),
                             ),
                             location,
                             device,
