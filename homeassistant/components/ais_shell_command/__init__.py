@@ -94,6 +94,9 @@ async def async_setup(hass, config):
     async def start_screen_stream(service):
         await _start_screen_stream(hass, service)
 
+    async def screen_stream_command(service):
+        await _screen_stream_command(hass, service)
+
     # register services
     hass.services.async_register(DOMAIN, "change_host_name", change_host_name)
     hass.services.async_register(DOMAIN, "cec_command", cec_command)
@@ -119,6 +122,7 @@ async def async_setup(hass, config):
     hass.services.async_register(DOMAIN, "install_zwave", install_zwave)
     hass.services.async_register(DOMAIN, "start_sip_server", start_sip_server)
     hass.services.async_register(DOMAIN, "start_screen_stream", start_screen_stream)
+    hass.services.async_register(DOMAIN, "screen_stream_command", screen_stream_command)
 
     if ais_global.has_front_clock():
         hass.services.async_register(
@@ -676,3 +680,37 @@ async def _start_screen_stream(hass, call):
 
     comm = r"su -c 'monkey -p pl.sviete.screenstream -c android.intent.category.LAUNCHER 1'"
     await _run(comm)
+
+
+async def _screen_stream_command(hass, call):
+    # if not ais_global.has_root():
+    #     return
+
+    name = call.data["name"]
+    sX = call.data["sX"]
+    sY = call.data["sY"]
+    eX = 0
+    eY = 0
+    if "eX" in call.data:
+        eX = call.data["eX"]
+    if "eY" in call.data:
+        eY = call.data["eY"]
+    comm = r""
+    if name == "pan":
+        comm = (
+            "http://127.0.0.1:9966/ais-pan?sX="
+            + str(sX)
+            + "&sY="
+            + str(sY)
+            + "&eX="
+            + str(eX)
+            + "&eY="
+            + str(eY)
+        )
+    elif name == "tap":
+        comm = "http://127.0.0.1:9966/ais-click?x=" + str(sX) + "&y=" + str(sY)
+    elif name == "back":
+        comm = "http://127.0.0.1:9966/ais-back"
+    web_session = aiohttp_client.async_get_clientsession(hass)
+    with async_timeout.timeout(1):
+        await web_session.get(comm)
