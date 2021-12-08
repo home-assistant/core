@@ -6,6 +6,7 @@ from aiohwenergy import AiohwenergyException, DisabledError
 
 from homeassistant.components.homewizard.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_IP_ADDRESS
 
 from .generator import get_mock_device
 
@@ -19,7 +20,7 @@ async def test_load_unload(aioclient_mock, hass):
 
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={"unique_id": "HWE-P1_aabbccddeeff"},
+        data={CONF_IP_ADDRESS: "1.1.1.1"},
         unique_id=DOMAIN,
     )
     entry.add_to_hass(hass)
@@ -51,7 +52,7 @@ async def test_load_failed_host_unavailable(aioclient_mock, hass):
 
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={"unique_id": "HWE-P1_aabbccddeeff"},
+        data={CONF_IP_ADDRESS: "1.1.1.1"},
         unique_id=DOMAIN,
     )
     entry.add_to_hass(hass)
@@ -78,7 +79,7 @@ async def test_load_detect_api_disabled(aioclient_mock, hass):
 
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={"unique_id": "HWE-P1_aabbccddeeff"},
+        data={CONF_IP_ADDRESS: "1.1.1.1"},
         unique_id=DOMAIN,
     )
     entry.add_to_hass(hass)
@@ -105,7 +106,7 @@ async def test_load_handles_aiohwenergy_exception(aioclient_mock, hass):
 
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={"unique_id": "HWE-P1_aabbccddeeff"},
+        data={CONF_IP_ADDRESS: "1.1.1.1"},
         unique_id=DOMAIN,
     )
     entry.add_to_hass(hass)
@@ -132,7 +133,7 @@ async def test_load_handles_generic_exception(aioclient_mock, hass):
 
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={"unique_id": "HWE-P1_aabbccddeeff"},
+        data={CONF_IP_ADDRESS: "1.1.1.1"},
         unique_id=DOMAIN,
     )
     entry.add_to_hass(hass)
@@ -156,7 +157,7 @@ async def test_load_handles_initialization_error(aioclient_mock, hass):
 
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={"unique_id": "HWE-P1_aabbccddeeff"},
+        data={CONF_IP_ADDRESS: "1.1.1.1"},
         unique_id=DOMAIN,
     )
     entry.add_to_hass(hass)
