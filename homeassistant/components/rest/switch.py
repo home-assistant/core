@@ -207,8 +207,8 @@ class RestSwitch(SwitchEntity):
         """Send a state update to the device."""
         websession = async_get_clientsession(self.hass, self._verify_ssl)
 
-        rendered_headers = render_templates(self._headers)
-        rendered_params = render_templates(self._params)
+        rendered_headers = render_templates(self._headers, False)
+        rendered_params = render_templates(self._params, True)
 
         async with async_timeout.timeout(self._timeout):
             req = await getattr(websession, self._method)(
@@ -233,8 +233,8 @@ class RestSwitch(SwitchEntity):
         """Get the latest data from REST API and update the state."""
         websession = async_get_clientsession(hass, self._verify_ssl)
 
-        rendered_headers = render_templates(self._headers)
-        rendered_params = render_templates(self._params)
+        rendered_headers = render_templates(self._headers, False)
+        rendered_params = render_templates(self._params, True)
 
         async with async_timeout.timeout(self._timeout):
             req = await websession.get(
