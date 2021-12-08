@@ -8,9 +8,18 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     TEMP_KELVIN,
+    Platform,
 )
 
-PLATFORMS = ["binary_sensor", "climate", "cover", "light", "scene", "sensor", "switch"]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.LIGHT,
+    Platform.SCENE,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 DOMAIN = "lcn"
 DATA_LCN = "lcn"

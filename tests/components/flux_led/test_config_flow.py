@@ -40,6 +40,8 @@ from . import (
 
 from tests.common import MockConfigEntry
 
+MAC_ADDRESS_DIFFERENT = "ff:bb:ff:dd:ee:ff"
+
 
 async def test_discovery(hass: HomeAssistant):
     """Test setting up discovery."""
@@ -470,6 +472,34 @@ async def test_discovered_by_dhcp_or_discovery_adds_missing_unique_id(
     assert result["reason"] == "already_configured"
 
     assert config_entry.unique_id == MAC_ADDRESS
+
+
+@pytest.mark.parametrize(
+    "source, data",
+    [
+        (config_entries.SOURCE_DHCP, DHCP_DISCOVERY),
+        (config_entries.SOURCE_DISCOVERY, FLUX_DISCOVERY),
+    ],
+)
+async def test_discovered_by_dhcp_or_discovery_mac_address_mismatch_host_already_configured(
+    hass, source, data
+):
+    """Test we abort if the host is already configured but the mac does not match."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=MAC_ADDRESS_DIFFERENT
+    )
+    config_entry.add_to_hass(hass)
+
+    with _patch_discovery(), _patch_wifibulb():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": source}, data=data
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+
+    assert config_entry.unique_id == MAC_ADDRESS_DIFFERENT
 
 
 async def test_options(hass: HomeAssistant):

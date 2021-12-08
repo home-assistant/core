@@ -1,0 +1,36 @@
+{
+    "state": {
+        "yamaha_musiccast__zone_equalizer_mode": {
+            "auto": "Automatycznie",
+            "manual": "R\u0119cznie"
+        },
+        "yamaha_musiccast__zone_link_audio_delay": {
+            "balanced": "Zr\u00f3wnowa\u017cone"
+        },
+        "yamaha_musiccast__zone_link_audio_quality": {
+            "compressed": "Skompresowane",
+            "uncompressed": "Nieskompresowane"
+        },
+        "yamaha_musiccast__zone_link_control": {
+            "speed": "Pr\u0119dko\u015b\u0107",
+            "stability": "Stabilno\u015b\u0107",
+            "standard": "Normalnie"
+        },
+        "yamaha_musiccast__zone_sleep": {
+            "120 min": "120 minut",
+            "30 min": "30 minut",
+            "60 min": "60 minut",
+            "90 min": "90 minut",
+            "off": "wy\u0142\u0105czone"
+        },
+        "yamaha_musiccast__zone_surr_decoder_type": {
+            "auto": "Automatycznie",
+            "toggle": "Prze\u0142\u0105cz"
+        },
+        "yamaha_musiccast__zone_tone_control_mode": {
+            "auto": "Automatycznie",
+            "bypass": "Polski",
+            "manual": "R\u0119cznie"
+        }
+    }
+}

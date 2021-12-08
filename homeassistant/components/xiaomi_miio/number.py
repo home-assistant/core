@@ -82,9 +82,6 @@ ATTR_VOLUME = "volume"
 class XiaomiMiioNumberDescription(NumberEntityDescription):
     """A class that describes number entities."""
 
-    min_value: float | None = None
-    max_value: float | None = None
-    step: float | None = None
     available_with_device_off: bool = True
     method: str | None = None
 
@@ -278,9 +275,6 @@ class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
         """Initialize the generic Xiaomi attribute selector."""
         super().__init__(name, device, entry, unique_id, coordinator)
 
-        self._attr_min_value = description.min_value
-        self._attr_max_value = description.max_value
-        self._attr_step = description.step
         self._attr_value = self._extract_value_from_attribute(
             coordinator.data, description.key
         )

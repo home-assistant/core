@@ -341,6 +341,9 @@ class ZHADevice(LogMixin):
         )
 
     async def _check_available(self, *_):
+        # don't flip the availability state of the coordinator
+        if self.is_coordinator:
+            return
         if self.last_seen is None:
             self.update_available(False)
             return
