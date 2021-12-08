@@ -41,8 +41,8 @@
             },
             "reauth_confirm": {
                 "data": {
-                    "password": "\u015eifre",
-                    "username": "Kullan\u0131c\u0131 ad\u0131"
+                    "password": "Parola",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131"
                 },
                 "title": "Synology DSM Entegrasyonu Yeniden Do\u011frula"
             },

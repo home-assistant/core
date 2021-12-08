@@ -7,10 +7,10 @@ from ipaddress import IPv4Address, IPv6Address
 import logging
 from urllib.parse import urlparse
 
-from async_upnp_client.search import SsdpSearchListener
+from async_upnp_client.search import SsdpHeaders, SsdpSearchListener
 
 from homeassistant import config_entries
-from homeassistant.components import network
+from homeassistant.components import network, ssdp
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 
@@ -161,7 +161,12 @@ class YeelightScanner:
                 self._hass.config_entries.flow.async_init(
                     DOMAIN,
                     context={"source": config_entries.SOURCE_SSDP},
-                    data=response,
+                    data=ssdp.SsdpServiceInfo(
+                        ssdp_usn="",
+                        ssdp_st=SSDP_ST,
+                        ssdp_headers=response,
+                        upnp={},
+                    ),
                 )
             )
 
@@ -169,17 +174,17 @@ class YeelightScanner:
         # of another discovery
         async_call_later(self._hass, 1, _async_start_flow)
 
-    async def _async_process_entry(self, response):
+    async def _async_process_entry(self, headers: SsdpHeaders):
         """Process a discovery."""
-        _LOGGER.debug("Discovered via SSDP: %s", response)
-        unique_id = response["id"]
-        host = urlparse(response["location"]).hostname
+        _LOGGER.debug("Discovered via SSDP: %s", headers)
+        unique_id = headers["id"]
+        host = urlparse(headers["location"]).hostname
         current_entry = self._unique_id_capabilities.get(unique_id)
         # Make sure we handle ip changes
         if not current_entry or host != urlparse(current_entry["location"]).hostname:
-            _LOGGER.debug("Yeelight discovered with %s", response)
-            self._async_discovered_by_ssdp(response)
-        self._host_capabilities[host] = response
-        self._unique_id_capabilities[unique_id] = response
+            _LOGGER.debug("Yeelight discovered with %s", headers)
+            self._async_discovered_by_ssdp(headers)
+        self._host_capabilities[host] = headers
+        self._unique_id_capabilities[unique_id] = headers
         for event in self._host_discovered_events.get(host, []):
             event.set()

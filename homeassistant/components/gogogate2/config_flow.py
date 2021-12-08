@@ -40,16 +40,16 @@ class Gogogate2FlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> data_entry_flow.FlowResult:
         """Handle homekit discovery."""
         await self.async_set_unique_id(
-            discovery_info[zeroconf.ATTR_PROPERTIES][zeroconf.ATTR_PROPERTIES_ID]
+            discovery_info.properties[zeroconf.ATTR_PROPERTIES_ID]
         )
-        return await self._async_discovery_handler(discovery_info[zeroconf.ATTR_HOST])
+        return await self._async_discovery_handler(discovery_info.host)
 
     async def async_step_dhcp(
         self, discovery_info: dhcp.DhcpServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle dhcp discovery."""
-        await self.async_set_unique_id(discovery_info[dhcp.MAC_ADDRESS])
-        return await self._async_discovery_handler(discovery_info[dhcp.IP_ADDRESS])
+        await self.async_set_unique_id(discovery_info.macaddress)
+        return await self._async_discovery_handler(discovery_info.ip)
 
     async def _async_discovery_handler(self, ip_address):
         """Start the user flow from any discovery."""

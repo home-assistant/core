@@ -124,13 +124,12 @@ from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.auth import InvalidAuthError
-from homeassistant.auth.models import (
-    TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
-    Credentials,
-    User,
-)
+from homeassistant.auth.models import TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN, Credentials
 from homeassistant.components import websocket_api
-from homeassistant.components.http.auth import async_sign_path
+from homeassistant.components.http.auth import (
+    async_sign_path,
+    async_user_not_allowed_do_auth,
+)
 from homeassistant.components.http.ban import log_invalid_auth
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
@@ -179,15 +178,12 @@ SCHEMA_WS_SIGN_PATH = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
 )
 
 RESULT_TYPE_CREDENTIALS = "credentials"
-RESULT_TYPE_USER = "user"
 
 
 @bind_hass
-def create_auth_code(
-    hass, client_id: str, credential_or_user: Credentials | User
-) -> str:
+def create_auth_code(hass, client_id: str, credential: Credentials) -> str:
     """Create an authorization code to fetch tokens."""
-    return hass.data[DOMAIN](client_id, credential_or_user)
+    return hass.data[DOMAIN](client_id, credential)
 
 
 async def async_setup(hass, config):
@@ -296,7 +292,7 @@ class TokenView(HomeAssistantView):
                 status_code=HTTPStatus.BAD_REQUEST,
             )
 
-        credential = self._retrieve_auth(client_id, RESULT_TYPE_CREDENTIALS, code)
+        credential = self._retrieve_auth(client_id, code)
 
         if credential is None or not isinstance(credential, Credentials):
             return self.json(
@@ -306,9 +302,12 @@ class TokenView(HomeAssistantView):
 
         user = await hass.auth.async_get_or_create_user(credential)
 
-        if not user.is_active:
+        if user_access_error := async_user_not_allowed_do_auth(hass, user):
             return self.json(
-                {"error": "access_denied", "error_description": "User is not active"},
+                {
+                    "error": "access_denied",
+                    "error_description": user_access_error,
+                },
                 status_code=HTTPStatus.FORBIDDEN,
             )
 
@@ -362,6 +361,17 @@ class TokenView(HomeAssistantView):
                 {"error": "invalid_request"}, status_code=HTTPStatus.BAD_REQUEST
             )
 
+        if user_access_error := async_user_not_allowed_do_auth(
+            hass, refresh_token.user
+        ):
+            return self.json(
+                {
+                    "error": "access_denied",
+                    "error_description": user_access_error,
+                },
+                status_code=HTTPStatus.FORBIDDEN,
+            )
+
         try:
             access_token = hass.auth.async_create_access_token(
                 refresh_token, remote_addr
@@ -399,9 +409,7 @@ class LinkUserView(HomeAssistantView):
         hass = request.app["hass"]
         user = request["hass_user"]
 
-        credentials = self._retrieve_credentials(
-            data["client_id"], RESULT_TYPE_CREDENTIALS, data["code"]
-        )
+        credentials = self._retrieve_credentials(data["client_id"], data["code"])
 
         if credentials is None:
             return self.json_message("Invalid code", status_code=HTTPStatus.BAD_REQUEST)
@@ -426,30 +434,25 @@ def _create_auth_code_store():
     @callback
     def store_result(client_id, result):
         """Store flow result and return a code to retrieve it."""
-        if isinstance(result, User):
-            result_type = RESULT_TYPE_USER
-        elif isinstance(result, Credentials):
-            result_type = RESULT_TYPE_CREDENTIALS
-        else:
-            raise ValueError("result has to be either User or Credentials")
+        if not isinstance(result, Credentials):
+            raise ValueError("result has to be a Credentials instance")
 
         code = uuid.uuid4().hex
-        temp_results[(client_id, result_type, code)] = (
+        temp_results[(client_id, code)] = (
             dt_util.utcnow(),
-            result_type,
             result,
         )
         return code
 
     @callback
-    def retrieve_result(client_id, result_type, code):
+    def retrieve_result(client_id, code):
         """Retrieve flow result."""
-        key = (client_id, result_type, code)
+        key = (client_id, code)
 
         if key not in temp_results:
             return None
 
-        created, _, result = temp_results.pop(key)
+        created, result = temp_results.pop(key)
 
         # OAuth 4.2.1
         # The authorization code MUST expire shortly after it is issued to

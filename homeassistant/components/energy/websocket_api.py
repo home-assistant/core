@@ -303,6 +303,8 @@ async def ws_get_fossil_energy_consumption(
         """Reduce hourly deltas to daily or monthly deltas."""
         result: list[dict[str, Any]] = []
         deltas: list[float] = []
+        if not stat_list:
+            return result
         prev_stat: dict[str, Any] = stat_list[0]
 
         # Loop over the hourly deltas + a fake entry to end the period

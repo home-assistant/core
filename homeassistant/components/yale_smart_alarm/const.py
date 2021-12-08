@@ -11,6 +11,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_DISARMED,
+    Platform,
 )
 
 CONF_AREA_ID = "area_id"
@@ -30,7 +31,7 @@ LOGGER = logging.getLogger(__package__)
 ATTR_ONLINE = "online"
 ATTR_STATUS = "status"
 
-PLATFORMS = ["alarm_control_panel"]
+PLATFORMS = [Platform.ALARM_CONTROL_PANEL]
 
 STATE_MAP = {
     YALE_STATE_DISARM: STATE_ALARM_DISARMED,

@@ -3,12 +3,12 @@
         "abort": {
             "already_configured": "\u30c7\u30d0\u30a4\u30b9\u306f\u3059\u3067\u306b\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u3059",
             "already_in_progress": "\u69cb\u6210\u30d5\u30ed\u30fc\u306f\u3059\u3067\u306b\u9032\u884c\u4e2d\u3067\u3059",
-            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u305f",
+            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
             "not_konn_panel": "\u8a8d\u8b58\u3055\u308c\u305f\u3001Konnected.io\u30c7\u30d0\u30a4\u30b9\u3067\u306f\u3042\u308a\u307e\u305b\u3093",
             "unknown": "\u4e88\u671f\u3057\u306a\u3044\u30a8\u30e9\u30fc"
         },
         "error": {
-            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u305f"
+            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u307e\u3057\u305f"
         },
         "step": {
             "confirm": {
@@ -84,17 +84,25 @@
             },
             "options_misc": {
                 "data": {
+                    "api_host": "API\u30db\u30b9\u30c8\u306eURL\u3092\u4e0a\u66f8\u304d\u3059\u308b(\u30aa\u30d7\u30b7\u30e7\u30f3)",
                     "blink": "\u72b6\u614b\u5909\u66f4\u3092\u9001\u4fe1\u3059\u308b\u3068\u304d\u306b\u3001\u30d1\u30cd\u30eb\u306eLED\u3092\u70b9\u6ec5\u3055\u305b\u308b",
-                    "discovery": "\u30cd\u30c3\u30c8\u30ef\u30fc\u30af\u4e0a\u306e\u691c\u51fa(discovery)\u8981\u6c42\u306b\u5fdc\u7b54\u3059\u308b"
+                    "discovery": "\u30cd\u30c3\u30c8\u30ef\u30fc\u30af\u4e0a\u306e\u691c\u51fa(discovery)\u8981\u6c42\u306b\u5fdc\u7b54\u3059\u308b",
+                    "override_api_host": "\u30c7\u30d5\u30a9\u30eb\u30c8\u306eHome Assistant API\u30db\u30b9\u30c8\u30d1\u30cd\u30eb\u306eURL\u3092\u4e0a\u66f8\u304d\u3059\u308b"
                 },
+                "description": "\u30d1\u30cd\u30eb\u306b\u5fc5\u8981\u306a\u52d5\u4f5c\u3092\u9078\u629e\u3057\u3066\u304f\u3060\u3055\u3044",
                 "title": "\u305d\u306e\u4ed6\u306e\u8a2d\u5b9a"
             },
             "options_switch": {
                 "data": {
                     "activation": "\u30aa\u30f3\u306e\u3068\u304d\u306b\u51fa\u529b",
-                    "name": "\u540d\u524d(\u30aa\u30d7\u30b7\u30e7\u30f3)"
+                    "momentary": "\u30d1\u30eb\u30b9\u6301\u7d9a\u6642\u9593(ms)(\u30aa\u30d7\u30b7\u30e7\u30f3)",
+                    "more_states": "\u3053\u306e\u30be\u30fc\u30f3\u306e\u8ffd\u52a0\u72b6\u614b\u306e\u8a2d\u5b9a",
+                    "name": "\u540d\u524d(\u30aa\u30d7\u30b7\u30e7\u30f3)",
+                    "pause": "\u30d1\u30eb\u30b9\u9593\u306e\u4e00\u6642\u505c\u6b62(ms)(\u30aa\u30d7\u30b7\u30e7\u30f3)",
+                    "repeat": "\u7e70\u308a\u8fd4\u3059\u6642\u9593(-1 =\u7121\u9650)(\u30aa\u30d7\u30b7\u30e7\u30f3)"
                 },
-                "description": "{zone}\u30aa\u30d7\u30b7\u30e7\u30f3 : \u72b6\u614b{state}"
+                "description": "{zone}\u30aa\u30d7\u30b7\u30e7\u30f3 : \u72b6\u614b{state}",
+                "title": "\u5207\u308a\u66ff\u3048\u53ef\u80fd\u306a\u51fa\u529b\u306e\u8a2d\u5b9a"
             }
         }
     }

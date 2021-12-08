@@ -8,6 +8,7 @@ from zwave_js_server.version import VersionInfo
 
 from homeassistant import config_entries
 from homeassistant.components import usb
+from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.zwave_js.config_flow import SERVER_VERSION_TIMEOUT, TITLE
 from homeassistant.components.zwave_js.const import DOMAIN
@@ -282,7 +283,7 @@ async def test_supervisor_discovery(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
-        data=ADDON_DISCOVERY_INFO,
+        data=HassioServiceInfo(config=ADDON_DISCOVERY_INFO),
     )
 
     with patch(
@@ -322,7 +323,7 @@ async def test_supervisor_discovery_cannot_connect(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
-        data=ADDON_DISCOVERY_INFO,
+        data=HassioServiceInfo(config=ADDON_DISCOVERY_INFO),
     )
 
     assert result["type"] == "abort"
@@ -344,7 +345,7 @@ async def test_clean_discovery_on_user_create(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
-        data=ADDON_DISCOVERY_INFO,
+        data=HassioServiceInfo(config=ADDON_DISCOVERY_INFO),
     )
 
     assert result["type"] == "form"
@@ -407,7 +408,7 @@ async def test_abort_discovery_with_existing_entry(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
-        data=ADDON_DISCOVERY_INFO,
+        data=HassioServiceInfo(config=ADDON_DISCOVERY_INFO),
     )
 
     assert result["type"] == "abort"
@@ -431,7 +432,7 @@ async def test_abort_hassio_discovery_with_existing_flow(
     result2 = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
-        data=ADDON_DISCOVERY_INFO,
+        data=HassioServiceInfo(config=ADDON_DISCOVERY_INFO),
     )
 
     assert result2["type"] == "abort"
@@ -475,7 +476,6 @@ async def test_usb_discovery(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            "usb_path": "/test",
             "s0_legacy_key": "new123",
             "s2_access_control_key": "new456",
             "s2_authenticated_key": "new789",
@@ -488,7 +488,7 @@ async def test_usb_discovery(
         "core_zwave_js",
         {
             "options": {
-                "device": "/test",
+                "device": USB_DISCOVERY_INFO.device,
                 "s0_legacy_key": "new123",
                 "s2_access_control_key": "new456",
                 "s2_authenticated_key": "new789",
@@ -516,7 +516,7 @@ async def test_usb_discovery(
     assert result["title"] == TITLE
     assert result["data"] == {
         "url": "ws://host1:3001",
-        "usb_path": "/test",
+        "usb_path": USB_DISCOVERY_INFO.device,
         "s0_legacy_key": "new123",
         "s2_access_control_key": "new456",
         "s2_authenticated_key": "new789",
@@ -557,7 +557,6 @@ async def test_usb_discovery_addon_not_running(
     # Make sure the discovered usb device is preferred.
     data_schema = result["data_schema"]
     assert data_schema({}) == {
-        "usb_path": USB_DISCOVERY_INFO["device"],
         "s0_legacy_key": "",
         "s2_access_control_key": "",
         "s2_authenticated_key": "",
@@ -567,7 +566,6 @@ async def test_usb_discovery_addon_not_running(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            "usb_path": USB_DISCOVERY_INFO["device"],
             "s0_legacy_key": "new123",
             "s2_access_control_key": "new456",
             "s2_authenticated_key": "new789",
@@ -580,7 +578,7 @@ async def test_usb_discovery_addon_not_running(
         "core_zwave_js",
         {
             "options": {
-                "device": USB_DISCOVERY_INFO["device"],
+                "device": USB_DISCOVERY_INFO.device,
                 "s0_legacy_key": "new123",
                 "s2_access_control_key": "new456",
                 "s2_authenticated_key": "new789",
@@ -608,7 +606,7 @@ async def test_usb_discovery_addon_not_running(
     assert result["title"] == TITLE
     assert result["data"] == {
         "url": "ws://host1:3001",
-        "usb_path": USB_DISCOVERY_INFO["device"],
+        "usb_path": USB_DISCOVERY_INFO.device,
         "s0_legacy_key": "new123",
         "s2_access_control_key": "new456",
         "s2_authenticated_key": "new789",
@@ -629,7 +627,7 @@ async def test_discovery_addon_not_running(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
-        data=ADDON_DISCOVERY_INFO,
+        data=HassioServiceInfo(config=ADDON_DISCOVERY_INFO),
     )
 
     assert result["step_id"] == "hassio_confirm"
@@ -711,7 +709,7 @@ async def test_discovery_addon_not_installed(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
-        data=ADDON_DISCOVERY_INFO,
+        data=HassioServiceInfo(config=ADDON_DISCOVERY_INFO),
     )
 
     assert result["step_id"] == "hassio_confirm"
@@ -792,7 +790,7 @@ async def test_abort_usb_discovery_with_existing_flow(hass, supervisor, addon_op
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HASSIO},
-        data=ADDON_DISCOVERY_INFO,
+        data=HassioServiceInfo(config=ADDON_DISCOVERY_INFO),
     )
 
     assert result["type"] == "form"

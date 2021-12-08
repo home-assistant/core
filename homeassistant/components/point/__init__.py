@@ -185,7 +185,7 @@ class MinutPointClient:
 
     async def _sync(self):
         """Update local list of devices."""
-        if not await self._client.update() and self._is_available:
+        if not await self._client.update():
             self._is_available = False
             _LOGGER.warning("Device is unavailable")
             async_dispatcher_send(self._hass, SIGNAL_UPDATE_ENTITY)
@@ -315,7 +315,7 @@ class MinutPointEntity(Entity):
             connections={
                 (device_registry.CONNECTION_NETWORK_MAC, device["device_mac"])
             },
-            identifiers=device["device_id"],
+            identifiers={(DOMAIN, device["device_id"])},
             manufacturer="Minut",
             model=f"Point v{device['hardware_version']}",
             name=device["description"],

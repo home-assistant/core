@@ -1,13 +1,14 @@
 """The Rollease Acmeda Automate integration."""
 
 from homeassistant import config_entries, core
+from homeassistant.const import Platform
 
 from .const import DOMAIN
 from .hub import PulseHub
 
 CONF_HUBS = "hubs"
 
-PLATFORMS = ["cover", "sensor"]
+PLATFORMS = [Platform.COVER, Platform.SENSOR]
 
 
 async def async_setup_entry(

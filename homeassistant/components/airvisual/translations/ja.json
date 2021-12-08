@@ -5,7 +5,7 @@
             "reauth_successful": "\u518d\u8a8d\u8a3c\u306b\u6210\u529f\u3057\u307e\u3057\u305f"
         },
         "error": {
-            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u305f",
+            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
             "general_error": "\u4e88\u671f\u3057\u306a\u3044\u30a8\u30e9\u30fc",
             "invalid_api_key": "\u7121\u52b9\u306aAPI\u30ad\u30fc",
             "location_not_found": "\u30ed\u30b1\u30fc\u30b7\u30e7\u30f3\u304c\u898b\u3064\u304b\u308a\u307e\u305b\u3093"

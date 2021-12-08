@@ -83,4 +83,4 @@ class HydrawiseSensor(HydrawiseEntity, SensorEntity):
             _LOGGER.debug("New cycle time: %s", next_cycle)
             self._attr_native_value = dt.utc_from_timestamp(
                 dt.as_timestamp(dt.now()) + next_cycle
-            ).isoformat()
+            )

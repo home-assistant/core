@@ -7,6 +7,7 @@ from aiorecollect.client import Client, PickupEvent
 from aiorecollect.errors import RecollectError
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -16,7 +17,7 @@ from .const import CONF_PLACE_ID, CONF_SERVICE_ID, DOMAIN, LOGGER
 DEFAULT_NAME = "recollect_waste"
 DEFAULT_UPDATE_INTERVAL = timedelta(days=1)
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

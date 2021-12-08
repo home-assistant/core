@@ -242,6 +242,7 @@ async def test_stream_keepalive(hass):
     # Setup demo HLS track
     source = "test_stream_keepalive_source"
     stream = create_stream(hass, source, {})
+    assert stream.available
     track = stream.add_provider(HLS_PROVIDER)
     track.num_segments = 2
 
@@ -267,9 +268,11 @@ async def test_stream_keepalive(hass):
         stream._thread.join()
         stream._thread = None
         assert av_open.call_count == 2
+        assert not stream.available
 
     # Stop stream, if it hasn't quit already
     stream.stop()
+    assert not stream.available
 
 
 async def test_hls_playlist_view_no_output(hass, hls_stream):

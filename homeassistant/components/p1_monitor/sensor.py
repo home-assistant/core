@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONF_HOST,
     CURRENCY_EURO,
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
@@ -268,6 +269,7 @@ class P1MonitorSensorEntity(CoordinatorEntity, SensorEntity):
             identifiers={
                 (DOMAIN, f"{coordinator.config_entry.entry_id}_{service_key}")
             },
+            configuration_url=f"http://{coordinator.config_entry.data[CONF_HOST]}",
             manufacturer="P1 Monitor",
             name=service,
         )

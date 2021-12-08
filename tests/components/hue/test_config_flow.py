@@ -423,6 +423,26 @@ async def test_bridge_ssdp_missing_serial(hass):
     assert result["reason"] == "not_hue_bridge"
 
 
+async def test_bridge_ssdp_invalid_location(hass):
+    """Test if discovery info is a serial attribute."""
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="http:///",
+            upnp={
+                ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL[0],
+                ssdp.ATTR_UPNP_SERIAL: "1234",
+            },
+        ),
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "not_hue_bridge"
+
+
 async def test_bridge_ssdp_espalexa(hass):
     """Test if discovery info is from an Espalexa based device."""
     result = await hass.config_entries.flow.async_init(
@@ -686,12 +706,7 @@ async def test_options_flow_v2(hass):
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "init"
-    # V2 bridge does not have config options
-    assert result["data_schema"] is None
+    assert config_flow.HueFlowHandler.async_supports_options_flow(entry) is False
 
 
 async def test_bridge_zeroconf(hass, aioclient_mock):
@@ -703,7 +718,7 @@ async def test_bridge_zeroconf(hass, aioclient_mock):
         data=zeroconf.ZeroconfServiceInfo(
             host="192.168.1.217",
             port=443,
-            hostname="Philips-hue.local.",
+            hostname="Philips-hue.local",
             type="_hue._tcp.local.",
             name="Philips Hue - ABCABC._hue._tcp.local.",
             properties={
@@ -720,7 +735,9 @@ async def test_bridge_zeroconf(hass, aioclient_mock):
 
 async def test_bridge_zeroconf_already_exists(hass, aioclient_mock):
     """Test a bridge being discovered by zeroconf already exists."""
-    create_mock_api_discovery(aioclient_mock, [("192.168.1.217", "ecb5faabcabc")])
+    create_mock_api_discovery(
+        aioclient_mock, [("0.0.0.0", "ecb5faabcabc"), ("192.168.1.217", "ecb5faabcabc")]
+    )
     entry = MockConfigEntry(
         domain="hue",
         source=config_entries.SOURCE_SSDP,
@@ -734,7 +751,7 @@ async def test_bridge_zeroconf_already_exists(hass, aioclient_mock):
         data=zeroconf.ZeroconfServiceInfo(
             host="192.168.1.217",
             port=443,
-            hostname="Philips-hue.local.",
+            hostname="Philips-hue.local",
             type="_hue._tcp.local.",
             name="Philips Hue - ABCABC._hue._tcp.local.",
             properties={

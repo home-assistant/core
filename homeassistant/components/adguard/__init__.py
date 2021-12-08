@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_URL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -46,7 +47,7 @@ SERVICE_REFRESH_SCHEMA = vol.Schema(
     {vol.Optional(CONF_FORCE, default=False): cv.boolean}
 )
 
-PLATFORMS = ["sensor", "switch"]
+PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
