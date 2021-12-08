@@ -49,16 +49,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for elmax-cloud."""
 
     VERSION = 1
-
-    def __init__(self):
-        """Initialize."""
-        self._client: Elmax = None
-        self._username: str = None
-        self._password: str = None
-        self._panels_schema = None
-        self._panel_names = None
-        self._reauth_username = None
-        self._reauth_panelid = None
+    _client: Elmax
+    _username: str
+    _password: str
+    _panels_schema: vol.Schema
+    _panel_names: dict
+    _reauth_username: str | None
+    _reauth_panelid: str | None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
