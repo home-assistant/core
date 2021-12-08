@@ -37,21 +37,14 @@ async def test_user_form(discover_mock: MagicMock, hass: core.HomeAssistant):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_zeroconf_form(hass: core.HomeAssistant):
-    """Test we pass sonos devices to the discovery manager."""
+async def test_zeroconf_form(hass: core.HomeAssistant, zeroconf_payload):
+    """Test we pass Zeroconf discoveries to the manager."""
 
     mock_manager = hass.data[DATA_SONOS_DISCOVERY_MANAGER] = MagicMock()
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
-            host="192.168.4.2",
-            hostname="Sonos-aaa",
-            name="Sonos-aaa@Living Room._sonos._tcp.local.",
-            port=None,
-            properties={"bootseq": "1234"},
-            type="mock_type",
-        ),
+        data=zeroconf_payload,
     )
     assert result["type"] == "form"
     assert result["errors"] is None
@@ -128,21 +121,16 @@ async def test_zeroconf_sonos_v1(hass: core.HomeAssistant):
     assert len(mock_manager.mock_calls) == 2
 
 
-async def test_zeroconf_form_not_sonos(hass: core.HomeAssistant):
+async def test_zeroconf_form_not_sonos(hass: core.HomeAssistant, zeroconf_payload):
     """Test we abort on non-sonos devices."""
     mock_manager = hass.data[DATA_SONOS_DISCOVERY_MANAGER] = MagicMock()
+
+    zeroconf_payload.hostname = "not-aaa"
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
-            host="192.168.4.2",
-            hostname="not-aaa",
-            name="mock_name",
-            port=None,
-            properties={"bootseq": "1234"},
-            type="mock_type",
-        ),
+        data=zeroconf_payload,
     )
     assert result["type"] == "abort"
     assert result["reason"] == "not_sonos_device"

@@ -1,9 +1,9 @@
 """Configuration for Sonos tests."""
-from unittest.mock import AsyncMock, MagicMock, Mock, patch as patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 
-from homeassistant.components import ssdp
+from homeassistant.components import ssdp, zeroconf
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.sonos import DOMAIN
 from homeassistant.const import CONF_HOSTS
@@ -40,6 +40,37 @@ class SonosMockEvent:
         newcount = int(count) + 1
         self.variables[var_name] = ":".join([base, str(newcount)])
         return self.variables[var_name]
+
+
+@pytest.fixture
+def zeroconf_payload():
+    """Return a default zeroconf payload."""
+    return zeroconf.ZeroconfServiceInfo(
+        host="192.168.4.2",
+        hostname="Sonos-aaa",
+        name="Sonos-aaa@Living Room._sonos._tcp.local.",
+        port=None,
+        properties={"bootseq": "1234"},
+        type="mock_type",
+    )
+
+
+@pytest.fixture
+async def async_autosetup_sonos(async_setup_sonos):
+    """Set up a Sonos integration instance on test run."""
+    await async_setup_sonos()
+
+
+@pytest.fixture
+def async_setup_sonos(hass, config_entry):
+    """Return a coroutine to set up a Sonos integration instance on demand."""
+
+    async def _wrapper():
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    return _wrapper
 
 
 @pytest.fixture(name="config_entry")
