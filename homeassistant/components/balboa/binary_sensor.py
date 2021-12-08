@@ -1,6 +1,6 @@
 """Support for Balboa Spa binary sensors."""
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_MOVING,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 
@@ -28,7 +28,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class BalboaSpaBinarySensor(BalboaEntity, BinarySensorEntity):
     """Representation of a Balboa Spa binary sensor entity."""
 
-    _attr_device_class = DEVICE_CLASS_MOVING
+    _attr_device_class = BinarySensorDeviceClass.MOVING
 
 
 class BalboaSpaCircPump(BalboaSpaBinarySensor):
