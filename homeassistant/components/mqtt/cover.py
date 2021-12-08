@@ -36,7 +36,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType
 
-from . import PLATFORMS, render_outgoing_payload, subscription
+from . import PLATFORMS, MqttCommandTemplate, subscription
 from .. import mqtt
 from .const import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC, DOMAIN
 from .debug_info import log_messages
@@ -625,12 +625,12 @@ class MqttCover(MqttEntity, CoverEntity):
                 "tilt_min": self._config[CONF_TILT_MIN],
                 "tilt_max": self._config[CONF_TILT_MAX],
             }
-            tilt = template.async_render(parse_result=False, variables=variables)
+            tilt = MqttCommandTemplate(template).async_render(None, variables=variables)
 
         await mqtt.async_publish(
             self.hass,
             self._config.get(CONF_TILT_COMMAND_TOPIC),
-            render_outgoing_payload(tilt),
+            tilt,
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
         )
@@ -654,7 +654,9 @@ class MqttCover(MqttEntity, CoverEntity):
                 "tilt_min": self._config[CONF_TILT_MIN],
                 "tilt_max": self._config[CONF_TILT_MAX],
             }
-            position = template.async_render(parse_result=False, variables=variables)
+            position = MqttCommandTemplate(template).async_render(
+                None, variables=variables
+            )
 
         await mqtt.async_publish(
             self.hass,

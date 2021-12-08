@@ -13,7 +13,7 @@ from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 
-from . import PLATFORMS, render_outgoing_payload, subscription
+from . import PLATFORMS, MqttCommandTemplate, subscription
 from .. import mqtt
 from .const import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC, DOMAIN
 from .debug_info import log_messages
@@ -105,12 +105,23 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
             CONF_COMMAND_TEMPLATE: config.get(CONF_COMMAND_TEMPLATE),
             CONF_VALUE_TEMPLATE: config.get(CONF_VALUE_TEMPLATE),
         }
-        for key, tpl in self._templates.items():
-            if tpl is None:
-                self._templates[key] = lambda value: value
-            else:
-                tpl.hass = self.hass
-                self._templates[key] = tpl.async_render_with_possible_json_value
+
+        command_template = self._templates[CONF_COMMAND_TEMPLATE]
+        if command_template is None:
+            self._templates[CONF_COMMAND_TEMPLATE] = lambda value: value
+        else:
+            self._templates[CONF_COMMAND_TEMPLATE] = MqttCommandTemplate(
+                command_template, self.hass
+            ).async_render
+
+        value_template = self._templates[CONF_VALUE_TEMPLATE]
+        if value_template is None:
+            self._templates[CONF_VALUE_TEMPLATE] = lambda value: value
+        else:
+            value_template.hass = self.hass
+            self._templates[
+                CONF_VALUE_TEMPLATE
+            ] = value_template.async_render_with_possible_json_value
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
@@ -165,7 +176,7 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
         await mqtt.async_publish(
             self.hass,
             self._config[CONF_COMMAND_TOPIC],
-            render_outgoing_payload(payload),
+            payload,
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
         )

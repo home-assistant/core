@@ -251,6 +251,36 @@ MQTT_PUBLISH_SCHEMA = vol.All(
 SubscribePayloadType = Union[str, bytes]  # Only bytes if encoding is None
 
 
+class MqttCommandTemplate:
+    """Class for rendering MQTT payload with command templates."""
+
+    def __init__(
+        self,
+        command_template: template.Template,
+        hass: HomeAssistant | None = None,
+        variables: template.TemplateVarsType = None,
+    ) -> None:
+        """Instantiate a command template."""
+        if hass is not None:
+            command_template.hass = hass
+        self.template = command_template
+        self.variables = variables
+
+    @callback
+    def async_render(
+        self, value: PublishPayloadType, variables: template.TemplateVarsType = None
+    ) -> PublishPayloadType:
+        """Render the command template with given value or variables."""
+        values = {"value": value}
+        if self.variables is not None:
+            values.update(self.variables)
+        if variables is not None:
+            values.update(variables)
+        return render_outgoing_payload(
+            self.template.async_render(values, parse_result=False)
+        )
+
+
 @dataclass
 class MqttServiceInfo(BaseServiceInfo):
     """Prepared info from mqtt entries."""
