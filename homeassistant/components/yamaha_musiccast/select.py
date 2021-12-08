@@ -1,4 +1,5 @@
 """The select entities for musiccast."""
+from typing import Optional
 
 from aiomusiccast.capabilities import OptionSetter
 
@@ -46,7 +47,7 @@ class SelectableCapapility(MusicCastCapabilityEntity, SelectEntity):
         await self.capability.set(value)
 
     @property
-    def device_class(self) -> str | None:
+    def device_class(self) -> Optional[str]:
         """Return the device class, to identify the entity for translations."""
         return DEVICE_CLASS_MAPPING.get(self.capability.id)
 
