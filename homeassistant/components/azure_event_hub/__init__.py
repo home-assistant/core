@@ -179,13 +179,14 @@ class AzureEventHub:
                     len(data_batch),
                     dequeue_count,
                 )
-                try:
-                    await client.send_batch(data_batch)
-                except EventHubError as exc:
-                    _LOGGER.error("Error in sending events to Event Hub: %s", exc)
-                finally:
-                    for _ in range(dequeue_count):
-                        self.queue.task_done()
+                if data_batch:
+                    try:
+                        await client.send_batch(data_batch)
+                    except EventHubError as exc:
+                        _LOGGER.error("Error in sending events to Event Hub: %s", exc)
+                    finally:
+                        for _ in range(dequeue_count):
+                            self.queue.task_done()
 
         if not self.shutdown:
             self._next_send_remover = async_call_later(
@@ -208,7 +209,7 @@ class AzureEventHub:
             except asyncio.QueueEmpty:
                 break
             dequeue_count += 1
-            if event is None:
+            if not event:
                 self.shutdown = True
                 break
             event_data = self._event_to_filtered_event_data(event)
