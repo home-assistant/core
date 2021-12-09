@@ -64,13 +64,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class DeLijnPublicTransportSensor(SensorEntity):
     """Representation of a Ruter sensor."""
 
+    _attr_attribution = ATTRIBUTION
     _attr_device_class = SensorDeviceClass.TIMESTAMP
     _attr_icon = "mdi:bus"
 
     def __init__(self, line):
         """Initialize the sensor."""
         self.line = line
-        self._attr_attribution = ATTRIBUTION
         self._attr_extra_state_attributes = {}
 
     async def async_update(self):
