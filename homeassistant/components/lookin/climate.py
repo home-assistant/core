@@ -186,7 +186,7 @@ class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
 
     def update_meteo_from_value(self, event: UDPEvent) -> None:
         self._attr_current_temperature = float(int(event.value[:4], 16)) / 10
-        self.humidity = float(int(event.value[-4:], 16)) / 10
+        self._attr_current_humidity = float(int(event.value[-4:], 16)) / 10
 
     @callback
     def _handle_coordinator_update(self) -> None:
