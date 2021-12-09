@@ -9,9 +9,6 @@
                     "token": "Token"
                 }
             }
-        },
-        "abort": {
-            "single_instance_allowed": "Only a single instance is allowed."
         }
     }
 }

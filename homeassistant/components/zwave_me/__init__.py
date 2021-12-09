@@ -1,11 +1,13 @@
 """The Z-Wave-Me WS integration."""
+import asyncio
 import logging
 
 from zwave_me_ws import ZWaveMe, ZWaveMeData
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect, \
+    dispatcher_send
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN, PLATFORMS, ZWAVE_PLATFORMS
@@ -15,10 +17,11 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, entry):
     """Set up Z-Wave-Me from a config entry."""
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
-    hass.data[DOMAIN] = ZWaveMeController(hass, entry)
-
-    return True
+    hass.data[DOMAIN][entry.entry_id] = ZWaveMeController(hass, entry)
+    if hass.data[DOMAIN][entry.entry_id].async_establish_connection():
+        hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+        return True
+    return False
 
 
 async def async_unload_entry(hass, entry):
@@ -31,7 +34,7 @@ class ZWaveMeController:
 
     def __init__(self, hass: HomeAssistant, config: ConfigEntry) -> None:
         """Create the API instance."""
-        self.device_ids: list[str] = []
+        self.device_ids: set = set()
         self._hass = hass
         self._config = config
         self.zwave_api = ZWaveMe(
@@ -42,22 +45,33 @@ class ZWaveMeController:
             url=self._config.data["url"],
             platforms=ZWAVE_PLATFORMS,
         )
+        self.platforms_inited = False
+
+    async def async_establish_connection(self, hass):
+        established = asyncio.Future()
+        loop = asyncio.get_running_loop()
+        hass.async_add_job(
+            self.zwave_api.get_connection,
+            lambda result: loop.call_soon_threadsafe(established, result)
+        )   
+
+        return await established
 
     def add_device(self, device: ZWaveMeData) -> None:
         """Send signal to create device."""
         if device.deviceType in ZWAVE_PLATFORMS:
             if device.id in self.device_ids:
-                dispatcher_send(self._hass, "ZWAVE_ME_INFO_" + device.id, device)
+                dispatcher_send(self._hass, "ZWAVE_ME_INFO_" + device.id,
+                                device)
             else:
                 dispatcher_send(
-                    self._hass, "ZWAVE_ME_NEW_" + device.deviceType.upper(), device
+                    self._hass, "ZWAVE_ME_NEW_" + device.deviceType.upper(),
+                    device
                 )
-                self.device_ids.append(device.id)
+                self.device_ids.add(device.id)
 
     def on_device_create(self, devices: list[ZWaveMeData]) -> None:
         """Create multiple devices."""
-        if devices is None:
-            return
         for device in devices:
             self.add_device(device)
 
@@ -69,11 +83,13 @@ class ZWaveMeController:
 class ZWaveMeEntity(Entity):
     """Representation of a ZWaveMe device."""
 
-    def __init__(self, device):
+    def __init__(self, device, entry_id):
         """Initialize the device."""
         self._attr_name = device.title
+        self._attr_unique_id = self.device.id
         self._attr_should_poll = False
         self.device = device
+        self.entry_id = entry_id
 
     async def async_added_to_hass(self) -> None:
         """Connect to an updater."""
@@ -81,22 +97,9 @@ class ZWaveMeEntity(Entity):
             self.hass, f"ZWAVE_ME_INFO_{self.device.id}", self.get_new_data
         ))
 
-    def get_device(self):
-        """Get device info by id."""
-        for device in self.hass.data[DOMAIN].get_devices():
-            if device.id == self.device.id:
-                return device
-
-        return None
-
     @callback
     def get_new_data(self, new_data):
         """Update info in the HAss."""
         self.device = new_data
         self._attr_available = not new_data.isFailed
-        self.async_write_ha_state
-
-    @property
-    def unique_id(self) -> str:
-        """If the switch is currently on or off."""
-        return DOMAIN + "." + self.device.id + self._name
+        self.async_write_ha_state()
