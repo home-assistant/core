@@ -19,7 +19,6 @@ from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
-    ENTITY_CATEGORY_DIAGNOSTIC,
     LENGTH_MILLIMETERS,
     PERCENTAGE,
     POWER_WATT,
@@ -31,6 +30,7 @@ from homeassistant.const import (
     UV_INDEX,
 )
 from homeassistant.core import callback
+from homeassistant.helpers.entity import EntityCategory
 
 from . import (
     CONF_DATA_BITS,
@@ -78,7 +78,7 @@ SENSOR_TYPES = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         convert=_battery_convert,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     RfxtrxSensorEntityDescription(
         key="Current",
@@ -122,7 +122,7 @@ SENSOR_TYPES = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         convert=_rssi_convert,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     RfxtrxSensorEntityDescription(
         key="Temperature",
