@@ -28,7 +28,7 @@ INPUT_PIN_SCHEMA = vol.Schema({vol.Required(CONF_PIN, default=None): int})
 DEFAULT_START_OFF = False
 
 
-async def device_scan(identifier, loop):
+async def device_scan(hass, identifier, loop):
     """Scan for a specific device using identifier as filter."""
 
     def _filter_device(dev):
@@ -46,8 +46,10 @@ async def device_scan(identifier, loop):
         except ValueError:
             return None
 
+    aiozc = await zeroconf.async_get_async_instance(hass)
+
     for hosts in (_host_filter(), None):
-        scan_result = await scan(loop, timeout=3, hosts=hosts)
+        scan_result = await scan(loop, timeout=3, hosts=hosts, aiozc=aiozc)
         matches = [atv for atv in scan_result if _filter_device(atv)]
 
         if matches:
@@ -226,7 +228,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_find_device(self, allow_exist=False):
         """Scan for the selected device to discover services."""
         self.atv, self.atv_identifiers = await device_scan(
-            self.scan_filter, self.hass.loop
+            self.hass, self.scan_filter, self.hass.loop
         )
         if not self.atv:
             raise DeviceNotFound()
