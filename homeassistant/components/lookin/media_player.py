@@ -1,7 +1,13 @@
 """The lookin integration light platform."""
 from __future__ import annotations
 
+from collections.abc import Callable, Coroutine
+from datetime import timedelta
+import logging
+from typing import Any, cast
+
 from aiolookin import Remote
+from aiolookin.models import UDPCommandType, UDPEvent
 
 from homeassistant.components.media_player import (
     DEVICE_CLASS_RECEIVER,
@@ -17,13 +23,16 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_PLAYING
+from homeassistant.const import STATE_ON, STATE_STANDBY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
 from .entity import LookinPowerEntity
 from .models import LookinData
+
+LOGGER = logging.getLogger(__name__)
 
 _TYPE_TO_DEVICE_CLASS = {"01": DEVICE_CLASS_TV, "02": DEVICE_CLASS_RECEIVER}
 
@@ -51,13 +60,36 @@ async def async_setup_entry(
         if remote["Type"] not in _TYPE_TO_DEVICE_CLASS:
             continue
         uuid = remote["UUID"]
-        device = await lookin_data.lookin_protocol.get_remote(uuid)
+
+        def _wrap_async_update(
+            uuid: str,
+        ) -> Callable[[], Coroutine[None, Any, Remote]]:
+            """Create a function to capture the uuid cell variable."""
+
+            async def _async_update() -> Remote:
+                return await lookin_data.lookin_protocol.get_remote(uuid)
+
+            return _async_update
+
+        coordinator = DataUpdateCoordinator(
+            hass,
+            LOGGER,
+            name=f"{config_entry.title} {uuid}",
+            update_method=_wrap_async_update(uuid),
+            update_interval=timedelta(
+                seconds=60
+            ),  # Updates are pushed (fallback is polling)
+        )
+        await coordinator.async_refresh()
+        device: Remote = coordinator.data
+
         entities.append(
             LookinMedia(
                 uuid=uuid,
                 device=device,
                 lookin_data=lookin_data,
                 device_class=_TYPE_TO_DEVICE_CLASS[remote["Type"]],
+                coordinator=coordinator,
             )
         )
 
@@ -75,18 +107,25 @@ class LookinMedia(LookinPowerEntity, MediaPlayerEntity):
         device: Remote,
         lookin_data: LookinData,
         device_class: str,
+        coordinator: DataUpdateCoordinator,
     ) -> None:
         """Init the lookin media player."""
-        super().__init__(uuid, device, lookin_data)
         self._attr_device_class = device_class
         self._attr_supported_features: int = 0
-        self._state: str = STATE_PLAYING
+        self._state: str | None = None
+        self._is_muted: bool = False
+        super().__init__(coordinator, uuid, device, lookin_data)
         for function_name, feature in _FUNCTION_NAME_TO_FEATURE.items():
             if function_name in self._function_names:
                 self._attr_supported_features |= feature
+        self._async_update_from_data()
 
     @property
-    def state(self) -> str:
+    def _remote(self) -> Remote:
+        return cast(Remote, self.coordinator.data)
+
+    @property
+    def state(self) -> str | None:
         """State of the player."""
         return self._state
 
@@ -109,11 +148,77 @@ class LookinMedia(LookinPowerEntity, MediaPlayerEntity):
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
         await self._async_send_command("mute")
+        self._is_muted = not self._is_muted
 
     async def async_turn_off(self) -> None:
         """Turn the media player off."""
         await self._async_send_command(self._power_off_command)
+        self._state = STATE_STANDBY
 
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
         await self._async_send_command(self._power_on_command)
+        self._state = STATE_ON
+
+    @property
+    def name(self) -> str:
+        """Return the name of the entity."""
+        name: str = self._remote.name
+        return name
+
+    @property
+    def is_volume_muted(self) -> bool | None:
+        """Boolean if volume is currently muted."""
+        return self._is_muted
+
+    def _update_from_status(self, status: str) -> None:
+        """Update media property from status.
+
+        00F0
+        0 - 0/1 on/off
+        0 - sourse
+        F - volume, 0 - muted, 1 - volume up, F - volume down
+        0 - not used
+        """
+        if len(status) != 4:
+            return
+        state = status[0]
+        mute = status[2]
+
+        self._state = STATE_STANDBY if state == "1" else STATE_ON
+        self._is_muted = mute == "0"
+
+    def _async_push_update(self, event: UDPEvent) -> None:
+        """Process an update pushed via UDP."""
+        LOGGER.debug("Processing push message for %s: %s", self.entity_id, event)
+        self._update_from_status(event.value)
+        self.coordinator.async_set_updated_data(self._remote)
+        self.async_write_ha_state()
+
+    async def _async_push_update_device(self, event: UDPEvent) -> None:
+        """Process an update pushed via UDP."""
+        LOGGER.debug("Processing push message for %s: %s", self.entity_id, event)
+        await self.coordinator.async_refresh()
+
+    async def async_added_to_hass(self) -> None:
+        """Call when the entity is added to hass."""
+        self.async_on_remove(
+            self._lookin_udp_subs.subscribe_event(
+                self._lookin_device.id,
+                UDPCommandType.ir,
+                self._uuid,
+                self._async_push_update,
+            )
+        )
+        self.async_on_remove(
+            self._lookin_udp_subs.subscribe_event(
+                self._lookin_device.id,
+                UDPCommandType.data,
+                self._uuid,
+                self._async_push_update_device,
+            )
+        )
+
+    def _async_update_from_data(self) -> None:
+        """Update attrs from data."""
+        self._update_from_status(self._remote.status)
