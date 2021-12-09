@@ -259,7 +259,6 @@ class SensorTemplate(TemplateEntity, SensorEntity):
                 return
 
             self._attr_native_value = parsed_timestamp
-            self._valid_result = True
             return
 
         # Date device class
@@ -267,7 +266,6 @@ class SensorTemplate(TemplateEntity, SensorEntity):
 
         if parsed_date is not None:
             self._attr_native_value = parsed_date
-            self._valid_result = True
             return
 
         _LOGGER.warning("%s rendered invalid date %s", self.entity_id, result)
