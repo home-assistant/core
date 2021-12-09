@@ -244,10 +244,10 @@ class GroupProbe:
     @callback
     def discover_group_entities(self, group: zha_typing.ZhaGroupType) -> None:
         """Process a group and create any entities that are needed."""
-        # only create a group entity if there are 2 or more members in a group
-        if len(group.members) < 2:
+        # Only create a group entity if there are members in a group
+        if len(group.members) == 0:
             _LOGGER.debug(
-                "Group: %s:0x%04x has less than 2 members - skipping entity discovery",
+                "Group: %s:0x%04x has no members - skipping entity discovery",
                 group.name,
                 group.group_id,
             )
