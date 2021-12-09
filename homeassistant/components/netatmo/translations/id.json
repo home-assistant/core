@@ -15,6 +15,7 @@
                 "title": "Pilih Metode Autentikasi"
             },
             "reauth_confirm": {
+                "description": "Integrasi Netatmo perlu mengautentikasi ulang akun Anda",
                 "title": "Autentikasi Ulang Integrasi"
             }
         }
@@ -22,6 +23,7 @@
     "device_automation": {
         "trigger_subtype": {
             "away": "keluar",
+            "hg": "perlindungan kebekuan",
             "schedule": "jadwal"
         },
         "trigger_type": {

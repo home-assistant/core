@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -60,7 +61,13 @@ def _bytearray_string(data):
 
 SERVICE_SEND_SCHEMA = vol.Schema({ATTR_EVENT: _bytearray_string})
 
-PLATFORMS = ["switch", "sensor", "light", "binary_sensor", "cover"]
+PLATFORMS = [
+    Platform.SWITCH,
+    Platform.SENSOR,
+    Platform.LIGHT,
+    Platform.BINARY_SENSOR,
+    Platform.COVER,
+]
 
 
 async def async_setup_entry(hass, entry: config_entries.ConfigEntry):

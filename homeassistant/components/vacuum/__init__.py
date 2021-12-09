@@ -341,17 +341,6 @@ class VacuumEntity(_BaseVacuum, ToggleEntity):
         """Not supported."""
 
 
-class VacuumDevice(VacuumEntity):
-    """Representation of a vacuum (for backwards compatibility)."""
-
-    def __init_subclass__(cls, **kwargs):
-        """Print deprecation warning."""
-        super().__init_subclass__(**kwargs)
-        _LOGGER.warning(
-            "VacuumDevice is deprecated, modify %s to extend VacuumEntity", cls.__name__
-        )
-
-
 @dataclass
 class StateVacuumEntityDescription(EntityDescription):
     """A class that describes vacuum entities."""
@@ -406,15 +395,3 @@ class StateVacuumEntity(_BaseVacuum):
 
     async def async_toggle(self, **kwargs):
         """Not supported."""
-
-
-class StateVacuumDevice(StateVacuumEntity):
-    """Representation of a vacuum (for backwards compatibility)."""
-
-    def __init_subclass__(cls, **kwargs):
-        """Print deprecation warning."""
-        super().__init_subclass__(**kwargs)
-        _LOGGER.warning(
-            "StateVacuumDevice is deprecated, modify %s to extend StateVacuumEntity",
-            cls.__name__,
-        )

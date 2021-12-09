@@ -5,7 +5,7 @@ from hlk_sw16 import create_hlk_sw16_connection
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SWITCHES
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SWITCHES, Platform
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
@@ -24,7 +24,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["switch"]
+PLATFORMS = [Platform.SWITCH]
 
 DATA_DEVICE_REGISTER = "hlk_sw16_device_register"
 DATA_DEVICE_LISTENER = "hlk_sw16_device_listener"

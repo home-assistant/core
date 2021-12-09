@@ -412,7 +412,7 @@ class AmcrestCam(Camera):
                         f"{serial_number}-{self._resolution}-{self._channel}"
                     )
                     _LOGGER.debug("Assigned unique_id=%s", self._attr_unique_id)
-            self.is_streaming = self._get_video()
+            self._attr_is_streaming = self._get_video()
             self._is_recording = self._get_recording()
             self._motion_detection_enabled = self._get_motion_detection()
             self._audio_enabled = self._get_audio()

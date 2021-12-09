@@ -41,7 +41,7 @@
         "ix": 64,
         "pal": 1,
         "sel": true,
-        "rev": false,
+        "rev": true,
         "cln": -1
       }
     ]

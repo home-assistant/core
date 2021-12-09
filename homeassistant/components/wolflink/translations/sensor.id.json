@@ -40,6 +40,9 @@
             "solarbetrieb": "Mode surya",
             "sparbetrieb": "Mode ekonomi",
             "sparen": "Ekonomi",
+            "standby": "Siaga",
+            "start": "Mulai",
+            "storung": "Kesalahan",
             "urlaubsmodus": "Mode liburan",
             "ventilprufung": "Uji katup"
         }

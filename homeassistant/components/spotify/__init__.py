@@ -4,9 +4,13 @@ import aiohttp
 from spotipy import Spotify, SpotifyException
 import voluptuous as vol
 
-from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_CREDENTIALS, CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.const import (
+    ATTR_CREDENTIALS,
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
@@ -37,7 +41,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS = [MEDIA_PLAYER_DOMAIN]
+PLATFORMS = [Platform.MEDIA_PLAYER]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

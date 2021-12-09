@@ -30,9 +30,9 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle dhcp discovery."""
-        self.ip_address = discovery_info[dhcp.IP_ADDRESS]
+        self.ip_address = discovery_info.ip
 
-        await self.async_set_unique_id(discovery_info[dhcp.MAC_ADDRESS])
+        await self.async_set_unique_id(discovery_info.macaddress)
         self._abort_if_unique_id_configured(updates={CONF_HOST: self.ip_address})
         self._async_abort_entries_match({CONF_HOST: self.ip_address})
 

@@ -9,20 +9,15 @@ from urllib.parse import ParseResult, urlparse
 from fritzconnection.core.exceptions import FritzConnectionException, FritzSecurityError
 import voluptuous as vol
 
+from homeassistant.components import ssdp
 from homeassistant.components.device_tracker.const import (
     CONF_CONSIDER_HOME,
     DEFAULT_CONSIDER_HOME,
-)
-from homeassistant.components.ssdp import (
-    ATTR_SSDP_LOCATION,
-    ATTR_UPNP_FRIENDLY_NAME,
-    ATTR_UPNP_UDN,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .common import FritzBoxTools
 from .const import (
@@ -115,17 +110,18 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_ssdp(self, discovery_info: DiscoveryInfoType) -> FlowResult:
+    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Handle a flow initialized by discovery."""
-        ssdp_location: ParseResult = urlparse(discovery_info[ATTR_SSDP_LOCATION])
+        ssdp_location: ParseResult = urlparse(discovery_info.ssdp_location or "")
         self._host = ssdp_location.hostname
         self._port = ssdp_location.port
         self._name = (
-            discovery_info.get(ATTR_UPNP_FRIENDLY_NAME) or self.fritz_tools.model
+            discovery_info.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME)
+            or self.fritz_tools.model
         )
         self.context[CONF_HOST] = self._host
 
-        if uuid := discovery_info.get(ATTR_UPNP_UDN):
+        if uuid := discovery_info.upnp.get(ssdp.ATTR_UPNP_UDN):
             if uuid.startswith("uuid:"):
                 uuid = uuid[5:]
             await self.async_set_unique_id(uuid)

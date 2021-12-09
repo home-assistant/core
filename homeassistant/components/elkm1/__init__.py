@@ -22,6 +22,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
@@ -57,12 +58,12 @@ SYNC_TIMEOUT = 120
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
-    "alarm_control_panel",
-    "climate",
-    "light",
-    "scene",
-    "sensor",
-    "switch",
+    Platform.ALARM_CONTROL_PANEL,
+    Platform.CLIMATE,
+    Platform.LIGHT,
+    Platform.SCENE,
+    Platform.SENSOR,
+    Platform.SWITCH,
 ]
 
 SPEAK_SERVICE_SCHEMA = vol.Schema(

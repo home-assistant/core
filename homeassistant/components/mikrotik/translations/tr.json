@@ -11,7 +11,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Ana bilgisayar",
+                    "host": "Sunucu",
                     "name": "Ad",
                     "password": "Parola",
                     "port": "Port",

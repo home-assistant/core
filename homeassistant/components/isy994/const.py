@@ -15,14 +15,12 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_SMOKE,
     DEVICE_CLASS_SOUND,
     DEVICE_CLASS_VIBRATION,
-    DOMAIN as BINARY_SENSOR,
 )
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_COOL,
     CURRENT_HVAC_FAN,
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
-    DOMAIN as CLIMATE,
     FAN_AUTO,
     FAN_HIGH,
     FAN_MEDIUM,
@@ -37,12 +35,6 @@ from homeassistant.components.climate.const import (
     PRESET_AWAY,
     PRESET_BOOST,
 )
-from homeassistant.components.cover import DOMAIN as COVER
-from homeassistant.components.fan import DOMAIN as FAN
-from homeassistant.components.light import DOMAIN as LIGHT
-from homeassistant.components.lock import DOMAIN as LOCK
-from homeassistant.components.sensor import DOMAIN as SENSOR
-from homeassistant.components.switch import DOMAIN as SWITCH
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     CURRENCY_CENT,
@@ -109,6 +101,7 @@ from homeassistant.const import (
     VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
     VOLUME_GALLONS,
     VOLUME_LITERS,
+    Platform,
 )
 
 _LOGGER = logging.getLogger(__package__)
@@ -133,14 +126,29 @@ DEFAULT_VAR_SENSOR_STRING = "HA."
 KEY_ACTIONS = "actions"
 KEY_STATUS = "status"
 
-PLATFORMS = [BINARY_SENSOR, SENSOR, LOCK, FAN, COVER, LIGHT, SWITCH, CLIMATE]
-PROGRAM_PLATFORMS = [BINARY_SENSOR, LOCK, FAN, COVER, SWITCH]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.FAN,
+    Platform.LIGHT,
+    Platform.LOCK,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
+PROGRAM_PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.COVER,
+    Platform.FAN,
+    Platform.LOCK,
+    Platform.SWITCH,
+]
 
 SUPPORTED_BIN_SENS_CLASSES = ["moisture", "opening", "motion", "climate"]
 
 # ISY Scenes are more like Switches than Home Assistant Scenes
 # (they can turn off, and report their state)
-ISY_GROUP_PLATFORM = SWITCH
+ISY_GROUP_PLATFORM = Platform.SWITCH
 
 ISY994_ISY = "isy"
 ISY994_NODES = "isy994_nodes"
@@ -211,7 +219,7 @@ UOM_PERCENTAGE = "51"
 # Insteon Types: https://www.universal-devices.com/developers/wsdk/5.0.4/1_fam.xml
 # Z-Wave Categories: https://www.universal-devices.com/developers/wsdk/5.0.4/4_fam.xml
 NODE_FILTERS = {
-    BINARY_SENSOR: {
+    Platform.BINARY_SENSOR: {
         FILTER_UOM: [UOM_ON_OFF],
         FILTER_STATES: [],
         FILTER_NODE_DEF_ID: [
@@ -231,7 +239,7 @@ NODE_FILTERS = {
         ],  # Does a startswith() match; include the dot
         FILTER_ZWAVE_CAT: (["104", "112", "138"] + list(map(str, range(148, 180)))),
     },
-    SENSOR: {
+    Platform.SENSOR: {
         # This is just a more-readable way of including MOST uoms between 1-100
         # (Remember that range() is non-inclusive of the stop value)
         FILTER_UOM: (
@@ -255,28 +263,28 @@ NODE_FILTERS = {
         FILTER_INSTEON_TYPE: ["0.16.", "0.17.", "0.18.", "9.0.", "9.7."],
         FILTER_ZWAVE_CAT: (["118", "143"] + list(map(str, range(180, 186)))),
     },
-    LOCK: {
+    Platform.LOCK: {
         FILTER_UOM: ["11"],
         FILTER_STATES: ["locked", "unlocked"],
         FILTER_NODE_DEF_ID: ["DoorLock"],
         FILTER_INSTEON_TYPE: [TYPE_CATEGORY_LOCK, "4.64."],
         FILTER_ZWAVE_CAT: ["111"],
     },
-    FAN: {
+    Platform.FAN: {
         FILTER_UOM: [],
         FILTER_STATES: ["off", "low", "med", "high"],
         FILTER_NODE_DEF_ID: ["FanLincMotor"],
         FILTER_INSTEON_TYPE: ["1.46."],
         FILTER_ZWAVE_CAT: [],
     },
-    COVER: {
+    Platform.COVER: {
         FILTER_UOM: [UOM_BARRIER],
         FILTER_STATES: ["open", "closed", "closing", "opening", "stopped"],
         FILTER_NODE_DEF_ID: ["DimmerMotorSwitch_ADV"],
         FILTER_INSTEON_TYPE: [TYPE_CATEGORY_COVER],
         FILTER_ZWAVE_CAT: [],
     },
-    LIGHT: {
+    Platform.LIGHT: {
         FILTER_UOM: ["51"],
         FILTER_STATES: ["on", "off", "%"],
         FILTER_NODE_DEF_ID: [
@@ -293,7 +301,7 @@ NODE_FILTERS = {
         FILTER_INSTEON_TYPE: [TYPE_CATEGORY_DIMMABLE],
         FILTER_ZWAVE_CAT: ["109", "119"],
     },
-    SWITCH: {
+    Platform.SWITCH: {
         FILTER_UOM: ["78"],
         FILTER_STATES: ["on", "off"],
         FILTER_NODE_DEF_ID: [
@@ -323,7 +331,7 @@ NODE_FILTERS = {
         ],
         FILTER_ZWAVE_CAT: ["121", "122", "123", "137", "141", "147"],
     },
-    CLIMATE: {
+    Platform.CLIMATE: {
         FILTER_UOM: [UOM_ON_OFF],
         FILTER_STATES: ["heating", "cooling", "idle", "fan_only", "off"],
         FILTER_NODE_DEF_ID: ["TempLinc", "Thermostat"],

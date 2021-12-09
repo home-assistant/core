@@ -1,7 +1,7 @@
 """Support for WLED button."""
 from __future__ import annotations
 
-from homeassistant.components.button import ButtonEntity
+from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ENTITY_CATEGORY_CONFIG
 from homeassistant.core import HomeAssistant
@@ -23,7 +23,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             WLEDRestartButton(coordinator),
-            WLEDUpgradeButton(coordinator),
+            WLEDUpdateButton(coordinator),
         ]
     )
 
@@ -31,7 +31,7 @@ async def async_setup_entry(
 class WLEDRestartButton(WLEDEntity, ButtonEntity):
     """Defines a WLED restart button."""
 
-    _attr_icon = "mdi:restart"
+    _attr_device_class = ButtonDeviceClass.RESTART
     _attr_entity_category = ENTITY_CATEGORY_CONFIG
 
     def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
@@ -46,21 +46,21 @@ class WLEDRestartButton(WLEDEntity, ButtonEntity):
         await self.coordinator.wled.reset()
 
 
-class WLEDUpgradeButton(WLEDEntity, ButtonEntity):
-    """Defines a WLED upgrade button."""
+class WLEDUpdateButton(WLEDEntity, ButtonEntity):
+    """Defines a WLED update button."""
 
-    _attr_icon = "mdi:cellphone-arrow-down"
+    _attr_device_class = ButtonDeviceClass.UPDATE
     _attr_entity_category = ENTITY_CATEGORY_CONFIG
 
     def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
         """Initialize the button entity."""
         super().__init__(coordinator=coordinator)
-        self._attr_name = f"{coordinator.data.info.name} Upgrade"
-        self._attr_unique_id = f"{coordinator.data.info.mac_address}_upgrade"
+        self._attr_name = f"{coordinator.data.info.name} Update"
+        self._attr_unique_id = f"{coordinator.data.info.mac_address}_update"
 
     @property
     def available(self) -> bool:
-        """Return if the entity and an upgrade is available."""
+        """Return if the entity and an update is available."""
         current = self.coordinator.data.info.version
         beta = self.coordinator.data.info.version_latest_beta
         stable = self.coordinator.data.info.version_latest_stable
@@ -82,13 +82,13 @@ class WLEDUpgradeButton(WLEDEntity, ButtonEntity):
 
     @wled_exception_handler
     async def async_press(self) -> None:
-        """Send out a restart command."""
+        """Send out a update command."""
         current = self.coordinator.data.info.version
         beta = self.coordinator.data.info.version_latest_beta
         stable = self.coordinator.data.info.version_latest_stable
 
-        # If we already run a pre-release, allow upgrading to a newer
-        # pre-release or newer stable, otherwise, offer a normal stable upgrades.
+        # If we already run a pre-release, allow update to a newer
+        # pre-release or newer stable, otherwise, offer a normal stable updates.
         version = stable
         if (
             current is not None

@@ -20,7 +20,19 @@ DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
 )
 
 DISCOVERY_INFO_WRONG_DEVOLO_DEVICE = zeroconf.ZeroconfServiceInfo(
-    properties={"MT": "2700"}
+    host="mock_host",
+    hostname="mock_hostname",
+    name="mock_name",
+    port=None,
+    properties={"MT": "2700"},
+    type="mock_type",
 )
 
-DISCOVERY_INFO_WRONG_DEVICE = zeroconf.ZeroconfServiceInfo(properties={"Features": ""})
+DISCOVERY_INFO_WRONG_DEVICE = zeroconf.ZeroconfServiceInfo(
+    host="mock_host",
+    hostname="mock_hostname",
+    name="mock_name",
+    port=None,
+    properties={"Features": ""},
+    type="mock_type",
+)

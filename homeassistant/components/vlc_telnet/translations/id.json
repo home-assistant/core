@@ -14,6 +14,15 @@
         },
         "flow_title": "{host}",
         "step": {
+            "hassio_confirm": {
+                "description": "Ingin terhubung ke add-on {addon}?"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Kata Sandi"
+                },
+                "description": "Harap masukkan kata sandi yang benar untuk host: {host}"
+            },
             "user": {
                 "data": {
                     "host": "Host",

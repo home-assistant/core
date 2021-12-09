@@ -131,6 +131,7 @@ HM_DEVICE_TYPES = {
         "IPMultiIOPCB",
         "ValveBoxW",
         "CO2SensorIP",
+        "IPLockDLD",
     ],
     DISCOVER_CLIMATE: [
         "Thermostat",
@@ -180,7 +181,6 @@ HM_DEVICE_TYPES = {
         "IPRainSensor",
         "IPLanRouter",
         "IPMultiIOPCB",
-        "IPLockDLD",
         "IPWHS2",
     ],
     DISCOVER_COVER: [

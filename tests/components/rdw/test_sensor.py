@@ -1,5 +1,5 @@
 """Tests for the sensors provided by the RDW integration."""
-from homeassistant.components.rdw.const import DOMAIN, ENTRY_TYPE_SERVICE
+from homeassistant.components.rdw.const import DOMAIN
 from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -52,7 +52,7 @@ async def test_vehicle_sensors(
     assert device_entry.identifiers == {(DOMAIN, "11ZKZ3")}
     assert device_entry.manufacturer == "Skoda"
     assert device_entry.name == "Skoda: 11ZKZ3"
-    assert device_entry.entry_type == ENTRY_TYPE_SERVICE
+    assert device_entry.entry_type is dr.DeviceEntryType.SERVICE
     assert device_entry.model == "Citigo"
     assert (
         device_entry.configuration_url
