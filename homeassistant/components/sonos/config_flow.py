@@ -1,22 +1,22 @@
 """Config flow for SONOS."""
 import dataclasses
 
-import soco
-
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
+from homeassistant.components.ssdp import DOMAIN as SSDP_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.config_entry_flow import DiscoveryFlowHandler
 
-from .const import DATA_SONOS_DISCOVERY_MANAGER, DOMAIN
+from .const import DATA_SONOS_DISCOVERY_MANAGER, DOMAIN, UPNP_ST
 from .helpers import hostname_to_uid
 
 
 async def _async_has_devices(hass: HomeAssistant) -> bool:
-    """Return if there are devices that can be discovered."""
-    result = await hass.async_add_executor_job(soco.discover)
-    return bool(result)
+    """Return if Sonos devices have been seen recently with SSDP."""
+    ssdp_scanner = hass.data[SSDP_DOMAIN]
+    results = await ssdp_scanner.async_get_discovery_info_by_st(UPNP_ST)
+    return bool(results)
 
 
 class SonosDiscoveryFlowHandler(DiscoveryFlowHandler):
