@@ -37,7 +37,6 @@ class DanfossAirBinarySensor(BinarySensorEntity):
         """Initialize the Danfoss Air binary sensor."""
         self._data = data
         self._attr_name = name
-        self._attr_is_on = None
         self._type = sensor_type
         self._attr_device_class = device_class
 
