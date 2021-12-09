@@ -4,8 +4,8 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_MOVING,
     PLATFORM_SCHEMA,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.const import ATTR_ATTRIBUTION
@@ -74,7 +74,7 @@ class DigitalOceanBinarySensor(BinarySensorEntity):
     @property
     def device_class(self):
         """Return the class of this sensor."""
-        return DEVICE_CLASS_MOVING
+        return BinarySensorDeviceClass.MOVING
 
     @property
     def extra_state_attributes(self):
