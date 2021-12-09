@@ -164,6 +164,12 @@ async def test_render_outgoing_payload(hass):
         mqtt.render_outgoing_payload("b'\\xde\\xad\\xbe\\xef'") == b"\xde\xad\xbe\xef"
     )
 
+    assert mqtt.render_outgoing_payload(1234) == 1234
+
+    assert mqtt.render_outgoing_payload(1234.56) == 1234.56
+
+    assert mqtt.render_outgoing_payload(None) is None
+
 
 async def test_command_template_value(hass):
     """Test the rendering of MQTT command template."""
