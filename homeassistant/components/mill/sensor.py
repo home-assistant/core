@@ -123,15 +123,13 @@ async def async_setup_entry(hass, entry, async_add_entities):
     if entry.data.get(CONNECTION_TYPE) == LOCAL:
         mill_data_coordinator = hass.data[DOMAIN][LOCAL][entry.data[CONF_IP_ADDRESS]]
 
-        entities = [
+        async_add_entities(
             LocalMillSensor(
                 mill_data_coordinator,
                 entity_description,
             )
             for entity_description in LOCAL_SENSOR_TYPES
-        ]
-
-        async_add_entities(entities)
+        )
         return
 
     mill_data_coordinator = hass.data[DOMAIN][CLOUD][entry.data[CONF_USERNAME]]
