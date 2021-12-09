@@ -23,7 +23,7 @@ from homeassistant.helpers.typing import ConfigType
 from .const import CONF_USER_ID, DOMAIN, LOGGER
 
 CONF_AUTH_CODE = "auth_code"
-CONF_AUTH_URL = "auth_url"
+CONF_AUTH_URL = "url"
 CONF_DOCS_URL = "docs_url"
 
 AUTH_DOCS_URL = (
