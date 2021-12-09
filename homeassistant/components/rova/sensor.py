@@ -20,7 +20,7 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
-from homeassistant.util.dt import get_time_zone
+from homeassistant.util.dt import get_time_zone, now
 
 # Config for rova requests.
 CONF_ZIP_CODE = "zip_code"
@@ -146,7 +146,7 @@ class RovaData:
             )
             code = item["GarbageTypeCode"].lower()
 
-            if code not in self.data and date > datetime.now():
+            if code not in self.data and date > now():
                 self.data[code] = date
 
         _LOGGER.debug("Updated Rova calendar: %s", self.data)
