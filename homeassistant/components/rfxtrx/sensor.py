@@ -238,7 +238,7 @@ async def async_setup_entry(
             event.device, data_bits=entity_info.get(CONF_DATA_BITS)
         )
         for data_type in set(event.values) & set(SENSOR_TYPES_DICT):
-            data_id = (*device_id, data_type)
+            data_id = (*device_id, str(data_type))
             if data_id in data_ids:
                 continue
             data_ids.add(data_id)
