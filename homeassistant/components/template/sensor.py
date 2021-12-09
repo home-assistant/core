@@ -308,14 +308,14 @@ class TriggerSensorEntity(TriggerEntity, SensorEntity):
                 _LOGGER.warning(
                     "%s rendered invalid timestamp: %s", self.entity_id, state
                 )
-                self._rendered = self._static_rendered
+                self._rendered[CONF_STATE] = None
                 return
 
             if parsed_timestamp.tzinfo is None:
                 _LOGGER.warning(
                     "%s rendered timestamp without timezone: %s", self.entity_id, state
                 )
-                self._rendered = self._static_rendered
+                self._rendered[CONF_STATE] = None
                 return
 
             self._rendered[CONF_STATE] = parsed_timestamp
@@ -329,4 +329,4 @@ class TriggerSensorEntity(TriggerEntity, SensorEntity):
             return
 
         _LOGGER.warning("%s rendered invalid date %s", self.entity_id, state)
-        self._rendered = self._static_rendered
+        self._rendered[CONF_STATE] = None
