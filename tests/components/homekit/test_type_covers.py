@@ -92,7 +92,7 @@ async def test_garage_door_open_close(hass, hk_driver, events):
     call_close_cover = async_mock_service(hass, DOMAIN, "close_cover")
     call_open_cover = async_mock_service(hass, DOMAIN, "open_cover")
 
-    await hass.async_add_executor_job(acc.char_target_state.client_update_value, 1)
+    acc.char_target_state.client_update_value(1)
     await hass.async_block_till_done()
     assert call_close_cover
     assert call_close_cover[0].data[ATTR_ENTITY_ID] == entity_id
@@ -104,14 +104,14 @@ async def test_garage_door_open_close(hass, hk_driver, events):
     hass.states.async_set(entity_id, STATE_CLOSED)
     await hass.async_block_till_done()
 
-    await hass.async_add_executor_job(acc.char_target_state.client_update_value, 1)
+    acc.char_target_state.client_update_value(1)
     await hass.async_block_till_done()
     assert acc.char_current_state.value == HK_DOOR_CLOSED
     assert acc.char_target_state.value == HK_DOOR_CLOSED
     assert len(events) == 2
     assert events[-1].data[ATTR_VALUE] is None
 
-    await hass.async_add_executor_job(acc.char_target_state.client_update_value, 0)
+    acc.char_target_state.client_update_value(0)
     await hass.async_block_till_done()
     assert call_open_cover
     assert call_open_cover[0].data[ATTR_ENTITY_ID] == entity_id
@@ -123,7 +123,7 @@ async def test_garage_door_open_close(hass, hk_driver, events):
     hass.states.async_set(entity_id, STATE_OPEN)
     await hass.async_block_till_done()
 
-    await hass.async_add_executor_job(acc.char_target_state.client_update_value, 0)
+    acc.char_target_state.client_update_value(0)
     await hass.async_block_till_done()
     assert acc.char_current_state.value == HK_DOOR_OPEN
     assert acc.char_target_state.value == HK_DOOR_OPEN
@@ -202,7 +202,7 @@ async def test_windowcovering_set_cover_position(hass, hk_driver, events):
     # Set from HomeKit
     call_set_cover_position = async_mock_service(hass, DOMAIN, "set_cover_position")
 
-    await hass.async_add_executor_job(acc.char_target_position.client_update_value, 25)
+    acc.char_target_position.client_update_value(25)
     await hass.async_block_till_done()
     assert call_set_cover_position[0]
     assert call_set_cover_position[0].data[ATTR_ENTITY_ID] == entity_id
@@ -212,7 +212,7 @@ async def test_windowcovering_set_cover_position(hass, hk_driver, events):
     assert len(events) == 1
     assert events[-1].data[ATTR_VALUE] == 25
 
-    await hass.async_add_executor_job(acc.char_target_position.client_update_value, 75)
+    acc.char_target_position.client_update_value(75)
     await hass.async_block_till_done()
     assert call_set_cover_position[1]
     assert call_set_cover_position[1].data[ATTR_ENTITY_ID] == entity_id
@@ -286,7 +286,7 @@ async def test_windowcovering_cover_set_tilt(hass, hk_driver, events):
     # HomeKit sets tilts between -90 and 90 (degrees), whereas
     # Homeassistant expects a % between 0 and 100. Keep that in mind
     # when comparing
-    await hass.async_add_executor_job(acc.char_target_tilt.client_update_value, 90)
+    acc.char_target_tilt.client_update_value(90)
     await hass.async_block_till_done()
     assert call_set_tilt_position[0]
     assert call_set_tilt_position[0].data[ATTR_ENTITY_ID] == entity_id
@@ -296,7 +296,7 @@ async def test_windowcovering_cover_set_tilt(hass, hk_driver, events):
     assert len(events) == 1
     assert events[-1].data[ATTR_VALUE] == 100
 
-    await hass.async_add_executor_job(acc.char_target_tilt.client_update_value, 45)
+    acc.char_target_tilt.client_update_value(45)
     await hass.async_block_till_done()
     assert call_set_tilt_position[1]
     assert call_set_tilt_position[1].data[ATTR_ENTITY_ID] == entity_id
@@ -378,7 +378,7 @@ async def test_windowcovering_open_close(hass, hk_driver, events):
     call_close_cover = async_mock_service(hass, DOMAIN, "close_cover")
     call_open_cover = async_mock_service(hass, DOMAIN, "open_cover")
 
-    await hass.async_add_executor_job(acc.char_target_position.client_update_value, 25)
+    acc.char_target_position.client_update_value(25)
     await hass.async_block_till_done()
     assert call_close_cover
     assert call_close_cover[0].data[ATTR_ENTITY_ID] == entity_id
@@ -388,7 +388,7 @@ async def test_windowcovering_open_close(hass, hk_driver, events):
     assert len(events) == 1
     assert events[-1].data[ATTR_VALUE] is None
 
-    await hass.async_add_executor_job(acc.char_target_position.client_update_value, 90)
+    acc.char_target_position.client_update_value(90)
     await hass.async_block_till_done()
     assert call_open_cover[0]
     assert call_open_cover[0].data[ATTR_ENTITY_ID] == entity_id
@@ -398,7 +398,7 @@ async def test_windowcovering_open_close(hass, hk_driver, events):
     assert len(events) == 2
     assert events[-1].data[ATTR_VALUE] is None
 
-    await hass.async_add_executor_job(acc.char_target_position.client_update_value, 55)
+    acc.char_target_position.client_update_value(55)
     await hass.async_block_till_done()
     assert call_open_cover[1]
     assert call_open_cover[1].data[ATTR_ENTITY_ID] == entity_id
@@ -425,7 +425,7 @@ async def test_windowcovering_open_close_stop(hass, hk_driver, events):
     call_open_cover = async_mock_service(hass, DOMAIN, "open_cover")
     call_stop_cover = async_mock_service(hass, DOMAIN, "stop_cover")
 
-    await hass.async_add_executor_job(acc.char_target_position.client_update_value, 25)
+    acc.char_target_position.client_update_value(25)
     await hass.async_block_till_done()
     assert call_close_cover
     assert call_close_cover[0].data[ATTR_ENTITY_ID] == entity_id
@@ -435,7 +435,7 @@ async def test_windowcovering_open_close_stop(hass, hk_driver, events):
     assert len(events) == 1
     assert events[-1].data[ATTR_VALUE] is None
 
-    await hass.async_add_executor_job(acc.char_target_position.client_update_value, 90)
+    acc.char_target_position.client_update_value(90)
     await hass.async_block_till_done()
     assert call_open_cover
     assert call_open_cover[0].data[ATTR_ENTITY_ID] == entity_id
@@ -445,7 +445,7 @@ async def test_windowcovering_open_close_stop(hass, hk_driver, events):
     assert len(events) == 2
     assert events[-1].data[ATTR_VALUE] is None
 
-    await hass.async_add_executor_job(acc.char_target_position.client_update_value, 55)
+    acc.char_target_position.client_update_value(55)
     await hass.async_block_till_done()
     assert call_stop_cover
     assert call_stop_cover[0].data[ATTR_ENTITY_ID] == entity_id
@@ -474,11 +474,11 @@ async def test_windowcovering_open_close_with_position_and_stop(
     # Set from HomeKit
     call_stop_cover = async_mock_service(hass, DOMAIN, "stop_cover")
 
-    await hass.async_add_executor_job(acc.char_hold_position.client_update_value, 0)
+    acc.char_hold_position.client_update_value(0)
     await hass.async_block_till_done()
     assert not call_stop_cover
 
-    await hass.async_add_executor_job(acc.char_hold_position.client_update_value, 1)
+    acc.char_hold_position.client_update_value(1)
     await hass.async_block_till_done()
     assert call_stop_cover
     assert call_stop_cover[0].data[ATTR_ENTITY_ID] == entity_id
@@ -506,7 +506,7 @@ async def test_windowcovering_basic_restore(hass, hk_driver, events):
         suggested_object_id="all_info_set",
         capabilities={},
         supported_features=SUPPORT_STOP,
-        device_class="mock-device-class",
+        original_device_class="mock-device-class",
     )
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START, {})
@@ -544,7 +544,7 @@ async def test_windowcovering_restore(hass, hk_driver, events):
         suggested_object_id="all_info_set",
         capabilities={},
         supported_features=SUPPORT_STOP,
-        device_class="mock-device-class",
+        original_device_class="mock-device-class",
     )
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START, {})

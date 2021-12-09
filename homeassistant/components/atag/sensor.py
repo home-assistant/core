@@ -1,8 +1,6 @@
 """Initialization of ATAG One sensor platform."""
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import (
-    DEVICE_CLASS_PRESSURE,
-    DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     PRESSURE_BAR,
     TEMP_CELSIUS,
@@ -38,8 +36,8 @@ class AtagSensor(AtagEntity, SensorEntity):
         super().__init__(coordinator, SENSORS[sensor])
         self._attr_name = sensor
         if coordinator.data.report[self._id].sensorclass in (
-            DEVICE_CLASS_PRESSURE,
-            DEVICE_CLASS_TEMPERATURE,
+            SensorDeviceClass.PRESSURE,
+            SensorDeviceClass.TEMPERATURE,
         ):
             self._attr_device_class = coordinator.data.report[self._id].sensorclass
         if coordinator.data.report[self._id].measure in (

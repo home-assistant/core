@@ -20,14 +20,14 @@ STORAGE_VERSION = 4
 class OnboadingStorage(Store):
     """Store onboarding data."""
 
-    async def _async_migrate_func(self, old_version, old_data):
+    async def _async_migrate_func(self, old_major_version, old_minor_version, old_data):
         """Migrate to the new version."""
         # From version 1 -> 2, we automatically mark the integration step done
-        if old_version < 2:
+        if old_major_version < 2:
             old_data["done"].append(STEP_INTEGRATION)
-        if old_version < 3:
+        if old_major_version < 3:
             old_data["done"].append(STEP_CORE_CONFIG)
-        if old_version < 4:
+        if old_major_version < 4:
             old_data["done"].append(STEP_ANALYTICS)
         return old_data
 
@@ -50,9 +50,7 @@ def async_is_user_onboarded(hass):
 async def async_setup(hass, config):
     """Set up the onboarding component."""
     store = OnboadingStorage(hass, STORAGE_VERSION, STORAGE_KEY, private=True)
-    data = await store.async_load()
-
-    if data is None:
+    if (data := await store.async_load()) is None:
         data = {"done": []}
 
     if STEP_USER not in data["done"]:

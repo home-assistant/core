@@ -36,6 +36,8 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         key="PIR_Status",
         device_class=DEVICE_CLASS_MOTION,
     ),
+    "last_alarm_type_code": SensorEntityDescription(key="last_alarm_type_code"),
+    "last_alarm_type_name": SensorEntityDescription(key="last_alarm_type_name"),
 }
 
 

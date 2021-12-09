@@ -50,7 +50,7 @@ async def async_get_type(hass, cloud_id, install_code, host):
     )
 
     try:
-        with async_timeout.timeout(30):
+        async with async_timeout.timeout(30):
             meters = await hub.get_device_list()
     except aioeagle.BadAuth as err:
         raise InvalidAuth from err

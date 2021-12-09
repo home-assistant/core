@@ -31,7 +31,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.template import Template, TemplateError
 
-from .const import CONF_AVAILABILITY
+from .const import CONF_AVAILABILITY, DOMAIN
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
 
@@ -139,9 +139,8 @@ class TemplateNumber(TemplateEntity, NumberEntity):
         with contextlib.suppress(TemplateError):
             self._attr_name = name_template.async_render(parse_result=False)
         self._value_template = value_template
-        domain = __name__.split(".")[-2]
         self._command_set_value = Script(
-            hass, command_set_value, self._attr_name, domain
+            hass, command_set_value, self._attr_name, DOMAIN
         )
         self._step_template = step_template
         self._min_value_template = minimum_template
@@ -150,6 +149,8 @@ class TemplateNumber(TemplateEntity, NumberEntity):
         self._attr_unique_id = unique_id
         self._attr_value = None
         self._attr_step = None
+        self._attr_min_value = None
+        self._attr_max_value = None
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -212,12 +213,11 @@ class TriggerNumberEntity(TriggerEntity, NumberEntity):
     ) -> None:
         """Initialize the entity."""
         super().__init__(hass, coordinator, config)
-        domain = __name__.split(".")[-2]
         self._command_set_value = Script(
             hass,
             config[CONF_SET_VALUE],
             self._rendered.get(CONF_NAME, DEFAULT_NAME),
-            domain,
+            DOMAIN,
         )
 
     @property

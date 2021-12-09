@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 import aiohttp
 from aiomodernforms import ModernFormsConnectionError
 
+from homeassistant.components import zeroconf
 from homeassistant.components.modern_forms.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONTENT_TYPE_JSON
@@ -68,7 +69,14 @@ async def test_full_zeroconf_flow_implementation(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data={"host": "192.168.1.123", "hostname": "example.local.", "properties": {}},
+        data=zeroconf.ZeroconfServiceInfo(
+            host="192.168.1.123",
+            hostname="example.local.",
+            name="mock_name",
+            port=None,
+            properties={},
+            type="mock_type",
+        ),
     )
 
     flows = hass.config_entries.flow.async_progress()
@@ -130,7 +138,14 @@ async def test_zeroconf_connection_error(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data={"host": "192.168.1.123", "hostname": "example.local.", "properties": {}},
+        data=zeroconf.ZeroconfServiceInfo(
+            host="192.168.1.123",
+            hostname="example.local.",
+            name="mock_name",
+            port=None,
+            properties={},
+            type="mock_type",
+        ),
     )
 
     assert result.get("type") == RESULT_TYPE_ABORT
@@ -154,7 +169,14 @@ async def test_zeroconf_confirm_connection_error(
             CONF_HOST: "example.com",
             CONF_NAME: "test",
         },
-        data={"host": "192.168.1.123", "hostname": "example.com.", "properties": {}},
+        data=zeroconf.ZeroconfServiceInfo(
+            host="192.168.1.123",
+            hostname="example.com.",
+            name="mock_name",
+            port=None,
+            properties={},
+            type="mock_type",
+        ),
     )
 
     assert result.get("type") == RESULT_TYPE_ABORT
@@ -216,11 +238,14 @@ async def test_zeroconf_with_mac_device_exists_abort(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data={
-            "host": "192.168.1.123",
-            "hostname": "example.local.",
-            "properties": {CONF_MAC: "AA:BB:CC:DD:EE:FF"},
-        },
+        data=zeroconf.ZeroconfServiceInfo(
+            host="192.168.1.123",
+            hostname="example.local.",
+            name="mock_name",
+            port=None,
+            properties={CONF_MAC: "AA:BB:CC:DD:EE:FF"},
+            type="mock_type",
+        ),
     )
 
     assert result.get("type") == RESULT_TYPE_ABORT

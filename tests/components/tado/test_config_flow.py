@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 import requests
 
 from homeassistant import config_entries
+from homeassistant.components import zeroconf
 from homeassistant.components.tado.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
@@ -126,7 +127,14 @@ async def test_form_homekit(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
-        data={"properties": {"id": "AA:BB:CC:DD:EE:FF"}},
+        data=zeroconf.ZeroconfServiceInfo(
+            host="mock_host",
+            hostname="mock_hostname",
+            name="mock_name",
+            port=None,
+            properties={zeroconf.ATTR_PROPERTIES_ID: "AA:BB:CC:DD:EE:FF"},
+            type="mock_type",
+        ),
     )
     assert result["type"] == "form"
     assert result["errors"] == {}
@@ -145,6 +153,13 @@ async def test_form_homekit(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
-        data={"properties": {"id": "AA:BB:CC:DD:EE:FF"}},
+        data=zeroconf.ZeroconfServiceInfo(
+            host="mock_host",
+            hostname="mock_hostname",
+            name="mock_name",
+            port=None,
+            properties={zeroconf.ATTR_PROPERTIES_ID: "AA:BB:CC:DD:EE:FF"},
+            type="mock_type",
+        ),
     )
     assert result["type"] == "abort"

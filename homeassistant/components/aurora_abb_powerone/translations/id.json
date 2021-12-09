@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "no_serial_ports": "Tidak ada port com yang ditemukan. Perlu perangkat RS485 yang valid untuk berkomunikasi."
+        },
+        "error": {
+            "cannot_connect": "Tidak dapat terhubung, periksa port serial, alamat, koneksi listrik dan apakah inverter sedang nyala (di siang hari)",
+            "cannot_open_serial_port": "Tidak dapat membuka port serial, periksa dan coba lagi",
+            "invalid_serial_port": "Port serial bukan perangkat yang valid atau tidak dapat dibuka",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "address": "Alamat Inverter",
+                    "port": "Port Adaptor RS485 atau USB-RS485"
+                },
+                "description": "Inverter harus terhubung melalui adaptor RS485, pilih port serial dan alamat inverter seperti yang dikonfigurasi pada panel LCD"
+            }
+        }
+    }
+}

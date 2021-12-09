@@ -14,7 +14,7 @@ from pymazda import (
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_REGION
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_REGION, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -34,7 +34,7 @@ from .const import DATA_CLIENT, DATA_COORDINATOR, DATA_VEHICLES, DOMAIN, SERVICE
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["device_tracker", "lock", "sensor"]
+PLATFORMS = [Platform.DEVICE_TRACKER, Platform.LOCK, Platform.SENSOR]
 
 
 async def with_timeout(task, timeout_seconds=10):

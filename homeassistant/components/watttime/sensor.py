@@ -10,13 +10,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    MASS_POUNDS,
-    PERCENTAGE,
-)
+from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, MASS_POUNDS, PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -29,13 +23,10 @@ from .const import (
     CONF_BALANCING_AUTHORITY,
     CONF_BALANCING_AUTHORITY_ABBREV,
     CONF_SHOW_ON_MAP,
-    DATA_COORDINATOR,
     DOMAIN,
 )
 
 ATTR_BALANCING_AUTHORITY = "balancing_authority"
-
-DEFAULT_ATTRIBUTION = "Pickup data provided by WattTime"
 
 SENSOR_TYPE_REALTIME_EMISSIONS_MOER = "moer"
 SENSOR_TYPE_REALTIME_EMISSIONS_PERCENT = "percent"
@@ -63,7 +54,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up WattTime sensors based on a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR]
+    coordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         [
             RealtimeEmissionsSensor(coordinator, entry, description)
@@ -96,7 +87,6 @@ class RealtimeEmissionsSensor(CoordinatorEntity, SensorEntity):
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return entity specific state attributes."""
         attrs = {
-            ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION,
             ATTR_BALANCING_AUTHORITY: self._entry.data[CONF_BALANCING_AUTHORITY],
         }
 

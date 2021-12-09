@@ -20,13 +20,12 @@ async def validate_input(data):
     lat = data.get(CONF_LATITUDE)
     lon = data.get(CONF_LONGITUDE)
     station = data.get(CONF_STATION)
-    lang = data.get(CONF_LANGUAGE)
+    lang = data.get(CONF_LANGUAGE).lower()
 
-    weather_data = ECWeather(
-        station_id=station,
-        coordinates=(lat, lon),
-        language=lang.lower(),
-    )
+    if station:
+        weather_data = ECWeather(station_id=station, language=lang)
+    else:
+        weather_data = ECWeather(coordinates=(lat, lon), language=lang)
     await weather_data.update()
 
     if lat is None or lon is None:

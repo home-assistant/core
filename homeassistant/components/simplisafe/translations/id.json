@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Akun SimpliSafe ini sudah digunakan.",
-            "reauth_successful": "Autentikasi ulang berhasil"
+            "reauth_successful": "Autentikasi ulang berhasil",
+            "wrong_account": "Kredensial pengguna yang diberikan tidak cocok dengan akun SimpliSafe ini."
         },
         "error": {
             "identifier_exists": "Akun sudah terdaftar",
@@ -11,6 +12,13 @@
             "unknown": "Kesalahan yang tidak diharapkan"
         },
         "step": {
+            "input_auth_code": {
+                "data": {
+                    "auth_code": "Kode Otorisasi"
+                },
+                "description": "Masukkan kode otorisasi dari URL aplikasi web SimpliSafe:",
+                "title": "Selesaikan Otorisasi"
+            },
             "mfa": {
                 "description": "Periksa email Anda untuk mendapatkan tautan dari SimpliSafe. Setelah memverifikasi tautan, kembali ke sini untuk menyelesaikan instalasi integrasi.",
                 "title": "Autentikasi Multi-Faktor SimpliSafe"
@@ -28,6 +36,7 @@
                     "password": "Kata Sandi",
                     "username": "Email"
                 },
+                "description": "Sejak tahun 2021, SimpliSafe telah berpindah ke mekanisme autentikasi baru melalui aplikasi webnya. Karena keterbatasan teknis, ada langkah manual di akhir proses ini; pastikan Anda membaca [dokumentasi] (http://home-assistant.io/integrations/simplisafe#getting-an-authorization-code) sebelum memulai.\n\nJika siap, klik [di sini]({url}) untuk membuka aplikasi web SimpliSafe dan masukkan kredensial Anda. Setelah proses selesai, kembali ke sini dan klik Kirim.",
                 "title": "Isi informasi Anda."
             }
         }

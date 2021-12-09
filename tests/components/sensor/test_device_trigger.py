@@ -86,7 +86,7 @@ async def test_get_triggers(hass, device_reg, entity_reg, enable_custom_integrat
         if device_class != "none"
     ]
     triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
-    assert len(triggers) == 23
+    assert len(triggers) == 24
     assert triggers == expected_triggers
 
 
@@ -122,7 +122,7 @@ async def test_get_trigger_capabilities(
         "test",
         platform.ENTITIES["battery"].unique_id,
         device_id=device_entry.id,
-        device_class=device_class_reg,
+        original_device_class=device_class_reg,
         unit_of_measurement=unit_reg,
     ).entity_id
     if set_state:

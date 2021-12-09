@@ -94,10 +94,10 @@ class AirSensor(SensorEntity):
 
     ICON = "mdi:cloud-outline"
 
-    def __init__(self, name, APIdata):
+    def __init__(self, name, api_data):
         """Initialize the sensor."""
         self._name = name
-        self._api_data = APIdata
+        self._api_data = api_data
         self._site_data = None
         self._state = None
         self._updated = None

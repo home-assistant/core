@@ -1,0 +1,10 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Nie uda\u0142o si\u0119 po\u0142\u0105czy\u0107",
+            "invalid_auth": "Niepoprawna autentykacja",
+            "invalid_station": "Nie mo\u017cna znale\u017a\u0107 stacji pogodowej o podanej nazwie",
+            "more_stations": "Znaleziono wiele stacji pogodowych o podanej nazwie"
+        }
+    }
+}

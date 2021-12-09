@@ -10,7 +10,13 @@ from requests.exceptions import RequestException
 
 from homeassistant import exceptions
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_HOST, CONF_PLATFORM, CONF_PORT, CONF_TOKEN
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PLATFORM,
+    CONF_PORT,
+    CONF_TOKEN,
+    Platform,
+)
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -30,7 +36,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["binary_sensor", "lock"]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.LOCK]
 UPDATE_INTERVAL = timedelta(seconds=30)
 
 

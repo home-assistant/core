@@ -10,6 +10,9 @@
         },
         "step": {
             "user": {
+                "data": {
+                    "device": "Cihaz"
+                },
                 "title": "Modeme ba\u011flan\u0131n"
             }
         }

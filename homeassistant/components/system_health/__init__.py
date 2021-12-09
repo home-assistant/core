@@ -64,7 +64,7 @@ async def get_integration_info(
 ):
     """Get integration system health."""
     try:
-        with async_timeout.timeout(INFO_CALLBACK_TIMEOUT):
+        async with async_timeout.timeout(INFO_CALLBACK_TIMEOUT):
             data = await registration.info_callback(hass)
     except asyncio.TimeoutError:
         data = {"error": {"type": "failed", "error": "timeout"}}

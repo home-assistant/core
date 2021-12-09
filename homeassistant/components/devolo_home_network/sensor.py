@@ -7,10 +7,15 @@ from typing import Any
 
 from devolo_plc_api.device import Device
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
@@ -39,6 +44,7 @@ class DevoloSensorEntityDescription(
 SENSOR_TYPES: dict[str, DevoloSensorEntityDescription] = {
     CONNECTED_PLC_DEVICES: DevoloSensorEntityDescription(
         key=CONNECTED_PLC_DEVICES,
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         icon="mdi:lan",
         name="Connected PLC devices",
@@ -51,10 +57,12 @@ SENSOR_TYPES: dict[str, DevoloSensorEntityDescription] = {
         entity_registry_enabled_default=True,
         icon="mdi:wifi",
         name="Connected Wifi clients",
+        state_class=SensorStateClass.MEASUREMENT,
         value_func=lambda data: len(data["connected_stations"]),
     ),
     NEIGHBORING_WIFI_NETWORKS: DevoloSensorEntityDescription(
         key=NEIGHBORING_WIFI_NETWORKS,
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         icon="mdi:wifi-marker",
         name="Neighboring Wifi networks",
@@ -64,7 +72,7 @@ SENSOR_TYPES: dict[str, DevoloSensorEntityDescription] = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Get all devices and sensors and setup them via config entry."""
     device: Device = hass.data[DOMAIN][entry.entry_id]["device"]

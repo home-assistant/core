@@ -7,11 +7,25 @@
             "cannot_connect": "Failed to connect"
         },
         "step": {
-            "user": {
+            "cloud": {
                 "data": {
                     "password": "Password",
                     "username": "Username"
                 }
+            },
+            "local": {
+                "data": {
+                    "ip_address": "IP Address"
+                },
+                "description": "Local IP address of the device."
+            },
+            "user": {
+                "data": {
+                    "connection_type": "Select connection type",
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "description": "Select connection type. Local requires generation 3 heaters"
             }
         }
     }

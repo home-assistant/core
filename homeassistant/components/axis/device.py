@@ -280,7 +280,7 @@ async def get_device(hass, host, port, username, password):
     )
 
     try:
-        with async_timeout.timeout(30):
+        async with async_timeout.timeout(30):
             await device.vapix.initialize()
 
         return device

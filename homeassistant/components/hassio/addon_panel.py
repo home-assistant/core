@@ -21,8 +21,7 @@ async def async_setup_addon_panel(hass: HomeAssistant, hassio):
     hass.http.register_view(hassio_addon_panel)
 
     # If panels are exists
-    panels = await hassio_addon_panel.get_panels()
-    if not panels:
+    if not (panels := await hassio_addon_panel.get_panels()):
         return
 
     # Register available panels

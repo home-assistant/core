@@ -3,10 +3,9 @@ import json
 import logging
 
 from homeassistant.components import mqtt
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import (
     DEGREE,
-    DEVICE_CLASS_TEMPERATURE,
     PRECIPITATION_INCHES,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
@@ -37,7 +36,7 @@ def discover_sensors(topic, payload):
         else:
             unit = TEMP_CELSIUS
         return ArwnSensor(
-            topic, name, "temp", unit, device_class=DEVICE_CLASS_TEMPERATURE
+            topic, name, "temp", unit, device_class=SensorDeviceClass.TEMPERATURE
         )
     if domain == "moisture":
         name = f"{parts[2]} Moisture"

@@ -1,0 +1,21 @@
+{
+    "options": {
+        "step": {
+            "usb_config": {
+                "data": {
+                    "usb_path": "Chemin du p\u00e9riph\u00e9rique USB"
+                }
+            },
+            "usb_config_option": {
+                "data": {
+                    "usb_path": "Chemin du p\u00e9riph\u00e9rique USB"
+                }
+            },
+            "usb_manual_config": {
+                "data": {
+                    "usb_manual_path": "Chemin du p\u00e9riph\u00e9rique USB"
+                }
+            }
+        }
+    }
+}

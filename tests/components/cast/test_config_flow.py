@@ -245,7 +245,7 @@ async def test_option_flow(hass, parameter_data):
     assert dict(config_entry.data) == expected_data
 
 
-async def test_known_hosts(hass, castbrowser_mock, castbrowser_constructor_mock):
+async def test_known_hosts(hass, castbrowser_mock):
     """Test known hosts is passed to pychromecasts."""
     result = await hass.config_entries.flow.async_init(
         "cast", context={"source": config_entries.SOURCE_USER}
@@ -257,12 +257,9 @@ async def test_known_hosts(hass, castbrowser_mock, castbrowser_constructor_mock)
     await hass.async_block_till_done()
     config_entry = hass.config_entries.async_entries("cast")[0]
 
-    assert castbrowser_mock.start_discovery.call_count == 1
-    castbrowser_constructor_mock.assert_called_once_with(
-        ANY, ANY, ["192.168.0.1", "192.168.0.2"]
-    )
+    assert castbrowser_mock.return_value.start_discovery.call_count == 1
+    castbrowser_mock.assert_called_once_with(ANY, ANY, ["192.168.0.1", "192.168.0.2"])
     castbrowser_mock.reset_mock()
-    castbrowser_constructor_mock.reset_mock()
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     result = await hass.config_entries.options.async_configure(
@@ -272,8 +269,8 @@ async def test_known_hosts(hass, castbrowser_mock, castbrowser_constructor_mock)
 
     await hass.async_block_till_done()
 
-    castbrowser_mock.start_discovery.assert_not_called()
-    castbrowser_constructor_mock.assert_not_called()
-    castbrowser_mock.host_browser.update_hosts.assert_called_once_with(
+    castbrowser_mock.return_value.start_discovery.assert_not_called()
+    castbrowser_mock.assert_not_called()
+    castbrowser_mock.return_value.host_browser.update_hosts.assert_called_once_with(
         ["192.168.0.11", "192.168.0.12"]
     )
