@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime
+import logging
 from typing import Any
 
 import voluptuous as vol
@@ -13,8 +14,8 @@ from homeassistant.components.sensor import (
     ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA,
     STATE_CLASSES_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
-    SensorEntityDeviceClass,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -55,6 +56,7 @@ LEGACY_FIELDS = {
     CONF_VALUE_TEMPLATE: CONF_STATE,
 }
 
+
 SENSOR_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
@@ -87,6 +89,7 @@ LEGACY_SENSOR_SCHEMA = vol.All(
         }
     ),
 )
+_LOGGER = logging.getLogger(__name__)
 
 
 def extra_validation_checks(val):
@@ -181,6 +184,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
+# class SensorTemplateMixin(SensorEntity):
+#     """Mixin for template sensors."""
+
+#     def
+
+
 class SensorTemplate(TemplateEntity, SensorEntity):
     """Representation of a Template Sensor."""
 
@@ -233,17 +242,42 @@ class SensorTemplate(TemplateEntity, SensorEntity):
             self._attr_native_value = None
             return
 
-        if (
-            self.device_class
-            in (
-                SensorEntityDeviceClass.DATE,
-                SensorEntityDeviceClass.DATETIME,
-            )
-            and (result := dt_util.parse_datetime(result)) is not None
-        ) and self.device_class == SensorEntityDeviceClass.DATE:
-            result = result.date()
+        if result is None or self.device_class not in (
+            SensorDeviceClass.DATE,
+            SensorDeviceClass.TIMESTAMP,
+        ):
+            self._attr_native_value = result
+            return
 
-        self._attr_native_value = result
+        if self.device_class == SensorDeviceClass.TIMESTAMP:
+            if (parsed_timestamp := dt_util.parse_datetime(result)) is None:
+                _LOGGER.warning(
+                    "%s rendered invalid timestamp: %s", self.entity_id, result
+                )
+                self._attr_native_value = None
+                return
+
+            if parsed_timestamp.tzinfo is None:
+                _LOGGER.warning(
+                    "%s rendered timestamp without timezone: %s", self.entity_id, result
+                )
+                self._attr_native_value = None
+                return
+
+            self._attr_native_value = parsed_timestamp
+            self._valid_result = True
+            return
+
+        # Date device class
+        parsed_date = dt_util.parse_date(result)
+
+        if parsed_date is not None:
+            self._attr_native_value = parsed_date
+            self._valid_result = True
+            return
+
+        _LOGGER.warning("%s rendered invalid date %s", self.entity_id, result)
+        self._attr_native_value = None
 
 
 class TriggerSensorEntity(TriggerEntity, SensorEntity):
@@ -255,23 +289,50 @@ class TriggerSensorEntity(TriggerEntity, SensorEntity):
     @property
     def native_value(self) -> str | datetime | date | None:
         """Return state of the sensor."""
-        state = self._rendered.get(CONF_STATE)
-        if (
-            state is not None
-            and self.device_class
-            in (
-                SensorEntityDeviceClass.DATE,
-                SensorEntityDeviceClass.DATETIME,
-            )
-            and (parsed_state := dt_util.parse_datetime(state)) is not None
-        ):
-            if self.device_class == SensorEntityDeviceClass.DATE:
-                return parsed_state.date()
-            return parsed_state
-
-        return state
+        return self._rendered.get(CONF_STATE)
 
     @property
     def state_class(self) -> str | None:
         """Sensor state class."""
         return self._config.get(CONF_STATE_CLASS)
+
+    @callback
+    def _process_data(self) -> None:
+        """Process new data."""
+        super()._process_data()
+
+        if (
+            state := self._rendered.get(CONF_STATE)
+        ) is None or self.device_class not in (
+            SensorDeviceClass.DATE,
+            SensorDeviceClass.TIMESTAMP,
+        ):
+            return
+
+        if self.device_class == SensorDeviceClass.TIMESTAMP:
+            if (parsed_timestamp := dt_util.parse_datetime(state)) is None:
+                _LOGGER.warning(
+                    "%s rendered invalid timestamp: %s", self.entity_id, state
+                )
+                self._rendered = self._static_rendered
+                return
+
+            if parsed_timestamp.tzinfo is None:
+                _LOGGER.warning(
+                    "%s rendered timestamp without timezone: %s", self.entity_id, state
+                )
+                self._rendered = self._static_rendered
+                return
+
+            self._rendered[CONF_STATE] = parsed_timestamp
+            return
+
+        # Date device class
+        parsed_date = dt_util.parse_date(state)
+
+        if parsed_date is not None:
+            self._rendered[CONF_STATE] = parsed_date
+            return
+
+        _LOGGER.warning("%s rendered invalid date %s", self.entity_id, state)
+        self._rendered = self._static_rendered
