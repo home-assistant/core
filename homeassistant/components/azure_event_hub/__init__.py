@@ -3,9 +3,10 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
-from datetime import datetime
 import json
 import logging
+import time
+from typing import Any
 
 from azure.eventhub import EventData, EventDataBatch
 from azure.eventhub.exceptions import EventHubError
@@ -19,7 +20,6 @@ from homeassistant.helpers.entityfilter import FILTER_SCHEMA
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.dt import utcnow
 
 from .client import AzureEventHubClient
 from .const import (
@@ -103,8 +103,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Update listener for options."""
-    hass.data[DOMAIN][DATA_HUB].send_interval = entry.options[CONF_SEND_INTERVAL]
-    hass.data[DOMAIN][DATA_HUB].max_delay = entry.options[CONF_MAX_DELAY]
+    hass.data[DOMAIN][DATA_HUB].update_options(entry.options)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -126,13 +125,13 @@ class AzureEventHub:
     ) -> None:
         """Initialize the listener."""
         self.hass = hass
-        self._queue: asyncio.PriorityQueue[  # pylint: disable=unsubscriptable-object
-            tuple[int, tuple[datetime, Event | None]]
+        self.queue: asyncio.PriorityQueue[  # pylint: disable=unsubscriptable-object
+            tuple[int, tuple[float, Event | None]]
         ] = asyncio.PriorityQueue()
         self._client = client
         self._entities_filter = entities_filter
-        self.send_interval = send_interval
-        self.max_delay = max_delay
+        self._send_interval = send_interval
+        self._max_delay = max_delay
         self._listener_remover: Callable[[], None] | None = None
         self._next_send_remover: Callable[[], None] | None = None
         self.shutdown = False
@@ -148,7 +147,7 @@ class AzureEventHub:
         )
         # schedule the first send after 10 seconds to capture startup events, after that each send will schedule the next after the interval.
         self._next_send_remover = async_call_later(
-            self.hass, self.send_interval, self.async_send
+            self.hass, self._send_interval, self.async_send
         )
         return True
 
@@ -158,7 +157,7 @@ class AzureEventHub:
             self._next_send_remover()
         if self._listener_remover:
             self._listener_remover()
-        await self._queue.put((3, (utcnow(), None)))
+        await self.queue.put((3, (time.monotonic(), None)))
         await self.async_send(None)
         return True
 
@@ -168,24 +167,32 @@ class AzureEventHub:
 
     async def async_listen(self, event: Event) -> None:
         """Listen for new messages on the bus and queue them for AEH."""
-        await self._queue.put((2, (event.time_fired, event)))
+        await self.queue.put((2, (time.monotonic(), event)))
 
     async def async_send(self, _) -> None:
         """Write preprocessed events to eventhub, with retry."""
         async with self._client.client as client:
-            while not self._queue.empty():
-                data_batch = await self.fill_batch(client)
+            while not self.queue.empty():
+                data_batch, dequeue_count = await self.fill_batch(client)
+                _LOGGER.debug(
+                    "Sending %d event(s), out of %d events in the queue",
+                    len(data_batch),
+                    dequeue_count,
+                )
                 try:
                     await client.send_batch(data_batch)
                 except EventHubError as exc:
                     _LOGGER.error("Error in sending events to Event Hub: %s", exc)
+                finally:
+                    for _ in range(dequeue_count):
+                        self.queue.task_done()
 
         if not self.shutdown:
             self._next_send_remover = async_call_later(
-                self.hass, self.send_interval, self.async_send
+                self.hass, self._send_interval, self.async_send
             )
 
-    async def fill_batch(self, client) -> EventDataBatch:
+    async def fill_batch(self, client) -> tuple[EventDataBatch, int]:
         """Return a batch of events formatted for writing.
 
         Uses get_nowait instead of await get, because the functions batches and doesn't wait for each single event, the send function is called.
@@ -197,39 +204,31 @@ class AzureEventHub:
         dropped = 0
         while not self.shutdown:
             try:
-                _, (timestamp, event) = self._queue.get_nowait()
+                _, (timestamp, event) = self.queue.get_nowait()
             except asyncio.QueueEmpty:
                 break
             dequeue_count += 1
             if event is None:
                 self.shutdown = True
                 break
-
-            if (utcnow() - timestamp).seconds > self.max_delay + self.send_interval:
+            event_data = self._event_to_filtered_event_data(event)
+            if not event_data:
+                continue
+            if time.monotonic() - timestamp <= self._max_delay:
+                try:
+                    event_batch.add(event_data)
+                except ValueError:
+                    self.queue.put_nowait((1, (timestamp, event)))
+                    break
+            else:
                 dropped += 1
-                continue
-            if not (event_data := self._event_to_filtered_event_data(event)):
-                continue
-
-            try:
-                event_batch.add(event_data)
-            except ValueError:
-                self._queue.put_nowait((1, (event.time_fired, event)))
-                break
 
         if dropped:
             _LOGGER.warning(
                 "Dropped %d old events, consider increasing the max_delay", dropped
             )
 
-        _LOGGER.debug(
-            "Sending %d event(s), out of %d events in the queue",
-            len(event_batch),
-            dequeue_count,
-        )
-        for _ in range(dequeue_count):
-            self._queue.task_done()
-        return event_batch
+        return event_batch, dequeue_count
 
     def _event_to_filtered_event_data(self, event: Event) -> EventData | None:
         """Filter event states and create EventData object."""
@@ -241,3 +240,8 @@ class AzureEventHub:
         ):
             return None
         return EventData(json.dumps(obj=state, cls=JSONEncoder).encode("utf-8"))
+
+    def update_options(self, new_options: dict[str, Any]) -> None:
+        """Update options."""
+        self._send_interval = new_options[CONF_SEND_INTERVAL]
+        self._max_delay = new_options[CONF_MAX_DELAY]

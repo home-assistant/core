@@ -2,12 +2,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import logging
 
 from azure.eventhub.aio import EventHubProducerClient, EventHubSharedKeyCredential
 
-from homeassistant.exceptions import HomeAssistantError
-
 from .const import ADDITIONAL_ARGS, CONF_EVENT_HUB_CON_STRING
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -29,18 +30,8 @@ class AzureEventHubClient:
     def from_input(cls, **kwargs) -> AzureEventHubClient:
         """Create the right class."""
         if CONF_EVENT_HUB_CON_STRING in kwargs:
-            try:
-                return AzureEventHubClientConnectionString(**kwargs)
-            except TypeError as exc:
-                raise ClientCreationError(
-                    "Could not create AEH client from connection string."
-                ) from exc
-        try:
-            return AzureEventHubClientSAS(**kwargs)
-        except TypeError as exc:
-            raise ClientCreationError(
-                "Could not create AEH client from SAS credentials"
-            ) from exc
+            return AzureEventHubClientConnectionString(**kwargs)
+        return AzureEventHubClientSAS(**kwargs)
 
 
 @dataclass
@@ -78,7 +69,3 @@ class AzureEventHubClientSAS(AzureEventHubClient):
             ),
             **ADDITIONAL_ARGS,
         )
-
-
-class ClientCreationError(HomeAssistantError):
-    """Error creating client."""

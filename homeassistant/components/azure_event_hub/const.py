@@ -19,7 +19,6 @@ DATA_HUB = "hub"
 STEP_USER = "user"
 STEP_SAS = "sas"
 STEP_CONN_STRING = "conn_string"
-STEP_IMPORT = "import"
 
 DEFAULT_SEND_INTERVAL: int = 5
 DEFAULT_MAX_DELAY: int = 30

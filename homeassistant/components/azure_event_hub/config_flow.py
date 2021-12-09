@@ -12,7 +12,7 @@ from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
-from .client import AzureEventHubClient, ClientCreationError
+from .client import AzureEventHubClient
 from .const import (
     CONF_EVENT_HUB_CON_STRING,
     CONF_EVENT_HUB_INSTANCE_NAME,
@@ -25,7 +25,6 @@ from .const import (
     DEFAULT_OPTIONS,
     DOMAIN,
     STEP_CONN_STRING,
-    STEP_IMPORT,
     STEP_SAS,
     STEP_USER,
 )
@@ -54,21 +53,12 @@ SAS_SCHEMA = vol.Schema(
 )
 
 
-async def validate_data(data: dict[str, Any], step_id: str) -> dict[str, str] | None:
+async def validate_data(data: dict[str, Any]) -> dict[str, str] | None:
     """Validate the input."""
+    client = AzureEventHubClient.from_input(**data)
     try:
-        client = AzureEventHubClient.from_input(**data)
-        _LOGGER.warning("Client: %s", client)
-    except ClientCreationError:
-        return {"base": f"invalid_{step_id}"}
-    except Exception:  # pylint: disable=broad-except
-        return {"base": "unknown"}
-
-    try:
-        _LOGGER.warning("Testing connection with client: %s", client)
         await client.test_connection()
     except EventHubError:
-        _LOGGER.warning("Event hub error")
         return {"base": "cannot_connect"}
     except Exception as exc:  # pylint: disable=broad-except
         _LOGGER.warning("Unknown error: %s", exc)
@@ -81,17 +71,17 @@ class AEHConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION: int = 1
 
-    @staticmethod
-    @callback
-    def async_get_options_flow(config_entry):
-        """Get the options flow for this handler."""
-        return AEHOptionsFlowHandler(config_entry)
-
     def __init__(self):
         """Initialize the config flow."""
         self._data: dict[str, Any] = {}
         self._options: dict[str, Any] = DEFAULT_OPTIONS
         self._conn_string: bool | None = None
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Get the options flow for this handler."""
+        return AEHOptionsFlowHandler(config_entry)
 
     async def async_step_user(self, user_input: dict[str, Any] = None) -> FlowResult:
         """Handle the initial user step."""
@@ -99,8 +89,13 @@ class AEHConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="single_instance_allowed")
         if user_input is None:
             return self.async_show_form(step_id=STEP_USER, data_schema=BASE_SCHEMA)
-        self._update_data(user_input, STEP_USER)
-        return await self.async_route(STEP_USER)
+
+        self._conn_string = user_input.pop(CONF_USE_CONN_STRING)
+        self._data = user_input
+
+        if self._conn_string:
+            return await self.async_step_conn_string()
+        return await self.async_step_sas()
 
     async def async_step_conn_string(
         self, user_input: dict[str, Any] = None
@@ -113,9 +108,7 @@ class AEHConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 description_placeholders=self._data[CONF_EVENT_HUB_INSTANCE_NAME],
                 last_step=True,
             )
-
-        self._update_data(user_input, STEP_CONN_STRING)
-        errors = await validate_data(self._data, STEP_CONN_STRING)
+        errors = await self.async_update_and_validate_data(user_input)
         if errors is not None:
             return self.async_show_form(
                 step_id=STEP_CONN_STRING,
@@ -124,7 +117,12 @@ class AEHConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 description_placeholders=self._data[CONF_EVENT_HUB_INSTANCE_NAME],
                 last_step=True,
             )
-        return await self.async_route(STEP_CONN_STRING)
+
+        return self.async_create_entry(
+            title=self._data[CONF_EVENT_HUB_INSTANCE_NAME],
+            data=self._data,
+            options=self._options,
+        )
 
     async def async_step_sas(self, user_input: dict[str, Any] = None) -> FlowResult:
         """Handle the sas steps."""
@@ -135,8 +133,8 @@ class AEHConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 description_placeholders=self._data[CONF_EVENT_HUB_INSTANCE_NAME],
                 last_step=True,
             )
-        self._update_data(user_input, STEP_SAS)
-        errors = await validate_data(self._data, STEP_SAS)
+
+        errors = await self.async_update_and_validate_data(user_input)
         if errors is not None:
             return self.async_show_form(
                 step_id=STEP_SAS,
@@ -146,40 +144,33 @@ class AEHConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 last_step=True,
             )
 
-        return await self.async_route(STEP_SAS)
-
-    async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
-        """Import config from configuration.yaml."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-        self._update_data(import_config, STEP_IMPORT)
-        return await self.async_route(STEP_IMPORT)
-
-    async def async_route(self, step_id: str) -> FlowResult:
-        """Handle the user_input, check if configured and route to the right next step or create entry."""
-        if step_id == STEP_USER and self._conn_string is not None:
-            if self._conn_string:
-                return await self.async_step_conn_string()
-            return await self.async_step_sas()
         return self.async_create_entry(
             title=self._data[CONF_EVENT_HUB_INSTANCE_NAME],
             data=self._data,
             options=self._options,
         )
 
-    def _update_data(self, user_input: dict[str, Any], step_id: str) -> None:
-        """Parse the user_input and store in data and options attributes."""
-        if step_id in (STEP_CONN_STRING, STEP_SAS):
-            self._data.update(user_input)
-            return
-        if step_id == STEP_USER:
-            self._conn_string = user_input.pop(CONF_USE_CONN_STRING)
-        if step_id == STEP_IMPORT:
-            if CONF_SEND_INTERVAL in user_input:
-                self._options[CONF_SEND_INTERVAL] = user_input.pop(CONF_SEND_INTERVAL)
-            if CONF_MAX_DELAY in user_input:
-                self._options[CONF_MAX_DELAY] = user_input.pop(CONF_MAX_DELAY)
-        self._data = user_input
+    async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
+        """Import config from configuration.yaml."""
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
+        if CONF_SEND_INTERVAL in import_config:
+            self._options[CONF_SEND_INTERVAL] = import_config.pop(CONF_SEND_INTERVAL)
+        if CONF_MAX_DELAY in import_config:
+            self._options[CONF_MAX_DELAY] = import_config.pop(CONF_MAX_DELAY)
+        self._data = import_config
+        return self.async_create_entry(
+            title=self._data[CONF_EVENT_HUB_INSTANCE_NAME],
+            data=self._data,
+            options=self._options,
+        )
+
+    async def async_update_and_validate_data(
+        self, user_input: dict[str, Any]
+    ) -> dict[str, str] | None:
+        """Validate the input."""
+        self._data.update(user_input)
+        return await validate_data(self._data)
 
 
 class AEHOptionsFlowHandler(config_entries.OptionsFlow):

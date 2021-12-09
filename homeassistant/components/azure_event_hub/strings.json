@@ -9,7 +9,7 @@
           }
         },
         "conn_string": {
-          "title": "Connection string method",
+          "title": "Connection String method",
           "description": "Please enter the connection string for: {event_hub_instance_name}",
           "data": {
             "event_hub_connection_string": "Event Hub Connection String"
@@ -26,8 +26,6 @@
         }
       },
       "error": {
-        "invalid_sas": "Invalid SAS credentials",
-        "invalid_conn_string": "Invalid connection string",
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
         "unknown": "[%key:common::config_flow::error::unknown%]"
       },
