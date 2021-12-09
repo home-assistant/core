@@ -776,7 +776,7 @@ async def test_renaming_entity_name(hass, hass_client):
     assert "climate.heatpump" in registry.entities
     registry.async_update_entity(
         entity_id="sensor.outside_temperature",
-        name="Inside Temperature",
+        name="Outside Temperature Renamed",
     )
     registry.async_update_entity(
         entity_id="climate.heatpump",
@@ -817,13 +817,13 @@ async def test_renaming_entity_name(hass, hass_client):
     assert (
         'sensor_temperature_celsius{domain="sensor",'
         'entity="sensor.outside_temperature",'
-        'friendly_name="Inside Temperature"} 15.6' in body
+        'friendly_name="Outside Temperature Renamed"} 15.6' in body
     )
 
     assert (
         'entity_available{domain="sensor",'
         'entity="sensor.outside_temperature",'
-        'friendly_name="Inside Temperature"} 1.0' in body
+        'friendly_name="Outside Temperature Renamed"} 1.0' in body
     )
 
     # Keep other sensors
