@@ -1,13 +1,14 @@
 """Support for HERE travel time sensors."""
 from __future__ import annotations
 
-from datetime import datetime, time, timedelta
+from datetime import timedelta
 import logging
 
 import herepy
 from herepy.here_enum import RouteMode
 import voluptuous as vol
 
+from homeassistant.components.here_travel_time import HERETravelTimeData
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -18,15 +19,13 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM,
     CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_UNIT_SYSTEM_METRIC,
-    EVENT_HOMEASSISTANT_START,
     TIME_MINUTES,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.location import find_coordinates
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import dt
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -184,12 +183,21 @@ async def async_setup_platform(
     departure = config.get(CONF_DEPARTURE)
 
     here_data = HERETravelTimeData(
-        here_client, travel_mode, traffic_mode, route_mode, units, arrival, departure
+        hass,
+        here_client,
+        origin,
+        destination,
+        origin_entity_id,
+        destination_entity_id,
+        travel_mode,
+        route_mode,
+        units,
+        arrival,
+        departure,
     )
+    await here_data.async_setup()
 
-    sensor = HERETravelTimeSensor(
-        name, origin, destination, origin_entity_id, destination_entity_id, here_data
-    )
+    sensor = HERETravelTimeSensor(name, traffic_mode, here_data)
 
     async_add_entities([sensor])
 
@@ -216,55 +224,32 @@ def _are_valid_client_credentials(here_client: herepy.RoutingApi) -> bool:
     return True
 
 
-class HERETravelTimeSensor(SensorEntity):
+class HERETravelTimeSensor(SensorEntity, CoordinatorEntity):
     """Representation of a HERE travel time sensor."""
 
     def __init__(
         self,
         name: str,
-        origin: str,
-        destination: str,
-        origin_entity_id: str,
-        destination_entity_id: str,
+        traffic_mode: str,
         here_data: HERETravelTimeData,
     ) -> None:
         """Initialize the sensor."""
         self._name = name
-        self._origin_entity_id = origin_entity_id
-        self._destination_entity_id = destination_entity_id
+        self._traffic_mode = traffic_mode
         self._here_data = here_data
-        self._unit_of_measurement = TIME_MINUTES
-        self._attrs = {
-            ATTR_UNIT_SYSTEM: self._here_data.units,
-            ATTR_MODE: self._here_data.travel_mode,
-            ATTR_TRAFFIC_MODE: self._here_data.traffic_mode,
-        }
-        if self._origin_entity_id is None:
-            self._here_data.origin = origin
-
-        if self._destination_entity_id is None:
-            self._here_data.destination = destination
-
-    async def async_added_to_hass(self) -> None:
-        """Delay the sensor update to avoid entity not found warnings."""
-
-        @callback
-        def delayed_sensor_update(event):
-            """Update sensor after Home Assistant started."""
-            self.async_schedule_update_ha_state(True)
-
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, delayed_sensor_update
-        )
+        assert here_data.coordinator is not None
+        super().__init__(here_data.coordinator)
 
     @property
     def native_value(self) -> str | None:
         """Return the state of the sensor."""
-        if self._here_data.traffic_mode and self._here_data.traffic_time is not None:
-            return str(round(self._here_data.traffic_time / 60))
-        if self._here_data.base_time is not None:
-            return str(round(self._here_data.base_time / 60))
-
+        if self.coordinator.data is not None:
+            if self._traffic_mode:
+                if (time := self.coordinator.data.get("traffic_time")) is not None:
+                    return str(round(time / 60))
+            else:
+                if (time := self.coordinator.data.get("base_time")) is not None:
+                    return str(round(time / 60))
         return None
 
     @property
@@ -277,26 +262,29 @@ class HERETravelTimeSensor(SensorEntity):
         self,
     ) -> dict[str, None | float | str | bool] | None:
         """Return the state attributes."""
-        if self._here_data.base_time is None:
-            return None
-
-        res = self._attrs
-        if self._here_data.attribution is not None:
-            res[ATTR_ATTRIBUTION] = self._here_data.attribution
-        res[ATTR_DURATION] = self._here_data.base_time / 60
-        res[ATTR_DISTANCE] = self._here_data.distance
-        res[ATTR_ROUTE] = self._here_data.route
-        res[ATTR_DURATION_IN_TRAFFIC] = self._here_data.traffic_time / 60
-        res[ATTR_ORIGIN] = self._here_data.origin
-        res[ATTR_DESTINATION] = self._here_data.destination
-        res[ATTR_ORIGIN_NAME] = self._here_data.origin_name
-        res[ATTR_DESTINATION_NAME] = self._here_data.destination_name
-        return res
+        if self.coordinator.data is not None:
+            res = {
+                ATTR_UNIT_SYSTEM: self._here_data.units,
+                ATTR_MODE: self._here_data.travel_mode,
+                ATTR_TRAFFIC_MODE: self._traffic_mode,
+                ATTR_DURATION: self.coordinator.data["base_time"] / 60,
+                ATTR_DISTANCE: self.coordinator.data["distance"],
+                ATTR_ROUTE: self.coordinator.data["route"],
+                ATTR_DURATION_IN_TRAFFIC: self.coordinator.data["traffic_time"] / 60,
+                ATTR_ORIGIN: self.coordinator.data["origin"],
+                ATTR_DESTINATION: self.coordinator.data["destination"],
+                ATTR_ORIGIN_NAME: self.coordinator.data["origin_name"],
+                ATTR_DESTINATION_NAME: self.coordinator.data["destination_name"],
+            }
+            if (attribution := self.coordinator.data.get("attribution")) is not None:
+                res[ATTR_ATTRIBUTION] = attribution
+            return res
+        return None
 
     @property
     def native_unit_of_measurement(self) -> str:
         """Return the unit this state is expressed in."""
-        return self._unit_of_measurement
+        return TIME_MINUTES
 
     @property
     def icon(self) -> str:
@@ -310,142 +298,3 @@ class HERETravelTimeSensor(SensorEntity):
         if self._here_data.travel_mode == TRAVEL_MODE_TRUCK:
             return ICON_TRUCK
         return ICON_CAR
-
-    async def async_update(self) -> None:
-        """Update Sensor Information."""
-        # Convert device_trackers to HERE friendly location
-        if self._origin_entity_id is not None:
-            self._here_data.origin = find_coordinates(self.hass, self._origin_entity_id)
-
-        if self._destination_entity_id is not None:
-            self._here_data.destination = find_coordinates(
-                self.hass, self._destination_entity_id
-            )
-
-        await self.hass.async_add_executor_job(self._here_data.update)
-
-
-class HERETravelTimeData:
-    """HERETravelTime data object."""
-
-    def __init__(
-        self,
-        here_client: herepy.RoutingApi,
-        travel_mode: str,
-        traffic_mode: bool,
-        route_mode: str,
-        units: str,
-        arrival: datetime,
-        departure: datetime,
-    ) -> None:
-        """Initialize herepy."""
-        self.origin = None
-        self.destination = None
-        self.travel_mode = travel_mode
-        self.traffic_mode = traffic_mode
-        self.route_mode = route_mode
-        self.arrival = arrival
-        self.departure = departure
-        self.attribution = None
-        self.traffic_time = None
-        self.distance = None
-        self.route = None
-        self.base_time = None
-        self.origin_name = None
-        self.destination_name = None
-        self.units = units
-        self._client = here_client
-        self.combine_change = True
-
-    def update(self) -> None:
-        """Get the latest data from HERE."""
-        if self.traffic_mode:
-            traffic_mode = TRAFFIC_MODE_ENABLED
-        else:
-            traffic_mode = TRAFFIC_MODE_DISABLED
-
-        if self.destination is not None and self.origin is not None:
-            # Convert location to HERE friendly location
-            destination = self.destination.split(",")
-            origin = self.origin.split(",")
-            if (arrival := self.arrival) is not None:
-                arrival = convert_time_to_isodate(arrival)
-            if (departure := self.departure) is not None:
-                departure = convert_time_to_isodate(departure)
-
-            if departure is None and arrival is None:
-                departure = "now"
-
-            _LOGGER.debug(
-                "Requesting route for origin: %s, destination: %s, route_mode: %s, mode: %s, traffic_mode: %s, arrival: %s, departure: %s",
-                origin,
-                destination,
-                herepy.RouteMode[self.route_mode],
-                herepy.RouteMode[self.travel_mode],
-                herepy.RouteMode[traffic_mode],
-                arrival,
-                departure,
-            )
-
-            try:
-                response = self._client.public_transport_timetable(
-                    origin,
-                    destination,
-                    self.combine_change,
-                    [
-                        herepy.RouteMode[self.route_mode],
-                        herepy.RouteMode[self.travel_mode],
-                        herepy.RouteMode[traffic_mode],
-                    ],
-                    arrival=arrival,
-                    departure=departure,
-                )
-            except herepy.NoRouteFoundError:
-                # Better error message for cryptic no route error codes
-                _LOGGER.error(NO_ROUTE_ERROR_MESSAGE)
-                return
-
-            _LOGGER.debug("Raw response is: %s", response.response)
-
-            source_attribution = response.response.get("sourceAttribution")
-            if source_attribution is not None:
-                self.attribution = self._build_hass_attribution(source_attribution)
-            route = response.response["route"]
-            summary = route[0]["summary"]
-            waypoint = route[0]["waypoint"]
-            self.base_time = summary["baseTime"]
-            if self.travel_mode in TRAVEL_MODES_VEHICLE:
-                self.traffic_time = summary["trafficTime"]
-            else:
-                self.traffic_time = self.base_time
-            distance = summary["distance"]
-            if self.units == CONF_UNIT_SYSTEM_IMPERIAL:
-                # Convert to miles.
-                self.distance = distance / 1609.344
-            else:
-                # Convert to kilometers
-                self.distance = distance / 1000
-            self.route = response.route_short
-            self.origin_name = waypoint[0]["mappedRoadName"]
-            self.destination_name = waypoint[1]["mappedRoadName"]
-
-    @staticmethod
-    def _build_hass_attribution(source_attribution: dict) -> str | None:
-        """Build a hass frontend ready string out of the sourceAttribution."""
-        suppliers = source_attribution.get("supplier")
-        if suppliers is not None:
-            supplier_titles = []
-            for supplier in suppliers:
-                if (title := supplier.get("title")) is not None:
-                    supplier_titles.append(title)
-            joined_supplier_titles = ",".join(supplier_titles)
-            attribution = f"With the support of {joined_supplier_titles}. All information is provided without warranty of any kind."
-            return attribution
-
-
-def convert_time_to_isodate(simple_time: time) -> str:
-    """Take a time like 08:00:00 and combine it with the current date."""
-    combined = datetime.combine(dt.start_of_local_day(), simple_time)
-    if combined < datetime.now():
-        combined = combined + timedelta(days=1)
-    return combined.isoformat()
