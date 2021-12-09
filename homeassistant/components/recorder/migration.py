@@ -588,8 +588,21 @@ def _apply_update(instance, session, new_version, old_version):  # noqa: C901
         # Add name column to StatisticsMeta
         _add_columns(session, "statistics_meta", ["name VARCHAR(255)"])
     elif new_version == 24:
-        # Purge duplicated statistics
-        delete_duplicates(session)
+        # Delete duplicated statistics
+        delete_duplicates(instance, session)
+        # Recreate statistics indices to block duplicated statistics
+        _drop_index(connection, "statistics", "ix_statistics_statistic_id_start")
+        _create_index(connection, "statistics", "ix_statistics_statistic_id_start")
+        _drop_index(
+            connection,
+            "statistics_short_term",
+            "ix_statistics_short_term_statistic_id_start",
+        )
+        _create_index(
+            connection,
+            "statistics_short_term",
+            "ix_statistics_short_term_statistic_id_start",
+        )
 
     else:
         raise ValueError(f"No schema migration defined for version {new_version}")

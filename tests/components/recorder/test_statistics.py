@@ -1,12 +1,18 @@
 """The tests for sensor recorder platform."""
 # pylint: disable=protected-access,invalid-name
 from datetime import timedelta
+import importlib
+import json
+import sys
 from unittest.mock import patch, sentinel
 
 import pytest
 from pytest import approx
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session
 
-from homeassistant.components.recorder import history, statistics
+from homeassistant.components import recorder
+from homeassistant.components.recorder import SQLITE_URL_PREFIX, history, statistics
 from homeassistant.components.recorder.const import DATA_INSTANCE
 from homeassistant.components.recorder.models import (
     StatisticsShortTerm,
@@ -26,7 +32,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import mock_registry
+from tests.common import get_test_home_assistant, mock_registry
 from tests.components.recorder.common import wait_recording_done
 
 
@@ -635,10 +641,33 @@ def test_monthly_statistics(hass_recorder, caplog, timezone):
     dt_util.set_default_time_zone(dt_util.get_time_zone("UTC"))
 
 
-def test_delete_duplicates(hass_recorder, caplog):
+def _create_engine_test(*args, **kwargs):
+    """Test version of create_engine that initializes with old schema.
+
+    This simulates an existing db with the old schema.
+    """
+    module = "tests.components.recorder.models_schema_23"
+    importlib.import_module(module)
+    old_models = sys.modules[module]
+    engine = create_engine(*args, **kwargs)
+    old_models.Base.metadata.create_all(engine)
+    with Session(engine) as session:
+        session.add(recorder.models.StatisticsRuns(start=statistics.get_start_time()))
+        session.add(
+            recorder.models.SchemaChanges(schema_version=old_models.SCHEMA_VERSION)
+        )
+        session.commit()
+    return engine
+
+
+def test_delete_duplicates(caplog, tmpdir):
     """Test removal of duplicated statistics."""
-    hass = hass_recorder()
-    wait_recording_done(hass)
+    test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
+    dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
+
+    module = "tests.components.recorder.models_schema_23"
+    importlib.import_module(module)
+    old_models = sys.modules[module]
 
     period1 = dt_util.as_utc(dt_util.parse_datetime("2021-09-01 00:00:00"))
     period2 = dt_util.as_utc(dt_util.parse_datetime("2021-09-30 23:00:00"))
@@ -756,35 +785,58 @@ def test_delete_duplicates(hass_recorder, caplog):
         "unit_of_measurement": "%",
     }
 
-    with patch.object(
-        statistics, "_statistics_exists", return_value=False
-    ), patch.object(
-        statistics, "_insert_statistics", wraps=statistics._insert_statistics
-    ) as insert_statistics_mock:
-        async_add_external_statistics(
-            hass, external_energy_metadata_1, external_energy_statistics_1
-        )
-        async_add_external_statistics(
-            hass, external_energy_metadata_2, external_energy_statistics_2
-        )
-        async_add_external_statistics(
-            hass, external_co2_metadata, external_co2_statistics
-        )
+    # Create some duplicated statistics with schema version 23
+    with patch.object(recorder, "models", old_models), patch.object(
+        recorder.migration, "SCHEMA_VERSION", old_models.SCHEMA_VERSION
+    ), patch(
+        "homeassistant.components.recorder.create_engine", new=_create_engine_test
+    ):
+        hass = get_test_home_assistant()
+        setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
         wait_recording_done(hass)
-        assert insert_statistics_mock.call_count == 14
+        wait_recording_done(hass)
 
-    with session_scope(hass=hass) as session:
-        delete_duplicates(session)
+        with session_scope(hass=hass) as session:
+            session.add(
+                recorder.models.StatisticsMeta.from_meta(external_energy_metadata_1)
+            )
+            session.add(
+                recorder.models.StatisticsMeta.from_meta(external_energy_metadata_2)
+            )
+            session.add(recorder.models.StatisticsMeta.from_meta(external_co2_metadata))
+        with session_scope(hass=hass) as session:
+            for stat in external_energy_statistics_1:
+                session.add(recorder.models.Statistics.from_stats(1, stat))
+            for stat in external_energy_statistics_2:
+                session.add(recorder.models.Statistics.from_stats(2, stat))
+            for stat in external_co2_statistics:
+                session.add(recorder.models.Statistics.from_stats(3, stat))
+
+        hass.stop()
+
+    # Test that the duplicates are removed during migration from schema 23
+    hass = get_test_home_assistant()
+    setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
+    hass.start()
+    wait_recording_done(hass)
+    wait_recording_done(hass)
+    hass.stop()
+
     assert "Deleted 2 duplicated statistics rows" in caplog.text
     assert "Found non identical" not in caplog.text
     assert "Found more than" not in caplog.text
     assert "Found duplicated" not in caplog.text
 
 
-def test_delete_duplicates_non_identical(hass_recorder, caplog):
+@pytest.mark.freeze_time("2021-08-01 00:00:00+00:00")
+def test_delete_duplicates_non_identical(caplog, tmpdir):
     """Test removal of duplicated statistics."""
-    hass = hass_recorder()
-    wait_recording_done(hass)
+    test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
+    dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
+
+    module = "tests.components.recorder.models_schema_23"
+    importlib.import_module(module)
+    old_models = sys.modules[module]
 
     period1 = dt_util.as_utc(dt_util.parse_datetime("2021-09-01 00:00:00"))
     period2 = dt_util.as_utc(dt_util.parse_datetime("2021-09-30 23:00:00"))
@@ -871,67 +923,78 @@ def test_delete_duplicates_non_identical(hass_recorder, caplog):
         "statistic_id": "test:total_energy_import_tariff_2",
         "unit_of_measurement": "kWh",
     }
-    external_co2_statistics = (
-        {
-            "start": period1,
-            "last_reset": None,
-            "mean": 10,
-        },
-        {
-            "start": period2,
-            "last_reset": None,
-            "mean": 30,
-        },
-        {
-            "start": period3,
-            "last_reset": None,
-            "mean": 60,
-        },
-        {
-            "start": period4,
-            "last_reset": None,
-            "mean": 90,
-        },
-    )
-    external_co2_metadata = {
-        "has_mean": True,
-        "has_sum": False,
-        "name": "Fossil percentage",
-        "source": "test",
-        "statistic_id": "test:fossil_percentage",
-        "unit_of_measurement": "%",
-    }
 
-    with patch.object(
-        statistics, "_statistics_exists", return_value=False
-    ), patch.object(
-        statistics, "_insert_statistics", wraps=statistics._insert_statistics
-    ) as insert_statistics_mock:
-        async_add_external_statistics(
-            hass, external_energy_metadata_1, external_energy_statistics_1
-        )
-        async_add_external_statistics(
-            hass, external_energy_metadata_2, external_energy_statistics_2
-        )
-        async_add_external_statistics(
-            hass, external_co2_metadata, external_co2_statistics
-        )
+    # Create some duplicated statistics with schema version 23
+    with patch.object(recorder, "models", old_models), patch.object(
+        recorder.migration, "SCHEMA_VERSION", old_models.SCHEMA_VERSION
+    ), patch(
+        "homeassistant.components.recorder.create_engine", new=_create_engine_test
+    ):
+        hass = get_test_home_assistant()
+        setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
         wait_recording_done(hass)
-        assert insert_statistics_mock.call_count == 14
+        wait_recording_done(hass)
 
-    with session_scope(hass=hass) as session:
-        delete_duplicates(session)
-    assert "Deleted" not in caplog.text
-    assert "Found non identical" in caplog.text
+        with session_scope(hass=hass) as session:
+            session.add(
+                recorder.models.StatisticsMeta.from_meta(external_energy_metadata_1)
+            )
+            session.add(
+                recorder.models.StatisticsMeta.from_meta(external_energy_metadata_2)
+            )
+        with session_scope(hass=hass) as session:
+            for stat in external_energy_statistics_1:
+                session.add(recorder.models.Statistics.from_stats(1, stat))
+            for stat in external_energy_statistics_2:
+                session.add(recorder.models.Statistics.from_stats(2, stat))
+
+        hass.stop()
+
+    # Test that the duplicates are removed during migration from schema 23
+    hass = get_test_home_assistant()
+    hass.config.config_dir = tmpdir
+    setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
+    hass.start()
+    wait_recording_done(hass)
+    wait_recording_done(hass)
+    hass.stop()
+
+    assert "Deleted 2 duplicated statistics rows" in caplog.text
+    assert "Deleted 1 non identical" in caplog.text
     assert "Found more than" not in caplog.text
     assert "Found duplicated" not in caplog.text
 
+    isotime = dt_util.utcnow().isoformat()
+    backup_file_name = f"deleted_statistics.{isotime}.json"
+
+    with open(hass.config.path(backup_file_name)) as backup_file:
+        backup = json.load(backup_file)
+
+    assert backup == [
+        {
+            "created": "2021-08-01T00:00:00",
+            "id": 4,
+            "last_reset": None,
+            "max": None,
+            "mean": None,
+            "metadata_id": 1,
+            "min": None,
+            "start": "2021-10-31T23:00:00",
+            "state": 3.0,
+            "sum": 5.0,
+        }
+    ]
+
 
 @patch.object(statistics, "MAX_DUPLICATES", 2)
-def test_delete_duplicates_too_many(hass_recorder, caplog):
+def test_delete_duplicates_too_many(caplog, tmpdir):
     """Test removal of duplicated statistics."""
-    hass = hass_recorder()
-    wait_recording_done(hass)
+    test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
+    dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
+
+    module = "tests.components.recorder.models_schema_23"
+    importlib.import_module(module)
+    old_models = sys.modules[module]
 
     period1 = dt_util.as_utc(dt_util.parse_datetime("2021-09-01 00:00:00"))
     period2 = dt_util.as_utc(dt_util.parse_datetime("2021-09-30 23:00:00"))
@@ -1018,56 +1081,42 @@ def test_delete_duplicates_too_many(hass_recorder, caplog):
         "statistic_id": "test:total_energy_import_tariff_2",
         "unit_of_measurement": "kWh",
     }
-    external_co2_statistics = (
-        {
-            "start": period1,
-            "last_reset": None,
-            "mean": 10,
-        },
-        {
-            "start": period2,
-            "last_reset": None,
-            "mean": 30,
-        },
-        {
-            "start": period3,
-            "last_reset": None,
-            "mean": 60,
-        },
-        {
-            "start": period4,
-            "last_reset": None,
-            "mean": 90,
-        },
-    )
-    external_co2_metadata = {
-        "has_mean": True,
-        "has_sum": False,
-        "name": "Fossil percentage",
-        "source": "test",
-        "statistic_id": "test:fossil_percentage",
-        "unit_of_measurement": "%",
-    }
 
-    with patch.object(
-        statistics, "_statistics_exists", return_value=False
-    ), patch.object(
-        statistics, "_insert_statistics", wraps=statistics._insert_statistics
-    ) as insert_statistics_mock:
-        async_add_external_statistics(
-            hass, external_energy_metadata_1, external_energy_statistics_1
-        )
-        async_add_external_statistics(
-            hass, external_energy_metadata_2, external_energy_statistics_2
-        )
-        async_add_external_statistics(
-            hass, external_co2_metadata, external_co2_statistics
-        )
+    # Create some duplicated statistics with schema version 23
+    with patch.object(recorder, "models", old_models), patch.object(
+        recorder.migration, "SCHEMA_VERSION", old_models.SCHEMA_VERSION
+    ), patch(
+        "homeassistant.components.recorder.create_engine", new=_create_engine_test
+    ):
+        hass = get_test_home_assistant()
+        setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
         wait_recording_done(hass)
-        assert insert_statistics_mock.call_count == 14
+        wait_recording_done(hass)
 
-    with session_scope(hass=hass) as session:
-        delete_duplicates(session)
+        with session_scope(hass=hass) as session:
+            session.add(
+                recorder.models.StatisticsMeta.from_meta(external_energy_metadata_1)
+            )
+            session.add(
+                recorder.models.StatisticsMeta.from_meta(external_energy_metadata_2)
+            )
+        with session_scope(hass=hass) as session:
+            for stat in external_energy_statistics_1:
+                session.add(recorder.models.Statistics.from_stats(1, stat))
+            for stat in external_energy_statistics_2:
+                session.add(recorder.models.Statistics.from_stats(2, stat))
+
+        hass.stop()
+
+    # Test that the duplicates are removed during migration from schema 23
+    hass = get_test_home_assistant()
+    hass.config.config_dir = tmpdir
+    setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
+    hass.start()
+    wait_recording_done(hass)
+    wait_recording_done(hass)
+    hass.stop()
+
     assert "Deleted 2 duplicated statistics rows" in caplog.text
     assert "Found non identical" not in caplog.text
     assert "Found more than 1 duplicated statistic rows" in caplog.text
@@ -1075,10 +1124,14 @@ def test_delete_duplicates_too_many(hass_recorder, caplog):
 
 
 @patch.object(statistics, "MAX_DUPLICATES", 2)
-def test_delete_duplicates_short_term(hass_recorder, caplog):
+def test_delete_duplicates_short_term(caplog, tmpdir):
     """Test removal of duplicated statistics."""
-    hass = hass_recorder()
-    wait_recording_done(hass)
+    test_db_file = tmpdir.mkdir("sqlite").join("test_run_info.db")
+    dburl = f"{SQLITE_URL_PREFIX}//{test_db_file}"
+
+    module = "tests.components.recorder.models_schema_23"
+    importlib.import_module(module)
+    old_models = sys.modules[module]
 
     period4 = dt_util.as_utc(dt_util.parse_datetime("2021-10-31 23:00:00"))
 
@@ -1090,30 +1143,51 @@ def test_delete_duplicates_short_term(hass_recorder, caplog):
         "statistic_id": "test:total_energy_import_tariff_1",
         "unit_of_measurement": "kWh",
     }
+    statistic_row = {
+        "start": period4,
+        "last_reset": None,
+        "state": 3,
+        "sum": 5,
+    }
 
-    with session_scope(hass=hass) as session:
-        metadata_id = statistics._update_or_add_metadata(
-            hass, session, external_energy_metadata_1
-        )
-        statistic_row = {
-            "start": period4,
-            "last_reset": None,
-            "state": 3,
-            "sum": 5,
-        }
-        statistics._insert_statistics(
-            session, StatisticsShortTerm, metadata_id, statistic_row
-        )
-        statistics._insert_statistics(
-            session, StatisticsShortTerm, metadata_id, statistic_row
-        )
+    # Create some duplicated statistics with schema version 23
+    with patch.object(recorder, "models", old_models), patch.object(
+        recorder.migration, "SCHEMA_VERSION", old_models.SCHEMA_VERSION
+    ), patch(
+        "homeassistant.components.recorder.create_engine", new=_create_engine_test
+    ):
+        hass = get_test_home_assistant()
+        setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
+        wait_recording_done(hass)
+        wait_recording_done(hass)
 
-    with session_scope(hass=hass) as session:
-        delete_duplicates(session)
+        with session_scope(hass=hass) as session:
+            session.add(
+                recorder.models.StatisticsMeta.from_meta(external_energy_metadata_1)
+            )
+        with session_scope(hass=hass) as session:
+            session.add(
+                recorder.models.StatisticsShortTerm.from_stats(1, statistic_row)
+            )
+            session.add(
+                recorder.models.StatisticsShortTerm.from_stats(1, statistic_row)
+            )
+
+        hass.stop()
+
+    # Test that the duplicates are removed during migration from schema 23
+    hass = get_test_home_assistant()
+    hass.config.config_dir = tmpdir
+    setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
+    hass.start()
+    wait_recording_done(hass)
+    wait_recording_done(hass)
+    hass.stop()
+
     assert "duplicated statistics rows" not in caplog.text
     assert "Found non identical" not in caplog.text
-    assert "Found more than 1 duplicated statistic rows" not in caplog.text
-    assert "Found duplicated short term statistic rows" in caplog.text
+    assert "Found more than" not in caplog.text
+    assert "Deleted duplicated short term statistic" in caplog.text
 
 
 def test_delete_duplicates_no_duplicates(hass_recorder, caplog):
@@ -1121,11 +1195,68 @@ def test_delete_duplicates_no_duplicates(hass_recorder, caplog):
     hass = hass_recorder()
     wait_recording_done(hass)
     with session_scope(hass=hass) as session:
-        delete_duplicates(session)
+        delete_duplicates(hass.data[DATA_INSTANCE], session)
     assert "duplicated statistics rows" not in caplog.text
     assert "Found non identical" not in caplog.text
     assert "Found more than" not in caplog.text
     assert "Found duplicated" not in caplog.text
+
+
+def test_duplicate_statistics_handle_integrity_error(hass_recorder, caplog):
+    """Test the recorder does not blow up if statistics is duplicated."""
+    hass = hass_recorder()
+    wait_recording_done(hass)
+
+    period1 = dt_util.as_utc(dt_util.parse_datetime("2021-09-01 00:00:00"))
+    period2 = dt_util.as_utc(dt_util.parse_datetime("2021-09-30 23:00:00"))
+
+    external_energy_metadata_1 = {
+        "has_mean": False,
+        "has_sum": True,
+        "name": "Total imported energy",
+        "source": "test",
+        "statistic_id": "test:total_energy_import_tariff_1",
+        "unit_of_measurement": "kWh",
+    }
+    external_energy_statistics_1 = [
+        {
+            "start": period1,
+            "last_reset": None,
+            "state": 3,
+            "sum": 5,
+        },
+    ]
+    external_energy_statistics_2 = [
+        {
+            "start": period2,
+            "last_reset": None,
+            "state": 3,
+            "sum": 6,
+        }
+    ]
+
+    with patch.object(
+        statistics, "_statistics_exists", return_value=False
+    ), patch.object(
+        statistics, "_insert_statistics", wraps=statistics._insert_statistics
+    ) as insert_statistics_mock:
+        async_add_external_statistics(
+            hass, external_energy_metadata_1, external_energy_statistics_1
+        )
+        async_add_external_statistics(
+            hass, external_energy_metadata_1, external_energy_statistics_1
+        )
+        async_add_external_statistics(
+            hass, external_energy_metadata_1, external_energy_statistics_2
+        )
+        wait_recording_done(hass)
+        assert insert_statistics_mock.call_count == 3
+
+    with session_scope(hass=hass) as session:
+        tmp = session.query(recorder.models.Statistics).all()
+        assert len(tmp) == 2
+
+    assert "Blocked attempt to insert duplicated statistic rows" in caplog.text
 
 
 def record_states(hass):
