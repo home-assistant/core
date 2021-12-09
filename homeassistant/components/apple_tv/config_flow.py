@@ -113,9 +113,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_reconfigure(self, user_input=None):
         """Inform user that reconfiguration is about to start."""
         if user_input is not None:
-            return await self.async_find_device_wrapper(
-                self.async_pair_next_protocol, allow_exist=True
-            )
+            return await self.async_find_device_wrapper(self.async_pair_next_protocol)
 
         return self.async_show_form(step_id="reconfigure")
 
@@ -164,9 +162,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Scan for the device in order to extract _all_ unique identifiers assigned to
         # it. Not doing it like this will yield multiple config flows for the same
         # device, one per protocol, which is undesired.
-        return await self.async_find_device_wrapper(
-            self.async_found_zeroconf_device, allow_exist=True
-        )
+        return await self.async_find_device_wrapper(self.async_found_zeroconf_device)
 
     async def async_found_zeroconf_device(self, user_input=None):
         """Handle device found after Zeroconf discovery."""
@@ -203,8 +199,8 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         self.context["all_identifiers"] = self.atv.all_identifiers
 
-        await self.async_set_unique_id(self.device_identifier)
         # Also abort if an integration with this identifier already exists
+        await self.async_set_unique_id(self.device_identifier)
         # but be sure to update the address if its changed so the scanner
         # will probe the new address
         self._abort_if_unique_id_configured(updates={CONF_ADDRESS: self.atv.address})
@@ -259,6 +255,14 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     if identifier in entry.data.get(
                         CONF_IDENTIFIERS, [entry.unique_id]
                     ):
+                        if entry.data.get(CONF_ADDRESS) != self.atv.address:
+                            self.hass.config_entries.async_update_entry(
+                                entry,
+                                data={**entry.data, CONF_ADDRESS: self.atv.address},
+                            )
+                            self.hass.async_create_task(
+                                self.hass.config_entries.async_reload(entry.entry_id)
+                            )
                         raise DeviceAlreadyConfigured()
 
     async def async_step_confirm(self, user_input=None):
