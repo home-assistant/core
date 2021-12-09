@@ -282,14 +282,8 @@ class AppleTVManager:
             address,
         )
 
-        atvs = await scan(
-            self.hass.loop, identifier=identifiers, protocol=protocols, aiozc=aiozc
-        )
-        if atvs:
-            return atvs[0]
-
-        _LOGGER.debug("Failed to find device %s, trying later", self.config_entry.title)
-
+        # No need to scan for the device, as soon as async_step_zeroconf runs
+        # it will update the address and reload the config entry when the device is found
         return None
 
     async def _connect(self, conf):
