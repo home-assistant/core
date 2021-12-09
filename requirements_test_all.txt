@@ -1361,7 +1361,7 @@ tellduslive==0.10.11
 tesla-powerwall==0.3.12
 
 # homeassistant.components.tesla_wall_connector
-tesla-wall-connector==1.0.0
+tesla-wall-connector==1.0.1
 
 # homeassistant.components.tolo
 tololib==0.1.0b3
