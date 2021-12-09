@@ -1,7 +1,7 @@
 """Support for MAX! binary sensors via MAX! Cube."""
 from homeassistant.components.binary_sensor import (
-    BinarySensorEntity,
     BinarySensorDeviceClass,
+    BinarySensorEntity,
 )
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 
@@ -25,7 +25,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class MaxCubeBinarySensorBase(BinarySensorEntity):
     """Base class for maxcube binary sensors."""
 
-    _attr_entity_category: str | None = EntityCategory.DIAGNOSTIC
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(self, handler, device):
         """Initialize MAX! Cube BinarySensorEntity."""
@@ -41,7 +41,7 @@ class MaxCubeBinarySensorBase(BinarySensorEntity):
 class MaxCubeShutter(MaxCubeBinarySensorBase):
     """Representation of a MAX! Cube Binary Sensor device."""
 
-    _attr_device_class: DeviceInfo | None = BinarySensorDeviceClass.WINDOW
+    _attr_device_class = BinarySensorDeviceClass.WINDOW
 
     def __init__(self, handler, device):
         """Initialize MAX! Cube BinarySensorEntity."""
@@ -59,7 +59,7 @@ class MaxCubeShutter(MaxCubeBinarySensorBase):
 class MaxCubeBattery(MaxCubeBinarySensorBase):
     """Representation of a MAX! Cube Binary Sensor device."""
 
-    _attr_device_class: DeviceInfo | None = BinarySensorDeviceClass.BATTERY
+    _attr_device_class = BinarySensorDeviceClass.BATTERY
 
     def __init__(self, handler, device):
         """Initialize MAX! Cube BinarySensorEntity."""
