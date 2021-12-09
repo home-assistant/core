@@ -172,7 +172,7 @@ class LookinMedia(LookinPowerEntity, MediaPlayerEntity):
         return self._is_muted
 
     def _update_from_status(self, status: str) -> None:
-        """.
+        """Update media property from status.
 
         00F0
         0 - 0/1 on/off
