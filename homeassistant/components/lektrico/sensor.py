@@ -8,7 +8,7 @@ from typing import Any
 
 from lektricowifi import lektricowifi
 
-from homeassistant.components.sensor import (  # https://developers.home-assistant.io/docs/core/entity/sensor/;
+from homeassistant.components.sensor import (
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_ILLUMINANCE,
@@ -271,16 +271,6 @@ class LektricoSensor(CoordinatorEntity, SensorEntity):
 
         self._settings = settings
         self._lektrico_device = _lektrico_device
-
-    @property
-    def name(self) -> str | None:
-        """Return the entity name. ex: 1P7K Charger_State ."""
-        return self._attr_name
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return the unique id of the entity. ex: 500006_Led_Brightness ."""
-        return self._attr_unique_id
 
     @property
     def native_value(self) -> float | str | Any | None:
