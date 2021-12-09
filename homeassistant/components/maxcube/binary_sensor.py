@@ -1,7 +1,5 @@
 """Support for MAX! binary sensors via MAX! Cube."""
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_WINDOW,
     BinarySensorEntity,
     BinarySensorDeviceClass,
 )
