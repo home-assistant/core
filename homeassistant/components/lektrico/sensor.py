@@ -1,11 +1,10 @@
 """Support for Lektrico charging station sensors."""
 from __future__ import annotations
 
-# import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
-from typing import Any  # , Callable  # , Tuple
+from typing import Any
 
 from lektricowifi import lektricowifi
 
@@ -22,7 +21,7 @@ from homeassistant.components.sensor import (  # https://developers.home-assista
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (  # https://developers.home-assistant.io/docs/device_registry_index/; https://github.com/home-assistant/core/blob/dev/homeassistant/const.py; ATTR_TEMPERATURE,; ENERGY_WATT_HOUR,
+from homeassistant.const import (
     ATTR_IDENTIFIERS,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
@@ -37,20 +36,16 @@ from homeassistant.const import (  # https://developers.home-assistant.io/docs/d
     TIME_SECONDS,
 )
 from homeassistant.core import HomeAssistant
-
-# from homeassistant.util import Throttle
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import (  # async_get_current_platform,
-    AddEntitiesCallback,
-)
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
-from .const import DOMAIN  # , SERVICE_IDENTIFY
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,7 +58,6 @@ class LektricoSensorEntityDescription(SensorEntityDescription):
     """A class that describes the Lektrico sensor entities."""
 
     unit_fn: str | None = None
-    # value_fn: Callable[[Any], float | str] | None | Any = None
     value_fn: Any | None = None
 
 
@@ -86,7 +80,6 @@ SENSORS: tuple[LektricoSensorEntityDescription, ...] = (
         device_class=DEVICE_CLASS_CURRENT,
         unit_fn=ELECTRIC_CURRENT_AMPERE,
         value_fn=lambda x: x.current,
-        # icon="mdi:pin-outline",
     ),
     LektricoSensorEntityDescription(
         key="instant_power",
@@ -165,12 +158,7 @@ class LektricoDevice:
         self._device = device
         self._hass = hass
         self.friendly_name = friendly_name.replace(" ", "_")
-        self._name = friendly_name  # device.device_info.name
-        # self._device_id = device.device_info.id
-        # self._firmware = device.device_info.firmware
-        # self._model = f"{device.device_info.model_name}"
-        # self._id = f"{self._type.name}:{self._device_id}"
-        # self._state = None
+        self._name = friendly_name
         self._coordinator: DataUpdateCoordinator | None = None
         self._update_fail_count = 0
         self._info = None
@@ -196,12 +184,6 @@ class LektricoDevice:
         """Async Update device state."""
         a_data = self._hass.async_add_job(self._device.charger_info)
         data = await a_data
-        print(data)  # Info(charger_state='A', session_energy=0.0, charging_time=0,
-        # instant_power=0.0, current=0.0, voltage=0.0, temperature=32.4,
-        # dynamic_current=32, headless=False, install_current=32, led_max_brightness=20,
-        # total_charged_energy=0, fw_version='1.31')
-        ############################################################################
-        # print(f"SENSORS[0].key= {SENSORS[0].key}") #charger_state
         entity_reg = er.async_get(self._hass)
         my_entry = entity_reg.async_get(f"sensor.{self.friendly_name}_{SENSORS[0].key}")
         # print(f"my_entry= {my_entry}")

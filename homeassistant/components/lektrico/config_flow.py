@@ -57,7 +57,6 @@ class LektricoFlowHandler(ConfigFlow, domain=DOMAIN):
     @callback
     def _async_create_entry(self) -> FlowResult:
         return self.async_create_entry(
-            # title="Lektrico",
             title=self.friendly_name,
             data={CONF_HOST: self.host, CONF_FRIENDLY_NAME: self.friendly_name},
         )
