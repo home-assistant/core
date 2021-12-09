@@ -72,9 +72,6 @@ class DeLijnPublicTransportSensor(SensorEntity):
         self.line = line
         self._attr_attribution = ATTRIBUTION
         self._attr_extra_state_attributes = {}
-        self._attr_name = None
-        self._attr_native_value = None
-        self._attr_available = True
 
     async def async_update(self):
         """Get the latest data from the De Lijn API."""
