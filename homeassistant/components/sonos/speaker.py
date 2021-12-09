@@ -994,9 +994,9 @@ class SonosSpeaker:
     @soco_error()
     def update_media(self, event: SonosEvent | None = None) -> None:
         """Update information about currently playing media."""
-        variables = event and event.variables
+        variables = event.variables if event else {}
 
-        if variables and "transport_state" in variables:
+        if "transport_state" in variables:
             # If the transport has an error then transport_state will
             # not be set
             new_status = variables["transport_state"]
@@ -1012,7 +1012,7 @@ class SonosSpeaker:
         update_position = new_status != self.media.playback_status
         self.media.playback_status = new_status
 
-        if variables and "transport_state" in variables:
+        if "transport_state" in variables:
             self.media.play_mode = variables["current_play_mode"]
             track_uri = (
                 variables["enqueued_transport_uri"] or variables["current_track_uri"]
@@ -1060,7 +1060,7 @@ class SonosSpeaker:
         self.media.title = source
         self.media.source_name = source
 
-    def update_media_radio(self, variables: dict | None) -> None:
+    def update_media_radio(self, variables: dict) -> None:
         """Update state when streaming radio."""
         self.media.clear_position()
         radio_title = None

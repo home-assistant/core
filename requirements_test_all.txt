@@ -521,7 +521,7 @@ hole==0.7.0
 holidays==0.11.3.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20211206.0
+home-assistant-frontend==20211209.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1373,7 +1373,7 @@ tellduslive==0.10.11
 tesla-powerwall==0.3.12
 
 # homeassistant.components.tesla_wall_connector
-tesla-wall-connector==1.0.0
+tesla-wall-connector==1.0.1
 
 # homeassistant.components.tolo
 tololib==0.1.0b3
