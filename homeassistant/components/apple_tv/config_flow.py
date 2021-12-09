@@ -157,7 +157,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Extract unique identifier from service
         unique_id = get_unique_id(service_type, name, properties)
-        if unique_id:
+        if unique_id is None:
             return self.async_abort(reason="unknown")
         self.scan_filter = discovery_info.host
 
