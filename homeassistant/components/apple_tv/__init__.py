@@ -265,10 +265,7 @@ class AppleTVManager:
 
         _LOGGER.debug("Discovering device %s", self.config_entry.title)
         atvs = await scan(
-            self.hass.loop,
-            identifier=identifiers,
-            protocol=protocols,
-            hosts=[address],
+            self.hass.loop, identifier=identifiers, protocol=protocols, hosts=[address]
         )
         if atvs:
             return atvs[0]
@@ -278,9 +275,8 @@ class AppleTVManager:
             self.config_entry.title,
             address,
         )
-
-        # No need to scan for the device, as soon as async_step_zeroconf runs
-        # it will update the address and reload the config entry when the device is found
+        # We no longer multicast scan for the device since as soon as async_step_zeroconf runs,
+        # it will update the address and reload the config entry when the device is found.
         return None
 
     async def _connect(self, conf):
