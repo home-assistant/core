@@ -65,7 +65,7 @@ async def async_setup_entry(
         entity = RfxtrxCover(
             event.device,
             device_id,
-            signal_repetitions=entity_info[CONF_SIGNAL_REPETITIONS],
+            signal_repetitions=entity_info.get(CONF_SIGNAL_REPETITIONS, 1),
             venetian_blind_mode=entity_info.get(CONF_VENETIAN_BLIND_MODE),
         )
         entities.append(entity)
