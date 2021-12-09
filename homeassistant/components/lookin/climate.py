@@ -219,7 +219,7 @@ class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
                 self._lookin_device.id,
                 UDPCommandType.meteo,
                 None,
-                self.update_meteo_from_value,
+                self._async_update_meteo_from_value,
             )
         )
         return await super().async_added_to_hass()
