@@ -10,7 +10,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
 )
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY
+from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
@@ -70,7 +70,8 @@ class DeLijnPublicTransportSensor(SensorEntity):
     def __init__(self, line):
         """Initialize the sensor."""
         self.line = line
-        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+        self._attr_attribution = ATTRIBUTION
+        self._attr_extra_state_attributes = {}
         self._attr_name = None
         self._attr_native_value = None
         self._attr_available = True
