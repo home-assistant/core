@@ -238,7 +238,6 @@ class PrometheusMetrics:
                         metric.remove(*sample.labels.values())
                     except KeyError:
                         pass
-                    # break
 
     def _handle_attributes(self, state):
         for key, value in state.attributes.items():
