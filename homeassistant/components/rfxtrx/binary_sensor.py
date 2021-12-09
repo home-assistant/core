@@ -12,7 +12,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.const import CONF_COMMAND_OFF, CONF_COMMAND_ON, STATE_ON
-from homeassistant.core import callback, CALLBACK_TYPE
+from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.helpers import event as evt
 
 from . import DeviceTuple, RfxtrxEntity, async_setup_platform_entry, get_pt2262_cmd
@@ -98,7 +98,7 @@ async def async_setup_entry(
     def _constructor(
         event: rfxtrxmod.RFXtrxEvent,
         auto: bool,
-        device_id: tuple,
+        device_id: DeviceTuple,
         entity_info: dict,
     ):
 

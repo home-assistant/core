@@ -246,12 +246,13 @@ async def async_setup_platform_entry(
     async_add_entities: AddEntitiesCallback,
     supported: Callable[[rfxtrxmod.RFXtrxEvent], bool],
     constructor: Callable[
-        [rfxtrxmod.RFXtrxEvent, rfxtrxmod.RFXtrxEvent | None, tuple, dict], list[Entity]
+        [rfxtrxmod.RFXtrxEvent, rfxtrxmod.RFXtrxEvent | None, DeviceTuple, dict],
+        list[Entity],
     ],
 ):
     """Set up config entry."""
     entry_data = config_entry.data
-    device_ids = set()
+    device_ids: set[DeviceTuple] = set()
 
     # Add entities from config
     entities = []
@@ -277,7 +278,7 @@ async def async_setup_platform_entry(
     if entry_data[CONF_AUTOMATIC_ADD]:
 
         @callback
-        def _update(event: rfxtrxmod.RFXtrxEvent, device_id: tuple):
+        def _update(event: rfxtrxmod.RFXtrxEvent, device_id: DeviceTuple):
             """Handle light updates from the RFXtrx gateway."""
             if not supported(event):
                 return
