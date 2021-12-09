@@ -176,8 +176,7 @@ class LektricoDevice:
 
         if self._coordinator is None:
             return False
-        else:
-            return True
+        return True
 
     async def async_device_update(self) -> lektricowifi.Info:
         """Async Update device state."""
@@ -278,10 +277,9 @@ class LektricoSensor(CoordinatorEntity, SensorEntity):
         if self.entity_description.value_fn is not None:
             if self._lektrico_device.coordinator is None:
                 return None
-            else:
-                return self.entity_description.value_fn(
-                    self._lektrico_device.coordinator.data
-                )
+            return self.entity_description.value_fn(
+                self._lektrico_device.coordinator.data
+            )
         return None
 
     @property
@@ -301,11 +299,10 @@ class LektricoSensor(CoordinatorEntity, SensorEntity):
                 ATTR_MANUFACTURER: "Lektrico",
                 ATTR_MODEL: f"1P7K {self._settings.serial_number} rev.{self._settings.board_revision}",
             }
-        else:
-            return {
-                ATTR_IDENTIFIERS: {(DOMAIN, self._settings.serial_number)},
-                ATTR_NAME: self.friendly_name,
-                ATTR_MANUFACTURER: "Lektrico",
-                ATTR_MODEL: f"1P7K {self._settings.serial_number} rev.{self._settings.board_revision}",
-                ATTR_SW_VERSION: self._lektrico_device.coordinator.data.fw_version,
-            }
+        return {
+            ATTR_IDENTIFIERS: {(DOMAIN, self._settings.serial_number)},
+            ATTR_NAME: self.friendly_name,
+            ATTR_MANUFACTURER: "Lektrico",
+            ATTR_MODEL: f"1P7K {self._settings.serial_number} rev.{self._settings.board_revision}",
+            ATTR_SW_VERSION: self._lektrico_device.coordinator.data.fw_version,
+        }
