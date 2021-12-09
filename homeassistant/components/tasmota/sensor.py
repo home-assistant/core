@@ -59,7 +59,6 @@ SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
     hc.SENSOR_APPARENT_POWERUSAGE: {
-        DEVICE_CLASS: SensorDeviceClass.POWER,
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
     hc.SENSOR_BATTERY: {
@@ -85,9 +84,15 @@ SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
         ICON: "mdi:weather-rainy",
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
-    hc.SENSOR_DISTANCE: {ICON: "mdi:leak", STATE_CLASS: SensorStateClass.MEASUREMENT},
+    hc.SENSOR_DISTANCE: {
+        ICON: SensorDeviceClass,
+        STATE_CLASS: SensorStateClass.MEASUREMENT,
+    },
     hc.SENSOR_ECO2: {ICON: "mdi:molecule-co2"},
-    hc.SENSOR_FREQUENCY: {ICON: "mdi:current-ac"},
+    hc.SENSOR_FREQUENCY: {
+        DEVICE_CLASS: SensorDeviceClass.FREQUENCY,
+        STATE_CLASS: SensorStateClass.MEASUREMENT,
+    },
     hc.SENSOR_HUMIDITY: {
         DEVICE_CLASS: SensorDeviceClass.HUMIDITY,
         STATE_CLASS: SensorStateClass.MEASUREMENT,
@@ -106,9 +111,18 @@ SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
     hc.SENSOR_PB1: {ICON: "mdi:flask"},
     hc.SENSOR_PB2_5: {ICON: "mdi:flask"},
     hc.SENSOR_PB5: {ICON: "mdi:flask"},
-    hc.SENSOR_PM10: {ICON: "mdi:air-filter"},
-    hc.SENSOR_PM1: {ICON: "mdi:air-filter"},
-    hc.SENSOR_PM2_5: {ICON: "mdi:air-filter"},
+    hc.SENSOR_PM10: {
+        DEVICE_CLASS: SensorDeviceClass.PM10,
+        STATE_CLASS: SensorStateClass.MEASUREMENT,
+    },
+    hc.SENSOR_PM1: {
+        DEVICE_CLASS: SensorDeviceClass.PM1,
+        STATE_CLASS: SensorStateClass.MEASUREMENT,
+    },
+    hc.SENSOR_PM2_5: {
+        DEVICE_CLASS: SensorDeviceClass.PM25,
+        STATE_CLASS: SensorStateClass.MEASUREMENT,
+    },
     hc.SENSOR_POWERFACTOR: {
         ICON: "mdi:alpha-f-circle-outline",
         STATE_CLASS: SensorStateClass.MEASUREMENT,
@@ -127,7 +141,6 @@ SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
     },
     hc.SENSOR_PROXIMITY: {ICON: "mdi:ruler"},
     hc.SENSOR_REACTIVE_POWERUSAGE: {
-        DEVICE_CLASS: SensorDeviceClass.POWER,
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
     hc.SENSOR_STATUS_LAST_RESTART_TIME: {DEVICE_CLASS: SensorDeviceClass.TIMESTAMP},
