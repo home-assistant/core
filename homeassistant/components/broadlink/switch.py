@@ -6,9 +6,8 @@ from broadlink.exceptions import BroadlinkException
 import voluptuous as vol
 
 from homeassistant.components.switch import (
-    DEVICE_CLASS_OUTLET,
-    DEVICE_CLASS_SWITCH,
     PLATFORM_SCHEMA,
+    SwitchDeviceClass,
     SwitchEntity,
 )
 from homeassistant.const import (
@@ -136,7 +135,7 @@ class BroadlinkSwitch(BroadlinkEntity, SwitchEntity, RestoreEntity, ABC):
     """Representation of a Broadlink switch."""
 
     _attr_assumed_state = True
-    _attr_device_class = DEVICE_CLASS_SWITCH
+    _attr_device_class = SwitchDeviceClass.SWITCH
 
     def __init__(self, device, command_on, command_off):
         """Initialize the switch."""
@@ -269,7 +268,7 @@ class BroadlinkBG1Slot(BroadlinkSwitch):
         self._attr_is_on = self._coordinator.data[f"pwr{slot}"]
 
         self._attr_name = f"{device.name} S{slot}"
-        self._attr_device_class = DEVICE_CLASS_OUTLET
+        self._attr_device_class = SwitchDeviceClass.OUTLET
         self._attr_unique_id = f"{device.unique_id}-s{slot}"
 
     def _update_state(self, data):
