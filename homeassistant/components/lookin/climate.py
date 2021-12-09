@@ -116,6 +116,7 @@ async def async_setup_entry(
 class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
     """An aircon or heat pump."""
 
+    _attr_current_humidity: float | None = None  # type: ignore
     _attr_temperature_unit = TEMP_CELSIUS
     _attr_supported_features: int = SUPPORT_FLAGS
     _attr_fan_modes: list[str] = LOOKIN_FAN_MODE_IDX_TO_HASS
@@ -185,6 +186,7 @@ class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
         self._attr_hvac_mode = LOOKIN_HVAC_MODE_IDX_TO_HASS[self._climate.hvac_mode]
 
     def update_meteo_from_value(self, event: UDPEvent) -> None:
+        """Update temperature and humidity from UDP event."""
         self._attr_current_temperature = float(int(event.value[:4], 16)) / 10
         self._attr_current_humidity = float(int(event.value[-4:], 16)) / 10
 
@@ -205,12 +207,18 @@ class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
         """Call when the entity is added to hass."""
         self.async_on_remove(
             self._lookin_udp_subs.subscribe_event(
-                self._lookin_device.id, UDPCommandType.ir, self._uuid, self._async_push_update
+                self._lookin_device.id,
+                UDPCommandType.ir,
+                self._uuid,
+                self._async_push_update,
             )
         )
         self.async_on_remove(
             self._lookin_udp_subs.subscribe_event(
-                self._lookin_device.id, UDPCommandType.meteo, None, self.update_meteo_from_value
+                self._lookin_device.id,
+                UDPCommandType.meteo,
+                None,
+                self.update_meteo_from_value,
             )
         )
         return await super().async_added_to_hass()

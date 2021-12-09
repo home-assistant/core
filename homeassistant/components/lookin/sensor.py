@@ -50,7 +50,10 @@ async def async_setup_entry(
 
     if lookin_data.lookin_device.model >= 2:
         async_add_entities(
-            [LookinSensorEntity(description, lookin_data) for description in SENSOR_TYPES]
+            [
+                LookinSensorEntity(description, lookin_data)
+                for description in SENSOR_TYPES
+            ]
         )
 
 

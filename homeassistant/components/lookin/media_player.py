@@ -2,12 +2,13 @@
 from __future__ import annotations
 
 from collections.abc import Coroutine
-from typing import Any, Callable, cast
 from datetime import timedelta
 import logging
+from typing import Any, Callable, cast
 
 from aiolookin import Remote
 from aiolookin.models import UDPCommandType, UDPEvent
+
 from homeassistant.components.media_player import (
     DEVICE_CLASS_RECEIVER,
     DEVICE_CLASS_TV,
@@ -160,8 +161,10 @@ class LookinMedia(LookinPowerEntity, MediaPlayerEntity):
         self._state = STATE_ON
 
     @property
-    def name(self) -> str | None:
-        return self._remote.name
+    def name(self) -> str:
+        """Return the name of the entity."""
+        name: str = self._remote.name
+        return name
 
     @property
     def is_volume_muted(self) -> bool | None:
@@ -169,7 +172,8 @@ class LookinMedia(LookinPowerEntity, MediaPlayerEntity):
         return self._is_muted
 
     def _update_from_status(self, status: str) -> None:
-        """
+        """.
+
         00F0
         0 - 0/1 on/off
         0 - sourse
@@ -195,18 +199,23 @@ class LookinMedia(LookinPowerEntity, MediaPlayerEntity):
         """Process an update pushed via UDP."""
         LOGGER.debug("Processing push message for %s: %s", self.entity_id, event)
         await self.coordinator.async_refresh()
-        self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Call when the entity is added to hass."""
         self.async_on_remove(
             self._lookin_udp_subs.subscribe_event(
-                self._lookin_device.id, UDPCommandType.ir, self._uuid, self._async_push_update
+                self._lookin_device.id,
+                UDPCommandType.ir,
+                self._uuid,
+                self._async_push_update,
             )
         )
         self.async_on_remove(
             self._lookin_udp_subs.subscribe_event(
-                self._lookin_device.id, UDPCommandType.data, self._uuid, self._async_push_update_device
+                self._lookin_device.id,
+                UDPCommandType.data,
+                self._uuid,
+                self._async_push_update_device,
             )
         )
 
