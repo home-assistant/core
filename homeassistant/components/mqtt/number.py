@@ -139,7 +139,7 @@ class MqttNumber(MqttEntity, NumberEntity, RestoreEntity):
 
         self._templates = {
             CONF_COMMAND_TEMPLATE: MqttCommandTemplate(
-                self._templates[CONF_COMMAND_TEMPLATE], self.hass
+                config.get(CONF_COMMAND_TEMPLATE), self.hass
             ).async_render,
             CONF_VALUE_TEMPLATE: config.get(CONF_VALUE_TEMPLATE),
         }
