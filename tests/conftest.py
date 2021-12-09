@@ -26,7 +26,7 @@ from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH_REQUIRED,
 )
 from homeassistant.components.websocket_api.http import URL
-from homeassistant.const import ATTR_NOW, EVENT_TIME_CHANGED
+from homeassistant.const import ATTR_NOW, EVENT_TIME_CHANGED, HASSIO_USER_NAME
 from homeassistant.helpers import config_entry_oauth2_flow, event
 from homeassistant.setup import async_setup_component
 from homeassistant.util import location
@@ -401,6 +401,26 @@ def hass_read_only_access_token(hass, hass_read_only_user, local_auth):
         hass.auth.async_create_refresh_token(
             hass_read_only_user, CLIENT_ID, credential=credential
         )
+    )
+    return hass.auth.async_create_access_token(refresh_token)
+
+
+@pytest.fixture
+def hass_supervisor_user(hass, local_auth):
+    """Return the Home Assistant Supervisor user."""
+    admin_group = hass.loop.run_until_complete(
+        hass.auth.async_get_group(GROUP_ID_ADMIN)
+    )
+    return MockUser(
+        name=HASSIO_USER_NAME, groups=[admin_group], system_generated=True
+    ).add_to_hass(hass)
+
+
+@pytest.fixture
+def hass_supervisor_access_token(hass, hass_supervisor_user, local_auth):
+    """Return a Home Assistant Supervisor access token."""
+    refresh_token = hass.loop.run_until_complete(
+        hass.auth.async_create_refresh_token(hass_supervisor_user)
     )
     return hass.auth.async_create_access_token(refresh_token)
 

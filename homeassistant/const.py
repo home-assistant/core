@@ -756,3 +756,6 @@ ENTITY_CATEGORIES: Final[list[str]] = [
 CAST_APP_ID_HOMEASSISTANT_MEDIA: Final = "B45F4572"
 # The ID of the Home Assistant Lovelace Cast App
 CAST_APP_ID_HOMEASSISTANT_LOVELACE: Final = "A078F6B0"
+
+# User used by Supervisor
+HASSIO_USER_NAME = "Supervisor"
