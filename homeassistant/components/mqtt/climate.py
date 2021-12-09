@@ -377,12 +377,10 @@ class MqttClimate(MqttEntity, ClimateEntity):
 
         command_templates = {}
         for key in COMMAND_TEMPLATE_KEYS:
-            command_templates[key] = lambda value: value
-
-        for key in COMMAND_TEMPLATE_KEYS & config.keys():
             command_templates[key] = MqttCommandTemplate(
                 config[key], self.hass
             ).async_render
+
         self._command_templates = command_templates
 
     async def _subscribe_topics(self):  # noqa: C901

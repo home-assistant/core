@@ -238,11 +238,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
         self._optimistic_mode = optimistic or self._topic[CONF_MODE_STATE_TOPIC] is None
 
         for key, tpl in self._command_templates.items():
-            if tpl is None:
-                self._command_templates[key] = lambda value: value
-            else:
-                tpl.hass = self.hass
-                self._command_templates[key] = MqttCommandTemplate(tpl).async_render
+            self._command_templates[key] = MqttCommandTemplate(tpl).async_render
 
         for key, tpl in self._value_templates.items():
             if tpl is None:

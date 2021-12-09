@@ -256,29 +256,57 @@ class MqttCommandTemplate:
 
     def __init__(
         self,
-        command_template: template.Template,
+        command_template: template.Template | None,
         hass: HomeAssistant | None = None,
         variables: template.TemplateVarsType = None,
     ) -> None:
         """Instantiate a command template."""
+        self._attr_command_template = command_template
+        if command_template is None:
+            return
+
         if hass is not None:
             command_template.hass = hass
-        self.template = command_template
         self.variables = variables
 
     @callback
     def async_render(
-        self, value: PublishPayloadType, variables: template.TemplateVarsType = None
+        self,
+        value: PublishPayloadType = None,
+        variables: template.TemplateVarsType = None,
     ) -> PublishPayloadType:
-        """Render the command template with given value or variables."""
+        """Render or convert the command template with given value or variables."""
+        if self._attr_command_template is None:
+            return MqttCommandTemplate._convert_outgoing_payload(value)
+
         values = {"value": value}
         if self.variables is not None:
             values.update(self.variables)
         if variables is not None:
             values.update(variables)
-        return render_outgoing_payload(
-            self.template.async_render(values, parse_result=False)
+        return MqttCommandTemplate._convert_outgoing_payload(
+            self._attr_command_template.async_render(values, parse_result=False)
         )
+
+    @staticmethod
+    def _convert_outgoing_payload(payload: PublishPayloadType) -> PublishPayloadType:
+        """Ensure correct raw MQTT payload is passed as bytes for publishing."""
+        # pass-through for bytes type object
+        if isinstance(payload, bytes):
+            return payload
+
+        # cast bytes literal string to bytes type object
+        if isinstance(payload, str):
+            try:
+                native_object = literal_eval(payload)
+                if isinstance(native_object, bytes):
+                    return native_object
+
+            except (ValueError, TypeError, SyntaxError, MemoryError):
+                pass
+            return payload
+
+        return payload
 
 
 @dataclass
@@ -324,26 +352,6 @@ def _build_publish_data(topic: Any, qos: int, retain: bool) -> ServiceDataType:
 def publish(hass: HomeAssistant, topic, payload, qos=0, retain=False) -> None:
     """Publish message to an MQTT topic."""
     hass.add_job(async_publish, hass, topic, payload, qos, retain)
-
-
-def render_outgoing_payload(payload: PublishPayloadType) -> PublishPayloadType:
-    """Ensure correct raw MQTT payload is passed as bytes for publishing."""
-    # pass-through for bytes type object
-    if isinstance(payload, bytes):
-        return payload
-
-    # cast bytes literal string to bytes type object
-    if isinstance(payload, str):
-        try:
-            native_object = literal_eval(payload)
-            if isinstance(native_object, bytes):
-                return native_object
-
-        except (ValueError, TypeError, SyntaxError, MemoryError):
-            pass
-        return payload
-
-    return payload
 
 
 async def async_publish(
@@ -580,9 +588,9 @@ async def async_setup_entry(hass, entry):
 
         if payload_template is not None:
             try:
-                payload = template.Template(payload_template, hass).async_render(
-                    parse_result=False
-                )
+                payload = MqttCommandTemplate(
+                    template.Template(payload_template, hass)
+                ).async_render()
             except (template.jinja2.TemplateError, TemplateError) as exc:
                 _LOGGER.error(
                     "Unable to publish to %s: rendering payload template of "
@@ -593,9 +601,7 @@ async def async_setup_entry(hass, entry):
                 )
                 return
 
-        await hass.data[DATA_MQTT].async_publish(
-            msg_topic, render_outgoing_payload(payload), qos, retain
-        )
+        await hass.data[DATA_MQTT].async_publish(msg_topic, payload, qos, retain)
 
     hass.services.async_register(
         DOMAIN, SERVICE_PUBLISH, async_publish_service, schema=MQTT_PUBLISH_SCHEMA

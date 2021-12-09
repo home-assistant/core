@@ -156,19 +156,20 @@ async def test_publish(hass, mqtt_mock):
     mqtt_mock.reset_mock()
 
 
-async def test_render_outgoing_payload(hass):
-    """Test the rendering of outgoing MQTT payloads."""
-    assert mqtt.render_outgoing_payload(b"\xde\xad\xbe\xef") == b"\xde\xad\xbe\xef"
+async def test_convert_outgoing_payload(hass):
+    """Test the converting of outgoing MQTT payloads without template."""
+    command_template = mqtt.MqttCommandTemplate(None)
+    assert command_template.async_render(b"\xde\xad\xbe\xef") == b"\xde\xad\xbe\xef"
 
     assert (
-        mqtt.render_outgoing_payload("b'\\xde\\xad\\xbe\\xef'") == b"\xde\xad\xbe\xef"
+        command_template.async_render("b'\\xde\\xad\\xbe\\xef'") == b"\xde\xad\xbe\xef"
     )
 
-    assert mqtt.render_outgoing_payload(1234) == 1234
+    assert command_template.async_render(1234) == 1234
 
-    assert mqtt.render_outgoing_payload(1234.56) == 1234.56
+    assert command_template.async_render(1234.56) == 1234.56
 
-    assert mqtt.render_outgoing_payload(None) is None
+    assert command_template.async_render(None) is None
 
 
 async def test_command_template_value(hass):

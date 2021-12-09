@@ -138,17 +138,11 @@ class MqttNumber(MqttEntity, NumberEntity, RestoreEntity):
         self._optimistic = config[CONF_OPTIMISTIC]
 
         self._templates = {
-            CONF_COMMAND_TEMPLATE: config.get(CONF_COMMAND_TEMPLATE),
+            CONF_COMMAND_TEMPLATE: MqttCommandTemplate(
+                self._templates[CONF_COMMAND_TEMPLATE], self.hass
+            ).async_render,
             CONF_VALUE_TEMPLATE: config.get(CONF_VALUE_TEMPLATE),
         }
-
-        command_template = self._templates[CONF_COMMAND_TEMPLATE]
-        if command_template is None:
-            self._templates[CONF_COMMAND_TEMPLATE] = lambda value: value
-        else:
-            self._templates[CONF_COMMAND_TEMPLATE] = MqttCommandTemplate(
-                command_template, self.hass
-            ).async_render
 
         value_template = self._templates[CONF_VALUE_TEMPLATE]
         if value_template is None:
