@@ -61,7 +61,7 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
         NumberEntityDescription(
             key=DPCode.FEED_MANUAL,
             name="Feed",
-            icon="mdi:numeric",
+            icon="mdi:bowl",
         ),
     ),
     # Human Presence Sensor
