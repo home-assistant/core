@@ -12,16 +12,16 @@ from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 MOCK_HOST = "http://fronius"
-MOCK_UID = "123.4567890"  # has to match mocked logger unique_id
+MOCK_UID = "123.4567890"
 
 
 async def setup_fronius_integration(
-    hass: HomeAssistant, is_logger: bool = True
+    hass: HomeAssistant, is_logger: bool = True, unique_id: str = MOCK_UID
 ) -> ConfigEntry:
     """Create the Fronius integration."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=MOCK_UID,
+        unique_id=unique_id,  # has to match mocked logger unique_id
         data={
             CONF_HOST: MOCK_HOST,
             "is_logger": is_logger,

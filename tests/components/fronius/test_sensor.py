@@ -373,7 +373,9 @@ async def test_gen24_storage(hass, aioclient_mock):
         assert state.state == str(expected_state)
 
     mock_responses(aioclient_mock, fixture_set="gen24_storage")
-    config_entry = await setup_fronius_integration(hass, is_logger=False)
+    config_entry = await setup_fronius_integration(
+        hass, is_logger=False, unique_id="12345678"
+    )
 
     assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 36
     await enable_all_entities(
@@ -471,6 +473,39 @@ async def test_gen24_storage(hass, aioclient_mock):
     assert_state("sensor.temperature_cell_fronius_storage_0_http_fronius", 21.5)
     assert_state("sensor.capacity_designed_fronius_storage_0_http_fronius", 16588)
     assert_state("sensor.voltage_dc_fronius_storage_0_http_fronius", 0.0)
+
+    # Devices
+    device_registry = dr.async_get(hass)
+
+    solar_net = device_registry.async_get_device(
+        identifiers={(DOMAIN, "solar_net_12345678")}
+    )
+    assert solar_net.configuration_url == "http://fronius"
+    assert solar_net.manufacturer == "Fronius"
+    assert solar_net.name == "SolarNet"
+
+    inverter_1 = device_registry.async_get_device(identifiers={(DOMAIN, "12345678")})
+    assert inverter_1.manufacturer == "Fronius"
+    assert inverter_1.model == "Gen24"
+    assert inverter_1.name == "Gen24 Storage"
+
+    meter = device_registry.async_get_device(identifiers={(DOMAIN, "1234567890")})
+    assert meter.manufacturer == "Fronius"
+    assert meter.model == "Smart Meter TS 65A-3"
+    assert meter.name == "Smart Meter TS 65A-3"
+
+    ohmpilot = device_registry.async_get_device(identifiers={(DOMAIN, "23456789")})
+    assert ohmpilot.manufacturer == "Fronius"
+    assert ohmpilot.model == "Ohmpilot 6"
+    assert ohmpilot.name == "Ohmpilot"
+    assert ohmpilot.sw_version == "1.0.25-3"
+
+    storage = device_registry.async_get_device(
+        identifiers={(DOMAIN, "P030T020Z2001234567     ")}
+    )
+    assert storage.manufacturer == "BYD"
+    assert storage.model == "BYD Battery-Box Premium HV"
+    assert storage.name == "BYD Battery-Box Premium HV"
 
 
 async def test_primo_s0(hass, aioclient_mock):
