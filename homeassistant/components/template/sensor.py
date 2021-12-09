@@ -184,12 +184,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-# class SensorTemplateMixin(SensorEntity):
-#     """Mixin for template sensors."""
-
-#     def
-
-
 class SensorTemplate(TemplateEntity, SensorEntity):
     """Representation of a Template Sensor."""
 
