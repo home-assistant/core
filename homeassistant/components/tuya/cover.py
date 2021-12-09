@@ -319,7 +319,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
             commands.append(
                 {
                     "code": self.entity_description.set_position,
-                    "value": 0,
+                    "value": 100,
                 }
             )
 
@@ -327,7 +327,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
 
     def close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
-        value: bool | str = True
+        value: bool | str = False
         if self.device.function[self.entity_description.key].type == "Enum":
             value = "close"
 
@@ -339,7 +339,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
             commands.append(
                 {
                     "code": self.entity_description.set_position,
-                    "value": 100,
+                    "value": 0,
                 }
             )
 
