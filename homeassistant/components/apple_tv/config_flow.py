@@ -113,7 +113,9 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_reconfigure(self, user_input=None):
         """Inform user that reconfiguration is about to start."""
         if user_input is not None:
-            return await self.async_find_device_wrapper(self.async_pair_next_protocol)
+            return await self.async_find_device_wrapper(
+                self.async_pair_next_protocol, allow_exist=True
+            )
 
         return self.async_show_form(step_id="reconfigure")
 
