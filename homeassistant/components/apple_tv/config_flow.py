@@ -151,6 +151,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle device found via zeroconf."""
+        self._async_abort_entries_match({CONF_ADDRESS: discovery_info.host})
         service_type = discovery_info.type[:-1]  # Remove leading .
         name = discovery_info.name.replace(f".{service_type}.", "")
         properties = discovery_info.properties
@@ -163,7 +164,9 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Scan for the device in order to extract _all_ unique identifiers assigned to
         # it. Not doing it like this will yield multiple config flows for the same
         # device, one per protocol, which is undesired.
-        return await self.async_find_device_wrapper(self.async_found_zeroconf_device)
+        return await self.async_find_device_wrapper(
+            self.async_found_zeroconf_device, allow_exist=True
+        )
 
     async def async_found_zeroconf_device(self, user_input=None):
         """Handle device found after Zeroconf discovery."""
@@ -186,6 +189,10 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # potentially new identifiers. In the example above, when service C is
         # discovered, the identifier of service C will be inserted into
         # "all_identifiers" of the original flow (making the device complete).
+        # Also abort if an integration with this identifier already exists
+        await self.async_set_unique_id(self.device_identifier)
+        self._abort_if_unique_id_configured(updates={CONF_ADDRESS: self.atv.address})
+
         for flow in self._async_in_progress():
             for identifier in self.atv.all_identifiers:
                 if identifier not in flow["context"].get("all_identifiers", []):
@@ -199,10 +206,6 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 raise data_entry_flow.AbortFlow("already_in_progress")
 
         self.context["all_identifiers"] = self.atv.all_identifiers
-
-        # Also abort if an integration with this identifier already exists
-        await self.async_set_unique_id(self.device_identifier)
-        self._abort_if_unique_id_configured()
 
         self.context["identifier"] = self.unique_id
         return await self.async_step_confirm()
