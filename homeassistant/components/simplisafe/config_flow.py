@@ -23,6 +23,11 @@ from homeassistant.helpers.typing import ConfigType
 from .const import CONF_USER_ID, DOMAIN, LOGGER
 
 CONF_AUTH_CODE = "auth_code"
+CONF_DOCS_URL = "docs_url"
+
+AUTH_DOCS_URL = (
+    "http://home-assistant.io/integrations/simplisafe#getting-an-authorization-code"
+)
 
 STEP_USER_SCHEMA = vol.Schema(
     {
@@ -74,7 +79,10 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=STEP_USER_SCHEMA,
             errors=errors or {},
-            description_placeholders={CONF_URL: self._oauth_values.auth_url},
+            description_placeholders={
+                CONF_URL: self._oauth_values.auth_url,
+                CONF_DOCS_URL: AUTH_DOCS_URL,
+            },
         )
 
     async def async_step_reauth(self, config: ConfigType) -> FlowResult:
