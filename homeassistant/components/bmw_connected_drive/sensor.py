@@ -8,11 +8,14 @@ from typing import cast
 
 from bimmer_connected.vehicle import ConnectedDriveVehicle
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_UNIT_SYSTEM_IMPERIAL,
-    DEVICE_CLASS_BATTERY,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
     PERCENTAGE,
@@ -61,7 +64,7 @@ SENSOR_TYPES: dict[str, BMWSensorEntityDescription] = {
         key="charging_level_hv",
         unit_metric=PERCENTAGE,
         unit_imperial=PERCENTAGE,
-        device_class=DEVICE_CLASS_BATTERY,
+        device_class=SensorDeviceClass.BATTERY,
     ),
     # --- Specific ---
     "mileage": BMWSensorEntityDescription(
