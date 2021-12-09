@@ -121,12 +121,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> data_entry_flow.FlowResult:
         """Dialog that informs the user that reauth is required."""
-        entry_id = self.context["entry_id"]
-        entry = self.hass.config_entries.async_get_entry(entry_id)
-        assert entry is not None
         host = self.HOST
         errors = {CONF_PASSWORD: self.ERROR_INVALID_AUTH}
         if user_input is None:
+            entry_id = self.context["entry_id"]
+            entry = self.hass.config_entries.async_get_entry(entry_id)
+            assert entry is not None
             host = entry.data[CONF_HOST]
         else:
             key: bytes | None = None
@@ -159,6 +159,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     data = {CONF_HOST: host}
                     if key is not None:
                         data[CONF_AUTHENTICATION] = key.hex()
+                    entry_id = self.context["entry_id"]
+                    entry = self.hass.config_entries.async_get_entry(entry_id)
+                    assert entry is not None
                     self.hass.config_entries.async_update_entry(entry, data=data)
                     self.hass.async_create_task(
                         self.hass.config_entries.async_setup(entry_id)
