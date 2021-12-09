@@ -189,10 +189,6 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # potentially new identifiers. In the example above, when service C is
         # discovered, the identifier of service C will be inserted into
         # "all_identifiers" of the original flow (making the device complete).
-        # Also abort if an integration with this identifier already exists
-        await self.async_set_unique_id(self.device_identifier)
-        self._abort_if_unique_id_configured(updates={CONF_ADDRESS: self.atv.address})
-
         for flow in self._async_in_progress():
             for identifier in self.atv.all_identifiers:
                 if identifier not in flow["context"].get("all_identifiers", []):
@@ -206,6 +202,12 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 raise data_entry_flow.AbortFlow("already_in_progress")
 
         self.context["all_identifiers"] = self.atv.all_identifiers
+
+        await self.async_set_unique_id(self.device_identifier)
+        # Also abort if an integration with this identifier already exists
+        # but be sure to update the address if its changed so the scanner
+        # will probe the new address
+        self._abort_if_unique_id_configured(updates={CONF_ADDRESS: self.atv.address})
 
         self.context["identifier"] = self.unique_id
         return await self.async_step_confirm()
