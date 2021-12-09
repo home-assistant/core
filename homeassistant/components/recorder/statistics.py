@@ -367,7 +367,7 @@ def delete_duplicates(instance: Recorder, session: scoped_session) -> None:
         isotime = dt_util.utcnow().isoformat()
         backup_file_name = f"deleted_statistics.{isotime}.json"
         backup_path = instance.hass.config.path(backup_file_name)
-        with open(backup_path, "w") as backup_file:
+        with open(backup_path, "w", encoding="utf8") as backup_file:
             json.dump(
                 non_identical_duplicates,
                 backup_file,
@@ -549,7 +549,10 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
         platform_stats.extend(platform_stat)
 
     # Insert collected statistics in the database
-    with session_scope(session=instance.get_session()) as session:  # type: ignore
+    with session_scope(
+        session=instance.get_session(),  # type: ignore
+        filter=_filter_unique_constraint_integrity_error(instance),
+    ) as session:
         for stats in platform_stats:
             metadata_id = _update_or_add_metadata(instance.hass, session, stats["meta"])
             _insert_statistics(
@@ -1179,15 +1182,11 @@ def async_add_external_statistics(
     hass.data[DATA_INSTANCE].async_external_statistics(metadata, statistics)
 
 
-@retryable_database_job("statistics")
-def add_external_statistics(
+def _filter_unique_constraint_integrity_error(
     instance: Recorder,
-    metadata: StatisticMetaData,
-    statistics: Iterable[StatisticData],
-) -> bool:
-    """Process an add_statistics job."""
-
-    def filter_unique_constraint_integrity_error(err: Exception) -> bool:
+) -> Callable[[Exception], bool]:
+    def _filter_unique_constraint_integrity_error(err: Exception) -> bool:
+        """Handle unique constraint integrity errors."""
         if not isinstance(err, StatementError):
             return False
 
@@ -1212,11 +1211,26 @@ def add_external_statistics(
             _LOGGER.warning(
                 "Blocked attempt to insert duplicated statistic rows, please report at "
                 'https://github.com/home-assistant/core/issues?q=is%%3Aissue+label%%3A"integration%%3A+recorder"+',
+                exc_info=err,
             )
 
         return ignore
 
-    with session_scope(session=instance.get_session(), filter=filter_unique_constraint_integrity_error) as session:  # type: ignore
+    return _filter_unique_constraint_integrity_error
+
+
+@retryable_database_job("statistics")
+def add_external_statistics(
+    instance: Recorder,
+    metadata: StatisticMetaData,
+    statistics: Iterable[StatisticData],
+) -> bool:
+    """Process an add_statistics job."""
+
+    with session_scope(
+        session=instance.get_session(),  # type: ignore
+        filter=_filter_unique_constraint_integrity_error(instance),
+    ) as session:
         metadata_id = _update_or_add_metadata(instance.hass, session, metadata)
         for stat in statistics:
             if stat_id := _statistics_exists(

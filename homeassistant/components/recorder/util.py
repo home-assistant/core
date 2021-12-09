@@ -66,7 +66,10 @@ RETRYABLE_MYSQL_ERRORS = (1205, 1206, 1213)
 
 @contextmanager
 def session_scope(
-    *, hass: HomeAssistant | None = None, session: Session | None = None, filter=None
+    *,
+    hass: HomeAssistant | None = None,
+    session: Session | None = None,
+    filter: Callable[[Exception], bool] | None = None,
 ) -> Generator[Session, None, None]:
     """Provide a transactional scope around a series of operations."""
     if session is None and hass is not None:
