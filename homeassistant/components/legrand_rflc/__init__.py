@@ -37,11 +37,12 @@ async def async_setup_entry(
     hass.data.setdefault(DOMAIN, {})[entry_id] = hub = lc7001.aio.Hub(host, **kwargs)
 
     async def authenticated(mac) -> None:
-        if mac.lower() != entry.unique_id:
+        unique_id = mac.lower()
+        if unique_id != entry.unique_id:
             _LOGGER.warning(
                 "Expected %s but found %s at %s",
                 entry.unique_id,
-                mac.lower(),
+                unique_id,
                 host,
             )
             hass.async_create_task(_reauth())

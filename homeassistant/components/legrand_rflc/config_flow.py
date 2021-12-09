@@ -144,11 +144,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except lc7001.aio.Authenticator.Error:
                 pass
             else:
-                if mac.lower() != self.unique_id:
+                unique_id = mac.lower()
+                if unique_id != self.unique_id:
                     _LOGGER.warning(
                         "Expected %s but found %s at %s",
                         self.unique_id,
-                        mac.lower(),
+                        unique_id,
                         self.HOST,
                     )
                     errors[CONF_HOST] = self.ERROR_INVALID_HOST
