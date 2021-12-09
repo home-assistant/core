@@ -1,10 +1,10 @@
 """The lookin integration light platform."""
 from __future__ import annotations
 
-from collections.abc import Coroutine
+from collections.abc import Callable, Coroutine
 from datetime import timedelta
 import logging
-from typing import Any, Callable, cast
+from typing import Any, cast
 
 from aiolookin import Remote
 from aiolookin.models import UDPCommandType, UDPEvent
@@ -185,7 +185,7 @@ class LookinMedia(LookinPowerEntity, MediaPlayerEntity):
         state = status[0]
         mute = status[2]
 
-        self._state = state == "1" and STATE_STANDBY or STATE_ON
+        self._state = STATE_STANDBY if state == "1" else STATE_ON
         self._is_muted = mute == "0"
 
     def _async_push_update(self, event: UDPEvent) -> None:
