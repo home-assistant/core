@@ -69,7 +69,7 @@ def session_scope(
     *,
     hass: HomeAssistant | None = None,
     session: Session | None = None,
-    filter_exceptions: Callable[[Exception], bool] | None = None,
+    exception_filter: Callable[[Exception], bool] | None = None,
 ) -> Generator[Session, None, None]:
     """Provide a transactional scope around a series of operations."""
     if session is None and hass is not None:
@@ -88,7 +88,7 @@ def session_scope(
         _LOGGER.error("Error executing query: %s", err)
         if need_rollback:
             session.rollback()
-        if not filter_exceptions or not filter_exceptions(err):
+        if not exception_filter or not exception_filter(err):
             raise
     finally:
         session.close()

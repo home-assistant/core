@@ -551,7 +551,7 @@ def compile_statistics(instance: Recorder, start: datetime) -> bool:
     # Insert collected statistics in the database
     with session_scope(
         session=instance.get_session(),  # type: ignore
-        filter=_filter_unique_constraint_integrity_error(instance),
+        exception_filter=_filter_unique_constraint_integrity_error(instance),
     ) as session:
         for stats in platform_stats:
             metadata_id = _update_or_add_metadata(instance.hass, session, stats["meta"])
@@ -1229,7 +1229,7 @@ def add_external_statistics(
 
     with session_scope(
         session=instance.get_session(),  # type: ignore
-        filter=_filter_unique_constraint_integrity_error(instance),
+        exception_filter=_filter_unique_constraint_integrity_error(instance),
     ) as session:
         metadata_id = _update_or_add_metadata(instance.hass, session, metadata)
         for stat in statistics:
