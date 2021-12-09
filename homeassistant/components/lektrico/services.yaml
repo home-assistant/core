@@ -1,8 +1,0 @@
-identify:
-  name: Identify
-  description: >-
-    Identify a Lektrico charger.
-  target:
-    entity:
-      integration: charger
-      domain: sensor
