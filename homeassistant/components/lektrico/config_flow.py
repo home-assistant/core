@@ -28,7 +28,6 @@ class LektricoFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initiated by the user."""
-        print("Handle a flow initiated by the user")
         if user_input is None:
             return self._async_show_setup_form()
 
@@ -42,7 +41,6 @@ class LektricoFlowHandler(ConfigFlow, domain=DOMAIN):
         self, errors: dict[str, str] | None = None
     ) -> FlowResult:
         """Show the setup form to the user."""
-        print("Show the setup form to the user.")
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(

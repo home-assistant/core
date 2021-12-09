@@ -175,7 +175,6 @@ class LektricoDevice:
         await self._create_coordinator()
 
         if self._coordinator is None:
-            print("coordinator is NONE")
             return False
         else:
             return True
@@ -186,14 +185,12 @@ class LektricoDevice:
         data = await a_data
         entity_reg = er.async_get(self._hass)
         my_entry = entity_reg.async_get(f"sensor.{self.friendly_name}_{SENSORS[0].key}")
-        # print(f"my_entry= {my_entry}")
         if my_entry is not None:
             dev_reg = dr.async_get(self._hass)
             if my_entry.device_id is not None:
                 device = dev_reg.async_get(my_entry.device_id)
                 if device is not None:
                     dev_reg.async_update_device(device.id, sw_version=data.fw_version)
-                    # print(f"device.sw_version= {device.sw_version}")
         return data
 
     async def _create_coordinator(self) -> None:
@@ -221,30 +218,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up Lektrico charger based on a config entry."""
     charger: lektricowifi.Charger = hass.data[DOMAIN][entry.entry_id]
-    # print(f"hass= {hass}")
-    # print(f"hass.data= {hass.data}")   #f.f.f.f. mare
-    # print(f"hass.data[DOMAIN]= {hass.data[DOMAIN]}")
-    # {'b66d66f250b9c6f25d9cd488630dacee': {'lektrico_client': Charger(_host='192.168.100.11',
-    # request_timeout=8, session=<aiohttp.client.ClientSession object at 0x7ffa67284760>,
-    # _close_session=False)}}
-    # print(f"entry= {entry}")
-    # <homeassistant.config_entries.ConfigEntry object at 0x7ffa892987d0>
-    # print(f"entry.entry_id= {entry.entry_id}") #b66d66f250b9c6f25d9cd488630dacee
-    # print(f"hass.data[DOMAIN][entry.entry_id]= {hass.data[DOMAIN][entry.entry_id]}")
-    # {'lektrico_client': Charger(_host='192.168.100.11', request_timeout=8,
-    # session=<aiohttp.client.ClientSession object at 0x7ffa67284760>,
-    # _close_session=False)}
-    # print(f"hass.data[DOMAIN][entry.entry_id][DATA_LEKTRICO_CLIENT]=
-    # {hass.data[DOMAIN][entry.entry_id][DATA_LEKTRICO_CLIENT]}")
-    # Charger(_host='192.168.100.11', request_timeout=8,
-    # session=<aiohttp.client.ClientSession object at 0x7ffa67284760>,
-    # _close_session=False)
-
-    print(f"entry.title={entry.title}")  # entry.title=lek
-    print(f"entry.data={entry.data}")
-    # entry.data={'host': '192.168.100.11', 'friendly_name': 'lek'}
-    print(f"entry.data.friendly_name={entry.data[CONF_FRIENDLY_NAME]}")
-    # entry.data.friendly_name=lek
 
     await charger.charger_info()
     settings = await charger.charger_config()
@@ -269,28 +242,6 @@ async def async_setup_entry(
 
     async_add_entities(sensors, True)
 
-    # platform = async_get_current_platform()
-    # platform.async_register_entity_service(
-    #     SERVICE_IDENTIFY,
-    #     {},
-    #     LektricoSensor.async_identify.__name__,
-    # )
-
-
-# def get_entity_name(device, ent_key, ent_name) -> str:
-#     """Get the name for the entity"""
-#     name_slug = device.name
-#     # if ent_key == DEFAULT_SENSOR:
-#     #     return name_slug
-
-#     name = ent_name or ent_key
-#     if not ent_name:
-#         feat_name = device.available_features.get(ent_key)
-#         if feat_name and feat_name != ent_key:
-#             name = feat_name.replace("_", " ").capitalize()
-
-#     return f"{name_slug} {name}"
-
 
 class LektricoSensor(CoordinatorEntity, SensorEntity):
     """The entity class for Lektrico charging stations sensors."""
@@ -312,21 +263,11 @@ class LektricoSensor(CoordinatorEntity, SensorEntity):
             super().__init__(_lektrico_device.coordinator)
         self.charger = charger
         self.friendly_name = friendly_name
-        print("_init_")
         self.entity_description = description
-        # print(f"self.entity_description={self.entity_description}")
-        # self._attr_name = get_entity_name(charger, description.key, description.name)
 
         self._attr_name = f"{self.friendly_name} {description.name}"
-        # this is the entity name    #ex: 1P7K Charger_State
-        # and it will become the entity id  sensor.<friendly_name>_charger_state
-        # ex: sensor.1p7k_charger_state
-        print(f"self._attr_name={self._attr_name}")
         self._attr_unique_id = f"{settings.serial_number}_{description.name}"
         # ex: 500006_Led_Brightness
-        print(f"self._attr_unique_id={self._attr_unique_id}")
-        # print(f"data = {_lektrico_device.coordinator.data}")
-        # self._attributes: dict[str, str] = {}
 
         self._settings = settings
         self._lektrico_device = _lektrico_device
@@ -344,7 +285,6 @@ class LektricoSensor(CoordinatorEntity, SensorEntity):
     @property
     def native_value(self) -> float | str | Any | None:
         """Return the state of the sensor."""
-        # print(f"{self.entity_description.name} - {self.entity_description.value_fn}")
         if self.entity_description.value_fn is not None:
             if self._lektrico_device.coordinator is None:
                 return None
@@ -357,7 +297,6 @@ class LektricoSensor(CoordinatorEntity, SensorEntity):
     @property
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the sensor, if any."""
-        # print(f"{self.entity_description.name} - {self.entity_description.unit_fn}")
         if self.entity_description.unit_fn is not None:
             return self.entity_description.unit_fn
         return super().native_unit_of_measurement
@@ -378,23 +317,5 @@ class LektricoSensor(CoordinatorEntity, SensorEntity):
                 ATTR_NAME: self.friendly_name,
                 ATTR_MANUFACTURER: "Lektrico",
                 ATTR_MODEL: f"1P7K {self._settings.serial_number} rev.{self._settings.board_revision}",
-                # ATTR_SW_VERSION: self._settings.serial_number
-                # ATTR_SW_VERSION: f"{self._info.firmware_version}
-                # ({self._info.firmware_build_number})",
                 ATTR_SW_VERSION: self._lektrico_device.coordinator.data.fw_version,
             }
-
-    # async def async_update(self):
-    #     """Update the entity.
-    #     Only used by the generic entity update service.
-    #     """
-    #     print("async_update")
-    #     # await self.coordinator.async_request_refresh()
-
-    # async def async_identify(self) -> None:
-    #     """Identify the charger, will make it blink."""
-    #     # try:
-    #     print("identify")
-    #     # except ChargerError:
-    #     #     _LOGGER.exception("An error occurred while identifying the Lektrico charger")
-    #     #     self._state = None
