@@ -46,14 +46,11 @@ async def device_scan(hass, identifier, loop):
         except ValueError:
             return None
 
-    aiozc = await zeroconf.async_get_async_instance(hass)
+    scan_result = await scan(loop, timeout=3, hosts=_host_filter())
+    matches = [atv for atv in scan_result if _filter_device(atv)]
 
-    for hosts in (_host_filter(), None):
-        scan_result = await scan(loop, timeout=3, hosts=hosts, aiozc=aiozc)
-        matches = [atv for atv in scan_result if _filter_device(atv)]
-
-        if matches:
-            return matches[0], matches[0].all_identifiers
+    if matches:
+        return matches[0], matches[0].all_identifiers
 
     return None, None
 
@@ -157,9 +154,10 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         properties = discovery_info.properties
 
         # Extract unique identifier from service
-        self.scan_filter = get_unique_id(service_type, name, properties)
-        if self.scan_filter is None:
+        unique_id = get_unique_id(service_type, name, properties)
+        if unique_id:
             return self.async_abort(reason="unknown")
+        self.scan_filter = discovery_info.host
 
         # Scan for the device in order to extract _all_ unique identifiers assigned to
         # it. Not doing it like this will yield multiple config flows for the same
