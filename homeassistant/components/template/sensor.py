@@ -262,9 +262,7 @@ class SensorTemplate(TemplateEntity, SensorEntity):
             return
 
         # Date device class
-        parsed_date = dt_util.parse_date(result)
-
-        if parsed_date is not None:
+        if (parsed_date := dt_util.parse_date(result)) is not None:
             self._attr_native_value = parsed_date
             return
 
@@ -320,9 +318,7 @@ class TriggerSensorEntity(TriggerEntity, SensorEntity):
             return
 
         # Date device class
-        parsed_date = dt_util.parse_date(state)
-
-        if parsed_date is not None:
+        if (parsed_date := dt_util.parse_date(state)) is not None:
             self._rendered[CONF_STATE] = parsed_date
             return
 
