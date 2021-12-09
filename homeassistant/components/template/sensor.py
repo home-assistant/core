@@ -184,6 +184,32 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
+@callback
+def _async_parse_date_datetime(
+    value: str, entity_id: str, device_class: SensorDeviceClass | str | None
+) -> datetime | date | None:
+    """Parse datetime."""
+    if device_class == SensorDeviceClass.TIMESTAMP:
+        if (parsed_timestamp := dt_util.parse_datetime(value)) is None:
+            _LOGGER.warning("%s rendered invalid timestamp: %s", entity_id, value)
+            return None
+
+        if parsed_timestamp.tzinfo is None:
+            _LOGGER.warning(
+                "%s rendered timestamp without timezone: %s", entity_id, value
+            )
+            return None
+
+        return parsed_timestamp
+
+    # Date device class
+    if (parsed_date := dt_util.parse_date(value)) is not None:
+        return parsed_date
+
+    _LOGGER.warning("%s rendered invalid date %s", entity_id, value)
+    return None
+
+
 class SensorTemplate(TemplateEntity, SensorEntity):
     """Representation of a Template Sensor."""
 
@@ -243,31 +269,9 @@ class SensorTemplate(TemplateEntity, SensorEntity):
             self._attr_native_value = result
             return
 
-        if self.device_class == SensorDeviceClass.TIMESTAMP:
-            if (parsed_timestamp := dt_util.parse_datetime(result)) is None:
-                _LOGGER.warning(
-                    "%s rendered invalid timestamp: %s", self.entity_id, result
-                )
-                self._attr_native_value = None
-                return
-
-            if parsed_timestamp.tzinfo is None:
-                _LOGGER.warning(
-                    "%s rendered timestamp without timezone: %s", self.entity_id, result
-                )
-                self._attr_native_value = None
-                return
-
-            self._attr_native_value = parsed_timestamp
-            return
-
-        # Date device class
-        if (parsed_date := dt_util.parse_date(result)) is not None:
-            self._attr_native_value = parsed_date
-            return
-
-        _LOGGER.warning("%s rendered invalid date %s", self.entity_id, result)
-        self._attr_native_value = None
+        self._attr_native_value = _async_parse_date_datetime(
+            result, self.entity_id, self.device_class
+        )
 
 
 class TriggerSensorEntity(TriggerEntity, SensorEntity):
@@ -299,28 +303,6 @@ class TriggerSensorEntity(TriggerEntity, SensorEntity):
         ):
             return
 
-        if self.device_class == SensorDeviceClass.TIMESTAMP:
-            if (parsed_timestamp := dt_util.parse_datetime(state)) is None:
-                _LOGGER.warning(
-                    "%s rendered invalid timestamp: %s", self.entity_id, state
-                )
-                self._rendered[CONF_STATE] = None
-                return
-
-            if parsed_timestamp.tzinfo is None:
-                _LOGGER.warning(
-                    "%s rendered timestamp without timezone: %s", self.entity_id, state
-                )
-                self._rendered[CONF_STATE] = None
-                return
-
-            self._rendered[CONF_STATE] = parsed_timestamp
-            return
-
-        # Date device class
-        if (parsed_date := dt_util.parse_date(state)) is not None:
-            self._rendered[CONF_STATE] = parsed_date
-            return
-
-        _LOGGER.warning("%s rendered invalid date %s", self.entity_id, state)
-        self._rendered[CONF_STATE] = None
+        self._rendered[CONF_STATE] = _async_parse_date_datetime(
+            state, self.entity_id, self.device_class
+        )
