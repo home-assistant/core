@@ -165,6 +165,11 @@ class PrometheusMetrics:
         if not self._filter(state.entity_id):
             return
 
+        if (old_state := event.data.get("old_state")) is not None and (
+            old_friendly_name := old_state.attributes.get(ATTR_FRIENDLY_NAME)
+        ) != state.attributes.get(ATTR_FRIENDLY_NAME):
+            self._remove_labelsets(old_state.entity_id, old_friendly_name)
+
         ignored_states = (STATE_UNAVAILABLE, STATE_UNKNOWN)
 
         handler = f"_handle_{domain}"
@@ -206,19 +211,24 @@ class PrometheusMetrics:
             metrics_entity_id = entity_id
         elif action == "update":
             changes = event.data.get("changes")
+
             if "entity_id" in changes:
                 metrics_entity_id = changes["entity_id"]
-            elif "disabled_by" in changes or "name" in changes:
+            elif "disabled_by" in changes:
                 metrics_entity_id = entity_id
+            elif "name" in changes:
+                return
 
         if metrics_entity_id:
             self._remove_labelsets(metrics_entity_id)
 
-    def _remove_labelsets(self, entity_id):
+    def _remove_labelsets(self, entity_id, friendly_name=None):
         """Remove labelsets matching the given entity id from all metrics."""
         for _, metric in self._metrics.items():
             for sample in metric.collect()[0].samples:
-                if sample.labels["entity"] == entity_id:
+                if sample.labels["entity"] == entity_id and (
+                    not friendly_name or sample.labels["friendly_name"] == friendly_name
+                ):
                     _LOGGER.debug(
                         "Removing labelset from %s for entity_id: %s",
                         sample.name,
@@ -228,7 +238,7 @@ class PrometheusMetrics:
                         metric.remove(*sample.labels.values())
                     except KeyError:
                         pass
-                    break
+                    # break
 
     def _handle_attributes(self, state):
         for key, value in state.attributes.items():

@@ -722,6 +722,10 @@ async def test_renaming_entity_name(hass, hass_client):
     )
     client = await setup_prometheus_client(hass, hass_client, "")
 
+    await async_setup_component(
+        hass, climate.DOMAIN, {"climate": [{"platform": "demo"}]}
+    )
+
     assert await async_setup_component(
         hass, sensor.DOMAIN, {"sensor": [{"platform": "demo"}]}
     )
@@ -753,11 +757,30 @@ async def test_renaming_entity_name(hass, hass_client):
         'friendly_name="Outside Humidity"} 1.0' in body
     )
 
+    assert (
+        'climate_action{action="heating",'
+        'domain="climate",'
+        'entity="climate.heatpump",'
+        'friendly_name="HeatPump"} 1.0' in body
+    )
+
+    assert (
+        'climate_action{action="cooling",'
+        'domain="climate",'
+        'entity="climate.heatpump",'
+        'friendly_name="HeatPump"} 0.0' in body
+    )
+
     registry = entity_registry.async_get(hass)
     assert "sensor.outside_temperature" in registry.entities
+    assert "climate.heatpump" in registry.entities
     registry.async_update_entity(
         entity_id="sensor.outside_temperature",
         name="Inside Temperature",
+    )
+    registry.async_update_entity(
+        entity_id="climate.heatpump",
+        name="Renamed",
     )
 
     await hass.async_block_till_done()
@@ -774,6 +797,20 @@ async def test_renaming_entity_name(hass, hass_client):
         'entity_available{domain="sensor",'
         'entity="sensor.outside_temperature",'
         'friendly_name="Outside Temperature"} 1.0' not in body
+    )
+
+    assert (
+        'climate_action{action="heating",'
+        'domain="climate",'
+        'entity="climate.heatpump",'
+        'friendly_name="HeatPump"} 1.0' not in body
+    )
+
+    assert (
+        'climate_action{action="cooling",'
+        'domain="climate",'
+        'entity="climate.heatpump",'
+        'friendly_name="HeatPump"} 0.0' not in body
     )
 
     # Check if new metrics created
@@ -902,6 +939,10 @@ async def test_deleting_entity(hass, hass_client):
     )
     client = await setup_prometheus_client(hass, hass_client, "")
 
+    await async_setup_component(
+        hass, climate.DOMAIN, {"climate": [{"platform": "demo"}]}
+    )
+
     assert await async_setup_component(
         hass, sensor.DOMAIN, {"sensor": [{"platform": "demo"}]}
     )
@@ -933,9 +974,25 @@ async def test_deleting_entity(hass, hass_client):
         'friendly_name="Outside Humidity"} 1.0' in body
     )
 
+    assert (
+        'climate_action{action="heating",'
+        'domain="climate",'
+        'entity="climate.heatpump",'
+        'friendly_name="HeatPump"} 1.0' in body
+    )
+
+    assert (
+        'climate_action{action="cooling",'
+        'domain="climate",'
+        'entity="climate.heatpump",'
+        'friendly_name="HeatPump"} 0.0' in body
+    )
+
     registry = entity_registry.async_get(hass)
     assert "sensor.outside_temperature" in registry.entities
+    assert "climate.heatpump" in registry.entities
     registry.async_remove("sensor.outside_temperature")
+    registry.async_remove("climate.heatpump")
 
     await hass.async_block_till_done()
     body = await generate_latest_metrics(client)
@@ -951,6 +1008,20 @@ async def test_deleting_entity(hass, hass_client):
         'entity_available{domain="sensor",'
         'entity="sensor.outside_temperature",'
         'friendly_name="Outside Temperature"} 1.0' not in body
+    )
+
+    assert (
+        'climate_action{action="heating",'
+        'domain="climate",'
+        'entity="climate.heatpump",'
+        'friendly_name="HeatPump"} 1.0' not in body
+    )
+
+    assert (
+        'climate_action{action="cooling",'
+        'domain="climate",'
+        'entity="climate.heatpump",'
+        'friendly_name="HeatPump"} 0.0' not in body
     )
 
     # Keep other sensors
@@ -975,6 +1046,10 @@ async def test_disabling_entity(hass, hass_client):
         {},
     )
     client = await setup_prometheus_client(hass, hass_client, "")
+
+    await async_setup_component(
+        hass, climate.DOMAIN, {"climate": [{"platform": "demo"}]}
+    )
 
     assert await async_setup_component(
         hass, sensor.DOMAIN, {"sensor": [{"platform": "demo"}]}
@@ -1014,12 +1089,28 @@ async def test_disabling_entity(hass, hass_client):
         'friendly_name="Outside Humidity"} 1.0' in body
     )
 
+    assert (
+        'climate_action{action="heating",'
+        'domain="climate",'
+        'entity="climate.heatpump",'
+        'friendly_name="HeatPump"} 1.0' in body
+    )
+
+    assert (
+        'climate_action{action="cooling",'
+        'domain="climate",'
+        'entity="climate.heatpump",'
+        'friendly_name="HeatPump"} 0.0' in body
+    )
+
     registry = entity_registry.async_get(hass)
     assert "sensor.outside_temperature" in registry.entities
+    assert "climate.heatpump" in registry.entities
     registry.async_update_entity(
         entity_id="sensor.outside_temperature",
         disabled_by="user",
     )
+    registry.async_update_entity(entity_id="climate.heatpump", disabled_by="user")
 
     await hass.async_block_till_done()
     body = await generate_latest_metrics(client)
@@ -1042,6 +1133,20 @@ async def test_disabling_entity(hass, hass_client):
         'state_change_total{domain="sensor",'
         'entity="sensor.outside_temperature",'
         'friendly_name="Outside Temperature"} 1.0' not in body
+    )
+
+    assert (
+        'climate_action{action="heating",'
+        'domain="climate",'
+        'entity="climate.heatpump",'
+        'friendly_name="HeatPump"} 1.0' not in body
+    )
+
+    assert (
+        'climate_action{action="cooling",'
+        'domain="climate",'
+        'entity="climate.heatpump",'
+        'friendly_name="HeatPump"} 0.0' not in body
     )
 
     # Keep other sensors
