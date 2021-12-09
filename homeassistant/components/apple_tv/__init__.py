@@ -271,7 +271,7 @@ class AppleTVManager:
             return atvs[0]
 
         _LOGGER.debug(
-            "Failed to find device %s with address %s, trying to scan",
+            "Failed to find device %s with address %s",
             self.config_entry.title,
             address,
         )
