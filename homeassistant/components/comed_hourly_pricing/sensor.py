@@ -104,7 +104,7 @@ class ComedHourlyPricingSensor(SensorEntity):
                 else:
                     url_string += "?type=currenthouraverage"
 
-                with async_timeout.timeout(60):
+                async with async_timeout.timeout(60):
                     response = await self.websession.get(url_string)
                     # The API responds with MIME type 'text/html'
                     text = await response.text()

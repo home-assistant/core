@@ -65,6 +65,7 @@ class BondEntity(Entity):
             manufacturer=self._hub.make,
             # type ignore: tuple items should not be Optional
             identifiers={(DOMAIN, self._hub.bond_id, self._device.device_id)},  # type: ignore[arg-type]
+            configuration_url=f"http://{self._hub.host}",
         )
         if self.name is not None:
             device_info[ATTR_NAME] = self.name

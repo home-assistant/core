@@ -168,8 +168,7 @@ def _fuzzymatch(name: str, items: Iterable[T], key: Callable[[T], str]) -> T | N
     pattern = ".*?".join(name)
     regex = re.compile(pattern, re.IGNORECASE)
     for idx, item in enumerate(items):
-        match = regex.search(key(item))
-        if match:
+        if match := regex.search(key(item)):
             # Add key length so we prefer shorter keys with the same group and start.
             # Add index so we pick first match in case same group, start, and key length.
             matches.append(

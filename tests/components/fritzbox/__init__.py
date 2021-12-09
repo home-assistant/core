@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Any
 from unittest.mock import Mock
 
+from homeassistant.components.climate.const import PRESET_COMFORT, PRESET_ECO
 from homeassistant.components.fritzbox.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
@@ -67,6 +68,7 @@ class FritzDeviceClimateMock(FritzDeviceBaseMock):
     """Mock of a AVM Fritz!Box climate device."""
 
     actual_temperature = 18.0
+    temperature = 18.0
     alert_state = "fake_state"
     battery_level = 23
     battery_low = True
@@ -78,7 +80,7 @@ class FritzDeviceClimateMock(FritzDeviceBaseMock):
     has_powermeter = False
     has_lightbulb = False
     has_switch = False
-    has_temperature_sensor = False
+    has_temperature_sensor = True
     has_thermostat = True
     holiday_active = "fake_holiday"
     lock = "fake_locked"
@@ -86,6 +88,10 @@ class FritzDeviceClimateMock(FritzDeviceBaseMock):
     summer_active = "fake_summer"
     target_temperature = 19.5
     window_open = "fake_window"
+    nextchange_temperature = 22.0
+    nextchange_endperiod = 0
+    nextchange_preset = PRESET_COMFORT
+    scheduled_preset = PRESET_ECO
 
 
 class FritzDeviceSensorMock(FritzDeviceBaseMock):

@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
 
 from miio.airfresh import LedBrightness as AirfreshLedBrightness
 from miio.airhumidifier import LedBrightness as AirhumidifierLedBrightness
@@ -126,14 +125,6 @@ class XiaomiSelector(XiaomiCoordinatedMiioEntity, SelectEntity):
         self._attr_options = list(description.options)
         self.entity_description = description
 
-    @staticmethod
-    def _extract_value_from_attribute(state, attribute):
-        value = getattr(state, attribute)
-        if isinstance(value, Enum):
-            return value.value
-
-        return value
-
 
 class XiaomiAirHumidifierSelector(XiaomiSelector):
     """Representation of a Xiaomi Air Humidifier selector."""
@@ -153,7 +144,7 @@ class XiaomiAirHumidifierSelector(XiaomiSelector):
         )
         # Sometimes (quite rarely) the device returns None as the LED brightness so we
         # check that the value is not None before updating the state.
-        if led_brightness:
+        if led_brightness is not None:
             self._current_led_brightness = led_brightness
             self.async_write_ha_state()
 

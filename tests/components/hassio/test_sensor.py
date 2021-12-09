@@ -111,8 +111,25 @@ def mock_all(aioclient_mock, request):
     )
 
 
-async def test_sensors(hass, aioclient_mock):
-    """Test hassio OS and addons sensors."""
+@pytest.mark.parametrize(
+    "entity_id,expected",
+    [
+        ("sensor.home_assistant_operating_system_version", "1.0.0"),
+        ("sensor.home_assistant_operating_system_newest_version", "1.0.0"),
+        ("sensor.test_version", "2.0.0"),
+        ("sensor.test_newest_version", "2.0.1"),
+        ("sensor.test2_version", "3.1.0"),
+        ("sensor.test2_newest_version", "3.2.0"),
+        ("sensor.test_cpu_percent", "0.99"),
+        ("sensor.test2_cpu_percent", "unavailable"),
+        ("sensor.test_memory_percent", "4.59"),
+        ("sensor.test2_memory_percent", "unavailable"),
+    ],
+)
+async def test_sensor(hass, entity_id, expected, aioclient_mock):
+    """Test hassio OS and addons sensor."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
 
     with patch.dict(os.environ, MOCK_ENVIRON):
         result = await async_setup_component(
@@ -121,38 +138,17 @@ async def test_sensors(hass, aioclient_mock):
             {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
         )
         assert result
-
-    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
-    config_entry.add_to_hass(hass)
-
     await hass.async_block_till_done()
 
-    sensors = {
-        "sensor.home_assistant_operating_system_version": "1.0.0",
-        "sensor.home_assistant_operating_system_newest_version": "1.0.0",
-        "sensor.test_version": "2.0.0",
-        "sensor.test_newest_version": "2.0.1",
-        "sensor.test2_version": "3.1.0",
-        "sensor.test2_newest_version": "3.2.0",
-        "sensor.test_cpu_percent": "0.99",
-        "sensor.test2_cpu_percent": "unavailable",
-        "sensor.test_memory_percent": "4.59",
-        "sensor.test2_memory_percent": "unavailable",
-    }
+    # Verify that the entity is disabled by default.
+    assert hass.states.get(entity_id) is None
 
-    """Check that entities are disabled by default."""
-    for sensor in sensors:
-        assert hass.states.get(sensor) is None
-
-    """Enable sensors."""
+    # Enable the entity.
     ent_reg = entity_registry.async_get(hass)
-    for sensor in sensors:
-        ent_reg.async_update_entity(sensor, disabled_by=None)
+    ent_reg.async_update_entity(entity_id, disabled_by=None)
     await hass.config_entries.async_reload(config_entry.entry_id)
-
     await hass.async_block_till_done()
 
-    """Check sensor values."""
-    for sensor, value in sensors.items():
-        state = hass.states.get(sensor)
-        assert state.state == value
+    # Verify that the entity have the expected state.
+    state = hass.states.get(entity_id)
+    assert state.state == expected

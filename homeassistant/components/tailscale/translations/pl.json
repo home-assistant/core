@@ -1,0 +1,18 @@
+{
+    "config": {
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "Klucz API"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "Klucz API",
+                    "tailnet": "Tailnet"
+                },
+                "description": "Aby uwierzytelni\u0107 si\u0119 w Tailscale, musisz utworzy\u0107 klucz API na stronie https://login.tailscale.com/admin/settings/authkeys.\n\nTailnet to nazwa Twojej sieci Tailscale. Mo\u017cna j\u0105 znale\u017a\u0107 w lewym g\u00f3rnym rogu w panelu administracyjnym Tailscale (obok logo Tailscale)."
+            }
+        }
+    }
+}

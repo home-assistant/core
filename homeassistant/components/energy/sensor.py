@@ -197,8 +197,7 @@ class SensorManager:
         ):
             return
 
-        current_entity = to_remove.pop(key, None)
-        if current_entity:
+        if current_entity := to_remove.pop(key, None):
             current_entity.update_config(config)
             return
 

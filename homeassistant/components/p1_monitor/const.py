@@ -9,8 +9,6 @@ DOMAIN: Final = "p1_monitor"
 LOGGER = logging.getLogger(__package__)
 SCAN_INTERVAL = timedelta(seconds=5)
 
-ENTRY_TYPE_SERVICE: Final = "service"
-
 SERVICE_SMARTMETER: Final = "smartmeter"
 SERVICE_PHASES: Final = "phases"
 SERVICE_SETTINGS: Final = "settings"

@@ -4,6 +4,11 @@
             "cannot_connect": "\u8fde\u63a5\u5931\u8d25"
         },
         "step": {
+            "cloud": {
+                "data": {
+                    "account_id": "\u5e10\u6237ID"
+                }
+            },
             "user": {
                 "data": {
                     "password": "\u5bc6\u7801"

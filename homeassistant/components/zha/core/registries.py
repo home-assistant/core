@@ -21,6 +21,7 @@ from homeassistant.components.light import DOMAIN as LIGHT
 from homeassistant.components.lock import DOMAIN as LOCK
 from homeassistant.components.number import DOMAIN as NUMBER
 from homeassistant.components.sensor import DOMAIN as SENSOR
+from homeassistant.components.siren import DOMAIN as SIREN
 from homeassistant.components.switch import DOMAIN as SWITCH
 
 # importing channels updates registries
@@ -82,6 +83,8 @@ SINGLE_INPUT_CLUSTER_DEVICE_CLASS = {
     zcl.clusters.measurement.OccupancySensing.cluster_id: BINARY_SENSOR,
     zcl.clusters.measurement.PressureMeasurement.cluster_id: SENSOR,
     zcl.clusters.measurement.RelativeHumidity.cluster_id: SENSOR,
+    zcl.clusters.measurement.SoilMoisture.cluster_id: SENSOR,
+    zcl.clusters.measurement.LeafWetness.cluster_id: SENSOR,
     zcl.clusters.measurement.TemperatureMeasurement.cluster_id: SENSOR,
     zcl.clusters.security.IasZone.cluster_id: BINARY_SENSOR,
 }
@@ -111,6 +114,7 @@ DEVICE_CLASS = {
         zigpy.profiles.zha.DeviceType.SHADE: COVER,
         zigpy.profiles.zha.DeviceType.SMART_PLUG: SWITCH,
         zigpy.profiles.zha.DeviceType.IAS_ANCILLARY_CONTROL: ALARM,
+        zigpy.profiles.zha.DeviceType.IAS_WARNING_DEVICE: SIREN,
     },
     zigpy.profiles.zll.PROFILE_ID: {
         zigpy.profiles.zll.DeviceType.COLOR_LIGHT: LIGHT,

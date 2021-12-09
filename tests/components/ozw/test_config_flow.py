@@ -4,19 +4,22 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.ozw.config_flow import TITLE
 from homeassistant.components.ozw.const import DOMAIN
 
 from tests.common import MockConfigEntry
 
-ADDON_DISCOVERY_INFO = {
-    "addon": "OpenZWave",
-    "host": "host1",
-    "port": 1234,
-    "username": "name1",
-    "password": "pass1",
-}
+ADDON_DISCOVERY_INFO = HassioServiceInfo(
+    config={
+        "addon": "OpenZWave",
+        "host": "host1",
+        "port": 1234,
+        "username": "name1",
+        "password": "pass1",
+    }
+)
 
 
 @pytest.fixture(name="supervisor")

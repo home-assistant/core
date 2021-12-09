@@ -92,5 +92,5 @@ class FritzBoxBinarySensor(FritzBoxBaseEntity, BinarySensorEntity):
             self._attr_is_on = self._fritzbox_tools.update_available
             self._attr_extra_state_attributes = {
                 "installed_version": self._fritzbox_tools.current_firmware,
-                "latest_available_version:": self._fritzbox_tools.latest_firmware,
+                "latest_available_version": self._fritzbox_tools.latest_firmware,
             }

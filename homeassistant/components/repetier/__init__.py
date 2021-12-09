@@ -262,8 +262,7 @@ class PrinterAPI:
         printer = self.printers[printer_id]
         methods = API_PRINTER_METHODS[sensor_type]
         for prop, offline in methods.offline.items():
-            state = getattr(printer, prop)
-            if state == offline:
+            if getattr(printer, prop) == offline:
                 # if state matches offline, sensor is offline
                 return None
 

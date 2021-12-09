@@ -2,11 +2,11 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 import contextlib
 from datetime import datetime, timedelta
 import functools
-from typing import Any, Callable, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Callable, TypeVar, cast
 
 from async_upnp_client import UpnpService, UpnpStateVariable
 from async_upnp_client.const import NotificationSubType
@@ -241,18 +241,18 @@ class DlnaDmrEntity(MediaPlayerEntity):
         await self._device_disconnect()
 
     async def async_ssdp_callback(
-        self, info: Mapping[str, Any], change: ssdp.SsdpChange
+        self, info: ssdp.SsdpServiceInfo, change: ssdp.SsdpChange
     ) -> None:
         """Handle notification from SSDP of device state change."""
         _LOGGER.debug(
             "SSDP %s notification of device %s at %s",
             change,
-            info[ssdp.ATTR_SSDP_USN],
-            info.get(ssdp.ATTR_SSDP_LOCATION),
+            info.ssdp_usn,
+            info.ssdp_location,
         )
 
         try:
-            bootid_str = info[ssdp.ATTR_SSDP_BOOTID]
+            bootid_str = info.ssdp_headers[ssdp.ATTR_SSDP_BOOTID]
             bootid: int | None = int(bootid_str, 10)
         except (KeyError, ValueError):
             bootid = None
@@ -263,7 +263,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
                 # Store the new value (because our old value matches) so that we
                 # can ignore subsequent ssdp:alive messages
                 with contextlib.suppress(KeyError, ValueError):
-                    next_bootid_str = info[ssdp.ATTR_SSDP_NEXTBOOTID]
+                    next_bootid_str = info.ssdp_headers[ssdp.ATTR_SSDP_NEXTBOOTID]
                     self._bootid = int(next_bootid_str, 10)
             # Nothing left to do until ssdp:alive comes through
             return
@@ -278,7 +278,9 @@ class DlnaDmrEntity(MediaPlayerEntity):
             await self._device_disconnect()
 
         if change == ssdp.SsdpChange.ALIVE and not self._device:
-            location = info[ssdp.ATTR_SSDP_LOCATION]
+            if TYPE_CHECKING:
+                assert info.ssdp_location
+            location = info.ssdp_location
             try:
                 await self._device_connect(location)
             except UpnpError as err:
@@ -613,8 +615,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         metadata: dict[str, Any] = extra.get("metadata") or {}
 
         title = extra.get("title") or metadata.get("title") or "Home Assistant"
-        thumb = extra.get("thumb")
-        if thumb:
+        if thumb := extra.get("thumb"):
             metadata["album_art_uri"] = thumb
 
         # Translate metadata keys from HA names to DIDL-Lite names
@@ -666,8 +667,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         if not self._device:
             return None
 
-        play_mode = self._device.play_mode
-        if not play_mode:
+        if not (play_mode := self._device.play_mode):
             return None
 
         if play_mode == PlayMode.VENDOR_DEFINED:
@@ -700,8 +700,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         if not self._device:
             return None
 
-        play_mode = self._device.play_mode
-        if not play_mode:
+        if not (play_mode := self._device.play_mode):
             return None
 
         if play_mode == PlayMode.VENDOR_DEFINED:

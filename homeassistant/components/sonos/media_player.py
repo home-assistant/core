@@ -108,7 +108,6 @@ SERVICE_RESTORE = "restore"
 SERVICE_SET_TIMER = "set_sleep_timer"
 SERVICE_CLEAR_TIMER = "clear_sleep_timer"
 SERVICE_UPDATE_ALARM = "update_alarm"
-SERVICE_SET_OPTION = "set_option"
 SERVICE_PLAY_QUEUE = "play_queue"
 SERVICE_REMOVE_FROM_QUEUE = "remove_from_queue"
 
@@ -120,8 +119,6 @@ ATTR_INCLUDE_LINKED_ZONES = "include_linked_zones"
 ATTR_MASTER = "master"
 ATTR_WITH_GROUP = "with_group"
 ATTR_QUEUE_POSITION = "queue_position"
-ATTR_EQ_BASS = "bass_level"
-ATTR_EQ_TREBLE = "treble_level"
 
 
 async def async_setup_entry(
@@ -226,19 +223,6 @@ async def async_setup_entry(
     )
 
     platform.async_register_entity_service(  # type: ignore
-        SERVICE_SET_OPTION,
-        {
-            vol.Optional(ATTR_EQ_BASS): vol.All(
-                vol.Coerce(int), vol.Range(min=-10, max=10)
-            ),
-            vol.Optional(ATTR_EQ_TREBLE): vol.All(
-                vol.Coerce(int), vol.Range(min=-10, max=10)
-            ),
-        },
-        "set_option",
-    )
-
-    platform.async_register_entity_service(  # type: ignore
         SERVICE_PLAY_QUEUE,
         {vol.Optional(ATTR_QUEUE_POSITION): cv.positive_int},
         "play_queue",
@@ -254,24 +238,23 @@ async def async_setup_entry(
 class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     """Representation of a Sonos entity."""
 
+    _attr_supported_features = SUPPORT_SONOS
+    _attr_media_content_type = MEDIA_TYPE_MUSIC
+
+    def __init__(self, speaker: SonosSpeaker) -> None:
+        """Initialize the media player entity."""
+        super().__init__(speaker)
+        self._attr_unique_id = self.soco.uid
+        self._attr_name = self.speaker.zone_name
+
     @property
     def coordinator(self) -> SonosSpeaker:
         """Return the current coordinator SonosSpeaker."""
         return self.speaker.coordinator or self.speaker
 
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return self.soco.uid  # type: ignore[no-any-return]
-
     def __hash__(self) -> int:
         """Return a hash of self."""
         return hash(self.unique_id)
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self.speaker.zone_name  # type: ignore[no-any-return]
 
     @property  # type: ignore[misc]
     def state(self) -> str:
@@ -338,11 +321,6 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         """Content id of current playing media."""
         return self.media.uri
 
-    @property
-    def media_content_type(self) -> str:
-        """Content type of current playing media."""
-        return MEDIA_TYPE_MUSIC
-
     @property  # type: ignore[misc]
     def media_duration(self) -> float | None:
         """Duration of current playing media in seconds."""
@@ -392,11 +370,6 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     def source(self) -> str | None:
         """Name of the current input source."""
         return self.media.source_name or None
-
-    @property  # type: ignore[misc]
-    def supported_features(self) -> int:
-        """Flag media player features that are supported."""
-        return SUPPORT_SONOS
 
     @soco_error()
     def volume_up(self) -> None:
@@ -606,19 +579,6 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         alarm.save()
 
     @soco_error()
-    def set_option(
-        self,
-        bass_level: int | None = None,
-        treble_level: int | None = None,
-    ) -> None:
-        """Modify playback options."""
-        if bass_level is not None:
-            self.soco.bass = bass_level
-
-        if treble_level is not None:
-            self.soco.treble = treble_level
-
-    @soco_error()
     def play_queue(self, queue_position: int = 0) -> None:
         """Start playing the queue."""
         self.soco.play_from_queue(queue_position)
@@ -634,12 +594,6 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         attributes: dict[str, Any] = {
             ATTR_SONOS_GROUP: self.speaker.sonos_group_entities
         }
-
-        if self.speaker.bass_level is not None:
-            attributes[ATTR_EQ_BASS] = self.speaker.bass_level
-
-        if self.speaker.treble_level is not None:
-            attributes[ATTR_EQ_TREBLE] = self.speaker.treble_level
 
         if self.media.queue_position is not None:
             attributes[ATTR_QUEUE_POSITION] = self.media.queue_position
@@ -663,8 +617,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 media_content_id,
                 MEDIA_TYPES_TO_SONOS[media_content_type],
             )
-            image_url = getattr(item, "album_art_uri", None)
-            if image_url:
+            if image_url := getattr(item, "album_art_uri", None):
                 result = await self._async_fetch_image(image_url)  # type: ignore[no-untyped-call]
                 return result  # type: ignore
 

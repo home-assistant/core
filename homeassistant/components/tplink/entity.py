@@ -38,12 +38,8 @@ class CoordinatedTPLinkEntity(CoordinatorEntity):
         """Initialize the switch."""
         super().__init__(coordinator)
         self.device: SmartDevice = device
+        self._attr_name = self.device.alias
         self._attr_unique_id = self.device.device_id
-
-    @property
-    def name(self) -> str:
-        """Return the name of the Smart Plug."""
-        return cast(str, self.device.alias)
 
     @property
     def device_info(self) -> DeviceInfo:

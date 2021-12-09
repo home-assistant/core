@@ -3,7 +3,7 @@ from base64 import b64decode
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN
 

@@ -155,7 +155,6 @@ class DenonDevice(MediaPlayerEntity):
             name=config_entry.title,
         )
         self._attr_sound_mode_list = receiver.sound_mode_list
-        self._attr_source_list = receiver.input_func_list
 
         self._receiver = receiver
         self._update_audyssey = update_audyssey
@@ -245,6 +244,11 @@ class DenonDevice(MediaPlayerEntity):
     def state(self):
         """Return the state of the device."""
         return self._receiver.state
+
+    @property
+    def source_list(self):
+        """Return a list of available input sources."""
+        return self._receiver.input_func_list
 
     @property
     def is_volume_muted(self):

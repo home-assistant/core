@@ -178,6 +178,13 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
     # https://developer.tuya.com/en/docs/iot/tgq?id=Kaof8ke9il4k4
     "tgq": (
         TuyaLightEntityDescription(
+            key=DPCode.SWITCH_LED,
+            name="Light",
+            brightness=(DPCode.BRIGHT_VALUE_V2, DPCode.BRIGHT_VALUE),
+            brightness_max=DPCode.BRIGHTNESS_MAX_1,
+            brightness_min=DPCode.BRIGHTNESS_MIN_1,
+        ),
+        TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED_1,
             name="Light",
             brightness=DPCode.BRIGHT_VALUE_1,
@@ -323,6 +330,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
     _brightness_type: IntegerTypeData | None = None
     _color_data_dpcode: DPCode | None = None
     _color_data_type: ColorTypeData | None = None
+    _color_mode_dpcode: DPCode | None = None
     _color_temp_dpcode: DPCode | None = None
     _color_temp_type: IntegerTypeData | None = None
 
@@ -353,6 +361,13 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                 ),
                 None,
             )
+
+        # Determine color mode DPCode
+        if (
+            description.color_mode is not None
+            and description.color_mode in device.function
+        ):
+            self._color_mode_dpcode = description.color_mode
 
         # Determine DPCodes for color temperature
         if (
@@ -443,14 +458,36 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         """Turn on or control the light."""
         commands = [{"code": self.entity_description.key, "value": True}]
 
-        if self._color_data_type and (
+        if self._color_temp_type and ATTR_COLOR_TEMP in kwargs:
+            if self._color_mode_dpcode:
+                commands += [
+                    {
+                        "code": self._color_mode_dpcode,
+                        "value": WorkMode.WHITE,
+                    },
+                ]
+
+            commands += [
+                {
+                    "code": self._color_temp_dpcode,
+                    "value": round(
+                        self._color_temp_type.remap_value_from(
+                            kwargs[ATTR_COLOR_TEMP],
+                            self.min_mireds,
+                            self.max_mireds,
+                            reverse=True,
+                        )
+                    ),
+                },
+            ]
+        elif self._color_data_type and (
             ATTR_HS_COLOR in kwargs
             or (ATTR_BRIGHTNESS in kwargs and self.color_mode == COLOR_MODE_HS)
         ):
-            if color_mode_dpcode := self.entity_description.color_mode:
+            if self._color_mode_dpcode:
                 commands += [
                     {
-                        "code": color_mode_dpcode,
+                        "code": self._color_mode_dpcode,
                         "value": WorkMode.COLOUR,
                     },
                 ]
@@ -482,29 +519,6 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                                 )
                             ),
                         }
-                    ),
-                },
-            ]
-
-        elif ATTR_COLOR_TEMP in kwargs and self._color_temp_type:
-            if color_mode_dpcode := self.entity_description.color_mode:
-                commands += [
-                    {
-                        "code": color_mode_dpcode,
-                        "value": WorkMode.WHITE,
-                    },
-                ]
-
-            commands += [
-                {
-                    "code": self._color_temp_dpcode,
-                    "value": round(
-                        self._color_temp_type.remap_value_from(
-                            kwargs[ATTR_COLOR_TEMP],
-                            self.min_mireds,
-                            self.max_mireds,
-                            reverse=True,
-                        )
                     ),
                 },
             ]
@@ -645,9 +659,8 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         # We consider it to be in HS color mode, when work mode is anything
         # else than "white".
         if (
-            self.entity_description.color_mode
-            and self.device.status.get(self.entity_description.color_mode)
-            != WorkMode.WHITE
+            self._color_mode_dpcode
+            and self.device.status.get(self._color_mode_dpcode) != WorkMode.WHITE
         ):
             return COLOR_MODE_HS
         if self._color_temp_dpcode:

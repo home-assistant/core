@@ -242,6 +242,7 @@ async def test_stream_keepalive(hass):
     # Setup demo HLS track
     source = "test_stream_keepalive_source"
     stream = create_stream(hass, source, {})
+    assert stream.available
     track = stream.add_provider(HLS_PROVIDER)
     track.num_segments = 2
 
@@ -267,9 +268,11 @@ async def test_stream_keepalive(hass):
         stream._thread.join()
         stream._thread = None
         assert av_open.call_count == 2
+        assert not stream.available
 
     # Stop stream, if it hasn't quit already
     stream.stop()
+    assert not stream.available
 
 
 async def test_hls_playlist_view_no_output(hass, hls_stream):
@@ -447,4 +450,34 @@ async def test_hls_max_segments_discontinuity(hass, hls_stream, stream_worker_sy
     )
 
     stream_worker_sync.resume()
+    stream.stop()
+
+
+async def test_remove_incomplete_segment_on_exit(hass, stream_worker_sync):
+    """Test that the incomplete segment gets removed when the worker thread quits."""
+    await async_setup_component(hass, "stream", {"stream": {}})
+
+    stream = create_stream(hass, STREAM_SOURCE, {})
+    stream_worker_sync.pause()
+    stream.start()
+    hls = stream.add_provider(HLS_PROVIDER)
+
+    segment = Segment(sequence=0, stream_id=0, duration=SEGMENT_DURATION)
+    hls.put(segment)
+    segment = Segment(sequence=1, stream_id=0, duration=SEGMENT_DURATION)
+    hls.put(segment)
+    segment = Segment(sequence=2, stream_id=0, duration=0)
+    hls.put(segment)
+    await hass.async_block_till_done()
+
+    segments = hls._segments
+    assert len(segments) == 3
+    assert not segments[-1].complete
+    stream_worker_sync.resume()
+    stream._thread_quit.set()
+    stream._thread.join()
+    stream._thread = None
+    await hass.async_block_till_done()
+    assert segments[-1].complete
+    assert len(segments) == 2
     stream.stop()

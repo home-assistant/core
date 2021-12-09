@@ -30,8 +30,8 @@ def mock_device():
 def mock_validate_input():
     """Mock setup entry and user input."""
     info = {
-        "serial_number": DISCOVERY_INFO["properties"]["SN"],
-        "title": DISCOVERY_INFO["properties"]["Product"],
+        "serial_number": DISCOVERY_INFO.properties["SN"],
+        "title": DISCOVERY_INFO.properties["Product"],
     }
 
     with patch(
@@ -39,3 +39,8 @@ def mock_validate_input():
         return_value=info,
     ):
         yield info
+
+
+@pytest.fixture(autouse=True)
+def devolo_home_network_mock_async_zeroconf(mock_async_zeroconf):
+    """Auto mock zeroconf."""

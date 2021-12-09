@@ -1,5 +1,9 @@
 {
     "device_automation": {
+        "condition_type": {
+            "is_home": "{entity_name} evde",
+            "is_not_home": "{entity_name} evde de\u011fil"
+        },
         "trigger_type": {
             "enters": "{entity_name} bir b\u00f6lgeye girdi",
             "leaves": "{entity_name} bir b\u00f6lgeden ayr\u0131l\u0131yor"

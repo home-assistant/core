@@ -18,6 +18,8 @@ from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.script import Script
 
+from .const import DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
 
 CONF_OFF_ACTION = "turn_off"
@@ -82,9 +84,8 @@ class WolSwitch(SwitchEntity):
         self._mac_address = mac_address
         self._broadcast_address = broadcast_address
         self._broadcast_port = broadcast_port
-        domain = __name__.split(".")[-2]
         self._off_script = (
-            Script(hass, off_action, name, domain) if off_action else None
+            Script(hass, off_action, name, DOMAIN) if off_action else None
         )
         self._state = False
         self._assumed_state = host is None

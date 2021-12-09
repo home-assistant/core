@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Perangkat sudah dikonfigurasi",
-            "reauth_successful": "Autentikasi ulang berhasil"
+            "reauth_successful": "Autentikasi ulang berhasil",
+            "reconfigure_successful": "Konfigurasi ulang berhasil"
         },
         "error": {
             "cannot_connect": "Gagal terhubung",
@@ -32,15 +33,18 @@
             },
             "reauth": {
                 "data": {
+                    "password": "Kata Sandi",
                     "username": "Nama Pengguna"
                 },
+                "description": "Alasan: {details}",
                 "title": "Autentikasi Ulang Integrasi Synology DSM"
             },
             "reauth_confirm": {
                 "data": {
                     "password": "Kata Sandi",
                     "username": "Nama Pengguna"
-                }
+                },
+                "title": "Autentikasi Ulang Integrasi Synology DSM"
             },
             "user": {
                 "data": {

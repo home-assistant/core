@@ -132,8 +132,7 @@ class GPSLoggerEntity(TrackerEntity, RestoreEntity):
         if self._location is not None:
             return
 
-        state = await self.async_get_last_state()
-        if state is None:
+        if (state := await self.async_get_last_state()) is None:
             self._location = (None, None)
             self._accuracy = None
             self._attributes = {

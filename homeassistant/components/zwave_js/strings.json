@@ -22,6 +22,7 @@
       },
       "configure_addon": {
         "title": "Enter the Z-Wave JS add-on configuration",
+        "description": "The add-on will generate security keys if those fields are left empty.",
         "data": {
           "usb_path": "[%key:common::config_flow::data::usb_path%]",
           "s0_legacy_key": "S0 Key (Legacy)",
@@ -79,6 +80,7 @@
       },
       "configure_addon": {
         "title": "Enter the Z-Wave JS add-on configuration",
+        "description": "The add-on will generate security keys if those fields are left empty.",
         "data": {
           "usb_path": "[%key:common::config_flow::data::usb_path%]",
           "s0_legacy_key": "S0 Key (Legacy)",

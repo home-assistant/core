@@ -149,7 +149,7 @@ class MobileAppNotificationService(BaseNotificationService):
         target_data["registration_info"] = reg_info
 
         try:
-            with async_timeout.timeout(10):
+            async with async_timeout.timeout(10):
                 response = await async_get_clientsession(self._hass).post(
                     push_url, json=target_data
                 )

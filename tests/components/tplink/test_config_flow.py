@@ -4,6 +4,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config_entries, setup
+from homeassistant.components import dhcp
 from homeassistant.components.tplink import DOMAIN
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.core import HomeAssistant
@@ -308,7 +309,9 @@ async def test_discovered_by_discovery_and_dhcp(hass):
         result2 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data={"ip": IP_ADDRESS, "macaddress": MAC_ADDRESS, "hostname": ALIAS},
+            data=dhcp.DhcpServiceInfo(
+                ip=IP_ADDRESS, macaddress=MAC_ADDRESS, hostname=ALIAS
+            ),
         )
         await hass.async_block_till_done()
     assert result2["type"] == RESULT_TYPE_ABORT
@@ -318,7 +321,9 @@ async def test_discovered_by_discovery_and_dhcp(hass):
         result3 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data={"ip": IP_ADDRESS, "macaddress": "00:00:00:00:00:00"},
+            data=dhcp.DhcpServiceInfo(
+                ip=IP_ADDRESS, macaddress="00:00:00:00:00:00", hostname="mock_hostname"
+            ),
         )
         await hass.async_block_till_done()
     assert result3["type"] == RESULT_TYPE_ABORT
@@ -328,7 +333,9 @@ async def test_discovered_by_discovery_and_dhcp(hass):
         result3 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data={"ip": "1.2.3.5", "macaddress": "00:00:00:00:00:01"},
+            data=dhcp.DhcpServiceInfo(
+                ip="1.2.3.5", macaddress="00:00:00:00:00:01", hostname="mock_hostname"
+            ),
         )
         await hass.async_block_till_done()
     assert result3["type"] == RESULT_TYPE_ABORT
@@ -340,7 +347,7 @@ async def test_discovered_by_discovery_and_dhcp(hass):
     [
         (
             config_entries.SOURCE_DHCP,
-            {"ip": IP_ADDRESS, "macaddress": MAC_ADDRESS, "hostname": ALIAS},
+            dhcp.DhcpServiceInfo(ip=IP_ADDRESS, macaddress=MAC_ADDRESS, hostname=ALIAS),
         ),
         (
             config_entries.SOURCE_DISCOVERY,
@@ -381,7 +388,7 @@ async def test_discovered_by_dhcp_or_discovery(hass, source, data):
     [
         (
             config_entries.SOURCE_DHCP,
-            {"ip": IP_ADDRESS, "macaddress": MAC_ADDRESS, "hostname": ALIAS},
+            dhcp.DhcpServiceInfo(ip=IP_ADDRESS, macaddress=MAC_ADDRESS, hostname=ALIAS),
         ),
         (
             config_entries.SOURCE_DISCOVERY,

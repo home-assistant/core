@@ -10,12 +10,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    ATTR_STATE,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-)
+from homeassistant.const import ATTR_STATE, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -33,8 +28,6 @@ ATTR_REPORTED_LONGITUDE = "reported_longitude"
 ATTR_STATE_REPORTS_LAST_WEEK = "state_reports_last_week"
 ATTR_STATE_REPORTS_THIS_WEEK = "state_reports_this_week"
 ATTR_ZIP_CODE = "zip_code"
-
-DEFAULT_ATTRIBUTION = "Data provided by Flu Near You"
 
 SENSOR_TYPE_CDC_LEVEL = "level"
 SENSOR_TYPE_CDC_LEVEL2 = "level2"
@@ -140,8 +133,6 @@ async def async_setup_entry(
 class FluNearYouSensor(CoordinatorEntity, SensorEntity):
     """Define a base Flu Near You sensor."""
 
-    DEFAULT_EXTRA_STATE_ATTRIBUTES = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
-
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
@@ -166,7 +157,6 @@ class CdcSensor(FluNearYouSensor):
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return entity specific state attributes."""
         return {
-            **self.DEFAULT_EXTRA_STATE_ATTRIBUTES,
             ATTR_REPORTED_DATE: self.coordinator.data["week_date"],
             ATTR_STATE: self.coordinator.data["name"],
         }
@@ -186,7 +176,6 @@ class UserSensor(FluNearYouSensor):
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return entity specific state attributes."""
         attrs = {
-            **self.DEFAULT_EXTRA_STATE_ATTRIBUTES,
             ATTR_CITY: self.coordinator.data["local"]["city"].split("(")[0],
             ATTR_REPORTED_LATITUDE: self.coordinator.data["local"]["latitude"],
             ATTR_REPORTED_LONGITUDE: self.coordinator.data["local"]["longitude"],

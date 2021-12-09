@@ -269,9 +269,7 @@ class ConfiguredDoorBird:
         if not self.webhook_is_registered(url):
             self.device.change_favorite("http", f"Home Assistant ({event})", url)
 
-        fav_id = self.get_webhook_id(url)
-
-        if not fav_id:
+        if not self.get_webhook_id(url):
             _LOGGER.warning(
                 'Could not find favorite for URL "%s". ' 'Skipping sensor "%s"',
                 url,

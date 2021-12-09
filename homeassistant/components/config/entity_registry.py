@@ -10,7 +10,10 @@ from homeassistant.components.websocket_api.decorators import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_registry import DISABLED_USER, async_get_registry
+from homeassistant.helpers.entity_registry import (
+    RegistryEntryDisabler,
+    async_get_registry,
+)
 
 
 async def async_setup(hass):
@@ -69,12 +72,18 @@ async def websocket_get_entity(hass, connection, msg):
         vol.Required("type"): "config/entity_registry/update",
         vol.Required("entity_id"): cv.entity_id,
         # If passed in, we update value. Passing None will remove old value.
-        vol.Optional("name"): vol.Any(str, None),
-        vol.Optional("icon"): vol.Any(str, None),
         vol.Optional("area_id"): vol.Any(str, None),
+        vol.Optional("device_class"): vol.Any(str, None),
+        vol.Optional("icon"): vol.Any(str, None),
+        vol.Optional("name"): vol.Any(str, None),
         vol.Optional("new_entity_id"): str,
         # We only allow setting disabled_by user via API.
-        vol.Optional("disabled_by"): vol.Any(DISABLED_USER, None),
+        vol.Optional("disabled_by"): vol.Any(
+            None,
+            vol.All(
+                vol.Coerce(RegistryEntryDisabler), RegistryEntryDisabler.USER.value
+            ),
+        ),
     }
 )
 async def websocket_update_entity(hass, connection, msg):
@@ -92,7 +101,7 @@ async def websocket_update_entity(hass, connection, msg):
 
     changes = {}
 
-    for key in ("name", "icon", "area_id", "disabled_by"):
+    for key in ("area_id", "device_class", "disabled_by", "icon", "name"):
         if key in msg:
             changes[key] = msg[key]
 
@@ -168,15 +177,15 @@ async def websocket_remove_entity(hass, connection, msg):
 def _entry_dict(entry):
     """Convert entry to API format."""
     return {
+        "area_id": entry.area_id,
         "config_entry_id": entry.config_entry_id,
         "device_id": entry.device_id,
-        "area_id": entry.area_id,
         "disabled_by": entry.disabled_by,
-        "entity_id": entry.entity_id,
-        "name": entry.name,
-        "icon": entry.icon,
-        "platform": entry.platform,
         "entity_category": entry.entity_category,
+        "entity_id": entry.entity_id,
+        "icon": entry.icon,
+        "name": entry.name,
+        "platform": entry.platform,
     }
 
 
@@ -184,8 +193,10 @@ def _entry_dict(entry):
 def _entry_ext_dict(entry):
     """Convert entry to API format."""
     data = _entry_dict(entry)
-    data["original_name"] = entry.original_name
-    data["original_icon"] = entry.original_icon
-    data["unique_id"] = entry.unique_id
     data["capabilities"] = entry.capabilities
+    data["device_class"] = entry.device_class
+    data["original_device_class"] = entry.original_device_class
+    data["original_icon"] = entry.original_icon
+    data["original_name"] = entry.original_name
+    data["unique_id"] = entry.unique_id
     return data

@@ -11,23 +11,24 @@ from homeassistant.components.twinkly.const import (
     DOMAIN as TWINKLY_DOMAIN,
 )
 
-from tests.components.twinkly import TEST_MODEL, ClientMock
+from . import TEST_MODEL, ClientMock
 
 
 async def test_invalid_host(hass):
     """Test the failure when invalid host provided."""
-    result = await hass.config_entries.flow.async_init(
-        TWINKLY_DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
-    assert result["errors"] == {}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_ENTRY_HOST: "dummy"},
-    )
+    client = ClientMock()
+    client.is_offline = True
+    with patch("twinkly_client.TwinklyClient", return_value=client):
+        result = await hass.config_entries.flow.async_init(
+            TWINKLY_DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] == "form"
+        assert result["step_id"] == "user"
+        assert result["errors"] == {}
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_ENTRY_HOST: "dummy"},
+        )
 
     assert result["type"] == "form"
     assert result["step_id"] == "user"

@@ -119,19 +119,19 @@ LIFX_EFFECT_PULSE_SCHEMA = cv.make_entity_service_schema(
         ATTR_BRIGHTNESS_PCT: VALID_BRIGHTNESS_PCT,
         vol.Exclusive(ATTR_COLOR_NAME, COLOR_GROUP): cv.string,
         vol.Exclusive(ATTR_RGB_COLOR, COLOR_GROUP): vol.All(
-            vol.ExactSequence((cv.byte, cv.byte, cv.byte)), vol.Coerce(tuple)
+            vol.Coerce(tuple), vol.ExactSequence((cv.byte, cv.byte, cv.byte))
         ),
         vol.Exclusive(ATTR_XY_COLOR, COLOR_GROUP): vol.All(
-            vol.ExactSequence((cv.small_float, cv.small_float)), vol.Coerce(tuple)
+            vol.Coerce(tuple), vol.ExactSequence((cv.small_float, cv.small_float))
         ),
         vol.Exclusive(ATTR_HS_COLOR, COLOR_GROUP): vol.All(
+            vol.Coerce(tuple),
             vol.ExactSequence(
                 (
                     vol.All(vol.Coerce(float), vol.Range(min=0, max=360)),
                     vol.All(vol.Coerce(float), vol.Range(min=0, max=100)),
                 )
             ),
-            vol.Coerce(tuple),
         ),
         vol.Exclusive(ATTR_COLOR_TEMP, COLOR_GROUP): vol.All(
             vol.Coerce(int), vol.Range(min=1)
