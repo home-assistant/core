@@ -3,10 +3,11 @@ from __future__ import annotations
 
 import asyncio
 import binascii
+from collections.abc import Callable
 import copy
 import functools
 import logging
-from typing import Callable, NamedTuple
+from typing import NamedTuple
 
 import RFXtrx as rfxtrxmod
 import async_timeout
