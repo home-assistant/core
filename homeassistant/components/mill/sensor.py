@@ -203,6 +203,7 @@ class LocalMillSensor(CoordinatorEntity, SensorEntity):
             f"{coordinator.mill_data_connection.name} {entity_description.name}"
         )
 
+    @property
     def native_value(self):
         """Return the native value of the sensor."""
         return self.coordinator.data[self.entity_description.key]
