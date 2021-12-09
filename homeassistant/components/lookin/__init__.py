@@ -1,6 +1,7 @@
 """The lookin integration."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import logging
 
@@ -37,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         lookin_device = await lookin_protocol.get_info()
         devices = await lookin_protocol.get_devices()
-    except aiohttp.ClientError as ex:
+    except (asyncio.TimeoutError, aiohttp.ClientError) as ex:
         raise ConfigEntryNotReady from ex
 
     meteo_coordinator: DataUpdateCoordinator = DataUpdateCoordinator(
