@@ -5,11 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Final
 
-from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
-    SensorEntityDescription,
-)
+from homeassistant.components.sensor import SensorEntityDescription, SensorStateClass
 from homeassistant.const import (
     CURRENCY_EURO,
     DEVICE_CLASS_CURRENT,
@@ -57,42 +53,42 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
         name="Low tariff usage",
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/reading/electricity_returned_1",
         name="Low tariff returned",
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/reading/electricity_delivered_2",
         name="High tariff usage",
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/reading/electricity_returned_2",
         name="High tariff returned",
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/reading/electricity_currently_delivered",
         name="Current power usage",
         device_class=DEVICE_CLASS_POWER,
         native_unit_of_measurement=POWER_KILO_WATT,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/reading/electricity_currently_returned",
         name="Current power return",
         device_class=DEVICE_CLASS_POWER,
         native_unit_of_measurement=POWER_KILO_WATT,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/reading/phase_currently_delivered_l1",
@@ -100,7 +96,7 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         device_class=DEVICE_CLASS_POWER,
         native_unit_of_measurement=POWER_KILO_WATT,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/reading/phase_currently_delivered_l2",
@@ -108,7 +104,7 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         device_class=DEVICE_CLASS_POWER,
         native_unit_of_measurement=POWER_KILO_WATT,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/reading/phase_currently_delivered_l3",
@@ -116,7 +112,7 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         device_class=DEVICE_CLASS_POWER,
         native_unit_of_measurement=POWER_KILO_WATT,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/reading/phase_currently_returned_l1",
@@ -124,7 +120,7 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         device_class=DEVICE_CLASS_POWER,
         native_unit_of_measurement=POWER_KILO_WATT,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/reading/phase_currently_returned_l2",
@@ -132,7 +128,7 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         device_class=DEVICE_CLASS_POWER,
         native_unit_of_measurement=POWER_KILO_WATT,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/reading/phase_currently_returned_l3",
@@ -140,7 +136,7 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         device_class=DEVICE_CLASS_POWER,
         native_unit_of_measurement=POWER_KILO_WATT,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/reading/extra_device_delivered",
@@ -148,7 +144,7 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         icon="mdi:fire",
         native_unit_of_measurement=VOLUME_CUBIC_METERS,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/reading/phase_voltage_l1",
@@ -156,7 +152,7 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         device_class=DEVICE_CLASS_VOLTAGE,
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/reading/phase_voltage_l2",
@@ -164,7 +160,7 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         device_class=DEVICE_CLASS_VOLTAGE,
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/reading/phase_voltage_l3",
@@ -172,7 +168,7 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         device_class=DEVICE_CLASS_VOLTAGE,
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/reading/phase_power_current_l1",
@@ -180,7 +176,7 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         device_class=DEVICE_CLASS_CURRENT,
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/reading/phase_power_current_l2",
@@ -188,7 +184,7 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         device_class=DEVICE_CLASS_CURRENT,
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/reading/phase_power_current_l3",
@@ -196,7 +192,7 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         device_class=DEVICE_CLASS_CURRENT,
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/reading/timestamp",
@@ -210,14 +206,14 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
         name="Gas usage",
         device_class=DEVICE_CLASS_GAS,
         native_unit_of_measurement=VOLUME_CUBIC_METERS,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/consumption/gas/currently_delivered",
         name="Current gas usage",
         device_class=DEVICE_CLASS_GAS,
         native_unit_of_measurement=VOLUME_CUBIC_METERS,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/consumption/gas/read_at",
@@ -231,42 +227,42 @@ SENSORS: tuple[DSMRReaderSensorEntityDescription, ...] = (
         name="Low tariff usage",
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/day-consumption/electricity2",
         name="High tariff usage",
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/day-consumption/electricity1_returned",
         name="Low tariff return",
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/day-consumption/electricity2_returned",
         name="High tariff return",
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/day-consumption/electricity_merged",
         name="Power usage total",
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/day-consumption/electricity_returned_merged",
         name="Power return total",
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     DSMRReaderSensorEntityDescription(
         key="dsmr/day-consumption/electricity1_cost",
