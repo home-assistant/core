@@ -185,7 +185,7 @@ class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
         self._attr_hvac_mode = LOOKIN_HVAC_MODE_IDX_TO_HASS[self._climate.hvac_mode]
 
     def update_meteo_from_value(self, event: UDPEvent) -> None:
-        self.temperature = float(int(event.value[:4], 16)) / 10
+        self._attr_current_temperature = float(int(event.value[:4], 16)) / 10
         self.humidity = float(int(event.value[-4:], 16)) / 10
 
     @callback
