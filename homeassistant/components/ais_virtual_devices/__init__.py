@@ -4,8 +4,9 @@ import json
 import logging
 
 from homeassistant.components.ais_dom import ais_global
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.setup import async_setup_component
+from homeassistant.components.mjpeg.camera import CONF_MJPEG_URL, CONF_STILL_IMAGE_URL
+from homeassistant.const import CONF_NAME, CONF_PLATFORM
+from homeassistant.helpers import discovery
 
 DOMAIN = "ais_virtual_devices"
 _LOGGER = logging.getLogger(__name__)
@@ -89,7 +90,7 @@ async def async_setup(hass, config):
             "friendly_name": "Przełączniki",
             "context_key_words": "przełaczniki",
             "context_answer": "OK, wybrano wszystkie przełączniki. Możesz powiedzieć co włączyć lub nawigować pilotem "
-                              "by sprawdzać status oraz przełączać.",
+            "by sprawdzać status oraz przełączać.",
             "remote_group_view": "group.all_ais_devices",
         },
     )
@@ -104,7 +105,7 @@ async def async_setup(hass, config):
             "friendly_name": "Światła",
             "context_key_words": "światła",
             "context_answer": "OK, wybrano wszystkie światła. Możesz powiedzieć co włączyć lub nawigować pilotem by "
-                              "sprawdzać status oraz przełączać",
+            "sprawdzać status oraz przełączać",
             "remote_group_view": "group.all_ais_devices",
         },
     )
@@ -215,7 +216,7 @@ async def async_setup(hass, config):
             "friendly_name": "Urządzenia",
             "context_key_words": "urządzenia",
             "context_answer": "OK, wybrano wszystkie urządzenia. Możesz powiedzieć co włączyć lub nawigować pilotem "
-                              "by sprawdzać status oraz przełączać.",
+            "by sprawdzać status oraz przełączać.",
             "remote_group_view": "Mój Dom",
         },
     )
@@ -330,7 +331,7 @@ async def async_setup(hass, config):
             "context_suffix": "Radio",
             "context_key_words": "radio,radia,radia internetowe",
             "context_answer": "OK, powiedz jakiej stacji chcesz posłuchać lub wybierz pilotem typ radia i stację "
-                              "radiową",
+            "radiową",
             "remote_group_view": "Audio",
         },
     )
@@ -350,7 +351,7 @@ async def async_setup(hass, config):
             "context_suffix": "Podcast",
             "context_key_words": "podcast,podcasty,podkasty,podkast",
             "context_answer": "OK, powiedz jaką audycję mam włączyć lub wybierz pilotem typ, "
-                              "audycję i odcinek podcasta",
+            "audycję i odcinek podcasta",
             "remote_group_view": "Audio",
         },
     )
@@ -370,7 +371,7 @@ async def async_setup(hass, config):
             "context_suffix": "Książka",
             "context_key_words": "książki,książka,audiobook,audiobooks",
             "context_answer": "OK, powiedz jakiej książki chcesz posłuchać lub wybierz pilotem autora, książkę i "
-                              "rozdział książki",
+            "rozdział książki",
             "remote_group_view": "Audio",
         },
     )
@@ -419,7 +420,7 @@ async def async_setup(hass, config):
             "friendly_name": "Ustawienia sieci",
             "context_key_words": "internet,sieć,ustawienia sieci,wifi",
             "context_answer": "OK, wybrano internet. Możesz nawigowac pilotem by uzyskać informację o statusie Twojej "
-                              "sieci.",
+            "sieci.",
             "remote_group_view": "Ustawienia",
         },
     )
@@ -442,7 +443,7 @@ async def async_setup(hass, config):
             "friendly_name": "Dodaj nowe urządzenia",
             "context_key_words": "dodaj urządzenie",
             "context_answer": "OK, wybrano dodawanie nowego urządzenia. Możesz nawigowac pilotem by dodać urządzenie "
-                              "do systemu.",
+            "do systemu.",
             "remote_group_view": "Ustawienia",
         },
     )
@@ -509,7 +510,7 @@ async def async_setup(hass, config):
             "friendly_name": "System",
             "context_key_words": "wersja,aktualizacja,wersja systemu",
             "context_answer": "OK, wybrano informację o wersji. Możesz nawigować pilotem by sprawdzić dostępność "
-                              "aktualizacji systemu",
+            "aktualizacji systemu",
             "remote_group_view": "Pomoc",
         },
     )
@@ -531,7 +532,7 @@ async def async_setup(hass, config):
     # LOG settings
     try:
         with open(
-                hass.config.config_dir + ais_global.G_LOG_SETTINGS_INFO_FILE
+            hass.config.config_dir + ais_global.G_LOG_SETTINGS_INFO_FILE
         ) as json_file:
             log_settings = json.load(json_file)
         ais_global.G_LOG_SETTINGS_INFO = log_settings
@@ -555,7 +556,7 @@ async def async_setup(hass, config):
     # DB settings
     try:
         with open(
-                hass.config.config_dir + ais_global.G_DB_SETTINGS_INFO_FILE
+            hass.config.config_dir + ais_global.G_DB_SETTINGS_INFO_FILE
         ) as json_file:
             db_settings = json.load(json_file)
         ais_global.G_DB_SETTINGS_INFO = db_settings
@@ -566,13 +567,19 @@ async def async_setup(hass, config):
         if "dbShowLogbook" not in ais_global.G_DB_SETTINGS_INFO:
             ais_global.G_DB_SETTINGS_INFO["dbShowLogbook"] = False
         if "dbInclude" not in ais_global.G_DB_SETTINGS_INFO:
-            ais_global.G_DB_SETTINGS_INFO["dbInclude"] = ais_global.G_AIS_INCLUDE_DB_DEFAULT
+            ais_global.G_DB_SETTINGS_INFO[
+                "dbInclude"
+            ] = ais_global.G_AIS_INCLUDE_DB_DEFAULT
         if "dbExclude" not in ais_global.G_DB_SETTINGS_INFO:
-            ais_global.G_DB_SETTINGS_INFO["dbExclude"] = ais_global.G_AIS_EXCLUDE_DB_DEFAULT_EMPTY
+            ais_global.G_DB_SETTINGS_INFO[
+                "dbExclude"
+            ] = ais_global.G_AIS_EXCLUDE_DB_DEFAULT_EMPTY
     except Exception as e:
         _LOGGER.info("Error get db settings info " + str(e))
-        ais_global.G_DB_SETTINGS_INFO = {"dbInclude": ais_global.G_AIS_INCLUDE_DB_DEFAULT,
-                                         "dbExclude": ais_global.G_AIS_EXCLUDE_DB_DEFAULT_EMPTY}
+        ais_global.G_DB_SETTINGS_INFO = {
+            "dbInclude": ais_global.G_AIS_INCLUDE_DB_DEFAULT,
+            "dbExclude": ais_global.G_AIS_EXCLUDE_DB_DEFAULT_EMPTY,
+        }
 
     if ais_global.G_DB_SETTINGS_INFO is not None:
         # set the logs settings info
@@ -581,9 +588,9 @@ async def async_setup(hass, config):
         )
 
         if (
-                not hass.services.has_service("recorder", "purge")
-                and "dbEngine" in ais_global.G_DB_SETTINGS_INFO
-                and len(ais_global.G_DB_SETTINGS_INFO["dbEngine"]) > 1
+            not hass.services.has_service("recorder", "purge")
+            and "dbEngine" in ais_global.G_DB_SETTINGS_INFO
+            and len(ais_global.G_DB_SETTINGS_INFO["dbEngine"]) > 1
         ):
             hass.async_create_task(
                 hass.helpers.discovery.async_load_platform(
@@ -608,5 +615,33 @@ async def async_setup(hass, config):
                         "history", "history", {}, config
                     )
                 )
+
+    # Set up android camera
+    if ais_global.has_root():
+        cmd = 'su -c "dumpsys package pl.sviete.screenstream | grep versionName"'
+        cmd_process = await asyncio.create_subprocess_shell(
+            cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+        )
+        apk_version, stderr = await cmd_process.communicate()
+        apk_version = (
+            apk_version.decode("utf-8")
+            .replace("\n", "")
+            .strip()
+            .replace("versionName=", "")
+        )
+
+        if "." in apk_version:
+            mjpeg_camera = {
+                CONF_PLATFORM: "mjpeg",
+                CONF_MJPEG_URL: "http://127.0.0.1:9966/stream.mjpeg",
+                CONF_STILL_IMAGE_URL: "http://127.0.0.1:9966/stream.mjpeg",
+                CONF_NAME: "Android",
+            }
+
+            hass.async_create_task(
+                discovery.async_load_platform(
+                    hass, "camera", "mjpeg", mjpeg_camera, config
+                )
+            )
 
     return True
