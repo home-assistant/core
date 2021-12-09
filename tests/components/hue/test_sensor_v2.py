@@ -22,7 +22,7 @@ async def test_sensors(hass, mock_bridge_v2, v2_resources_test_data):
     sensor = hass.states.get("sensor.hue_motion_sensor_temperature")
     assert sensor is not None
     assert sensor.state == "18.1"
-    assert sensor.attributes["friendly_name"] == "Hue motion sensor: Temperature"
+    assert sensor.attributes["friendly_name"] == "Hue motion sensor Temperature"
     assert sensor.attributes["device_class"] == "temperature"
     assert sensor.attributes["state_class"] == "measurement"
     assert sensor.attributes["unit_of_measurement"] == "°C"
@@ -32,7 +32,7 @@ async def test_sensors(hass, mock_bridge_v2, v2_resources_test_data):
     sensor = hass.states.get("sensor.hue_motion_sensor_illuminance")
     assert sensor is not None
     assert sensor.state == "63"
-    assert sensor.attributes["friendly_name"] == "Hue motion sensor: Illuminance"
+    assert sensor.attributes["friendly_name"] == "Hue motion sensor Illuminance"
     assert sensor.attributes["device_class"] == "illuminance"
     assert sensor.attributes["state_class"] == "measurement"
     assert sensor.attributes["unit_of_measurement"] == "lx"
@@ -43,7 +43,7 @@ async def test_sensors(hass, mock_bridge_v2, v2_resources_test_data):
     sensor = hass.states.get("sensor.wall_switch_with_2_controls_battery")
     assert sensor is not None
     assert sensor.state == "100"
-    assert sensor.attributes["friendly_name"] == "Wall switch with 2 controls: Battery"
+    assert sensor.attributes["friendly_name"] == "Wall switch with 2 controls Battery"
     assert sensor.attributes["device_class"] == "battery"
     assert sensor.attributes["state_class"] == "measurement"
     assert sensor.attributes["unit_of_measurement"] == "%"

@@ -298,6 +298,7 @@ class SynoApi:
         else:
             self.config_url = f"http://{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
 
+        self.initialized = False
         # DSM APIs
         self.dsm: SynologyDSM = None
         self.information: SynoDSMInformation = None
@@ -347,6 +348,7 @@ class SynoApi:
 
         await self._hass.async_add_executor_job(self._fetch_device_configuration)
         await self.async_update()
+        self.initialized = True
 
     @callback
     def subscribe(self, api_key: str, unique_id: str) -> Callable[[], None]:
@@ -506,6 +508,9 @@ class SynoApi:
                 self.dsm.update, self._with_information
             )
         except (SynologyDSMLoginFailedException, SynologyDSMRequestException) as err:
+            if not self.initialized:
+                raise err
+
             _LOGGER.warning(
                 "Connection error during update, fallback by reloading the entry"
             )

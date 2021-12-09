@@ -97,4 +97,4 @@ class ReCollectWasteSensor(CoordinatorEntity, SensorEntity):
                 ATTR_NEXT_PICKUP_DATE: next_pickup_event.date.isoformat(),
             }
         )
-        self._attr_native_value = pickup_event.date.isoformat()
+        self._attr_native_value = pickup_event.date

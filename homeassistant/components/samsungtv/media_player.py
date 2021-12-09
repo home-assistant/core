@@ -99,16 +99,34 @@ class SamsungTVDevice(MediaPlayerEntity):
         self._config_entry = config_entry
         self._host: str | None = config_entry.data[CONF_HOST]
         self._mac: str | None = config_entry.data.get(CONF_MAC)
-        self._manufacturer: str | None = config_entry.data.get(CONF_MANUFACTURER)
-        self._model: str | None = config_entry.data.get(CONF_MODEL)
-        self._name: str | None = config_entry.data.get(CONF_NAME)
         self._on_script = on_script
-        self._uuid = config_entry.unique_id
-        # Assume that the TV is not muted
-        self._muted: bool = False
         # Assume that the TV is in Play mode
         self._playing: bool = True
-        self._state: str | None = None
+
+        self._attr_name: str | None = config_entry.data.get(CONF_NAME)
+        self._attr_state: str | None = None
+        self._attr_unique_id = config_entry.unique_id
+        self._attr_is_volume_muted: bool = False
+        self._attr_device_class = DEVICE_CLASS_TV
+        self._attr_source_list = list(SOURCES)
+
+        if self._on_script or self._mac:
+            self._attr_supported_features = SUPPORT_SAMSUNGTV | SUPPORT_TURN_ON
+        else:
+            self._attr_supported_features = SUPPORT_SAMSUNGTV
+
+        self._attr_device_info = DeviceInfo(
+            name=self.name,
+            manufacturer=config_entry.data.get(CONF_MANUFACTURER),
+            model=config_entry.data.get(CONF_MODEL),
+        )
+        if self.unique_id:
+            self._attr_device_info["identifiers"] = {(DOMAIN, self.unique_id)}
+        if self._mac:
+            self._attr_device_info["connections"] = {
+                (CONNECTION_NETWORK_MAC, self._mac)
+            }
+
         # Mark the end of a shutdown command (need to wait 15 seconds before
         # sending the next command to avoid turning the TV back ON).
         self._end_of_power_off: datetime | None = None
@@ -136,9 +154,9 @@ class SamsungTVDevice(MediaPlayerEntity):
         if self._auth_failed or self.hass.is_stopping:
             return
         if self._power_off_in_progress():
-            self._state = STATE_OFF
+            self._attr_state = STATE_OFF
         else:
-            self._state = STATE_ON if self._bridge.is_on() else STATE_OFF
+            self._attr_state = STATE_ON if self._bridge.is_on() else STATE_OFF
 
     def send_key(self, key: str) -> None:
         """Send a key to the tv and handles exceptions."""
@@ -154,67 +172,16 @@ class SamsungTVDevice(MediaPlayerEntity):
         )
 
     @property
-    def unique_id(self) -> str | None:
-        """Return the unique ID of the device."""
-        return self._uuid
-
-    @property
-    def name(self) -> str | None:
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def state(self) -> str | None:
-        """Return the state of the device."""
-        return self._state
-
-    @property
     def available(self) -> bool:
         """Return the availability of the device."""
         if self._auth_failed:
             return False
         return (
-            self._state == STATE_ON
+            self._attr_state == STATE_ON
             or self._on_script is not None
             or self._mac is not None
             or self._power_off_in_progress()
         )
-
-    @property
-    def device_info(self) -> DeviceInfo | None:
-        """Return device specific attributes."""
-        info: DeviceInfo = {
-            "name": self.name,
-            "manufacturer": self._manufacturer,
-            "model": self._model,
-        }
-        if self.unique_id:
-            info["identifiers"] = {(DOMAIN, self.unique_id)}
-        if self._mac:
-            info["connections"] = {(CONNECTION_NETWORK_MAC, self._mac)}
-        return info
-
-    @property
-    def is_volume_muted(self) -> bool:
-        """Boolean if volume is currently muted."""
-        return self._muted
-
-    @property
-    def source_list(self) -> list:
-        """List of available input sources."""
-        return list(SOURCES)
-
-    @property
-    def supported_features(self) -> int:
-        """Flag media player features that are supported."""
-        if self._on_script or self._mac:
-            return SUPPORT_SAMSUNGTV | SUPPORT_TURN_ON
-        return SUPPORT_SAMSUNGTV
-
-    @property
-    def device_class(self) -> str:
-        """Set the device class to TV."""
-        return DEVICE_CLASS_TV
 
     def turn_off(self) -> None:
         """Turn off media player."""

@@ -21,7 +21,7 @@ async def test_button_simple(hass: HomeAssistant, knx: KNXTestKit):
     events = async_capture_events(hass, "state_changed")
     await knx.setup_integration(
         {
-            ButtonSchema.PLATFORM_NAME: {
+            ButtonSchema.PLATFORM: {
                 CONF_NAME: "test",
                 KNX_ADDRESS: "1/2/3",
             }
@@ -57,7 +57,7 @@ async def test_button_raw(hass: HomeAssistant, knx: KNXTestKit):
     """Test KNX button with raw payload."""
     await knx.setup_integration(
         {
-            ButtonSchema.PLATFORM_NAME: {
+            ButtonSchema.PLATFORM: {
                 CONF_NAME: "test",
                 KNX_ADDRESS: "1/2/3",
                 CONF_PAYLOAD: False,
@@ -76,7 +76,7 @@ async def test_button_type(hass: HomeAssistant, knx: KNXTestKit):
     """Test KNX button with encoded payload."""
     await knx.setup_integration(
         {
-            ButtonSchema.PLATFORM_NAME: {
+            ButtonSchema.PLATFORM: {
                 CONF_NAME: "test",
                 KNX_ADDRESS: "1/2/3",
                 ButtonSchema.CONF_VALUE: 21.5,

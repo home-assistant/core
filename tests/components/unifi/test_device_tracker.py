@@ -1,4 +1,4 @@
-"""The tests for the UniFi device tracker platform."""
+"""The tests for the UniFi Network device tracker platform."""
 
 from datetime import timedelta
 from unittest.mock import patch
@@ -900,7 +900,7 @@ async def test_wireless_client_go_wired_issue(
 ):
     """Test the solution to catch wireless device go wired UniFi issue.
 
-    UniFi has a known issue that when a wireless device goes away it sometimes gets marked as wired.
+    UniFi Network has a known issue that when a wireless device goes away it sometimes gets marked as wired.
     """
     client = {
         "essid": "ssid",
@@ -1089,7 +1089,7 @@ async def test_restoring_client(hass, aioclient_mock):
         data=ENTRY_CONFIG,
         source="test",
         options={},
-        entry_id=1,
+        entry_id="1",
     )
 
     registry = er.async_get(hass)

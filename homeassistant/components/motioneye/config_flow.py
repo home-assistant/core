@@ -10,6 +10,7 @@ from motioneye_client.client import (
 )
 import voluptuous as vol
 
+from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     ConfigEntry,
@@ -162,9 +163,9 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a reauthentication flow."""
         return await self.async_step_user(config_data)
 
-    async def async_step_hassio(self, discovery_info: dict[str, Any]) -> FlowResult:
+    async def async_step_hassio(self, discovery_info: HassioServiceInfo) -> FlowResult:
         """Handle Supervisor discovery."""
-        self._hassio_discovery = discovery_info
+        self._hassio_discovery = discovery_info.config
         await self._async_handle_discovery_without_unique_id()
 
         return await self.async_step_hassio_confirm()

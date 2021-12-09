@@ -22,6 +22,7 @@ from homeassistant.components.light import DOMAIN as LIGHT
 from homeassistant.components.lock import DOMAIN as LOCK
 from homeassistant.components.number import DOMAIN as NUMBER
 from homeassistant.components.sensor import DOMAIN as SENSOR
+from homeassistant.components.siren import DOMAIN as SIREN
 from homeassistant.components.switch import DOMAIN as SWITCH
 import homeassistant.helpers.config_validation as cv
 
@@ -120,6 +121,7 @@ PLATFORMS = (
     LOCK,
     NUMBER,
     SENSOR,
+    SIREN,
     SWITCH,
 )
 

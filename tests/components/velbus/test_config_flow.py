@@ -77,29 +77,11 @@ async def test_user_fail(hass: HomeAssistant):
     assert result["errors"] == {CONF_PORT: "cannot_connect"}
 
 
-@pytest.mark.usefixtures("controller")
-async def test_import(hass: HomeAssistant):
-    """Test import step."""
-    flow = init_config_flow(hass)
-
-    result = await flow.async_step_import({CONF_PORT: PORT_TCP})
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "velbus_import"
-
-
 @pytest.mark.usefixtures("config_entry")
 async def test_abort_if_already_setup(hass: HomeAssistant):
-    """Test we abort if Daikin is already setup."""
+    """Test we abort if Velbus is already setup."""
     flow = init_config_flow(hass)
 
-    result = await flow.async_step_import(
-        {CONF_PORT: PORT_TCP, CONF_NAME: "velbus import test"}
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured"
-
-    result = await flow.async_step_user(
-        {CONF_PORT: PORT_TCP, CONF_NAME: "velbus import test"}
-    )
+    result = await flow.async_step_user({CONF_PORT: PORT_TCP, CONF_NAME: "velbus test"})
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {"port": "already_configured"}

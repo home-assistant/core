@@ -40,7 +40,7 @@ async def test_default_state(hass):
     assert entry
     assert entry.unique_id == "unique_identifier"
     assert entry.original_name == "Bedroom Group"
-    assert entry.device_class == "presence"
+    assert entry.original_device_class == "presence"
 
 
 async def test_state_reporting_all(hass):

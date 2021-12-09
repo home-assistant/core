@@ -18,6 +18,9 @@
                     "name": "Nama"
                 }
             },
+            "discovery_confirm": {
+                "description": "Ingin menyiapkan {name} ({host})?"
+            },
             "user": {
                 "data": {
                     "ip_address": "Alamat IP"

@@ -8,10 +8,11 @@ import logging
 from pynws import SimpleNWS
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import debounce
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -28,7 +29,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["sensor", "weather"]
+PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
 
 DEFAULT_SCAN_INTERVAL = datetime.timedelta(minutes=10)
 FAILED_SCAN_INTERVAL = datetime.timedelta(minutes=1)
@@ -172,7 +173,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 def device_info(latitude, longitude) -> DeviceInfo:
     """Return device registry information."""
     return DeviceInfo(
-        entry_type="service",
+        entry_type=DeviceEntryType.SERVICE,
         identifiers={(DOMAIN, base_unique_id(latitude, longitude))},
         manufacturer="National Weather Service",
         name=f"NWS: {latitude}, {longitude}",

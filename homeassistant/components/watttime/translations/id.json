@@ -6,7 +6,8 @@
         },
         "error": {
             "invalid_auth": "Autentikasi tidak valid",
-            "unknown": "Kesalahan yang tidak diharapkan"
+            "unknown": "Kesalahan yang tidak diharapkan",
+            "unknown_coordinates": "Tidak ada data untuk garis lintang/bujur"
         },
         "step": {
             "coordinates": {
@@ -26,6 +27,7 @@
                 "data": {
                     "password": "Kata Sandi"
                 },
+                "description": "Masukkan kembali kata sandi untuk {username} :",
                 "title": "Autentikasi Ulang Integrasi"
             },
             "user": {
@@ -34,6 +36,16 @@
                     "username": "Nama Pengguna"
                 },
                 "description": "Masukkan nama pengguna dan kata sandi Anda:"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_on_map": "Tampilkan lokasi yang dipantau di peta"
+                },
+                "title": "Konfigurasikan WattTime"
             }
         }
     }

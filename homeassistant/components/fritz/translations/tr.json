@@ -32,7 +32,7 @@
             },
             "start_config": {
                 "data": {
-                    "host": "Ana bilgisayar",
+                    "host": "Sunucu",
                     "password": "Parola",
                     "port": "Port",
                     "username": "Kullan\u0131c\u0131 Ad\u0131"
@@ -42,7 +42,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Ana bilgisayar",
+                    "host": "Sunucu",
                     "password": "Parola",
                     "port": "Port",
                     "username": "Kullan\u0131c\u0131 Ad\u0131"

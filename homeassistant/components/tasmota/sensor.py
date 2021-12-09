@@ -259,10 +259,10 @@ class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, SensorEntity):
         return class_or_icon.get(ICON)
 
     @property
-    def native_value(self) -> str | None:
+    def native_value(self) -> datetime | str | None:
         """Return the state of the entity."""
         if self._state_timestamp and self.device_class == DEVICE_CLASS_TIMESTAMP:
-            return self._state_timestamp.isoformat()
+            return self._state_timestamp
         return self._state
 
     @property

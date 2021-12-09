@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import ValuesView
-from typing import Any
+from typing import Any, cast
 
 from pydeconz.light import Cover
 
@@ -108,9 +108,9 @@ class DeconzCover(DeconzDevice, CoverEntity):
         """Return if the cover is closed."""
         return not self._device.is_open
 
-    async def async_set_cover_position(self, **kwargs: int) -> None:
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        position = 100 - kwargs[ATTR_POSITION]
+        position = 100 - cast(int, kwargs[ATTR_POSITION])
         await self._device.set_position(lift=position)
 
     async def async_open_cover(self, **kwargs: Any) -> None:
@@ -132,9 +132,9 @@ class DeconzCover(DeconzDevice, CoverEntity):
             return 100 - self._device.tilt  # type: ignore[no-any-return]
         return None
 
-    async def async_set_cover_tilt_position(self, **kwargs: int) -> None:
+    async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Tilt the cover to a specific position."""
-        position = 100 - kwargs[ATTR_TILT_POSITION]
+        position = 100 - cast(int, kwargs[ATTR_TILT_POSITION])
         await self._device.set_position(tilt=position)
 
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:

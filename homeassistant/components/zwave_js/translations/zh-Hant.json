@@ -33,6 +33,7 @@
                     "s2_unauthenticated_key": "S2 \u672a\u9a57\u8b49\u5bc6\u9470",
                     "usb_path": "USB \u88dd\u7f6e\u8def\u5f91"
                 },
+                "description": "\u5047\u5982\u6b04\u4f4d\u4fdd\u6301\u7a7a\u767d\u3001\u9644\u52a0\u5143\u4ef6\u5c07\u6703\u7522\u751f\u4e00\u7d44\u5b89\u5168\u5bc6\u9470\u3002",
                 "title": "\u8f38\u5165 Z-Wave JS \u9644\u52a0\u5143\u4ef6\u8a2d\u5b9a"
             },
             "hassio_confirm": {
@@ -119,6 +120,7 @@
                     "s2_unauthenticated_key": "S2 \u672a\u9a57\u8b49\u5bc6\u9470",
                     "usb_path": "USB \u88dd\u7f6e\u8def\u5f91"
                 },
+                "description": "\u5047\u5982\u6b04\u4f4d\u4fdd\u6301\u7a7a\u767d\u3001\u9644\u52a0\u5143\u4ef6\u5c07\u6703\u7522\u751f\u4e00\u7d44\u5b89\u5168\u5bc6\u9470\u3002",
                 "title": "\u8f38\u5165 Z-Wave JS \u9644\u52a0\u5143\u4ef6\u8a2d\u5b9a"
             },
             "install_addon": {

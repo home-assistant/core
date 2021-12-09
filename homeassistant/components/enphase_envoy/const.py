@@ -6,11 +6,16 @@ from homeassistant.components.sensor import (
     STATE_CLASS_TOTAL_INCREASING,
     SensorEntityDescription,
 )
-from homeassistant.const import DEVICE_CLASS_ENERGY, ENERGY_WATT_HOUR, POWER_WATT
+from homeassistant.const import (
+    DEVICE_CLASS_ENERGY,
+    ENERGY_WATT_HOUR,
+    POWER_WATT,
+    Platform,
+)
 
 DOMAIN = "enphase_envoy"
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 
 
 COORDINATOR = "coordinator"
