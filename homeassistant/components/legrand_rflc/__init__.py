@@ -46,8 +46,7 @@ async def async_setup_entry(
             )
             hass.async_create_task(_reauth())
             raise asyncio.CancelledError("reauth")
-        else:
-            hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+        hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     async def _reauth() -> None:
         await hass.config_entries.async_unload(entry_id)
