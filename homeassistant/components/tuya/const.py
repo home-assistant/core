@@ -187,6 +187,9 @@ class DPCode(str, Enum):
     FAN_SPEED_PERCENT = "fan_speed_percent"  # Stepless speed
     FAR_DETECTION = "far_detection"
     FAULT = "fault"
+    FEED_MANUAL = "manual_feed"
+    FEED_REPORT = "feed_report"
+    FEED_STATE = "feed_state"
     FILTER_LIFE = "filter"
     FILTER_RESET = "filter_reset"  # Filter (cartridge) reset
     FLOODLIGHT_LIGHTNESS = "floodlight_lightness"

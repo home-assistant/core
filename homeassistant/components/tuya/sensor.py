@@ -137,6 +137,22 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         *BATTERY_SENSORS,
     ),
+    # Smart Pet Feeder
+    # https://developer.tuya.com/en/docs/iot/categorycwwsq?id=Kaiuz2b6vydld
+    "cwwsq": (
+        TuyaSensorEntityDescription(
+            key=DPCode.FEED_STATE,
+            name="Status",
+            icon="mdi:information",
+            device_class=DEVICE_CLASS_TUYA_STATUS
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.FEED_REPORT,
+            name="Feed Report",
+            icon="mdi:counter",
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+    ),
     # Air Quality Monitor
     # No specification on Tuya portal
     "hjjcy": (
