@@ -994,7 +994,7 @@ class SonosSpeaker:
     @soco_error()
     def update_media(self, event: SonosEvent | None = None) -> None:
         """Update information about currently playing media."""
-        variables = event and event.variables or {}
+        variables = event.variables if event else {}
 
         if "transport_state" in variables:
             # If the transport has an error then transport_state will
