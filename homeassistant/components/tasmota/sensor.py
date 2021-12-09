@@ -85,7 +85,7 @@ SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
     hc.SENSOR_DISTANCE: {
-        ICON: SensorDeviceClass,
+        ICON: "mdi:leak",
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
     hc.SENSOR_ECO2: {ICON: "mdi:molecule-co2"},
