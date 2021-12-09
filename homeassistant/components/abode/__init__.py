@@ -8,7 +8,6 @@ from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     ATTR_DATE,
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
@@ -248,16 +247,12 @@ def setup_abode_events(hass):
 class AbodeEntity(Entity):
     """Representation of an Abode entity."""
 
+    _attr_attribution = ATTRIBUTION
+
     def __init__(self, data):
         """Initialize Abode entity."""
         self._data = data
-        self._available = True
         self._attr_should_poll = data.polling
-
-    @property
-    def available(self):
-        """Return the available state."""
-        return self._available
 
     async def async_added_to_hass(self):
         """Subscribe to Abode connection status updates."""
@@ -277,7 +272,7 @@ class AbodeEntity(Entity):
 
     def _update_connection_status(self):
         """Update the entity available property."""
-        self._available = self._data.abode.events.connected
+        self._attr_available = self._data.abode.events.connected
         self.schedule_update_ha_state()
 
 
@@ -315,7 +310,6 @@ class AbodeDevice(AbodeEntity):
     def extra_state_attributes(self):
         """Return the state attributes."""
         return {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
             "device_id": self._device.device_id,
             "battery_low": self._device.battery_low,
             "no_response": self._device.no_response,
@@ -347,7 +341,6 @@ class AbodeAutomation(AbodeEntity):
         self._attr_name = automation.name
         self._attr_unique_id = automation.automation_id
         self._attr_extra_state_attributes = {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
             "type": "CUE automation",
         }
 
