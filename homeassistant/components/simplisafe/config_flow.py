@@ -68,7 +68,6 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def _async_show_form(self, *, errors: dict[str, Any] | None = None) -> FlowResult:
         """Show the form."""
-        """Handle the start of the config flow."""
         self._oauth_values = async_get_simplisafe_oauth_values()
 
         return self.async_show_form(
