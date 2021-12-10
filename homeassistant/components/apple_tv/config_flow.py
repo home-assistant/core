@@ -1,4 +1,5 @@
 """Config flow for Apple TV integration."""
+import asyncio
 from collections import deque
 from ipaddress import ip_address
 import logging
@@ -7,7 +8,7 @@ from random import randrange
 from pyatv import exceptions, pair, scan
 from pyatv.const import DeviceModel, PairingRequirement, Protocol
 from pyatv.convert import model_str, protocol_str
-from pyatv.helpers import get_unique_id
+from pyatv.helpers import AIRPLAY_SERVICE, MEDIAREMOTE_SERVICE, get_unique_id
 import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
@@ -21,11 +22,15 @@ from .const import CONF_CREDENTIALS, CONF_IDENTIFIERS, CONF_START_OFF, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+SERVICES_WITH_ZEROCONF_IDENTIFIERS = {MEDIAREMOTE_SERVICE, AIRPLAY_SERVICE}
+
 DEVICE_INPUT = "device_input"
 
 INPUT_PIN_SCHEMA = vol.Schema({vol.Required(CONF_PIN, default=None): int})
 
 DEFAULT_START_OFF = False
+
+DISCOVERY_AGGREGATION_TIME = 15  # seconds
 
 
 async def device_scan(identifier, loop):
@@ -150,7 +155,8 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle device found via zeroconf."""
-        self._async_abort_entries_match({CONF_ADDRESS: discovery_info.host})
+        host = discovery_info.host
+        self._async_abort_entries_match({CONF_ADDRESS: host})
         service_type = discovery_info.type[:-1]  # Remove leading .
         name = discovery_info.name.replace(f".{service_type}.", "")
         properties = discovery_info.properties
@@ -161,10 +167,43 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="unknown")
         self.scan_filter = discovery_info.host
 
+        await self._async_aggregate_discoveries(host, unique_id, service_type)
         # Scan for the device in order to extract _all_ unique identifiers assigned to
         # it. Not doing it like this will yield multiple config flows for the same
         # device, one per protocol, which is undesired.
         return await self.async_find_device_wrapper(self.async_found_zeroconf_device)
+
+    async def _async_aggregate_discoveries(
+        self, host: str, unique_id: str, service_type: str
+    ) -> None:
+        """Aggregate discoveries for the same host that happen inside of DISCOVERY_AGGREGATION_TIME."""
+        # Wait DISCOVERY_AGGREGATION_TIME for multiple services to be
+        # discovered via zeroconf.  Once the first service is discovered
+        # this allows other services to be discovered inside the time
+        # window before triggering a scan of the device. This prevents
+        # a multiple scans of the device at the same time since each
+        # apple_tv device has multiple services that are discovered by
+        # zeroconf.
+        await asyncio.sleep(DISCOVERY_AGGREGATION_TIME)
+        # Must not await until self.context[CONF_ADDRESS] is set
+        # or other flows may see it to soon and all flows
+        # will lose the race and nothing moves forward
+        for flow in self._async_in_progress(include_uninitialized=True):
+            context = flow["context"]
+            if (
+                context.get("source") != config_entries.SOURCE_ZEROCONF
+                or context.get(CONF_ADDRESS) != host
+            ):
+                continue
+            if (
+                service_type in SERVICES_WITH_ZEROCONF_IDENTIFIERS
+                and "all_identifiers" in context
+                and unique_id not in context["all_identifiers"]
+            ):
+                # Add potentially new identifiers from this device to the existing flow
+                context["all_identifiers"].append(unique_id)
+            raise data_entry_flow.AbortFlow("already_in_progress")
+        self.context[CONF_ADDRESS] = host
 
     async def async_found_zeroconf_device(self, user_input=None):
         """Handle device found after Zeroconf discovery."""

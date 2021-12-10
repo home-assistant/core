@@ -8,7 +8,7 @@ import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import zeroconf
-from homeassistant.components.apple_tv import CONF_ADDRESS
+from homeassistant.components.apple_tv import CONF_ADDRESS, config_flow
 from homeassistant.components.apple_tv.const import CONF_START_OFF, DOMAIN
 
 from .common import airplay_service, create_conf, mrp_service
@@ -23,6 +23,13 @@ DMAP_SERVICE = zeroconf.ZeroconfServiceInfo(
     name="dmapid._touch-able._tcp.local.",
     properties={"CtlN": "Apple TV"},
 )
+
+
+@pytest.fixture(autouse=True)
+def zero_aggregation_time():
+    """Prevent the aggregation time from delaying the tests."""
+    with patch.object(config_flow, "DISCOVERY_AGGREGATION_TIME", 0):
+        yield
 
 
 @pytest.fixture(autouse=True)
@@ -820,6 +827,7 @@ async def test_zeroconf_pair_additionally_found_protocols(
             properties={"deviceid": "airplayid"},
         ),
     )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
     mock_scan.result = [
         create_conf("127.0.0.1", "Device", mrp_service(), airplay_service())
