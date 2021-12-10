@@ -49,6 +49,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
+    await fritz_tools.async_config_entry_first_refresh()
+
     # Load the other platforms like switch
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 

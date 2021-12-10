@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, ValuesView
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 from types import MappingProxyType
 from typing import Any, TypedDict
@@ -33,8 +33,8 @@ from homeassistant.helpers.device_registry import (
     async_entries_for_config_entry,
     async_get,
 )
-from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_registry import (
     EntityRegistry,
     RegistryEntry,
@@ -105,6 +105,7 @@ class Device:
     mac: str
     ip_address: str
     name: str
+    wan_access: bool
 
 
 class HostInfo(TypedDict):
@@ -128,7 +129,12 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
         port: int = DEFAULT_PORT,
     ) -> None:
         """Initialize FritzboxTools class."""
-        super().__init__(hass=hass, logger=_LOGGER, name=f"{DOMAIN}-{host}-coordinator")
+        super().__init__(
+            hass=hass,
+            logger=_LOGGER,
+            name=f"{DOMAIN}-{host}-coordinator",
+            update_interval=timedelta(seconds=30),
+        )
 
         self._devices: dict[str, FritzDevice] = {}
         self._options: MappingProxyType[str, Any] | None = None
@@ -282,8 +288,17 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
             dev_name = known_host["name"]
             dev_ip = known_host["ip"]
             dev_home = known_host["status"]
+            dev_wan_access = True
+            if dev_ip:
+                wan_access = self.connection.call_action(
+                    "X_AVM-DE_HostFilter:1",
+                    "GetWANAccessByIP",
+                    NewIPv4Address=dev_ip,
+                )
+                if wan_access:
+                    dev_wan_access = not wan_access.get("NewDisallow")
 
-            dev_info = Device(dev_mac, dev_ip, dev_name)
+            dev_info = Device(dev_mac, dev_ip, dev_name, dev_wan_access)
 
             if dev_mac in self._devices:
                 self._devices[dev_mac].update(dev_info, dev_home, consider_home)
@@ -386,11 +401,12 @@ class FritzData:
     profile_switches: dict = field(default_factory=dict)
 
 
-class FritzDeviceBase(Entity):
+class FritzDeviceBase(update_coordinator.CoordinatorEntity):
     """Entity base class for a device connected to a FRITZ!Box router."""
 
     def __init__(self, router: FritzBoxTools, device: FritzDevice) -> None:
         """Initialize a FRITZ!Box device."""
+        super().__init__(router)
         self._router = router
         self._mac: str = device.mac_address
         self._name: str = device.hostname or DEFAULT_DEVICE_NAME
@@ -404,8 +420,7 @@ class FritzDeviceBase(Entity):
     def ip_address(self) -> str | None:
         """Return the primary ip address of the device."""
         if self._mac:
-            device: FritzDevice = self._router.devices[self._mac]
-            return device.ip_address
+            return self._router.devices[self._mac].ip_address
         return None
 
     @property
@@ -417,8 +432,7 @@ class FritzDeviceBase(Entity):
     def hostname(self) -> str | None:
         """Return hostname of the device."""
         if self._mac:
-            device: FritzDevice = self._router.devices[self._mac]
-            return device.hostname
+            return self._router.devices[self._mac].hostname
         return None
 
     @property
@@ -450,17 +464,6 @@ class FritzDeviceBase(Entity):
         await self.async_process_update()
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self) -> None:
-        """Register state update callback."""
-        await self.async_process_update()
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                self._router.signal_device_update,
-                self.async_on_demand_update,
-            )
-        )
-
 
 class FritzDevice:
     """Representation of a device connected to the FRITZ!Box."""
@@ -472,6 +475,7 @@ class FritzDevice:
         self._ip_address: str | None = None
         self._last_activity: datetime | None = None
         self._connected = False
+        self._wan_access = False
 
     def update(self, dev_info: Device, dev_home: bool, consider_home: float) -> None:
         """Update device info."""
@@ -493,6 +497,7 @@ class FritzDevice:
             self._last_activity = utc_point_in_time
 
         self._ip_address = dev_info.ip_address
+        self._wan_access = dev_info.wan_access
 
     @property
     def is_connected(self) -> bool:
@@ -518,6 +523,11 @@ class FritzDevice:
     def last_activity(self) -> datetime | None:
         """Return device last activity."""
         return self._last_activity
+
+    @property
+    def wan_access(self) -> bool:
+        """Return device wan access."""
+        return self._wan_access
 
 
 class SwitchInfo(TypedDict):
