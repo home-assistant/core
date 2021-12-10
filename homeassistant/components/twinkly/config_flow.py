@@ -70,4 +70,3 @@ class TwinklyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured(updates={CONF_ENTRY_HOST: dhcp.ip})
 
         return await self.async_step_user(user_input={CONF_HOST=dhcp.ip})
-    
