@@ -6,11 +6,16 @@ from homeassistant.components.sensor import (
     STATE_CLASS_TOTAL_INCREASING,
     SensorEntityDescription,
 )
-from homeassistant.const import DEVICE_CLASS_ENERGY, ENERGY_WATT_HOUR, POWER_WATT
+from homeassistant.const import (
+    DEVICE_CLASS_ENERGY,
+    ENERGY_WATT_HOUR,
+    POWER_WATT,
+    Platform,
+)
 
 DOMAIN = "enphase_envoy"
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 
 
 COORDINATOR = "coordinator"
@@ -27,7 +32,7 @@ SENSORS = (
         key="daily_production",
         name="Today's Energy Production",
         native_unit_of_measurement=ENERGY_WATT_HOUR,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
         device_class=DEVICE_CLASS_ENERGY,
     ),
     SensorEntityDescription(

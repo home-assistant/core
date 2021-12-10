@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
-import datetime
+from datetime import datetime, timedelta
 from functools import lru_cache
 import logging
 import os
@@ -16,7 +16,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
-    STATE_CLASS_TOTAL,
+    STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
     SensorEntityDescription,
@@ -80,21 +80,21 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         name="Disk free",
         native_unit_of_measurement=DATA_GIBIBYTES,
         icon="mdi:harddisk",
-        state_class=STATE_CLASS_TOTAL,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     "disk_use": SysMonitorSensorEntityDescription(
         key="disk_use",
         name="Disk use",
         native_unit_of_measurement=DATA_GIBIBYTES,
         icon="mdi:harddisk",
-        state_class=STATE_CLASS_TOTAL,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     "disk_use_percent": SysMonitorSensorEntityDescription(
         key="disk_use_percent",
         name="Disk use (percent)",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:harddisk",
-        state_class=STATE_CLASS_TOTAL,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     "ipv4_address": SysMonitorSensorEntityDescription(
         key="ipv4_address",
@@ -117,40 +117,40 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         key="load_15m",
         name="Load (15m)",
         icon=CPU_ICON,
-        state_class=STATE_CLASS_TOTAL,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     "load_1m": SysMonitorSensorEntityDescription(
         key="load_1m",
         name="Load (1m)",
         icon=CPU_ICON,
-        state_class=STATE_CLASS_TOTAL,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     "load_5m": SysMonitorSensorEntityDescription(
         key="load_5m",
         name="Load (5m)",
         icon=CPU_ICON,
-        state_class=STATE_CLASS_TOTAL,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     "memory_free": SysMonitorSensorEntityDescription(
         key="memory_free",
         name="Memory free",
         native_unit_of_measurement=DATA_MEBIBYTES,
         icon="mdi:memory",
-        state_class=STATE_CLASS_TOTAL,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     "memory_use": SysMonitorSensorEntityDescription(
         key="memory_use",
         name="Memory use",
         native_unit_of_measurement=DATA_MEBIBYTES,
         icon="mdi:memory",
-        state_class=STATE_CLASS_TOTAL,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     "memory_use_percent": SysMonitorSensorEntityDescription(
         key="memory_use_percent",
         name="Memory use (percent)",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:memory",
-        state_class=STATE_CLASS_TOTAL,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     "network_in": SysMonitorSensorEntityDescription(
         key="network_in",
@@ -187,7 +187,7 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         name="Network throughput in",
         native_unit_of_measurement=DATA_RATE_MEGABYTES_PER_SECOND,
         icon="mdi:server-network",
-        state_class=STATE_CLASS_TOTAL,
+        state_class=STATE_CLASS_MEASUREMENT,
         mandatory_arg=True,
     ),
     "throughput_network_out": SysMonitorSensorEntityDescription(
@@ -195,14 +195,14 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         name="Network throughput out",
         native_unit_of_measurement=DATA_RATE_MEGABYTES_PER_SECOND,
         icon="mdi:server-network",
-        state_class=STATE_CLASS_TOTAL,
+        state_class=STATE_CLASS_MEASUREMENT,
         mandatory_arg=True,
     ),
     "process": SysMonitorSensorEntityDescription(
         key="process",
         name="Process",
         icon=CPU_ICON,
-        state_class=STATE_CLASS_TOTAL,
+        state_class=STATE_CLASS_MEASUREMENT,
         mandatory_arg=True,
     ),
     "processor_use": SysMonitorSensorEntityDescription(
@@ -210,35 +210,35 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         name="Processor use",
         native_unit_of_measurement=PERCENTAGE,
         icon=CPU_ICON,
-        state_class=STATE_CLASS_TOTAL,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     "processor_temperature": SysMonitorSensorEntityDescription(
         key="processor_temperature",
         name="Processor temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=DEVICE_CLASS_TEMPERATURE,
-        state_class=STATE_CLASS_TOTAL,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     "swap_free": SysMonitorSensorEntityDescription(
         key="swap_free",
         name="Swap free",
         native_unit_of_measurement=DATA_MEBIBYTES,
         icon="mdi:harddisk",
-        state_class=STATE_CLASS_TOTAL,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     "swap_use": SysMonitorSensorEntityDescription(
         key="swap_use",
         name="Swap use",
         native_unit_of_measurement=DATA_MEBIBYTES,
         icon="mdi:harddisk",
-        state_class=STATE_CLASS_TOTAL,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     "swap_use_percent": SysMonitorSensorEntityDescription(
         key="swap_use_percent",
         name="Swap use (percent)",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:harddisk",
-        state_class=STATE_CLASS_TOTAL,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
 }
 
@@ -315,9 +315,9 @@ class SensorData:
     """Data for a sensor."""
 
     argument: Any
-    state: str | None
+    state: str | datetime | None
     value: Any | None
-    update_time: datetime.datetime | None
+    update_time: datetime | None
     last_exception: BaseException | None
 
 
@@ -367,7 +367,7 @@ async def async_setup_platform(
 async def async_setup_sensor_registry_updates(
     hass: HomeAssistant,
     sensor_registry: dict[tuple[str, str], SensorData],
-    scan_interval: datetime.timedelta,
+    scan_interval: timedelta,
 ) -> None:
     """Update the registry and create polling."""
 
@@ -439,7 +439,7 @@ class SystemMonitorSensor(SensorEntity):
         self._argument: str = argument
 
     @property
-    def native_value(self) -> str | None:
+    def native_value(self) -> str | datetime | None:
         """Return the state of the device."""
         return self.data.state
 
@@ -465,7 +465,7 @@ class SystemMonitorSensor(SensorEntity):
 
 def _update(  # noqa: C901
     type_: str, data: SensorData
-) -> tuple[str | None, str | None, datetime.datetime | None]:
+) -> tuple[str | datetime | None, str | None, datetime | None]:
     """Get the latest system information."""
     state = None
     value = None
@@ -549,7 +549,7 @@ def _update(  # noqa: C901
     elif type_ == "last_boot":
         # Only update on initial setup
         if data.state is None:
-            state = dt_util.utc_from_timestamp(psutil.boot_time()).isoformat()
+            state = dt_util.utc_from_timestamp(psutil.boot_time())
         else:
             state = data.state
     elif type_ == "load_1m":

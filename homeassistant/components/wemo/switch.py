@@ -1,7 +1,6 @@
 """Support for WeMo switches."""
 import asyncio
 from datetime import datetime, timedelta
-import logging
 
 from pywemo import CoffeeMaker, Insight, Maker
 
@@ -15,8 +14,6 @@ from .entity import WemoEntity
 
 SCAN_INTERVAL = timedelta(seconds=10)
 PARALLEL_UPDATES = 0
-
-_LOGGER = logging.getLogger(__name__)
 
 # The WEMO_ constants below come from pywemo itself
 ATTR_SENSOR_STATE = "sensor_state"

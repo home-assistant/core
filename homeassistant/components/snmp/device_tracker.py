@@ -86,8 +86,7 @@ class SnmpScanner(DeviceScanner):
         if not self.success_init:
             return False
 
-        data = self.get_snmp_data()
-        if not data:
+        if not (data := self.get_snmp_data()):
             return False
 
         self.last_results = data

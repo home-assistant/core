@@ -92,7 +92,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "invalid_auth"
 
         try:
-            with async_timeout.timeout(10):
+            async with async_timeout.timeout(10):
                 auth_url = await self.hass.async_add_executor_job(self._get_auth_url)
             if not auth_url:
                 return self.async_abort(reason="unknown_authorize_url_generation")

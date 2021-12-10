@@ -6,19 +6,37 @@
             "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
         },
         "error": {
-            "invalid_auth": "Ung\u00fcltige Authentifizierung"
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "login_error": "Anmeldefehler ({code}): {msg}"
         },
         "flow_title": "Tuya Konfiguration",
         "step": {
+            "login": {
+                "data": {
+                    "access_id": "Zugangs-ID",
+                    "access_secret": "Zugangsgeheimnis",
+                    "country_code": "L\u00e4ndercode",
+                    "endpoint": "Verf\u00fcgbarkeitsbereich",
+                    "password": "Passwort",
+                    "tuya_app_type": "Mobile App",
+                    "username": "Konto"
+                },
+                "description": "Gib deine Tuya-Anmeldedaten ein",
+                "title": "Tuya"
+            },
             "user": {
                 "data": {
-                    "country_code": "L\u00e4ndercode deines Kontos (z. B. 1 f\u00fcr USA oder 86 f\u00fcr China)",
+                    "access_id": "Tuya IoT-Zugriffs-ID",
+                    "access_secret": "Tuya IoT-Zugriffsgeheimnis",
+                    "country_code": "Land",
                     "password": "Passwort",
                     "platform": "Die App, in der dein Konto registriert ist",
-                    "username": "Benutzername"
+                    "region": "Region",
+                    "tuya_project_type": "Tuya Cloud Projekttyp",
+                    "username": "Konto"
                 },
                 "description": "Gib deine Tuya-Anmeldeinformationen ein.",
-                "title": "Tuya"
+                "title": "Tuya-Integration"
             }
         }
     },

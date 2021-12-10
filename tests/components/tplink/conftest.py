@@ -25,3 +25,8 @@ def device_reg_fixture(hass):
 def entity_reg_fixture(hass):
     """Return an empty, loaded, registry."""
     return mock_registry(hass)
+
+
+@pytest.fixture(autouse=True)
+def tplink_mock_get_source_ip(mock_get_source_ip):
+    """Mock network util's async_get_source_ip."""

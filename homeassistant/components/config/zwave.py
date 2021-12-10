@@ -7,7 +7,6 @@ from aiohttp.web import Response
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.zwave import DEVICE_CONFIG_SCHEMA_ENTRY, const
-from homeassistant.const import HTTP_BAD_REQUEST
 import homeassistant.core as ha
 import homeassistant.helpers.config_validation as cv
 
@@ -52,7 +51,7 @@ class ZWaveLogView(HomeAssistantView):
         try:
             lines = int(request.query.get("lines", 0))
         except ValueError:
-            return Response(text="Invalid datetime", status=HTTP_BAD_REQUEST)
+            return Response(text="Invalid datetime", status=HTTPStatus.BAD_REQUEST)
 
         hass = request.app["hass"]
         response = await hass.async_add_executor_job(self._get_log, hass, lines)
@@ -81,8 +80,7 @@ class ZWaveConfigWriteView(HomeAssistantView):
     def post(self, request):
         """Save cache configuration to zwcfg_xxxxx.xml."""
         hass = request.app["hass"]
-        network = hass.data.get(const.DATA_NETWORK)
-        if network is None:
+        if (network := hass.data.get(const.DATA_NETWORK)) is None:
             return self.json_message(
                 "No Z-Wave network data found", HTTPStatus.NOT_FOUND
             )
@@ -132,8 +130,7 @@ class ZWaveNodeGroupView(HomeAssistantView):
         nodeid = int(node_id)
         hass = request.app["hass"]
         network = hass.data.get(const.DATA_NETWORK)
-        node = network.nodes.get(nodeid)
-        if node is None:
+        if (node := network.nodes.get(nodeid)) is None:
             return self.json_message("Node not found", HTTPStatus.NOT_FOUND)
         groupdata = node.groups
         groups = {}
@@ -159,8 +156,7 @@ class ZWaveNodeConfigView(HomeAssistantView):
         nodeid = int(node_id)
         hass = request.app["hass"]
         network = hass.data.get(const.DATA_NETWORK)
-        node = network.nodes.get(nodeid)
-        if node is None:
+        if (node := network.nodes.get(nodeid)) is None:
             return self.json_message("Node not found", HTTPStatus.NOT_FOUND)
         config = {}
         for value in node.get_values(
@@ -190,8 +186,7 @@ class ZWaveUserCodeView(HomeAssistantView):
         nodeid = int(node_id)
         hass = request.app["hass"]
         network = hass.data.get(const.DATA_NETWORK)
-        node = network.nodes.get(nodeid)
-        if node is None:
+        if (node := network.nodes.get(nodeid)) is None:
             return self.json_message("Node not found", HTTPStatus.NOT_FOUND)
         usercodes = {}
         if not node.has_command_class(const.COMMAND_CLASS_USER_CODE):
@@ -221,8 +216,7 @@ class ZWaveProtectionView(HomeAssistantView):
 
         def _fetch_protection():
             """Get protection data."""
-            node = network.nodes.get(nodeid)
-            if node is None:
+            if (node := network.nodes.get(nodeid)) is None:
                 return self.json_message("Node not found", HTTPStatus.NOT_FOUND)
             protection_options = {}
             if not node.has_command_class(const.COMMAND_CLASS_PROTECTION):

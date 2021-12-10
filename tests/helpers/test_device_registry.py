@@ -167,23 +167,25 @@ async def test_multiple_config_entries(registry):
 async def test_loading_from_storage(hass, hass_storage):
     """Test loading stored devices on start."""
     hass_storage[device_registry.STORAGE_KEY] = {
-        "version": device_registry.STORAGE_VERSION,
+        "version": device_registry.STORAGE_VERSION_MAJOR,
+        "minor_version": device_registry.STORAGE_VERSION_MINOR,
         "data": {
             "devices": [
                 {
+                    "area_id": "12345A",
                     "config_entries": ["1234"],
+                    "configuration_url": None,
                     "connections": [["Zigbee", "01.23.45.67.89"]],
+                    "disabled_by": device_registry.DeviceEntryDisabler.USER,
+                    "entry_type": device_registry.DeviceEntryType.SERVICE,
                     "id": "abcdefghijklm",
                     "identifiers": [["serial", "12:34:56:AB:CD:EF"]],
                     "manufacturer": "manufacturer",
                     "model": "model",
+                    "name_by_user": "Test Friendly Name",
                     "name": "name",
                     "sw_version": "version",
-                    "entry_type": "service",
-                    "area_id": "12345A",
-                    "name_by_user": "Test Friendly Name",
-                    "disabled_by": device_registry.DISABLED_USER,
-                    "suggested_area": "Kitchen",
+                    "via_device_id": None,
                 }
             ],
             "deleted_devices": [
@@ -192,6 +194,7 @@ async def test_loading_from_storage(hass, hass_storage):
                     "connections": [["Zigbee", "23.45.67.89.01"]],
                     "id": "bcdefghijklmn",
                     "identifiers": [["serial", "34:56:AB:CD:EF:12"]],
+                    "orphaned_timestamp": None,
                 }
             ],
         },
@@ -212,8 +215,8 @@ async def test_loading_from_storage(hass, hass_storage):
     assert entry.id == "abcdefghijklm"
     assert entry.area_id == "12345A"
     assert entry.name_by_user == "Test Friendly Name"
-    assert entry.entry_type == "service"
-    assert entry.disabled_by == device_registry.DISABLED_USER
+    assert entry.entry_type is device_registry.DeviceEntryType.SERVICE
+    assert entry.disabled_by is device_registry.DeviceEntryDisabler.USER
     assert isinstance(entry.config_entries, set)
     assert isinstance(entry.connections, set)
     assert isinstance(entry.identifiers, set)
@@ -229,6 +232,107 @@ async def test_loading_from_storage(hass, hass_storage):
     assert isinstance(entry.config_entries, set)
     assert isinstance(entry.connections, set)
     assert isinstance(entry.identifiers, set)
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_migration_1_1_to_1_2(hass, hass_storage):
+    """Test migration from version 1.1 to 1.2."""
+    hass_storage[device_registry.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 1,
+        "data": {
+            "devices": [
+                {
+                    "config_entries": ["1234"],
+                    "connections": [["Zigbee", "01.23.45.67.89"]],
+                    "entry_type": "service",
+                    "id": "abcdefghijklm",
+                    "identifiers": [["serial", "12:34:56:AB:CD:EF"]],
+                    "manufacturer": "manufacturer",
+                    "model": "model",
+                    "name": "name",
+                    "sw_version": "version",
+                },
+                # Invalid entry type
+                {
+                    "config_entries": [None],
+                    "connections": [],
+                    "entry_type": "INVALID_VALUE",
+                    "id": "invalid-entry-type",
+                    "identifiers": [["serial", "mock-id-invalid-entry"]],
+                    "manufacturer": None,
+                    "model": None,
+                    "name": None,
+                    "sw_version": None,
+                },
+            ],
+        },
+    }
+
+    await device_registry.async_load(hass)
+    registry = device_registry.async_get(hass)
+
+    # Test data was loaded
+    entry = registry.async_get_or_create(
+        config_entry_id="1234",
+        connections={("Zigbee", "01.23.45.67.89")},
+        identifiers={("serial", "12:34:56:AB:CD:EF")},
+    )
+    assert entry.id == "abcdefghijklm"
+
+    # Update to trigger a store
+    entry = registry.async_get_or_create(
+        config_entry_id="1234",
+        connections={("Zigbee", "01.23.45.67.89")},
+        identifiers={("serial", "12:34:56:AB:CD:EF")},
+        sw_version="new_version",
+    )
+    assert entry.id == "abcdefghijklm"
+
+    # Check we store migrated data
+    await flush_store(registry._store)
+    assert hass_storage[device_registry.STORAGE_KEY] == {
+        "version": device_registry.STORAGE_VERSION_MAJOR,
+        "minor_version": device_registry.STORAGE_VERSION_MINOR,
+        "key": device_registry.STORAGE_KEY,
+        "data": {
+            "devices": [
+                {
+                    "area_id": None,
+                    "config_entries": ["1234"],
+                    "configuration_url": None,
+                    "connections": [["Zigbee", "01.23.45.67.89"]],
+                    "disabled_by": None,
+                    "entry_type": "service",
+                    "id": "abcdefghijklm",
+                    "identifiers": [["serial", "12:34:56:AB:CD:EF"]],
+                    "manufacturer": "manufacturer",
+                    "model": "model",
+                    "name": "name",
+                    "name_by_user": None,
+                    "sw_version": "new_version",
+                    "via_device_id": None,
+                },
+                {
+                    "area_id": None,
+                    "config_entries": [None],
+                    "configuration_url": None,
+                    "connections": [],
+                    "disabled_by": None,
+                    "entry_type": None,
+                    "id": "invalid-entry-type",
+                    "identifiers": [["serial", "mock-id-invalid-entry"]],
+                    "manufacturer": None,
+                    "model": None,
+                    "name_by_user": None,
+                    "name": None,
+                    "sw_version": None,
+                    "via_device_id": None,
+                },
+            ],
+            "deleted_devices": [],
+        },
+    }
 
 
 async def test_removing_config_entries(hass, registry, update_events):
@@ -420,7 +524,7 @@ async def test_deleted_device_removing_area_id(registry):
 
 
 async def test_specifying_via_device_create(registry):
-    """Test specifying a via_device and updating."""
+    """Test specifying a via_device and removal of the hub device."""
     via = registry.async_get_or_create(
         config_entry_id="123",
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
@@ -439,6 +543,10 @@ async def test_specifying_via_device_create(registry):
     )
 
     assert light.via_device_id == via.id
+
+    registry.async_remove_device(via.id)
+    light = registry.async_get_device({("hue", "456")})
+    assert light.via_device_id is None
 
 
 async def test_specifying_via_device_update(registry):
@@ -484,7 +592,7 @@ async def test_loading_saving_data(hass, registry, area_registry):
         model="via",
         name="Original Name",
         sw_version="Orig SW 1",
-        entry_type="device",
+        entry_type=None,
     )
 
     orig_light = registry.async_get_or_create(
@@ -494,7 +602,7 @@ async def test_loading_saving_data(hass, registry, area_registry):
         manufacturer="manufacturer",
         model="light",
         via_device=("hue", "0123"),
-        disabled_by=device_registry.DISABLED_USER,
+        disabled_by=device_registry.DeviceEntryDisabler.USER,
     )
 
     orig_light2 = registry.async_get_or_create(
@@ -543,7 +651,7 @@ async def test_loading_saving_data(hass, registry, area_registry):
         manufacturer="manufacturer",
         model="light",
         via_device=("hue", "0123"),
-        disabled_by=device_registry.DISABLED_USER,
+        disabled_by=device_registry.DeviceEntryDisabler.USER,
         suggested_area="Kitchen",
     )
 
@@ -652,7 +760,7 @@ async def test_update(registry):
             name_by_user="Test Friendly Name",
             new_identifiers=new_identifiers,
             via_device_id="98765B",
-            disabled_by=device_registry.DISABLED_USER,
+            disabled_by=device_registry.DeviceEntryDisabler.USER,
         )
 
     assert mock_save.call_count == 1
@@ -663,7 +771,7 @@ async def test_update(registry):
     assert updated_entry.name_by_user == "Test Friendly Name"
     assert updated_entry.identifiers == new_identifiers
     assert updated_entry.via_device_id == "98765B"
-    assert updated_entry.disabled_by == device_registry.DISABLED_USER
+    assert updated_entry.disabled_by is device_registry.DeviceEntryDisabler.USER
 
     assert registry.async_get_device({("hue", "456")}) is None
     assert registry.async_get_device({("bla", "123")}) is None
@@ -1227,7 +1335,7 @@ async def test_disable_config_entry_disables_devices(hass, registry):
     entry2 = registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={(device_registry.CONNECTION_NETWORK_MAC, "34:56:AB:CD:EF:12")},
-        disabled_by=device_registry.DISABLED_USER,
+        disabled_by=device_registry.DeviceEntryDisabler.USER,
     )
 
     assert not entry1.disabled
@@ -1240,10 +1348,10 @@ async def test_disable_config_entry_disables_devices(hass, registry):
 
     entry1 = registry.async_get(entry1.id)
     assert entry1.disabled
-    assert entry1.disabled_by == device_registry.DISABLED_CONFIG_ENTRY
+    assert entry1.disabled_by is device_registry.DeviceEntryDisabler.CONFIG_ENTRY
     entry2 = registry.async_get(entry2.id)
     assert entry2.disabled
-    assert entry2.disabled_by == device_registry.DISABLED_USER
+    assert entry2.disabled_by is device_registry.DeviceEntryDisabler.USER
 
     await hass.config_entries.async_set_disabled_by(config_entry.entry_id, None)
     await hass.async_block_till_done()
@@ -1252,7 +1360,7 @@ async def test_disable_config_entry_disables_devices(hass, registry):
     assert not entry1.disabled
     entry2 = registry.async_get(entry2.id)
     assert entry2.disabled
-    assert entry2.disabled_by == device_registry.DISABLED_USER
+    assert entry2.disabled_by is device_registry.DeviceEntryDisabler.USER
 
 
 async def test_only_disable_device_if_all_config_entries_are_disabled(hass, registry):
@@ -1288,7 +1396,7 @@ async def test_only_disable_device_if_all_config_entries_are_disabled(hass, regi
 
     entry1 = registry.async_get(entry1.id)
     assert entry1.disabled
-    assert entry1.disabled_by == device_registry.DISABLED_CONFIG_ENTRY
+    assert entry1.disabled_by is device_registry.DeviceEntryDisabler.CONFIG_ENTRY
 
     await hass.config_entries.async_set_disabled_by(config_entry1.entry_id, None)
     await hass.async_block_till_done()

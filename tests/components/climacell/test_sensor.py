@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-import logging
 from typing import Any
 from unittest.mock import patch
 
@@ -23,7 +22,6 @@ from .const import API_V3_ENTRY_DATA, API_V4_ENTRY_DATA
 
 from tests.common import MockConfigEntry
 
-_LOGGER = logging.getLogger(__name__)
 CC_SENSOR_ENTITY_ID = "sensor.climacell_{}"
 
 O3 = "ozone"

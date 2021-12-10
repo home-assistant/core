@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from aiohttp import ClientError
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.aurora.const import DOMAIN
 
 from tests.common import MockConfigEntry
@@ -18,7 +18,7 @@ DATA = {
 
 async def test_form(hass):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -47,7 +47,6 @@ async def test_form(hass):
 async def test_form_cannot_connect(hass):
     """Test if invalid response or no connection returned from the API."""
 
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -68,7 +67,7 @@ async def test_form_cannot_connect(hass):
 
 async def test_with_unknown_error(hass):
     """Test with unknown error response from the API."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )

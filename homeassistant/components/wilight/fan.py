@@ -86,8 +86,7 @@ class WiLightFan(WiLightDevice, FanEntity):
         ):
             return 0
 
-        wl_speed = self._status.get("speed")
-        if wl_speed is None:
+        if (wl_speed := self._status.get("speed")) is None:
             return None
         return ordered_list_item_to_percentage(ORDERED_NAMED_FAN_SPEEDS, wl_speed)
 

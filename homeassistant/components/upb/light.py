@@ -67,8 +67,7 @@ class UpbLight(UpbAttachedEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn on the light."""
-        flash = kwargs.get(ATTR_FLASH)
-        if flash:
+        if flash := kwargs.get(ATTR_FLASH):
             await self.async_light_blink(0.5 if flash == "short" else 1.5)
         else:
             rate = kwargs.get(ATTR_TRANSITION, -1)

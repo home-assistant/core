@@ -2,7 +2,7 @@
 
 from aioemonitor.monitor import EmonitorChannel
 
-from homeassistant.components.sensor import DEVICE_CLASS_POWER, SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import POWER_WATT
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo
@@ -37,7 +37,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class EmonitorPowerSensor(CoordinatorEntity, SensorEntity):
     """Representation of an Emonitor power sensor entity."""
 
-    _attr_device_class = DEVICE_CLASS_POWER
+    _attr_device_class = SensorDeviceClass.POWER
     _attr_native_unit_of_measurement = POWER_WATT
 
     def __init__(self, coordinator: DataUpdateCoordinator, channel_number: int) -> None:
@@ -94,9 +94,9 @@ class EmonitorPowerSensor(CoordinatorEntity, SensorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return info about the emonitor device."""
-        return {
-            "name": name_short_mac(self.mac_address[-6:]),
-            "connections": {(dr.CONNECTION_NETWORK_MAC, self.mac_address)},
-            "manufacturer": "Powerhouse Dynamics, Inc.",
-            "sw_version": self.coordinator.data.hardware.firmware_version,
-        }
+        return DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, self.mac_address)},
+            manufacturer="Powerhouse Dynamics, Inc.",
+            name=name_short_mac(self.mac_address[-6:]),
+            sw_version=self.coordinator.data.hardware.firmware_version,
+        )

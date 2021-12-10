@@ -6,7 +6,7 @@
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
             "invalid_api_key": "\u00c9rv\u00e9nytelen API kulcs",
-            "requests_exceeded": "T\u00fall\u00e9pt\u00e9k az Accuweather API-hoz beny\u00fajtott k\u00e9relmek megengedett sz\u00e1m\u00e1t. Meg kell v\u00e1rnia vagy m\u00f3dos\u00edtania kell az API-kulcsot."
+            "requests_exceeded": "Accuweather API-hoz enged\u00e9lyezett lek\u00e9r\u00e9sek sz\u00e1ma t\u00fal lett l\u00e9pve. Meg kell v\u00e1rnia m\u00edg a tilt\u00e1s lej\u00e1r vagy m\u00f3dos\u00edtania kell az API-kulcsot."
         },
         "step": {
             "user": {

@@ -34,7 +34,7 @@
                     "blid": "BLID",
                     "host": "Host"
                 },
-                "description": "Er is geen Roomba of Braava ontdekt op uw netwerk. De BLID is het gedeelte van de hostnaam van het apparaat na `iRobot-`. Volg de stappen die worden beschreven in de documentatie op: {auth_help_url}",
+                "description": "Er is geen Roomba of Braava ontdekt op uw netwerk.",
                 "title": "Handmatig verbinding maken met het apparaat"
             },
             "user": {

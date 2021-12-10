@@ -1,8 +1,6 @@
 """Platform for binary sensor integration."""
 from __future__ import annotations
 
-import logging
-
 from smarttub import SpaError, SpaReminder
 import voluptuous as vol
 
@@ -15,8 +13,6 @@ from homeassistant.helpers import entity_platform
 
 from .const import ATTR_ERRORS, ATTR_REMINDERS, DOMAIN, SMARTTUB_CONTROLLER
 from .entity import SmartTubEntity, SmartTubSensorBase
-
-_LOGGER = logging.getLogger(__name__)
 
 # whether the reminder has been snoozed (bool)
 ATTR_REMINDER_SNOOZED = "snoozed"
@@ -175,10 +171,7 @@ class SmartTubError(SmartTubEntity, BinarySensorEntity):
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
-
-        error = self.error
-
-        if error is None:
+        if (error := self.error) is None:
             return {}
 
         return {

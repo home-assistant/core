@@ -62,6 +62,7 @@ from homeassistant.helpers import (
     device_registry,
     entity_platform,
 )
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.network import is_internal_request
 import homeassistant.util.dt as dt_util
@@ -238,8 +239,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     connection = data[DATA_CONNECTION]
     kodi = data[DATA_KODI]
     name = config_entry.data[CONF_NAME]
-    uid = config_entry.unique_id
-    if uid is None:
+    if (uid := config_entry.unique_id) is None:
         uid = config_entry.entry_id
 
     entity = KodiEntity(connection, kodi, name, uid)
@@ -346,13 +346,13 @@ class KodiEntity(MediaPlayerEntity):
         return self._unique_id
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device info for this device."""
-        return {
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "name": self.name,
-            "manufacturer": "Kodi",
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.unique_id)},
+            manufacturer="Kodi",
+            name=self.name,
+        )
 
     @property
     def state(self):
@@ -534,9 +534,7 @@ class KodiEntity(MediaPlayerEntity):
         if self._properties.get("live"):
             return None
 
-        total_time = self._properties.get("totaltime")
-
-        if total_time is None:
+        if (total_time := self._properties.get("totaltime")) is None:
             return None
 
         return (
@@ -548,9 +546,7 @@ class KodiEntity(MediaPlayerEntity):
     @property
     def media_position(self):
         """Position of current playing media in seconds."""
-        time = self._properties.get("time")
-
-        if time is None:
+        if (time := self._properties.get("time")) is None:
             return None
 
         return time["hours"] * 3600 + time["minutes"] * 60 + time["seconds"]
@@ -563,8 +559,7 @@ class KodiEntity(MediaPlayerEntity):
     @property
     def media_image_url(self):
         """Image url of current playing media."""
-        thumbnail = self._item.get("thumbnail")
-        if thumbnail is None:
+        if (thumbnail := self._item.get("thumbnail")) is None:
             return None
 
         return self._kodi.thumbnail_url(thumbnail)
@@ -599,8 +594,7 @@ class KodiEntity(MediaPlayerEntity):
     @property
     def media_artist(self):
         """Artist of current playing media, music track only."""
-        artists = self._item.get("artist", [])
-        if artists:
+        if artists := self._item.get("artist"):
             return artists[0]
 
         return None
@@ -608,8 +602,7 @@ class KodiEntity(MediaPlayerEntity):
     @property
     def media_album_artist(self):
         """Album artist of current playing media, music track only."""
-        artists = self._item.get("albumartist", [])
-        if artists:
+        if artists := self._item.get("albumartist"):
             return artists[0]
 
         return None

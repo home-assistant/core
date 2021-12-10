@@ -15,8 +15,6 @@ from pyclimacell.exceptions import (
     UnknownException,
 )
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
@@ -24,9 +22,11 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_NAME,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -75,7 +75,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [SENSOR_DOMAIN, WEATHER_DOMAIN]
+PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
 
 
 def _set_update_interval(hass: HomeAssistant, current_entry: ConfigEntry) -> timedelta:
@@ -112,7 +112,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up ClimaCell API from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
-    params = {}
+    params: dict[str, Any] = {}
     # If config entry options not set up, set them up
     if not entry.options:
         params["options"] = {
@@ -206,7 +206,7 @@ class ClimaCellDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
-        data = {FORECASTS: {}}
+        data: dict[str, Any] = {FORECASTS: {}}
         try:
             if self._api_version == 3:
                 data[CURRENT] = await self._api.realtime(
@@ -357,10 +357,10 @@ class ClimaCellEntity(CoordinatorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device registry information."""
-        return {
-            "identifiers": {(DOMAIN, self._config_entry.data[CONF_API_KEY])},
-            "name": "ClimaCell",
-            "manufacturer": "ClimaCell",
-            "sw_version": f"v{self.api_version}",
-            "entry_type": "service",
-        }
+        return DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, self._config_entry.data[CONF_API_KEY])},
+            manufacturer="ClimaCell",
+            name="ClimaCell",
+            sw_version=f"v{self.api_version}",
+        )

@@ -478,6 +478,7 @@ async def test_camera_image_raises_exception(hass, config_entry, requests_mock):
         "homeassistant.components.webhook.async_generate_url"
     ):
         mock_auth.return_value.async_post_request.side_effect = fake_post
+        mock_auth.return_value.async_get_image.side_effect = fake_post
         mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
         mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
 

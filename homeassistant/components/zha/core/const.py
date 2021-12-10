@@ -22,6 +22,7 @@ from homeassistant.components.light import DOMAIN as LIGHT
 from homeassistant.components.lock import DOMAIN as LOCK
 from homeassistant.components.number import DOMAIN as NUMBER
 from homeassistant.components.sensor import DOMAIN as SENSOR
+from homeassistant.components.siren import DOMAIN as SIREN
 from homeassistant.components.switch import DOMAIN as SWITCH
 import homeassistant.helpers.config_validation as cv
 
@@ -84,6 +85,8 @@ CHANNEL_ELECTRICAL_MEASUREMENT = "electrical_measurement"
 CHANNEL_EVENT_RELAY = "event_relay"
 CHANNEL_FAN = "fan"
 CHANNEL_HUMIDITY = "humidity"
+CHANNEL_SOIL_MOISTURE = "soil_moisture"
+CHANNEL_LEAF_WETNESS = "leaf_wetness"
 CHANNEL_IAS_ACE = "ias_ace"
 CHANNEL_IAS_WD = "ias_wd"
 CHANNEL_IDENTIFY = "identify"
@@ -118,6 +121,7 @@ PLATFORMS = (
     LOCK,
     NUMBER,
     SENSOR,
+    SIREN,
     SWITCH,
 )
 

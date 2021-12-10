@@ -14,6 +14,7 @@ from homeassistant.const import (
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     STATE_UNAVAILABLE,
 )
 from homeassistant.helpers import entity_registry as er
@@ -92,6 +93,8 @@ async def test_sensors(hass, aioclient_mock, mock_deconz_websocket):
 
     assert len(hass.states.async_all()) == 6
 
+    ent_reg = er.async_get(hass)
+
     light_level_sensor = hass.states.get("sensor.light_level_sensor")
     assert light_level_sensor.state == "999.8"
     assert light_level_sensor.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_ILLUMINANCE
@@ -109,6 +112,10 @@ async def test_sensors(hass, aioclient_mock, mock_deconz_websocket):
     switch_2_battery_level = hass.states.get("sensor.switch_2_battery_level")
     assert switch_2_battery_level.state == "100"
     assert switch_2_battery_level.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_BATTERY
+    assert (
+        ent_reg.async_get("sensor.switch_2_battery_level").entity_category
+        == ENTITY_CATEGORY_DIAGNOSTIC
+    )
 
     assert not hass.states.get("sensor.daylight_sensor")
 
@@ -196,6 +203,17 @@ async def test_allow_clip_sensors(hass, aioclient_mock):
                 "config": {"reachable": True},
                 "uniqueid": "00:00:00:00:00:00:00:01-00",
             },
+            "3": {
+                "config": {"on": True, "reachable": True},
+                "etag": "a5ed309124d9b7a21ef29fc278f2625e",
+                "manufacturername": "Philips",
+                "modelid": "CLIPGenericStatus",
+                "name": "CLIP Flur",
+                "state": {"lastupdated": "2021-10-01T10:23:06.779", "status": 0},
+                "swversion": "1.0",
+                "type": "CLIPGenericStatus",
+                "uniqueid": "/sensors/3",
+            },
         }
     }
     with patch.dict(DECONZ_WEB_REQUEST, data):
@@ -205,8 +223,9 @@ async def test_allow_clip_sensors(hass, aioclient_mock):
             options={CONF_ALLOW_CLIP_SENSOR: True},
         )
 
-    assert len(hass.states.async_all()) == 3
+    assert len(hass.states.async_all()) == 4
     assert hass.states.get("sensor.clip_light_level_sensor").state == "999.8"
+    assert hass.states.get("sensor.clip_flur").state == "0"
 
     # Disallow clip sensors
 
@@ -217,6 +236,7 @@ async def test_allow_clip_sensors(hass, aioclient_mock):
 
     assert len(hass.states.async_all()) == 2
     assert not hass.states.get("sensor.clip_light_level_sensor")
+    assert not hass.states.get("sensor.clip_flur")
 
     # Allow clip sensors
 
@@ -225,8 +245,9 @@ async def test_allow_clip_sensors(hass, aioclient_mock):
     )
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 3
+    assert len(hass.states.async_all()) == 4
     assert hass.states.get("sensor.clip_light_level_sensor").state == "999.8"
+    assert hass.states.get("sensor.clip_flur").state == "0"
 
 
 async def test_add_new_sensor(hass, aioclient_mock, mock_deconz_websocket):

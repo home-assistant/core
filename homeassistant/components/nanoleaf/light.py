@@ -1,7 +1,11 @@
 """Support for Nanoleaf Lights."""
 from __future__ import annotations
 
-from aiohttp import ServerDisconnectedError
+from datetime import timedelta
+import logging
+import math
+from typing import Any
+
 from aionanoleaf import Nanoleaf, Unavailable
 import voluptuous as vol
 
@@ -21,16 +25,19 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import color as color_util
 from homeassistant.util.color import (
+    color_temperature_kelvin_to_mired as kelvin_to_mired,
     color_temperature_mired_to_kelvin as mired_to_kelvin,
 )
 
+from . import NanoleafEntryData
 from .const import DOMAIN
+from .entity import NanoleafEntity
 
 RESERVED_EFFECTS = ("*Solid*", "*Static*", "*Dynamic*")
 DEFAULT_NAME = "Nanoleaf"
@@ -42,6 +49,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
+
+_LOGGER = logging.getLogger(__name__)
+
+SCAN_INTERVAL = timedelta(minutes=5)
 
 
 async def async_setup_platform(
@@ -64,35 +75,33 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Nanoleaf light."""
-    nanoleaf: Nanoleaf = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([NanoleafLight(nanoleaf)])
+    entry_data: NanoleafEntryData = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities([NanoleafLight(entry_data.device)])
 
 
-class NanoleafLight(LightEntity):
+class NanoleafLight(NanoleafEntity, LightEntity):
     """Representation of a Nanoleaf Light."""
 
     def __init__(self, nanoleaf: Nanoleaf) -> None:
-        """Initialize an Nanoleaf light."""
-        self._nanoleaf = nanoleaf
-        self._attr_unique_id = self._nanoleaf.serial_no
-        self._attr_name = self._nanoleaf.name
-        self._attr_min_mireds = 154
-        self._attr_max_mireds = 833
+        """Initialize the Nanoleaf light."""
+        super().__init__(nanoleaf)
+        self._attr_unique_id = nanoleaf.serial_no
+        self._attr_name = nanoleaf.name
+        self._attr_min_mireds = math.ceil(1000000 / nanoleaf.color_temperature_max)
+        self._attr_max_mireds = kelvin_to_mired(nanoleaf.color_temperature_min)
 
     @property
-    def brightness(self):
+    def brightness(self) -> int:
         """Return the brightness of the light."""
         return int(self._nanoleaf.brightness * 2.55)
 
     @property
-    def color_temp(self):
+    def color_temp(self) -> int:
         """Return the current color temperature."""
-        return color_util.color_temperature_kelvin_to_mired(
-            self._nanoleaf.color_temperature
-        )
+        return kelvin_to_mired(self._nanoleaf.color_temperature)
 
     @property
-    def effect(self):
+    def effect(self) -> str | None:
         """Return the current effect."""
         # The API returns the *Solid* effect if the Nanoleaf is in HS or CT mode.
         # The effects *Static* and *Dynamic* are not supported by Home Assistant.
@@ -103,27 +112,27 @@ class NanoleafLight(LightEntity):
         )
 
     @property
-    def effect_list(self):
+    def effect_list(self) -> list[str]:
         """Return the list of supported effects."""
         return self._nanoleaf.effects_list
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return the icon to use in the frontend, if any."""
         return "mdi:triangle-outline"
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if light is on."""
         return self._nanoleaf.is_on
 
     @property
-    def hs_color(self):
+    def hs_color(self) -> tuple[int, int]:
         """Return the color in HS."""
         return self._nanoleaf.hue, self._nanoleaf.saturation
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Flag supported features."""
         return (
             SUPPORT_BRIGHTNESS
@@ -133,7 +142,7 @@ class NanoleafLight(LightEntity):
             | SUPPORT_TRANSITION
         )
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         hs_color = kwargs.get(ATTR_HS_COLOR)
@@ -167,19 +176,39 @@ class NanoleafLight(LightEntity):
                 )
             await self._nanoleaf.set_effect(effect)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
-        transition = kwargs.get(ATTR_TRANSITION)
-        await self._nanoleaf.turn_off(transition)
+        transition: float | None = kwargs.get(ATTR_TRANSITION)
+        await self._nanoleaf.turn_off(None if transition is None else int(transition))
 
     async def async_update(self) -> None:
         """Fetch new state data for this light."""
         try:
             await self._nanoleaf.get_info()
-        except ServerDisconnectedError:
-            # Retry the request once if the device disconnected
-            await self._nanoleaf.get_info()
         except Unavailable:
+            if self.available:
+                _LOGGER.warning("Could not connect to %s", self.name)
             self._attr_available = False
             return
+        if not self.available:
+            _LOGGER.info("Fetching %s data recovered", self.name)
         self._attr_available = True
+
+    @callback
+    def async_handle_update(self) -> None:
+        """Handle state update."""
+        self.async_write_ha_state()
+        if not self.available:
+            _LOGGER.info("Connection to %s recovered", self.name)
+        self._attr_available = True
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity being added to Home Assistant."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{DOMAIN}_update_light_{self._nanoleaf.serial_no}",
+                self.async_handle_update,
+            )
+        )

@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "La cuenta ya ha sido configurada",
+            "invalid_host": "Nombre de host o direcci\u00f3n IP no v\u00e1lidos",
             "unknown": "Error inesperado"
         },
         "error": {

@@ -35,6 +35,10 @@
     },
     "device_automation": {
         "trigger_subtype": {
+            "1": "First button",
+            "2": "Second button",
+            "3": "Third button",
+            "4": "Fourth button",
             "button_1": "First button",
             "button_2": "Second button",
             "button_3": "Third button",
@@ -47,11 +51,16 @@
             "turn_on": "Turn on"
         },
         "trigger_type": {
+            "double_short_release": "Both \"{subtype}\" released",
+            "initial_press": "Button \"{subtype}\" pressed initially",
+            "long_release": "Button \"{subtype}\" released after long press",
             "remote_button_long_release": "\"{subtype}\" button released after long press",
             "remote_button_short_press": "\"{subtype}\" button pressed",
             "remote_button_short_release": "\"{subtype}\" button released",
             "remote_double_button_long_press": "Both \"{subtype}\" released after long press",
-            "remote_double_button_short_press": "Both \"{subtype}\" released"
+            "remote_double_button_short_press": "Both \"{subtype}\" released",
+            "repeat": "Button \"{subtype}\" held down",
+            "short_release": "Button \"{subtype}\" released after short press"
         }
     },
     "options": {
@@ -59,6 +68,7 @@
             "init": {
                 "data": {
                     "allow_hue_groups": "Allow Hue groups",
+                    "allow_hue_scenes": "Allow Hue scenes",
                     "allow_unreachable": "Allow unreachable bulbs to report their state correctly"
                 }
             }

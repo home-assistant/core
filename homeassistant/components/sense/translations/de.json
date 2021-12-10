@@ -12,7 +12,8 @@
             "user": {
                 "data": {
                     "email": "E-Mail",
-                    "password": "Passwort"
+                    "password": "Passwort",
+                    "timeout": "Zeit\u00fcberschreitung"
                 },
                 "title": "Stelle eine Verbindung zu deinem Sense Energy Monitor her"
             }

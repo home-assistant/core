@@ -44,6 +44,7 @@ class TPLinkSensorEntityDescription(SensorEntityDescription):
     """Describes TPLink sensor entity."""
 
     emeter_attr: str | None = None
+    precision: int | None = None
 
 
 ENERGY_SENSORS: tuple[TPLinkSensorEntityDescription, ...] = (
@@ -54,6 +55,7 @@ ENERGY_SENSORS: tuple[TPLinkSensorEntityDescription, ...] = (
         state_class=STATE_CLASS_MEASUREMENT,
         name="Current Consumption",
         emeter_attr="power",
+        precision=1,
     ),
     TPLinkSensorEntityDescription(
         key=ATTR_TOTAL_ENERGY_KWH,
@@ -62,6 +64,7 @@ ENERGY_SENSORS: tuple[TPLinkSensorEntityDescription, ...] = (
         state_class=STATE_CLASS_TOTAL_INCREASING,
         name="Total Consumption",
         emeter_attr="total",
+        precision=3,
     ),
     TPLinkSensorEntityDescription(
         key=ATTR_TODAY_ENERGY_KWH,
@@ -69,6 +72,7 @@ ENERGY_SENSORS: tuple[TPLinkSensorEntityDescription, ...] = (
         device_class=DEVICE_CLASS_ENERGY,
         state_class=STATE_CLASS_TOTAL_INCREASING,
         name="Today's Consumption",
+        precision=3,
     ),
     TPLinkSensorEntityDescription(
         key=ATTR_VOLTAGE,
@@ -77,6 +81,7 @@ ENERGY_SENSORS: tuple[TPLinkSensorEntityDescription, ...] = (
         state_class=STATE_CLASS_MEASUREMENT,
         name="Voltage",
         emeter_attr="voltage",
+        precision=1,
     ),
     TPLinkSensorEntityDescription(
         key=ATTR_CURRENT_A,
@@ -85,6 +90,7 @@ ENERGY_SENSORS: tuple[TPLinkSensorEntityDescription, ...] = (
         state_class=STATE_CLASS_MEASUREMENT,
         name="Current",
         emeter_attr="current",
+        precision=2,
     ),
 )
 
@@ -94,14 +100,13 @@ def async_emeter_from_device(
 ) -> float | None:
     """Map a sensor key to the device attribute."""
     if attr := description.emeter_attr:
-        val = getattr(device.emeter_realtime, attr)
-        if val is None:
+        if (val := getattr(device.emeter_realtime, attr)) is None:
             return None
-        return cast(float, val)
+        return round(cast(float, val), description.precision)
 
     # ATTR_TODAY_ENERGY_KWH
     if (emeter_today := device.emeter_today) is not None:
-        return cast(float, emeter_today)
+        return round(cast(float, emeter_today), description.precision)
     # today's consumption not available, when device was off all the day
     # bulb's do not report this information, so filter it out
     return None if device.is_bulb else 0.0

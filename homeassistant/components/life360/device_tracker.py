@@ -211,8 +211,7 @@ class Life360Scanner:
         prev_seen = self._prev_seen(dev_id, last_seen)
 
         if not loc:
-            err_msg = member["issues"]["title"]
-            if err_msg:
+            if err_msg := member["issues"]["title"]:
                 if member["issues"]["dialog"]:
                     err_msg += f": {member['issues']['dialog']}"
             else:

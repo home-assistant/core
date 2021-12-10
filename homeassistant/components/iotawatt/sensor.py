@@ -9,7 +9,7 @@ from iotawattpy.sensor import Sensor
 
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
+    STATE_CLASS_TOTAL,
     SensorEntity,
     SensorEntityDescription,
 )
@@ -83,6 +83,7 @@ ENTITY_DESCRIPTION_KEY_MAP: dict[str, IotaWattSensorEntityDescription] = {
     "WattHours": IotaWattSensorEntityDescription(
         "WattHours",
         native_unit_of_measurement=ENERGY_WATT_HOUR,
+        state_class=STATE_CLASS_TOTAL,
         device_class=DEVICE_CLASS_ENERGY,
     ),
     "VA": IotaWattSensorEntityDescription(
@@ -190,15 +191,13 @@ class IotaWattSensor(update_coordinator.CoordinatorEntity, SensorEntity):
         return self._sensor_data.getName()
 
     @property
-    def device_info(self) -> entity.DeviceInfo | None:
+    def device_info(self) -> entity.DeviceInfo:
         """Return device info."""
-        return {
-            "connections": {
-                (CONNECTION_NETWORK_MAC, self._sensor_data.hub_mac_address)
-            },
-            "manufacturer": "IoTaWatt",
-            "model": "IoTaWatt",
-        }
+        return entity.DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, self._sensor_data.hub_mac_address)},
+            manufacturer="IoTaWatt",
+            model="IoTaWatt",
+        )
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -242,7 +241,6 @@ class IotaWattAccumulatingSensor(IotaWattSensor, RestoreEntity):
 
         super().__init__(coordinator, key, entity_description)
 
-        self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
         if self._attr_unique_id is not None:
             self._attr_unique_id += ".accumulated"
 

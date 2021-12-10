@@ -65,6 +65,28 @@ async def test_options(hass: HomeAssistant, mock_api: MagicMock) -> None:
 
     assert hass.data[DOMAIN].update_interval is None
 
+    # test setting server name to "*Auto Detect"
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_SERVER_NAME: "*Auto Detect",
+            CONF_SCAN_INTERVAL: 30,
+            CONF_MANUAL: True,
+        },
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["data"] == {
+        CONF_SERVER_NAME: "*Auto Detect",
+        CONF_SERVER_ID: None,
+        CONF_SCAN_INTERVAL: 30,
+        CONF_MANUAL: True,
+    }
+
     # test setting the option to update periodically
     result2 = await hass.config_entries.options.async_init(entry.entry_id)
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM

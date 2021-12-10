@@ -8,6 +8,8 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -44,18 +46,23 @@ async def async_setup_entry(
         MeteoFranceSensor(coordinator_forecast, description)
         for description in SENSOR_TYPES
     ]
-    entities.extend(
-        [
-            MeteoFranceRainSensor(coordinator_rain, description)
-            for description in SENSOR_TYPES_RAIN
-        ]
-    )
-    entities.extend(
-        [
-            MeteoFranceAlertSensor(coordinator_alert, description)
-            for description in SENSOR_TYPES_ALERT
-        ]
-    )
+    # Add rain forecast entity only if location support this feature
+    if coordinator_rain:
+        entities.extend(
+            [
+                MeteoFranceRainSensor(coordinator_rain, description)
+                for description in SENSOR_TYPES_RAIN
+            ]
+        )
+    # Add weather alert entity only if location support this feature
+    if coordinator_alert:
+        entities.extend(
+            [
+                MeteoFranceAlertSensor(coordinator_alert, description)
+                for description in SENSOR_TYPES_ALERT
+            ]
+        )
+    # Add weather probability entities only if location support this feature
     if coordinator_forecast.data.probability_forecast:
         entities.extend(
             [
@@ -87,15 +94,15 @@ class MeteoFranceSensor(CoordinatorEntity, SensorEntity):
         self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        return {
-            "identifiers": {(DOMAIN, self.platform.config_entry.unique_id)},
-            "name": self.coordinator.name,
-            "manufacturer": MANUFACTURER,
-            "model": MODEL,
-            "entry_type": "service",
-        }
+        return DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, self.platform.config_entry.unique_id)},
+            manufacturer=MANUFACTURER,
+            model=MODEL,
+            name=self.coordinator.name,
+        )
 
     @property
     def native_value(self):
@@ -135,11 +142,7 @@ class MeteoFranceRainSensor(MeteoFranceSensor):
             (cadran for cadran in self.coordinator.data.forecast if cadran["rain"] > 1),
             None,
         )
-        return (
-            dt_util.utc_from_timestamp(next_rain["dt"]).isoformat()
-            if next_rain
-            else None
-        )
+        return dt_util.utc_from_timestamp(next_rain["dt"]) if next_rain else None
 
     @property
     def extra_state_attributes(self):

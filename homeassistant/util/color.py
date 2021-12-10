@@ -218,7 +218,7 @@ def color_RGB_to_xy(
 
 
 # Taken from:
-# http://www.developers.meethue.com/documentation/color-conversions-rgb-xy
+# https://github.com/PhilipsHue/PhilipsHueSDK-iOS-OSX/blob/00187a3/ApplicationDesignNotes/RGB%20to%20xy%20Color%20conversion.md
 # License: Code is given as is. Use at your own risk and discretion.
 def color_RGB_to_xy_brightness(
     iR: int, iG: int, iB: int, Gamut: GamutType | None = None
@@ -268,7 +268,7 @@ def color_xy_to_RGB(
 
 
 # Converted to Python from Obj-C, original source from:
-# http://www.developers.meethue.com/documentation/color-conversions-rgb-xy
+# https://github.com/PhilipsHue/PhilipsHueSDK-iOS-OSX/blob/00187a3/ApplicationDesignNotes/RGB%20to%20xy%20Color%20conversion.md
 def color_xy_brightness_to_RGB(
     vX: float, vY: float, ibrightness: int, Gamut: GamutType | None = None
 ) -> tuple[int, int, int]:
@@ -404,8 +404,8 @@ def color_hs_to_xy(
     return color_RGB_to_xy(*color_hs_to_RGB(iH, iS), Gamut)
 
 
-def _match_max_scale(
-    input_colors: tuple[int, ...], output_colors: tuple[int, ...]
+def match_max_scale(
+    input_colors: tuple[int, ...], output_colors: tuple[float, ...]
 ) -> tuple[int, ...]:
     """Match the maximum value of the output to the input."""
     max_in = max(input_colors)
@@ -426,7 +426,7 @@ def color_rgb_to_rgbw(r: int, g: int, b: int) -> tuple[int, int, int, int]:
 
     # Match the output maximum value to the input. This ensures the full
     # channel range is used.
-    return _match_max_scale((r, g, b), rgbw)  # type: ignore
+    return match_max_scale((r, g, b), rgbw)  # type: ignore[return-value]
 
 
 def color_rgbw_to_rgb(r: int, g: int, b: int, w: int) -> tuple[int, int, int]:
@@ -436,7 +436,7 @@ def color_rgbw_to_rgb(r: int, g: int, b: int, w: int) -> tuple[int, int, int]:
 
     # Match the output maximum value to the input. This ensures the
     # output doesn't overflow.
-    return _match_max_scale((r, g, b, w), rgb)  # type: ignore
+    return match_max_scale((r, g, b, w), rgb)  # type: ignore[return-value]
 
 
 def color_rgb_to_rgbww(
@@ -458,7 +458,7 @@ def color_rgb_to_rgbww(
 
     # Match the output maximum value to the input. This ensures the full
     # channel range is used.
-    return _match_max_scale((r, g, b), rgbww)  # type: ignore
+    return match_max_scale((r, g, b), rgbww)  # type: ignore[return-value]
 
 
 def color_rgbww_to_rgb(
@@ -481,7 +481,7 @@ def color_rgbww_to_rgb(
 
     # Match the output maximum value to the input. This ensures the
     # output doesn't overflow.
-    return _match_max_scale((r, g, b, cw, ww), rgb)  # type: ignore
+    return match_max_scale((r, g, b, cw, ww), rgb)  # type: ignore[return-value]
 
 
 def color_rgb_to_hex(r: int, g: int, b: int) -> str:

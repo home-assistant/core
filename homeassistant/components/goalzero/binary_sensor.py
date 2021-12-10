@@ -1,6 +1,8 @@
 """Support for Goal Zero Yeti Sensors."""
 from __future__ import annotations
 
+from typing import cast
+
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_BATTERY_CHARGING,
     DEVICE_CLASS_CONNECTIVITY,
@@ -9,7 +11,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, ENTITY_CATEGORY_DIAGNOSTIC
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -29,6 +31,7 @@ BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
         key="app_online",
         name="App Online",
         device_class=DEVICE_CLASS_CONNECTIVITY,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     BinarySensorEntityDescription(
         key="isCharging",
@@ -80,5 +83,5 @@ class YetiBinarySensor(YetiEntity, BinarySensorEntity):
 
     @property
     def is_on(self) -> bool:
-        """Return if the service is on."""
-        return self.api.data.get(self.entity_description.key) == 1
+        """Return True if the service is on."""
+        return cast(bool, self.api.data[self.entity_description.key] == 1)
