@@ -118,6 +118,7 @@ class LookinMedia(LookinPowerEntity, MediaPlayerEntity):
         for function_name, feature in _FUNCTION_NAME_TO_FEATURE.items():
             if function_name in self._function_names:
                 self._attr_supported_features |= feature
+                self._attr_name = self._remote.name
         self._async_update_from_data()
 
     @property
