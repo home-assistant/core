@@ -251,21 +251,22 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
         }
 
-        if not allow_exist:
-            for identifier in self.atv.all_identifiers:
-                for entry in self._async_current_entries():
-                    if identifier in entry.data.get(
-                        CONF_IDENTIFIERS, [entry.unique_id]
-                    ):
-                        if entry.data.get(CONF_ADDRESS) != self.atv.address:
-                            self.hass.config_entries.async_update_entry(
-                                entry,
-                                data={**entry.data, CONF_ADDRESS: self.atv.address},
-                            )
-                            self.hass.async_create_task(
-                                self.hass.config_entries.async_reload(entry.entry_id)
-                            )
-                        raise DeviceAlreadyConfigured()
+        for identifier in self.atv.all_identifiers:
+            for entry in self._async_current_entries():
+                if identifier not in entry.data.get(
+                    CONF_IDENTIFIERS, [entry.unique_id]
+                ):
+                    continue
+                if entry.data.get(CONF_ADDRESS) != self.atv.address:
+                    self.hass.config_entries.async_update_entry(
+                        entry,
+                        data={**entry.data, CONF_ADDRESS: self.atv.address},
+                    )
+                    self.hass.async_create_task(
+                        self.hass.config_entries.async_reload(entry.entry_id)
+                    )
+                if not allow_exist:
+                    raise DeviceAlreadyConfigured()
 
     async def async_step_confirm(self, user_input=None):
         """Handle user-confirmation of discovered node."""
