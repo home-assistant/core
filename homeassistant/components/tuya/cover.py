@@ -297,7 +297,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
             is not None
         ):
             return self.entity_description.current_state_inverse is not (
-                current_state in (False, "fully_close")
+                current_state in (True, "fully_close")
             )
 
         if (position := self.current_cover_position) is not None:
