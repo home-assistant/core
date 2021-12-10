@@ -2,8 +2,7 @@
 import dataclasses
 
 from homeassistant import config_entries
-from homeassistant.components import zeroconf
-from homeassistant.components import ssdp
+from homeassistant.components import ssdp, zeroconf
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.config_entry_flow import DiscoveryFlowHandler
@@ -14,7 +13,7 @@ from .helpers import hostname_to_uid
 
 async def _async_has_devices(hass: HomeAssistant) -> bool:
     """Return if Sonos devices have been seen recently with SSDP."""
-    return bool(await ssdp.async_get_discovery_info_by_st(UPNP_ST))
+    return bool(await ssdp.async_get_discovery_info_by_st(hass, UPNP_ST))
 
 
 class SonosDiscoveryFlowHandler(DiscoveryFlowHandler):
