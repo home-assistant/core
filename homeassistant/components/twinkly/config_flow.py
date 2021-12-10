@@ -65,8 +65,8 @@ class TwinklyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: dhcp.DhcpServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle dhcp discovery of a Squeezebox player."""
-        device_info = await twinkly_client.TwinklyClient(dhcp.ip).get_device_info()
+        device_info = await twinkly_client.TwinklyClient(discovery_info.ip).get_device_info()
         await self.async_set_unique_id(device_info[DEV_ID])
-        self._abort_if_unique_id_configured(updates={CONF_ENTRY_HOST: dhcp.ip})
+        self._abort_if_unique_id_configured(updates={CONF_ENTRY_HOST: discovery_info.ip})
 
-        return await self.async_step_user(user_input={CONF_HOST: dhcp.ip})
+        return await self.async_step_user(user_input={CONF_HOST: discovery_info.ip})

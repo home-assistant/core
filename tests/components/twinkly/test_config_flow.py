@@ -1,5 +1,4 @@
 """Tests for the config_flow of the twinly component."""
-
 from unittest.mock import patch
 
 from homeassistant import config_entries
@@ -11,6 +10,8 @@ from homeassistant.components.twinkly.const import (
     CONF_ENTRY_NAME,
     DOMAIN as TWINKLY_DOMAIN,
 )
+
+from tests.common import MockConfigEntry
 
 from . import TEST_MODEL, ClientMock
 
@@ -87,7 +88,7 @@ async def test_dhcp_already_exists(hass):
     client = ClientMock()
 
     entry = MockConfigEntry(
-        domain=DOMAIN,
+        domain=TWINKLY_DOMAIN,
         data={
             CONF_ENTRY_HOST: "1.2.3.4",
             CONF_ENTRY_ID: client.id,
