@@ -26,6 +26,7 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.reload import async_setup_reload_service
+from homeassistant.util import slugify
 
 from . import DOMAIN, PLATFORMS
 
@@ -84,6 +85,9 @@ class GenericCamera(Camera):
         self._still_image_url = device_info[CONF_STILL_IMAGE_URL]
         self._stream_source = device_info.get(CONF_STREAM_SOURCE)
         self._still_image_url.hass = hass
+        self._attr_unique_id = "_".join(
+            [DOMAIN, slugify(str(self._still_image_url.template))]
+        )
         if self._stream_source is not None:
             self._stream_source.hass = hass
         self._limit_refetch = device_info[CONF_LIMIT_REFETCH_TO_URL_CHANGE]
