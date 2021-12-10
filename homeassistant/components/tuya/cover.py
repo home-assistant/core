@@ -319,7 +319,11 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
             commands.append(
                 {
                     "code": self.entity_description.set_position,
-                    "value": 100,
+                    "value": round(
+                        self._set_position_type.remap_value_from(
+                            100, 0, 100, reverse=True
+                        ),
+                    ),
                 }
             )
 
@@ -339,7 +343,11 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
             commands.append(
                 {
                     "code": self.entity_description.set_position,
-                    "value": 0,
+                    "value": round(
+                        self._set_position_type.remap_value_from(
+                            0, 0, 100, reverse=True
+                        ),
+                    ),
                 }
             )
 
