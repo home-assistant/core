@@ -780,38 +780,16 @@ async def test_renaming_entity_name(hass, hass_client):
     )
     registry.async_update_entity(
         entity_id="climate.heatpump",
-        name="Renamed",
+        name="HeatPump Renamed",
     )
 
     await hass.async_block_till_done()
     body = await generate_latest_metrics(client)
 
     # Check if old metrics deleted
-    assert (
-        'sensor_temperature_celsius{domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"} 15.6' not in body
-    )
-
-    assert (
-        'entity_available{domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"} 1.0' not in body
-    )
-
-    assert (
-        'climate_action{action="heating",'
-        'domain="climate",'
-        'entity="climate.heatpump",'
-        'friendly_name="HeatPump"} 1.0' not in body
-    )
-
-    assert (
-        'climate_action{action="cooling",'
-        'domain="climate",'
-        'entity="climate.heatpump",'
-        'friendly_name="HeatPump"} 0.0' not in body
-    )
+    body_line = "\n".join(body)
+    assert 'friendly_name="Outside Temperature"' not in body_line
+    assert 'friendly_name="HeatPump"' not in body_line
 
     # Check if new metrics created
     assert (
@@ -824,6 +802,20 @@ async def test_renaming_entity_name(hass, hass_client):
         'entity_available{domain="sensor",'
         'entity="sensor.outside_temperature",'
         'friendly_name="Outside Temperature Renamed"} 1.0' in body
+    )
+
+    assert (
+        'climate_action{action="heating",'
+        'domain="climate",'
+        'entity="climate.heatpump",'
+        'friendly_name="HeatPump Renamed"} 1.0' in body
+    )
+
+    assert (
+        'climate_action{action="cooling",'
+        'domain="climate",'
+        'entity="climate.heatpump",'
+        'friendly_name="HeatPump Renamed"} 0.0' in body
     )
 
     # Keep other sensors
@@ -884,35 +876,26 @@ async def test_renaming_entity_id(hass, hass_client):
     assert "sensor.outside_temperature" in registry.entities
     registry.async_update_entity(
         entity_id="sensor.outside_temperature",
-        new_entity_id="sensor.inside_temperature",
+        new_entity_id="sensor.outside_temperature_renamed",
     )
 
     await hass.async_block_till_done()
     body = await generate_latest_metrics(client)
 
     # Check if old metrics deleted
-    assert (
-        'sensor_temperature_celsius{domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"} 15.6' not in body
-    )
-
-    assert (
-        'entity_available{domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"} 1.0' not in body
-    )
+    body_line = "\n".join(body)
+    assert 'entity="sensor.outside_temperature"' not in body_line
 
     # Check if new metrics created
     assert (
         'sensor_temperature_celsius{domain="sensor",'
-        'entity="sensor.inside_temperature",'
+        'entity="sensor.outside_temperature_renamed",'
         'friendly_name="Outside Temperature"} 15.6' in body
     )
 
     assert (
         'entity_available{domain="sensor",'
-        'entity="sensor.inside_temperature",'
+        'entity="sensor.outside_temperature_renamed",'
         'friendly_name="Outside Temperature"} 1.0' in body
     )
 
@@ -998,31 +981,11 @@ async def test_deleting_entity(hass, hass_client):
     body = await generate_latest_metrics(client)
 
     # Check if old metrics deleted
-    assert (
-        'sensor_temperature_celsius{domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"} 15.6' not in body
-    )
-
-    assert (
-        'entity_available{domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"} 1.0' not in body
-    )
-
-    assert (
-        'climate_action{action="heating",'
-        'domain="climate",'
-        'entity="climate.heatpump",'
-        'friendly_name="HeatPump"} 1.0' not in body
-    )
-
-    assert (
-        'climate_action{action="cooling",'
-        'domain="climate",'
-        'entity="climate.heatpump",'
-        'friendly_name="HeatPump"} 0.0' not in body
-    )
+    body_line = "\n".join(body)
+    assert 'entity="sensor.outside_temperature"' not in body_line
+    assert 'friendly_name="Outside Temperature"' not in body_line
+    assert 'entity="climate.heatpump"' not in body_line
+    assert 'friendly_name="HeatPump"' not in body_line
 
     # Keep other sensors
     assert (
@@ -1116,38 +1079,11 @@ async def test_disabling_entity(hass, hass_client):
     body = await generate_latest_metrics(client)
 
     # Check if old metrics deleted
-    assert (
-        'sensor_temperature_celsius{domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"} 15.6' not in body
-    )
-
-    assert any(
-        'state_change_created{domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"}' not in metric
-        for metric in body
-    )
-
-    assert (
-        'state_change_total{domain="sensor",'
-        'entity="sensor.outside_temperature",'
-        'friendly_name="Outside Temperature"} 1.0' not in body
-    )
-
-    assert (
-        'climate_action{action="heating",'
-        'domain="climate",'
-        'entity="climate.heatpump",'
-        'friendly_name="HeatPump"} 1.0' not in body
-    )
-
-    assert (
-        'climate_action{action="cooling",'
-        'domain="climate",'
-        'entity="climate.heatpump",'
-        'friendly_name="HeatPump"} 0.0' not in body
-    )
+    body_line = "\n".join(body)
+    assert 'entity="sensor.outside_temperature"' not in body_line
+    assert 'friendly_name="Outside Temperature"' not in body_line
+    assert 'entity="climate.heatpump"' not in body_line
+    assert 'friendly_name="HeatPump"' not in body_line
 
     # Keep other sensors
     assert (
