@@ -257,7 +257,7 @@ class MqttCommandTemplate:
     def __init__(
         self,
         command_template: template.Template | None,
-        hass: HomeAssistant | None = None,
+        hass: HomeAssistant,
         variables: template.TemplateVarsType = None,
     ) -> None:
         """Instantiate a command template."""
@@ -265,8 +265,7 @@ class MqttCommandTemplate:
         if command_template is None:
             return
 
-        if hass is not None:
-            command_template.hass = hass
+        command_template.hass = hass
         self.variables = variables
 
     @callback
@@ -589,7 +588,7 @@ async def async_setup_entry(hass, entry):
         if payload_template is not None:
             try:
                 payload = MqttCommandTemplate(
-                    template.Template(payload_template, hass)
+                    template.Template(payload_template), hass
                 ).async_render()
             except (template.jinja2.TemplateError, TemplateError) as exc:
                 _LOGGER.error(

@@ -158,7 +158,7 @@ async def test_publish(hass, mqtt_mock):
 
 async def test_convert_outgoing_payload(hass):
     """Test the converting of outgoing MQTT payloads without template."""
-    command_template = mqtt.MqttCommandTemplate(None)
+    command_template = mqtt.MqttCommandTemplate(None, hass)
     assert command_template.async_render(b"\xde\xad\xbe\xef") == b"\xde\xad\xbe\xef"
 
     assert (

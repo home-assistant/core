@@ -288,17 +288,17 @@ class MqttCover(MqttEntity, CoverEntity):
         if value_template is not None:
             value_template.hass = self.hass
 
-        set_position_template = self._config.get(CONF_SET_POSITION_TEMPLATE)
-        if set_position_template is not None:
-            set_position_template.hass = self.hass
+        self._set_position_template = MqttCommandTemplate(
+            self._config.get(CONF_SET_POSITION_TEMPLATE), self.hass
+        ).async_render
 
         get_position_template = self._config.get(CONF_GET_POSITION_TEMPLATE)
         if get_position_template is not None:
             get_position_template.hass = self.hass
 
-        set_tilt_template = self._config.get(CONF_TILT_COMMAND_TEMPLATE)
-        if set_tilt_template is not None:
-            set_tilt_template.hass = self.hass
+        self._set_tilt_template = MqttCommandTemplate(
+            self._config.get(CONF_TILT_COMMAND_TEMPLATE), self.hass
+        ).async_render
 
         tilt_status_template = self._config.get(CONF_TILT_STATUS_TEMPLATE)
         if tilt_status_template is not None:
@@ -611,12 +611,11 @@ class MqttCover(MqttEntity, CoverEntity):
 
     async def async_set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""
-        template = self._config.get(CONF_TILT_COMMAND_TEMPLATE)
         tilt = kwargs[ATTR_TILT_POSITION]
         percentage_tilt = tilt
         tilt = self.find_in_range_from_percent(tilt)
         # Handover the tilt after calculated from percent would make it more consistent with receiving templates
-        if template is not None:
+        if self._config.get(CONF_TILT_COMMAND_TEMPLATE) is not None:
             variables = {
                 "tilt_position": percentage_tilt,
                 "entity_id": self.entity_id,
@@ -625,7 +624,7 @@ class MqttCover(MqttEntity, CoverEntity):
                 "tilt_min": self._config[CONF_TILT_MIN],
                 "tilt_max": self._config[CONF_TILT_MAX],
             }
-            tilt = MqttCommandTemplate(template).async_render(None, variables=variables)
+            tilt = self._set_tilt_template(None, variables=variables)
 
         await mqtt.async_publish(
             self.hass,
@@ -641,11 +640,10 @@ class MqttCover(MqttEntity, CoverEntity):
 
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
-        template = self._config.get(CONF_SET_POSITION_TEMPLATE)
         position = kwargs[ATTR_POSITION]
         percentage_position = position
         position = self.find_in_range_from_percent(position, COVER_PAYLOAD)
-        if template is not None:
+        if self._config.get(CONF_SET_POSITION_TEMPLATE) is not None:
             variables = {
                 "position": percentage_position,
                 "entity_id": self.entity_id,
@@ -654,9 +652,7 @@ class MqttCover(MqttEntity, CoverEntity):
                 "tilt_min": self._config[CONF_TILT_MIN],
                 "tilt_max": self._config[CONF_TILT_MAX],
             }
-            position = MqttCommandTemplate(template).async_render(
-                None, variables=variables
-            )
+            position = self._set_position_template(None, variables=variables)
 
         await mqtt.async_publish(
             self.hass,

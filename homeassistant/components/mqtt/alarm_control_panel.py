@@ -152,7 +152,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
             value_template.hass = self.hass
         self.command_template = MqttCommandTemplate(
             self._config[CONF_COMMAND_TEMPLATE], self.hass
-        )
+        ).async_render
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
@@ -308,7 +308,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
     async def _publish(self, code, action):
         """Publish via mqtt."""
         variables = {"action": action, "code": code}
-        payload = self.command_template.async_render(None, variables=variables)
+        payload = self.command_template(None, variables=variables)
         await mqtt.async_publish(
             self.hass,
             self._config[CONF_COMMAND_TOPIC],
