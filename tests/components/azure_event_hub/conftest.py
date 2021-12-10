@@ -6,10 +6,10 @@ from unittest.mock import MagicMock, patch
 from azure.eventhub.aio import EventHubProducerClient
 import pytest
 
-from homeassistant.components.azure_event_hub.const import DATA_FILTER, DATA_HUB, DOMAIN
+from homeassistant.components.azure_event_hub.const import CONF_FILTER, DATA_HUB, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_ON
-from homeassistant.helpers.entityfilter import FILTER_SCHEMA
+from homeassistant.setup import async_setup_component
 
 from .const import AZURE_EVENT_HUB_PATH, BASIC_OPTIONS, PRODUCER_PATH, SAS_CONFIG_FULL
 
@@ -41,10 +41,10 @@ async def mock_entry_fixture(hass, filter_schema, mock_create_batch):
         title="test-instance",
         options=BASIC_OPTIONS,
     )
-    hass.data[DOMAIN] = {DATA_FILTER: FILTER_SCHEMA(filter_schema)}
     entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(entry.entry_id)
+    assert await async_setup_component(
+        hass, DOMAIN, {DOMAIN: {CONF_FILTER: filter_schema}}
+    )
     assert entry.state == ConfigEntryState.LOADED
 
     # Clear the component_loaded event from the queue.
@@ -73,11 +73,8 @@ def mock_send_batch_fixture():
 @pytest.fixture(autouse=True, name="mock_client", scope="module")
 def mock_client_fixture(mock_send_batch):
     """Mock the azure event hub producer client."""
-    with patch(f"{PRODUCER_PATH}.close") as mock_close, patch(
-        f"{PRODUCER_PATH}.__init__", return_value=None
-    ) as mock_init:
+    with patch(f"{PRODUCER_PATH}.close") as mock_close:
         yield (
-            mock_init,
             mock_send_batch,
             mock_close,
         )
@@ -95,12 +92,8 @@ def mock_create_batch_fixture():
 async def mock_hub(hass, entry):
     """Use the entry and add a single test event to the queue."""
     assert entry.state == ConfigEntryState.LOADED
-    assert hass.data[DOMAIN][DATA_HUB].queue.qsize() == 0
-
     hass.states.async_set("sensor.test", STATE_ON)
     await hass.async_block_till_done()
-
-    assert hass.data[DOMAIN][DATA_HUB].queue.qsize() == 1
     yield hass.data[DOMAIN][DATA_HUB]
 
 
@@ -124,3 +117,12 @@ def mock_setup_entry():
         f"{AZURE_EVENT_HUB_PATH}.async_setup_entry", return_value=True
     ) as setup_entry:
         yield setup_entry
+
+
+@pytest.fixture
+def mock_update_options():
+    """Mock the update options call, used for config flow tests."""
+    with patch(
+        f"{AZURE_EVENT_HUB_PATH}.AzureEventHub.update_options", return_value=None
+    ) as update_options:
+        yield update_options

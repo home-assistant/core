@@ -8,7 +8,6 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.azure_event_hub.const import (
     CONF_MAX_DELAY,
     CONF_SEND_INTERVAL,
-    DATA_HUB,
     DOMAIN,
     STEP_CONN_STRING,
     STEP_SAS,
@@ -173,7 +172,7 @@ async def test_connection_error_cs(
     assert result2["errors"] == {"base": error_message}
 
 
-async def test_options_flow(hass, entry):
+async def test_options_flow(hass, entry, mock_update_options):
     """Test options flow."""
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
@@ -187,12 +186,5 @@ async def test_options_flow(hass, entry):
     assert updated["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert updated["data"] == UPDATE_OPTIONS
     await hass.async_block_till_done()
-
-    assert (
-        hass.data[DOMAIN][DATA_HUB]._send_interval  # pylint: disable=protected-access
-        == UPDATE_OPTIONS[CONF_SEND_INTERVAL]
-    )
-    assert (
-        hass.data[DOMAIN][DATA_HUB]._max_delay  # pylint: disable=protected-access
-        == UPDATE_OPTIONS[CONF_MAX_DELAY]
-    )
+    mock_update_options.assert_called_once()
+    assert mock_update_options.call_args[0][0] == UPDATE_OPTIONS

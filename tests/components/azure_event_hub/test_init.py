@@ -8,13 +8,23 @@ from azure.eventhub.exceptions import EventHubError
 import pytest
 
 from homeassistant.components import azure_event_hub
-from homeassistant.components.azure_event_hub.const import DATA_HUB, DOMAIN
+from homeassistant.components.azure_event_hub.const import (
+    CONF_SEND_INTERVAL,
+    DATA_HUB,
+    DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_ON
 from homeassistant.setup import async_setup_component
 
 from .conftest import FilterTest
-from .const import AZURE_EVENT_HUB_PATH, BASIC_OPTIONS, CS_CONFIG_FULL, SAS_CONFIG_FULL
+from .const import (
+    AZURE_EVENT_HUB_PATH,
+    BASIC_OPTIONS,
+    CS_CONFIG_FULL,
+    SAS_CONFIG_FULL,
+    UPDATE_OPTIONS,
+)
 
 from tests.common import MockConfigEntry
 
@@ -24,7 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 async def test_import(hass):
     """Test the popping of the filter and further import of the config."""
     config = {
-        azure_event_hub.DOMAIN: {
+        DOMAIN: {
             "send_interval": 10,
             "max_delay": 10,
             "filter": {
@@ -37,14 +47,14 @@ async def test_import(hass):
             },
         }
     }
-    config[azure_event_hub.DOMAIN].update(CS_CONFIG_FULL)
-    assert await async_setup_component(hass, azure_event_hub.DOMAIN, config)
+    config[DOMAIN].update(CS_CONFIG_FULL)
+    assert await async_setup_component(hass, DOMAIN, config)
 
 
 async def test_filter_only_config(hass):
     """Test the popping of the filter and further import of the config."""
     config = {
-        azure_event_hub.DOMAIN: {
+        DOMAIN: {
             "filter": {
                 "include_domains": ["light"],
                 "include_entity_globs": ["sensor.included_*"],
@@ -55,12 +65,16 @@ async def test_filter_only_config(hass):
             },
         }
     }
-    assert await async_setup_component(hass, azure_event_hub.DOMAIN, config)
+    assert await async_setup_component(hass, DOMAIN, config)
 
 
-async def test_unload_entry(hass, entry):
-    """Test being able to unload an entry."""
+async def test_unload_entry(hass, entry, mock_create_batch):
+    """Test being able to unload an entry.
+
+    Queue should be empty, so adding events to the batch should not be called, this verifies that the unload, calls async_stop, which calls async_send and shuts down the hub.
+    """
     assert await hass.config_entries.async_unload(entry.entry_id)
+    mock_create_batch.add.assert_not_called()
     assert entry.state == ConfigEntryState.NOT_LOADED
 
 
@@ -74,17 +88,8 @@ async def test_failed_test_connection(hass, mock_get_eventhub_properties):
     )
     entry.add_to_hass(hass)
     mock_get_eventhub_properties.side_effect = EventHubError("Test")
-    try:
-        await hass.config_entries.async_setup(entry.entry_id)
-    except azure_event_hub.ConfigEntryNotReady:
-        pass
+    await hass.config_entries.async_setup(entry.entry_id)
     assert entry.state == ConfigEntryState.SETUP_RETRY
-
-
-async def test_stop(hass, hub):
-    """Test stopping the hub, which empties the queue."""
-    assert await hub.async_stop()
-    assert hub.queue.empty()
 
 
 async def test_send_batch_error(hass, hub, mock_send_batch):
@@ -200,3 +205,14 @@ async def test_filter(hass, entry, tests, mock_create_batch):
             mock_create_batch.add.reset_mock()
         else:
             mock_create_batch.add.assert_not_called()
+
+
+async def test_options_update(hass, hub):
+    """Test the update options function."""
+    assert (  # pylint: disable=protected-access
+        hub._send_interval == BASIC_OPTIONS[CONF_SEND_INTERVAL]
+    )
+    hub.update_options(UPDATE_OPTIONS)
+    assert (  # pylint: disable=protected-access
+        hub._send_interval == UPDATE_OPTIONS[CONF_SEND_INTERVAL]
+    )
