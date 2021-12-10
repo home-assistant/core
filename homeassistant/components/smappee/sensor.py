@@ -320,7 +320,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     ),
                 )
                 for actuator_id, actuator in service_location.actuators.items()
-                if actuator.type == "SWITCH"
+                if actuator.type == "SWITCH" and not service_location.local_polling
             ]
         )
 
