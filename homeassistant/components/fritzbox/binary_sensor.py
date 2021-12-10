@@ -8,7 +8,7 @@ from typing import Final
 from pyfritzhome.fritzhomedevice import FritzhomeDevice
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_WINDOW,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -40,7 +40,7 @@ BINARY_SENSOR_TYPES: Final[tuple[FritzBinarySensorEntityDescription, ...]] = (
     FritzBinarySensorEntityDescription(
         key="alarm",
         name="Alarm",
-        device_class=DEVICE_CLASS_WINDOW,
+        device_class=BinarySensorDeviceClass.WINDOW,
         suitable=lambda device: device.has_alarm,  # type: ignore[no-any-return]
         is_on=lambda device: device.alert_state,  # type: ignore[no-any-return]
     ),
