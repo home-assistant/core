@@ -163,11 +163,7 @@ def _patch_discovery(device=None, no_device=False):
     async def _discovery(*args, **kwargs):
         if no_device:
             raise OSError
-<<<<<<< HEAD
         return [] if no_device else [device or FLUX_DISCOVERY]
-=======
-        return [FLUX_DISCOVERY]
->>>>>>> 5cf7226bf2 (remove discovery locks are upstream lib now supports concurrent discovery)
 
     @contextmanager
     def _patcher():
@@ -176,11 +172,7 @@ def _patch_discovery(device=None, no_device=False):
             new=_discovery,
         ), patch(
             "homeassistant.components.flux_led.discovery.AIOBulbScanner.getBulbInfo",
-<<<<<<< HEAD
             return_value=[] if no_device else [device or FLUX_DISCOVERY],
-=======
-            return_value=[] if no_device else [FLUX_DISCOVERY],
->>>>>>> 5cf7226bf2 (remove discovery locks are upstream lib now supports concurrent discovery)
         ):
             yield
 
