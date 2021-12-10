@@ -154,7 +154,8 @@ class LookinMedia(LookinPowerEntity, MediaPlayerEntity):
     async def async_turn_off(self) -> None:
         """Turn the media player off."""
         await self._async_send_command(self._power_off_command)
-        self._state = STATE_STANDBY
+        self._attr_state = STATE_STANDBY
+        self.async_write_ha_state()
 
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
