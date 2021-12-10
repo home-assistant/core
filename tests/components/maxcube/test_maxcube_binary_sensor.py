@@ -4,9 +4,7 @@ from datetime import timedelta
 from maxcube.cube import MaxCube
 from maxcube.windowshutter import MaxWindowShutter
 
-from homeassistant.components.binary_sensor import (
-    BinarySensorDeviceClass,
-)
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
