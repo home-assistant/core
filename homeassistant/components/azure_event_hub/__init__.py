@@ -215,7 +215,7 @@ class AzureEventHub:
             event_data = self._event_to_filtered_event_data(event)
             if not event_data:
                 continue
-            if time.monotonic() - timestamp <= self._max_delay:
+            if time.monotonic() - timestamp <= self._max_delay + self._send_interval:
                 try:
                     event_batch.add(event_data)
                 except ValueError:
