@@ -167,11 +167,6 @@ class LookinMedia(LookinPowerEntity, MediaPlayerEntity):
         name: str = self._remote.name
         return name
 
-    @property
-    def is_volume_muted(self) -> bool | None:
-        """Boolean if volume is currently muted."""
-        return self._is_muted
-
     def _update_from_status(self, status: str) -> None:
         """Update media property from status.
 
