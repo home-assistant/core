@@ -164,7 +164,7 @@ def _patch_discovery(device=None, no_device=False):
     async def _discovery(*args, **kwargs):
         if no_device:
             raise OSError
-        return [FLUX_DISCOVERY]
+        return [] if no_device else [device or FLUX_DISCOVERY]
 
     @contextmanager
     def _patcher():
@@ -173,7 +173,7 @@ def _patch_discovery(device=None, no_device=False):
             new=_discovery,
         ), patch(
             "homeassistant.components.flux_led.discovery.AIOBulbScanner.getBulbInfo",
-            return_value=[] if no_device else [FLUX_DISCOVERY],
+            return_value=[] if no_device else [device or FLUX_DISCOVERY],
         ):
             yield
 
