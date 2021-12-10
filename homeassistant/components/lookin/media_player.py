@@ -148,7 +148,8 @@ class LookinMedia(LookinPowerEntity, MediaPlayerEntity):
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
         await self._async_send_command("mute")
-        self._is_muted = not self._is_muted
+        self._attr_is_volume_muted = not self.is_volume_muted
+        self.async_write_ha_state()
 
     async def async_turn_off(self) -> None:
         """Turn the media player off."""
