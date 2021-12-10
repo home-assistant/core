@@ -646,7 +646,7 @@ ICON_SCHEMA = vol.Schema(cv.icon)
 
 
 ENTITY_CATEGORIES: EsphomeEnumMapper[
-    EsphomeEntityCategory, EntityCategory | str | None
+    EsphomeEntityCategory, EntityCategory | None
 ] = EsphomeEnumMapper(
     {
         EsphomeEntityCategory.NONE: None,
@@ -799,7 +799,7 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         return not self._static_info.disabled_by_default
 
     @property
-    def entity_category(self) -> str | None:
+    def entity_category(self) -> EntityCategory | None:
         """Return the category of the entity, if any."""
         if not self._static_info.entity_category:
             return None

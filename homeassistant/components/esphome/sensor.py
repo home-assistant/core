@@ -61,7 +61,7 @@ async def async_setup_entry(
 
 
 _STATE_CLASSES: EsphomeEnumMapper[
-    EsphomeSensorStateClass, SensorStateClass | str | None
+    EsphomeSensorStateClass, SensorStateClass | None
 ] = EsphomeEnumMapper(
     {
         EsphomeSensorStateClass.NONE: None,
@@ -105,7 +105,7 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
         return self._static_info.device_class
 
     @property
-    def state_class(self) -> SensorStateClass | str | None:
+    def state_class(self) -> SensorStateClass | None:
         """Return the state class of this entity."""
         if not self._static_info.state_class:
             return None
