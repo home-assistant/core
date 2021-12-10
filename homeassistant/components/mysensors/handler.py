@@ -18,7 +18,7 @@ HANDLERS = decorator.Registry()
 async def handle_set(hass: HomeAssistant, gateway_id: GatewayId, msg: Message) -> None:
     """Handle a mysensors set message."""
     validated = validate_set_msg(gateway_id, msg)
-    _handle_child_update(hass, gateway_id, validated)
+    _handle_child_update(hass, gateway_id, validated, msg)
 
 
 @HANDLERS.register("internal")
@@ -28,6 +28,18 @@ async def handle_internal(
     """Handle a mysensors internal message."""
     internal = msg.gateway.const.Internal(msg.sub_type)
     if (handler := HANDLERS.get(internal.name)) is None:
+        return
+    await handler(hass, gateway_id, msg)
+
+
+@HANDLERS.register("stream")
+async def handle_stream(
+    hass: HomeAssistant, gateway_id: GatewayId, msg: Message
+) -> None:
+    """Handle a mysensors stream message."""
+
+    stream = msg.gateway.const.Stream(msg.sub_type)
+    if (handler := HANDLERS.get(stream.name)) is None:
         return
     await handler(hass, gateway_id, msg)
 
@@ -64,9 +76,28 @@ async def handle_sketch_version(
     _handle_node_update(hass, gateway_id, msg)
 
 
+@HANDLERS.register("ST_FIRMWARE_CONFIG_REQUEST")
+async def handle_firmware_config_request(
+    hass: HomeAssistant, gateway_id: GatewayId, msg: Message
+) -> None:
+    """Handle an internal sketch version message."""
+    _handle_node_update(hass, gateway_id, msg)
+
+
+@HANDLERS.register("ST_FIRMWARE_REQUEST")
+async def handle_firmware_request(
+    hass: HomeAssistant, gateway_id: GatewayId, msg: Message
+) -> None:
+    """Handle an internal sketch version message."""
+    _handle_node_update(hass, gateway_id, msg)
+
+
 @callback
 def _handle_child_update(
-    hass: HomeAssistant, gateway_id: GatewayId, validated: dict[str, list[DevId]]
+    hass: HomeAssistant,
+    gateway_id: GatewayId,
+    validated: dict[str, list[DevId]],
+    msg: Message,
 ) -> None:
     """Handle a child update."""
     signals: list[str] = []
@@ -86,7 +117,7 @@ def _handle_child_update(
     for signal in set(signals):
         # Only one signal per device is needed.
         # A device can have multiple platforms, ie multiple schemas.
-        async_dispatcher_send(hass, signal)
+        async_dispatcher_send(hass, signal, msg)
 
 
 @callback
@@ -95,4 +126,4 @@ def _handle_node_update(
 ) -> None:
     """Handle a node update."""
     signal = NODE_CALLBACK.format(gateway_id, msg.node_id)
-    async_dispatcher_send(hass, signal)
+    async_dispatcher_send(hass, signal, msg)

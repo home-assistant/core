@@ -336,7 +336,7 @@ homeassistant/components/mullvad/* @meichthys
 homeassistant/components/mutesync/* @currentoor
 homeassistant/components/my/* @home-assistant/core
 homeassistant/components/myq/* @bdraco @ehendrix23
-homeassistant/components/mysensors/* @MartinHjelmare @functionpointer
+homeassistant/components/mysensors/* @MartinHjelmare @functionpointer @dianlight
 homeassistant/components/mystrom/* @fabaff
 homeassistant/components/nam/* @bieniu
 homeassistant/components/nanoleaf/* @milanmeu

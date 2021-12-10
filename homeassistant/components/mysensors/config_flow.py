@@ -1,6 +1,7 @@
 """Config flow for MySensors."""
 from __future__ import annotations
 
+import collections
 import os
 from typing import Any
 
@@ -46,7 +47,7 @@ from .const import (
 from .gateway import MQTT_COMPONENT, is_serial_port, is_socket_address, try_connect
 
 
-def _get_schema_common(user_input: dict[str, str]) -> dict:
+def _get_schema_common(user_input: dict[str, Any]) -> dict:
     """Create a schema with options common to all gateway types."""
     schema = {
         vol.Required(
@@ -107,6 +108,11 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Set up config flow."""
         self._gw_type: str | None = None
+
+    @staticmethod
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowHandler:
+        """Get the options flow for this handler."""
+        return OptionsFlowHandler(config_entry)
 
     async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
         """Import a config entry.
@@ -348,3 +354,47 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
 
         return errors
+
+
+class OptionsFlowHandler(config_entries.OptionsFlow):
+    """Option Panel."""
+
+    def __init__(self, config_entry: ConfigEntry):
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: collections.abc.Mapping[str, Any] | None = None
+    ) -> FlowResult:
+        """Manage the options."""
+        return await self.async_step_gw_tcp()
+
+    async def async_step_gw_tcp(
+        self, user_input: collections.abc.Mapping[str, Any] | None = None
+    ) -> FlowResult:
+        """Manage the options for tcp gateway."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        current_config = self.config_entry.data
+
+        schema = _get_schema_common(current_config)  # type: ignore[arg-type]
+        schema[
+            vol.Required(
+                CONF_DEVICE, default=current_config.get(CONF_DEVICE, "127.0.0.1")
+            )
+        ] = str
+        # Don't use cv.port as that would show a slider *facepalm*
+        schema[
+            vol.Optional(
+                CONF_TCP_PORT,
+                default=current_config.get(CONF_TCP_PORT, DEFAULT_TCP_PORT),
+            )
+        ] = vol.Coerce(int)
+
+        schema = vol.Schema(schema)
+
+        return self.async_show_form(
+            step_id="gw_tcp",
+            data_schema=schema,
+        )

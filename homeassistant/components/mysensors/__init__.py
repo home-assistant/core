@@ -4,18 +4,25 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 from functools import partial
+import io
 import logging
+import os
+import re
 
 from mysensors import BaseAsyncGateway
+from mysensors.ota import load_fw, prepare_fw
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import websocket_api
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
+from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.components.mqtt import valid_publish_topic, valid_subscribe_topic
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_OPTIMISTIC
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -53,10 +60,13 @@ CONF_DEBUG = "debug"
 CONF_NODE_NAME = "name"
 
 DATA_HASS_CONFIG = "hass_config"
+FIRMWARE_DIR = "mysensors_fw"
 
 DEFAULT_BAUD_RATE = 115200
 DEFAULT_TCP_PORT = 5003
 DEFAULT_VERSION = "1.4"
+
+MAX_FIRMWARE_SIZE = 1024 * 1204 * 8
 
 
 def set_default_persistence_file(value: dict) -> dict:
@@ -239,6 +249,191 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.async_create_task(finish())
 
+    @websocket_api.websocket_command(
+        {
+            vol.Required("type"): "mysensors/device_list",
+            vol.Required("config_entry"): str,
+        }
+    )
+    @websocket_api.async_response
+    async def websocket_handle_device_list(
+        hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    ) -> None:
+        """List all MySensor devices."""
+        if MYSENSORS_GATEWAYS not in hass.data[DOMAIN]:
+            _LOGGER.info("No Mysensor Gateway Found! Is mysensor configured?")
+
+        gateways = hass.data.get(DOMAIN).get(MYSENSORS_GATEWAYS)  # type: ignore[union-attr]
+        found = []
+        gateway = gateways.get(msg["config_entry"])
+        registry: device_registry.DeviceRegistry = device_registry.async_get(hass)
+
+        for sensor in gateway.sensors.values():
+            device_entry = registry.async_get_device(
+                {(DOMAIN, f"{msg['config_entry']}-{sensor.sensor_id}")}
+            )
+            found.append(
+                {
+                    "gateway": msg["config_entry"],
+                    "node_id": sensor.sensor_id,
+                    "type": sensor.type,
+                    "device_id": device_entry.id if device_entry else None,
+                    "device_name": device_entry.name if device_entry else None,
+                    "device_name_by_user": device_entry.name_by_user
+                    if device_entry
+                    else None,
+                    "sketch_name": sensor.sketch_name,
+                    "sketch_version": sensor.sketch_version,
+                    "battery_level": sensor.battery_level,
+                    "protocol_version": sensor.protocol_version,
+                    "heartbeat": sensor.heartbeat,
+                    "reboot": sensor.reboot,
+                }
+            )
+            _LOGGER.debug(dir(sensor))
+        connection.send_result(
+            msg["id"],
+            {
+                "list": found,
+            },
+        )
+
+    # Register our service with Home Assistant.
+    # hass.services.async_register(DOMAIN, 'device_list', device_list)
+    hass.components.websocket_api.async_register_command(
+        websocket_handle_device_list,
+    )
+
+    file_parser = re.compile(
+        r"^(?P<name>[0-9a-zA-Z\.]+)(?:_(?P<type>\d+))?(?:_(?P<version>\d+\.\d+\.\d+))?\.hex$"
+    )
+
+    def file2data(file: str) -> dict | bool:
+        """Convert FileName to a Firmware Data Object."""
+        # TODO: Support more file format with crc, blocks, bloader_ver etc etc
+        result = file_parser.search(file)
+
+        if result is not None:
+            return {
+                "fw_filename": file,
+                "fw_name": result.group("name"),
+                "fw_type": result.group("type"),
+                "fw_version": result.group("version"),
+                "fw_crc": None,
+                "fw_blocks": None,
+                "bloader_ver": None,
+            }
+
+        return False
+
+    real_firmware_dir = os.path.realpath(
+        os.path.normcase(hass.config.path(FIRMWARE_DIR))
+    )
+    os.makedirs(real_firmware_dir, exist_ok=True)
+
+    @websocket_api.websocket_command(
+        {
+            vol.Required("type"): "mysensors/firmware_list",
+        }
+    )
+    @websocket_api.async_response
+    async def websocket_handle_firmware_list(
+        hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    ) -> None:
+        """Read and parse all Firmware in FIRMWARE_DIR directory."""
+        found = []
+        dirs = os.listdir(real_firmware_dir)
+        for file in dirs:
+            data = file2data(file)
+            if data:
+                found.append(data)
+
+        connection.send_result(msg["id"], {"list": found})
+
+    # Register our service with Home Assistant.
+    hass.components.websocket_api.async_register_command(
+        websocket_handle_firmware_list,
+    )
+
+    @websocket_api.websocket_command(
+        {
+            vol.Required("type"): "mysensors/fota",
+            vol.Required("config_entry"): str,
+            vol.Required("node_id"): int,
+            vol.Required("fw_type"): int,
+            vol.Required("fw_ver"): int,
+            vol.Required("filename"): str,
+        }
+    )
+    @websocket_api.async_response
+    async def websocket_handle_fota(
+        hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    ) -> None:
+        """Perform FOTA on selected node."""
+        gateways = hass.data.get(DOMAIN).get(MYSENSORS_GATEWAYS)  # type: ignore[union-attr]
+        gateway = gateways.get(msg["config_entry"])
+        await gateway.update_fw(
+            [msg["node_id"]],
+            msg["fw_type"],
+            msg["fw_ver"],
+            fw_path=f"{real_firmware_dir}/{msg['filename']}",
+        )
+
+        _LOGGER.debug("FOTA Firmware... %s/%s", real_firmware_dir, msg["filename"])
+        connection.send_result(msg["id"], {"ok": "ok"})
+
+    # Register our service with Home Assistant.
+    hass.components.websocket_api.async_register_command(
+        websocket_handle_fota,
+    )
+
+    @websocket_api.websocket_command(
+        {
+            vol.Required("type"): "mysensors/reboot",
+            vol.Required("config_entry"): str,
+            vol.Required("node_id"): int,
+        }
+    )
+    @websocket_api.async_response
+    async def websocket_handle_reboot(
+        hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    ) -> None:
+        gateways = hass.data.get(DOMAIN).get(MYSENSORS_GATEWAYS)  # type: ignore[union-attr]
+        gateway = gateways.get(msg["config_entry"])
+
+        gateway.sensors[msg["node_id"]].reboot = 1
+        connection.send_result(msg["id"], {"ok": "ok"})
+
+    # Register our service with Home Assistant.
+    hass.components.websocket_api.async_register_command(
+        websocket_handle_reboot,
+    )
+
+    @websocket_api.websocket_command(
+        {
+            vol.Required("type"): "mysensors/remove",
+            vol.Required("config_entry"): str,
+            vol.Required("node_id"): int,
+        }
+    )
+    @websocket_api.async_response
+    async def websocket_handle_remove(
+        hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+    ) -> None:
+        # _LOGGER.info(f'Node removing... {msg["node_id"]}')
+        gateways = hass.data.get(DOMAIN).get(MYSENSORS_GATEWAYS)  # type: ignore[union-attr]
+        gateway = gateways.get(msg["config_entry"])
+
+        gateway.sensors.pop(msg["node_id"])
+        connection.send_result(msg["id"], {"ok": "ok"})
+
+    # Register our service with Home Assistant.
+    hass.components.websocket_api.async_register_command(
+        websocket_handle_remove,
+    )
+
+    hass.http.register_view(FirmwareUploadView(hass))
+
     return True
 
 
@@ -313,8 +508,59 @@ def setup_mysensors_platform(
         args_copy = (*device_args, gateway_id, gateway, node_id, child_id, value_type)
         devices[dev_id] = device_class_copy(*args_copy)
         new_devices.append(devices[dev_id])
+
+        """.
+        # Create MySensorsNodeEntity if not exists
+        node_dev_id: DevId = (DOMAIN, NODE_ID.format(node_id), NODE_ROOT_CHILD_ID)
+        if node_dev_id not in devices:
+            _LOGGER.info(
+                "Setup base entity %s for platform %s",
+                node_dev_id,
+                domain,
+            )
+            devices[node_dev_id] = MySensorsNodeEntity(
+                gateway_id, gateway, node_id, NODE_ROOT_CHILD_ID, 0
+            )
+            new_devices.append(devices[node_dev_id])
+        """
     if new_devices:
         _LOGGER.info("Adding new devices: %s", new_devices)
         if async_add_entities is not None:
             async_add_entities(new_devices, True)
     return new_devices
+
+
+class FirmwareUploadView(HomeAssistantView):
+    """View to upload firmware."""
+
+    url = "/api/mysensors/firmware/upload"
+    name = "api:mysensors:firmware:upload"
+
+    def __init__(self, hass: HomeAssistant):
+        """Initialize."""
+        self.hass = hass
+
+    async def post(self, request):  # type: ignore[no-untyped-def]
+        """Handle upload."""
+        # Increase max payload
+        request._client_max_size = MAX_FIRMWARE_SIZE  # pylint: disable=protected-access
+
+        data = await request.post()
+
+        fw_data: io.BufferedReader = data["file"].file
+
+        real_firmware_dir = os.path.realpath(
+            os.path.normcase(self.hass.config.path(FIRMWARE_DIR))
+        )
+        os.makedirs(real_firmware_dir, exist_ok=True)
+
+        fw_file = open(f"{real_firmware_dir}/{data['file'].filename}", "wb")
+        fw_file.write(fw_data.read())
+        fw_file.close()
+
+        fw_bin_str = load_fw(f"{real_firmware_dir}/{data['file'].filename}")
+        if fw_bin_str is not None:
+            return self.json({"blocks": prepare_fw(fw_bin_str)["blocks"]})
+
+        os.remove(f"{real_firmware_dir}/{data['file'].filename}")
+        return self.json(result="", status_code=406)

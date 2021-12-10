@@ -34,6 +34,8 @@ MYSENSORS_GATEWAY_START_TASK: str = "mysensors_gateway_start_task_{}"
 MYSENSORS_GATEWAYS: Final = "mysensors_gateways"
 PLATFORM: Final = "platform"
 SCHEMA: Final = "schema"
+NODE_ID: Final = "node_{}"
+NODE_ROOT_CHILD_ID = 0
 CHILD_CALLBACK: str = "mysensors_child_callback_{}_{}_{}_{}"
 NODE_CALLBACK: str = "mysensors_node_callback_{}_{}"
 MYSENSORS_DISCOVERY: str = "mysensors_discovery_{}_{}"
@@ -51,6 +53,8 @@ class DiscoveryInfo(TypedDict):
 
 
 SERVICE_SEND_IR_CODE: Final = "send_ir_code"
+SERVICE_FIRMWARE_LIST: Final = "firmware_list"
+SERVICE_UPDATE_FIRMWARE: Final = "update_firmware"
 
 SensorType = str
 # S_DOOR, S_MOTION, S_SMOKE, ...
