@@ -190,17 +190,15 @@ async def async_setup_platform(
     async_add_entities(
         new_entities=[
             StatisticsSensor(
-                source_entity_id=str(config.get(CONF_ENTITY_ID)),
-                name=str(config.get(CONF_NAME)),
-                unique_id=config.get(CONF_UNIQUE_ID),
-                state_characteristic=str(config.get(CONF_STATE_CHARACTERISTIC)),
-                samples_max_buffer_size=cast(
-                    int, config.get(CONF_SAMPLES_MAX_BUFFER_SIZE)
-                ),
-                samples_max_age=config.get(CONF_MAX_AGE),
-                precision=cast(int, config.get(CONF_PRECISION)),
-                quantile_intervals=cast(int, config.get(CONF_QUANTILE_INTERVALS)),
-                quantile_method=str(config.get(CONF_QUANTILE_METHOD)),
+                source_entity_id=config[CONF_ENTITY_ID],
+                name=config[CONF_NAME],
+                unique_id=config.get(CONF_UNIQUE_ID, None),
+                state_characteristic=config[CONF_STATE_CHARACTERISTIC],
+                samples_max_buffer_size=config[CONF_SAMPLES_MAX_BUFFER_SIZE],
+                samples_max_age=config.get(CONF_MAX_AGE, None),
+                precision=config[CONF_PRECISION],
+                quantile_intervals=config[CONF_QUANTILE_INTERVALS],
+                quantile_method=config[CONF_QUANTILE_METHOD],
             )
         ],
         update_before_add=True,
@@ -240,7 +238,7 @@ class StatisticsSensor(SensorEntity):
         self._precision: int = precision
         self._quantile_intervals: int = quantile_intervals
         self._quantile_method: str = quantile_method
-        self._value: StateType | None = None
+        self._value: StateType | datetime = None
         self._unit_of_measurement: str | None = None
         self._available: bool = False
         self.states: deque[float | bool] = deque(maxlen=self._samples_max_buffer_size)
@@ -251,7 +249,7 @@ class StatisticsSensor(SensorEntity):
             STAT_SOURCE_VALUE_VALID: None,
         }
 
-        self._state_characteristic_fn: Callable[[], StateType]
+        self._state_characteristic_fn: Callable[[], StateType | datetime]
         if self.is_binary:
             self._state_characteristic_fn = getattr(
                 self, f"_stat_binary_{self._state_characteristic}"
@@ -371,7 +369,7 @@ class StatisticsSensor(SensorEntity):
         return STATE_CLASS_MEASUREMENT
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self._value
 
@@ -574,14 +572,14 @@ class StatisticsSensor(SensorEntity):
     def _stat_count(self) -> StateType:
         return len(self.states)
 
-    def _stat_datetime_newest(self) -> StateType:
+    def _stat_datetime_newest(self) -> datetime | None:
         if len(self.states) > 0:
-            return str(self.ages[-1])
+            return self.ages[-1]
         return None
 
-    def _stat_datetime_oldest(self) -> StateType:
+    def _stat_datetime_oldest(self) -> datetime | None:
         if len(self.states) > 0:
-            return str(self.ages[0])
+            return self.ages[0]
         return None
 
     def _stat_distance_95_percent_of_values(self) -> StateType:
