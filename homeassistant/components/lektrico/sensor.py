@@ -159,12 +159,12 @@ class LektricoDevice:
         self._hass = hass
         self.friendly_name = friendly_name.replace(" ", "_")
         self._name = friendly_name
-        self._coordinator: DataUpdateCoordinator | None = None
+        self._coordinator: DataUpdateCoordinator
         self._update_fail_count = 0
         self._info = None
 
     @property
-    def coordinator(self) -> DataUpdateCoordinator | None:
+    def coordinator(self) -> DataUpdateCoordinator:
         """Return the coordinator of the Lektrico device."""
         return self._coordinator
 
@@ -174,8 +174,6 @@ class LektricoDevice:
         # Create status update coordinator
         await self._create_coordinator()
 
-        if self._coordinator is None:
-            return False
         return True
 
     async def async_device_update(self) -> lektricowifi.Info:
@@ -256,10 +254,10 @@ class LektricoSensor(CoordinatorEntity, SensorEntity):
         friendly_name: str,
     ) -> None:
         """Initialize Lektrico charger."""
-        if _lektrico_device.coordinator is None:
-            super()
-        else:
-            super().__init__(_lektrico_device.coordinator)
+        # if _lektrico_device.coordinator is None:
+        #     super()
+        # else:
+        super().__init__(_lektrico_device.coordinator)
         self.charger = charger
         self.friendly_name = friendly_name
         self.entity_description = description
@@ -275,8 +273,6 @@ class LektricoSensor(CoordinatorEntity, SensorEntity):
     def native_value(self) -> float | str | Any | None:
         """Return the state of the sensor."""
         if self.entity_description.value_fn is not None:
-            if self._lektrico_device.coordinator is None:
-                return None
             return self.entity_description.value_fn(
                 self._lektrico_device.coordinator.data
             )
@@ -292,13 +288,6 @@ class LektricoSensor(CoordinatorEntity, SensorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information about this Lektrico charger."""
-        if self._lektrico_device.coordinator is None:
-            return {
-                ATTR_IDENTIFIERS: {(DOMAIN, self._settings.serial_number)},
-                ATTR_NAME: self.friendly_name,
-                ATTR_MANUFACTURER: "Lektrico",
-                ATTR_MODEL: f"1P7K {self._settings.serial_number} rev.{self._settings.board_revision}",
-            }
         return {
             ATTR_IDENTIFIERS: {(DOMAIN, self._settings.serial_number)},
             ATTR_NAME: self.friendly_name,
