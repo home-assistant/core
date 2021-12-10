@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from homeassistant import config_entries
+from homeassistant.components import dhcp
 from homeassistant.components.twinkly.const import (
     CONF_ENTRY_HOST,
     CONF_ENTRY_ID,
@@ -67,7 +68,7 @@ async def test_dhcp_can_confirm(hass):
     client = ClientMock()
     with patch("twinkly_client.TwinklyClient", return_value=client):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
+            TWINKLY_DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
                 hostname="Twinkly_XYZ",
@@ -87,7 +88,12 @@ async def test_dhcp_already_exists(hass):
 
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: "1.2.3.4"},
+        data={
+            CONF_ENTRY_HOST: "1.2.3.4",
+            CONF_ENTRY_ID: client.id,
+            CONF_ENTRY_NAME: client.id,
+            CONF_ENTRY_MODEL: TEST_MODEL,
+        },
         unique_id=client.id,
     )
     entry.add_to_hass(hass)
@@ -95,7 +101,7 @@ async def test_dhcp_already_exists(hass):
     client = ClientMock()
     with patch("twinkly_client.TwinklyClient", return_value=client):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
+            TWINKLY_DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
                 hostname="Twinkly_XYZ",
