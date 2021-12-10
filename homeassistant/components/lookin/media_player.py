@@ -188,7 +188,6 @@ class LookinMedia(LookinPowerEntity, MediaPlayerEntity):
         LOGGER.debug("Processing push message for %s: %s", self.entity_id, event)
         await self.coordinator.async_refresh()
         self._attr_name = self._remote.name
-        self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Call when the entity is added to hass."""
