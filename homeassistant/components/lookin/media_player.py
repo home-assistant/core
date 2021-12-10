@@ -182,7 +182,7 @@ class LookinMedia(LookinPowerEntity, MediaPlayerEntity):
         mute = status[2]
 
         self._state = STATE_STANDBY if state == "1" else STATE_ON
-        self._is_muted = mute == "0"
+        self._attr_is_volume_muted = mute == "0"
 
     def _async_push_update(self, event: UDPEvent) -> None:
         """Process an update pushed via UDP."""
