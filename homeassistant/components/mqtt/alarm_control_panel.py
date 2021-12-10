@@ -150,7 +150,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         value_template = self._config.get(CONF_VALUE_TEMPLATE)
         if value_template is not None:
             value_template.hass = self.hass
-        self.command_template = MqttCommandTemplate(
+        self._command_template = MqttCommandTemplate(
             self._config[CONF_COMMAND_TEMPLATE], self.hass
         ).async_render
 
@@ -308,7 +308,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
     async def _publish(self, code, action):
         """Publish via mqtt."""
         variables = {"action": action, "code": code}
-        payload = self.command_template(None, variables=variables)
+        payload = self._command_template(None, variables=variables)
         await mqtt.async_publish(
             self.hass,
             self._config[CONF_COMMAND_TOPIC],

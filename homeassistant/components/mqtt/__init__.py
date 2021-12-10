@@ -258,7 +258,6 @@ class MqttCommandTemplate:
         self,
         command_template: template.Template | None,
         hass: HomeAssistant,
-        variables: template.TemplateVarsType = None,
     ) -> None:
         """Instantiate a command template."""
         self._attr_command_template = command_template
@@ -266,7 +265,6 @@ class MqttCommandTemplate:
             return
 
         command_template.hass = hass
-        self.variables = variables
 
     @callback
     def async_render(
@@ -275,37 +273,37 @@ class MqttCommandTemplate:
         variables: template.TemplateVarsType = None,
     ) -> PublishPayloadType:
         """Render or convert the command template with given value or variables."""
+
+        def _convert_outgoing_payload(
+            payload: PublishPayloadType,
+        ) -> PublishPayloadType:
+            """Ensure correct raw MQTT payload is passed as bytes for publishing."""
+            # pass-through for bytes type object
+            if isinstance(payload, bytes):
+                return payload
+
+            # cast bytes literal string to bytes type object
+            if isinstance(payload, str):
+                try:
+                    native_object = literal_eval(payload)
+                    if isinstance(native_object, bytes):
+                        return native_object
+
+                except (ValueError, TypeError, SyntaxError, MemoryError):
+                    pass
+                return payload
+
+            return payload
+
         if self._attr_command_template is None:
-            return MqttCommandTemplate._convert_outgoing_payload(value)
+            return value
 
         values = {"value": value}
-        if self.variables is not None:
-            values.update(self.variables)
         if variables is not None:
             values.update(variables)
-        return MqttCommandTemplate._convert_outgoing_payload(
+        return _convert_outgoing_payload(
             self._attr_command_template.async_render(values, parse_result=False)
         )
-
-    @staticmethod
-    def _convert_outgoing_payload(payload: PublishPayloadType) -> PublishPayloadType:
-        """Ensure correct raw MQTT payload is passed as bytes for publishing."""
-        # pass-through for bytes type object
-        if isinstance(payload, bytes):
-            return payload
-
-        # cast bytes literal string to bytes type object
-        if isinstance(payload, str):
-            try:
-                native_object = literal_eval(payload)
-                if isinstance(native_object, bytes):
-                    return native_object
-
-            except (ValueError, TypeError, SyntaxError, MemoryError):
-                pass
-            return payload
-
-        return payload
 
 
 @dataclass

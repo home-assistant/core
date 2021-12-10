@@ -615,16 +615,15 @@ class MqttCover(MqttEntity, CoverEntity):
         percentage_tilt = tilt
         tilt = self.find_in_range_from_percent(tilt)
         # Handover the tilt after calculated from percent would make it more consistent with receiving templates
-        if self._config.get(CONF_TILT_COMMAND_TEMPLATE) is not None:
-            variables = {
-                "tilt_position": percentage_tilt,
-                "entity_id": self.entity_id,
-                "position_open": self._config[CONF_POSITION_OPEN],
-                "position_closed": self._config[CONF_POSITION_CLOSED],
-                "tilt_min": self._config[CONF_TILT_MIN],
-                "tilt_max": self._config[CONF_TILT_MAX],
-            }
-            tilt = self._set_tilt_template(None, variables=variables)
+        variables = {
+            "tilt_position": percentage_tilt,
+            "entity_id": self.entity_id,
+            "position_open": self._config.get(CONF_POSITION_OPEN),
+            "position_closed": self._config.get(CONF_POSITION_CLOSED),
+            "tilt_min": self._config.get(CONF_TILT_MIN),
+            "tilt_max": self._config.get(CONF_TILT_MAX),
+        }
+        tilt = self._set_tilt_template(tilt, variables=variables)
 
         await mqtt.async_publish(
             self.hass,
@@ -643,16 +642,15 @@ class MqttCover(MqttEntity, CoverEntity):
         position = kwargs[ATTR_POSITION]
         percentage_position = position
         position = self.find_in_range_from_percent(position, COVER_PAYLOAD)
-        if self._config.get(CONF_SET_POSITION_TEMPLATE) is not None:
-            variables = {
-                "position": percentage_position,
-                "entity_id": self.entity_id,
-                "position_open": self._config[CONF_POSITION_OPEN],
-                "position_closed": self._config[CONF_POSITION_CLOSED],
-                "tilt_min": self._config[CONF_TILT_MIN],
-                "tilt_max": self._config[CONF_TILT_MAX],
-            }
-            position = self._set_position_template(None, variables=variables)
+        variables = {
+            "position": percentage_position,
+            "entity_id": self.entity_id,
+            "position_open": self._config[CONF_POSITION_OPEN],
+            "position_closed": self._config[CONF_POSITION_CLOSED],
+            "tilt_min": self._config[CONF_TILT_MIN],
+            "tilt_max": self._config[CONF_TILT_MAX],
+        }
+        position = self._set_position_template(position, variables=variables)
 
         await mqtt.async_publish(
             self.hass,
