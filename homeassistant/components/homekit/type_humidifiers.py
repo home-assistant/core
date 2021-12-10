@@ -99,6 +99,7 @@ class HumidifierDehumidifier(HomeAccessory):
                 CHAR_TARGET_HUMIDIFIER_DEHUMIDIFIER,
                 value=self._hk_device_class,
                 valid_values={
+                    "HumidifierorDehumidifier": 0,
                     HC_HASS_TO_HOMEKIT_DEVICE_CLASS_NAME[
                         device_class
                     ]: self._hk_device_class
