@@ -5,8 +5,7 @@ from maxcube.cube import MaxCube
 from maxcube.windowshutter import MaxWindowShutter
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_WINDOW,
+    BinarySensorDeviceClass,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -15,6 +14,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.util import utcnow
 
 from tests.common import async_fire_time_changed
@@ -29,12 +29,13 @@ async def test_window_shuttler(hass, cube: MaxCube, windowshutter: MaxWindowShut
     assert entity_registry.async_is_registered(ENTITY_ID)
     entity = entity_registry.async_get(ENTITY_ID)
     assert entity.unique_id == "AABBCCDD03"
+    assert entity.entity_category == EntityCategory.DIAGNOSTIC
 
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "TestRoom TestShutter"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_WINDOW
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.WINDOW
 
     windowshutter.is_open = False
     async_fire_time_changed(hass, utcnow() + timedelta(minutes=5))
@@ -52,10 +53,11 @@ async def test_window_shuttler_battery(
     assert entity_registry.async_is_registered(BATTERY_ENTITY_ID)
     entity = entity_registry.async_get(BATTERY_ENTITY_ID)
     assert entity.unique_id == "AABBCCDD03_battery"
+    assert entity.entity_category == EntityCategory.DIAGNOSTIC
 
     state = hass.states.get(BATTERY_ENTITY_ID)
     assert state is not None
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_BATTERY
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.BATTERY
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "TestRoom TestShutter battery"
 
     windowshutter.battery = 1  # maxcube-api MAX_DEVICE_BATTERY_LOW
