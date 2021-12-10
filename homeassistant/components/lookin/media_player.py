@@ -118,11 +118,13 @@ class LookinMedia(LookinPowerEntity, MediaPlayerEntity):
         for function_name, feature in _FUNCTION_NAME_TO_FEATURE.items():
             if function_name in self._function_names:
                 self._attr_supported_features |= feature
+                self._attr_name = self._remote.name
         self._async_update_from_data()
 
     @property
     def _remote(self) -> Remote:
         return cast(Remote, self.coordinator.data)
+
     async def async_volume_up(self) -> None:
         """Turn volume up for media player."""
         await self._async_send_command("volup")
@@ -157,12 +159,6 @@ class LookinMedia(LookinPowerEntity, MediaPlayerEntity):
         self._attr_state = STATE_ON
         self.async_write_ha_state()
 
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        name: str = self._remote.name
-        return name
-
     def _update_from_status(self, status: str) -> None:
         """Update media property from status.
 
@@ -191,6 +187,8 @@ class LookinMedia(LookinPowerEntity, MediaPlayerEntity):
         """Process an update pushed via UDP."""
         LOGGER.debug("Processing push message for %s: %s", self.entity_id, event)
         await self.coordinator.async_refresh()
+        self._attr_name = self._remote.name
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Call when the entity is added to hass."""
