@@ -13,6 +13,7 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     SensorEntity,
 )
+from homeassistant.components.sensor.helpers import async_parse_date_datetime
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_FORCE_UPDATE,
@@ -186,4 +187,6 @@ class RestSensor(RestEntity, SensorEntity):
                 value, None
             )
 
-        self._state = value
+        self._state = async_parse_date_datetime(
+            value, self.entity_id, self.device_class
+        )
