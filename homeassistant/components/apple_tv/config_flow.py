@@ -165,7 +165,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         unique_id = get_unique_id(service_type, name, properties)
         if unique_id is None:
             return self.async_abort(reason="unknown")
-        self.scan_filter = discovery_info.host
+        self.scan_filter = host
 
         await self._async_aggregate_discoveries(host, unique_id, service_type)
         # Scan for the device in order to extract _all_ unique identifiers assigned to
