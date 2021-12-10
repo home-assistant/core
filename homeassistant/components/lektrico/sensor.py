@@ -254,9 +254,6 @@ class LektricoSensor(CoordinatorEntity, SensorEntity):
         friendly_name: str,
     ) -> None:
         """Initialize Lektrico charger."""
-        # if _lektrico_device.coordinator is None:
-        #     super()
-        # else:
         super().__init__(_lektrico_device.coordinator)
         self.charger = charger
         self.friendly_name = friendly_name
