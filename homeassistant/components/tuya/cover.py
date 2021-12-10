@@ -315,7 +315,10 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
             {"code": self.entity_description.key, "value": value}
         ]
 
-        if (self.entity_description.set_position) is not None:
+        if (
+            self.entity_description.set_position is not None
+            and self._set_position_type is not None
+        ):
             commands.append(
                 {
                     "code": self.entity_description.set_position,
@@ -339,7 +342,10 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
             {"code": self.entity_description.key, "value": value}
         ]
 
-        if (self.entity_description.set_position) is not None:
+        if (
+            self.entity_description.set_position is not None
+            and self._set_position_type is not None
+        ):
             commands.append(
                 {
                     "code": self.entity_description.set_position,
