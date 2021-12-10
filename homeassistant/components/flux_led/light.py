@@ -1,4 +1,4 @@
-"""Support for FluxLED/MagicHome lights."""
+"""Support for Magic Home lights."""
 from __future__ import annotations
 
 import ast

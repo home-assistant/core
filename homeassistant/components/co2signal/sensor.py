@@ -10,8 +10,8 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
-    STATE_CLASS_MEASUREMENT,
     SensorEntity,
+    SensorStateClass,
 )
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -84,7 +84,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class CO2Sensor(update_coordinator.CoordinatorEntity[CO2SignalResponse], SensorEntity):
     """Implementation of the CO2Signal sensor."""
 
-    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_icon = "mdi:molecule-co2"
 
     def __init__(

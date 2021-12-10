@@ -42,7 +42,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for FluxLED/MagicHome Integration."""
+    """Handle a config flow for Magic Home Integration."""
 
     VERSION = 1
 
@@ -237,7 +237,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FluxLEDDiscovery:
         """Try to connect."""
         self._async_abort_entries_match({CONF_HOST: host})
-        if device := await async_discover_device(self.hass, host):
+        if (device := await async_discover_device(self.hass, host)) and device[
+            ATTR_MODEL_DESCRIPTION
+        ]:
+            # Older models do not return enough information
+            # to build the model description via UDP so we have
+            # to fallback to making a tcp connection to avoid
+            # identifying the device as the chip model number
+            # AKA `HF-LPB100-ZJ200`
             return device
         bulb = async_wifi_bulb_for_host(host)
         try:
