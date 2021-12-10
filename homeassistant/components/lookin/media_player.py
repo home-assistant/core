@@ -123,12 +123,6 @@ class LookinMedia(LookinPowerEntity, MediaPlayerEntity):
     @property
     def _remote(self) -> Remote:
         return cast(Remote, self.coordinator.data)
-
-    @property
-    def state(self) -> str | None:
-        """State of the player."""
-        return self._state
-
     async def async_volume_up(self) -> None:
         """Turn volume up for media player."""
         await self._async_send_command("volup")
