@@ -1763,6 +1763,23 @@ def slugify(value, separator="_"):
     return slugify_util(value, separator=separator)
 
 
+def ternary(
+    value: Any, if_true: Any = True, if_false: Any = False, if_none: Any = _SENTINEL
+) -> Any:
+    """Ternary function/filter that allow for common if/else constructs.
+
+    Examples:
+        {{ is_state("device_tracker.frenck", "home") | ternary("yes", "no") }}
+        {{ ternary(1==2, "yes", "no") }}
+        {{ (1 == 1) | ternary("yes", "no") }}
+    """
+    if value is None and if_none is not _SENTINEL:
+        return if_none
+    if bool(value):
+        return if_true
+    return if_false
+
+
 @contextmanager
 def set_template(template_str: str, action: str) -> Generator:
     """Store template being parsed or rendered in a Contextvar to aid error handling."""
@@ -1877,6 +1894,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["int"] = forgiving_int_filter
         self.filters["relative_time"] = relative_time
         self.filters["slugify"] = slugify
+        self.filters["ternary"] = ternary
         self.globals["log"] = logarithm
         self.globals["sin"] = sine
         self.globals["cos"] = cosine
@@ -1906,6 +1924,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["pack"] = struct_pack
         self.globals["unpack"] = struct_unpack
         self.globals["slugify"] = slugify
+        self.globals["ternary"] = ternary
         self.tests["match"] = regex_match
         self.tests["search"] = regex_search
 
