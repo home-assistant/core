@@ -21,6 +21,7 @@ from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.location import find_coordinates
 import homeassistant.util.dt as dt_util
 
 from .const import (
@@ -36,7 +37,6 @@ from .const import (
     DOMAIN,
     TRACKABLE_DOMAINS,
 )
-from .helpers import get_location_from_entity, resolve_zone
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -213,17 +213,10 @@ class GoogleTravelTimeSensor(SensorEntity):
 
         # Convert device_trackers to google friendly location
         if hasattr(self, "_origin_entity_id"):
-            self._origin = get_location_from_entity(
-                self.hass, _LOGGER, self._origin_entity_id
-            )
+            self._origin = find_coordinates(self.hass, self._origin_entity_id)
 
         if hasattr(self, "_destination_entity_id"):
-            self._destination = get_location_from_entity(
-                self.hass, _LOGGER, self._destination_entity_id
-            )
-
-        self._destination = resolve_zone(self.hass, self._destination)
-        self._origin = resolve_zone(self.hass, self._origin)
+            self._destination = find_coordinates(self.hass, self._destination_entity_id)
 
         if self._destination is not None and self._origin is not None:
             self._matrix = distance_matrix(
