@@ -6,7 +6,8 @@ from datetime import timedelta
 import logging
 from typing import Any, Final, cast
 
-from aiolookin import Climate, MeteoSensor, SensorID
+from aiolookin import Climate, MeteoSensor
+from aiolookin.models import UDPCommandType, UDPEvent
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
@@ -116,6 +117,7 @@ async def async_setup_entry(
 class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
     """An aircon or heat pump."""
 
+    _attr_current_humidity: float | None = None  # type: ignore
     _attr_temperature_unit = TEMP_CELSIUS
     _attr_supported_features: int = SUPPORT_FLAGS
     _attr_fan_modes: list[str] = LOOKIN_FAN_MODE_IDX_TO_HASS
@@ -198,6 +200,7 @@ class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
     def _async_update_from_data(self) -> None:
         """Update attrs from data."""
         meteo_data: MeteoSensor = self._meteo_coordinator.data
+
         self._attr_current_temperature = meteo_data.temperature
         self._attr_current_humidity = int(meteo_data.humidity)
         self._attr_target_temperature = self._climate.temp_celsius
@@ -206,26 +209,40 @@ class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
         self._attr_hvac_mode = LOOKIN_HVAC_MODE_IDX_TO_HASS[self._climate.hvac_mode]
 
     @callback
+    def _async_update_meteo_from_value(self, event: UDPEvent) -> None:
+        """Update temperature and humidity from UDP event."""
+        self._attr_current_temperature = float(int(event.value[:4], 16)) / 10
+        self._attr_current_humidity = float(int(event.value[-4:], 16)) / 10
+
+    @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._async_update_from_data()
         super()._handle_coordinator_update()
 
     @callback
-    def _async_push_update(self, msg: dict[str, str]) -> None:
+    def _async_push_update(self, event: UDPEvent) -> None:
         """Process an update pushed via UDP."""
-        LOGGER.debug("Processing push message for %s: %s", self.entity_id, msg)
-        self._climate.update_from_status(msg["value"])
+        LOGGER.debug("Processing push message for %s: %s", self.entity_id, event)
+        self._climate.update_from_status(event.value)
         self.coordinator.async_set_updated_data(self._climate)
 
     async def async_added_to_hass(self) -> None:
         """Call when the entity is added to hass."""
         self.async_on_remove(
-            self._lookin_udp_subs.subscribe_sensor(
-                self._lookin_device.id, SensorID.IR, self._uuid, self._async_push_update
+            self._lookin_udp_subs.subscribe_event(
+                self._lookin_device.id,
+                UDPCommandType.ir,
+                self._uuid,
+                self._async_push_update,
             )
         )
         self.async_on_remove(
-            self._meteo_coordinator.async_add_listener(self._handle_coordinator_update)
+            self._lookin_udp_subs.subscribe_event(
+                self._lookin_device.id,
+                UDPCommandType.meteo,
+                None,
+                self._async_update_meteo_from_value,
+            )
         )
         return await super().async_added_to_hass()
