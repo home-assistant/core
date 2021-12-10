@@ -14,9 +14,10 @@ from .helpers import hostname_to_uid
 
 async def _async_has_devices(hass: HomeAssistant) -> bool:
     """Return if Sonos devices have been seen recently with SSDP."""
-    ssdp_scanner = hass.data[SSDP_DOMAIN]
-    results = await ssdp_scanner.async_get_discovery_info_by_st(UPNP_ST)
-    return bool(results)
+    if ssdp_scanner := hass.data.get(SSDP_DOMAIN):
+        results = await ssdp_scanner.async_get_discovery_info_by_st(UPNP_ST)
+        return bool(results)
+    return False
 
 
 class SonosDiscoveryFlowHandler(DiscoveryFlowHandler):
