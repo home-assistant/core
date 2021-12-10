@@ -649,7 +649,7 @@ class ThermostatHVACAction(Sensor, id_suffix="hvac_action"):
     manufacturers="Sinope Technologies",
     stop_on_match_group=CHANNEL_THERMOSTAT,
 )
-class ThermostatHVACAction(ThermostatHVACAction):
+class SinopeHVACAction(ThermostatHVACAction):
     """Sinope Thermostat HVAC action sensor."""
 
     @property
