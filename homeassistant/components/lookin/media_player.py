@@ -112,22 +112,18 @@ class LookinMedia(LookinPowerEntity, MediaPlayerEntity):
         """Init the lookin media player."""
         self._attr_device_class = device_class
         self._attr_supported_features: int = 0
-        self._state: str | None = None
-        self._is_muted: bool = False
+        self._attr_state = None
+        self._attr_is_volume_muted: bool = False
         super().__init__(coordinator, uuid, device, lookin_data)
         for function_name, feature in _FUNCTION_NAME_TO_FEATURE.items():
             if function_name in self._function_names:
                 self._attr_supported_features |= feature
+                self._attr_name = self._remote.name
         self._async_update_from_data()
 
     @property
     def _remote(self) -> Remote:
         return cast(Remote, self.coordinator.data)
-
-    @property
-    def state(self) -> str | None:
-        """State of the player."""
-        return self._state
 
     async def async_volume_up(self) -> None:
         """Turn volume up for media player."""
@@ -148,28 +144,20 @@ class LookinMedia(LookinPowerEntity, MediaPlayerEntity):
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
         await self._async_send_command("mute")
-        self._is_muted = not self._is_muted
+        self._attr_is_volume_muted = not self.is_volume_muted
+        self.async_write_ha_state()
 
     async def async_turn_off(self) -> None:
         """Turn the media player off."""
         await self._async_send_command(self._power_off_command)
-        self._state = STATE_STANDBY
+        self._attr_state = STATE_STANDBY
+        self.async_write_ha_state()
 
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
         await self._async_send_command(self._power_on_command)
-        self._state = STATE_ON
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        name: str = self._remote.name
-        return name
-
-    @property
-    def is_volume_muted(self) -> bool | None:
-        """Boolean if volume is currently muted."""
-        return self._is_muted
+        self._attr_state = STATE_ON
+        self.async_write_ha_state()
 
     def _update_from_status(self, status: str) -> None:
         """Update media property from status.
@@ -185,8 +173,8 @@ class LookinMedia(LookinPowerEntity, MediaPlayerEntity):
         state = status[0]
         mute = status[2]
 
-        self._state = STATE_STANDBY if state == "1" else STATE_ON
-        self._is_muted = mute == "0"
+        self._attr_state = STATE_STANDBY if state == "1" else STATE_ON
+        self._attr_is_volume_muted = mute == "0"
 
     def _async_push_update(self, event: UDPEvent) -> None:
         """Process an update pushed via UDP."""
@@ -199,6 +187,7 @@ class LookinMedia(LookinPowerEntity, MediaPlayerEntity):
         """Process an update pushed via UDP."""
         LOGGER.debug("Processing push message for %s: %s", self.entity_id, event)
         await self.coordinator.async_refresh()
+        self._attr_name = self._remote.name
 
     async def async_added_to_hass(self) -> None:
         """Call when the entity is added to hass."""
