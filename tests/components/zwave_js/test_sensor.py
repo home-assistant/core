@@ -5,11 +5,7 @@ from zwave_js_server.const.command_class.meter import MeterType
 from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
 
-from homeassistant.components.sensor import (
-    ATTR_STATE_CLASS,
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
-)
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
 from homeassistant.components.zwave_js.const import (
     ATTR_METER_TYPE,
     ATTR_METER_TYPE_NAME,
@@ -90,7 +86,7 @@ async def test_energy_sensors(hass, hank_binary_switch, integration):
     assert state.state == "0.0"
     assert state.attributes["unit_of_measurement"] == POWER_WATT
     assert state.attributes["device_class"] == DEVICE_CLASS_POWER
-    assert state.attributes["state_class"] == STATE_CLASS_MEASUREMENT
+    assert state.attributes["state_class"] == SensorStateClass.MEASUREMENT
 
     state = hass.states.get(ENERGY_SENSOR)
 
@@ -98,7 +94,7 @@ async def test_energy_sensors(hass, hank_binary_switch, integration):
     assert state.state == "0.16"
     assert state.attributes["unit_of_measurement"] == ENERGY_KILO_WATT_HOUR
     assert state.attributes["device_class"] == DEVICE_CLASS_ENERGY
-    assert state.attributes["state_class"] == STATE_CLASS_TOTAL_INCREASING
+    assert state.attributes["state_class"] == SensorStateClass.TOTAL_INCREASING
 
     state = hass.states.get(VOLTAGE_SENSOR)
 
@@ -296,7 +292,7 @@ async def test_meter_attributes(
     assert state.attributes[ATTR_METER_TYPE] == MeterType.ELECTRIC.value
     assert state.attributes[ATTR_METER_TYPE_NAME] == MeterType.ELECTRIC.name
     assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_ENERGY
-    assert state.attributes[ATTR_STATE_CLASS] == STATE_CLASS_TOTAL_INCREASING
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.TOTAL_INCREASING
 
 
 async def test_special_meters(hass, aeon_smart_switch_6_state, client, integration):
@@ -358,9 +354,9 @@ async def test_special_meters(hass, aeon_smart_switch_6_state, client, integrati
     state = hass.states.get("sensor.smart_switch_6_electric_consumed_kvah_10")
     assert state
     assert ATTR_DEVICE_CLASS not in state.attributes
-    assert state.attributes[ATTR_STATE_CLASS] == STATE_CLASS_TOTAL_INCREASING
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.TOTAL_INCREASING
 
     state = hass.states.get("sensor.smart_switch_6_electric_consumed_kva_reactive_11")
     assert state
     assert ATTR_DEVICE_CLASS not in state.attributes
-    assert state.attributes[ATTR_STATE_CLASS] == STATE_CLASS_MEASUREMENT
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT

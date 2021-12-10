@@ -2,11 +2,7 @@
 import pytest
 
 from homeassistant.components.p1_monitor.const import DOMAIN
-from homeassistant.components.sensor import (
-    ATTR_STATE_CLASS,
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
-)
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
@@ -44,7 +40,7 @@ async def test_smartmeter(
     assert entry.unique_id == f"{entry_id}_smartmeter_power_consumption"
     assert state.state == "877"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Power Consumption"
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == POWER_WATT
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_POWER
     assert ATTR_ICON not in state.attributes
@@ -58,7 +54,7 @@ async def test_smartmeter(
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME) == "Energy Consumption - High Tariff"
     )
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL_INCREASING
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_KILO_WATT_HOUR
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_ENERGY
     assert ATTR_ICON not in state.attributes
@@ -101,7 +97,7 @@ async def test_phases(
     assert entry.unique_id == f"{entry_id}_phases_voltage_phase_l1"
     assert state.state == "233.6"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Voltage Phase L1"
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ELECTRIC_POTENTIAL_VOLT
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_VOLTAGE
     assert ATTR_ICON not in state.attributes
@@ -113,7 +109,7 @@ async def test_phases(
     assert entry.unique_id == f"{entry_id}_phases_current_phase_l1"
     assert state.state == "1.6"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Current Phase L1"
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ELECTRIC_CURRENT_AMPERE
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_CURRENT
     assert ATTR_ICON not in state.attributes
@@ -125,7 +121,7 @@ async def test_phases(
     assert entry.unique_id == f"{entry_id}_phases_power_consumed_phase_l1"
     assert state.state == "315"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Power Consumed Phase L1"
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == POWER_WATT
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_POWER
     assert ATTR_ICON not in state.attributes
@@ -157,7 +153,7 @@ async def test_settings(
     assert entry.unique_id == f"{entry_id}_settings_energy_consumption_price_low"
     assert state.state == "0.20522"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Energy Consumption Price - Low"
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}"
@@ -170,7 +166,7 @@ async def test_settings(
     assert entry.unique_id == f"{entry_id}_settings_energy_production_price_low"
     assert state.state == "0.20522"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Energy Production Price - Low"
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}"

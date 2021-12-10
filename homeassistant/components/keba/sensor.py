@@ -5,10 +5,9 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
@@ -55,7 +54,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 name="Charging Power",
                 native_unit_of_measurement=POWER_KILO_WATT,
                 device_class=DEVICE_CLASS_POWER,
-                state_class=STATE_CLASS_MEASUREMENT,
+                state_class=SensorStateClass.MEASUREMENT,
             ),
         ),
         KebaSensor(
@@ -76,7 +75,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 name="Total Energy",
                 native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
                 device_class=DEVICE_CLASS_ENERGY,
-                state_class=STATE_CLASS_TOTAL_INCREASING,
+                state_class=SensorStateClass.TOTAL_INCREASING,
             ),
         ),
     ]

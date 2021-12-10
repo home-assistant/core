@@ -2,10 +2,9 @@
 from __future__ import annotations
 
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.const import (
     DEVICE_CLASS_CURRENT,
@@ -34,7 +33,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=DEVICE_CLASS_TEMPERATURE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="voltage",
@@ -47,14 +46,14 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="Amps",
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
         device_class=DEVICE_CLASS_CURRENT,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="watts",
         name="Watts",
         native_unit_of_measurement=POWER_WATT,
         device_class=DEVICE_CLASS_POWER,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="charge_time",
@@ -67,7 +66,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="Energy added",
         native_unit_of_measurement=ENERGY_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
 )
 

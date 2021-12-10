@@ -9,9 +9,7 @@ from homeassistant.components.energy import data
 from homeassistant.components.sensor import (
     ATTR_LAST_RESET,
     ATTR_STATE_CLASS,
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL,
-    STATE_CLASS_TOTAL_INCREASING,
+    SensorStateClass,
 )
 from homeassistant.components.sensor.recorder import compile_statistics
 from homeassistant.const import (
@@ -108,7 +106,7 @@ async def test_cost_sensor_price_entity_total_increasing(
 
     energy_attributes = {
         ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-        ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
+        ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
     }
 
     await async_init_recorder_component(hass)
@@ -167,7 +165,7 @@ async def test_cost_sensor_price_entity_total_increasing(
     assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_MONETARY
     if initial_cost != "unknown":
         assert state.attributes[ATTR_LAST_RESET] == last_reset_cost_sensor
-    assert state.attributes[ATTR_STATE_CLASS] == STATE_CLASS_TOTAL
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.TOTAL
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "EUR"
 
     # Optional late setup of dependent entities
@@ -184,7 +182,7 @@ async def test_cost_sensor_price_entity_total_increasing(
     assert state.state == "0.0"
     assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_MONETARY
     assert state.attributes[ATTR_LAST_RESET] == last_reset_cost_sensor
-    assert state.attributes[ATTR_STATE_CLASS] == STATE_CLASS_TOTAL
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.TOTAL
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "EUR"
 
     # # Unique ID temp disabled
@@ -372,7 +370,7 @@ async def test_cost_sensor_price_entity_total(
     assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_MONETARY
     if initial_cost != "unknown":
         assert state.attributes[ATTR_LAST_RESET] == last_reset_cost_sensor
-    assert state.attributes[ATTR_STATE_CLASS] == STATE_CLASS_TOTAL
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.TOTAL
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "EUR"
 
     # Optional late setup of dependent entities
@@ -389,7 +387,7 @@ async def test_cost_sensor_price_entity_total(
     assert state.state == "0.0"
     assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_MONETARY
     assert state.attributes[ATTR_LAST_RESET] == last_reset_cost_sensor
-    assert state.attributes[ATTR_STATE_CLASS] == STATE_CLASS_TOTAL
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.TOTAL
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "EUR"
 
     # # Unique ID temp disabled
@@ -577,7 +575,7 @@ async def test_cost_sensor_price_entity_total_no_reset(
     assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_MONETARY
     if initial_cost != "unknown":
         assert state.attributes[ATTR_LAST_RESET] == last_reset_cost_sensor
-    assert state.attributes[ATTR_STATE_CLASS] == STATE_CLASS_TOTAL
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.TOTAL
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "EUR"
 
     # Optional late setup of dependent entities
@@ -594,7 +592,7 @@ async def test_cost_sensor_price_entity_total_no_reset(
     assert state.state == "0.0"
     assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_MONETARY
     assert state.attributes[ATTR_LAST_RESET] == last_reset_cost_sensor
-    assert state.attributes[ATTR_STATE_CLASS] == STATE_CLASS_TOTAL
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.TOTAL
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "EUR"
 
     # # Unique ID temp disabled
@@ -677,7 +675,7 @@ async def test_cost_sensor_handle_energy_units(
     """Test energy cost price from sensor entity."""
     energy_attributes = {
         ATTR_UNIT_OF_MEASUREMENT: energy_unit,
-        ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
+        ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
     }
     energy_data = data.EnergyManager.default_preferences()
     energy_data["energy_sources"].append(
@@ -743,11 +741,11 @@ async def test_cost_sensor_handle_price_units(
     """Test energy cost price from sensor entity."""
     energy_attributes = {
         ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-        ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
+        ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
     }
     price_attributes = {
         ATTR_UNIT_OF_MEASUREMENT: price_unit,
-        ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+        ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
     }
     energy_data = data.EnergyManager.default_preferences()
     energy_data["energy_sources"].append(
@@ -804,7 +802,7 @@ async def test_cost_sensor_handle_gas(hass, hass_storage) -> None:
     """Test gas cost price from sensor entity."""
     energy_attributes = {
         ATTR_UNIT_OF_MEASUREMENT: VOLUME_CUBIC_METERS,
-        ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
+        ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
     }
     energy_data = data.EnergyManager.default_preferences()
     energy_data["energy_sources"].append(
@@ -853,7 +851,7 @@ async def test_cost_sensor_handle_gas_kwh(hass, hass_storage) -> None:
     """Test gas cost price from sensor entity."""
     energy_attributes = {
         ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
-        ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
+        ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
     }
     energy_data = data.EnergyManager.default_preferences()
     energy_data["energy_sources"].append(
@@ -960,7 +958,7 @@ async def test_cost_sensor_wrong_state_class(
     assert state.state == STATE_UNKNOWN
 
 
-@pytest.mark.parametrize("state_class", [STATE_CLASS_MEASUREMENT])
+@pytest.mark.parametrize("state_class", [SensorStateClass.MEASUREMENT])
 async def test_cost_sensor_state_class_measurement_no_reset(
     hass, hass_storage, caplog, state_class
 ) -> None:

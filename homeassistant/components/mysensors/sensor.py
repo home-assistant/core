@@ -8,10 +8,9 @@ from awesomeversion import AwesomeVersion
 from homeassistant.components import mysensors
 from homeassistant.components.sensor import (
     DOMAIN,
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -51,13 +50,13 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "V_TEMP": SensorEntityDescription(
         key="V_TEMP",
         device_class=DEVICE_CLASS_TEMPERATURE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "V_HUM": SensorEntityDescription(
         key="V_HUM",
         native_unit_of_measurement=PERCENTAGE,
         device_class=DEVICE_CLASS_HUMIDITY,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "V_DIMMER": SensorEntityDescription(
         key="V_DIMMER",
@@ -116,13 +115,13 @@ SENSORS: dict[str, SensorEntityDescription] = {
         key="V_WATT",
         native_unit_of_measurement=POWER_WATT,
         device_class=DEVICE_CLASS_POWER,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "V_KWH": SensorEntityDescription(
         key="V_KWH",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     "V_LIGHT_LEVEL": SensorEntityDescription(
         key="V_LIGHT_LEVEL",
@@ -151,7 +150,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
         key="V_LEVEL_S_LIGHT_LEVEL",
         native_unit_of_measurement=LIGHT_LUX,
         device_class=DEVICE_CLASS_ILLUMINANCE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "V_LEVEL_S_MOISTURE": SensorEntityDescription(
         key="V_LEVEL_S_MOISTURE",
@@ -162,13 +161,13 @@ SENSORS: dict[str, SensorEntityDescription] = {
         key="V_VOLTAGE",
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         device_class=DEVICE_CLASS_VOLTAGE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "V_CURRENT": SensorEntityDescription(
         key="V_CURRENT",
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
         device_class=DEVICE_CLASS_CURRENT,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "V_PH": SensorEntityDescription(
         key="V_PH",

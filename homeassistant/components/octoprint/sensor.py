@@ -6,7 +6,7 @@ import logging
 
 from pyoctoprintapi import OctoprintJobInfo, OctoprintPrinterInfo
 
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
@@ -207,7 +207,7 @@ class OctoPrintTemperatureSensor(OctoPrintSensorBase):
 
     _attr_native_unit_of_measurement = TEMP_CELSIUS
     _attr_device_class = DEVICE_CLASS_TEMPERATURE
-    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
         self,

@@ -7,7 +7,7 @@ from google_nest_sdm.device import Device
 from google_nest_sdm.device_traits import HumidityTrait, TemperatureTrait
 from google_nest_sdm.exceptions import GoogleNestException
 
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
@@ -58,7 +58,7 @@ class SensorBase(SensorEntity):
     """Representation of a dynamically updated Sensor."""
 
     _attr_shoud_poll = False
-    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, device: Device) -> None:
         """Initialize the sensor."""

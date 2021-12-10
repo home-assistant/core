@@ -7,7 +7,7 @@ from homeassistant.components.forecast_solar.const import DOMAIN
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     DOMAIN as SENSOR_DOMAIN,
-    STATE_CLASS_MEASUREMENT,
+    SensorStateClass,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -100,7 +100,7 @@ async def test_sensors(
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME) == "Estimated Power Production - Now"
     )
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == POWER_WATT
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_POWER
     assert ATTR_ICON not in state.attributes

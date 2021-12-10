@@ -5,9 +5,8 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
+    SensorStateClass,
 )
 from homeassistant.const import DEGREE, PRESSURE_MBAR, TEMP_CELSIUS
 from homeassistant.core import callback
@@ -74,9 +73,9 @@ class NumberEntity(WiffiEntity, SensorEntity):
         self._value = metric.value
 
         if self._is_measurement_entity():
-            self._attr_state_class = STATE_CLASS_MEASUREMENT
+            self._attr_state_class = SensorStateClass.MEASUREMENT
         elif self._is_metered_entity():
-            self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
+            self._attr_state_class = SensorStateClass.TOTAL_INCREASING
 
         self.reset_expiration_date()
 

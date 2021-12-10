@@ -7,9 +7,9 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
-    STATE_CLASS_MEASUREMENT,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
@@ -35,27 +35,27 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     SENSOR_TEMPERATURE: SensorEntityDescription(
         key=SENSOR_TEMPERATURE,
         device_class=DEVICE_CLASS_TEMPERATURE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SENSOR_AMBIENT_TEMPERATURE: SensorEntityDescription(
         key=SENSOR_AMBIENT_TEMPERATURE,
         device_class=DEVICE_CLASS_TEMPERATURE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SENSOR_HUMIDITY: SensorEntityDescription(
         key=SENSOR_HUMIDITY,
         device_class=DEVICE_CLASS_HUMIDITY,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SENSOR_MOISTURE: SensorEntityDescription(
         key=SENSOR_MOISTURE,
         device_class=SENSOR_MOISTURE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SENSOR_LIGHT: SensorEntityDescription(
         key=SENSOR_LIGHT,
         device_class=DEVICE_CLASS_ILLUMINANCE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 }
 

@@ -3,10 +3,9 @@ from __future__ import annotations
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_ENERGY,
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
     StateType,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -30,21 +29,21 @@ SENSORS = (
         name="Eagle-200 Meter Power Demand",
         native_unit_of_measurement=POWER_KILO_WATT,
         device_class=DEVICE_CLASS_POWER,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="zigbee:CurrentSummationDelivered",
         name="Eagle-200 Total Meter Energy Delivered",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="zigbee:CurrentSummationReceived",
         name="Eagle-200 Total Meter Energy Received",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
 )
 
@@ -64,7 +63,7 @@ async def async_setup_entry(
                     key="zigbee:Price",
                     name="Meter Price",
                     native_unit_of_measurement=f"{coordinator.data['zigbee:PriceCurrency']}/{ENERGY_KILO_WATT_HOUR}",
-                    state_class=STATE_CLASS_MEASUREMENT,
+                    state_class=SensorStateClass.MEASUREMENT,
                 ),
             )
         )

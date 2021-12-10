@@ -19,10 +19,9 @@ from zwave_js_server.util.command_class.meter import get_meter_type
 from homeassistant.components.sensor import (
     DEVICE_CLASS_ENERGY,
     DOMAIN as SENSOR_DOMAIN,
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.components.zwave_js.discovery_data_template import (
     NumericSensorDataTemplateData,
@@ -94,74 +93,74 @@ ENTITY_DESCRIPTION_KEY_MAP: dict[str, SensorEntityDescription] = {
         ENTITY_DESC_KEY_BATTERY,
         device_class=DEVICE_CLASS_BATTERY,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     ENTITY_DESC_KEY_CURRENT: SensorEntityDescription(
         ENTITY_DESC_KEY_CURRENT,
         device_class=DEVICE_CLASS_CURRENT,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     ENTITY_DESC_KEY_VOLTAGE: SensorEntityDescription(
         ENTITY_DESC_KEY_VOLTAGE,
         device_class=DEVICE_CLASS_VOLTAGE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     ENTITY_DESC_KEY_ENERGY_MEASUREMENT: SensorEntityDescription(
         ENTITY_DESC_KEY_ENERGY_MEASUREMENT,
         device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     ENTITY_DESC_KEY_ENERGY_TOTAL_INCREASING: SensorEntityDescription(
         ENTITY_DESC_KEY_ENERGY_TOTAL_INCREASING,
         device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     ENTITY_DESC_KEY_POWER: SensorEntityDescription(
         ENTITY_DESC_KEY_POWER,
         device_class=DEVICE_CLASS_POWER,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     ENTITY_DESC_KEY_POWER_FACTOR: SensorEntityDescription(
         ENTITY_DESC_KEY_POWER_FACTOR,
         device_class=DEVICE_CLASS_POWER_FACTOR,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     ENTITY_DESC_KEY_CO: SensorEntityDescription(
         ENTITY_DESC_KEY_CO,
         device_class=DEVICE_CLASS_CO,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     ENTITY_DESC_KEY_CO2: SensorEntityDescription(
         ENTITY_DESC_KEY_CO2,
         device_class=DEVICE_CLASS_CO2,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     ENTITY_DESC_KEY_HUMIDITY: SensorEntityDescription(
         ENTITY_DESC_KEY_HUMIDITY,
         device_class=DEVICE_CLASS_HUMIDITY,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     ENTITY_DESC_KEY_ILLUMINANCE: SensorEntityDescription(
         ENTITY_DESC_KEY_ILLUMINANCE,
         device_class=DEVICE_CLASS_ILLUMINANCE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     ENTITY_DESC_KEY_PRESSURE: SensorEntityDescription(
         ENTITY_DESC_KEY_PRESSURE,
         device_class=DEVICE_CLASS_PRESSURE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     ENTITY_DESC_KEY_SIGNAL_STRENGTH: SensorEntityDescription(
         ENTITY_DESC_KEY_SIGNAL_STRENGTH,
         device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     ENTITY_DESC_KEY_TEMPERATURE: SensorEntityDescription(
         ENTITY_DESC_KEY_TEMPERATURE,
         device_class=DEVICE_CLASS_TEMPERATURE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     ENTITY_DESC_KEY_TARGET_TEMPERATURE: SensorEntityDescription(
         ENTITY_DESC_KEY_TARGET_TEMPERATURE,
@@ -171,12 +170,12 @@ ENTITY_DESCRIPTION_KEY_MAP: dict[str, SensorEntityDescription] = {
     ENTITY_DESC_KEY_MEASUREMENT: SensorEntityDescription(
         ENTITY_DESC_KEY_MEASUREMENT,
         device_class=None,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     ENTITY_DESC_KEY_TOTAL_INCREASING: SensorEntityDescription(
         ENTITY_DESC_KEY_TOTAL_INCREASING,
         device_class=None,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
 }
 

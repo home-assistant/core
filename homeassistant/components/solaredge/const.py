@@ -2,11 +2,7 @@
 from datetime import timedelta
 import logging
 
-from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL,
-    STATE_CLASS_TOTAL_INCREASING,
-)
+from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import (
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
@@ -43,7 +39,7 @@ SENSOR_TYPES = [
         json_key="lifeTimeData",
         name="Lifetime energy",
         icon="mdi:solar-power",
-        state_class=STATE_CLASS_TOTAL,
+        state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=ENERGY_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
     ),
@@ -79,7 +75,7 @@ SENSOR_TYPES = [
         json_key="currentPower",
         name="Current Power",
         icon="mdi:solar-power",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=POWER_WATT,
         device_class=DEVICE_CLASS_POWER,
     ),
@@ -151,7 +147,7 @@ SENSOR_TYPES = [
         json_key="Purchased",
         name="Imported Energy",
         entity_registry_enabled_default=False,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=ENERGY_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
     ),
@@ -160,7 +156,7 @@ SENSOR_TYPES = [
         json_key="Production",
         name="Production Energy",
         entity_registry_enabled_default=False,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=ENERGY_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
     ),
@@ -169,7 +165,7 @@ SENSOR_TYPES = [
         json_key="Consumption",
         name="Consumption Energy",
         entity_registry_enabled_default=False,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=ENERGY_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
     ),
@@ -178,7 +174,7 @@ SENSOR_TYPES = [
         json_key="SelfConsumption",
         name="SelfConsumption Energy",
         entity_registry_enabled_default=False,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=ENERGY_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
     ),
@@ -187,7 +183,7 @@ SENSOR_TYPES = [
         json_key="FeedIn",
         name="Exported Energy",
         entity_registry_enabled_default=False,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=ENERGY_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
     ),
@@ -196,7 +192,7 @@ SENSOR_TYPES = [
         json_key="STORAGE",
         name="Storage Level",
         entity_registry_enabled_default=False,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
     ),
 ]

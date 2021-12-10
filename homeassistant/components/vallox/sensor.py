@@ -5,9 +5,9 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
@@ -144,7 +144,7 @@ SENSORS: tuple[ValloxSensorEntityDescription, ...] = (
         name="Fan Speed",
         metric_key="A_CYC_FAN_SPEED",
         icon="mdi:fan",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         sensor_type=ValloxFanSpeedSensor,
     ),
@@ -167,7 +167,7 @@ SENSORS: tuple[ValloxSensorEntityDescription, ...] = (
         name="Extract Air",
         metric_key="A_CYC_TEMP_EXTRACT_AIR",
         device_class=DEVICE_CLASS_TEMPERATURE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=TEMP_CELSIUS,
     ),
     ValloxSensorEntityDescription(
@@ -175,7 +175,7 @@ SENSORS: tuple[ValloxSensorEntityDescription, ...] = (
         name="Exhaust Air",
         metric_key="A_CYC_TEMP_EXHAUST_AIR",
         device_class=DEVICE_CLASS_TEMPERATURE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=TEMP_CELSIUS,
     ),
     ValloxSensorEntityDescription(
@@ -183,7 +183,7 @@ SENSORS: tuple[ValloxSensorEntityDescription, ...] = (
         name="Outdoor Air",
         metric_key="A_CYC_TEMP_OUTDOOR_AIR",
         device_class=DEVICE_CLASS_TEMPERATURE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=TEMP_CELSIUS,
     ),
     ValloxSensorEntityDescription(
@@ -191,7 +191,7 @@ SENSORS: tuple[ValloxSensorEntityDescription, ...] = (
         name="Supply Air",
         metric_key="A_CYC_TEMP_SUPPLY_AIR",
         device_class=DEVICE_CLASS_TEMPERATURE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=TEMP_CELSIUS,
     ),
     ValloxSensorEntityDescription(
@@ -199,7 +199,7 @@ SENSORS: tuple[ValloxSensorEntityDescription, ...] = (
         name="Humidity",
         metric_key="A_CYC_RH_VALUE",
         device_class=DEVICE_CLASS_HUMIDITY,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
     ),
     ValloxSensorEntityDescription(
@@ -207,7 +207,7 @@ SENSORS: tuple[ValloxSensorEntityDescription, ...] = (
         name="Efficiency",
         metric_key="A_CYC_EXTRACT_EFFICIENCY",
         icon="mdi:gauge",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
     ),
     ValloxSensorEntityDescription(
@@ -215,7 +215,7 @@ SENSORS: tuple[ValloxSensorEntityDescription, ...] = (
         name="CO2",
         metric_key="A_CYC_CO2_VALUE",
         device_class=DEVICE_CLASS_CO2,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
     ),
 )

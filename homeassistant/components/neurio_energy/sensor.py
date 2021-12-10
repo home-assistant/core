@@ -10,9 +10,8 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
+    SensorStateClass,
 )
 from homeassistant.const import (
     CONF_API_KEY,
@@ -149,11 +148,11 @@ class NeurioEnergy(SensorEntity):
         if sensor_type == ACTIVE_TYPE:
             self._unit_of_measurement = POWER_WATT
             self._attr_device_class = DEVICE_CLASS_POWER
-            self._attr_state_class = STATE_CLASS_MEASUREMENT
+            self._attr_state_class = SensorStateClass.MEASUREMENT
         elif sensor_type == DAILY_TYPE:
             self._unit_of_measurement = ENERGY_KILO_WATT_HOUR
             self._attr_device_class = DEVICE_CLASS_ENERGY
-            self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
+            self._attr_state_class = SensorStateClass.TOTAL_INCREASING
 
     @property
     def name(self):

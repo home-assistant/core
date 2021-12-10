@@ -8,7 +8,7 @@ from huisbaasje.const import (
     SOURCE_TYPE_GAS,
 )
 
-from homeassistant.components.sensor import STATE_CLASS_TOTAL_INCREASING
+from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import (
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_GAS,
@@ -77,7 +77,7 @@ SENSORS_INFO = [
         "unit_of_measurement": ENERGY_KILO_WATT_HOUR,
         "source_type": SOURCE_TYPE_ELECTRICITY_IN,
         "sensor_type": SENSOR_TYPE_THIS_DAY,
-        "state_class": STATE_CLASS_TOTAL_INCREASING,
+        "state_class": SensorStateClass.TOTAL_INCREASING,
         "precision": 3,
     },
     {
@@ -86,7 +86,7 @@ SENSORS_INFO = [
         "unit_of_measurement": ENERGY_KILO_WATT_HOUR,
         "source_type": SOURCE_TYPE_ELECTRICITY_IN_LOW,
         "sensor_type": SENSOR_TYPE_THIS_DAY,
-        "state_class": STATE_CLASS_TOTAL_INCREASING,
+        "state_class": SensorStateClass.TOTAL_INCREASING,
         "precision": 3,
     },
     {
@@ -95,7 +95,7 @@ SENSORS_INFO = [
         "unit_of_measurement": ENERGY_KILO_WATT_HOUR,
         "source_type": SOURCE_TYPE_ELECTRICITY_OUT,
         "sensor_type": SENSOR_TYPE_THIS_DAY,
-        "state_class": STATE_CLASS_TOTAL_INCREASING,
+        "state_class": SensorStateClass.TOTAL_INCREASING,
         "precision": 3,
     },
     {
@@ -104,7 +104,7 @@ SENSORS_INFO = [
         "unit_of_measurement": ENERGY_KILO_WATT_HOUR,
         "source_type": SOURCE_TYPE_ELECTRICITY_OUT_LOW,
         "sensor_type": SENSOR_TYPE_THIS_DAY,
-        "state_class": STATE_CLASS_TOTAL_INCREASING,
+        "state_class": SensorStateClass.TOTAL_INCREASING,
         "precision": 3,
     },
     {
@@ -152,7 +152,7 @@ SENSORS_INFO = [
         "unit_of_measurement": VOLUME_CUBIC_METERS,
         "source_type": SOURCE_TYPE_GAS,
         "sensor_type": SENSOR_TYPE_THIS_DAY,
-        "state_class": STATE_CLASS_TOTAL_INCREASING,
+        "state_class": SensorStateClass.TOTAL_INCREASING,
         "icon": "mdi:counter",
         "precision": 1,
     },
@@ -162,7 +162,7 @@ SENSORS_INFO = [
         "unit_of_measurement": VOLUME_CUBIC_METERS,
         "source_type": SOURCE_TYPE_GAS,
         "sensor_type": SENSOR_TYPE_THIS_WEEK,
-        "state_class": STATE_CLASS_TOTAL_INCREASING,
+        "state_class": SensorStateClass.TOTAL_INCREASING,
         "icon": "mdi:counter",
         "precision": 1,
     },
@@ -172,7 +172,7 @@ SENSORS_INFO = [
         "unit_of_measurement": VOLUME_CUBIC_METERS,
         "source_type": SOURCE_TYPE_GAS,
         "sensor_type": SENSOR_TYPE_THIS_MONTH,
-        "state_class": STATE_CLASS_TOTAL_INCREASING,
+        "state_class": SensorStateClass.TOTAL_INCREASING,
         "icon": "mdi:counter",
         "precision": 1,
     },
@@ -182,7 +182,7 @@ SENSORS_INFO = [
         "unit_of_measurement": VOLUME_CUBIC_METERS,
         "source_type": SOURCE_TYPE_GAS,
         "sensor_type": SENSOR_TYPE_THIS_YEAR,
-        "state_class": STATE_CLASS_TOTAL_INCREASING,
+        "state_class": SensorStateClass.TOTAL_INCREASING,
         "icon": "mdi:counter",
         "precision": 1,
     },

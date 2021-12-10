@@ -10,9 +10,9 @@ from aiolyric.objects.device import LyricDevice
 from aiolyric.objects.location import LyricLocation
 
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -82,7 +82,7 @@ async def async_setup_entry(
                             key=f"{device.macID}_indoor_temperature",
                             name="Indoor Temperature",
                             device_class=DEVICE_CLASS_TEMPERATURE,
-                            state_class=STATE_CLASS_MEASUREMENT,
+                            state_class=SensorStateClass.MEASUREMENT,
                             native_unit_of_measurement=hass.config.units.temperature_unit,
                             value=lambda device: device.indoorTemperature,
                         ),
@@ -98,7 +98,7 @@ async def async_setup_entry(
                             key=f"{device.macID}_outdoor_temperature",
                             name="Outdoor Temperature",
                             device_class=DEVICE_CLASS_TEMPERATURE,
-                            state_class=STATE_CLASS_MEASUREMENT,
+                            state_class=SensorStateClass.MEASUREMENT,
                             native_unit_of_measurement=hass.config.units.temperature_unit,
                             value=lambda device: device.outdoorTemperature,
                         ),
@@ -114,7 +114,7 @@ async def async_setup_entry(
                             key=f"{device.macID}_outdoor_humidity",
                             name="Outdoor Humidity",
                             device_class=DEVICE_CLASS_HUMIDITY,
-                            state_class=STATE_CLASS_MEASUREMENT,
+                            state_class=SensorStateClass.MEASUREMENT,
                             native_unit_of_measurement="%",
                             value=lambda device: device.displayedOutdoorHumidity,
                         ),

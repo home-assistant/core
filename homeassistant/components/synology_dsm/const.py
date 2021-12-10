@@ -15,10 +15,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_UPDATE,
     BinarySensorEntityDescription,
 )
-from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
-    SensorEntityDescription,
-)
+from homeassistant.components.sensor import SensorEntityDescription, SensorStateClass
 from homeassistant.components.switch import SwitchEntityDescription
 from homeassistant.const import (
     DATA_MEGABYTES,
@@ -150,7 +147,7 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:chip",
         entity_registry_enabled_default=False,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SynologyDSMSensorEntityDescription(
         api_key=SynoCoreUtilization.API_KEY,
@@ -158,7 +155,7 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         name="CPU Utilization (User)",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:chip",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SynologyDSMSensorEntityDescription(
         api_key=SynoCoreUtilization.API_KEY,
@@ -167,7 +164,7 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:chip",
         entity_registry_enabled_default=False,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SynologyDSMSensorEntityDescription(
         api_key=SynoCoreUtilization.API_KEY,
@@ -175,7 +172,7 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         name="CPU Utilization (Total)",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:chip",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SynologyDSMSensorEntityDescription(
         api_key=SynoCoreUtilization.API_KEY,
@@ -205,7 +202,7 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         name="Memory Usage (Real)",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:memory",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SynologyDSMSensorEntityDescription(
         api_key=SynoCoreUtilization.API_KEY,
@@ -214,7 +211,7 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         native_unit_of_measurement=DATA_MEGABYTES,
         icon="mdi:memory",
         entity_registry_enabled_default=False,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SynologyDSMSensorEntityDescription(
         api_key=SynoCoreUtilization.API_KEY,
@@ -223,7 +220,7 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         native_unit_of_measurement=DATA_MEGABYTES,
         icon="mdi:memory",
         entity_registry_enabled_default=False,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SynologyDSMSensorEntityDescription(
         api_key=SynoCoreUtilization.API_KEY,
@@ -231,7 +228,7 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         name="Memory Available (Swap)",
         native_unit_of_measurement=DATA_MEGABYTES,
         icon="mdi:memory",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SynologyDSMSensorEntityDescription(
         api_key=SynoCoreUtilization.API_KEY,
@@ -239,7 +236,7 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         name="Memory Available (Real)",
         native_unit_of_measurement=DATA_MEGABYTES,
         icon="mdi:memory",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SynologyDSMSensorEntityDescription(
         api_key=SynoCoreUtilization.API_KEY,
@@ -247,7 +244,7 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         name="Memory Total (Swap)",
         native_unit_of_measurement=DATA_MEGABYTES,
         icon="mdi:memory",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SynologyDSMSensorEntityDescription(
         api_key=SynoCoreUtilization.API_KEY,
@@ -255,7 +252,7 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         name="Memory Total (Real)",
         native_unit_of_measurement=DATA_MEGABYTES,
         icon="mdi:memory",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SynologyDSMSensorEntityDescription(
         api_key=SynoCoreUtilization.API_KEY,
@@ -263,7 +260,7 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         name="Upload Throughput",
         native_unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
         icon="mdi:upload",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SynologyDSMSensorEntityDescription(
         api_key=SynoCoreUtilization.API_KEY,
@@ -271,7 +268,7 @@ UTILISATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         name="Download Throughput",
         native_unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
         icon="mdi:download",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 STORAGE_VOL_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
@@ -288,7 +285,7 @@ STORAGE_VOL_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         native_unit_of_measurement=DATA_TERABYTES,
         icon="mdi:chart-pie",
         entity_registry_enabled_default=False,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SynologyDSMSensorEntityDescription(
         api_key=SynoStorage.API_KEY,
@@ -296,7 +293,7 @@ STORAGE_VOL_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         name="Used Space",
         native_unit_of_measurement=DATA_TERABYTES,
         icon="mdi:chart-pie",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SynologyDSMSensorEntityDescription(
         api_key=SynoStorage.API_KEY,
@@ -345,7 +342,7 @@ STORAGE_DISK_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         name="Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=DEVICE_CLASS_TEMPERATURE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
 )
@@ -357,7 +354,7 @@ INFORMATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
         name="Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=DEVICE_CLASS_TEMPERATURE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SynologyDSMSensorEntityDescription(

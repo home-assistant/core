@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Final
 
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT
+from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     DEVICE_CLASS_AQI,
@@ -55,48 +55,48 @@ SENSOR_TYPES: Final[tuple[GiosSensorEntityDescription, ...]] = (
         name="C6H6",
         icon="mdi:molecule",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     GiosSensorEntityDescription(
         key=ATTR_CO,
         name="CO",
         device_class=DEVICE_CLASS_CO,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     GiosSensorEntityDescription(
         key=ATTR_NO2,
         name="NO2",
         device_class=DEVICE_CLASS_NITROGEN_DIOXIDE,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     GiosSensorEntityDescription(
         key=ATTR_O3,
         name="O3",
         device_class=DEVICE_CLASS_OZONE,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     GiosSensorEntityDescription(
         key=ATTR_PM10,
         name="PM10",
         device_class=DEVICE_CLASS_PM10,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     GiosSensorEntityDescription(
         key=ATTR_PM25,
         name="PM2.5",
         device_class=DEVICE_CLASS_PM25,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     GiosSensorEntityDescription(
         key=ATTR_SO2,
         name="SO2",
         device_class=DEVICE_CLASS_SULPHUR_DIOXIDE,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )

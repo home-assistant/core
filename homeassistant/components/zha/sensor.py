@@ -23,9 +23,8 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
     DOMAIN,
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -227,7 +226,7 @@ class Battery(Sensor):
 
     SENSOR_ATTR = "battery_percentage_remaining"
     _device_class = DEVICE_CLASS_BATTERY
-    _state_class = STATE_CLASS_MEASUREMENT
+    _state_class = SensorStateClass.MEASUREMENT
     _unit = PERCENTAGE
     _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
 
@@ -278,7 +277,7 @@ class ElectricalMeasurement(Sensor):
 
     SENSOR_ATTR = "active_power"
     _device_class = DEVICE_CLASS_POWER
-    _state_class = STATE_CLASS_MEASUREMENT
+    _state_class = SensorStateClass.MEASUREMENT
     _unit = POWER_WATT
     _div_mul_prefix = "ac_power"
 
@@ -371,7 +370,7 @@ class Humidity(Sensor):
     SENSOR_ATTR = "measured_value"
     _device_class = DEVICE_CLASS_HUMIDITY
     _divisor = 100
-    _state_class = STATE_CLASS_MEASUREMENT
+    _state_class = SensorStateClass.MEASUREMENT
     _unit = PERCENTAGE
 
 
@@ -382,7 +381,7 @@ class SoilMoisture(Sensor):
     SENSOR_ATTR = "measured_value"
     _device_class = DEVICE_CLASS_HUMIDITY
     _divisor = 100
-    _state_class = STATE_CLASS_MEASUREMENT
+    _state_class = SensorStateClass.MEASUREMENT
     _unit = PERCENTAGE
 
 
@@ -393,7 +392,7 @@ class LeafWetness(Sensor):
     SENSOR_ATTR = "measured_value"
     _device_class = DEVICE_CLASS_HUMIDITY
     _divisor = 100
-    _state_class = STATE_CLASS_MEASUREMENT
+    _state_class = SensorStateClass.MEASUREMENT
     _unit = PERCENTAGE
 
 
@@ -417,7 +416,7 @@ class SmartEnergyMetering(Sensor):
 
     SENSOR_ATTR: int | str = "instantaneous_demand"
     _device_class: str | None = DEVICE_CLASS_POWER
-    _state_class: str | None = STATE_CLASS_MEASUREMENT
+    _state_class: SensorStateClass | None = SensorStateClass.MEASUREMENT
 
     unit_of_measure_map = {
         0x00: POWER_WATT,
@@ -461,7 +460,7 @@ class SmartEnergySummation(SmartEnergyMetering, id_suffix="summation_delivered")
 
     SENSOR_ATTR: int | str = "current_summ_delivered"
     _device_class: str | None = DEVICE_CLASS_ENERGY
-    _state_class: str = STATE_CLASS_TOTAL_INCREASING
+    _state_class: SensorStateClass = SensorStateClass.TOTAL_INCREASING
 
     unit_of_measure_map = {
         0x00: ENERGY_KILO_WATT_HOUR,
@@ -495,7 +494,7 @@ class Pressure(Sensor):
     SENSOR_ATTR = "measured_value"
     _device_class = DEVICE_CLASS_PRESSURE
     _decimals = 0
-    _state_class = STATE_CLASS_MEASUREMENT
+    _state_class = SensorStateClass.MEASUREMENT
     _unit = PRESSURE_HPA
 
 
@@ -506,7 +505,7 @@ class Temperature(Sensor):
     SENSOR_ATTR = "measured_value"
     _device_class = DEVICE_CLASS_TEMPERATURE
     _divisor = 100
-    _state_class = STATE_CLASS_MEASUREMENT
+    _state_class = SensorStateClass.MEASUREMENT
     _unit = TEMP_CELSIUS
 
 

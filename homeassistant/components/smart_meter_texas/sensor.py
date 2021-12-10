@@ -1,7 +1,7 @@
 """Support for Smart Meter Texas sensors."""
 from smart_meter_texas import Meter
 
-from homeassistant.components.sensor import STATE_CLASS_TOTAL_INCREASING, SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.const import CONF_ADDRESS, DEVICE_CLASS_ENERGY, ENERGY_KILO_WATT_HOUR
 from homeassistant.core import callback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -34,7 +34,7 @@ class SmartMeterTexasSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
     """Representation of an Smart Meter Texas sensor."""
 
     _attr_device_class = DEVICE_CLASS_ENERGY
-    _attr_state_class = STATE_CLASS_TOTAL_INCREASING
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
     _attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
 
     def __init__(self, meter: Meter, coordinator: DataUpdateCoordinator) -> None:

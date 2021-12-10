@@ -4,10 +4,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -139,7 +138,7 @@ SENSOR_ENTITIES: tuple[ToonSensorEntityDescription, ...] = (
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=DEVICE_CLASS_TEMPERATURE,
         entity_registry_enabled_default=False,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         cls=ToonDisplayDeviceSensor,
     ),
     ToonSensorEntityDescription(
@@ -150,7 +149,7 @@ SENSOR_ENTITIES: tuple[ToonSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         device_class=DEVICE_CLASS_HUMIDITY,
         entity_registry_enabled_default=False,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         cls=ToonDisplayDeviceSensor,
     ),
     ToonSensorEntityDescription(
@@ -196,7 +195,7 @@ SENSOR_ENTITIES: tuple[ToonSensorEntityDescription, ...] = (
         section="gas_usage",
         measurement="meter",
         native_unit_of_measurement=VOLUME_CUBIC_METERS,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=DEVICE_CLASS_GAS,
         cls=ToonGasMeterDeviceSensor,
     ),
@@ -254,7 +253,7 @@ SENSOR_ENTITIES: tuple[ToonSensorEntityDescription, ...] = (
         measurement="meter_high",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         cls=ToonElectricityMeterDeviceSensor,
     ),
     ToonSensorEntityDescription(
@@ -264,7 +263,7 @@ SENSOR_ENTITIES: tuple[ToonSensorEntityDescription, ...] = (
         measurement="meter_low",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         cls=ToonElectricityMeterDeviceSensor,
     ),
     ToonSensorEntityDescription(
@@ -274,7 +273,7 @@ SENSOR_ENTITIES: tuple[ToonSensorEntityDescription, ...] = (
         measurement="current",
         native_unit_of_measurement=POWER_WATT,
         device_class=DEVICE_CLASS_POWER,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         cls=ToonElectricityMeterDeviceSensor,
     ),
     ToonSensorEntityDescription(
@@ -284,7 +283,7 @@ SENSOR_ENTITIES: tuple[ToonSensorEntityDescription, ...] = (
         measurement="meter_produced_high",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         cls=ToonElectricityMeterDeviceSensor,
     ),
     ToonSensorEntityDescription(
@@ -294,7 +293,7 @@ SENSOR_ENTITIES: tuple[ToonSensorEntityDescription, ...] = (
         measurement="meter_produced_low",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         cls=ToonElectricityMeterDeviceSensor,
     ),
     ToonSensorEntityDescription(
@@ -335,7 +334,7 @@ SENSOR_ENTITIES: tuple[ToonSensorEntityDescription, ...] = (
         native_unit_of_measurement=VOLUME_CUBIC_METERS,
         icon="mdi:water",
         entity_registry_enabled_default=False,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         cls=ToonWaterMeterDeviceSensor,
     ),
     ToonSensorEntityDescription(
@@ -346,7 +345,7 @@ SENSOR_ENTITIES: tuple[ToonSensorEntityDescription, ...] = (
         native_unit_of_measurement=VOLUME_LMIN,
         icon="mdi:water-pump",
         entity_registry_enabled_default=False,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         cls=ToonWaterMeterDeviceSensor,
     ),
     ToonSensorEntityDescription(
@@ -369,7 +368,7 @@ SENSOR_ENTITIES_SOLAR: tuple[ToonSensorEntityDescription, ...] = (
         measurement="current_solar",
         native_unit_of_measurement=POWER_WATT,
         device_class=DEVICE_CLASS_POWER,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         cls=ToonSolarDeviceSensor,
     ),
     ToonSensorEntityDescription(
@@ -388,7 +387,7 @@ SENSOR_ENTITIES_SOLAR: tuple[ToonSensorEntityDescription, ...] = (
         measurement="current_produced",
         native_unit_of_measurement=POWER_WATT,
         device_class=DEVICE_CLASS_POWER,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         cls=ToonSolarDeviceSensor,
     ),
     ToonSensorEntityDescription(
@@ -398,7 +397,7 @@ SENSOR_ENTITIES_SOLAR: tuple[ToonSensorEntityDescription, ...] = (
         measurement="day_produced_solar",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         cls=ToonSolarDeviceSensor,
     ),
     ToonSensorEntityDescription(
@@ -438,7 +437,7 @@ SENSOR_ENTITIES_SOLAR: tuple[ToonSensorEntityDescription, ...] = (
         measurement="current_covered_by_solar",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:solar-power",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         cls=ToonSolarDeviceSensor,
     ),
 )
@@ -452,7 +451,7 @@ SENSOR_ENTITIES_BOILER: tuple[ToonSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:percent",
         entity_registry_enabled_default=False,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         cls=ToonBoilerDeviceSensor,
     ),
 )

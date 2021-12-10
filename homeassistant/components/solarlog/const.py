@@ -3,11 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL,
-    SensorEntityDescription,
-)
+from homeassistant.components.sensor import SensorEntityDescription, SensorStateClass
 from homeassistant.const import (
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
@@ -45,28 +41,28 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
         name="power AC",
         icon="mdi:solar-power",
         native_unit_of_measurement=POWER_WATT,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SolarLogSensorEntityDescription(
         key="power_dc",
         name="power DC",
         icon="mdi:solar-power",
         native_unit_of_measurement=POWER_WATT,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SolarLogSensorEntityDescription(
         key="voltage_ac",
         name="voltage AC",
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         device_class=DEVICE_CLASS_VOLTAGE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SolarLogSensorEntityDescription(
         key="voltage_dc",
         name="voltage DC",
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         device_class=DEVICE_CLASS_VOLTAGE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SolarLogSensorEntityDescription(
         key="yield_day",
@@ -101,7 +97,7 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
         name="yield total",
         icon="mdi:solar-power",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        state_class=STATE_CLASS_TOTAL,
+        state_class=SensorStateClass.TOTAL,
         factor=0.001,
     ),
     SolarLogSensorEntityDescription(
@@ -109,7 +105,7 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
         name="consumption AC",
         native_unit_of_measurement=POWER_WATT,
         device_class=DEVICE_CLASS_POWER,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SolarLogSensorEntityDescription(
         key="consumption_day",
@@ -144,7 +140,7 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
         name="consumption total",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_TOTAL,
+        state_class=SensorStateClass.TOTAL,
         factor=0.001,
     ),
     SolarLogSensorEntityDescription(
@@ -160,7 +156,7 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
         icon="mdi:solar-power",
         native_unit_of_measurement=POWER_WATT,
         device_class=DEVICE_CLASS_POWER,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SolarLogSensorEntityDescription(
         key="capacity",
@@ -168,7 +164,7 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
         icon="mdi:solar-power",
         native_unit_of_measurement=PERCENTAGE,
         device_class=DEVICE_CLASS_POWER_FACTOR,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         factor=100,
     ),
     SolarLogSensorEntityDescription(
@@ -176,7 +172,7 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
         name="efficiency",
         native_unit_of_measurement=PERCENTAGE,
         device_class=DEVICE_CLASS_POWER_FACTOR,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         factor=100,
     ),
     SolarLogSensorEntityDescription(
@@ -185,14 +181,14 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
         icon="mdi:solar-power",
         native_unit_of_measurement=POWER_WATT,
         device_class=DEVICE_CLASS_POWER,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SolarLogSensorEntityDescription(
         key="usage",
         name="usage",
         native_unit_of_measurement=PERCENTAGE,
         device_class=DEVICE_CLASS_POWER_FACTOR,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         factor=100,
     ),
 )

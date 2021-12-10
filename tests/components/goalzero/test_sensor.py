@@ -1,12 +1,7 @@
 """Sensor tests for the Goalzero integration."""
 from homeassistant.components.goalzero.const import DEFAULT_NAME
 from homeassistant.components.goalzero.sensor import SENSOR_TYPES
-from homeassistant.components.sensor import (
-    ATTR_STATE_CLASS,
-    DOMAIN,
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
-)
+from homeassistant.components.sensor import ATTR_STATE_CLASS, DOMAIN, SensorStateClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -44,32 +39,32 @@ async def test_sensors(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker)
     assert state.state == "0.0"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_POWER
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == POWER_WATT
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     state = hass.states.get(f"sensor.{DEFAULT_NAME}_amps_in")
     assert state.state == "0.0"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_CURRENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ELECTRIC_CURRENT_AMPERE
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     state = hass.states.get(f"sensor.{DEFAULT_NAME}_watts_out")
     assert state.state == "50.5"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_POWER
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == POWER_WATT
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     state = hass.states.get(f"sensor.{DEFAULT_NAME}_amps_out")
     assert state.state == "2.1"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_CURRENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ELECTRIC_CURRENT_AMPERE
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     state = hass.states.get(f"sensor.{DEFAULT_NAME}_wh_out")
     assert state.state == "5.23"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_ENERGY
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_WATT_HOUR
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL_INCREASING
     state = hass.states.get(f"sensor.{DEFAULT_NAME}_wh_stored")
     assert state.state == "1330"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_ENERGY
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_WATT_HOUR
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     state = hass.states.get(f"sensor.{DEFAULT_NAME}_volts")
     assert state.state == "12.0"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_VOLTAGE

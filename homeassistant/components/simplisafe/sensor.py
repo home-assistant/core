@@ -5,7 +5,7 @@ from simplipy.device import DeviceTypes
 from simplipy.device.sensor.v3 import SensorV3
 from simplipy.system.v3 import SystemV3
 
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant, callback
@@ -39,7 +39,7 @@ class SimplisafeFreezeSensor(SimpliSafeEntity, SensorEntity):
 
     _attr_device_class = DEVICE_CLASS_TEMPERATURE
     _attr_native_unit_of_measurement = TEMP_FAHRENHEIT
-    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
         self, simplisafe: SimpliSafe, system: SystemV3, sensor: SensorV3

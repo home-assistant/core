@@ -9,9 +9,8 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
+    SensorStateClass,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -178,9 +177,9 @@ class SAJsensor(SensorEntity):
         self._state = self._sensor.value
 
         if pysaj_sensor.name in ("current_power", "temperature"):
-            self._attr_state_class = STATE_CLASS_MEASUREMENT
+            self._attr_state_class = SensorStateClass.MEASUREMENT
         if pysaj_sensor.name == "total_yield":
-            self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
+            self._attr_state_class = SensorStateClass.TOTAL_INCREASING
 
     @property
     def name(self):

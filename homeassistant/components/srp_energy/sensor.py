@@ -5,7 +5,7 @@ import logging
 import async_timeout
 from requests.exceptions import ConnectionError as ConnectError, HTTPError, Timeout
 
-from homeassistant.components.sensor import STATE_CLASS_TOTAL_INCREASING, SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     DEVICE_CLASS_ENERGY,
@@ -149,7 +149,7 @@ class SrpEntity(SensorEntity):
     @property
     def state_class(self):
         """Return the state class."""
-        return STATE_CLASS_TOTAL_INCREASING
+        return SensorStateClass.TOTAL_INCREASING
 
     async def async_added_to_hass(self):
         """When entity is added to hass."""

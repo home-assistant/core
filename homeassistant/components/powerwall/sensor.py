@@ -3,11 +3,7 @@ import logging
 
 from tesla_powerwall import MeterType
 
-from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
-    SensorEntity,
-)
+from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_ENERGY,
@@ -108,7 +104,7 @@ class PowerWallChargeSensor(PowerWallEntity, SensorEntity):
 class PowerWallEnergySensor(PowerWallEntity, SensorEntity):
     """Representation of an Powerwall Energy sensor."""
 
-    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = POWER_KILO_WATT
     _attr_device_class = DEVICE_CLASS_POWER
 
@@ -155,7 +151,7 @@ class PowerWallEnergySensor(PowerWallEntity, SensorEntity):
 class PowerWallEnergyDirectionSensor(PowerWallEntity, SensorEntity):
     """Representation of an Powerwall Direction Energy sensor."""
 
-    _attr_state_class = STATE_CLASS_TOTAL_INCREASING
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
     _attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
     _attr_device_class = DEVICE_CLASS_ENERGY
 

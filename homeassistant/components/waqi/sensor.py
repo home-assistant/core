@@ -7,7 +7,7 @@ import aiohttp
 import voluptuous as vol
 from waqiasync import WaqiClient
 
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_TEMPERATURE,
@@ -103,7 +103,7 @@ class WaqiSensor(SensorEntity):
     _attr_icon = ATTR_ICON
     _attr_native_unit_of_measurement = ATTR_UNIT
     _attr_device_class = DEVICE_CLASS_AQI
-    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, client, station):
         """Initialize the sensor."""

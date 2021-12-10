@@ -8,7 +8,7 @@ pubsub subscriber.
 from google_nest_sdm.device import Device
 from google_nest_sdm.event import EventMessage
 
-from homeassistant.components.sensor import ATTR_STATE_CLASS, STATE_CLASS_MEASUREMENT
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -60,14 +60,14 @@ async def test_thermostat_device(hass):
     assert temperature.state == "25.1"
     assert temperature.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
     assert temperature.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_TEMPERATURE
-    assert temperature.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert temperature.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
     humidity = hass.states.get("sensor.my_sensor_humidity")
     assert humidity is not None
     assert humidity.state == "35"
     assert humidity.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
     assert humidity.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_HUMIDITY
-    assert humidity.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert humidity.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
     registry = er.async_get(hass)
     entry = registry.async_get("sensor.my_sensor_temperature")

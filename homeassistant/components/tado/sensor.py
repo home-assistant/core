@@ -1,7 +1,7 @@
 """Support for Tado sensors for each zone."""
 import logging
 
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
@@ -157,7 +157,7 @@ class TadoHomeSensor(TadoHomeEntity, SensorEntity):
     def state_class(self):
         """Return the state class."""
         if self.home_variable in ["outdoor temperature", "solar percentage"]:
-            return STATE_CLASS_MEASUREMENT
+            return SensorStateClass.MEASUREMENT
         return None
 
     @callback
@@ -270,7 +270,7 @@ class TadoZoneSensor(TadoZoneEntity, SensorEntity):
     def state_class(self):
         """Return the state class."""
         if self.zone_variable in ["ac", "heating", "humidity", "temperature"]:
-            return STATE_CLASS_MEASUREMENT
+            return SensorStateClass.MEASUREMENT
         return None
 
     @callback

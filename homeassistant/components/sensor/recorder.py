@@ -30,10 +30,8 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_MONETARY,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL,
-    STATE_CLASS_TOTAL_INCREASING,
     STATE_CLASSES,
+    SensorStateClass,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -70,19 +68,19 @@ from . import ATTR_LAST_RESET, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 DEVICE_CLASS_STATISTICS: dict[str, dict[str, set[str]]] = {
-    STATE_CLASS_MEASUREMENT: {
+    SensorStateClass.MEASUREMENT: {
         # Deprecated, support will be removed in Home Assistant 2021.11
         DEVICE_CLASS_ENERGY: {"sum"},
         DEVICE_CLASS_GAS: {"sum"},
         DEVICE_CLASS_MONETARY: {"sum"},
     },
-    STATE_CLASS_TOTAL: {},
-    STATE_CLASS_TOTAL_INCREASING: {},
+    SensorStateClass.TOTAL: {},
+    SensorStateClass.TOTAL_INCREASING: {},
 }
 DEFAULT_STATISTICS = {
-    STATE_CLASS_MEASUREMENT: {"mean", "min", "max"},
-    STATE_CLASS_TOTAL: {"sum"},
-    STATE_CLASS_TOTAL_INCREASING: {"sum"},
+    SensorStateClass.MEASUREMENT: {"mean", "min", "max"},
+    SensorStateClass.TOTAL: {"sum"},
+    SensorStateClass.TOTAL_INCREASING: {"sum"},
 }
 
 # Normalized units which will be stored in the statistics table
@@ -529,13 +527,13 @@ def _compile_statistics(  # noqa: C901
                 # Deprecated, will be removed in Home Assistant 2021.11
                 if (
                     "last_reset" not in state.attributes
-                    and state_class == STATE_CLASS_MEASUREMENT
+                    and state_class == SensorStateClass.MEASUREMENT
                 ):
                     continue
 
                 reset = False
                 if (
-                    state_class != STATE_CLASS_TOTAL_INCREASING
+                    state_class != SensorStateClass.TOTAL_INCREASING
                     and (
                         last_reset := _last_reset_as_utc_isoformat(
                             state.attributes.get("last_reset"), entity_id
@@ -565,7 +563,7 @@ def _compile_statistics(  # noqa: C901
                         entity_id,
                         fstate,
                     )
-                elif state_class == STATE_CLASS_TOTAL_INCREASING:
+                elif state_class == SensorStateClass.TOTAL_INCREASING:
                     try:
                         if old_state is None or reset_detected(
                             hass, entity_id, fstate, new_state, state
@@ -598,7 +596,7 @@ def _compile_statistics(  # noqa: C901
                     new_state = fstate
 
             # Deprecated, will be removed in Home Assistant 2021.11
-            if last_reset is None and state_class == STATE_CLASS_MEASUREMENT:
+            if last_reset is None and state_class == SensorStateClass.MEASUREMENT:
                 # No valid updates
                 continue
 
@@ -640,7 +638,7 @@ def list_statistic_ids(hass: HomeAssistant, statistic_type: str | None = None) -
         if (
             "sum" in provided_statistics
             and ATTR_LAST_RESET not in state.attributes
-            and state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+            and state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
         ):
             continue
 

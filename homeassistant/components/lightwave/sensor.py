@@ -1,5 +1,5 @@
 """Support for LightwaveRF TRV - Associated Battery."""
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.const import CONF_NAME, DEVICE_CLASS_BATTERY, PERCENTAGE
 
 from . import CONF_SERIAL, LIGHTWAVE_LINK
@@ -27,7 +27,7 @@ class LightwaveBattery(SensorEntity):
 
     _attr_device_class = DEVICE_CLASS_BATTERY
     _attr_native_unit_of_measurement = PERCENTAGE
-    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, name, lwlink, serial):
         """Initialize the Lightwave Trv battery sensor."""

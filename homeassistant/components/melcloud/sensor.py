@@ -11,10 +11,9 @@ from pymelcloud.atw_device import Zone
 from homeassistant.components.sensor import (
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_TEMPERATURE,
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.const import ENERGY_KILO_WATT_HOUR, TEMP_CELSIUS
 
@@ -153,9 +152,9 @@ class MelDeviceSensor(SensorEntity):
         self._attr_unique_id = f"{api.device.serial}-{api.device.mac}-{description.key}"
 
         if description.device_class == DEVICE_CLASS_ENERGY:
-            self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
+            self._attr_state_class = SensorStateClass.TOTAL_INCREASING
         else:
-            self._attr_state_class = STATE_CLASS_MEASUREMENT
+            self._attr_state_class = SensorStateClass.MEASUREMENT
 
     @property
     def native_value(self):

@@ -8,9 +8,9 @@ from aiohomekit.model.characteristics import Characteristic, CharacteristicsType
 from aiohomekit.model.services import ServicesTypes
 
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -53,35 +53,35 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
         key=CharacteristicsTypes.Vendor.EVE_ENERGY_WATT,
         name="Real Time Energy",
         device_class=DEVICE_CLASS_POWER,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=POWER_WATT,
     ),
     CharacteristicsTypes.Vendor.KOOGEEK_REALTIME_ENERGY: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.Vendor.KOOGEEK_REALTIME_ENERGY,
         name="Real Time Energy",
         device_class=DEVICE_CLASS_POWER,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=POWER_WATT,
     ),
     CharacteristicsTypes.Vendor.KOOGEEK_REALTIME_ENERGY_2: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.Vendor.KOOGEEK_REALTIME_ENERGY_2,
         name="Real Time Energy",
         device_class=DEVICE_CLASS_POWER,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=POWER_WATT,
     ),
     CharacteristicsTypes.Vendor.EVE_DEGREE_AIR_PRESSURE: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.Vendor.EVE_DEGREE_AIR_PRESSURE,
         name="Air Pressure",
         device_class=DEVICE_CLASS_PRESSURE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PRESSURE_HPA,
     ),
     CharacteristicsTypes.TEMPERATURE_CURRENT: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.TEMPERATURE_CURRENT,
         name="Current Temperature",
         device_class=DEVICE_CLASS_TEMPERATURE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=TEMP_CELSIUS,
         # This sensor is only for temperature characteristics that are not part
         # of a temperature sensor service.
@@ -94,7 +94,7 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
         key=CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT,
         name="Current Humidity",
         device_class=DEVICE_CLASS_HUMIDITY,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         # This sensor is only for humidity characteristics that are not part
         # of a humidity sensor service.
@@ -107,48 +107,48 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
         key=CharacteristicsTypes.AIR_QUALITY,
         name="Air Quality",
         device_class=DEVICE_CLASS_AQI,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     CharacteristicsTypes.DENSITY_PM25: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.DENSITY_PM25,
         name="PM2.5 Density",
         device_class=DEVICE_CLASS_PM25,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     ),
     CharacteristicsTypes.DENSITY_PM10: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.DENSITY_PM10,
         name="PM10 Density",
         device_class=DEVICE_CLASS_PM10,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     ),
     CharacteristicsTypes.DENSITY_OZONE: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.DENSITY_OZONE,
         name="Ozone Density",
         device_class=DEVICE_CLASS_OZONE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     ),
     CharacteristicsTypes.DENSITY_NO2: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.DENSITY_NO2,
         name="Nitrogen Dioxide Density",
         device_class=DEVICE_CLASS_NITROGEN_DIOXIDE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     ),
     CharacteristicsTypes.DENSITY_SO2: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.DENSITY_SO2,
         name="Sulphur Dioxide Density",
         device_class=DEVICE_CLASS_SULPHUR_DIOXIDE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     ),
     CharacteristicsTypes.DENSITY_VOC: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.DENSITY_VOC,
         name="Volatile Organic Compound Density",
         device_class=DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     ),
 }

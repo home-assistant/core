@@ -6,11 +6,7 @@ from typing import Callable
 from mysensors.sensor import Sensor
 import pytest
 
-from homeassistant.components.sensor import (
-    ATTR_STATE_CLASS,
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
-)
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ICON,
@@ -73,7 +69,7 @@ async def test_power_sensor(
     assert state.state == "1200"
     assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_POWER
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == POWER_WATT
-    assert state.attributes[ATTR_STATE_CLASS] == STATE_CLASS_MEASUREMENT
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
 
 
 async def test_energy_sensor(
@@ -90,7 +86,7 @@ async def test_energy_sensor(
     assert state.state == "18000"
     assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_ENERGY
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == ENERGY_KILO_WATT_HOUR
-    assert state.attributes[ATTR_STATE_CLASS] == STATE_CLASS_TOTAL_INCREASING
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.TOTAL_INCREASING
 
 
 async def test_sound_sensor(
@@ -155,4 +151,4 @@ async def test_temperature_sensor(
     assert state.state == temperature
     assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_TEMPERATURE
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == unit
-    assert state.attributes[ATTR_STATE_CLASS] == STATE_CLASS_MEASUREMENT
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT

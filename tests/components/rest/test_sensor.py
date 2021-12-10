@@ -194,7 +194,7 @@ async def test_setup_get(hass):
                 "password": "my password",
                 "headers": {"Accept": CONTENT_TYPE_JSON},
                 "device_class": DEVICE_CLASS_TEMPERATURE,
-                "state_class": sensor.STATE_CLASS_MEASUREMENT,
+                "state_class": sensor.SensorStateClass.MEASUREMENT,
             }
         },
     )
@@ -215,7 +215,9 @@ async def test_setup_get(hass):
     assert state.state == ""
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
     assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_TEMPERATURE
-    assert state.attributes[sensor.ATTR_STATE_CLASS] == sensor.STATE_CLASS_MEASUREMENT
+    assert (
+        state.attributes[sensor.ATTR_STATE_CLASS] == sensor.SensorStateClass.MEASUREMENT
+    )
 
 
 @respx.mock

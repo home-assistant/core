@@ -3,8 +3,8 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_TEMPERATURE,
-    STATE_CLASS_MEASUREMENT,
     SensorEntity,
+    SensorStateClass,
 )
 from homeassistant.const import LIGHT_LUX, PERCENTAGE, TEMP_CELSIUS
 from homeassistant.core import callback
@@ -19,8 +19,8 @@ DEVICE_CLASS_MAP = {
     "lightSensor": DEVICE_CLASS_ILLUMINANCE,
 }
 STATE_CLASS_MAP = {
-    "temperatureSensor": STATE_CLASS_MEASUREMENT,
-    "humiditySensor": STATE_CLASS_MEASUREMENT,
+    "temperatureSensor": SensorStateClass.MEASUREMENT,
+    "humiditySensor": SensorStateClass.MEASUREMENT,
     "lightSensor": None,
 }
 UNIT_MAP = {

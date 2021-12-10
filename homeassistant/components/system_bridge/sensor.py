@@ -9,9 +9,9 @@ from typing import Final, cast
 from systembridge import Bridge
 
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -64,7 +64,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
     SystemBridgeSensorEntityDescription(
         key="cpu_speed",
         name="CPU Speed",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=FREQUENCY_GIGAHERTZ,
         icon="mdi:speedometer",
         value=lambda bridge: bridge.cpu.currentSpeed.avg,
@@ -74,7 +74,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         name="CPU Temperature",
         entity_registry_enabled_default=False,
         device_class=DEVICE_CLASS_TEMPERATURE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=TEMP_CELSIUS,
         value=lambda bridge: bridge.cpu.temperature.main,
     ),
@@ -83,28 +83,28 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         name="CPU Voltage",
         entity_registry_enabled_default=False,
         device_class=DEVICE_CLASS_VOLTAGE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         value=lambda bridge: bridge.cpu.cpu.voltage,
     ),
     SystemBridgeSensorEntityDescription(
         key="displays_connected",
         name="Displays Connected",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:monitor",
         value=lambda bridge: len(bridge.display.displays),
     ),
     SystemBridgeSensorEntityDescription(
         key="kernel",
         name="Kernel",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:devices",
         value=lambda bridge: bridge.os.kernel,
     ),
     SystemBridgeSensorEntityDescription(
         key="memory_free",
         name="Memory Free",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=DATA_GIGABYTES,
         icon="mdi:memory",
         value=lambda bridge: round(bridge.memory.free / 1000 ** 3, 2),
@@ -112,7 +112,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
     SystemBridgeSensorEntityDescription(
         key="memory_used_percentage",
         name="Memory Used %",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:memory",
         value=lambda bridge: round((bridge.memory.used / bridge.memory.total) * 100, 2),
@@ -121,7 +121,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         key="memory_used",
         name="Memory Used",
         entity_registry_enabled_default=False,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=DATA_GIGABYTES,
         icon="mdi:memory",
         value=lambda bridge: round(bridge.memory.used / 1000 ** 3, 2),
@@ -129,14 +129,14 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
     SystemBridgeSensorEntityDescription(
         key="os",
         name="Operating System",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:devices",
         value=lambda bridge: f"{bridge.os.distro} {bridge.os.release}",
     ),
     SystemBridgeSensorEntityDescription(
         key="processes_load",
         name="Load",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:percent",
         value=lambda bridge: round(bridge.processes.load.currentLoad, 2),
@@ -145,7 +145,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         key="processes_load_idle",
         name="Idle Load",
         entity_registry_enabled_default=False,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:percent",
         value=lambda bridge: round(bridge.processes.load.currentLoadIdle, 2),
@@ -154,7 +154,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         key="processes_load_system",
         name="System Load",
         entity_registry_enabled_default=False,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:percent",
         value=lambda bridge: round(bridge.processes.load.currentLoadSystem, 2),
@@ -163,7 +163,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         key="processes_load_user",
         name="User Load",
         entity_registry_enabled_default=False,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:percent",
         value=lambda bridge: round(bridge.processes.load.currentLoadUser, 2),
@@ -187,7 +187,7 @@ BATTERY_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         key="battery",
         name="Battery",
         device_class=DEVICE_CLASS_BATTERY,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         value=lambda bridge: bridge.battery.percent,
     ),
@@ -195,7 +195,7 @@ BATTERY_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         key="battery_time_remaining",
         name="Battery Time Remaining",
         device_class=DEVICE_CLASS_TIMESTAMP,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         value=lambda bridge: str(
             datetime.now() + timedelta(minutes=bridge.battery.timeRemaining)
         ),
@@ -221,7 +221,7 @@ async def async_setup_entry(
                 SystemBridgeSensorEntityDescription(
                     key=f"filesystem_{uid}",
                     name=f"{key} Space Used",
-                    state_class=STATE_CLASS_MEASUREMENT,
+                    state_class=SensorStateClass.MEASUREMENT,
                     native_unit_of_measurement=PERCENTAGE,
                     icon="mdi:harddisk",
                     value=lambda bridge, i=key: round(
@@ -244,7 +244,7 @@ async def async_setup_entry(
                 SystemBridgeSensorEntityDescription(
                     key=f"display_{name}_resolution_x",
                     name=f"Display {name} Resolution X",
-                    state_class=STATE_CLASS_MEASUREMENT,
+                    state_class=SensorStateClass.MEASUREMENT,
                     native_unit_of_measurement=PIXELS,
                     icon="mdi:monitor",
                     value=lambda bridge, i=index: bridge.display.displays[
@@ -257,7 +257,7 @@ async def async_setup_entry(
                 SystemBridgeSensorEntityDescription(
                     key=f"display_{name}_resolution_y",
                     name=f"Display {name} Resolution Y",
-                    state_class=STATE_CLASS_MEASUREMENT,
+                    state_class=SensorStateClass.MEASUREMENT,
                     native_unit_of_measurement=PIXELS,
                     icon="mdi:monitor",
                     value=lambda bridge, i=index: bridge.display.displays[
@@ -270,7 +270,7 @@ async def async_setup_entry(
                 SystemBridgeSensorEntityDescription(
                     key=f"display_{name}_refresh_rate",
                     name=f"Display {name} Refresh Rate",
-                    state_class=STATE_CLASS_MEASUREMENT,
+                    state_class=SensorStateClass.MEASUREMENT,
                     native_unit_of_measurement=FREQUENCY_HERTZ,
                     icon="mdi:monitor",
                     value=lambda bridge, i=index: bridge.display.displays[
@@ -296,7 +296,7 @@ async def async_setup_entry(
                         key=f"gpu_{index}_core_clock_speed",
                         name=f"{name} Clock Speed",
                         entity_registry_enabled_default=False,
-                        state_class=STATE_CLASS_MEASUREMENT,
+                        state_class=SensorStateClass.MEASUREMENT,
                         native_unit_of_measurement=FREQUENCY_MEGAHERTZ,
                         icon="mdi:speedometer",
                         value=lambda bridge, i=index: bridge.graphics.controllers[
@@ -310,7 +310,7 @@ async def async_setup_entry(
                         key=f"gpu_{index}_memory_clock_speed",
                         name=f"{name} Memory Clock Speed",
                         entity_registry_enabled_default=False,
-                        state_class=STATE_CLASS_MEASUREMENT,
+                        state_class=SensorStateClass.MEASUREMENT,
                         native_unit_of_measurement=FREQUENCY_MEGAHERTZ,
                         icon="mdi:speedometer",
                         value=lambda bridge, i=index: bridge.graphics.controllers[
@@ -323,7 +323,7 @@ async def async_setup_entry(
                     SystemBridgeSensorEntityDescription(
                         key=f"gpu_{index}_memory_free",
                         name=f"{name} Memory Free",
-                        state_class=STATE_CLASS_MEASUREMENT,
+                        state_class=SensorStateClass.MEASUREMENT,
                         native_unit_of_measurement=DATA_GIGABYTES,
                         icon="mdi:memory",
                         value=lambda bridge, i=index: round(
@@ -336,7 +336,7 @@ async def async_setup_entry(
                     SystemBridgeSensorEntityDescription(
                         key=f"gpu_{index}_memory_used_percentage",
                         name=f"{name} Memory Used %",
-                        state_class=STATE_CLASS_MEASUREMENT,
+                        state_class=SensorStateClass.MEASUREMENT,
                         native_unit_of_measurement=PERCENTAGE,
                         icon="mdi:memory",
                         value=lambda bridge, i=index: round(
@@ -355,7 +355,7 @@ async def async_setup_entry(
                         key=f"gpu_{index}_memory_used",
                         name=f"{name} Memory Used",
                         entity_registry_enabled_default=False,
-                        state_class=STATE_CLASS_MEASUREMENT,
+                        state_class=SensorStateClass.MEASUREMENT,
                         native_unit_of_measurement=DATA_GIGABYTES,
                         icon="mdi:memory",
                         value=lambda bridge, i=index: round(
@@ -369,7 +369,7 @@ async def async_setup_entry(
                         key=f"gpu_{index}_fan_speed",
                         name=f"{name} Fan Speed",
                         entity_registry_enabled_default=False,
-                        state_class=STATE_CLASS_MEASUREMENT,
+                        state_class=SensorStateClass.MEASUREMENT,
                         native_unit_of_measurement=PERCENTAGE,
                         icon="mdi:fan",
                         value=lambda bridge, i=index: bridge.graphics.controllers[
@@ -384,7 +384,7 @@ async def async_setup_entry(
                         name=f"{name} Power Usage",
                         entity_registry_enabled_default=False,
                         device_class=DEVICE_CLASS_POWER,
-                        state_class=STATE_CLASS_MEASUREMENT,
+                        state_class=SensorStateClass.MEASUREMENT,
                         native_unit_of_measurement=POWER_WATT,
                         value=lambda bridge, i=index: bridge.graphics.controllers[
                             i
@@ -398,7 +398,7 @@ async def async_setup_entry(
                         name=f"{name} Temperature",
                         entity_registry_enabled_default=False,
                         device_class=DEVICE_CLASS_TEMPERATURE,
-                        state_class=STATE_CLASS_MEASUREMENT,
+                        state_class=SensorStateClass.MEASUREMENT,
                         native_unit_of_measurement=TEMP_CELSIUS,
                         value=lambda bridge, i=index: bridge.graphics.controllers[
                             i
@@ -410,7 +410,7 @@ async def async_setup_entry(
                     SystemBridgeSensorEntityDescription(
                         key=f"gpu_{index}_usage_percentage",
                         name=f"{name} Usage %",
-                        state_class=STATE_CLASS_MEASUREMENT,
+                        state_class=SensorStateClass.MEASUREMENT,
                         native_unit_of_measurement=PERCENTAGE,
                         icon="mdi:percent",
                         value=lambda bridge, i=index: bridge.graphics.controllers[
@@ -429,7 +429,7 @@ async def async_setup_entry(
                     key=f"processes_load_cpu_{index}",
                     name=f"Load CPU {index}",
                     entity_registry_enabled_default=False,
-                    state_class=STATE_CLASS_MEASUREMENT,
+                    state_class=SensorStateClass.MEASUREMENT,
                     native_unit_of_measurement=PERCENTAGE,
                     icon="mdi:percent",
                     value=lambda bridge, index=index: round(
@@ -443,7 +443,7 @@ async def async_setup_entry(
                     key=f"processes_load_cpu_{index}_idle",
                     name=f"Idle Load CPU {index}",
                     entity_registry_enabled_default=False,
-                    state_class=STATE_CLASS_MEASUREMENT,
+                    state_class=SensorStateClass.MEASUREMENT,
                     native_unit_of_measurement=PERCENTAGE,
                     icon="mdi:percent",
                     value=lambda bridge, index=index: round(
@@ -457,7 +457,7 @@ async def async_setup_entry(
                     key=f"processes_load_cpu_{index}_system",
                     name=f"System Load CPU {index}",
                     entity_registry_enabled_default=False,
-                    state_class=STATE_CLASS_MEASUREMENT,
+                    state_class=SensorStateClass.MEASUREMENT,
                     native_unit_of_measurement=PERCENTAGE,
                     icon="mdi:percent",
                     value=lambda bridge, index=index: round(
@@ -471,7 +471,7 @@ async def async_setup_entry(
                     key=f"processes_load_cpu_{index}_user",
                     name=f"User Load CPU {index}",
                     entity_registry_enabled_default=False,
-                    state_class=STATE_CLASS_MEASUREMENT,
+                    state_class=SensorStateClass.MEASUREMENT,
                     native_unit_of_measurement=PERCENTAGE,
                     icon="mdi:percent",
                     value=lambda bridge, index=index: round(

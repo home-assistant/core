@@ -1,11 +1,7 @@
 """Constants for the Kostal Plenticore Solar Inverter integration."""
 from typing import NamedTuple
 
-from homeassistant.components.sensor import (
-    ATTR_STATE_CLASS,
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
-)
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ICON,
@@ -50,7 +46,7 @@ SENSOR_PROCESS_DATA = [
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
             ATTR_ENABLED_DEFAULT: True,
-            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
         "format_round",
     ),
@@ -62,7 +58,7 @@ SENSOR_PROCESS_DATA = [
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
             ATTR_ENABLED_DEFAULT: True,
-            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
         "format_round",
     ),
@@ -80,7 +76,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
-            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
         "format_round",
     ),
@@ -91,7 +87,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
-            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
         "format_round",
     ),
@@ -102,7 +98,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
-            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
         "format_round",
     ),
@@ -113,7 +109,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
-            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
         "format_round",
     ),
@@ -125,7 +121,7 @@ SENSOR_PROCESS_DATA = [
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
             ATTR_ENABLED_DEFAULT: True,
-            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
         "format_round",
     ),
@@ -136,7 +132,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
-            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
         "format_round",
     ),
@@ -147,7 +143,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_POTENTIAL_VOLT,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_VOLTAGE,
-            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
         "format_round",
     ),
@@ -158,7 +154,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_CURRENT_AMPERE,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_CURRENT,
-            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
         "format_float",
     ),
@@ -169,7 +165,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
-            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
         "format_round",
     ),
@@ -180,7 +176,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_POTENTIAL_VOLT,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_VOLTAGE,
-            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
         "format_round",
     ),
@@ -191,7 +187,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_CURRENT_AMPERE,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_CURRENT,
-            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
         "format_float",
     ),
@@ -202,7 +198,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
-            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
         "format_round",
     ),
@@ -213,7 +209,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_POTENTIAL_VOLT,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_VOLTAGE,
-            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
         "format_round",
     ),
@@ -224,7 +220,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_CURRENT_AMPERE,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_CURRENT,
-            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
         "format_float",
     ),
@@ -235,7 +231,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
-            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
         "format_round",
     ),
@@ -250,7 +246,7 @@ SENSOR_PROCESS_DATA = [
         "devices:local:battery",
         "Cycles",
         "Battery Cycles",
-        {ATTR_ICON: "mdi:recycle", ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT},
+        {ATTR_ICON: "mdi:recycle", ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT},
         "format_round",
     ),
     (
@@ -260,7 +256,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_POWER,
-            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
         "format_round",
     ),
@@ -292,7 +288,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
             ATTR_ICON: "mdi:chart-donut",
-            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
         "format_round",
     ),
@@ -324,7 +320,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
             ATTR_ICON: "mdi:chart-donut",
-            ATTR_STATE_CLASS: STATE_CLASS_MEASUREMENT,
+            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
         "format_round",
     ),
@@ -372,7 +368,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
-            ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
+            ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
         },
         "format_energy",
     ),
@@ -413,7 +409,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
-            ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
+            ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
         },
         "format_energy",
     ),
@@ -454,7 +450,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
-            ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
+            ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
         },
         "format_energy",
     ),
@@ -495,7 +491,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
-            ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
+            ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
         },
         "format_energy",
     ),
@@ -536,7 +532,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
-            ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
+            ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
         },
         "format_energy",
     ),
@@ -577,7 +573,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
-            ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
+            ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
         },
         "format_energy",
     ),
@@ -618,7 +614,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
-            ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
+            ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
         },
         "format_energy",
     ),
@@ -660,7 +656,7 @@ SENSOR_PROCESS_DATA = [
         {
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
             ATTR_DEVICE_CLASS: DEVICE_CLASS_ENERGY,
-            ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
+            ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
         },
         "format_energy",
     ),

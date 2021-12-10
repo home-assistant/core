@@ -5,10 +5,9 @@ from dataclasses import dataclass
 from functools import partial
 
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -52,7 +51,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=f"clicks/{VOLUME_CUBIC_METERS}",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         api_category=DATA_PROVISION_SETTINGS,
     ),
     RainMachineSensorEntityDescription(
@@ -62,7 +61,7 @@ SENSOR_DESCRIPTIONS = (
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         native_unit_of_measurement="liter",
         entity_registry_enabled_default=False,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         api_category=DATA_PROVISION_SETTINGS,
     ),
     RainMachineSensorEntityDescription(
@@ -81,7 +80,7 @@ SENSOR_DESCRIPTIONS = (
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         native_unit_of_measurement="clicks",
         entity_registry_enabled_default=False,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         api_category=DATA_PROVISION_SETTINGS,
     ),
     RainMachineSensorEntityDescription(
@@ -91,7 +90,7 @@ SENSOR_DESCRIPTIONS = (
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=DEVICE_CLASS_TEMPERATURE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         api_category=DATA_RESTRICTIONS_UNIVERSAL,
     ),
 )

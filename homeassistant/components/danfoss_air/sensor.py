@@ -3,7 +3,7 @@ import logging
 
 from pydanfossair.commands import ReadCommand
 
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_HUMIDITY,
@@ -27,28 +27,28 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             TEMP_CELSIUS,
             ReadCommand.exhaustTemperature,
             DEVICE_CLASS_TEMPERATURE,
-            STATE_CLASS_MEASUREMENT,
+            SensorStateClass.MEASUREMENT,
         ],
         [
             "Danfoss Air Outdoor Temperature",
             TEMP_CELSIUS,
             ReadCommand.outdoorTemperature,
             DEVICE_CLASS_TEMPERATURE,
-            STATE_CLASS_MEASUREMENT,
+            SensorStateClass.MEASUREMENT,
         ],
         [
             "Danfoss Air Supply Temperature",
             TEMP_CELSIUS,
             ReadCommand.supplyTemperature,
             DEVICE_CLASS_TEMPERATURE,
-            STATE_CLASS_MEASUREMENT,
+            SensorStateClass.MEASUREMENT,
         ],
         [
             "Danfoss Air Extract Temperature",
             TEMP_CELSIUS,
             ReadCommand.extractTemperature,
             DEVICE_CLASS_TEMPERATURE,
-            STATE_CLASS_MEASUREMENT,
+            SensorStateClass.MEASUREMENT,
         ],
         [
             "Danfoss Air Remaining Filter",
@@ -62,7 +62,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             PERCENTAGE,
             ReadCommand.humidity,
             DEVICE_CLASS_HUMIDITY,
-            STATE_CLASS_MEASUREMENT,
+            SensorStateClass.MEASUREMENT,
         ],
         ["Danfoss Air Fan Step", PERCENTAGE, ReadCommand.fan_step, None, None],
         [

@@ -10,9 +10,9 @@ from ovoenergy import OVODailyUsage
 from ovoenergy.ovoenergy import OVOEnergy
 
 from homeassistant.components.sensor import (
-    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -49,7 +49,7 @@ SENSOR_TYPES_ELECTRICITY: tuple[OVOEnergySensorEntityDescription, ...] = (
         key="last_electricity_reading",
         name="OVO Last Electricity Reading",
         device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         value=lambda usage: usage.electricity[-1].consumption,
     ),
@@ -57,7 +57,7 @@ SENSOR_TYPES_ELECTRICITY: tuple[OVOEnergySensorEntityDescription, ...] = (
         key=KEY_LAST_ELECTRICITY_COST,
         name="OVO Last Electricity Cost",
         device_class=DEVICE_CLASS_MONETARY,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         value=lambda usage: usage.electricity[-1].cost.amount,
     ),
     OVOEnergySensorEntityDescription(
@@ -81,7 +81,7 @@ SENSOR_TYPES_GAS: tuple[OVOEnergySensorEntityDescription, ...] = (
         key="last_gas_reading",
         name="OVO Last Gas Reading",
         device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         icon="mdi:gas-cylinder",
         value=lambda usage: usage.gas[-1].consumption,
@@ -90,7 +90,7 @@ SENSOR_TYPES_GAS: tuple[OVOEnergySensorEntityDescription, ...] = (
         key=KEY_LAST_GAS_COST,
         name="OVO Last Gas Cost",
         device_class=DEVICE_CLASS_MONETARY,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:cash-multiple",
         value=lambda usage: usage.gas[-1].cost.amount,
     ),

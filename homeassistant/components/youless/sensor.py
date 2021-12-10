@@ -3,12 +3,7 @@ from __future__ import annotations
 
 from youless_api.youless_sensor import YoulessSensor
 
-from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL,
-    STATE_CLASS_TOTAL_INCREASING,
-    SensorEntity,
-)
+from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.components.youless import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -42,9 +37,13 @@ async def async_setup_entry(
     async_add_entities(
         [
             GasSensor(coordinator, device),
-            PowerMeterSensor(coordinator, device, "low", STATE_CLASS_TOTAL_INCREASING),
-            PowerMeterSensor(coordinator, device, "high", STATE_CLASS_TOTAL_INCREASING),
-            PowerMeterSensor(coordinator, device, "total", STATE_CLASS_TOTAL),
+            PowerMeterSensor(
+                coordinator, device, "low", SensorStateClass.TOTAL_INCREASING
+            ),
+            PowerMeterSensor(
+                coordinator, device, "high", SensorStateClass.TOTAL_INCREASING
+            ),
+            PowerMeterSensor(coordinator, device, "total", SensorStateClass.TOTAL),
             CurrentPowerSensor(coordinator, device),
             DeliveryMeterSensor(coordinator, device, "low"),
             DeliveryMeterSensor(coordinator, device, "high"),
@@ -103,7 +102,7 @@ class GasSensor(YoulessBaseSensor):
 
     _attr_native_unit_of_measurement = VOLUME_CUBIC_METERS
     _attr_device_class = DEVICE_CLASS_GAS
-    _attr_state_class = STATE_CLASS_TOTAL_INCREASING
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
 
     def __init__(self, coordinator: DataUpdateCoordinator, device: str) -> None:
         """Instantiate a gas sensor."""
@@ -122,7 +121,7 @@ class CurrentPowerSensor(YoulessBaseSensor):
 
     _attr_native_unit_of_measurement = POWER_WATT
     _attr_device_class = DEVICE_CLASS_POWER
-    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, coordinator: DataUpdateCoordinator, device: str) -> None:
         """Instantiate the usage meter."""
@@ -141,7 +140,7 @@ class DeliveryMeterSensor(YoulessBaseSensor):
 
     _attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
     _attr_device_class = DEVICE_CLASS_ENERGY
-    _attr_state_class = STATE_CLASS_TOTAL_INCREASING
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
 
     def __init__(
         self, coordinator: DataUpdateCoordinator, device: str, dev_type: str
@@ -167,14 +166,14 @@ class PowerMeterSensor(YoulessBaseSensor):
 
     _attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
     _attr_device_class = DEVICE_CLASS_ENERGY
-    _attr_state_class = STATE_CLASS_TOTAL_INCREASING
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
 
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
         device: str,
         dev_type: str,
-        state_class: str,
+        state_class: SensorStateClass,
     ) -> None:
         """Instantiate a power meter sensor."""
         super().__init__(
@@ -199,7 +198,7 @@ class ExtraMeterSensor(YoulessBaseSensor):
 
     _attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
     _attr_device_class = DEVICE_CLASS_ENERGY
-    _attr_state_class = STATE_CLASS_TOTAL_INCREASING
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
 
     def __init__(
         self, coordinator: DataUpdateCoordinator, device: str, dev_type: str
@@ -225,7 +224,7 @@ class ExtraMeterPowerSensor(YoulessBaseSensor):
 
     _attr_native_unit_of_measurement = POWER_WATT
     _attr_device_class = DEVICE_CLASS_POWER
-    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
         self, coordinator: DataUpdateCoordinator, device: str, dev_type: str

@@ -13,9 +13,9 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
-    STATE_CLASS_MEASUREMENT,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -72,7 +72,7 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
         native_unit_of_measurement=TEMP_CELSIUS,
         icon="mdi:thermometer",
         device_class=DEVICE_CLASS_TEMPERATURE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     TrafikverketSensorEntityDescription(
         key="road_temp",
@@ -81,7 +81,7 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
         native_unit_of_measurement=TEMP_CELSIUS,
         icon="mdi:thermometer",
         device_class=DEVICE_CLASS_TEMPERATURE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     TrafikverketSensorEntityDescription(
         key="precipitation",
@@ -96,7 +96,7 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
         name="Wind direction",
         native_unit_of_measurement=DEGREE,
         icon="mdi:flag-triangle",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     TrafikverketSensorEntityDescription(
         key="wind_direction_text",
@@ -110,7 +110,7 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
         name="Wind speed",
         native_unit_of_measurement=SPEED_METERS_PER_SECOND,
         icon="mdi:weather-windy",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     TrafikverketSensorEntityDescription(
         key="wind_speed_max",
@@ -119,7 +119,7 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
         native_unit_of_measurement=SPEED_METERS_PER_SECOND,
         icon="mdi:weather-windy-variant",
         entity_registry_enabled_default=False,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     TrafikverketSensorEntityDescription(
         key="humidity",
@@ -129,7 +129,7 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
         icon="mdi:water-percent",
         device_class=DEVICE_CLASS_HUMIDITY,
         entity_registry_enabled_default=False,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     TrafikverketSensorEntityDescription(
         key="precipitation_amount",
@@ -137,7 +137,7 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
         name="Precipitation amount",
         native_unit_of_measurement=LENGTH_MILLIMETERS,
         icon="mdi:cup-water",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     TrafikverketSensorEntityDescription(
         key="precipitation_amountname",

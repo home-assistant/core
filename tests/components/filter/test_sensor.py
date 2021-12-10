@@ -17,7 +17,7 @@ from homeassistant.components.filter.sensor import (
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     DEVICE_CLASS_TEMPERATURE,
-    STATE_CLASS_TOTAL_INCREASING,
+    SensorStateClass,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -275,14 +275,14 @@ async def test_setup(hass):
             {
                 "icon": "mdi:test",
                 ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
-                ATTR_STATE_CLASS: STATE_CLASS_TOTAL_INCREASING,
+                ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
             },
         )
         await hass.async_block_till_done()
         state = hass.states.get("sensor.test")
         assert state.attributes["icon"] == "mdi:test"
         assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_TEMPERATURE
-        assert state.attributes[ATTR_STATE_CLASS] == STATE_CLASS_TOTAL_INCREASING
+        assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.TOTAL_INCREASING
         assert state.state == "1.0"
 
 

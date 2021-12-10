@@ -26,11 +26,7 @@ from homematicip.aio.device import (
 )
 from homematicip.base.enums import ValveState
 
-from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
-    SensorEntity,
-)
+from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEVICE_CLASS_ENERGY,
@@ -134,7 +130,7 @@ async def async_setup_entry(
 class HomematicipAccesspointDutyCycle(HomematicipGenericEntity, SensorEntity):
     """Representation of then HomeMaticIP access point."""
 
-    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize access point status entity."""
@@ -188,7 +184,7 @@ class HomematicipHeatingThermostat(HomematicipGenericEntity, SensorEntity):
 class HomematicipHumiditySensor(HomematicipGenericEntity, SensorEntity):
     """Representation of the HomematicIP humidity sensor."""
 
-    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the thermometer device."""
@@ -213,7 +209,7 @@ class HomematicipHumiditySensor(HomematicipGenericEntity, SensorEntity):
 class HomematicipTemperatureSensor(HomematicipGenericEntity, SensorEntity):
     """Representation of the HomematicIP thermometer."""
 
-    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the thermometer device."""
@@ -252,7 +248,7 @@ class HomematicipTemperatureSensor(HomematicipGenericEntity, SensorEntity):
 class HomematicipIlluminanceSensor(HomematicipGenericEntity, SensorEntity):
     """Representation of the HomematicIP Illuminance sensor."""
 
-    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the  device."""
@@ -291,7 +287,7 @@ class HomematicipIlluminanceSensor(HomematicipGenericEntity, SensorEntity):
 class HomematicipPowerSensor(HomematicipGenericEntity, SensorEntity):
     """Representation of the HomematicIP power measuring sensor."""
 
-    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the  device."""
@@ -316,7 +312,7 @@ class HomematicipPowerSensor(HomematicipGenericEntity, SensorEntity):
 class HomematicipEnergySensor(HomematicipGenericEntity, SensorEntity):
     """Representation of the HomematicIP energy measuring sensor."""
 
-    _attr_state_class = STATE_CLASS_TOTAL_INCREASING
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the device."""

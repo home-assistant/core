@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -46,7 +46,7 @@ SENSOR_DESCRIPTION_TEMPERATURE = SensorEntityDescription(
     name="Temperature",
     device_class=DEVICE_CLASS_TEMPERATURE,
     native_unit_of_measurement=TEMP_FAHRENHEIT,
-    state_class=STATE_CLASS_MEASUREMENT,
+    state_class=SensorStateClass.MEASUREMENT,
 )
 SENSOR_DESCRIPTION_UPTIME = SensorEntityDescription(
     key=SENSOR_KIND_UPTIME,

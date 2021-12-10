@@ -2,7 +2,7 @@
 from datetime import timedelta
 from unittest.mock import patch
 
-from homeassistant.components.sensor import STATE_CLASS_TOTAL
+from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import (
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
@@ -39,7 +39,7 @@ async def test_state(hass) -> None:
 
     state = hass.states.get("sensor.integration")
     assert state is not None
-    assert state.attributes.get("state_class") == STATE_CLASS_TOTAL
+    assert state.attributes.get("state_class") == SensorStateClass.TOTAL
     assert "device_class" not in state.attributes
 
     future_now = dt_util.utcnow() + timedelta(seconds=3600)
@@ -57,7 +57,7 @@ async def test_state(hass) -> None:
 
     assert state.attributes.get("unit_of_measurement") == ENERGY_KILO_WATT_HOUR
     assert state.attributes.get("device_class") == DEVICE_CLASS_ENERGY
-    assert state.attributes.get("state_class") == STATE_CLASS_TOTAL
+    assert state.attributes.get("state_class") == SensorStateClass.TOTAL
 
 
 async def test_restore_state(hass: HomeAssistant) -> None:
@@ -125,7 +125,7 @@ async def test_restore_state_failed(hass: HomeAssistant) -> None:
     assert state
     assert state.state == "unknown"
     assert state.attributes.get("unit_of_measurement") is None
-    assert state.attributes.get("state_class") == STATE_CLASS_TOTAL
+    assert state.attributes.get("state_class") == SensorStateClass.TOTAL
 
     assert "device_class" not in state.attributes
 

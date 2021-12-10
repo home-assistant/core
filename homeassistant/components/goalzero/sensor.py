@@ -4,10 +4,9 @@ from __future__ import annotations
 from typing import cast
 
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -44,14 +43,14 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="Watts In",
         device_class=DEVICE_CLASS_POWER,
         native_unit_of_measurement=POWER_WATT,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="ampsIn",
         name="Amps In",
         device_class=DEVICE_CLASS_CURRENT,
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
@@ -59,14 +58,14 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="Watts Out",
         device_class=DEVICE_CLASS_POWER,
         native_unit_of_measurement=POWER_WATT,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="ampsOut",
         name="Amps Out",
         device_class=DEVICE_CLASS_CURRENT,
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
@@ -74,7 +73,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="WH Out",
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_WATT_HOUR,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
@@ -82,7 +81,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="WH Stored",
         device_class=DEVICE_CLASS_ENERGY,
         native_unit_of_measurement=ENERGY_WATT_HOUR,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="volts",

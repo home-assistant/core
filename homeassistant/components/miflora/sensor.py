@@ -12,9 +12,9 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
-    STATE_CLASS_MEASUREMENT,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.const import (
     CONDUCTIVITY,
@@ -148,7 +148,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class MiFloraSensor(SensorEntity):
     """Implementing the MiFlora sensor."""
 
-    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
         self,

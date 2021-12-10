@@ -5,7 +5,7 @@ from itertools import chain
 
 from ismartgate.common import AbstractDoor, get_configured_doors
 
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
@@ -78,7 +78,7 @@ class DoorSensorBattery(DoorSensorEntity):
         unique_id = sensor_unique_id(config_entry, door, "battery")
         super().__init__(config_entry, data_update_coordinator, door, unique_id)
         self._attr_device_class = DEVICE_CLASS_BATTERY
-        self._attr_state_class = STATE_CLASS_MEASUREMENT
+        self._attr_state_class = SensorStateClass.MEASUREMENT
         self._attr_native_unit_of_measurement = PERCENTAGE
 
     @property
@@ -105,7 +105,7 @@ class DoorSensorTemperature(DoorSensorEntity):
         unique_id = sensor_unique_id(config_entry, door, "temperature")
         super().__init__(config_entry, data_update_coordinator, door, unique_id)
         self._attr_device_class = DEVICE_CLASS_TEMPERATURE
-        self._attr_state_class = STATE_CLASS_MEASUREMENT
+        self._attr_state_class = SensorStateClass.MEASUREMENT
         self._attr_native_unit_of_measurement = TEMP_CELSIUS
 
     @property

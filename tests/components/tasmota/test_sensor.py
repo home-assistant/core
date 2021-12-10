@@ -292,7 +292,8 @@ async def test_indexed_sensor_state_via_mqtt2(hass, mqtt_mock, setup_tasmota):
     assert state.state == "unavailable"
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
     assert (
-        state.attributes[sensor.ATTR_STATE_CLASS] == sensor.STATE_CLASS_TOTAL_INCREASING
+        state.attributes[sensor.ATTR_STATE_CLASS]
+        == sensor.SensorStateClass.TOTAL_INCREASING
     )
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
@@ -343,7 +344,8 @@ async def test_indexed_sensor_state_via_mqtt3(hass, mqtt_mock, setup_tasmota):
     assert state.state == "unavailable"
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
     assert (
-        state.attributes[sensor.ATTR_STATE_CLASS] == sensor.STATE_CLASS_TOTAL_INCREASING
+        state.attributes[sensor.ATTR_STATE_CLASS]
+        == sensor.SensorStateClass.TOTAL_INCREASING
     )
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")

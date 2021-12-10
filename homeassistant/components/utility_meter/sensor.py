@@ -8,9 +8,8 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     ATTR_LAST_RESET,
-    STATE_CLASS_TOTAL,
-    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
+    SensorStateClass,
 )
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -370,9 +369,9 @@ class UtilityMeterSensor(RestoreEntity, SensorEntity):
     def state_class(self):
         """Return the device class of the sensor."""
         return (
-            STATE_CLASS_TOTAL
+            SensorStateClass.TOTAL
             if self._sensor_net_consumption
-            else STATE_CLASS_TOTAL_INCREASING
+            else SensorStateClass.TOTAL_INCREASING
         )
 
     @property

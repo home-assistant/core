@@ -7,11 +7,7 @@ from collections.abc import Sequence
 from pysmartthings import Attribute, Capability
 from pysmartthings.device import DeviceEntity
 
-from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
-    SensorEntity,
-)
+from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.const import (
     AREA_SQUARE_METERS,
     CONCENTRATION_PARTS_PER_MILLION,
@@ -74,7 +70,7 @@ CAPABILITY_TO_SENSORS = {
             "Air Quality",
             "CAQI",
             None,
-            STATE_CLASS_MEASUREMENT,
+            SensorStateClass.MEASUREMENT,
             None,
         )
     ],
@@ -98,7 +94,7 @@ CAPABILITY_TO_SENSORS = {
             "Body Mass Index",
             f"{MASS_KILOGRAMS}/{AREA_SQUARE_METERS}",
             None,
-            STATE_CLASS_MEASUREMENT,
+            SensorStateClass.MEASUREMENT,
             None,
         )
     ],
@@ -108,7 +104,7 @@ CAPABILITY_TO_SENSORS = {
             "Body Weight",
             MASS_KILOGRAMS,
             None,
-            STATE_CLASS_MEASUREMENT,
+            SensorStateClass.MEASUREMENT,
             None,
         )
     ],
@@ -118,7 +114,7 @@ CAPABILITY_TO_SENSORS = {
             "Carbon Dioxide Measurement",
             CONCENTRATION_PARTS_PER_MILLION,
             DEVICE_CLASS_CO2,
-            STATE_CLASS_MEASUREMENT,
+            SensorStateClass.MEASUREMENT,
             None,
         )
     ],
@@ -138,7 +134,7 @@ CAPABILITY_TO_SENSORS = {
             "Carbon Monoxide Measurement",
             CONCENTRATION_PARTS_PER_MILLION,
             DEVICE_CLASS_CO,
-            STATE_CLASS_MEASUREMENT,
+            SensorStateClass.MEASUREMENT,
             None,
         )
     ],
@@ -191,7 +187,7 @@ CAPABILITY_TO_SENSORS = {
             "Fine Dust Level",
             None,
             None,
-            STATE_CLASS_MEASUREMENT,
+            SensorStateClass.MEASUREMENT,
             None,
         ),
         Map(
@@ -199,7 +195,7 @@ CAPABILITY_TO_SENSORS = {
             "Dust Level",
             None,
             None,
-            STATE_CLASS_MEASUREMENT,
+            SensorStateClass.MEASUREMENT,
             None,
         ),
     ],
@@ -209,7 +205,7 @@ CAPABILITY_TO_SENSORS = {
             "Energy Meter",
             ENERGY_KILO_WATT_HOUR,
             DEVICE_CLASS_ENERGY,
-            STATE_CLASS_TOTAL_INCREASING,
+            SensorStateClass.TOTAL_INCREASING,
             None,
         )
     ],
@@ -219,7 +215,7 @@ CAPABILITY_TO_SENSORS = {
             "Equivalent Carbon Dioxide Measurement",
             CONCENTRATION_PARTS_PER_MILLION,
             None,
-            STATE_CLASS_MEASUREMENT,
+            SensorStateClass.MEASUREMENT,
             None,
         )
     ],
@@ -229,7 +225,7 @@ CAPABILITY_TO_SENSORS = {
             "Formaldehyde Measurement",
             CONCENTRATION_PARTS_PER_MILLION,
             None,
-            STATE_CLASS_MEASUREMENT,
+            SensorStateClass.MEASUREMENT,
             None,
         )
     ],
@@ -239,7 +235,7 @@ CAPABILITY_TO_SENSORS = {
             "Gas Meter",
             ENERGY_KILO_WATT_HOUR,
             None,
-            STATE_CLASS_MEASUREMENT,
+            SensorStateClass.MEASUREMENT,
             None,
         ),
         Map(
@@ -258,7 +254,7 @@ CAPABILITY_TO_SENSORS = {
             "Gas Meter Volume",
             VOLUME_CUBIC_METERS,
             None,
-            STATE_CLASS_MEASUREMENT,
+            SensorStateClass.MEASUREMENT,
             None,
         ),
     ],
@@ -268,7 +264,7 @@ CAPABILITY_TO_SENSORS = {
             "Illuminance",
             LIGHT_LUX,
             DEVICE_CLASS_ILLUMINANCE,
-            STATE_CLASS_MEASUREMENT,
+            SensorStateClass.MEASUREMENT,
             None,
         )
     ],
@@ -278,7 +274,7 @@ CAPABILITY_TO_SENSORS = {
             "Infrared Level",
             PERCENTAGE,
             None,
-            STATE_CLASS_MEASUREMENT,
+            SensorStateClass.MEASUREMENT,
             None,
         )
     ],
@@ -331,7 +327,7 @@ CAPABILITY_TO_SENSORS = {
             "Power Meter",
             POWER_WATT,
             DEVICE_CLASS_POWER,
-            STATE_CLASS_MEASUREMENT,
+            SensorStateClass.MEASUREMENT,
             None,
         )
     ],
@@ -361,7 +357,7 @@ CAPABILITY_TO_SENSORS = {
             "Relative Humidity Measurement",
             PERCENTAGE,
             DEVICE_CLASS_HUMIDITY,
-            STATE_CLASS_MEASUREMENT,
+            SensorStateClass.MEASUREMENT,
             None,
         )
     ],
@@ -401,7 +397,7 @@ CAPABILITY_TO_SENSORS = {
             "LQI Signal Strength",
             None,
             None,
-            STATE_CLASS_MEASUREMENT,
+            SensorStateClass.MEASUREMENT,
             ENTITY_CATEGORY_DIAGNOSTIC,
         ),
         Map(
@@ -409,7 +405,7 @@ CAPABILITY_TO_SENSORS = {
             "RSSI Signal Strength",
             None,
             DEVICE_CLASS_SIGNAL_STRENGTH,
-            STATE_CLASS_MEASUREMENT,
+            SensorStateClass.MEASUREMENT,
             ENTITY_CATEGORY_DIAGNOSTIC,
         ),
     ],
@@ -422,7 +418,7 @@ CAPABILITY_TO_SENSORS = {
             "Temperature Measurement",
             None,
             DEVICE_CLASS_TEMPERATURE,
-            STATE_CLASS_MEASUREMENT,
+            SensorStateClass.MEASUREMENT,
             None,
         )
     ],
@@ -497,7 +493,7 @@ CAPABILITY_TO_SENSORS = {
             "Tvoc Measurement",
             CONCENTRATION_PARTS_PER_MILLION,
             None,
-            STATE_CLASS_MEASUREMENT,
+            SensorStateClass.MEASUREMENT,
             None,
         )
     ],
@@ -507,7 +503,7 @@ CAPABILITY_TO_SENSORS = {
             "Ultraviolet Index",
             None,
             None,
-            STATE_CLASS_MEASUREMENT,
+            SensorStateClass.MEASUREMENT,
             None,
         )
     ],
@@ -517,7 +513,7 @@ CAPABILITY_TO_SENSORS = {
             "Voltage Measurement",
             ELECTRIC_POTENTIAL_VOLT,
             DEVICE_CLASS_VOLTAGE,
-            STATE_CLASS_MEASUREMENT,
+            SensorStateClass.MEASUREMENT,
             None,
         )
     ],
@@ -715,9 +711,9 @@ class SmartThingsPowerConsumptionSensor(SmartThingsEntity, SensorEntity):
         """Init the class."""
         super().__init__(device)
         self.report_name = report_name
-        self._attr_state_class = STATE_CLASS_MEASUREMENT
+        self._attr_state_class = SensorStateClass.MEASUREMENT
         if self.report_name != "power":
-            self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
+            self._attr_state_class = SensorStateClass.TOTAL_INCREASING
 
     @property
     def name(self) -> str:
