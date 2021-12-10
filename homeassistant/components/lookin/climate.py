@@ -158,6 +158,16 @@ class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
         if hvac_mode := kwargs.get(ATTR_HVAC_MODE):
             self._climate.hvac_mode = HASS_TO_LOOKIN_HVAC_MODE[hvac_mode]
         elif self._climate.hvac_mode == lookin_index.index(HVAC_MODE_OFF):
+            #
+            # If the device is off, and the user didn't specify an HVAC mode
+            # (which is the default when using the HA UI), the device won't turn
+            # on without having an HVAC mode passed.
+            #
+            # We picked the hvac mode based on the current temp if its available
+            # since only some units support auto, but most support either heat
+            # or cool otherwise we set auto since we don't have a way to make
+            # an educated guess.
+            #
             meteo_data: MeteoSensor = self._meteo_coordinator.data
             current_temp = meteo_data.temperature
             if not current_temp:
