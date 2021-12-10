@@ -48,9 +48,13 @@ async def async_setup_entry(
     """Set up lookin sensors from the config entry."""
     lookin_data: LookinData = hass.data[DOMAIN][config_entry.entry_id]
 
-    async_add_entities(
-        [LookinSensorEntity(description, lookin_data) for description in SENSOR_TYPES]
-    )
+    if lookin_data.lookin_device.model >= 2:
+        async_add_entities(
+            [
+                LookinSensorEntity(description, lookin_data)
+                for description in SENSOR_TYPES
+            ]
+        )
 
 
 class LookinSensorEntity(LookinDeviceCoordinatorEntity, SensorEntity):
