@@ -7,7 +7,7 @@ from aiohttp import ClientError
 import twinkly_client
 from voluptuous import Required, Schema
 
-from homeassistant import config_entries
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import dhcp
 from homeassistant.const import CONF_HOST
 
