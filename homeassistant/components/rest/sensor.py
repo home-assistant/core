@@ -11,6 +11,7 @@ from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     DOMAIN as SENSOR_DOMAIN,
     PLATFORM_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
 )
 from homeassistant.components.sensor.helpers import async_parse_date_datetime
@@ -186,6 +187,13 @@ class RestSensor(RestEntity, SensorEntity):
             value = self._value_template.async_render_with_possible_json_value(
                 value, None
             )
+
+        if value is None or self.device_class not in (
+            SensorDeviceClass.DATE,
+            SensorDeviceClass.TIMESTAMP,
+        ):
+            self._state = value
+            return
 
         self._state = async_parse_date_datetime(
             value, self.entity_id, self.device_class
