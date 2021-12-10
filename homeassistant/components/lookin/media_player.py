@@ -157,11 +157,6 @@ class LookinMedia(LookinPowerEntity, MediaPlayerEntity):
         self._attr_state = STATE_ON
         self.async_write_ha_state()
 
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        name: str = self._remote.name
-        return name
 
     def _update_from_status(self, status: str) -> None:
         """Update media property from status.
