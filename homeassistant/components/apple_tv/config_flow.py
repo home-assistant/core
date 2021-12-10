@@ -247,7 +247,6 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured(updates={CONF_ADDRESS: self.atv.address})
 
         self.context["identifier"] = self.unique_id
-
         return await self.async_step_confirm()
 
     async def async_find_device_wrapper(self, next_func, allow_exist=False):
