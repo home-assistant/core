@@ -332,7 +332,7 @@ class FritzBoxTools:
         try:
             if service_call.service == SERVICE_REBOOT:
                 _LOGGER.warning(
-                    'Service "reboot" is deprecated, please use the corresponding button entity instead'
+                    'Service "fritz.reboot" is deprecated, please use the corresponding button entity instead'
                 )
                 await self.hass.async_add_executor_job(
                     self.connection.call_action, "DeviceConfig1", "Reboot"
@@ -341,7 +341,7 @@ class FritzBoxTools:
 
             if service_call.service == SERVICE_RECONNECT:
                 _LOGGER.warning(
-                    'Service "reconnect" is deprecated, please use the corresponding button entity instead'
+                    'Service "fritz.reconnect" is deprecated, please use the corresponding button entity instead'
                 )
                 await self.hass.async_add_executor_job(
                     self.connection.call_action,
