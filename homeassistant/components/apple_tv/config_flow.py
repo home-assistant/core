@@ -184,29 +184,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # a multiple scans of the device at the same time since each
         # apple_tv device has multiple services that are discovered by
         # zeroconf.
-        await asyncio.sleep(DISCOVERY_AGGREGATION_TIME)
-        # Must not await until self.context[CONF_ADDRESS] is set
-        # or other flows may see it to soon and all flows
-        # will lose the race and nothing moves forward
-        for flow in self._async_in_progress(include_uninitialized=True):
-            context = flow["context"]
-            if (
-                context.get("source") != config_entries.SOURCE_ZEROCONF
-                or context.get(CONF_ADDRESS) != host
-            ):
-                continue
-            if (
-                service_type in SERVICES_WITH_ZEROCONF_IDENTIFIERS
-                and "all_identifiers" in context
-                and unique_id not in context["all_identifiers"]
-            ):
-                # Add potentially new identifiers from this device to the existing flow
-                context["all_identifiers"].append(unique_id)
-            raise data_entry_flow.AbortFlow("already_in_progress")
-        self.context[CONF_ADDRESS] = host
-
-    async def async_found_zeroconf_device(self, user_input=None):
-        """Handle device found after Zeroconf discovery."""
+        #
         # Suppose we have a device with three services: A, B and C. Let's assume
         # service A is discovered by Zeroconf, triggering a device scan that also finds
         # service B but *not* C. An identifier is picked from one of the services and
@@ -226,26 +204,40 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # potentially new identifiers. In the example above, when service C is
         # discovered, the identifier of service C will be inserted into
         # "all_identifiers" of the original flow (making the device complete).
-        for flow in self._async_in_progress():
-            for identifier in self.atv.all_identifiers:
-                if identifier not in flow["context"].get("all_identifiers", []):
-                    continue
-
+        #
+        await asyncio.sleep(DISCOVERY_AGGREGATION_TIME)
+        #
+        # Must not await until self.context[CONF_ADDRESS] is set or other flows may
+        # see it to soon and all flows will lose the race and nothing moves forward
+        #
+        for flow in self._async_in_progress(include_uninitialized=True):
+            context = flow["context"]
+            if (
+                context.get("source") != config_entries.SOURCE_ZEROCONF
+                or context.get(CONF_ADDRESS) != host
+            ):
+                continue
+            if (
+                service_type in SERVICES_WITH_ZEROCONF_IDENTIFIERS
+                and "all_identifiers" in context
+                and unique_id not in context["all_identifiers"]
+            ):
                 # Add potentially new identifiers from this device to the existing flow
-                identifiers = set(flow["context"]["all_identifiers"])
-                identifiers.update(self.atv.all_identifiers)
-                flow["context"]["all_identifiers"] = list(identifiers)
+                context["all_identifiers"].append(unique_id)
+            raise data_entry_flow.AbortFlow("already_in_progress")
+        self.context[CONF_ADDRESS] = host
+        #
+        # Safe to await again after self.context[CONF_ADDRESS] is set
+        #
 
-                raise data_entry_flow.AbortFlow("already_in_progress")
-
+    async def async_found_zeroconf_device(self, user_input=None):
+        """Handle device found after Zeroconf discovery."""
         self.context["all_identifiers"] = self.atv.all_identifiers
-
         # Also abort if an integration with this identifier already exists
         await self.async_set_unique_id(self.device_identifier)
         # but be sure to update the address if its changed so the scanner
         # will probe the new address
         self._abort_if_unique_id_configured(updates={CONF_ADDRESS: self.atv.address})
-
         self.context["identifier"] = self.unique_id
         return await self.async_step_confirm()
 
@@ -289,20 +281,22 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 else model_str(dev_info.model)
             ),
         }
-
-        for identifier in self.atv.all_identifiers:
-            for entry in self._async_current_entries():
-                if identifier in entry.data.get(CONF_IDENTIFIERS, [entry.unique_id]):
-                    if entry.data.get(CONF_ADDRESS) != self.atv.address:
-                        self.hass.config_entries.async_update_entry(
-                            entry,
-                            data={**entry.data, CONF_ADDRESS: self.atv.address},
-                        )
-                        self.hass.async_create_task(
-                            self.hass.config_entries.async_reload(entry.entry_id)
-                        )
-                    if not allow_exist:
-                        raise DeviceAlreadyConfigured()
+        all_identifiers = set(self.atv.all_identifiers)
+        for entry in self._async_current_entries():
+            if not all_identifiers.intersection(
+                entry.data.get(CONF_IDENTIFIERS, [entry.unique_id])
+            ):
+                continue
+            if entry.data.get(CONF_ADDRESS) != self.atv.address:
+                self.hass.config_entries.async_update_entry(
+                    entry,
+                    data={**entry.data, CONF_ADDRESS: self.atv.address},
+                )
+                self.hass.async_create_task(
+                    self.hass.config_entries.async_reload(entry.entry_id)
+                )
+            if not allow_exist:
+                raise DeviceAlreadyConfigured()
 
     async def async_step_confirm(self, user_input=None):
         """Handle user-confirmation of discovered node."""

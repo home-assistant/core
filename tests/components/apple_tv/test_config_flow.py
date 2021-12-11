@@ -529,6 +529,20 @@ async def test_zeroconf_unsupported_service_aborts(hass):
 
 async def test_zeroconf_add_mrp_device(hass, mrp_device, pairing):
     """Test add MRP device discovered by zeroconf."""
+    unrelated_result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=zeroconf.ZeroconfServiceInfo(
+            host="127.0.0.2",
+            hostname="mock_hostname",
+            port=None,
+            name="Kitchen",
+            properties={"UniqueIdentifier": "unrelated", "Name": "Kitchen"},
+            type="_mediaremotetv._tcp.local.",
+        ),
+    )
+    assert unrelated_result["type"] == data_entry_flow.RESULT_TYPE_FORM
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
@@ -599,6 +613,10 @@ async def test_zeroconf_ip_change(hass, mock_scan):
     entry = MockConfigEntry(
         domain="apple_tv", unique_id="mrpid", data={CONF_ADDRESS: "127.0.0.2"}
     )
+    unrelated_entry = MockConfigEntry(
+        domain="apple_tv", unique_id="unrelated", data={CONF_ADDRESS: "127.0.0.2"}
+    )
+    unrelated_entry.add_to_hass(hass)
     entry.add_to_hass(hass)
     mock_scan.result = [
         create_conf("127.0.0.1", "Device", mrp_service(), airplay_service())
@@ -616,8 +634,9 @@ async def test_zeroconf_ip_change(hass, mock_scan):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
-    assert len(mock_async_setup.mock_calls) == 1
+    assert len(mock_async_setup.mock_calls) == 2
     assert entry.data[CONF_ADDRESS] == "127.0.0.1"
+    assert unrelated_entry.data[CONF_ADDRESS] == "127.0.0.2"
 
 
 async def test_zeroconf_add_existing_aborts(hass, dmap_device):
