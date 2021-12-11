@@ -40,6 +40,8 @@ from .const import (
     CONF_NAMES,
     CONF_TYPE_OWSERVER,
     CONF_TYPE_SYSBUS,
+    DEVICE_KEYS_0_3,
+    DEVICE_KEYS_A_B,
     DOMAIN,
     READ_MODE_FLOAT,
     READ_MODE_INT,
@@ -188,21 +190,15 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
     "28": (SIMPLE_TEMPERATURE_SENSOR_DESCRIPTION,),
     "3B": (SIMPLE_TEMPERATURE_SENSOR_DESCRIPTION,),
     "42": (SIMPLE_TEMPERATURE_SENSOR_DESCRIPTION,),
-    "1D": (
+    "1D": tuple(
         OneWireSensorEntityDescription(
-            key="counter.A",
-            name="Counter A",
+            key=f"counter.{id}",
+            name=f"Counter {id}",
             native_unit_of_measurement="count",
             read_mode=READ_MODE_INT,
             state_class=SensorStateClass.TOTAL_INCREASING,
-        ),
-        OneWireSensorEntityDescription(
-            key="counter.B",
-            name="Counter B",
-            native_unit_of_measurement="count",
-            read_mode=READ_MODE_INT,
-            state_class=SensorStateClass.TOTAL_INCREASING,
-        ),
+        )
+        for id in DEVICE_KEYS_A_B
     ),
 }
 
@@ -237,39 +233,16 @@ HOBBYBOARD_EF: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
         ),
     ),
-    "HB_MOISTURE_METER": (
+    "HB_MOISTURE_METER": tuple(
         OneWireSensorEntityDescription(
-            key="moisture/sensor.0",
+            key=f"moisture/sensor.{id}",
             device_class=SensorDeviceClass.PRESSURE,
-            name="Moisture 0",
+            name=f"Moisture {id}",
             native_unit_of_measurement=PRESSURE_CBAR,
             read_mode=READ_MODE_FLOAT,
             state_class=SensorStateClass.MEASUREMENT,
-        ),
-        OneWireSensorEntityDescription(
-            key="moisture/sensor.1",
-            device_class=SensorDeviceClass.PRESSURE,
-            name="Moisture 1",
-            native_unit_of_measurement=PRESSURE_CBAR,
-            read_mode=READ_MODE_FLOAT,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
-        OneWireSensorEntityDescription(
-            key="moisture/sensor.2",
-            device_class=SensorDeviceClass.PRESSURE,
-            name="Moisture 2",
-            native_unit_of_measurement=PRESSURE_CBAR,
-            read_mode=READ_MODE_FLOAT,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
-        OneWireSensorEntityDescription(
-            key="moisture/sensor.3",
-            device_class=SensorDeviceClass.PRESSURE,
-            name="Moisture 3",
-            native_unit_of_measurement=PRESSURE_CBAR,
-            read_mode=READ_MODE_FLOAT,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
+        )
+        for id in DEVICE_KEYS_0_3
     ),
 }
 

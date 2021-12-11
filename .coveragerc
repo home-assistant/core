@@ -604,6 +604,7 @@ omit =
     homeassistant/components/lookin/models.py
     homeassistant/components/lookin/sensor.py
     homeassistant/components/lookin/climate.py
+    homeassistant/components/lookin/media_player.py
     homeassistant/components/luci/device_tracker.py
     homeassistant/components/luftdaten/__init__.py
     homeassistant/components/luftdaten/sensor.py
@@ -844,7 +845,6 @@ omit =
     homeassistant/components/progettihwsw/__init__.py
     homeassistant/components/progettihwsw/binary_sensor.py
     homeassistant/components/progettihwsw/switch.py
-    homeassistant/components/prometheus/*
     homeassistant/components/prowl/notify.py
     homeassistant/components/proxmoxve/*
     homeassistant/components/proxy/camera.py
@@ -1003,7 +1003,16 @@ omit =
     homeassistant/components/somfy/switch.py
     homeassistant/components/somfy_mylink/__init__.py
     homeassistant/components/somfy_mylink/cover.py
-    homeassistant/components/sonos/*
+    homeassistant/components/sonos/__init__.py
+    homeassistant/components/sonos/alarms.py
+    homeassistant/components/sonos/entity.py
+    homeassistant/components/sonos/favorites.py
+    homeassistant/components/sonos/helpers.py
+    homeassistant/components/sonos/household_coordinator.py
+    homeassistant/components/sonos/media_browser.py
+    homeassistant/components/sonos/media_player.py
+    homeassistant/components/sonos/speaker.py
+    homeassistant/components/sonos/switch.py
     homeassistant/components/sony_projector/switch.py
     homeassistant/components/spc/*
     homeassistant/components/spider/*
