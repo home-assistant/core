@@ -30,7 +30,12 @@ from homeassistant.components.light import (
     SUPPORT_FLASH,
     SUPPORT_TRANSITION,
 )
-from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import (
+    ATTR_SUPPORTED_FEATURES,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    Platform,
+)
 from homeassistant.core import State, callback
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.dispatcher import (
@@ -77,8 +82,8 @@ UPDATE_COLORLOOP_HUE = 0x8
 FLASH_EFFECTS = {light.FLASH_SHORT: EFFECT_BLINK, light.FLASH_LONG: EFFECT_BREATHE}
 
 UNSUPPORTED_ATTRIBUTE = 0x86
-STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, light.DOMAIN)
-GROUP_MATCH = functools.partial(ZHA_ENTITIES.group_match, light.DOMAIN)
+STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.LIGHT)
+GROUP_MATCH = functools.partial(ZHA_ENTITIES.group_match, Platform.LIGHT)
 PARALLEL_UPDATES = 0
 SIGNAL_LIGHT_GROUP_STATE_CHANGED = "zha_light_group_state_changed"
 
@@ -102,7 +107,7 @@ class LightColorMode(enum.IntEnum):
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Zigbee Home Automation light from config entry."""
-    entities_to_create = hass.data[DATA_ZHA][light.DOMAIN]
+    entities_to_create = hass.data[DATA_ZHA][Platform.LIGHT]
 
     unsub = async_dispatcher_connect(
         hass,
