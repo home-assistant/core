@@ -14,7 +14,7 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import FluxLedUpdateCoordinator
+from . import FluxLedUpdateCoordinator, _async_clear_discovery_cache
 from .const import (
     CONF_REMOTE_ACCESS_ENABLED,
     CONF_REMOTE_ACCESS_HOST,
@@ -82,12 +82,14 @@ class FluxRemoteAccessSwitch(FluxBaseEntity, SwitchEntity):
             self.entry.data[CONF_REMOTE_ACCESS_PORT],
         )
         # The device will reboot so we must reload
+        _async_clear_discovery_cache(self.hass, self._device.ipaddr)
         await self.hass.config_entries.async_reload(self.entry.entry_id)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the remote access off."""
         await self._device.async_disable_remote_access()
         # The device will reboot so we must reload
+        _async_clear_discovery_cache(self.hass, self._device.ipaddr)
         await self.hass.config_entries.async_reload(self.entry.entry_id)
 
     @property
