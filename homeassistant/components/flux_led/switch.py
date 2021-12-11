@@ -94,3 +94,8 @@ class FluxRemoteAccessSwitch(FluxBaseEntity, SwitchEntity):
     def is_on(self) -> bool:
         """Return true if remote access is enabled."""
         return bool(self.entry.data[CONF_REMOTE_ACCESS_ENABLED])
+
+    @property
+    def icon(self) -> str:
+        """Return icon based on state."""
+        return "mdi:cloud-outline" if self.is_on else "mdi:cloud-outline-off"
