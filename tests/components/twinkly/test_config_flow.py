@@ -11,9 +11,9 @@ from homeassistant.components.twinkly.const import (
     DOMAIN as TWINKLY_DOMAIN,
 )
 
-from tests.common import MockConfigEntry
-
 from . import TEST_MODEL, ClientMock
+
+from tests.common import MockConfigEntry
 
 
 async def test_invalid_host(hass):
