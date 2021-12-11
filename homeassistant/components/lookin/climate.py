@@ -1,15 +1,16 @@
 """The lookin integration climate platform."""
 from __future__ import annotations
 
-from collections.abc import Coroutine
+from collections.abc import Callable, Coroutine
 from datetime import timedelta
 import logging
-from typing import Any, Callable, Final, cast
+from typing import Any, Final, cast
 
 from aiolookin import Climate, MeteoSensor, SensorID
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
+    ATTR_HVAC_MODE,
     FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
@@ -151,6 +152,28 @@ class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
         self._climate.temp_celsius = int(temperature)
+        lookin_index = LOOKIN_HVAC_MODE_IDX_TO_HASS
+        if hvac_mode := kwargs.get(ATTR_HVAC_MODE):
+            self._climate.hvac_mode = HASS_TO_LOOKIN_HVAC_MODE[hvac_mode]
+        elif self._climate.hvac_mode == lookin_index.index(HVAC_MODE_OFF):
+            #
+            # If the device is off, and the user didn't specify an HVAC mode
+            # (which is the default when using the HA UI), the device won't turn
+            # on without having an HVAC mode passed.
+            #
+            # We picked the hvac mode based on the current temp if its available
+            # since only some units support auto, but most support either heat
+            # or cool otherwise we set auto since we don't have a way to make
+            # an educated guess.
+            #
+            meteo_data: MeteoSensor = self._meteo_coordinator.data
+            current_temp = meteo_data.temperature
+            if not current_temp:
+                self._climate.hvac_mode = lookin_index.index(HVAC_MODE_AUTO)
+            elif current_temp >= self._climate.temp_celsius:
+                self._climate.hvac_mode = lookin_index.index(HVAC_MODE_COOL)
+            else:
+                self._climate.hvac_mode = lookin_index.index(HVAC_MODE_HEAT)
         await self._async_update_conditioner()
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:

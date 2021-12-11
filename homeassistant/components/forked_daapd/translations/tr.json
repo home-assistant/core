@@ -1,20 +1,41 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "not_forked_daapd": "Cihaz, forked-daapd sunucusu de\u011fil."
         },
         "error": {
+            "forbidden": "Ba\u011flan\u0131lam\u0131yor. L\u00fctfen forked-daapd a\u011f izinlerinizi kontrol edin.",
             "unknown_error": "Beklenmeyen hata",
-            "wrong_password": "Yanl\u0131\u015f parola."
+            "websocket_not_enabled": "forked-daapd sunucu websocket etkin de\u011fil.",
+            "wrong_host_or_port": "Ba\u011flan\u0131lam\u0131yor. L\u00fctfen ana bilgisayar\u0131 ve ba\u011flant\u0131 noktas\u0131n\u0131 kontrol edin.",
+            "wrong_password": "Yanl\u0131\u015f parola.",
+            "wrong_server_type": "> = 27.0 s\u00fcr\u00fcm\u00fcne sahip bir forked-daapd sunucusu gerektirir."
         },
+        "flow_title": "{name} ({host})",
         "step": {
             "user": {
                 "data": {
-                    "host": "Ana Bilgisayar",
+                    "host": "Ana bilgisayar",
                     "name": "Kolay Ad\u0131",
                     "password": "API parolas\u0131 (parola yoksa bo\u015f b\u0131rak\u0131n)",
                     "port": "API Port"
-                }
+                },
+                "title": "Forked-daapd cihaz\u0131n\u0131 kurun"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "librespot_java_port": "librespot-java boru kontrol\u00fc i\u00e7in ba\u011flant\u0131 noktas\u0131 (kullan\u0131l\u0131yorsa)",
+                    "max_playlists": "Kaynak olarak kullan\u0131lan maksimum oynatma listesi say\u0131s\u0131",
+                    "tts_pause_time": "TTS'den \u00f6nce ve sonra duraklatmak i\u00e7in saniyeler",
+                    "tts_volume": "TTS ses seviyesi (aral\u0131k [0,1])"
+                },
+                "description": "Forked-daapd entegrasyonu i\u00e7in \u00e7e\u015fitli se\u00e7enekleri ayarlay\u0131n.",
+                "title": "Forked-daapd se\u00e7eneklerini yap\u0131land\u0131r\u0131n"
             }
         }
     }

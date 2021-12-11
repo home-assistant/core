@@ -7,6 +7,7 @@
         "error": {
             "connection_error": "Impossible de se connecter \u00e0 ESP. Assurez-vous que votre fichier YAML contient une ligne 'api:'.",
             "invalid_auth": "Authentification invalide",
+            "invalid_psk": "La cl\u00e9 de chiffrement de transport n\u2019est pas valide. Assurez-vous qu\u2019elle correspond \u00e0 ce que vous avez dans votre configuration",
             "resolve_error": "Impossible de r\u00e9soudre l'adresse de l'ESP. Si cette erreur persiste, veuillez d\u00e9finir une adresse IP statique: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
         },
         "flow_title": "ESPHome: {name}",
@@ -20,6 +21,12 @@
             "discovery_confirm": {
                 "description": "Voulez-vous ajouter le n\u0153ud ESPHome ` {name} ` \u00e0 Home Assistant?",
                 "title": "N\u0153ud ESPHome d\u00e9couvert"
+            },
+            "encryption_key": {
+                "data": {
+                    "noise_psk": "Cl\u00e9 de chiffrement"
+                },
+                "description": "Entrez la cl\u00e9 de chiffrement que vous avez d\u00e9finie dans votre configuration pour {name}."
             },
             "user": {
                 "data": {

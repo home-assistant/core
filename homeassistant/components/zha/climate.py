@@ -405,8 +405,7 @@ class Thermostat(ZhaEntity, ClimateEntity):
             # occupancy attribute is an unreportable attribute, but if we get
             # an attribute update for an "occupied" setpoint, there's a chance
             # occupancy has changed
-            occupancy = await self._thrm.get_occupancy()
-            if occupancy is True:
+            if await self._thrm.get_occupancy() is True:
                 self._preset = PRESET_NONE
 
         self.debug("Attribute '%s' = %s update", record.attr_name, record.value)
@@ -600,7 +599,7 @@ class ZenWithinThermostat(Thermostat):
     channel_names=CHANNEL_THERMOSTAT,
     aux_channels=CHANNEL_FAN,
     manufacturers="Centralite",
-    models="3157100",
+    models={"3157100", "3157100-E"},
     stop_on_match=True,
 )
 class CentralitePearl(ZenWithinThermostat):
@@ -614,10 +613,13 @@ class CentralitePearl(ZenWithinThermostat):
         "_TZE200_ywdxldoj",
         "_TZE200_cwnjrr72",
         "_TZE200_b6wax7g0",
+        "_TZE200_2atgpdho",
+        "_TZE200_pvvbommb",
+        "_TZE200_4eeyebrt",
         "_TYST11_ckud7u2l",
         "_TYST11_ywdxldoj",
         "_TYST11_cwnjrr72",
-        "_TYST11_b6wax7g0",
+        "_TYST11_2atgpdho",
     },
 )
 class MoesThermostat(Thermostat):

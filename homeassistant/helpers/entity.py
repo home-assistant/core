@@ -15,6 +15,7 @@ from typing import Any, Final, Literal, TypedDict, final
 
 import voluptuous as vol
 
+from homeassistant.backports.enum import StrEnum
 from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -26,8 +27,7 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     ATTR_UNIT_OF_MEASUREMENT,
     DEVICE_DEFAULT_NAME,
-    ENTITY_CATEGORY_CONFIG,
-    ENTITY_CATEGORY_DIAGNOSTIC,
+    ENTITY_CATEGORIES,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -38,6 +38,7 @@ from homeassistant.const import (
 from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, NoEntitySpecifiedError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.event import Event, async_track_entity_registry_updated_event
 from homeassistant.helpers.typing import StateType
@@ -54,11 +55,6 @@ SOURCE_PLATFORM_CONFIG = "platform_config"
 # epsilon to make the string representation readable
 FLOAT_PRECISION = abs(int(math.floor(math.log10(abs(sys.float_info.epsilon))))) - 1
 
-
-ENTITY_CATEGORIES: Final[list[str]] = [
-    ENTITY_CATEGORY_CONFIG,
-    ENTITY_CATEGORY_DIAGNOSTIC,
-]
 
 ENTITY_CATEGORIES_SCHEMA: Final = vol.In(ENTITY_CATEGORIES)
 
@@ -133,7 +129,7 @@ def get_device_class(hass: HomeAssistant, entity_id: str) -> str | None:
     if not (entry := entity_registry.async_get(entity_id)):
         raise HomeAssistantError(f"Unknown entity {entity_id}")
 
-    return entry.device_class
+    return entry.device_class or entry.original_device_class
 
 
 def get_supported_features(hass: HomeAssistant, entity_id: str) -> int:
@@ -174,7 +170,7 @@ class DeviceInfo(TypedDict, total=False):
     default_manufacturer: str
     default_model: str
     default_name: str
-    entry_type: str | None
+    entry_type: DeviceEntryType | None
     identifiers: set[tuple[str, str]]
     manufacturer: str | None
     model: str | None
@@ -182,6 +178,24 @@ class DeviceInfo(TypedDict, total=False):
     suggested_area: str | None
     sw_version: str | None
     via_device: tuple[str, str]
+
+
+class EntityCategory(StrEnum):
+    """Category of an entity.
+
+    An entity with a category will:
+    - Not be exposed to cloud, Alexa, or Google Assistant components
+    - Not be included in indirect service calls to devices or areas
+    """
+
+    # Config: An entity which allows changing the configuration of a device
+    CONFIG = "config"
+
+    # Diagnostic: An entity exposing some configuration parameter or diagnostics of a device
+    DIAGNOSTIC = "diagnostic"
+
+    # System: An entity which is not useful for the user to interact with
+    SYSTEM = "system"
 
 
 @dataclass
@@ -192,7 +206,9 @@ class EntityDescription:
     key: str
 
     device_class: str | None = None
-    entity_category: Literal["config", "diagnostic"] | None = None
+    entity_category: EntityCategory | Literal[
+        "config", "diagnostic", "system"
+    ] | None = None
     entity_registry_enabled_default: bool = True
     force_update: bool = False
     icon: str | None = None
@@ -225,6 +241,9 @@ class Entity(ABC):
     # If we reported this entity is updated while disabled
     _disabled_reported = False
 
+    # If we reported this entity is using deprecated device_state_attributes
+    _deprecated_device_state_attributes_reported = False
+
     # Protect for multiple updates
     _update_staged = False
 
@@ -251,7 +270,7 @@ class Entity(ABC):
     _attr_context_recent_time: timedelta = timedelta(seconds=5)
     _attr_device_class: str | None
     _attr_device_info: DeviceInfo | None = None
-    _attr_entity_category: str | None
+    _attr_entity_category: EntityCategory | str | None
     _attr_entity_picture: str | None = None
     _attr_entity_registry_enabled_default: bool
     _attr_extra_state_attributes: MutableMapping[str, Any]
@@ -419,7 +438,7 @@ class Entity(ABC):
         return self._attr_attribution
 
     @property
-    def entity_category(self) -> str | None:
+    def entity_category(self) -> EntityCategory | str | None:
         """Return the category of the entity, if any."""
         if hasattr(self, "_attr_entity_category"):
             return self._attr_entity_category
@@ -521,7 +540,19 @@ class Entity(ABC):
             attr.update(self.state_attributes or {})
             extra_state_attributes = self.extra_state_attributes
             # Backwards compatibility for "device_state_attributes" deprecated in 2021.4
-            # Add warning in 2021.6, remove in 2021.10
+            # Warning added in 2021.12, will be removed in 2022.4
+            if (
+                self.device_state_attributes is not None
+                and not self._deprecated_device_state_attributes_reported
+            ):
+                report_issue = self._suggest_report_issue()
+                _LOGGER.warning(
+                    "Entity %s (%s) implements device_state_attributes. Please %s",
+                    self.entity_id,
+                    type(self),
+                    report_issue,
+                )
+                self._deprecated_device_state_attributes_reported = True
             if extra_state_attributes is None:
                 extra_state_attributes = self.device_state_attributes
             attr.update(extra_state_attributes or {})
@@ -531,27 +562,29 @@ class Entity(ABC):
             attr[ATTR_UNIT_OF_MEASUREMENT] = unit_of_measurement
 
         entry = self.registry_entry
-        # pylint: disable=consider-using-ternary
-        if (name := (entry and entry.name) or self.name) is not None:
-            attr[ATTR_FRIENDLY_NAME] = name
-
-        if (icon := (entry and entry.icon) or self.icon) is not None:
-            attr[ATTR_ICON] = icon
-
-        if (entity_picture := self.entity_picture) is not None:
-            attr[ATTR_ENTITY_PICTURE] = entity_picture
 
         if assumed_state := self.assumed_state:
             attr[ATTR_ASSUMED_STATE] = assumed_state
 
-        if (supported_features := self.supported_features) is not None:
-            attr[ATTR_SUPPORTED_FEATURES] = supported_features
-
-        if (device_class := self.device_class) is not None:
-            attr[ATTR_DEVICE_CLASS] = str(device_class)
-
         if (attribution := self.attribution) is not None:
             attr[ATTR_ATTRIBUTION] = attribution
+
+        if (
+            device_class := (entry and entry.device_class) or self.device_class
+        ) is not None:
+            attr[ATTR_DEVICE_CLASS] = str(device_class)
+
+        if (entity_picture := self.entity_picture) is not None:
+            attr[ATTR_ENTITY_PICTURE] = entity_picture
+
+        if (icon := (entry and entry.icon) or self.icon) is not None:
+            attr[ATTR_ICON] = icon
+
+        if (name := (entry and entry.name) or self.name) is not None:
+            attr[ATTR_FRIENDLY_NAME] = name
+
+        if (supported_features := self.supported_features) is not None:
+            attr[ATTR_SUPPORTED_FEATURES] = supported_features
 
         end = timer()
 

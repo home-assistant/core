@@ -694,7 +694,7 @@ def test_home_driver():
 
     # pair
     with patch("pyhap.accessory_driver.AccessoryDriver.pair") as mock_pair, patch(
-        "homeassistant.components.homekit.accessories.dismiss_setup_message"
+        "homeassistant.components.homekit.accessories.async_dismiss_setup_message"
     ) as mock_dissmiss_msg:
         driver.pair("client_uuid", "client_public", b"1")
 
@@ -703,7 +703,7 @@ def test_home_driver():
 
     # unpair
     with patch("pyhap.accessory_driver.AccessoryDriver.unpair") as mock_unpair, patch(
-        "homeassistant.components.homekit.accessories.show_setup_message"
+        "homeassistant.components.homekit.accessories.async_show_setup_message"
     ) as mock_show_msg:
         driver.unpair("client_uuid")
 

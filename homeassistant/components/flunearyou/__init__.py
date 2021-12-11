@@ -26,8 +26,6 @@ PLATFORMS = ["sensor"]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Flu Near You as config entry."""
-    hass.data.setdefault(DOMAIN, {})
-
     websession = aiohttp_client.async_get_clientsession(hass)
     client = Client(session=websession)
 
@@ -64,6 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         data_init_tasks.append(coordinator.async_refresh())
 
     await asyncio.gather(*data_init_tasks)
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinators
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)

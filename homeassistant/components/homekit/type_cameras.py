@@ -333,8 +333,7 @@ class Camera(HomeAccessory, PyhapCamera):
             session_info["id"],
             stream_config,
         )
-        input_source = await self._async_get_stream_source()
-        if not input_source:
+        if not (input_source := await self._async_get_stream_source()):
             _LOGGER.error("Camera has no stream source")
             return False
         if "-i " not in input_source:

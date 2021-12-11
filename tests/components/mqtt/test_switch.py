@@ -6,7 +6,12 @@ import pytest
 
 from homeassistant.components import switch
 from homeassistant.components.mqtt.switch import MQTT_SWITCH_ATTRIBUTES_BLOCKED
-from homeassistant.const import ATTR_ASSUMED_STATE, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    ATTR_ASSUMED_STATE,
+    ATTR_DEVICE_CLASS,
+    STATE_OFF,
+    STATE_ON,
+)
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
 
@@ -56,6 +61,7 @@ async def test_controlling_state_via_topic(hass, mqtt_mock):
                 "command_topic": "command-topic",
                 "payload_on": 1,
                 "payload_off": 0,
+                "device_class": "switch",
             }
         },
     )
@@ -63,6 +69,7 @@ async def test_controlling_state_via_topic(hass, mqtt_mock):
 
     state = hass.states.get("switch.test")
     assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == "switch"
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "state-topic", "1")
@@ -387,6 +394,7 @@ async def test_discovery_update_unchanged_switch(hass, mqtt_mock, caplog):
     """Test update of discovered switch."""
     data1 = (
         '{ "name": "Beer",'
+        '  "device_class": "switch",'
         '  "state_topic": "test_topic",'
         '  "command_topic": "test_topic" }'
     )

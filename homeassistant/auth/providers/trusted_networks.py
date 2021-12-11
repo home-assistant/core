@@ -194,6 +194,12 @@ class TrustedNetworksAuthProvider(AuthProvider):
         if any(ip_addr in trusted_proxy for trusted_proxy in self.trusted_proxies):
             raise InvalidAuthError("Can't allow access from a proxy server")
 
+        if "cloud" in self.hass.config.components:
+            from hass_nabucasa import remote  # pylint: disable=import-outside-toplevel
+
+            if remote.is_cloud_request.get():
+                raise InvalidAuthError("Can't allow access from Home Assistant Cloud")
+
     @callback
     def async_validate_refresh_token(
         self, refresh_token: RefreshToken, remote_ip: str | None = None

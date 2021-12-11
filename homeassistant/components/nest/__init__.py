@@ -1,16 +1,21 @@
 """Support for Nest devices."""
+from __future__ import annotations
 
+from http import HTTPStatus
 import logging
 
+from aiohttp import web
 from google_nest_sdm.event import EventMessage
 from google_nest_sdm.exceptions import (
     AuthException,
     ConfigurationException,
     GoogleNestException,
 )
-from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 import voluptuous as vol
 
+from homeassistant.auth.permissions.const import POLICY_READ
+from homeassistant.components.http.const import KEY_HASS_USER
+from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_BINARY_SENSORS,
@@ -21,24 +26,34 @@ from homeassistant.const import (
     CONF_STRUCTURE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import (
-    aiohttp_client,
-    config_entry_oauth2_flow,
-    config_validation as cv,
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+    Unauthorized,
 )
+from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
+from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.helpers.typing import ConfigType
 
 from . import api, config_flow
-from .const import DATA_SDM, DATA_SUBSCRIBER, DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
+from .const import (
+    CONF_PROJECT_ID,
+    CONF_SUBSCRIBER_ID,
+    DATA_NEST_CONFIG,
+    DATA_SDM,
+    DATA_SUBSCRIBER,
+    DOMAIN,
+    OAUTH2_AUTHORIZE,
+    OAUTH2_TOKEN,
+    OOB_REDIRECT_URI,
+)
 from .events import EVENT_NAME_MAP, NEST_EVENT
 from .legacy import async_setup_legacy, async_setup_legacy_entry
+from .media_source import get_media_source_devices
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_PROJECT_ID = "project_id"
-CONF_SUBSCRIBER_ID = "subscriber_id"
-DATA_NEST_CONFIG = "nest_config"
 DATA_NEST_UNAVAILABLE = "nest_unavailable"
 
 NEST_SETUP_NOTIFICATION = "nest_setup"
@@ -68,6 +83,56 @@ CONFIG_SCHEMA = vol.Schema(
 
 # Platforms for SDM API
 PLATFORMS = ["sensor", "camera", "climate"]
+WEB_AUTH_DOMAIN = DOMAIN
+INSTALLED_AUTH_DOMAIN = f"{DOMAIN}.installed"
+
+# Fetch media for events with an in memory cache. The largest media items
+# are mp4 clips at ~90kb each, so this totals a few MB per camera.
+# Note: Media for events can only be published within 30 seconds of the event
+EVENT_MEDIA_CACHE_SIZE = 64
+
+
+class WebAuth(config_entry_oauth2_flow.LocalOAuth2Implementation):
+    """OAuth implementation using OAuth for web applications."""
+
+    name = "OAuth for Web"
+
+    def __init__(
+        self, hass: HomeAssistant, client_id: str, client_secret: str, project_id: str
+    ) -> None:
+        """Initialize WebAuth."""
+        super().__init__(
+            hass,
+            WEB_AUTH_DOMAIN,
+            client_id,
+            client_secret,
+            OAUTH2_AUTHORIZE.format(project_id=project_id),
+            OAUTH2_TOKEN,
+        )
+
+
+class InstalledAppAuth(config_entry_oauth2_flow.LocalOAuth2Implementation):
+    """OAuth implementation using OAuth for installed applications."""
+
+    name = "OAuth for Apps"
+
+    def __init__(
+        self, hass: HomeAssistant, client_id: str, client_secret: str, project_id: str
+    ) -> None:
+        """Initialize InstalledAppAuth."""
+        super().__init__(
+            hass,
+            INSTALLED_AUTH_DOMAIN,
+            client_id,
+            client_secret,
+            OAUTH2_AUTHORIZE.format(project_id=project_id),
+            OAUTH2_TOKEN,
+        )
+
+    @property
+    def redirect_uri(self) -> str:
+        """Return the redirect uri."""
+        return OOB_REDIRECT_URI
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -80,23 +145,26 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if CONF_PROJECT_ID not in config[DOMAIN]:
         return await async_setup_legacy(hass, config)
 
-    if CONF_SUBSCRIBER_ID not in config[DOMAIN]:
-        _LOGGER.error("Configuration option 'subscriber_id' required")
-        return False
-
     # For setup of ConfigEntry below
     hass.data[DOMAIN][DATA_NEST_CONFIG] = config[DOMAIN]
     project_id = config[DOMAIN][CONF_PROJECT_ID]
     config_flow.NestFlowHandler.register_sdm_api(hass)
     config_flow.NestFlowHandler.async_register_implementation(
         hass,
-        config_entry_oauth2_flow.LocalOAuth2Implementation(
+        InstalledAppAuth(
             hass,
-            DOMAIN,
             config[DOMAIN][CONF_CLIENT_ID],
             config[DOMAIN][CONF_CLIENT_SECRET],
-            OAUTH2_AUTHORIZE.format(project_id=project_id),
-            OAUTH2_TOKEN,
+            project_id,
+        ),
+    )
+    config_flow.NestFlowHandler.async_register_implementation(
+        hass,
+        WebAuth(
+            hass,
+            config[DOMAIN][CONF_CLIENT_ID],
+            config[DOMAIN][CONF_CLIENT_SECRET],
+            project_id,
         ),
     )
 
@@ -129,7 +197,7 @@ class SignalUpdateCallback:
                 "device_id": device_entry.id,
                 "type": event_type,
                 "timestamp": event_message.timestamp,
-                "nest_event_id": image_event.event_id,
+                "nest_event_id": image_event.event_session_id,
             }
             self._hass.bus.async_fire(NEST_EVENT, message)
 
@@ -140,27 +208,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if DATA_SDM not in entry.data:
         return await async_setup_legacy_entry(hass, entry)
 
-    implementation = (
-        await config_entry_oauth2_flow.async_get_config_entry_implementation(
-            hass, entry
-        )
-    )
+    subscriber = await api.new_subscriber(hass, entry)
+    if not subscriber:
+        return False
+    # Keep media for last N events in memory
+    subscriber.cache_policy.event_cache_size = EVENT_MEDIA_CACHE_SIZE
+    subscriber.cache_policy.fetch = True
 
-    config = hass.data[DOMAIN][DATA_NEST_CONFIG]
-
-    session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
-    auth = api.AsyncConfigEntryAuth(
-        aiohttp_client.async_get_clientsession(hass),
-        session,
-        config[CONF_CLIENT_ID],
-        config[CONF_CLIENT_SECRET],
-    )
-    subscriber = GoogleNestSubscriber(
-        auth, config[CONF_PROJECT_ID], config[CONF_SUBSCRIBER_ID]
-    )
     callback = SignalUpdateCallback(hass)
     subscriber.set_update_callback(callback.async_handle_event)
-
     try:
         await subscriber.start_async()
     except AuthException as err:
@@ -191,6 +247,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
+    hass.http.register_view(NestEventMediaView(hass))
+
     return True
 
 
@@ -208,3 +266,72 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(DATA_NEST_UNAVAILABLE, None)
 
     return unload_ok
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle removal of pubsub subscriptions created during config flow."""
+    if DATA_SDM not in entry.data or CONF_SUBSCRIBER_ID not in entry.data:
+        return
+
+    subscriber = await api.new_subscriber(hass, entry)
+    if not subscriber:
+        return
+    _LOGGER.debug("Deleting subscriber '%s'", subscriber.subscriber_id)
+    try:
+        await subscriber.delete_subscription()
+    except GoogleNestException as err:
+        _LOGGER.warning(
+            "Unable to delete subscription '%s'; Will be automatically cleaned up by cloud console: %s",
+            subscriber.subscriber_id,
+            err,
+        )
+    finally:
+        subscriber.stop_async()
+
+
+class NestEventMediaView(HomeAssistantView):
+    """Returns media for related to events for a specific device.
+
+    This is primarily used to render media for events for MediaSource. The media type
+    depends on the specific device e.g. an image, or a movie clip preview.
+    """
+
+    url = "/api/nest/event_media/{device_id}/{event_id}"
+    name = "api:nest:event_media"
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize NestEventMediaView."""
+        self.hass = hass
+
+    async def get(
+        self, request: web.Request, device_id: str, event_id: str
+    ) -> web.StreamResponse:
+        """Start a GET request."""
+        user = request[KEY_HASS_USER]
+        entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
+        for entry in async_entries_for_device(entity_registry, device_id):
+            if not user.permissions.check_entity(entry.entity_id, POLICY_READ):
+                raise Unauthorized(entity_id=entry.entity_id)
+
+        devices = await get_media_source_devices(self.hass)
+        if not (nest_device := devices.get(device_id)):
+            return self._json_error(
+                f"No Nest Device found for '{device_id}'", HTTPStatus.NOT_FOUND
+            )
+        try:
+            event_media = await nest_device.event_media_manager.get_media(event_id)
+        except GoogleNestException as err:
+            raise HomeAssistantError("Unable to fetch media for event") from err
+        if not event_media:
+            return self._json_error(
+                f"No event found for event_id '{event_id}'", HTTPStatus.NOT_FOUND
+            )
+        media = event_media.media
+        return web.Response(
+            body=media.contents, content_type=media.event_image_type.content_type
+        )
+
+    def _json_error(self, message: str, status: HTTPStatus) -> web.StreamResponse:
+        """Return a json error message with additional logging."""
+        _LOGGER.debug(message)
+        return self.json_message(message, status)

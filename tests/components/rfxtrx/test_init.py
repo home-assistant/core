@@ -17,8 +17,8 @@ async def test_fire_event(hass, rfxtrx):
         device="/dev/serial/by-id/usb-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0",
         automatic_add=True,
         devices={
-            "0b1100cd0213c7f210010f51": {"fire_event": True},
-            "0716000100900970": {"fire_event": True},
+            "0b1100cd0213c7f210010f51": {},
+            "0716000100900970": {},
         },
     )
     mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)

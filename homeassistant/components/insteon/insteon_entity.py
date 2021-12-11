@@ -68,8 +68,7 @@ class InsteonEntity(Entity):
         if (description := self._insteon_device.description) is None:
             description = "Unknown Device"
         # Get an extension label if there is one
-        extension = self._get_label()
-        if extension:
+        if extension := self._get_label():
             extension = f" {extension}"
         return f"{description} {self._insteon_device.address}{extension}"
 

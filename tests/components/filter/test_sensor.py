@@ -1,6 +1,5 @@
 """The test for the data filter sensor platform."""
 from datetime import timedelta
-from os import path
 from unittest.mock import patch
 
 from pytest import fixture
@@ -30,7 +29,11 @@ import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import assert_setup_component, async_init_recorder_component
+from tests.common import (
+    assert_setup_component,
+    async_init_recorder_component,
+    get_fixture_path,
+)
 
 
 @fixture
@@ -184,11 +187,7 @@ async def test_source_state_none(hass, values):
     assert state.state == "0.0"
 
     # Force Template Reload
-    yaml_path = path.join(
-        _get_fixtures_base_path(),
-        "fixtures",
-        "template/sensor_configuration.yaml",
-    )
+    yaml_path = get_fixture_path("sensor_configuration.yaml", "template")
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             "template",
@@ -478,11 +477,8 @@ async def test_reload(hass):
 
     assert hass.states.get("sensor.test")
 
-    yaml_path = path.join(
-        _get_fixtures_base_path(),
-        "fixtures",
-        "filter/configuration.yaml",
-    )
+    yaml_path = get_fixture_path("configuration.yaml", "filter")
+
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             DOMAIN,
@@ -496,7 +492,3 @@ async def test_reload(hass):
 
     assert hass.states.get("sensor.test") is None
     assert hass.states.get("sensor.filtered_realistic_humidity")
-
-
-def _get_fixtures_base_path():
-    return path.dirname(path.dirname(path.dirname(__file__)))

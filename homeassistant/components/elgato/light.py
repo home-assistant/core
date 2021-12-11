@@ -23,7 +23,7 @@ from homeassistant.helpers.entity_platform import (
     async_get_current_platform,
 )
 
-from .const import DATA_ELGATO_CLIENT, DOMAIN, SERVICE_IDENTIFY
+from .const import DOMAIN, SERVICE_IDENTIFY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Elgato Light based on a config entry."""
-    elgato: Elgato = hass.data[DOMAIN][entry.entry_id][DATA_ELGATO_CLIENT]
+    elgato: Elgato = hass.data[DOMAIN][entry.entry_id]
     info = await elgato.info()
     settings = await elgato.settings()
     async_add_entities([ElgatoLight(elgato, info, settings)], True)

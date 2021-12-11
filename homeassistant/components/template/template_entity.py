@@ -2,12 +2,18 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+import itertools
 import logging
 from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_ENTITY_PICTURE_TEMPLATE,
+    CONF_ICON,
+    CONF_ICON_TEMPLATE,
+)
 from homeassistant.core import EVENT_HOMEASSISTANT_START, CoreState, callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
@@ -20,7 +26,68 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.template import Template, result_as_boolean
 
+from .const import (
+    CONF_ATTRIBUTE_TEMPLATES,
+    CONF_ATTRIBUTES,
+    CONF_AVAILABILITY,
+    CONF_AVAILABILITY_TEMPLATE,
+    CONF_PICTURE,
+)
+
 _LOGGER = logging.getLogger(__name__)
+
+
+TEMPLATE_ENTITY_COMMON_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_ATTRIBUTES): vol.Schema({cv.string: cv.template}),
+        vol.Optional(CONF_AVAILABILITY): cv.template,
+        vol.Optional(CONF_ICON): cv.template,
+        vol.Optional(CONF_PICTURE): cv.template,
+    }
+)
+
+TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY = vol.Schema(
+    {
+        vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
+    }
+)
+
+TEMPLATE_ENTITY_COMMON_SCHEMA_LEGACY = vol.Schema(
+    {
+        vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
+        vol.Optional(CONF_ICON_TEMPLATE): cv.template,
+    }
+).extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY.schema)
+
+
+LEGACY_FIELDS = {
+    CONF_ICON_TEMPLATE: CONF_ICON,
+    CONF_ENTITY_PICTURE_TEMPLATE: CONF_PICTURE,
+    CONF_AVAILABILITY_TEMPLATE: CONF_AVAILABILITY,
+    CONF_ATTRIBUTE_TEMPLATES: CONF_ATTRIBUTES,
+}
+
+
+def rewrite_common_legacy_to_modern_conf(
+    entity_cfg: dict[str, Any], extra_legacy_fields: dict[str, str] = None
+) -> list[dict]:
+    """Rewrite legacy config."""
+    entity_cfg = {**entity_cfg}
+    if extra_legacy_fields is None:
+        extra_legacy_fields = {}
+
+    for from_key, to_key in itertools.chain(
+        LEGACY_FIELDS.items(), extra_legacy_fields.items()
+    ):
+        if from_key not in entity_cfg or to_key in entity_cfg:
+            continue
+
+        val = entity_cfg.pop(from_key)
+        if isinstance(val, str):
+            val = Template(val)
+        entity_cfg[to_key] = val
+
+    return entity_cfg
 
 
 class _TemplateAttribute:
@@ -125,16 +192,23 @@ class TemplateEntity(Entity):
         icon_template=None,
         entity_picture_template=None,
         attribute_templates=None,
+        config=None,
     ):
         """Template Entity."""
         self._template_attrs = {}
         self._async_update = None
-        self._attribute_templates = attribute_templates
         self._attr_extra_state_attributes = {}
-        self._availability_template = availability_template
-        self._icon_template = icon_template
-        self._entity_picture_template = entity_picture_template
         self._self_ref_update_count = 0
+        if config is None:
+            self._attribute_templates = attribute_templates
+            self._availability_template = availability_template
+            self._icon_template = icon_template
+            self._entity_picture_template = entity_picture_template
+        else:
+            self._attribute_templates = config.get(CONF_ATTRIBUTES)
+            self._availability_template = config.get(CONF_AVAILABILITY)
+            self._icon_template = config.get(CONF_ICON)
+            self._entity_picture_template = config.get(CONF_PICTURE)
 
     @callback
     def _update_available(self, result):

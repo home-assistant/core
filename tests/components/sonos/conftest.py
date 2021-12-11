@@ -70,6 +70,11 @@ def soco_fixture(music_library, speaker_info, battery_info, alarm_clock):
         mock_soco.night_mode = True
         mock_soco.dialog_mode = True
         mock_soco.volume = 19
+        mock_soco.bass = 1
+        mock_soco.treble = -1
+        mock_soco.sub_enabled = False
+        mock_soco.surround_enabled = True
+        mock_soco.soundbar_audio_input_format = "Dolby 5.1"
         mock_soco.get_battery_info.return_value = battery_info
         mock_soco.all_zones = [mock_soco]
         yield mock_soco
@@ -92,10 +97,14 @@ def discover_fixture(soco):
 
     async def do_callback(hass, callback, *args, **kwargs):
         await callback(
-            {
-                ssdp.ATTR_UPNP_UDN: f"uuid:{soco.uid}",
-                ssdp.ATTR_SSDP_LOCATION: f"http://{soco.ip_address}/",
-            },
+            ssdp.SsdpServiceInfo(
+                ssdp_location=f"http://{soco.ip_address}/",
+                ssdp_st="urn:schemas-upnp-org:device:ZonePlayer:1",
+                ssdp_usn=f"uuid:{soco.uid}_MR::urn:schemas-upnp-org:service:GroupRenderingControl:1",
+                upnp={
+                    ssdp.ATTR_UPNP_UDN: f"uuid:{soco.uid}",
+                },
+            ),
             ssdp.SsdpChange.ALIVE,
         )
         return MagicMock()

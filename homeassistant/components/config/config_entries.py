@@ -249,8 +249,7 @@ def get_entry(
     msg_id: int,
 ) -> config_entries.ConfigEntry | None:
     """Get entry, send error message if it doesn't exist."""
-    entry = hass.config_entries.async_get_entry(entry_id)
-    if entry is None:
+    if (entry := hass.config_entries.async_get_entry(entry_id)) is None:
         send_entry_not_found(connection, msg_id)
     return entry
 
@@ -367,13 +366,11 @@ async def ignore_config_flow(hass, connection, msg):
 def entry_json(entry: config_entries.ConfigEntry) -> dict:
     """Return JSON value of a config entry."""
     handler = config_entries.HANDLERS.get(entry.domain)
-    supports_options = (
-        # Guard in case handler is no longer registered (custom component etc)
-        handler is not None
-        # pylint: disable=comparison-with-callable
-        and handler.async_get_options_flow
-        != config_entries.ConfigFlow.async_get_options_flow
+    # work out if handler has support for options flow
+    supports_options = handler is not None and handler.async_supports_options_flow(
+        entry
     )
+
     return {
         "entry_id": entry.entry_id,
         "domain": entry.domain,

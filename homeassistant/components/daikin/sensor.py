@@ -6,7 +6,11 @@ from dataclasses import dataclass
 
 from pydaikin.daikin_base import Appliance
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import (
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_HUMIDITY,
@@ -49,6 +53,7 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         key=ATTR_INSIDE_TEMPERATURE,
         name="Inside Temperature",
         device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
         native_unit_of_measurement=TEMP_CELSIUS,
         value_func=lambda device: device.inside_temperature,
     ),
@@ -56,6 +61,7 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         key=ATTR_OUTSIDE_TEMPERATURE,
         name="Outside Temperature",
         device_class=DEVICE_CLASS_TEMPERATURE,
+        state_class=STATE_CLASS_MEASUREMENT,
         native_unit_of_measurement=TEMP_CELSIUS,
         value_func=lambda device: device.outside_temperature,
     ),
@@ -63,6 +69,7 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         key=ATTR_HUMIDITY,
         name="Humidity",
         device_class=DEVICE_CLASS_HUMIDITY,
+        state_class=STATE_CLASS_MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         value_func=lambda device: device.humidity,
     ),
@@ -70,6 +77,7 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         key=ATTR_TARGET_HUMIDITY,
         name="Target Humidity",
         device_class=DEVICE_CLASS_HUMIDITY,
+        state_class=STATE_CLASS_MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         value_func=lambda device: device.humidity,
     ),

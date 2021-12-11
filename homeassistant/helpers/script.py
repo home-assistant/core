@@ -262,11 +262,7 @@ async def async_validate_action_config(
             config = platform.ACTION_SCHEMA(config)  # type: ignore
 
     elif action_type == cv.SCRIPT_ACTION_CHECK_CONDITION:
-        if config[CONF_CONDITION] == "device":
-            platform = await device_automation.async_get_device_automation_platform(
-                hass, config[CONF_DOMAIN], "condition"
-            )
-            config = platform.CONDITION_SCHEMA(config)  # type: ignore
+        config = await condition.async_validate_condition_config(hass, config)  # type: ignore
 
     elif action_type == cv.SCRIPT_ACTION_WAIT_FOR_TRIGGER:
         config[CONF_WAIT_FOR_TRIGGER] = await async_validate_trigger_config(
@@ -274,7 +270,17 @@ async def async_validate_action_config(
         )
 
     elif action_type == cv.SCRIPT_ACTION_REPEAT:
-        config[CONF_SEQUENCE] = await async_validate_actions_config(
+        if CONF_UNTIL in config[CONF_REPEAT]:
+            conditions = await condition.async_validate_conditions_config(
+                hass, config[CONF_REPEAT][CONF_UNTIL]
+            )
+            config[CONF_REPEAT][CONF_UNTIL] = conditions
+        if CONF_WHILE in config[CONF_REPEAT]:
+            conditions = await condition.async_validate_conditions_config(
+                hass, config[CONF_REPEAT][CONF_WHILE]
+            )
+            config[CONF_REPEAT][CONF_WHILE] = conditions
+        config[CONF_REPEAT][CONF_SEQUENCE] = await async_validate_actions_config(
             hass, config[CONF_REPEAT][CONF_SEQUENCE]
         )
 
@@ -285,6 +291,10 @@ async def async_validate_action_config(
             )
 
         for choose_conf in config[CONF_CHOOSE]:
+            conditions = await condition.async_validate_conditions_config(
+                hass, choose_conf[CONF_CONDITIONS]
+            )
+            choose_conf[CONF_CONDITIONS] = conditions
             choose_conf[CONF_SEQUENCE] = await async_validate_actions_config(
                 hass, choose_conf[CONF_SEQUENCE]
             )
@@ -476,7 +486,10 @@ class _ScriptRun:
         def async_script_wait(entity_id, from_s, to_s):
             """Handle script after template condition is true."""
             wait_var = self._variables["wait"]
-            wait_var["remaining"] = to_context.remaining if to_context else timeout
+            if to_context and to_context.deadline:
+                wait_var["remaining"] = to_context.deadline - self._hass.loop.time()
+            else:
+                wait_var["remaining"] = timeout
             wait_var["completed"] = True
             done.set()
 
@@ -777,7 +790,10 @@ class _ScriptRun:
 
         async def async_done(variables, context=None):
             wait_var = self._variables["wait"]
-            wait_var["remaining"] = to_context.remaining if to_context else timeout
+            if to_context and to_context.deadline:
+                wait_var["remaining"] = to_context.deadline - self._hass.loop.time()
+            else:
+                wait_var["remaining"] = timeout
             wait_var["trigger"] = variables["trigger"]
             done.set()
 
@@ -1273,7 +1289,7 @@ class Script:
         else:
             config_cache_key = frozenset((k, str(v)) for k, v in config.items())
         if not (cond := self._config_cache.get(config_cache_key)):
-            cond = await condition.async_from_config(self._hass, config, False)
+            cond = await condition.async_from_config(self._hass, config)
             self._config_cache[config_cache_key] = cond
         return cond
 

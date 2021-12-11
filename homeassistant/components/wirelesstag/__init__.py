@@ -3,7 +3,8 @@ import logging
 
 from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
-from wirelesstagpy import WirelessTags, WirelessTagsException
+from wirelesstagpy import WirelessTags
+from wirelesstagpy.exceptions import WirelessTagsException
 
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,

@@ -362,7 +362,13 @@ async def test_options_flow_exclude_mode_basic(hass, mock_get_source_ip):
 
 
 async def test_options_flow_devices(
-    mock_hap, hass, demo_cleanup, device_reg, entity_reg, mock_get_source_ip
+    mock_hap,
+    hass,
+    demo_cleanup,
+    device_reg,
+    entity_reg,
+    mock_get_source_ip,
+    mock_async_zeroconf,
 ):
     """Test devices can be bridged."""
     config_entry = MockConfigEntry(
@@ -441,7 +447,7 @@ async def test_options_flow_devices(
 
 
 async def test_options_flow_devices_preserved_when_advanced_off(
-    mock_hap, hass, mock_get_source_ip
+    mock_hap, hass, mock_get_source_ip, mock_async_zeroconf
 ):
     """Test devices are preserved if they were added in advanced mode but it was turned off."""
     config_entry = MockConfigEntry(
@@ -508,8 +514,10 @@ async def test_options_flow_devices_preserved_when_advanced_off(
     }
 
 
-async def test_options_flow_with_non_existant_entity(hass, mock_get_source_ip):
-    """Test config flow options in include mode."""
+async def test_options_flow_include_mode_with_non_existant_entity(
+    hass, mock_get_source_ip
+):
+    """Test config flow options in include mode with a non-existent entity."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_NAME: "mock_name", CONF_PORT: 12345},
@@ -558,6 +566,63 @@ async def test_options_flow_with_non_existant_entity(hass, mock_get_source_ip):
             "exclude_entities": [],
             "include_domains": ["fan", "vacuum"],
             "include_entities": ["climate.new", "climate.front_gate"],
+        },
+    }
+
+
+async def test_options_flow_exclude_mode_with_non_existant_entity(
+    hass, mock_get_source_ip
+):
+    """Test config flow options in exclude mode with a non-existent entity."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_NAME: "mock_name", CONF_PORT: 12345},
+        options={
+            "filter": {
+                "include_domains": ["climate"],
+                "exclude_entities": ["climate.not_exist", "climate.front_gate"],
+            },
+        },
+    )
+    config_entry.add_to_hass(hass)
+    hass.states.async_set("climate.front_gate", "off")
+    hass.states.async_set("climate.new", "off")
+
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(
+        config_entry.entry_id, context={"show_advanced_options": False}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"domains": ["climate"]},
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "include_exclude"
+
+    entities = result["data_schema"]({})["entities"]
+    assert "climate.not_exist" not in entities
+
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "entities": ["climate.new", "climate.front_gate"],
+            "include_exclude_mode": "exclude",
+        },
+    )
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert config_entry.options == {
+        "mode": "bridge",
+        "filter": {
+            "exclude_domains": [],
+            "exclude_entities": ["climate.new", "climate.front_gate"],
+            "include_domains": ["climate"],
+            "include_entities": [],
         },
     }
 

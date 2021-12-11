@@ -11,6 +11,7 @@ from homeassistant.components.switch import SwitchEntity, SwitchEntityDescriptio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TYPE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -57,6 +58,15 @@ DEVICE_SWITCHES: dict[str, tuple[OneWireEntityDescription, ...]] = {
             )
             for id in DEVICE_KEYS_A_B
         ]
+    ),
+    "26": (
+        OneWireSwitchEntityDescription(
+            key="IAD",
+            entity_registry_enabled_default=False,
+            entity_category=EntityCategory.CONFIG,
+            name="IAD",
+            read_mode=READ_MODE_BOOL,
+        ),
     ),
     "29": tuple(
         [

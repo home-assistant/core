@@ -319,7 +319,7 @@ async def async_wait_for_elk_to_sync(elk, timeout, conf_host):
     elk.add_handler("login", login_status)
     elk.add_handler("sync_complete", sync_complete)
     try:
-        with async_timeout.timeout(timeout):
+        async with async_timeout.timeout(timeout):
             await event.wait()
     except asyncio.TimeoutError:
         _LOGGER.error(

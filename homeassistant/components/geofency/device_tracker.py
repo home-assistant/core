@@ -106,9 +106,7 @@ class GeofencyEntity(TrackerEntity, RestoreEntity):
         if self._attributes:
             return
 
-        state = await self.async_get_last_state()
-
-        if state is None:
+        if (state := await self.async_get_last_state()) is None:
             self._gps = (None, None)
             return
 

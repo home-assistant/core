@@ -209,7 +209,8 @@ class ControllerDevice(ClimateEntity):
                 return
             self.async_write_ha_state()
             for zone in self.zones.values():
-                zone.async_schedule_update_ha_state()
+                if zone.hass is not None:
+                    zone.async_schedule_update_ha_state()
 
         self.async_on_remove(
             async_dispatcher_connect(
@@ -244,7 +245,8 @@ class ControllerDevice(ClimateEntity):
         self._available = available
         self.async_write_ha_state()
         for zone in self.zones.values():
-            zone.async_schedule_update_ha_state()
+            if zone.hass is not None:
+                zone.async_schedule_update_ha_state()
 
     @property
     def unique_id(self):
@@ -494,6 +496,8 @@ class ZoneDevice(ClimateEntity):
         def zone_update(ctrl: Controller, zone: Zone) -> None:
             """Handle zone data updates."""
             if zone is not self._zone:
+                return
+            if not self.available:
                 return
             self._name = zone.name.title()
             self.async_write_ha_state()

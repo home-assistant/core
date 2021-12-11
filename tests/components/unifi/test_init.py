@@ -1,4 +1,4 @@
-"""Test UniFi setup process."""
+"""Test UniFi Network integration setup process."""
 from unittest.mock import AsyncMock, patch
 
 from homeassistant.components import unifi
@@ -59,8 +59,8 @@ async def test_controller_mac(hass):
     )
     assert device.configuration_url == "https://123:443"
     assert device.manufacturer == "Ubiquiti Networks"
-    assert device.model == "UniFi Controller"
-    assert device.name == "UniFi Controller"
+    assert device.model == "UniFi Network"
+    assert device.name == "UniFi Network"
     assert device.sw_version is None
 
 

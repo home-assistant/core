@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from sonarr import Sonarr
 
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import DOMAIN
@@ -38,6 +39,6 @@ class SonarrEntity(Entity):
             name="Activity Sensor",
             manufacturer="Sonarr",
             sw_version=self.sonarr.app.info.version,
-            entry_type="service",
+            entry_type=DeviceEntryType.SERVICE,
             configuration_url=configuration_url,
         )

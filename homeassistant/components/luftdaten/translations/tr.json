@@ -2,7 +2,17 @@
     "config": {
         "error": {
             "already_configured": "Hizmet zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
-            "cannot_connect": "Ba\u011flanma hatas\u0131"
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_sensor": "Sens\u00f6r mevcut de\u011fil veya ge\u00e7ersiz"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "show_on_map": "Haritada g\u00f6ster",
+                    "station_id": "Luftdaten Sens\u00f6r Kimli\u011fi"
+                },
+                "title": "Luftdaten'i tan\u0131mlay\u0131n"
+            }
         }
     }
 }

@@ -478,7 +478,7 @@ def get_metadata_with_session(
     hass: HomeAssistant,
     session: scoped_session,
     *,
-    statistic_ids: Iterable[str] | None = None,
+    statistic_ids: list[str] | tuple[str] | None = None,
     statistic_type: Literal["mean"] | Literal["sum"] | None = None,
     statistic_source: str | None = None,
 ) -> dict[str, tuple[int, StatisticMetaData]]:
@@ -533,7 +533,7 @@ def get_metadata_with_session(
 def get_metadata(
     hass: HomeAssistant,
     *,
-    statistic_ids: Iterable[str] | None = None,
+    statistic_ids: list[str] | tuple[str] | None = None,
     statistic_type: Literal["mean"] | Literal["sum"] | None = None,
     statistic_source: str | None = None,
 ) -> dict[str, tuple[int, StatisticMetaData]]:
@@ -620,8 +620,7 @@ def list_statistic_ids(
         platform_statistic_ids = platform.list_statistic_ids(hass, statistic_type)
 
         for statistic_id, info in platform_statistic_ids.items():
-            unit = info["unit_of_measurement"]
-            if unit is not None:
+            if (unit := info["unit_of_measurement"]) is not None:
                 # Display unit according to user settings
                 unit = _configured_unit(unit, units)
             platform_statistic_ids[statistic_id]["unit_of_measurement"] = unit
@@ -698,8 +697,8 @@ def _reduce_statistics(
                         "mean": mean(mean_values) if mean_values else None,
                         "min": min(min_values) if min_values else None,
                         "max": max(max_values) if max_values else None,
-                        "last_reset": prev_stat["last_reset"],
-                        "state": prev_stat["state"],
+                        "last_reset": prev_stat.get("last_reset"),
+                        "state": prev_stat.get("state"),
                         "sum": prev_stat["sum"],
                     }
                 )
@@ -717,50 +716,54 @@ def _reduce_statistics(
     return result
 
 
+def same_day(time1: datetime, time2: datetime) -> bool:
+    """Return True if time1 and time2 are in the same date."""
+    date1 = dt_util.as_local(time1).date()
+    date2 = dt_util.as_local(time2).date()
+    return date1 == date2
+
+
+def day_start_end(time: datetime) -> tuple[datetime, datetime]:
+    """Return the start and end of the period (day) time is within."""
+    start = dt_util.as_utc(
+        dt_util.as_local(time).replace(hour=0, minute=0, second=0, microsecond=0)
+    )
+    end = start + timedelta(days=1)
+    return (start, end)
+
+
 def _reduce_statistics_per_day(
     stats: dict[str, list[dict[str, Any]]]
 ) -> dict[str, list[dict[str, Any]]]:
     """Reduce hourly statistics to daily statistics."""
 
-    def same_period(time1: datetime, time2: datetime) -> bool:
-        """Return True if time1 and time2 are in the same date."""
-        date1 = dt_util.as_local(time1).date()
-        date2 = dt_util.as_local(time2).date()
-        return date1 == date2
+    return _reduce_statistics(stats, same_day, day_start_end, timedelta(days=1))
 
-    def period_start_end(time: datetime) -> tuple[datetime, datetime]:
-        """Return the start and end of the period (day) time is within."""
-        start = dt_util.as_utc(
-            dt_util.as_local(time).replace(hour=0, minute=0, second=0, microsecond=0)
-        )
-        end = start + timedelta(days=1)
-        return (start, end)
 
-    return _reduce_statistics(stats, same_period, period_start_end, timedelta(days=1))
+def same_month(time1: datetime, time2: datetime) -> bool:
+    """Return True if time1 and time2 are in the same year and month."""
+    date1 = dt_util.as_local(time1).date()
+    date2 = dt_util.as_local(time2).date()
+    return (date1.year, date1.month) == (date2.year, date2.month)
+
+
+def month_start_end(time: datetime) -> tuple[datetime, datetime]:
+    """Return the start and end of the period (month) time is within."""
+    start_local = dt_util.as_local(time).replace(
+        day=1, hour=0, minute=0, second=0, microsecond=0
+    )
+    start = dt_util.as_utc(start_local)
+    end_local = (start_local + timedelta(days=31)).replace(day=1)
+    end = dt_util.as_utc(end_local)
+    return (start, end)
 
 
 def _reduce_statistics_per_month(
-    stats: dict[str, list[dict[str, Any]]]
+    stats: dict[str, list[dict[str, Any]]],
 ) -> dict[str, list[dict[str, Any]]]:
     """Reduce hourly statistics to monthly statistics."""
 
-    def same_period(time1: datetime, time2: datetime) -> bool:
-        """Return True if time1 and time2 are in the same year and month."""
-        date1 = dt_util.as_local(time1).date()
-        date2 = dt_util.as_local(time2).date()
-        return (date1.year, date1.month) == (date2.year, date2.month)
-
-    def period_start_end(time: datetime) -> tuple[datetime, datetime]:
-        """Return the start and end of the period (month) time is within."""
-        start = dt_util.as_utc(
-            dt_util.as_local(time).replace(
-                day=1, hour=0, minute=0, second=0, microsecond=0
-            )
-        )
-        end = (start + timedelta(days=31)).replace(day=1)
-        return (start, end)
-
-    return _reduce_statistics(stats, same_period, period_start_end, timedelta(days=31))
+    return _reduce_statistics(stats, same_month, month_start_end, timedelta(days=31))
 
 
 def statistics_during_period(
@@ -769,6 +772,7 @@ def statistics_during_period(
     end_time: datetime | None = None,
     statistic_ids: list[str] | None = None,
     period: Literal["5minute", "day", "hour", "month"] = "hour",
+    start_time_as_datetime: bool = False,
 ) -> dict[str, list[dict[str, Any]]]:
     """Return statistics during UTC period start_time - end_time for the statistic_ids.
 
@@ -809,7 +813,15 @@ def statistics_during_period(
         # Return statistics combined with metadata
         if period not in ("day", "month"):
             return _sorted_statistics_to_dict(
-                hass, session, stats, statistic_ids, metadata, True, table, start_time
+                hass,
+                session,
+                stats,
+                statistic_ids,
+                metadata,
+                True,
+                table,
+                start_time,
+                start_time_as_datetime,
             )
 
         result = _sorted_statistics_to_dict(
@@ -822,8 +834,12 @@ def statistics_during_period(
         return _reduce_statistics_per_month(result)
 
 
-def get_last_statistics(
-    hass: HomeAssistant, number_of_stats: int, statistic_id: str, convert_units: bool
+def _get_last_statistics(
+    hass: HomeAssistant,
+    number_of_stats: int,
+    statistic_id: str,
+    convert_units: bool,
+    table: type[Statistics | StatisticsShortTerm],
 ) -> dict[str, list[dict]]:
     """Return the last number_of_stats statistics for a given statistic_id."""
     statistic_ids = [statistic_id]
@@ -833,16 +849,19 @@ def get_last_statistics(
         if not metadata:
             return {}
 
-        baked_query = hass.data[STATISTICS_SHORT_TERM_BAKERY](
-            lambda session: session.query(*QUERY_STATISTICS_SHORT_TERM)
-        )
+        if table == StatisticsShortTerm:
+            bakery = STATISTICS_SHORT_TERM_BAKERY
+            base_query = QUERY_STATISTICS_SHORT_TERM
+        else:
+            bakery = STATISTICS_BAKERY
+            base_query = QUERY_STATISTICS
+
+        baked_query = hass.data[bakery](lambda session: session.query(*base_query))
 
         baked_query += lambda q: q.filter_by(metadata_id=bindparam("metadata_id"))
         metadata_id = metadata[statistic_id][0]
 
-        baked_query += lambda q: q.order_by(
-            StatisticsShortTerm.metadata_id, StatisticsShortTerm.start.desc()
-        )
+        baked_query += lambda q: q.order_by(table.metadata_id, table.start.desc())
 
         baked_query += lambda q: q.limit(bindparam("number_of_stats"))
 
@@ -862,9 +881,27 @@ def get_last_statistics(
             statistic_ids,
             metadata,
             convert_units,
-            StatisticsShortTerm,
+            table,
             None,
         )
+
+
+def get_last_statistics(
+    hass: HomeAssistant, number_of_stats: int, statistic_id: str, convert_units: bool
+) -> dict[str, list[dict]]:
+    """Return the last number_of_stats statistics for a statistic_id."""
+    return _get_last_statistics(
+        hass, number_of_stats, statistic_id, convert_units, Statistics
+    )
+
+
+def get_last_short_term_statistics(
+    hass: HomeAssistant, number_of_stats: int, statistic_id: str, convert_units: bool
+) -> dict[str, list[dict]]:
+    """Return the last number_of_stats short term statistics for a statistic_id."""
+    return _get_last_statistics(
+        hass, number_of_stats, statistic_id, convert_units, StatisticsShortTerm
+    )
 
 
 def _statistics_at_time(
