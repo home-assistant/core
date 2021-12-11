@@ -278,7 +278,6 @@ class MqttCommandTemplate:
             payload: PublishPayloadType,
         ) -> PublishPayloadType:
             """Ensure correct raw MQTT payload is passed as bytes for publishing."""
-            # cast bytes literal string to bytes type object
             if isinstance(payload, str):
                 try:
                     native_object = literal_eval(payload)
