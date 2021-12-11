@@ -67,6 +67,11 @@ from tests.components.androidtv import patchers
 
 CONF_OPTIONS = "options"
 
+PATCH_ACCESS = patch("homeassistant.components.androidtv.os.access", return_value=True)
+PATCH_ISFILE = patch(
+    "homeassistant.components.androidtv.os.path.isfile", patchers.isfile
+)
+
 SHELL_RESPONSE_OFF = ""
 SHELL_RESPONSE_STANDBY = "1"
 
@@ -345,7 +350,7 @@ async def test_setup_with_adbkey(hass):
         patch_key
     ], patchers.patch_shell(SHELL_RESPONSE_OFF)[
         patch_key
-    ], patchers.PATCH_ANDROIDTV_OPEN, patchers.PATCH_SIGNER, patchers.PATCH_ISFILE, patchers.PATCH_ACCESS:
+    ], patchers.PATCH_ANDROIDTV_OPEN, patchers.PATCH_SIGNER, PATCH_ISFILE, PATCH_ACCESS:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         await hass.helpers.entity_component.async_update_entity(entity_id)
