@@ -11,6 +11,7 @@ from homeassistant.components.fan import (
     ATTR_PRESET_MODES,
     ATTR_SPEED,
     SPEED_MEDIUM,
+    NotValidPresetModeError,
 )
 
 
@@ -405,3 +406,13 @@ async def test_inovelli_lzw36(hass, client, inovelli_lzw36, integration):
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == node_id
     assert args["value"] == 1
+
+    client.async_send_command.reset_mock()
+    with pytest.raises(NotValidPresetModeError):
+        await hass.services.async_call(
+            "fan",
+            "turn_on",
+            {"entity_id": entity_id, "preset_mode": "wheeze"},
+            blocking=True,
+        )
+    assert len(client.async_send_command.call_args_list) == 0
