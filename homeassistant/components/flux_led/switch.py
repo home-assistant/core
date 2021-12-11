@@ -14,7 +14,7 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import FluxLedUpdateCoordinator, _async_clear_discovery_cache
+from . import FluxLedUpdateCoordinator
 from .const import (
     CONF_REMOTE_ACCESS_ENABLED,
     CONF_REMOTE_ACCESS_HOST,
@@ -71,7 +71,6 @@ class FluxRemoteAccessSwitch(FluxBaseEntity, SwitchEntity):
         """Initialize the light."""
         super().__init__(device, entry)
         self._attr_entity_category = EntityCategory.CONFIG
-        self._is_on = bool(self.entry.data[CONF_REMOTE_ACCESS_ENABLED])
         self._attr_name = f"{entry.data[CONF_NAME]} Remote Access"
         if entry.unique_id:
             self._attr_unique_id = f"{entry.unique_id}_remote_access"
@@ -82,31 +81,27 @@ class FluxRemoteAccessSwitch(FluxBaseEntity, SwitchEntity):
             self.entry.data[CONF_REMOTE_ACCESS_HOST],
             self.entry.data[CONF_REMOTE_ACCESS_PORT],
         )
-        self._is_on = True
-        await self._async_wait_for_device_reboot()
+        await self._async_update_entry(True)
 
-    async def _async_wait_for_device_reboot(self) -> None:
-        # The device will reboot so we must reload
-        self.async_write_ha_state()
-        _async_clear_discovery_cache(self.hass, self._device.ipaddr)
+    async def _async_update_entry(self, new_state: bool) -> None:
+        """Update the entry with the new state on success."""
         self.hass.config_entries.async_update_entry(
             self.entry,
-            data={**self.entry.data, CONF_REMOTE_ACCESS_ENABLED: self._is_on},
+            data={**self.entry.data, CONF_REMOTE_ACCESS_ENABLED: new_state},
         )
-        await self.hass.config_entries.async_reload(self.entry.entry_id)
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the remote access off."""
         await self._device.async_disable_remote_access()
-        self._is_on = False
-        await self._async_wait_for_device_reboot()
+        await self._async_update_entry(False)
 
     @property
     def is_on(self) -> bool:
         """Return true if remote access is enabled."""
-        return self._is_on
+        return bool(self.entry.data[CONF_REMOTE_ACCESS_ENABLED])
 
     @property
     def icon(self) -> str:
         """Return icon based on state."""
-        return "mdi:cloud-outline" if self._is_on else "mdi:cloud-off-outline"
+        return "mdi:cloud-outline" if self.is_on else "mdi:cloud-off-outline"
