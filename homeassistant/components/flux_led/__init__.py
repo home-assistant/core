@@ -99,7 +99,7 @@ def async_populate_data_from_discovery(
     """Copy discovery data into config entry data."""
     for conf_key, discovery_key in CONF_TO_DISCOVERY.items():
         if (
-            discovery_key in device
+            device.get(discovery_key) is not None
             and current_data.get(conf_key) != device[discovery_key]  # type: ignore[misc]
         ):
             data_updates[conf_key] = device[discovery_key]  # type: ignore[misc]
