@@ -53,6 +53,13 @@ from .discovery import (
     async_trigger_discovery,
 )
 
+CONF_TO_DISCOVERY: Final = {
+    CONF_REMOTE_ACCESS_ENABLED: ATTR_REMOTE_ACCESS_ENABLED,
+    CONF_REMOTE_ACCESS_HOST: ATTR_REMOTE_ACCESS_HOST,
+    CONF_REMOTE_ACCESS_PORT: ATTR_REMOTE_ACCESS_PORT,
+    CONF_MINOR_VERSION: ATTR_VERSION_NUM,
+}
+
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS_BY_TYPE: Final = {
@@ -73,31 +80,24 @@ async def async_update_entry_from_discovery(
     hass: HomeAssistant, entry: config_entries.ConfigEntry, device: FluxLEDDiscovery
 ) -> None:
     """Update a config entry from a flux_led discovery."""
-    name = async_name_from_discovery(device)
-    updates = {**entry.data}
-    original_entry = {**entry.data}
-    if ATTR_REMOTE_ACCESS_ENABLED in device:
-        updates.update(
-            {
-                CONF_REMOTE_ACCESS_ENABLED: device[ATTR_REMOTE_ACCESS_ENABLED],
-                CONF_REMOTE_ACCESS_HOST: device[ATTR_REMOTE_ACCESS_HOST],
-                CONF_REMOTE_ACCESS_PORT: device[ATTR_REMOTE_ACCESS_PORT],
-            }
-        )
-    if ATTR_VERSION_NUM in device:
-        updates[CONF_MINOR_VERSION] = device[ATTR_VERSION_NUM]
-    if not entry.data.get(CONF_NAME) or is_ip_address(entry.data[CONF_NAME]):
-        updates[CONF_NAME] = async_name_from_discovery(device)
+    data_updates = {**entry.data}
     mac_address = device[ATTR_ID]
     assert mac_address is not None
-    updated = updates != original_entry
-    hass.config_entries.async_update_entry(
-        entry,
-        data=updates,
-        title=name,
-        unique_id=dr.format_mac(mac_address),
-    )
-    if updated:
+    updates: dict[str, Any] = {}
+    if not entry.unique_id:
+        updates["unique_id"] = dr.format_mac(mac_address)
+    for conf_key, discovery_key in CONF_TO_DISCOVERY.items():
+        if (
+            discovery_key in device
+            and entry.data.get(conf_key) != device[discovery_key]  # type: ignore[misc]
+        ):
+            data_updates[conf_key] = device[discovery_key]  # type: ignore[misc]
+    if not entry.data.get(CONF_NAME) or is_ip_address(entry.data[CONF_NAME]):
+        updates["title"] = data_updates[CONF_NAME] = async_name_from_discovery(device)
+    if data_updates:
+        updates["data"] = {**entry.data, **data_updates}
+    if updates:
+        hass.config_entries.async_update_entry(entry, **updates)
         await hass.config_entries.async_reload(entry.entry_id)
 
 
