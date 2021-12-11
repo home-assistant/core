@@ -6,7 +6,11 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity, DEVICE_CLASSES_SCHEMA
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorEntity,
+    DEVICE_CLASSES_SCHEMA,
+)
 from homeassistant.const import (
     CONF_COMMAND,
     CONF_NAME,
@@ -61,7 +65,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     data = CommandSensorData(hass, command, command_timeout)
 
     add_entities(
-        [CommandSensor(hass, data, name, device_class, unit, value_template, json_attributes)], True
+        [
+            CommandSensor(
+                hass, data, name, device_class, unit, value_template, json_attributes
+            )
+        ],
+        True,
     )
 
 
@@ -69,7 +78,14 @@ class CommandSensor(SensorEntity):
     """Representation of a sensor that is using shell commands."""
 
     def __init__(
-        self, hass, data, name, device_class, unit_of_measurement, value_template, json_attributes
+        self,
+            hass,
+            data,
+            name,
+            device_class,
+            unit_of_measurement,
+            value_template,
+            json_attributes,
     ):
         """Initialize the sensor."""
         self._hass = hass
