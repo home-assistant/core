@@ -165,18 +165,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         unique_id = get_unique_id(service_type, name, properties)
         if unique_id is None:
             return self.async_abort(reason="unknown")
-        self.scan_filter = host
 
-        await self._async_aggregate_discoveries(host, unique_id, service_type)
-        # Scan for the device in order to extract _all_ unique identifiers assigned to
-        # it. Not doing it like this will yield multiple config flows for the same
-        # device, one per protocol, which is undesired.
-        return await self.async_find_device_wrapper(self.async_found_zeroconf_device)
-
-    async def _async_aggregate_discoveries(
-        self, host: str, unique_id: str, service_type: str
-    ) -> None:
-        """Aggregate discoveries for the same host that happen inside of DISCOVERY_AGGREGATION_TIME."""
         #
         # Suppose we have a device with three services: A, B and C. Let's assume
         # service A is discovered by Zeroconf, triggering a device scan that also finds
@@ -207,7 +196,14 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # zeroconf.
         #
         await asyncio.sleep(DISCOVERY_AGGREGATION_TIME)
+
         self._async_check_in_progress_and_set_address(host, unique_id)
+
+        # Scan for the device in order to extract _all_ unique identifiers assigned to
+        # it. Not doing it like this will yield multiple config flows for the same
+        # device, one per protocol, which is undesired.
+        self.scan_filter = host
+        return await self.async_find_device_wrapper(self.async_found_zeroconf_device)
 
     @callback
     def _async_check_in_progress_and_set_address(self, host: str, unique_id: str):
