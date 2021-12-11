@@ -89,11 +89,13 @@ class ZwaveFan(ZWaveBaseEntity, FanEntity):
         **kwargs: Any,
     ) -> None:
         """Turn the device on."""
-        if percentage is None:
+        if percentage is not None:
+            await self.async_set_percentage(percentage)
+        elif preset_mode is not None:
+            await self.async_set_preset_mode(preset_mode)
+        else:
             # Value 255 tells device to return to previous value
             await self.info.node.async_set_value(self._target_value, 255)
-        else:
-            await self.async_set_percentage(percentage)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
