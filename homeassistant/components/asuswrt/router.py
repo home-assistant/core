@@ -47,6 +47,7 @@ from .const import (
     SENSORS_CONNECTED_DEVICE,
     SENSORS_LOAD_AVG,
     SENSORS_RATES,
+    SENSORS_TEMPERATURES,
 )
 
 CONF_REQ_RELOAD = [CONF_DNSMASQ, CONF_INTERFACE, CONF_REQUIRE_IP]
@@ -60,6 +61,7 @@ SENSORS_TYPE_BYTES = "sensors_bytes"
 SENSORS_TYPE_COUNT = "sensors_count"
 SENSORS_TYPE_LOAD_AVG = "sensors_load_avg"
 SENSORS_TYPE_RATES = "sensors_rates"
+SENSORS_TYPE_TEMPERATURES = "sensors_temperatures"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -114,6 +116,15 @@ class AsusWrtSensorDataHandler:
 
         return _get_dict(SENSORS_LOAD_AVG, avg)
 
+    async def _get_temperatures(self):
+        """Fetch temperatures information from the router."""
+        try:
+            temperatures = await self._api.async_get_temperature()
+        except (OSError, ValueError) as exc:
+            raise UpdateFailed(exc) from exc
+
+        return temperatures
+
     def update_device_count(self, conn_devices: int):
         """Update connected devices attribute."""
         if self._connected_devices == conn_devices:
@@ -131,6 +142,8 @@ class AsusWrtSensorDataHandler:
             method = self._get_load_avg
         elif sensor_type == SENSORS_TYPE_RATES:
             method = self._get_rates
+        elif sensor_type == SENSORS_TYPE_TEMPERATURES:
+            method = self._get_temperatures
         else:
             raise RuntimeError(f"Invalid sensor type: {sensor_type}")
 
@@ -350,8 +363,13 @@ class AsusWrtRouter:
             SENSORS_TYPE_LOAD_AVG: SENSORS_LOAD_AVG,
             SENSORS_TYPE_RATES: SENSORS_RATES,
         }
+        sensors_types[
+            SENSORS_TYPE_TEMPERATURES
+        ] = await self._get_available_temperature_sensors()
 
         for sensor_type, sensor_names in sensors_types.items():
+            if not sensor_names:
+                continue
             coordinator = await self._sensors_data_handler.get_coordinator(
                 sensor_type, sensor_type != SENSORS_TYPE_COUNT
             )
@@ -369,6 +387,23 @@ class AsusWrtRouter:
             coordinator = self._sensors_coordinator[SENSORS_TYPE_COUNT][KEY_COORDINATOR]
             if self._sensors_data_handler.update_device_count(self._connected_devices):
                 await coordinator.async_refresh()
+
+    async def _get_available_temperature_sensors(self):
+        """Check which temperature information is available on the router."""
+        try:
+            availability = await self._api.async_find_temperature_commands()
+            available_sensors = [
+                SENSORS_TEMPERATURES[i] for i in range(3) if availability[i]
+            ]
+        except Exception as exc:  # pylint: disable=broad-except
+            _LOGGER.debug(
+                "Failed checking temperature sensor availability for ASUS router %s. Exception: %s",
+                self._host,
+                exc,
+            )
+            return []
+
+        return available_sensors
 
     async def close(self) -> None:
         """Close the connection."""

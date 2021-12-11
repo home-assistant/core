@@ -1,7 +1,7 @@
 """Support for IPP sensors."""
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Any
 
 from homeassistant.components.sensor import SensorEntity
@@ -187,7 +187,6 @@ class IPPUptimeSensor(IPPSensor):
         )
 
     @property
-    def native_value(self) -> str:
+    def native_value(self) -> datetime:
         """Return the state of the sensor."""
-        uptime = utcnow() - timedelta(seconds=self.coordinator.data.info.uptime)
-        return uptime.replace(microsecond=0).isoformat()
+        return utcnow() - timedelta(seconds=self.coordinator.data.info.uptime)

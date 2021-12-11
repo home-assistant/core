@@ -14,19 +14,14 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    CONF_RESPOND_TO_READ,
-    DATA_KNX_CONFIG,
-    DOMAIN,
-    KNX_ADDRESS,
-    SupportedPlatforms,
-)
+from .const import CONF_RESPOND_TO_READ, DATA_KNX_CONFIG, DOMAIN, KNX_ADDRESS
 from .knx_entity import KnxEntity
 from .schema import SwitchSchema
 
@@ -38,9 +33,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up switch(es) for KNX platform."""
     xknx: XKNX = hass.data[DOMAIN].xknx
-    config: list[ConfigType] = hass.data[DATA_KNX_CONFIG][
-        SupportedPlatforms.SWITCH.value
-    ]
+    config: list[ConfigType] = hass.data[DATA_KNX_CONFIG][Platform.SWITCH]
 
     async_add_entities(KNXSwitch(xknx, entity_config) for entity_config in config)
 

@@ -12,7 +12,14 @@ from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER, SOURCE_ZERO
 
 from tests.common import MockConfigEntry
 
-DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(host="10.10.2.3")
+DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
+    host="10.10.2.3",
+    hostname="mock_hostname",
+    name="mock_name",
+    port=None,
+    properties={},
+    type="mock_type",
+)
 VALID_CONFIG = {"host": "10.10.2.3"}
 VALID_AUTH = {"username": "fake_username", "password": "fake_password"}
 

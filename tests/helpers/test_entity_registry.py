@@ -2,6 +2,7 @@
 from unittest.mock import patch
 
 import pytest
+import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_START, STATE_UNAVAILABLE
@@ -74,10 +75,10 @@ def test_get_or_create_updates_data(registry):
         area_id="mock-area-id",
         capabilities={"max": 100},
         config_entry=orig_config_entry,
-        device_class="mock-device-class",
         device_id="mock-dev-id",
         disabled_by=er.DISABLED_HASS,
         entity_category="config",
+        original_device_class="mock-device-class",
         original_icon="initial-original_icon",
         original_name="initial-original_name",
         supported_features=5,
@@ -91,12 +92,14 @@ def test_get_or_create_updates_data(registry):
         area_id="mock-area-id",
         capabilities={"max": 100},
         config_entry_id=orig_config_entry.entry_id,
-        device_class="mock-device-class",
+        device_class=None,
         device_id="mock-dev-id",
         disabled_by=er.DISABLED_HASS,
         entity_category="config",
         icon=None,
+        id=orig_entry.id,
         name=None,
+        original_device_class="mock-device-class",
         original_icon="initial-original_icon",
         original_name="initial-original_name",
         supported_features=5,
@@ -112,10 +115,10 @@ def test_get_or_create_updates_data(registry):
         area_id="new-mock-area-id",
         capabilities={"new-max": 100},
         config_entry=new_config_entry,
-        device_class="new-mock-device-class",
         device_id="new-mock-dev-id",
         disabled_by=er.DISABLED_USER,
         entity_category=None,
+        original_device_class="new-mock-device-class",
         original_icon="updated-original_icon",
         original_name="updated-original_name",
         supported_features=10,
@@ -129,12 +132,14 @@ def test_get_or_create_updates_data(registry):
         area_id="new-mock-area-id",
         capabilities={"new-max": 100},
         config_entry_id=new_config_entry.entry_id,
-        device_class="new-mock-device-class",
+        device_class=None,
         device_id="new-mock-dev-id",
         disabled_by=er.DISABLED_HASS,  # Should not be updated
         entity_category="config",
         icon=None,
+        id=orig_entry.id,
         name=None,
+        original_device_class="new-mock-device-class",
         original_icon="updated-original_icon",
         original_name="updated-original_name",
         supported_features=10,
@@ -182,17 +187,20 @@ async def test_loading_saving_data(hass, registry):
         area_id="mock-area-id",
         capabilities={"max": 100},
         config_entry=mock_config,
-        device_class="mock-device-class",
         device_id="mock-dev-id",
         disabled_by=er.DISABLED_HASS,
         entity_category="config",
+        original_device_class="mock-device-class",
         original_icon="hass:original-icon",
         original_name="Original Name",
         supported_features=5,
         unit_of_measurement="initial-unit_of_measurement",
     )
     orig_entry2 = registry.async_update_entity(
-        orig_entry2.entity_id, name="User Name", icon="hass:user-icon"
+        orig_entry2.entity_id,
+        device_class="user-class",
+        name="User Name",
+        icon="hass:user-icon",
     )
 
     assert len(registry.entities) == 2
@@ -213,12 +221,13 @@ async def test_loading_saving_data(hass, registry):
     assert new_entry2.area_id == "mock-area-id"
     assert new_entry2.capabilities == {"max": 100}
     assert new_entry2.config_entry_id == mock_config.entry_id
-    assert new_entry2.device_class == "mock-device-class"
+    assert new_entry2.device_class == "user-class"
     assert new_entry2.device_id == "mock-dev-id"
     assert new_entry2.disabled_by == er.DISABLED_HASS
     assert new_entry2.entity_category == "config"
     assert new_entry2.icon == "hass:user-icon"
     assert new_entry2.name == "User Name"
+    assert new_entry2.original_device_class == "mock-device-class"
     assert new_entry2.original_icon == "hass:original-icon"
     assert new_entry2.original_name == "Original Name"
     assert new_entry2.supported_features == 5
@@ -412,6 +421,33 @@ async def test_migration_yaml_to_json(hass):
 
 
 @pytest.mark.parametrize("load_registries", [False])
+async def test_migration_1_1(hass, hass_storage):
+    """Test migration from version 1.1."""
+    hass_storage[er.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 1,
+        "data": {
+            "entities": [
+                {
+                    "device_class": "best_class",
+                    "entity_id": "test.entity",
+                    "platform": "super_platform",
+                    "unique_id": "very_unique",
+                },
+            ]
+        },
+    }
+
+    await er.async_load(hass)
+    registry = er.async_get(hass)
+
+    entry = registry.async_get_or_create("test", "super_platform", "very_unique")
+
+    assert entry.device_class is None
+    assert entry.original_device_class == "best_class"
+
+
+@pytest.mark.parametrize("load_registries", [False])
 async def test_loading_invalid_entity_id(hass, hass_storage):
     """Test we skip entities with invalid entity IDs."""
     hass_storage[er.STORAGE_KEY] = {
@@ -599,7 +635,7 @@ async def test_restore_states(hass):
         suggested_object_id="all_info_set",
         capabilities={"max": 100},
         supported_features=5,
-        device_class="mock-device-class",
+        original_device_class="mock-device-class",
         original_name="Mock Original Name",
         original_icon="hass:original-icon",
     )
@@ -649,14 +685,14 @@ async def test_async_get_device_class_lookup(hass):
         "light",
         "battery_charging",
         device_id="light_device_entry_id",
-        device_class="battery_charging",
+        original_device_class="battery_charging",
     )
     ent_reg.async_get_or_create(
         "sensor",
         "light",
         "battery",
         device_id="light_device_entry_id",
-        device_class="battery",
+        original_device_class="battery",
     )
     ent_reg.async_get_or_create(
         "light", "light", "demo", device_id="light_device_entry_id"
@@ -666,14 +702,14 @@ async def test_async_get_device_class_lookup(hass):
         "vacuum",
         "battery_charging",
         device_id="vacuum_device_entry_id",
-        device_class="battery_charging",
+        original_device_class="battery_charging",
     )
     ent_reg.async_get_or_create(
         "sensor",
         "vacuum",
         "battery",
         device_id="vacuum_device_entry_id",
-        device_class="battery",
+        original_device_class="battery",
     )
     ent_reg.async_get_or_create(
         "vacuum", "vacuum", "demo", device_id="vacuum_device_entry_id"
@@ -683,7 +719,7 @@ async def test_async_get_device_class_lookup(hass):
         "remote",
         "battery_charging",
         device_id="remote_device_entry_id",
-        device_class="battery_charging",
+        original_device_class="battery_charging",
     )
     ent_reg.async_get_or_create(
         "remote", "remote", "demo", device_id="remote_device_entry_id"
@@ -815,7 +851,9 @@ async def test_disable_device_disables_entities(hass, registry):
     assert entry2.disabled
     assert entry3.disabled
 
-    device_registry.async_update_device(device_entry.id, disabled_by=er.DISABLED_USER)
+    device_registry.async_update_device(
+        device_entry.id, disabled_by=dr.DeviceEntryDisabler.USER
+    )
     await hass.async_block_till_done()
 
     entry1 = registry.async_get(entry1.entity_id)
@@ -986,3 +1024,73 @@ async def test_entity_max_length_exceeded(hass, registry):
     assert exc_info.value.property_name == "generated_entity_id"
     assert exc_info.value.max_length == 255
     assert exc_info.value.value == f"sensor.{long_entity_id_name}_2"
+
+
+async def test_resolve_entity_ids(hass, registry):
+    """Test resolving entity IDs."""
+
+    entry1 = registry.async_get_or_create(
+        "light", "hue", "1234", suggested_object_id="beer"
+    )
+    assert entry1.entity_id == "light.beer"
+
+    entry2 = registry.async_get_or_create(
+        "light", "hue", "2345", suggested_object_id="milk"
+    )
+    assert entry2.entity_id == "light.milk"
+
+    expected = ["light.beer", "light.milk"]
+    assert er.async_resolve_entity_ids(registry, [entry1.id, entry2.id]) == expected
+
+    expected = ["light.beer", "light.milk"]
+    assert er.async_resolve_entity_ids(registry, ["light.beer", entry2.id]) == expected
+
+    with pytest.raises(vol.Invalid):
+        er.async_resolve_entity_ids(registry, ["light.beer", "bad_uuid"])
+
+    expected = ["light.unknown"]
+    assert er.async_resolve_entity_ids(registry, ["light.unknown"]) == expected
+
+    with pytest.raises(vol.Invalid):
+        er.async_resolve_entity_ids(registry, ["unknown_uuid"])
+
+
+def test_entity_registry_items():
+    """Test the EntityRegistryItems container."""
+    entities = er.EntityRegistryItems()
+    assert entities.get_entity_id(("a", "b", "c")) is None
+    assert entities.get_entry("abc") is None
+
+    entry1 = er.RegistryEntry("test.entity1", "1234", "hue")
+    entry2 = er.RegistryEntry("test.entity2", "2345", "hue")
+    entities["test.entity1"] = entry1
+    entities["test.entity2"] = entry2
+
+    assert entities["test.entity1"] is entry1
+    assert entities["test.entity2"] is entry2
+
+    assert entities.get_entity_id(("test", "hue", "1234")) is entry1.entity_id
+    assert entities.get_entry(entry1.id) is entry1
+    assert entities.get_entity_id(("test", "hue", "2345")) is entry2.entity_id
+    assert entities.get_entry(entry2.id) is entry2
+
+    entities.pop("test.entity1")
+    del entities["test.entity2"]
+
+    assert entities.get_entity_id(("test", "hue", "1234")) is None
+    assert entities.get_entry(entry1.id) is None
+    assert entities.get_entity_id(("test", "hue", "2345")) is None
+    assert entities.get_entry(entry2.id) is None
+
+
+async def test_deprecated_disabled_by_str(hass, registry, caplog):
+    """Test deprecated str use of disabled_by converts to enum and logs a warning."""
+    entry = registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        disabled_by=er.RegistryEntryDisabler.USER.value,
+    )
+
+    assert entry.disabled_by is er.RegistryEntryDisabler.USER
+    assert " str for entity registry disabled_by. This is deprecated " in caplog.text

@@ -115,7 +115,9 @@ def mirobo_is_got_error_fixture():
 
     mock_vacuum.timer.return_value = [mock_timer_1, mock_timer_2]
 
-    with patch("homeassistant.components.xiaomi_miio.Vacuum") as mock_vacuum_cls:
+    with patch(
+        "homeassistant.components.xiaomi_miio.RoborockVacuum"
+    ) as mock_vacuum_cls:
         mock_vacuum_cls.return_value = mock_vacuum
         yield mock_vacuum
 
@@ -149,7 +151,9 @@ def mirobo_old_speeds_fixture(request):
         2020, 4, 1, 13, 21, 10, tzinfo=dt_util.UTC
     )
 
-    with patch("homeassistant.components.xiaomi_miio.Vacuum") as mock_vacuum_cls:
+    with patch(
+        "homeassistant.components.xiaomi_miio.RoborockVacuum"
+    ) as mock_vacuum_cls:
         mock_vacuum_cls.return_value = mock_vacuum
         yield mock_vacuum
 
@@ -209,7 +213,9 @@ def mirobo_is_on_fixture():
 
     mock_vacuum.timer.return_value = [mock_timer_1, mock_timer_2]
 
-    with patch("homeassistant.components.xiaomi_miio.Vacuum") as mock_vacuum_cls:
+    with patch(
+        "homeassistant.components.xiaomi_miio.RoborockVacuum"
+    ) as mock_vacuum_cls:
         mock_vacuum_cls.return_value = mock_vacuum
         yield mock_vacuum
 

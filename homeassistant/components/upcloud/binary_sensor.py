@@ -2,7 +2,11 @@
 
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    PLATFORM_SCHEMA,
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -29,3 +33,5 @@ async def async_setup_entry(
 
 class UpCloudBinarySensor(UpCloudServerEntity, BinarySensorEntity):
     """Representation of an UpCloud server sensor."""
+
+    _attr_device_class = BinarySensorDeviceClass.POWER

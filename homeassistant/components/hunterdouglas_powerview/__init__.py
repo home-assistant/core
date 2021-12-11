@@ -13,7 +13,7 @@ from aiopvapi.userdata import UserData
 import async_timeout
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -55,7 +55,7 @@ PARALLEL_UPDATES = 1
 
 CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
-PLATFORMS = ["cover", "scene", "sensor"]
+PLATFORMS = [Platform.COVER, Platform.SCENE, Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
 
 

@@ -6,6 +6,9 @@ from datetime import datetime, timedelta
 import logging
 from typing import final
 
+import voluptuous as vol
+
+from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_validation import (  # noqa: F401
@@ -27,6 +30,16 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class ButtonDeviceClass(StrEnum):
+    """Device class for buttons."""
+
+    RESTART = "restart"
+    UPDATE = "update"
+
+
+DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(ButtonDeviceClass))
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -61,15 +74,26 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class ButtonEntityDescription(EntityDescription):
     """A class that describes button entities."""
 
+    device_class: ButtonDeviceClass | None = None
+
 
 class ButtonEntity(RestoreEntity):
     """Representation of a Button entity."""
 
     entity_description: ButtonEntityDescription
     _attr_should_poll = False
-    _attr_device_class: None = None
+    _attr_device_class: ButtonDeviceClass | None
     _attr_state: None = None
     __last_pressed: datetime | None = None
+
+    @property
+    def device_class(self) -> ButtonDeviceClass | None:
+        """Return the class of this entity."""
+        if hasattr(self, "_attr_device_class"):
+            return self._attr_device_class
+        if hasattr(self, "entity_description"):
+            return self.entity_description.device_class
+        return None
 
     @property
     @final

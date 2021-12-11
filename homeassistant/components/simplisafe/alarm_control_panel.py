@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING
 
 from simplipy.errors import SimplipyError
 from simplipy.system import SystemStates
-from simplipy.system.v2 import SystemV2
 from simplipy.system.v3 import SystemV3
 from simplipy.websocket import (
     EVENT_ALARM_CANCELED,
@@ -38,6 +37,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMING,
     STATE_ALARM_DISARMED,
+    STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -57,6 +57,7 @@ from .const import (
     DOMAIN,
     LOGGER,
 )
+from .typing import SystemType
 
 ATTR_BATTERY_BACKUP_POWER_LEVEL = "battery_backup_power_level"
 ATTR_GSM_STRENGTH = "gsm_strength"
@@ -67,6 +68,7 @@ ATTR_WIFI_STRENGTH = "wifi_strength"
 
 STATE_MAP_FROM_REST_API = {
     SystemStates.ALARM: STATE_ALARM_TRIGGERED,
+    SystemStates.ALARM_COUNT: STATE_ALARM_PENDING,
     SystemStates.AWAY: STATE_ALARM_ARMED_AWAY,
     SystemStates.AWAY_COUNT: STATE_ALARM_ARMING,
     SystemStates.EXIT_DELAY: STATE_ALARM_ARMING,
@@ -117,7 +119,7 @@ async def async_setup_entry(
 class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
     """Representation of a SimpliSafe alarm."""
 
-    def __init__(self, simplisafe: SimpliSafe, system: SystemV2 | SystemV3) -> None:
+    def __init__(self, simplisafe: SimpliSafe, system: SystemType) -> None:
         """Initialize the SimpliSafe alarm."""
         super().__init__(
             simplisafe,

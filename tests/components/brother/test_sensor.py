@@ -3,7 +3,8 @@ from datetime import datetime, timedelta
 import json
 from unittest.mock import Mock, patch
 
-from homeassistant.components.brother.const import DOMAIN, UNIT_PAGES
+from homeassistant.components.brother.const import DOMAIN
+from homeassistant.components.brother.sensor import UNIT_PAGES
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     DOMAIN as SENSOR_DOMAIN,

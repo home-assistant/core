@@ -70,7 +70,12 @@ async def test_full_zeroconf_flow_implementation(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="192.168.1.123", hostname="example.local.", properties={}
+            host="192.168.1.123",
+            hostname="example.local.",
+            name="mock_name",
+            port=None,
+            properties={},
+            type="mock_type",
         ),
     )
 
@@ -134,7 +139,12 @@ async def test_zeroconf_connection_error(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="192.168.1.123", hostname="example.local.", properties={}
+            host="192.168.1.123",
+            hostname="example.local.",
+            name="mock_name",
+            port=None,
+            properties={},
+            type="mock_type",
         ),
     )
 
@@ -160,7 +170,12 @@ async def test_zeroconf_confirm_connection_error(
             CONF_NAME: "test",
         },
         data=zeroconf.ZeroconfServiceInfo(
-            host="192.168.1.123", hostname="example.com.", properties={}
+            host="192.168.1.123",
+            hostname="example.com.",
+            name="mock_name",
+            port=None,
+            properties={},
+            type="mock_type",
         ),
     )
 
@@ -226,7 +241,10 @@ async def test_zeroconf_with_mac_device_exists_abort(
         data=zeroconf.ZeroconfServiceInfo(
             host="192.168.1.123",
             hostname="example.local.",
+            name="mock_name",
+            port=None,
             properties={CONF_MAC: "AA:BB:CC:DD:EE:FF"},
+            type="mock_type",
         ),
     )
 

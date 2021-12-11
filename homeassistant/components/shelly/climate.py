@@ -49,6 +49,9 @@ async def async_setup_entry(
     if get_device_entry_gen(config_entry) == 2:
         return
 
+    device_block: Block | None = None
+    sensor_block: Block | None = None
+
     wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][BLOCK]
     for block in wrapper.device.blocks:
         if block.type == "device":
@@ -176,7 +179,10 @@ class ShellyClimate(ShellyBlockEntity, RestoreEntity, ClimateEntity):
             return
 
         preset_index = self._attr_preset_modes.index(preset_mode)
-        await self.set_state_full_path(
-            schedule=(0 if preset_index == 0 else 1),
-            schedule_profile=f"{preset_index}",
-        )
+
+        if preset_index == 0:
+            await self.set_state_full_path(schedule=0)
+        else:
+            await self.set_state_full_path(
+                schedule=1, schedule_profile=f"{preset_index}"
+            )

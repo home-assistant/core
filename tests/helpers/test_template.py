@@ -5,6 +5,7 @@ import math
 import random
 from unittest.mock import patch
 
+from freezegun import freeze_time
 import pytest
 import voluptuous as vol
 
@@ -692,7 +693,7 @@ def test_timestamp_custom(hass):
 
 def test_timestamp_local(hass):
     """Test the timestamps to local filter."""
-    tests = {None: None, 1469119144: "2016-07-21 16:39:04"}
+    tests = {None: None, 1469119144: "2016-07-21T16:39:04+00:00"}
 
     for inp, out in tests.items():
         assert (
@@ -730,6 +731,36 @@ def test_as_datetime(hass, input):
         template.Template(f"{{{{ '{input}' | as_datetime }}}}", hass).async_render()
         == expected
     )
+
+
+def test_as_datetime_from_timestamp(hass):
+    """Test converting a UNIX timestamp to a date object."""
+    tests = [
+        (1469119144, "2016-07-21 16:39:04+00:00"),
+        (1469119144.0, "2016-07-21 16:39:04+00:00"),
+        (-1, "1969-12-31 23:59:59+00:00"),
+    ]
+    for input, output in tests:
+        # expected = dt_util.parse_datetime(input)
+        if output is not None:
+            output = str(output)
+
+        assert (
+            template.Template(f"{{{{ as_datetime({input}) }}}}", hass).async_render()
+            == output
+        )
+        assert (
+            template.Template(f"{{{{ {input} | as_datetime }}}}", hass).async_render()
+            == output
+        )
+        assert (
+            template.Template(f"{{{{ as_datetime('{input}') }}}}", hass).async_render()
+            == output
+        )
+        assert (
+            template.Template(f"{{{{ '{input}' | as_datetime }}}}", hass).async_render()
+            == output
+        )
 
 
 def test_as_local(hass):
@@ -859,8 +890,8 @@ def test_timestamp_utc(hass):
     now = dt_util.utcnow()
     tests = {
         None: None,
-        1469119144: "2016-07-21 16:39:04",
-        dt_util.as_timestamp(now): now.strftime("%Y-%m-%d %H:%M:%S"),
+        1469119144: "2016-07-21T16:39:04+00:00",
+        dt_util.as_timestamp(now): now.isoformat(),
     }
 
     for inp, out in tests.items():
@@ -1119,42 +1150,68 @@ def test_utcnow(mock_is_safe, hass):
     assert info.has_time is True
 
 
+@pytest.mark.parametrize(
+    "now, expected, expected_midnight, timezone_str",
+    [
+        # Host clock in UTC
+        (
+            "2021-11-24 03:00:00+00:00",
+            "2021-11-23T10:00:00-08:00",
+            "2021-11-23T00:00:00-08:00",
+            "America/Los_Angeles",
+        ),
+        # Host clock in local time
+        (
+            "2021-11-23 19:00:00-08:00",
+            "2021-11-23T10:00:00-08:00",
+            "2021-11-23T00:00:00-08:00",
+            "America/Los_Angeles",
+        ),
+    ],
+)
 @patch(
     "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
     return_value=True,
 )
-def test_today_at(mock_is_safe, hass):
+def test_today_at(mock_is_safe, hass, now, expected, expected_midnight, timezone_str):
     """Test today_at method."""
-    now = dt_util.now()
-    with patch("homeassistant.util.dt.now", return_value=now):
-        now = now.replace(hour=10, minute=0, second=0, microsecond=0)
-        result = template.Template(
-            "{{ today_at('10:00').isoformat() }}",
-            hass,
-        ).async_render()
-        assert result == now.isoformat()
+    freezer = freeze_time(now)
+    freezer.start()
 
-        result = template.Template(
-            "{{ today_at('10:00:00').isoformat() }}",
-            hass,
-        ).async_render()
-        assert result == now.isoformat()
+    original_tz = dt_util.DEFAULT_TIME_ZONE
 
-        result = template.Template(
-            "{{ ('10:00:00' | today_at).isoformat() }}",
-            hass,
-        ).async_render()
-        assert result == now.isoformat()
+    timezone = dt_util.get_time_zone(timezone_str)
+    dt_util.set_default_time_zone(timezone)
 
-        now = now.replace(hour=0)
-        result = template.Template(
-            "{{ today_at().isoformat() }}",
-            hass,
-        ).async_render()
-        assert result == now.isoformat()
+    result = template.Template(
+        "{{ today_at('10:00').isoformat() }}",
+        hass,
+    ).async_render()
+    assert result == expected
 
-        with pytest.raises(TemplateError):
-            template.Template("{{ today_at('bad') }}", hass).async_render()
+    result = template.Template(
+        "{{ today_at('10:00:00').isoformat() }}",
+        hass,
+    ).async_render()
+    assert result == expected
+
+    result = template.Template(
+        "{{ ('10:00:00' | today_at).isoformat() }}",
+        hass,
+    ).async_render()
+    assert result == expected
+
+    result = template.Template(
+        "{{ today_at().isoformat() }}",
+        hass,
+    ).async_render()
+    assert result == expected_midnight
+
+    with pytest.raises(TemplateError):
+        template.Template("{{ today_at('bad') }}", hass).async_render()
+
+    freezer.stop()
+    dt_util.set_default_time_zone(original_tz)
 
 
 @patch(
@@ -1446,6 +1503,140 @@ def test_bitwise_or(hass):
         hass,
     )
     assert tpl.async_render() == 8 | 2
+
+
+def test_pack(hass, caplog):
+    """Test struct pack method."""
+
+    # render as filter
+    tpl = template.Template(
+        """
+{{ value | pack('>I') }}
+            """,
+        hass,
+    )
+    variables = {
+        "value": 0xDEADBEEF,
+    }
+    assert tpl.async_render(variables=variables) == b"\xde\xad\xbe\xef"
+
+    # render as function
+    tpl = template.Template(
+        """
+{{ pack(value, '>I') }}
+            """,
+        hass,
+    )
+    variables = {
+        "value": 0xDEADBEEF,
+    }
+    assert tpl.async_render(variables=variables) == b"\xde\xad\xbe\xef"
+
+    # test with None value
+    tpl = template.Template(
+        """
+{{ pack(value, '>I') }}
+            """,
+        hass,
+    )
+    variables = {
+        "value": None,
+    }
+    # "Template warning: 'pack' unable to pack object with type '%s' and format_string '%s' see https://docs.python.org/3/library/struct.html for more information"
+    assert tpl.async_render(variables=variables) is None
+    assert (
+        "Template warning: 'pack' unable to pack object 'None' with type 'NoneType' and format_string '>I' see https://docs.python.org/3/library/struct.html for more information"
+        in caplog.text
+    )
+
+    # test with invalid filter
+    tpl = template.Template(
+        """
+{{ pack(value, 'invalid filter') }}
+            """,
+        hass,
+    )
+    variables = {
+        "value": 0xDEADBEEF,
+    }
+    # "Template warning: 'pack' unable to pack object with type '%s' and format_string '%s' see https://docs.python.org/3/library/struct.html for more information"
+    assert tpl.async_render(variables=variables) is None
+    assert (
+        "Template warning: 'pack' unable to pack object '3735928559' with type 'int' and format_string 'invalid filter' see https://docs.python.org/3/library/struct.html for more information"
+        in caplog.text
+    )
+
+
+def test_unpack(hass, caplog):
+    """Test struct unpack method."""
+
+    # render as filter
+    tpl = template.Template(
+        """
+{{ value | unpack('>I') }}
+            """,
+        hass,
+    )
+    variables = {
+        "value": b"\xde\xad\xbe\xef",
+    }
+    assert tpl.async_render(variables=variables) == 0xDEADBEEF
+
+    # render as function
+    tpl = template.Template(
+        """
+{{ unpack(value, '>I') }}
+            """,
+        hass,
+    )
+    variables = {
+        "value": b"\xde\xad\xbe\xef",
+    }
+    assert tpl.async_render(variables=variables) == 0xDEADBEEF
+
+    # unpack with offset
+    tpl = template.Template(
+        """
+{{ unpack(value, '>H', offset=2) }}
+            """,
+        hass,
+    )
+    variables = {
+        "value": b"\xde\xad\xbe\xef",
+    }
+    assert tpl.async_render(variables=variables) == 0xBEEF
+
+    # test with an empty bytes object
+    tpl = template.Template(
+        """
+{{ unpack(value, '>I') }}
+            """,
+        hass,
+    )
+    variables = {
+        "value": b"",
+    }
+    assert tpl.async_render(variables=variables) is None
+    assert (
+        "Template warning: 'unpack' unable to unpack object 'b''' with format_string '>I' and offset 0 see https://docs.python.org/3/library/struct.html for more information"
+        in caplog.text
+    )
+
+    # test with invalid filter
+    tpl = template.Template(
+        """
+{{ unpack(value, 'invalid filter') }}
+            """,
+        hass,
+    )
+    variables = {
+        "value": b"",
+    }
+    assert tpl.async_render(variables=variables) is None
+    assert (
+        "Template warning: 'unpack' unable to unpack object 'b''' with format_string 'invalid filter' and offset 0 see https://docs.python.org/3/library/struct.html for more information"
+        in caplog.text
+    )
 
 
 def test_distance_function_with_1_state(hass):

@@ -35,14 +35,6 @@ MQTT_SELECT_ATTRIBUTES_BLOCKED = frozenset(
 )
 
 
-def validate_config(config):
-    """Validate that the configuration is valid, throws if it isn't."""
-    if len(config[CONF_OPTIONS]) < 2:
-        raise vol.Invalid(f"'{CONF_OPTIONS}' must include at least 2 options")
-
-    return config
-
-
 _PLATFORM_SCHEMA_BASE = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
@@ -53,15 +45,9 @@ _PLATFORM_SCHEMA_BASE = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
     },
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-PLATFORM_SCHEMA = vol.All(
-    _PLATFORM_SCHEMA_BASE,
-    validate_config,
-)
+PLATFORM_SCHEMA = vol.All(_PLATFORM_SCHEMA_BASE)
 
-DISCOVERY_SCHEMA = vol.All(
-    _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
-    validate_config,
-)
+DISCOVERY_SCHEMA = vol.All(_PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA))
 
 
 async def async_setup_platform(

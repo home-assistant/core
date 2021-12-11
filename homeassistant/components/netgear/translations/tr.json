@@ -9,7 +9,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Ana bilgisayar (\u0130ste\u011fe ba\u011fl\u0131)",
+                    "host": "Sunucu (\u0130ste\u011fe ba\u011fl\u0131)",
                     "password": "Parola",
                     "port": "Port (\u0130ste\u011fe ba\u011fl\u0131)",
                     "ssl": "SSL sertifikas\u0131 kullan\u0131r",

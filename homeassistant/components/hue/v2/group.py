@@ -7,7 +7,6 @@ from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
 from aiohue.v2.controllers.groups import GroupedLight, Room, Zone
 
-from homeassistant.components.group.light import LightGroup
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -18,6 +17,7 @@ from homeassistant.components.light import (
     COLOR_MODE_ONOFF,
     COLOR_MODE_XY,
     SUPPORT_TRANSITION,
+    LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -73,11 +73,12 @@ async def async_setup_entry(
     )
 
 
-class GroupedHueLight(HueBaseEntity, LightGroup):
+class GroupedHueLight(HueBaseEntity, LightEntity):
     """Representation of a Grouped Hue light."""
 
     # Entities for Hue groups are disabled by default
     _attr_entity_registry_enabled_default = False
+    _attr_icon = "mdi:lightbulb-group"
 
     def __init__(
         self, bridge: HueBridge, resource: GroupedLight, group: Room | Zone

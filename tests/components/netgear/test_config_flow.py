@@ -211,12 +211,16 @@ async def test_ssdp_already_configured(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_SSDP},
-        data={
-            ssdp.ATTR_SSDP_LOCATION: SSDP_URL_SLL,
-            ssdp.ATTR_UPNP_MODEL_NUMBER: "RBR20",
-            ssdp.ATTR_UPNP_PRESENTATION_URL: URL,
-            ssdp.ATTR_UPNP_SERIAL: SERIAL,
-        },
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location=SSDP_URL_SLL,
+            upnp={
+                ssdp.ATTR_UPNP_MODEL_NUMBER: "RBR20",
+                ssdp.ATTR_UPNP_PRESENTATION_URL: URL,
+                ssdp.ATTR_UPNP_SERIAL: SERIAL,
+            },
+        ),
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
@@ -227,12 +231,16 @@ async def test_ssdp(hass, service):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_SSDP},
-        data={
-            ssdp.ATTR_SSDP_LOCATION: SSDP_URL,
-            ssdp.ATTR_UPNP_MODEL_NUMBER: "RBR20",
-            ssdp.ATTR_UPNP_PRESENTATION_URL: URL,
-            ssdp.ATTR_UPNP_SERIAL: SERIAL,
-        },
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location=SSDP_URL,
+            upnp={
+                ssdp.ATTR_UPNP_MODEL_NUMBER: "RBR20",
+                ssdp.ATTR_UPNP_PRESENTATION_URL: URL,
+                ssdp.ATTR_UPNP_SERIAL: SERIAL,
+            },
+        ),
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"

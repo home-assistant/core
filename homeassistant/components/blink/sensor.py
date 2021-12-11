@@ -3,13 +3,12 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.const import (
-    DEVICE_CLASS_SIGNAL_STRENGTH,
-    DEVICE_CLASS_TEMPERATURE,
-    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    TEMP_FAHRENHEIT,
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
 )
+from homeassistant.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT, TEMP_FAHRENHEIT
 
 from .const import DOMAIN, TYPE_TEMPERATURE, TYPE_WIFI_STRENGTH
 
@@ -20,13 +19,13 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key=TYPE_TEMPERATURE,
         name="Temperature",
         native_unit_of_measurement=TEMP_FAHRENHEIT,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
     SensorEntityDescription(
         key=TYPE_WIFI_STRENGTH,
         name="Wifi Signal",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-        device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
     ),
 )
 

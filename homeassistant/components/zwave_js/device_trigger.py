@@ -415,7 +415,7 @@ async def async_attach_trigger(
         else:
             raise HomeAssistantError(f"Unhandled trigger type {trigger_type}")
 
-        state_config = state.TRIGGER_SCHEMA(state_config)
+        state_config = await state.async_validate_trigger_config(hass, state_config)
         return await state.async_attach_trigger(
             hass, state_config, action, automation_info, platform_type="device"
         )

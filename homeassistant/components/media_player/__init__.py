@@ -22,6 +22,7 @@ import async_timeout
 import voluptuous as vol
 from yarl import URL
 
+from homeassistant.backports.enum import StrEnum
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
 from homeassistant.components.websocket_api.const import (
@@ -140,13 +141,24 @@ ENTITY_IMAGE_CACHE = {CACHE_IMAGES: collections.OrderedDict(), CACHE_MAXSIZE: 16
 
 SCAN_INTERVAL = dt.timedelta(seconds=10)
 
-DEVICE_CLASS_TV = "tv"
-DEVICE_CLASS_SPEAKER = "speaker"
-DEVICE_CLASS_RECEIVER = "receiver"
 
-DEVICE_CLASSES = [DEVICE_CLASS_TV, DEVICE_CLASS_SPEAKER, DEVICE_CLASS_RECEIVER]
+class MediaPlayerDeviceClass(StrEnum):
+    """Device class for media players."""
 
-DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
+    TV = "tv"
+    SPEAKER = "speaker"
+    RECEIVER = "receiver"
+
+
+DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(MediaPlayerDeviceClass))
+
+
+# DEVICE_CLASS* below are deprecated as of 2021.12
+# use the MediaPlayerDeviceClass enum instead.
+DEVICE_CLASSES = [cls.value for cls in MediaPlayerDeviceClass]
+DEVICE_CLASS_TV = MediaPlayerDeviceClass.TV.value
+DEVICE_CLASS_SPEAKER = MediaPlayerDeviceClass.SPEAKER.value
+DEVICE_CLASS_RECEIVER = MediaPlayerDeviceClass.RECEIVER.value
 
 
 MEDIA_PLAYER_PLAY_MEDIA_SCHEMA = {
@@ -373,6 +385,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class MediaPlayerEntityDescription(EntityDescription):
     """A class that describes media player entities."""
 
+    device_class: MediaPlayerDeviceClass | str | None = None
+
 
 class MediaPlayerEntity(Entity):
     """ABC for media player entities."""
@@ -382,6 +396,7 @@ class MediaPlayerEntity(Entity):
 
     _attr_app_id: str | None = None
     _attr_app_name: str | None = None
+    _attr_device_class: MediaPlayerDeviceClass | str | None
     _attr_group_members: list[str] | None = None
     _attr_is_volume_muted: bool | None = None
     _attr_media_album_artist: str | None = None
@@ -413,6 +428,15 @@ class MediaPlayerEntity(Entity):
     _attr_volume_level: float | None = None
 
     # Implement these for your media player
+    @property
+    def device_class(self) -> MediaPlayerDeviceClass | str | None:
+        """Return the class of this entity."""
+        if hasattr(self, "_attr_device_class"):
+            return self._attr_device_class
+        if hasattr(self, "entity_description"):
+            return self.entity_description.device_class
+        return None
+
     @property
     def state(self) -> str | None:
         """State of the player."""
@@ -1123,7 +1147,7 @@ async def websocket_browse_media(hass, connection, msg):
     To use, media_player integrations can implement MediaPlayerEntity.async_browse_media()
     """
     component = hass.data[DOMAIN]
-    player: MediaPlayerDevice | None = component.get_entity(msg["entity_id"])
+    player: MediaPlayerEntity | None = component.get_entity(msg["entity_id"])
 
     if player is None:
         connection.send_error(msg["id"], "entity_not_found", "Entity not found")
@@ -1169,18 +1193,6 @@ async def websocket_browse_media(hass, connection, msg):
         _LOGGER.warning("Browse Media should use new BrowseMedia class")
 
     connection.send_result(msg["id"], payload)
-
-
-class MediaPlayerDevice(MediaPlayerEntity):
-    """ABC for media player devices (for backwards compatibility)."""
-
-    def __init_subclass__(cls, **kwargs):
-        """Print deprecation warning."""
-        super().__init_subclass__(**kwargs)
-        _LOGGER.warning(
-            "MediaPlayerDevice is deprecated, modify %s to extend MediaPlayerEntity",
-            cls.__name__,
-        )
 
 
 class BrowseMedia:

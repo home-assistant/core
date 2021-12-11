@@ -192,7 +192,7 @@ class SqueezeboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         _LOGGER.debug(
             "Reached dhcp discovery of a player with info: %s", discovery_info
         )
-        await self.async_set_unique_id(format_mac(discovery_info[dhcp.MAC_ADDRESS]))
+        await self.async_set_unique_id(format_mac(discovery_info.macaddress))
         self._abort_if_unique_id_configured()
 
         _LOGGER.debug("Configuring dhcp player with unique id: %s", self.unique_id)
