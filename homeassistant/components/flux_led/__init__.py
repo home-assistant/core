@@ -151,19 +151,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ) from ex
 
     # UDP probe after successful connect only
-    discovery = _async_get_discovery(hass, host)
-    if not entry.unique_id or not discovery:
-        if discovery := await async_discover_device(hass, host):
-            async_update_entry_from_discovery(hass, entry, discovery)
+    directed_discovery = None
+    if discovery := _async_get_discovery(hass, host):
+        directed_discovery = False
+    elif discovery := await async_discover_device(hass, host):
+        directed_discovery = True
 
-    if entry.unique_id and discovery:
-        assert discovery[ATTR_ID] is not None
-        mac = dr.format_mac(cast(str, discovery[ATTR_ID]))
-        if mac != entry.unique_id:
-            # The device is offline and another flux_led device is now using the ip address
-            raise ConfigEntryNotReady(
-                f"Unexpected device found at {host}; Expected {entry.unique_id}, found {mac}"
-            )
+    if discovery:
+        if entry.unique_id:
+            assert discovery[ATTR_ID] is not None
+            mac = dr.format_mac(cast(str, discovery[ATTR_ID]))
+            if mac != entry.unique_id:
+                # The device is offline and another flux_led device is now using the ip address
+                raise ConfigEntryNotReady(
+                    f"Unexpected device found at {host}; Expected {entry.unique_id}, found {mac}"
+                )
+        if directed_discovery:
+            # Only update the entry once we have verified the unique id
+            # is either missing or we have verified it matches
+            async_update_entry_from_discovery(hass, entry, discovery)
 
     coordinator = FluxLedUpdateCoordinator(hass, device, entry)
     hass.data[DOMAIN][entry.entry_id] = coordinator
