@@ -6,10 +6,15 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorEntity,
+    DEVICE_CLASSES_SCHEMA,
+)
 from homeassistant.const import (
     CONF_COMMAND,
     CONF_NAME,
+    CONF_DEVICE_CLASS,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
     STATE_UNKNOWN,
@@ -36,6 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
         vol.Optional(CONF_JSON_ATTRIBUTES): cv.ensure_list_csv,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     }
@@ -55,10 +61,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if value_template is not None:
         value_template.hass = hass
     json_attributes = config.get(CONF_JSON_ATTRIBUTES)
+    device_class = config.get(CONF_DEVICE_CLASS)
     data = CommandSensorData(hass, command, command_timeout)
 
     add_entities(
-        [CommandSensor(hass, data, name, unit, value_template, json_attributes)], True
+        [
+            CommandSensor(
+                hass, data, name, device_class, unit, value_template, json_attributes
+            )
+        ],
+        True,
     )
 
 
@@ -66,7 +78,14 @@ class CommandSensor(SensorEntity):
     """Representation of a sensor that is using shell commands."""
 
     def __init__(
-        self, hass, data, name, unit_of_measurement, value_template, json_attributes
+        self,
+        hass,
+        data,
+        name,
+        device_class,
+        unit_of_measurement,
+        value_template,
+        json_attributes,
     ):
         """Initialize the sensor."""
         self._hass = hass
@@ -74,6 +93,7 @@ class CommandSensor(SensorEntity):
         self._attributes = None
         self._json_attributes = json_attributes
         self._name = name
+        self._device_class = device_class
         self._state = None
         self._unit_of_measurement = unit_of_measurement
         self._value_template = value_template
@@ -82,6 +102,11 @@ class CommandSensor(SensorEntity):
     def name(self):
         """Return the name of the sensor."""
         return self._name
+
+    @property
+    def device_class(self):
+        """Return the class of the sensor."""
+        return self._device_class
 
     @property
     def native_unit_of_measurement(self):
