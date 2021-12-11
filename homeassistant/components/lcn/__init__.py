@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from functools import partial
 import logging
 
 import pypck
@@ -9,6 +10,7 @@ import pypck
 from homeassistant import config_entries
 from homeassistant.const import (
     CONF_ADDRESS,
+    CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_IP_ADDRESS,
     CONF_NAME,
@@ -18,6 +20,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.typing import ConfigType
 
@@ -119,6 +122,13 @@ async def async_setup_entry(
     # forward config_entry to components
     hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
+    # register for LCN bus messages
+    device_registry = dr.async_get(hass)
+    input_received = partial(
+        async_host_input_received, hass, config_entry, device_registry
+    )
+    lcn_connection.register_for_inputs(input_received)
+
     # register service calls
     for service_name, service in SERVICES:
         if not hass.services.has_service(DOMAIN, service_name):
@@ -148,6 +158,80 @@ async def async_unload_entry(
             hass.services.async_remove(DOMAIN, service_name)
 
     return unload_ok
+
+
+def async_host_input_received(
+    hass: HomeAssistant,
+    config_entry: config_entries.ConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    inp: pypck.inputs.Input,
+) -> None:
+    """Process received input object (command) from LCN bus."""
+    if not isinstance(inp, pypck.inputs.ModInput):
+        return
+
+    lcn_connection = hass.data[DOMAIN][config_entry.entry_id][CONNECTION]
+    logical_address = lcn_connection.physical_to_logical(inp.physical_source_addr)
+    address = (
+        logical_address.seg_id,
+        logical_address.addr_id,
+        logical_address.is_group,
+    )
+    identifiers = {(DOMAIN, generate_unique_id(config_entry.entry_id, address))}
+    device = device_registry.async_get_device(identifiers, set())
+    if device is None:
+        return
+
+    if isinstance(inp, pypck.inputs.ModStatusAccessControl):
+        _async_fire_access_control_event(hass, device, address, inp)
+    elif isinstance(inp, pypck.inputs.ModSendKeysHost):
+        _async_fire_send_keys_event(hass, device, address, inp)
+
+
+def _async_fire_access_control_event(
+    hass: HomeAssistant, device: dr.DeviceEntry, address: AddressType, inp: InputType
+) -> None:
+    """Fire access control event (transponder, transmitter, fingerprint)."""
+    event_data = {
+        "segment_id": address[0],
+        "module_id": address[1],
+        "code": inp.code,
+    }
+
+    if device is not None:
+        event_data.update({CONF_DEVICE_ID: device.id})
+
+    if inp.periphery == pypck.lcn_defs.AccessControlPeriphery.TRANSMITTER:
+        event_data.update(
+            {"level": inp.level, "key": inp.key, "action": inp.action.value}
+        )
+
+    event_name = f"lcn_{inp.periphery.value.lower()}"
+    hass.bus.async_fire(event_name, event_data)
+
+
+def _async_fire_send_keys_event(
+    hass: HomeAssistant, device: dr.DeviceEntry, address: AddressType, inp: InputType
+) -> None:
+    """Fire send_keys event."""
+    for table, action in enumerate(inp.actions):
+        if action == pypck.lcn_defs.SendKeyCommand.DONTSEND:
+            continue
+
+        for key, selected in enumerate(inp.keys):
+            if not selected:
+                continue
+            event_data = {
+                "segment_id": address[0],
+                "module_id": address[1],
+                "key": pypck.lcn_defs.Key(table * 8 + key).name.lower(),
+                "action": action.name.lower(),
+            }
+
+            if device is not None:
+                event_data.update({CONF_DEVICE_ID: device.id})
+
+            hass.bus.async_fire("lcn_send_keys", event_data)
 
 
 class LcnEntity(Entity):
@@ -183,7 +267,7 @@ class LcnEntity(Entity):
     def device_info(self) -> DeviceInfo | None:
         """Return device specific attributes."""
         address = f"{'g' if self.address[2] else 'm'}{self.address[0]:03d}{self.address[1]:03d}"
-        model = f"LCN {get_device_model(self.config[CONF_DOMAIN], self.config[CONF_DOMAIN_DATA])}"
+        model = f"LCN resource ({get_device_model(self.config[CONF_DOMAIN], self.config[CONF_DOMAIN_DATA])})"
 
         return {
             "identifiers": {(DOMAIN, self.unique_id)},
