@@ -96,7 +96,7 @@ def async_update_entry_from_discovery(
                 CONF_REMOTE_ACCESS_PORT: device[ATTR_REMOTE_ACCESS_PORT],
             }
         )
-    if CONF_MINOR_VERSION in device:
+    if ATTR_VERSION_NUM in device:
         updates[CONF_MINOR_VERSION] = device[ATTR_VERSION_NUM]
     if not entry.data.get(CONF_NAME) or is_ip_address(entry.data[CONF_NAME]):
         updates[CONF_NAME] = async_name_from_discovery(device)
