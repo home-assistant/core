@@ -7,7 +7,13 @@ from typing import Any, Final
 
 from flux_led import DeviceType
 from flux_led.aio import AIOWifiLedBulb
-from flux_led.const import ATTR_ID
+from flux_led.const import (
+    ATTR_ID,
+    ATTR_REMOTE_ACCESS_ENABLED,
+    ATTR_REMOTE_ACCESS_HOST,
+    ATTR_REMOTE_ACCESS_PORT,
+    ATTR_VERSION_NUM,
+)
 from flux_led.scanner import FluxLEDDiscovery
 
 from homeassistant import config_entries
@@ -26,8 +32,13 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util.network import is_ip_address
 
 from .const import (
+    CONF_MINOR_VERSION,
+    CONF_REMOTE_ACCESS_ENABLED,
+    CONF_REMOTE_ACCESS_HOST,
+    CONF_REMOTE_ACCESS_PORT,
     DISCOVER_SCAN_TIMEOUT,
     DOMAIN,
     FLUX_LED_DISCOVERY,
@@ -64,11 +75,24 @@ def async_update_entry_from_discovery(
 ) -> None:
     """Update a config entry from a flux_led discovery."""
     name = async_name_from_discovery(device)
+    updates = {**entry.data}
+    if ATTR_REMOTE_ACCESS_ENABLED in device:
+        updates.update(
+            {
+                CONF_REMOTE_ACCESS_ENABLED: device[ATTR_REMOTE_ACCESS_ENABLED],
+                CONF_REMOTE_ACCESS_HOST: device[ATTR_REMOTE_ACCESS_HOST],
+                CONF_REMOTE_ACCESS_PORT: device[ATTR_REMOTE_ACCESS_PORT],
+            }
+        )
+    if ATTR_VERSION_NUM in device:
+        updates[CONF_MINOR_VERSION] = device[ATTR_VERSION_NUM]
+    if not entry.data.get(CONF_NAME) or is_ip_address(entry.data[CONF_NAME]):
+        updates[CONF_NAME] = async_name_from_discovery(device)
     mac_address = device[ATTR_ID]
     assert mac_address is not None
     hass.config_entries.async_update_entry(
         entry,
-        data={**entry.data, CONF_NAME: name},
+        data=updates,
         title=name,
         unique_id=dr.format_mac(mac_address),
     )
@@ -97,10 +121,17 @@ async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None
     await hass.config_entries.async_reload(entry.entry_id)
 
 
+@callback
+def _async_device_was_discovered(hass: HomeAssistant, mac: str) -> bool:
+    """Check if a device was already discovered via a broadcast discovery."""
+    discoveries: list[FluxLEDDiscovery] = hass.data[DOMAIN][FLUX_LED_DISCOVERY]
+    return any(discovery for discovery in discoveries if discovery[ATTR_ID] == mac)
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Flux LED/MagicLight from a config entry."""
     host = entry.data[CONF_HOST]
-    if not entry.unique_id:
+    if not entry.unique_id or not _async_device_was_discovered(hass, entry.unique_id):
         if discovery := await async_discover_device(hass, host):
             async_update_entry_from_discovery(hass, entry, discovery)
 

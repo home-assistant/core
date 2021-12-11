@@ -23,6 +23,10 @@ from homeassistant.components.flux_led.const import (
     CONF_CUSTOM_EFFECT_TRANSITION,
     CONF_DEVICES,
     CONF_EFFECT,
+    CONF_MINOR_VERSION,
+    CONF_REMOTE_ACCESS_ENABLED,
+    CONF_REMOTE_ACCESS_HOST,
+    CONF_REMOTE_ACCESS_PORT,
     CONF_SPEED_PCT,
     CONF_TRANSITION,
     DOMAIN,
@@ -1197,6 +1201,10 @@ async def test_migrate_from_yaml_with_custom_effect(hass: HomeAssistant) -> None
         CONF_HOST: IP_ADDRESS,
         CONF_NAME: "flux_lamppost",
         CONF_PROTOCOL: "ledenet",
+        CONF_REMOTE_ACCESS_ENABLED: True,
+        CONF_REMOTE_ACCESS_HOST: "the.cloud",
+        CONF_REMOTE_ACCESS_PORT: 8816,
+        CONF_MINOR_VERSION: 0x04,
     }
     assert migrated_entry.options == {
         CONF_MODE: "auto",
@@ -1241,6 +1249,10 @@ async def test_migrate_from_yaml_no_custom_effect(hass: HomeAssistant) -> None:
         CONF_HOST: IP_ADDRESS,
         CONF_NAME: "flux_lamppost",
         CONF_PROTOCOL: "ledenet",
+        CONF_REMOTE_ACCESS_ENABLED: True,
+        CONF_REMOTE_ACCESS_HOST: "the.cloud",
+        CONF_REMOTE_ACCESS_PORT: 8816,
+        CONF_MINOR_VERSION: 0x04,
     }
     assert migrated_entry.options == {
         CONF_MODE: "auto",
