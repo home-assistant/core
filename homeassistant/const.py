@@ -3,9 +3,11 @@ from __future__ import annotations
 
 from typing import Final
 
+from homeassistant.backports.enum import StrEnum
+
 MAJOR_VERSION: Final = 2021
-MINOR_VERSION: Final = 11
-PATCH_VERSION: Final = "5"
+MINOR_VERSION: Final = 12
+PATCH_VERSION: Final = "0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
 REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 8, 0)
@@ -15,6 +17,42 @@ REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = "2022.1"
 
 # Format for platform files
 PLATFORM_FORMAT: Final = "{platform}.{domain}"
+
+
+class Platform(StrEnum):
+    """Available entity platforms."""
+
+    AIR_QUALITY = "air_quality"
+    ALARM_CONTROL_PANEL = "alarm_control_panel"
+    BINARY_SENSOR = "binary_sensor"
+    BUTTON = "button"
+    CALENDAR = "calendar"
+    CAMERA = "camera"
+    CLIMATE = "climate"
+    COVER = "cover"
+    DEVICE_TRACKER = "device_tracker"
+    FAN = "fan"
+    GEO_LOCATION = "geo_location"
+    HUMIDIFIER = "humidifier"
+    IMAGE_PROCESSING = "image_processing"
+    LIGHT = "light"
+    LOCK = "lock"
+    MAILBOX = "mailbox"
+    MEDIA_PLAYER = "media_player"
+    NOTIFY = "notify"
+    NUMBER = "number"
+    REMOTE = "remote"
+    SCENE = "scene"
+    SELECT = "select"
+    SENSOR = "sensor"
+    SIREN = "siren"
+    STT = "stt"
+    SWITCH = "switch"
+    TTS = "tts"
+    VACUUM = "vacuum"
+    WATER_HEATER = "water_heater"
+    WEATHER = "weather"
+
 
 # Can be used to specify a catch all when registering state or event listeners.
 MATCH_ALL: Final = "*"
@@ -233,6 +271,8 @@ EVENT_TIME_CHANGED: Final = "time_changed"
 
 
 # #### DEVICE CLASSES ####
+# DEVICE_CLASS_* below are deprecated as of 2021.12
+# use the SensorDeviceClass enum instead.
 DEVICE_CLASS_AQI: Final = "aqi"
 DEVICE_CLASS_BATTERY: Final = "battery"
 DEVICE_CLASS_CO: Final = "carbon_monoxide"
@@ -240,6 +280,8 @@ DEVICE_CLASS_CO2: Final = "carbon_dioxide"
 DEVICE_CLASS_CURRENT: Final = "current"
 DEVICE_CLASS_DATE: Final = "date"
 DEVICE_CLASS_ENERGY: Final = "energy"
+DEVICE_CLASS_FREQUENCY: Final = "frequency"
+DEVICE_CLASS_GAS: Final = "gas"
 DEVICE_CLASS_HUMIDITY: Final = "humidity"
 DEVICE_CLASS_ILLUMINANCE: Final = "illuminance"
 DEVICE_CLASS_MONETARY: Final = "monetary"
@@ -247,19 +289,18 @@ DEVICE_CLASS_NITROGEN_DIOXIDE = "nitrogen_dioxide"
 DEVICE_CLASS_NITROGEN_MONOXIDE = "nitrogen_monoxide"
 DEVICE_CLASS_NITROUS_OXIDE = "nitrous_oxide"
 DEVICE_CLASS_OZONE: Final = "ozone"
-DEVICE_CLASS_POWER_FACTOR: Final = "power_factor"
-DEVICE_CLASS_POWER: Final = "power"
-DEVICE_CLASS_PM25: Final = "pm25"
 DEVICE_CLASS_PM1: Final = "pm1"
 DEVICE_CLASS_PM10: Final = "pm10"
+DEVICE_CLASS_PM25: Final = "pm25"
+DEVICE_CLASS_POWER_FACTOR: Final = "power_factor"
+DEVICE_CLASS_POWER: Final = "power"
 DEVICE_CLASS_PRESSURE: Final = "pressure"
 DEVICE_CLASS_SIGNAL_STRENGTH: Final = "signal_strength"
 DEVICE_CLASS_SULPHUR_DIOXIDE = "sulphur_dioxide"
 DEVICE_CLASS_TEMPERATURE: Final = "temperature"
 DEVICE_CLASS_TIMESTAMP: Final = "timestamp"
-DEVICE_CLASS_VOLTAGE: Final = "voltage"
 DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS = "volatile_organic_compounds"
-DEVICE_CLASS_GAS: Final = "gas"
+DEVICE_CLASS_VOLTAGE: Final = "voltage"
 
 # #### STATES ####
 STATE_ON: Final = "on"
@@ -420,6 +461,7 @@ ATTR_TEMPERATURE: Final = "temperature"
 POWER_WATT: Final = "W"
 POWER_KILO_WATT: Final = "kW"
 POWER_VOLT_AMPERE: Final = "VA"
+POWER_BTU_PER_HOUR: Final = "BTU/h"
 
 # Energy units
 ENERGY_WATT_HOUR: Final = "Wh"
@@ -471,6 +513,7 @@ LENGTH_MILES: Final = "mi"
 
 # Frequency units
 FREQUENCY_HERTZ: Final = "Hz"
+FREQUENCY_KILOHERTZ: Final = "kHz"
 FREQUENCY_MEGAHERTZ: Final = "MHz"
 FREQUENCY_GIGAHERTZ: Final = "GHz"
 
@@ -479,7 +522,9 @@ PRESSURE_PA: Final = "Pa"
 PRESSURE_HPA: Final = "hPa"
 PRESSURE_KPA: Final = "kPa"
 PRESSURE_BAR: Final = "bar"
+PRESSURE_CBAR: Final = "cbar"
 PRESSURE_MBAR: Final = "mbar"
+PRESSURE_MMHG: Final = "mmHg"
 PRESSURE_INHG: Final = "inHg"
 PRESSURE_PSI: Final = "psi"
 
@@ -660,21 +705,6 @@ URL_API_ERROR_LOG: Final = "/api/error_log"
 URL_API_LOG_OUT: Final = "/api/log_out"
 URL_API_TEMPLATE: Final = "/api/template"
 
-HTTP_OK: Final = 200
-HTTP_CREATED: Final = 201
-HTTP_ACCEPTED: Final = 202
-HTTP_MOVED_PERMANENTLY: Final = 301
-HTTP_BAD_REQUEST: Final = 400
-HTTP_UNAUTHORIZED: Final = 401
-HTTP_FORBIDDEN: Final = 403
-HTTP_NOT_FOUND: Final = 404
-HTTP_METHOD_NOT_ALLOWED: Final = 405
-HTTP_UNPROCESSABLE_ENTITY: Final = 422
-HTTP_TOO_MANY_REQUESTS: Final = 429
-HTTP_INTERNAL_SERVER_ERROR: Final = 500
-HTTP_BAD_GATEWAY: Final = 502
-HTTP_SERVICE_UNAVAILABLE: Final = 503
-
 HTTP_BASIC_AUTHENTICATION: Final = "basic"
 HTTP_BEARER_AUTHENTICATION: Final = "bearer_token"
 HTTP_DIGEST_AUTHENTICATION: Final = "digest"
@@ -695,8 +725,10 @@ MASS: Final = "mass"
 PRESSURE: Final = "pressure"
 VOLUME: Final = "volume"
 TEMPERATURE: Final = "temperature"
-SPEED_MS: Final = "speed_ms"
+SPEED: Final = "speed"
+WIND_SPEED: Final = "wind_speed"
 ILLUMINANCE: Final = "illuminance"
+ACCUMULATED_PRECIPITATION: Final = "accumulated_precipitation"
 
 WEEKDAYS: Final[list[str]] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
 
@@ -709,8 +741,21 @@ PRECISION_TENTHS: Final = 0.1
 # cloud, alexa, or google_home components
 CLOUD_NEVER_EXPOSED_ENTITIES: Final[list[str]] = ["group.all_locks"]
 
-# The ID of the Home Assistant Cast App
-CAST_APP_ID_HOMEASSISTANT: Final = "B12CE3CA"
-
+# ENTITY_CATEGOR* below are deprecated as of 2021.12
+# use the EntityCategory enum instead.
 ENTITY_CATEGORY_CONFIG: Final = "config"
 ENTITY_CATEGORY_DIAGNOSTIC: Final = "diagnostic"
+ENTITY_CATEGORY_SYSTEM: Final = "system"
+ENTITY_CATEGORIES: Final[list[str]] = [
+    ENTITY_CATEGORY_CONFIG,
+    ENTITY_CATEGORY_DIAGNOSTIC,
+    ENTITY_CATEGORY_SYSTEM,
+]
+
+# The ID of the Home Assistant Media Player Cast App
+CAST_APP_ID_HOMEASSISTANT_MEDIA: Final = "B45F4572"
+# The ID of the Home Assistant Lovelace Cast App
+CAST_APP_ID_HOMEASSISTANT_LOVELACE: Final = "A078F6B0"
+
+# User used by Supervisor
+HASSIO_USER_NAME = "Supervisor"

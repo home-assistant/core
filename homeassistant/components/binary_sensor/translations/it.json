@@ -31,6 +31,7 @@
             "is_not_plugged_in": "{entity_name} \u00e8 collegato",
             "is_not_powered": "{entity_name} non \u00e8 alimentato",
             "is_not_present": "{entity_name} non \u00e8 presente",
+            "is_not_running": "{entity_name} non \u00e8 in funzionamento",
             "is_not_tampered": "{entity_name} non rileva manomissioni",
             "is_not_unsafe": "{entity_name} \u00e8 sicuro",
             "is_occupied": "{entity_name} \u00e8 occupato",
@@ -41,6 +42,7 @@
             "is_powered": "{entity_name} \u00e8 alimentato",
             "is_present": "{entity_name} \u00e8 presente",
             "is_problem": "{entity_name} sta rilevando un problema",
+            "is_running": "{entity_name} \u00e8 in funzionamento",
             "is_smoke": "{entity_name} sta rilevando il fumo",
             "is_sound": "{entity_name} sta rilevando il suono",
             "is_tampered": "{entity_name} rileva manomissioni",
@@ -81,6 +83,7 @@
             "not_plugged_in": "{entity_name} \u00e8 scollegato",
             "not_powered": "{entity_name} non \u00e8 alimentato",
             "not_present": "{entity_name} non \u00e8 presente",
+            "not_running": "{entity_name} non \u00e8 pi\u00f9 in funzione",
             "not_unsafe": "{entity_name} \u00e8 diventato sicuro",
             "occupied": "{entity_name} \u00e8 diventato occupato",
             "opened": "{entity_name} \u00e8 aperto",
@@ -88,6 +91,7 @@
             "powered": "{entity_name} \u00e8 alimentato",
             "present": "{entity_name} \u00e8 presente",
             "problem": "{entity_name} ha iniziato a rilevare un problema",
+            "running": "{entity_name} ha iniziato a funzionare",
             "smoke": "{entity_name} ha iniziato la rilevazione di fumo",
             "sound": "{entity_name} ha iniziato il rilevamento del suono",
             "turned_off": "{entity_name} disattivato",
@@ -96,6 +100,19 @@
             "update": "{entity_name} ha ottenuto un aggiornamento disponibile",
             "vibration": "{entity_name} iniziato a rilevare le vibrazioni"
         }
+    },
+    "device_class": {
+        "cold": "freddo",
+        "gas": "gas",
+        "heat": "caldo",
+        "moisture": "umidit\u00e0",
+        "motion": "movimento",
+        "occupancy": "occupazione",
+        "power": "potenza",
+        "problem": "problema",
+        "smoke": "fumo",
+        "sound": "suono",
+        "vibration": "vibrazione"
     },
     "state": {
         "_": {
@@ -173,6 +190,10 @@
         "problem": {
             "off": "OK",
             "on": "Problema"
+        },
+        "running": {
+            "off": "Non in esecuzione",
+            "on": "In esecuzione"
         },
         "safety": {
             "off": "Sicuro",

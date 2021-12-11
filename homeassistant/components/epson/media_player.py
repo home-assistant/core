@@ -100,8 +100,7 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
         _LOGGER.debug("Setting unique_id for projector")
         if self._unique_id:
             return False
-        uid = await self._projector.get_serial_number()
-        if uid:
+        if uid := await self._projector.get_serial_number():
             self.hass.config_entries.async_update_entry(self._entry, unique_id=uid)
             registry = async_get_entity_registry(self.hass)
             old_entity_id = registry.async_get_entity_id(

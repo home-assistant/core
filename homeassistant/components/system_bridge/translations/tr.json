@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu",
+            "unknown": "Beklenmeyen hata"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
+            "unknown": "Beklenmeyen hata"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "authenticate": {
+                "data": {
+                    "api_key": "API Anahtar\u0131"
+                },
+                "description": "{name} i\u00e7in yap\u0131land\u0131rman\u0131zda belirledi\u011finiz API Anahtar\u0131n\u0131 girin."
+            },
+            "user": {
+                "data": {
+                    "api_key": "API Anahtar\u0131",
+                    "host": "Ana bilgisayar",
+                    "port": "Port"
+                },
+                "description": "L\u00fctfen ba\u011flant\u0131 bilgilerinizi giriniz."
+            }
+        }
+    },
+    "title": "Sistem K\u00f6pr\u00fcs\u00fc"
+}

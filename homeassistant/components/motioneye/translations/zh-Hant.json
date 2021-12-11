@@ -30,6 +30,7 @@
         "step": {
             "init": {
                 "data": {
+                    "stream_url_template": "\u4e32\u6d41 URL \u6a21\u677f",
                     "webhook_set": "\u8a2d\u5b9a motionEye webhooks \u4ee5\u56de\u5831\u4e8b\u4ef6\u81f3 Home Assistant",
                     "webhook_set_overwrite": "\u8986\u84cb\u7121\u6cd5\u8fa8\u8b58\u7684 Webhooks"
                 }

@@ -29,6 +29,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     AIOSHELLY_DEVICE_TIMEOUT_SEC,
+    ATTR_BETA,
     ATTR_CHANNEL,
     ATTR_CLICK_TYPE,
     ATTR_DEVICE,
@@ -36,6 +37,7 @@ from .const import (
     BATTERY_DEVICES_WITH_PERMANENT_CONNECTION,
     BLOCK,
     CONF_COAP_PORT,
+    CONF_SLEEP_PERIOD,
     DATA_CONFIG_ENTRY,
     DEFAULT_COAP_PORT,
     DEVICE,
@@ -44,6 +46,7 @@ from .const import (
     ENTRY_RELOAD_COOLDOWN,
     EVENT_SHELLY_CLICK,
     INPUTS_EVENTS_DICT,
+    MODELS_SUPPORTING_LIGHT_EFFECTS,
     POLLING_TIMEOUT_SEC,
     REST,
     REST_SENSORS_UPDATE_INTERVAL,
@@ -62,9 +65,17 @@ from .utils import (
     get_rpc_device_name,
 )
 
-BLOCK_PLATFORMS: Final = ["binary_sensor", "cover", "light", "sensor", "switch"]
+BLOCK_PLATFORMS: Final = [
+    "binary_sensor",
+    "button",
+    "climate",
+    "cover",
+    "light",
+    "sensor",
+    "switch",
+]
 BLOCK_SLEEPING_PLATFORMS: Final = ["binary_sensor", "sensor"]
-RPC_PLATFORMS: Final = ["binary_sensor", "light", "sensor", "switch"]
+RPC_PLATFORMS: Final = ["binary_sensor", "button", "light", "sensor", "switch"]
 _LOGGER: Final = logging.getLogger(__name__)
 
 COAP_SCHEMA: Final = vol.Schema(
@@ -143,7 +154,7 @@ async def async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> bo
     if device_entry and entry.entry_id not in device_entry.config_entries:
         device_entry = None
 
-    sleep_period = entry.data.get("sleep_period")
+    sleep_period = entry.data.get(CONF_SLEEP_PERIOD)
 
     @callback
     def _async_device_online(_: Any) -> None:
@@ -152,7 +163,7 @@ async def async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> bo
 
         if sleep_period is None:
             data = {**entry.data}
-            data["sleep_period"] = get_block_device_sleep_period(device.settings)
+            data[CONF_SLEEP_PERIOD] = get_block_device_sleep_period(device.settings)
             data["model"] = device.settings["device"]["type"]
             hass.config_entries.async_update_entry(entry, data=data)
 
@@ -164,8 +175,12 @@ async def async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> bo
         try:
             async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
                 await device.initialize()
-        except (asyncio.TimeoutError, OSError) as err:
-            raise ConfigEntryNotReady from err
+        except asyncio.TimeoutError as err:
+            raise ConfigEntryNotReady(
+                str(err) or "Timeout during device setup"
+            ) from err
+        except OSError as err:
+            raise ConfigEntryNotReady(str(err) or "Error during device setup") from err
 
         await async_block_device_setup(hass, entry, device)
     elif sleep_period is None or device_entry is None:
@@ -194,7 +209,7 @@ async def async_block_device_setup(
 
     platforms = BLOCK_SLEEPING_PLATFORMS
 
-    if not entry.data.get("sleep_period"):
+    if not entry.data.get(CONF_SLEEP_PERIOD):
         hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][
             REST
         ] = ShellyDeviceRestWrapper(hass, device)
@@ -217,8 +232,10 @@ async def async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool
             device = await RpcDevice.create(
                 aiohttp_client.async_get_clientsession(hass), options
             )
-    except (asyncio.TimeoutError, OSError) as err:
-        raise ConfigEntryNotReady from err
+    except asyncio.TimeoutError as err:
+        raise ConfigEntryNotReady(str(err) or "Timeout during device setup") from err
+    except OSError as err:
+        raise ConfigEntryNotReady(str(err) or "Error during device setup") from err
 
     device_wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][
         RPC
@@ -239,7 +256,7 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         """Initialize the Shelly device wrapper."""
         self.device_id: str | None = None
 
-        if sleep_period := entry.data["sleep_period"]:
+        if sleep_period := entry.data[CONF_SLEEP_PERIOD]:
             update_interval = SLEEP_PERIOD_MULTIPLIER * sleep_period
         else:
             update_interval = (
@@ -312,11 +329,12 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
 
             # For dual mode bulbs ignore change if it is due to mode/effect change
             if self.model in DUAL_MODE_LIGHT_MODELS:
-                if "mode" in block.sensor_ids and self.model != "SHRGBW2":
+                if "mode" in block.sensor_ids:
                     if self._last_mode != block.mode:
                         self._last_cfg_changed = None
                     self._last_mode = block.mode
 
+            if self.model in MODELS_SUPPORTING_LIGHT_EFFECTS:
                 if "effect" in block.sensor_ids:
                     if self._last_effect != block.effect:
                         self._last_cfg_changed = None
@@ -369,7 +387,7 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
 
     async def _async_update_data(self) -> None:
         """Fetch data."""
-        if sleep_period := self.entry.data.get("sleep_period"):
+        if sleep_period := self.entry.data.get(CONF_SLEEP_PERIOD):
             # Sleeping device, no point polling it, just mark it unavailable
             raise update_coordinator.UpdateFailed(
                 f"Sleeping device did not update within {sleep_period} seconds interval"
@@ -407,6 +425,41 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         )
         self.device_id = entry.id
         self.device.subscribe_updates(self.async_set_updated_data)
+
+    async def async_trigger_ota_update(self, beta: bool = False) -> None:
+        """Trigger or schedule an ota update."""
+        update_data = self.device.status["update"]
+        _LOGGER.debug("OTA update service - update_data: %s", update_data)
+
+        if not update_data["has_update"] and not beta:
+            _LOGGER.warning("No OTA update available for device %s", self.name)
+            return
+
+        if beta and not update_data.get("beta_version"):
+            _LOGGER.warning(
+                "No OTA update on beta channel available for device %s", self.name
+            )
+            return
+
+        if update_data["status"] == "updating":
+            _LOGGER.warning("OTA update already in progress for %s", self.name)
+            return
+
+        new_version = update_data["new_version"]
+        if beta:
+            new_version = update_data["beta_version"]
+        _LOGGER.info(
+            "Start OTA update of device %s from '%s' to '%s'",
+            self.name,
+            self.device.firmware_version,
+            new_version,
+        )
+        try:
+            async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
+                result = await self.device.trigger_ota_update(beta=beta)
+        except (asyncio.TimeoutError, OSError) as err:
+            _LOGGER.exception("Error while perform ota update: %s", err)
+        _LOGGER.debug("Result of OTA update call: %s", result)
 
     def shutdown(self) -> None:
         """Shutdown the wrapper."""
@@ -477,7 +530,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     platforms = BLOCK_SLEEPING_PLATFORMS
 
-    if not entry.data.get("sleep_period"):
+    if not entry.data.get(CONF_SLEEP_PERIOD):
         hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][REST] = None
         platforms = BLOCK_PLATFORMS
 
@@ -644,6 +697,42 @@ class RpcDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         )
         self.device_id = entry.id
         self.device.subscribe_updates(self.async_set_updated_data)
+
+    async def async_trigger_ota_update(self, beta: bool = False) -> None:
+        """Trigger an ota update."""
+
+        update_data = self.device.status["sys"]["available_updates"]
+        _LOGGER.debug("OTA update service - update_data: %s", update_data)
+
+        if not bool(update_data) or (not update_data.get("stable") and not beta):
+            _LOGGER.warning("No OTA update available for device %s", self.name)
+            return
+
+        if beta and not update_data.get(ATTR_BETA):
+            _LOGGER.warning(
+                "No OTA update on beta channel available for device %s", self.name
+            )
+            return
+
+        new_version = update_data.get("stable", {"version": ""})["version"]
+        if beta:
+            new_version = update_data.get(ATTR_BETA, {"version": ""})["version"]
+
+        assert self.device.shelly
+        _LOGGER.info(
+            "Start OTA update of device %s from '%s' to '%s'",
+            self.name,
+            self.device.firmware_version,
+            new_version,
+        )
+        result = None
+        try:
+            async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
+                result = await self.device.trigger_ota_update(beta=beta)
+        except (asyncio.TimeoutError, OSError) as err:
+            _LOGGER.exception("Error while perform ota update: %s", err)
+
+        _LOGGER.debug("Result of OTA update call: %s", result)
 
     async def shutdown(self) -> None:
         """Shutdown the wrapper."""

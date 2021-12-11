@@ -1,5 +1,6 @@
 """Test the Aurora ABB PowerOne Solar PV config flow."""
 from datetime import timedelta
+import logging
 from logging import INFO
 from unittest.mock import patch
 
@@ -17,7 +18,9 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ADDRESS, CONF_PORT
 from homeassistant.util.dt import utcnow
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
+
+TEST_DATA = {"device": "/dev/ttyUSB7", "address": 3, "name": "MyAuroraPV"}
 
 
 def _simulated_returns(index, global_measure=None):
@@ -163,10 +166,60 @@ async def test_form_invalid_com_ports(hass):
     assert len(mock_clientclose.mock_calls) == 1
 
 
+async def test_import_invalid_com_ports(hass, caplog):
+    """Test we display correct info when the comport is invalid.."""
+
+    caplog.set_level(logging.ERROR)
+    with patch(
+        "aurorapy.client.AuroraSerialClient.connect",
+        side_effect=OSError(19, "...no such device..."),
+        return_value=None,
+    ):
+        await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=TEST_DATA
+        )
+    configs = hass.config_entries.async_entries(DOMAIN)
+    assert len(configs) == 1
+    entry = configs[0]
+    assert entry.state == ConfigEntryState.SETUP_ERROR
+    assert "Failed to connect to inverter: " in caplog.text
+
+
+async def test_import_com_port_wont_open(hass):
+    """Test we display correct info when comport won't open."""
+
+    with patch(
+        "aurorapy.client.AuroraSerialClient.connect",
+        side_effect=AuroraError("..could not open port..."),
+    ):
+        await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=TEST_DATA
+        )
+    configs = hass.config_entries.async_entries(DOMAIN)
+    assert len(configs) == 1
+    entry = configs[0]
+    assert entry.state == ConfigEntryState.SETUP_ERROR
+
+
+async def test_import_other_oserror(hass):
+    """Test we display correct info when comport won't open."""
+
+    with patch(
+        "aurorapy.client.AuroraSerialClient.connect",
+        side_effect=OSError(18, "...another error..."),
+    ):
+        await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=TEST_DATA
+        )
+    configs = hass.config_entries.async_entries(DOMAIN)
+    assert len(configs) == 1
+    entry = configs[0]
+    assert entry.state == ConfigEntryState.SETUP_ERROR
+
+
 # Tests below can be deleted after deprecation period is finished.
 async def test_import_day(hass):
     """Test .yaml import when the inverter is able to communicate."""
-    TEST_DATA = {"device": "/dev/ttyUSB7", "address": 3, "name": "MyAuroraPV"}
 
     with patch("aurorapy.client.AuroraSerialClient.connect", return_value=None,), patch(
         "aurorapy.client.AuroraSerialClient.serial_number",
@@ -195,7 +248,6 @@ async def test_import_day(hass):
 
 async def test_import_night(hass):
     """Test .yaml import when the inverter is inaccessible (e.g. darkness)."""
-    TEST_DATA = {"device": "/dev/ttyUSB7", "address": 3, "name": "MyAuroraPV"}
 
     # First time round, no response.
     with patch(
@@ -241,13 +293,14 @@ async def test_import_night(hass):
         assert entry.unique_id
 
         assert len(mock_connect.mock_calls) == 1
-        assert hass.states.get("sensor.power_output").state == "45.7"
+        power = hass.states.get("sensor.power_output")
+        assert power
+        assert power.state == "45.7"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
 async def test_import_night_then_user(hass):
     """Attempt yaml import and fail (dark), but user sets up manually before auto retry."""
-    TEST_DATA = {"device": "/dev/ttyUSB7", "address": 3, "name": "MyAuroraPV"}
 
     # First time round, no response.
     with patch(
@@ -322,3 +375,29 @@ async def test_import_night_then_user(hass):
         await hass.async_block_till_done()
         assert entry.state == ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+
+async def test_import_already_existing(hass):
+    """Test configuration.yaml import when already configured."""
+    TESTDATA = {"device": "/dev/ttyUSB7", "address": 7, "name": "MyAuroraPV"}
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="MyAuroraPV",
+        unique_id="0123456",
+        data={
+            CONF_PORT: "/dev/ttyUSB7",
+            CONF_ADDRESS: 7,
+            ATTR_FIRMWARE: "1.234",
+            ATTR_MODEL: "9.8.7.6 (A.B.C)",
+            ATTR_SERIAL_NUMBER: "9876543",
+            "title": "PhotoVoltaic Inverters",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=TESTDATA
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"

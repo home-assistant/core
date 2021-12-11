@@ -34,8 +34,7 @@ class EntityMapStorage:
 
     async def async_initialize(self):
         """Get the pairing cache data."""
-        raw_storage = await self.store.async_load()
-        if not raw_storage:
+        if not (raw_storage := await self.store.async_load()):
             # There is no cached data about HomeKit devices yet
             return
 

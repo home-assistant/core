@@ -21,7 +21,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
@@ -428,14 +428,15 @@ class SmartThingsEntity(Entity):
             self._dispatcher_remove()
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Get attributes about the device."""
-        return {
-            "identifiers": {(DOMAIN, self._device.device_id)},
-            "name": self._device.label,
-            "model": self._device.device_type_name,
-            "manufacturer": "Unavailable",
-        }
+        return DeviceInfo(
+            configuration_url="https://account.smartthings.com",
+            identifiers={(DOMAIN, self._device.device_id)},
+            manufacturer="Unavailable",
+            model=self._device.device_type_name,
+            name=self._device.label,
+        )
 
     @property
     def name(self) -> str:

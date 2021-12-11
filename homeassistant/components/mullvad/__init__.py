@@ -18,7 +18,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: dict) -> bool:
     """Set up Mullvad VPN integration."""
 
     async def async_get_mullvad_api_data():
-        with async_timeout.timeout(10):
+        async with async_timeout.timeout(10):
             api = await hass.async_add_executor_job(MullvadAPI)
             return api.data
 

@@ -38,7 +38,7 @@ DEFAULT_PING_COUNT = 5
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
-PARALLEL_UPDATES = 0
+PARALLEL_UPDATES = 50
 
 PING_MATCHER = re.compile(
     r"(?P<min>\d+.\d+)\/(?P<avg>\d+.\d+)\/(?P<max>\d+.\d+)\/(?P<mdev>\d+.\d+)"

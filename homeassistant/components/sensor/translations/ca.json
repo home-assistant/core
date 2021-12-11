@@ -6,6 +6,7 @@
             "is_carbon_monoxide": "Concentraci\u00f3 actual de mon\u00f2xid de carboni de {entity_name}",
             "is_current": "Intensitat actual de {entity_name}",
             "is_energy": "Energia actual de {entity_name}",
+            "is_frequency": "Freq\u00fc\u00e8ncia actual de {entity_name}",
             "is_gas": "Gas actual de {entity_name}",
             "is_humidity": "Humitat actual de {entity_name}",
             "is_illuminance": "Il\u00b7luminaci\u00f3 actual de {entity_name}",
@@ -32,6 +33,7 @@
             "carbon_monoxide": "Canvia la concentraci\u00f3 de mon\u00f2xid de carboni de {entity_name}",
             "current": "Canvia la intensitat de {entity_name}",
             "energy": "Canvia l'energia de {entity_name}",
+            "frequency": "Canvia la freq\u00fc\u00e8ncia de {entity_name}",
             "gas": "Canvia el gas de {entity_name}",
             "humidity": "Canvia la humitat de {entity_name}",
             "illuminance": "Canvia la il\u00b7luminaci\u00f3 de {entity_name}",
@@ -55,8 +57,8 @@
     },
     "state": {
         "_": {
-            "off": "off",
-            "on": "on"
+            "off": "OFF",
+            "on": "ON"
         }
     },
     "title": "Sensor"

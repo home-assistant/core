@@ -38,6 +38,7 @@ TOPIC_MATCHER = re.compile(
 SUPPORTED_COMPONENTS = [
     "alarm_control_panel",
     "binary_sensor",
+    "button",
     "camera",
     "climate",
     "cover",
@@ -97,9 +98,8 @@ async def async_start(  # noqa: C901
         payload = msg.payload
         topic = msg.topic
         topic_trimmed = topic.replace(f"{discovery_topic}/", "", 1)
-        match = TOPIC_MATCHER.match(topic_trimmed)
 
-        if not match:
+        if not (match := TOPIC_MATCHER.match(topic_trimmed)):
             if topic_trimmed.endswith("config"):
                 _LOGGER.warning(
                     "Received message on illegal discovery topic '%s'", topic
@@ -288,14 +288,14 @@ async def async_start(  # noqa: C901
                 if key not in hass.data[INTEGRATION_UNSUBSCRIBE]:
                     return
 
-                data = {
-                    "topic": msg.topic,
-                    "payload": msg.payload,
-                    "qos": msg.qos,
-                    "retain": msg.retain,
-                    "subscribed_topic": msg.subscribed_topic,
-                    "timestamp": msg.timestamp,
-                }
+                data = mqtt.MqttServiceInfo(
+                    topic=msg.topic,
+                    payload=msg.payload,
+                    qos=msg.qos,
+                    retain=msg.retain,
+                    subscribed_topic=msg.subscribed_topic,
+                    timestamp=msg.timestamp,
+                )
                 result = await hass.config_entries.flow.async_init(
                     integration, context={"source": DOMAIN}, data=data
                 )

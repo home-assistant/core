@@ -126,6 +126,24 @@ def get_zeroconf_info_mock_manufacturer(manufacturer):
     return mock_zc_info
 
 
+def get_zeroconf_info_mock_model(model):
+    """Return info for get_service_info for an zeroconf device."""
+
+    def mock_zc_info(service_type, name):
+        return AsyncServiceInfo(
+            service_type,
+            name,
+            addresses=[b"\n\x00\x00\x14"],
+            port=80,
+            weight=0,
+            priority=0,
+            server="name.local.",
+            properties={b"model": model.encode()},
+        )
+
+    return mock_zc_info
+
+
 async def test_setup(hass, mock_async_zeroconf):
     """Test configured options for a device are loaded via config entry."""
     with patch.object(
@@ -328,6 +346,39 @@ async def test_zeroconf_match_manufacturer(hass, mock_async_zeroconf):
     assert len(mock_service_browser.mock_calls) == 1
     assert len(mock_config_flow.mock_calls) == 1
     assert mock_config_flow.mock_calls[0][1][0] == "samsungtv"
+
+
+async def test_zeroconf_match_model(hass, mock_async_zeroconf):
+    """Test matching a specific model in zeroconf."""
+
+    def http_only_service_update_mock(ipv6, zeroconf, services, handlers):
+        """Call service update handler."""
+        handlers[0](
+            zeroconf,
+            "_airplay._tcp.local.",
+            "s1000._airplay._tcp.local.",
+            ServiceStateChange.Added,
+        )
+
+    with patch.dict(
+        zc_gen.ZEROCONF,
+        {"_airplay._tcp.local.": [{"domain": "appletv", "model": "appletv*"}]},
+        clear=True,
+    ), patch.object(
+        hass.config_entries.flow, "async_init"
+    ) as mock_config_flow, patch.object(
+        zeroconf, "HaAsyncServiceBrowser", side_effect=http_only_service_update_mock
+    ) as mock_service_browser, patch(
+        "homeassistant.components.zeroconf.AsyncServiceInfo",
+        side_effect=get_zeroconf_info_mock_model("appletv"),
+    ):
+        assert await async_setup_component(hass, zeroconf.DOMAIN, {zeroconf.DOMAIN: {}})
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    assert len(mock_service_browser.mock_calls) == 1
+    assert len(mock_config_flow.mock_calls) == 1
+    assert mock_config_flow.mock_calls[0][1][0] == "appletv"
 
 
 async def test_zeroconf_match_manufacturer_not_present(hass, mock_async_zeroconf):
@@ -979,3 +1030,37 @@ async def test_no_name(hass, mock_async_zeroconf):
     register_call = mock_async_zeroconf.async_register_service.mock_calls[-1]
     info = register_call.args[0]
     assert info.name == "Home._home-assistant._tcp.local."
+
+
+async def test_service_info_compatibility(hass, caplog):
+    """Test compatibility with old-style dict.
+
+    To be removed in 2022.6
+    """
+    discovery_info = zeroconf.ZeroconfServiceInfo(
+        host="mock_host",
+        port=None,
+        hostname="mock_hostname",
+        type="mock_type",
+        name="mock_name",
+        properties={},
+    )
+
+    # Ensure first call get logged
+    assert discovery_info["host"] == "mock_host"
+    assert discovery_info.get("host") == "mock_host"
+    assert discovery_info.get("host", "fallback_host") == "mock_host"
+    assert discovery_info.get("invalid_key", "fallback_host") == "fallback_host"
+    assert "Detected code that accessed discovery_info['host']" in caplog.text
+    assert "Detected code that accessed discovery_info.get('host')" not in caplog.text
+
+    # Ensure second call doesn't get logged
+    caplog.clear()
+    assert discovery_info["host"] == "mock_host"
+    assert discovery_info.get("host") == "mock_host"
+    assert "Detected code that accessed discovery_info['host']" not in caplog.text
+    assert "Detected code that accessed discovery_info.get('host')" not in caplog.text
+
+    discovery_info._warning_logged = False
+    assert discovery_info.get("host") == "mock_host"
+    assert "Detected code that accessed discovery_info.get('host')" in caplog.text

@@ -31,6 +31,8 @@
             "is_not_plugged_in": "{entity_name} is niet aangesloten",
             "is_not_powered": "{entity_name} is niet van stroom voorzien...",
             "is_not_present": "{entity_name} is niet aanwezig",
+            "is_not_running": "{entity_name} is niet langer actief",
+            "is_not_tampered": "{entity_name} detecteert geen sabotage",
             "is_not_unsafe": "{entity_name} is veilig",
             "is_occupied": "{entity_name} bezet is",
             "is_off": "{entity_name} is uitgeschakeld",
@@ -40,8 +42,10 @@
             "is_powered": "{entity_name} is van stroom voorzien....",
             "is_present": "{entity_name} is aanwezig",
             "is_problem": "{entity_name} detecteert een probleem",
+            "is_running": "{entity_name} is actief",
             "is_smoke": "{entity_name} detecteert rook",
             "is_sound": "{entity_name} detecteert geluid",
+            "is_tampered": "{entity_name} detecteert sabotage",
             "is_unsafe": "{entity_name} is onveilig",
             "is_update": "{entity_name} heeft een update beschikbaar",
             "is_vibration": "{entity_name} detecteert trillingen"
@@ -52,6 +56,7 @@
             "connected": "{entity_name} verbonden",
             "gas": "{entity_name} begon gas te detecteren",
             "hot": "{entity_name} werd heet",
+            "is_not_tampered": "{entity_name} gestopt met het detecteren van sabotage",
             "is_tampered": "{entity_name} begonnen met het detecteren van sabotage",
             "light": "{entity_name} begon licht te detecteren",
             "locked": "{entity_name} vergrendeld",
@@ -78,6 +83,7 @@
             "not_plugged_in": "{entity_name} niet verbonden",
             "not_powered": "{entity_name} niet ingeschakeld",
             "not_present": "{entity_name} is niet aanwezig",
+            "not_running": "{entity_name} is niet langer actief",
             "not_unsafe": "{entity_name} werd veilig",
             "occupied": "{entity_name} werd bezet",
             "opened": "{entity_name} geopend",
@@ -85,6 +91,7 @@
             "powered": "{entity_name} heeft vermogen",
             "present": "{entity_name} aanwezig",
             "problem": "{entity_name} begonnen met het detecteren van een probleem",
+            "running": "{entity_name} is actief geworden",
             "smoke": "{entity_name} begon rook te detecteren",
             "sound": "{entity_name} begon geluid te detecteren",
             "turned_off": "{entity_name} uitgeschakeld",
@@ -93,6 +100,19 @@
             "update": "{entity_name} kreeg een update beschikbaar",
             "vibration": "{entity_name} begon trillingen te detecteren"
         }
+    },
+    "device_class": {
+        "cold": "koud",
+        "gas": "gas",
+        "heat": "warmte",
+        "moisture": "vochtigheid",
+        "motion": "beweging",
+        "occupancy": "bezetting",
+        "power": "power",
+        "problem": "probleem",
+        "smoke": "rook",
+        "sound": "geluid",
+        "vibration": "trilling"
     },
     "state": {
         "_": {
@@ -170,6 +190,10 @@
         "problem": {
             "off": "OK",
             "on": "Probleem"
+        },
+        "running": {
+            "off": "Niet actief",
+            "on": "Actief"
         },
         "safety": {
             "off": "Veilig",

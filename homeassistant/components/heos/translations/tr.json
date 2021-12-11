@@ -9,8 +9,10 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Ana Bilgisayar"
-                }
+                    "host": "Ana bilgisayar"
+                },
+                "description": "L\u00fctfen bir Heos cihaz\u0131n\u0131n ana bilgisayar ad\u0131n\u0131 veya IP adresini girin (tercihen a\u011fa kabloyla ba\u011fl\u0131 olan).",
+                "title": "Heos'a ba\u011flan\u0131n"
             }
         }
     }

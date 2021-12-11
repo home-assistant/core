@@ -9,13 +9,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import as_local, parse_datetime, utcnow
 
 from . import OpenUvEntity
-from .const import (
-    DATA_CLIENT,
-    DATA_PROTECTION_WINDOW,
-    DOMAIN,
-    LOGGER,
-    TYPE_PROTECTION_WINDOW,
-)
+from .const import DATA_PROTECTION_WINDOW, DOMAIN, LOGGER, TYPE_PROTECTION_WINDOW
 
 ATTR_PROTECTION_WINDOW_ENDING_TIME = "end_time"
 ATTR_PROTECTION_WINDOW_ENDING_UV = "end_uv"
@@ -33,7 +27,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up an OpenUV sensor based on a config entry."""
-    openuv = hass.data[DOMAIN][entry.entry_id][DATA_CLIENT]
+    openuv = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         [OpenUvBinarySensor(openuv, BINARY_SENSOR_DESCRIPTION_PROTECTION_WINDOW)]
     )

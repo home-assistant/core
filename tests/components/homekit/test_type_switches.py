@@ -71,14 +71,14 @@ async def test_outlet_set_state(hass, hk_driver, events):
     call_turn_on = async_mock_service(hass, "switch", "turn_on")
     call_turn_off = async_mock_service(hass, "switch", "turn_off")
 
-    await hass.async_add_executor_job(acc.char_on.client_update_value, True)
+    acc.char_on.client_update_value(True)
     await hass.async_block_till_done()
     assert call_turn_on
     assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
     assert len(events) == 1
     assert events[-1].data[ATTR_VALUE] is None
 
-    await hass.async_add_executor_job(acc.char_on.client_update_value, False)
+    acc.char_on.client_update_value(False)
     await hass.async_block_till_done()
     assert call_turn_off
     assert call_turn_off[0].data[ATTR_ENTITY_ID] == entity_id
@@ -123,14 +123,14 @@ async def test_switch_set_state(hass, hk_driver, entity_id, attrs, events):
     call_turn_on = async_mock_service(hass, domain, "turn_on")
     call_turn_off = async_mock_service(hass, domain, "turn_off")
 
-    await hass.async_add_executor_job(acc.char_on.client_update_value, True)
+    acc.char_on.client_update_value(True)
     await hass.async_block_till_done()
     assert call_turn_on
     assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
     assert len(events) == 1
     assert events[-1].data[ATTR_VALUE] is None
 
-    await hass.async_add_executor_job(acc.char_on.client_update_value, False)
+    acc.char_on.client_update_value(False)
     await hass.async_block_till_done()
     assert call_turn_off
     assert call_turn_off[0].data[ATTR_ENTITY_ID] == entity_id
@@ -188,7 +188,7 @@ async def test_valve_set_state(hass, hk_driver, events):
     call_turn_on = async_mock_service(hass, "switch", "turn_on")
     call_turn_off = async_mock_service(hass, "switch", "turn_off")
 
-    await hass.async_add_executor_job(acc.char_active.client_update_value, 1)
+    acc.char_active.client_update_value(1)
     await hass.async_block_till_done()
     assert acc.char_in_use.value == 1
     assert call_turn_on
@@ -196,7 +196,7 @@ async def test_valve_set_state(hass, hk_driver, events):
     assert len(events) == 1
     assert events[-1].data[ATTR_VALUE] is None
 
-    await hass.async_add_executor_job(acc.char_active.client_update_value, 0)
+    acc.char_active.client_update_value(0)
     await hass.async_block_till_done()
     assert acc.char_in_use.value == 0
     assert call_turn_off
@@ -246,7 +246,7 @@ async def test_vacuum_set_state_with_returnhome_and_start_support(
         hass, VACUUM_DOMAIN, SERVICE_RETURN_TO_BASE
     )
 
-    await hass.async_add_executor_job(acc.char_on.client_update_value, 1)
+    acc.char_on.client_update_value(1)
     await hass.async_block_till_done()
     assert acc.char_on.value == 1
     assert call_start
@@ -254,7 +254,7 @@ async def test_vacuum_set_state_with_returnhome_and_start_support(
     assert len(events) == 1
     assert events[-1].data[ATTR_VALUE] is None
 
-    await hass.async_add_executor_job(acc.char_on.client_update_value, 0)
+    acc.char_on.client_update_value(0)
     await hass.async_block_till_done()
     assert acc.char_on.value == 0
     assert call_return_to_base
@@ -292,7 +292,7 @@ async def test_vacuum_set_state_without_returnhome_and_start_support(
     call_turn_on = async_mock_service(hass, VACUUM_DOMAIN, SERVICE_TURN_ON)
     call_turn_off = async_mock_service(hass, VACUUM_DOMAIN, SERVICE_TURN_OFF)
 
-    await hass.async_add_executor_job(acc.char_on.client_update_value, 1)
+    acc.char_on.client_update_value(1)
     await hass.async_block_till_done()
     assert acc.char_on.value == 1
     assert call_turn_on
@@ -300,7 +300,7 @@ async def test_vacuum_set_state_without_returnhome_and_start_support(
     assert len(events) == 1
     assert events[-1].data[ATTR_VALUE] is None
 
-    await hass.async_add_executor_job(acc.char_on.client_update_value, 0)
+    acc.char_on.client_update_value(0)
     await hass.async_block_till_done()
     assert acc.char_on.value == 0
     assert call_turn_off
@@ -326,7 +326,7 @@ async def test_reset_switch(hass, hk_driver, events):
     call_turn_on = async_mock_service(hass, domain, "turn_on")
     call_turn_off = async_mock_service(hass, domain, "turn_off")
 
-    await hass.async_add_executor_job(acc.char_on.client_update_value, True)
+    acc.char_on.client_update_value(True)
     await hass.async_block_till_done()
     assert acc.char_on.value is True
     assert call_turn_on
@@ -347,7 +347,7 @@ async def test_reset_switch(hass, hk_driver, events):
     assert len(events) == 1
     assert not call_turn_off
 
-    await hass.async_add_executor_job(acc.char_on.client_update_value, False)
+    acc.char_on.client_update_value(False)
     await hass.async_block_till_done()
     assert acc.char_on.value is False
     assert len(events) == 1
@@ -370,7 +370,7 @@ async def test_script_switch(hass, hk_driver, events):
     call_turn_on = async_mock_service(hass, domain, "test")
     call_turn_off = async_mock_service(hass, domain, "turn_off")
 
-    await hass.async_add_executor_job(acc.char_on.client_update_value, True)
+    acc.char_on.client_update_value(True)
     await hass.async_block_till_done()
     assert acc.char_on.value is True
     assert call_turn_on
@@ -391,7 +391,7 @@ async def test_script_switch(hass, hk_driver, events):
     assert len(events) == 1
     assert not call_turn_off
 
-    await hass.async_add_executor_job(acc.char_on.client_update_value, False)
+    acc.char_on.client_update_value(False)
     await hass.async_block_till_done()
     assert acc.char_on.value is False
     assert len(events) == 1
@@ -449,3 +449,46 @@ async def test_input_select_switch(hass, hk_driver, events, domain):
     assert acc.select_chars["option1"].value is False
     assert acc.select_chars["option2"].value is False
     assert acc.select_chars["option3"].value is False
+
+
+async def test_button_switch(hass, hk_driver, events):
+    """Test switch accessory from a button entity."""
+    domain = "button"
+    entity_id = "button.test"
+
+    hass.states.async_set(entity_id, None)
+    await hass.async_block_till_done()
+    acc = Switch(hass, hk_driver, "Switch", entity_id, 2, None)
+    await acc.run()
+    await hass.async_block_till_done()
+
+    assert acc.activate_only is True
+    assert acc.char_on.value is False
+
+    call_press = async_mock_service(hass, domain, "press")
+
+    acc.char_on.client_update_value(True)
+    await hass.async_block_till_done()
+    assert acc.char_on.value is True
+    assert len(call_press) == 1
+    assert call_press[0].data[ATTR_ENTITY_ID] == entity_id
+    assert len(events) == 1
+    assert events[-1].data[ATTR_VALUE] is None
+
+    future = dt_util.utcnow() + timedelta(seconds=1)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
+    assert acc.char_on.value is True
+
+    future = dt_util.utcnow() + timedelta(seconds=10)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
+    assert acc.char_on.value is False
+
+    assert len(events) == 1
+    assert len(call_press) == 1
+
+    acc.char_on.client_update_value(False)
+    await hass.async_block_till_done()
+    assert acc.char_on.value is False
+    assert len(events) == 1

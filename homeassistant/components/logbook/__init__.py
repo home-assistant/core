@@ -193,9 +193,7 @@ class LogbookView(HomeAssistantView):
     async def get(self, request, datetime=None):
         """Retrieve logbook entries."""
         if datetime:
-            datetime = dt_util.parse_datetime(datetime)
-
-            if datetime is None:
+            if (datetime := dt_util.parse_datetime(datetime)) is None:
                 return self.json_message("Invalid datetime", HTTPStatus.BAD_REQUEST)
         else:
             datetime = dt_util.start_of_local_day()
@@ -219,8 +217,7 @@ class LogbookView(HomeAssistantView):
             end_day = start_day + timedelta(days=period)
         else:
             start_day = datetime
-            end_day = dt_util.parse_datetime(end_time)
-            if end_day is None:
+            if (end_day := dt_util.parse_datetime(end_time)) is None:
                 return self.json_message("Invalid end_time", HTTPStatus.BAD_REQUEST)
 
         hass = request.app["hass"]

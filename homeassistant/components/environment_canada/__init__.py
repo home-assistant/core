@@ -78,7 +78,7 @@ def trigger_import(hass, config):
         CONF_LATITUDE,
         CONF_LONGITUDE,
         CONF_LANGUAGE,
-    ):  # pylint: disable=consider-using-tuple
+    ):
         if config.get(key):
             data[key] = config[key]
 

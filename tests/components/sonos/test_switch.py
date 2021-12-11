@@ -14,7 +14,7 @@ from homeassistant.components.sonos.switch import (
     ATTR_VOLUME,
 )
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
-from homeassistant.const import ATTR_TIME, STATE_ON
+from homeassistant.const import ATTR_TIME, STATE_OFF, STATE_ON
 from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
@@ -42,6 +42,8 @@ async def test_entity_registry(hass, config_entry, config):
     assert "switch.sonos_zone_a_status_light" in entity_registry.entities
     assert "switch.sonos_zone_a_night_sound" in entity_registry.entities
     assert "switch.sonos_zone_a_speech_enhancement" in entity_registry.entities
+    assert "switch.sonos_zone_a_subwoofer_enabled" in entity_registry.entities
+    assert "switch.sonos_zone_a_surround_enabled" in entity_registry.entities
     assert "switch.sonos_zone_a_touch_controls" in entity_registry.entities
 
 
@@ -82,6 +84,14 @@ async def test_switch_attributes(hass, config_entry, config, soco):
 
     touch_controls = entity_registry.entities["switch.sonos_zone_a_touch_controls"]
     assert hass.states.get(touch_controls.entity_id) is None
+
+    sub_switch = entity_registry.entities["switch.sonos_zone_a_subwoofer_enabled"]
+    sub_switch_state = hass.states.get(sub_switch.entity_id)
+    assert sub_switch_state.state == STATE_OFF
+
+    surround_switch = entity_registry.entities["switch.sonos_zone_a_surround_enabled"]
+    surround_switch_state = hass.states.get(surround_switch.entity_id)
+    assert surround_switch_state.state == STATE_ON
 
     # Enable disabled switches
     for entity in (status_light, touch_controls):

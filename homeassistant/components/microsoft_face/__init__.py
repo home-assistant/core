@@ -299,7 +299,7 @@ class MicrosoftFace:
                 payload = None
 
         try:
-            with async_timeout.timeout(self.timeout):
+            async with async_timeout.timeout(self.timeout):
                 response = await getattr(self.websession, method)(
                     url, data=payload, headers=headers, params=params
                 )

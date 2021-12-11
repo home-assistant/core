@@ -16,7 +16,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.helpers.dispatcher import (
@@ -26,7 +26,6 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -61,7 +60,7 @@ def get_api(
 
 @callback
 def async_setup_netgear_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
     entity_class_generator: Callable[[NetgearRouter, dict], list],
@@ -103,7 +102,7 @@ def async_add_new_entities(router, async_add_entities, tracked, entity_class_gen
 class NetgearRouter:
     """Representation of a Netgear router."""
 
-    def __init__(self, hass: HomeAssistantType, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize a Netgear router."""
         self.hass = hass
         self.entry = entry

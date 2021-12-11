@@ -64,8 +64,7 @@ SUPPORTED_TARGET_TEMPERATURE_STEP = 1
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up entry."""
     auth: Auth = hass.data[DOMAIN][config_entry.entry_id][AUTH_INSTANCE_KEY]
-    said_list = auth.get_said_list()
-    if not said_list:
+    if not (said_list := auth.get_said_list()):
         _LOGGER.debug("No appliances found")
         return
 
