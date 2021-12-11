@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any, Final
+from typing import Any, Final, cast
 
 from flux_led import DeviceType
 from flux_led.aio import AIOWifiLedBulb
@@ -123,10 +123,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 @callback
-def _async_device_was_discovered(hass: HomeAssistant, mac: str) -> bool:
+def _async_get_discovery(hass: HomeAssistant, host: str) -> FluxLEDDiscovery | None:
     """Check if a device was already discovered via a broadcast discovery."""
     discoveries: list[FluxLEDDiscovery] = hass.data[DOMAIN][FLUX_LED_DISCOVERY]
-    return any(discovery for discovery in discoveries if discovery[ATTR_ID] == mac)
+    for discovery in discoveries:
+        if discovery[ATTR_IPADDR] == host:
+            return discovery
+    return None
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -148,9 +151,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ) from ex
 
     # UDP probe after successful connect only
-    if not entry.unique_id or not _async_device_was_discovered(hass, entry.unique_id):
+    discovery = _async_get_discovery(hass, host)
+    if not entry.unique_id or not discovery:
         if discovery := await async_discover_device(hass, host):
             async_update_entry_from_discovery(hass, entry, discovery)
+
+    if entry.unique_id and discovery:
+        assert discovery[ATTR_ID] is not None
+        mac = dr.format_mac(cast(str, discovery[ATTR_ID]))
+        if mac != entry.unique_id:
+            # The device is offline and another flux_led device is now using the ip address
+            raise ConfigEntryNotReady(
+                f"Unexpected device found at {host}; Expected {entry.unique_id}, found {mac}"
+            )
 
     coordinator = FluxLedUpdateCoordinator(hass, device, entry)
     hass.data[DOMAIN][entry.entry_id] = coordinator

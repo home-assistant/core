@@ -1,6 +1,6 @@
 """Tests for light platform."""
 from datetime import timedelta
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, Mock, patch
 
 from flux_led.const import (
     COLOR_MODE_ADDRESSABLE as FLUX_COLOR_MODE_ADDRESSABLE,
@@ -65,6 +65,7 @@ from homeassistant.util.dt import utcnow
 
 from . import (
     DEFAULT_ENTRY_TITLE,
+    FLUX_DISCOVERY,
     IP_ADDRESS,
     MAC_ADDRESS,
     _mocked_bulb,
@@ -1181,7 +1182,14 @@ async def test_migrate_from_yaml_with_custom_effect(hass: HomeAssistant) -> None
             }
         ],
     }
-    with _patch_discovery(), _patch_wifibulb():
+
+    async def _discovery(self, *args, address=None, **kwargs):
+        # Only return discovery results when doing directed discovery
+        return [FLUX_DISCOVERY] if address == IP_ADDRESS else []
+
+    with patch(
+        "homeassistant.components.flux_led.AIOBulbScanner.async_scan", new=_discovery
+    ), _patch_wifibulb():
         await async_setup_component(hass, LIGHT_DOMAIN, config)
         await hass.async_block_till_done()
         await hass.async_block_till_done()
@@ -1229,7 +1237,14 @@ async def test_migrate_from_yaml_no_custom_effect(hass: HomeAssistant) -> None:
             }
         ],
     }
-    with _patch_discovery(), _patch_wifibulb():
+
+    async def _discovery(self, *args, address=None, **kwargs):
+        # Only return discovery results when doing directed discovery
+        return [FLUX_DISCOVERY] if address == IP_ADDRESS else []
+
+    with patch(
+        "homeassistant.components.flux_led.AIOBulbScanner.async_scan", new=_discovery
+    ), _patch_wifibulb():
         await async_setup_component(hass, LIGHT_DOMAIN, config)
         await hass.async_block_till_done()
         await hass.async_block_till_done()
