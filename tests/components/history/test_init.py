@@ -856,7 +856,7 @@ TEMPERATURE_SENSOR_ATTRIBUTES = {
         (IMPERIAL_SYSTEM, TEMPERATURE_SENSOR_ATTRIBUTES, 10, 50),
         (METRIC_SYSTEM, TEMPERATURE_SENSOR_ATTRIBUTES, 10, 10),
         (IMPERIAL_SYSTEM, PRESSURE_SENSOR_ATTRIBUTES, 1000, 14.503774389728312),
-        (METRIC_SYSTEM, PRESSURE_SENSOR_ATTRIBUTES, 1000, 100000),
+        (METRIC_SYSTEM, PRESSURE_SENSOR_ATTRIBUTES, 1000, 1000),
     ],
 )
 async def test_statistics_during_period(
@@ -981,7 +981,7 @@ async def test_statistics_during_period_bad_end_time(hass, hass_ws_client):
         (IMPERIAL_SYSTEM, TEMPERATURE_SENSOR_ATTRIBUTES, "°F"),
         (METRIC_SYSTEM, TEMPERATURE_SENSOR_ATTRIBUTES, "°C"),
         (IMPERIAL_SYSTEM, PRESSURE_SENSOR_ATTRIBUTES, "psi"),
-        (METRIC_SYSTEM, PRESSURE_SENSOR_ATTRIBUTES, "Pa"),
+        (METRIC_SYSTEM, PRESSURE_SENSOR_ATTRIBUTES, "hPa"),
     ],
 )
 async def test_list_statistic_ids(hass, hass_ws_client, units, attributes, unit):
