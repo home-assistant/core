@@ -89,7 +89,8 @@ def async_name_from_discovery(device: FluxLEDDiscovery) -> str:
     return f"{device[ATTR_MODEL]} {short_mac}"
 
 
-async def async_update_entry_from_discovery(
+@callback
+def async_update_entry_from_discovery(
     hass: HomeAssistant, entry: config_entries.ConfigEntry, device: FluxLEDDiscovery
 ) -> bool:
     """Update a config entry from a flux_led discovery."""
@@ -190,7 +191,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     host = entry.data[CONF_HOST]
     if not entry.unique_id or not _async_device_was_discovered(hass, entry.unique_id):
         if discovery := await async_discover_device(hass, host):
-            await async_update_entry_from_discovery(hass, entry, discovery)
+            async_update_entry_from_discovery(hass, entry, discovery)
 
     device: AIOWifiLedBulb = async_wifi_bulb_for_host(host)
     signal = SIGNAL_STATE_UPDATED.format(device.ipaddr)
