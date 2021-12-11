@@ -401,3 +401,49 @@ def test_color_rgb_to_rgbww():
     assert color_util.color_rgb_to_rgbww(64, 64, 64, 154, 370) == (0, 14, 25, 64, 64)
     assert color_util.color_rgb_to_rgbww(32, 64, 16, 154, 370) == (9, 64, 0, 38, 38)
     assert color_util.color_rgb_to_rgbww(0, 0, 0, 154, 370) == (0, 0, 0, 0, 0)
+
+
+def test_color_temperature_to_rgbww():
+    """Test color temp to warm, cold conversion."""
+    assert color_util.color_temperature_to_rgbww(153, 255, 153, 500) == (
+        0,
+        0,
+        0,
+        0,
+        255,
+    )
+    assert color_util.color_temperature_to_rgbww(153, 128, 153, 500) == (
+        0,
+        0,
+        0,
+        0,
+        128,
+    )
+    assert color_util.color_temperature_to_rgbww(500, 255, 153, 500) == (
+        0,
+        0,
+        0,
+        255,
+        0,
+    )
+    assert color_util.color_temperature_to_rgbww(500, 128, 153, 500) == (
+        0,
+        0,
+        0,
+        128,
+        0,
+    )
+    assert color_util.color_temperature_to_rgbww(347, 255, 153, 500) == (
+        0,
+        0,
+        0,
+        143,
+        112,
+    )
+    assert color_util.color_temperature_to_rgbww(347, 128, 153, 500) == (
+        0,
+        0,
+        0,
+        72,
+        56,
+    )
