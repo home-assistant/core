@@ -189,12 +189,25 @@ async def test_error_both_key_server(hass):
     config_data[CONF_ADBKEY] = ADBKEY
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_USER},
+        context={"source": SOURCE_USER, "show_advanced_options": True},
         data=config_data,
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {"base": "key_and_server"}
+
+    with patch(
+        CONNECT_METHOD,
+        return_value=MockConfigDevice(),
+    ), PATCH_SETUP_ENTRY, PATCH_GET_HOST_IP:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=CONFIG_ADB_SERVER
+        )
+        await hass.async_block_till_done()
+
+        assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result2["title"] == HOST
+        assert result2["data"] == CONFIG_ADB_SERVER
 
 
 async def test_error_invalid_key(hass):
@@ -203,12 +216,25 @@ async def test_error_invalid_key(hass):
     config_data[CONF_ADBKEY] = ADBKEY
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_USER},
+        context={"source": SOURCE_USER, "show_advanced_options": True},
         data=config_data,
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {"base": "adbkey_not_file"}
+
+    with patch(
+        CONNECT_METHOD,
+        return_value=MockConfigDevice(),
+    ), PATCH_SETUP_ENTRY, PATCH_GET_HOST_IP:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=CONFIG_ADB_SERVER
+        )
+        await hass.async_block_till_done()
+
+        assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result2["title"] == HOST
+        assert result2["data"] == CONFIG_ADB_SERVER
 
 
 async def test_error_invalid_host(hass):
@@ -219,12 +245,25 @@ async def test_error_invalid_host(hass):
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": SOURCE_USER},
+            context={"source": SOURCE_USER, "show_advanced_options": True},
             data=CONFIG_ADB_SERVER,
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["errors"] == {"base": "invalid_host"}
+
+    with patch(
+        CONNECT_METHOD,
+        return_value=MockConfigDevice(),
+    ), PATCH_SETUP_ENTRY, PATCH_GET_HOST_IP:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=CONFIG_ADB_SERVER
+        )
+        await hass.async_block_till_done()
+
+        assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result2["title"] == HOST
+        assert result2["data"] == CONFIG_ADB_SERVER
 
 
 async def test_invalid_serial(hass):
@@ -324,11 +363,24 @@ async def test_on_connect_failed(hass):
         CONNECT_METHOD,
         side_effect=TypeError,
     ), PATCH_GET_HOST_IP:
-        result = await hass.config_entries.flow.async_configure(
-            flow_result["flow_id"], user_input=CONFIG_ADB_SERVER
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=CONFIG_ADB_SERVER
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["errors"] == {"base": "unknown"}
+        assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result2["errors"] == {"base": "unknown"}
+
+    with patch(
+        CONNECT_METHOD,
+        return_value=MockConfigDevice(),
+    ), PATCH_SETUP_ENTRY, PATCH_GET_HOST_IP:
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"], user_input=CONFIG_ADB_SERVER
+        )
+        await hass.async_block_till_done()
+
+        assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result3["title"] == HOST
+        assert result3["data"] == CONFIG_ADB_SERVER
 
 
 async def test_options_flow(hass):

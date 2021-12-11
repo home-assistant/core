@@ -66,6 +66,7 @@ from .const import (
     CONF_APPS,
     CONF_EXCLUDE_UNNAMED_APPS,
     CONF_GET_SOURCES,
+    CONF_MIGRATION_OPTIONS,
     CONF_SCREENCAP,
     CONF_STATE_DETECTION_RULES,
     CONF_TURN_OFF_COMMAND,
@@ -79,7 +80,6 @@ from .const import (
     DEVICE_ANDROIDTV,
     DEVICE_CLASSES,
     DOMAIN,
-    MIGRATION_DATA,
     PROP_ETHMAC,
     PROP_WIFIMAC,
     SIGNAL_CONFIG_ENTITY,
@@ -207,9 +207,7 @@ async def async_setup_platform(
 
     # save option to use with entry
     if config_options:
-        hass.data.setdefault(DOMAIN, {}).setdefault(MIGRATION_DATA, {})[
-            host
-        ] = config_options
+        config_data[CONF_MIGRATION_OPTIONS] = config_options
 
     # Launch config entries setup
     hass.async_create_task(
@@ -237,8 +235,9 @@ async def async_setup_entry(
         aftv,
         device_name,
         device_type,
-        entry.entry_id,
         entry.unique_id,
+        entry.entry_id,
+        hass.data[DOMAIN][entry.entry_id],
     ]
 
     async_add_entities(
@@ -330,14 +329,16 @@ class ADBDevice(MediaPlayerEntity):
         aftv,
         name,
         dev_type,
-        entry_id,
         unique_id,
+        entry_id,
+        entry_data,
     ):
         """Initialize the Android TV / Fire TV device."""
         self.aftv = aftv
-        self._entry_id = entry_id
         self._attr_name = name
         self._attr_unique_id = unique_id
+        self._entry_id = entry_id
+        self._entry_data = entry_data
 
         info = aftv.device_properties
         model = info.get(ATTR_MODEL)
@@ -387,7 +388,7 @@ class ADBDevice(MediaPlayerEntity):
     def _process_config(self):
         """Load the config options."""
         _LOGGER.debug("Loading configuration options")
-        options = self.hass.data[DOMAIN][self._entry_id][ANDROID_DEV_OPT]
+        options = self._entry_data[ANDROID_DEV_OPT]
 
         apps = options.get(CONF_APPS, {})
         self._app_id_to_name = APPS.copy()

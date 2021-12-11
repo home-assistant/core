@@ -10,6 +10,7 @@ CONF_ADBKEY = "adbkey"
 CONF_APPS = "apps"
 CONF_EXCLUDE_UNNAMED_APPS = "exclude_unnamed_apps"
 CONF_GET_SOURCES = "get_sources"
+CONF_MIGRATION_OPTIONS = "migration_options"
 CONF_SCREENCAP = "screencap"
 CONF_STATE_DETECTION_RULES = "state_detection_rules"
 CONF_TURN_OFF_COMMAND = "turn_off_command"
@@ -25,8 +26,6 @@ DEFAULT_SCREENCAP = True
 DEVICE_ANDROIDTV = "androidtv"
 DEVICE_FIRETV = "firetv"
 DEVICE_CLASSES = [DEFAULT_DEVICE_CLASS, DEVICE_ANDROIDTV, DEVICE_FIRETV]
-
-MIGRATION_DATA = "migration_data"
 
 PROP_ETHMAC = "ethmac"
 PROP_SERIALNO = "serialno"

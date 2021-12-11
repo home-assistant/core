@@ -19,6 +19,7 @@ from .const import (
     CONF_APPS,
     CONF_EXCLUDE_UNNAMED_APPS,
     CONF_GET_SOURCES,
+    CONF_MIGRATION_OPTIONS,
     CONF_SCREENCAP,
     CONF_STATE_DETECTION_RULES,
     CONF_TURN_OFF_COMMAND,
@@ -64,6 +65,10 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
+
+    def __init__(self):
+        """Initialize AndroidTV config flow."""
+        self._import_options = None
 
     @callback
     def _show_setup_form(self, user_input=None, error=None):
@@ -153,6 +158,7 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=user_input.get(CONF_NAME) or host,
                     data=user_input,
+                    options=self._import_options,
                 )
 
         user_input = user_input or {}
@@ -166,6 +172,7 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     "Already configured. This yaml configuration has already been imported. Please remove it"
                 )
                 return self.async_abort(reason="already_configured")
+        self._import_options = import_config.pop(CONF_MIGRATION_OPTIONS, None)
         return await self.async_step_user(import_config)
 
     @staticmethod
@@ -209,8 +216,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     def _async_init_form(self, errors=None):
         """Return initial configuration form."""
 
-        apps = {APPS_NEW_ID: "Add new"}
-        apps.update(self._apps)
+        apps_list = {k: f"{v} ({k})" if v else k for k, v in self._apps.items()}
+        apps = {APPS_NEW_ID: "Add new", **apps_list}
         options = self.config_entry.options
         data_schema = vol.Schema(
             {
@@ -272,30 +279,20 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     @callback
     def _async_apps_form(self, app_id):
         """Return configuration form for apps."""
-        data_schema = vol.Schema(
-            {
-                vol.Optional(
-                    CONF_APP_NAME,
-                    description={"suggested_value": self._apps.get(app_id, "")},
-                ): str,
-            }
-        )
+        data_schema = {
+            vol.Optional(
+                CONF_APP_NAME,
+                description={"suggested_value": self._apps.get(app_id, "")},
+            ): str,
+        }
         if app_id == APPS_NEW_ID:
-            data_schema = data_schema.extend(
-                {
-                    vol.Optional(CONF_APP_ID): str,
-                }
-            )
+            data_schema[vol.Optional(CONF_APP_ID)] = str
         else:
-            data_schema = data_schema.extend(
-                {
-                    vol.Optional(CONF_APP_DELETE, default=False): bool,
-                }
-            )
+            data_schema[vol.Optional(CONF_APP_DELETE, default=False)] = bool
 
         return self.async_show_form(
             step_id="apps",
-            data_schema=data_schema,
+            data_schema=vol.Schema(data_schema),
             description_placeholders={
                 "app_id": f"`{app_id}`" if app_id != APPS_NEW_ID else "",
             },
