@@ -1,7 +1,9 @@
-"""Support for WLED button."""
+"""Support for ZHA button."""
 from __future__ import annotations
 
+import abc
 import functools
+import logging
 from typing import Any
 
 from homeassistant.components.button import DOMAIN, ButtonDeviceClass, ButtonEntity
@@ -18,6 +20,9 @@ from .core.const import CHANNEL_IDENTIFY, DATA_ZHA, SIGNAL_ADD_ENTITIES
 from .entity import ZhaEntity
 
 MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, DOMAIN)
+DEFAULT_DURATION = 5  # seconds
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -44,9 +49,7 @@ async def async_setup_entry(
 class ZHAButton(ZhaEntity, ButtonEntity):
     """Defines a ZHA button."""
 
-    _attr_device_class = ButtonDeviceClass.UPDATE
-    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
-    _command_name = None
+    _command_name: str = None
 
     def __init__(
         self,
@@ -57,8 +60,9 @@ class ZHAButton(ZhaEntity, ButtonEntity):
     ) -> None:
         """Init this button."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
-        self._channel = channels[0]
+        self._channel: ChannelType = channels[0]
 
+    @abc.abstractmethod
     def get_args(self) -> list[Any]:
         """Return the arguments to use in the command."""
 
@@ -67,16 +71,27 @@ class ZHAButton(ZhaEntity, ButtonEntity):
         if self._command_name:
             command = getattr(self._channel, self._command_name)
             if command is not None:
-                await command(*self.get_args())
+                arguments = self.get_args()
+                if arguments:
+                    await command(*arguments)
+                else:
+                    await command()
+            else:
+                _LOGGER.warning(
+                    "Attempted to issue command: %s but the command was not found",
+                    self._command_name,
+                )
 
 
 @MULTI_MATCH(channel_names=CHANNEL_IDENTIFY)
 class ZHAIdentifyButton(ZHAButton):
     """Defines a ZHA identify button."""
 
+    _attr_device_class: ButtonDeviceClass = ButtonDeviceClass.UPDATE
+    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
     _command_name = "identify"
 
     def get_args(self) -> list[Any]:
         """Return the arguments to use in the command."""
 
-        return [5]
+        return [DEFAULT_DURATION]
