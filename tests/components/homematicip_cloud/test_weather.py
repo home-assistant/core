@@ -37,7 +37,7 @@ async def test_hmip_weather_sensor(hass, default_mock_hap_factory):
     assert ha_state.state == ""
     assert ha_state.attributes[ATTR_WEATHER_TEMPERATURE] == 4.3
     assert ha_state.attributes[ATTR_WEATHER_HUMIDITY] == 97
-    assert ha_state.attributes[ATTR_WEATHER_WIND_SPEED] == 15.0
+    assert ha_state.attributes[ATTR_WEATHER_WIND_SPEED] == 4.17
     assert ha_state.attributes[ATTR_ATTRIBUTION] == "Powered by Homematic IP"
 
     await async_manipulate_test_data(hass, hmip_device, "actualTemperature", 12.1)
@@ -61,7 +61,7 @@ async def test_hmip_weather_sensor_pro(hass, default_mock_hap_factory):
     assert ha_state.state == "sunny"
     assert ha_state.attributes[ATTR_WEATHER_TEMPERATURE] == 15.4
     assert ha_state.attributes[ATTR_WEATHER_HUMIDITY] == 65
-    assert ha_state.attributes[ATTR_WEATHER_WIND_SPEED] == 2.6
+    assert ha_state.attributes[ATTR_WEATHER_WIND_SPEED] == 0.72
     assert ha_state.attributes[ATTR_WEATHER_WIND_BEARING] == 295.0
     assert ha_state.attributes[ATTR_ATTRIBUTION] == "Powered by Homematic IP"
 
@@ -84,7 +84,7 @@ async def test_hmip_home_weather(hass, default_mock_hap_factory):
     assert ha_state.state == "partlycloudy"
     assert ha_state.attributes[ATTR_WEATHER_TEMPERATURE] == 16.6
     assert ha_state.attributes[ATTR_WEATHER_HUMIDITY] == 54
-    assert ha_state.attributes[ATTR_WEATHER_WIND_SPEED] == 8.6
+    assert ha_state.attributes[ATTR_WEATHER_WIND_SPEED] == 2.39
     assert ha_state.attributes[ATTR_WEATHER_WIND_BEARING] == 294
     assert ha_state.attributes[ATTR_ATTRIBUTION] == "Powered by Homematic IP"
 
