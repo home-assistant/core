@@ -5,8 +5,9 @@ import voluptuous as vol
 from zigpy.zcl.foundation import Status
 
 from homeassistant.components.lock import STATE_LOCKED, STATE_UNLOCKED, LockEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -14,7 +15,6 @@ from .core import discovery
 from .core.const import (
     CHANNEL_DOORLOCK,
     DATA_ZHA,
-    DATA_ZHA_DISPATCHERS,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
 )
@@ -33,7 +33,11 @@ SERVICE_DISABLE_LOCK_USER_CODE = "disable_lock_user_code"
 SERVICE_CLEAR_LOCK_USER_CODE = "clear_lock_user_code"
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: entity_platform.AddEntitiesCallback,
+):
     """Set up the Zigbee Home Automation Door Lock from config entry."""
     entities_to_create = hass.data[DATA_ZHA][Platform.LOCK]
 
@@ -44,7 +48,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             discovery.async_add_entities, async_add_entities, entities_to_create
         ),
     )
-    hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
+    config_entry.async_on_unload(unsub)
 
     platform = entity_platform.async_get_current_platform()
 

@@ -39,14 +39,16 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     PRECISION_TENTHS,
     TEMP_CELSIUS,
     Platform,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.dt as dt_util
 
@@ -55,7 +57,6 @@ from .core.const import (
     CHANNEL_FAN,
     CHANNEL_THERMOSTAT,
     DATA_ZHA,
-    DATA_ZHA_DISPATCHERS,
     PRESET_COMPLEX,
     PRESET_SCHEDULE,
     SIGNAL_ADD_ENTITIES,
@@ -154,7 +155,11 @@ SYSTEM_MODE_2_HVAC = {
 ZCL_TEMP = 100
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+):
     """Set up the Zigbee Home Automation sensor from config entry."""
     entities_to_create = hass.data[DATA_ZHA][Platform.CLIMATE]
     unsub = async_dispatcher_connect(
@@ -164,7 +169,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             discovery.async_add_entities, async_add_entities, entities_to_create
         ),
     )
-    hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
+    config_entry.async_on_unload(unsub)
 
 
 @MULTI_MATCH(channel_names=CHANNEL_THERMOSTAT, aux_channels=CHANNEL_FAN)

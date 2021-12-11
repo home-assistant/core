@@ -72,7 +72,6 @@ from .core.const import (
     CHANNEL_TEMPERATURE,
     CHANNEL_THERMOSTAT,
     DATA_ZHA,
-    DATA_ZHA_DISPATCHERS,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
 )
@@ -121,7 +120,7 @@ async def async_setup_entry(
             update_before_add=False,
         ),
     )
-    hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
+    config_entry.async_on_unload(unsub)
 
 
 class Sensor(ZhaEntity, SensorEntity):
