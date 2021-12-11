@@ -278,10 +278,6 @@ class MqttCommandTemplate:
             payload: PublishPayloadType,
         ) -> PublishPayloadType:
             """Ensure correct raw MQTT payload is passed as bytes for publishing."""
-            # pass-through for bytes type object
-            if isinstance(payload, bytes):
-                return payload
-
             # cast bytes literal string to bytes type object
             if isinstance(payload, str):
                 try:
@@ -291,7 +287,6 @@ class MqttCommandTemplate:
 
                 except (ValueError, TypeError, SyntaxError, MemoryError):
                     pass
-                return payload
 
             return payload
 
