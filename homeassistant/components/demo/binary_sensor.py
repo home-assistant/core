@@ -1,7 +1,6 @@
 """Demo platform that has two fake binary sensors."""
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_MOISTURE,
-    DEVICE_CLASS_MOTION,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.helpers.entity import DeviceInfo
@@ -14,10 +13,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(
         [
             DemoBinarySensor(
-                "binary_1", "Basement Floor Wet", False, DEVICE_CLASS_MOISTURE
+                "binary_1",
+                "Basement Floor Wet",
+                False,
+                BinarySensorDeviceClass.MOISTURE,
             ),
             DemoBinarySensor(
-                "binary_2", "Movement Backyard", True, DEVICE_CLASS_MOTION
+                "binary_2", "Movement Backyard", True, BinarySensorDeviceClass.MOTION
             ),
         ]
     )
@@ -31,7 +33,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class DemoBinarySensor(BinarySensorEntity):
     """representation of a Demo binary sensor."""
 
-    def __init__(self, unique_id, name, state, device_class):
+    def __init__(
+        self,
+        unique_id: str,
+        name: str,
+        state: bool,
+        device_class: BinarySensorDeviceClass,
+    ) -> None:
         """Initialize the demo sensor."""
         self._unique_id = unique_id
         self._name = name
@@ -55,7 +63,7 @@ class DemoBinarySensor(BinarySensorEntity):
         return self._unique_id
 
     @property
-    def device_class(self):
+    def device_class(self) -> BinarySensorDeviceClass:
         """Return the class of this sensor."""
         return self._sensor_type
 

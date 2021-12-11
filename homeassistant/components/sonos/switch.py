@@ -20,6 +20,8 @@ from .const import (
     SONOS_CREATE_SWITCHES,
 )
 from .entity import SonosEntity
+from .exception import SpeakerUnavailable
+from .helpers import soco_error
 from .speaker import SonosSpeaker
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,6 +38,8 @@ ATTR_CROSSFADE = "cross_fade"
 ATTR_NIGHT_SOUND = "night_mode"
 ATTR_SPEECH_ENHANCEMENT = "dialog_mode"
 ATTR_STATUS_LIGHT = "status_light"
+ATTR_SUB_ENABLED = "sub_enabled"
+ATTR_SURROUND_ENABLED = "surround_enabled"
 ATTR_TOUCH_CONTROLS = "buttons_enabled"
 
 ALL_FEATURES = (
@@ -43,6 +47,8 @@ ALL_FEATURES = (
     ATTR_CROSSFADE,
     ATTR_NIGHT_SOUND,
     ATTR_SPEECH_ENHANCEMENT,
+    ATTR_SUB_ENABLED,
+    ATTR_SURROUND_ENABLED,
     ATTR_STATUS_LIGHT,
 )
 
@@ -58,6 +64,8 @@ FRIENDLY_NAMES = {
     ATTR_NIGHT_SOUND: "Night Sound",
     ATTR_SPEECH_ENHANCEMENT: "Speech Enhancement",
     ATTR_STATUS_LIGHT: "Status Light",
+    ATTR_SUB_ENABLED: "Subwoofer Enabled",
+    ATTR_SURROUND_ENABLED: "Surround Enabled",
     ATTR_TOUCH_CONTROLS: "Touch Controls",
 }
 
@@ -66,6 +74,8 @@ FEATURE_ICONS = {
     ATTR_SPEECH_ENHANCEMENT: "mdi:ear-hearing",
     ATTR_CROSSFADE: "mdi:swap-horizontal",
     ATTR_STATUS_LIGHT: "mdi:led-on",
+    ATTR_SUB_ENABLED: "mdi:dog",
+    ATTR_SURROUND_ENABLED: "mdi:surround-sound",
     ATTR_TOUCH_CONTROLS: "mdi:gesture-tap",
 }
 
@@ -144,8 +154,12 @@ class SonosSwitchEntity(SonosEntity, SwitchEntity):
         if not self.should_poll:
             await self.hass.async_add_executor_job(self.update)
 
+    @soco_error(raise_on_err=False)
     def update(self) -> None:
         """Fetch switch state if necessary."""
+        if not self.available:
+            raise SpeakerUnavailable
+
         state = getattr(self.soco, self.feature_type)
         setattr(self.speaker, self.feature_type, state)
 
@@ -164,6 +178,7 @@ class SonosSwitchEntity(SonosEntity, SwitchEntity):
         """Turn the entity off."""
         self.send_command(False)
 
+    @soco_error()
     def send_command(self, enable: bool) -> None:
         """Enable or disable the feature on the device."""
         if self.needs_coordinator:
@@ -180,11 +195,12 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
     """Representation of a Sonos Alarm entity."""
 
     _attr_entity_category = ENTITY_CATEGORY_CONFIG
+    _attr_icon = "mdi:alarm"
 
     def __init__(self, alarm_id: str, speaker: SonosSpeaker) -> None:
         """Initialize the switch."""
         super().__init__(speaker)
-
+        self._attr_unique_id = f"{SONOS_DOMAIN}-{alarm_id}"
         self.alarm_id = alarm_id
         self.household_id = speaker.household_id
         self.entity_id = ENTITY_ID_FORMAT.format(f"sonos_alarm_{self.alarm_id}")
@@ -204,16 +220,6 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
     def alarm(self):
         """Return the alarm instance."""
         return self.hass.data[DATA_SONOS].alarms[self.household_id].get(self.alarm_id)
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID of the switch."""
-        return f"{SONOS_DOMAIN}-{self.alarm_id}"
-
-    @property
-    def icon(self):
-        """Return icon of Sonos alarm switch."""
-        return "mdi:alarm"
 
     @property
     def name(self) -> str:

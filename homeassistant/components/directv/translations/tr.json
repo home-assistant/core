@@ -7,13 +7,18 @@
         "error": {
             "cannot_connect": "Ba\u011flanma hatas\u0131"
         },
+        "flow_title": "{name}",
         "step": {
             "ssdp_confirm": {
+                "data": {
+                    "one": "Bo\u015f",
+                    "other": "Bo\u015f"
+                },
                 "description": "{name} kurmak istiyor musunuz?"
             },
             "user": {
                 "data": {
-                    "host": "Ana Bilgisayar"
+                    "host": "Ana bilgisayar"
                 }
             }
         }

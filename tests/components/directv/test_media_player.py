@@ -160,15 +160,15 @@ async def test_unique_id(
     entity_registry = er.async_get(hass)
 
     main = entity_registry.async_get(MAIN_ENTITY_ID)
-    assert main.device_class == DEVICE_CLASS_RECEIVER
+    assert main.original_device_class == DEVICE_CLASS_RECEIVER
     assert main.unique_id == "028877455858"
 
     client = entity_registry.async_get(CLIENT_ENTITY_ID)
-    assert client.device_class == DEVICE_CLASS_RECEIVER
+    assert client.original_device_class == DEVICE_CLASS_RECEIVER
     assert client.unique_id == "2CA17D1CD30X"
 
     unavailable_client = entity_registry.async_get(UNAVAILABLE_ENTITY_ID)
-    assert unavailable_client.device_class == DEVICE_CLASS_RECEIVER
+    assert unavailable_client.original_device_class == DEVICE_CLASS_RECEIVER
     assert unavailable_client.unique_id == "9XXXXXXXXXX9"
 
 

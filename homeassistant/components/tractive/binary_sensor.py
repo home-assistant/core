@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_BATTERY_CHARGING,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -76,7 +76,7 @@ class TractiveBinarySensor(TractiveEntity, BinarySensorEntity):
 SENSOR_TYPE = BinarySensorEntityDescription(
     key=ATTR_BATTERY_CHARGING,
     name="Battery Charging",
-    device_class=DEVICE_CLASS_BATTERY_CHARGING,
+    device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
     entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
 )
 

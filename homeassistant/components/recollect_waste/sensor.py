@@ -5,7 +5,7 @@ from aiorecollect.client import PickupType
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_FRIENDLY_NAME, DEVICE_CLASS_DATE
+from homeassistant.const import CONF_FRIENDLY_NAME, DEVICE_CLASS_DATE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -14,14 +14,13 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import CONF_PLACE_ID, CONF_SERVICE_ID, DATA_COORDINATOR, DOMAIN
+from .const import CONF_PLACE_ID, CONF_SERVICE_ID, DOMAIN
 
 ATTR_PICKUP_TYPES = "pickup_types"
 ATTR_AREA_NAME = "area_name"
 ATTR_NEXT_PICKUP_TYPES = "next_pickup_types"
 ATTR_NEXT_PICKUP_DATE = "next_pickup_date"
 
-DEFAULT_ATTRIBUTION = "Pickup data provided by ReCollect Waste"
 DEFAULT_NAME = "Waste Pickup"
 
 PLATFORM_SCHEMA = cv.deprecated(DOMAIN)
@@ -44,7 +43,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up ReCollect Waste sensors based on a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR]
+    coordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities([ReCollectWasteSensor(coordinator, entry)])
 
 
@@ -57,7 +56,7 @@ class ReCollectWasteSensor(CoordinatorEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator)
 
-        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
+        self._attr_extra_state_attributes = {}
         self._attr_name = DEFAULT_NAME
         self._attr_unique_id = (
             f"{entry.data[CONF_PLACE_ID]}{entry.data[CONF_SERVICE_ID]}"
@@ -98,4 +97,4 @@ class ReCollectWasteSensor(CoordinatorEntity, SensorEntity):
                 ATTR_NEXT_PICKUP_DATE: next_pickup_event.date.isoformat(),
             }
         )
-        self._attr_native_value = pickup_event.date.isoformat()
+        self._attr_native_value = pickup_event.date

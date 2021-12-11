@@ -14,39 +14,32 @@ from .renault_vehicle import RenaultVehicleProxy
 
 
 @dataclass
-class RenaultRequiredKeysMixin:
+class RenaultDataRequiredKeysMixin:
     """Mixin for required keys."""
 
     coordinator: str
 
 
 @dataclass
-class RenaultEntityDescription(EntityDescription, RenaultRequiredKeysMixin):
-    """Class describing Renault entities."""
+class RenaultDataEntityDescription(EntityDescription, RenaultDataRequiredKeysMixin):
+    """Class describing Renault data entities."""
 
 
-class RenaultDataEntity(CoordinatorEntity[Optional[T]], Entity):
+class RenaultEntity(Entity):
     """Implementation of a Renault entity with a data coordinator."""
 
-    entity_description: RenaultEntityDescription
+    entity_description: EntityDescription
 
     def __init__(
         self,
         vehicle: RenaultVehicleProxy,
-        description: RenaultEntityDescription,
+        description: EntityDescription,
     ) -> None:
         """Initialise entity."""
-        super().__init__(vehicle.coordinators[description.coordinator])
         self.vehicle = vehicle
         self.entity_description = description
         self._attr_device_info = self.vehicle.device_info
         self._attr_unique_id = f"{self.vehicle.details.vin}_{description.key}".lower()
-
-    def _get_data_attr(self, key: str) -> StateType:
-        """Return the attribute value from the coordinator data."""
-        if self.coordinator.data is None:
-            return None
-        return cast(StateType, getattr(self.coordinator.data, key))
 
     @property
     def name(self) -> str:
@@ -55,3 +48,22 @@ class RenaultDataEntity(CoordinatorEntity[Optional[T]], Entity):
         Overridden to include the device name.
         """
         return f"{self.vehicle.device_info[ATTR_NAME]} {self.entity_description.name}"
+
+
+class RenaultDataEntity(CoordinatorEntity[Optional[T]], RenaultEntity):
+    """Implementation of a Renault entity with a data coordinator."""
+
+    def __init__(
+        self,
+        vehicle: RenaultVehicleProxy,
+        description: RenaultDataEntityDescription,
+    ) -> None:
+        """Initialise entity."""
+        super().__init__(vehicle.coordinators[description.coordinator])
+        RenaultEntity.__init__(self, vehicle, description)
+
+    def _get_data_attr(self, key: str) -> StateType:
+        """Return the attribute value from the coordinator data."""
+        if self.coordinator.data is None:
+            return None
+        return cast(StateType, getattr(self.coordinator.data, key))

@@ -19,12 +19,11 @@ from homeassistant.const import (
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
-    PRESSURE_HPA,
+    PRESSURE_PA,
     TEMP_CELSIUS,
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
@@ -68,14 +67,14 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key=SENSOR_PRESSURE,
         name="Pressure",
         icon="mdi:arrow-down-bold",
-        native_unit_of_measurement=PRESSURE_HPA,
+        native_unit_of_measurement=PRESSURE_PA,
         device_class=DEVICE_CLASS_PRESSURE,
     ),
     SensorEntityDescription(
         key=SENSOR_PRESSURE_AT_SEALEVEL,
         name="Pressure at sealevel",
         icon="mdi:download",
-        native_unit_of_measurement=PRESSURE_HPA,
+        native_unit_of_measurement=PRESSURE_PA,
         device_class=DEVICE_CLASS_PRESSURE,
     ),
     SensorEntityDescription(
@@ -175,11 +174,9 @@ async def async_setup_entry(hass, config_entry):
         hass.async_create_task(hass.config_entries.async_remove(config_entry.entry_id))
         return False
 
-    session = async_get_clientsession(hass)
-
     try:
         luftdaten = LuftDatenData(
-            Luftdaten(config_entry.data[CONF_SENSOR_ID], hass.loop, session),
+            Luftdaten(config_entry.data[CONF_SENSOR_ID]),
             config_entry.data.get(CONF_SENSORS, {}).get(
                 CONF_MONITORED_CONDITIONS, SENSOR_KEYS
             ),

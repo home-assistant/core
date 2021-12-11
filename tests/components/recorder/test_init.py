@@ -1,5 +1,6 @@
 """The tests for the Recorder component."""
 # pylint: disable=protected-access
+import asyncio
 from datetime import datetime, timedelta
 import sqlite3
 from unittest.mock import patch
@@ -1134,3 +1135,81 @@ def test_entity_id_filter(hass_recorder):
             db_events = list(session.query(Events).filter_by(event_type="hello"))
             # Keep referring idx + 1, as no new events are being added
             assert len(db_events) == idx + 1, data
+
+
+async def test_database_lock_and_unlock(hass: HomeAssistant, tmp_path):
+    """Test writing events during lock getting written after unlocking."""
+    # Use file DB, in memory DB cannot do write locks.
+    config = {recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db")}
+    await async_init_recorder_component(hass, config)
+    await hass.async_block_till_done()
+
+    instance: Recorder = hass.data[DATA_INSTANCE]
+
+    assert await instance.lock_database()
+
+    assert not await instance.lock_database()
+
+    event_type = "EVENT_TEST"
+    event_data = {"test_attr": 5, "test_attr_10": "nice"}
+    hass.bus.fire(event_type, event_data)
+    task = asyncio.create_task(async_wait_recording_done(hass, instance))
+
+    # Recording can't be finished while lock is held
+    with pytest.raises(asyncio.TimeoutError):
+        await asyncio.wait_for(asyncio.shield(task), timeout=1)
+
+    with session_scope(hass=hass) as session:
+        db_events = list(session.query(Events).filter_by(event_type=event_type))
+        assert len(db_events) == 0
+
+    assert instance.unlock_database()
+
+    await task
+    with session_scope(hass=hass) as session:
+        db_events = list(session.query(Events).filter_by(event_type=event_type))
+        assert len(db_events) == 1
+
+
+async def test_database_lock_and_overflow(hass: HomeAssistant, tmp_path):
+    """Test writing events during lock leading to overflow the queue causes the database to unlock."""
+    # Use file DB, in memory DB cannot do write locks.
+    config = {recorder.CONF_DB_URL: "sqlite:///" + str(tmp_path / "pytest.db")}
+    await async_init_recorder_component(hass, config)
+    await hass.async_block_till_done()
+
+    instance: Recorder = hass.data[DATA_INSTANCE]
+
+    with patch.object(recorder, "MAX_QUEUE_BACKLOG", 1), patch.object(
+        recorder, "DB_LOCK_QUEUE_CHECK_TIMEOUT", 0.1
+    ):
+        await instance.lock_database()
+
+        event_type = "EVENT_TEST"
+        event_data = {"test_attr": 5, "test_attr_10": "nice"}
+        hass.bus.fire(event_type, event_data)
+
+        # Check that this causes the queue to overflow and write succeeds
+        # even before unlocking.
+        await async_wait_recording_done(hass, instance)
+
+        with session_scope(hass=hass) as session:
+            db_events = list(session.query(Events).filter_by(event_type=event_type))
+            assert len(db_events) == 1
+
+        assert not instance.unlock_database()
+
+
+async def test_database_lock_timeout(hass):
+    """Test locking database timeout when recorder stopped."""
+    await async_init_recorder_component(hass)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    instance: Recorder = hass.data[DATA_INSTANCE]
+    with patch.object(recorder, "DB_LOCK_TIMEOUT", 0.1):
+        try:
+            with pytest.raises(TimeoutError):
+                await instance.lock_database()
+        finally:
+            instance.unlock_database()

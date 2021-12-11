@@ -1,6 +1,5 @@
 """Support for Broadlink switches."""
 from abc import ABC, abstractmethod
-from functools import partial
 import logging
 
 from broadlink.exceptions import BroadlinkException
@@ -23,11 +22,12 @@ from homeassistant.const import (
     CONF_TIMEOUT,
     CONF_TYPE,
     STATE_ON,
+    Platform,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import DOMAIN, SWITCH_DOMAIN
+from .const import DOMAIN
 from .entity import BroadlinkEntity
 from .helpers import data_packet, import_device, mac_address
 
@@ -91,7 +91,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         )
 
     if switches:
-        platform_data = hass.data[DOMAIN].platforms.setdefault(SWITCH_DOMAIN, {})
+        platform_data = hass.data[DOMAIN].platforms.setdefault(Platform.SWITCH, {})
         platform_data.setdefault(mac_addr, []).extend(switches)
 
     else:
@@ -108,25 +108,26 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Broadlink switch."""
     device = hass.data[DOMAIN].devices[config_entry.entry_id]
+    switches = []
 
     if device.api.type in {"RM4MINI", "RM4PRO", "RMMINI", "RMMINIB", "RMPRO"}:
-        platform_data = hass.data[DOMAIN].platforms.get(SWITCH_DOMAIN, {})
+        platform_data = hass.data[DOMAIN].platforms.get(Platform.SWITCH, {})
         user_defined_switches = platform_data.get(device.api.mac, {})
-        switches = [
+        switches.extend(
             BroadlinkRMSwitch(device, config) for config in user_defined_switches
-        ]
+        )
 
     elif device.api.type == "SP1":
-        switches = [BroadlinkSP1Switch(device)]
+        switches.append(BroadlinkSP1Switch(device))
 
     elif device.api.type in {"SP2", "SP2S", "SP3", "SP3S", "SP4", "SP4B"}:
-        switches = [BroadlinkSP2Switch(device)]
+        switches.append(BroadlinkSP2Switch(device))
 
     elif device.api.type == "BG1":
-        switches = [BroadlinkBG1Slot(device, slot) for slot in range(1, 3)]
+        switches.extend(BroadlinkBG1Slot(device, slot) for slot in range(1, 3))
 
     elif device.api.type == "MP1":
-        switches = [BroadlinkMP1Slot(device, slot) for slot in range(1, 5)]
+        switches.extend(BroadlinkMP1Slot(device, slot) for slot in range(1, 5))
 
     async_add_entities(switches)
 
@@ -179,11 +180,13 @@ class BroadlinkRMSwitch(BroadlinkSwitch):
 
     async def _async_send_packet(self, packet):
         """Send a packet to the device."""
+        device = self._device
+
         if packet is None:
             return True
 
         try:
-            await self._device.async_request(self._device.api.send_data, packet)
+            await device.async_request(device.api.send_data, packet)
         except (BroadlinkException, OSError) as err:
             _LOGGER.error("Failed to send packet: %s", err)
             return False
@@ -200,8 +203,10 @@ class BroadlinkSP1Switch(BroadlinkSwitch):
 
     async def _async_send_packet(self, packet):
         """Send a packet to the device."""
+        device = self._device
+
         try:
-            await self._device.async_request(self._device.api.set_power, packet)
+            await device.async_request(device.api.set_power, packet)
         except (BroadlinkException, OSError) as err:
             _LOGGER.error("Failed to send packet: %s", err)
             return False
@@ -242,10 +247,10 @@ class BroadlinkMP1Slot(BroadlinkSwitch):
 
     async def _async_send_packet(self, packet):
         """Send a packet to the device."""
+        device = self._device
+
         try:
-            await self._device.async_request(
-                self._device.api.set_power, self._slot, packet
-            )
+            await device.async_request(device.api.set_power, self._slot, packet)
         except (BroadlinkException, OSError) as err:
             _LOGGER.error("Failed to send packet: %s", err)
             return False
@@ -273,9 +278,11 @@ class BroadlinkBG1Slot(BroadlinkSwitch):
 
     async def _async_send_packet(self, packet):
         """Send a packet to the device."""
-        set_state = partial(self._device.api.set_state, **{f"pwr{self._slot}": packet})
+        device = self._device
+        state = {f"pwr{self._slot}": packet}
+
         try:
-            await self._device.async_request(set_state)
+            await device.async_request(device.api.set_state, **state)
         except (BroadlinkException, OSError) as err:
             _LOGGER.error("Failed to send packet: %s", err)
             return False

@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Host zaten ayarlanm\u0131\u015f."
+            "already_configured": "Hizmet zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
         },
         "error": {
             "cannot_connect": "Server ile ba\u011flant\u0131 kurulamad\u0131. L\u00fctfen host ve port ayarlar\u0131n\u0131 kontrol et ve tekrar dene. Ayr\u0131ca, serverda en az Minecraft s\u00fcr\u00fcm 1.7 \u00e7al\u0131\u015ft\u0131rd\u0131\u011f\u0131ndan emin ol.",
@@ -11,7 +11,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Ana Bilgisayar",
+                    "host": "Ana bilgisayar",
                     "name": "Ad"
                 },
                 "description": "G\u00f6zetmeye izin vermek i\u00e7in Minecraft server nesnesini ayarla.",

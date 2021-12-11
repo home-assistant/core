@@ -32,14 +32,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = api
 
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, server_url)},
         manufacturer="Nightscout Foundation",
         name=status.name,
         sw_version=status.version,
-        entry_type="service",
+        entry_type=dr.DeviceEntryType.SERVICE,
     )
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)

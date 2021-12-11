@@ -579,6 +579,8 @@ async def test_entity_and_device_attributes(hass, thermostat):
 
     entry = device_registry.async_get_device({(DOMAIN, thermostat.device_id)})
     assert entry
+    assert entry.configuration_url == "https://account.smartthings.com"
+    assert entry.identifiers == {(DOMAIN, thermostat.device_id)}
     assert entry.name == thermostat.label
     assert entry.model == thermostat.device_type_name
     assert entry.manufacturer == "Unavailable"

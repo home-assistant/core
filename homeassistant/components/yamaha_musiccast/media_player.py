@@ -342,9 +342,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
             parts = media_id.split(":")
 
             if parts[0] == "list":
-                index = parts[3]
-
-                if index == "-1":
+                if (index := parts[3]) == "-1":
                     index = "0"
 
                 await self.coordinator.musiccast.play_list_media(index, self._zone_id)

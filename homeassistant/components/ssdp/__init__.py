@@ -2,12 +2,13 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Mapping
+from dataclasses import dataclass, field
 from datetime import timedelta
 from enum import Enum
 from ipaddress import IPv4Address, IPv6Address
 import logging
-from typing import Any, Callable, Mapping
+from typing import Any, Callable
 
 from async_upnp_client.aiohttp import AiohttpSessionRequester
 from async_upnp_client.const import DeviceOrServiceType, SsdpHeaders, SsdpSource
@@ -20,9 +21,11 @@ from homeassistant import config_entries
 from homeassistant.components import network
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, MATCH_ALL
 from homeassistant.core import HomeAssistant, callback as core_callback
+from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.frame import report
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_ssdp, bind_hass
 
@@ -56,23 +59,111 @@ ATTR_UPNP_UDN = "UDN"
 ATTR_UPNP_UPC = "UPC"
 ATTR_UPNP_PRESENTATION_URL = "presentationURL"
 # Attributes for accessing info added by Home Assistant
-ATTR_HA_MATCHING_DOMAINS = "x-homeassistant-matching-domains"
+ATTR_HA_MATCHING_DOMAINS = "x_homeassistant_matching_domains"
 
 PRIMARY_MATCH_KEYS = [ATTR_UPNP_MANUFACTURER, "st", ATTR_UPNP_DEVICE_TYPE, "nt"]
 
-DISCOVERY_MAPPING = {
-    "usn": ATTR_SSDP_USN,
-    "ext": ATTR_SSDP_EXT,
-    "server": ATTR_SSDP_SERVER,
-    "st": ATTR_SSDP_ST,
-    "location": ATTR_SSDP_LOCATION,
-    "_udn": ATTR_SSDP_UDN,
-    "nt": ATTR_SSDP_NT,
-}
+_LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class _HaServiceDescription:
+    """Keys added by HA."""
+
+    x_homeassistant_matching_domains: set[str] = field(default_factory=set)
+
+
+@dataclass
+class _SsdpServiceDescription:
+    """SSDP info with optional keys."""
+
+    ssdp_usn: str
+    ssdp_st: str
+    ssdp_location: str | None = None
+    ssdp_nt: str | None = None
+    ssdp_udn: str | None = None
+    ssdp_ext: str | None = None
+    ssdp_server: str | None = None
+    ssdp_headers: Mapping[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class _UpnpServiceDescription:
+    """UPnP info."""
+
+    upnp: Mapping[str, Any]
+
+
+@dataclass
+class SsdpServiceInfo(
+    _HaServiceDescription,
+    _SsdpServiceDescription,
+    _UpnpServiceDescription,
+    BaseServiceInfo,
+):
+    """Prepared info from ssdp/upnp entries."""
+
+    # Used to prevent log flooding. To be removed in 2022.6
+    _warning_logged: bool = False
+
+    def __getitem__(self, name: str) -> Any:
+        """
+        Allow property access by name for compatibility reason.
+
+        Deprecated, and will be removed in version 2022.6.
+        """
+        if not self._warning_logged:
+            report(
+                f"accessed discovery_info['{name}'] instead of discovery_info.{name}; this will fail in version 2022.6",
+                exclude_integrations={DOMAIN},
+                error_if_core=False,
+            )
+            self._warning_logged = True
+        # Use a property if it is available, fallback to upnp data
+        if hasattr(self, name):
+            return getattr(self, name)
+        if name in self.ssdp_headers and name not in self.upnp:
+            return self.ssdp_headers.get(name)
+        return self.upnp[name]
+
+    def get(self, name: str, default: Any = None) -> Any:
+        """
+        Enable method for compatibility reason.
+
+        Deprecated, and will be removed in version 2022.6.
+        """
+        if not self._warning_logged:
+            report(
+                f"accessed discovery_info.get('{name}') instead of discovery_info.{name}; this will fail in version 2022.6",
+                exclude_integrations={DOMAIN},
+                error_if_core=False,
+            )
+            self._warning_logged = True
+        if hasattr(self, name):
+            return getattr(self, name)
+        return self.upnp.get(name, self.ssdp_headers.get(name, default))
+
+    def __contains__(self, name: str) -> bool:
+        """
+        Enable method for compatibility reason.
+
+        Deprecated, and will be removed in version 2022.6.
+        """
+        if not self._warning_logged:
+            report(
+                "accessed discovery_info.__contains__() instead of discovery_info.upnp.__contains__() "
+                "or discovery_info.ssdp_headers.__contains__(); this will fail in version 2022.6",
+                exclude_integrations={DOMAIN},
+                error_if_core=False,
+            )
+            self._warning_logged = True
+        if hasattr(self, name):
+            return getattr(self, name) is not None
+        return name in self.upnp or name in self.ssdp_headers
+
 
 SsdpChange = Enum("SsdpChange", "ALIVE BYEBYE UPDATE")
-SsdpCallback = Callable[[Mapping[str, Any], SsdpChange], Awaitable]
-
+SsdpCallback = Callable[[SsdpServiceInfo, SsdpChange], Awaitable]
 
 SSDP_SOURCE_SSDP_CHANGE_MAPPING: Mapping[SsdpSource, SsdpChange] = {
     SsdpSource.SEARCH_ALIVE: SsdpChange.ALIVE,
@@ -81,8 +172,6 @@ SSDP_SOURCE_SSDP_CHANGE_MAPPING: Mapping[SsdpSource, SsdpChange] = {
     SsdpSource.ADVERTISEMENT_BYEBYE: SsdpChange.BYEBYE,
     SsdpSource.ADVERTISEMENT_UPDATE: SsdpChange.UPDATE,
 }
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @bind_hass
@@ -102,7 +191,7 @@ async def async_register_callback(
 @bind_hass
 async def async_get_discovery_info_by_udn_st(  # pylint: disable=invalid-name
     hass: HomeAssistant, udn: str, st: str
-) -> dict[str, str] | None:
+) -> SsdpServiceInfo | None:
     """Fetch the discovery info cache."""
     scanner: Scanner = hass.data[DOMAIN]
     return await scanner.async_get_discovery_info_by_udn_st(udn, st)
@@ -111,7 +200,7 @@ async def async_get_discovery_info_by_udn_st(  # pylint: disable=invalid-name
 @bind_hass
 async def async_get_discovery_info_by_st(  # pylint: disable=invalid-name
     hass: HomeAssistant, st: str
-) -> list[dict[str, str]]:
+) -> list[SsdpServiceInfo]:
     """Fetch all the entries matching the st."""
     scanner: Scanner = hass.data[DOMAIN]
     return await scanner.async_get_discovery_info_by_st(st)
@@ -120,7 +209,7 @@ async def async_get_discovery_info_by_st(  # pylint: disable=invalid-name
 @bind_hass
 async def async_get_discovery_info_by_udn(
     hass: HomeAssistant, udn: str
-) -> list[dict[str, str]]:
+) -> list[SsdpServiceInfo]:
     """Fetch all the entries matching the udn."""
     scanner: Scanner = hass.data[DOMAIN]
     return await scanner.async_get_discovery_info_by_udn(udn)
@@ -141,7 +230,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def _async_process_callbacks(
     callbacks: list[SsdpCallback],
-    discovery_info: dict[str, str],
+    discovery_info: SsdpServiceInfo,
     ssdp_change: SsdpChange,
 ) -> None:
     for callback in callbacks:
@@ -400,14 +489,18 @@ class Scanner:
         if not callbacks and not matching_domains:
             return
 
-        discovery_info = discovery_info_from_headers_and_description(info_with_desc)
-        discovery_info[ATTR_HA_MATCHING_DOMAINS] = matching_domains
+        discovery_info = discovery_info_from_headers_and_description(
+            combined_headers, info_desc
+        )
+        discovery_info.x_homeassistant_matching_domains = matching_domains
         ssdp_change = SSDP_SOURCE_SSDP_CHANGE_MAPPING[source]
         await _async_process_callbacks(callbacks, discovery_info, ssdp_change)
 
         # Config flows should only be created for alive/update messages from alive devices
         if ssdp_change == SsdpChange.BYEBYE:
             return
+
+        _LOGGER.debug("Discovery info: %s", discovery_info)
 
         for domain in matching_domains:
             _LOGGER.debug("Discovered %s at %s", domain, location)
@@ -427,7 +520,7 @@ class Scanner:
 
     async def _async_headers_to_discovery_info(
         self, headers: Mapping[str, Any]
-    ) -> dict[str, Any]:
+    ) -> SsdpServiceInfo:
         """Combine the headers and description into discovery_info.
 
         Building this is a bit expensive so we only do it on demand.
@@ -437,13 +530,11 @@ class Scanner:
         info_desc = (
             await self._description_cache.async_get_description_dict(location) or {}
         )
-        return discovery_info_from_headers_and_description(
-            CaseInsensitiveDict(headers, **info_desc)
-        )
+        return discovery_info_from_headers_and_description(headers, info_desc)
 
     async def async_get_discovery_info_by_udn_st(  # pylint: disable=invalid-name
         self, udn: str, st: str
-    ) -> dict[str, Any] | None:
+    ) -> SsdpServiceInfo | None:
         """Return discovery_info for a udn and st."""
         if headers := self._all_headers_from_ssdp_devices.get((udn, st)):
             return await self._async_headers_to_discovery_info(headers)
@@ -451,7 +542,7 @@ class Scanner:
 
     async def async_get_discovery_info_by_st(  # pylint: disable=invalid-name
         self, st: str
-    ) -> list[dict[str, Any]]:
+    ) -> list[SsdpServiceInfo]:
         """Return matching discovery_infos for a st."""
         return [
             await self._async_headers_to_discovery_info(headers)
@@ -459,7 +550,7 @@ class Scanner:
             if udn_st[1] == st
         ]
 
-    async def async_get_discovery_info_by_udn(self, udn: str) -> list[dict[str, Any]]:
+    async def async_get_discovery_info_by_udn(self, udn: str) -> list[SsdpServiceInfo]:
         """Return matching discovery_infos for a udn."""
         return [
             await self._async_headers_to_discovery_info(headers)
@@ -469,23 +560,36 @@ class Scanner:
 
 
 def discovery_info_from_headers_and_description(
-    info_with_desc: CaseInsensitiveDict,
-) -> dict[str, Any]:
+    combined_headers: Mapping[str, Any],
+    info_desc: Mapping[str, Any],
+) -> SsdpServiceInfo:
     """Convert headers and description to discovery_info."""
-    info = {
-        DISCOVERY_MAPPING.get(k.lower(), k): v
-        for k, v in info_with_desc.as_dict().items()
-    }
+    ssdp_usn = combined_headers["usn"]
+    ssdp_st = combined_headers.get("st")
+    upnp_info = {**info_desc}
 
-    if ATTR_UPNP_UDN not in info and ATTR_SSDP_USN in info:
-        if udn := _udn_from_usn(info[ATTR_SSDP_USN]):
-            info[ATTR_UPNP_UDN] = udn
+    # Increase compatibility: depending on the message type,
+    # either the ST (Search Target, from M-SEARCH messages)
+    # or NT (Notification Type, from NOTIFY messages) header is mandatory
+    if not ssdp_st:
+        ssdp_st = combined_headers["nt"]
 
-    # Increase compatibility.
-    if ATTR_SSDP_ST not in info and ATTR_SSDP_NT in info:
-        info[ATTR_SSDP_ST] = info[ATTR_SSDP_NT]
+    # Ensure UPnP "udn" is set
+    if ATTR_UPNP_UDN not in upnp_info:
+        if udn := _udn_from_usn(ssdp_usn):
+            upnp_info[ATTR_UPNP_UDN] = udn
 
-    return info
+    return SsdpServiceInfo(
+        ssdp_usn=ssdp_usn,
+        ssdp_st=ssdp_st,
+        ssdp_ext=combined_headers.get("ext"),
+        ssdp_server=combined_headers.get("server"),
+        ssdp_location=combined_headers.get("location"),
+        ssdp_udn=combined_headers.get("_udn"),
+        ssdp_nt=combined_headers.get("nt"),
+        ssdp_headers=combined_headers,
+        upnp=upnp_info,
+    )
 
 
 def _udn_from_usn(usn: str | None) -> str | None:

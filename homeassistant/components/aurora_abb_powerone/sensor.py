@@ -29,7 +29,7 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 
-from .aurora_device import AuroraDevice
+from .aurora_device import AuroraEntity
 from .const import DEFAULT_ADDRESS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -84,7 +84,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
     """Set up aurora_abb_powerone sensor based on a config entry."""
     entities = []
 
-    client = hass.data[DOMAIN][config_entry.unique_id]
+    client = hass.data[DOMAIN][config_entry.entry_id]
     data = config_entry.data
 
     for sens in SENSOR_TYPES:
@@ -94,7 +94,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
     async_add_entities(entities, True)
 
 
-class AuroraSensor(AuroraDevice, SensorEntity):
+class AuroraSensor(AuroraEntity, SensorEntity):
     """Representation of a Sensor on a Aurora ABB PowerOne Solar inverter."""
 
     def __init__(
@@ -106,7 +106,7 @@ class AuroraSensor(AuroraDevice, SensorEntity):
         """Initialize the sensor."""
         super().__init__(client, data)
         self.entity_description = entity_description
-        self.availableprev = True
+        self.available_prev = True
 
     def update(self):
         """Fetch new state data for the sensor.
@@ -114,7 +114,7 @@ class AuroraSensor(AuroraDevice, SensorEntity):
         This is the only method that should fetch new data for Home Assistant.
         """
         try:
-            self.availableprev = self._attr_available
+            self.available_prev = self._attr_available
             self.client.connect()
             if self.entity_description.key == "instantaneouspower":
                 # read ADC channel 3 (grid power output)
@@ -145,7 +145,7 @@ class AuroraSensor(AuroraDevice, SensorEntity):
             else:
                 raise error
         finally:
-            if self._attr_available != self.availableprev:
+            if self._attr_available != self.available_prev:
                 if self._attr_available:
                     _LOGGER.info("Communication with %s back online", self.name)
                 else:

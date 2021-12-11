@@ -111,17 +111,17 @@ class TasmotaCover(
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        self._tasmota_entity.open()
+        await self._tasmota_entity.open()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
-        self._tasmota_entity.close()
+        await self._tasmota_entity.close()
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         position = kwargs[cover.ATTR_POSITION]
-        self._tasmota_entity.set_position(position)
+        await self._tasmota_entity.set_position(position)
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
-        self._tasmota_entity.stop()
+        await self._tasmota_entity.stop()

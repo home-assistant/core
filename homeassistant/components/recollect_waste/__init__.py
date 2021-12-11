@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_PLACE_ID, CONF_SERVICE_ID, DATA_COORDINATOR, DOMAIN, LOGGER
+from .const import CONF_PLACE_ID, CONF_SERVICE_ID, DOMAIN, LOGGER
 
 DEFAULT_NAME = "recollect_waste"
 DEFAULT_UPDATE_INTERVAL = timedelta(days=1)
@@ -21,9 +21,6 @@ PLATFORMS = ["sensor"]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up RainMachine as config entry."""
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {}
-
     session = aiohttp_client.async_get_clientsession(hass)
     client = Client(
         entry.data[CONF_PLACE_ID], entry.data[CONF_SERVICE_ID], session=session
@@ -49,7 +46,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     await coordinator.async_config_entry_first_refresh()
-    hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR] = coordinator
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = coordinator
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 

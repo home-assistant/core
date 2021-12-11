@@ -1,7 +1,13 @@
 """Support for deCONZ binary sensors."""
+from __future__ import annotations
+
+from collections.abc import ValuesView
+
 from pydeconz.sensor import (
     Alarm,
     CarbonMonoxide,
+    DeconzBinarySensor as PydeconzBinarySensor,
+    DeconzSensor as PydeconzSensor,
     Fire,
     GenericFlag,
     OpenClose,
@@ -22,13 +28,15 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, ENTITY_CATEGORY_DIAGNOSTIC
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ATTR_DARK, ATTR_ON
 from .deconz_device import DeconzDevice
-from .gateway import get_gateway_from_config_entry
+from .gateway import DeconzGateway, get_gateway_from_config_entry
 
 DECONZ_BINARY_SENSORS = (
     Alarm,
@@ -73,15 +81,22 @@ ENTITY_DESCRIPTIONS = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the deCONZ binary sensor."""
     gateway = get_gateway_from_config_entry(hass, config_entry)
     gateway.entities[DOMAIN] = set()
 
     @callback
-    def async_add_sensor(sensors=gateway.api.sensors.values()):
+    def async_add_sensor(
+        sensors: list[PydeconzSensor]
+        | ValuesView[PydeconzSensor] = gateway.api.sensors.values(),
+    ) -> None:
         """Add binary sensor from deCONZ."""
-        entities = []
+        entities: list[DeconzBinarySensor | DeconzTampering] = []
 
         for sensor in sensors:
 
@@ -120,8 +135,9 @@ class DeconzBinarySensor(DeconzDevice, BinarySensorEntity):
     """Representation of a deCONZ binary sensor."""
 
     TYPE = DOMAIN
+    _device: PydeconzBinarySensor
 
-    def __init__(self, device, gateway):
+    def __init__(self, device: PydeconzBinarySensor, gateway: DeconzGateway) -> None:
         """Initialize deCONZ binary sensor."""
         super().__init__(device, gateway)
 
@@ -129,21 +145,21 @@ class DeconzBinarySensor(DeconzDevice, BinarySensorEntity):
             self.entity_description = entity_description
 
     @callback
-    def async_update_callback(self):
+    def async_update_callback(self) -> None:
         """Update the sensor's state."""
         keys = {"on", "reachable", "state"}
         if self._device.changed_keys.intersection(keys):
             super().async_update_callback()
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if sensor is on."""
-        return self._device.state
+        return self._device.state  # type: ignore[no-any-return]
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, bool | float | int | list | None]:
         """Return the state attributes of the sensor."""
-        attr = {}
+        attr: dict[str, bool | float | int | list | None] = {}
 
         if self._device.on is not None:
             attr[ATTR_ON] = self._device.on
@@ -168,11 +184,12 @@ class DeconzTampering(DeconzDevice, BinarySensorEntity):
     """Representation of a deCONZ tampering sensor."""
 
     TYPE = DOMAIN
+    _device: PydeconzSensor
 
     _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
     _attr_device_class = DEVICE_CLASS_TAMPER
 
-    def __init__(self, device, gateway):
+    def __init__(self, device: PydeconzSensor, gateway: DeconzGateway) -> None:
         """Initialize deCONZ binary sensor."""
         super().__init__(device, gateway)
 
@@ -193,4 +210,4 @@ class DeconzTampering(DeconzDevice, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return the state of the sensor."""
-        return self._device.tampered
+        return self._device.tampered  # type: ignore[no-any-return]

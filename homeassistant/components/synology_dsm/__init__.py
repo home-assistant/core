@@ -42,7 +42,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry, entity_registry
+from homeassistant.helpers import device_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import (
     DeviceEntry,
@@ -70,13 +70,9 @@ from .const import (
     SERVICE_REBOOT,
     SERVICE_SHUTDOWN,
     SERVICES,
-    STORAGE_DISK_BINARY_SENSORS,
-    STORAGE_DISK_SENSORS,
-    STORAGE_VOL_SENSORS,
     SYNO_API,
     SYSTEM_LOADED,
     UNDO_UPDATE_LISTENER,
-    UTILISATION_SENSORS,
     SynologyDSMEntityDescription,
 )
 
@@ -89,75 +85,10 @@ ATTRIBUTION = "Data provided by Synology"
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(  # noqa: C901
-    hass: HomeAssistant, entry: ConfigEntry
-) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Synology DSM sensors."""
 
-    # Migrate old unique_id
-    @callback
-    def _async_migrator(
-        entity_entry: entity_registry.RegistryEntry,
-    ) -> dict[str, str] | None:
-        """Migrate away from ID using label."""
-        # Reject if new unique_id
-        if "SYNO." in entity_entry.unique_id:
-            return None
-
-        entries = (
-            *STORAGE_DISK_BINARY_SENSORS,
-            *STORAGE_DISK_SENSORS,
-            *STORAGE_VOL_SENSORS,
-            *UTILISATION_SENSORS,
-        )
-        infos = entity_entry.unique_id.split("_")
-        serial = infos.pop(0)
-        label = infos.pop(0)
-        device_id = "_".join(infos)
-
-        # Removed entity
-        if (
-            "Type" in entity_entry.unique_id
-            or "Device" in entity_entry.unique_id
-            or "Name" in entity_entry.unique_id
-        ):
-            return None
-
-        entity_type: str | None = None
-        for description in entries:
-            if (
-                device_id
-                and description.name == "Status"
-                and "Status" in entity_entry.unique_id
-                and "(Smart)" not in entity_entry.unique_id
-            ):
-                if "sd" in device_id and "disk" in description.key:
-                    entity_type = description.key
-                    continue
-                if "volume" in device_id and "volume" in description.key:
-                    entity_type = description.key
-                    continue
-
-            if description.name == label:
-                entity_type = description.key
-
-        if entity_type is None:
-            return None
-
-        new_unique_id = "_".join([serial, entity_type])
-        if device_id:
-            new_unique_id += f"_{device_id}"
-
-        _LOGGER.info(
-            "Migrating unique_id from [%s] to [%s]",
-            entity_entry.unique_id,
-            new_unique_id,
-        )
-        return {"new_unique_id": new_unique_id}
-
-    await entity_registry.async_migrate_entries(hass, entry.entry_id, _async_migrator)
-
-    # migrate device indetifiers
+    # Migrate device indentifiers
     dev_reg = await get_dev_reg(hass)
     devices: list[DeviceEntry] = device_registry.async_entries_for_config_entry(
         dev_reg, entry.entry_id
@@ -367,6 +298,7 @@ class SynoApi:
         else:
             self.config_url = f"http://{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}"
 
+        self.initialized = False
         # DSM APIs
         self.dsm: SynologyDSM = None
         self.information: SynoDSMInformation = None
@@ -416,6 +348,7 @@ class SynoApi:
 
         await self._hass.async_add_executor_job(self._fetch_device_configuration)
         await self.async_update()
+        self.initialized = True
 
     @callback
     def subscribe(self, api_key: str, unique_id: str) -> Callable[[], None]:
@@ -575,6 +508,9 @@ class SynoApi:
                 self.dsm.update, self._with_information
             )
         except (SynologyDSMLoginFailedException, SynologyDSMRequestException) as err:
+            if not self.initialized:
+                raise err
+
             _LOGGER.warning(
                 "Connection error during update, fallback by reloading the entry"
             )

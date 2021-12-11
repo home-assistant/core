@@ -21,28 +21,28 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SimpliSafe, SimpliSafeEntity
-from .const import DATA_CLIENT, DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER
 
 SUPPORTED_BATTERY_SENSOR_TYPES = [
-    DeviceTypes.carbon_monoxide,
-    DeviceTypes.entry,
-    DeviceTypes.glass_break,
-    DeviceTypes.leak,
-    DeviceTypes.lock_keypad,
-    DeviceTypes.motion,
-    DeviceTypes.siren,
-    DeviceTypes.smoke,
-    DeviceTypes.temperature,
+    DeviceTypes.CARBON_MONOXIDE,
+    DeviceTypes.ENTRY,
+    DeviceTypes.GLASS_BREAK,
+    DeviceTypes.LEAK,
+    DeviceTypes.LOCK_KEYPAD,
+    DeviceTypes.MOTION,
+    DeviceTypes.SIREN,
+    DeviceTypes.SMOKE,
+    DeviceTypes.TEMPERATURE,
 ]
 
 TRIGGERED_SENSOR_TYPES = {
-    DeviceTypes.carbon_monoxide: DEVICE_CLASS_GAS,
-    DeviceTypes.entry: DEVICE_CLASS_DOOR,
-    DeviceTypes.glass_break: DEVICE_CLASS_SAFETY,
-    DeviceTypes.leak: DEVICE_CLASS_MOISTURE,
-    DeviceTypes.motion: DEVICE_CLASS_MOTION,
-    DeviceTypes.siren: DEVICE_CLASS_SAFETY,
-    DeviceTypes.smoke: DEVICE_CLASS_SMOKE,
+    DeviceTypes.CARBON_MONOXIDE: DEVICE_CLASS_GAS,
+    DeviceTypes.ENTRY: DEVICE_CLASS_DOOR,
+    DeviceTypes.GLASS_BREAK: DEVICE_CLASS_SAFETY,
+    DeviceTypes.LEAK: DEVICE_CLASS_MOISTURE,
+    DeviceTypes.MOTION: DEVICE_CLASS_MOTION,
+    DeviceTypes.SIREN: DEVICE_CLASS_SAFETY,
+    DeviceTypes.SMOKE: DEVICE_CLASS_SMOKE,
 }
 
 
@@ -50,7 +50,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up SimpliSafe binary sensors based on a config entry."""
-    simplisafe = hass.data[DOMAIN][entry.entry_id][DATA_CLIENT]
+    simplisafe = hass.data[DOMAIN][entry.entry_id]
 
     sensors: list[BatteryBinarySensor | TriggeredBinarySensor] = []
 

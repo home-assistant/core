@@ -10,13 +10,12 @@ from tuya_iot import TuyaDevice, TuyaDeviceManager
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    DEVICE_CLASS_CURTAIN,
-    DEVICE_CLASS_GARAGE,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
     SUPPORT_SET_TILT_POSITION,
     SUPPORT_STOP,
+    CoverDeviceClass,
     CoverEntity,
     CoverEntityDescription,
 )
@@ -36,7 +35,8 @@ class TuyaCoverEntityDescription(CoverEntityDescription):
     """Describe an Tuya cover entity."""
 
     current_state: DPCode | None = None
-    current_position: DPCode | None = None
+    current_state_inverse: bool = False
+    current_position: DPCode | tuple[DPCode, ...] | None = None
     set_position: DPCode | None = None
 
 
@@ -49,23 +49,32 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
             key=DPCode.CONTROL,
             name="Curtain",
             current_state=DPCode.SITUATION_SET,
-            current_position=DPCode.PERCENT_STATE,
+            current_position=(DPCode.PERCENT_CONTROL, DPCode.PERCENT_STATE),
             set_position=DPCode.PERCENT_CONTROL,
-            device_class=DEVICE_CLASS_CURTAIN,
+            device_class=CoverDeviceClass.CURTAIN,
         ),
         TuyaCoverEntityDescription(
             key=DPCode.CONTROL_2,
             name="Curtain 2",
             current_position=DPCode.PERCENT_STATE_2,
             set_position=DPCode.PERCENT_CONTROL_2,
-            device_class=DEVICE_CLASS_CURTAIN,
+            device_class=CoverDeviceClass.CURTAIN,
         ),
         TuyaCoverEntityDescription(
             key=DPCode.CONTROL_3,
             name="Curtain 3",
             current_position=DPCode.PERCENT_STATE_3,
             set_position=DPCode.PERCENT_CONTROL_3,
-            device_class=DEVICE_CLASS_CURTAIN,
+            device_class=CoverDeviceClass.CURTAIN,
+        ),
+        # switch_1 is an undocumented code that behaves identically to control
+        # It is used by the Kogan Smart Blinds Driver
+        TuyaCoverEntityDescription(
+            key=DPCode.SWITCH_1,
+            name="Blind",
+            current_position=DPCode.PERCENT_CONTROL,
+            set_position=DPCode.PERCENT_CONTROL,
+            device_class=CoverDeviceClass.BLIND,
         ),
     ),
     # Garage Door Opener
@@ -75,19 +84,22 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
             key=DPCode.SWITCH_1,
             name="Door",
             current_state=DPCode.DOORCONTACT_STATE,
-            device_class=DEVICE_CLASS_GARAGE,
+            current_state_inverse=True,
+            device_class=CoverDeviceClass.GARAGE,
         ),
         TuyaCoverEntityDescription(
             key=DPCode.SWITCH_2,
             name="Door 2",
             current_state=DPCode.DOORCONTACT_STATE_2,
-            device_class=DEVICE_CLASS_GARAGE,
+            current_state_inverse=True,
+            device_class=CoverDeviceClass.GARAGE,
         ),
         TuyaCoverEntityDescription(
             key=DPCode.SWITCH_3,
             name="Door 3",
             current_state=DPCode.DOORCONTACT_STATE_3,
-            device_class=DEVICE_CLASS_GARAGE,
+            current_state_inverse=True,
+            device_class=CoverDeviceClass.GARAGE,
         ),
     ),
     # Curtain Switch
@@ -98,14 +110,14 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
             name="Curtain",
             current_position=DPCode.PERCENT_CONTROL,
             set_position=DPCode.PERCENT_CONTROL,
-            device_class=DEVICE_CLASS_CURTAIN,
+            device_class=CoverDeviceClass.CURTAIN,
         ),
         TuyaCoverEntityDescription(
             key=DPCode.CONTROL_2,
             name="Curtain 2",
             current_position=DPCode.PERCENT_CONTROL_2,
             set_position=DPCode.PERCENT_CONTROL_2,
-            device_class=DEVICE_CLASS_CURTAIN,
+            device_class=CoverDeviceClass.CURTAIN,
         ),
     ),
     # Curtain Robot
@@ -115,7 +127,7 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
             key=DPCode.CONTROL,
             current_position=DPCode.PERCENT_STATE,
             set_position=DPCode.PERCENT_CONTROL,
-            device_class=DEVICE_CLASS_CURTAIN,
+            device_class=CoverDeviceClass.CURTAIN,
         ),
     ),
 }
@@ -161,6 +173,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
     _set_position_type: IntegerTypeData | None = None
     _tilt_dpcode: DPCode | None = None
     _tilt_type: IntegerTypeData | None = None
+    _position_dpcode: DPCode | None = None
     entity_description: TuyaCoverEntityDescription
 
     def __init__(
@@ -179,9 +192,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         if device.function[description.key].type == "Boolean":
             self._attr_supported_features |= SUPPORT_OPEN | SUPPORT_CLOSE
         elif device.function[description.key].type == "Enum":
-            data_type = EnumTypeData.from_json(
-                device.status_range[description.key].values
-            )
+            data_type = EnumTypeData.from_json(device.function[description.key].values)
             if "open" in data_type.range:
                 self._attr_supported_features |= SUPPORT_OPEN
             if "close" in data_type.range:
@@ -225,21 +236,34 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
                 device.status_range[tilt_dpcode].values
             )
 
+        # Determine current_position DPCodes
+        if (
+            self.entity_description.current_position is None
+            and self.entity_description.set_position is not None
+        ):
+            self._position_dpcode = self.entity_description.set_position
+        elif isinstance(self.entity_description.current_position, DPCode):
+            self._position_dpcode = self.entity_description.current_position
+        elif isinstance(self.entity_description.current_position, tuple):
+            self._position_dpcode = next(
+                (
+                    dpcode
+                    for dpcode in self.entity_description.current_position
+                    if self.device.status.get(dpcode) is not None
+                ),
+                None,
+            )
+
     @property
     def current_cover_position(self) -> int | None:
         """Return cover current position."""
         if self._current_position_type is None:
             return None
 
-        if not (
-            dpcode := (
-                self.entity_description.current_position
-                or self.entity_description.set_position
-            )
-        ):
+        if not self._position_dpcode:
             return None
 
-        if (position := self.device.status.get(dpcode)) is None:
+        if (position := self.device.status.get(self._position_dpcode)) is None:
             return None
 
         return round(
@@ -262,7 +286,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
 
     @property
     def is_closed(self) -> bool | None:
-        """Return is cover is closed."""
+        """Return true if cover is closed."""
         if (
             self.entity_description.current_state is not None
             and (
@@ -272,7 +296,9 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
             )
             is not None
         ):
-            return current_state in (True, "fully_close")
+            return self.entity_description.current_state_inverse is not (
+                current_state in (True, "fully_close")
+            )
 
         if (position := self.current_cover_position) is not None:
             return position == 0
@@ -284,14 +310,54 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         value: bool | str = True
         if self.device.function[self.entity_description.key].type == "Enum":
             value = "open"
-        self._send_command([{"code": self.entity_description.key, "value": value}])
+
+        commands: list[dict[str, str | int]] = [
+            {"code": self.entity_description.key, "value": value}
+        ]
+
+        if (
+            self.entity_description.set_position is not None
+            and self._set_position_type is not None
+        ):
+            commands.append(
+                {
+                    "code": self.entity_description.set_position,
+                    "value": round(
+                        self._set_position_type.remap_value_from(
+                            100, 0, 100, reverse=True
+                        ),
+                    ),
+                }
+            )
+
+        self._send_command(commands)
 
     def close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
-        value: bool | str = True
+        value: bool | str = False
         if self.device.function[self.entity_description.key].type == "Enum":
             value = "close"
-        self._send_command([{"code": self.entity_description.key, "value": value}])
+
+        commands: list[dict[str, str | int]] = [
+            {"code": self.entity_description.key, "value": value}
+        ]
+
+        if (
+            self.entity_description.set_position is not None
+            and self._set_position_type is not None
+        ):
+            commands.append(
+                {
+                    "code": self.entity_description.set_position,
+                    "value": round(
+                        self._set_position_type.remap_value_from(
+                            0, 0, 100, reverse=True
+                        ),
+                    ),
+                }
+            )
+
+        self._send_command(commands)
 
     def set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""

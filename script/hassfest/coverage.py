@@ -34,7 +34,6 @@ ALLOWED_IGNORE_VIOLATIONS = {
     ("ifttt", "config_flow.py"),
     ("ios", "config_flow.py"),
     ("iqvia", "config_flow.py"),
-    ("knx", "scene.py"),
     ("konnected", "config_flow.py"),
     ("lcn", "scene.py"),
     ("life360", "config_flow.py"),

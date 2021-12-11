@@ -276,6 +276,15 @@ class PrometheusMetrics:
         value = self.state_as_number(state)
         metric.labels(**self._labels(state)).set(value)
 
+    def _handle_input_number(self, state):
+        metric = self._metric(
+            "input_number_state",
+            self.prometheus_cli.Gauge,
+            "State of the input number",
+        )
+        value = self.state_as_number(state)
+        metric.labels(**self._labels(state)).set(value)
+
     def _handle_device_tracker(self, state):
         metric = self._metric(
             "device_tracker_state",
@@ -409,9 +418,11 @@ class PrometheusMetrics:
                 break
 
         if metric is not None:
-            _metric = self._metric(
-                metric, self.prometheus_cli.Gauge, f"Sensor data measured in {unit}"
-            )
+            documentation = "State of the sensor"
+            if unit:
+                documentation = f"Sensor data measured in {unit}"
+
+            _metric = self._metric(metric, self.prometheus_cli.Gauge, documentation)
 
             try:
                 value = self.state_as_number(state)
@@ -449,8 +460,12 @@ class PrometheusMetrics:
     def _sensor_fallback_metric(state, unit):
         """Get metric from fallback logic for compatibility."""
         if unit in (None, ""):
-            _LOGGER.debug("Unsupported sensor: %s", state.entity_id)
-            return None
+            try:
+                state_helper.state_as_number(state)
+            except ValueError:
+                _LOGGER.debug("Unsupported sensor: %s", state.entity_id)
+                return None
+            return "sensor_state"
         return f"sensor_unit_{unit}"
 
     @staticmethod

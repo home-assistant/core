@@ -1,10 +1,11 @@
 """The tests for generic camera component."""
 import asyncio
 from http import HTTPStatus
-from os import path
 from unittest.mock import patch
 
+import aiohttp
 import httpx
+import pytest
 import respx
 
 from homeassistant import config as hass_config
@@ -12,6 +13,8 @@ from homeassistant.components.generic import DOMAIN
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.setup import async_setup_component
+
+from tests.common import get_fixture_path
 
 
 @respx.mock
@@ -131,10 +134,13 @@ async def test_limit_refetch(hass, hass_client):
 
     hass.states.async_set("sensor.temp", "5")
 
-    with patch("async_timeout.timeout", side_effect=asyncio.TimeoutError()):
+    with pytest.raises(aiohttp.ServerTimeoutError), patch(
+        "async_timeout.timeout", side_effect=asyncio.TimeoutError()
+    ):
         resp = await client.get("/api/camera_proxy/camera.config_test")
-        assert respx.calls.call_count == 0
-        assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+
+    assert respx.calls.call_count == 0
+    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
 
     hass.states.async_set("sensor.temp", "10")
 
@@ -379,11 +385,8 @@ async def test_reloading(hass, hass_client):
     body = await resp.text()
     assert body == "hello world"
 
-    yaml_path = path.join(
-        _get_fixtures_base_path(),
-        "fixtures",
-        "generic/configuration.yaml",
-    )
+    yaml_path = get_fixture_path("configuration.yaml", "generic")
+
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             DOMAIN,
@@ -456,7 +459,3 @@ async def test_timeout_cancelled(hass, hass_client):
         assert respx.calls.call_count == total_calls
         assert resp.status == HTTPStatus.OK
         assert await resp.text() == "hello world"
-
-
-def _get_fixtures_base_path():
-    return path.dirname(path.dirname(path.dirname(__file__)))

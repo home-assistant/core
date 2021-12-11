@@ -255,7 +255,7 @@ class Analytics:
             )
 
         try:
-            with async_timeout.timeout(30):
+            async with async_timeout.timeout(30):
                 response = await self.session.post(self.endpoint, json=payload)
                 if response.status == 200:
                     LOGGER.info(

@@ -148,7 +148,7 @@ UPDATE_FIELDS = {
 class PersonStore(Store):
     """Person storage."""
 
-    async def _async_migrate_func(self, old_version, old_data):
+    async def _async_migrate_func(self, old_major_version, old_minor_version, old_data):
         """Migrate to the new version.
 
         Migrate storage to use format of collection helper.
@@ -420,8 +420,7 @@ class Person(RestoreEntity):
     async def async_added_to_hass(self):
         """Register device trackers."""
         await super().async_added_to_hass()
-        state = await self.async_get_last_state()
-        if state:
+        if state := await self.async_get_last_state():
             self._parse_source_state(state)
 
         if self.hass.is_running:

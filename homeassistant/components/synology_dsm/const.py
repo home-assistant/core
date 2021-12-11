@@ -108,7 +108,7 @@ UPGRADE_BINARY_SENSORS: tuple[SynologyDSMBinarySensorEntityDescription, ...] = (
     SynologyDSMBinarySensorEntityDescription(
         api_key=SynoCoreUpgrade.API_KEY,
         key="update_available",
-        name="Update available",
+        name="Update Available",
         device_class=DEVICE_CLASS_UPDATE,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
@@ -118,7 +118,7 @@ SECURITY_BINARY_SENSORS: tuple[SynologyDSMBinarySensorEntityDescription, ...] = 
     SynologyDSMBinarySensorEntityDescription(
         api_key=SynoCoreSecurity.API_KEY,
         key="status",
-        name="Security status",
+        name="Security Status",
         device_class=DEVICE_CLASS_SAFETY,
     ),
 )
@@ -353,7 +353,7 @@ INFORMATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
     SynologyDSMSensorEntityDescription(
         api_key=SynoDSMInformation.API_KEY,
         key="temperature",
-        name="temperature",
+        name="Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=DEVICE_CLASS_TEMPERATURE,
         state_class=STATE_CLASS_MEASUREMENT,
@@ -362,7 +362,7 @@ INFORMATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
     SynologyDSMSensorEntityDescription(
         api_key=SynoDSMInformation.API_KEY,
         key="uptime",
-        name="last boot",
+        name="Last Boot",
         device_class=DEVICE_CLASS_TIMESTAMP,
         entity_registry_enabled_default=False,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
@@ -374,7 +374,7 @@ SURVEILLANCE_SWITCH: tuple[SynologyDSMSwitchEntityDescription, ...] = (
     SynologyDSMSwitchEntityDescription(
         api_key=SynoSurveillanceStation.HOME_MODE_API_KEY,
         key="home_mode",
-        name="home mode",
+        name="Home Mode",
         icon="mdi:home-account",
         entity_category=ENTITY_CATEGORY_CONFIG,
     ),

@@ -6,11 +6,18 @@ from dataclasses import dataclass
 import logging
 from typing import Any, cast
 
-from bimmer_connected.state import ChargingState, LockState, VehicleState
 from bimmer_connected.vehicle import ConnectedDriveVehicle
-from bimmer_connected.vehicle_status import ConditionBasedServiceReport
+from bimmer_connected.vehicle_status import (
+    ChargingState,
+    ConditionBasedServiceReport,
+    LockState,
+    VehicleStatus,
+)
 
 from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_BATTERY_CHARGING,
+    DEVICE_CLASS_LIGHT,
+    DEVICE_CLASS_LOCK,
     DEVICE_CLASS_OPENING,
     DEVICE_CLASS_PLUG,
     DEVICE_CLASS_PROBLEM,
@@ -18,7 +25,6 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import LENGTH_KILOMETERS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.unit_system import UnitSystem
@@ -28,13 +34,13 @@ from . import (
     BMWConnectedDriveAccount,
     BMWConnectedDriveBaseEntity,
 )
-from .const import CONF_ACCOUNT, DATA_ENTRIES
+from .const import CONF_ACCOUNT, DATA_ENTRIES, UNIT_MAP
 
 _LOGGER = logging.getLogger(__name__)
 
 
 def _are_doors_closed(
-    vehicle_state: VehicleState, extra_attributes: dict[str, Any], *args: Any
+    vehicle_state: VehicleStatus, extra_attributes: dict[str, Any], *args: Any
 ) -> bool:
     # device class opening: On means open, Off means closed
     _LOGGER.debug("Status of lid: %s", vehicle_state.all_lids_closed)
@@ -44,7 +50,7 @@ def _are_doors_closed(
 
 
 def _are_windows_closed(
-    vehicle_state: VehicleState, extra_attributes: dict[str, Any], *args: Any
+    vehicle_state: VehicleStatus, extra_attributes: dict[str, Any], *args: Any
 ) -> bool:
     # device class opening: On means open, Off means closed
     for window in vehicle_state.windows:
@@ -53,7 +59,7 @@ def _are_windows_closed(
 
 
 def _are_doors_locked(
-    vehicle_state: VehicleState, extra_attributes: dict[str, Any], *args: Any
+    vehicle_state: VehicleStatus, extra_attributes: dict[str, Any], *args: Any
 ) -> bool:
     # device class lock: On means unlocked, Off means locked
     # Possible values: LOCKED, SECURED, SELECTIVE_LOCKED, UNLOCKED
@@ -63,7 +69,7 @@ def _are_doors_locked(
 
 
 def _are_parking_lights_on(
-    vehicle_state: VehicleState, extra_attributes: dict[str, Any], *args: Any
+    vehicle_state: VehicleStatus, extra_attributes: dict[str, Any], *args: Any
 ) -> bool:
     # device class light: On means light detected, Off means no light
     extra_attributes["lights_parking"] = vehicle_state.parking_lights.value
@@ -71,7 +77,7 @@ def _are_parking_lights_on(
 
 
 def _are_problems_detected(
-    vehicle_state: VehicleState,
+    vehicle_state: VehicleStatus,
     extra_attributes: dict[str, Any],
     unit_system: UnitSystem,
 ) -> bool:
@@ -82,7 +88,7 @@ def _are_problems_detected(
 
 
 def _check_control_messages(
-    vehicle_state: VehicleState, extra_attributes: dict[str, Any], *args: Any
+    vehicle_state: VehicleStatus, extra_attributes: dict[str, Any], *args: Any
 ) -> bool:
     # device class problem: On means problem detected, Off means no problem
     check_control_messages = vehicle_state.check_control_messages
@@ -96,7 +102,7 @@ def _check_control_messages(
 
 
 def _is_vehicle_charging(
-    vehicle_state: VehicleState, extra_attributes: dict[str, Any], *args: Any
+    vehicle_state: VehicleStatus, extra_attributes: dict[str, Any], *args: Any
 ) -> bool:
     # device class power: On means power detected, Off means no power
     extra_attributes["charging_status"] = vehicle_state.charging_status.value
@@ -107,7 +113,7 @@ def _is_vehicle_charging(
 
 
 def _is_vehicle_plugged_in(
-    vehicle_state: VehicleState, extra_attributes: dict[str, Any], *args: Any
+    vehicle_state: VehicleStatus, extra_attributes: dict[str, Any], *args: Any
 ) -> bool:
     # device class plug: On means device is plugged in,
     #                    Off means device is unplugged
@@ -124,7 +130,12 @@ def _format_cbs_report(
     if report.due_date is not None:
         result[f"{service_type} date"] = report.due_date.strftime("%Y-%m-%d")
     if report.due_distance is not None:
-        distance = round(unit_system.length(report.due_distance, LENGTH_KILOMETERS))
+        distance = round(
+            unit_system.length(
+                report.due_distance[0],
+                UNIT_MAP.get(report.due_distance[1], report.due_distance[1]),
+            )
+        )
         result[f"{service_type} distance"] = f"{distance} {unit_system.length_unit}"
     return result
 
@@ -133,7 +144,7 @@ def _format_cbs_report(
 class BMWRequiredKeysMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[VehicleState, dict[str, Any], UnitSystem], bool]
+    value_fn: Callable[[VehicleStatus, dict[str, Any], UnitSystem], bool]
 
 
 @dataclass
@@ -161,14 +172,14 @@ SENSOR_TYPES: tuple[BMWBinarySensorEntityDescription, ...] = (
     BMWBinarySensorEntityDescription(
         key="door_lock_state",
         name="Door lock state",
-        device_class="lock",
+        device_class=DEVICE_CLASS_LOCK,
         icon="mdi:car-key",
         value_fn=_are_doors_locked,
     ),
     BMWBinarySensorEntityDescription(
         key="lights_parking",
         name="Parking lights",
-        device_class="light",
+        device_class=DEVICE_CLASS_LIGHT,
         icon="mdi:car-parking-lights",
         value_fn=_are_parking_lights_on,
     ),
@@ -190,7 +201,7 @@ SENSOR_TYPES: tuple[BMWBinarySensorEntityDescription, ...] = (
     BMWBinarySensorEntityDescription(
         key="charging_status",
         name="Charging status",
-        device_class="power",
+        device_class=DEVICE_CLASS_BATTERY_CHARGING,
         icon="mdi:ev-station",
         value_fn=_is_vehicle_charging,
     ),
@@ -245,7 +256,8 @@ class BMWConnectedDriveSensor(BMWConnectedDriveBaseEntity, BinarySensorEntity):
 
     def update(self) -> None:
         """Read new state data from the library."""
-        vehicle_state = self._vehicle.state
+        _LOGGER.debug("Updating binary sensors of %s", self._vehicle.name)
+        vehicle_state = self._vehicle.status
         result = self._attrs.copy()
 
         self._attr_is_on = self.entity_description.value_fn(

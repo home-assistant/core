@@ -67,12 +67,14 @@ homeassistant/components/axis/* @Kane610
 homeassistant/components/azure_devops/* @timmo001
 homeassistant/components/azure_event_hub/* @eavanvalkenburg
 homeassistant/components/azure_service_bus/* @hfurubotten
+homeassistant/components/balboa/* @garbled1
 homeassistant/components/beewi_smartclim/* @alemuro
 homeassistant/components/bitcoin/* @fabaff
 homeassistant/components/bizkaibus/* @UgaitzEtxebarria
 homeassistant/components/blebox/* @bbx-a @bbx-jp
 homeassistant/components/blink/* @fronzbot
 homeassistant/components/blueprint/* @home-assistant/core
+homeassistant/components/bluesound/* @thrawnarn
 homeassistant/components/bmp280/* @belidzs
 homeassistant/components/bmw_connected_drive/* @gerard33 @rikroe
 homeassistant/components/bond/* @bdraco @prystupa @joshs85
@@ -84,6 +86,7 @@ homeassistant/components/brunt/* @eavanvalkenburg
 homeassistant/components/bsblan/* @liudger
 homeassistant/components/bt_smarthub/* @jxwolstenholme
 homeassistant/components/buienradar/* @mjj4791 @ties @Robbie1221
+homeassistant/components/button/* @home-assistant/core
 homeassistant/components/cast/* @emontnemery
 homeassistant/components/cert_expiry/* @Cereal2nd @jjlawren
 homeassistant/components/circuit/* @braam
@@ -118,6 +121,7 @@ homeassistant/components/denonavr/* @ol-iver @starkillerOG
 homeassistant/components/derivative/* @afaucogney
 homeassistant/components/device_automation/* @home-assistant/core
 homeassistant/components/devolo_home_control/* @2Fake @Shutgun
+homeassistant/components/devolo_home_network/* @2Fake @Shutgun
 homeassistant/components/dexcom/* @gagebenne
 homeassistant/components/dhcp/* @bdraco
 homeassistant/components/dht/* @thegardenmonkey
@@ -157,6 +161,7 @@ homeassistant/components/epson/* @pszafer
 homeassistant/components/epsonworkforce/* @ThaStealth
 homeassistant/components/eq3btsmart/* @rytilahti
 homeassistant/components/esphome/* @OttoWinter @jesserockz
+homeassistant/components/evil_genius_labs/* @balloob
 homeassistant/components/evohome/* @zxdavb
 homeassistant/components/ezviz/* @RenierM26 @baqs
 homeassistant/components/faa_delays/* @ntilley905
@@ -182,7 +187,7 @@ homeassistant/components/freebox/* @hacf-fr @Quentame
 homeassistant/components/freedompro/* @stefano055415
 homeassistant/components/fritz/* @mammuth @AaronDavidSchneider @chemelli74
 homeassistant/components/fritzbox/* @mib1185 @flabbamann
-homeassistant/components/fronius/* @nielstron
+homeassistant/components/fronius/* @nielstron @farmio
 homeassistant/components/frontend/* @home-assistant/frontend
 homeassistant/components/garages_amsterdam/* @klaasnicolaas
 homeassistant/components/gdacs/* @exxamalte
@@ -227,7 +232,7 @@ homeassistant/components/homematic/* @pvizeli @danielperna84
 homeassistant/components/honeywell/* @rdfurman
 homeassistant/components/http/* @home-assistant/core
 homeassistant/components/huawei_lte/* @scop @fphammerle
-homeassistant/components/hue/* @balloob @frenck
+homeassistant/components/hue/* @balloob @marcelveldt
 homeassistant/components/huisbaasje/* @dennisschroer
 homeassistant/components/humidifier/* @home-assistant/core @Shulyaka
 homeassistant/components/hunterdouglas_powerview/* @bdraco
@@ -261,6 +266,7 @@ homeassistant/components/irish_rail_transport/* @ttroy50
 homeassistant/components/islamic_prayer_times/* @engrbm87
 homeassistant/components/isy994/* @bdraco @shbatm
 homeassistant/components/izone/* @Swamp-Ig
+homeassistant/components/jellyfin/* @j-stienstra
 homeassistant/components/jewish_calendar/* @tsvi
 homeassistant/components/juicenet/* @jesserockz
 homeassistant/components/kaiterra/* @Michsior14
@@ -287,7 +293,6 @@ homeassistant/components/local_ip/* @issacg
 homeassistant/components/logger/* @home-assistant/core
 homeassistant/components/logi_circle/* @evanjd
 homeassistant/components/lookin/* @ANMalko
-homeassistant/components/loopenergy/* @pavoni
 homeassistant/components/lovelace/* @home-assistant/frontend
 homeassistant/components/luci/* @mzdrale
 homeassistant/components/luftdaten/* @fabaff
@@ -422,6 +427,7 @@ homeassistant/components/raincloud/* @vanstinator
 homeassistant/components/rainforest_eagle/* @gtdiehl @jcalbert
 homeassistant/components/rainmachine/* @bachya
 homeassistant/components/random/* @fabaff
+homeassistant/components/rdw/* @frenck
 homeassistant/components/recollect_waste/* @bachya
 homeassistant/components/recorder/* @home-assistant/core
 homeassistant/components/rejseplanen/* @DarkFox
@@ -429,6 +435,7 @@ homeassistant/components/renault/* @epenet
 homeassistant/components/repetier/* @MTrab
 homeassistant/components/rflink/* @javicalle
 homeassistant/components/rfxtrx/* @danielhiversen @elupus @RobBie1221
+homeassistant/components/ridwell/* @bachya
 homeassistant/components/ring/* @balloob
 homeassistant/components/risco/* @OnFreund
 homeassistant/components/rituals_perfume_genie/* @milanmeu
@@ -520,12 +527,14 @@ homeassistant/components/system_bridge/* @timmo001
 homeassistant/components/tado/* @michaelarnauts @noltari
 homeassistant/components/tag/* @balloob @dmulcahey
 homeassistant/components/tahoma/* @philklei
+homeassistant/components/tailscale/* @frenck
 homeassistant/components/tankerkoenig/* @guillempages
 homeassistant/components/tapsaff/* @bazwilliams
 homeassistant/components/tasmota/* @emontnemery
 homeassistant/components/tautulli/* @ludeeus
 homeassistant/components/tellduslive/* @fredrike
 homeassistant/components/template/* @PhracturedBlue @tetienne @home-assistant/core
+homeassistant/components/tesla_wall_connector/* @einarhauks
 homeassistant/components/tfiac/* @fredrike @mellado
 homeassistant/components/thethingsnetwork/* @fabaff
 homeassistant/components/threshold/* @fabaff
@@ -534,12 +543,12 @@ homeassistant/components/tile/* @bachya
 homeassistant/components/time_date/* @fabaff
 homeassistant/components/tmb/* @alemuro
 homeassistant/components/todoist/* @boralyl
+homeassistant/components/tolo/* @MatthiasLohr
 homeassistant/components/totalconnect/* @austinmroczek
 homeassistant/components/tplink/* @rytilahti @thegardenmonkey
 homeassistant/components/traccar/* @ludeeus
 homeassistant/components/trace/* @home-assistant/core
 homeassistant/components/tractive/* @Danielhiversen @zhulik @bieniu
-homeassistant/components/tradfri/* @janiversen
 homeassistant/components/trafikverket_train/* @endor-force
 homeassistant/components/trafikverket_weatherstation/* @endor-force
 homeassistant/components/transmission/* @engrbm87 @JPHutchins
@@ -575,6 +584,7 @@ homeassistant/components/vizio/* @raman325
 homeassistant/components/vlc_telnet/* @rodripf @dmcc @MartinHjelmare
 homeassistant/components/volkszaehler/* @fabaff
 homeassistant/components/volumio/* @OnFreund
+homeassistant/components/volvooncall/* @molobrakos @decompil3d
 homeassistant/components/wake_on_lan/* @ntilley905
 homeassistant/components/wallbox/* @hesselonline
 homeassistant/components/waqi/* @andrey-git

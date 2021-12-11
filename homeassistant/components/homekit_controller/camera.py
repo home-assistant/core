@@ -18,11 +18,6 @@ class HomeKitCamera(AccessoryEntity, Camera):
         """Define the homekit characteristics the entity is tracking."""
         return []
 
-    @property
-    def state(self):
-        """Return the current state of the camera."""
-        return "idle"
-
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:

@@ -1,5 +1,7 @@
 """Counter for the days until an HTTPS (TLS) certificate will expire."""
-from datetime import timedelta
+from __future__ import annotations
+
+from datetime import datetime, timedelta
 
 import voluptuous as vol
 
@@ -85,8 +87,8 @@ class SSLCertificateTimestamp(CertExpiryEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.host}:{coordinator.port}-timestamp"
 
     @property
-    def native_value(self):
+    def native_value(self) -> datetime | None:
         """Return the state of the sensor."""
         if self.coordinator.data:
-            return self.coordinator.data.isoformat()
+            return self.coordinator.data
         return None

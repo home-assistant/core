@@ -54,9 +54,6 @@ async def test_duplicate_error(hass, mock_async_from_auth):
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
-        result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_AUTH_CODE: "code123"}
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -73,9 +70,6 @@ async def test_invalid_credentials(hass, mock_async_from_auth):
     assert result["step_id"] == "user"
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
-    )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_AUTH_CODE: "code123"}
     )
@@ -132,9 +126,6 @@ async def test_step_reauth_old_format(hass, mock_async_from_auth):
         "homeassistant.components.simplisafe.async_setup_entry", return_value=True
     ), patch("homeassistant.config_entries.ConfigEntries.async_reload"):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
-        result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_AUTH_CODE: "code123"}
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -167,9 +158,6 @@ async def test_step_reauth_new_format(hass, mock_async_from_auth):
         "homeassistant.components.simplisafe.async_setup_entry", return_value=True
     ), patch("homeassistant.config_entries.ConfigEntries.async_reload"):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
-        result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_AUTH_CODE: "code123"}
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -178,6 +166,42 @@ async def test_step_reauth_new_format(hass, mock_async_from_auth):
     assert len(hass.config_entries.async_entries()) == 1
     [config_entry] = hass.config_entries.async_entries(DOMAIN)
     assert config_entry.data == {CONF_USER_ID: "12345", CONF_TOKEN: "token123"}
+
+
+async def test_step_reauth_wrong_account(hass, api, mock_async_from_auth):
+    """Test the re-auth step returning a different account from this one."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="12345",
+        data={
+            CONF_USER_ID: "12345",
+            CONF_TOKEN: "token123",
+        },
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_REAUTH},
+        data={CONF_USER_ID: "12345", CONF_TOKEN: "token123"},
+    )
+    assert result["step_id"] == "user"
+
+    # Simulate the next auth call returning a different user ID than the one we've
+    # identified as this entry's unique ID:
+    api.user_id = "67890"
+
+    with patch(
+        "homeassistant.components.simplisafe.async_setup_entry", return_value=True
+    ), patch("homeassistant.config_entries.ConfigEntries.async_reload"):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_AUTH_CODE: "code123"}
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "wrong_account"
+
+    assert len(hass.config_entries.async_entries()) == 1
+    [config_entry] = hass.config_entries.async_entries(DOMAIN)
+    assert config_entry.unique_id == "12345"
 
 
 async def test_step_user(hass, mock_async_from_auth):
@@ -190,9 +214,6 @@ async def test_step_user(hass, mock_async_from_auth):
     with patch(
         "homeassistant.components.simplisafe.async_setup_entry", return_value=True
     ), patch("homeassistant.config_entries.ConfigEntries.async_reload"):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_AUTH_CODE: "code123"}
         )
@@ -213,9 +234,6 @@ async def test_unknown_error(hass, mock_async_from_auth):
     assert result["step_id"] == "user"
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
-    )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_AUTH_CODE: "code123"}
     )

@@ -9,6 +9,19 @@
             "no_motion": "{entity_name} parou de detectar movimento"
         }
     },
+    "device_class": {
+        "cold": "frio",
+        "gas": "g\u00e1s",
+        "heat": "calor",
+        "moisture": "umidade",
+        "motion": "movimento",
+        "occupancy": "presen\u00e7a",
+        "power": "energia",
+        "problem": "problema",
+        "smoke": "fuma\u00e7a",
+        "sound": "som",
+        "vibration": "vibra\u00e7\u00e3o"
+    },
     "state": {
         "_": {
             "off": "Desligado",

@@ -225,7 +225,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             """Forward Home Assistant states updates to ESPHome."""
 
             # Only communicate changes to the state or attribute tracked
-            if (
+            if event.data.get("new_state") is None or (
                 event.data.get("old_state") is not None
                 and "new_state" in event.data
                 and (
@@ -267,7 +267,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             assert cli.api_version is not None
             entry_data.api_version = cli.api_version
             entry_data.available = True
-            device_id = await _async_setup_device_registry(
+            device_id = _async_setup_device_registry(
                 hass, entry, entry_data.device_info
             )
             entry_data.async_update_device_state(hass)
@@ -320,7 +320,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def _async_setup_device_registry(
+@callback
+def _async_setup_device_registry(
     hass: HomeAssistant, entry: ConfigEntry, device_info: EsphomeDeviceInfo
 ) -> str:
     """Set up device registry feature for a particular config entry."""
@@ -455,8 +456,7 @@ async def _setup_services(
     for service in services:
         if service.key in old_services:
             # Already exists
-            matching = old_services.pop(service.key)
-            if matching != service:
+            if (matching := old_services.pop(service.key)) != service:
                 # Need to re-register
                 to_unregister.append(matching)
                 to_register.append(service)

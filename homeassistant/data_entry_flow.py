@@ -4,6 +4,7 @@ from __future__ import annotations
 import abc
 import asyncio
 from collections.abc import Iterable, Mapping
+from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Any, TypedDict
 import uuid
@@ -23,6 +24,11 @@ RESULT_TYPE_SHOW_PROGRESS_DONE = "progress_done"
 
 # Event that is fired when a flow is progressed via external or progress source.
 EVENT_DATA_ENTRY_FLOW_PROGRESSED = "data_entry_flow_progressed"
+
+
+@dataclass
+class BaseServiceInfo:
+    """Base class for discovery ServiceInfo."""
 
 
 class FlowError(HomeAssistantError):
@@ -290,8 +296,7 @@ class FlowManager(abc.ABC):
     @callback
     def _async_remove_flow_progress(self, flow_id: str) -> None:
         """Remove a flow from in progress."""
-        flow = self._progress.pop(flow_id, None)
-        if flow is None:
+        if (flow := self._progress.pop(flow_id, None)) is None:
             raise UnknownFlow
         handler = flow.handler
         self._handler_progress_index[handler].remove(flow.flow_id)
@@ -302,7 +307,7 @@ class FlowManager(abc.ABC):
         self,
         flow: Any,
         step_id: str,
-        user_input: dict | None,
+        user_input: dict | BaseServiceInfo | None,
         step_done: asyncio.Future | None = None,
     ) -> FlowResult:
         """Handle a step of a flow."""

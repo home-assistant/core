@@ -121,7 +121,7 @@ async def test_camera_image_failed_start_stream_call(hass: HomeAssistant) -> Non
     await setup_test_config_entry(hass, hyperion_client=client)
 
     with pytest.raises(HomeAssistantError):
-        await async_get_image(hass, TEST_CAMERA_ENTITY_ID, timeout=0)
+        await async_get_image(hass, TEST_CAMERA_ENTITY_ID, timeout=0.01)
 
     assert client.async_send_image_stream_start.called
     assert not client.async_send_image_stream_stop.called

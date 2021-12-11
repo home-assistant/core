@@ -3,7 +3,7 @@
   "name": "Airthings",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/airthings",
-  "requirements": ["airthings_cloud==0.0.1"],
+  "requirements": ["airthings_cloud==0.1.0"],
   "codeowners": [
     "@danielhiversen"
   ],

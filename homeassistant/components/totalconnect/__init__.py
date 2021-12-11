@@ -34,12 +34,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     temp_codes = conf[CONF_USERCODES]
     usercodes = {int(code): temp_codes[code] for code in temp_codes}
-    client = await hass.async_add_executor_job(
-        TotalConnectClient, username, password, usercodes
-    )
 
-    if not client.is_logged_in():
-        raise ConfigEntryAuthFailed("TotalConnect authentication failed")
+    try:
+        client = await hass.async_add_executor_job(
+            TotalConnectClient, username, password, usercodes
+        )
+    except AuthenticationError as exception:
+        raise ConfigEntryAuthFailed("TotalConnect authentication failed") from exception
 
     coordinator = TotalConnectDataUpdateCoordinator(hass, client)
     await coordinator.async_config_entry_first_refresh()

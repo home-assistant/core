@@ -64,7 +64,7 @@
       "label": "Code Coverage",
       "detail": "Generate code coverage report for a given integration.",
       "type": "shell",
-      "command": "pytest ./tests/components/${input:integrationName}/ --cov=homeassistant.components.${input:integrationName} --cov-report term-missing",
+      "command": "pytest ./tests/components/${input:integrationName}/ --cov=homeassistant.components.${input:integrationName} --cov-report term-missing --durations-min=1 --durations=0",
       "group": {
         "kind": "test",
         "isDefault": true

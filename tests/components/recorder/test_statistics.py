@@ -14,6 +14,7 @@ from homeassistant.components.recorder.models import (
 )
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
+    get_last_short_term_statistics,
     get_last_statistics,
     get_metadata,
     list_statistic_ids,
@@ -40,7 +41,7 @@ def test_compile_hourly_statistics(hass_recorder):
     for kwargs in ({}, {"statistic_ids": ["sensor.test1"]}):
         stats = statistics_during_period(hass, zero, period="5minute", **kwargs)
         assert stats == {}
-    stats = get_last_statistics(hass, 0, "sensor.test1", True)
+    stats = get_last_short_term_statistics(hass, 0, "sensor.test1", True)
     assert stats == {}
 
     recorder.do_adhoc_statistics(start=zero)
@@ -91,20 +92,20 @@ def test_compile_hourly_statistics(hass_recorder):
     )
     assert stats == {}
 
-    # Test get_last_statistics
-    stats = get_last_statistics(hass, 0, "sensor.test1", True)
+    # Test get_last_short_term_statistics
+    stats = get_last_short_term_statistics(hass, 0, "sensor.test1", True)
     assert stats == {}
 
-    stats = get_last_statistics(hass, 1, "sensor.test1", True)
+    stats = get_last_short_term_statistics(hass, 1, "sensor.test1", True)
     assert stats == {"sensor.test1": [{**expected_2, "statistic_id": "sensor.test1"}]}
 
-    stats = get_last_statistics(hass, 2, "sensor.test1", True)
+    stats = get_last_short_term_statistics(hass, 2, "sensor.test1", True)
     assert stats == {"sensor.test1": expected_stats1[::-1]}
 
-    stats = get_last_statistics(hass, 3, "sensor.test1", True)
+    stats = get_last_short_term_statistics(hass, 3, "sensor.test1", True)
     assert stats == {"sensor.test1": expected_stats1[::-1]}
 
-    stats = get_last_statistics(hass, 1, "sensor.test3", True)
+    stats = get_last_short_term_statistics(hass, 1, "sensor.test3", True)
     assert stats == {}
 
 
@@ -236,7 +237,7 @@ def test_rename_entity(hass_recorder):
     for kwargs in ({}, {"statistic_ids": ["sensor.test1"]}):
         stats = statistics_during_period(hass, zero, period="5minute", **kwargs)
         assert stats == {}
-    stats = get_last_statistics(hass, 0, "sensor.test1", True)
+    stats = get_last_short_term_statistics(hass, 0, "sensor.test1", True)
     assert stats == {}
 
     recorder.do_adhoc_statistics(start=zero)
@@ -392,6 +393,22 @@ def test_external_statistics(hass_recorder, caplog):
             },
         )
     }
+    last_stats = get_last_statistics(hass, 1, "test:total_energy_import", True)
+    assert last_stats == {
+        "test:total_energy_import": [
+            {
+                "statistic_id": "test:total_energy_import",
+                "start": period2.isoformat(),
+                "end": (period2 + timedelta(hours=1)).isoformat(),
+                "max": None,
+                "mean": None,
+                "min": None,
+                "last_reset": None,
+                "state": approx(1.0),
+                "sum": approx(3.0),
+            },
+        ]
+    }
 
     # Update the previously inserted statistics
     external_statistics = {
@@ -542,6 +559,95 @@ def test_external_statistics_errors(hass_recorder, caplog):
     assert statistics_during_period(hass, zero, period="hour") == {}
     assert list_statistic_ids(hass) == []
     assert get_metadata(hass, statistic_ids=("test:total_energy_import",)) == {}
+
+
+@pytest.mark.parametrize("timezone", ["America/Regina", "Europe/Vienna", "UTC"])
+@pytest.mark.freeze_time("2021-08-01 00:00:00+00:00")
+def test_monthly_statistics(hass_recorder, caplog, timezone):
+    """Test inserting external statistics."""
+    dt_util.set_default_time_zone(dt_util.get_time_zone(timezone))
+
+    hass = hass_recorder()
+    wait_recording_done(hass)
+    assert "Compiling statistics for" not in caplog.text
+    assert "Statistics already compiled" not in caplog.text
+
+    zero = dt_util.utcnow()
+    period1 = dt_util.as_utc(dt_util.parse_datetime("2021-09-01 00:00:00"))
+    period2 = dt_util.as_utc(dt_util.parse_datetime("2021-09-30 23:00:00"))
+    period3 = dt_util.as_utc(dt_util.parse_datetime("2021-10-01 00:00:00"))
+    period4 = dt_util.as_utc(dt_util.parse_datetime("2021-10-31 23:00:00"))
+
+    external_statistics = (
+        {
+            "start": period1,
+            "last_reset": None,
+            "state": 0,
+            "sum": 2,
+        },
+        {
+            "start": period2,
+            "last_reset": None,
+            "state": 1,
+            "sum": 3,
+        },
+        {
+            "start": period3,
+            "last_reset": None,
+            "state": 2,
+            "sum": 4,
+        },
+        {
+            "start": period4,
+            "last_reset": None,
+            "state": 3,
+            "sum": 5,
+        },
+    )
+    external_metadata = {
+        "has_mean": False,
+        "has_sum": True,
+        "name": "Total imported energy",
+        "source": "test",
+        "statistic_id": "test:total_energy_import",
+        "unit_of_measurement": "kWh",
+    }
+
+    async_add_external_statistics(hass, external_metadata, external_statistics)
+    wait_recording_done(hass)
+    stats = statistics_during_period(hass, zero, period="month")
+    sep_start = dt_util.as_utc(dt_util.parse_datetime("2021-09-01 00:00:00"))
+    sep_end = dt_util.as_utc(dt_util.parse_datetime("2021-10-01 00:00:00"))
+    oct_start = dt_util.as_utc(dt_util.parse_datetime("2021-10-01 00:00:00"))
+    oct_end = dt_util.as_utc(dt_util.parse_datetime("2021-11-01 00:00:00"))
+    assert stats == {
+        "test:total_energy_import": [
+            {
+                "statistic_id": "test:total_energy_import",
+                "start": sep_start.isoformat(),
+                "end": sep_end.isoformat(),
+                "max": None,
+                "mean": None,
+                "min": None,
+                "last_reset": None,
+                "state": approx(1.0),
+                "sum": approx(3.0),
+            },
+            {
+                "statistic_id": "test:total_energy_import",
+                "start": oct_start.isoformat(),
+                "end": oct_end.isoformat(),
+                "max": None,
+                "mean": None,
+                "min": None,
+                "last_reset": None,
+                "state": approx(3.0),
+                "sum": approx(5.0),
+            },
+        ]
+    }
+
+    dt_util.set_default_time_zone(dt_util.get_time_zone("UTC"))
 
 
 def record_states(hass):
