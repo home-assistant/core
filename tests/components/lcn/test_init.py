@@ -19,6 +19,7 @@ from .conftest import MockPchkConnectionManager, init_integration, setup_compone
 async def test_async_setup_entry(hass, entry):
     """Test a successful setup entry and unload of entry."""
     await init_integration(hass, entry)
+
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert entry.state == ConfigEntryState.LOADED
 
