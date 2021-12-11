@@ -427,7 +427,11 @@ async def test_zeroconf_host_already_configured(hass, tmpdir):
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="1.1.1.1",
-            hostname="lutron-abc.local.",
+            hostname="LuTrOn-abc.local.",
+            name="mock_name",
+            port=None,
+            properties={},
+            type="mock_type",
         ),
     )
     await hass.async_block_till_done()
@@ -450,7 +454,11 @@ async def test_zeroconf_lutron_id_already_configured(hass):
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="1.1.1.1",
-            hostname="lutron-abc.local.",
+            hostname="LuTrOn-abc.local.",
+            name="mock_name",
+            port=None,
+            properties={},
+            type="mock_type",
         ),
     )
     await hass.async_block_till_done()
@@ -469,6 +477,10 @@ async def test_zeroconf_not_lutron_device(hass):
         data=zeroconf.ZeroconfServiceInfo(
             host="1.1.1.1",
             hostname="notlutron-abc.local.",
+            name="mock_name",
+            port=None,
+            properties={},
+            type="mock_type",
         ),
     )
     await hass.async_block_till_done()
@@ -492,7 +504,11 @@ async def test_zeroconf(hass, source, tmpdir):
         context={"source": source},
         data=zeroconf.ZeroconfServiceInfo(
             host="1.1.1.1",
-            hostname="lutron-abc.local.",
+            hostname="LuTrOn-abc.local.",
+            name="mock_name",
+            port=None,
+            properties={},
+            type="mock_type",
         ),
     )
     await hass.async_block_till_done()

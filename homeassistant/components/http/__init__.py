@@ -1,7 +1,6 @@
 """Support to serve the Home Assistant API as WSGI application."""
 from __future__ import annotations
 
-from contextvars import ContextVar
 from ipaddress import ip_network
 import logging
 import os
@@ -28,7 +27,7 @@ from .ban import setup_bans
 from .const import KEY_AUTHENTICATED, KEY_HASS, KEY_HASS_USER  # noqa: F401
 from .cors import setup_cors
 from .forwarded import async_setup_forwarded
-from .request_context import setup_request_context
+from .request_context import current_request, setup_request_context
 from .security_filter import setup_security_filter
 from .static import CACHE_HEADERS, CachingStaticResource
 from .view import HomeAssistantView
@@ -401,8 +400,3 @@ async def start_http_server_and_save_config(
         ]
 
     store.async_delay_save(lambda: conf, SAVE_DELAY)
-
-
-current_request: ContextVar[web.Request | None] = ContextVar(
-    "current_request", default=None
-)

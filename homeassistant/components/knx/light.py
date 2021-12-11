@@ -23,19 +23,13 @@ from homeassistant.components.light import (
     COLOR_MODE_XY,
     LightEntity,
 )
-from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME
+from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.color as color_util
 
-from .const import (
-    DATA_KNX_CONFIG,
-    DOMAIN,
-    KNX_ADDRESS,
-    ColorTempModes,
-    SupportedPlatforms,
-)
+from .const import DATA_KNX_CONFIG, DOMAIN, KNX_ADDRESS, ColorTempModes
 from .knx_entity import KnxEntity
 from .schema import LightSchema
 
@@ -47,9 +41,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up light(s) for KNX platform."""
     xknx: XKNX = hass.data[DOMAIN].xknx
-    config: list[ConfigType] = hass.data[DATA_KNX_CONFIG][
-        SupportedPlatforms.LIGHT.value
-    ]
+    config: list[ConfigType] = hass.data[DATA_KNX_CONFIG][Platform.LIGHT]
 
     async_add_entities(KNXLight(xknx, entity_config) for entity_config in config)
 
@@ -219,7 +211,6 @@ class KNXLight(KnxEntity, LightEntity):
             if rgb is not None:
                 if not self._device.supports_brightness:
                     # brightness will be calculated from color so color must not hold brightness again
-                    # pylint: disable=protected-access
                     return cast(
                         Tuple[int, int, int], color_util.match_max_scale((255,), rgb)
                     )
@@ -234,7 +225,6 @@ class KNXLight(KnxEntity, LightEntity):
             if rgb is not None and white is not None:
                 if not self._device.supports_brightness:
                     # brightness will be calculated from color so color must not hold brightness again
-                    # pylint: disable=protected-access
                     return cast(
                         Tuple[int, int, int, int],
                         color_util.match_max_scale((255,), (*rgb, white)),

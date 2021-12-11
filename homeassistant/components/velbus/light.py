@@ -51,11 +51,6 @@ class VelbusLight(VelbusEntity, LightEntity):
     _channel: VelbusDimmer
     _attr_supported_feature = SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
 
-    def __init__(self, channel: VelbusDimmer) -> None:
-        """Initialize the dimmer."""
-        super().__init__(channel)
-        self._attr_name = self._channel.get_name()
-
     @property
     def is_on(self) -> bool:
         """Return true if the light is on."""

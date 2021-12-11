@@ -958,18 +958,6 @@ class LightEntity(ToggleEntity):
         return self._attr_supported_features
 
 
-class Light(LightEntity):
-    """Representation of a light (for backwards compatibility)."""
-
-    def __init_subclass__(cls, **kwargs):
-        """Print deprecation warning."""
-        super().__init_subclass__(**kwargs)
-        _LOGGER.warning(
-            "Light is deprecated, modify %s to extend LightEntity",
-            cls.__name__,
-        )
-
-
 def legacy_supported_features(
     supported_features: int, supported_color_modes: list[str] | None
 ) -> int:

@@ -173,7 +173,7 @@ async def test_light_added(hass, mock_bridge_v2):
 
     await setup_platform(hass, mock_bridge_v2, "light")
 
-    test_entity_id = "light.hue_mocked_device"
+    test_entity_id = "light.hue_fake_light"
 
     # verify entity does not exist before we start
     assert hass.states.get(test_entity_id) is None
@@ -186,7 +186,7 @@ async def test_light_added(hass, mock_bridge_v2):
     test_entity = hass.states.get(test_entity_id)
     assert test_entity is not None
     assert test_entity.state == "off"
-    assert test_entity.attributes["friendly_name"] == FAKE_DEVICE["metadata"]["name"]
+    assert test_entity.attributes["friendly_name"] == FAKE_LIGHT["metadata"]["name"]
 
 
 async def test_light_availability(hass, mock_bridge_v2, v2_resources_test_data):
@@ -210,13 +210,6 @@ async def test_light_availability(hass, mock_bridge_v2, v2_resources_test_data):
                 "id": "1987ba66-c21d-48d0-98fb-121d939a71f3",
                 "status": status,
                 "type": "zigbee_connectivity",
-            },
-        )
-        mock_bridge_v2.api.emit_event(
-            "update",
-            {
-                "id": "02cba059-9c2c-4d45-97e4-4f79b1bfbaa1",
-                "type": "light",
             },
         )
         await hass.async_block_till_done()

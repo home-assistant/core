@@ -22,7 +22,6 @@ SECTIONS = (
     "automation",
     "config_entries",
     "core",
-    "customize",
     "device_registry",
     "entity_registry",
     "group",

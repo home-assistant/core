@@ -40,7 +40,6 @@ HOMEKIT_ACCESSORY_DISPATCH = {
     "leak": "binary_sensor",
     "fan": "fan",
     "fanv2": "fan",
-    "air-quality": "air_quality",
     "occupancy": "binary_sensor",
     "television": "media_player",
     "valve": "switch",

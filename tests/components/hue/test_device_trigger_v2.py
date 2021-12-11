@@ -70,12 +70,20 @@ async def test_get_triggers(hass, mock_bridge_v2, v2_resources_test_data, device
                 "platform": "device",
                 "domain": hue.DOMAIN,
                 "device_id": hue_wall_switch_device.id,
-                "unique_id": hue_wall_switch_device.id,
+                "unique_id": resource_id,
                 "type": event_type,
                 "subtype": control_id,
             }
-            for event_type in (x.value for x in ButtonEvent if x != ButtonEvent.UNKNOWN)
-            for control_id in range(1, 3)
+            for event_type in (
+                ButtonEvent.INITIAL_PRESS,
+                ButtonEvent.LONG_RELEASE,
+                ButtonEvent.REPEAT,
+                ButtonEvent.SHORT_RELEASE,
+            )
+            for control_id, resource_id in (
+                (1, "c658d3d8-a013-4b81-8ac6-78b248537e70"),
+                (2, "be1eb834-bdf5-4d26-8fba-7b1feaa83a9d"),
+            )
         ),
     ]
 

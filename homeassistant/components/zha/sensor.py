@@ -30,6 +30,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
     DEVICE_CLASS_ENERGY,
     ELECTRIC_CURRENT_AMPERE,
@@ -60,6 +61,7 @@ from .core import discovery
 from .core.const import (
     CHANNEL_ANALOG_INPUT,
     CHANNEL_ELECTRICAL_MEASUREMENT,
+    CHANNEL_FAN,
     CHANNEL_HUMIDITY,
     CHANNEL_ILLUMINANCE,
     CHANNEL_LEAF_WETNESS,
@@ -541,6 +543,16 @@ class VOCLevel(Sensor):
     _unit = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
 
 
+@STRICT_MATCH(channel_names="voc_level", models="lumi.airmonitor.acn01")
+class PPBVOCLevel(Sensor):
+    """VOC Level sensor."""
+
+    SENSOR_ATTR = "measured_value"
+    _decimals = 0
+    _multiplier = 1
+    _unit = CONCENTRATION_PARTS_PER_BILLION
+
+
 @STRICT_MATCH(channel_names="formaldehyde_concentration")
 class FormaldehydeConcentration(Sensor):
     """Formaldehyde Concentration sensor."""
@@ -625,6 +637,13 @@ class ThermostatHVACAction(Sensor, id_suffix="hvac_action"):
         self.async_write_ha_state()
 
 
+@MULTI_MATCH(
+    channel_names=CHANNEL_THERMOSTAT,
+    aux_channels=CHANNEL_FAN,
+    manufacturers="Centralite",
+    models={"3157100", "3157100-E"},
+    stop_on_match=True,
+)
 @MULTI_MATCH(
     channel_names=CHANNEL_THERMOSTAT,
     manufacturers="Zen Within",

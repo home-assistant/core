@@ -2,10 +2,10 @@
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    DEVICE_CLASS_DAMPER,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
+    CoverDeviceClass,
     CoverEntity,
 )
 
@@ -36,7 +36,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class AdvantageAirZoneVent(AdvantageAirEntity, CoverEntity):
     """Advantage Air Cover Class."""
 
-    _attr_device_class = DEVICE_CLASS_DAMPER
+    _attr_device_class = CoverDeviceClass.DAMPER
     _attr_supported_features = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
 
     def __init__(self, instance, ac_key, zone_key):

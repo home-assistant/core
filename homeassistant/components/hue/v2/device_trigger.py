@@ -40,6 +40,19 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     }
 )
 
+DEFAULT_BUTTON_EVENT_TYPES = (
+    # all except `DOUBLE_SHORT_RELEASE`
+    ButtonEvent.INITIAL_PRESS,
+    ButtonEvent.REPEAT,
+    ButtonEvent.SHORT_RELEASE,
+    ButtonEvent.LONG_RELEASE,
+)
+
+DEVICE_SPECIFIC_EVENT_TYPES = {
+    # device specific overrides of specific supported button events
+    "Hue tap switch": (ButtonEvent.INITIAL_PRESS,),
+}
+
 
 async def async_validate_trigger_config(
     bridge: "HueBridge",
@@ -84,10 +97,13 @@ async def async_get_triggers(bridge: "HueBridge", device_entry: DeviceEntry):
     hue_dev_id = get_hue_device_id(device_entry)
     # extract triggers from all button resources of this Hue device
     triggers = []
+    model_id = api.devices[hue_dev_id].product_data.product_name
     for resource in api.devices.get_sensors(hue_dev_id):
         if resource.type != ResourceTypes.BUTTON:
             continue
-        for event_type in (x.value for x in ButtonEvent if x != ButtonEvent.UNKNOWN):
+        for event_type in DEVICE_SPECIFIC_EVENT_TYPES.get(
+            model_id, DEFAULT_BUTTON_EVENT_TYPES
+        ):
             triggers.append(
                 {
                     CONF_DEVICE_ID: device_entry.id,
@@ -95,7 +111,7 @@ async def async_get_triggers(bridge: "HueBridge", device_entry: DeviceEntry):
                     CONF_PLATFORM: "device",
                     CONF_TYPE: event_type,
                     CONF_SUBTYPE: resource.metadata.control_id,
-                    CONF_UNIQUE_ID: device_entry.id,
+                    CONF_UNIQUE_ID: resource.id,
                 }
             )
     return triggers

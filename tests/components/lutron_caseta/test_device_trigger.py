@@ -335,11 +335,3 @@ async def test_validate_trigger_invalid_triggers(hass, device_reg):
             ]
         },
     )
-
-    assert (
-        len(entity_ids := hass.states.async_entity_ids("persistent_notification")) == 1
-    )
-    assert (
-        "The following integrations and platforms could not be set up"
-        in hass.states.get(entity_ids[0]).attributes["message"]
-    )

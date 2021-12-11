@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "no_selection": "Prosz\u0119 przynajmniej wybra\u0107 miasto lub powiat"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "_a_to_d": "Miasto/powiat (A-D)",
+                    "_e_to_h": "Miasto/powiat (E-H)",
+                    "_i_to_l": "Miasto/powiat (I-L)",
+                    "_m_to_q": "Miasto/powiat (M-Q)",
+                    "_r_to_u": "Miasto/powiat (R-U)",
+                    "_v_to_z": "Miasto/powiat (V-Z)"
+                }
+            }
+        }
+    }
+}

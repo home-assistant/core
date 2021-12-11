@@ -20,6 +20,7 @@
             "armed_away": "Armer {entity_name} en mode \"sortie\"",
             "armed_home": "Armer {entity_name} en mode \"maison\"",
             "armed_night": "Armer {entity_name} en mode \"nuit\"",
+            "armed_vacation": "{entity_name} vacances arm\u00e9es",
             "disarmed": "{entity_name} d\u00e9sarm\u00e9",
             "triggered": "{entity_name} d\u00e9clench\u00e9"
         }

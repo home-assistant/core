@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import aiohttp
 
 from homeassistant import config_entries, data_entry_flow
+from homeassistant.components import ssdp
 from homeassistant.components.harmony.config_flow import CannotConnect
 from homeassistant.components.harmony.const import DOMAIN, PREVIOUS_ACTIVE_ACTIVITY
 from homeassistant.const import CONF_HOST, CONF_NAME
@@ -58,10 +59,14 @@ async def test_form_ssdp(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_SSDP},
-            data={
-                "friendlyName": "Harmony Hub",
-                "ssdp_location": "http://192.168.1.12:8088/description",
-            },
+            data=ssdp.SsdpServiceInfo(
+                ssdp_usn="mock_usn",
+                ssdp_st="mock_st",
+                ssdp_location="http://192.168.1.12:8088/description",
+                upnp={
+                    "friendlyName": "Harmony Hub",
+                },
+            ),
         )
     assert result["type"] == "form"
     assert result["step_id"] == "link"
@@ -106,10 +111,14 @@ async def test_form_ssdp_fails_to_get_remote_id(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_SSDP},
-            data={
-                "friendlyName": "Harmony Hub",
-                "ssdp_location": "http://192.168.1.12:8088/description",
-            },
+            data=ssdp.SsdpServiceInfo(
+                ssdp_usn="mock_usn",
+                ssdp_st="mock_st",
+                ssdp_location="http://192.168.1.12:8088/description",
+                upnp={
+                    "friendlyName": "Harmony Hub",
+                },
+            ),
         )
     assert result["type"] == "abort"
     assert result["reason"] == "cannot_connect"
@@ -139,10 +148,14 @@ async def test_form_ssdp_aborts_before_checking_remoteid_if_host_known(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_SSDP},
-            data={
-                "friendlyName": "Harmony Hub",
-                "ssdp_location": "http://2.2.2.2:8088/description",
-            },
+            data=ssdp.SsdpServiceInfo(
+                ssdp_usn="mock_usn",
+                ssdp_st="mock_st",
+                ssdp_location="http://2.2.2.2:8088/description",
+                upnp={
+                    "friendlyName": "Harmony Hub",
+                },
+            ),
         )
     assert result["type"] == "abort"
 

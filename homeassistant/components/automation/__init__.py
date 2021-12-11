@@ -714,7 +714,7 @@ async def _async_process_if(hass, name, config, p_config):
     checks = []
     for if_config in if_configs:
         try:
-            checks.append(await condition.async_from_config(hass, if_config, False))
+            checks.append(await condition.async_from_config(hass, if_config))
         except HomeAssistantError as ex:
             LOGGER.warning("Invalid condition: %s", ex)
             return None

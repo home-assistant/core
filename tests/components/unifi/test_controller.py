@@ -1,4 +1,4 @@
-"""Test UniFi Controller."""
+"""Test UniFi Network."""
 
 import asyncio
 from copy import deepcopy
@@ -171,7 +171,7 @@ async def setup_unifi_integration(
     unique_id="1",
     config_entry_id=DEFAULT_CONFIG_ENTRY_ID,
 ):
-    """Create the UniFi controller."""
+    """Create the UniFi Network instance."""
     assert await async_setup_component(hass, UNIFI_DOMAIN, {})
 
     config_entry = MockConfigEntry(

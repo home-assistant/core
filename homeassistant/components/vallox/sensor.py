@@ -56,7 +56,7 @@ class ValloxSensor(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = f"{uuid}-{description.key}"
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the value reported by the sensor."""
         if (metric_key := self.entity_description.metric_key) is None:
             return None
@@ -84,7 +84,7 @@ class ValloxFanSpeedSensor(ValloxSensor):
     """Child class for fan speed reporting."""
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the value reported by the sensor."""
         fan_is_on = self.coordinator.data.get_metric(METRIC_KEY_MODE) == MODE_ON
         return super().native_value if fan_is_on else 0
@@ -94,7 +94,7 @@ class ValloxFilterRemainingSensor(ValloxSensor):
     """Child class for filter remaining time reporting."""
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the value reported by the sensor."""
         super_native_value = super().native_value
 
@@ -107,7 +107,7 @@ class ValloxFilterRemainingSensor(ValloxSensor):
         days_remaining_delta = timedelta(days=days_remaining)
         now = datetime.utcnow().replace(hour=13, minute=0, second=0, microsecond=0)
 
-        return (now + days_remaining_delta).isoformat()
+        return now + days_remaining_delta
 
 
 class ValloxCellStateSensor(ValloxSensor):

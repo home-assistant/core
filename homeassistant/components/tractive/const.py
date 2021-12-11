@@ -11,6 +11,7 @@ ATTR_BUZZER = "buzzer"
 ATTR_LED = "led"
 ATTR_LIVE_TRACKING = "live_tracking"
 ATTR_MINUTES_ACTIVE = "minutes_active"
+ATTR_TRACKER_STATE = "tracker_state"
 
 CLIENT = "client"
 TRACKABLES = "trackables"

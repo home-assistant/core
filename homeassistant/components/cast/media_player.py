@@ -134,7 +134,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         """Handle discovery of a new chromecast."""
         # If wanted_uuids is set, we're only accepting specific cast devices identified
         # by UUID
-        if wanted_uuids is not None and discover.uuid not in wanted_uuids:
+        if wanted_uuids is not None and str(discover.uuid) not in wanted_uuids:
             # UUID not matching, ignore.
             return
 
@@ -162,7 +162,6 @@ class CastDevice(MediaPlayerEntity):
         """Initialize the cast device."""
 
         self._cast_info = cast_info
-        self.services = cast_info.services
         self._chromecast: pychromecast.Chromecast | None = None
         self.cast_status = None
         self.media_status = None
@@ -176,13 +175,13 @@ class CastDevice(MediaPlayerEntity):
 
         self._add_remove_handler = None
         self._cast_view_remove_handler = None
-        self._attr_unique_id = cast_info.uuid
+        self._attr_unique_id = str(cast_info.uuid)
         self._attr_name = cast_info.friendly_name
-        if cast_info.model_name != "Google Cast Group":
+        if cast_info.cast_info.model_name != "Google Cast Group":
             self._attr_device_info = DeviceInfo(
                 identifiers={(CAST_DOMAIN, str(cast_info.uuid).replace("-", ""))},
-                manufacturer=str(cast_info.manufacturer),
-                model=cast_info.model_name,
+                manufacturer=str(cast_info.cast_info.manufacturer),
+                model=cast_info.cast_info.model_name,
                 name=str(cast_info.friendly_name),
             )
 
@@ -224,20 +223,11 @@ class CastDevice(MediaPlayerEntity):
             "[%s %s] Connecting to cast device by service %s",
             self.entity_id,
             self._cast_info.friendly_name,
-            self.services,
+            self._cast_info.cast_info.services,
         )
         chromecast = await self.hass.async_add_executor_job(
             pychromecast.get_chromecast_from_cast_info,
-            pychromecast.discovery.CastInfo(
-                self.services,
-                self._cast_info.uuid,
-                self._cast_info.model_name,
-                self._cast_info.friendly_name,
-                None,
-                None,
-                self._cast_info.cast_type,
-                self._cast_info.manufacturer,
-            ),
+            self._cast_info.cast_info,
             ChromeCastZeroconf.get_zeroconf(),
         )
         chromecast.media_controller.app_id = CAST_APP_ID_HOMEASSISTANT_MEDIA
@@ -776,7 +766,6 @@ class DynamicCastGroup:
 
         self.hass = hass
         self._cast_info = cast_info
-        self.services = cast_info.services
         self._chromecast: pychromecast.Chromecast | None = None
         self.mz_mgr = None
         self._status_listener: CastStatusListener | None = None
@@ -824,20 +813,11 @@ class DynamicCastGroup:
             "[%s %s] Connecting to cast device by service %s",
             "Dynamic group",
             self._cast_info.friendly_name,
-            self.services,
+            self._cast_info.cast_info.services,
         )
         chromecast = await self.hass.async_add_executor_job(
             pychromecast.get_chromecast_from_cast_info,
-            pychromecast.discovery.CastInfo(
-                self.services,
-                self._cast_info.uuid,
-                self._cast_info.model_name,
-                self._cast_info.friendly_name,
-                None,
-                None,
-                self._cast_info.cast_type,
-                self._cast_info.manufacturer,
-            ),
+            self._cast_info.cast_info,
             ChromeCastZeroconf.get_zeroconf(),
         )
         chromecast.media_controller.app_id = CAST_APP_ID_HOMEASSISTANT_MEDIA
@@ -889,7 +869,7 @@ class DynamicCastGroup:
             # Removed is not our device.
             return
 
-        if not discover.services:
+        if not discover.cast_info.services:
             # Clean up the dynamic group
             _LOGGER.debug("Clean up dynamic group: %s", discover)
             await self.async_tear_down()
