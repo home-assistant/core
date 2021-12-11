@@ -29,7 +29,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 SERVICE_ALARM_ARM_AWAY_INSTANT = "arm_away_instant"
-SERVICE_ALARM_ARM_HOME_INSTANT = "arm_stay_instant"
+SERVICE_ALARM_ARM_HOME_INSTANT = "arm_home_instant"
 
 
 async def async_setup_entry(hass, entry, async_add_entities) -> None:
