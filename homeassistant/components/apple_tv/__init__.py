@@ -36,6 +36,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Apple TV"
 
+BACKOFF_TIME_LOWER_LIMIT = 15  # seconds
 BACKOFF_TIME_UPPER_LIMIT = 300  # Five minutes
 
 SIGNAL_CONNECTED = "apple_tv_connected"
@@ -241,7 +242,11 @@ class AppleTVManager:
             if self.atv is None:
                 self._connection_attempts += 1
                 backoff = min(
-                    randrange(2 ** self._connection_attempts), BACKOFF_TIME_UPPER_LIMIT
+                    max(
+                        BACKOFF_TIME_LOWER_LIMIT,
+                        randrange(2 ** self._connection_attempts),
+                    ),
+                    BACKOFF_TIME_UPPER_LIMIT,
                 )
 
                 _LOGGER.debug("Reconnecting in %d seconds", backoff)
