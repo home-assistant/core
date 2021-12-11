@@ -39,7 +39,7 @@ from google_nest_sdm.exceptions import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, OptionsFlow
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
@@ -59,11 +59,14 @@ from .const import (
     SDM_SCOPES,
 )
 
+_LOGGER = logging.getLogger(__name__)
+
+
 DATA_FLOW_IMPL = "nest_flow_implementation"
 SUBSCRIPTION_FORMAT = "projects/{cloud_project_id}/subscriptions/home-assistant-{rnd}"
 SUBSCRIPTION_RAND_LENGTH = 10
 CLOUD_CONSOLE_URL = "https://console.cloud.google.com/home/dashboard"
-_LOGGER = logging.getLogger(__name__)
+ACCESS_URL = "https://nestservices.google.com/partnerconnections"
 
 
 def _generate_subscription_id(cloud_project_id: str) -> str:
@@ -434,4 +437,34 @@ class NestFlowHandler(
         """Create an entry from tokens."""
         return self.async_create_entry(
             title=title, data={"tokens": tokens, "impl_domain": flow["domain"]}
+        )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+        """Return the options flow handler."""
+        return OptionsFlowHandler(config_entry)
+
+
+class OptionsFlowHandler(OptionsFlow):
+    """The nest options flow handler."""
+
+    def __init__(self, config_entry: ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            # User has changed devices or permissions
+            self.hass.async_create_task(
+                self.hass.config_entries.async_reload(self.config_entry.entry_id)
+            )
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            description_placeholders={"access_url": ACCESS_URL},
         )

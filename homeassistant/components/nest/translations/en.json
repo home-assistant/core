@@ -66,5 +66,13 @@
             "camera_sound": "Sound detected",
             "doorbell_chime": "Doorbell pressed"
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "description": "To modify the devices and permissions granted to Home Assistant, visit the Nest [Partner Connections Manager]({access_url}).\n\nTo add or revoke specific permissions or devices, toggle the permissions you want to add or revoke and click the back arrow to save.\n\nOnce finished, click Submit below to update Home Assistant.",
+                "title": "Nest Devices and Permissions"
+            }
+        }
     }
 }

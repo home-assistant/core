@@ -10,9 +10,9 @@ from google_nest_sdm.exceptions import (
 )
 import pytest
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.nest.const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -581,3 +581,34 @@ async def test_pubsub_subscriber_config_entry_reauth(hass, oauth, subscriber):
         "projects/other-cloud-project-id/subscriptions" in entry.data["subscriber_id"]
     )
     assert entry.data["cloud_project_id"] == "other-cloud-project-id"
+
+
+async def test_options_flow(
+    hass: HomeAssistant, setup_integration: MockConfigEntry
+) -> None:
+    """Test viewing the options flow and reloading configuration."""
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    entry = entries[0]
+    assert entry.state is ConfigEntryState.LOADED
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result.get("type") == data_entry_flow.RESULT_TYPE_FORM
+    assert result.get("step_id") == "init"
+    assert result.get("errors") is None
+    assert "flow_id" in result
+    assert "description_placeholders" in result
+    assert "access_url" in result.get("description_placeholders")
+
+    # Click `Submit` and verify the integration is reloaded
+    with patch(
+        "homeassistant.components.nest.async_setup_entry", return_value=True
+    ) as mock_setup:
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={},
+        )
+        assert result.get("type") == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert entry.options == {}
+        await hass.async_block_till_done()
+        assert len(mock_setup.mock_calls) == 1

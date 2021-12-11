@@ -215,6 +215,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     subscriber = await api.new_subscriber(hass, entry)
     if not subscriber:
         return False
+
     # Keep media for last N events in memory
     subscriber.cache_policy.event_cache_size = EVENT_MEDIA_CACHE_SIZE
     subscriber.cache_policy.fetch = True

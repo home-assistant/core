@@ -1,8 +1,20 @@
 """Common libraries for test setup."""
 
+from __future__ import annotations
+
+from typing import AsyncGenerator
+from unittest.mock import patch
+
 import aiohttp
 from google_nest_sdm.auth import AbstractAuth
 import pytest
+
+from homeassistant.components.nest.const import DOMAIN
+from homeassistant.core import HomeAssistant
+
+from .common import CONFIG, FakeSubscriber, async_setup_component, create_config_entry
+
+from tests.common import MockConfigEntry
 
 
 class FakeAuth(AbstractAuth):
@@ -63,3 +75,40 @@ async def auth(aiohttp_client):
     app.router.add_post("/", auth.response_handler)
     auth.client = await aiohttp_client(app)
     return auth
+
+
+@pytest.fixture
+async def subscriber(auth: AbstractAuth) -> FakeSubscriber:
+    """Fixture that creates a FakeSubscriber."""
+    return FakeSubscriber()
+
+
+@pytest.fixture
+async def config_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Fixture that creates a config entry."""
+    return create_config_entry(hass)
+
+
+@pytest.fixture
+def platforms() -> list[str]:
+    """Fixture to set which platforms to test, overridden by tests if needed."""
+    return []
+
+
+@pytest.fixture
+async def setup_integration(
+    hass: HomeAssistant,
+    subscriber: FakeSubscriber,
+    platforms: list[str],
+    config_entry: MockConfigEntry,
+) -> AsyncGenerator[MockConfigEntry, None]:
+    """Fixture that initializes the integration."""
+    with patch(
+        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation"
+    ), patch("homeassistant.components.nest.PLATFORMS", platforms,), patch(
+        "homeassistant.components.nest.api.GoogleNestSubscriber",
+        return_value=subscriber,
+    ):
+        assert await async_setup_component(hass, DOMAIN, CONFIG)
+        await hass.async_block_till_done()
+        yield config_entry
