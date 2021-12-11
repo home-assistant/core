@@ -54,6 +54,7 @@ from .const import (
 )
 
 CONF_TO_DISCOVERY: Final = {
+    CONF_HOST: ATTR_IPADDR,
     CONF_REMOTE_ACCESS_ENABLED: ATTR_REMOTE_ACCESS_ENABLED,
     CONF_REMOTE_ACCESS_HOST: ATTR_REMOTE_ACCESS_HOST,
     CONF_REMOTE_ACCESS_PORT: ATTR_REMOTE_ACCESS_PORT,
@@ -90,7 +91,7 @@ def async_name_from_discovery(device: FluxLEDDiscovery) -> str:
 
 async def async_update_entry_from_discovery(
     hass: HomeAssistant, entry: config_entries.ConfigEntry, device: FluxLEDDiscovery
-) -> None:
+) -> bool:
     """Update a config entry from a flux_led discovery."""
     data_updates = {**entry.data}
     mac_address = device[ATTR_ID]
@@ -109,8 +110,8 @@ async def async_update_entry_from_discovery(
     if data_updates:
         updates["data"] = {**entry.data, **data_updates}
     if updates:
-        hass.config_entries.async_update_entry(entry, **updates)
-        await hass.config_entries.async_reload(entry.entry_id)
+        return hass.config_entries.async_update_entry(entry, **updates)
+    return False
 
 
 async def async_discover_devices(
