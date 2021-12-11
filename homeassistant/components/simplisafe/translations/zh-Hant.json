@@ -32,6 +32,7 @@
             },
             "user": {
                 "data": {
+                    "auth_code": "\u8a8d\u8b49\u78bc",
                     "code": "\u9a57\u8b49\u78bc\uff08\u4f7f\u7528\u65bc Home Assistant UI\uff09",
                     "password": "\u5bc6\u78bc",
                     "username": "\u96fb\u5b50\u90f5\u4ef6"
