@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Any, Final
+from typing import Any, Final, cast
 
 from flux_led import DeviceType
 from flux_led.aio import AIOWifiLedBulb
@@ -213,12 +213,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if discovery := await async_discover_device(hass, host):
             async_update_entry_from_discovery(hass, entry, discovery)
 
-    if entry.unique_id and discovery and discovery[ATTR_ID] != entry.unique_id:
-        # The device is offline and another flux_led
-        # device is now using the ip address
-        raise ConfigEntryNotReady(
-            "Unexpected device found at {host}; Expected {entry.unique_id}, found {discovery[ATTR_ID]}"
-        )
+    if entry.unique_id and discovery:
+        assert discovery[ATTR_ID] is not None
+        mac = dr.format_mac(cast(str, discovery[ATTR_ID]))
+        if mac != entry.unique_id:
+            # The device is offline and another flux_led device is now using the ip address
+            raise ConfigEntryNotReady(
+                f"Unexpected device found at {host}; Expected {entry.unique_id}, found {mac}"
+            )
 
     coordinator = FluxLedUpdateCoordinator(hass, device, entry)
     hass.data[DOMAIN][entry.entry_id] = coordinator
