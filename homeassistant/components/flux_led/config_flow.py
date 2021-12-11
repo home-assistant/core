@@ -4,13 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Final, cast
 
-from flux_led.const import (
-    ATTR_ID,
-    ATTR_IPADDR,
-    ATTR_MODEL,
-    ATTR_MODEL_DESCRIPTION,
-    ATTR_VERSION_NUM,
-)
+from flux_led.const import ATTR_ID, ATTR_IPADDR, ATTR_MODEL, ATTR_MODEL_DESCRIPTION
 from flux_led.scanner import FluxLEDDiscovery
 import voluptuous as vol
 
@@ -26,6 +20,7 @@ from . import (
     async_discover_device,
     async_discover_devices,
     async_name_from_discovery,
+    async_populate_data_from_discovery,
     async_update_entry_from_discovery,
     async_wifi_bulb_for_host,
 )
@@ -33,7 +28,6 @@ from .const import (
     CONF_CUSTOM_EFFECT_COLORS,
     CONF_CUSTOM_EFFECT_SPEED_PCT,
     CONF_CUSTOM_EFFECT_TRANSITION,
-    CONF_MINOR_VERSION,
     DEFAULT_EFFECT_SPEED,
     DISCOVER_SCAN_TIMEOUT,
     DOMAIN,
@@ -177,8 +171,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_HOST: device[ATTR_IPADDR],
             CONF_NAME: name,
         }
-        if minor_version := device[ATTR_VERSION_NUM]:
-            data[CONF_MINOR_VERSION] = minor_version
+        async_populate_data_from_discovery(data, data, device)
         return self.async_create_entry(
             title=name,
             data=data,
