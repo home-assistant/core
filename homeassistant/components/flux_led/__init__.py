@@ -93,7 +93,7 @@ async def async_update_entry_from_discovery(
     hass: HomeAssistant, entry: config_entries.ConfigEntry, device: FluxLEDDiscovery
 ) -> bool:
     """Update a config entry from a flux_led discovery."""
-    data_updates = {**entry.data}
+    data_updates = {}
     mac_address = device[ATTR_ID]
     assert mac_address is not None
     updates: dict[str, Any] = {}
