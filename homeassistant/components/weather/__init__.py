@@ -262,7 +262,7 @@ class WeatherEntity(Entity):
                         self.temperature_unit,
                         self.precision,
                     )
-                if ATTR_FORECAST_PRESSURE in forecast_entry:
+                if forecast_entry.get(ATTR_FORECAST_PRESSURE) is not None:
                     if (unit := self.pressure_unit) is not None:
                         pressure = round(
                             self.hass.config.units.pressure(
@@ -271,7 +271,7 @@ class WeatherEntity(Entity):
                             ROUNDING_PRECISION,
                         )
                         forecast_entry[ATTR_FORECAST_PRESSURE] = pressure
-                if ATTR_FORECAST_WIND_SPEED in forecast_entry:
+                if forecast_entry.get(ATTR_FORECAST_WIND_SPEED) is not None:
                     if (unit := self.wind_speed_unit) is not None:
                         wind_speed = round(
                             self.hass.config.units.wind_speed(
@@ -280,7 +280,7 @@ class WeatherEntity(Entity):
                             ROUNDING_PRECISION,
                         )
                         forecast_entry[ATTR_FORECAST_WIND_SPEED] = wind_speed
-                if ATTR_FORECAST_PRECIPITATION in forecast_entry:
+                if forecast_entry.get(ATTR_FORECAST_PRECIPITATION) is not None:
                     if (unit := self.precipitation_unit) is not None:
                         precipitation = round(
                             self.hass.config.units.accumulated_precipitation(
