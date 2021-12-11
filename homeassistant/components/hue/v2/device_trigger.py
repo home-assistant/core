@@ -109,7 +109,7 @@ async def async_get_triggers(bridge: "HueBridge", device_entry: DeviceEntry):
                     CONF_DEVICE_ID: device_entry.id,
                     CONF_DOMAIN: DOMAIN,
                     CONF_PLATFORM: "device",
-                    CONF_TYPE: event_type,
+                    CONF_TYPE: event_type.value,
                     CONF_SUBTYPE: resource.metadata.control_id,
                     CONF_UNIQUE_ID: resource.id,
                 }
