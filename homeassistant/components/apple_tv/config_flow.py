@@ -299,9 +299,6 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # If number of services found during device scan mismatch number of
             # identifiers collected during Zeroconf discovery, then trigger a new scan
             # with hopes of finding all services.
-            import pprint
-
-            pprint.pprint([self.context["all_identifiers"], self.atv.all_identifiers])
             if len(self.atv.all_identifiers) != expected_identifier_count:
                 try:
                     await self.async_find_device()
