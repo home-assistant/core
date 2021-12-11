@@ -522,7 +522,7 @@ DHCP = [
     },
     {
         "domain": "twinkly",
-        "hostname": "Twinkly_*"
+        "hostname": "twinkly_*"
     },
     {
         "domain": "verisure",
