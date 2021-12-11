@@ -1,7 +1,6 @@
 """Support for Magic Home switches."""
 from __future__ import annotations
 
-import asyncio
 from typing import Any
 
 from flux_led import DeviceType
@@ -15,7 +14,7 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import FluxLedUpdateCoordinator, _async_clear_discovery_cache
+from . import FluxLedUpdateCoordinator
 from .const import (
     CONF_REMOTE_ACCESS_ENABLED,
     CONF_REMOTE_ACCESS_HOST,
@@ -23,8 +22,6 @@ from .const import (
     DOMAIN,
 )
 from .entity import FluxBaseEntity, FluxOnOffEntity
-
-DEVICE_REBOOT_TIME = 10
 
 
 async def async_setup_entry(
@@ -84,18 +81,20 @@ class FluxRemoteAccessSwitch(FluxBaseEntity, SwitchEntity):
             self.entry.data[CONF_REMOTE_ACCESS_HOST],
             self.entry.data[CONF_REMOTE_ACCESS_PORT],
         )
-        await self._async_wait_for_device_reboot()
+        await self._async_update_entry(True)
 
-    async def _async_wait_for_device_reboot(self) -> None:
-        # The device will reboot so we must reload
-        _async_clear_discovery_cache(self.hass, self._device.ipaddr)
-        await asyncio.sleep(DEVICE_REBOOT_TIME)  # We want the service call to block
-        await self.hass.config_entries.async_reload(self.entry.entry_id)
+    async def _async_update_entry(self, new_state: bool) -> None:
+        """Update the entry with the new state on success."""
+        self.hass.config_entries.async_update_entry(
+            self.entry,
+            data={**self.entry.data, CONF_REMOTE_ACCESS_ENABLED: new_state},
+        )
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the remote access off."""
         await self._device.async_disable_remote_access()
-        await self._async_wait_for_device_reboot()
+        await self._async_update_entry(False)
 
     @property
     def is_on(self) -> bool:
