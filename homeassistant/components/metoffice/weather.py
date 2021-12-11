@@ -111,11 +111,6 @@ class MetOfficeWeather(CoordinatorEntity, WeatherEntity):
         return None
 
     @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
-
-    @property
     def visibility(self):
         """Return the platform visibility."""
         _visibility = None
