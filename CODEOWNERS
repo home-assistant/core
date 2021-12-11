@@ -452,7 +452,7 @@ homeassistant/components/samsungtv/* @escoand @chemelli74
 homeassistant/components/scene/* @home-assistant/core
 homeassistant/components/schluter/* @prairieapps
 homeassistant/components/scrape/* @fabaff
-homeassistant/components/screenlogic/* @dieselrabbit
+homeassistant/components/screenlogic/* @dieselrabbit @bdraco
 homeassistant/components/script/* @home-assistant/core
 homeassistant/components/search/* @home-assistant/core
 homeassistant/components/select/* @home-assistant/core
