@@ -1,6 +1,10 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "\u30b5\u30fc\u30d3\u30b9\u306f\u3059\u3067\u306b\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u3059"
+        },
         "error": {
+            "invalid_key": "\u7121\u52b9\u306aAPI\u30ad\u30fc",
             "no_devices": "\u30a2\u30ab\u30a6\u30f3\u30c8\u306b\u30c7\u30d0\u30a4\u30b9\u304c\u898b\u3064\u304b\u308a\u307e\u305b\u3093"
         },
         "step": {

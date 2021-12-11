@@ -16,6 +16,7 @@ from homeassistant.const import (
     DEVICE_CLASS_TIMESTAMP,
     STATE_UNAVAILABLE,
 )
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.util import dt
 
 from tests.common import (
@@ -390,7 +391,7 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         )
         assert picnic_service.model == DEFAULT_USER_RESPONSE["user_id"]
         assert picnic_service.name == "Picnic: Commonstreet 123a"
-        assert picnic_service.entry_type == "service"
+        assert picnic_service.entry_type is DeviceEntryType.SERVICE
 
     async def test_auth_token_is_saved_on_update(self):
         """Test that auth-token changes in the session object are reflected by the config entry."""

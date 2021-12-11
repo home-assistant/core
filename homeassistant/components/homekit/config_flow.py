@@ -76,6 +76,7 @@ SUPPORTED_DOMAINS = [
     "alarm_control_panel",
     "automation",
     "binary_sensor",
+    "button",
     CAMERA_DOMAIN,
     "climate",
     "cover",
@@ -452,12 +453,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         data_schema = {}
         entity_schema = vol.In
-        # Strip out entities that no longer exist to prevent error in the UI
-        entities = [
-            entity_id
-            for entity_id in entity_filter.get(CONF_INCLUDE_ENTITIES, [])
-            if entity_id in all_supported_entities
-        ]
+        entities = entity_filter.get(CONF_INCLUDE_ENTITIES, [])
         if self.hk_options[CONF_HOMEKIT_MODE] != HOMEKIT_MODE_ACCESSORY:
             include_exclude_mode = MODE_INCLUDE
             if not entities:
@@ -468,9 +464,13 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             ] = vol.In(INCLUDE_EXCLUDE_MODES)
             entity_schema = cv.multi_select
 
-        data_schema[vol.Optional(CONF_ENTITIES, default=entities)] = entity_schema(
-            all_supported_entities
-        )
+        # Strip out entities that no longer exist to prevent error in the UI
+        valid_entities = [
+            entity_id for entity_id in entities if entity_id in all_supported_entities
+        ]
+        data_schema[
+            vol.Optional(CONF_ENTITIES, default=valid_entities)
+        ] = entity_schema(all_supported_entities)
 
         return self.async_show_form(
             step_id="include_exclude", data_schema=vol.Schema(data_schema)

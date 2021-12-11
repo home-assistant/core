@@ -2,7 +2,7 @@
 
 import upb_lib
 
-from homeassistant.const import ATTR_COMMAND, CONF_FILE_PATH, CONF_HOST
+from homeassistant.const import ATTR_COMMAND, CONF_FILE_PATH, CONF_HOST, Platform
 from homeassistant.core import callback
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
@@ -14,7 +14,7 @@ from .const import (
     EVENT_UPB_SCENE_CHANGED,
 )
 
-PLATFORMS = ["light", "scene"]
+PLATFORMS = [Platform.LIGHT, Platform.SCENE]
 
 
 async def async_setup_entry(hass, config_entry):

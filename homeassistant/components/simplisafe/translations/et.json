@@ -32,11 +32,12 @@
             },
             "user": {
                 "data": {
+                    "auth_code": "Tuvastuskood",
                     "code": "Kood (kasutatakse Home Assistant'i kasutajaliideses)",
                     "password": "Salas\u00f5na",
                     "username": "E-post"
                 },
-                "description": "Alates 2021. aastast on SimpliSafe oma veebirakenduse kaudu \u00fcle l\u00e4inud uuele tuvastusmehhanismile. Tehniliste piirangute t\u00f5ttu on selle protsessi l\u00f5pus k\u00e4sitsi tehtud samm; palun loe enne alustamist l\u00e4bi [dokumentatsioon] (http://home-assistant.io/integrations/simplisafe#getting-an-authorization-code). \n\n Kui oled valmis, kl\u00f5psa SimpliSafe'i veebirakenduse avamiseks ja oma mandaadi sisestamiseks {url} Kui protsess on l\u00f5pule j\u00f5udnud, naase siia ja kl\u00f5psa nuppu Esita.",
+                "description": "SimpliSafe autendib Home Assistantiga SimpliSafe'i veebirakenduse kaudu. Tehniliste piirangute t\u00f5ttu on selle protsessi l\u00f5pus k\u00e4sitsi samm; enne alustamist loe kindlasti [dokumentatsioon]( {docs_url} \n\n 1. SimpliSafe'i veebirakenduse avamiseks ja oma mandaatide sisestamiseks kl\u00f5psa [siin]( {url} \n\n 2. Kui sisselogimisprotsess on l\u00f5ppenud, naase siia ja sisesta alltoodud tuvastuskood.",
                 "title": "Sisesta oma teave."
             }
         }

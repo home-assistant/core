@@ -8,6 +8,8 @@ import voluptuous as vol
 
 from homeassistant.components.climate import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP
 from homeassistant.components.climate.const import (
+    ATTR_HVAC_ACTION,
+    CURRENT_HVAC_ACTIONS,
     DOMAIN as CLIMATE_DOMAIN,
     HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
@@ -432,6 +434,28 @@ async def test_receive_mqtt_temperature(hass, mqtt_mock):
     assert state.attributes.get("current_temperature") == 47
 
 
+async def test_handle_action_received(hass, mqtt_mock):
+    """Test getting the action received via MQTT."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    config["climate"]["action_topic"] = "action"
+    assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
+    await hass.async_block_till_done()
+
+    # Cycle through valid modes and also check for wrong input such as "None" (str(None))
+    async_fire_mqtt_message(hass, "action", "None")
+    state = hass.states.get(ENTITY_CLIMATE)
+    hvac_action = state.attributes.get(ATTR_HVAC_ACTION)
+    assert hvac_action is None
+    # Redefine actions according to https://developers.home-assistant.io/docs/core/entity/climate/#hvac-action
+    actions = ["off", "heating", "cooling", "drying", "idle", "fan"]
+    assert all(elem in actions for elem in CURRENT_HVAC_ACTIONS)
+    for action in actions:
+        async_fire_mqtt_message(hass, "action", action)
+        state = hass.states.get(ENTITY_CLIMATE)
+        hvac_action = state.attributes.get(ATTR_HVAC_ACTION)
+        assert hvac_action == action
+
+
 async def test_set_away_mode_pessimistic(hass, mqtt_mock):
     """Test setting of the away mode."""
     config = copy.deepcopy(DEFAULT_CONFIG)
@@ -490,21 +514,6 @@ async def test_set_away_mode(hass, mqtt_mock):
     )
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("preset_mode") == "away"
-
-
-async def test_set_hvac_action(hass, mqtt_mock):
-    """Test setting of the HVAC action."""
-    config = copy.deepcopy(DEFAULT_CONFIG)
-    config["climate"]["action_topic"] = "action"
-    assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("hvac_action") is None
-
-    async_fire_mqtt_message(hass, "action", "cool")
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("hvac_action") == "cool"
 
 
 async def test_set_hold_pessimistic(hass, mqtt_mock):
@@ -779,9 +788,9 @@ async def test_get_with_templates(hass, mqtt_mock, caplog):
     assert state.attributes.get("current_temperature") == 74656
 
     # Action
-    async_fire_mqtt_message(hass, "action", '"cool"')
+    async_fire_mqtt_message(hass, "action", '"cooling"')
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("hvac_action") == "cool"
+    assert state.attributes.get("hvac_action") == "cooling"
 
 
 async def test_set_with_templates(hass, mqtt_mock, caplog):

@@ -59,6 +59,7 @@ class ForecastSolarSensorEntity(CoordinatorEntity, SensorEntity):
             manufacturer="Forecast.Solar",
             model=coordinator.data.account_type.value,
             name="Solar Production Forecast",
+            configuration_url="https://forecast.solar",
         )
 
     @property

@@ -10,24 +10,22 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_DEVICE,
     CONF_NAME,
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_TEMPERATURE,
     ENERGY_KILO_WATT_HOUR,
     POWER_WATT,
     TEMP_CELSIUS,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import EntityCategory
 
 from .aurora_device import AuroraEntity
 from .const import DEFAULT_ADDRESS, DOMAIN
@@ -37,23 +35,24 @@ _LOGGER = logging.getLogger(__name__)
 SENSOR_TYPES = [
     SensorEntityDescription(
         key="instantaneouspower",
-        device_class=DEVICE_CLASS_POWER,
+        device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=POWER_WATT,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         name="Power Output",
     ),
     SensorEntityDescription(
         key="temp",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=TEMP_CELSIUS,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         name="Temperature",
     ),
     SensorEntityDescription(
         key="totalenergy",
-        device_class=DEVICE_CLASS_ENERGY,
+        device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         name="Total Energy",
     ),
 ]
