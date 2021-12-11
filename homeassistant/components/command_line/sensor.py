@@ -93,7 +93,7 @@ class CommandSensor(SensorEntity):
         self._attributes = None
         self._json_attributes = json_attributes
         self._name = name
-        self._device_class = device_class
+        self._attr_device_class = device_class
         self._state = None
         self._unit_of_measurement = unit_of_measurement
         self._value_template = value_template
