@@ -2,7 +2,7 @@
 
 import logging
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -16,24 +16,6 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup(hass: HomeAssistant, config):
     """Set up the Decora Wifi component."""
     hass.data.setdefault(DOMAIN, {})
-
-    if DOMAIN not in config:
-        return True
-
-    # Trigger import config flow
-    conf = config[DOMAIN]
-
-    if not hass.config_entries.async_entries(DOMAIN):
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data={
-                    CONF_USERNAME: conf[CONF_USERNAME],
-                    CONF_PASSWORD: conf[CONF_PASSWORD],
-                },
-            )
-        )
     return True
 
 

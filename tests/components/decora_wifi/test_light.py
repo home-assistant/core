@@ -6,13 +6,15 @@ from homeassistant.components.decora_wifi.const import DOMAIN
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_TRANSITION,
+    DOMAIN as LIGHT_DOMAIN,
     SUPPORT_BRIGHTNESS,
     SUPPORT_TRANSITION,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_PLATFORM, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 from tests.components.decora_wifi.common import (
@@ -219,3 +221,40 @@ async def test_comm_failure(hass: HomeAssistant):
         light_1_c = hass.states.get("light.fake_switch_1")
         assert light_1_c is not None
         assert light_1_c.attributes[ATTR_BRIGHTNESS] == 255
+
+
+async def test_migrate_from_yaml(hass: HomeAssistant) -> None:
+    """Test migration from yaml."""
+    # Arrange Fake API State
+    FakeDecoraWiFiIotSwitch.reset_counter()
+    FakeDecoraWiFiSession.clear_accounts()
+    FakeDecoraWiFiSession.add_account(
+        FakeDecoraWiFiAccount(TEST_USERNAME, TEST_PASSWORD, switch_models=["D26HD"])
+    )
+
+    config = {
+        LIGHT_DOMAIN: [
+            {
+                CONF_PLATFORM: DOMAIN,
+                CONF_USERNAME: TEST_USERNAME,
+                CONF_PASSWORD: TEST_PASSWORD,
+            },
+        ],
+    }
+
+    # Conduct Tests
+    with patch(
+        "homeassistant.components.decora_wifi.common.DecoraWiFiSession",
+        side_effect=FakeDecoraWiFiSession,
+    ), patch(
+        "homeassistant.components.decora_wifi.common.Residence",
+        side_effect=FakeDecoraWiFiResidence,
+    ), patch(
+        "homeassistant.components.decora_wifi.common.ResidentialAccount",
+        side_effect=FakeDecoraWiFiResidentialAccount,
+    ):
+        await async_setup_component(hass, LIGHT_DOMAIN, config)
+        await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert entries

@@ -23,6 +23,12 @@ class DecoraWifiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.data = {}
         super().__init__()
 
+    async def async_step_import(self, data=None) -> FlowResult:
+        """Handle import from yaml."""
+        if data is not None:
+            return await self.async_step_user_validate(data)
+        return self.async_abort(reason="import_failed")
+
     async def async_step_user(self, user_input=None) -> FlowResult:
         """Handle user-initiated setup config flow."""
         # Begin interactive credential input

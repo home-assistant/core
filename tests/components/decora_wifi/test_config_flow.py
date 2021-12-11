@@ -209,3 +209,11 @@ async def test_reauth_validate_invalid_login(hass: HomeAssistant):
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result2["step_id"] == "reauth_validate"
     assert result2["errors"] == {"base": "invalid_auth"}
+
+
+async def test_import_abort_on_no_data(hass: HomeAssistant):
+    """Test that import flow aborts if None is passed for data."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=None
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
