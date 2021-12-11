@@ -189,10 +189,6 @@ def _async_device_was_discovered(hass: HomeAssistant, mac: str) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Flux LED/MagicLight from a config entry."""
     host = entry.data[CONF_HOST]
-    if not entry.unique_id or not _async_device_was_discovered(hass, entry.unique_id):
-        if discovery := await async_discover_device(hass, host):
-            async_update_entry_from_discovery(hass, entry, discovery)
-
     device: AIOWifiLedBulb = async_wifi_bulb_for_host(host)
     signal = SIGNAL_STATE_UPDATED.format(device.ipaddr)
 
@@ -207,6 +203,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(
             str(ex) or f"Timed out trying to connect to {device.ipaddr}"
         ) from ex
+
+    # UDP probe after successful connect only
+    if not entry.unique_id or not _async_device_was_discovered(hass, entry.unique_id):
+        if discovery := await async_discover_device(hass, host):
+            async_update_entry_from_discovery(hass, entry, discovery)
 
     coordinator = FluxLedUpdateCoordinator(hass, device, entry)
     hass.data[DOMAIN][entry.entry_id] = coordinator
