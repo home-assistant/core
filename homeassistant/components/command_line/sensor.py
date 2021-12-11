@@ -104,11 +104,6 @@ class CommandSensor(SensorEntity):
         return self._name
 
     @property
-    def device_class(self):
-        """Return the class of the sensor."""
-        return self._device_class
-
-    @property
     def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
