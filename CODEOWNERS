@@ -294,7 +294,7 @@ homeassistant/components/litterrobot/* @natekspencer
 homeassistant/components/local_ip/* @issacg
 homeassistant/components/logger/* @home-assistant/core
 homeassistant/components/logi_circle/* @evanjd
-homeassistant/components/lookin/* @ANMalko
+homeassistant/components/lookin/* @ANMalko @bdraco
 homeassistant/components/lovelace/* @home-assistant/frontend
 homeassistant/components/luci/* @mzdrale
 homeassistant/components/luftdaten/* @fabaff
