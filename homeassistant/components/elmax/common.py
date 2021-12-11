@@ -6,12 +6,7 @@ import logging
 from logging import Logger
 
 import async_timeout
-from elmax_api.exceptions import (
-    ElmaxApiError,
-    ElmaxBadLoginError,
-    ElmaxBadPinError,
-    ElmaxNetworkError,
-)
+from elmax_api.exceptions import ElmaxApiError, ElmaxBadLoginError, ElmaxBadPinError
 from elmax_api.http import Elmax
 from elmax_api.model.actuator import Actuator
 from elmax_api.model.endpoint import DeviceEndpoint
@@ -92,13 +87,10 @@ class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
                 # If the panel is no more available within the given. Raise config error as the user must
                 # reconfigure it in order to  make it work again
                 if not panel:
-                    _LOGGER.error(
-                        "Panel ID %s is no more linked to this user account",
-                        self._panel_id,
+                    raise ConfigEntryAuthFailed(
+                        f"Panel ID {self._panel_id} is no more linked to this user account"
                     )
-                    raise ConfigEntryAuthFailed()
 
-                panel = panels[0]
                 self._panel_entry = panel
 
                 # If the panel is online, proceed with fetching its state
@@ -118,20 +110,11 @@ class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
                 return None
 
         except ElmaxBadPinError as err:
-            _LOGGER.error("Control panel pin was refused")
-            raise ConfigEntryAuthFailed from err
+            raise ConfigEntryAuthFailed("Control panel pin was refused") from err
         except ElmaxBadLoginError as err:
-            _LOGGER.error("Refused username/password")
-            raise ConfigEntryAuthFailed from err
+            raise ConfigEntryAuthFailed("Refused username/password") from err
         except ElmaxApiError as err:
             raise UpdateFailed(f"Error communicating with ELMAX API: {err}") from err
-        except ElmaxNetworkError as err:
-            raise UpdateFailed(
-                "Network error occurred while contacting ELMAX cloud"
-            ) from err
-        except Exception as err:
-            _LOGGER.exception("Unexpected exception")
-            raise UpdateFailed("An unexpected error occurred") from err
 
 
 class ElmaxEntity(CoordinatorEntity):
