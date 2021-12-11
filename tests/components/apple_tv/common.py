@@ -70,3 +70,14 @@ def airplay_service():
         {},
         pairing_requirement=const.PairingRequirement.Mandatory,
     )
+
+
+def raop_service():
+    """Create example RAOP service."""
+    return conf.ManualService(
+        "AABBCCDDEEFF",
+        Protocol.RAOP,
+        7000,
+        {},
+        pairing_requirement=const.PairingRequirement.Mandatory,
+    )
