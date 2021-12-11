@@ -70,11 +70,11 @@ async def test_imperial_metric(
 
     data = state.attributes
     for key, value in result_observation.items():
-        assert data.get(key) == value
+        assert data.get(key) == pytest.approx(value, abs=0.01)
 
     forecast = data.get(ATTR_FORECAST)
     for key, value in result_forecast.items():
-        assert forecast[0].get(key) == value
+        assert forecast[0].get(key) == pytest.approx(value, abs=0.01)
 
     state = hass.states.get("weather.abc_daynight")
 
@@ -83,11 +83,11 @@ async def test_imperial_metric(
 
     data = state.attributes
     for key, value in result_observation.items():
-        assert data.get(key) == value
+        assert data.get(key) == pytest.approx(value, abs=0.01)
 
     forecast = data.get(ATTR_FORECAST)
     for key, value in result_forecast.items():
-        assert forecast[0].get(key) == value
+        assert forecast[0].get(key) == pytest.approx(value, abs=0.01)
 
 
 async def test_none_values(hass, mock_simple_nws, no_sensor):

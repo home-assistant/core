@@ -241,13 +241,9 @@ class NWSWeather(WeatherEntity):
             data[ATTR_FORECAST_WIND_BEARING] = forecast_entry.get("windBearing")
             wind_speed = forecast_entry.get("windSpeedAvg")
             if wind_speed is not None:
-                data[ATTR_FORECAST_WIND_SPEED] = round(
-                    convert_speed(
-                        wind_speed, SPEED_MILES_PER_HOUR, SPEED_KILOMETERS_PER_HOUR
-                    )
+                data[ATTR_FORECAST_WIND_SPEED] = convert_speed(
+                    wind_speed, SPEED_MILES_PER_HOUR, SPEED_KILOMETERS_PER_HOUR
                 )
-            else:
-                data[ATTR_FORECAST_WIND_SPEED] = None
             forecast.append(data)
         return forecast
 
