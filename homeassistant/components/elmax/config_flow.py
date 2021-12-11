@@ -92,8 +92,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         online_panels = [x for x in await client.list_control_panels() if x.online]
 
         # If no online panel was found, we display an error in the next UI.
-        panels = list(online_panels)
-        if not panels:
+        if not online_panels:
             return self.async_show_form(
                 step_id="user",
                 data_schema=LOGIN_FORM_SCHEMA,
@@ -105,7 +104,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # dictionary to handle that case.
         panel_names: dict[str, str] = {}
         username = client.get_authenticated_username()
-        for panel in panels:
+        for panel in online_panels:
             _store_panel_by_name(
                 panel=panel, username=username, panel_names=panel_names
             )
