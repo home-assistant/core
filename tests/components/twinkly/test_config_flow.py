@@ -80,7 +80,7 @@ async def test_dhcp_can_confirm(hass):
         await hass.async_block_till_done()
 
     assert result["type"] == "form"
-    assert result["step_id"] == "confirm"
+    assert result["step_id"] == "discovery_confirm"
 
 
 async def test_dhcp_already_exists(hass):
@@ -99,7 +99,6 @@ async def test_dhcp_already_exists(hass):
     )
     entry.add_to_hass(hass)
 
-    client = ClientMock()
     with patch("twinkly_client.TwinklyClient", return_value=client):
         result = await hass.config_entries.flow.async_init(
             TWINKLY_DOMAIN,
