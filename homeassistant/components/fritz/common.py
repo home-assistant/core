@@ -346,12 +346,16 @@ class FritzBoxTools:
         )
         entities_removed: bool = False
 
-        device_hosts_macs = {device["mac"] for device in device_hosts_list}
+        device_hosts_macs = set()
+        device_hosts_names = set()
+        for device in device_hosts_list:
+            device_hosts_macs.add(device["mac"])
+            device_hosts_names.add(device["name"])
 
         for entry in ha_entity_reg_list:
-            if (
-                not _cleanup_entity_filter(entry)
-                or entry.unique_id.split("_")[0] in device_hosts_macs
+            if not _cleanup_entity_filter(entry) or (
+                entry.unique_id.split("_")[0] in device_hosts_macs
+                and entry.original_name.split(" ")[0] in device_hosts_names
             ):
                 continue
             _LOGGER.info("Removing entity: %s", entry.name or entry.original_name)
