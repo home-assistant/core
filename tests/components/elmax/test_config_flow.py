@@ -111,7 +111,7 @@ async def test_invalid_credentials(hass):
         )
         assert login_result["step_id"] == "user"
         assert login_result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert login_result["errors"] == {"base": "bad_auth"}
+        assert login_result["errors"] == {"base": "invalid_auth"}
 
 
 async def test_connection_error(hass):
@@ -391,4 +391,4 @@ async def test_reauth_bad_login(hass):
         )
         assert result["step_id"] == "reauth_confirm"
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["errors"] == {"base": "bad_auth"}
+        assert result["errors"] == {"base": "invalid_auth"}

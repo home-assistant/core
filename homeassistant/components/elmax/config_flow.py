@@ -78,7 +78,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="user",
                 data_schema=LOGIN_FORM_SCHEMA,
-                errors={"base": "bad_auth"},
+                errors={"base": "invalid_auth"},
             )
         except ElmaxNetworkError:
             _LOGGER.exception("A network error occurred")
@@ -93,7 +93,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # If no online panel was found, we display an error in the next UI.
         panels = list(online_panels)
-        if len(panels) < 1:
+        if not panels:
             return self.async_show_form(
                 step_id="user",
                 data_schema=LOGIN_FORM_SCHEMA,
@@ -215,7 +215,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.error(
                     "Wrong credentials or failed login while re-authenticating"
                 )
-                errors["base"] = "bad_auth"
+                errors["base"] = "invalid_auth"
             except NoOnlinePanelsError:
                 _LOGGER.warning(
                     "Panel ID %s is no longer associated to this user",
