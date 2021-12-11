@@ -105,7 +105,7 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Attempt to connect the Android TV."""
 
         try:
-            aftv = await async_connect_androidtv(self.hass, user_input)
+            aftv, message = await async_connect_androidtv(self.hass, user_input)
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
                 "Unknown error connecting with Android TV at %s", user_input[CONF_HOST]
@@ -113,6 +113,7 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return RESULT_UNKNOWN, None
 
         if not aftv:
+            _LOGGER.warning(message)
             return RESULT_CONN_ERROR, None
 
         dev_prop = aftv.device_properties

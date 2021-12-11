@@ -98,7 +98,7 @@ async def _test_user(hass, config):
     # test with all provided
     with patch(
         CONNECT_METHOD,
-        return_value=MockConfigDevice(),
+        return_value=(MockConfigDevice(), None),
     ), PATCH_SETUP_ENTRY as mock_setup_entry, PATCH_GET_HOST_IP:
         result = await hass.config_entries.flow.async_configure(
             flow_result["flow_id"], user_input=config
@@ -128,7 +128,7 @@ async def test_import(hass):
     # test with all provided
     with patch(
         CONNECT_METHOD,
-        return_value=MockConfigDevice(),
+        return_value=(MockConfigDevice(), None),
     ), PATCH_SETUP_ENTRY as mock_setup_entry, PATCH_GET_HOST_IP:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -151,7 +151,7 @@ async def test_user_adbkey(hass):
 
     with patch(
         CONNECT_METHOD,
-        return_value=MockConfigDevice(),
+        return_value=(MockConfigDevice(), None),
     ), PATCH_SETUP_ENTRY as mock_setup_entry, PATCH_GET_HOST_IP, PATCH_ISFILE, PATCH_ACCESS:
 
         result = await hass.config_entries.flow.async_init(
@@ -179,7 +179,7 @@ async def test_import_data(hass):
 
     with patch(
         CONNECT_METHOD,
-        return_value=MockConfigDevice(),
+        return_value=(MockConfigDevice(), None),
     ), PATCH_SETUP_ENTRY as mock_setup_entry, PATCH_GET_HOST_IP, PATCH_ISFILE, PATCH_ACCESS:
 
         assert await async_setup_component(hass, MP_DOMAIN, platform_data)
@@ -204,7 +204,7 @@ async def test_error_both_key_server(hass):
 
     with patch(
         CONNECT_METHOD,
-        return_value=MockConfigDevice(),
+        return_value=(MockConfigDevice(), None),
     ), PATCH_SETUP_ENTRY, PATCH_GET_HOST_IP:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=CONFIG_ADB_SERVER
@@ -231,7 +231,7 @@ async def test_error_invalid_key(hass):
 
     with patch(
         CONNECT_METHOD,
-        return_value=MockConfigDevice(),
+        return_value=(MockConfigDevice(), None),
     ), PATCH_SETUP_ENTRY, PATCH_GET_HOST_IP:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=CONFIG_ADB_SERVER
@@ -260,7 +260,7 @@ async def test_error_invalid_host(hass):
 
     with patch(
         CONNECT_METHOD,
-        return_value=MockConfigDevice(),
+        return_value=(MockConfigDevice(), None),
     ), PATCH_SETUP_ENTRY, PATCH_GET_HOST_IP:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=CONFIG_ADB_SERVER
@@ -276,7 +276,7 @@ async def test_invalid_serial(hass):
     """Test for invallid serialno."""
     with patch(
         CONNECT_METHOD,
-        return_value=MockConfigDevice(eth_mac=""),
+        return_value=(MockConfigDevice(eth_mac=""), None),
     ), PATCH_GET_HOST_IP:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -336,7 +336,7 @@ async def test_abort_if_unique_exist(hass):
     # Should fail, same SerialNo
     with patch(
         CONNECT_METHOD,
-        return_value=MockConfigDevice(),
+        return_value=(MockConfigDevice(), None),
     ), PATCH_GET_HOST_IP:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -355,10 +355,7 @@ async def test_on_connect_failed(hass):
         context={"source": SOURCE_USER, "show_advanced_options": True},
     )
 
-    with patch(
-        CONNECT_METHOD,
-        return_value=None,
-    ), PATCH_GET_HOST_IP:
+    with patch(CONNECT_METHOD, return_value=(None, "Error")), PATCH_GET_HOST_IP:
         result = await hass.config_entries.flow.async_configure(
             flow_result["flow_id"], user_input=CONFIG_ADB_SERVER
         )
@@ -377,7 +374,7 @@ async def test_on_connect_failed(hass):
 
     with patch(
         CONNECT_METHOD,
-        return_value=MockConfigDevice(),
+        return_value=(MockConfigDevice(), None),
     ), PATCH_SETUP_ENTRY, PATCH_GET_HOST_IP:
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"], user_input=CONFIG_ADB_SERVER
