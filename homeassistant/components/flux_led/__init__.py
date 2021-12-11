@@ -9,6 +9,7 @@ from flux_led import DeviceType
 from flux_led.aio import AIOWifiLedBulb
 from flux_led.const import (
     ATTR_ID,
+    ATTR_IPADDR,
     ATTR_REMOTE_ACCESS_ENABLED,
     ATTR_REMOTE_ACCESS_HOST,
     ATTR_REMOTE_ACCESS_PORT,
