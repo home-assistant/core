@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
 from datetime import timedelta
 import logging
 from typing import Any, Final, cast
@@ -90,22 +91,32 @@ def async_name_from_discovery(device: FluxLEDDiscovery) -> str:
 
 
 @callback
+def async_populate_data_from_discovery(
+    current_data: Mapping[str, Any],
+    data_updates: dict[str, Any],
+    device: FluxLEDDiscovery,
+) -> None:
+    """Copy discovery data into config entry data."""
+    for conf_key, discovery_key in CONF_TO_DISCOVERY.items():
+        if (
+            discovery_key in device
+            and current_data.get(conf_key) != device[discovery_key]  # type: ignore[misc]
+        ):
+            data_updates[conf_key] = device[discovery_key]  # type: ignore[misc]
+
+
+@callback
 def async_update_entry_from_discovery(
     hass: HomeAssistant, entry: config_entries.ConfigEntry, device: FluxLEDDiscovery
 ) -> bool:
     """Update a config entry from a flux_led discovery."""
-    data_updates = {}
+    data_updates: dict[str, Any] = {}
     mac_address = device[ATTR_ID]
     assert mac_address is not None
     updates: dict[str, Any] = {}
     if not entry.unique_id:
         updates["unique_id"] = dr.format_mac(mac_address)
-    for conf_key, discovery_key in CONF_TO_DISCOVERY.items():
-        if (
-            discovery_key in device
-            and entry.data.get(conf_key) != device[discovery_key]  # type: ignore[misc]
-        ):
-            data_updates[conf_key] = device[discovery_key]  # type: ignore[misc]
+    async_populate_data_from_discovery(entry.data, data_updates, device)
     if not entry.data.get(CONF_NAME) or is_ip_address(entry.data[CONF_NAME]):
         updates["title"] = data_updates[CONF_NAME] = async_name_from_discovery(device)
     if data_updates:
