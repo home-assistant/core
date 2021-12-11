@@ -57,6 +57,9 @@ FLUX_DISCOVERY = FluxLEDDiscovery(
     firmware_date=datetime.date(2021, 5, 5),
     model_info=MODEL,
     model_description=MODEL_DESCRIPTION,
+    remote_access_enabled=True,
+    remote_access_host="the.cloud",
+    remote_access_port=8816,
 )
 
 

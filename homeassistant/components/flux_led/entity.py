@@ -6,18 +6,54 @@ from typing import Any
 
 from flux_led.aiodevice import AIOWifiLedBulb
 
+from homeassistant import config_entries
+from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import FluxLedUpdateCoordinator
 from .const import CONF_MINOR_VERSION, SIGNAL_STATE_UPDATED
 
 
+def _async_device_info(
+    unique_id: str, device: AIOWifiLedBulb, entry: config_entries.ConfigEntry
+) -> DeviceInfo:
+    version_num = device.version_num
+    if minor_version := entry.data.get(CONF_MINOR_VERSION):
+        sw_version = version_num + int(hex(minor_version)[2:]) / 100
+    else:
+        sw_version = device.version_num
+    return DeviceInfo(
+        connections={(dr.CONNECTION_NETWORK_MAC, unique_id)},
+        manufacturer="Zengge",
+        model=device.model,
+        name=entry.data[CONF_NAME],
+        sw_version=str(sw_version),
+    )
+
+
+class FluxBaseEntity(Entity):
+    """Representation of a Flux entity without a coordinator."""
+
+    def __init__(
+        self,
+        device: AIOWifiLedBulb,
+        entry: config_entries.ConfigEntry,
+    ) -> None:
+        """Initialize the light."""
+        self._device: AIOWifiLedBulb = device
+        self.entry = entry
+        if entry.unique_id:
+            self._attr_device_info = _async_device_info(
+                entry.unique_id, self._device, entry
+            )
+
+
 class FluxEntity(CoordinatorEntity):
-    """Representation of a Flux entity."""
+    """Representation of a Flux entity with a coordinator."""
 
     coordinator: FluxLedUpdateCoordinator
 
@@ -33,19 +69,9 @@ class FluxEntity(CoordinatorEntity):
         self._responding = True
         self._attr_name = name
         self._attr_unique_id = unique_id
-        version_num = self._device.version_num
-        if minor_version := coordinator.entry.data.get(CONF_MINOR_VERSION):
-            sw_version = version_num + int(hex(minor_version)[2:]) / 100
-        else:
-            sw_version = self._device.version_num
-
-        if self.unique_id:
-            self._attr_device_info = DeviceInfo(
-                connections={(dr.CONNECTION_NETWORK_MAC, self.unique_id)},
-                manufacturer="Magic Home (Zengge)",
-                model=self._device.model,
-                name=self.name,
-                sw_version=str(sw_version),
+        if unique_id:
+            self._attr_device_info = _async_device_info(
+                unique_id, self._device, coordinator.entry
             )
 
     @property
