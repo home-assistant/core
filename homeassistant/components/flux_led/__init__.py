@@ -189,6 +189,16 @@ def _async_get_discovery(hass: HomeAssistant, host: str) -> FluxLEDDiscovery | N
     return None
 
 
+@callback
+def _async_clear_discovery_cache(hass: HomeAssistant, host: str) -> None:
+    """Clear the discovery response from a host."""
+    domain_data = hass.data[DOMAIN]
+    discoveries: list[FluxLEDDiscovery] = domain_data[FLUX_LED_DISCOVERY]
+    domain_data[FLUX_LED_DISCOVERY] = [
+        discovery for discovery in discoveries if discovery[ATTR_IPADDR] != host
+    ]
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Flux LED/MagicLight from a config entry."""
     host = entry.data[CONF_HOST]
