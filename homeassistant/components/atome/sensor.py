@@ -20,6 +20,7 @@ from homeassistant.const import (
     DEVICE_CLASS_POWER,
     ENERGY_KILO_WATT_HOUR,
     POWER_WATT,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
 from homeassistant.core import callback
@@ -71,7 +72,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def format_receive_value(value):
     """Format if pb then return None."""
-    if value is None or value == STATE_UNKNOWN:
+    if value is None or value == STATE_UNKNOWN or value == STATE_UNAVAILABLE:
         return None
     return float(value)
 
