@@ -172,15 +172,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Close Android TV connection on HA Stop."""
         await aftv.adb_close()
 
-    stop_listener = hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, async_close_connection
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_close_connection)
     )
+    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         ANDROID_DEV: aftv,
         ANDROID_DEV_OPT: entry.options.copy(),
-        "conf_listener": entry.add_update_listener(update_listener),
-        "stop_listener": stop_listener,
     }
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
@@ -190,14 +189,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    if unload_ok:
-        hass.data[DOMAIN][entry.entry_id]["stop_listener"]()
-        hass.data[DOMAIN][entry.entry_id]["conf_listener"]()
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         aftv = hass.data[DOMAIN][entry.entry_id][ANDROID_DEV]
         await aftv.adb_close()
-
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
@@ -216,6 +210,7 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry):
 
     if reload_opt:
         await hass.config_entries.async_reload(entry.entry_id)
-    else:
-        hass.data[DOMAIN][entry.entry_id][ANDROID_DEV_OPT] = entry.options.copy()
-        async_dispatcher_send(hass, f"{SIGNAL_CONFIG_ENTITY}_{entry.entry_id}")
+        return
+
+    hass.data[DOMAIN][entry.entry_id][ANDROID_DEV_OPT] = entry.options.copy()
+    async_dispatcher_send(hass, f"{SIGNAL_CONFIG_ENTITY}_{entry.entry_id}")
