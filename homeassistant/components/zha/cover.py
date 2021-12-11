@@ -14,6 +14,7 @@ from homeassistant.components.cover import (
     DEVICE_CLASS_SHADE,
     CoverEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     STATE_CLOSED,
     STATE_CLOSING,
@@ -21,8 +22,9 @@ from homeassistant.const import (
     STATE_OPENING,
     Platform,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .core import discovery
 from .core.const import (
@@ -31,7 +33,6 @@ from .core.const import (
     CHANNEL_ON_OFF,
     CHANNEL_SHADE,
     DATA_ZHA,
-    DATA_ZHA_DISPATCHERS,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
     SIGNAL_SET_LEVEL,
@@ -45,7 +46,11 @@ _LOGGER = logging.getLogger(__name__)
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.COVER)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+):
     """Set up the Zigbee Home Automation cover from config entry."""
     entities_to_create = hass.data[DATA_ZHA][Platform.COVER]
 
@@ -56,7 +61,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             discovery.async_add_entities, async_add_entities, entities_to_create
         ),
     )
-    hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
+    config_entry.async_on_unload(unsub)
 
 
 @STRICT_MATCH(channel_names=CHANNEL_COVER)
