@@ -1,6 +1,7 @@
 """Support for Magic Home switches."""
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
 from flux_led import DeviceType
@@ -22,6 +23,8 @@ from .const import (
     DOMAIN,
 )
 from .entity import FluxBaseEntity, FluxOnOffEntity
+
+DEVICE_REBOOT_TIME = 10
 
 
 async def async_setup_entry(
@@ -81,16 +84,18 @@ class FluxRemoteAccessSwitch(FluxBaseEntity, SwitchEntity):
             self.entry.data[CONF_REMOTE_ACCESS_HOST],
             self.entry.data[CONF_REMOTE_ACCESS_PORT],
         )
+        await self._async_wait_for_device_reboot()
+
+    async def _async_wait_for_device_reboot(self) -> None:
         # The device will reboot so we must reload
         _async_clear_discovery_cache(self.hass, self._device.ipaddr)
+        await asyncio.sleep(DEVICE_REBOOT_TIME)  # We want the service call to block
         await self.hass.config_entries.async_reload(self.entry.entry_id)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the remote access off."""
         await self._device.async_disable_remote_access()
-        # The device will reboot so we must reload
-        _async_clear_discovery_cache(self.hass, self._device.ipaddr)
-        await self.hass.config_entries.async_reload(self.entry.entry_id)
+        await self._async_wait_for_device_reboot()
 
     @property
     def is_on(self) -> bool:
