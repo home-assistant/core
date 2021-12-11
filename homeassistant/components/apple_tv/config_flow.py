@@ -177,13 +177,6 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, host: str, unique_id: str, service_type: str
     ) -> None:
         """Aggregate discoveries for the same host that happen inside of DISCOVERY_AGGREGATION_TIME."""
-        # Wait DISCOVERY_AGGREGATION_TIME for multiple services to be
-        # discovered via zeroconf.  Once the first service is discovered
-        # this allows other services to be discovered inside the time
-        # window before triggering a scan of the device. This prevents
-        # a multiple scans of the device at the same time since each
-        # apple_tv device has multiple services that are discovered by
-        # zeroconf.
         #
         # Suppose we have a device with three services: A, B and C. Let's assume
         # service A is discovered by Zeroconf, triggering a device scan that also finds
@@ -205,10 +198,18 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # discovered, the identifier of service C will be inserted into
         # "all_identifiers" of the original flow (making the device complete).
         #
+        # Wait DISCOVERY_AGGREGATION_TIME for multiple services to be
+        # discovered via zeroconf. Once the first service is discovered
+        # this allows other services to be discovered inside the time
+        # window before triggering a scan of the device. This prevents
+        # a multiple scans of the device at the same time since each
+        # apple_tv device has multiple services that are discovered by
+        # zeroconf.
+        #
         await asyncio.sleep(DISCOVERY_AGGREGATION_TIME)
         #
         # Must not await until self.context[CONF_ADDRESS] is set or other flows may
-        # see it to soon and all flows will lose the race and nothing moves forward
+        # see it too soon and all flows will lose the race and nothing moves forward
         #
         for flow in self._async_in_progress(include_uninitialized=True):
             context = flow["context"]
