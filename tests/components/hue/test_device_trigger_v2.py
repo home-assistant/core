@@ -71,7 +71,7 @@ async def test_get_triggers(hass, mock_bridge_v2, v2_resources_test_data, device
                 "domain": hue.DOMAIN,
                 "device_id": hue_wall_switch_device.id,
                 "unique_id": resource_id,
-                "type": event_type,
+                "type": event_type.value,
                 "subtype": control_id,
             }
             for event_type in (
