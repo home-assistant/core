@@ -664,7 +664,7 @@ fjaraskupan==1.0.2
 flipr-api==1.4.1
 
 # homeassistant.components.flux_led
-flux_led==0.26.5
+flux_led==0.26.6
 
 # homeassistant.components.homekit
 fnvhash==0.1.0
@@ -1723,7 +1723,7 @@ pyownet==0.10.0.post1
 pypca==0.0.7
 
 # homeassistant.components.lcn
-pypck==0.7.10
+pypck==0.7.11
 
 # homeassistant.components.pjlink
 pypjlink2==1.2.1
