@@ -4,12 +4,8 @@ import functools
 import voluptuous as vol
 from zigpy.zcl.foundation import Status
 
-from homeassistant.components.lock import (
-    DOMAIN,
-    STATE_LOCKED,
-    STATE_UNLOCKED,
-    LockEntity,
-)
+from homeassistant.components.lock import STATE_LOCKED, STATE_UNLOCKED, LockEntity
+from homeassistant.const import Platform
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -27,7 +23,7 @@ from .entity import ZhaEntity
 
 # The first state is Zigbee 'Not fully locked'
 STATE_LIST = [STATE_UNLOCKED, STATE_LOCKED, STATE_UNLOCKED]
-STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
+STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.LOCK)
 
 VALUE_TO_STATE = dict(enumerate(STATE_LIST))
 
@@ -39,7 +35,7 @@ SERVICE_CLEAR_LOCK_USER_CODE = "clear_lock_user_code"
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Zigbee Home Automation Door Lock from config entry."""
-    entities_to_create = hass.data[DATA_ZHA][DOMAIN]
+    entities_to_create = hass.data[DATA_ZHA][Platform.LOCK]
 
     unsub = async_dispatcher_connect(
         hass,

@@ -22,7 +22,6 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
-    DOMAIN,
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
@@ -51,6 +50,7 @@ from homeassistant.const import (
     VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR,
     VOLUME_GALLONS,
     VOLUME_LITERS,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -99,8 +99,8 @@ BATTERY_SIZES = {
 }
 
 CHANNEL_ST_HUMIDITY_CLUSTER = f"channel_0x{SMARTTHINGS_HUMIDITY_CLUSTER:04x}"
-STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
-MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, DOMAIN)
+STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.SENSOR)
+MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, Platform.SENSOR)
 
 
 async def async_setup_entry(
@@ -109,7 +109,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Zigbee Home Automation sensor from config entry."""
-    entities_to_create = hass.data[DATA_ZHA][DOMAIN]
+    entities_to_create = hass.data[DATA_ZHA][Platform.SENSOR]
 
     unsub = async_dispatcher_connect(
         hass,

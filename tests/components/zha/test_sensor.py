@@ -8,7 +8,6 @@ import zigpy.zcl.clusters.homeautomation as homeautomation
 import zigpy.zcl.clusters.measurement as measurement
 import zigpy.zcl.clusters.smartenergy as smartenergy
 
-from homeassistant.components.sensor import DOMAIN
 from homeassistant.components.zha.core.const import ZHA_CHANNEL_READS_PER_REQ
 import homeassistant.config as config_util
 from homeassistant.const import (
@@ -32,6 +31,7 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
     VOLUME_CUBIC_FEET,
     VOLUME_CUBIC_METERS,
+    Platform,
 )
 from homeassistant.helpers import restore_state
 from homeassistant.helpers.entity_component import async_update_entity
@@ -505,7 +505,7 @@ async def test_temp_uom(
     )
     cluster = zigpy_device.endpoints[1].temperature
     zha_device = await zha_device_restored(zigpy_device)
-    entity_id = await find_entity_id(DOMAIN, zha_device, hass)
+    entity_id = await find_entity_id(Platform.SENSOR, zha_device, hass)
 
     if not restore:
         await async_enable_traffic(hass, [zha_device], enabled=False)
@@ -545,7 +545,7 @@ async def test_electrical_measurement_init(
     )
     cluster = zigpy_device.endpoints[1].in_clusters[cluster_id]
     zha_device = await zha_device_joined(zigpy_device)
-    entity_id = await find_entity_id(DOMAIN, zha_device, hass)
+    entity_id = await find_entity_id(Platform.SENSOR, zha_device, hass)
 
     # allow traffic to flow through the gateway and devices
     await async_enable_traffic(hass, [zha_device])
@@ -681,7 +681,7 @@ async def test_unsupported_attributes_sensor(
 
     await async_enable_traffic(hass, [zha_device], enabled=False)
     await hass.async_block_till_done()
-    present_entity_ids = set(await find_entity_ids(DOMAIN, zha_device, hass))
+    present_entity_ids = set(await find_entity_ids(Platform.SENSOR, zha_device, hass))
     assert present_entity_ids == entity_ids
     assert missing_entity_ids not in present_entity_ids
 

@@ -12,18 +12,7 @@ import zigpy_xbee.zigbee.application
 import zigpy_zigate.zigbee.application
 import zigpy_znp.zigbee.application
 
-from homeassistant.components.alarm_control_panel import DOMAIN as ALARM
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
-from homeassistant.components.climate import DOMAIN as CLIMATE
-from homeassistant.components.cover import DOMAIN as COVER
-from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
-from homeassistant.components.fan import DOMAIN as FAN
-from homeassistant.components.light import DOMAIN as LIGHT
-from homeassistant.components.lock import DOMAIN as LOCK
-from homeassistant.components.number import DOMAIN as NUMBER
-from homeassistant.components.sensor import DOMAIN as SENSOR
-from homeassistant.components.siren import DOMAIN as SIREN
-from homeassistant.components.switch import DOMAIN as SWITCH
+from homeassistant.const import Platform
 import homeassistant.helpers.config_validation as cv
 
 from .typing import CALLABLE_T
@@ -111,18 +100,18 @@ CLUSTER_TYPE_IN = "in"
 CLUSTER_TYPE_OUT = "out"
 
 PLATFORMS = (
-    ALARM,
-    BINARY_SENSOR,
-    CLIMATE,
-    COVER,
-    DEVICE_TRACKER,
-    FAN,
-    LIGHT,
-    LOCK,
-    NUMBER,
-    SENSOR,
-    SIREN,
-    SWITCH,
+    Platform.ALARM_CONTROL_PANEL,
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.DEVICE_TRACKER,
+    Platform.FAN,
+    Platform.LIGHT,
+    Platform.LOCK,
+    Platform.NUMBER,
+    Platform.SENSOR,
+    Platform.SIREN,
+    Platform.SWITCH,
 )
 
 CONF_ALARM_MASTER_CODE = "alarm_master_code"
