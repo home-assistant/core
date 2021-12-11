@@ -74,7 +74,6 @@ async def test_security_hello_reload(hass):
 
 
 async def _reauth_confirm(self: ConfigFlow, user_input) -> data_entry_flow.FlowResult:
-    self._data = user_input
     return await self.async_step_reauth_confirm(user_input)
 
 

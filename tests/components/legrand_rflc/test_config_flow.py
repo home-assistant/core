@@ -19,8 +19,6 @@ from homeassistant.data_entry_flow import (
 
 from .emulation import Server
 
-from tests.common import MockConfigEntry
-
 COMPOSER: Final = lc7001.aio.Composer()
 
 HOST: Final = Server.HOST
@@ -135,7 +133,6 @@ async def test_step_user_create_entry(hass):
 
 
 async def _reauth_confirm(self: ConfigFlow, user_input) -> data_entry_flow.FlowResult:
-    self._data = user_input
     return await self.async_step_reauth_confirm(user_input)
 
 
@@ -143,8 +140,6 @@ async def test_step_reauth(hass):
     """Test reauth step in configuration flow."""
     sessions = [Server.SECURITY_HELLO_AUTHENTICATION_OK]
     async with Server.Context(Server(hass, sessions)):
-        entry = MockConfigEntry(domain=DOMAIN)
-        entry.add_to_hass(hass)
         with patch.object(ConfigFlow, "async_step_reauth", _reauth_confirm):
             with patch(
                 "homeassistant.components.legrand_rflc.async_setup_entry",
@@ -154,7 +149,7 @@ async def test_step_reauth(hass):
                     DOMAIN,
                     context={
                         "source": SOURCE_REAUTH,
-                        "entry_id": entry.entry_id,
+                        "entry_id": Server.mock_entry(hass),
                         "unique_id": Server.MAC.lower(),
                     },
                     data={
@@ -175,6 +170,7 @@ async def test_step_reauth_invalid_authentication(hass):
                 DOMAIN,
                 context={
                     "source": SOURCE_REAUTH,
+                    "entry_id": Server.mock_entry(hass),
                     "unique_id": Server.MAC.lower(),
                 },
                 data={
@@ -192,6 +188,7 @@ async def test_step_reauth_invalid_host(hass):
             DOMAIN,
             context={
                 "source": SOURCE_REAUTH,
+                "entry_id": Server.mock_entry(hass),
                 "unique_id": INVALID_HOST,
             },
             data={
@@ -210,6 +207,7 @@ async def test_step_reauth_invalid_host_mac(hass):
                 DOMAIN,
                 context={
                     "source": SOURCE_REAUTH,
+                    "entry_id": Server.mock_entry(hass),
                     "unique_id": Server.MAC.upper(),
                 },
                 data={

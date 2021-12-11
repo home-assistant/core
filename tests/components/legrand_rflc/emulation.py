@@ -150,20 +150,23 @@ class Server:
             self._patcher.stop()
             await self._task
 
+    @classmethod
+    def mock_entry(cls, hass):
+        """Mock a ConfigEntry for a Server."""
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            unique_id=cls.MAC.lower(),
+            data={
+                CONF_AUTHENTICATION: cls.AUTHENTICATION,
+                CONF_HOST: cls.HOST,
+            },
+        )
+        entry.add_to_hass(hass)
+        return entry.entry_id
+
     async def start(self):
         """Manage a Context for the lifetime of a mocked ConfigEntry."""
         async with self.Context(self):
-            # mock a config entry bound in our self.Context
-            entry = MockConfigEntry(
-                domain=DOMAIN,
-                unique_id=self.MAC.lower(),
-                data={
-                    CONF_AUTHENTICATION: self.AUTHENTICATION,
-                    CONF_HOST: self.HOST,
-                },
-            )
-            entry.add_to_hass(self._hass)
-            # ... and setup
             self._hass.async_create_task(
-                self._hass.config_entries.async_setup(entry.entry_id)
+                self._hass.config_entries.async_setup(self.mock_entry(self._hass))
             )
