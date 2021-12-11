@@ -7,7 +7,7 @@ arm_away_instant:
       domain: alarm_control_panel
 
 arm_home_instant:
-  name: Arm Stay Instant
+  name: Arm Home Instant
   description: Arm Stay with zero entry delay.
   target:
     entity:
