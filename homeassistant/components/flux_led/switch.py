@@ -98,4 +98,4 @@ class FluxRemoteAccessSwitch(FluxBaseEntity, SwitchEntity):
     @property
     def icon(self) -> str:
         """Return icon based on state."""
-        return "mdi:cloud-outline" if self.is_on else "mdi:cloud-outline-off"
+        return "mdi:cloud-outline" if self.is_on else "mdi:cloud-off-outline"
