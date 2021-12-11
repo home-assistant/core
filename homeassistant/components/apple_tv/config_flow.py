@@ -97,10 +97,12 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         existing config entry. If that's the case, the unique_id from that entry is
         re-used, otherwise the newly discovered identifier is used instead.
         """
+        all_identifiers = set(self.atv.all_identifiers)
         for entry in self._async_current_entries():
-            for identifier in self.atv.all_identifiers:
-                if identifier in entry.data.get(CONF_IDENTIFIERS, [entry.unique_id]):
-                    return entry.unique_id
+            if all_identifiers.intersection(
+                entry.data.get(CONF_IDENTIFIERS, [entry.unique_id])
+            ):
+                return entry.unique_id
         return self.atv.identifier
 
     async def async_step_reauth(self, user_input=None):
@@ -195,7 +197,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # since both flows really represent the same device. They will however end up
         # as two separate flows.
         #
-        # To solve this, all identifiers found during a device scan is stored as
+        # To solve this, all identifiers are stored as
         # "all_identifiers" in the flow context. When a new service is discovered, the
         # code below will check these identifiers for all active flows and abort if a
         # match is found. Before aborting, the original flow is updated with any
