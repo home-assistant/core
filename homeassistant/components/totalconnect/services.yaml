@@ -8,7 +8,7 @@ arm_away_instant:
 
 arm_home_instant:
   name: Arm Home Instant
-  description: Arm Stay with zero entry delay.
+  description: Arm Home with zero entry delay.
   target:
     entity:
       integration: totalconnect
