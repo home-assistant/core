@@ -9,9 +9,6 @@ from flux_led.const import (
     ATTR_IPADDR,
     ATTR_MODEL,
     ATTR_MODEL_DESCRIPTION,
-    ATTR_REMOTE_ACCESS_ENABLED,
-    ATTR_REMOTE_ACCESS_HOST,
-    ATTR_REMOTE_ACCESS_PORT,
     ATTR_VERSION_NUM,
 )
 from flux_led.scanner import FluxLEDDiscovery
@@ -31,9 +28,6 @@ from .const import (
     CONF_CUSTOM_EFFECT_SPEED_PCT,
     CONF_CUSTOM_EFFECT_TRANSITION,
     CONF_MINOR_VERSION,
-    CONF_REMOTE_ACCESS_ENABLED,
-    CONF_REMOTE_ACCESS_HOST,
-    CONF_REMOTE_ACCESS_PORT,
     DEFAULT_EFFECT_SPEED,
     DISCOVER_SCAN_TIMEOUT,
     DOMAIN,
@@ -129,24 +123,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         mac = dr.format_mac(mac_address)
         host = device[ATTR_IPADDR]
         await self.async_set_unique_id(mac)
-        updates: dict[str, Any] = {CONF_HOST: host}
-        if device[ATTR_VERSION_NUM]:
-            # If the version changes, the config entry will get reloaded
-            # which should handle any changes as a result of the software update
-            updates[CONF_MINOR_VERSION] = device[ATTR_VERSION_NUM]
-        if ATTR_REMOTE_ACCESS_ENABLED in device:
-            updates.update(
-                {
-                    CONF_REMOTE_ACCESS_ENABLED: device[ATTR_REMOTE_ACCESS_ENABLED],
-                    CONF_REMOTE_ACCESS_HOST: device[ATTR_REMOTE_ACCESS_HOST],
-                    CONF_REMOTE_ACCESS_PORT: device[ATTR_REMOTE_ACCESS_PORT],
-                }
-            )
-        self._abort_if_unique_id_configured(updates=updates)
         for entry in self._async_current_entries(include_ignore=False):
-            if entry.data[CONF_HOST] == host:
+            if entry.unique_id == mac:
+                await async_update_entry_from_discovery(self.hass, entry, device)
+                return self.async_abort(reason="already_configured")
+            elif entry.data[CONF_HOST] == host:
                 if not entry.unique_id:
-                    async_update_entry_from_discovery(self.hass, entry, device)
+                    await async_update_entry_from_discovery(self.hass, entry, device)
                 return self.async_abort(reason="already_configured")
         self.context[CONF_HOST] = host
         for progress in self._async_in_progress():

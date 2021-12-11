@@ -69,13 +69,13 @@ def async_wifi_bulb_for_host(host: str) -> AIOWifiLedBulb:
     return AIOWifiLedBulb(host)
 
 
-@callback
-def async_update_entry_from_discovery(
+async def async_update_entry_from_discovery(
     hass: HomeAssistant, entry: config_entries.ConfigEntry, device: FluxLEDDiscovery
 ) -> None:
     """Update a config entry from a flux_led discovery."""
     name = async_name_from_discovery(device)
     updates = {**entry.data}
+    original_entry = {**entry.data}
     if ATTR_REMOTE_ACCESS_ENABLED in device:
         updates.update(
             {
@@ -90,12 +90,15 @@ def async_update_entry_from_discovery(
         updates[CONF_NAME] = async_name_from_discovery(device)
     mac_address = device[ATTR_ID]
     assert mac_address is not None
+    updated = updates != original_entry
     hass.config_entries.async_update_entry(
         entry,
         data=updates,
         title=name,
         unique_id=dr.format_mac(mac_address),
     )
+    if updated:
+        await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -116,11 +119,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Update listener."""
-    await hass.config_entries.async_reload(entry.entry_id)
-
-
 @callback
 def _async_device_was_discovered(hass: HomeAssistant, mac: str) -> bool:
     """Check if a device was already discovered via a broadcast discovery."""
@@ -133,7 +131,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     host = entry.data[CONF_HOST]
     if not entry.unique_id or not _async_device_was_discovered(hass, entry.unique_id):
         if discovery := await async_discover_device(hass, host):
-            async_update_entry_from_discovery(hass, entry, discovery)
+            await async_update_entry_from_discovery(hass, entry, discovery)
 
     device: AIOWifiLedBulb = async_wifi_bulb_for_host(host)
     signal = SIGNAL_STATE_UPDATED.format(device.ipaddr)
@@ -154,7 +152,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = coordinator
     platforms = PLATFORMS_BY_TYPE[device.device_type]
     hass.config_entries.async_setup_platforms(entry, platforms)
-    entry.async_on_unload(entry.add_update_listener(async_update_listener))
 
     return True
 
