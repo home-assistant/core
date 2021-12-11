@@ -41,21 +41,25 @@ async def test_standard_setup(hass):
     show_form_result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    login_result = await hass.config_entries.flow.async_configure(
-        show_form_result["flow_id"],
-        {
-            CONF_ELMAX_USERNAME: MOCK_USERNAME,
-            CONF_ELMAX_PASSWORD: MOCK_PASSWORD,
-        },
-    )
-    result = await hass.config_entries.flow.async_configure(
-        login_result["flow_id"],
-        {
-            CONF_ELMAX_PANEL_NAME: MOCK_PANEL_NAME,
-            CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
-        },
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    with patch(
+        "homeassistant.components.elmax.async_setup_entry",
+        return_value=True,
+    ):
+        login_result = await hass.config_entries.flow.async_configure(
+            show_form_result["flow_id"],
+            {
+                CONF_ELMAX_USERNAME: MOCK_USERNAME,
+                CONF_ELMAX_PASSWORD: MOCK_PASSWORD,
+            },
+        )
+        result = await hass.config_entries.flow.async_configure(
+            login_result["flow_id"],
+            {
+                CONF_ELMAX_PANEL_NAME: MOCK_PANEL_NAME,
+                CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
+            },
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
 
 async def test_one_config_allowed(hass):
@@ -244,27 +248,31 @@ async def test_reauth_flow(hass):
     ).add_to_hass(hass)
 
     # Trigger reauth
-    reauth_result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_REAUTH},
-        data={
-            CONF_ELMAX_PANEL_ID: MOCK_PANEL_ID,
-            CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
-            CONF_ELMAX_USERNAME: MOCK_USERNAME,
-            CONF_ELMAX_PASSWORD: MOCK_PASSWORD,
-        },
-    )
-    result = await hass.config_entries.flow.async_configure(
-        reauth_result["flow_id"],
-        {
-            CONF_ELMAX_PANEL_ID: MOCK_PANEL_ID,
-            CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
-            CONF_ELMAX_USERNAME: MOCK_USERNAME,
-            CONF_ELMAX_PASSWORD: MOCK_PASSWORD,
-        },
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "reauth_successful"
+    with patch(
+        "homeassistant.components.elmax.async_setup_entry",
+        return_value=True,
+    ):
+        reauth_result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_REAUTH},
+            data={
+                CONF_ELMAX_PANEL_ID: MOCK_PANEL_ID,
+                CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
+                CONF_ELMAX_USERNAME: MOCK_USERNAME,
+                CONF_ELMAX_PASSWORD: MOCK_PASSWORD,
+            },
+        )
+        result = await hass.config_entries.flow.async_configure(
+            reauth_result["flow_id"],
+            {
+                CONF_ELMAX_PANEL_ID: MOCK_PANEL_ID,
+                CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
+                CONF_ELMAX_USERNAME: MOCK_USERNAME,
+                CONF_ELMAX_PASSWORD: MOCK_PASSWORD,
+            },
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["reason"] == "reauth_successful"
 
 
 async def test_reauth_panel_disappeared(hass):
