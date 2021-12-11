@@ -12,6 +12,7 @@
                 "data": {
                     "host": "Vert",
                     "individual_address": "Individuell adresse for tilkoblingen",
+                    "local_ip": "Lokal IP (la st\u00e5 tomt hvis du er usikker)",
                     "port": "Port",
                     "route_back": "Rute tilbake / NAT-modus"
                 },
@@ -54,6 +55,7 @@
             "tunnel": {
                 "data": {
                     "host": "Vert",
+                    "local_ip": "Lokal IP (la st\u00e5 tomt hvis du er usikker)",
                     "port": "Port",
                     "route_back": "Rute tilbake / NAT-modus"
                 }

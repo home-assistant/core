@@ -2,13 +2,14 @@
 import logging
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import (
     async_entries_for_config_entry,
     async_get,
 )
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
 
 

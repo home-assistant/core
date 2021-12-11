@@ -185,7 +185,7 @@ class MinutPointClient:
 
     async def _sync(self):
         """Update local list of devices."""
-        if not await self._client.update() and self._is_available:
+        if not await self._client.update():
             self._is_available = False
             _LOGGER.warning("Device is unavailable")
             async_dispatcher_send(self._hass, SIGNAL_UPDATE_ENTITY)

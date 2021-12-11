@@ -1147,7 +1147,7 @@ async def websocket_browse_media(hass, connection, msg):
     To use, media_player integrations can implement MediaPlayerEntity.async_browse_media()
     """
     component = hass.data[DOMAIN]
-    player: MediaPlayerDevice | None = component.get_entity(msg["entity_id"])
+    player: MediaPlayerEntity | None = component.get_entity(msg["entity_id"])
 
     if player is None:
         connection.send_error(msg["id"], "entity_not_found", "Entity not found")
@@ -1193,18 +1193,6 @@ async def websocket_browse_media(hass, connection, msg):
         _LOGGER.warning("Browse Media should use new BrowseMedia class")
 
     connection.send_result(msg["id"], payload)
-
-
-class MediaPlayerDevice(MediaPlayerEntity):
-    """ABC for media player devices (for backwards compatibility)."""
-
-    def __init_subclass__(cls, **kwargs):
-        """Print deprecation warning."""
-        super().__init_subclass__(**kwargs)
-        _LOGGER.warning(
-            "MediaPlayerDevice is deprecated, modify %s to extend MediaPlayerEntity",
-            cls.__name__,
-        )
 
 
 class BrowseMedia:

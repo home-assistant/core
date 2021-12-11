@@ -12,8 +12,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SurePetcareDataCoordinator
@@ -67,7 +67,7 @@ class Hub(SurePetcareBinarySensor):
     """Sure Petcare Hub."""
 
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
-    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
     def available(self) -> bool:
@@ -117,7 +117,7 @@ class DeviceConnectivity(SurePetcareBinarySensor):
     """Sure Petcare Device."""
 
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
-    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(
         self,

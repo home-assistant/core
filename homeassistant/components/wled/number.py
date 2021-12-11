@@ -41,21 +41,23 @@ NUMBERS = [
         name="Speed",
         icon="mdi:speedometer",
         entity_category=ENTITY_CATEGORY_CONFIG,
+        step=1,
+        min_value=0,
+        max_value=255,
     ),
     NumberEntityDescription(
         key=ATTR_INTENSITY,
         name="Intensity",
         entity_category=ENTITY_CATEGORY_CONFIG,
+        step=1,
+        min_value=0,
+        max_value=255,
     ),
 ]
 
 
 class WLEDNumber(WLEDEntity, NumberEntity):
     """Defines a WLED speed number."""
-
-    _attr_step = 1
-    _attr_min_value = 0
-    _attr_max_value = 255
 
     def __init__(
         self,

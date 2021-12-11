@@ -62,7 +62,7 @@ class EightHeatSensor(EightSleepBaseEntity, BinarySensorEntity):
         """Initialize the sensor."""
         super().__init__(name, coordinator, eight, side, sensor)
         self._attr_device_class = DEVICE_CLASS_OCCUPANCY
-
+        assert self._usrobj
         _LOGGER.debug(
             "Presence Sensor: %s, Side: %s, User: %s",
             self._sensor,
@@ -73,4 +73,5 @@ class EightHeatSensor(EightSleepBaseEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
+        assert self._usrobj
         return bool(self._usrobj.bed_presence)
