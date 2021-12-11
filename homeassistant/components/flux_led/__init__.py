@@ -87,6 +87,7 @@ async def async_update_entry_from_discovery(
     """Update a config entry from a flux_led discovery."""
     name = async_name_from_discovery(device)
     updates = {**entry.data}
+    original_entry = {**entry.data}
     if ATTR_REMOTE_ACCESS_ENABLED in device:
         updates.update(
             {
@@ -101,13 +102,15 @@ async def async_update_entry_from_discovery(
         updates[CONF_NAME] = async_name_from_discovery(device)
     mac_address = device[ATTR_ID]
     assert mac_address is not None
+    updated = updates != original_entry
     hass.config_entries.async_update_entry(
         entry,
         data=updates,
         title=name,
         unique_id=dr.format_mac(mac_address),
     )
-    await hass.config_entries.async_reload(entry.entry_id)
+    if updated:
+        await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_discover_devices(
