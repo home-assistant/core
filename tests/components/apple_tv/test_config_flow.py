@@ -1,6 +1,6 @@
 """Test config flow."""
 
-from unittest.mock import patch
+from unittest.mock import ANY, patch
 
 from pyatv import exceptions
 from pyatv.const import PairingRequirement, Protocol
@@ -11,7 +11,7 @@ from homeassistant.components import zeroconf
 from homeassistant.components.apple_tv import CONF_ADDRESS, config_flow
 from homeassistant.components.apple_tv.const import CONF_START_OFF, DOMAIN
 
-from .common import airplay_service, create_conf, mrp_service
+from .common import airplay_service, create_conf, mrp_service, raop_service
 
 from tests.common import MockConfigEntry
 
@@ -22,6 +22,16 @@ DMAP_SERVICE = zeroconf.ZeroconfServiceInfo(
     type="_touch-able._tcp.local.",
     name="dmapid._touch-able._tcp.local.",
     properties={"CtlN": "Apple TV"},
+)
+
+
+RAOP_SERVICE = zeroconf.ZeroconfServiceInfo(
+    host="127.0.0.1",
+    hostname="mock_hostname",
+    port=None,
+    type="_raop._tcp.local.",
+    name="AABBCCDDEEFF@Master Bed._raop._tcp.local.",
+    properties={"am": "AppleTV11,1"},
 )
 
 
@@ -847,9 +857,25 @@ async def test_zeroconf_pair_additionally_found_protocols(
         ),
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    await hass.async_block_till_done()
 
     mock_scan.result = [
-        create_conf("127.0.0.1", "Device", mrp_service(), airplay_service())
+        create_conf("127.0.0.1", "Device", raop_service(), airplay_service())
+    ]
+
+    # Find the same device again, but now also with RAOP service. The first flow should
+    # be updated with the RAOP service.
+    await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=RAOP_SERVICE,
+    )
+    await hass.async_block_till_done()
+
+    mock_scan.result = [
+        create_conf(
+            "127.0.0.1", "Device", raop_service(), mrp_service(), airplay_service()
+        )
     ]
 
     # Find the same device again, but now also with MRP service. The first flow should
@@ -866,29 +892,41 @@ async def test_zeroconf_pair_additionally_found_protocols(
             properties={"UniqueIdentifier": "mrpid", "Name": "Kitchen"},
         ),
     )
+    await hass.async_block_till_done()
 
-    # Verify that _both_ protocols are paired
+    # Verify that all protocols are paired
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {},
     )
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result2["step_id"] == "pair_with_pin"
-    assert result2["description_placeholders"] == {"protocol": "MRP"}
 
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["step_id"] == "pair_no_pin"
+    assert result2["description_placeholders"] == {"pin": ANY, "protocol": "RAOP"}
+
+    # Verify that all protocols are paired
     result3 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"pin": 1234},
+        {},
     )
+
     assert result3["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result3["step_id"] == "pair_with_pin"
-    assert result3["description_placeholders"] == {"protocol": "AirPlay"}
+    assert result3["description_placeholders"] == {"protocol": "MRP"}
 
     result4 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {"pin": 1234},
     )
-    assert result4["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result4["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result4["step_id"] == "pair_with_pin"
+    assert result4["description_placeholders"] == {"protocol": "AirPlay"}
+
+    result5 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"pin": 1234},
+    )
+    assert result5["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
 
 # Re-configuration
