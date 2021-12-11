@@ -8,7 +8,7 @@ from random import randrange
 from pyatv import exceptions, pair, scan
 from pyatv.const import DeviceModel, PairingRequirement, Protocol
 from pyatv.convert import model_str, protocol_str
-from pyatv.helpers import AIRPLAY_SERVICE, MEDIAREMOTE_SERVICE, get_unique_id
+from pyatv.helpers import get_unique_id
 import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
@@ -21,8 +21,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import CONF_CREDENTIALS, CONF_IDENTIFIERS, CONF_START_OFF, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-SERVICES_WITH_ZEROCONF_IDENTIFIERS = {MEDIAREMOTE_SERVICE, AIRPLAY_SERVICE}
 
 DEVICE_INPUT = "device_input"
 
@@ -217,11 +215,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 or context.get(CONF_ADDRESS) != host
             ):
                 continue
-            if (
-                service_type in SERVICES_WITH_ZEROCONF_IDENTIFIERS
-                and "all_identifiers" in context
-                and unique_id not in context["all_identifiers"]
-            ):
+            if unique_id not in context.get("all_identifiers", []):
                 # Add potentially new identifiers from this device to the existing flow
                 context["all_identifiers"].append(unique_id)
             raise data_entry_flow.AbortFlow("already_in_progress")
@@ -305,6 +299,9 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # If number of services found during device scan mismatch number of
             # identifiers collected during Zeroconf discovery, then trigger a new scan
             # with hopes of finding all services.
+            import pprint
+
+            pprint.pprint([self.context["all_identifiers"], self.atv.all_identifiers])
             if len(self.atv.all_identifiers) != expected_identifier_count:
                 try:
                     await self.async_find_device()
