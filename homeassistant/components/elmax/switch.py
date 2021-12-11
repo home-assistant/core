@@ -35,7 +35,7 @@ class ElmaxSwitch(ElmaxEntity, SwitchEntity):
             # Check for timeout
             if (time.time() - start_ts) > timeout:
                 _LOGGER.warning(
-                    "Timeout occurred while waiting for state change from Elmax cloud."
+                    "Timeout occurred while waiting for state change from Elmax cloud"
                 )
                 return False
             # Otherwise sleep a bit and then trigger an update
