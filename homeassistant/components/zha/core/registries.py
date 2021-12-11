@@ -11,25 +11,14 @@ from zigpy import zcl
 import zigpy.profiles.zha
 import zigpy.profiles.zll
 
-from homeassistant.components.alarm_control_panel import DOMAIN as ALARM
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
-from homeassistant.components.climate import DOMAIN as CLIMATE
-from homeassistant.components.cover import DOMAIN as COVER
-from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
-from homeassistant.components.fan import DOMAIN as FAN
-from homeassistant.components.light import DOMAIN as LIGHT
-from homeassistant.components.lock import DOMAIN as LOCK
-from homeassistant.components.number import DOMAIN as NUMBER
-from homeassistant.components.sensor import DOMAIN as SENSOR
-from homeassistant.components.siren import DOMAIN as SIREN
-from homeassistant.components.switch import DOMAIN as SWITCH
+from homeassistant.const import Platform
 
 # importing channels updates registries
 from . import channels as zha_channels  # noqa: F401 pylint: disable=unused-import
 from .decorators import CALLABLE_T, DictRegistry, SetRegistry
 from .typing import ChannelType
 
-GROUP_ENTITY_DOMAINS = [LIGHT, SWITCH, FAN]
+GROUP_ENTITY_DOMAINS = [Platform.LIGHT, Platform.SWITCH, Platform.FAN]
 
 PHILLIPS_REMOTE_CLUSTER = 0xFC00
 SMARTTHINGS_ACCELERATION_CLUSTER = 0xFC02
@@ -64,34 +53,34 @@ REMOTE_DEVICE_TYPES = collections.defaultdict(list, REMOTE_DEVICE_TYPES)
 SINGLE_INPUT_CLUSTER_DEVICE_CLASS = {
     # this works for now but if we hit conflicts we can break it out to
     # a different dict that is keyed by manufacturer
-    SMARTTHINGS_ACCELERATION_CLUSTER: BINARY_SENSOR,
-    SMARTTHINGS_HUMIDITY_CLUSTER: SENSOR,
-    VOC_LEVEL_CLUSTER: SENSOR,
-    zcl.clusters.closures.DoorLock.cluster_id: LOCK,
-    zcl.clusters.closures.WindowCovering.cluster_id: COVER,
-    zcl.clusters.general.BinaryInput.cluster_id: BINARY_SENSOR,
-    zcl.clusters.general.AnalogInput.cluster_id: SENSOR,
-    zcl.clusters.general.AnalogOutput.cluster_id: NUMBER,
-    zcl.clusters.general.MultistateInput.cluster_id: SENSOR,
-    zcl.clusters.general.OnOff.cluster_id: SWITCH,
-    zcl.clusters.general.PowerConfiguration.cluster_id: SENSOR,
-    zcl.clusters.hvac.Fan.cluster_id: FAN,
-    zcl.clusters.measurement.CarbonDioxideConcentration.cluster_id: SENSOR,
-    zcl.clusters.measurement.CarbonMonoxideConcentration.cluster_id: SENSOR,
-    zcl.clusters.measurement.FormaldehydeConcentration.cluster_id: SENSOR,
-    zcl.clusters.measurement.IlluminanceMeasurement.cluster_id: SENSOR,
-    zcl.clusters.measurement.OccupancySensing.cluster_id: BINARY_SENSOR,
-    zcl.clusters.measurement.PressureMeasurement.cluster_id: SENSOR,
-    zcl.clusters.measurement.RelativeHumidity.cluster_id: SENSOR,
-    zcl.clusters.measurement.SoilMoisture.cluster_id: SENSOR,
-    zcl.clusters.measurement.LeafWetness.cluster_id: SENSOR,
-    zcl.clusters.measurement.TemperatureMeasurement.cluster_id: SENSOR,
-    zcl.clusters.security.IasZone.cluster_id: BINARY_SENSOR,
+    SMARTTHINGS_ACCELERATION_CLUSTER: Platform.BINARY_SENSOR,
+    SMARTTHINGS_HUMIDITY_CLUSTER: Platform.SENSOR,
+    VOC_LEVEL_CLUSTER: Platform.SENSOR,
+    zcl.clusters.closures.DoorLock.cluster_id: Platform.LOCK,
+    zcl.clusters.closures.WindowCovering.cluster_id: Platform.COVER,
+    zcl.clusters.general.BinaryInput.cluster_id: Platform.BINARY_SENSOR,
+    zcl.clusters.general.AnalogInput.cluster_id: Platform.SENSOR,
+    zcl.clusters.general.AnalogOutput.cluster_id: Platform.NUMBER,
+    zcl.clusters.general.MultistateInput.cluster_id: Platform.SENSOR,
+    zcl.clusters.general.OnOff.cluster_id: Platform.SWITCH,
+    zcl.clusters.general.PowerConfiguration.cluster_id: Platform.SENSOR,
+    zcl.clusters.hvac.Fan.cluster_id: Platform.FAN,
+    zcl.clusters.measurement.CarbonDioxideConcentration.cluster_id: Platform.SENSOR,
+    zcl.clusters.measurement.CarbonMonoxideConcentration.cluster_id: Platform.SENSOR,
+    zcl.clusters.measurement.FormaldehydeConcentration.cluster_id: Platform.SENSOR,
+    zcl.clusters.measurement.IlluminanceMeasurement.cluster_id: Platform.SENSOR,
+    zcl.clusters.measurement.OccupancySensing.cluster_id: Platform.BINARY_SENSOR,
+    zcl.clusters.measurement.PressureMeasurement.cluster_id: Platform.SENSOR,
+    zcl.clusters.measurement.RelativeHumidity.cluster_id: Platform.SENSOR,
+    zcl.clusters.measurement.SoilMoisture.cluster_id: Platform.SENSOR,
+    zcl.clusters.measurement.LeafWetness.cluster_id: Platform.SENSOR,
+    zcl.clusters.measurement.TemperatureMeasurement.cluster_id: Platform.SENSOR,
+    zcl.clusters.security.IasZone.cluster_id: Platform.BINARY_SENSOR,
 }
 
 SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS = {
-    zcl.clusters.general.OnOff.cluster_id: BINARY_SENSOR,
-    zcl.clusters.security.IasAce.cluster_id: ALARM,
+    zcl.clusters.general.OnOff.cluster_id: Platform.BINARY_SENSOR,
+    zcl.clusters.security.IasAce.cluster_id: Platform.ALARM_CONTROL_PANEL,
 }
 
 BINDABLE_CLUSTERS = SetRegistry()
@@ -99,31 +88,31 @@ CHANNEL_ONLY_CLUSTERS = SetRegistry()
 
 DEVICE_CLASS = {
     zigpy.profiles.zha.PROFILE_ID: {
-        SMARTTHINGS_ARRIVAL_SENSOR_DEVICE_TYPE: DEVICE_TRACKER,
-        zigpy.profiles.zha.DeviceType.THERMOSTAT: CLIMATE,
-        zigpy.profiles.zha.DeviceType.COLOR_DIMMABLE_LIGHT: LIGHT,
-        zigpy.profiles.zha.DeviceType.COLOR_TEMPERATURE_LIGHT: LIGHT,
-        zigpy.profiles.zha.DeviceType.DIMMABLE_BALLAST: LIGHT,
-        zigpy.profiles.zha.DeviceType.DIMMABLE_LIGHT: LIGHT,
-        zigpy.profiles.zha.DeviceType.DIMMABLE_PLUG_IN_UNIT: LIGHT,
-        zigpy.profiles.zha.DeviceType.EXTENDED_COLOR_LIGHT: LIGHT,
-        zigpy.profiles.zha.DeviceType.LEVEL_CONTROLLABLE_OUTPUT: COVER,
-        zigpy.profiles.zha.DeviceType.ON_OFF_BALLAST: SWITCH,
-        zigpy.profiles.zha.DeviceType.ON_OFF_LIGHT: LIGHT,
-        zigpy.profiles.zha.DeviceType.ON_OFF_PLUG_IN_UNIT: SWITCH,
-        zigpy.profiles.zha.DeviceType.SHADE: COVER,
-        zigpy.profiles.zha.DeviceType.SMART_PLUG: SWITCH,
-        zigpy.profiles.zha.DeviceType.IAS_ANCILLARY_CONTROL: ALARM,
-        zigpy.profiles.zha.DeviceType.IAS_WARNING_DEVICE: SIREN,
+        SMARTTHINGS_ARRIVAL_SENSOR_DEVICE_TYPE: Platform.DEVICE_TRACKER,
+        zigpy.profiles.zha.DeviceType.THERMOSTAT: Platform.CLIMATE,
+        zigpy.profiles.zha.DeviceType.COLOR_DIMMABLE_LIGHT: Platform.LIGHT,
+        zigpy.profiles.zha.DeviceType.COLOR_TEMPERATURE_LIGHT: Platform.LIGHT,
+        zigpy.profiles.zha.DeviceType.DIMMABLE_BALLAST: Platform.LIGHT,
+        zigpy.profiles.zha.DeviceType.DIMMABLE_LIGHT: Platform.LIGHT,
+        zigpy.profiles.zha.DeviceType.DIMMABLE_PLUG_IN_UNIT: Platform.LIGHT,
+        zigpy.profiles.zha.DeviceType.EXTENDED_COLOR_LIGHT: Platform.LIGHT,
+        zigpy.profiles.zha.DeviceType.LEVEL_CONTROLLABLE_OUTPUT: Platform.COVER,
+        zigpy.profiles.zha.DeviceType.ON_OFF_BALLAST: Platform.SWITCH,
+        zigpy.profiles.zha.DeviceType.ON_OFF_LIGHT: Platform.LIGHT,
+        zigpy.profiles.zha.DeviceType.ON_OFF_PLUG_IN_UNIT: Platform.SWITCH,
+        zigpy.profiles.zha.DeviceType.SHADE: Platform.COVER,
+        zigpy.profiles.zha.DeviceType.SMART_PLUG: Platform.SWITCH,
+        zigpy.profiles.zha.DeviceType.IAS_ANCILLARY_CONTROL: Platform.ALARM_CONTROL_PANEL,
+        zigpy.profiles.zha.DeviceType.IAS_WARNING_DEVICE: Platform.SIREN,
     },
     zigpy.profiles.zll.PROFILE_ID: {
-        zigpy.profiles.zll.DeviceType.COLOR_LIGHT: LIGHT,
-        zigpy.profiles.zll.DeviceType.COLOR_TEMPERATURE_LIGHT: LIGHT,
-        zigpy.profiles.zll.DeviceType.DIMMABLE_LIGHT: LIGHT,
-        zigpy.profiles.zll.DeviceType.DIMMABLE_PLUGIN_UNIT: LIGHT,
-        zigpy.profiles.zll.DeviceType.EXTENDED_COLOR_LIGHT: LIGHT,
-        zigpy.profiles.zll.DeviceType.ON_OFF_LIGHT: LIGHT,
-        zigpy.profiles.zll.DeviceType.ON_OFF_PLUGIN_UNIT: SWITCH,
+        zigpy.profiles.zll.DeviceType.COLOR_LIGHT: Platform.LIGHT,
+        zigpy.profiles.zll.DeviceType.COLOR_TEMPERATURE_LIGHT: Platform.LIGHT,
+        zigpy.profiles.zll.DeviceType.DIMMABLE_LIGHT: Platform.LIGHT,
+        zigpy.profiles.zll.DeviceType.DIMMABLE_PLUGIN_UNIT: Platform.LIGHT,
+        zigpy.profiles.zll.DeviceType.EXTENDED_COLOR_LIGHT: Platform.LIGHT,
+        zigpy.profiles.zll.DeviceType.ON_OFF_LIGHT: Platform.LIGHT,
+        zigpy.profiles.zll.DeviceType.ON_OFF_PLUGIN_UNIT: Platform.SWITCH,
     },
 }
 DEVICE_CLASS = collections.defaultdict(dict, DEVICE_CLASS)

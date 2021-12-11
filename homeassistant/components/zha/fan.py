@@ -11,12 +11,11 @@ from zigpy.zcl.clusters import hvac
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
     ATTR_PRESET_MODE,
-    DOMAIN,
     SUPPORT_SET_SPEED,
     FanEntity,
     NotValidPresetModeError,
 )
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import State, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.percentage import (
@@ -53,13 +52,13 @@ PRESET_MODES = list(NAME_TO_PRESET_MODE)
 
 DEFAULT_ON_PERCENTAGE = 50
 
-STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
-GROUP_MATCH = functools.partial(ZHA_ENTITIES.group_match, DOMAIN)
+STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.FAN)
+GROUP_MATCH = functools.partial(ZHA_ENTITIES.group_match, Platform.FAN)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Zigbee Home Automation fan from config entry."""
-    entities_to_create = hass.data[DATA_ZHA][DOMAIN]
+    entities_to_create = hass.data[DATA_ZHA][Platform.FAN]
 
     unsub = async_dispatcher_connect(
         hass,
