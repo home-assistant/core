@@ -6,30 +6,15 @@ from threading import Event as ThreadingEvent, Thread
 from time import sleep
 
 from fritzconnection.core.fritzmonitor import FritzMonitor
-import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_USERNAME,
-    EVENT_HOMEASSISTANT_STOP,
-)
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.entity import DeviceInfo
 
 from .const import (
     ATTR_PREFIXES,
     CONF_PHONEBOOK,
     CONF_PREFIXES,
-    DEFAULT_HOST,
-    DEFAULT_NAME,
-    DEFAULT_PHONEBOOK,
-    DEFAULT_PORT,
-    DEFAULT_USERNAME,
     DOMAIN,
     FRITZ_STATE_CALL,
     FRITZ_STATE_CONNECT,
@@ -49,27 +34,6 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(hours=3)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
-        vol.Optional(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PHONEBOOK, default=DEFAULT_PHONEBOOK): cv.positive_int,
-        vol.Optional(CONF_PREFIXES): vol.All(cv.ensure_list, [cv.string]),
-    }
-)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Import the platform into a config entry."""
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
-    )
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

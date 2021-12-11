@@ -32,7 +32,6 @@ DEFAULT_HOST = "169.254.1.1"  # IP valid for all Fritz!Box routers
 DEFAULT_PORT = 1012
 DEFAULT_USERNAME = "admin"
 DEFAULT_PHONEBOOK = 0
-DEFAULT_NAME = "Phone"
 
 DOMAIN = "fritzbox_callmonitor"
 MANUFACTURER = "AVM"
