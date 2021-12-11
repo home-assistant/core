@@ -31,8 +31,8 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_NAME,
-    LENGTH_CENTIMETERS,
     LENGTH_KILOMETERS,
+    LENGTH_MILLIMETERS,
     PRESSURE_KPA,
     SPEED_KILOMETERS_PER_HOUR,
     TEMP_CELSIUS,
@@ -102,7 +102,7 @@ class ECWeather(CoordinatorEntity, WeatherEntity):
     _attr_wind_speed_unit = SPEED_KILOMETERS_PER_HOUR
     _attr_pressure_unit = PRESSURE_KPA
     _attr_visibility_unit = LENGTH_KILOMETERS
-    _attr_precipitation_unit = LENGTH_CENTIMETERS
+    _attr_precipitation_unit = LENGTH_MILLIMETERS
 
     def __init__(self, coordinator, hourly):
         """Initialize Environment Canada weather."""
@@ -153,7 +153,7 @@ class ECWeather(CoordinatorEntity, WeatherEntity):
     def pressure(self):
         """Return the pressure."""
         if self.ec_data.conditions.get("pressure", {}).get("value"):
-            return 10 * float(self.ec_data.conditions["pressure"]["value"])
+            return float(self.ec_data.conditions["pressure"]["value"])
         return None
 
     @property
