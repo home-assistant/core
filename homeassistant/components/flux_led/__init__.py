@@ -81,8 +81,7 @@ def async_name_from_discovery(device: FluxLEDDiscovery) -> str:
     return f"{device[ATTR_MODEL]} {short_mac}"
 
 
-@callback
-def async_update_entry_from_discovery(
+async def async_update_entry_from_discovery(
     hass: HomeAssistant, entry: config_entries.ConfigEntry, device: FluxLEDDiscovery
 ) -> None:
     """Update a config entry from a flux_led discovery."""
@@ -108,6 +107,7 @@ def async_update_entry_from_discovery(
         title=name,
         unique_id=dr.format_mac(mac_address),
     )
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_discover_devices(
@@ -174,11 +174,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Update listener."""
-    await hass.config_entries.async_reload(entry.entry_id)
-
-
 @callback
 def _async_device_was_discovered(hass: HomeAssistant, mac: str) -> bool:
     """Check if a device was already discovered via a broadcast discovery."""
@@ -191,7 +186,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     host = entry.data[CONF_HOST]
     if not entry.unique_id or not _async_device_was_discovered(hass, entry.unique_id):
         if discovery := await async_discover_device(hass, host):
-            async_update_entry_from_discovery(hass, entry, discovery)
+            await async_update_entry_from_discovery(hass, entry, discovery)
 
     device: AIOWifiLedBulb = async_wifi_bulb_for_host(host)
     signal = SIGNAL_STATE_UPDATED.format(device.ipaddr)
@@ -210,10 +205,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     coordinator = FluxLedUpdateCoordinator(hass, device, entry)
     hass.data[DOMAIN][entry.entry_id] = coordinator
-    hass.config_entries.async_setup_platforms(
-        entry, PLATFORMS_BY_TYPE[device.device_type]
-    )
-    entry.async_on_unload(entry.add_update_listener(async_update_listener))
+    platforms = PLATFORMS_BY_TYPE[device.device_type]
+    hass.config_entries.async_setup_platforms(entry, platforms)
 
     return True
 
