@@ -10,6 +10,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity, DEVIC
 from homeassistant.const import (
     CONF_COMMAND,
     CONF_NAME,
+    CONF_DEVICE_CLASS,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
     STATE_UNKNOWN,
