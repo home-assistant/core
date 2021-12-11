@@ -129,6 +129,7 @@ class FlicButton(BinarySensorEntity):
     def __init__(self, hass, client, address, timeout, ignored_click_types):
         """Initialize the flic button."""
 
+        self._attr_unique_id = f"flic_{address.replace(':', '')}"
         self._hass = hass
         self._address = address
         self._timeout = timeout
