@@ -366,3 +366,38 @@ def test_get_color_in_voluptuous():
         schema("not a color")
 
     assert schema("red") == (255, 0, 0)
+
+
+def test_color_rgb_to_rgbww():
+    """Test color_rgb_to_rgbww conversions."""
+    assert color_util.color_rgb_to_rgbww(255, 255, 255, 154, 370) == (
+        0,
+        54,
+        98,
+        255,
+        255,
+    )
+    assert color_util.color_rgb_to_rgbww(255, 255, 255, 100, 1000) == (
+        255,
+        255,
+        255,
+        0,
+        0,
+    )
+    assert color_util.color_rgb_to_rgbww(255, 255, 255, 1, 1000) == (
+        0,
+        118,
+        241,
+        255,
+        255,
+    )
+    assert color_util.color_rgb_to_rgbww(128, 128, 128, 154, 370) == (
+        0,
+        27,
+        49,
+        128,
+        128,
+    )
+    assert color_util.color_rgb_to_rgbww(64, 64, 64, 154, 370) == (0, 14, 25, 64, 64)
+    assert color_util.color_rgb_to_rgbww(32, 64, 16, 154, 370) == (9, 64, 0, 38, 38)
+    assert color_util.color_rgb_to_rgbww(0, 0, 0, 154, 370) == (0, 0, 0, 0, 0)
