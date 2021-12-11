@@ -49,10 +49,10 @@ def create_conf(name, address, *services):
     return atv
 
 
-def mrp_service(enabled=True):
+def mrp_service(enabled=True, unique_id="mrpid"):
     """Create example MRP service."""
     return conf.ManualService(
-        "mrpid",
+        unique_id,
         Protocol.MRP,
         5555,
         {},
