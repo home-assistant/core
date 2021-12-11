@@ -79,13 +79,13 @@ class CommandSensor(SensorEntity):
 
     def __init__(
         self,
-            hass,
-            data,
-            name,
-            device_class,
-            unit_of_measurement,
-            value_template,
-            json_attributes,
+        hass,
+        data,
+        name,
+        device_class,
+        unit_of_measurement,
+        value_template,
+        json_attributes,
     ):
         """Initialize the sensor."""
         self._hass = hass
