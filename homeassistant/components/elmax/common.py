@@ -4,7 +4,6 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 from logging import Logger
-from typing import Any
 
 import async_timeout
 from elmax_api.exceptions import (
@@ -19,7 +18,6 @@ from elmax_api.model.endpoint import DeviceEndpoint
 from elmax_api.model.panel import PanelEntry, PanelStatus
 
 from homeassistant.components.elmax.const import DEFAULT_TIMEOUT, DOMAIN
-from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.helpers.update_coordinator import (
@@ -154,7 +152,6 @@ class ElmaxEntity(CoordinatorEntity):
         self._device = elmax_device
         self._panel_version = panel_version
         self._client = coordinator.http_client
-        self._transitory_state: Any = None
 
     @property
     def panel_id(self) -> str:
@@ -170,12 +167,6 @@ class ElmaxEntity(CoordinatorEntity):
     def name(self) -> str | None:
         """Return the entity name."""
         return self._device.name
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._transitory_state = None
-        self.async_write_ha_state()
 
     @property
     def device_info(self):

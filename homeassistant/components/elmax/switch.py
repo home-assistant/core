@@ -1,4 +1,7 @@
 """Elmax switch platform."""
+import asyncio
+import logging
+import time
 from typing import Any
 
 from elmax_api.model.command import SwitchCommand
@@ -12,6 +15,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import HomeAssistantType
 
+_LOGGER = logging.getLogger(__name__)
+
 
 class ElmaxSwitch(ElmaxEntity, SwitchEntity):
     """Implement the Elmax switch entity."""
@@ -19,25 +24,43 @@ class ElmaxSwitch(ElmaxEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return True if entity is on."""
-        if self._transitory_state is not None:
-            return self._transitory_state
         return self.coordinator.get_actuator_state(self._device.endpoint_id).opened
+
+    async def _wait_for_state_change(self, timeout=5.0) -> bool:
+        """Refresh data and wait until the state state changes."""
+        start_ts = time.time()
+        old_state = self.coordinator.get_actuator_state(self._device.endpoint_id).opened
+        new_state = old_state
+        while new_state == old_state:
+            # Check for timeout
+            if (time.time() - start_ts) > timeout:
+                _LOGGER.warning(
+                    "Timeout occurred while waiting for state change from Elmax cloud."
+                )
+                return False
+            # Otherwise sleep a bit and then trigger an update
+            await asyncio.sleep(0.5)
+            await self.coordinator.async_refresh()
+            new_state = self.coordinator.get_actuator_state(
+                self._device.endpoint_id
+            ).opened
+        return True
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.coordinator.http_client.execute_command(
             endpoint_id=self._device.endpoint_id, command=SwitchCommand.TURN_ON
         )
-        self._transitory_state = True
-        self.async_write_ha_state()
+        if await self._wait_for_state_change():
+            self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.coordinator.http_client.execute_command(
             endpoint_id=self._device.endpoint_id, command=SwitchCommand.TURN_OFF
         )
-        self._transitory_state = False
-        self.async_write_ha_state()
+        if await self._wait_for_state_change():
+            self.async_write_ha_state()
 
     @property
     def assumed_state(self) -> bool:
