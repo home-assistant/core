@@ -219,7 +219,10 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 or context.get(CONF_ADDRESS) != host
             ):
                 continue
-            if unique_id not in context.get("all_identifiers", []):
+            if (
+                "all_identifiers" in context
+                and unique_id not in context["all_identifiers"]
+            ):
                 # Add potentially new identifiers from this device to the existing flow
                 context["all_identifiers"].append(unique_id)
             raise data_entry_flow.AbortFlow("already_in_progress")
