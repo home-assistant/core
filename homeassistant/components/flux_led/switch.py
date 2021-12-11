@@ -46,7 +46,8 @@ async def async_setup_entry(
     if entry.data.get(CONF_REMOTE_ACCESS_HOST):
         entities.append(FluxRemoteAccessSwitch(coordinator.device, entry))
 
-    async_add_entities(entities)
+    if entities:
+        async_add_entities(entities)
 
 
 class FluxSwitch(FluxOnOffEntity, CoordinatorEntity, SwitchEntity):
