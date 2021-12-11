@@ -10,8 +10,7 @@ from zigpy.zcl.foundation import Status
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_POSITION,
-    DEVICE_CLASS_DAMPER,
-    DEVICE_CLASS_SHADE,
+    CoverDeviceClass,
     CoverEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -187,7 +186,7 @@ class ZhaCover(ZhaEntity, CoverEntity):
 class Shade(ZhaEntity, CoverEntity):
     """ZHA Shade."""
 
-    _attr_device_class = DEVICE_CLASS_SHADE
+    _attr_device_class = CoverDeviceClass.SHADE
 
     def __init__(
         self,
@@ -296,7 +295,7 @@ class Shade(ZhaEntity, CoverEntity):
 class KeenVent(Shade):
     """Keen vent cover."""
 
-    _attr_device_class = DEVICE_CLASS_DAMPER
+    _attr_device_class = CoverDeviceClass.DAMPER
 
     async def async_open_cover(self, **kwargs):
         """Open the cover."""
