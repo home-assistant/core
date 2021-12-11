@@ -65,7 +65,7 @@ CONF_TO_DISCOVERY: Final = {
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS_BY_TYPE: Final = {
-    DeviceType.Bulb: [Platform.LIGHT, Platform.NUMBER],
+    DeviceType.Bulb: [Platform.LIGHT, Platform.NUMBER, Platform.SWITCH],
     DeviceType.Switch: [Platform.SWITCH],
 }
 DISCOVERY_INTERVAL: Final = timedelta(minutes=15)

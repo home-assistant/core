@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from flux_led import DeviceType
 from flux_led.aio import AIOWifiLedBulb
 
 from homeassistant import config_entries
@@ -30,17 +31,22 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Flux lights."""
     coordinator: FluxLedUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    entities: list[FluxSwitch | FluxRemoteAccessSwitch] = [
-        FluxSwitch(
-            coordinator,
-            entry.unique_id,
-            entry.data[CONF_NAME],
-        ),
-    ]
+    entities: list[FluxSwitch | FluxRemoteAccessSwitch] = []
+
+    if coordinator.device.device_type == DeviceType.Switch:
+        entities.append(
+            FluxSwitch(
+                coordinator,
+                entry.unique_id,
+                entry.data[CONF_NAME],
+            )
+        )
+
     if entry.data.get(CONF_REMOTE_ACCESS_HOST):
         entities.append(FluxRemoteAccessSwitch(coordinator.device, entry))
 
-    async_add_entities(entities)
+    if entities:
+        async_add_entities(entities)
 
 
 class FluxSwitch(FluxOnOffEntity, CoordinatorEntity, SwitchEntity):
@@ -55,6 +61,8 @@ class FluxSwitch(FluxOnOffEntity, CoordinatorEntity, SwitchEntity):
 class FluxRemoteAccessSwitch(FluxBaseEntity, SwitchEntity):
     """Representation of a Flux remote access switch."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         device: AIOWifiLedBulb,
@@ -68,7 +76,7 @@ class FluxRemoteAccessSwitch(FluxBaseEntity, SwitchEntity):
             self._attr_unique_id = f"{entry.unique_id}_remote_access"
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the device on."""
+        """Turn the remote access on."""
         await self._device.async_enable_remote_access(
             self.entry.data[CONF_REMOTE_ACCESS_HOST],
             self.entry.data[CONF_REMOTE_ACCESS_PORT],
@@ -77,7 +85,7 @@ class FluxRemoteAccessSwitch(FluxBaseEntity, SwitchEntity):
         await self.hass.config_entries.async_reload(self.entry.entry_id)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the device on."""
+        """Turn the remote access off."""
         await self._device.async_disable_remote_access()
         # The device will reboot so we must reload
         await self.hass.config_entries.async_reload(self.entry.entry_id)
