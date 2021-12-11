@@ -207,10 +207,15 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # zeroconf.
         #
         await asyncio.sleep(DISCOVERY_AGGREGATION_TIME)
-        #
-        # Must not await until self.context[CONF_ADDRESS] is set or other flows may
-        # see it too soon and all flows will lose the race and nothing moves forward
-        #
+        self._async_check_in_progress_and_set_address(host, unique_id)
+
+    @callback
+    def _async_check_in_progress_and_set_address(self, host: str, unique_id: str):
+        """Check for in-progress flows and update them with identifiers if needed.
+
+        This code must not await between checking in progress and setting the host
+        or it will have a race condition where no flows move forward.
+        """
         for flow in self._async_in_progress(include_uninitialized=True):
             context = flow["context"]
             if (
@@ -223,9 +228,6 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 context["all_identifiers"].append(unique_id)
             raise data_entry_flow.AbortFlow("already_in_progress")
         self.context[CONF_ADDRESS] = host
-        #
-        # Safe to await again after self.context[CONF_ADDRESS] is set
-        #
 
     async def async_found_zeroconf_device(self, user_input=None):
         """Handle device found after Zeroconf discovery."""
