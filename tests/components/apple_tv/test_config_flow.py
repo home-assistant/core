@@ -1,6 +1,6 @@
 """Test config flow."""
 
-from unittest.mock import patch
+from unittest.mock import ANY, patch
 
 from pyatv import exceptions
 from pyatv.const import PairingRequirement, Protocol
@@ -8,20 +8,38 @@ import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import zeroconf
+from homeassistant.components.apple_tv import CONF_ADDRESS, config_flow
 from homeassistant.components.apple_tv.const import CONF_START_OFF, DOMAIN
 
-from .common import airplay_service, create_conf, mrp_service
+from .common import airplay_service, create_conf, mrp_service, raop_service
 
 from tests.common import MockConfigEntry
 
 DMAP_SERVICE = zeroconf.ZeroconfServiceInfo(
-    host="mock_host",
+    host="127.0.0.1",
     hostname="mock_hostname",
     port=None,
     type="_touch-able._tcp.local.",
     name="dmapid._touch-able._tcp.local.",
     properties={"CtlN": "Apple TV"},
 )
+
+
+RAOP_SERVICE = zeroconf.ZeroconfServiceInfo(
+    host="127.0.0.1",
+    hostname="mock_hostname",
+    port=None,
+    type="_raop._tcp.local.",
+    name="AABBCCDDEEFF@Master Bed._raop._tcp.local.",
+    properties={"am": "AppleTV11,1"},
+)
+
+
+@pytest.fixture(autouse=True)
+def zero_aggregation_time():
+    """Prevent the aggregation time from delaying the tests."""
+    with patch.object(config_flow, "DISCOVERY_AGGREGATION_TIME", 0):
+        yield
 
 
 @pytest.fixture(autouse=True)
@@ -507,7 +525,7 @@ async def test_zeroconf_unsupported_service_aborts(hass):
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="mock_host",
+            host="127.0.0.1",
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -521,11 +539,25 @@ async def test_zeroconf_unsupported_service_aborts(hass):
 
 async def test_zeroconf_add_mrp_device(hass, mrp_device, pairing):
     """Test add MRP device discovered by zeroconf."""
+    unrelated_result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=zeroconf.ZeroconfServiceInfo(
+            host="127.0.0.2",
+            hostname="mock_hostname",
+            port=None,
+            name="Kitchen",
+            properties={"UniqueIdentifier": "unrelated", "Name": "Kitchen"},
+            type="_mediaremotetv._tcp.local.",
+        ),
+    )
+    assert unrelated_result["type"] == data_entry_flow.RESULT_TYPE_FORM
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="mock_host",
+            host="127.0.0.1",
             hostname="mock_hostname",
             port=None,
             name="Kitchen",
@@ -586,6 +618,37 @@ async def test_zeroconf_add_dmap_device(hass, dmap_device, dmap_pin, pairing):
     }
 
 
+async def test_zeroconf_ip_change(hass, mock_scan):
+    """Test that the config entry gets updated when the ip changes and reloads."""
+    entry = MockConfigEntry(
+        domain="apple_tv", unique_id="mrpid", data={CONF_ADDRESS: "127.0.0.2"}
+    )
+    unrelated_entry = MockConfigEntry(
+        domain="apple_tv", unique_id="unrelated", data={CONF_ADDRESS: "127.0.0.2"}
+    )
+    unrelated_entry.add_to_hass(hass)
+    entry.add_to_hass(hass)
+    mock_scan.result = [
+        create_conf("127.0.0.1", "Device", mrp_service(), airplay_service())
+    ]
+
+    with patch(
+        "homeassistant.components.apple_tv.async_setup_entry", return_value=True
+    ) as mock_async_setup:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=DMAP_SERVICE,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+    assert len(mock_async_setup.mock_calls) == 2
+    assert entry.data[CONF_ADDRESS] == "127.0.0.1"
+    assert unrelated_entry.data[CONF_ADDRESS] == "127.0.0.2"
+
+
 async def test_zeroconf_add_existing_aborts(hass, dmap_device):
     """Test start new zeroconf flow while existing flow is active aborts."""
     await hass.config_entries.flow.async_init(
@@ -638,7 +701,7 @@ async def test_zeroconf_abort_if_other_in_progress(hass, mock_scan):
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="mock_host",
+            host="127.0.0.1",
             hostname="mock_hostname",
             port=None,
             type="_airplay._tcp.local.",
@@ -658,7 +721,7 @@ async def test_zeroconf_abort_if_other_in_progress(hass, mock_scan):
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="mock_host",
+            host="127.0.0.1",
             hostname="mock_hostname",
             port=None,
             type="_mediaremotetv._tcp.local.",
@@ -681,7 +744,7 @@ async def test_zeroconf_missing_device_during_protocol_resolve(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="mock_host",
+            host="127.0.0.1",
             hostname="mock_hostname",
             port=None,
             type="_airplay._tcp.local.",
@@ -700,7 +763,7 @@ async def test_zeroconf_missing_device_during_protocol_resolve(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="mock_host",
+            host="127.0.0.1",
             hostname="mock_hostname",
             port=None,
             type="_mediaremotetv._tcp.local.",
@@ -733,7 +796,7 @@ async def test_zeroconf_additional_protocol_resolve_failure(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="mock_host",
+            host="127.0.0.1",
             hostname="mock_hostname",
             port=None,
             type="_airplay._tcp.local.",
@@ -752,7 +815,7 @@ async def test_zeroconf_additional_protocol_resolve_failure(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="mock_host",
+            host="127.0.0.1",
             hostname="mock_hostname",
             port=None,
             type="_mediaremotetv._tcp.local.",
@@ -785,7 +848,7 @@ async def test_zeroconf_pair_additionally_found_protocols(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="mock_host",
+            host="127.0.0.1",
             hostname="mock_hostname",
             port=None,
             type="_airplay._tcp.local.",
@@ -793,9 +856,26 @@ async def test_zeroconf_pair_additionally_found_protocols(
             properties={"deviceid": "airplayid"},
         ),
     )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    await hass.async_block_till_done()
 
     mock_scan.result = [
-        create_conf("127.0.0.1", "Device", mrp_service(), airplay_service())
+        create_conf("127.0.0.1", "Device", raop_service(), airplay_service())
+    ]
+
+    # Find the same device again, but now also with RAOP service. The first flow should
+    # be updated with the RAOP service.
+    await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=RAOP_SERVICE,
+    )
+    await hass.async_block_till_done()
+
+    mock_scan.result = [
+        create_conf(
+            "127.0.0.1", "Device", raop_service(), mrp_service(), airplay_service()
+        )
     ]
 
     # Find the same device again, but now also with MRP service. The first flow should
@@ -804,7 +884,7 @@ async def test_zeroconf_pair_additionally_found_protocols(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="mock_host",
+            host="127.0.0.1",
             hostname="mock_hostname",
             port=None,
             type="_mediaremotetv._tcp.local.",
@@ -812,29 +892,41 @@ async def test_zeroconf_pair_additionally_found_protocols(
             properties={"UniqueIdentifier": "mrpid", "Name": "Kitchen"},
         ),
     )
+    await hass.async_block_till_done()
 
-    # Verify that _both_ protocols are paired
+    # Verify that all protocols are paired
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {},
     )
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result2["step_id"] == "pair_with_pin"
-    assert result2["description_placeholders"] == {"protocol": "MRP"}
 
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["step_id"] == "pair_no_pin"
+    assert result2["description_placeholders"] == {"pin": ANY, "protocol": "RAOP"}
+
+    # Verify that all protocols are paired
     result3 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"pin": 1234},
+        {},
     )
+
     assert result3["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result3["step_id"] == "pair_with_pin"
-    assert result3["description_placeholders"] == {"protocol": "AirPlay"}
+    assert result3["description_placeholders"] == {"protocol": "MRP"}
 
     result4 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {"pin": 1234},
     )
-    assert result4["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result4["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result4["step_id"] == "pair_with_pin"
+    assert result4["description_placeholders"] == {"protocol": "AirPlay"}
+
+    result5 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"pin": 1234},
+    )
+    assert result5["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
 
 # Re-configuration
