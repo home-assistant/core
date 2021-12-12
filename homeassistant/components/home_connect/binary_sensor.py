@@ -55,7 +55,7 @@ class HomeConnectBinarySensor(HomeConnectEntity, BinarySensorEntity):
         elif state in self._states["off"]:
             self._state = False
         else:
-            _LOGGER.warning("Unexpected value for HomeConnect %s state: %s", state)
+            _LOGGER.warning("Unexpected value for HomeConnect state: %s", state)
             self._state = None
         _LOGGER.debug("Updated, new state: %s", self._state)
 

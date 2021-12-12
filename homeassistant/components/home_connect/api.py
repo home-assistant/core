@@ -10,7 +10,6 @@ from homeassistant import config_entries, core
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ICON,
-    ATTR_STATES,
     CONF_DEVICE,
     CONF_ENTITIES,
     DEVICE_CLASS_TIMESTAMP,
@@ -26,6 +25,7 @@ from .const import (
     ATTR_DEVICE,
     ATTR_KEY,
     ATTR_SIGN,
+    ATTR_STATES,
     ATTR_UNIT,
     ATTR_VALUE,
     BSH_ACTIVE_PROGRAM,
