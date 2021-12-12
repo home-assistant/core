@@ -20,13 +20,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Uonet+ Vulcan integration."""
     hass.data.setdefault(DOMAIN, {})
     try:
-        keystore = Keystore.load(entry.data.get("keystore"))
-        account = Account.load(entry.data.get("account"))
+        keystore = Keystore.load(entry.data["keystore"])
+        account = Account.load(entry.data["account"])
         client = Vulcan(keystore, account)
         await client.select_student()
         students = await client.get_students()
         for student in students:
-            if str(student.pupil.id) == str(entry.data.get("student_id")):
+            if str(student.pupil.id) == str(entry.data["student_id"]):
                 client.student = student
                 break
     except VulcanAPIException as err:
@@ -62,10 +62,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             hass.data[DOMAIN]["connection_error"] = True
         await client.close()
         raise ConfigEntryNotReady from err
-    num = 0
-    for _ in hass.config_entries.async_entries(DOMAIN):
-        num += 1
-    hass.data[DOMAIN]["students_number"] = num
+    hass.data[DOMAIN]["students_number"] = len(
+        hass.config_entries.async_entries(DOMAIN)
+    )
     hass.data[DOMAIN][entry.entry_id] = client
 
     if not entry.update_listeners:

@@ -19,16 +19,11 @@ from .fetch_data import get_lessons, get_student_info
 
 _LOGGER = logging.getLogger(__name__)
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=DEFAULT_SCAN_INTERVAL)
-
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the calendar platform for event devices."""
-    global MIN_TIME_BETWEEN_UPDATES  # pylint: disable=global-statement
-    MIN_TIME_BETWEEN_UPDATES = (
-        timedelta(minutes=config_entry.options.get(CONF_SCAN_INTERVAL))
-        if config_entry.options.get(CONF_SCAN_INTERVAL) is not None
-        else MIN_TIME_BETWEEN_UPDATES
+    VulcanCalendarData.MIN_TIME_BETWEEN_UPDATES = timedelta(
+        minutes=config_entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
     )
     client = hass.data[DOMAIN][config_entry.entry_id]
     data = {
@@ -73,17 +68,9 @@ class VulcanCalendarEventDevice(CalendarEventDevice):
         else:
             name = f" - {self.student_info['full_name']}"
             self.device_name = f"{self.student_info['full_name']}: Calendar"
-        self._name = f"Vulcan calendar{name}"
-
-    @property
-    def unique_id(self):
-        """Return unique id."""
-        return self._unique_id
-
-    @property
-    def device_info(self):
-        """Return device info."""
-        return {
+        self._attr_name = f"Vulcan calendar{name}"
+        self._attr_unique_id = f"vulcan_calendar_{self.student_info['id']}"
+        self._attr_device_info = {
             "identifiers": {(DOMAIN, f"calendar_{self.student_info['id']}")},
             "entry_type": DeviceEntryType.SERVICE,
             "name": self.device_name,
@@ -96,11 +83,6 @@ class VulcanCalendarEventDevice(CalendarEventDevice):
     def event(self):
         """Return the next upcoming event."""
         return self._event
-
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        return self._name
 
     async def async_get_events(self, hass, start_date, end_date):
         """Get all events in a specific time frame."""
@@ -128,6 +110,8 @@ class VulcanCalendarEventDevice(CalendarEventDevice):
 
 class VulcanCalendarData:
     """Class to utilize calendar service object to get next event."""
+
+    MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=DEFAULT_SCAN_INTERVAL)
 
     def __init__(self, client, student_info, hass):
         """Set up how we are going to search the Vulcan calendar."""

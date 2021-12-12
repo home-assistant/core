@@ -81,22 +81,22 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 account = credentials["account"]
                 keystore = credentials["keystore"]
                 client = Vulcan(keystore, account)
-                _students = await client.get_students()
+                students = await client.get_students()
                 await client.close()
 
-                if len(_students) > 1:
+                if len(students) > 1:
                     # pylint:disable=attribute-defined-outside-init
                     self.account = account
                     self.keystore = keystore
-                    self.students = _students
+                    self.students = students
                     return await self.async_step_select_student()
-                _student = _students[0]
-                await self.async_set_unique_id(str(_student.pupil.id))
+                student = students[0]
+                await self.async_set_unique_id(str(student.pupil.id))
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=f"{_student.pupil.first_name} {_student.pupil.last_name}",
+                    title=f"{student.pupil.first_name} {student.pupil.last_name}",
                     data={
-                        "student_id": str(_student.pupil.id),
+                        "student_id": str(student.pupil.id),
                         "keystore": keystore.as_dict,
                         "account": account.as_dict,
                     },
@@ -147,15 +147,15 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors = {}
         credentials_list = {}
         for entry in self.hass.config_entries.async_entries(DOMAIN):
-            credentials_list[entry.entry_id] = entry.data.get("account")["UserName"]
+            credentials_list[entry.entry_id] = entry.data["account"]["UserName"]
 
         if user_input is not None:
             entry = self.hass.config_entries.async_get_entry(user_input["credentials"])
-            keystore = Keystore.load(entry.data.get("keystore"))
-            account = Account.load(entry.data.get("account"))
+            keystore = Keystore.load(entry.data["keystore"])
+            account = Account.load(entry.data["account"])
             client = Vulcan(keystore, account)
             try:
-                _students = await client.get_students()
+                students = await client.get_students()
             except VulcanAPIException as err:
                 if str(err) == "The certificate is not authorized.":
                     return await self.async_step_auth(
@@ -173,14 +173,14 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_auth(errors={"base": "unknown"})
             finally:
                 await client.close()
-            if len(_students) == 1:
-                _student = _students[0]
-                await self.async_set_unique_id(str(_student.pupil.id))
+            if len(students) == 1:
+                student = students[0]
+                await self.async_set_unique_id(str(student.pupil.id))
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=f"{_student.pupil.first_name} {_student.pupil.last_name}",
+                    title=f"{student.pupil.first_name} {student.pupil.last_name}",
                     data={
-                        "student_id": str(_student.pupil.id),
+                        "student_id": str(student.pupil.id),
                         "keystore": keystore.as_dict,
                         "account": account.as_dict,
                     },
@@ -188,7 +188,7 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             # pylint:disable=attribute-defined-outside-init
             self.account = account
             self.keystore = keystore
-            self.students = _students
+            self.students = students
             return await self.async_step_select_student()
 
         data_schema = {
@@ -212,16 +212,16 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             if user_input["use_saved_credentials"]:
                 if len(existing_entries) == 1:
-                    keystore = Keystore.load(existing_entries[0].data.get("keystore"))
-                    account = Account.load(existing_entries[0].data.get("account"))
+                    keystore = Keystore.load(existing_entries[0].data["keystore"])
+                    account = Account.load(existing_entries[0].data["account"])
                     client = Vulcan(keystore, account)
-                    _students = await client.get_students()
+                    students = await client.get_students()
                     await client.close()
                     new_students = []
                     existing_entry_ids = []
                     for entry in self.hass.config_entries.async_entries(DOMAIN):
-                        existing_entry_ids.append(entry.data.get("student_id"))
-                    for student in _students:
+                        existing_entry_ids.append(entry.data["student_id"])
+                    for student in students:
                         if str(student.pupil.id) not in existing_entry_ids:
                             new_students.append(student)
                     if not new_students:
@@ -298,7 +298,7 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     existing_entries.append(entry)
                 for student in students:
                     for entry in existing_entries:
-                        if str(student.pupil.id) == str(entry.data.get("student_id")):
+                        if str(student.pupil.id) == str(entry.data["student_id"]):
                             self.hass.config_entries.async_update_entry(
                                 entry,
                                 title=f"{student.pupil.first_name} {student.pupil.last_name}",
