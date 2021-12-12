@@ -444,6 +444,11 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "Occupancy",
                 DEV_SIG_ENT_MAP_ID: "binary_sensor.centralite_motion_sensor_a_77665544_occupancy",
             },
+            ("button", "00:11:22:33:44:55:66:77-2-3"): {
+                DEV_SIG_CHANNELS: ["identify"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
+                DEV_SIG_ENT_MAP_ID: "button.centralite_motion_sensor_a_77665544_identify_2",
+            },
         },
     },
     {
@@ -1149,6 +1154,7 @@ DEVICES = [
         DEV_SIG_ENTITIES: [
             "button.jasco_products_45852_77665544_identify",
             "light.jasco_products_45852_77665544_level_on_off",
+            "button.jasco_products_45852_77665544_identify_2",
             "sensor.jasco_products_45852_77665544_smartenergy_metering",
             "sensor.jasco_products_45852_77665544_smartenergy_metering_summation_delivered",
         ],
@@ -1172,6 +1178,11 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["smartenergy_metering"],
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
                 DEV_SIG_ENT_MAP_ID: "sensor.jasco_products_45852_77665544_smartenergy_metering_summation_delivered",
+            },
+            ("button", "00:11:22:33:44:55:66:77-2-3"): {
+                DEV_SIG_CHANNELS: ["identify"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
+                DEV_SIG_ENT_MAP_ID: "button.jasco_products_45852_77665544_identify_2",
             },
         },
     },
@@ -1200,6 +1211,7 @@ DEVICES = [
         DEV_SIG_ENTITIES: [
             "button.jasco_products_45856_77665544_identify",
             "light.jasco_products_45856_77665544_on_off",
+            "button.jasco_products_45856_77665544_identify_2",
             "sensor.jasco_products_45856_77665544_smartenergy_metering",
             "sensor.jasco_products_45856_77665544_smartenergy_metering_summation_delivered",
         ],
@@ -1223,6 +1235,11 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["smartenergy_metering"],
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
                 DEV_SIG_ENT_MAP_ID: "sensor.jasco_products_45856_77665544_smartenergy_metering_summation_delivered",
+            },
+            ("button", "00:11:22:33:44:55:66:77-2-3"): {
+                DEV_SIG_CHANNELS: ["identify"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
+                DEV_SIG_ENT_MAP_ID: "button.jasco_products_45856_77665544_identify_2",
             },
         },
     },
@@ -1251,6 +1268,7 @@ DEVICES = [
         DEV_SIG_ENTITIES: [
             "button.jasco_products_45857_77665544_identify",
             "light.jasco_products_45857_77665544_level_on_off",
+            "button.jasco_products_45857_77665544_identify_2",
             "sensor.jasco_products_45857_77665544_smartenergy_metering",
             "sensor.jasco_products_45857_77665544_smartenergy_metering_summation_delivered",
         ],
@@ -1274,6 +1292,11 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["smartenergy_metering"],
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
                 DEV_SIG_ENT_MAP_ID: "sensor.jasco_products_45857_77665544_smartenergy_metering_summation_delivered",
+            },
+            ("button", "00:11:22:33:44:55:66:77-2-3"): {
+                DEV_SIG_CHANNELS: ["identify"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
+                DEV_SIG_ENT_MAP_ID: "button.jasco_products_45857_77665544_identify_2",
             },
         },
     },
@@ -1833,6 +1856,16 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "Battery",
                 DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_remote_b186acn01_77665544_power",
             },
+            ("button", "00:11:22:33:44:55:66:77-2-3"): {
+                DEV_SIG_CHANNELS: ["identify"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
+                DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_remote_b186acn01_77665544_identify_2",
+            },
+            ("button", "00:11:22:33:44:55:66:77-3-3"): {
+                DEV_SIG_CHANNELS: ["identify"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
+                DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_remote_b186acn01_77665544_identify_3",
+            },
         },
     },
     {
@@ -1878,6 +1911,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["power"],
                 DEV_SIG_ENT_MAP_CLASS: "Battery",
                 DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_remote_b286acn01_77665544_power",
+            },
+            ("button", "00:11:22:33:44:55:66:77-2-3"): {
+                DEV_SIG_CHANNELS: ["identify"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
+                DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_remote_b286acn01_77665544_identify_2",
+            },
+            ("button", "00:11:22:33:44:55:66:77-3-3"): {
+                DEV_SIG_CHANNELS: ["identify"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
+                DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_remote_b286acn01_77665544_identify_3",
             },
         },
     },
@@ -2262,6 +2305,16 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "Battery",
                 DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_86sw1_77665544_power",
             },
+            ("button", "00:11:22:33:44:55:66:77-2-3"): {
+                DEV_SIG_CHANNELS: ["identify"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
+                DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_sensor_86sw1_77665544_identify_2",
+            },
+            ("button", "00:11:22:33:44:55:66:77-3-3"): {
+                DEV_SIG_CHANNELS: ["identify"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
+                DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_sensor_86sw1_77665544_identify_3",
+            },
         },
     },
     {
@@ -2307,6 +2360,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["power"],
                 DEV_SIG_ENT_MAP_CLASS: "Battery",
                 DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_cube_aqgl01_77665544_power",
+            },
+            ("button", "00:11:22:33:44:55:66:77-2-3"): {
+                DEV_SIG_CHANNELS: ["identify"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
+                DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_sensor_cube_aqgl01_77665544_identify_2",
+            },
+            ("button", "00:11:22:33:44:55:66:77-3-3"): {
+                DEV_SIG_CHANNELS: ["identify"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
+                DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_sensor_cube_aqgl01_77665544_identify_3",
             },
         },
     },
@@ -2365,6 +2428,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["humidity"],
                 DEV_SIG_ENT_MAP_CLASS: "Humidity",
                 DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_ht_77665544_humidity",
+            },
+            ("button", "00:11:22:33:44:55:66:77-2-3"): {
+                DEV_SIG_CHANNELS: ["identify"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
+                DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_sensor_ht_77665544_identify_2",
+            },
+            ("button", "00:11:22:33:44:55:66:77-3-3"): {
+                DEV_SIG_CHANNELS: ["identify"],
+                DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
+                DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_sensor_ht_77665544_identify_3",
             },
         },
     },
@@ -3471,6 +3544,7 @@ DEVICES = [
         DEV_SIG_ENTITIES: [
             "button.sercomm_corp_sz_esw01_77665544_identify",
             "light.sercomm_corp_sz_esw01_77665544_on_off",
+            "button.sercomm_corp_sz_esw01_77665544_identify_2",
             "sensor.sercomm_corp_sz_esw01_77665544_electrical_measurement",
             "sensor.sercomm_corp_sz_esw01_77665544_electrical_measurement_apparent_power",
             "sensor.sercomm_corp_sz_esw01_77665544_electrical_measurement_rms_current",
