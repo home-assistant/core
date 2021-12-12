@@ -129,8 +129,6 @@ async def async_handle_message(hass, message):
         parameters = req.get("intent","").get("params").copy()
         parameters["session_id"] = req.get("session", "").get("id","")
 
-    action = req.get("action", "")
-    parameters = req.get("parameters").copy()
     parameters["dialogflow_query"] = message
     dialogflow_response = DialogflowResponse(parameters, _api_version)
 
@@ -147,7 +145,9 @@ async def async_handle_message(hass, message):
     )
 
     if "plain" in intent_response.speech:
+        _LOGGER.error( "intent_response.speech : %s" %(intent_response.speech["plain"]["speech"]))
         dialogflow_response.add_speech(intent_response.speech["plain"]["speech"])
+        dialogflow_response.add_next_scene("actions.scene.END_CONVERSATION")
 
     return dialogflow_response.as_dict()
 
@@ -158,6 +158,7 @@ class DialogflowResponse:
     def __init__(self, parameters, api_version):
         """Initialize the Dialogflow response."""
         self.speech = None
+        self.next_scene = None
         self.parameters = {}
         self.api_version = api_version
         # Parameter names replace '.' and '-' for '_'
@@ -173,25 +174,29 @@ class DialogflowResponse:
             text = text.async_render(self.parameters, parse_result=False)
 
         self.speech = text
+    def add_next_scene(self, next_scene):
+        """Add next_scene to the response."""
+        self.next_scene = next_scene
 
     def as_dict(self):
         """Return response in a Dialogflow valid dictionary."""
+        valRetour = None
         if self.api_version is V1:
-            return {"speech": self.speech, "displayText": self.speech, "source": SOURCE}
+            valRetour = {"speech": self.speech, "displayText": self.speech, "source": SOURCE}
 
         if self.api_version is V2:
-            return {"fulfillmentText": self.speech, "source": SOURCE}
+            valRetour = {"fulfillmentText": self.speech, "source": SOURCE}
 
         if self.api_version is V3:
-            return {
+            valRetour = {
   "session": {
     "id": self.parameters["session_id"],
     "params": {}
   },
   "prompt": {
-    "override": false,
+    "override": False,
     "firstSimple": {
-      "speech": "Hello World.",
+      "speech": self.speech,
       "text": ""
     }
   },
@@ -199,7 +204,9 @@ class DialogflowResponse:
     "name": "SceneName",
     "slots": {},
     "next": {
-      "name": "actions.scene.END_CONVERSATION"
+      "name": self.next_scene
     }
   }
 }
+        _LOGGER.warning( "valRetour : %s" %(valRetour))
+        return valRetour
