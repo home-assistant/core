@@ -17,10 +17,11 @@ from homeassistant.const import (
     CONF_DEVICES,
     STATE_ON,
 )
-from homeassistant.core import callback
+from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.helpers import event as evt
 
 from . import (
+    DeviceTuple,
     RfxtrxEntity,
     connect_auto_add,
     find_possible_pt2262_device,
@@ -83,7 +84,7 @@ SENSOR_TYPES = (
 SENSOR_TYPES_DICT = {desc.key: desc for desc in SENSOR_TYPES}
 
 
-def supported(event):
+def supported(event: rfxtrxmod.RFXtrxEvent):
     """Return whether an event supports binary_sensor."""
     if isinstance(event, rfxtrxmod.ControlEvent):
         return True
@@ -103,8 +104,8 @@ async def async_setup_entry(
     """Set up platform."""
     sensors = []
 
-    device_ids = set()
-    pt2262_devices = []
+    device_ids: set[DeviceTuple] = set()
+    pt2262_devices: list[str] = []
 
     discovery_info = config_entry.data
 
@@ -127,25 +128,29 @@ async def async_setup_entry(
             continue
         device_ids.add(device_id)
 
-        if event.device.packettype == DEVICE_PACKET_TYPE_LIGHTING4:
-            find_possible_pt2262_device(pt2262_devices, event.device.id_string)
-            pt2262_devices.append(event.device.id_string)
+        device: rfxtrxmod.RFXtrxDevice = event.device
 
-        device = RfxtrxBinarySensor(
-            event.device,
+        if device.packettype == DEVICE_PACKET_TYPE_LIGHTING4:
+            find_possible_pt2262_device(pt2262_devices, device.id_string)
+            pt2262_devices.append(device.id_string)
+
+        entity = RfxtrxBinarySensor(
+            device,
             device_id,
-            get_sensor_description(event.device.type_string),
+            get_sensor_description(device.type_string),
             entity_info.get(CONF_OFF_DELAY),
             entity_info.get(CONF_DATA_BITS),
             entity_info.get(CONF_COMMAND_ON),
             entity_info.get(CONF_COMMAND_OFF),
         )
-        sensors.append(device)
+        sensors.append(entity)
 
     async_add_entities(sensors)
 
     @callback
-    def binary_sensor_update(event, device_id):
+    def binary_sensor_update(
+        event: rfxtrxmod.RFXtrxEvent, device_id: DeviceTuple
+    ) -> None:
         """Call for control updates from the RFXtrx gateway."""
         if not supported(event):
             return
@@ -179,22 +184,22 @@ class RfxtrxBinarySensor(RfxtrxEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        device,
-        device_id,
-        entity_description,
-        off_delay=None,
-        data_bits=None,
-        cmd_on=None,
-        cmd_off=None,
-        event=None,
-    ):
+        device: rfxtrxmod.RFXtrxDevice,
+        device_id: DeviceTuple,
+        entity_description: BinarySensorEntityDescription,
+        off_delay: float | None = None,
+        data_bits: int | None = None,
+        cmd_on: int | None = None,
+        cmd_off: int | None = None,
+        event: rfxtrxmod.RFXtrxEvent | None = None,
+    ) -> None:
         """Initialize the RFXtrx sensor."""
         super().__init__(device, device_id, event=event)
         self.entity_description = entity_description
         self._data_bits = data_bits
         self._off_delay = off_delay
-        self._state = None
-        self._delay_listener = None
+        self._state: bool | None = None
+        self._delay_listener: CALLBACK_TYPE | None = None
         self._cmd_on = cmd_on
         self._cmd_off = cmd_off
 
@@ -220,11 +225,12 @@ class RfxtrxBinarySensor(RfxtrxEntity, BinarySensorEntity):
         """Return true if the sensor state is True."""
         return self._state
 
-    def _apply_event_lighting4(self, event):
+    def _apply_event_lighting4(self, event: rfxtrxmod.RFXtrxEvent):
         """Apply event for a lighting 4 device."""
         if self._data_bits is not None:
-            cmd = get_pt2262_cmd(event.device.id_string, self._data_bits)
-            cmd = int(cmd, 16)
+            cmdstr = get_pt2262_cmd(event.device.id_string, self._data_bits)
+            assert cmdstr
+            cmd = int(cmdstr, 16)
             if cmd == self._cmd_on:
                 self._state = True
             elif cmd == self._cmd_off:
@@ -232,7 +238,8 @@ class RfxtrxBinarySensor(RfxtrxEntity, BinarySensorEntity):
         else:
             self._state = True
 
-    def _apply_event_standard(self, event):
+    def _apply_event_standard(self, event: rfxtrxmod.RFXtrxEvent):
+        assert isinstance(event, (rfxtrxmod.SensorEvent, rfxtrxmod.ControlEvent))
         if event.values.get("Command") in COMMAND_ON_LIST:
             self._state = True
         elif event.values.get("Command") in COMMAND_OFF_LIST:
@@ -242,7 +249,7 @@ class RfxtrxBinarySensor(RfxtrxEntity, BinarySensorEntity):
         elif event.values.get("Sensor Status") in SENSOR_STATUS_OFF:
             self._state = False
 
-    def _apply_event(self, event):
+    def _apply_event(self, event: rfxtrxmod.RFXtrxEvent):
         """Apply command from rfxtrx."""
         super()._apply_event(event)
         if event.device.packettype == DEVICE_PACKET_TYPE_LIGHTING4:
@@ -251,7 +258,7 @@ class RfxtrxBinarySensor(RfxtrxEntity, BinarySensorEntity):
             self._apply_event_standard(event)
 
     @callback
-    def _handle_event(self, event, device_id):
+    def _handle_event(self, event: rfxtrxmod.RFXtrxEvent, device_id: DeviceTuple):
         """Check if event applies to me and update."""
         if not self._event_applies(event, device_id):
             return

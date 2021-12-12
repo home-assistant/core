@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -56,7 +57,7 @@ DEFAULT_UPDATE_INTERVAL = timedelta(seconds=15)
 
 CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
-PLATFORMS = ["binary_sensor", "sensor", "switch"]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
 
 UPDATE_INTERVALS = {
     DATA_PROVISION_SETTINGS: timedelta(minutes=1),

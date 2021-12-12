@@ -8,13 +8,13 @@ from typing import TYPE_CHECKING, Any, NamedTuple, cast
 
 import attr
 
+from homeassistant.backports.enum import StrEnum
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import RequiredParameterMissing
 from homeassistant.helpers import storage
 from homeassistant.helpers.frame import report
 from homeassistant.loader import bind_hass
-from homeassistant.util.enum import StrEnum
 import homeassistant.util.uuid as uuid_util
 
 from .debounce import Debouncer
@@ -172,7 +172,11 @@ class DeviceRegistryStore(storage.Store):
             # From version 1.1
             for device in old_data["devices"]:
                 # Introduced in 0.110
-                device["entry_type"] = device.get("entry_type")
+                try:
+                    device["entry_type"] = DeviceEntryType(device.get("entry_type"))
+                except ValueError:
+                    device["entry_type"] = None
+
                 # Introduced in 0.79
                 # renamed in 0.95
                 device["via_device_id"] = device.get("via_device_id") or device.get(

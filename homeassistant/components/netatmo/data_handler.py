@@ -58,6 +58,16 @@ SCAN_INTERVAL = 60
 
 
 @dataclass
+class NetatmoDevice:
+    """Netatmo device class."""
+
+    data_handler: NetatmoDataHandler
+    device: pyatmo.climate.NetatmoModule
+    parent_id: str
+    state_class_name: str
+
+
+@dataclass
 class NetatmoDataClass:
     """Class for keeping track of Netatmo data class metadata."""
 
@@ -184,7 +194,11 @@ class NetatmoDataHandler:
             self._auth, **kwargs
         )
 
-        await self.async_fetch_data(data_class_entry)
+        try:
+            await self.async_fetch_data(data_class_entry)
+        except KeyError:
+            self.data_classes.pop(data_class_entry)
+            raise
 
         self._queue.append(self.data_classes[data_class_entry])
         _LOGGER.debug("Data class %s added", data_class_entry)

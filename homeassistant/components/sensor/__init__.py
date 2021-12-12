@@ -12,6 +12,7 @@ from typing import Any, Final, cast, final
 import ciso8601
 import voluptuous as vol
 
+from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (  # noqa: F401
     DEVICE_CLASS_AQI,
@@ -53,7 +54,6 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType, StateType
-from homeassistant.util.enum import StrEnum
 
 from .const import CONF_STATE_CLASS  # noqa: F401
 

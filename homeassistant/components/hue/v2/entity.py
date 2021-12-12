@@ -64,7 +64,7 @@ class HueBaseEntity(Entity):
         type_title = RESOURCE_TYPE_NAMES.get(
             self.resource.type, self.resource.type.value.replace("_", " ").title()
         )
-        return f"{dev_name}: {type_title}"
+        return f"{dev_name} {type_title}"
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""

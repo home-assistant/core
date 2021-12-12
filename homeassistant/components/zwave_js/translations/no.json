@@ -33,6 +33,7 @@
                     "s2_unauthenticated_key": "S2 Uautentisert n\u00f8kkel",
                     "usb_path": "USB enhetsbane"
                 },
+                "description": "Tillegget vil generere sikkerhetsn\u00f8kler hvis disse feltene er tomme.",
                 "title": "Angi konfigurasjon for Z-Wave JS-tillegg"
             },
             "hassio_confirm": {
@@ -119,6 +120,7 @@
                     "s2_unauthenticated_key": "S2 Uautentisert n\u00f8kkel",
                     "usb_path": "USB enhetsbane"
                 },
+                "description": "Tillegget vil generere sikkerhetsn\u00f8kler hvis disse feltene er tomme.",
                 "title": "Angi konfigurasjon for Z-Wave JS-tillegg"
             },
             "install_addon": {

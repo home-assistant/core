@@ -28,7 +28,6 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
 
@@ -154,7 +153,7 @@ async def test_spa_hvac_modes(hass: HomeAssistant):
         assert [HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF] == modes
         assert state.state == HVAC_SETTINGS[heat_mode]
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(ValueError):
         await _patch_spa_heatmode(hass, config_entry, 2)
 
 
@@ -198,7 +197,7 @@ async def test_spa_preset_modes(hass: HomeAssistant):
     with patch(
         "homeassistant.components.balboa.BalboaSpaWifi.get_heatmode",
         return_value=2,
-    ), pytest.raises(HomeAssistantError):
+    ), pytest.raises(ValueError):
         await common.async_set_preset_mode(hass, 2, ENTITY_CLIMATE)
 
 

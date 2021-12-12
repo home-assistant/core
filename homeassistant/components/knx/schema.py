@@ -30,6 +30,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
     CONF_TYPE,
+    Platform,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ENTITY_CATEGORIES_SCHEMA
@@ -50,7 +51,6 @@ from .const import (
     KNX_ADDRESS,
     PRESET_MODES,
     ColorTempModes,
-    SupportedPlatforms,
 )
 
 ##################
@@ -275,14 +275,14 @@ class EventSchema:
 class KNXPlatformSchema(ABC):
     """Voluptuous schema for KNX platform entity configuration."""
 
-    PLATFORM_NAME: ClassVar[str]
+    PLATFORM: ClassVar[Platform | str]
     ENTITY_SCHEMA: ClassVar[vol.Schema]
 
     @classmethod
     def platform_node(cls) -> dict[vol.Optional, vol.All]:
         """Return a schema node for the platform."""
         return {
-            vol.Optional(cls.PLATFORM_NAME): vol.All(
+            vol.Optional(str(cls.PLATFORM)): vol.All(
                 cv.ensure_list, [cls.ENTITY_SCHEMA]
             )
         }
@@ -291,7 +291,7 @@ class KNXPlatformSchema(ABC):
 class BinarySensorSchema(KNXPlatformSchema):
     """Voluptuous schema for KNX binary sensors."""
 
-    PLATFORM_NAME = SupportedPlatforms.BINARY_SENSOR.value
+    PLATFORM = Platform.BINARY_SENSOR
 
     CONF_STATE_ADDRESS = CONF_STATE_ADDRESS
     CONF_SYNC_STATE = CONF_SYNC_STATE
@@ -327,7 +327,7 @@ class BinarySensorSchema(KNXPlatformSchema):
 class ButtonSchema(KNXPlatformSchema):
     """Voluptuous schema for KNX buttons."""
 
-    PLATFORM_NAME = SupportedPlatforms.BUTTON.value
+    PLATFORM = Platform.BUTTON
 
     CONF_VALUE = "value"
     DEFAULT_NAME = "KNX Button"
@@ -388,7 +388,7 @@ class ButtonSchema(KNXPlatformSchema):
 class ClimateSchema(KNXPlatformSchema):
     """Voluptuous schema for KNX climate devices."""
 
-    PLATFORM_NAME = SupportedPlatforms.CLIMATE.value
+    PLATFORM = Platform.CLIMATE
 
     CONF_ACTIVE_STATE_ADDRESS = "active_state_address"
     CONF_SETPOINT_SHIFT_ADDRESS = "setpoint_shift_address"
@@ -507,7 +507,7 @@ class ClimateSchema(KNXPlatformSchema):
 class CoverSchema(KNXPlatformSchema):
     """Voluptuous schema for KNX covers."""
 
-    PLATFORM_NAME = SupportedPlatforms.COVER.value
+    PLATFORM = Platform.COVER
 
     CONF_MOVE_LONG_ADDRESS = "move_long_address"
     CONF_MOVE_SHORT_ADDRESS = "move_short_address"
@@ -562,7 +562,7 @@ class CoverSchema(KNXPlatformSchema):
 class ExposeSchema(KNXPlatformSchema):
     """Voluptuous schema for KNX exposures."""
 
-    PLATFORM_NAME = CONF_KNX_EXPOSE
+    PLATFORM = CONF_KNX_EXPOSE
 
     CONF_KNX_EXPOSE_TYPE = CONF_TYPE
     CONF_KNX_EXPOSE_ATTRIBUTE = "attribute"
@@ -599,7 +599,7 @@ class ExposeSchema(KNXPlatformSchema):
 class FanSchema(KNXPlatformSchema):
     """Voluptuous schema for KNX fans."""
 
-    PLATFORM_NAME = SupportedPlatforms.FAN.value
+    PLATFORM = Platform.FAN
 
     CONF_STATE_ADDRESS = CONF_STATE_ADDRESS
     CONF_OSCILLATION_ADDRESS = "oscillation_address"
@@ -624,7 +624,7 @@ class FanSchema(KNXPlatformSchema):
 class LightSchema(KNXPlatformSchema):
     """Voluptuous schema for KNX lights."""
 
-    PLATFORM_NAME = SupportedPlatforms.LIGHT.value
+    PLATFORM = Platform.LIGHT
 
     CONF_STATE_ADDRESS = CONF_STATE_ADDRESS
     CONF_BRIGHTNESS_ADDRESS = "brightness_address"
@@ -764,7 +764,7 @@ class LightSchema(KNXPlatformSchema):
 class NotifySchema(KNXPlatformSchema):
     """Voluptuous schema for KNX notifications."""
 
-    PLATFORM_NAME = SupportedPlatforms.NOTIFY.value
+    PLATFORM = Platform.NOTIFY
 
     DEFAULT_NAME = "KNX Notify"
 
@@ -779,7 +779,7 @@ class NotifySchema(KNXPlatformSchema):
 class NumberSchema(KNXPlatformSchema):
     """Voluptuous schema for KNX numbers."""
 
-    PLATFORM_NAME = SupportedPlatforms.NUMBER.value
+    PLATFORM = Platform.NUMBER
 
     CONF_MAX = "max"
     CONF_MIN = "min"
@@ -810,7 +810,7 @@ class NumberSchema(KNXPlatformSchema):
 class SceneSchema(KNXPlatformSchema):
     """Voluptuous schema for KNX scenes."""
 
-    PLATFORM_NAME = SupportedPlatforms.SCENE.value
+    PLATFORM = Platform.SCENE
 
     CONF_SCENE_NUMBER = "scene_number"
 
@@ -830,7 +830,7 @@ class SceneSchema(KNXPlatformSchema):
 class SelectSchema(KNXPlatformSchema):
     """Voluptuous schema for KNX selects."""
 
-    PLATFORM_NAME = SupportedPlatforms.SELECT.value
+    PLATFORM = Platform.SELECT
 
     CONF_OPTION = "option"
     CONF_OPTIONS = "options"
@@ -863,7 +863,7 @@ class SelectSchema(KNXPlatformSchema):
 class SensorSchema(KNXPlatformSchema):
     """Voluptuous schema for KNX sensors."""
 
-    PLATFORM_NAME = SupportedPlatforms.SENSOR.value
+    PLATFORM = Platform.SENSOR
 
     CONF_ALWAYS_CALLBACK = "always_callback"
     CONF_STATE_ADDRESS = CONF_STATE_ADDRESS
@@ -886,7 +886,7 @@ class SensorSchema(KNXPlatformSchema):
 class SwitchSchema(KNXPlatformSchema):
     """Voluptuous schema for KNX switches."""
 
-    PLATFORM_NAME = SupportedPlatforms.SWITCH.value
+    PLATFORM = Platform.SWITCH
 
     CONF_INVERT = CONF_INVERT
     CONF_STATE_ADDRESS = CONF_STATE_ADDRESS
@@ -907,7 +907,7 @@ class SwitchSchema(KNXPlatformSchema):
 class WeatherSchema(KNXPlatformSchema):
     """Voluptuous schema for KNX weather station."""
 
-    PLATFORM_NAME = SupportedPlatforms.WEATHER.value
+    PLATFORM = Platform.WEATHER
 
     CONF_SYNC_STATE = CONF_SYNC_STATE
     CONF_KNX_TEMPERATURE_ADDRESS = "address_temperature"

@@ -252,8 +252,7 @@ async def async_from_config_dict(
             f"{'.'.join(str(x) for x in sys.version_info[:3])} is deprecated and will "
             f"be removed in Home Assistant {REQUIRED_NEXT_PYTHON_HA_RELEASE}. "
             "Please upgrade Python to "
-            f"{'.'.join(str(x) for x in REQUIRED_NEXT_PYTHON_VER)} or "
-            "higher."
+            f"{'.'.join(str(x) for x in REQUIRED_NEXT_PYTHON_VER[:2])}."
         )
         _LOGGER.warning(msg)
         hass.components.persistent_notification.async_create(

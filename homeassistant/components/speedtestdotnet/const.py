@@ -9,7 +9,11 @@ from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
     SensorEntityDescription,
 )
-from homeassistant.const import DATA_RATE_MEGABITS_PER_SECOND, TIME_MILLISECONDS
+from homeassistant.const import (
+    DATA_RATE_MEGABITS_PER_SECOND,
+    TIME_MILLISECONDS,
+    Platform,
+)
 
 DOMAIN: Final = "speedtestdotnet"
 
@@ -65,4 +69,4 @@ ATTRIBUTION: Final = "Data retrieved from Speedtest.net by Ookla"
 
 ICON: Final = "mdi:speedometer"
 
-PLATFORMS: Final = ["sensor"]
+PLATFORMS: Final = [Platform.SENSOR]

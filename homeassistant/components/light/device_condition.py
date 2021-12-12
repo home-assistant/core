@@ -19,9 +19,11 @@ CONDITION_SCHEMA = toggle_entity.CONDITION_SCHEMA.extend(
 
 
 @callback
-def async_condition_from_config(config: ConfigType) -> ConditionCheckerType:
+def async_condition_from_config(
+    hass: HomeAssistant, config: ConfigType
+) -> ConditionCheckerType:
     """Evaluate state based on configuration."""
-    return toggle_entity.async_condition_from_config(config)
+    return toggle_entity.async_condition_from_config(hass, config)
 
 
 async def async_get_conditions(

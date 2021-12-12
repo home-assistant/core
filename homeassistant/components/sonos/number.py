@@ -39,17 +39,9 @@ class SonosLevelEntity(SonosEntity, NumberEntity):
     def __init__(self, speaker: SonosSpeaker, level_type: str) -> None:
         """Initialize the level entity."""
         super().__init__(speaker)
+        self._attr_unique_id = f"{self.soco.uid}-{level_type}"
+        self._attr_name = f"{self.speaker.zone_name} {level_type.capitalize()}"
         self.level_type = level_type
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID."""
-        return f"{self.soco.uid}-{self.level_type}"
-
-    @property
-    def name(self) -> str:
-        """Return the name."""
-        return f"{self.speaker.zone_name} {self.level_type.capitalize()}"
 
     async def _async_poll(self) -> None:
         """Poll the value if subscriptions are not working."""

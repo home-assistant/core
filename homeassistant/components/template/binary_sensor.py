@@ -46,7 +46,11 @@ from .const import (
     CONF_OBJECT_ID,
     CONF_PICTURE,
 )
-from .template_entity import TEMPLATE_ENTITY_COMMON_SCHEMA, TemplateEntity
+from .template_entity import (
+    TEMPLATE_ENTITY_COMMON_SCHEMA,
+    TemplateEntity,
+    rewrite_common_legacy_to_modern_conf,
+)
 from .trigger_entity import TriggerEntity
 
 CONF_DELAY_ON = "delay_on"
@@ -106,14 +110,7 @@ def rewrite_legacy_to_modern_conf(cfg: dict[str, dict]) -> list[dict]:
     for object_id, entity_cfg in cfg.items():
         entity_cfg = {**entity_cfg, CONF_OBJECT_ID: object_id}
 
-        for from_key, to_key in LEGACY_FIELDS.items():
-            if from_key not in entity_cfg or to_key in entity_cfg:
-                continue
-
-            val = entity_cfg.pop(from_key)
-            if isinstance(val, str):
-                val = template.Template(val)
-            entity_cfg[to_key] = val
+        entity_cfg = rewrite_common_legacy_to_modern_conf(entity_cfg, LEGACY_FIELDS)
 
         if CONF_NAME not in entity_cfg:
             entity_cfg[CONF_NAME] = template.Template(object_id)

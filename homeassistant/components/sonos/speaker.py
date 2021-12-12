@@ -46,6 +46,7 @@ from .const import (
     SCAN_INTERVAL,
     SONOS_CHECK_ACTIVITY,
     SONOS_CREATE_ALARM,
+    SONOS_CREATE_AUDIO_FORMAT_SENSOR,
     SONOS_CREATE_BATTERY,
     SONOS_CREATE_LEVELS,
     SONOS_CREATE_MEDIA_PLAYER,
@@ -196,6 +197,8 @@ class SonosSpeaker:
         self.cross_fade: bool | None = None
         self.bass: int | None = None
         self.treble: int | None = None
+        self.sub_enabled: bool | None = None
+        self.surround_enabled: bool | None = None
 
         # Misc features
         self.buttons_enabled: bool | None = None
@@ -237,6 +240,11 @@ class SonosSpeaker:
         future.result(timeout=10)
 
         dispatcher_send(self.hass, SONOS_CREATE_LEVELS, self)
+
+        if audio_format := self.soco.soundbar_audio_input_format:
+            dispatcher_send(
+                self.hass, SONOS_CREATE_AUDIO_FORMAT_SENSOR, self, audio_format
+            )
 
         if battery_info := fetch_battery_info_or_none(self.soco):
             self.battery_info = battery_info
@@ -407,10 +415,12 @@ class SonosSpeaker:
                     self.zone_name,
                 )
             else:
+                exc_info = exception if _LOGGER.isEnabledFor(logging.DEBUG) else None
                 _LOGGER.error(
-                    "Subscription renewals for %s failed",
+                    "Subscription renewals for %s failed: %s",
                     self.zone_name,
-                    exc_info=exception,
+                    exception,
+                    exc_info=exc_info,
                 )
             await self.async_offline()
 
@@ -984,9 +994,9 @@ class SonosSpeaker:
     @soco_error()
     def update_media(self, event: SonosEvent | None = None) -> None:
         """Update information about currently playing media."""
-        variables = event and event.variables
+        variables = event.variables if event else {}
 
-        if variables and "transport_state" in variables:
+        if "transport_state" in variables:
             # If the transport has an error then transport_state will
             # not be set
             new_status = variables["transport_state"]
@@ -1002,7 +1012,7 @@ class SonosSpeaker:
         update_position = new_status != self.media.playback_status
         self.media.playback_status = new_status
 
-        if variables and "transport_state" in variables:
+        if "transport_state" in variables:
             self.media.play_mode = variables["current_play_mode"]
             track_uri = (
                 variables["enqueued_transport_uri"] or variables["current_track_uri"]
@@ -1050,7 +1060,7 @@ class SonosSpeaker:
         self.media.title = source
         self.media.source_name = source
 
-    def update_media_radio(self, variables: dict | None) -> None:
+    def update_media_radio(self, variables: dict) -> None:
         """Update state when streaming radio."""
         self.media.clear_position()
         radio_title = None

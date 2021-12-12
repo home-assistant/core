@@ -388,7 +388,7 @@ async def test_setting_sensor_value_via_mqtt_message_and_template_and_raw_state_
                 "state_topic": "test-topic",
                 "payload_on": "ON",
                 "payload_off": "OFF",
-                "value_template": "{%if value|bitwise_and(1)-%}ON{%else%}OFF{%-endif-%}",
+                "value_template": "{%if value|unpack('b')-%}ON{%else%}OFF{%-endif-%}",
             }
         },
     )

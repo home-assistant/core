@@ -16,7 +16,12 @@ from homeassistant.const import (
     SUN_EVENT_SUNSET,
 )
 from homeassistant.exceptions import ConditionError, HomeAssistantError
-from homeassistant.helpers import condition, config_validation as cv, trace
+from homeassistant.helpers import (
+    condition,
+    config_validation as cv,
+    entity_registry as er,
+    trace,
+)
 from homeassistant.helpers.template import Template
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -1107,6 +1112,29 @@ async def test_state_attribute_boolean(hass):
     assert test(hass)
 
 
+async def test_state_entity_registry_id(hass):
+    """Test with entity specified by entity registry id."""
+    registry = er.async_get(hass)
+    entry = registry.async_get_or_create(
+        "switch", "hue", "1234", suggested_object_id="test"
+    )
+    assert entry.entity_id == "switch.test"
+    config = {
+        "condition": "state",
+        "entity_id": entry.id,
+        "state": "on",
+    }
+    config = cv.CONDITION_SCHEMA(config)
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+
+    hass.states.async_set("switch.test", "on")
+    assert test(hass)
+
+    hass.states.async_set("switch.test", "off")
+    assert not test(hass)
+
+
 async def test_state_using_input_entities(hass):
     """Test state conditions using input_* entities."""
     await async_setup_component(
@@ -1416,6 +1444,29 @@ async def test_numeric_state_attribute(hass):
     assert not test(hass)
 
     hass.states.async_set("sensor.temperature", 100, {"attribute1": None})
+    assert not test(hass)
+
+
+async def test_numeric_state_entity_registry_id(hass):
+    """Test with entity specified by entity registry id."""
+    registry = er.async_get(hass)
+    entry = registry.async_get_or_create(
+        "sensor", "hue", "1234", suggested_object_id="test"
+    )
+    assert entry.entity_id == "sensor.test"
+    config = {
+        "condition": "numeric_state",
+        "entity_id": entry.id,
+        "above": 100,
+    }
+    config = cv.CONDITION_SCHEMA(config)
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+
+    hass.states.async_set("sensor.test", "110")
+    assert test(hass)
+
+    hass.states.async_set("sensor.test", "90")
     assert not test(hass)
 
 

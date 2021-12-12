@@ -89,7 +89,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 )
 
 
-SCAN_INTERVAL = timedelta(hours=1)
+SCAN_INTERVAL = timedelta(minutes=5)
 _LOGGER = logging.getLogger(__name__)
 
 

@@ -144,6 +144,7 @@ PLAYABLE_MEDIA_TYPES = [
 
 SONOS_CHECK_ACTIVITY = "sonos_check_activity"
 SONOS_CREATE_ALARM = "sonos_create_alarm"
+SONOS_CREATE_AUDIO_FORMAT_SENSOR = "sonos_create_audio_format_sensor"
 SONOS_CREATE_BATTERY = "sonos_create_battery"
 SONOS_CREATE_SWITCHES = "sonos_create_switches"
 SONOS_CREATE_LEVELS = "sonos_create_levels"

@@ -12,7 +12,7 @@ from pylutron_caseta.smartbridge import Smartbridge
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -63,7 +63,14 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS = ["light", "switch", "cover", "scene", "fan", "binary_sensor"]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.COVER,
+    Platform.FAN,
+    Platform.LIGHT,
+    Platform.SCENE,
+    Platform.SWITCH,
+]
 
 
 async def async_setup(hass, base_config):

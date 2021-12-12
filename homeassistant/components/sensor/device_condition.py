@@ -186,7 +186,9 @@ async def async_get_conditions(
 
 
 @callback
-def async_condition_from_config(config: ConfigType) -> condition.ConditionCheckerType:
+def async_condition_from_config(
+    hass: HomeAssistant, config: ConfigType
+) -> condition.ConditionCheckerType:
     """Evaluate state based on configuration."""
     numeric_state_config = {
         condition.CONF_CONDITION: "numeric_state",
@@ -198,6 +200,9 @@ def async_condition_from_config(config: ConfigType) -> condition.ConditionChecke
         numeric_state_config[condition.CONF_BELOW] = config[CONF_BELOW]
 
     numeric_state_config = cv.NUMERIC_STATE_CONDITION_SCHEMA(numeric_state_config)
+    numeric_state_config = condition.numeric_state_validate_config(
+        hass, numeric_state_config
+    )
     return condition.async_numeric_state_from_config(numeric_state_config)
 
 

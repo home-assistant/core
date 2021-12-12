@@ -3,6 +3,12 @@
         "abort": {
             "already_configured": "Konto on juba h\u00e4\u00e4lestatud"
         },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Tuvastamine nurjus",
+            "invalid_station": "M\u00e4\u00e4ratud nimega ilmajaama ei leitud",
+            "more_stations": "Leiti mitu m\u00e4\u00e4ratud nimega ilmajaama"
+        },
         "step": {
             "user": {
                 "data": {

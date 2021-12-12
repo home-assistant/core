@@ -5,8 +5,7 @@ import logging
 from typing import Any, Awaitable, Callable, Union
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp, ssdp, zeroconf
-from homeassistant.components.mqtt import discovery as mqtt
+from homeassistant.components import dhcp, mqtt, ssdp, zeroconf
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.typing import UNDEFINED, DiscoveryInfoType, UndefinedType

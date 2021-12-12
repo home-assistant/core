@@ -40,7 +40,7 @@ def soco_error(
                 return None
             except (OSError, SoCoException, SoCoUPnPException) as err:
                 error_code = getattr(err, "error_code", None)
-                function = funct.__name__
+                function = funct.__qualname__
                 if errorcodes and error_code in errorcodes:
                     _LOGGER.debug(
                         "Error code %s ignored in call to %s", error_code, function
@@ -59,7 +59,9 @@ def soco_error(
                 return None
 
             dispatcher_send(
-                self.hass, f"{SONOS_SPEAKER_ACTIVITY}-{self.soco.uid}", funct.__name__
+                self.hass,
+                f"{SONOS_SPEAKER_ACTIVITY}-{self.soco.uid}",
+                funct.__qualname__,
             )
             return result
 

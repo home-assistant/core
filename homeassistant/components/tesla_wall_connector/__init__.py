@@ -15,7 +15,7 @@ from tesla_wall_connector.exceptions import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -34,7 +34,7 @@ from .const import (
     WALLCONNECTOR_DEVICE_NAME,
 )
 
-PLATFORMS: list[str] = ["binary_sensor", "sensor"]
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 

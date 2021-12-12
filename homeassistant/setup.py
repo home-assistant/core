@@ -14,6 +14,7 @@ from homeassistant.const import (
     EVENT_COMPONENT_LOADED,
     EVENT_HOMEASSISTANT_START,
     PLATFORM_FORMAT,
+    Platform,
 )
 from homeassistant.core import CALLBACK_TYPE
 from homeassistant.exceptions import HomeAssistantError
@@ -26,34 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_COMPONENT = "component"
 
-BASE_PLATFORMS = {
-    "air_quality",
-    "alarm_control_panel",
-    "binary_sensor",
-    "camera",
-    "calendar",
-    "climate",
-    "cover",
-    "device_tracker",
-    "fan",
-    "humidifier",
-    "image_processing",
-    "light",
-    "lock",
-    "media_player",
-    "notify",
-    "number",
-    "remote",
-    "scene",
-    "select",
-    "sensor",
-    "siren",
-    "switch",
-    "tts",
-    "vacuum",
-    "water_heater",
-    "weather",
-}
+BASE_PLATFORMS = {platform.value for platform in Platform}
 
 DATA_SETUP_DONE = "setup_done"
 DATA_SETUP_STARTED = "setup_started"

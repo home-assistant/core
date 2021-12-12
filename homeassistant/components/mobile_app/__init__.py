@@ -6,7 +6,7 @@ from homeassistant.components.webhook import (
     async_register as webhook_register,
     async_unregister as webhook_unregister,
 )
-from homeassistant.const import ATTR_DEVICE_ID, CONF_WEBHOOK_ID
+from homeassistant.const import ATTR_DEVICE_ID, CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, discovery
 from homeassistant.helpers.typing import ConfigType
@@ -31,7 +31,7 @@ from .helpers import savable_state
 from .http_api import RegistrationsView
 from .webhook import handle_webhook
 
-PLATFORMS = "sensor", "binary_sensor", "device_tracker"
+PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.DEVICE_TRACKER]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

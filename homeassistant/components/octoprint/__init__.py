@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SENSORS,
     CONF_SSL,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -49,7 +50,7 @@ def ensure_valid_path(value):
     return value
 
 
-PLATFORMS = ["binary_sensor", "sensor"]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 DEFAULT_NAME = "OctoPrint"
 CONF_NUMBER_OF_TOOLS = "number_of_tools"
 CONF_BED = "bed"

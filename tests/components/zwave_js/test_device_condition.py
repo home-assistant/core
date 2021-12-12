@@ -552,7 +552,7 @@ async def test_failure_scenarios(hass, client, hank_binary_switch, integration):
 
     with pytest.raises(HomeAssistantError):
         await device_condition.async_condition_from_config(
-            {"type": "failed.test", "device_id": device.id}
+            hass, {"type": "failed.test", "device_id": device.id}
         )
 
     with patch(
