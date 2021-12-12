@@ -8,16 +8,10 @@ from aiohue.v2.models.device import DeviceArchetypes
 from aiohue.v2.models.resource import ResourceTypes
 
 from homeassistant import core
-from homeassistant.components.binary_sensor import DEVICE_CLASS_MOTION
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_HOST,
-    CONF_USERNAME,
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_TEMPERATURE,
-)
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_USERNAME
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.device_registry import (
     async_entries_for_config_entry as devices_for_config_entries,
@@ -102,10 +96,10 @@ async def handle_v2_migration(hass: core.HomeAssistant, entry: ConfigEntry) -> N
     async with HueBridgeV2(host, api_key, websession) as api:
 
         sensor_class_mapping = {
-            DEVICE_CLASS_BATTERY: ResourceTypes.DEVICE_POWER,
-            DEVICE_CLASS_MOTION: ResourceTypes.MOTION,
-            DEVICE_CLASS_ILLUMINANCE: ResourceTypes.LIGHT_LEVEL,
-            DEVICE_CLASS_TEMPERATURE: ResourceTypes.TEMPERATURE,
+            SensorDeviceClass.BATTERY.value: ResourceTypes.DEVICE_POWER,
+            BinarySensorDeviceClass.MOTION.value: ResourceTypes.MOTION,
+            SensorDeviceClass.ILLUMINANCE.value: ResourceTypes.LIGHT_LEVEL,
+            SensorDeviceClass.TEMPERATURE.value: ResourceTypes.TEMPERATURE,
         }
 
         # migrate entities attached to a device

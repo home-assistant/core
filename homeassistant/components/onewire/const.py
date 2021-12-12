@@ -15,6 +15,7 @@ DEFAULT_SYSBUS_MOUNT_DIR = "/sys/bus/w1/devices/"
 
 DOMAIN = "onewire"
 
+DEVICE_KEYS_0_3 = range(4)
 DEVICE_KEYS_0_7 = range(8)
 DEVICE_KEYS_A_B = ("A", "B")
 
@@ -32,7 +33,7 @@ DEVICE_SUPPORT_OWSERVER = {
     "3B": (),
     "42": (),
     "7E": ("EDS0066", "EDS0068"),
-    "EF": ("HB_MOISTURE_METER", "HobbyBoards_EF"),
+    "EF": ("HB_HUB", "HB_MOISTURE_METER", "HobbyBoards_EF"),
 }
 DEVICE_SUPPORT_SYSBUS = ["10", "22", "28", "3B", "42"]
 

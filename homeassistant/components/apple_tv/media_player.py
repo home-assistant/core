@@ -31,6 +31,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_STOP,
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
+    SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.const import (
@@ -66,6 +67,7 @@ SUPPORT_APPLE_TV = (
     | SUPPORT_STOP
     | SUPPORT_NEXT_TRACK
     | SUPPORT_PREVIOUS_TRACK
+    | SUPPORT_VOLUME_SET
     | SUPPORT_VOLUME_STEP
     | SUPPORT_REPEAT_SET
     | SUPPORT_SHUFFLE_SET
@@ -86,6 +88,7 @@ SUPPORT_FEATURE_MAPPING = {
     FeatureName.VolumeDown: SUPPORT_VOLUME_STEP,
     FeatureName.SetRepeat: SUPPORT_REPEAT_SET,
     FeatureName.SetShuffle: SUPPORT_SHUFFLE_SET,
+    FeatureName.SetVolume: SUPPORT_VOLUME_SET,
 }
 
 
@@ -207,6 +210,20 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
         return None
 
     @property
+    def media_content_id(self):
+        """Content ID of current playing media."""
+        if self._playing:
+            return self._playing.content_identifier
+        return None
+
+    @property
+    def volume_level(self):
+        """Volume level of the media player (0..1)."""
+        if self._is_feature_available(FeatureName.Volume):
+            return self.atv.audio.volume / 100.0  # from percent
+        return None
+
+    @property
     def media_duration(self):
         """Duration of current playing media in seconds."""
         if self._playing:
@@ -283,6 +300,27 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
         """Album name of current playing media, music track only."""
         if self._is_feature_available(FeatureName.Album):
             return self._playing.album
+        return None
+
+    @property
+    def media_series_title(self):
+        """Title of series of current playing media, TV show only."""
+        if self._is_feature_available(FeatureName.SeriesName):
+            return self._playing.series_name
+        return None
+
+    @property
+    def media_season(self):
+        """Season of current playing media, TV show only."""
+        if self._is_feature_available(FeatureName.SeasonNumber):
+            return str(self._playing.season_number)
+        return None
+
+    @property
+    def media_episode(self):
+        """Episode of current playing media, TV show only."""
+        if self._is_feature_available(FeatureName.EpisodeNumber):
+            return str(self._playing.episode_number)
         return None
 
     @property
@@ -365,6 +403,12 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
         """Turn volume down for media player."""
         if self.atv:
             await self.atv.audio.volume_down()
+
+    async def async_set_volume_level(self, volume):
+        """Set volume level, range 0..1."""
+        if self.atv:
+            # pyatv expects volume in percent
+            await self.atv.audio.set_volume(volume * 100.0)
 
     async def async_set_repeat(self, repeat):
         """Set repeat mode."""

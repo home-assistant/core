@@ -88,6 +88,11 @@ DHCP = [
     },
     {
         "domain": "flux_led",
+        "macaddress": "ACCF23*",
+        "hostname": "[ba][lk]*"
+    },
+    {
+        "domain": "flux_led",
         "macaddress": "B4E842*",
         "hostname": "[ba][lk]*"
     },

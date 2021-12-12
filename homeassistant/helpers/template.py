@@ -110,18 +110,25 @@ def attach(hass: HomeAssistant, obj: Any) -> None:
 
 
 def render_complex(
-    value: Any, variables: TemplateVarsType = None, limited: bool = False
+    value: Any,
+    variables: TemplateVarsType = None,
+    limited: bool = False,
+    parse_result: bool = True,
 ) -> Any:
     """Recursive template creator helper function."""
     if isinstance(value, list):
-        return [render_complex(item, variables) for item in value]
+        return [
+            render_complex(item, variables, limited, parse_result) for item in value
+        ]
     if isinstance(value, collections.abc.Mapping):
         return {
-            render_complex(key, variables): render_complex(item, variables)
+            render_complex(key, variables, limited, parse_result): render_complex(
+                item, variables, limited, parse_result
+            )
             for key, item in value.items()
         }
     if isinstance(value, Template):
-        return value.async_render(variables, limited=limited)
+        return value.async_render(variables, limited=limited, parse_result=parse_result)
 
     return value
 

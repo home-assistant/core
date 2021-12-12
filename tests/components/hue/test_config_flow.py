@@ -7,7 +7,7 @@ from aiohue.errors import LinkButtonNotPressed
 import pytest
 import voluptuous as vol
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components import ssdp, zeroconf
 from homeassistant.components.hue import config_flow, const
 from homeassistant.components.hue.errors import CannotConnect
@@ -706,8 +706,7 @@ async def test_options_flow_v2(hass):
     )
     entry.add_to_hass(hass)
 
-    with pytest.raises(data_entry_flow.UnknownHandler):
-        await hass.config_entries.options.async_init(entry.entry_id)
+    assert config_flow.HueFlowHandler.async_supports_options_flow(entry) is False
 
 
 async def test_bridge_zeroconf(hass, aioclient_mock):

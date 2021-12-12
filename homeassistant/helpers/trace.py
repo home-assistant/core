@@ -216,7 +216,7 @@ def script_execution_set(reason: str) -> None:
 
 
 def script_execution_get() -> str | None:
-    """Return the current trace."""
+    """Return the stop reason."""
     if (data := script_execution_cv.get()) is None:
         return None
     return data.script_execution

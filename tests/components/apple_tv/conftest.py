@@ -96,12 +96,19 @@ def full_device(mock_scan, dmap_pin):
 @pytest.fixture
 def mrp_device(mock_scan):
     """Mock pyatv.scan."""
-    mock_scan.result.append(
-        create_conf(
-            "127.0.0.1",
-            "MRP Device",
-            mrp_service(),
-        )
+    mock_scan.result.extend(
+        [
+            create_conf(
+                "127.0.0.1",
+                "MRP Device",
+                mrp_service(),
+            ),
+            create_conf(
+                "127.0.0.2",
+                "MRP Device 2",
+                mrp_service(unique_id="unrelated"),
+            ),
+        ]
     )
     yield mock_scan
 
