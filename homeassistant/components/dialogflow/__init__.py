@@ -18,6 +18,7 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: {}}, extra=vol.ALLOW_EXTRA)
 
 V1 = 1
 V2 = 2
+V3 = 3
 
 
 class DialogFlowError(HomeAssistantError):
@@ -85,6 +86,8 @@ def dialogflow_error_response(message, error):
         parameters = message["result"]["parameters"]
     elif api_version is V2:
         parameters = message["queryResult"]["parameters"]
+    elif api_version is V3:
+        parameters = message["intent"]["params"]
     dialogflow_response = DialogflowResponse(parameters, api_version)
     dialogflow_response.add_speech(error)
     return dialogflow_response.as_dict()
@@ -96,6 +99,8 @@ def get_api_version(message):
         return V1
     if message.get("responseId") is not None:
         return V2
+    if message.get("handler") is not None:
+        return V3
 
 
 async def async_handle_message(hass, message):
@@ -108,11 +113,20 @@ async def async_handle_message(hass, message):
         req = message.get("result")
         if req.get("actionIncomplete", True):
             return
+        action = req.get("action", "")
+        parameters = req.get("parameters").copy()
 
     elif _api_version is V2:
         req = message.get("queryResult")
         if req.get("allRequiredParamsPresent", False) is False:
             return
+        action = req.get("action", "")
+        parameters = req.get("parameters").copy()
+        
+    elif _api_version is V3:
+        req = message
+        action = req.get("handler", "").get("name","")
+        parameters = req.get("intent","").get("params").copy()
 
     action = req.get("action", "")
     parameters = req.get("parameters").copy()
@@ -165,4 +179,7 @@ class DialogflowResponse:
             return {"speech": self.speech, "displayText": self.speech, "source": SOURCE}
 
         if self.api_version is V2:
+            return {"fulfillmentText": self.speech, "source": SOURCE}
+
+        if self.api_version is V3:
             return {"fulfillmentText": self.speech, "source": SOURCE}
