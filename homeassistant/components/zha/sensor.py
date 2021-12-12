@@ -24,6 +24,7 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
+    ELECTRIC_POWER_FACTOR,
     FREQUENCY_HERTZ,
     ENERGY_KILO_WATT_HOUR,
     LIGHT_LUX,
@@ -368,7 +369,7 @@ class ElectricalMeasurementPowerFactor(ElectricalMeasurement, id_suffix="power_f
 
     SENSOR_ATTR = "power_factor"
     _device_class: SensorDeviceClass = SensorDeviceClass.POWER_FACTOR
-    _unit = ELECTRIC_POWER_FACTOR
+    _unit = PERCENTAGE
 
     @property
     def should_poll(self) -> bool:
