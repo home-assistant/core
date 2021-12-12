@@ -700,12 +700,9 @@ class RSSISensor(Sensor, id_suffix="rssi"):
 
         Return entity if it is a supported configuration, otherwise return None
         """
-        platform_restrictions = ZHA_ENTITIES.single_device_matches[Platform.SENSOR]
-        device_restrictions = platform_restrictions[zha_device.ieee]
         key = CHANNEL_BASIC + "_rssi"
-        if key in device_restrictions:
+        if ZHA_ENTITIES.prevent_entity_creation(Platform.SENSOR, zha_device.ieee, key):
             return None
-        device_restrictions.append(key)
         return cls(unique_id, zha_device, channels, **kwargs)
 
     @property
@@ -743,12 +740,9 @@ class LQISensor(Sensor, id_suffix="lqi"):
 
         Return entity if it is a supported configuration, otherwise return None
         """
-        platform_restrictions = ZHA_ENTITIES.single_device_matches[Platform.SENSOR]
-        device_restrictions = platform_restrictions[zha_device.ieee]
         key = CHANNEL_BASIC + "_lqi"
-        if key in device_restrictions:
+        if ZHA_ENTITIES.prevent_entity_creation(Platform.SENSOR, zha_device.ieee, key):
             return None
-        device_restrictions.append(key)
         return cls(unique_id, zha_device, channels, **kwargs)
 
     @property

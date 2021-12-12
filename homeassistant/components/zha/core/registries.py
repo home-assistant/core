@@ -346,6 +346,15 @@ class ZHAEntityRegistry:
 
         return decorator
 
+    def prevent_entity_creation(self, platform: Platform, ieee: EUI64, key: str):
+        """Return True if the entity should not be created."""
+        platform_restrictions = ZHA_ENTITIES.single_device_matches[platform]
+        device_restrictions = platform_restrictions[ieee]
+        if key in device_restrictions:
+            return True
+        device_restrictions.append(key)
+        return False
+
     def clean_up(self) -> None:
         """Clean up post discovery."""
         self.single_device_matches: dict[
