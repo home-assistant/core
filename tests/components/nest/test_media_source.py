@@ -231,6 +231,7 @@ async def test_camera_event(hass, auth, hass_client):
     assert "Person" in browse.title
     assert not browse.can_expand
     assert not browse.children
+    assert not browse.can_play
 
     # Resolving the event links to the media
     media = await media_source.async_resolve_media(
@@ -302,6 +303,7 @@ async def test_event_order(hass, auth):
     event_timestamp_string = event_timestamp2.strftime(DATE_STR_FORMAT)
     assert browse.children[0].title == f"Motion @ {event_timestamp_string}"
     assert not browse.children[0].can_expand
+    assert not browse.can_play
 
     # Person event is next
     assert browse.children[1].domain == DOMAIN
@@ -310,6 +312,7 @@ async def test_event_order(hass, auth):
     event_timestamp_string = event_timestamp1.strftime(DATE_STR_FORMAT)
     assert browse.children[1].title == f"Person @ {event_timestamp_string}"
     assert not browse.children[1].can_expand
+    assert not browse.can_play
 
 
 async def test_browse_invalid_device_id(hass, auth):
@@ -449,6 +452,7 @@ async def test_camera_event_clip_preview(hass, auth, hass_client):
     assert browse.children[0].title == f"Motion @ {event_timestamp_string}"
     assert not browse.children[0].can_expand
     assert len(browse.children[0].children) == 0
+    assert browse.children[0].can_play
 
     # Resolving the event links to the media
     media = await media_source.async_resolve_media(
