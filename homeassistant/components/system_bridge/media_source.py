@@ -58,11 +58,7 @@ class SystemBridgeSource(MediaSource):
             mime_type,
         )
 
-    async def async_browse_media(
-        self,
-        item: MediaSourceItem,
-        media_types: tuple[str] = ("image",),
-    ) -> BrowseMediaSource:
+    async def async_browse_media(self, item: MediaSourceItem) -> BrowseMediaSource:
         """Return media."""
         if not item.identifier:
             return _build_root_paths(self.name)
