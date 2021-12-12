@@ -62,7 +62,7 @@ class FakeSubscriber(GoogleNestSubscriber):
 
     def set_update_callback(self, callback: Callable[[EventMessage], Awaitable[None]]):
         """Capture the callback set by Home Assistant."""
-        self._callback = callback
+        self._device_manager.set_update_callback(callback)
 
     async def create_subscription(self):
         """Create the subscription."""
@@ -93,7 +93,6 @@ class FakeSubscriber(GoogleNestSubscriber):
         """Simulate a received pubsub message, invoked by tests."""
         # Update device state, then invoke HomeAssistant to refresh
         await self._device_manager.async_handle_event(event_message)
-        await self._callback(event_message)
 
 
 async def async_setup_sdm_platform(
