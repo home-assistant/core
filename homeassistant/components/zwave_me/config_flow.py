@@ -42,12 +42,11 @@ class ZWaveMeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 title=self.url,
                 data=user_input,
             )
-        else:
-            return self.async_show_form(
-                step_id="user",
-                data_schema=schema,
-                errors=errors,
-            )
+        return self.async_show_form(
+            step_id="user",
+            data_schema=schema,
+            errors=errors,
+        )
 
     async def async_step_zeroconf(self, discovery_info):
         """Handle a discovered Z-Wave accessory.
@@ -64,7 +63,5 @@ class ZWaveMeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         entry = await self.async_set_unique_id(DOMAIN + self.url)
         if entry is None:
             return self.async_show_form(
-                step_id="user",
-                data_schema=schema,
-                errors=errors
+                step_id="user", data_schema=schema, errors=errors
             )

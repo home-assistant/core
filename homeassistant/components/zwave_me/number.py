@@ -1,11 +1,11 @@
 """Representation of a switchMultilevel."""
 
+from homeassistant.components.number import NumberEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import ZWaveMeEntity
 from .const import DOMAIN
-from homeassistant.components.number import NumberEntity
 
 DEVICE_NAME = "switchMultilevel"
 

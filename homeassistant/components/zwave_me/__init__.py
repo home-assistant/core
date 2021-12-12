@@ -6,8 +6,7 @@ from zwave_me_ws import ZWaveMe, ZWaveMeData
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect, \
-    dispatcher_send
+from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN, PLATFORMS, ZWAVE_PLATFORMS
@@ -48,12 +47,13 @@ class ZWaveMeController:
         self.platforms_inited = False
 
     async def async_establish_connection(self, hass):
+        """Try to establish connection with ZWave-Me"""
         established = asyncio.Future()
         loop = asyncio.get_running_loop()
         hass.async_add_job(
             self.zwave_api.get_connection,
-            lambda result: loop.call_soon_threadsafe(established, result)
-        )   
+            lambda result: loop.call_soon_threadsafe(established, result),
+        )
 
         return await established
 
@@ -61,12 +61,10 @@ class ZWaveMeController:
         """Send signal to create device."""
         if device.deviceType in ZWAVE_PLATFORMS:
             if device.id in self.device_ids:
-                dispatcher_send(self._hass, "ZWAVE_ME_INFO_" + device.id,
-                                device)
+                dispatcher_send(self._hass, "ZWAVE_ME_INFO_" + device.id, device)
             else:
                 dispatcher_send(
-                    self._hass, "ZWAVE_ME_NEW_" + device.deviceType.upper(),
-                    device
+                    self._hass, "ZWAVE_ME_NEW_" + device.deviceType.upper(), device
                 )
                 self.device_ids.add(device.id)
 
@@ -93,9 +91,11 @@ class ZWaveMeEntity(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Connect to an updater."""
-        self.async_on_remove(async_dispatcher_connect(
-            self.hass, f"ZWAVE_ME_INFO_{self.device.id}", self.get_new_data
-        ))
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, f"ZWAVE_ME_INFO_{self.device.id}", self.get_new_data
+            )
+        )
 
     @callback
     def get_new_data(self, new_data):

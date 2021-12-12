@@ -5,7 +5,11 @@ from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.components.zwave_me.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM, FlowResult
+from homeassistant.data_entry_flow import (
+    RESULT_TYPE_CREATE_ENTRY,
+    RESULT_TYPE_FORM,
+    FlowResult,
+)
 
 MOCK_ZEROCONF_DATA = zeroconf.ZeroconfServiceInfo(
     host="192.168.1.14",
