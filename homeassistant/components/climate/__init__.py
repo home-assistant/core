@@ -179,7 +179,7 @@ class ClimateEntity(Entity):
     """Base class for climate entities."""
 
     entity_description: ClimateEntityDescription
-    _attr_current_humidity: float | None = None
+    _attr_current_humidity: int | None = None
     _attr_current_temperature: float | None = None
     _attr_fan_mode: str | None
     _attr_fan_modes: list[str] | None
@@ -315,7 +315,7 @@ class ClimateEntity(Entity):
         return self._attr_temperature_unit
 
     @property
-    def current_humidity(self) -> float | None:
+    def current_humidity(self) -> int | None:
         """Return the current humidity."""
         return self._attr_current_humidity
 
