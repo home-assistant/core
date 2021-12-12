@@ -2,6 +2,7 @@
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.helpers import update_coordinator
 from homeassistant.helpers.entity import DeviceInfo, StateType
+from homeassistant.util.dt import as_local
 
 from . import SolarlogData
 from .const import DOMAIN, SENSOR_TYPES, SolarLogSensorEntityDescription
@@ -40,7 +41,10 @@ class SolarlogSensor(update_coordinator.CoordinatorEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the native sensor value."""
-        result = getattr(self.coordinator.data, self.entity_description.key)
+        if self.entity_description.key == "time":
+            result = as_local(getattr(self.coordinator.data, self.entity_description.key))
+        else:
+            result = getattr(self.coordinator.data, self.entity_description.key)
         if self.entity_description.factor:
             state = round(result * self.entity_description.factor, 3)
         else:
