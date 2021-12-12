@@ -47,7 +47,7 @@ class LongPressRequiresSubscriptionError(OptionsValidationError):
     error_string = "long_press_requires_subscription"
 
 
-@dataclass
+@dataclass(frozen=True)
 class Options:
     """Configuration options for the DeviceCoordinator class."""
 
