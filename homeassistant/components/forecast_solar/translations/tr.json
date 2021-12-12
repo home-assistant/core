@@ -4,8 +4,13 @@
             "user": {
                 "data": {
                     "azimuth": "Azimut (360 derece, 0 = Kuzey, 90 = Do\u011fu, 180 = G\u00fcney, 270 = Bat\u0131)",
-                    "declination": "Sapma (0 = Yatay, 90 = Dikey)"
-                }
+                    "declination": "Sapma (0 = Yatay, 90 = Dikey)",
+                    "latitude": "Enlem",
+                    "longitude": "Boylam",
+                    "modules power": "Solar mod\u00fcllerinizin toplam en y\u00fcksek Watt g\u00fcc\u00fc",
+                    "name": "Ad"
+                },
+                "description": "G\u00fcne\u015f panellerinizin verilerini doldurun. Bir alan net de\u011filse l\u00fctfen belgelere bak\u0131n."
             }
         }
     },
@@ -13,8 +18,13 @@
         "step": {
             "init": {
                 "data": {
-                    "azimuth": "Azimut (360 derece, 0 = Kuzey, 90 = Do\u011fu, 180 = G\u00fcney, 270 = Bat\u0131)"
-                }
+                    "api_key": "Forecast.Solar API Anahtar\u0131 (iste\u011fe ba\u011fl\u0131)",
+                    "azimuth": "Azimut (360 derece, 0 = Kuzey, 90 = Do\u011fu, 180 = G\u00fcney, 270 = Bat\u0131)",
+                    "damping": "S\u00f6n\u00fcmleme fakt\u00f6r\u00fc: sonu\u00e7lar\u0131 sabah ve ak\u015fam ayarlar",
+                    "declination": "Sapma (0 = Yatay, 90 = Dikey)",
+                    "modules power": "Solar mod\u00fcllerinizin toplam en y\u00fcksek Watt g\u00fcc\u00fc"
+                },
+                "description": "Bu de\u011ferler Solar.Forecast sonucunun ayarlanmas\u0131na izin verir. Bir alan net de\u011filse l\u00fctfen belgelere bak\u0131n."
             }
         }
     }

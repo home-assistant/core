@@ -35,7 +35,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             continue
         config = {
             ATTR_SENSOR_ATTRIBUTES: {},
-            ATTR_SENSOR_DEVICE_CLASS: entry.device_class,
+            ATTR_SENSOR_DEVICE_CLASS: entry.device_class or entry.original_device_class,
             ATTR_SENSOR_ICON: entry.original_icon,
             ATTR_SENSOR_NAME: entry.original_name,
             ATTR_SENSOR_STATE: None,

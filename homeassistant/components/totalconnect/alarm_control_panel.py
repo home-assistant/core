@@ -21,11 +21,15 @@ from homeassistant.const import (
     STATE_ALARM_TRIGGERED,
 )
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_platform
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+SERVICE_ALARM_ARM_AWAY_INSTANT = "arm_away_instant"
+SERVICE_ALARM_ARM_HOME_INSTANT = "arm_home_instant"
 
 
 async def async_setup_entry(hass, entry, async_add_entities) -> None:
@@ -47,6 +51,21 @@ async def async_setup_entry(hass, entry, async_add_entities) -> None:
             )
 
     async_add_entities(alarms, True)
+
+    # Set up services
+    platform = entity_platform.async_get_current_platform()
+
+    platform.async_register_entity_service(
+        SERVICE_ALARM_ARM_AWAY_INSTANT,
+        None,
+        "async_alarm_arm_away_instant",
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_ALARM_ARM_HOME_INSTANT,
+        None,
+        "async_alarm_arm_home_instant",
+    )
 
 
 class TotalConnectAlarm(CoordinatorEntity, alarm.AlarmControlPanelEntity):
@@ -200,4 +219,32 @@ class TotalConnectAlarm(CoordinatorEntity, alarm.AlarmControlPanelEntity):
         except BadResultCodeError as error:
             raise HomeAssistantError(
                 f"TotalConnect failed to arm night {self._name}."
+            ) from error
+
+    async def async_alarm_arm_home_instant(self, code=None):
+        """Send arm home instant command."""
+        await self.hass.async_add_executor_job(self._arm_home_instant)
+        await self.coordinator.async_request_refresh()
+
+    def _arm_home_instant(self):
+        """Arm home instant synchronous."""
+        try:
+            ArmingHelper(self._partition).arm_stay_instant()
+        except BadResultCodeError as error:
+            raise HomeAssistantError(
+                f"TotalConnect failed to arm home instant {self._name}."
+            ) from error
+
+    async def async_alarm_arm_away_instant(self, code=None):
+        """Send arm away instant command."""
+        await self.hass.async_add_executor_job(self._arm_away_instant)
+        await self.coordinator.async_request_refresh()
+
+    def _arm_away_instant(self, code=None):
+        """Arm away instant synchronous."""
+        try:
+            ArmingHelper(self._partition).arm_away_instant()
+        except BadResultCodeError as error:
+            raise HomeAssistantError(
+                f"TotalConnect failed to arm away instant {self._name}."
             ) from error

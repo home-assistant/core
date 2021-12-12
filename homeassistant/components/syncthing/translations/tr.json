@@ -1,10 +1,19 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Hizmet zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama"
+        },
         "step": {
             "user": {
                 "data": {
                     "title": "Senkronizasyon entegrasyonunu kurun",
-                    "token": "Anahtar"
+                    "token": "Anahtar",
+                    "url": "URL",
+                    "verify_ssl": "SSL sertifikas\u0131n\u0131 do\u011frulay\u0131n"
                 }
             }
         }

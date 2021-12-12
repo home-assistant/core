@@ -4,8 +4,9 @@ from __future__ import annotations
 import abc
 import asyncio
 from collections.abc import Iterable, Mapping
+from dataclasses import dataclass
 from types import MappingProxyType
-from typing import Any, Final, TypedDict
+from typing import Any, TypedDict
 import uuid
 
 import voluptuous as vol
@@ -21,11 +22,13 @@ RESULT_TYPE_EXTERNAL_STEP_DONE = "external_done"
 RESULT_TYPE_SHOW_PROGRESS = "progress"
 RESULT_TYPE_SHOW_PROGRESS_DONE = "progress_done"
 
-STEP_ID_INIT: Final = "init"
-STEP_ID_USER: Final = "user"
-
 # Event that is fired when a flow is progressed via external or progress source.
 EVENT_DATA_ENTRY_FLOW_PROGRESSED = "data_entry_flow_progressed"
+
+
+@dataclass
+class BaseServiceInfo:
+    """Base class for discovery ServiceInfo."""
 
 
 class FlowError(HomeAssistantError):
@@ -304,7 +307,7 @@ class FlowManager(abc.ABC):
         self,
         flow: Any,
         step_id: str,
-        user_input: dict | None,
+        user_input: dict | BaseServiceInfo | None,
         step_done: asyncio.Future | None = None,
     ) -> FlowResult:
         """Handle a step of a flow."""

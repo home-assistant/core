@@ -119,16 +119,6 @@ async def test_get_async_get_browse_image(hass, hass_client_no_auth, hass_ws_cli
     assert content == b"image"
 
 
-def test_deprecated_base_class(caplog):
-    """Test deprecated base class."""
-
-    class CustomMediaPlayer(media_player.MediaPlayerDevice):
-        pass
-
-    CustomMediaPlayer()
-    assert "MediaPlayerDevice is deprecated, modify CustomMediaPlayer" in caplog.text
-
-
 async def test_media_browse(hass, hass_ws_client):
     """Test browsing media."""
     await async_setup_component(

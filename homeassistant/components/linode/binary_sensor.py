@@ -51,7 +51,7 @@ class LinodeBinarySensor(BinarySensorEntity):
 
     _attr_device_class = DEVICE_CLASS_MOVING
 
-    def __init__(self, li, node_id):
+    def __init__(self, li, node_id):  # pylint: disable=invalid-name
         """Initialize a new Linode sensor."""
         self._linode = li
         self._node_id = node_id

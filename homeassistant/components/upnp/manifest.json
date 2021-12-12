@@ -3,7 +3,7 @@
   "name": "UPnP/IGD",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/upnp",
-  "requirements": ["async-upnp-client==0.22.11"],
+  "requirements": ["async-upnp-client==0.22.12"],
   "dependencies": ["network", "ssdp"],
   "codeowners": ["@StevenLooman","@ehendrix23"],
   "ssdp": [

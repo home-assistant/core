@@ -11,6 +11,7 @@ from homeassistant.components.kraken.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_START
+from homeassistant.helpers.device_registry import DeviceEntryType
 import homeassistant.util.dt as dt_util
 
 from .const import (
@@ -253,7 +254,7 @@ async def test_sensors_available_after_restart(hass):
             identifiers={(DOMAIN, "XBT_USD")},
             name="XBT USD",
             manufacturer="Kraken.com",
-            entry_type="service",
+            entry_type=DeviceEntryType.SERVICE,
         )
         entry.add_to_hass(hass)
 

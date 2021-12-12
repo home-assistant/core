@@ -279,6 +279,20 @@ def test_color_rgb_to_hex():
     assert color_util.color_rgb_to_hex(255, 67.9204190, 0) == "ff4400"
 
 
+def test_match_max_scale():
+    """Test match_max_scale."""
+    match_max_scale = color_util.match_max_scale
+    assert match_max_scale((255, 255, 255), (255, 255, 255)) == (255, 255, 255)
+    assert match_max_scale((0, 0, 0), (0, 0, 0)) == (0, 0, 0)
+    assert match_max_scale((255, 255, 255), (128, 128, 128)) == (255, 255, 255)
+    assert match_max_scale((0, 255, 0), (64, 128, 128)) == (128, 255, 255)
+    assert match_max_scale((0, 100, 0), (128, 64, 64)) == (100, 50, 50)
+    assert match_max_scale((10, 20, 33), (100, 200, 333)) == (10, 20, 33)
+    assert match_max_scale((255,), (100, 200, 333)) == (77, 153, 255)
+    assert match_max_scale((128,), (10.5, 20.9, 30.4)) == (44, 88, 128)
+    assert match_max_scale((10, 20, 30, 128), (100, 200, 333)) == (38, 77, 128)
+
+
 def test_gamut():
     """Test gamut functions."""
     assert color_util.check_valid_gamut(GAMUT)
@@ -352,3 +366,38 @@ def test_get_color_in_voluptuous():
         schema("not a color")
 
     assert schema("red") == (255, 0, 0)
+
+
+def test_color_rgb_to_rgbww():
+    """Test color_rgb_to_rgbww conversions."""
+    assert color_util.color_rgb_to_rgbww(255, 255, 255, 154, 370) == (
+        0,
+        54,
+        98,
+        255,
+        255,
+    )
+    assert color_util.color_rgb_to_rgbww(255, 255, 255, 100, 1000) == (
+        255,
+        255,
+        255,
+        0,
+        0,
+    )
+    assert color_util.color_rgb_to_rgbww(255, 255, 255, 1, 1000) == (
+        0,
+        118,
+        241,
+        255,
+        255,
+    )
+    assert color_util.color_rgb_to_rgbww(128, 128, 128, 154, 370) == (
+        0,
+        27,
+        49,
+        128,
+        128,
+    )
+    assert color_util.color_rgb_to_rgbww(64, 64, 64, 154, 370) == (0, 14, 25, 64, 64)
+    assert color_util.color_rgb_to_rgbww(32, 64, 16, 154, 370) == (9, 64, 0, 38, 38)
+    assert color_util.color_rgb_to_rgbww(0, 0, 0, 154, 370) == (0, 0, 0, 0, 0)

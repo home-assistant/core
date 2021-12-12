@@ -8,6 +8,7 @@ import async_timeout
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, LENGTH_METERS
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -123,7 +124,7 @@ class Measurement(CoordinatorEntity, SensorEntity):
     def device_info(self):
         """Return the device info."""
         return DeviceInfo(
-            entry_type="service",
+            entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, "measure-id", self.station_id)},
             manufacturer="https://environment.data.gov.uk/",
             model=self.parameter_name,

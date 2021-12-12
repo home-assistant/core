@@ -1,7 +1,7 @@
 """Support for monitoring OctoPrint sensors."""
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 
 from pyoctoprintapi import OctoprintJobInfo, OctoprintPrinterInfo
@@ -22,6 +22,17 @@ from . import OctoprintDataUpdateCoordinator
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+JOB_PRINTING_STATES = ["Printing from SD", "Printing"]
+
+
+def _is_printer_printing(printer: OctoprintPrinterInfo) -> bool:
+    return (
+        printer
+        and printer.state
+        and printer.state.flags
+        and printer.state.flags.printing
+    )
 
 
 async def async_setup_entry(
@@ -148,15 +159,19 @@ class OctoPrintEstimatedFinishTimeSensor(OctoPrintSensorBase):
         super().__init__(coordinator, "Estimated Finish Time", device_id)
 
     @property
-    def native_value(self):
+    def native_value(self) -> datetime | None:
         """Return sensor state."""
         job: OctoprintJobInfo = self.coordinator.data["job"]
-        if not job or not job.progress.print_time_left or job.state != "Printing":
+        if (
+            not job
+            or not job.progress.print_time_left
+            or not _is_printer_printing(self.coordinator.data["printer"])
+        ):
             return None
 
         read_time = self.coordinator.data["last_read_time"]
 
-        return (read_time + timedelta(seconds=job.progress.print_time_left)).isoformat()
+        return read_time + timedelta(seconds=job.progress.print_time_left)
 
 
 class OctoPrintStartTimeSensor(OctoPrintSensorBase):
@@ -171,16 +186,20 @@ class OctoPrintStartTimeSensor(OctoPrintSensorBase):
         super().__init__(coordinator, "Start Time", device_id)
 
     @property
-    def native_value(self):
+    def native_value(self) -> datetime | None:
         """Return sensor state."""
         job: OctoprintJobInfo = self.coordinator.data["job"]
 
-        if not job or not job.progress.print_time or job.state != "Printing":
+        if (
+            not job
+            or not job.progress.print_time
+            or not _is_printer_printing(self.coordinator.data["printer"])
+        ):
             return None
 
         read_time = self.coordinator.data["last_read_time"]
 
-        return (read_time - timedelta(seconds=job.progress.print_time)).isoformat()
+        return read_time - timedelta(seconds=job.progress.print_time)
 
 
 class OctoPrintTemperatureSensor(OctoPrintSensorBase):
@@ -211,12 +230,15 @@ class OctoPrintTemperatureSensor(OctoPrintSensorBase):
 
         for temp in printer.temperatures:
             if temp.name == self._api_tool:
-                return round(
+                val = (
                     temp.actual_temp
                     if self._temp_type == "actual"
-                    else temp.target_temp,
-                    2,
+                    else temp.target_temp
                 )
+                if val is None:
+                    return None
+
+                return round(val, 2)
 
         return None
 

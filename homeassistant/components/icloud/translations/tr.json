@@ -8,14 +8,15 @@
         "error": {
             "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
             "send_verification_code": "Do\u011frulama kodu g\u00f6nderilemedi",
-            "validate_verification_code": "Do\u011frulama kodunuzu do\u011frulamay\u0131 ba\u015faramad\u0131n\u0131z, bir g\u00fcven ayg\u0131t\u0131 se\u00e7in ve do\u011frulamay\u0131 yeniden ba\u015flat\u0131n"
+            "validate_verification_code": "Do\u011frulama kodunuz do\u011frulanamad\u0131, tekrar deneyin"
         },
         "step": {
             "reauth": {
                 "data": {
                     "password": "Parola"
                 },
-                "description": "{username} i\u00e7in \u00f6nceden girdi\u011finiz \u015fifreniz art\u0131k \u00e7al\u0131\u015fm\u0131yor. Bu entegrasyonu kullanmaya devam etmek i\u00e7in \u015fifrenizi g\u00fcncelleyin."
+                "description": "{username} i\u00e7in \u00f6nceden girdi\u011finiz \u015fifreniz art\u0131k \u00e7al\u0131\u015fm\u0131yor. Bu entegrasyonu kullanmaya devam etmek i\u00e7in \u015fifrenizi g\u00fcncelleyin.",
+                "title": "Entegrasyonu Yeniden Do\u011frula"
             },
             "trusted_device": {
                 "data": {

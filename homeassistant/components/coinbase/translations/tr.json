@@ -1,8 +1,17 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
+            "unknown": "Beklenmeyen hata"
+        },
         "step": {
             "user": {
                 "data": {
+                    "api_key": "API Anahtar\u0131",
                     "api_token": "API Gizli Anahtar\u0131",
                     "currencies": "Hesap Bakiyesi Para Birimleri",
                     "exchange_rates": "D\u00f6viz Kurlar\u0131"
@@ -15,7 +24,8 @@
     "options": {
         "error": {
             "currency_unavaliable": "\u0130stenen para birimi bakiyelerinden biri veya daha fazlas\u0131 Coinbase API'niz taraf\u0131ndan sa\u011flanm\u0131yor.",
-            "exchange_rate_unavaliable": "\u0130stenen d\u00f6viz kurlar\u0131ndan biri veya daha fazlas\u0131 Coinbase taraf\u0131ndan sa\u011flanm\u0131yor."
+            "exchange_rate_unavaliable": "\u0130stenen d\u00f6viz kurlar\u0131ndan biri veya daha fazlas\u0131 Coinbase taraf\u0131ndan sa\u011flanm\u0131yor.",
+            "unknown": "Beklenmeyen hata"
         },
         "step": {
             "init": {

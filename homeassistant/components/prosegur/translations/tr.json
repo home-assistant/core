@@ -1,9 +1,27 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
+            "unknown": "Beklenmeyen hata"
+        },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "description": "Prosegur hesab\u0131yla yeniden kimlik do\u011frulamas\u0131 yap\u0131n.",
+                    "password": "Parola",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131"
+                }
+            },
             "user": {
                 "data": {
-                    "country": "\u00dclke"
+                    "country": "\u00dclke",
+                    "password": "Parola",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131"
                 }
             }
         }

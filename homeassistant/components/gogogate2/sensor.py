@@ -11,6 +11,7 @@ from homeassistant.const import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_TEMPERATURE,
     ENTITY_CATEGORY_DIAGNOSTIC,
+    PERCENTAGE,
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
@@ -78,6 +79,7 @@ class DoorSensorBattery(DoorSensorEntity):
         super().__init__(config_entry, data_update_coordinator, door, unique_id)
         self._attr_device_class = DEVICE_CLASS_BATTERY
         self._attr_state_class = STATE_CLASS_MEASUREMENT
+        self._attr_native_unit_of_measurement = PERCENTAGE
 
     @property
     def name(self):

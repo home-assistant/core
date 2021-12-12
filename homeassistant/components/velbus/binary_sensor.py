@@ -1,4 +1,6 @@
 """Support for Velbus Binary Sensors."""
+from velbusaio.channels import Button as VelbusButton
+
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -24,6 +26,8 @@ async def async_setup_entry(
 
 class VelbusBinarySensor(VelbusEntity, BinarySensorEntity):
     """Representation of a Velbus Binary Sensor."""
+
+    _channel: VelbusButton
 
     @property
     def is_on(self) -> bool:

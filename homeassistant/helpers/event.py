@@ -789,7 +789,32 @@ class _TrackTemplateResultInfo:
 
     def async_setup(self, raise_on_template_error: bool, strict: bool = False) -> None:
         """Activation of template tracking."""
+        block_render = False
+        super_template = self._track_templates[0] if self._has_super_template else None
+
+        # Render the super template first
+        if super_template is not None:
+            template = super_template.template
+            variables = super_template.variables
+            self._info[template] = info = template.async_render_to_info(
+                variables, strict=strict
+            )
+
+            # If the super template did not render to True, don't update other templates
+            try:
+                super_result: str | TemplateError = info.result()
+            except TemplateError as ex:
+                super_result = ex
+            if (
+                super_result is not None
+                and self._super_template_as_boolean(super_result) is not True
+            ):
+                block_render = True
+
+        # Then update the remaining templates unless blocked by the super template
         for track_template_ in self._track_templates:
+            if block_render or track_template_ == super_template:
+                continue
             template = track_template_.template
             variables = track_template_.variables
             self._info[template] = info = template.async_render_to_info(
@@ -810,9 +835,10 @@ class _TrackTemplateResultInfo:
         )
         self._update_time_listeners()
         _LOGGER.debug(
-            "Template group %s listens for %s",
+            "Template group %s listens for %s, first render blocker by super template: %s",
             self._track_templates,
             self.listeners,
+            block_render,
         )
 
     @property
@@ -923,14 +949,22 @@ class _TrackTemplateResultInfo:
 
         last_result = self._last_result.get(template)
 
-        # Check to see if the result has changed
-        if result == last_result:
+        # Check to see if the result has changed or is new
+        if result == last_result and template in self._last_result:
             return True
 
         if isinstance(result, TemplateError) and isinstance(last_result, TemplateError):
             return True
 
         return TrackTemplateResult(template, last_result, result)
+
+    @staticmethod
+    def _super_template_as_boolean(result: bool | str | TemplateError) -> bool:
+        """Return True if the result is truthy or a TemplateError."""
+        if isinstance(result, TemplateError):
+            return True
+
+        return result_as_boolean(result)
 
     @callback
     def _refresh(
@@ -974,13 +1008,6 @@ class _TrackTemplateResultInfo:
 
         track_templates = track_templates or self._track_templates
 
-        def _super_template_as_boolean(result: bool | str | TemplateError) -> bool:
-            """Return True if the result is truthy or a TemplateError."""
-            if isinstance(result, TemplateError):
-                return True
-
-            return result_as_boolean(result)
-
         # Update the super template first
         if super_template is not None:
             update = self._render_template_if_ready(super_template, now, event)
@@ -994,14 +1021,14 @@ class _TrackTemplateResultInfo:
             # If the super template did not render to True, don't update other templates
             if (
                 super_result is not None
-                and _super_template_as_boolean(super_result) is not True
+                and self._super_template_as_boolean(super_result) is not True
             ):
                 block_updates = True
 
             if (
                 isinstance(update, TrackTemplateResult)
-                and _super_template_as_boolean(update.last_result) is not True
-                and _super_template_as_boolean(update.result) is True
+                and self._super_template_as_boolean(update.last_result) is not True
+                and self._super_template_as_boolean(update.result) is True
             ):
                 # Super template changed from not True to True, force re-render
                 # of all templates in the group
@@ -1030,9 +1057,10 @@ class _TrackTemplateResultInfo:
                 )
             )
             _LOGGER.debug(
-                "Template group %s listens for %s",
+                "Template group %s listens for %s, re-render blocker by super template: %s",
                 self._track_templates,
                 self.listeners,
+                block_updates,
             )
 
         if not updates:

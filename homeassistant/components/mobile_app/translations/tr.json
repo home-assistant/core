@@ -1,4 +1,14 @@
 {
+    "config": {
+        "abort": {
+            "install_app": "Home Assistant ile entegrasyonu ayarlamak i\u00e7in mobil uygulamay\u0131 a\u00e7\u0131n. Uyumlu uygulamalar\u0131n listesi i\u00e7in [belgelere]( {apps_url}"
+        },
+        "step": {
+            "confirm": {
+                "description": "Mobil Uygulama bile\u015fenini kurmak istiyor musunuz?"
+            }
+        }
+    },
     "device_automation": {
         "action_type": {
             "notify": "Bildirim g\u00f6nder"

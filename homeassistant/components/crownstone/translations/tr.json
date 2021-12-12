@@ -1,7 +1,96 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Hesap zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "usb_setup_complete": "Crownstone USB kurulumu tamamland\u0131.",
+            "usb_setup_unsuccessful": "Crownstone USB kurulumu ba\u015far\u0131s\u0131z oldu."
+        },
         "error": {
-            "account_not_verified": "Hesap do\u011frulanmad\u0131. L\u00fctfen hesab\u0131n\u0131z\u0131 Crownstone'dan gelen aktivasyon e-postas\u0131 arac\u0131l\u0131\u011f\u0131yla etkinle\u015ftirin."
+            "account_not_verified": "Hesap do\u011frulanmad\u0131. L\u00fctfen hesab\u0131n\u0131z\u0131 Crownstone'dan gelen aktivasyon e-postas\u0131 arac\u0131l\u0131\u011f\u0131yla etkinle\u015ftirin.",
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
+            "unknown": "Beklenmeyen hata"
+        },
+        "step": {
+            "usb_config": {
+                "data": {
+                    "usb_path": "USB Cihaz Yolu"
+                },
+                "description": "Crownstone USB donan\u0131m kilidinin seri ba\u011flant\u0131 noktas\u0131n\u0131 se\u00e7in veya bir USB donan\u0131m kilidi kurmak istemiyorsan\u0131z 'USB kullanma' se\u00e7ene\u011fini se\u00e7in. \n\n VID 10C4 ve PID EA60'a sahip bir cihaz aray\u0131n.",
+                "title": "Crownstone USB dongle yap\u0131land\u0131rmas\u0131"
+            },
+            "usb_manual_config": {
+                "data": {
+                    "usb_manual_path": "USB Cihaz Yolu"
+                },
+                "description": "Crownstone USB dongle'\u0131n yolunu manuel olarak girin.",
+                "title": "Crownstone USB dongle manuel yolu"
+            },
+            "usb_sphere_config": {
+                "data": {
+                    "usb_sphere": "Crownstone Stick"
+                },
+                "description": "USB'nin bulundu\u011fu bir Crownstone Stick se\u00e7in.",
+                "title": "Crownstone USB Stick"
+            },
+            "user": {
+                "data": {
+                    "email": "E-posta",
+                    "password": "Parola"
+                },
+                "title": "Crownstone hesab\u0131"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "usb_sphere_option": "USB'nin bulundu\u011fu Crownstone Stick",
+                    "use_usb_option": "Yerel veri iletimi i\u00e7in Crownstone USB dongle kullan\u0131n"
+                }
+            },
+            "usb_config": {
+                "data": {
+                    "usb_path": "USB Cihaz Yolu"
+                },
+                "description": "Crownstone USB donan\u0131m kilidinin seri ba\u011flant\u0131 noktas\u0131n\u0131 se\u00e7in. \n\n VID 10C4 ve PID EA60'a sahip bir cihaz aray\u0131n.",
+                "title": "Crownstone USB dongle yap\u0131land\u0131rmas\u0131"
+            },
+            "usb_config_option": {
+                "data": {
+                    "usb_path": "USB Cihaz Yolu"
+                },
+                "description": "Crownstone USB donan\u0131m kilidinin seri ba\u011flant\u0131 noktas\u0131n\u0131 se\u00e7in. \n\n VID 10C4 ve PID EA60'a sahip bir cihaz aray\u0131n.",
+                "title": "Crownstone USB dongle yap\u0131land\u0131rmas\u0131"
+            },
+            "usb_manual_config": {
+                "data": {
+                    "usb_manual_path": "USB Cihaz Yolu"
+                },
+                "description": "Crownstone USB dongle'\u0131n yolunu manuel olarak girin.",
+                "title": "Crownstone USB dongle manuel yolu"
+            },
+            "usb_manual_config_option": {
+                "data": {
+                    "usb_manual_path": "USB Cihaz Yolu"
+                },
+                "description": "Crownstone USB dongle'\u0131n yolunu manuel olarak girin.",
+                "title": "Crownstone USB dongle manuel yolu"
+            },
+            "usb_sphere_config": {
+                "data": {
+                    "usb_sphere": "Crownstone Stick"
+                },
+                "description": "USB'nin bulundu\u011fu bir Crownstone Stick se\u00e7in.",
+                "title": "Crownstone USB Stick"
+            },
+            "usb_sphere_config_option": {
+                "data": {
+                    "usb_sphere": "Crownstone Stick"
+                },
+                "description": "USB'nin bulundu\u011fu bir Crownstone Stick se\u00e7in.",
+                "title": "Crownstone USB Stick"
+            }
         }
     }
 }

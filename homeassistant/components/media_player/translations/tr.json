@@ -2,7 +2,10 @@
     "device_automation": {
         "condition_type": {
             "is_idle": "{entity_name} bo\u015fta",
-            "is_off": "{entity_name} kapal\u0131"
+            "is_off": "{entity_name} kapal\u0131",
+            "is_on": "{entity_name} a\u00e7\u0131k",
+            "is_paused": "{entity_name} duraklat\u0131ld\u0131",
+            "is_playing": "{entity_name} oynat\u0131l\u0131yor"
         },
         "trigger_type": {
             "idle": "{entity_name} bo\u015fta",

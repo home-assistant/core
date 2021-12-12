@@ -27,7 +27,7 @@ from homeassistant.helpers.script import Script
 from homeassistant.helpers.template import Template, TemplateError
 
 from . import TriggerUpdateCoordinator
-from .const import CONF_AVAILABILITY
+from .const import CONF_AVAILABILITY, DOMAIN
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
 
@@ -129,9 +129,8 @@ class TemplateSelect(TemplateEntity, SelectEntity):
             self._attr_name = name_template.async_render(parse_result=False)
         self._name_template = name_template
         self._value_template = value_template
-        domain = __name__.split(".")[-2]
         self._command_select_option = Script(
-            hass, command_select_option, self._attr_name, domain
+            hass, command_select_option, self._attr_name, DOMAIN
         )
         self._options_template = options_template
         self._attr_assumed_state = self._optimistic = optimistic
@@ -182,12 +181,11 @@ class TriggerSelectEntity(TriggerEntity, SelectEntity):
     ) -> None:
         """Initialize the entity."""
         super().__init__(hass, coordinator, config)
-        domain = __name__.split(".")[-2]
         self._command_select_option = Script(
             hass,
             config[CONF_SELECT_OPTION],
             self._rendered.get(CONF_NAME, DEFAULT_NAME),
-            domain,
+            DOMAIN,
         )
 
     @property

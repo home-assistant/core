@@ -1,5 +1,14 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "reauth_successful": "Autentikasi ulang berhasil"
+        },
+        "error": {
+            "invalid_auth": "Autentikasi tidak valid",
+            "unknown": "Kesalahan yang tidak diharapkan",
+            "unknown_coordinates": "Tidak ada data untuk garis lintang/bujur"
+        },
         "step": {
             "coordinates": {
                 "data": {
@@ -14,12 +23,29 @@
                 },
                 "description": "Pilih lokasi untuk dipantau:"
             },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Kata Sandi"
+                },
+                "description": "Masukkan kembali kata sandi untuk {username} :",
+                "title": "Autentikasi Ulang Integrasi"
+            },
             "user": {
                 "data": {
                     "password": "Kata Sandi",
                     "username": "Nama Pengguna"
                 },
                 "description": "Masukkan nama pengguna dan kata sandi Anda:"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_on_map": "Tampilkan lokasi yang dipantau di peta"
+                },
+                "title": "Konfigurasikan WattTime"
             }
         }
     }

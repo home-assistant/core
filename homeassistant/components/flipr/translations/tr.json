@@ -1,7 +1,30 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+        },
         "error": {
-            "no_flipr_id_found": "\u015eu anda hesab\u0131n\u0131zla ili\u015fkilendirilmi\u015f bir flipr kimli\u011fi yok. \u00d6nce Flipr'\u0131n mobil uygulamas\u0131yla \u00e7al\u0131\u015ft\u0131\u011f\u0131n\u0131 do\u011frulaman\u0131z gerekir."
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
+            "no_flipr_id_found": "\u015eu anda hesab\u0131n\u0131zla ili\u015fkilendirilmi\u015f bir flipr kimli\u011fi yok. \u00d6nce Flipr'\u0131n mobil uygulamas\u0131yla \u00e7al\u0131\u015ft\u0131\u011f\u0131n\u0131 do\u011frulaman\u0131z gerekir.",
+            "unknown": "Beklenmeyen hata"
+        },
+        "step": {
+            "flipr_id": {
+                "data": {
+                    "flipr_id": "Flipr Kimli\u011fi"
+                },
+                "description": "Listeden Flipr kimli\u011finizi se\u00e7in",
+                "title": "Flipr'inizi se\u00e7in"
+            },
+            "user": {
+                "data": {
+                    "email": "E-posta",
+                    "password": "Parola"
+                },
+                "description": "Flipr hesab\u0131n\u0131z\u0131 kullanarak ba\u011flan\u0131n.",
+                "title": "Flipr'e ba\u011flan"
+            }
         }
     }
 }

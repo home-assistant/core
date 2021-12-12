@@ -3,13 +3,23 @@
         "abort": {
             "no_plants": "Bu hesapta bitki bulunamad\u0131"
         },
+        "error": {
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama"
+        },
         "step": {
             "plant": {
                 "data": {
                     "plant_id": "Bitki"
-                }
+                },
+                "title": "Tesisinizi se\u00e7in"
             },
             "user": {
+                "data": {
+                    "name": "Ad",
+                    "password": "Parola",
+                    "url": "URL",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131"
+                },
                 "title": "Growatt bilgilerinizi girin"
             }
         }

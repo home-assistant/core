@@ -12,9 +12,9 @@ from homeassistant.components.climate.const import (
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
-from homeassistant.const import ATTR_TEMPERATURE
+from homeassistant.const import ATTR_TEMPERATURE, Platform
 
-from . import CLIMATE, DOMAIN, AtagEntity
+from . import DOMAIN, AtagEntity
 
 PRESET_MAP = {
     "Manual": "manual",
@@ -31,7 +31,7 @@ HVAC_MODES = [HVAC_MODE_AUTO, HVAC_MODE_HEAT]
 async def async_setup_entry(hass, entry, async_add_entities):
     """Load a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([AtagThermostat(coordinator, CLIMATE)])
+    async_add_entities([AtagThermostat(coordinator, Platform.CLIMATE)])
 
 
 class AtagThermostat(AtagEntity, ClimateEntity):

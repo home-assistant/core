@@ -1,7 +1,7 @@
 """Support for Synology DSM sensors."""
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Any
 
 from homeassistant.components.sensor import SensorEntity
@@ -164,7 +164,7 @@ class SynoDSMInfoSensor(SynoDSMSensor):
         """Initialize the Synology SynoDSMInfoSensor entity."""
         super().__init__(api, coordinator, description)
         self._previous_uptime: str | None = None
-        self._last_boot: str | None = None
+        self._last_boot: datetime | None = None
 
     @property
     def native_value(self) -> Any | None:
@@ -176,8 +176,7 @@ class SynoDSMInfoSensor(SynoDSMSensor):
         if self.entity_description.key == "uptime":
             # reboot happened or entity creation
             if self._previous_uptime is None or self._previous_uptime > attr:
-                last_boot = utcnow() - timedelta(seconds=attr)
-                self._last_boot = last_boot.replace(microsecond=0).isoformat()
+                self._last_boot = utcnow() - timedelta(seconds=attr)
 
             self._previous_uptime = attr
             return self._last_boot

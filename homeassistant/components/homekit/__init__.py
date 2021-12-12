@@ -1,4 +1,6 @@
 """Support for Apple HomeKit."""
+from __future__ import annotations
+
 import asyncio
 import ipaddress
 import logging
@@ -18,6 +20,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.humidifier import DOMAIN as HUMIDIFIER_DOMAIN
+from homeassistant.components.network.const import MDNS_TARGET_IP
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -90,6 +93,7 @@ from .const import (
     HOMEKIT_PAIRING_QR,
     HOMEKIT_PAIRING_QR_SECRET,
     MANUFACTURER,
+    PERSIST_LOCK,
     SERVICE_HOMEKIT_RESET_ACCESSORY,
     SERVICE_HOMEKIT_START,
     SERVICE_HOMEKIT_UNPAIR,
@@ -98,11 +102,11 @@ from .const import (
 from .type_triggers import DeviceTriggerAccessory
 from .util import (
     accessory_friendly_name,
+    async_dismiss_setup_message,
     async_port_is_available,
-    dismiss_setup_message,
+    async_show_setup_message,
     get_persist_fullpath_for_entry_id,
     remove_state_files_for_entry_id,
-    show_setup_message,
     state_needs_accessory_mode,
     validate_entity_config,
 )
@@ -118,8 +122,6 @@ STATUS_STOPPED = 2
 STATUS_WAIT = 3
 
 PORT_CLEANUP_CHECK_INTERVAL_SECS = 1
-
-MDNS_TARGET_IP = "224.0.0.251"
 
 _HOMEKIT_CONFIG_UPDATE_TIME = (
     5  # number of seconds to wait for homekit to see the c# change
@@ -172,6 +174,15 @@ UNPAIR_SERVICE_SCHEMA = vol.All(
 )
 
 
+def _async_all_homekit_instances(hass: HomeAssistant) -> list[HomeKit]:
+    """All active HomeKit instances."""
+    return [
+        data[HOMEKIT]
+        for data in hass.data[DOMAIN].values()
+        if isinstance(data, dict) and HOMEKIT in data
+    ]
+
+
 def _async_get_entries_by_name(current_entries):
     """Return a dict of the entries by name."""
 
@@ -182,7 +193,7 @@ def _async_get_entries_by_name(current_entries):
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the HomeKit from yaml."""
-    hass.data.setdefault(DOMAIN, {})
+    hass.data.setdefault(DOMAIN, {})[PERSIST_LOCK] = asyncio.Lock()
 
     _async_register_events_and_services(hass)
 
@@ -310,7 +321,7 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    dismiss_setup_message(hass, entry.entry_id)
+    async_dismiss_setup_message(hass, entry.entry_id)
     homekit = hass.data[DOMAIN][entry.entry_id][HOMEKIT]
 
     if homekit.status == STATUS_RUNNING:
@@ -361,10 +372,7 @@ def _async_register_events_and_services(hass: HomeAssistant):
 
     async def async_handle_homekit_reset_accessory(service):
         """Handle reset accessory HomeKit service call."""
-        for entry_id in hass.data[DOMAIN]:
-            if HOMEKIT not in hass.data[DOMAIN][entry_id]:
-                continue
-            homekit = hass.data[DOMAIN][entry_id][HOMEKIT]
+        for homekit in _async_all_homekit_instances(hass):
             if homekit.status != STATUS_RUNNING:
                 _LOGGER.warning(
                     "HomeKit is not running. Either it is waiting to be "
@@ -394,16 +402,11 @@ def _async_register_events_and_services(hass: HomeAssistant):
                 for ctype, cval in dev_reg_ent.connections
                 if ctype == device_registry.CONNECTION_NETWORK_MAC
             ]
-            domain_data = hass.data[DOMAIN]
             matching_instances = [
-                domain_data[entry_id][HOMEKIT]
-                for entry_id in domain_data
-                if HOMEKIT in domain_data[entry_id]
-                and domain_data[entry_id][HOMEKIT].driver
-                and device_registry.format_mac(
-                    domain_data[entry_id][HOMEKIT].driver.state.mac
-                )
-                in macs
+                homekit
+                for homekit in _async_all_homekit_instances(hass)
+                if homekit.driver
+                and device_registry.format_mac(homekit.driver.state.mac) in macs
             ]
             if not matching_instances:
                 raise HomeAssistantError(
@@ -422,10 +425,7 @@ def _async_register_events_and_services(hass: HomeAssistant):
     async def async_handle_homekit_service_start(service):
         """Handle start HomeKit service call."""
         tasks = []
-        for entry_id in hass.data[DOMAIN]:
-            if HOMEKIT not in hass.data[DOMAIN][entry_id]:
-                continue
-            homekit = hass.data[DOMAIN][entry_id][HOMEKIT]
+        for homekit in _async_all_homekit_instances(hass):
             if homekit.status == STATUS_RUNNING:
                 _LOGGER.debug("HomeKit is already running")
                 continue
@@ -708,7 +708,8 @@ class HomeKit:
         self._async_register_bridge()
         _LOGGER.debug("Driver start for %s", self._name)
         await self.driver.async_start()
-        self.driver.async_persist()
+        async with self.hass.data[DOMAIN][PERSIST_LOCK]:
+            await self.hass.async_add_executor_job(self.driver.persist)
         self.status = STATUS_RUNNING
 
         if self.driver.state.paired:
@@ -718,7 +719,7 @@ class HomeKit:
     @callback
     def _async_show_setup_message(self):
         """Show the pairing setup message."""
-        show_setup_message(
+        async_show_setup_message(
             self.hass,
             self._entry_id,
             accessory_friendly_name(self._entry_title, self.driver.accessory),
@@ -765,7 +766,7 @@ class HomeKit:
             manufacturer=MANUFACTURER,
             name=accessory_friendly_name(self._entry_title, self.driver.accessory),
             model=f"HomeKit {hk_mode_name}",
-            entry_type="service",
+            entry_type=device_registry.DeviceEntryType.SERVICE,
         )
 
     @callback
@@ -858,7 +859,7 @@ class HomeKit:
             ent_reg_ent is None
             or ent_reg_ent.device_id is None
             or ent_reg_ent.device_id not in device_lookup
-            or ent_reg_ent.device_class
+            or (ent_reg_ent.device_class or ent_reg_ent.original_device_class)
             in (DEVICE_CLASS_BATTERY_CHARGING, DEVICE_CLASS_BATTERY)
         ):
             return

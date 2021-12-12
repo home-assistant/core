@@ -6,12 +6,7 @@ from typing import TYPE_CHECKING, Any
 from simplipy.device.lock import Lock, LockStates
 from simplipy.errors import SimplipyError
 from simplipy.system.v3 import SystemV3
-from simplipy.websocket import (
-    EVENT_LOCK_ERROR,
-    EVENT_LOCK_LOCKED,
-    EVENT_LOCK_UNLOCKED,
-    WebsocketEvent,
-)
+from simplipy.websocket import EVENT_LOCK_LOCKED, EVENT_LOCK_UNLOCKED, WebsocketEvent
 
 from homeassistant.components.lock import LockEntity
 from homeassistant.config_entries import ConfigEntry
@@ -25,7 +20,6 @@ ATTR_LOCK_LOW_BATTERY = "lock_low_battery"
 ATTR_PIN_PAD_LOW_BATTERY = "pin_pad_low_battery"
 
 STATE_MAP_FROM_WEBSOCKET_EVENT = {
-    EVENT_LOCK_ERROR: None,
     EVENT_LOCK_LOCKED: True,
     EVENT_LOCK_UNLOCKED: False,
 }
@@ -90,6 +84,9 @@ class SimpliSafeLock(SimpliSafeEntity, LockEntity):
     @callback
     def async_update_from_rest_api(self) -> None:
         """Update the entity with the provided REST API data."""
+        self._attr_is_jammed = self._device.state == LockStates.JAMMED
+        self._attr_is_locked = self._device.state == LockStates.LOCKED
+
         self._attr_extra_state_attributes.update(
             {
                 ATTR_LOCK_LOW_BATTERY: self._device.lock_low_battery,
@@ -97,12 +94,14 @@ class SimpliSafeLock(SimpliSafeEntity, LockEntity):
             }
         )
 
-        self._attr_is_jammed = self._device.state == LockStates.jammed
-        self._attr_is_locked = self._device.state == LockStates.locked
-
     @callback
     def async_update_from_websocket_event(self, event: WebsocketEvent) -> None:
         """Update the entity when new data comes from the websocket."""
         if TYPE_CHECKING:
             assert event.event_type
-        self._attr_is_locked = STATE_MAP_FROM_WEBSOCKET_EVENT[event.event_type]
+        if state := STATE_MAP_FROM_WEBSOCKET_EVENT.get(event.event_type) is not None:
+            self._attr_is_locked = state
+            self.async_reset_error_count()
+        else:
+            LOGGER.error("Unknown lock websocket event: %s", event.event_type)
+            self.async_increment_error_count()

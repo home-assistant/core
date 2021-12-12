@@ -107,6 +107,7 @@ async def test_async_setup_entry_sets_up_hub_and_supported_domains(hass: HomeAss
     assert hub.manufacturer == "Olibra"
     assert hub.model == "test-model"
     assert hub.sw_version == "test-version"
+    assert hub.configuration_url == "http://some host"
 
     # verify supported domains are setup
     assert len(mock_cover_async_setup_entry.mock_calls) == 1

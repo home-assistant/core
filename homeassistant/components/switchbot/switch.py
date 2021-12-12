@@ -130,6 +130,8 @@ class SwitchBotBotEntity(SwitchbotEntity, SwitchEntity, RestoreEntity):
             self._last_run_success = bool(
                 await self.hass.async_add_executor_job(self._device.turn_on)
             )
+            if self._last_run_success:
+                self._attr_is_on = True
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
@@ -139,6 +141,8 @@ class SwitchBotBotEntity(SwitchbotEntity, SwitchEntity, RestoreEntity):
             self._last_run_success = bool(
                 await self.hass.async_add_executor_job(self._device.turn_off)
             )
+            if self._last_run_success:
+                self._attr_is_on = False
 
     @property
     def assumed_state(self) -> bool:
@@ -150,6 +154,8 @@ class SwitchBotBotEntity(SwitchbotEntity, SwitchEntity, RestoreEntity):
     @property
     def is_on(self) -> bool:
         """Return true if device is on."""
+        if not self.data["data"]["switchMode"]:
+            return self._attr_is_on
         return self.data["data"]["isOn"]
 
     @property

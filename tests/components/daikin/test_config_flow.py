@@ -120,7 +120,18 @@ async def test_api_password_abort(hass):
 @pytest.mark.parametrize(
     "source, data, unique_id",
     [
-        (SOURCE_ZEROCONF, zeroconf.HaServiceInfo(host=HOST), MAC),
+        (
+            SOURCE_ZEROCONF,
+            zeroconf.ZeroconfServiceInfo(
+                host=HOST,
+                hostname="mock_hostname",
+                name="mock_name",
+                port=None,
+                properties={},
+                type="mock_type",
+            ),
+            MAC,
+        ),
     ],
 )
 async def test_discovery_zeroconf(

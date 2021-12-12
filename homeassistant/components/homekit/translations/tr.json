@@ -5,7 +5,7 @@
         },
         "step": {
             "pairing": {
-                "description": "{name} haz\u0131r olur olmaz e\u015fle\u015ftirme, \"Bildirimler\" i\u00e7inde \"HomeKit K\u00f6pr\u00fc Kurulumu\" olarak mevcut olacakt\u0131r.",
+                "description": "\u201cHomeKit E\u015fle\u015ftirme\u201d alt\u0131ndaki \u201cBildirimler\u201d b\u00f6l\u00fcm\u00fcndeki talimatlar\u0131 izleyerek e\u015fle\u015ftirmeyi tamamlamak i\u00e7in.",
                 "title": "HomeKit'i E\u015fle\u015ftir"
             },
             "user": {
@@ -24,6 +24,7 @@
                     "auto_start": "Otomatik ba\u015flatma (homekit.start hizmetini manuel olarak ar\u0131yorsan\u0131z devre d\u0131\u015f\u0131 b\u0131rak\u0131n)",
                     "devices": "Cihazlar (Tetikleyiciler)"
                 },
+                "description": "Se\u00e7ilen her cihaz i\u00e7in programlanabilir anahtarlar olu\u015fturulur. Bir cihaz tetikleyicisi tetiklendi\u011finde, HomeKit bir otomasyon veya sahne \u00e7al\u0131\u015ft\u0131racak \u015fekilde yap\u0131land\u0131r\u0131labilir.",
                 "title": "Geli\u015fmi\u015f yap\u0131land\u0131rma"
             },
             "cameras": {
@@ -32,7 +33,7 @@
                     "camera_copy": "Yerel H.264 ak\u0131\u015flar\u0131n\u0131 destekleyen kameralar"
                 },
                 "description": "Yerel H.264 ak\u0131\u015flar\u0131n\u0131 destekleyen t\u00fcm kameralar\u0131 kontrol edin. Kamera bir H.264 ak\u0131\u015f\u0131 vermezse, sistem videoyu HomeKit i\u00e7in H.264'e d\u00f6n\u00fc\u015ft\u00fcr\u00fcr. Kod d\u00f6n\u00fc\u015ft\u00fcrme, y\u00fcksek performansl\u0131 bir CPU gerektirir ve tek kartl\u0131 bilgisayarlarda \u00e7al\u0131\u015fma olas\u0131l\u0131\u011f\u0131 d\u00fc\u015f\u00fckt\u00fcr.",
-                "title": "Kamera video codec bile\u015fenini se\u00e7in."
+                "title": "Kamera Yap\u0131land\u0131rmas\u0131"
             },
             "include_exclude": {
                 "data": {
@@ -44,9 +45,15 @@
             },
             "init": {
                 "data": {
+                    "include_domains": "\u0130\u00e7erecek etki alanlar\u0131",
                     "mode": "Mod"
                 },
-                "description": "HomeKit, bir k\u00f6pr\u00fcy\u00fc veya tek bir aksesuar\u0131 g\u00f6sterecek \u015fekilde yap\u0131land\u0131r\u0131labilir. Aksesuar modunda yaln\u0131zca tek bir varl\u0131k kullan\u0131labilir. TV cihaz s\u0131n\u0131f\u0131na sahip medya oynat\u0131c\u0131lar\u0131n d\u00fczg\u00fcn \u00e7al\u0131\u015fmas\u0131 i\u00e7in aksesuar modu gereklidir. \"Eklenecek alan adlar\u0131\"ndaki varl\u0131klar HomeKit'e dahil edilecektir. Bir sonraki ekranda bu listeye dahil edilecek veya hari\u00e7 tutulacak varl\u0131klar\u0131 se\u00e7ebileceksiniz."
+                "description": "HomeKit, bir k\u00f6pr\u00fcy\u00fc veya tek bir aksesuar\u0131 g\u00f6sterecek \u015fekilde yap\u0131land\u0131r\u0131labilir. Aksesuar modunda yaln\u0131zca tek bir varl\u0131k kullan\u0131labilir. TV cihaz s\u0131n\u0131f\u0131na sahip medya oynat\u0131c\u0131lar\u0131n d\u00fczg\u00fcn \u00e7al\u0131\u015fmas\u0131 i\u00e7in aksesuar modu gereklidir. \"Eklenecek alan adlar\u0131\"ndaki varl\u0131klar HomeKit'e dahil edilecektir. Bir sonraki ekranda bu listeye dahil edilecek veya hari\u00e7 tutulacak varl\u0131klar\u0131 se\u00e7ebileceksiniz.",
+                "title": "Dahil edilecek alanlar\u0131 se\u00e7in."
+            },
+            "yaml": {
+                "description": "Bu giri\u015f YAML arac\u0131l\u0131\u011f\u0131yla kontrol edilir",
+                "title": "HomeKit Se\u00e7eneklerini Ayarlay\u0131n"
             }
         }
     }

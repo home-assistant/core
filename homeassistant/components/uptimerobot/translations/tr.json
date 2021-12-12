@@ -1,16 +1,29 @@
 {
     "config": {
         "abort": {
-            "reauth_failed_existing": "Yap\u0131land\u0131rma giri\u015fi g\u00fcncellenemedi, l\u00fctfen entegrasyonu kald\u0131r\u0131n ve yeniden kurun."
+            "already_configured": "Hesap zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "reauth_failed_existing": "Yap\u0131land\u0131rma giri\u015fi g\u00fcncellenemedi, l\u00fctfen entegrasyonu kald\u0131r\u0131n ve yeniden kurun.",
+            "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu",
+            "unknown": "Beklenmeyen hata"
         },
         "error": {
-            "reauth_failed_matching_account": "Sa\u011flad\u0131\u011f\u0131n\u0131z API anahtar\u0131, mevcut yap\u0131land\u0131rman\u0131n hesap kimli\u011fiyle e\u015fle\u015fmiyor."
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_api_key": "Ge\u00e7ersiz API anahtar\u0131",
+            "reauth_failed_matching_account": "Sa\u011flad\u0131\u011f\u0131n\u0131z API anahtar\u0131, mevcut yap\u0131land\u0131rman\u0131n hesap kimli\u011fiyle e\u015fle\u015fmiyor.",
+            "unknown": "Beklenmeyen hata"
         },
         "step": {
             "reauth_confirm": {
-                "description": "UptimeRobot'tan yeni bir salt okunur API anahtar\u0131 sa\u011flaman\u0131z gerekiyor"
+                "data": {
+                    "api_key": "API Anahtar\u0131"
+                },
+                "description": "UptimeRobot'tan yeni bir salt okunur API anahtar\u0131 sa\u011flaman\u0131z gerekiyor",
+                "title": "Entegrasyonu Yeniden Do\u011frula"
             },
             "user": {
+                "data": {
+                    "api_key": "API Anahtar\u0131"
+                },
                 "description": "UptimeRobot'tan salt okunur bir API anahtar\u0131 sa\u011flaman\u0131z gerekiyor"
             }
         }

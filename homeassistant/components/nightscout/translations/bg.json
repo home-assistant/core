@@ -7,7 +7,8 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "API \u043a\u043b\u044e\u0447"
+                    "api_key": "API \u043a\u043b\u044e\u0447",
+                    "url": "URL"
                 }
             }
         }

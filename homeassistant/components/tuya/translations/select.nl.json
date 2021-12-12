@@ -14,12 +14,17 @@
             "0": "Lage gevoeligheid",
             "1": "Hoge gevoeligheid"
         },
+        "tuya__fingerbot_mode": {
+            "click": "Duw",
+            "switch": "Schakelaar"
+        },
         "tuya__ipc_work_mode": {
             "0": "Energiezuinige modus",
             "1": "Continue werkmodus:"
         },
         "tuya__led_type": {
             "halogen": "Halogeen",
+            "incandescent": "Witgloeiend",
             "led": "LED"
         },
         "tuya__light_mode": {

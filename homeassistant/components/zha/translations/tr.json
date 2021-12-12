@@ -1,21 +1,40 @@
 {
     "config": {
         "abort": {
+            "not_zha_device": "Bu cihaz bir zha cihaz\u0131 de\u011fil",
             "single_instance_allowed": "Zaten yap\u0131land\u0131r\u0131lm\u0131\u015f. Yaln\u0131zca tek bir konfig\u00fcrasyon m\u00fcmk\u00fcnd\u00fcr.",
             "usb_probe_failed": "USB ayg\u0131t\u0131 ara\u015ft\u0131r\u0131lamad\u0131"
         },
         "error": {
             "cannot_connect": "Ba\u011flanma hatas\u0131"
         },
+        "flow_title": "{name}",
         "step": {
+            "confirm": {
+                "description": "{name} kurulumunu yapmak istiyor musunuz?"
+            },
             "pick_radio": {
+                "data": {
+                    "radio_type": "Radyo Tipi"
+                },
+                "description": "Zigbee radyonuzun bir t\u00fcr\u00fcn\u00fc se\u00e7in",
                 "title": "Radyo Tipi"
             },
             "port_config": {
                 "data": {
+                    "baudrate": "ba\u011flant\u0131 noktas\u0131 h\u0131z\u0131",
+                    "flow_control": "veri ak\u0131\u015f\u0131 denetimi",
                     "path": "Seri cihaz yolu"
                 },
+                "description": "Ba\u011flant\u0131 noktas\u0131na \u00f6zel ayarlar\u0131 girin",
                 "title": "Ayarlar"
+            },
+            "user": {
+                "data": {
+                    "path": "Seri Cihaz Yolu"
+                },
+                "description": "Zigbee radyo i\u00e7in seri ba\u011flant\u0131 noktas\u0131 se\u00e7in",
+                "title": "ZHA"
             }
         }
     },
@@ -27,12 +46,67 @@
             "title": "Alarm Kontrol Paneli Se\u00e7enekleri"
         },
         "zha_options": {
+            "consider_unavailable_battery": "Pille \u00e7al\u0131\u015fan ayg\u0131tlar\u0131n kullan\u0131lamad\u0131\u011f\u0131n\u0131 g\u00f6z \u00f6n\u00fcnde bulundurun (saniye)",
+            "consider_unavailable_mains": "\u015eebekeyle \u00e7al\u0131\u015fan ayg\u0131tlar\u0131n kullan\u0131lamad\u0131\u011f\u0131n\u0131 g\u00f6z \u00f6n\u00fcnde bulundurun (saniye)",
+            "default_light_transition": "Varsay\u0131lan \u0131\u015f\u0131k ge\u00e7i\u015f s\u00fcresi (saniye)",
+            "enable_identify_on_join": "Cihazlar a\u011fa kat\u0131ld\u0131\u011f\u0131nda tan\u0131mlama efektini etkinle\u015ftir",
             "title": "Genel Se\u00e7enekler"
         }
     },
     "device_automation": {
+        "action_type": {
+            "squawk": "Squawk",
+            "warn": "Uyarmak"
+        },
+        "trigger_subtype": {
+            "both_buttons": "\u00c7ift d\u00fc\u011fmeler",
+            "button_1": "\u0130lk d\u00fc\u011fme",
+            "button_2": "\u0130kinci d\u00fc\u011fme",
+            "button_3": "\u00dc\u00e7\u00fcnc\u00fc d\u00fc\u011fme",
+            "button_4": "D\u00f6rd\u00fcnc\u00fc d\u00fc\u011fme",
+            "button_5": "Be\u015finci d\u00fc\u011fme",
+            "button_6": "Alt\u0131nc\u0131 d\u00fc\u011fme",
+            "close": "Kapat",
+            "dim_down": "K\u0131sma",
+            "dim_up": "A\u00e7ma",
+            "face_1": "y\u00fcz 1 etkinle\u015ftirilmi\u015f",
+            "face_2": "y\u00fcz 2 etkinle\u015ftirilmi\u015f",
+            "face_3": "y\u00fcz 3 etkinle\u015ftirilmi\u015f",
+            "face_4": "y\u00fcz 4 etkinle\u015ftirilmi\u015f",
+            "face_5": "y\u00fcz 5 etkinle\u015ftirilmi\u015f",
+            "face_6": "y\u00fcz 6 etkinle\u015ftirilmi\u015f",
+            "face_any": "Herhangi bir/belirtilen y\u00fcz(ler) etkinle\u015ftirildi\u011finde",
+            "left": "Sol",
+            "open": "A\u00e7\u0131k",
+            "right": "Sa\u011f",
+            "turn_off": "Kapat",
+            "turn_on": "A\u00e7\u0131n"
+        },
         "trigger_type": {
-            "device_offline": "Cihaz \u00e7evrimd\u0131\u015f\u0131"
+            "device_dropped": "Cihaz d\u00fc\u015ft\u00fc",
+            "device_flipped": "Ayg\u0131t \u00e7evrilmi\u015f \"{subtype}\"",
+            "device_knocked": "Cihaz \" {subtype} \" \u00f6\u011fesini \u00e7ald\u0131",
+            "device_offline": "Cihaz \u00e7evrimd\u0131\u015f\u0131",
+            "device_rotated": "Cihaz d\u00f6nd\u00fcr\u00fcld\u00fc \" {subtype} \"",
+            "device_shaken": "Cihaz salland\u0131",
+            "device_slid": "Cihaz kayd\u0131rd\u0131 \" {subtype} \"",
+            "device_tilted": "Cihaz e\u011fik",
+            "remote_button_alt_double_press": "\" {subtype} \" d\u00fc\u011fmesine \u00e7ift t\u0131kland\u0131 (Alternatif mod)",
+            "remote_button_alt_long_press": "\" {subtype} \" d\u00fc\u011fmesi s\u00fcrekli bas\u0131l\u0131 (Alternatif mod)",
+            "remote_button_alt_long_release": "\" {subtype} \" d\u00fc\u011fmesi uzun bas\u0131ld\u0131ktan sonra b\u0131rak\u0131ld\u0131 (Alternatif mod)",
+            "remote_button_alt_quadruple_press": "\" {subtype} \" d\u00fc\u011fmesi d\u00f6rt kez t\u0131kland\u0131 (Alternatif mod)",
+            "remote_button_alt_quintuple_press": "\" {subtype} \" d\u00fc\u011fmesi be\u015f kez t\u0131kland\u0131 (Alternatif mod)",
+            "remote_button_alt_short_press": "\" {subtype} \" d\u00fc\u011fmesine bas\u0131ld\u0131 (Alternatif mod)",
+            "remote_button_alt_short_release": "\" {subtype} \" d\u00fc\u011fmesi b\u0131rak\u0131ld\u0131 (Alternatif mod)",
+            "remote_button_alt_triple_press": "\" {subtype} \" d\u00fc\u011fmesine \u00fc\u00e7 kez t\u0131kland\u0131 (Alternatif mod)",
+            "remote_button_double_press": "\" {subtype} \" d\u00fc\u011fmesine \u00e7ift t\u0131kland\u0131",
+            "remote_button_long_press": "\" {subtype} \" d\u00fc\u011fmesi s\u00fcrekli bas\u0131l\u0131",
+            "remote_button_long_release": "\" {subtype} \" d\u00fc\u011fmesi uzun bas\u0131ld\u0131ktan sonra b\u0131rak\u0131ld\u0131",
+            "remote_button_quadruple_press": "\" {subtype} \" d\u00fc\u011fmesi d\u00f6rt kez t\u0131kland\u0131",
+            "remote_button_quintuple_press": "\" {subtype} \" d\u00fc\u011fmesi be\u015f kez t\u0131kland\u0131",
+            "remote_button_short_press": "\" {subtype} \" d\u00fc\u011fmesine bas\u0131ld\u0131",
+            "remote_button_short_release": "\" {subtype} \" d\u00fc\u011fmesi b\u0131rak\u0131ld\u0131",
+            "remote_button_triple_press": "\" {subtype} \" d\u00fc\u011fmesine \u00fc\u00e7 kez t\u0131kland\u0131"
         }
     }
 }

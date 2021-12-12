@@ -8,10 +8,14 @@
             "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
             "unknown": "Beklenmeyen hata"
         },
-        "flow_title": "Smile: {name}",
+        "flow_title": "{name}",
         "step": {
             "user": {
-                "description": "\u00dcr\u00fcn:"
+                "data": {
+                    "flow_type": "Ba\u011flant\u0131 t\u00fcr\u00fc"
+                },
+                "description": "\u00dcr\u00fcn:",
+                "title": "Plugwise tipi"
             },
             "user_gateway": {
                 "data": {
@@ -20,13 +24,17 @@
                     "port": "Port",
                     "username": "Smile Kullan\u0131c\u0131 Ad\u0131"
                 },
-                "description": "L\u00fctfen girin"
+                "description": "L\u00fctfen girin",
+                "title": "Smile'a Ba\u011flan\u0131n"
             }
         }
     },
     "options": {
         "step": {
             "init": {
+                "data": {
+                    "scan_interval": "Tarama Aral\u0131\u011f\u0131 (saniye)"
+                },
                 "description": "Plugwise Se\u00e7eneklerini Ayarlay\u0131n"
             }
         }

@@ -118,6 +118,8 @@ async def test_get_action_capabilities(hass, device_reg, entity_reg):
     ).entity_id
     actions = await async_get_device_automations(hass, "action", device_entry.id)
     assert len(actions) == 3
+    action_types = {action["type"] for action in actions}
+    assert action_types == {"turn_on", "toggle", "turn_off"}
     for action in actions:
         capabilities = await async_get_device_automation_capabilities(
             hass, "action", action
@@ -134,11 +136,17 @@ async def test_get_action_capabilities(hass, device_reg, entity_reg):
 
 
 @pytest.mark.parametrize(
-    "set_state,num_actions,supported_features_reg,supported_features_state,capabilities_reg,attributes_state,expected_capabilities",
+    "set_state,expected_actions,supported_features_reg,supported_features_state,capabilities_reg,attributes_state,expected_capabilities",
     [
         (
             False,
-            5,
+            {
+                "turn_on",
+                "toggle",
+                "turn_off",
+                "brightness_increase",
+                "brightness_decrease",
+            },
             0,
             0,
             {ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_BRIGHTNESS]},
@@ -157,7 +165,13 @@ async def test_get_action_capabilities(hass, device_reg, entity_reg):
         ),
         (
             True,
-            5,
+            {
+                "turn_on",
+                "toggle",
+                "turn_off",
+                "brightness_increase",
+                "brightness_decrease",
+            },
             0,
             0,
             None,
@@ -176,7 +190,7 @@ async def test_get_action_capabilities(hass, device_reg, entity_reg):
         ),
         (
             False,
-            4,
+            {"turn_on", "toggle", "turn_off", "flash"},
             SUPPORT_FLASH,
             0,
             None,
@@ -194,7 +208,7 @@ async def test_get_action_capabilities(hass, device_reg, entity_reg):
         ),
         (
             True,
-            4,
+            {"turn_on", "toggle", "turn_off", "flash"},
             0,
             SUPPORT_FLASH,
             None,
@@ -217,7 +231,7 @@ async def test_get_action_capabilities_features(
     device_reg,
     entity_reg,
     set_state,
-    num_actions,
+    expected_actions,
     supported_features_reg,
     supported_features_state,
     capabilities_reg,
@@ -247,7 +261,9 @@ async def test_get_action_capabilities_features(
         )
 
     actions = await async_get_device_automations(hass, "action", device_entry.id)
-    assert len(actions) == num_actions
+    assert len(actions) == len(expected_actions)
+    action_types = {action["type"] for action in actions}
+    assert action_types == expected_actions
     for action in actions:
         capabilities = await async_get_device_automation_capabilities(
             hass, "action", action

@@ -10,5 +10,14 @@
             }
         }
     },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "calculation_method": "Dua hesaplama y\u00f6ntemi"
+                }
+            }
+        }
+    },
     "title": "\u0130slami Namaz Vakitleri"
 }

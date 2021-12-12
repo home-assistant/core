@@ -5,6 +5,12 @@
             "spring": "\u0130lkbahar",
             "summer": "Yaz",
             "winter": "K\u0131\u015f"
+        },
+        "season__season__": {
+            "autumn": "Sonbahar",
+            "spring": "\u0130lkbahar",
+            "summer": "Yaz",
+            "winter": "K\u0131\u015f"
         }
     }
 }
