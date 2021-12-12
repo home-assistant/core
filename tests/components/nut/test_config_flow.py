@@ -35,7 +35,14 @@ async def test_form_zeroconf(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(host="192.168.1.5", port=1234),
+        data=zeroconf.ZeroconfServiceInfo(
+            host="192.168.1.5",
+            hostname="mock_hostname",
+            name="mock_name",
+            port=1234,
+            properties={},
+            type="mock_type",
+        ),
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"

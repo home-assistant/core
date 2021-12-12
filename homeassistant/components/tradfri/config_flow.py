@@ -97,13 +97,11 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle homekit discovery."""
         await self.async_set_unique_id(
-            discovery_info[zeroconf.ATTR_PROPERTIES][zeroconf.ATTR_PROPERTIES_ID]
+            discovery_info.properties[zeroconf.ATTR_PROPERTIES_ID]
         )
-        self._abort_if_unique_id_configured(
-            {CONF_HOST: discovery_info[zeroconf.ATTR_HOST]}
-        )
+        self._abort_if_unique_id_configured({CONF_HOST: discovery_info.host})
 
-        host = discovery_info[zeroconf.ATTR_HOST]
+        host = discovery_info.host
 
         for entry in self._async_current_entries():
             if entry.data.get(CONF_HOST) != host:
@@ -113,9 +111,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if not entry.unique_id:
                 self.hass.config_entries.async_update_entry(
                     entry,
-                    unique_id=discovery_info[zeroconf.ATTR_PROPERTIES][
-                        zeroconf.ATTR_PROPERTIES_ID
-                    ],
+                    unique_id=discovery_info.properties[zeroconf.ATTR_PROPERTIES_ID],
                 )
 
             return self.async_abort(reason="already_configured")

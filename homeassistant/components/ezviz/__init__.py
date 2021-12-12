@@ -11,6 +11,7 @@ from homeassistant.const import (
     CONF_TYPE,
     CONF_URL,
     CONF_USERNAME,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -30,10 +31,10 @@ from .coordinator import EzvizDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
-    "binary_sensor",
-    "camera",
-    "sensor",
-    "switch",
+    Platform.BINARY_SENSOR,
+    Platform.CAMERA,
+    Platform.SENSOR,
+    Platform.SWITCH,
 ]
 
 

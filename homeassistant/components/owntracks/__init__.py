@@ -14,6 +14,7 @@ from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     CONF_WEBHOOK_ID,
+    Platform,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -32,7 +33,7 @@ CONF_MQTT_TOPIC = "mqtt_topic"
 CONF_REGION_MAPPING = "region_mapping"
 CONF_EVENTS_ONLY = "events_only"
 BEACON_DEV_ID = "beacon"
-PLATFORMS = ["device_tracker"]
+PLATFORMS = [Platform.DEVICE_TRACKER]
 
 DEFAULT_OWNTRACKS_TOPIC = "owntracks/#"
 

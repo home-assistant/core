@@ -266,7 +266,12 @@ def _normalize_states(
                 hass.data[WARN_UNSUPPORTED_UNIT] = set()
             if entity_id not in hass.data[WARN_UNSUPPORTED_UNIT]:
                 hass.data[WARN_UNSUPPORTED_UNIT].add(entity_id)
-                _LOGGER.warning("%s has unknown unit %s", entity_id, unit)
+                _LOGGER.warning(
+                    "%s has unit %s which is unsupported for device_class %s",
+                    entity_id,
+                    unit,
+                    device_class,
+                )
             continue
 
         fstates.append((UNIT_CONVERSIONS[device_class][unit](fstate), state))
@@ -512,7 +517,9 @@ def _compile_statistics(  # noqa: C901
             last_reset = old_last_reset = None
             new_state = old_state = None
             _sum = 0.0
-            last_stats = statistics.get_last_statistics(hass, 1, entity_id, False)
+            last_stats = statistics.get_last_short_term_statistics(
+                hass, 1, entity_id, False
+            )
             if entity_id in last_stats:
                 # We have compiled history for this sensor before, use that as a starting point
                 last_reset = old_last_reset = last_stats[entity_id][0]["last_reset"]

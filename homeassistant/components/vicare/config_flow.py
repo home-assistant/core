@@ -8,7 +8,7 @@ from PyViCare.PyViCareUtils import PyViCareInvalidCredentialsError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.dhcp import MAC_ADDRESS
+from homeassistant.components import dhcp
 from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_NAME,
@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
+from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 
@@ -74,9 +75,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_dhcp(self, discovery_info):
+    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Invoke when a Viessmann MAC address is discovered on the network."""
-        formatted_mac = format_mac(discovery_info[MAC_ADDRESS])
+        formatted_mac = format_mac(discovery_info.macaddress)
         _LOGGER.info("Found device with mac %s", formatted_mac)
 
         await self.async_set_unique_id(formatted_mac)

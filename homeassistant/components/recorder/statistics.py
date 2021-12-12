@@ -834,8 +834,12 @@ def statistics_during_period(
         return _reduce_statistics_per_month(result)
 
 
-def get_last_statistics(
-    hass: HomeAssistant, number_of_stats: int, statistic_id: str, convert_units: bool
+def _get_last_statistics(
+    hass: HomeAssistant,
+    number_of_stats: int,
+    statistic_id: str,
+    convert_units: bool,
+    table: type[Statistics | StatisticsShortTerm],
 ) -> dict[str, list[dict]]:
     """Return the last number_of_stats statistics for a given statistic_id."""
     statistic_ids = [statistic_id]
@@ -845,16 +849,19 @@ def get_last_statistics(
         if not metadata:
             return {}
 
-        baked_query = hass.data[STATISTICS_SHORT_TERM_BAKERY](
-            lambda session: session.query(*QUERY_STATISTICS_SHORT_TERM)
-        )
+        if table == StatisticsShortTerm:
+            bakery = STATISTICS_SHORT_TERM_BAKERY
+            base_query = QUERY_STATISTICS_SHORT_TERM
+        else:
+            bakery = STATISTICS_BAKERY
+            base_query = QUERY_STATISTICS
+
+        baked_query = hass.data[bakery](lambda session: session.query(*base_query))
 
         baked_query += lambda q: q.filter_by(metadata_id=bindparam("metadata_id"))
         metadata_id = metadata[statistic_id][0]
 
-        baked_query += lambda q: q.order_by(
-            StatisticsShortTerm.metadata_id, StatisticsShortTerm.start.desc()
-        )
+        baked_query += lambda q: q.order_by(table.metadata_id, table.start.desc())
 
         baked_query += lambda q: q.limit(bindparam("number_of_stats"))
 
@@ -874,9 +881,27 @@ def get_last_statistics(
             statistic_ids,
             metadata,
             convert_units,
-            StatisticsShortTerm,
+            table,
             None,
         )
+
+
+def get_last_statistics(
+    hass: HomeAssistant, number_of_stats: int, statistic_id: str, convert_units: bool
+) -> dict[str, list[dict]]:
+    """Return the last number_of_stats statistics for a statistic_id."""
+    return _get_last_statistics(
+        hass, number_of_stats, statistic_id, convert_units, Statistics
+    )
+
+
+def get_last_short_term_statistics(
+    hass: HomeAssistant, number_of_stats: int, statistic_id: str, convert_units: bool
+) -> dict[str, list[dict]]:
+    """Return the last number_of_stats short term statistics for a statistic_id."""
+    return _get_last_statistics(
+        hass, number_of_stats, statistic_id, convert_units, StatisticsShortTerm
+    )
 
 
 def _statistics_at_time(

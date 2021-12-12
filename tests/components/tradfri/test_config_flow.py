@@ -106,7 +106,11 @@ async def test_discovery_connection(hass, mock_auth, mock_entry_setup):
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
             host="123.123.123.123",
+            hostname="mock_hostname",
+            name="mock_name",
+            port=None,
             properties={zeroconf.ATTR_PROPERTIES_ID: "homekit-id"},
+            type="mock_type",
         ),
     )
 
@@ -256,7 +260,12 @@ async def test_discovery_duplicate_aborted(hass):
         "tradfri",
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
-            host="new-host", properties={zeroconf.ATTR_PROPERTIES_ID: "homekit-id"}
+            host="new-host",
+            hostname="mock_hostname",
+            name="mock_name",
+            port=None,
+            properties={zeroconf.ATTR_PROPERTIES_ID: "homekit-id"},
+            type="mock_type",
         ),
     )
 
@@ -287,7 +296,11 @@ async def test_duplicate_discovery(hass, mock_auth, mock_entry_setup):
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
             host="123.123.123.123",
+            hostname="mock_hostname",
+            name="mock_name",
+            port=None,
             properties={zeroconf.ATTR_PROPERTIES_ID: "homekit-id"},
+            type="mock_type",
         ),
     )
 
@@ -298,7 +311,11 @@ async def test_duplicate_discovery(hass, mock_auth, mock_entry_setup):
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
             host="123.123.123.123",
+            hostname="mock_hostname",
+            name="mock_name",
+            port=None,
             properties={zeroconf.ATTR_PROPERTIES_ID: "homekit-id"},
+            type="mock_type",
         ),
     )
 
@@ -317,7 +334,12 @@ async def test_discovery_updates_unique_id(hass):
         "tradfri",
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
-            host="some-host", properties={zeroconf.ATTR_PROPERTIES_ID: "homekit-id"}
+            host="some-host",
+            hostname="mock_hostname",
+            name="mock_name",
+            port=None,
+            properties={zeroconf.ATTR_PROPERTIES_ID: "homekit-id"},
+            type="mock_type",
         ),
     )
 

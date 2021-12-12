@@ -42,25 +42,27 @@ TEST_USERNAME2 = "stretch"
 
 TEST_DISCOVERY = zeroconf.ZeroconfServiceInfo(
     host=TEST_HOST,
-    port=DEFAULT_PORT,
     hostname=f"{TEST_HOSTNAME}.local.",
-    server=f"{TEST_HOSTNAME}.local.",
+    name="mock_name",
+    port=DEFAULT_PORT,
     properties={
         "product": "smile",
         "version": "1.2.3",
         "hostname": f"{TEST_HOSTNAME}.local.",
     },
+    type="mock_type",
 )
 TEST_DISCOVERY2 = zeroconf.ZeroconfServiceInfo(
     host=TEST_HOST,
-    port=DEFAULT_PORT,
     hostname=f"{TEST_HOSTNAME2}.local.",
-    server=f"{TEST_HOSTNAME2}.local.",
+    name="mock_name",
+    port=DEFAULT_PORT,
     properties={
         "product": "stretch",
         "version": "1.2.3",
         "hostname": f"{TEST_HOSTNAME2}.local.",
     },
+    type="mock_type",
 )
 
 

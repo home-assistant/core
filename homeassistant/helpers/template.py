@@ -17,6 +17,7 @@ from operator import attrgetter
 import random
 import re
 import statistics
+from struct import error as StructError, pack, unpack_from
 import sys
 from typing import Any, cast
 from urllib.parse import urlencode as urllib_urlencode
@@ -109,18 +110,25 @@ def attach(hass: HomeAssistant, obj: Any) -> None:
 
 
 def render_complex(
-    value: Any, variables: TemplateVarsType = None, limited: bool = False
+    value: Any,
+    variables: TemplateVarsType = None,
+    limited: bool = False,
+    parse_result: bool = True,
 ) -> Any:
     """Recursive template creator helper function."""
     if isinstance(value, list):
-        return [render_complex(item, variables) for item in value]
+        return [
+            render_complex(item, variables, limited, parse_result) for item in value
+        ]
     if isinstance(value, collections.abc.Mapping):
         return {
-            render_complex(key, variables): render_complex(item, variables)
+            render_complex(key, variables, limited, parse_result): render_complex(
+                item, variables, limited, parse_result
+            )
             for key, item in value.items()
         }
     if isinstance(value, Template):
-        return value.async_render(variables, limited=limited)
+        return value.async_render(variables, limited=limited, parse_result=parse_result)
 
     return value
 
@@ -1462,9 +1470,7 @@ def timestamp_custom(value, date_format=DATE_STR_FORMAT, local=True, default=_SE
 def timestamp_local(value, default=_SENTINEL):
     """Filter to convert given timestamp to local date/time."""
     try:
-        return dt_util.as_local(dt_util.utc_from_timestamp(value)).strftime(
-            DATE_STR_FORMAT
-        )
+        return dt_util.as_local(dt_util.utc_from_timestamp(value)).isoformat()
     except (ValueError, TypeError):
         # If timestamp can't be converted
         if default is _SENTINEL:
@@ -1476,7 +1482,7 @@ def timestamp_local(value, default=_SENTINEL):
 def timestamp_utc(value, default=_SENTINEL):
     """Filter to convert given timestamp to UTC date/time."""
     try:
-        return dt_util.utc_from_timestamp(value).strftime(DATE_STR_FORMAT)
+        return dt_util.utc_from_timestamp(value).isoformat()
     except (ValueError, TypeError):
         # If timestamp can't be converted
         if default is _SENTINEL:
@@ -1494,6 +1500,16 @@ def forgiving_as_timestamp(value, default=_SENTINEL):
             warn_no_default("as_timestamp", value, None)
             return None
         return default
+
+
+def as_datetime(value):
+    """Filter and to convert a time string or UNIX timestamp to datetime object."""
+    try:
+        # Check for a valid UNIX timestamp string, int or float
+        timestamp = float(value)
+        return dt_util.utc_from_timestamp(timestamp)
+    except ValueError:
+        return dt_util.parse_datetime(value)
 
 
 def strptime(string, fmt, default=_SENTINEL):
@@ -1631,6 +1647,34 @@ def bitwise_or(first_value, second_value):
     return first_value | second_value
 
 
+def struct_pack(value: Any | None, format_string: str) -> bytes | None:
+    """Pack an object into a bytes object."""
+    try:
+        return pack(format_string, value)
+    except StructError:
+        _LOGGER.warning(
+            "Template warning: 'pack' unable to pack object '%s' with type '%s' and format_string '%s' see https://docs.python.org/3/library/struct.html for more information",
+            str(value),
+            type(value).__name__,
+            format_string,
+        )
+        return None
+
+
+def struct_unpack(value: bytes, format_string: str, offset: int = 0) -> Any | None:
+    """Unpack an object from bytes an return the first native object."""
+    try:
+        return unpack_from(format_string, value, offset)[0]
+    except StructError:
+        _LOGGER.warning(
+            "Template warning: 'unpack' unable to unpack object '%s' with format_string '%s' and offset %s see https://docs.python.org/3/library/struct.html for more information",
+            value,
+            format_string,
+            offset,
+        )
+        return None
+
+
 def base64_encode(value):
     """Perform base64 encode."""
     return base64.b64encode(value.encode("utf-8")).decode("utf-8")
@@ -1672,16 +1716,16 @@ def random_every_time(context, values):
 
 def today_at(time_str: str = "") -> datetime:
     """Record fetching now where the time has been replaced with value."""
-    start = dt_util.start_of_local_day(datetime.now())
+    today = dt_util.start_of_local_day()
+    if not time_str:
+        return today
 
-    dttime = start.time() if time_str == "" else dt_util.parse_time(time_str)
+    if (time_today := dt_util.parse_time(time_str)) is None:
+        raise ValueError(
+            f"could not convert {type(time_str).__name__} to datetime: '{time_str}'"
+        )
 
-    if dttime:
-        return datetime.combine(start.date(), dttime, tzinfo=dt_util.DEFAULT_TIME_ZONE)
-
-    raise ValueError(
-        f"could not convert {type(time_str).__name__} to datetime: '{time_str}'"
-    )
+    return datetime.combine(today, time_today, today.tzinfo)
 
 
 def relative_time(value):
@@ -1791,7 +1835,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["atan"] = arc_tangent
         self.filters["atan2"] = arc_tangent2
         self.filters["sqrt"] = square_root
-        self.filters["as_datetime"] = dt_util.parse_datetime
+        self.filters["as_datetime"] = as_datetime
         self.filters["as_timestamp"] = forgiving_as_timestamp
         self.filters["today_at"] = today_at
         self.filters["as_local"] = dt_util.as_local
@@ -1815,10 +1859,13 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["regex_findall_index"] = regex_findall_index
         self.filters["bitwise_and"] = bitwise_and
         self.filters["bitwise_or"] = bitwise_or
+        self.filters["pack"] = struct_pack
+        self.filters["unpack"] = struct_unpack
         self.filters["ord"] = ord
         self.filters["is_number"] = is_number
         self.filters["float"] = forgiving_float_filter
         self.filters["int"] = forgiving_int_filter
+        self.filters["relative_time"] = relative_time
         self.globals["log"] = logarithm
         self.globals["sin"] = sine
         self.globals["cos"] = cosine
@@ -1832,7 +1879,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["atan"] = arc_tangent
         self.globals["atan2"] = arc_tangent2
         self.globals["float"] = forgiving_float
-        self.globals["as_datetime"] = dt_util.parse_datetime
+        self.globals["as_datetime"] = as_datetime
         self.globals["as_local"] = dt_util.as_local
         self.globals["as_timestamp"] = forgiving_as_timestamp
         self.globals["today_at"] = today_at
@@ -1845,6 +1892,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["min"] = min
         self.globals["is_number"] = is_number
         self.globals["int"] = forgiving_int
+        self.globals["pack"] = struct_pack
+        self.globals["unpack"] = struct_unpack
         self.tests["match"] = regex_match
         self.tests["search"] = regex_search
 

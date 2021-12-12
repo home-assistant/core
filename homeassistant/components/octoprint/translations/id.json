@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Perangkat sudah dikonfigurasi",
+            "auth_failed": "Gagal mengambil kunci API aplikasi",
             "cannot_connect": "Gagal terhubung",
             "unknown": "Kesalahan yang tidak diharapkan"
         },
@@ -9,10 +10,16 @@
             "cannot_connect": "Gagal terhubung",
             "unknown": "Kesalahan yang tidak diharapkan"
         },
+        "flow_title": "OctoPrint Printer: {host}",
+        "progress": {
+            "get_api_key": "Buka antarmuka OctoPrint dan klik 'Izinkan' pada Permintaan Akses untuk 'Home Assistant'."
+        },
         "step": {
             "user": {
                 "data": {
                     "host": "Host",
+                    "path": "Jalur Navigasi",
+                    "port": "Nomor Port",
                     "ssl": "Gunakan SSL",
                     "username": "Nama Pengguna"
                 }

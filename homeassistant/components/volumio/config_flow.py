@@ -98,10 +98,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle zeroconf discovery."""
-        self._host = discovery_info[zeroconf.ATTR_HOST]
-        self._port = discovery_info[zeroconf.ATTR_PORT]
-        self._name = discovery_info[zeroconf.ATTR_PROPERTIES]["volumioName"]
-        self._uuid = discovery_info[zeroconf.ATTR_PROPERTIES]["UUID"]
+        self._host = discovery_info.host
+        self._port = discovery_info.port
+        self._name = discovery_info.properties["volumioName"]
+        self._uuid = discovery_info.properties["UUID"]
 
         await self._set_uid_and_abort()
 

@@ -19,4 +19,5 @@ class NanoleafEntity(Entity):
             model=nanoleaf.model,
             name=nanoleaf.name,
             sw_version=nanoleaf.firmware_version,
+            configuration_url=f"http://{nanoleaf.host}",
         )

@@ -38,6 +38,8 @@ ATTR_CROSSFADE = "cross_fade"
 ATTR_NIGHT_SOUND = "night_mode"
 ATTR_SPEECH_ENHANCEMENT = "dialog_mode"
 ATTR_STATUS_LIGHT = "status_light"
+ATTR_SUB_ENABLED = "sub_enabled"
+ATTR_SURROUND_ENABLED = "surround_enabled"
 ATTR_TOUCH_CONTROLS = "buttons_enabled"
 
 ALL_FEATURES = (
@@ -45,6 +47,8 @@ ALL_FEATURES = (
     ATTR_CROSSFADE,
     ATTR_NIGHT_SOUND,
     ATTR_SPEECH_ENHANCEMENT,
+    ATTR_SUB_ENABLED,
+    ATTR_SURROUND_ENABLED,
     ATTR_STATUS_LIGHT,
 )
 
@@ -60,6 +64,8 @@ FRIENDLY_NAMES = {
     ATTR_NIGHT_SOUND: "Night Sound",
     ATTR_SPEECH_ENHANCEMENT: "Speech Enhancement",
     ATTR_STATUS_LIGHT: "Status Light",
+    ATTR_SUB_ENABLED: "Subwoofer Enabled",
+    ATTR_SURROUND_ENABLED: "Surround Enabled",
     ATTR_TOUCH_CONTROLS: "Touch Controls",
 }
 
@@ -68,6 +74,8 @@ FEATURE_ICONS = {
     ATTR_SPEECH_ENHANCEMENT: "mdi:ear-hearing",
     ATTR_CROSSFADE: "mdi:swap-horizontal",
     ATTR_STATUS_LIGHT: "mdi:led-on",
+    ATTR_SUB_ENABLED: "mdi:dog",
+    ATTR_SURROUND_ENABLED: "mdi:surround-sound",
     ATTR_TOUCH_CONTROLS: "mdi:gesture-tap",
 }
 
@@ -187,11 +195,12 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
     """Representation of a Sonos Alarm entity."""
 
     _attr_entity_category = ENTITY_CATEGORY_CONFIG
+    _attr_icon = "mdi:alarm"
 
     def __init__(self, alarm_id: str, speaker: SonosSpeaker) -> None:
         """Initialize the switch."""
         super().__init__(speaker)
-
+        self._attr_unique_id = f"{SONOS_DOMAIN}-{alarm_id}"
         self.alarm_id = alarm_id
         self.household_id = speaker.household_id
         self.entity_id = ENTITY_ID_FORMAT.format(f"sonos_alarm_{self.alarm_id}")
@@ -211,16 +220,6 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
     def alarm(self):
         """Return the alarm instance."""
         return self.hass.data[DATA_SONOS].alarms[self.household_id].get(self.alarm_id)
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID of the switch."""
-        return f"{SONOS_DOMAIN}-{self.alarm_id}"
-
-    @property
-    def icon(self):
-        """Return icon of Sonos alarm switch."""
-        return "mdi:alarm"
 
     @property
     def name(self) -> str:

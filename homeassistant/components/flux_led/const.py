@@ -39,6 +39,7 @@ DEFAULT_SCAN_INTERVAL: Final = 5
 DEFAULT_EFFECT_SPEED: Final = 50
 
 FLUX_LED_DISCOVERY: Final = "flux_led_discovery"
+FLUX_LED_DISCOVERY_LOCK: Final = "flux_led_discovery_lock"
 
 FLUX_LED_EXCEPTIONS: Final = (
     asyncio.TimeoutError,
@@ -71,7 +72,7 @@ CONF_SPEED_PCT: Final = "speed_pct"
 CONF_TRANSITION: Final = "transition"
 
 
-EFFECT_SUPPORT_MODES = {COLOR_MODE_RGB, COLOR_MODE_RGBW, COLOR_MODE_RGBWW}
+EFFECT_SPEED_SUPPORT_MODES: Final = {COLOR_MODE_RGB, COLOR_MODE_RGBW, COLOR_MODE_RGBWW}
 
 
 CONF_CUSTOM_EFFECT_COLORS: Final = "custom_effect_colors"

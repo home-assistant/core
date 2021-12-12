@@ -79,7 +79,7 @@ class NestCamera(Camera):
         self._event_id: str | None = None
         self._event_image_bytes: bytes | None = None
         self._event_image_cleanup_unsub: Callable[[], None] | None = None
-        self.is_streaming = CameraLiveStreamTrait.NAME in self._device.traits
+        self._attr_is_streaming = CameraLiveStreamTrait.NAME in self._device.traits
         self._placeholder_image: bytes | None = None
 
     @property

@@ -5,10 +5,14 @@ from freezegun import freeze_time
 import pytest
 from wled import WLEDConnectionError, WLEDError
 
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import (
+    DOMAIN as BUTTON_DOMAIN,
+    SERVICE_PRESS,
+    ButtonDeviceClass,
+)
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
-    ATTR_ICON,
     ENTITY_CATEGORY_CONFIG,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -27,8 +31,8 @@ async def test_button_restart(
 
     state = hass.states.get("button.wled_rgb_light_restart")
     assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:restart"
     assert state.state == STATE_UNKNOWN
+    assert state.attributes[ATTR_DEVICE_CLASS] == ButtonDeviceClass.RESTART
 
     entry = entity_registry.async_get("button.wled_rgb_light_restart")
     assert entry
@@ -93,31 +97,31 @@ async def test_button_connection_error(
     assert "Error communicating with API" in caplog.text
 
 
-async def test_button_upgrade_stay_stable(
+async def test_button_update_stay_stable(
     hass: HomeAssistant, init_integration: MockConfigEntry, mock_wled: MagicMock
 ) -> None:
-    """Test the upgrade button.
+    """Test the update button.
 
-    There is both an upgrade for beta and stable available, however, the device
-    is currently running a stable version. Therefore, the upgrade button should
-    upgrade the the next stable (even though beta is newer).
+    There is both an update for beta and stable available, however, the device
+    is currently running a stable version. Therefore, the update button should
+    update the the next stable (even though beta is newer).
     """
     entity_registry = er.async_get(hass)
 
-    entry = entity_registry.async_get("button.wled_rgb_light_upgrade")
+    entry = entity_registry.async_get("button.wled_rgb_light_update")
     assert entry
-    assert entry.unique_id == "aabbccddeeff_upgrade"
+    assert entry.unique_id == "aabbccddeeff_update"
     assert entry.entity_category == ENTITY_CATEGORY_CONFIG
 
-    state = hass.states.get("button.wled_rgb_light_upgrade")
+    state = hass.states.get("button.wled_rgb_light_update")
     assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:cellphone-arrow-down"
     assert state.state == STATE_UNKNOWN
+    assert state.attributes[ATTR_DEVICE_CLASS] == ButtonDeviceClass.UPDATE
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.wled_rgb_light_upgrade"},
+        {ATTR_ENTITY_ID: "button.wled_rgb_light_update"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -126,19 +130,19 @@ async def test_button_upgrade_stay_stable(
 
 
 @pytest.mark.parametrize("mock_wled", ["wled/rgbw.json"], indirect=True)
-async def test_button_upgrade_beta_to_stable(
+async def test_button_update_beta_to_stable(
     hass: HomeAssistant, init_integration: MockConfigEntry, mock_wled: MagicMock
 ) -> None:
-    """Test the upgrade button.
+    """Test the update button.
 
-    There is both an upgrade for beta and stable available the device
+    There is both an update for beta and stable available the device
     is currently a beta, however, a newer stable is available. Therefore, the
-    upgrade button should upgrade to the next stable.
+    update button should update to the next stable.
     """
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.wled_rgbw_light_upgrade"},
+        {ATTR_ENTITY_ID: "button.wled_rgbw_light_update"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -147,18 +151,18 @@ async def test_button_upgrade_beta_to_stable(
 
 
 @pytest.mark.parametrize("mock_wled", ["wled/rgb_single_segment.json"], indirect=True)
-async def test_button_upgrade_stay_beta(
+async def test_button_update_stay_beta(
     hass: HomeAssistant, init_integration: MockConfigEntry, mock_wled: MagicMock
 ) -> None:
-    """Test the upgrade button.
+    """Test the update button.
 
-    There is an upgrade for beta and the device is currently a beta. Therefore,
-    the upgrade button should upgrade to the next beta.
+    There is an update for beta and the device is currently a beta. Therefore,
+    the update button should update to the next beta.
     """
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.wled_rgb_light_upgrade"},
+        {ATTR_ENTITY_ID: "button.wled_rgb_light_update"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -167,10 +171,10 @@ async def test_button_upgrade_stay_beta(
 
 
 @pytest.mark.parametrize("mock_wled", ["wled/rgb_websocket.json"], indirect=True)
-async def test_button_no_upgrade_available(
+async def test_button_no_update_available(
     hass: HomeAssistant, init_integration: MockConfigEntry, mock_wled: MagicMock
 ) -> None:
-    """Test the upgrade button. There is no update available."""
-    state = hass.states.get("button.wled_websocket_upgrade")
+    """Test the update button. There is no update available."""
+    state = hass.states.get("button.wled_websocket_update")
     assert state
     assert state.state == STATE_UNAVAILABLE

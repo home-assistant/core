@@ -192,4 +192,5 @@ class MetEireannWeather(CoordinatorEntity, WeatherEntity):
             identifiers={(DOMAIN,)},
             manufacturer="Met Éireann",
             model="Forecast",
+            configuration_url="https://www.met.ie",
         )

@@ -440,8 +440,11 @@ def mock_component(hass, component):
 def mock_registry(hass, mock_entries=None):
     """Mock the Entity Registry."""
     registry = entity_registry.EntityRegistry(hass)
-    registry.entities = mock_entries or OrderedDict()
-    registry._rebuild_index()
+    if mock_entries is None:
+        mock_entries = {}
+    registry.entities = entity_registry.EntityRegistryItems()
+    for key, entry in mock_entries.items():
+        registry.entities[key] = entry
 
     hass.data[entity_registry.DATA_REGISTRY] = registry
     return registry
@@ -899,8 +902,9 @@ def init_recorder_component(hass, add_config=None):
 
 async def async_init_recorder_component(hass, add_config=None):
     """Initialize the recorder asynchronously."""
-    config = dict(add_config) if add_config else {}
-    config[recorder.CONF_DB_URL] = "sqlite://"
+    config = add_config or {}
+    if recorder.CONF_DB_URL not in config:
+        config[recorder.CONF_DB_URL] = "sqlite://"
 
     with patch("homeassistant.components.recorder.migration.migrate_schema"):
         assert await async_setup_component(

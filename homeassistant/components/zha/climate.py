@@ -21,7 +21,6 @@ from homeassistant.components.climate.const import (
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
     CURRENT_HVAC_OFF,
-    DOMAIN,
     FAN_AUTO,
     FAN_ON,
     HVAC_MODE_COOL,
@@ -40,9 +39,16 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, TEMP_CELSIUS
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    PRECISION_TENTHS,
+    TEMP_CELSIUS,
+    Platform,
+)
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.dt as dt_util
 
@@ -51,7 +57,6 @@ from .core.const import (
     CHANNEL_FAN,
     CHANNEL_THERMOSTAT,
     DATA_ZHA,
-    DATA_ZHA_DISPATCHERS,
     PRESET_COMPLEX,
     PRESET_SCHEDULE,
     SIGNAL_ADD_ENTITIES,
@@ -73,8 +78,8 @@ ATTR_UNOCCP_HEAT_SETPT = "unoccupied_heating_setpoint"
 ATTR_UNOCCP_COOL_SETPT = "unoccupied_cooling_setpoint"
 
 
-STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
-MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, DOMAIN)
+STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.CLIMATE)
+MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, Platform.CLIMATE)
 RUNNING_MODE = {0x00: HVAC_MODE_OFF, 0x03: HVAC_MODE_COOL, 0x04: HVAC_MODE_HEAT}
 
 
@@ -150,9 +155,13 @@ SYSTEM_MODE_2_HVAC = {
 ZCL_TEMP = 100
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+):
     """Set up the Zigbee Home Automation sensor from config entry."""
-    entities_to_create = hass.data[DATA_ZHA][DOMAIN]
+    entities_to_create = hass.data[DATA_ZHA][Platform.CLIMATE]
     unsub = async_dispatcher_connect(
         hass,
         SIGNAL_ADD_ENTITIES,
@@ -160,10 +169,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             discovery.async_add_entities, async_add_entities, entities_to_create
         ),
     )
-    hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
+    config_entry.async_on_unload(unsub)
 
 
-@MULTI_MATCH(channel_names=CHANNEL_THERMOSTAT, aux_channels=CHANNEL_FAN)
+@MULTI_MATCH(
+    channel_names=CHANNEL_THERMOSTAT,
+    aux_channels=CHANNEL_FAN,
+    stop_on_match_group=CHANNEL_THERMOSTAT,
+)
 class Thermostat(ZhaEntity, ClimateEntity):
     """Representation of a ZHA Thermostat device."""
 
@@ -517,7 +530,7 @@ class Thermostat(ZhaEntity, ClimateEntity):
 @MULTI_MATCH(
     channel_names={CHANNEL_THERMOSTAT, "sinope_manufacturer_specific"},
     manufacturers="Sinope Technologies",
-    stop_on_match=True,
+    stop_on_match_group=CHANNEL_THERMOSTAT,
 )
 class SinopeTechnologiesThermostat(Thermostat):
     """Sinope Technologies Thermostat."""
@@ -570,7 +583,7 @@ class SinopeTechnologiesThermostat(Thermostat):
     channel_names=CHANNEL_THERMOSTAT,
     aux_channels=CHANNEL_FAN,
     manufacturers="Zen Within",
-    stop_on_match=True,
+    stop_on_match_group=CHANNEL_THERMOSTAT,
 )
 class ZenWithinThermostat(Thermostat):
     """Zen Within Thermostat implementation."""
@@ -599,8 +612,8 @@ class ZenWithinThermostat(Thermostat):
     channel_names=CHANNEL_THERMOSTAT,
     aux_channels=CHANNEL_FAN,
     manufacturers="Centralite",
-    models="3157100",
-    stop_on_match=True,
+    models={"3157100", "3157100-E"},
+    stop_on_match_group=CHANNEL_THERMOSTAT,
 )
 class CentralitePearl(ZenWithinThermostat):
     """Centralite Pearl Thermostat implementation."""
@@ -613,10 +626,13 @@ class CentralitePearl(ZenWithinThermostat):
         "_TZE200_ywdxldoj",
         "_TZE200_cwnjrr72",
         "_TZE200_b6wax7g0",
+        "_TZE200_2atgpdho",
+        "_TZE200_pvvbommb",
+        "_TZE200_4eeyebrt",
         "_TYST11_ckud7u2l",
         "_TYST11_ywdxldoj",
         "_TYST11_cwnjrr72",
-        "_TYST11_b6wax7g0",
+        "_TYST11_2atgpdho",
     },
 )
 class MoesThermostat(Thermostat):
