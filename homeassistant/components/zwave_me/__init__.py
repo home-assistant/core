@@ -70,7 +70,7 @@ class ZWaveMeController:
                 )
                 self.device_ids.add(device.id)
 
-    def on_device_create(self, devices: list[ZWaveMeData]) -> None:
+    def on_device_create(self, devices: list) -> None:
         """Create multiple devices."""
         for device in devices:
             self.add_device(device)

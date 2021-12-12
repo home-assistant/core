@@ -1,15 +1,14 @@
 """Test the zwave_me config flow."""
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.components.zwave_me.const import DOMAIN
-from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
+from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM, FlowResult
 
 MOCK_ZEROCONF_DATA = zeroconf.ZeroconfServiceInfo(
-    host="fake_host",
+    host="192.168.1.14",
     hostname="mock_hostname",
     name="mock_name",
     port=1234,
@@ -45,7 +44,7 @@ async def test_form(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == result2["url"]
+    assert result2["title"] == "ws://192.168.1.14:8083"
     assert result2["data"] == {
         "url": "192.168.1.14",
         "token": "test-token",
@@ -53,21 +52,13 @@ async def test_form(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_zeroconf(hass: HomeAssistant, remote: Mock, remotews: Mock):
+async def test_zeroconf(hass: HomeAssistant):
     """Test starting a flow from zeroconf."""
-    result = await hass.config_entries.flow.async_init(
+    result: FlowResult = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=MOCK_ZEROCONF_DATA,
     )
     await hass.async_block_till_done()
     assert result["type"] == "form"
-    assert result["step_id"] == "confirm"
-
-    # entry was added
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input="whatever"
-    )
-    assert result["type"] == "create_entry"
-    assert result["title"] == "1.1.1.1"
-    assert result["data"][CONF_HOST] == "1.1.1.1"
+    assert result["step_id"] == "user"

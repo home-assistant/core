@@ -1,7 +1,6 @@
 """Config flow to configure ZWaveMe integration."""
 
 import logging
-import re
 
 import voluptuous as vol
 
@@ -10,12 +9,6 @@ from homeassistant import config_entries
 from .const import CONF_TOKEN, CONF_URL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-URL_PATTER = re.compile(
-    "^(wss?://)([0-9]{1,3}(?:\.[0-9]{1,3}){3}|(?=[^/]"
-    "{1,254}:[0-9]{1,5}$)(?:(?=[a-zA-Z0-9-]{1,63}\.)"
-    "(?:xn--+)?[a-zA-Z0-9]+(?:-[a-zA-Z0-9]+)*\.)+[a-zA-Z]"
-    "{2,63}):([0-9]{1,5})$")
 
 
 class ZWaveMeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -37,19 +30,12 @@ class ZWaveMeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         if user_input is not None:
-            if not self.url:
+            if self.url == vol.UNDEFINED:
                 self.url = user_input["url"]
             self.token = user_input["token"]
 
             if not self.url.startswith(("ws://", "wss://")):
                 self.url = f"ws://{self.url}:8083"
-            # validate url
-            if not URL_PATTER.match(self.url):
-                return self.async_show_form(
-                    step_id="user",
-                    data_schema=schema,
-                    errors=errors,
-                )
 
             await self.async_set_unique_id(DOMAIN + self.url)
             return self.async_create_entry(
@@ -69,10 +55,7 @@ class ZWaveMeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         This flow is triggered by the discovery component.
         """
         errors = {}
-        if isinstance(discovery_info, dict):
-            self.url = discovery_info['host']
-        else:
-            self.url = discovery_info.host
+        self.url = discovery_info.host
         schema = vol.Schema(
             {
                 vol.Required(CONF_TOKEN): str,
