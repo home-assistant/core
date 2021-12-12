@@ -87,6 +87,25 @@ class ZHAButton(ZhaEntity, ButtonEntity):
 class ZHAIdentifyButton(ZHAButton):
     """Defines a ZHA identify button."""
 
+    @classmethod
+    def create_entity(
+        cls,
+        unique_id: str,
+        zha_device: ZhaDeviceType,
+        channels: list[ChannelType],
+        **kwargs,
+    ) -> ZhaEntity | None:
+        """Entity Factory.
+
+        Return entity if it is a supported configuration, otherwise return None
+        """
+        platform_restrictions = ZHA_ENTITIES.single_device_matches[Platform.BUTTON]
+        device_restrictions = platform_restrictions[zha_device.ieee]
+        if CHANNEL_IDENTIFY in device_restrictions:
+            return None
+        device_restrictions.append(CHANNEL_IDENTIFY)
+        return cls(unique_id, zha_device, channels, **kwargs)
+
     _attr_device_class: ButtonDeviceClass = ButtonDeviceClass.UPDATE
     _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
     _command_name = "identify"

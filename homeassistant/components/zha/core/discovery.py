@@ -67,6 +67,7 @@ class ProbeEndpoint:
         self.discover_by_device_type(channel_pool)
         self.discover_multi_entities(channel_pool)
         self.discover_by_cluster_id(channel_pool)
+        zha_regs.ZHA_ENTITIES.clean_up()
 
     @callback
     def discover_by_device_type(self, channel_pool: zha_typing.ChannelPoolType) -> None:
