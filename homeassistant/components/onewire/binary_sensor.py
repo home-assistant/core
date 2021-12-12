@@ -10,7 +10,6 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.components.onewire.model import OWServerDeviceDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TYPE
 from homeassistant.core import HomeAssistant
@@ -25,6 +24,7 @@ from .const import (
     DOMAIN,
     READ_MODE_BOOL,
 )
+from .model import OWServerDeviceDescription
 from .onewire_entities import OneWireEntityDescription, OneWireProxyEntity
 from .onewirehub import OneWireHub
 
