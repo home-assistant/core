@@ -38,7 +38,7 @@ from .const import (
 )
 from .coordinator import TautulliDataUpdateCoordinator
 
-# Deprecated in Home Assistant 2021.12
+# Deprecated in Home Assistant 2022.2
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
