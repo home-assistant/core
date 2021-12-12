@@ -27,7 +27,7 @@ from .const import DATA_COORDINATOR, DATA_DEVICES, DOMAIN, IMAGE_ACTIVITY, IMAGE
 _LOGGER = logging.getLogger(__name__)
 
 
-# Deprecated in Home Assistant 2021.12
+# Deprecated in Home Assistant 2022.2
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_MONITORED_CONDITIONS, default=[IMAGE_AVATAR]): vol.All(
