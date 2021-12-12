@@ -127,6 +127,7 @@ async def async_handle_message(hass, message):
         req = message
         action = req.get("handler", "").get("name","")
         parameters = req.get("intent","").get("params").copy()
+        parameters["session_id"] = req.get("session", "").get("id","")
 
     action = req.get("action", "")
     parameters = req.get("parameters").copy()
@@ -182,4 +183,23 @@ class DialogflowResponse:
             return {"fulfillmentText": self.speech, "source": SOURCE}
 
         if self.api_version is V3:
-            return {"fulfillmentText": self.speech, "source": SOURCE}
+            return {
+  "session": {
+    "id": self.parameters["session_id"],
+    "params": {}
+  },
+  "prompt": {
+    "override": false,
+    "firstSimple": {
+      "speech": "Hello World.",
+      "text": ""
+    }
+  },
+  "scene": {
+    "name": "SceneName",
+    "slots": {},
+    "next": {
+      "name": "actions.scene.END_CONVERSATION"
+    }
+  }
+}
