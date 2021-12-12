@@ -134,7 +134,7 @@ class ElectricalMeasurementChannel(ZigbeeChannel):
 
     @property
     def ac_frequency_multiplier(self) -> int:
-        """Return ac frequency divisor."""
+        """Return ac frequency multiplier."""
         return self.cluster.get("ac_frequency_multiplier") or 1
 
     @property
