@@ -42,11 +42,13 @@ class SolarlogSensor(update_coordinator.CoordinatorEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the native sensor value."""
         if self.entity_description.key == "time":
-            result = as_local(getattr(self.coordinator.data, self.entity_description.key))
+            state = as_local(
+                getattr(self.coordinator.data, self.entity_description.key)
+            )
         else:
             result = getattr(self.coordinator.data, self.entity_description.key)
-        if self.entity_description.factor:
-            state = round(result * self.entity_description.factor, 3)
-        else:
-            state = result
+            if self.entity_description.factor:
+                state = round(result * self.entity_description.factor, 3)
+            else:
+                state = result
         return state
