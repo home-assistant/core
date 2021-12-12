@@ -120,7 +120,7 @@ class OASATelematicsSensor(SensorEntity):
         self._name_data = self.data.name_data
         next_arrival_data = self._times[0]
         if ATTR_NEXT_ARRIVAL in next_arrival_data:
-            self._state = next_arrival_data[ATTR_NEXT_ARRIVAL].isoformat()
+            self._state = next_arrival_data[ATTR_NEXT_ARRIVAL]
 
 
 class OASATelematicsData:

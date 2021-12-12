@@ -18,14 +18,13 @@ https://developers.google.com/nest/device-access/api/camera#handle_camera_events
 
 from __future__ import annotations
 
-from collections import OrderedDict
 from collections.abc import Mapping
 from dataclasses import dataclass
 import logging
 
 from google_nest_sdm.camera_traits import CameraClipPreviewTrait, CameraEventImageTrait
 from google_nest_sdm.device import Device
-from google_nest_sdm.event import ImageEventBase
+from google_nest_sdm.event import EventImageType, ImageEventBase
 
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_DIRECTORY,
@@ -42,11 +41,13 @@ from homeassistant.components.media_source.models import (
     MediaSourceItem,
     PlayMedia,
 )
-from homeassistant.components.nest.const import DATA_SUBSCRIBER, DOMAIN
-from homeassistant.components.nest.device_info import NestDeviceInfo
-from homeassistant.components.nest.events import MEDIA_SOURCE_EVENT_TITLE_MAP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.template import DATE_STR_FORMAT
+from homeassistant.util import dt as dt_util
+
+from .const import DATA_SUBSCRIBER, DOMAIN
+from .device_info import NestDeviceInfo
+from .events import MEDIA_SOURCE_EVENT_TITLE_MAP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -182,7 +183,7 @@ class NestMediaSource(MediaSource):
             browse_device.children = []
             events = await _get_events(device)
             for child_event in events.values():
-                event_id = MediaId(media_id.device_id, child_event.event_id)
+                event_id = MediaId(media_id.device_id, child_event.event_session_id)
                 browse_device.children.append(
                     _browse_event(event_id, device, child_event)
                 )
@@ -204,7 +205,7 @@ class NestMediaSource(MediaSource):
 async def _get_events(device: Device) -> Mapping[str, ImageEventBase]:
     """Return relevant events for the specified device."""
     events = await device.event_media_manager.async_events()
-    return OrderedDict({e.event_id: e for e in events})
+    return {e.event_session_id: e for e in events}
 
 
 def _browse_root() -> BrowseMediaSource:
@@ -251,9 +252,9 @@ def _browse_event(
         media_content_type=MEDIA_TYPE_IMAGE,
         title=CLIP_TITLE_FORMAT.format(
             event_name=MEDIA_SOURCE_EVENT_TITLE_MAP.get(event.event_type, "Event"),
-            event_time=event.timestamp.strftime(DATE_STR_FORMAT),
+            event_time=dt_util.as_local(event.timestamp).strftime(DATE_STR_FORMAT),
         ),
-        can_play=True,
+        can_play=(event.event_image_type == EventImageType.CLIP_PREVIEW),
         can_expand=False,
         thumbnail=None,
         children=[],

@@ -64,7 +64,7 @@ class HueBaseEntity(Entity):
         type_title = RESOURCE_TYPE_NAMES.get(
             self.resource.type, self.resource.type.value.replace("_", " ").title()
         )
-        return f"{dev_name}: {type_title}"
+        return f"{dev_name} {type_title}"
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
@@ -102,6 +102,9 @@ class HueBaseEntity(Entity):
             return True
         if self.resource.type == ResourceTypes.ZIGBEE_CONNECTIVITY:
             # the zigbee connectivity sensor itself should be always available
+            return True
+        if self.device.product_data.manufacturer_name != "Signify Netherlands B.V.":
+            # availability status for non-philips brand lights is unreliable
             return True
         if zigbee := self.bridge.api.devices.get_zigbee_connectivity(self.device.id):
             # all device-attached entities get availability from the zigbee connectivity

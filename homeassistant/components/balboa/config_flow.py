@@ -1,4 +1,6 @@
 """Config flow for Balboa Spa Client integration."""
+import asyncio
+
 from pybalboa import BalboaSpaWifi
 import voluptuous as vol
 
@@ -26,15 +28,15 @@ async def validate_input(hass: core.HomeAssistant, data):
     await spa.send_mod_ident_req()
     await spa.send_panel_req(0, 1)
 
-    hass.loop.create_task(spa.listen())
+    asyncio.create_task(spa.listen())
 
     await spa.spa_configured()
 
-    macaddr = format_mac(spa.get_macaddr())
+    mac_addr = format_mac(spa.get_macaddr())
     model = spa.get_model_name()
     await spa.disconnect()
 
-    return {"title": model, "formatted_mac": macaddr}
+    return {"title": model, "formatted_mac": mac_addr}
 
 
 class BalboaSpaClientFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):

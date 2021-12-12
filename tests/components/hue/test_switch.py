@@ -17,7 +17,7 @@ async def test_switch(hass, mock_bridge_v2, v2_resources_test_data):
     # test config switch to enable/disable motion sensor
     test_entity = hass.states.get("switch.hue_motion_sensor_motion")
     assert test_entity is not None
-    assert test_entity.name == "Hue motion sensor: Motion"
+    assert test_entity.name == "Hue motion sensor Motion"
     assert test_entity.state == "on"
     assert test_entity.attributes["device_class"] == "switch"
 

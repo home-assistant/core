@@ -12,6 +12,7 @@
                 "data": {
                     "host": "Sunucu",
                     "individual_address": "Ba\u011flant\u0131 i\u00e7in bireysel adres",
+                    "local_ip": "Yerel IP (emin de\u011filseniz bo\u015f b\u0131rak\u0131n)",
                     "port": "Port",
                     "route_back": "Geri Y\u00f6nlendirme / NAT Modu"
                 },
@@ -54,6 +55,7 @@
             "tunnel": {
                 "data": {
                     "host": "Sunucu",
+                    "local_ip": "Yerel IP (emin de\u011filseniz bo\u015f b\u0131rak\u0131n)",
                     "port": "Port",
                     "route_back": "Geri Y\u00f6nlendirme / NAT Modu"
                 }
