@@ -8,6 +8,7 @@ from homeconnect.api import HomeConnectError
 
 from homeassistant import config_entries, core
 from homeassistant.const import (
+    ATTR_STATES,
     ATTR_DEVICE_CLASS,
     ATTR_ICON,
     CONF_DEVICE,
@@ -152,10 +153,10 @@ class DeviceWithPrograms(HomeConnectDevice):
     def get_is_finished_binary_sensor(self):
         """Get a dictionary with info about the finish state binary sensor."""
         return {
-            "device": self,
-            "desc": "is finished",
-            "device_class": "moving",
-            "states": {
+            ATTR_DEVICE: self,
+            ATTR_DESC: "is finished",
+            ATTR_DEVICE_CLASS: "moving",
+            ATTR_STATES: {
                 "key": BSH_OPERATION_STATE,
                 "on": [
                     "BSH.Common.EnumType.OperationState.Finished",
@@ -175,10 +176,10 @@ class DeviceWithPrograms(HomeConnectDevice):
     def get_is_running_binary_sensor(self):
         """Get a dictionary with info about the finish state binary sensor."""
         return {
-            "device": self,
-            "desc": "is running",
-            "device_class": "moving",
-            "states": {
+            ATTR_DEVICE: self,
+            ATTR_DESC: "is running",
+            ATTR_DEVICE_CLASS: "moving",
+            ATTR_STATES: {
                 "key": BSH_OPERATION_STATE,
                 "on": [
                     "BSH.Common.EnumType.OperationState.Run",

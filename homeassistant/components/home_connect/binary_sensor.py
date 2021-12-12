@@ -5,13 +5,6 @@ from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import CONF_ENTITIES
 
 from .const import (
-    ATTR_VALUE,
-    BSH_DOOR_STATE,
-    BSH_DOOR_STATE_CLOSED,
-    BSH_DOOR_STATE_LOCKED,
-    BSH_DOOR_STATE_OPEN,
-    BSH_REMOTE_CONTROL_ACTIVATION_STATE,
-    BSH_REMOTE_START_ALLOWANCE_STATE,
     DOMAIN,
 )
 from .entity import HomeConnectEntity
@@ -39,6 +32,7 @@ class HomeConnectBinarySensor(HomeConnectEntity, BinarySensorEntity):
     def __init__(self, device, desc, device_class, states):
         """Initialize the entity."""
         super().__init__(device, desc)
+        self._device_class = device_class
         self._state = None
         self._states = states
 
