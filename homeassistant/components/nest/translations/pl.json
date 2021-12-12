@@ -42,6 +42,12 @@
             "pick_implementation": {
                 "title": "Wybierz metod\u0119 uwierzytelniania"
             },
+            "pubsub": {
+                "data": {
+                    "cloud_project_id": "Identyfikator projektu Google Cloud"
+                },
+                "title": "Skonfiguruj Google Cloud"
+            },
             "reauth_confirm": {
                 "description": "Integracja Nest wymaga ponownego uwierzytelnienia Twojego konta",
                 "title": "Ponownie uwierzytelnij integracj\u0119"

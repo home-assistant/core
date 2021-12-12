@@ -294,7 +294,7 @@ homeassistant/components/litterrobot/* @natekspencer
 homeassistant/components/local_ip/* @issacg
 homeassistant/components/logger/* @home-assistant/core
 homeassistant/components/logi_circle/* @evanjd
-homeassistant/components/lookin/* @ANMalko
+homeassistant/components/lookin/* @ANMalko @bdraco
 homeassistant/components/lovelace/* @home-assistant/frontend
 homeassistant/components/luci/* @mzdrale
 homeassistant/components/luftdaten/* @fabaff
@@ -356,7 +356,6 @@ homeassistant/components/nightscout/* @marciogranzotto
 homeassistant/components/nilu/* @hfurubotten
 homeassistant/components/nina/* @DeerMaximum
 homeassistant/components/nissan_leaf/* @filcole
-homeassistant/components/nmap_tracker/* @bdraco
 homeassistant/components/nmbs/* @thibmaek
 homeassistant/components/no_ip/* @fabaff
 homeassistant/components/noaa_tides/* @jdelaney72
@@ -455,7 +454,7 @@ homeassistant/components/samsungtv/* @escoand @chemelli74
 homeassistant/components/scene/* @home-assistant/core
 homeassistant/components/schluter/* @prairieapps
 homeassistant/components/scrape/* @fabaff
-homeassistant/components/screenlogic/* @dieselrabbit
+homeassistant/components/screenlogic/* @dieselrabbit @bdraco
 homeassistant/components/script/* @home-assistant/core
 homeassistant/components/search/* @home-assistant/core
 homeassistant/components/select/* @home-assistant/core

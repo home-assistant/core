@@ -1,7 +1,6 @@
 """Base class for pilight."""
 import voluptuous as vol
 
-from homeassistant.components.pilight import DOMAIN, EVENT, SERVICE_NAME
 from homeassistant.const import (
     CONF_ID,
     CONF_NAME,
@@ -13,6 +12,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 
+from . import DOMAIN, EVENT, SERVICE_NAME
 from .const import (
     CONF_ECHO,
     CONF_OFF,
