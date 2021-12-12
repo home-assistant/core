@@ -41,4 +41,5 @@ class ONVIFBaseEntity(Entity):
             model=self.device.info.model,
             name=self.device.name,
             sw_version=self.device.info.fw_version,
+            configuration_url=f"http://{self.device.host}:{self.device.port}",
         )
