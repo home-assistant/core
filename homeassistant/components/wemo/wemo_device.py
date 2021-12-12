@@ -5,12 +5,10 @@ import asyncio
 from dataclasses import dataclass, fields
 from datetime import timedelta
 import logging
-import typing
 
 from pywemo import Insight, LongPressMixin, WeMoDevice
 from pywemo.exceptions import ActionException
 from pywemo.subscribe import EVENT_TYPE_LONG_PRESS
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -35,6 +33,20 @@ from .const import DOMAIN, WEMO_SUBSCRIPTION_EVENT
 _LOGGER = logging.getLogger(__name__)
 
 
+class OptionsValidationError(Exception):
+    """Error validating options."""
+
+    field: str = "base"
+    error_string: str = "unknown"
+
+
+class LongPressRequiresSubscriptionError(OptionsValidationError):
+    """subscriptions must be enabled to use long-press events."""
+
+    field = "enable_subscription"
+    error_string = "long_press_requires_subscription"
+
+
 @dataclass
 class Options:
     """Configuration options for the DeviceCoordinator class."""
@@ -50,24 +62,10 @@ class Options:
 
     def __post_init__(self) -> None:
         """Validate parameters."""
-        if self.enable_subscription is False:
-            # Long press support requires subscriptions.
-            self.enable_long_press = False
-
-    def schema(self) -> vol.Schema:
-        """Return the Voluptuous schema for the Options instance.
-
-        All values are optional. The default value is set to the current value and
-        the type hint is set to the value of the field type annotation.
-        """
-        return vol.Schema(
-            {
-                vol.Optional(
-                    field.name, default=getattr(self, field.name)
-                ): typing.get_type_hints(self)[field.name]
-                for field in fields(self)
-            }
-        )
+        if not self.enable_subscription and self.enable_long_press:
+            raise LongPressRequiresSubscriptionError(
+                "Local push update subscriptions must be enabled to use long-press events",
+            )
 
 
 class DeviceCoordinator(DataUpdateCoordinator[None]):

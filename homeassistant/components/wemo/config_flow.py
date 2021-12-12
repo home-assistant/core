@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
-from typing import Any
+from dataclasses import fields
+from typing import Any, get_type_hints
 
 import pywemo
+import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, OptionsFlow
 from homeassistant.core import HomeAssistant, callback
@@ -12,7 +14,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.config_entry_flow import DiscoveryFlowHandler
 
 from .const import DOMAIN
-from .wemo_device import Options
+from .wemo_device import Options, OptionsValidationError
 
 
 async def _async_has_devices(hass: HomeAssistant) -> bool:
@@ -45,10 +47,33 @@ class WemoOptionsFlow(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Manage options for the WeMo component."""
+        errors: dict[str, str] | None = None
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            try:
+                Options(**user_input)
+            except OptionsValidationError as err:
+                errors = {err.field: err.error_string}
+            else:
+                return self.async_create_entry(title="", data=user_input)
 
         return self.async_show_form(
             step_id="init",
-            data_schema=Options(**self.config_entry.options).schema(),
+            data_schema=_schema_for_options(Options(**self.config_entry.options)),
+            errors=errors,
         )
+
+
+def _schema_for_options(options: Options) -> vol.Schema:
+    """Return the Voluptuous schema for the Options instance.
+
+    All values are optional. The default value is set to the current value and
+    the type hint is set to the value of the field type annotation.
+    """
+    return vol.Schema(
+        {
+            vol.Optional(
+                field.name, default=getattr(options, field.name)
+            ): get_type_hints(options)[field.name]
+            for field in fields(options)
+        }
+    )

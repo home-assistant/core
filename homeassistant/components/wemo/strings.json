@@ -19,6 +19,10 @@
           "polling_interval_seconds": "Seconds to wait between polling the device"
         }
       }
+    },
+    "error": {
+      "long_press_requires_subscription": "Local push update subscriptions must be enabled to use long-press events",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
   "device_automation": {

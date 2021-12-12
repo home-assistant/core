@@ -195,11 +195,13 @@ async def test_options_enable_subscription_false(
     """Test setting Options.enable_subscription = False."""
     config_entry = hass.config_entries.async_get_entry(wemo_entity.config_entry_id)
     assert hass.config_entries.async_update_entry(
-        config_entry, options=asdict(wemo_device.Options(enable_subscription=False))
+        config_entry,
+        options=asdict(
+            wemo_device.Options(enable_subscription=False, enable_long_press=False)
+        ),
     )
     await hass.async_block_till_done()
     pywemo_registry.unregister.assert_called_once_with(pywemo_device)
-    pywemo_device.remove_long_press_virtual_device.assert_called_once_with()
 
 
 async def test_options_enable_long_press_false(hass, pywemo_device, wemo_entity):
@@ -218,7 +220,11 @@ async def test_options_polling_interval_seconds(hass, pywemo_device, wemo_entity
     assert hass.config_entries.async_update_entry(
         config_entry,
         options=asdict(
-            wemo_device.Options(enable_subscription=False, polling_interval_seconds=45)
+            wemo_device.Options(
+                enable_subscription=False,
+                enable_long_press=False,
+                polling_interval_seconds=45,
+            )
         ),
     )
     await hass.async_block_till_done()
