@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.nut import PyNUTData
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.helpers.entity import DeviceInfo
@@ -12,6 +11,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
+from . import PyNUTData
 from .const import (
     COORDINATOR,
     DOMAIN,
