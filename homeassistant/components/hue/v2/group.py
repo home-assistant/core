@@ -150,8 +150,8 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
             # Hue uses a range of [0, 100] to control brightness.
             brightness = float((brightness / 255) * 100)
         if transition is not None:
-            # hue transition duration is in steps of 100 ms
-            transition = int(transition * 100)
+            # hue transition duration is in milliseconds
+            transition = int(transition * 1000)
 
         # NOTE: a grouped_light can only handle turn on/off
         # To set other features, you'll have to control the attached lights
