@@ -47,7 +47,7 @@ class ZWaveMeController:
         self.platforms_inited = False
 
     async def async_establish_connection(self, hass):
-        """Try to establish connection with ZWave-Me"""
+        """Try to establish connection with ZWave-Me."""
         established = asyncio.Future()
         loop = asyncio.get_running_loop()
         hass.async_add_job(
