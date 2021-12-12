@@ -766,6 +766,7 @@ omit =
     homeassistant/components/onvif/__init__.py
     homeassistant/components/onvif/base.py
     homeassistant/components/onvif/binary_sensor.py
+    homeassistant/components/onvif/button.py
     homeassistant/components/onvif/camera.py
     homeassistant/components/onvif/device.py
     homeassistant/components/onvif/event.py
