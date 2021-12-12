@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Already configured. Only a single configuration possible.",
+            "unknown": "Unexpected error"
+        },
+        "error": {
+            "invalid_auth": "Invalid authentication"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "client_id": "API Key",
+                    "heating_type": "Heating type",
+                    "password": "Password",
+                    "username": "Email"
+                },
+                "description": "Setup ViCare to control your Viessmann device.\nMinimum needed: username, password, API key.",
+                "title": "Setup ViCare"
+            }
+        }
+    }
+}
