@@ -11,6 +11,7 @@
         "step": {
             "user": {
                 "data": {
+                    "device_key": "Cl\u00e9 de l'appareil",
                     "host": "H\u00f4te",
                     "port": "Port",
                     "verify_ssl": "V\u00e9rifier le certificat SSL"
