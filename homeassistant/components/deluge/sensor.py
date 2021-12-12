@@ -7,9 +7,9 @@ import voluptuous as vol
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
     PLATFORM_SCHEMA,
-    STATE_CLASS_MEASUREMENT,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -46,19 +46,19 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="download_speed",
         name="Down Speed",
         native_unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="upload_speed",
         name="Up Speed",
         native_unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 
 SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
-# Deprecated in Home Assistant 2022.1
+# Deprecated in Home Assistant 2022.2
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
