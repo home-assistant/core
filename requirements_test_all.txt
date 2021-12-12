@@ -161,7 +161,7 @@ aionotion==3.0.2
 aiopulse==0.4.3
 
 # homeassistant.components.hunterdouglas_powerview
-aiopvapi==1.6.14
+aiopvapi==1.6.19
 
 # homeassistant.components.pvpc_hourly_pricing
 aiopvpc==2.2.4
