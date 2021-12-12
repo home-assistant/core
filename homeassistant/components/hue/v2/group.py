@@ -24,7 +24,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from ..bridge import HueBridge
-from ..const import DOMAIN
+from ..const import CONF_ALLOW_HUE_GROUPS, DOMAIN
 from .entity import HueBaseEntity
 
 ALLOWED_ERRORS = [
@@ -76,8 +76,6 @@ async def async_setup_entry(
 class GroupedHueLight(HueBaseEntity, LightEntity):
     """Representation of a Grouped Hue light."""
 
-    # Entities for Hue groups are disabled by default
-    _attr_entity_registry_enabled_default = False
     _attr_icon = "mdi:lightbulb-group"
 
     def __init__(
@@ -91,6 +89,12 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
         self.controller = controller
         self.api: HueBridgeV2 = bridge.api
         self._attr_supported_features |= SUPPORT_TRANSITION
+
+        # Entities for Hue groups are disabled by default
+        # unless they were enabled in old version (legacy option)
+        self._attr_entity_registry_enabled_default = bridge.config_entry.data.get(
+            CONF_ALLOW_HUE_GROUPS, False
+        )
 
         self._update_values()
 
@@ -146,8 +150,8 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
             # Hue uses a range of [0, 100] to control brightness.
             brightness = float((brightness / 255) * 100)
         if transition is not None:
-            # hue transition duration is in steps of 100 ms
-            transition = int(transition * 100)
+            # hue transition duration is in milliseconds
+            transition = int(transition * 1000)
 
         # NOTE: a grouped_light can only handle turn on/off
         # To set other features, you'll have to control the attached lights
