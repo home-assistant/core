@@ -15,7 +15,8 @@
       "init": {
         "data": {
           "enable_subscription": "Subscribe to device local push updates",
-          "enable_long_press": "Register for device long-press events"
+          "enable_long_press": "Register for device long-press events",
+          "polling_interval_seconds": "Seconds to wait between polling the device"
         }
       }
     }

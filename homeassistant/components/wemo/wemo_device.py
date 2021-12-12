@@ -45,6 +45,9 @@ class Options:
     # Register for device long-press events.
     enable_long_press: bool = True
 
+    # Polling interval for when subscriptions are not enabled.
+    polling_interval_seconds: int = 30
+
     def __post_init__(self) -> None:
         """Validate parameters."""
         if self.enable_subscription is False:
@@ -78,7 +81,6 @@ class DeviceCoordinator(DataUpdateCoordinator[None]):
             hass,
             _LOGGER,
             name=wemo.name,
-            update_interval=timedelta(seconds=30),
         )
         self.hass = hass
         self.wemo = wemo
@@ -136,6 +138,11 @@ class DeviceCoordinator(DataUpdateCoordinator[None]):
                 "Failed to enable long press support for device: %s", self.wemo.name
             )
             self.supports_long_press = False
+
+    async def _async_set_polling_interval_seconds(
+        self, polling_interval_seconds: int
+    ) -> None:
+        self.update_interval = timedelta(seconds=polling_interval_seconds)
 
     async def async_set_options(
         self, hass: HomeAssistant, config_entry: ConfigEntry
