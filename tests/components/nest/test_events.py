@@ -4,6 +4,8 @@ These tests fake out the subscriber/devicemanager, and are not using a real
 pubsub subscriber.
 """
 
+import datetime
+
 from google_nest_sdm.device import Device
 from google_nest_sdm.event import EventMessage
 
@@ -298,3 +300,74 @@ async def test_event_message_without_device_event(hass):
     await hass.async_block_till_done()
 
     assert len(events) == 0
+
+
+async def test_doorbell_event_thread(hass):
+    """Test a series of pubsub messages in the same thread."""
+    events = async_capture_events(hass, NEST_EVENT)
+    subscriber = await async_setup_devices(
+        hass,
+        "sdm.devices.types.DOORBELL",
+        traits={
+            "sdm.devices.traits.Info": {
+                "customName": "Front",
+            },
+            "sdm.devices.traits.CameraLiveStream": {},
+            "sdm.devices.traits.CameraClipPreview": {},
+            "sdm.devices.traits.CameraPerson": {},
+        },
+    )
+    registry = er.async_get(hass)
+    entry = registry.async_get("camera.front")
+    assert entry is not None
+
+    event_message_data = {
+        "eventId": "some-event-id-ignored",
+        "resourceUpdate": {
+            "name": DEVICE_ID,
+            "events": {
+                "sdm.devices.events.CameraMotion.Motion": {
+                    "eventSessionId": EVENT_SESSION_ID,
+                    "eventId": "n:1",
+                },
+                "sdm.devices.events.CameraClipPreview.ClipPreview": {
+                    "eventSessionId": EVENT_SESSION_ID,
+                    "previewUrl": "image-url-1",
+                },
+            },
+        },
+        "eventThreadId": "CjY5Y3VKaTZwR3o4Y19YbTVfMF...",
+        "resourcegroup": [DEVICE_ID],
+    }
+
+    # Publish message #1 that starts the event thread
+    timestamp1 = utcnow()
+    message_data_1 = event_message_data.copy()
+    message_data_1.update(
+        {
+            "timestamp": timestamp1.isoformat(timespec="seconds"),
+            "eventThreadState": "STARTED",
+        }
+    )
+    await subscriber.async_receive_event(EventMessage(message_data_1, auth=None))
+
+    # Publish message #1 that sends a no-op update to end the event thread
+    timestamp2 = timestamp1 + datetime.timedelta(seconds=1)
+    message_data_2 = event_message_data.copy()
+    message_data_2.update(
+        {
+            "timestamp": timestamp2.isoformat(timespec="seconds"),
+            "eventThreadState": "ENDED",
+        }
+    )
+    await subscriber.async_receive_event(EventMessage(message_data_2, auth=None))
+    await hass.async_block_till_done()
+
+    # The event is only published once
+    assert len(events) == 1
+    assert events[0].data == {
+        "device_id": entry.device_id,
+        "type": "camera_motion",
+        "timestamp": timestamp1.replace(microsecond=0),
+        "nest_event_id": EVENT_SESSION_ID,
+    }
