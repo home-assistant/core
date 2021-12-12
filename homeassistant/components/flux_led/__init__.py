@@ -206,7 +206,7 @@ def _async_clear_discovery_cache(hass: HomeAssistant, host: str) -> None:
     domain_data = hass.data[DOMAIN]
     discoveries: list[FluxLEDDiscovery] = domain_data[FLUX_LED_DISCOVERY]
     domain_data[FLUX_LED_DISCOVERY] = [
-        discovery for discovery in discoveries if discovery[ATTR_IPADDR] == host
+        discovery for discovery in discoveries if discovery[ATTR_IPADDR] != host
     ]
 
 
