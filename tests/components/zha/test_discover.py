@@ -367,7 +367,6 @@ def _test_single_input_cluster_device_class(probe_mock):
         cover_ch,
         multistate_ch,
         ias_ch,
-        analog_ch,
     ]
 
     disc.ProbeEndpoint().discover_by_cluster_id(ch_pool)
@@ -383,11 +382,6 @@ def _test_single_input_cluster_device_class(probe_mock):
         component, ch = details
         assert call[0][0] == component
         assert call[0][1] == ch
-
-
-def test_single_input_cluster_device_class():
-    """Test SINGLE_INPUT_CLUSTER_DEVICE_CLASS matching by cluster id or class."""
-    _test_single_input_cluster_device_class()
 
 
 def test_single_input_cluster_device_class_by_cluster_class():
