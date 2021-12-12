@@ -31,6 +31,8 @@
             "is_not_plugged_in": "{entity_name} est d\u00e9branch\u00e9",
             "is_not_powered": "{entity_name} n'est pas aliment\u00e9",
             "is_not_present": "{entity_name} n'est pas pr\u00e9sent",
+            "is_not_running": "{entity_name} n'est pas en cours d'ex\u00e9cution",
+            "is_not_tampered": "{entity_name} ne d\u00e9tecte pas la falsification",
             "is_not_unsafe": "{entity_name} est en s\u00e9curit\u00e9",
             "is_occupied": "{entity_name} est occup\u00e9",
             "is_off": "{entity_name} est d\u00e9sactiv\u00e9",
@@ -40,8 +42,10 @@
             "is_powered": "{entity_name} est aliment\u00e9",
             "is_present": "{entity_name} est pr\u00e9sent",
             "is_problem": "{entity_name} d\u00e9tecte un probl\u00e8me",
+            "is_running": "{entity_name} est en cours d'ex\u00e9cution",
             "is_smoke": "{entity_name} d\u00e9tecte de la fum\u00e9e",
             "is_sound": "{entity_name} d\u00e9tecte du son",
+            "is_tampered": "{entity_name} d\u00e9tecte une falsification",
             "is_unsafe": "{entity_name} est dangereux",
             "is_update": "{entity_name} a une mise \u00e0 jour disponible",
             "is_vibration": "{entity_name} d\u00e9tecte des vibrations"
@@ -52,6 +56,8 @@
             "connected": "{entity_name} connect\u00e9",
             "gas": "{entity_name} a commenc\u00e9 \u00e0 d\u00e9tecter du gaz",
             "hot": "{entity_name} est devenu chaud",
+            "is_not_tampered": "{entity_name} a cess\u00e9 de d\u00e9tecter la falsification",
+            "is_tampered": "{entity_name} commenc\u00e9 \u00e0 d\u00e9tecter une falsification",
             "light": "{entity_name} a commenc\u00e9 \u00e0 d\u00e9tecter la lumi\u00e8re",
             "locked": "{entity_name} verrouill\u00e9",
             "moist": "{entity_name} est devenu humide",
@@ -77,6 +83,8 @@
             "not_plugged_in": "{entity_name} d\u00e9branch\u00e9",
             "not_powered": "{entity_name} non aliment\u00e9",
             "not_present": "{entity_name} non pr\u00e9sent",
+            "not_running": "{entity_name} n'est plus en cours d'ex\u00e9cution",
+            "not_tampered": "{entity_name} a cess\u00e9 de d\u00e9tecter la falsification",
             "not_unsafe": "{entity_name} est devenu s\u00fbr",
             "occupied": "{entity_name} est devenu occup\u00e9",
             "opened": "{entity_name} ouvert",
@@ -84,14 +92,29 @@
             "powered": "{entity_name} aliment\u00e9",
             "present": "{entity_name} pr\u00e9sent",
             "problem": "{entity_name} a commenc\u00e9 \u00e0 d\u00e9tecter un probl\u00e8me",
+            "running": "{entity_name} commenc\u00e9 \u00e0 s'ex\u00e9cuter",
             "smoke": "{entity_name} commenc\u00e9 \u00e0 d\u00e9tecter la fum\u00e9e",
             "sound": "{entity_name} commenc\u00e9 \u00e0 d\u00e9tecter le son",
+            "tampered": "{entity_name} commenc\u00e9 \u00e0 d\u00e9tecter une falsification",
             "turned_off": "{entity_name} est d\u00e9sactiv\u00e9",
             "turned_on": "{entity_name} est activ\u00e9",
             "unsafe": "{entity_name} est devenu dangereux",
             "update": "{entity_name} a une mise \u00e0 jour disponible",
             "vibration": "{entity_name} a commenc\u00e9 \u00e0 d\u00e9tecter les vibrations"
         }
+    },
+    "device_class": {
+        "cold": "froid",
+        "gas": "gaz",
+        "heat": "Chauffer",
+        "moisture": "humidit\u00e9",
+        "motion": "mouvement",
+        "occupancy": "occupation",
+        "power": "Puissance",
+        "problem": "Probl\u00e8me",
+        "smoke": "fum\u00e9e",
+        "sound": "son",
+        "vibration": "vibration"
     },
     "state": {
         "_": {
@@ -169,6 +192,10 @@
         "problem": {
             "off": "OK",
             "on": "Probl\u00e8me"
+        },
+        "running": {
+            "off": "\u00c0 l'arr\u00eat",
+            "on": "En marche"
         },
         "safety": {
             "off": "S\u00e9curis\u00e9",
