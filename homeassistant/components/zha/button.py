@@ -6,11 +6,11 @@ import functools
 import logging
 from typing import Any
 
-from homeassistant.components.button import DOMAIN, ButtonDeviceClass, ButtonEntity
+from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
 from homeassistant.components.zha.core.registries import ZHA_ENTITIES
 from homeassistant.components.zha.core.typing import ChannelType, ZhaDeviceType
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
+from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -19,7 +19,7 @@ from .core import discovery
 from .core.const import CHANNEL_IDENTIFY, DATA_ZHA, SIGNAL_ADD_ENTITIES
 from .entity import ZhaEntity
 
-MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, DOMAIN)
+MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, Platform.BUTTON)
 DEFAULT_DURATION = 5  # seconds
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,7 +31,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Zigbee Home Automation button from config entry."""
-    entities_to_create = hass.data[DATA_ZHA][DOMAIN]
+    entities_to_create = hass.data[DATA_ZHA][Platform.BUTTON]
 
     unsub = async_dispatcher_connect(
         hass,
