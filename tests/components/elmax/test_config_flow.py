@@ -59,6 +59,7 @@ async def test_standard_setup(hass):
                 CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
             },
         )
+        await hass.async_block_till_done()
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
 
@@ -272,6 +273,7 @@ async def test_reauth_flow(hass):
             },
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        await hass.async_block_till_done()
         assert result["reason"] == "reauth_successful"
 
 
