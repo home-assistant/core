@@ -1,1 +1,1 @@
-"""Tests for the monoprice component."""
+"""Tests for the ws66i component."""

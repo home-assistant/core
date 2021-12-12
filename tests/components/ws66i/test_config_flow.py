@@ -1,4 +1,4 @@
-"""Test the Monoprice 6-Zone Amplifier config flow."""
+"""Test the WS66i 6-Zone Amplifier config flow."""
 from unittest.mock import patch
 
 from homeassistant import config_entries, data_entry_flow, setup

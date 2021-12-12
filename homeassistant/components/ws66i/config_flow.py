@@ -53,10 +53,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
     ws66i = get_ws66i(data[CONF_IP_ADDRESS])
-    try:
-        await hass.async_add_executor_job(ws66i.open)
-    except ConnectionError as err:
-        raise CannotConnect from err
+    await hass.async_add_executor_job(ws66i.open)
     # no exception, close it
     ws66i.close()
 
@@ -67,7 +64,7 @@ async def validate_input(hass: core.HomeAssistant, data):
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Monoprice 6-Zone Amplifier."""
+    """Handle a config flow for WS66i 6-Zone Amplifier."""
 
     VERSION = 1
 
@@ -80,7 +77,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=user_input[CONF_IP_ADDRESS], data=info
                 )
-            except CannotConnect:
+            except ConnectionError:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
@@ -94,7 +91,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @core.callback
     def async_get_options_flow(config_entry):
         """Define the config flow to handle options."""
-        return MonopriceOptionsFlowHandler(config_entry)
+        return Ws66iOptionsFlowHandler(config_entry)
 
 
 @core.callback
@@ -109,8 +106,8 @@ def _key_for_source(index, source, previous_sources):
     return key
 
 
-class MonopriceOptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle a Monoprice options flow."""
+class Ws66iOptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle a WS66i options flow."""
 
     def __init__(self, config_entry):
         """Initialize."""
