@@ -186,7 +186,7 @@ aiohomekit==0.6.4
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==3.0.2
+aiohue==3.0.3
 
 # homeassistant.components.imap
 aioimaplib==0.9.0
@@ -231,7 +231,7 @@ aionotion==3.0.2
 aiopulse==0.4.3
 
 # homeassistant.components.hunterdouglas_powerview
-aiopvapi==1.6.14
+aiopvapi==1.6.19
 
 # homeassistant.components.pvpc_hourly_pricing
 aiopvpc==2.2.4
@@ -738,7 +738,7 @@ google-cloud-pubsub==2.1.0
 google-cloud-texttospeech==0.4.0
 
 # homeassistant.components.nest
-google-nest-sdm==0.4.5
+google-nest-sdm==0.4.6
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -819,7 +819,7 @@ hole==0.7.0
 holidays==0.11.3.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20211211.0
+home-assistant-frontend==20211212.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10

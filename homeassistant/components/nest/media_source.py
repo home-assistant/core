@@ -24,7 +24,7 @@ import logging
 
 from google_nest_sdm.camera_traits import CameraClipPreviewTrait, CameraEventImageTrait
 from google_nest_sdm.device import Device
-from google_nest_sdm.event import ImageEventBase
+from google_nest_sdm.event import EventImageType, ImageEventBase
 
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_DIRECTORY,
@@ -253,7 +253,7 @@ def _browse_event(
             event_name=MEDIA_SOURCE_EVENT_TITLE_MAP.get(event.event_type, "Event"),
             event_time=dt_util.as_local(event.timestamp).strftime(DATE_STR_FORMAT),
         ),
-        can_play=True,
+        can_play=(event.event_image_type == EventImageType.CLIP_PREVIEW),
         can_expand=False,
         thumbnail=None,
         children=[],
