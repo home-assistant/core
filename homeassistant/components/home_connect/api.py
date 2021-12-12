@@ -24,10 +24,15 @@ from .const import (
     ATTR_DESC,
     ATTR_DEVICE,
     ATTR_KEY,
-    ATTR_SENSOR_TYPE,
     ATTR_SIGN,
     ATTR_UNIT,
     ATTR_VALUE,
+    BSH_DOOR_STATE,
+    BSH_DOOR_STATE_CLOSED,
+    BSH_DOOR_STATE_LOCKED,
+    BSH_DOOR_STATE_OPEN,
+    BSH_REMOTE_CONTROL_ACTIVATION_STATE,
+    BSH_REMOTE_START_ALLOWANCE_STATE,
     BSH_ACTIVE_PROGRAM,
     BSH_OPERATION_STATE,
     BSH_POWER_OFF,
@@ -144,6 +149,52 @@ class DeviceWithPrograms(HomeConnectDevice):
         """Get the available programs."""
         return self.PROGRAMS
 
+    def get_is_finished_binary_sensor(self):
+        """Get a dictionary with info about the finish state binary sensor."""
+        return {
+            "device": self,
+            "desc": "is finished",
+            "device_class": "moving",
+            "states": {
+                "key": BSH_OPERATION_STATE,
+                "on": [
+                    "BSH.Common.EnumType.OperationState.Finished",
+                ],
+                "off": [
+                    "BSH.Common.EnumType.OperationState.Ready",
+                    "BSH.Common.EnumType.OperationState.DelayedStart",
+                    "BSH.Common.EnumType.OperationState.Run",
+                    "BSH.Common.EnumType.OperationState.Pause",
+                    "BSH.Common.EnumType.OperationState.ActionRequired",
+                    "BSH.Common.EnumType.OperationState.Aborting",
+                    "BSH.Common.EnumType.OperationState.Inactive",
+                ],
+            },
+        }
+
+    def get_is_running_binary_sensor(self):
+        """Get a dictionary with info about the finish state binary sensor."""
+        return {
+            "device": self,
+            "desc": "is running",
+            "device_class": "moving",
+            "states": {
+                "key": BSH_OPERATION_STATE,
+                "on": [
+                    "BSH.Common.EnumType.OperationState.Run",
+                ],
+                "off": [
+                    "BSH.Common.EnumType.OperationState.Ready",
+                    "BSH.Common.EnumType.OperationState.DelayedStart",
+                    "BSH.Common.EnumType.OperationState.Pause",
+                    "BSH.Common.EnumType.OperationState.Finished",
+                    "BSH.Common.EnumType.OperationState.ActionRequired",
+                    "BSH.Common.EnumType.OperationState.Aborting",
+                    "BSH.Common.EnumType.OperationState.Inactive",
+                ],
+            },
+        }
+
     def get_program_switches(self):
         """Get a dictionary with info about program switches.
 
@@ -204,8 +255,17 @@ class DeviceWithDoor(HomeConnectDevice):
         return {
             ATTR_DEVICE: self,
             ATTR_DESC: "Door",
-            ATTR_SENSOR_TYPE: "door",
             ATTR_DEVICE_CLASS: "door",
+            "states": {
+                "key": BSH_DOOR_STATE,
+                "off": [
+                    BSH_DOOR_STATE_CLOSED,
+                    BSH_DOOR_STATE_LOCKED,
+                ],
+                "on": [
+                    BSH_DOOR_STATE_OPEN,
+                ],
+            },
         }
 
 
@@ -233,7 +293,13 @@ class DeviceWithRemoteControl(HomeConnectDevice):
         return {
             ATTR_DEVICE: self,
             ATTR_DESC: "Remote Control",
-            ATTR_SENSOR_TYPE: "remote_control",
+            "states": {
+                "key": BSH_REMOTE_CONTROL_ACTIVATION_STATE,
+                "on": [
+                    True,
+                ],
+                "off": [False],
+            },
         }
 
 
@@ -245,7 +311,13 @@ class DeviceWithRemoteStart(HomeConnectDevice):
         return {
             ATTR_DEVICE: self,
             ATTR_DESC: "Remote Start",
-            ATTR_SENSOR_TYPE: "remote_start",
+            "states": {
+                "key": BSH_REMOTE_START_ALLOWANCE_STATE,
+                "on": [
+                    True,
+                ],
+                "off": [False],
+            },
         }
 
 
@@ -417,8 +489,16 @@ class Washer(
         op_state_sensor = self.get_opstate_sensor()
         program_sensors = self.get_program_sensors()
         program_switches = self.get_program_switches()
+        is_running_entity = self.get_is_running_binary_sensor()
+        is_finished_entity = self.get_is_finished_binary_sensor()
         return {
-            "binary_sensor": [door_entity, remote_control, remote_start],
+            "binary_sensor": [
+                door_entity,
+                remote_control,
+                remote_start,
+                is_finished_entity,
+                is_running_entity,
+            ],
             "switch": program_switches,
             "sensor": program_sensors + op_state_sensor,
         }
