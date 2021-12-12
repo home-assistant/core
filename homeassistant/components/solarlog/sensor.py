@@ -1,7 +1,7 @@
 """Platform for solarlog sensors."""
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.helpers import update_coordinator
-from homeassistant.helpers.entity import DeviceInfo, StateType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.util.dt import as_local
 
 from . import SolarlogData
