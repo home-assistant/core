@@ -29,7 +29,6 @@ UNIQUE_ID = "1234567890abcdef1234567890abcdef12345678"
 CONF_DATA = {
     CONF_API_KEY: API_KEY,
     CONF_URL: URL,
-    CONF_SSL: SSL,
     CONF_VERIFY_SSL: VERIFY_SSL,
 }
 CONF_IMPORT_DATA = {
@@ -110,7 +109,6 @@ async def setup_integration(
         unique_id=unique_id,
         data={
             CONF_URL: url,
-            CONF_SSL: SSL,
             CONF_VERIFY_SSL: VERIFY_SSL,
             CONF_API_KEY: api_key,
         },

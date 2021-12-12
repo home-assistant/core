@@ -3,12 +3,9 @@ from __future__ import annotations
 
 from pytautulli import PyTautulli, PyTautulliHostConfiguration
 
-from homeassistant.components.sensor import (
-    DOMAIN as SENSOR_DOMAIN,
-    SensorEntityDescription,
-)
+from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_SSL, CONF_URL, CONF_VERIFY_SSL
+from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntryType
@@ -18,7 +15,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DEFAULT_NAME, DOMAIN
 from .coordinator import TautulliDataUpdateCoordinator
 
-PLATFORMS = [SENSOR_DOMAIN]
+PLATFORMS = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -27,7 +24,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         api_token=entry.data[CONF_API_KEY],
         url=entry.data[CONF_URL],
         verify_ssl=entry.data[CONF_VERIFY_SSL],
-        ssl=entry.data[CONF_SSL],
     )
     api_client = PyTautulli(
         host_configuration=host_configuration,
