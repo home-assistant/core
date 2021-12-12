@@ -68,12 +68,13 @@ from .utils import (
 BLOCK_PLATFORMS: Final = [
     "binary_sensor",
     "button",
+    "climate",
     "cover",
     "light",
     "sensor",
     "switch",
 ]
-BLOCK_SLEEPING_PLATFORMS: Final = ["binary_sensor", "climate", "sensor"]
+BLOCK_SLEEPING_PLATFORMS: Final = ["binary_sensor", "sensor"]
 RPC_PLATFORMS: Final = ["binary_sensor", "button", "light", "sensor", "switch"]
 _LOGGER: Final = logging.getLogger(__name__)
 

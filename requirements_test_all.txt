@@ -399,7 +399,7 @@ fjaraskupan==1.0.2
 flipr-api==1.4.1
 
 # homeassistant.components.flux_led
-flux_led==0.26.3
+flux_led==0.26.7
 
 # homeassistant.components.homekit
 fnvhash==0.1.0
@@ -515,7 +515,7 @@ hole==0.7.0
 holidays==0.11.3.1
 
 # homeassistant.components.frontend
-ais-dom-frontend==20211209.0
+ais-dom-frontend==20211211.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1276,7 +1276,7 @@ sharkiqpy==0.1.8
 simplehound==0.3
 
 # homeassistant.components.simplisafe
-simplisafe-python==2021.12.0
+simplisafe-python==2021.12.1
 
 # homeassistant.components.slack
 slackclient==2.5.0
@@ -1479,7 +1479,7 @@ youless-api==0.15
 zeroconf==0.37.0
 
 # homeassistant.components.zha
-zha-quirks==0.0.64
+zha-quirks==0.0.65
 
 # homeassistant.components.zha
 zigpy-deconz==0.14.0
