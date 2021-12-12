@@ -7,9 +7,10 @@ at https://home-assistant.io/components/zha.climate/
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-import enum
 import functools
 from random import randint
+
+from zigpy.zcl.clusters.hvac import Fan as F, Thermostat as T
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
@@ -82,27 +83,6 @@ STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.CLIMATE)
 MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, Platform.CLIMATE)
 RUNNING_MODE = {0x00: HVAC_MODE_OFF, 0x03: HVAC_MODE_COOL, 0x04: HVAC_MODE_HEAT}
 
-
-class ThermostatFanMode(enum.IntEnum):
-    """Fan channel enum for thermostat Fans."""
-
-    OFF = 0x00
-    ON = 0x04
-    AUTO = 0x05
-
-
-class RunningState(enum.IntFlag):
-    """ZCL Running state enum."""
-
-    HEAT = 0x0001
-    COOL = 0x0002
-    FAN = 0x0004
-    HEAT_STAGE_2 = 0x0008
-    COOL_STAGE_2 = 0x0010
-    FAN_STAGE_2 = 0x0020
-    FAN_STAGE_3 = 0x0040
-
-
 SEQ_OF_OPERATION = {
     0x00: (HVAC_MODE_OFF, HVAC_MODE_COOL),  # cooling only
     0x01: (HVAC_MODE_OFF, HVAC_MODE_COOL),  # cooling with reheat
@@ -116,40 +96,25 @@ SEQ_OF_OPERATION = {
     0x07: (HVAC_MODE_HEAT_COOL, HVAC_MODE_OFF),  # centralite specific
 }
 
-
-class SystemMode(enum.IntEnum):
-    """ZCL System Mode attribute enum."""
-
-    OFF = 0x00
-    HEAT_COOL = 0x01
-    COOL = 0x03
-    HEAT = 0x04
-    AUX_HEAT = 0x05
-    PRE_COOL = 0x06
-    FAN_ONLY = 0x07
-    DRY = 0x08
-    SLEEP = 0x09
-
-
 HVAC_MODE_2_SYSTEM = {
-    HVAC_MODE_OFF: SystemMode.OFF,
-    HVAC_MODE_HEAT_COOL: SystemMode.HEAT_COOL,
-    HVAC_MODE_COOL: SystemMode.COOL,
-    HVAC_MODE_HEAT: SystemMode.HEAT,
-    HVAC_MODE_FAN_ONLY: SystemMode.FAN_ONLY,
-    HVAC_MODE_DRY: SystemMode.DRY,
+    HVAC_MODE_OFF: T.SystemMode.Off,
+    HVAC_MODE_HEAT_COOL: T.SystemMode.Auto,
+    HVAC_MODE_COOL: T.SystemMode.Cool,
+    HVAC_MODE_HEAT: T.SystemMode.Heat,
+    HVAC_MODE_FAN_ONLY: T.SystemMode.Fan_only,
+    HVAC_MODE_DRY: T.SystemMode.Dry,
 }
 
 SYSTEM_MODE_2_HVAC = {
-    SystemMode.OFF: HVAC_MODE_OFF,
-    SystemMode.HEAT_COOL: HVAC_MODE_HEAT_COOL,
-    SystemMode.COOL: HVAC_MODE_COOL,
-    SystemMode.HEAT: HVAC_MODE_HEAT,
-    SystemMode.AUX_HEAT: HVAC_MODE_HEAT,
-    SystemMode.PRE_COOL: HVAC_MODE_COOL,  # this is 'precooling'. is it the same?
-    SystemMode.FAN_ONLY: HVAC_MODE_FAN_ONLY,
-    SystemMode.DRY: HVAC_MODE_DRY,
-    SystemMode.SLEEP: HVAC_MODE_OFF,
+    T.SystemMode.Off: HVAC_MODE_OFF,
+    T.SystemMode.Auto: HVAC_MODE_HEAT_COOL,
+    T.SystemMode.Cool: HVAC_MODE_COOL,
+    T.SystemMode.Heat: HVAC_MODE_HEAT,
+    T.SystemMode.Emergency_Heating: HVAC_MODE_HEAT,
+    T.SystemMode.Pre_cooling: HVAC_MODE_COOL,  # this is 'precooling'. is it the same?
+    T.SystemMode.Fan_only: HVAC_MODE_FAN_ONLY,
+    T.SystemMode.Dry: HVAC_MODE_DRY,
+    T.SystemMode.Sleep: HVAC_MODE_OFF,
 }
 
 ZCL_TEMP = 100
@@ -233,7 +198,9 @@ class Thermostat(ZhaEntity, ClimateEntity):
             return FAN_AUTO
 
         if self._thrm.running_state & (
-            RunningState.FAN | RunningState.FAN_STAGE_2 | RunningState.FAN_STAGE_3
+            T.RunningState.Fan_State_On
+            | T.RunningState.Fan_2nd_Stage_On
+            | T.RunningState.Fan_3rd_Stage_On
         ):
             return FAN_ON
         return FAN_AUTO
@@ -259,18 +226,25 @@ class Thermostat(ZhaEntity, ClimateEntity):
     def _rm_rs_action(self) -> str | None:
         """Return the current HVAC action based on running mode and running state."""
 
-        running_mode = self._thrm.running_mode
-        if running_mode == SystemMode.HEAT:
+        if (running_state := self._thrm.running_state) is None:
+            return None
+        if running_state & (
+            T.RunningState.Heat_State_On | T.RunningState.Heat_2nd_Stage_On
+        ):
             return CURRENT_HVAC_HEAT
-        if running_mode == SystemMode.COOL:
+        if running_state & (
+            T.RunningState.Cool_State_On | T.RunningState.Cool_2nd_Stage_On
+        ):
             return CURRENT_HVAC_COOL
-
-        running_state = self._thrm.running_state
-        if running_state and running_state & (
-            RunningState.FAN | RunningState.FAN_STAGE_2 | RunningState.FAN_STAGE_3
+        if running_state & (
+            T.RunningState.Fan_State_On
+            | T.RunningState.Fan_2nd_Stage_On
+            | T.RunningState.Fan_3rd_Stage_On
         ):
             return CURRENT_HVAC_FAN
-        if self.hvac_mode != HVAC_MODE_OFF and running_mode == SystemMode.OFF:
+        if running_state & T.RunningState.Idle:
+            return CURRENT_HVAC_IDLE
+        if self.hvac_mode != HVAC_MODE_OFF:
             return CURRENT_HVAC_IDLE
         return CURRENT_HVAC_OFF
 
@@ -431,9 +405,9 @@ class Thermostat(ZhaEntity, ClimateEntity):
             return
 
         if fan_mode == FAN_ON:
-            mode = ThermostatFanMode.ON
+            mode = F.FanMode.On
         else:
-            mode = ThermostatFanMode.AUTO
+            mode = F.FanMode.Auto
 
         await self._fan.async_set_speed(mode)
 
@@ -545,6 +519,27 @@ class SinopeTechnologiesThermostat(Thermostat):
         self._supported_flags |= SUPPORT_PRESET_MODE
         self._manufacturer_ch = self.cluster_channels["sinope_manufacturer_specific"]
 
+    @property
+    def _rm_rs_action(self) -> str | None:
+        """Return the current HVAC action based on running mode and running state."""
+
+        running_mode = self._thrm.running_mode
+        if running_mode == T.SystemMode.Heat:
+            return CURRENT_HVAC_HEAT
+        if running_mode == T.SystemMode.Cool:
+            return CURRENT_HVAC_COOL
+
+        running_state = self._thrm.running_state
+        if running_state and running_state & (
+            T.RunningState.Fan_State_On
+            | T.RunningState.Fan_2nd_Stage_On
+            | T.RunningState.Fan_3rd_Stage_On
+        ):
+            return CURRENT_HVAC_FAN
+        if self.hvac_mode != HVAC_MODE_OFF and running_mode == T.SystemMode.Off:
+            return CURRENT_HVAC_IDLE
+        return CURRENT_HVAC_OFF
+
     @callback
     def _async_update_time(self, timestamp=None) -> None:
         """Update thermostat's time display."""
@@ -587,25 +582,6 @@ class SinopeTechnologiesThermostat(Thermostat):
 )
 class ZenWithinThermostat(Thermostat):
     """Zen Within Thermostat implementation."""
-
-    @property
-    def _rm_rs_action(self) -> str | None:
-        """Return the current HVAC action based on running mode and running state."""
-
-        if (running_state := self._thrm.running_state) is None:
-            return None
-        if running_state & (RunningState.HEAT | RunningState.HEAT_STAGE_2):
-            return CURRENT_HVAC_HEAT
-        if running_state & (RunningState.COOL | RunningState.COOL_STAGE_2):
-            return CURRENT_HVAC_COOL
-        if running_state & (
-            RunningState.FAN | RunningState.FAN_STAGE_2 | RunningState.FAN_STAGE_3
-        ):
-            return CURRENT_HVAC_FAN
-
-        if self.hvac_mode != HVAC_MODE_OFF:
-            return CURRENT_HVAC_IDLE
-        return CURRENT_HVAC_OFF
 
 
 @MULTI_MATCH(

@@ -3267,7 +3267,7 @@ DEVICES = [
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-513-hvac_action"): {
                 DEV_SIG_CHANNELS: ["thermostat"],
-                DEV_SIG_ENT_MAP_CLASS: "ThermostatHVACAction",
+                DEV_SIG_ENT_MAP_CLASS: "SinopeHVACAction",
                 DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1123zb_77665544_thermostat_hvac_action",
             },
         },
@@ -3312,7 +3312,7 @@ DEVICES = [
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-513-hvac_action"): {
                 DEV_SIG_CHANNELS: ["thermostat"],
-                DEV_SIG_ENT_MAP_CLASS: "ThermostatHVACAction",
+                DEV_SIG_ENT_MAP_CLASS: "SinopeHVACAction",
                 DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1124zb_77665544_thermostat_hvac_action",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1026"): {
@@ -3557,7 +3557,7 @@ DEVICES = [
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-513-hvac_action"): {
                 DEV_SIG_CHANNELS: ["thermostat"],
-                DEV_SIG_ENT_MAP_CLASS: "ZenHVACAction",
+                DEV_SIG_ENT_MAP_CLASS: "ThermostatHVACAction",
                 DEV_SIG_ENT_MAP_ID: "sensor.zen_within_zen_01_77665544_thermostat_hvac_action",
             },
         },

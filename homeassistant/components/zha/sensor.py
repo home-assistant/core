@@ -51,7 +51,6 @@ from .core import discovery
 from .core.const import (
     CHANNEL_ANALOG_INPUT,
     CHANNEL_ELECTRICAL_MEASUREMENT,
-    CHANNEL_FAN,
     CHANNEL_HUMIDITY,
     CHANNEL_ILLUMINANCE,
     CHANNEL_LEAF_WETNESS,
@@ -591,66 +590,6 @@ class ThermostatHVACAction(Sensor, id_suffix="hvac_action"):
     def _rm_rs_action(self) -> str | None:
         """Return the current HVAC action based on running mode and running state."""
 
-        running_mode = self._channel.running_mode
-        if running_mode == self._channel.RunningMode.Heat:
-            return CURRENT_HVAC_HEAT
-        if running_mode == self._channel.RunningMode.Cool:
-            return CURRENT_HVAC_COOL
-
-        running_state = self._channel.running_state
-        if running_state and running_state & (
-            self._channel.RunningState.Fan_State_On
-            | self._channel.RunningState.Fan_2nd_Stage_On
-            | self._channel.RunningState.Fan_3rd_Stage_On
-        ):
-            return CURRENT_HVAC_FAN
-        if (
-            self._channel.system_mode != self._channel.SystemMode.Off
-            and running_mode == self._channel.SystemMode.Off
-        ):
-            return CURRENT_HVAC_IDLE
-        return CURRENT_HVAC_OFF
-
-    @property
-    def _pi_demand_action(self) -> str | None:
-        """Return the current HVAC action based on pi_demands."""
-
-        heating_demand = self._channel.pi_heating_demand
-        if heating_demand is not None and heating_demand > 0:
-            return CURRENT_HVAC_HEAT
-        cooling_demand = self._channel.pi_cooling_demand
-        if cooling_demand is not None and cooling_demand > 0:
-            return CURRENT_HVAC_COOL
-
-        if self._channel.system_mode != self._channel.SystemMode.Off:
-            return CURRENT_HVAC_IDLE
-        return CURRENT_HVAC_OFF
-
-    @callback
-    def async_set_state(self, *args, **kwargs) -> None:
-        """Handle state update from channel."""
-        self.async_write_ha_state()
-
-
-@MULTI_MATCH(
-    channel_names=CHANNEL_THERMOSTAT,
-    aux_channels=CHANNEL_FAN,
-    manufacturers="Centralite",
-    models={"3157100", "3157100-E"},
-    stop_on_match_group=CHANNEL_THERMOSTAT,
-)
-@MULTI_MATCH(
-    channel_names=CHANNEL_THERMOSTAT,
-    manufacturers="Zen Within",
-    stop_on_match_group=CHANNEL_THERMOSTAT,
-)
-class ZenHVACAction(ThermostatHVACAction):
-    """Zen Within Thermostat HVAC Action."""
-
-    @property
-    def _rm_rs_action(self) -> str | None:
-        """Return the current HVAC action based on running mode and running state."""
-
         if (running_state := self._channel.running_state) is None:
             return None
 
@@ -676,6 +615,63 @@ class ZenHVACAction(ThermostatHVACAction):
         ):
             return CURRENT_HVAC_FAN
 
+        running_state = self._channel.running_state
+        if running_state and running_state & self._channel.RunningState.Idle:
+            return CURRENT_HVAC_IDLE
+
         if self._channel.system_mode != self._channel.SystemMode.Off:
+            return CURRENT_HVAC_IDLE
+        return CURRENT_HVAC_OFF
+
+    @property
+    def _pi_demand_action(self) -> str | None:
+        """Return the current HVAC action based on pi_demands."""
+
+        heating_demand = self._channel.pi_heating_demand
+        if heating_demand is not None and heating_demand > 0:
+            return CURRENT_HVAC_HEAT
+        cooling_demand = self._channel.pi_cooling_demand
+        if cooling_demand is not None and cooling_demand > 0:
+            return CURRENT_HVAC_COOL
+
+        if self._channel.system_mode != self._channel.SystemMode.Off:
+            return CURRENT_HVAC_IDLE
+        return CURRENT_HVAC_OFF
+
+    @callback
+    def async_set_state(self, *args, **kwargs) -> None:
+        """Handle state update from channel."""
+        self.async_write_ha_state()
+
+
+@MULTI_MATCH(
+    channel_names={CHANNEL_THERMOSTAT},
+    manufacturers="Sinope Technologies",
+    stop_on_match_group=CHANNEL_THERMOSTAT,
+)
+class SinopeHVACAction(ThermostatHVACAction):
+    """Sinope Thermostat HVAC action sensor."""
+
+    @property
+    def _rm_rs_action(self) -> str | None:
+        """Return the current HVAC action based on running mode and running state."""
+
+        running_mode = self._channel.running_mode
+        if running_mode == self._channel.RunningMode.Heat:
+            return CURRENT_HVAC_HEAT
+        if running_mode == self._channel.RunningMode.Cool:
+            return CURRENT_HVAC_COOL
+
+        running_state = self._channel.running_state
+        if running_state and running_state & (
+            self._channel.RunningState.Fan_State_On
+            | self._channel.RunningState.Fan_2nd_Stage_On
+            | self._channel.RunningState.Fan_3rd_Stage_On
+        ):
+            return CURRENT_HVAC_FAN
+        if (
+            self._channel.system_mode != self._channel.SystemMode.Off
+            and running_mode == self._channel.SystemMode.Off
+        ):
             return CURRENT_HVAC_IDLE
         return CURRENT_HVAC_OFF
