@@ -124,7 +124,7 @@ SERVICE_UPLOAD = "upload"
 
 DEFAULT_NAME = "Android TV"
 
-# Deprecated in Home Assistant 2021.9
+# Deprecated in Home Assistant 2022.2
 PLATFORM_SCHEMA = cv.deprecated(
     vol.All(
         PLATFORM_SCHEMA=PLATFORM_SCHEMA.extend(
