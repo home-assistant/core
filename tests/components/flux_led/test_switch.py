@@ -1,6 +1,6 @@
 """Tests for switch platform."""
 from homeassistant.components import flux_led
-from homeassistant.components.flux_led.const import DOMAIN
+from homeassistant.components.flux_led.const import CONF_REMOTE_ACCESS_ENABLED, DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -85,8 +85,8 @@ async def test_remote_access_on_off(hass: HomeAssistant) -> None:
         SWITCH_DOMAIN, "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
     bulb.async_disable_remote_access.assert_called_once()
-
     assert hass.states.get(entity_id).state == STATE_OFF
+    assert config_entry.data[CONF_REMOTE_ACCESS_ENABLED] is False
 
     await hass.services.async_call(
         SWITCH_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
@@ -94,3 +94,4 @@ async def test_remote_access_on_off(hass: HomeAssistant) -> None:
     bulb.async_enable_remote_access.assert_called_once()
 
     assert hass.states.get(entity_id).state == STATE_ON
+    assert config_entry.data[CONF_REMOTE_ACCESS_ENABLED] is True
