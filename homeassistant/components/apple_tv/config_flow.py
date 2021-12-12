@@ -191,7 +191,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # discovered via zeroconf. Once the first service is discovered
         # this allows other services to be discovered inside the time
         # window before triggering a scan of the device. This prevents
-        # a multiple scans of the device at the same time since each
+        # multiple scans of the device at the same time since each
         # apple_tv device has multiple services that are discovered by
         # zeroconf.
         #
