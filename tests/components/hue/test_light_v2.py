@@ -119,7 +119,7 @@ async def test_light_turn_on_service(hass, mock_bridge_v2, v2_resources_test_dat
     )
     assert len(mock_bridge_v2.mock_requests) == 2
     assert mock_bridge_v2.mock_requests[1]["json"]["on"]["on"] is True
-    assert mock_bridge_v2.mock_requests[1]["json"]["dynamics"]["duration"] == 600
+    assert mock_bridge_v2.mock_requests[1]["json"]["dynamics"]["duration"] == 6000
 
 
 async def test_light_turn_off_service(hass, mock_bridge_v2, v2_resources_test_data):
@@ -164,7 +164,7 @@ async def test_light_turn_off_service(hass, mock_bridge_v2, v2_resources_test_da
     )
     assert len(mock_bridge_v2.mock_requests) == 2
     assert mock_bridge_v2.mock_requests[1]["json"]["on"]["on"] is False
-    assert mock_bridge_v2.mock_requests[1]["json"]["dynamics"]["duration"] == 600
+    assert mock_bridge_v2.mock_requests[1]["json"]["dynamics"]["duration"] == 6000
 
 
 async def test_light_added(hass, mock_bridge_v2):
