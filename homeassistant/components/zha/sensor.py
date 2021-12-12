@@ -25,6 +25,7 @@ from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     LIGHT_LUX,
     PERCENTAGE,
     POWER_VOLT_AMPERE,
@@ -50,6 +51,7 @@ from homeassistant.helpers.typing import StateType
 from .core import discovery
 from .core.const import (
     CHANNEL_ANALOG_INPUT,
+    CHANNEL_BASIC,
     CHANNEL_ELECTRICAL_MEASUREMENT,
     CHANNEL_HUMIDITY,
     CHANNEL_ILLUMINANCE,
@@ -675,3 +677,89 @@ class SinopeHVACAction(ThermostatHVACAction):
         ):
             return CURRENT_HVAC_IDLE
         return CURRENT_HVAC_OFF
+
+
+@MULTI_MATCH(channel_names=CHANNEL_BASIC)
+class RSSISensor(Sensor, id_suffix="rssi"):
+    """RSSI sensor for a device."""
+
+    _state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _device_class: SensorDeviceClass = SensorDeviceClass.SIGNAL_STRENGTH
+    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
+    _attr_entity_registry_enabled_default = False
+
+    @classmethod
+    def create_entity(
+        cls,
+        unique_id: str,
+        zha_device: ZhaDeviceType,
+        channels: list[ChannelType],
+        **kwargs,
+    ) -> ZhaEntity | None:
+        """Entity Factory.
+
+        Return entity if it is a supported configuration, otherwise return None
+        """
+        platform_restrictions = ZHA_ENTITIES.single_device_matches[Platform.SENSOR]
+        device_restrictions = platform_restrictions[zha_device.ieee]
+        key = CHANNEL_BASIC + "_rssi"
+        if key in device_restrictions:
+            return None
+        device_restrictions.append(key)
+        return cls(unique_id, zha_device, channels, **kwargs)
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the entity."""
+        raw_state = self._zha_device.device.rssi
+        if raw_state is None:
+            return None
+        return raw_state
+
+    @property
+    def should_poll(self) -> bool:
+        """Poll the entity for current state."""
+        return True
+
+
+@MULTI_MATCH(channel_names=CHANNEL_BASIC)
+class LQISensor(Sensor, id_suffix="lqi"):
+    """LQI sensor for a device."""
+
+    _state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _device_class: SensorDeviceClass = SensorDeviceClass.SIGNAL_STRENGTH
+    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
+    _attr_entity_registry_enabled_default = False
+
+    @classmethod
+    def create_entity(
+        cls,
+        unique_id: str,
+        zha_device: ZhaDeviceType,
+        channels: list[ChannelType],
+        **kwargs,
+    ) -> ZhaEntity | None:
+        """Entity Factory.
+
+        Return entity if it is a supported configuration, otherwise return None
+        """
+        platform_restrictions = ZHA_ENTITIES.single_device_matches[Platform.SENSOR]
+        device_restrictions = platform_restrictions[zha_device.ieee]
+        key = CHANNEL_BASIC + "_lqi"
+        if key in device_restrictions:
+            return None
+        device_restrictions.append(key)
+        return cls(unique_id, zha_device, channels, **kwargs)
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the entity."""
+        raw_state = self._zha_device.device.lqi
+        if raw_state is None:
+            return None
+        return raw_state
+
+    @property
+    def should_poll(self) -> bool:
+        """Poll the entity for current state."""
+        return True
