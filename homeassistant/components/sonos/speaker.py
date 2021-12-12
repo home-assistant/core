@@ -498,16 +498,16 @@ class SonosSpeaker:
         if "mute" in variables:
             self.muted = variables["mute"]["Master"] == "1"
 
-        for bool_var in [
+        for bool_var in (
             "dialog_level",
             "night_mode",
             "sub_enabled",
             "surround_enabled",
-        ]:
+        ):
             if bool_var in variables:
                 setattr(self, bool_var, variables[bool_var] == "1")
 
-        for int_var in ["bass", "treble"]:
+        for int_var in ("bass", "treble"):
             if int_var in variables:
                 setattr(self, int_var, variables[int_var])
 
