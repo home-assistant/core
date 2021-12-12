@@ -37,14 +37,16 @@ async def test_setup(hass: HomeAssistant) -> None:
         hass,
         {
             "command": "echo 5",
-            "unit_of_measurement": "in",
+            "unit_of_measurement": "°C",
+            "device_class": "temperature",
         },
     )
     entity_state = hass.states.get("sensor.test")
     assert entity_state
     assert entity_state.state == "5"
     assert entity_state.name == "Test"
-    assert entity_state.attributes["unit_of_measurement"] == "in"
+    assert entity_state.attributes["unit_of_measurement"] == "°C"
+    assert entity_state.device_class == "temperature"
 
 
 async def test_template(hass: HomeAssistant) -> None:
