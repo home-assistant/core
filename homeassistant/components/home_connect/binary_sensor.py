@@ -4,9 +4,7 @@ import logging
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import CONF_ENTITIES
 
-from .const import (
-    DOMAIN,
-)
+from .const import DOMAIN
 from .entity import HomeConnectEntity
 
 _LOGGER = logging.getLogger(__name__)
