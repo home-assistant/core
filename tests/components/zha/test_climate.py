@@ -260,7 +260,7 @@ async def test_climate_hvac_action_running_state(hass, device_climate_sinope):
     thrm_cluster = device_climate_sinope.device.endpoints[1].thermostat
     entity_id = await find_entity_id(Platform.CLIMATE, device_climate_sinope, hass)
     sensor_entity_id = await find_entity_id(
-        Platform.SENSOR, device_climate_sinope, hass
+        Platform.SENSOR, device_climate_sinope, hass, "hvac"
     )
 
     state = hass.states.get(entity_id)
