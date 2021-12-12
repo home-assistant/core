@@ -43,4 +43,4 @@ class RebootButton(ONVIFBaseEntity, ButtonEntity):
         try:
             await device_mgmt.SystemReboot()
         except RequestError as err:
-            LOGGER.warning(f"Couldn't reboot {self.name}: {err}")
+            LOGGER.warning("Couldn't reboot %s: %s", self.device.name, err)
