@@ -205,6 +205,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     device: AIOWifiLedBulb = hass.data[DOMAIN][entry.entry_id].device
     platforms = PLATFORMS_BY_TYPE[device.device_type]
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, platforms):
+        # Make sure we probe the device again in case something has changed externally
+        _async_clear_discovery_cache(hass, entry.data[CONF_HOST])
         del hass.data[DOMAIN][entry.entry_id]
         await device.async_stop()
     return unload_ok
