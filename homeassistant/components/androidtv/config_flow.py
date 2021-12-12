@@ -105,7 +105,7 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Attempt to connect the Android TV."""
 
         try:
-            aftv, message = await async_connect_androidtv(self.hass, user_input)
+            aftv, error_message = await async_connect_androidtv(self.hass, user_input)
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
                 "Unknown error connecting with Android TV at %s", user_input[CONF_HOST]
@@ -113,7 +113,7 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return RESULT_UNKNOWN, None
 
         if not aftv:
-            _LOGGER.warning(message)
+            _LOGGER.warning(error_message)
             return RESULT_CONN_ERROR, None
 
         dev_prop = aftv.device_properties
@@ -170,7 +170,8 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         for entry in self._async_current_entries():
             if entry.data[CONF_HOST] == import_config[CONF_HOST]:
                 _LOGGER.warning(
-                    "Already configured. This yaml configuration has already been imported. Please remove it"
+                    "Host [%s] already configured. This yaml configuration has already been imported. Please remove it",
+                    CONF_HOST,
                 )
                 return self.async_abort(reason="already_configured")
         self._import_options = import_config.pop(CONF_MIGRATION_OPTIONS, None)

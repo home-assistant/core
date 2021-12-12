@@ -114,8 +114,8 @@ async def async_connect_androidtv(
         else:
             device_name = "Android TV / Fire TV device"
 
-        message = f"Could not connect to {device_name} at {address} {adb_log}"
-        return None, message
+        error_message = f"Could not connect to {device_name} at {address} {adb_log}"
+        return None, error_message
 
     return aftv, None
 
@@ -156,11 +156,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     state_det_rules = entry.options.get(CONF_STATE_DETECTION_RULES)
     json_rules = validate_state_det_rules(state_det_rules)
 
-    aftv, message = await async_connect_androidtv(
+    aftv, error_message = await async_connect_androidtv(
         hass, entry.data, state_detection_rules=json_rules
     )
     if not aftv:
-        raise ConfigEntryNotReady(message)
+        raise ConfigEntryNotReady(error_message)
 
     # migrate existing entity to new unique ID
     if entry.source == SOURCE_IMPORT:
