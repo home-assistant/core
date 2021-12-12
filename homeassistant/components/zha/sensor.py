@@ -186,19 +186,24 @@ class Sensor(ZhaEntity, SensorEntity):
         return round(float(value * self._multiplier) / self._divisor)
 
 
-@STRICT_MATCH(
+@MULTI_MATCH(
     channel_names=CHANNEL_ANALOG_INPUT,
     manufacturers="LUMI",
     models={"lumi.plug", "lumi.plug.maus01", "lumi.plug.mmeu01"},
+    stop_on_match_group=CHANNEL_ANALOG_INPUT,
 )
-@STRICT_MATCH(channel_names=CHANNEL_ANALOG_INPUT, manufacturers="Digi")
+@MULTI_MATCH(
+    channel_names=CHANNEL_ANALOG_INPUT,
+    manufacturers="Digi",
+    stop_on_match_group=CHANNEL_ANALOG_INPUT,
+)
 class AnalogInput(Sensor):
     """Sensor that displays analog input values."""
 
     SENSOR_ATTR = "present_value"
 
 
-@STRICT_MATCH(channel_names=CHANNEL_POWER_CONFIGURATION)
+@MULTI_MATCH(channel_names=CHANNEL_POWER_CONFIGURATION)
 class Battery(Sensor):
     """Battery sensor of power configuration cluster."""
 
@@ -339,8 +344,10 @@ class ElectricalMeasurementRMSVoltage(ElectricalMeasurement, id_suffix="rms_volt
         return False
 
 
-@STRICT_MATCH(generic_ids=CHANNEL_ST_HUMIDITY_CLUSTER)
-@STRICT_MATCH(channel_names=CHANNEL_HUMIDITY)
+@MULTI_MATCH(
+    generic_ids=CHANNEL_ST_HUMIDITY_CLUSTER, stop_on_match_group=CHANNEL_HUMIDITY
+)
+@MULTI_MATCH(channel_names=CHANNEL_HUMIDITY, stop_on_match_group=CHANNEL_HUMIDITY)
 class Humidity(Sensor):
     """Humidity sensor."""
 
@@ -351,7 +358,7 @@ class Humidity(Sensor):
     _unit = PERCENTAGE
 
 
-@STRICT_MATCH(channel_names=CHANNEL_SOIL_MOISTURE)
+@MULTI_MATCH(channel_names=CHANNEL_SOIL_MOISTURE)
 class SoilMoisture(Sensor):
     """Soil Moisture sensor."""
 
@@ -362,7 +369,7 @@ class SoilMoisture(Sensor):
     _unit = PERCENTAGE
 
 
-@STRICT_MATCH(channel_names=CHANNEL_LEAF_WETNESS)
+@MULTI_MATCH(channel_names=CHANNEL_LEAF_WETNESS)
 class LeafWetness(Sensor):
     """Leaf Wetness sensor."""
 
@@ -373,7 +380,7 @@ class LeafWetness(Sensor):
     _unit = PERCENTAGE
 
 
-@STRICT_MATCH(channel_names=CHANNEL_ILLUMINANCE)
+@MULTI_MATCH(channel_names=CHANNEL_ILLUMINANCE)
 class Illuminance(Sensor):
     """Illuminance Sensor."""
 
@@ -465,7 +472,7 @@ class SmartEnergySummation(SmartEnergyMetering, id_suffix="summation_delivered")
         return round(cooked, 3)
 
 
-@STRICT_MATCH(channel_names=CHANNEL_PRESSURE)
+@MULTI_MATCH(channel_names=CHANNEL_PRESSURE)
 class Pressure(Sensor):
     """Pressure sensor."""
 
@@ -476,7 +483,7 @@ class Pressure(Sensor):
     _unit = PRESSURE_HPA
 
 
-@STRICT_MATCH(channel_names=CHANNEL_TEMPERATURE)
+@MULTI_MATCH(channel_names=CHANNEL_TEMPERATURE)
 class Temperature(Sensor):
     """Temperature Sensor."""
 
@@ -487,7 +494,7 @@ class Temperature(Sensor):
     _unit = TEMP_CELSIUS
 
 
-@STRICT_MATCH(channel_names="carbon_dioxide_concentration")
+@MULTI_MATCH(channel_names="carbon_dioxide_concentration")
 class CarbonDioxideConcentration(Sensor):
     """Carbon Dioxide Concentration sensor."""
 
@@ -499,7 +506,7 @@ class CarbonDioxideConcentration(Sensor):
     _unit = CONCENTRATION_PARTS_PER_MILLION
 
 
-@STRICT_MATCH(channel_names="carbon_monoxide_concentration")
+@MULTI_MATCH(channel_names="carbon_monoxide_concentration")
 class CarbonMonoxideConcentration(Sensor):
     """Carbon Monoxide Concentration sensor."""
 
@@ -511,8 +518,8 @@ class CarbonMonoxideConcentration(Sensor):
     _unit = CONCENTRATION_PARTS_PER_MILLION
 
 
-@STRICT_MATCH(generic_ids="channel_0x042e")
-@STRICT_MATCH(channel_names="voc_level")
+@MULTI_MATCH(generic_ids="channel_0x042e", stop_on_match_group="voc_level")
+@MULTI_MATCH(channel_names="voc_level", stop_on_match_group="voc_level")
 class VOCLevel(Sensor):
     """VOC Level sensor."""
 
@@ -524,7 +531,11 @@ class VOCLevel(Sensor):
     _unit = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
 
 
-@STRICT_MATCH(channel_names="voc_level", models="lumi.airmonitor.acn01")
+@MULTI_MATCH(
+    channel_names="voc_level",
+    models="lumi.airmonitor.acn01",
+    stop_on_match_group="voc_level",
+)
 class PPBVOCLevel(Sensor):
     """VOC Level sensor."""
 
@@ -536,7 +547,7 @@ class PPBVOCLevel(Sensor):
     _unit = CONCENTRATION_PARTS_PER_BILLION
 
 
-@STRICT_MATCH(channel_names="formaldehyde_concentration")
+@MULTI_MATCH(channel_names="formaldehyde_concentration")
 class FormaldehydeConcentration(Sensor):
     """Formaldehyde Concentration sensor."""
 
@@ -547,7 +558,7 @@ class FormaldehydeConcentration(Sensor):
     _unit = CONCENTRATION_PARTS_PER_MILLION
 
 
-@MULTI_MATCH(channel_names=CHANNEL_THERMOSTAT)
+@MULTI_MATCH(channel_names=CHANNEL_THERMOSTAT, stop_on_match_group=CHANNEL_THERMOSTAT)
 class ThermostatHVACAction(Sensor, id_suffix="hvac_action"):
     """Thermostat HVAC action sensor."""
 
@@ -626,12 +637,12 @@ class ThermostatHVACAction(Sensor, id_suffix="hvac_action"):
     aux_channels=CHANNEL_FAN,
     manufacturers="Centralite",
     models={"3157100", "3157100-E"},
-    stop_on_match=True,
+    stop_on_match_group=CHANNEL_THERMOSTAT,
 )
 @MULTI_MATCH(
     channel_names=CHANNEL_THERMOSTAT,
     manufacturers="Zen Within",
-    stop_on_match=True,
+    stop_on_match_group=CHANNEL_THERMOSTAT,
 )
 class ZenHVACAction(ThermostatHVACAction):
     """Zen Within Thermostat HVAC Action."""

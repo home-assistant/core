@@ -172,7 +172,11 @@ async def async_setup_entry(
     config_entry.async_on_unload(unsub)
 
 
-@MULTI_MATCH(channel_names=CHANNEL_THERMOSTAT, aux_channels=CHANNEL_FAN)
+@MULTI_MATCH(
+    channel_names=CHANNEL_THERMOSTAT,
+    aux_channels=CHANNEL_FAN,
+    stop_on_match_group=CHANNEL_THERMOSTAT,
+)
 class Thermostat(ZhaEntity, ClimateEntity):
     """Representation of a ZHA Thermostat device."""
 
@@ -526,7 +530,7 @@ class Thermostat(ZhaEntity, ClimateEntity):
 @MULTI_MATCH(
     channel_names={CHANNEL_THERMOSTAT, "sinope_manufacturer_specific"},
     manufacturers="Sinope Technologies",
-    stop_on_match=True,
+    stop_on_match_group=CHANNEL_THERMOSTAT,
 )
 class SinopeTechnologiesThermostat(Thermostat):
     """Sinope Technologies Thermostat."""
@@ -579,7 +583,7 @@ class SinopeTechnologiesThermostat(Thermostat):
     channel_names=CHANNEL_THERMOSTAT,
     aux_channels=CHANNEL_FAN,
     manufacturers="Zen Within",
-    stop_on_match=True,
+    stop_on_match_group=CHANNEL_THERMOSTAT,
 )
 class ZenWithinThermostat(Thermostat):
     """Zen Within Thermostat implementation."""
@@ -609,7 +613,7 @@ class ZenWithinThermostat(Thermostat):
     aux_channels=CHANNEL_FAN,
     manufacturers="Centralite",
     models={"3157100", "3157100-E"},
-    stop_on_match=True,
+    stop_on_match_group=CHANNEL_THERMOSTAT,
 )
 class CentralitePearl(ZenWithinThermostat):
     """Centralite Pearl Thermostat implementation."""
