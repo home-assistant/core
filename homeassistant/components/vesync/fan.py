@@ -172,9 +172,13 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
         speed: str = None,
         percentage: int = None,
         preset_mode: str = None,
+        night_light: str = None,
         **kwargs,
     ) -> None:
         """Turn the device on."""
+        if night_light is not None:
+            self.self.smartfan.set_night_light(night_light)
+
         if preset_mode:
             self.set_preset_mode(preset_mode)
             return
