@@ -7,7 +7,7 @@ from vulcan._utils import VulcanAPIException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import DOMAIN
 
@@ -34,25 +34,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             _LOGGER.error(
                 "The certificate is not authorized, please authorize integration again"
             )
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": "reauth"},
-                )
-            )
+            raise ConfigEntryAuthFailed from err
         else:
             _LOGGER.error("Vulcan API error: %s", err)
-        return False
-    except FileNotFoundError:
-        _LOGGER.error(
-            "The certificate is not authorized, please authorize integration again"
-        )
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": "reauth"},
-            )
-        )
         return False
     except ClientConnectorError as err:
         if "connection_error" not in hass.data[DOMAIN]:

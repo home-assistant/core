@@ -44,8 +44,6 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_auth(self, user_input=None, errors=None):
         """Authorize integration."""
-        if errors is None:
-            errors = {}
 
         if user_input is not None:
             try:
@@ -57,26 +55,26 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             except VulcanAPIException as err:
                 if str(err) == "Invalid token!" or str(err) == "Invalid token.":
-                    errors["base"] = "invalid_token"
+                    errors = {"base": "invalid_token"}
                 elif str(err) == "Expired token.":
-                    errors["base"] = "expired_token"
+                    errors = {"base": "expired_token"}
                 elif str(err) == "Invalid PIN.":
-                    errors["base"] = "invalid_pin"
+                    errors = {"base": "invalid_pin"}
                 else:
-                    errors["base"] = "unknown"
+                    errors = {"base": "unknown"}
                     _LOGGER.error(err)
             except RuntimeError as err:
                 if str(err) == "Internal Server Error (ArgumentException)":
-                    errors["base"] = "invalid_symbol"
+                    errors = {"base": "invalid_symbol"}
                 else:
-                    errors["base"] = "unknown"
+                    errors = {"base": "unknown"}
                     _LOGGER.error(err)
             except ClientConnectionError as err:
-                errors["base"] = "cannot_connect"
+                errors = {"base": "cannot_connect"}
                 _LOGGER.error("Connection error: %s", err)
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+                errors = {"base": "unknown"}
             if not errors:
                 account = credentials["account"]
                 keystore = credentials["keystore"]
@@ -143,8 +141,6 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_select_saved_credentials(self, user_input=None, errors=None):
         """Allow user to select saved credentials."""
-        if errors is None:
-            errors = {}
         credentials_list = {}
         for entry in self.hass.config_entries.async_entries(DOMAIN):
             credentials_list[entry.entry_id] = entry.data["account"]["UserName"]

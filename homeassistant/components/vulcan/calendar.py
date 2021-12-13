@@ -8,6 +8,7 @@ from vulcan._utils import VulcanAPIException
 
 from homeassistant.components.calendar import ENTITY_ID_FORMAT, CalendarEventDevice
 from homeassistant.const import CONF_SCAN_INTERVAL
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.template import DATE_STR_FORMAT
@@ -133,12 +134,7 @@ class VulcanCalendarData:
                 _LOGGER.error(
                     "The certificate is not authorized, please authorize integration again"
                 )
-                hass.async_create_task(
-                    hass.config_entries.flow.async_init(
-                        DOMAIN,
-                        context={"source": "reauth"},
-                    )
-                )
+                raise ConfigEntryAuthFailed from err
             else:
                 _LOGGER.error("An API error has occurred: %s", err)
             events = []
@@ -196,12 +192,7 @@ class VulcanCalendarData:
                 _LOGGER.error(
                     "The certificate is not authorized, please authorize integration again"
                 )
-                self.hass.async_create_task(
-                    self.hass.config_entries.flow.async_init(
-                        DOMAIN,
-                        context={"source": "reauth"},
-                    )
-                )
+                raise ConfigEntryAuthFailed from err
             else:
                 _LOGGER.error("An API error has occurred: %s", err)
             return
