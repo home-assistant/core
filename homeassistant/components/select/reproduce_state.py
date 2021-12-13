@@ -6,11 +6,11 @@ from collections.abc import Iterable
 import logging
 from typing import Any
 
-from homeassistant.components.select.const import ATTR_OPTIONS
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import Context, HomeAssistant, State
 
 from . import ATTR_OPTION, DOMAIN, SERVICE_SELECT_OPTION
+from .const import ATTR_OPTIONS
 
 _LOGGER = logging.getLogger(__name__)
 
