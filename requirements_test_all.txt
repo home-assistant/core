@@ -269,7 +269,7 @@ bimmer_connected==0.8.5
 blebox_uniapi==1.3.3
 
 # homeassistant.components.blink
-blinkpy==0.17.0
+blinkpy==0.18.0
 
 # homeassistant.components.bond
 bond-api==0.1.15
