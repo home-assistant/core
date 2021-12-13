@@ -48,7 +48,7 @@ class GaragesamsterdamBinarySensor(CoordinatorEntity, BinarySensorEntity):
     ) -> None:
         """Initialize garages amsterdam binary sensor."""
         super().__init__(coordinator)
-        self.attr_unique_id = f"{garage_name}-{info_type}"
+        self._attr_unique_id = f"{garage_name}-{info_type}"
         self._garage_name = garage_name
         self._info_type = info_type
         self._attr_name = garage_name
