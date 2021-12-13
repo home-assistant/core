@@ -137,7 +137,7 @@ aiohomekit==0.6.4
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==3.0.2
+aiohue==3.0.3
 
 # homeassistant.components.apache_kafka
 aiokafka==0.6.0
@@ -467,7 +467,7 @@ google-api-python-client==1.6.4
 google-cloud-pubsub==2.1.0
 
 # homeassistant.components.nest
-google-nest-sdm==0.4.5
+google-nest-sdm==0.4.6
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
