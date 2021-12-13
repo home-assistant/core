@@ -268,6 +268,19 @@ async def test_migration_1_1_to_1_3(hass, hass_storage):
                     "sw_version": None,
                 },
             ],
+            "deleted_devices": [
+                {
+                    "config_entries": ["123456"],
+                    "connections": [],
+                    "entry_type": "service",
+                    "id": "deletedid",
+                    "identifiers": [["serial", "12:34:56:AB:CD:FF"]],
+                    "manufacturer": "manufacturer",
+                    "model": "model",
+                    "name": "name",
+                    "sw_version": "version",
+                }
+            ],
         },
     }
 
@@ -334,7 +347,15 @@ async def test_migration_1_1_to_1_3(hass, hass_storage):
                     "via_device_id": None,
                 },
             ],
-            "deleted_devices": [],
+            "deleted_devices": [
+                {
+                    "config_entries": ["123456"],
+                    "connections": [],
+                    "id": "deletedid",
+                    "identifiers": [["serial", "12:34:56:AB:CD:FF"]],
+                    "orphaned_timestamp": None,
+                }
+            ],
         },
     }
 
