@@ -12,14 +12,16 @@ from pyatv.const import (
 )
 from pyatv.helpers import is_streamable
 
-from homeassistant.components.media_player import MediaPlayerEntity
+from homeassistant.components.media_player import BrowseMedia, MediaPlayerEntity
 from homeassistant.components.media_player.const import (
+    MEDIA_TYPE_APP,
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_TVSHOW,
     MEDIA_TYPE_VIDEO,
     REPEAT_MODE_ALL,
     REPEAT_MODE_OFF,
     REPEAT_MODE_ONE,
+    SUPPORT_BROWSE_MEDIA,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -27,6 +29,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_PREVIOUS_TRACK,
     SUPPORT_REPEAT_SET,
     SUPPORT_SEEK,
+    SUPPORT_SELECT_SOURCE,
     SUPPORT_SHUFFLE_SET,
     SUPPORT_STOP,
     SUPPORT_TURN_OFF,
@@ -46,6 +49,7 @@ from homeassistant.core import callback
 import homeassistant.util.dt as dt_util
 
 from . import AppleTVEntity
+from .browse_media import build_app_list
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -60,6 +64,7 @@ SUPPORT_BASE = SUPPORT_TURN_ON | SUPPORT_TURN_OFF
 # of these).
 SUPPORT_APPLE_TV = (
     SUPPORT_BASE
+    | SUPPORT_BROWSE_MEDIA
     | SUPPORT_PLAY_MEDIA
     | SUPPORT_PAUSE
     | SUPPORT_PLAY
@@ -89,6 +94,8 @@ SUPPORT_FEATURE_MAPPING = {
     FeatureName.SetRepeat: SUPPORT_REPEAT_SET,
     FeatureName.SetShuffle: SUPPORT_SHUFFLE_SET,
     FeatureName.SetVolume: SUPPORT_VOLUME_SET,
+    FeatureName.AppList: SUPPORT_BROWSE_MEDIA | SUPPORT_SELECT_SOURCE,
+    FeatureName.LaunchApp: SUPPORT_BROWSE_MEDIA | SUPPORT_SELECT_SOURCE,
 }
 
 
@@ -108,6 +115,7 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
         """Initialize the Apple TV media player."""
         super().__init__(name, identifier, manager, **kwargs)
         self._playing = None
+        self._app_list = {}
 
     @callback
     def async_device_connected(self, atv):
@@ -134,6 +142,18 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
 
         # Listen to power updates
         self.atv.power.listener = self
+
+        if self.atv.features.in_state(FeatureState.Available, FeatureName.AppList):
+            self.hass.create_task(self._update_app_list())
+
+    async def _update_app_list(self):
+        _LOGGER.debug("Updating app list")
+        try:
+            apps = await self.atv.apps.app_list()
+            self._app_list = {app.name: app.identifier for app in apps}
+            self.async_write_ha_state()
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Failed to update app list")
 
     @callback
     def async_device_disconnected(self):
@@ -199,6 +219,11 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
         return None
 
     @property
+    def source_list(self):
+        """List of available input sources."""
+        return list(self._app_list.keys())
+
+    @property
     def media_content_type(self):
         """Content type of current playing media."""
         if self._playing:
@@ -248,7 +273,9 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
         """Send the play_media command to the media player."""
         # If input (file) has a file format supported by pyatv, then stream it with
         # RAOP. Otherwise try to play it with regular AirPlay.
-        if self._is_feature_available(FeatureName.StreamFile) and (
+        if media_type == MEDIA_TYPE_APP:
+            await self.atv.apps.launch_app(media_id)
+        elif self._is_feature_available(FeatureName.StreamFile) and (
             await is_streamable(media_id) or media_type == MEDIA_TYPE_MUSIC
         ):
             _LOGGER.debug("Streaming %s via RAOP", media_id)
@@ -346,6 +373,14 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
             return self.atv.features.in_state(FeatureState.Available, feature)
         return False
 
+    async def async_browse_media(
+        self,
+        media_content_type: str | None = None,
+        media_content_id: str | None = None,
+    ) -> BrowseMedia:
+        """Implement the websocket media browsing helper."""
+        return build_app_list(self._app_list)
+
     async def async_turn_on(self):
         """Turn the media player on."""
         if self._is_feature_available(FeatureName.TurnOn):
@@ -425,3 +460,8 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
             await self.atv.remote_control.set_shuffle(
                 ShuffleState.Songs if shuffle else ShuffleState.Off
             )
+
+    async def async_select_source(self, source: str) -> None:
+        """Select input source."""
+        if app_id := self._app_list.get(source):
+            await self.atv.apps.launch_app(app_id)
