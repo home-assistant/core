@@ -172,7 +172,7 @@ async def test_connection_error_cs(
     assert result2["errors"] == {"base": error_message}
 
 
-async def test_options_flow(hass, entry, mock_update_options):
+async def test_options_flow(hass, entry):
     """Test options flow."""
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
@@ -186,5 +186,3 @@ async def test_options_flow(hass, entry, mock_update_options):
     assert updated["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert updated["data"] == UPDATE_OPTIONS
     await hass.async_block_till_done()
-    mock_update_options.assert_called_once()
-    assert mock_update_options.call_args[0][0] == UPDATE_OPTIONS

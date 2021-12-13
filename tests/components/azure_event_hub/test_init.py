@@ -8,25 +8,16 @@ from azure.eventhub.exceptions import EventHubError
 import pytest
 
 from homeassistant.components import azure_event_hub
-from homeassistant.components.azure_event_hub.const import (
-    CONF_SEND_INTERVAL,
-    DATA_HUB,
-    DOMAIN,
-)
+from homeassistant.components.azure_event_hub.const import CONF_SEND_INTERVAL, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_ON
 from homeassistant.setup import async_setup_component
+from homeassistant.util.dt import utcnow
 
 from .conftest import FilterTest
-from .const import (
-    AZURE_EVENT_HUB_PATH,
-    BASIC_OPTIONS,
-    CS_CONFIG_FULL,
-    SAS_CONFIG_FULL,
-    UPDATE_OPTIONS,
-)
+from .const import AZURE_EVENT_HUB_PATH, BASIC_OPTIONS, CS_CONFIG_FULL, SAS_CONFIG_FULL
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -92,34 +83,45 @@ async def test_failed_test_connection(hass, mock_get_eventhub_properties):
     assert entry.state == ConfigEntryState.SETUP_RETRY
 
 
-async def test_send_batch_error(hass, hub, mock_send_batch):
+async def test_send_batch_error(hass, entry_with_one_event, mock_send_batch):
     """Test a error in send_batch."""
     mock_send_batch.reset_mock()
     mock_send_batch.side_effect = EventHubError("Test")
-    await hub.async_send(None)
+    async_fire_time_changed(
+        hass,
+        utcnow() + timedelta(seconds=entry_with_one_event.options[CONF_SEND_INTERVAL]),
+    )
+    await hass.async_block_till_done()
     mock_send_batch.assert_called_once()
 
 
-async def test_late_event(hass, hub, mock_create_batch):
+async def test_late_event(hass, entry_with_one_event, mock_create_batch):
     """Test the check on late events."""
     with patch(
         f"{AZURE_EVENT_HUB_PATH}.time.monotonic",
         return_value=monotonic() + timedelta(hours=1).seconds,
     ):
-        await hub.async_send(None)
+        async_fire_time_changed(
+            hass,
+            utcnow()
+            + timedelta(seconds=entry_with_one_event.options[CONF_SEND_INTERVAL]),
+        )
+        await hass.async_block_till_done()
         mock_create_batch.add.assert_not_called()
 
 
-async def test_full_batch(hass, hub, mock_create_batch):
+async def test_full_batch(hass, entry_with_one_event, mock_create_batch):
     """Test the full batch behaviour.
 
     Can't use async_send, because that causes a loop with this side_effect.
     """
-    mock_create_batch.add.side_effect = ValueError
-    assert hub.queue.qsize() == 1
-    async with hub._client.client as client:  # pylint: disable=protected-access
-        await hub.fill_batch(client)
-    assert hub.queue.qsize() == 1
+    mock_create_batch.add.side_effect = [ValueError, None]
+    async_fire_time_changed(
+        hass,
+        utcnow() + timedelta(seconds=entry_with_one_event.options[CONF_SEND_INTERVAL]),
+    )
+    await hass.async_block_till_done()
+    assert mock_create_batch.add.call_count == 2
 
 
 @pytest.mark.parametrize(
@@ -197,22 +199,12 @@ async def test_filter(hass, entry, tests, mock_create_batch):
     """
     for test in tests:
         hass.states.async_set(test.entity_id, STATE_ON)
+        async_fire_time_changed(
+            hass, utcnow() + timedelta(seconds=entry.options[CONF_SEND_INTERVAL])
+        )
         await hass.async_block_till_done()
-        await hass.data[DOMAIN][DATA_HUB].async_send(None)
-
         if test.should_pass:
             mock_create_batch.add.assert_called_once()
             mock_create_batch.add.reset_mock()
         else:
             mock_create_batch.add.assert_not_called()
-
-
-async def test_options_update(hass, hub):
-    """Test the update options function."""
-    assert (  # pylint: disable=protected-access
-        hub._send_interval == BASIC_OPTIONS[CONF_SEND_INTERVAL]
-    )
-    hub.update_options(UPDATE_OPTIONS)
-    assert (  # pylint: disable=protected-access
-        hub._send_interval == UPDATE_OPTIONS[CONF_SEND_INTERVAL]
-    )

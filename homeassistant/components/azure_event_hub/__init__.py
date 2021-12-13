@@ -219,6 +219,8 @@ class AzureEventHub:
                 try:
                     event_batch.add(event_data)
                 except ValueError:
+                    dequeue_count -= 1
+                    self.queue.task_done()
                     self.queue.put_nowait((1, (timestamp, event)))
                     break
             else:

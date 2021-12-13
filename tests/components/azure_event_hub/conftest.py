@@ -1,19 +1,25 @@
 """Test fixtures for AEH."""
 from dataclasses import dataclass
+from datetime import timedelta
 import logging
 from unittest.mock import MagicMock, patch
 
 from azure.eventhub.aio import EventHubProducerClient
 import pytest
 
-from homeassistant.components.azure_event_hub.const import CONF_FILTER, DATA_HUB, DOMAIN
+from homeassistant.components.azure_event_hub.const import (
+    CONF_FILTER,
+    CONF_SEND_INTERVAL,
+    DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_ON
 from homeassistant.setup import async_setup_component
+from homeassistant.util.dt import utcnow
 
 from .const import AZURE_EVENT_HUB_PATH, BASIC_OPTIONS, PRODUCER_PATH, SAS_CONFIG_FULL
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +39,7 @@ def mock_filter_schema():
 
 
 @pytest.fixture(name="entry")
-async def mock_entry_fixture(hass, filter_schema, mock_create_batch):
+async def mock_entry_fixture(hass, filter_schema, mock_create_batch, mock_send_batch):
     """Create the setup in HA."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -48,13 +54,23 @@ async def mock_entry_fixture(hass, filter_schema, mock_create_batch):
     assert entry.state == ConfigEntryState.LOADED
 
     # Clear the component_loaded event from the queue.
-    await hass.data[DOMAIN][DATA_HUB].queue.get()
-    hass.data[DOMAIN][DATA_HUB].queue.task_done()
-
+    async_fire_time_changed(
+        hass,
+        utcnow() + timedelta(seconds=entry.options[CONF_SEND_INTERVAL]),
+    )
+    await hass.async_block_till_done()
     yield entry
 
 
 # fixtures for init tests
+@pytest.fixture(name="entry_with_one_event")
+async def mock_entry_with_one_event(hass, entry):
+    """Use the entry and add a single test event to the queue."""
+    assert entry.state == ConfigEntryState.LOADED
+    hass.states.async_set("sensor.test", STATE_ON)
+    yield entry
+
+
 @dataclass
 class FilterTest:
     """Class for capturing a filter test."""
@@ -63,14 +79,14 @@ class FilterTest:
     should_pass: bool
 
 
-@pytest.fixture(name="mock_send_batch", scope="module")
+@pytest.fixture(name="mock_send_batch")
 def mock_send_batch_fixture():
     """Mock send_batch."""
     with patch(f"{PRODUCER_PATH}.send_batch") as mock_send_batch:
         yield mock_send_batch
 
 
-@pytest.fixture(autouse=True, name="mock_client", scope="module")
+@pytest.fixture(autouse=True, name="mock_client")
 def mock_client_fixture(mock_send_batch):
     """Mock the azure event hub producer client."""
     with patch(f"{PRODUCER_PATH}.close") as mock_close:
@@ -86,15 +102,6 @@ def mock_create_batch_fixture():
     mock_batch = MagicMock()
     with patch(f"{PRODUCER_PATH}.create_batch", return_value=mock_batch):
         yield mock_batch
-
-
-@pytest.fixture(name="hub")
-async def mock_hub(hass, entry):
-    """Use the entry and add a single test event to the queue."""
-    assert entry.state == ConfigEntryState.LOADED
-    hass.states.async_set("sensor.test", STATE_ON)
-    await hass.async_block_till_done()
-    yield hass.data[DOMAIN][DATA_HUB]
 
 
 # fixtures for config flow tests
@@ -117,12 +124,3 @@ def mock_setup_entry():
         f"{AZURE_EVENT_HUB_PATH}.async_setup_entry", return_value=True
     ) as setup_entry:
         yield setup_entry
-
-
-@pytest.fixture
-def mock_update_options():
-    """Mock the update options call, used for config flow tests."""
-    with patch(
-        f"{AZURE_EVENT_HUB_PATH}.AzureEventHub.update_options", return_value=None
-    ) as update_options:
-        yield update_options
