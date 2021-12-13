@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from datetime import timedelta
 import logging
 from typing import Any
@@ -18,7 +18,14 @@ from homeassistant.const import (
     CONF_USERNAME,
     Platform,
 )
-from homeassistant.core import CALLBACK_TYPE, Context, HassJob, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Context,
+    Event,
+    HassJob,
+    HomeAssistant,
+    callback,
+)
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -71,7 +78,7 @@ class PluggableAction:
     def __init__(self, update: Callable[[], None]) -> None:
         """Initialize."""
         self._update = update
-        self._actions: dict[Any, AutomationActionType] = {}
+        self._actions: dict[Any, tuple[HassJob, dict[str, Any]]] = {}
 
     def __bool__(self):
         """Return if we have something attached."""
@@ -102,7 +109,7 @@ class PluggableAction:
 class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Coordinator to update data."""
 
-    def __init__(self, hass, api: PhilipsTV, options: dict) -> None:
+    def __init__(self, hass, api: PhilipsTV, options: Mapping) -> None:
         """Set up the coordinator."""
         self.api = api
         self.options = options
@@ -170,7 +177,7 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
             self._async_notify_stop()
 
     @callback
-    def _async_stop_refresh(self, event: asyncio.Event) -> None:
+    def _async_stop_refresh(self, event: Event) -> None:
         super()._async_stop_refresh(event)
         self._async_notify_stop()
 
