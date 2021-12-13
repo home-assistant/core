@@ -231,21 +231,17 @@ class WalkingPadBLEDevice(WalkingPadBaseDevice):
         await self._walkingpad.ask_stats()
         await asyncio.sleep(AWAIT_SLEEP_INTERVAL)
         self._available_data = True
+        self._connecting = True
         _LOGGER.debug("%s: connected", self.name)
-
-    async def connect(self) -> None:
-        """Try to connect to device once."""
-        try:
-            await self._connect()
-        except BleakError as exc:
-            _LOGGER.error("%s: can't connect. %s", self.name, exc)
 
     async def connection_loop(self) -> None:
         """Try to connect to device until successful."""
+        self._connecting = True
         while not self.available_device:
             await asyncio.sleep(5.0)
             try:
                 await self._connect()
+                self._connecting = False
             except BleakError as exc:
                 _LOGGER.debug(
                     "%s: can't connect. %s. Retrying in 5 seconds", self.name, exc
@@ -295,17 +291,18 @@ class WalkingPadBLEDevice(WalkingPadBaseDevice):
 
     async def async_setup(self) -> None:
         """Set up device."""
-        await self.connect()
+        self._hass.async_create_task(self.connection_loop())
 
     async def async_update(self) -> None:
         """Update device properties and send data updated signal."""
-        await self.check_if_available()
-        if self.available_device:
-            await self._walkingpad.ask_stats()
-            await asyncio.sleep(AWAIT_SLEEP_INTERVAL)
-        else:
-            _LOGGER.warning("%s is not connected. Trying to connect", self.name)
-            await self.connection_loop()
+        if not self._connecting:
+            await self.check_if_available()
+            if self.available_device:
+                await self._walkingpad.ask_stats()
+                await asyncio.sleep(AWAIT_SLEEP_INTERVAL)
+            else:
+                _LOGGER.warning("%s is not connected. Trying to connect", self.name)
+                self._hass.async_create_task(self.connection_loop())
 
 
 class WalkingPadWiFiDevice(WalkingPadBaseDevice):
