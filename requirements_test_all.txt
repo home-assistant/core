@@ -430,7 +430,7 @@ fritzconnection==1.7.2
 gTTS==2.2.3
 
 # homeassistant.components.garages_amsterdam
-garages-amsterdam==2.1.1
+garages-amsterdam==3.0.0
 
 # homeassistant.components.geo_json_events
 # homeassistant.components.usgs_earthquakes_feed
