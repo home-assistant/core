@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Final
+from typing import Any
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -30,8 +30,8 @@ class GeocachingSensorEntityDescription(
     """Define Sensor entity description class."""
 
 
-SENSOR_DATA: Final[dict[str, GeocachingSensorEntityDescription]] = {
-    "username": GeocachingSensorEntityDescription(
+SENSOR_DATA: tuple[GeocachingSensorEntityDescription, ...] = (
+    GeocachingSensorEntityDescription(
         key="username",
         name="username",
         section="user",
@@ -39,7 +39,7 @@ SENSOR_DATA: Final[dict[str, GeocachingSensorEntityDescription]] = {
         icon="mdi:account",
         default_enabled=False,
     ),
-    "find_count": GeocachingSensorEntityDescription(
+    GeocachingSensorEntityDescription(
         key="find_count",
         name="Total finds",
         section="user",
@@ -48,7 +48,7 @@ SENSOR_DATA: Final[dict[str, GeocachingSensorEntityDescription]] = {
         native_unit_of_measurement="caches",
         default_enabled=True,
     ),
-    "hide_count": GeocachingSensorEntityDescription(
+    GeocachingSensorEntityDescription(
         key="hide_count",
         name="Total hides",
         section="user",
@@ -57,7 +57,7 @@ SENSOR_DATA: Final[dict[str, GeocachingSensorEntityDescription]] = {
         native_unit_of_measurement="caches",
         default_enabled=True,
     ),
-    "favorite_points": GeocachingSensorEntityDescription(
+    GeocachingSensorEntityDescription(
         key="favorite_points",
         name="Favorite points",
         section="user",
@@ -66,7 +66,7 @@ SENSOR_DATA: Final[dict[str, GeocachingSensorEntityDescription]] = {
         native_unit_of_measurement="points",
         default_enabled=True,
     ),
-    "souvenir_count": GeocachingSensorEntityDescription(
+    GeocachingSensorEntityDescription(
         key="souvenir_count",
         name="Total souvenirs",
         section="user",
@@ -75,7 +75,7 @@ SENSOR_DATA: Final[dict[str, GeocachingSensorEntityDescription]] = {
         native_unit_of_measurement="souvenirs",
         default_enabled=True,
     ),
-    "awarded_favorite_points": GeocachingSensorEntityDescription(
+    GeocachingSensorEntityDescription(
         key="awarded_favorite_points",
         name="Awarded favorite points",
         section="user",
@@ -84,7 +84,7 @@ SENSOR_DATA: Final[dict[str, GeocachingSensorEntityDescription]] = {
         native_unit_of_measurement="points",
         default_enabled=True,
     ),
-}
+)
 
 
 async def async_setup_entry(
@@ -93,10 +93,7 @@ async def async_setup_entry(
     """Set up a Geocaching sensor entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        [
-            GeocachingSensor(coordinator, key=key, entity_description=SENSOR_DATA[key])
-            for key in SENSOR_DATA
-        ]
+        [GeocachingSensor(coordinator, entity_description=item) for item in SENSOR_DATA]
     )
 
 
@@ -110,13 +107,12 @@ class GeocachingSensor(CoordinatorEntity, SensorEntity):
         self,
         coordinator: GeocachingDataUpdateCoordinator,
         *,
-        key: str,
         entity_description: GeocachingSensorEntityDescription,
     ) -> None:
         """Initialize the Geocaching sensor."""
         super().__init__(coordinator)
         self.entity_description = entity_description
-        self.key = key
+        self.key = entity_description.key
 
         self._attr_entity_registry_enabled_default = (
             entity_description.default_enabled or True
@@ -124,9 +120,7 @@ class GeocachingSensor(CoordinatorEntity, SensorEntity):
         self._attr_name = (
             f"Geocaching {coordinator.data.user.username} {entity_description.name}"
         )
-        self._attr_unique_id = (
-            f"geocaching_{coordinator.data.user.reference_code}_{key}"
-        )
+        self._attr_unique_id = f"geocaching_{coordinator.data.user.reference_code}_{entity_description.key}"
 
     @property
     def native_value(self) -> Any | None:
