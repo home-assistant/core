@@ -4,6 +4,7 @@ To update, run python3 -m script.hassfest
 """
 from __future__ import annotations
 
+<<<<<<< HEAD
 DHCP: list[dict[str, str | bool]] = [
     {"domain": "august", "hostname": "connect", "macaddress": "D86162*"},
     {"domain": "august", "hostname": "connect", "macaddress": "B8B7F1*"},
@@ -49,6 +50,156 @@ DHCP: list[dict[str, str | bool]] = [
     {"domain": "guardian", "hostname": "gvc*", "macaddress": "B4E62D*"},
     {"domain": "guardian", "hostname": "guardian*", "macaddress": "30AEA4*"},
     {"domain": "hunterdouglas_powerview", "registered_devices": True},
+=======
+# fmt: off
+
+DHCP = [
+    {
+        "domain": "august",
+        "hostname": "connect",
+        "macaddress": "D86162*"
+    },
+    {
+        "domain": "august",
+        "hostname": "connect",
+        "macaddress": "B8B7F1*"
+    },
+    {
+        "domain": "august",
+        "hostname": "connect",
+        "macaddress": "2C9FFB*"
+    },
+    {
+        "domain": "august",
+        "hostname": "august*",
+        "macaddress": "E076D0*"
+    },
+    {
+        "domain": "axis",
+        "hostname": "axis-00408c*",
+        "macaddress": "00408C*"
+    },
+    {
+        "domain": "axis",
+        "hostname": "axis-accc8e*",
+        "macaddress": "ACCC8E*"
+    },
+    {
+        "domain": "axis",
+        "hostname": "axis-b8a44f*",
+        "macaddress": "B8A44F*"
+    },
+    {
+        "domain": "blink",
+        "hostname": "blink*",
+        "macaddress": "B85F98*"
+    },
+    {
+        "domain": "blink",
+        "hostname": "blink*",
+        "macaddress": "00037F*"
+    },
+    {
+        "domain": "broadlink",
+        "macaddress": "34EA34*"
+    },
+    {
+        "domain": "broadlink",
+        "macaddress": "24DFA7*"
+    },
+    {
+        "domain": "broadlink",
+        "macaddress": "A043B0*"
+    },
+    {
+        "domain": "broadlink",
+        "macaddress": "B4430D*"
+    },
+    {
+        "domain": "broadlink",
+        "macaddress": "780F77*"
+    },
+    {
+        "domain": "emonitor",
+        "hostname": "emonitor*",
+        "macaddress": "0090C2*"
+    },
+    {
+        "domain": "flume",
+        "hostname": "flume-gw-*"
+    },
+    {
+        "domain": "flux_led",
+        "macaddress": "18B905*",
+        "hostname": "[ba][lk]*"
+    },
+    {
+        "domain": "flux_led",
+        "macaddress": "249494*",
+        "hostname": "[ba][lk]*"
+    },
+    {
+        "domain": "flux_led",
+        "macaddress": "7CB94C*",
+        "hostname": "[ba][lk]*"
+    },
+    {
+        "domain": "flux_led",
+        "macaddress": "ACCF23*",
+        "hostname": "[hba][flk]*"
+    },
+    {
+        "domain": "flux_led",
+        "macaddress": "B4E842*",
+        "hostname": "[ba][lk]*"
+    },
+    {
+        "domain": "flux_led",
+        "macaddress": "F0FE6B*",
+        "hostname": "[hba][flk]*"
+    },
+    {
+        "domain": "flux_led",
+        "macaddress": "8CCE4E*",
+        "hostname": "lwip*"
+    },
+    {
+        "domain": "flux_led",
+        "hostname": "zengge_[0-9a-f][0-9a-f]_*"
+    },
+    {
+        "domain": "flux_led",
+        "macaddress": "C82E47*",
+        "hostname": "sta*"
+    },
+    {
+        "domain": "fronius",
+        "macaddress": "0003AC*"
+    },
+    {
+        "domain": "goalzero",
+        "hostname": "yeti*"
+    },
+    {
+        "domain": "gogogate2",
+        "hostname": "ismartgate*"
+    },
+    {
+        "domain": "guardian",
+        "hostname": "gvc*",
+        "macaddress": "30AEA4*"
+    },
+    {
+        "domain": "guardian",
+        "hostname": "gvc*",
+        "macaddress": "B4E62D*"
+    },
+    {
+        "domain": "guardian",
+        "hostname": "guardian*",
+        "macaddress": "30AEA4*"
+    },
+>>>>>>> eaa78c74ad (mac address upper case)
     {
         "domain": "hunterdouglas_powerview",
         "hostname": "hunter*",

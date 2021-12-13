@@ -20,10 +20,14 @@
       "macaddress": "B4430D*"
     },
     {
+<<<<<<< HEAD
       "macaddress": "C8F742*"
     },
     {
       "macaddress": "780f77*"
+=======
+      "macaddress": "780F77*"
+>>>>>>> eaa78c74ad (mac address upper case)
     }
   ],
   "iot_class": "local_polling",
