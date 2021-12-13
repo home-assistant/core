@@ -19,14 +19,14 @@ class ControllerData(NamedTuple):
     """Controller data."""
 
     controller: pv.VeraController
-    devices: defaultdict[str, list[pv.VeraDevice]]
+    devices: defaultdict[Platform, list[pv.VeraDevice]]
     scenes: list[pv.VeraScene]
     config_entry: ConfigEntry
 
 
-def get_configured_platforms(controller_data: ControllerData) -> set[str]:
+def get_configured_platforms(controller_data: ControllerData) -> set[Platform]:
     """Get configured platforms for a controller."""
-    platforms: Sequence[str] = []
+    platforms: Sequence[Platform] = []
     for platform in controller_data.devices:
         platforms.append(platform)
 
