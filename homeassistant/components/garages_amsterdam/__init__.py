@@ -1,5 +1,6 @@
 """The Garages Amsterdam integration."""
 from datetime import timedelta
+import logging
 
 import async_timeout
 from garages_amsterdam import GaragesAmsterdam
@@ -10,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
@@ -50,7 +51,7 @@ async def get_coordinator(
 
     coordinator = DataUpdateCoordinator(
         hass,
-        LOGGER,
+        logging.getLogger(__name__),
         name=DOMAIN,
         update_method=async_get_garages,
         update_interval=timedelta(minutes=10),
