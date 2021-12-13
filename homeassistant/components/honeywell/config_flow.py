@@ -2,9 +2,9 @@
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.honeywell import get_somecomfort_client
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
+from . import get_somecomfort_client
 from .const import CONF_COOL_AWAY_TEMPERATURE, CONF_HEAT_AWAY_TEMPERATURE, DOMAIN
 
 
