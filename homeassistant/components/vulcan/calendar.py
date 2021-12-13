@@ -63,12 +63,11 @@ class VulcanCalendarEventDevice(CalendarEventDevice):
         self._unique_id = f"vulcan_calendar_{self.student_info['id']}"
 
         if data["students_number"] == 1:
-            name = ""
+            self._attr_name = "Vulcan calendar"
             self.device_name = "Calendar"
         else:
-            name = f" - {self.student_info['full_name']}"
+            self._attr_name = f"Vulcan calendar - {self.student_info['full_name']}"
             self.device_name = f"{self.student_info['full_name']}: Calendar"
-        self._attr_name = f"Vulcan calendar{name}"
         self._attr_unique_id = f"vulcan_calendar_{self.student_info['id']}"
         self._attr_device_info = {
             "identifiers": {(DOMAIN, f"calendar_{self.student_info['id']}")},
