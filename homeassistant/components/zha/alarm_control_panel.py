@@ -11,7 +11,6 @@ from homeassistant.components.alarm_control_panel import (
     SUPPORT_ALARM_TRIGGER,
     AlarmControlPanelEntity,
 )
-from homeassistant.components.zha.core.typing import ZhaDeviceType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
@@ -42,6 +41,7 @@ from .core.const import (
 )
 from .core.helpers import async_get_zha_config_value
 from .core.registries import ZHA_ENTITIES
+from .core.typing import ZhaDeviceType
 from .entity import ZhaEntity
 
 STRICT_MATCH = functools.partial(
