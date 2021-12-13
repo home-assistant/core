@@ -1,7 +1,6 @@
 """Config flow for Garages Amsterdam integration."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from aiohttp import ClientResponseError
@@ -12,9 +11,7 @@ from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
 
-from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN, LOGGER
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -34,10 +31,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     aiohttp_client.async_get_clientsession(self.hass)
                 )
             except ClientResponseError:
-                _LOGGER.error("Unexpected response from server")
+                LOGGER.error("Unexpected response from server")
                 return self.async_abort(reason="cannot_connect")
             except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
+                LOGGER.exception("Unexpected exception")
                 return self.async_abort(reason="unknown")
 
             for garage in sorted(api_data, key=lambda garage: garage.garage_name):
