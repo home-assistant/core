@@ -51,8 +51,7 @@ async def async_handle_addr_update(hass, context, msg):
     """Handle an addressable sensor update."""
     _LOGGER.debug("[addr handler] context: %s  msg: %s", context, msg)
     addr, temp = msg.get("addr"), msg.get("temp")
-    entity_id = context.get(addr)
-    if entity_id:
+    if entity_id := context.get(addr):
         async_dispatcher_send(hass, f"konnected.{entity_id}.update", temp)
     else:
         msg["device_id"] = context.get("device_id")

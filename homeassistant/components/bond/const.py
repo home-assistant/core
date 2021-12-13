@@ -9,7 +9,6 @@ CONF_BOND_ID: str = "bond_id"
 
 HUB = "hub"
 BPUP_SUBS = "bpup_subs"
-BPUP_STOP = "bpup_stop"
 
 SERVICE_SET_FAN_SPEED_TRACKED_STATE = "set_fan_speed_tracked_state"
 SERVICE_SET_POWER_TRACKED_STATE = "set_switch_power_tracked_state"

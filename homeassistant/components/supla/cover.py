@@ -7,12 +7,8 @@ from homeassistant.components.cover import (
     DEVICE_CLASS_GARAGE,
     CoverEntity,
 )
-from homeassistant.components.supla import (
-    DOMAIN,
-    SUPLA_COORDINATORS,
-    SUPLA_SERVERS,
-    SuplaChannel,
-)
+
+from . import DOMAIN, SUPLA_COORDINATORS, SUPLA_SERVERS, SuplaChannel
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,8 +55,7 @@ class SuplaCover(SuplaChannel, CoverEntity):
     @property
     def current_cover_position(self):
         """Return current position of cover. 0 is closed, 100 is open."""
-        state = self.channel_data.get("state")
-        if state:
+        if state := self.channel_data.get("state"):
             return 100 - state["shut"]
         return None
 

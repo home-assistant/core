@@ -38,9 +38,7 @@ command:
           domain: media_player
     command:
       name: Command
-      description: >-
-        Endpoint of the command. Known valid endpoints are listed in
-        https://github.com/TheRealLink/pylgtv/blob/master/pylgtv/endpoints.py
+      description: Endpoint of the command.
       required: true
       example: "system.launcher/open"
       selector:

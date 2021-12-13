@@ -97,15 +97,12 @@ async def test_report_state_instance(hass, aioclient_mock):
             assert report["instance"] == "fan.preset_mode"
             assert report["namespace"] == "Alexa.ModeController"
             checks += 1
-        if report["name"] == "percentage":
+        if report["name"] == "rangeValue":
             assert report["value"] == 90
-            assert report["namespace"] == "Alexa.PercentageController"
+            assert report["instance"] == "fan.percentage"
+            assert report["namespace"] == "Alexa.RangeController"
             checks += 1
-        if report["name"] == "powerLevel":
-            assert report["value"] == 90
-            assert report["namespace"] == "Alexa.PowerLevelController"
-            checks += 1
-    assert checks == 4
+    assert checks == 3
 
     assert call_json["event"]["endpoint"]["endpointId"] == "fan#test_fan"
 
@@ -120,9 +117,17 @@ async def test_send_add_or_update_message(hass, aioclient_mock):
         {"friendly_name": "Test Contact Sensor", "device_class": "door"},
     )
 
-    await state_report.async_send_add_or_update_message(
-        hass, DEFAULT_CONFIG, ["binary_sensor.test_contact", "zwave.bla"]
+    hass.states.async_set(
+        "zwave.bla",
+        "wow_such_unsupported",
     )
+
+    entities = [
+        "binary_sensor.test_contact",
+        "binary_sensor.non_existing",  # Supported, but does not exist
+        "zwave.bla",  # Unsupported
+    ]
+    await state_report.async_send_add_or_update_message(hass, DEFAULT_CONFIG, entities)
 
     assert len(aioclient_mock.mock_calls) == 1
     call = aioclient_mock.mock_calls

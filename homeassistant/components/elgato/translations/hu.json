@@ -7,11 +7,11 @@
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s"
         },
-        "flow_title": "Elgato Key Light: {serial_number}",
+        "flow_title": "{serial_number}",
         "step": {
             "user": {
                 "data": {
-                    "host": "Hoszt",
+                    "host": "C\u00edm",
                     "port": "Port"
                 },
                 "description": "\u00c1ll\u00edtsa be az Elgato Light-ot, hogy integr\u00e1lhat\u00f3 legyen az HomeAssistantba."

@@ -36,11 +36,6 @@ class BleBoxCoverEntity(BleBoxEntity, CoverEntity):
         self._attr_supported_features = position | stop | SUPPORT_OPEN | SUPPORT_CLOSE
 
     @property
-    def state(self):
-        """Return the equivalent HA cover state."""
-        return BLEBOX_TO_HASS_COVER_STATES[self._feature.state]
-
-    @property
     def current_cover_position(self):
         """Return the current cover position."""
         position = self._feature.current
@@ -83,5 +78,5 @@ class BleBoxCoverEntity(BleBoxEntity, CoverEntity):
         await self._feature.async_stop()
 
     def _is_state(self, state_name):
-        value = self.state
+        value = BLEBOX_TO_HASS_COVER_STATES[self._feature.state]
         return None if value is None else value == state_name

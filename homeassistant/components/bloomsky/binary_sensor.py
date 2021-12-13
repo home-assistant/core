@@ -2,8 +2,8 @@
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_MOISTURE,
     PLATFORM_SCHEMA,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.const import CONF_MONITORED_CONDITIONS
@@ -11,7 +11,7 @@ import homeassistant.helpers.config_validation as cv
 
 from . import DOMAIN
 
-SENSOR_TYPES = {"Rain": DEVICE_CLASS_MOISTURE, "Night": None}
+SENSOR_TYPES = {"Rain": BinarySensorDeviceClass.MOISTURE, "Night": None}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -39,7 +39,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class BloomSkySensor(BinarySensorEntity):
     """Representation of a single binary sensor in a BloomSky device."""
 
-    def __init__(self, bs, device, sensor_name):
+    def __init__(self, bs, device, sensor_name):  # pylint: disable=invalid-name
         """Initialize a BloomSky binary sensor."""
         self._bloomsky = bs
         self._device_id = device["DeviceID"]

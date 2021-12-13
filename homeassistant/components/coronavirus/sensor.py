@@ -58,8 +58,7 @@ class CoronavirusSensor(CoordinatorEntity, SensorEntity):
         if self.country == OPTION_WORLDWIDE:
             sum_cases = 0
             for case in self.coordinator.data.values():
-                value = getattr(case, self.info_type)
-                if value is None:
+                if (value := getattr(case, self.info_type)) is None:
                     continue
                 sum_cases += value
 

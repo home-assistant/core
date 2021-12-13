@@ -13,6 +13,10 @@ ZEROCONF = {
     ],
     "_airplay._tcp.local.": [
         {
+            "domain": "apple_tv",
+            "model": "appletv*"
+        },
+        {
             "domain": "samsungtv",
             "manufacturer": "samsung*"
         }
@@ -58,6 +62,9 @@ ZEROCONF = {
     "_dvl-deviceapi._tcp.local.": [
         {
             "domain": "devolo_home_control"
+        },
+        {
+            "domain": "devolo_home_network"
         }
     ],
     "_easylink._tcp.local.": [
@@ -157,6 +164,11 @@ ZEROCONF = {
             "domain": "lutron_caseta"
         }
     ],
+    "_lookin._tcp.local.": [
+        {
+            "domain": "lookin"
+        }
+    ],
     "_mediaremotetv._tcp.local.": [
         {
             "domain": "apple_tv"
@@ -168,6 +180,10 @@ ZEROCONF = {
         },
         {
             "domain": "xiaomi_miio"
+        },
+        {
+            "domain": "yeelight",
+            "name": "yeelink-*"
         }
     ],
     "_nanoleafapi._tcp.local.": [
@@ -183,6 +199,16 @@ ZEROCONF = {
     "_nut._tcp.local.": [
         {
             "domain": "nut"
+        }
+    ],
+    "_octoprint._tcp.local.": [
+        {
+            "domain": "octoprint"
+        }
+    ],
+    "_plexmediasvr._tcp.local.": [
+        {
+            "domain": "plex"
         }
     ],
     "_plugwise._tcp.local.": [

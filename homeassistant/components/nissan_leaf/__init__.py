@@ -1,13 +1,14 @@
 """Support for the Nissan Leaf Carwings/Nissan Connect API."""
 import asyncio
 from datetime import datetime, timedelta
+from http import HTTPStatus
 import logging
 import sys
 
 from pycarwings2 import CarwingsError, Session
 import voluptuous as vol
 
-from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME, HTTP_OK
+from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
@@ -212,12 +213,12 @@ class LeafDataStore:
         self.car_config = car_config
         self.force_miles = car_config[CONF_FORCE_MILES]
         self.data = {}
-        self.data[DATA_CLIMATE] = False
-        self.data[DATA_BATTERY] = 0
-        self.data[DATA_CHARGING] = False
-        self.data[DATA_RANGE_AC] = 0
-        self.data[DATA_RANGE_AC_OFF] = 0
-        self.data[DATA_PLUGGED_IN] = False
+        self.data[DATA_CLIMATE] = None
+        self.data[DATA_BATTERY] = None
+        self.data[DATA_CHARGING] = None
+        self.data[DATA_RANGE_AC] = None
+        self.data[DATA_RANGE_AC_OFF] = None
+        self.data[DATA_PLUGGED_IN] = None
         self.next_update = None
         self.last_check = None
         self.request_in_progress = False
@@ -293,7 +294,7 @@ class LeafDataStore:
         if server_response is not None:
             _LOGGER.debug("Server Response: %s", server_response.__dict__)
 
-            if server_response.answer["status"] == HTTP_OK:
+            if server_response.answer["status"] == HTTPStatus.OK:
                 self.data[DATA_BATTERY] = server_response.battery_percent
 
                 # pycarwings2 library doesn't always provide cruising rnages

@@ -1,9 +1,10 @@
 """Support for HDMI CEC."""
 from __future__ import annotations
 
-from functools import partial, reduce
+from functools import reduce
 import logging
 import multiprocessing
+from typing import Any
 
 from pycec.cec import CecAdapter
 from pycec.commands import CecCommand, KeyPressCommand, KeyReleaseCommand
@@ -41,7 +42,7 @@ from homeassistant.const import (
     STATE_PLAYING,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import discovery, event
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -222,9 +223,12 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
             hass.bus.fire(EVENT_HDMI_CEC_UNAVAILABLE)
             adapter.init()
 
-    hdmi_network.set_initialized_callback(
-        partial(event.async_call_later, hass, WATCHDOG_INTERVAL, _adapter_watchdog)
-    )
+    @callback
+    def _async_initialized_callback(*_: Any):
+        """Add watchdog on initialization."""
+        return event.async_call_later(hass, WATCHDOG_INTERVAL, _adapter_watchdog)
+
+    hdmi_network.set_initialized_callback(_async_initialized_callback)
 
     def _volume(call):
         """Increase/decrease volume and mute/unmute system."""
@@ -297,8 +301,7 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
 
     def _select_device(call):
         """Select the active device."""
-        addr = call.data[ATTR_DEVICE]
-        if not addr:
+        if not (addr := call.data[ATTR_DEVICE]):
             _LOGGER.error("Device not found: %s", call.data[ATTR_DEVICE])
             return
         if addr in device_aliases:

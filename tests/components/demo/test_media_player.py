@@ -1,4 +1,5 @@
 """The tests for the Demo Media player platform."""
+from http import HTTPStatus
 from unittest.mock import patch
 
 import pytest
@@ -460,7 +461,7 @@ async def test_media_image_proxy(hass, hass_client):
     assert state.state == STATE_PLAYING
     client = await hass_client()
     req = await client.get(state.attributes.get(ATTR_ENTITY_PICTURE))
-    assert req.status == 200
+    assert req.status == HTTPStatus.OK
     assert await req.text() == fake_picture_data
 
 

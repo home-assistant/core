@@ -12,7 +12,7 @@
         "flow_title": "{name}",
         "step": {
             "confirm_discovery": {
-                "description": "Szeretn\u00e9 be\u00e1ll\u00edtani a(z) {model} a(z) {host} c\u00edmen? \n\n A jelsz\u00f3val v\u00e9dett akkumul\u00e1toros eszk\u00f6z\u00f6ket fel kell \u00e9breszteni, miel\u0151tt folytatn\u00e1 a be\u00e1ll\u00edt\u00e1st.\n Az elemmel m\u0171k\u00f6d\u0151, jelsz\u00f3val nem v\u00e9dett eszk\u00f6z\u00f6k hozz\u00e1ad\u00e1sra ker\u00fclnek, amikor az eszk\u00f6z fel\u00e9bred, most manu\u00e1lisan \u00e9bresztheti fel az eszk\u00f6zt egy rajta l\u00e9v\u0151 gombbal, vagy v\u00e1rhat a k\u00f6vetkez\u0151 adatfriss\u00edt\u00e9sre."
+                "description": "Szeretn\u00e9 be\u00e1ll\u00edtani {model}-t {host} c\u00edmen? \n\nA jelsz\u00f3val v\u00e9dett akkumul\u00e1toros eszk\u00f6z\u00f6ket fel kell \u00e9breszteni, miel\u0151tt folytatn\u00e1 a be\u00e1ll\u00edt\u00e1st.\nAz elemmel m\u0171k\u00f6d\u0151, jelsz\u00f3val nem v\u00e9dett eszk\u00f6z\u00f6k hozz\u00e1ad\u00e1sra ker\u00fclnek, amikor az eszk\u00f6z fel\u00e9bred, most manu\u00e1lisan \u00e9bresztheti fel az eszk\u00f6zt egy rajta l\u00e9v\u0151 gombbal, vagy v\u00e1rhat a k\u00f6vetkez\u0151 adatfriss\u00edt\u00e9sre."
             },
             "credentials": {
                 "data": {
@@ -22,7 +22,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Hoszt"
+                    "host": "C\u00edm"
                 },
                 "description": "A be\u00e1ll\u00edt\u00e1s el\u0151tt az akkumul\u00e1toros eszk\u00f6z\u00f6ket fel kell \u00e9breszteni, most egy rajta l\u00e9v\u0151 gombbal fel\u00e9bresztheted az eszk\u00f6zt."
             }
@@ -33,14 +33,20 @@
             "button": "Gomb",
             "button1": "Els\u0151 gomb",
             "button2": "M\u00e1sodik gomb",
-            "button3": "Harmadik gomb"
+            "button3": "Harmadik gomb",
+            "button4": "Negyedik gomb"
         },
         "trigger_type": {
+            "btn_down": "{subtype} gomb lenyomva",
+            "btn_up": "{subtype} gomb elengedve",
             "double": "{subtype} dupla kattint\u00e1s",
+            "double_push": "{subtype} dupla lenyom\u00e1s",
             "long": "{subtype} hosszan nyomva",
+            "long_push": "{subtype} hosszan lenyomva",
             "long_single": "{subtype} hosszan nyomva, majd egy kattint\u00e1s",
             "single": "{subtype} egy kattint\u00e1s",
             "single_long": "{subtype} egy kattint\u00e1s, majd hosszan nyomva",
+            "single_push": "{subtype} egy lenyom\u00e1s",
             "triple": "{subtype} tripla kattint\u00e1s"
         }
     }

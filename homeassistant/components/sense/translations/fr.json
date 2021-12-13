@@ -12,7 +12,8 @@
             "user": {
                 "data": {
                     "email": "Email",
-                    "password": "Mot de passe"
+                    "password": "Mot de passe",
+                    "timeout": "D\u00e9lai expir\u00e9"
                 },
                 "title": "Connectez-vous \u00e0 votre moniteur d'\u00e9nergie Sense"
             }

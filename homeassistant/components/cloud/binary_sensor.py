@@ -2,10 +2,11 @@
 import asyncio
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import EntityCategory
 
 from .const import DISPATCHER_REMOTE_UPDATE, DOMAIN
 
@@ -25,9 +26,10 @@ class CloudRemoteBinary(BinarySensorEntity):
     """Representation of an Cloud Remote UI Connection binary sensor."""
 
     _attr_name = "Remote UI"
-    _attr_device_class = DEVICE_CLASS_CONNECTIVITY
+    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
     _attr_should_poll = False
     _attr_unique_id = "cloud-remote-ui-connectivity"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(self, cloud):
         """Initialize the binary sensor."""

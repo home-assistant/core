@@ -37,7 +37,7 @@ def generate_audio_frame(pcm_mulaw=False):
     return audio_frame
 
 
-def generate_h264_video(container_format="mp4", duration=5):
+def generate_video(encoder, container_format, duration):
     """
     Generate a test video.
 
@@ -51,7 +51,7 @@ def generate_h264_video(container_format="mp4", duration=5):
     output.name = "test.mov" if container_format == "mov" else "test.mp4"
     container = av.open(output, mode="w", format=container_format)
 
-    stream = container.add_stream("libx264", rate=fps)
+    stream = container.add_stream(encoder, rate=fps)
     stream.width = 480
     stream.height = 320
     stream.pix_fmt = "yuv420p"
@@ -80,6 +80,16 @@ def generate_h264_video(container_format="mp4", duration=5):
     output.seek(0)
 
     return output
+
+
+def generate_h264_video(container_format="mp4", duration=5):
+    """Generate a test video with libx264."""
+    return generate_video("libx264", container_format, duration)
+
+
+def generate_h265_video(container_format="mp4", duration=5):
+    """Generate a test video with libx265."""
+    return generate_video("libx265", container_format, duration)
 
 
 def remux_with_audio(source, container_format, audio_codec):

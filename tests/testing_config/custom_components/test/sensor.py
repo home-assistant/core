@@ -7,6 +7,7 @@ import homeassistant.components.sensor as sensor
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
+    FREQUENCY_GIGAHERTZ,
     PERCENTAGE,
     PRESSURE_HPA,
     SIGNAL_STRENGTH_DECIBELS,
@@ -38,6 +39,7 @@ UNITS_OF_MEASUREMENT = {
     sensor.DEVICE_CLASS_POWER: "kW",  # power (W/kW)
     sensor.DEVICE_CLASS_CURRENT: "A",  # current (A)
     sensor.DEVICE_CLASS_ENERGY: "kWh",  # energy (Wh/kWh)
+    sensor.DEVICE_CLASS_FREQUENCY: FREQUENCY_GIGAHERTZ,  # energy (Hz/kHz/MHz/GHz)
     sensor.DEVICE_CLASS_POWER_FACTOR: PERCENTAGE,  # power factor (no unit, min: -1.0, max: 1.0)
     sensor.DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,  # µg/m³ of vocs
     sensor.DEVICE_CLASS_VOLTAGE: "V",  # voltage (V)

@@ -10,11 +10,12 @@
             "invalid_auth": "Autentikasi tidak valid",
             "invalid_zone": "Zona tidak valid"
         },
-        "flow_title": "Cloudflare: {name}",
+        "flow_title": "{name}",
         "step": {
             "reauth_confirm": {
                 "data": {
-                    "api_token": "Token API"
+                    "api_token": "Token API",
+                    "description": "Autentikasi ulang dengan akun Cloudflare Anda."
                 }
             },
             "records": {

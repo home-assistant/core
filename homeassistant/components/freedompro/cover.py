@@ -5,29 +5,26 @@ from pyfreedompro import put_state
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    DEVICE_CLASS_BLIND,
-    DEVICE_CLASS_DOOR,
-    DEVICE_CLASS_GARAGE,
-    DEVICE_CLASS_GATE,
-    DEVICE_CLASS_WINDOW,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
+    CoverDeviceClass,
     CoverEntity,
 )
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 
 DEVICE_CLASS_MAP = {
-    "windowCovering": DEVICE_CLASS_BLIND,
-    "gate": DEVICE_CLASS_GATE,
-    "garageDoor": DEVICE_CLASS_GARAGE,
-    "door": DEVICE_CLASS_DOOR,
-    "window": DEVICE_CLASS_WINDOW,
+    "windowCovering": CoverDeviceClass.BLIND,
+    "gate": CoverDeviceClass.GATE,
+    "garageDoor": CoverDeviceClass.GARAGE,
+    "door": CoverDeviceClass.DOOR,
+    "window": CoverDeviceClass.WINDOW,
 }
 
 SUPPORTED_SENSORS = {"windowCovering", "gate", "garageDoor", "door", "window"}
@@ -54,14 +51,14 @@ class Device(CoordinatorEntity, CoverEntity):
         self._api_key = api_key
         self._attr_name = device["name"]
         self._attr_unique_id = device["uid"]
-        self._attr_device_info = {
-            "name": self.name,
-            "identifiers": {
+        self._attr_device_info = DeviceInfo(
+            identifiers={
                 (DOMAIN, self.unique_id),
             },
-            "model": device["type"],
-            "manufacturer": "Freedompro",
-        }
+            manufacturer="Freedompro",
+            model=device["type"],
+            name=self.name,
+        )
         self._attr_current_cover_position = 0
         self._attr_is_closed = True
         self._attr_supported_features = (

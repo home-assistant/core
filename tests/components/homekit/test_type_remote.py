@@ -1,5 +1,7 @@
 """Test different accessory types: Remotes."""
 
+import pytest
+
 from homeassistant.components.homekit.const import (
     ATTR_KEY_NAME,
     ATTR_VALUE,
@@ -140,8 +142,9 @@ async def test_activity_remote(hass, hk_driver, events, caplog):
 
     hass.bus.async_listen(EVENT_HOMEKIT_TV_REMOTE_KEY_PRESSED, listener)
 
-    acc.char_remote_key.client_update_value(20)
-    await hass.async_block_till_done()
+    with pytest.raises(ValueError):
+        acc.char_remote_key.client_update_value(20)
+        await hass.async_block_till_done()
 
     acc.char_remote_key.client_update_value(7)
     await hass.async_block_till_done()

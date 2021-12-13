@@ -102,8 +102,7 @@ def _list_payload(item, children=None):
 
 def _raw_item_payload(entity, item, parent_item=None, title=None, info=None):
     if "type" in item:
-        thumbnail = item.get("albumart")
-        if thumbnail:
+        if thumbnail := item.get("albumart"):
             item_hash = str(hash(thumbnail))
             entity.thumbnail_cache.setdefault(item_hash, thumbnail)
             thumbnail = entity.get_browse_image_url(MEDIA_TYPE_MUSIC, item_hash)
@@ -156,8 +155,7 @@ async def browse_node(entity, media_library, media_content_type, media_content_i
         for item in first_list["items"]
     ]
     info = navigation.get("info")
-    title = first_list.get("title")
-    if not title:
+    if not (title := first_list.get("title")):
         if info:
             title = f"{info.get('album')} ({info.get('artist')})"
         else:

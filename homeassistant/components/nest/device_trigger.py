@@ -38,8 +38,7 @@ async def async_get_nest_device_id(hass: HomeAssistant, device_id: str) -> str |
     device_registry: DeviceRegistry = (
         await hass.helpers.device_registry.async_get_registry()
     )
-    device = device_registry.async_get(device_id)
-    if device:
+    if device := device_registry.async_get(device_id):
         for (domain, unique_id) in device.identifiers:
             if domain == DOMAIN:
                 return unique_id
@@ -54,16 +53,15 @@ async def async_get_device_trigger_types(
     # "shouldn't happen" cases
     subscriber = hass.data[DOMAIN][DATA_SUBSCRIBER]
     device_manager = await subscriber.async_get_device_manager()
-    nest_device = device_manager.devices.get(nest_device_id)
-    if not nest_device:
+    if not (nest_device := device_manager.devices.get(nest_device_id)):
         raise InvalidDeviceAutomationConfig(f"Nest device not found {nest_device_id}")
 
     # Determine the set of event types based on the supported device traits
-    trigger_types = []
-    for trait in nest_device.traits:
-        trigger_type = DEVICE_TRAIT_TRIGGER_MAP.get(trait)
-        if trigger_type:
-            trigger_types.append(trigger_type)
+    trigger_types = [
+        trigger_type
+        for trait in nest_device.traits
+        if (trigger_type := DEVICE_TRAIT_TRIGGER_MAP.get(trait))
+    ]
     return trigger_types
 
 

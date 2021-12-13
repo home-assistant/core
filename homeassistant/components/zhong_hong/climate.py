@@ -239,12 +239,10 @@ class ZhongHongClimate(ClimateEntity):
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
-        if temperature is not None:
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is not None:
             self._device.set_temperature(temperature)
 
-        operation_mode = kwargs.get(ATTR_HVAC_MODE)
-        if operation_mode is not None:
+        if (operation_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
             self.set_hvac_mode(operation_mode)
 
     def set_hvac_mode(self, hvac_mode):

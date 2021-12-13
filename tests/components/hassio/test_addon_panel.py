@@ -1,4 +1,5 @@
 """Test add-on panel."""
+from http import HTTPStatus
 from unittest.mock import patch
 
 import pytest
@@ -104,10 +105,10 @@ async def test_hassio_addon_panel_api(hass, aioclient_mock, hassio_env, hass_cli
         hass_client = await hass_client()
 
         resp = await hass_client.post("/api/hassio_push/panel/test2")
-        assert resp.status == 400
+        assert resp.status == HTTPStatus.BAD_REQUEST
 
         resp = await hass_client.post("/api/hassio_push/panel/test1")
-        assert resp.status == 200
+        assert resp.status == HTTPStatus.OK
         assert mock_panel.call_count == 2
 
         mock_panel.assert_called_with(

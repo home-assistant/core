@@ -66,8 +66,7 @@ class TellstickLight(TellstickDevice, LightEntity):
     def _update_model(self, new_state, data):
         """Update the device entity state to match the arguments."""
         if new_state:
-            brightness = data
-            if brightness is not None:
+            if (brightness := data) is not None:
                 self._brightness = brightness
 
             # _brightness is not defined when called from super

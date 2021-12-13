@@ -1,8 +1,8 @@
 """Support for System Bridge binary sensors."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable
 
 from systembridge import Bridge
 
@@ -41,7 +41,7 @@ BATTERY_BINARY_SENSOR_TYPES: tuple[SystemBridgeBinarySensorEntityDescription, ..
         key="battery_is_charging",
         name="Battery Is Charging",
         device_class=DEVICE_CLASS_BATTERY_CHARGING,
-        value=lambda bridge: bridge.information.updates.available,
+        value=lambda bridge: bridge.battery.isCharging,
     ),
 )
 

@@ -17,14 +17,14 @@
                 "data": {
                     "api_key": "API Key"
                 },
-                "description": "You need to supply a new read-only API key from Uptime Robot",
+                "description": "You need to supply a new read-only API key from UptimeRobot",
                 "title": "Reauthenticate Integration"
             },
             "user": {
                 "data": {
                     "api_key": "API Key"
                 },
-                "description": "You need to supply a read-only API key from Uptime Robot"
+                "description": "You need to supply a read-only API key from UptimeRobot"
             }
         }
     }

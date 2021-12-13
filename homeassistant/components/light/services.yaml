@@ -53,7 +53,7 @@ turn_on:
             - "azure"
             - "beige"
             - "bisque"
-            - "black"
+            # Black is omitted from this list as nonsensical for lights
             - "blanchedalmond"
             - "blue"
             - "blueviolet"
@@ -362,7 +362,7 @@ toggle:
             - "azure"
             - "beige"
             - "bisque"
-            - "black"
+            # Black is omitted from this list as nonsensical for lights
             - "blanchedalmond"
             - "blue"
             - "blueviolet"

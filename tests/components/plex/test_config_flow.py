@@ -1,5 +1,6 @@
 """Tests for Plex config flow."""
 import copy
+from http import HTTPStatus
 import ssl
 from unittest.mock import patch
 
@@ -36,7 +37,6 @@ from homeassistant.const import (
     CONF_URL,
     CONF_VERIFY_SSL,
 )
-from homeassistant.setup import async_setup_component
 
 from .const import DEFAULT_OPTIONS, MOCK_SERVERS, MOCK_TOKEN, PLEX_DIRECT_URL
 from .helpers import trigger_plex_update, wait_for_debouncer
@@ -529,7 +529,7 @@ async def test_callback_view(hass, hass_client_no_auth, current_request_with_hos
         forward_url = f'{config_flow.AUTH_CALLBACK_PATH}?flow_id={result["flow_id"]}'
 
         resp = await client.get(forward_url)
-        assert resp.status == 200
+        assert resp.status == HTTPStatus.OK
 
 
 async def test_manual_config(hass, mock_plex_calls, current_request_with_host):
@@ -755,7 +755,6 @@ async def test_trigger_reauth(
     hass, entry, mock_plex_server, mock_websocket, current_request_with_host
 ):
     """Test setup and reauthorization of a Plex token."""
-    await async_setup_component(hass, "persistent_notification", {})
 
     assert entry.state is ConfigEntryState.LOADED
 

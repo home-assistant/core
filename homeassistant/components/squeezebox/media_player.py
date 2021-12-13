@@ -197,8 +197,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 known_players.append(entity)
                 async_add_entities([entity])
 
-        players = await lms.async_get_players()
-        if players:
+        if players := await lms.async_get_players():
             for player in players:
                 hass.async_create_task(_discovered_player(player))
 
@@ -561,8 +560,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         player_ids = {
             p.entity_id: p.unique_id for p in self.hass.data[DOMAIN][KNOWN_PLAYERS]
         }
-        other_player_id = player_ids.get(other_player)
-        if other_player_id:
+        if other_player_id := player_ids.get(other_player):
             await self._player.async_sync(other_player_id)
         else:
             _LOGGER.info("Could not find player_id for %s. Not syncing", other_player)

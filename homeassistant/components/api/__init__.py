@@ -97,8 +97,7 @@ class APIEventStream(HomeAssistantView):
         stop_obj = object()
         to_write = asyncio.Queue()
 
-        restrict = request.query.get("restrict")
-        if restrict:
+        if restrict := request.query.get("restrict"):
             restrict = restrict.split(",") + [EVENT_HOMEASSISTANT_STOP]
 
         async def forward_events(event):
@@ -132,7 +131,7 @@ class APIEventStream(HomeAssistantView):
 
             while True:
                 try:
-                    with async_timeout.timeout(STREAM_PING_INTERVAL):
+                    async with async_timeout.timeout(STREAM_PING_INTERVAL):
                         payload = await to_write.get()
 
                     if payload is stop_obj:
@@ -225,8 +224,7 @@ class APIEntityStateView(HomeAssistantView):
         if not user.permissions.check_entity(entity_id, POLICY_READ):
             raise Unauthorized(entity_id=entity_id)
 
-        state = request.app["hass"].states.get(entity_id)
-        if state:
+        if state := request.app["hass"].states.get(entity_id):
             return self.json(state)
         return self.json_message("Entity not found.", HTTPStatus.NOT_FOUND)
 
@@ -240,9 +238,7 @@ class APIEntityStateView(HomeAssistantView):
         except ValueError:
             return self.json_message("Invalid JSON specified.", HTTPStatus.BAD_REQUEST)
 
-        new_state = data.get("state")
-
-        if new_state is None:
+        if (new_state := data.get("state")) is None:
             return self.json_message("No state specified.", HTTPStatus.BAD_REQUEST)
 
         attributes = data.get("attributes")

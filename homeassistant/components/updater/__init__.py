@@ -125,7 +125,7 @@ async def get_newest_version(hass):
     """Get the newest Home Assistant version."""
     session = async_get_clientsession(hass)
 
-    with async_timeout.timeout(30):
+    async with async_timeout.timeout(30):
         req = await session.get(UPDATER_URL)
 
     try:

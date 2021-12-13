@@ -13,21 +13,21 @@
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
             "connection_upgrade": "Nem siker\u00fclt csatlakozni a nyomtat\u00f3hoz. K\u00e9rj\u00fck, pr\u00f3b\u00e1lja meg \u00fajra az SSL/TLS opci\u00f3 bejel\u00f6l\u00e9s\u00e9vel."
         },
-        "flow_title": "Nyomtat\u00f3: {name}",
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {
                     "base_path": "Relat\u00edv \u00fatvonal a nyomtat\u00f3hoz",
-                    "host": "Hoszt",
+                    "host": "C\u00edm",
                     "port": "Port",
                     "ssl": "SSL tan\u00fas\u00edtv\u00e1ny haszn\u00e1lata",
                     "verify_ssl": "SSL-tan\u00fas\u00edtv\u00e1ny ellen\u0151rz\u00e9se"
                 },
-                "description": "\u00c1ll\u00edtsa be a nyomtat\u00f3t az Internet Printing Protocol (IPP) protokollon kereszt\u00fcl, hogy integr\u00e1lhat\u00f3 legyen a Home Assistant seg\u00edts\u00e9g\u00e9vel.",
+                "description": "\u00c1ll\u00edtsa be a nyomtat\u00f3t az Internet Printing Protocol (IPP) protokollon kereszt\u00fcl, hogy integr\u00e1lhat\u00f3 legyen Home Assistant seg\u00edts\u00e9g\u00e9vel.",
                 "title": "Kapcsolja \u00f6ssze a nyomtat\u00f3t"
             },
             "zeroconf_confirm": {
-                "description": "Be szeretn\u00e9d \u00e1ll\u00edtani a {name}-t?",
+                "description": "Szeretn\u00e9 be\u00e1ll\u00edtani: {name}?",
                 "title": "Felfedezett nyomtat\u00f3"
             }
         }

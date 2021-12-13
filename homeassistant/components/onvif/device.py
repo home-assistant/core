@@ -373,10 +373,13 @@ class ONVIFDevice:
                     )
                     return
 
-                req.Velocity = {
-                    "PanTilt": {"x": pan_val, "y": tilt_val},
-                    "Zoom": {"x": zoom_val},
-                }
+                velocity = {}
+                if pan is not None or tilt is not None:
+                    velocity["PanTilt"] = {"x": pan_val, "y": tilt_val}
+                if zoom is not None:
+                    velocity["Zoom"] = {"x": zoom_val}
+
+                req.Velocity = velocity
 
                 await ptz_service.ContinuousMove(req)
                 await asyncio.sleep(continuous_duration)

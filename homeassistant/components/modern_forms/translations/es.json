@@ -1,7 +1,17 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado",
+            "cannot_connect": "No se pudo conectar"
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar"
+        },
         "flow_title": "{name}",
         "step": {
+            "confirm": {
+                "description": "\u00bfQuieres iniciar la configuraci\u00f3n?"
+            },
             "user": {
                 "data": {
                     "host": "Anfitri\u00f3n"

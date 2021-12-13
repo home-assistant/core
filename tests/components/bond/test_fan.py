@@ -25,7 +25,7 @@ from homeassistant.components.fan import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.util import utcnow
 
@@ -83,6 +83,10 @@ async def test_entity_registry(hass: core.HomeAssistant):
     registry: EntityRegistry = er.async_get(hass)
     entity = registry.entities["fan.name_1"]
     assert entity.unique_id == "test-hub-id_test-device-id"
+
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get(entity.device_id)
+    assert device.configuration_url == "http://some host"
 
 
 async def test_non_standard_speed_list(hass: core.HomeAssistant):

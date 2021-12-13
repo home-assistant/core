@@ -12,14 +12,11 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_NAME,
+    CONF_HOST,
     CURRENCY_EURO,
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_GAS,
-    DEVICE_CLASS_MONETARY,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_VOLTAGE,
     ELECTRIC_CURRENT_AMPERE,
@@ -29,15 +26,15 @@ from homeassistant.const import (
     VOLUME_CUBIC_METERS,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import P1MonitorDataUpdateCoordinator
 from .const import (
-    ATTR_ENTRY_TYPE,
     DOMAIN,
-    ENTRY_TYPE_SERVICE,
     SERVICE_PHASES,
     SERVICE_SETTINGS,
     SERVICE_SMARTMETER,
@@ -195,32 +192,32 @@ SENSORS: dict[
             key="gas_consumption_price",
             name="Gas Consumption Price",
             entity_registry_enabled_default=False,
-            device_class=DEVICE_CLASS_MONETARY,
-            native_unit_of_measurement=CURRENCY_EURO,
+            state_class=STATE_CLASS_MEASUREMENT,
+            native_unit_of_measurement=f"{CURRENCY_EURO}/{VOLUME_CUBIC_METERS}",
         ),
         SensorEntityDescription(
             key="energy_consumption_price_low",
             name="Energy Consumption Price - Low",
-            device_class=DEVICE_CLASS_MONETARY,
-            native_unit_of_measurement=CURRENCY_EURO,
+            state_class=STATE_CLASS_MEASUREMENT,
+            native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
         ),
         SensorEntityDescription(
             key="energy_consumption_price_high",
             name="Energy Consumption Price - High",
-            device_class=DEVICE_CLASS_MONETARY,
-            native_unit_of_measurement=CURRENCY_EURO,
+            state_class=STATE_CLASS_MEASUREMENT,
+            native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
         ),
         SensorEntityDescription(
             key="energy_production_price_low",
             name="Energy Production Price - Low",
-            device_class=DEVICE_CLASS_MONETARY,
-            native_unit_of_measurement=CURRENCY_EURO,
+            state_class=STATE_CLASS_MEASUREMENT,
+            native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
         ),
         SensorEntityDescription(
             key="energy_production_price_high",
             name="Energy Production Price - High",
-            device_class=DEVICE_CLASS_MONETARY,
-            native_unit_of_measurement=CURRENCY_EURO,
+            state_class=STATE_CLASS_MEASUREMENT,
+            native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
         ),
     ),
 }
@@ -267,14 +264,15 @@ class P1MonitorSensorEntity(CoordinatorEntity, SensorEntity):
             f"{coordinator.config_entry.entry_id}_{service_key}_{description.key}"
         )
 
-        self._attr_device_info = {
-            ATTR_IDENTIFIERS: {
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={
                 (DOMAIN, f"{coordinator.config_entry.entry_id}_{service_key}")
             },
-            ATTR_NAME: service,
-            ATTR_MANUFACTURER: "P1 Monitor",
-            ATTR_ENTRY_TYPE: ENTRY_TYPE_SERVICE,
-        }
+            configuration_url=f"http://{coordinator.config_entry.data[CONF_HOST]}",
+            manufacturer="P1 Monitor",
+            name=service,
+        )
 
     @property
     def native_value(self) -> StateType:

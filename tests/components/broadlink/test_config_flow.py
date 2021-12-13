@@ -6,9 +6,9 @@ from unittest.mock import call, patch
 import broadlink.exceptions as blke
 import pytest
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
+from homeassistant.components import dhcp
 from homeassistant.components.broadlink.const import DOMAIN
-from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
 from homeassistant.helpers import device_registry
 
 from . import get_device
@@ -825,7 +825,6 @@ async def test_flow_reauth_valid_host(hass):
 
 async def test_dhcp_can_finish(hass):
     """Test DHCP discovery flow can finish right away."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     device = get_device("Living Room")
     device.host = "1.2.3.4"
@@ -835,11 +834,11 @@ async def test_dhcp_can_finish(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data={
-                HOSTNAME: "broadlink",
-                IP_ADDRESS: "1.2.3.4",
-                MAC_ADDRESS: device_registry.format_mac(device.mac),
-            },
+            data=dhcp.DhcpServiceInfo(
+                hostname="broadlink",
+                ip="1.2.3.4",
+                macaddress=device_registry.format_mac(device.mac),
+            ),
         )
         await hass.async_block_till_done()
 
@@ -864,16 +863,16 @@ async def test_dhcp_can_finish(hass):
 
 async def test_dhcp_fails_to_connect(hass):
     """Test DHCP discovery flow that fails to connect."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     with patch(DEVICE_HELLO, side_effect=blke.NetworkTimeoutError()):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data={
-                HOSTNAME: "broadlink",
-                IP_ADDRESS: "1.2.3.4",
-                MAC_ADDRESS: "34:ea:34:b4:3b:5a",
-            },
+            data=dhcp.DhcpServiceInfo(
+                hostname="broadlink",
+                ip="1.2.3.4",
+                macaddress="34:ea:34:b4:3b:5a",
+            ),
         )
         await hass.async_block_till_done()
 
@@ -883,16 +882,16 @@ async def test_dhcp_fails_to_connect(hass):
 
 async def test_dhcp_unreachable(hass):
     """Test DHCP discovery flow that fails to connect."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     with patch(DEVICE_HELLO, side_effect=OSError(errno.ENETUNREACH, None)):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data={
-                HOSTNAME: "broadlink",
-                IP_ADDRESS: "1.2.3.4",
-                MAC_ADDRESS: "34:ea:34:b4:3b:5a",
-            },
+            data=dhcp.DhcpServiceInfo(
+                hostname="broadlink",
+                ip="1.2.3.4",
+                macaddress="34:ea:34:b4:3b:5a",
+            ),
         )
         await hass.async_block_till_done()
 
@@ -902,16 +901,16 @@ async def test_dhcp_unreachable(hass):
 
 async def test_dhcp_connect_unknown_error(hass):
     """Test DHCP discovery flow that fails to connect with an OSError."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     with patch(DEVICE_HELLO, side_effect=OSError()):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data={
-                HOSTNAME: "broadlink",
-                IP_ADDRESS: "1.2.3.4",
-                MAC_ADDRESS: "34:ea:34:b4:3b:5a",
-            },
+            data=dhcp.DhcpServiceInfo(
+                hostname="broadlink",
+                ip="1.2.3.4",
+                macaddress="34:ea:34:b4:3b:5a",
+            ),
         )
         await hass.async_block_till_done()
 
@@ -921,7 +920,7 @@ async def test_dhcp_connect_unknown_error(hass):
 
 async def test_dhcp_device_not_supported(hass):
     """Test DHCP discovery flow that fails because the device is not supported."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     device = get_device("Kitchen")
     mock_api = device.get_mock_api()
 
@@ -929,11 +928,11 @@ async def test_dhcp_device_not_supported(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data={
-                HOSTNAME: "broadlink",
-                IP_ADDRESS: device.host,
-                MAC_ADDRESS: device_registry.format_mac(device.mac),
-            },
+            data=dhcp.DhcpServiceInfo(
+                hostname="broadlink",
+                ip=device.host,
+                macaddress=device_registry.format_mac(device.mac),
+            ),
         )
 
     assert result["type"] == "abort"
@@ -942,7 +941,7 @@ async def test_dhcp_device_not_supported(hass):
 
 async def test_dhcp_already_exists(hass):
     """Test DHCP discovery flow that fails to connect."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     device = get_device("Living Room")
     mock_entry = device.get_mock_entry()
     mock_entry.add_to_hass(hass)
@@ -953,11 +952,11 @@ async def test_dhcp_already_exists(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data={
-                HOSTNAME: "broadlink",
-                IP_ADDRESS: "1.2.3.4",
-                MAC_ADDRESS: "34:ea:34:b4:3b:5a",
-            },
+            data=dhcp.DhcpServiceInfo(
+                hostname="broadlink",
+                ip="1.2.3.4",
+                macaddress="34:ea:34:b4:3b:5a",
+            ),
         )
         await hass.async_block_till_done()
 
@@ -967,7 +966,6 @@ async def test_dhcp_already_exists(hass):
 
 async def test_dhcp_updates_host(hass):
     """Test DHCP updates host."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     device = get_device("Living Room")
     device.host = "1.2.3.4"
@@ -979,11 +977,11 @@ async def test_dhcp_updates_host(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data={
-                HOSTNAME: "broadlink",
-                IP_ADDRESS: "4.5.6.7",
-                MAC_ADDRESS: "34:ea:34:b4:3b:5a",
-            },
+            data=dhcp.DhcpServiceInfo(
+                hostname="broadlink",
+                ip="4.5.6.7",
+                macaddress="34:ea:34:b4:3b:5a",
+            ),
         )
         await hass.async_block_till_done()
 
