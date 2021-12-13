@@ -64,6 +64,9 @@ async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
 
 async def get_media_source_devices(hass: HomeAssistant) -> Mapping[str, Device]:
     """Return a mapping of device id to eligible Nest event media devices."""
+    if DATA_SUBSCRIBER not in hass.data[DOMAIN]:
+        # Integration unloaded, or is legacy nest integration
+        return {}
     subscriber = hass.data[DOMAIN][DATA_SUBSCRIBER]
     device_manager = await subscriber.async_get_device_manager()
     device_registry = await hass.helpers.device_registry.async_get_registry()
