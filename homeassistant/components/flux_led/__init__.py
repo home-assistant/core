@@ -42,6 +42,7 @@ from homeassistant.util.network import is_ip_address
 
 from .const import (
     CONF_MINOR_VERSION,
+    CONF_MODEL,
     CONF_REMOTE_ACCESS_ENABLED,
     CONF_REMOTE_ACCESS_HOST,
     CONF_REMOTE_ACCESS_PORT,
@@ -60,6 +61,7 @@ CONF_TO_DISCOVERY: Final = {
     CONF_REMOTE_ACCESS_HOST: ATTR_REMOTE_ACCESS_HOST,
     CONF_REMOTE_ACCESS_PORT: ATTR_REMOTE_ACCESS_PORT,
     CONF_MINOR_VERSION: ATTR_VERSION_NUM,
+    CONF_MODEL: ATTR_MODEL,
 }
 
 _LOGGER = logging.getLogger(__name__)
