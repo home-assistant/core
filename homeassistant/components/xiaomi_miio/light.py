@@ -499,9 +499,16 @@ class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
         self._available = True
         self._state = state.is_on
         self._brightness = ceil((255 / 100.0) * state.brightness)
-        self._color_temp = self.translate(
-            state.color_temperature, CCT_MIN, CCT_MAX, self.max_mireds, self.min_mireds
-        )
+        # NOTE: this is a stop-gap fix for #61523 to avoid crashing
+        # when the backend library is not reporting color temp for a reason or another
+        if state.color_temperature is not None:
+            self._color_temp = self.translate(
+                state.color_temperature,
+                CCT_MIN,
+                CCT_MAX,
+                self.max_mireds,
+                self.min_mireds,
+            )
 
         delayed_turn_off = self.delayed_turn_off_timestamp(
             state.delay_off_countdown,
