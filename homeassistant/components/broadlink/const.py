@@ -32,6 +32,7 @@ DOMAINS_AND_TYPES = {
         "SP4B",
     },
     Platform.LIGHT: {"LB1", "LB2"},
+    Platform.CLIMATE: {"HYS"},
 }
 DEVICE_TYPES = set.union(*DOMAINS_AND_TYPES.values())
 
