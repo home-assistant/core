@@ -5,7 +5,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components.balboa.const import SIGNAL_UPDATE
 from homeassistant.components.climate.const import (
     ATTR_FAN_MODE,
     ATTR_HVAC_ACTION,
@@ -29,7 +28,6 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from . import init_integration
 
@@ -177,7 +175,7 @@ async def test_spa_hvac_action(hass: HomeAssistant, client: MagicMock) -> None:
 async def test_spa_preset_modes(hass: HomeAssistant, client: MagicMock) -> None:
     """Test the various preset modes."""
 
-    config_entry = await init_integration(hass)
+    await init_integration(hass)
 
     state = hass.states.get(ENTITY_CLIMATE)
     assert state
@@ -189,7 +187,7 @@ async def test_spa_preset_modes(hass: HomeAssistant, client: MagicMock) -> None:
     for mode in modelist:
         client.heatmode = modelist.index(mode)
         await common.async_set_preset_mode(hass, mode, ENTITY_CLIMATE)
-        async_dispatcher_send(hass, SIGNAL_UPDATE.format(config_entry.entry_id))
+        await client.new_data_cb()
         await hass.async_block_till_done()
 
         state = hass.states.get(ENTITY_CLIMATE)

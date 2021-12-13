@@ -1,14 +1,16 @@
 """Provide common fixtures."""
+from __future__ import annotations
+
+from collections.abc import Generator
 import time
-from typing import Generator
 from unittest.mock import MagicMock, patch
 
 from pybalboa.balboa import text_heatmode
 import pytest
 
 
-@pytest.fixture
-def client() -> Generator[None, MagicMock, None]:
+@pytest.fixture(name="client")
+def client_fixture() -> Generator[None, MagicMock, None]:
     """Mock balboa."""
     with patch(
         "homeassistant.components.balboa.BalboaSpaWifi", autospec=True
