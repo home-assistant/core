@@ -4,6 +4,7 @@
             "already_configured": "El Bridge ya est\u00e1 configurado",
             "already_in_progress": "El flujo de configuraci\u00f3n para el puente ya est\u00e1 en progreso.",
             "no_bridges": "No se descubrieron puentes deCONZ",
+            "no_hardware_available": "No hay hardware de radio conectado a deCONZ",
             "not_deconz_bridge": "No es un puente deCONZ",
             "updated_instance": "Instancia deCONZ actualizada con nueva direcci\u00f3n de host"
         },
@@ -41,6 +42,10 @@
             "button_2": "Segundo bot\u00f3n",
             "button_3": "Tercer bot\u00f3n",
             "button_4": "Cuarto bot\u00f3n",
+            "button_5": "Quinto bot\u00f3n",
+            "button_6": "Sexto bot\u00f3n",
+            "button_7": "S\u00e9ptimo bot\u00f3n",
+            "button_8": "Octavo bot\u00f3n",
             "close": "Cerrar",
             "dim_down": "Bajar la intensidad",
             "dim_up": "Aumentar intensidad",
@@ -65,6 +70,7 @@
             "remote_button_quadruple_press": "El bot\u00f3n \"{subtype}\" ha sido pulsado 4 veces",
             "remote_button_quintuple_press": "El bot\u00f3n \"{subtype}\" ha sido pulsado 5 veces",
             "remote_button_rotated": "Bot\u00f3n girado \"{subtype}\"",
+            "remote_button_rotated_fast": "Bot\u00f3n girado r\u00e1pidamente \"{subtype}\"",
             "remote_button_rotation_stopped": "Se detuvo la rotaci\u00f3n del bot\u00f3n \"{subtype}\"",
             "remote_button_short_press": "Se presion\u00f3 el bot\u00f3n \"{subtype}\"",
             "remote_button_short_release": "Se solt\u00f3 el bot\u00f3n \"{subtype}\"",
@@ -92,7 +98,8 @@
             "deconz_devices": {
                 "data": {
                     "allow_clip_sensor": "Permitir sensores deCONZ CLIP",
-                    "allow_deconz_groups": "Permitir grupos de luz deCONZ"
+                    "allow_deconz_groups": "Permitir grupos de luz deCONZ",
+                    "allow_new_devices": "Permitir la adici\u00f3n autom\u00e1tica de nuevos dispositivos"
                 },
                 "description": "Configurar la visibilidad de los tipos de dispositivos deCONZ",
                 "title": "Opciones de deCONZ"

@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from contextlib import suppress
 import datetime as dt
-from typing import Callable
 
 from httpx import RemoteProtocolError, TransportError
 from onvif import ONVIFCamera, ONVIFService
@@ -29,7 +29,9 @@ SUBSCRIPTION_ERRORS = (
 class EventManager:
     """ONVIF Event Manager."""
 
-    def __init__(self, hass: HomeAssistant, device: ONVIFCamera, unique_id: str):
+    def __init__(
+        self, hass: HomeAssistant, device: ONVIFCamera, unique_id: str
+    ) -> None:
         """Initialize event manager."""
         self.hass: HomeAssistant = hass
         self.device: ONVIFCamera = device
@@ -206,8 +208,7 @@ class EventManager:
                 continue
 
             topic = msg.Topic._value_1
-            parser = PARSERS.get(topic)
-            if not parser:
+            if not (parser := PARSERS.get(topic)):
                 if topic not in UNHANDLED_TOPICS:
                     LOGGER.info(
                         "No registered handler for event from %s: %s",

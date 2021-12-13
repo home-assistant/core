@@ -179,6 +179,20 @@ for i in [1, 2]:
     assert hass.states.is_state("hello.2", "world")
 
 
+async def test_using_enumerate(hass):
+    """Test that enumerate is accepted and executed."""
+    source = """
+for index, value in enumerate(["earth", "mars"]):
+    hass.states.set('hello.{}'.format(index), value)
+    """
+
+    hass.async_add_job(execute, hass, "test.py", source, {})
+    await hass.async_block_till_done()
+
+    assert hass.states.is_state("hello.0", "earth")
+    assert hass.states.is_state("hello.1", "mars")
+
+
 async def test_unpacking_sequence(hass, caplog):
     """Test compile error logs error."""
     caplog.set_level(logging.ERROR)

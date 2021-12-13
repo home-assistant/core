@@ -46,10 +46,10 @@ from .const import (
     DEBUG_COMP_BELLOWS,
     DEBUG_COMP_ZHA,
     DEBUG_COMP_ZIGPY,
-    DEBUG_COMP_ZIGPY_CC,
     DEBUG_COMP_ZIGPY_DECONZ,
     DEBUG_COMP_ZIGPY_XBEE,
     DEBUG_COMP_ZIGPY_ZIGATE,
+    DEBUG_COMP_ZIGPY_ZNP,
     DEBUG_LEVEL_CURRENT,
     DEBUG_LEVEL_ORIGINAL,
     DEBUG_LEVELS,
@@ -77,12 +77,7 @@ from .const import (
     ZHA_GW_MSG_RAW_INIT,
     RadioType,
 )
-from .device import (
-    CONSIDER_UNAVAILABLE_BATTERY,
-    CONSIDER_UNAVAILABLE_MAINS,
-    DeviceStatus,
-    ZHADevice,
-)
+from .device import DeviceStatus, ZHADevice
 from .group import GroupMember, ZHAGroup
 from .registries import GROUP_ENTITY_DOMAINS
 from .store import async_get_registry
@@ -179,23 +174,21 @@ class ZHAGateway:
         """Restore ZHA devices from zigpy application state."""
         for zigpy_device in self.application_controller.devices.values():
             zha_device = self._async_get_or_create_device(zigpy_device, restored=True)
-            if zha_device.nwk == 0x0000:
+            if zha_device.ieee == self.application_controller.ieee:
                 self.coordinator_zha_device = zha_device
             zha_dev_entry = self.zha_storage.devices.get(str(zigpy_device.ieee))
             delta_msg = "not known"
             if zha_dev_entry and zha_dev_entry.last_seen is not None:
                 delta = round(time.time() - zha_dev_entry.last_seen)
-                if zha_device.is_mains_powered:
-                    zha_device.available = delta < CONSIDER_UNAVAILABLE_MAINS
-                else:
-                    zha_device.available = delta < CONSIDER_UNAVAILABLE_BATTERY
+                zha_device.available = delta < zha_device.consider_unavailable_time
                 delta_msg = f"{str(timedelta(seconds=delta))} ago"
             _LOGGER.debug(
-                "[%s](%s) restored as '%s', last seen: %s",
+                "[%s](%s) restored as '%s', last seen: %s, consider_unavailable_time: %s seconds",
                 zha_device.nwk,
                 zha_device.name,
                 "available" if zha_device.available else "unavailable",
                 delta_msg,
+                zha_device.consider_unavailable_time,
             )
         # update the last seen time for devices every 10 minutes to avoid thrashing
         # writes and shutdown issues where storage isn't updated
@@ -224,20 +217,20 @@ class ZHAGateway:
 
         _LOGGER.debug("Loading battery powered devices")
         await asyncio.gather(
-            *[
+            *(
                 _throttle(dev, cached=True)
                 for dev in self.devices.values()
                 if not dev.is_mains_powered
-            ]
+            )
         )
 
         _LOGGER.debug("Loading mains powered devices")
         await asyncio.gather(
-            *[
+            *(
                 _throttle(dev, cached=False)
                 for dev in self.devices.values()
                 if dev.is_mains_powered
-            ]
+            )
         )
 
     def device_joined(self, device):
@@ -501,8 +494,7 @@ class ZHAGateway:
         self, zigpy_device: zha_typing.ZigpyDeviceType, restored: bool = False
     ):
         """Get or create a ZHA device."""
-        zha_device = self._devices.get(zigpy_device.ieee)
-        if zha_device is None:
+        if (zha_device := self._devices.get(zigpy_device.ieee)) is None:
             zha_device = ZHADevice.new(self._hass, zigpy_device, self, restored)
             self._devices[zigpy_device.ieee] = zha_device
             device_registry_device = self.ha_device_registry.async_get_or_create(
@@ -623,13 +615,15 @@ class ZHAGateway:
         zha_device.update_available(True)
 
     async def async_create_zigpy_group(
-        self, name: str, members: list[GroupMember]
+        self, name: str, members: list[GroupMember], group_id: int = None
     ) -> ZhaGroupType:
         """Create a new Zigpy Zigbee group."""
         # we start with two to fill any gaps from a user removing existing groups
-        group_id = 2
-        while group_id in self.groups:
-            group_id += 1
+
+        if group_id is None:
+            group_id = 2
+            while group_id in self.groups:
+                group_id += 1
 
         # guard against group already existing
         if self.async_get_group_by_name(name) is None:
@@ -654,8 +648,7 @@ class ZHAGateway:
 
     async def async_remove_zigpy_group(self, group_id: int) -> None:
         """Remove a Zigbee group from Zigpy."""
-        group = self.groups.get(group_id)
-        if not group:
+        if not (group := self.groups.get(group_id)):
             _LOGGER.debug("Group: %s:0x%04x could not be found", group.name, group_id)
             return
         if group.members:
@@ -694,7 +687,9 @@ def async_capture_log_levels():
         DEBUG_COMP_BELLOWS: logging.getLogger(DEBUG_COMP_BELLOWS).getEffectiveLevel(),
         DEBUG_COMP_ZHA: logging.getLogger(DEBUG_COMP_ZHA).getEffectiveLevel(),
         DEBUG_COMP_ZIGPY: logging.getLogger(DEBUG_COMP_ZIGPY).getEffectiveLevel(),
-        DEBUG_COMP_ZIGPY_CC: logging.getLogger(DEBUG_COMP_ZIGPY_CC).getEffectiveLevel(),
+        DEBUG_COMP_ZIGPY_ZNP: logging.getLogger(
+            DEBUG_COMP_ZIGPY_ZNP
+        ).getEffectiveLevel(),
         DEBUG_COMP_ZIGPY_DECONZ: logging.getLogger(
             DEBUG_COMP_ZIGPY_DECONZ
         ).getEffectiveLevel(),
@@ -713,7 +708,7 @@ def async_set_logger_levels(levels):
     logging.getLogger(DEBUG_COMP_BELLOWS).setLevel(levels[DEBUG_COMP_BELLOWS])
     logging.getLogger(DEBUG_COMP_ZHA).setLevel(levels[DEBUG_COMP_ZHA])
     logging.getLogger(DEBUG_COMP_ZIGPY).setLevel(levels[DEBUG_COMP_ZIGPY])
-    logging.getLogger(DEBUG_COMP_ZIGPY_CC).setLevel(levels[DEBUG_COMP_ZIGPY_CC])
+    logging.getLogger(DEBUG_COMP_ZIGPY_ZNP).setLevel(levels[DEBUG_COMP_ZIGPY_ZNP])
     logging.getLogger(DEBUG_COMP_ZIGPY_DECONZ).setLevel(levels[DEBUG_COMP_ZIGPY_DECONZ])
     logging.getLogger(DEBUG_COMP_ZIGPY_XBEE).setLevel(levels[DEBUG_COMP_ZIGPY_XBEE])
     logging.getLogger(DEBUG_COMP_ZIGPY_ZIGATE).setLevel(levels[DEBUG_COMP_ZIGPY_ZIGATE])

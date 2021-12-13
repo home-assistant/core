@@ -1,15 +1,19 @@
 """Provides the Canary DataUpdateCoordinator."""
+from __future__ import annotations
+
+from collections.abc import ValuesView
 from datetime import timedelta
 import logging
 
 from async_timeout import timeout
-from canary.api import Api
-from requests import ConnectTimeout, HTTPError
+from canary.api import Api, Location
+from requests.exceptions import ConnectTimeout, HTTPError
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
+from .model import CanaryData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 class CanaryDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching Canary data."""
 
-    def __init__(self, hass: HomeAssistant, *, api: Api):
+    def __init__(self, hass: HomeAssistant, *, api: Api) -> None:
         """Initialize global Canary data updater."""
         self.canary = api
         update_interval = timedelta(seconds=30)
@@ -29,10 +33,10 @@ class CanaryDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=update_interval,
         )
 
-    def _update_data(self) -> dict:
+    def _update_data(self) -> CanaryData:
         """Fetch data from Canary via sync functions."""
-        locations_by_id = {}
-        readings_by_device_id = {}
+        locations_by_id: dict[str, Location] = {}
+        readings_by_device_id: dict[str, ValuesView] = {}
 
         for location in self.canary.get_locations():
             location_id = location.location_id
@@ -49,7 +53,7 @@ class CanaryDataUpdateCoordinator(DataUpdateCoordinator):
             "readings": readings_by_device_id,
         }
 
-    async def _async_update_data(self) -> dict:
+    async def _async_update_data(self) -> CanaryData:
         """Fetch data from Canary."""
 
         try:

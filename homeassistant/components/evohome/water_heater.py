@@ -60,11 +60,6 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
         self._supported_features = SUPPORT_AWAY_MODE | SUPPORT_OPERATION_MODE
 
     @property
-    def state(self):
-        """Return the current state."""
-        return EVO_STATE_TO_HA[self._evo_device.stateStatus["state"]]
-
-    @property
     def current_operation(self) -> str:
         """Return the current operating mode (Auto, On, or Off)."""
         if self._evo_device.stateStatus["mode"] == EVO_FOLLOW:
@@ -111,6 +106,14 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
     async def async_turn_away_mode_off(self):
         """Turn away mode off."""
         await self._evo_broker.call_client_api(self._evo_device.set_dhw_auto())
+
+    async def async_turn_on(self):
+        """Turn on."""
+        await self._evo_broker.call_client_api(self._evo_device.set_dhw_on())
+
+    async def async_turn_off(self):
+        """Turn off."""
+        await self._evo_broker.call_client_api(self._evo_device.set_dhw_off())
 
     async def async_update(self) -> None:
         """Get the latest state data for a DHW controller."""

@@ -1,0 +1,69 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "La cuenta ya ha sido configurada"
+        },
+        "error": {
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
+            "unknown": "Error inesperado"
+        },
+        "step": {
+            "usb_config": {
+                "data": {
+                    "usb_path": "Ruta del dispositivo USB"
+                }
+            },
+            "usb_manual_config": {
+                "data": {
+                    "usb_manual_path": "Ruta del dispositivo USB"
+                }
+            },
+            "user": {
+                "data": {
+                    "email": "Correo electr\u00f3nico",
+                    "password": "Contrase\u00f1a"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "usb_config": {
+                "data": {
+                    "usb_path": "Ruta del dispositivo USB"
+                },
+                "description": "Seleccione el puerto serie del dispositivo USB Crownstone.\n\nBusque un dispositivo con VID 10C4 y PID EA60.",
+                "title": "Configuraci\u00f3n del dispositivo USB Crownstone"
+            },
+            "usb_config_option": {
+                "data": {
+                    "usb_path": "Ruta del dispositivo USB"
+                }
+            },
+            "usb_manual_config": {
+                "data": {
+                    "usb_manual_path": "Ruta del dispositivo USB"
+                },
+                "description": "Introduzca manualmente la ruta de un dispositivo USB Crownstone.",
+                "title": "Ruta manual del dispositivo USB Crownstone"
+            },
+            "usb_manual_config_option": {
+                "title": "Ruta manual del dispositivo USB Crownstone"
+            },
+            "usb_sphere_config": {
+                "data": {
+                    "usb_sphere": "Esfera Crownstone"
+                },
+                "description": "Selecciona una Esfera Crownstone donde se encuentra el USB.",
+                "title": "USB de Esfera Crownstone"
+            },
+            "usb_sphere_config_option": {
+                "data": {
+                    "usb_sphere": "Esfera Crownstone"
+                },
+                "description": "Selecciona una Esfera Crownstone donde se encuentra el USB.",
+                "title": "USB de Esfera Crownstone"
+            }
+        }
+    }
+}

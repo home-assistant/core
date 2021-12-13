@@ -9,7 +9,7 @@
             "snmp_error": "Server SNMP spento o stampante non supportata.",
             "wrong_host": "Nome host o indirizzo IP non valido."
         },
-        "flow_title": "Stampante Brother: {model} {serial_number}",
+        "flow_title": "{model} {serial_number}",
         "step": {
             "user": {
                 "data": {

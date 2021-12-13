@@ -6,19 +6,31 @@ from typing import Any
 import voluptuous as vol
 from wled import WLED, WLEDConnectionError
 
-from homeassistant.config_entries import SOURCE_ZEROCONF, ConfigFlow
+from homeassistant.components import zeroconf
+from homeassistant.config_entries import (
+    SOURCE_ZEROCONF,
+    ConfigEntry,
+    ConfigFlow,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .const import DOMAIN
+from .const import CONF_KEEP_MASTER_LIGHT, DEFAULT_KEEP_MASTER_LIGHT, DOMAIN
 
 
 class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a WLED config flow."""
 
     VERSION = 1
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> WLEDOptionsFlowHandler:
+        """Get the options flow for this handler."""
+        return WLEDOptionsFlowHandler(config_entry)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -27,25 +39,25 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
         return await self._handle_config_flow(user_input)
 
     async def async_step_zeroconf(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle zeroconf discovery."""
 
         # Hostname is format: wled-livingroom.local.
-        host = discovery_info["hostname"].rstrip(".")
+        host = discovery_info.hostname.rstrip(".")
         name, _ = host.rsplit(".")
 
         self.context.update(
             {
-                CONF_HOST: discovery_info["host"],
+                CONF_HOST: discovery_info.host,
                 CONF_NAME: name,
-                CONF_MAC: discovery_info["properties"].get(CONF_MAC),
+                CONF_MAC: discovery_info.properties.get(CONF_MAC),
                 "title_placeholders": {"name": name},
             }
         )
 
         # Prepare configuration flow
-        return await self._handle_config_flow(discovery_info, True)
+        return await self._handle_config_flow({}, True)
 
     async def async_step_zeroconf_confirm(
         self, user_input: dict[str, Any] | None = None
@@ -114,4 +126,33 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="zeroconf_confirm",
             description_placeholders={"name": name},
             errors=errors or {},
+        )
+
+
+class WLEDOptionsFlowHandler(OptionsFlow):
+    """Handle WLED options."""
+
+    def __init__(self, config_entry: ConfigEntry) -> None:
+        """Initialize WLED options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Manage WLED options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_KEEP_MASTER_LIGHT,
+                        default=self.config_entry.options.get(
+                            CONF_KEEP_MASTER_LIGHT, DEFAULT_KEEP_MASTER_LIGHT
+                        ),
+                    ): bool,
+                }
+            ),
         )

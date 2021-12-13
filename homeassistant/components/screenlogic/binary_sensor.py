@@ -1,6 +1,4 @@
 """Support for a ScreenLogic Binary Sensor."""
-import logging
-
 from screenlogicpy.const import DATA as SL_DATA, DEVICE_TYPE, EQUIPMENT, ON_OFF
 
 from homeassistant.components.binary_sensor import (
@@ -11,15 +9,13 @@ from homeassistant.components.binary_sensor import (
 from . import ScreenlogicEntity
 from .const import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
-
 SL_DEVICE_TYPE_TO_HA_DEVICE_CLASS = {DEVICE_TYPE.ALARM: DEVICE_CLASS_PROBLEM}
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up entry."""
     entities = []
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     # Generic binary sensor
     entities.append(ScreenLogicBinarySensor(coordinator, "chem_alarm"))

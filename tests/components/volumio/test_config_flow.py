@@ -2,6 +2,7 @@
 from unittest.mock import patch
 
 from homeassistant import config_entries
+from homeassistant.components import zeroconf
 from homeassistant.components.volumio.config_flow import CannotConnectError
 from homeassistant.components.volumio.const import DOMAIN
 
@@ -16,17 +17,20 @@ TEST_CONNECTION = {
 }
 
 
-TEST_DISCOVERY = {
-    "host": "1.1.1.1",
-    "port": 3000,
-    "properties": {"volumioName": "discovered", "UUID": "2222-2222-2222-2222"},
-}
+TEST_DISCOVERY = zeroconf.ZeroconfServiceInfo(
+    host="1.1.1.1",
+    hostname="mock_hostname",
+    name="mock_name",
+    port=3000,
+    properties={"volumioName": "discovered", "UUID": "2222-2222-2222-2222"},
+    type="mock_type",
+)
 
 TEST_DISCOVERY_RESULT = {
-    "host": TEST_DISCOVERY["host"],
-    "port": TEST_DISCOVERY["port"],
-    "id": TEST_DISCOVERY["properties"]["UUID"],
-    "name": TEST_DISCOVERY["properties"]["volumioName"],
+    "host": TEST_DISCOVERY.host,
+    "port": TEST_DISCOVERY.port,
+    "id": TEST_DISCOVERY.properties["UUID"],
+    "name": TEST_DISCOVERY.properties["volumioName"],
 }
 
 
@@ -242,7 +246,7 @@ async def test_discovery_updates_unique_id(hass):
             "name": "dummy",
             "id": TEST_DISCOVERY_RESULT["id"],
         },
-        state=config_entries.ENTRY_STATE_SETUP_RETRY,
+        state=config_entries.ConfigEntryState.SETUP_RETRY,
     )
 
     entry.add_to_hass(hass)

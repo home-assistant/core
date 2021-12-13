@@ -22,10 +22,10 @@ async def system_health_info(hass):
     health_info.update(await hass.data[DOMAIN]["resources"].async_get_info())
 
     dashboards_info = await asyncio.gather(
-        *[
+        *(
             hass.data[DOMAIN]["dashboards"][dashboard].async_get_info()
             for dashboard in hass.data[DOMAIN]["dashboards"]
-        ]
+        )
     )
 
     modes = set()
@@ -38,7 +38,9 @@ async def system_health_info(hass):
             else:
                 health_info[key] = dashboard[key]
 
-    if MODE_STORAGE in modes:
+    if hass.data[DOMAIN][CONF_MODE] == MODE_YAML:
+        health_info[CONF_MODE] = MODE_YAML
+    elif MODE_STORAGE in modes:
         health_info[CONF_MODE] = MODE_STORAGE
     elif MODE_YAML in modes:
         health_info[CONF_MODE] = MODE_YAML

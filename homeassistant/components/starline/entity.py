@@ -1,7 +1,7 @@
 """StarLine base entity."""
 from __future__ import annotations
 
-from typing import Callable
+from collections.abc import Callable
 
 from homeassistant.helpers.entity import Entity
 
@@ -13,7 +13,7 @@ class StarlineEntity(Entity):
 
     def __init__(
         self, account: StarlineAccount, device: StarlineDevice, key: str, name: str
-    ):
+    ) -> None:
         """Initialize StarLine entity."""
         self._account = account
         self._device = device

@@ -1,6 +1,7 @@
 """Support for Timers."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
 
@@ -188,7 +189,7 @@ class TimerStorageCollection(collection.StorageCollection):
 class Timer(RestoreEntity):
     """Representation of a timer."""
 
-    def __init__(self, config: dict):
+    def __init__(self, config: dict) -> None:
         """Initialize a timer."""
         self._config: dict = config
         self.editable: bool = True
@@ -196,7 +197,7 @@ class Timer(RestoreEntity):
         self._duration = cv.time_period_str(config[CONF_DURATION])
         self._remaining: timedelta | None = None
         self._end: datetime | None = None
-        self._listener = None
+        self._listener: Callable[[], None] | None = None
 
     @classmethod
     def from_yaml(cls, config: dict) -> Timer:
@@ -270,7 +271,7 @@ class Timer(RestoreEntity):
             newduration = duration
 
         event = EVENT_TIMER_STARTED
-        if self._state == STATUS_ACTIVE or self._state == STATUS_PAUSED:
+        if self._state in (STATUS_ACTIVE, STATUS_PAUSED):
             event = EVENT_TIMER_RESTARTED
 
         self._state = STATUS_ACTIVE

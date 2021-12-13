@@ -17,5 +17,16 @@
                 "title": "Fill in your information"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "from_window": "Starting UV index for the protection window",
+                    "to_window": "Ending UV index for the protection window"
+                },
+                "title": "Configure OpenUV"
+            }
+        }
     }
 }

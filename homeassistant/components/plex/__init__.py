@@ -14,7 +14,7 @@ from plexwebsocket import (
 import requests.exceptions
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
-from homeassistant.config_entries import ENTRY_STATE_SETUP_RETRY
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_URL, CONF_VERIFY_SSL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -107,7 +107,7 @@ async def async_setup_entry(hass, entry):
             entry, data={**entry.data, PLEX_SERVER_CONFIG: new_server_data}
         )
     except requests.exceptions.ConnectionError as error:
-        if entry.state != ENTRY_STATE_SETUP_RETRY:
+        if entry.state is not ConfigEntryState.SETUP_RETRY:
             _LOGGER.error(
                 "Plex server (%s) could not be reached: [%s]",
                 server_config[CONF_URL],

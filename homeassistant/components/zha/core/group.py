@@ -33,7 +33,7 @@ class ZHAGroupMember(LogMixin):
 
     def __init__(
         self, zha_group: ZhaGroupType, zha_device: ZhaDeviceType, endpoint_id: int
-    ):
+    ) -> None:
         """Initialize the group member."""
         self._zha_group: ZhaGroupType = zha_group
         self._zha_device: ZhaDeviceType = zha_device
@@ -116,7 +116,7 @@ class ZHAGroup(LogMixin):
         hass: HomeAssistant,
         zha_gateway: ZhaGatewayType,
         zigpy_group: ZigpyGroupType,
-    ):
+    ) -> None:
         """Initialize the group."""
         self.hass: HomeAssistant = hass
         self._zigpy_group: ZigpyGroupType = zigpy_group

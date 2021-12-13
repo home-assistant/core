@@ -31,6 +31,9 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import light
+from homeassistant.components.mqtt.light.schema_basic import (
+    MQTT_LIGHT_ATTRIBUTES_BLOCKED,
+)
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_SUPPORTED_FEATURES,
@@ -59,6 +62,7 @@ from .test_common import (
     help_test_entity_id_update_subscriptions,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
+    help_test_setting_blocked_attribute_via_mqtt_json_message,
     help_test_unique_id,
     help_test_update_with_json_attrs_bad_JSON,
     help_test_update_with_json_attrs_not_dict,
@@ -870,6 +874,13 @@ async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
     )
 
 
+async def test_setting_blocked_attribute_via_mqtt_json_message(hass, mqtt_mock):
+    """Test the setting of attribute via MQTT with JSON payload."""
+    await help_test_setting_blocked_attribute_via_mqtt_json_message(
+        hass, mqtt_mock, light.DOMAIN, DEFAULT_CONFIG, MQTT_LIGHT_ATTRIBUTES_BLOCKED
+    )
+
+
 async def test_setting_attribute_with_template(hass, mqtt_mock):
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_with_template(
@@ -939,24 +950,24 @@ async def test_discovery_removal(hass, mqtt_mock, caplog):
 
 async def test_discovery_update_light(hass, mqtt_mock, caplog):
     """Test update of discovered light."""
-    data1 = (
-        '{ "name": "Beer",'
-        '  "schema": "template",'
-        '  "state_topic": "test_topic",'
-        '  "command_topic": "test_topic",'
-        '  "command_on_template": "on",'
-        '  "command_off_template": "off"}'
-    )
-    data2 = (
-        '{ "name": "Milk",'
-        '  "schema": "template",'
-        '  "state_topic": "test_topic",'
-        '  "command_topic": "test_topic",'
-        '  "command_on_template": "on",'
-        '  "command_off_template": "off"}'
-    )
+    config1 = {
+        "name": "Beer",
+        "schema": "template",
+        "state_topic": "test_topic",
+        "command_topic": "test_topic",
+        "command_on_template": "on",
+        "command_off_template": "off",
+    }
+    config2 = {
+        "name": "Milk",
+        "schema": "template",
+        "state_topic": "test_topic",
+        "command_topic": "test_topic",
+        "command_on_template": "on",
+        "command_off_template": "off",
+    }
     await help_test_discovery_update(
-        hass, mqtt_mock, caplog, light.DOMAIN, data1, data2
+        hass, mqtt_mock, caplog, light.DOMAIN, config1, config2
     )
 
 

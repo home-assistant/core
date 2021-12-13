@@ -1,4 +1,6 @@
 """Real-time information about public transport departures in Norway."""
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 
 from enturclient import EnturPublicTransportData
@@ -150,15 +152,17 @@ class EnturProxy:
 class EnturPublicTransportSensor(SensorEntity):
     """Implementation of a Entur public transport sensor."""
 
-    def __init__(self, api: EnturProxy, name: str, stop: str, show_on_map: bool):
+    def __init__(
+        self, api: EnturProxy, name: str, stop: str, show_on_map: bool
+    ) -> None:
         """Initialize the sensor."""
         self.api = api
         self._stop = stop
         self._show_on_map = show_on_map
         self._name = name
-        self._state = None
+        self._state: int | None = None
         self._icon = ICONS[DEFAULT_ICON_KEY]
-        self._attributes = {}
+        self._attributes: dict[str, str] = {}
 
     @property
     def name(self) -> str:
@@ -166,7 +170,7 @@ class EnturPublicTransportSensor(SensorEntity):
         return self._name
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> int | None:
         """Return the state of the sensor."""
         return self._state
 
@@ -178,7 +182,7 @@ class EnturPublicTransportSensor(SensorEntity):
         return self._attributes
 
     @property
-    def unit_of_measurement(self) -> str:
+    def native_unit_of_measurement(self) -> str:
         """Return the unit this state is expressed in."""
         return TIME_MINUTES
 
@@ -193,7 +197,7 @@ class EnturPublicTransportSensor(SensorEntity):
 
         self._attributes = {}
 
-        data = self.api.get_stop_info(self._stop)
+        data: EnturPublicTransportData = self.api.get_stop_info(self._stop)
         if data is None:
             self._state = None
             return
@@ -202,8 +206,7 @@ class EnturPublicTransportSensor(SensorEntity):
             self._attributes[CONF_LATITUDE] = data.latitude
             self._attributes[CONF_LONGITUDE] = data.longitude
 
-        calls = data.estimated_calls
-        if not calls:
+        if not (calls := data.estimated_calls):
             self._state = None
             return
 

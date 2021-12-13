@@ -10,8 +10,9 @@ from tesla_powerwall import (
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.components.dhcp import IP_ADDRESS
+from homeassistant.components import dhcp
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
 
@@ -21,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 def _login_and_fetch_site_info(power_wall: Powerwall, password: str):
     """Login to the powerwall and fetch the base info."""
     if password is not None:
-        power_wall.login("", password)
+        power_wall.login(password)
     power_wall.detect_and_pin_version()
     return power_wall.get_site_info()
 
@@ -57,11 +58,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the powerwall flow."""
         self.ip_address = None
 
-    async def async_step_dhcp(self, discovery_info):
+    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle dhcp discovery."""
-        self.ip_address = discovery_info[IP_ADDRESS]
+        self.ip_address = discovery_info.ip
         self._async_abort_entries_match({CONF_IP_ADDRESS: self.ip_address})
-        self.ip_address = discovery_info[IP_ADDRESS]
         self.context["title_placeholders"] = {CONF_IP_ADDRESS: self.ip_address}
         return await self.async_step_user()
 

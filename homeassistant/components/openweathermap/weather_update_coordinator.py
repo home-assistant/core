@@ -21,6 +21,7 @@ from homeassistant.components.weather import (
 from homeassistant.helpers import sun
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt
+from homeassistant.util.temperature import kelvin_to_celsius
 
 from .const import (
     ATTR_API_CLOUDS,
@@ -72,7 +73,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self):
         data = {}
-        with async_timeout.timeout(20):
+        async with async_timeout.timeout(20):
             try:
                 weather_response = await self._get_owm_weather()
                 data = self._convert_weather_response(weather_response)
@@ -82,9 +83,9 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
 
     async def _get_owm_weather(self):
         """Poll weather data from OWM."""
-        if (
-            self._forecast_mode == FORECAST_MODE_ONECALL_HOURLY
-            or self._forecast_mode == FORECAST_MODE_ONECALL_DAILY
+        if self._forecast_mode in (
+            FORECAST_MODE_ONECALL_HOURLY,
+            FORECAST_MODE_ONECALL_DAILY,
         ):
             weather = await self.hass.async_add_executor_job(
                 self._owm_client.one_call, self._latitude, self._longitude
@@ -167,6 +168,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             ATTR_FORECAST_CONDITION: self._get_condition(
                 entry.weather_code, entry.reference_time("unix")
             ),
+            ATTR_API_CLOUDS: entry.clouds,
         }
 
         temperature_dict = entry.temperature("celsius")
@@ -181,7 +183,7 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
     @staticmethod
     def _fmt_dewpoint(dewpoint):
         if dewpoint is not None:
-            return round(dewpoint / 100, 1)
+            return round(kelvin_to_celsius(dewpoint), 1)
         return None
 
     @staticmethod
@@ -189,6 +191,8 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         """Get rain data from weather data."""
         if "all" in rain:
             return round(rain["all"], 2)
+        if "3h" in rain:
+            return round(rain["3h"], 2)
         if "1h" in rain:
             return round(rain["1h"], 2)
         return 0
@@ -199,6 +203,8 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
         if snow:
             if "all" in snow:
                 return round(snow["all"], 2)
+            if "3h" in snow:
+                return round(snow["3h"], 2)
             if "1h" in snow:
                 return round(snow["1h"], 2)
         return 0

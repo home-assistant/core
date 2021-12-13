@@ -44,7 +44,9 @@ RESPONSE_SCHEMA = vol.Schema(
 class Updater:
     """Updater class for data exchange."""
 
-    def __init__(self, update_available: bool, newest_version: str, release_notes: str):
+    def __init__(
+        self, update_available: bool, newest_version: str, release_notes: str
+    ) -> None:
         """Initialize attributes."""
         self.update_available = update_available
         self.release_notes = release_notes
@@ -123,7 +125,7 @@ async def get_newest_version(hass):
     """Get the newest Home Assistant version."""
     session = async_get_clientsession(hass)
 
-    with async_timeout.timeout(30):
+    async with async_timeout.timeout(30):
         req = await session.get(UPDATER_URL)
 
     try:

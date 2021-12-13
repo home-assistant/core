@@ -1,5 +1,6 @@
 """Support for Spider switches."""
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.helpers.entity import DeviceInfo
 
 from .const import DOMAIN
 
@@ -24,14 +25,15 @@ class SpiderPowerPlug(SwitchEntity):
         self.power_plug = power_plug
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device_info of the device."""
-        return {
-            "identifiers": {(DOMAIN, self.power_plug.id)},
-            "name": self.power_plug.name,
-            "manufacturer": self.power_plug.manufacturer,
-            "model": self.power_plug.model,
-        }
+        return DeviceInfo(
+            configuration_url="https://mijn.ithodaalderop.nl/",
+            identifiers={(DOMAIN, self.power_plug.id)},
+            manufacturer=self.power_plug.manufacturer,
+            model=self.power_plug.model,
+            name=self.power_plug.name,
+        )
 
     @property
     def unique_id(self):
@@ -42,16 +44,6 @@ class SpiderPowerPlug(SwitchEntity):
     def name(self):
         """Return the name of the switch if any."""
         return self.power_plug.name
-
-    @property
-    def current_power_w(self):
-        """Return the current power usage in W."""
-        return round(self.power_plug.current_energy_consumption)
-
-    @property
-    def today_energy_kwh(self):
-        """Return the current power usage in Kwh."""
-        return round(self.power_plug.today_energy_consumption / 1000, 2)
 
     @property
     def is_on(self):
@@ -73,4 +65,4 @@ class SpiderPowerPlug(SwitchEntity):
 
     def update(self):
         """Get the latest data."""
-        self.power_plug = self.api.get_power_plug(self.unique_id)
+        self.power_plug = self.api.get_power_plug(self.power_plug.id)

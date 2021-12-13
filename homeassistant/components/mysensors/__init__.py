@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from functools import partial
 import logging
-from typing import Callable
 
 from mysensors import BaseAsyncGateway
 import voluptuous as vol
@@ -40,9 +40,10 @@ from .const import (
     MYSENSORS_ON_UNLOAD,
     PLATFORMS_WITH_ENTRY_SUPPORT,
     DevId,
+    DiscoveryInfo,
     SensorType,
 )
-from .device import MySensorsDevice, MySensorsEntity, get_mysensors_devices
+from .device import MySensorsDevice, get_mysensors_devices
 from .gateway import finish_setup, get_mysensors_gateway, gw_stop, setup_gateway
 from .helpers import on_unload
 
@@ -61,8 +62,7 @@ DEFAULT_VERSION = "1.4"
 def set_default_persistence_file(value: dict) -> dict:
     """Set default persistence file."""
     for idx, gateway in enumerate(value):
-        fil = gateway.get(CONF_PERSISTENCE_FILE)
-        if fil is not None:
+        if gateway.get(CONF_PERSISTENCE_FILE) is not None:
             continue
         new_name = f"mysensors{idx + 1}.pickle"
         gateway[CONF_PERSISTENCE_FILE] = new_name
@@ -70,7 +70,7 @@ def set_default_persistence_file(value: dict) -> dict:
     return value
 
 
-def has_all_unique_files(value):
+def has_all_unique_files(value: list[dict]) -> list[dict]:
     """Validate that all persistence files are unique and set if any is set."""
     persistence_files = [gateway[CONF_PERSISTENCE_FILE] for gateway in value]
     schema = vol.Schema(vol.Unique())
@@ -78,17 +78,17 @@ def has_all_unique_files(value):
     return value
 
 
-def is_persistence_file(value):
+def is_persistence_file(value: str) -> str:
     """Validate that persistence file path ends in either .pickle or .json."""
     if value.endswith((".json", ".pickle")):
         return value
     raise vol.Invalid(f"{value} does not end in either `.json` or `.pickle`")
 
 
-def deprecated(key):
+def deprecated(key: str) -> Callable[[dict], dict]:
     """Mark key as deprecated in configuration."""
 
-    def validator(config):
+    def validator(config: dict) -> dict:
         """Check if key is in config, log warning and remove key."""
         if key not in config:
             return config
@@ -218,7 +218,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass_config=hass.data[DOMAIN][DATA_HASS_CONFIG],
         )
 
-        await on_unload(
+        on_unload(
             hass,
             entry.entry_id,
             async_dispatcher_connect(
@@ -230,10 +230,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def finish() -> None:
         await asyncio.gather(
-            *[
+            *(
                 hass.config_entries.async_forward_entry_setup(entry, platform)
                 for platform in PLATFORMS_WITH_ENTRY_SUPPORT
-            ]
+            )
         )
         await finish_setup(hass, entry, gateway)
 
@@ -270,8 +270,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 def setup_mysensors_platform(
     hass: HomeAssistant,
     domain: str,  # hass platform name
-    discovery_info: dict[str, list[DevId]],
-    device_class: type[MySensorsDevice] | dict[SensorType, type[MySensorsEntity]],
+    discovery_info: DiscoveryInfo,
+    device_class: type[MySensorsDevice] | dict[SensorType, type[MySensorsDevice]],
     device_args: (
         None | tuple
     ) = None,  # extra arguments that will be given to the entity constructor
@@ -302,11 +302,13 @@ def setup_mysensors_platform(
         if not gateway:
             _LOGGER.warning("Skipping setup of %s, no gateway found", dev_id)
             continue
-        device_class_copy = device_class
+
         if isinstance(device_class, dict):
             child = gateway.sensors[node_id].children[child_id]
             s_type = gateway.const.Presentation(child.type).name
             device_class_copy = device_class[s_type]
+        else:
+            device_class_copy = device_class
 
         args_copy = (*device_args, gateway_id, gateway, node_id, child_id, value_type)
         devices[dev_id] = device_class_copy(*args_copy)

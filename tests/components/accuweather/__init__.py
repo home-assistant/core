@@ -1,6 +1,6 @@
 """Tests for AccuWeather."""
 import json
-from unittest.mock import patch
+from unittest.mock import PropertyMock, patch
 
 from homeassistant.components.accuweather.const import DOMAIN
 
@@ -40,6 +40,10 @@ async def init_integration(
     ), patch(
         "homeassistant.components.accuweather.AccuWeather.async_get_forecast",
         return_value=forecast,
+    ), patch(
+        "homeassistant.components.accuweather.AccuWeather.requests_remaining",
+        new_callable=PropertyMock,
+        return_value=10,
     ):
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)

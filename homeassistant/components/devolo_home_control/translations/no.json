@@ -1,10 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Kontoen er allerede konfigurert"
+            "already_configured": "Kontoen er allerede konfigurert",
+            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
         },
         "error": {
-            "invalid_auth": "Ugyldig godkjenning"
+            "invalid_auth": "Ugyldig godkjenning",
+            "reauth_failed": "Bruk samme mydevolo-bruker som f\u00f8r."
         },
         "step": {
             "user": {

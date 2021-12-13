@@ -1,6 +1,7 @@
 {
   "domain": "ee_brightbox",
   "name": "EE Bright Box",
+  "disabled": "Library has incompatible requirements.",
   "documentation": "https://www.home-assistant.io/integrations/ee_brightbox",
   "requirements": ["eebrightbox==0.0.4"],
   "codeowners": [],

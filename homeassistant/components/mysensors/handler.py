@@ -27,8 +27,7 @@ async def handle_internal(
 ) -> None:
     """Handle a mysensors internal message."""
     internal = msg.gateway.const.Internal(msg.sub_type)
-    handler = HANDLERS.get(internal.name)
-    if handler is None:
+    if (handler := HANDLERS.get(internal.name)) is None:
         return
     await handler(hass, gateway_id, msg)
 
@@ -68,7 +67,7 @@ async def handle_sketch_version(
 @callback
 def _handle_child_update(
     hass: HomeAssistant, gateway_id: GatewayId, validated: dict[str, list[DevId]]
-):
+) -> None:
     """Handle a child update."""
     signals: list[str] = []
 
@@ -91,7 +90,9 @@ def _handle_child_update(
 
 
 @callback
-def _handle_node_update(hass: HomeAssistant, gateway_id: GatewayId, msg: Message):
+def _handle_node_update(
+    hass: HomeAssistant, gateway_id: GatewayId, msg: Message
+) -> None:
     """Handle a node update."""
     signal = NODE_CALLBACK.format(gateway_id, msg.node_id)
     async_dispatcher_send(hass, signal)

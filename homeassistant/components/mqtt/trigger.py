@@ -10,16 +10,12 @@ from homeassistant.core import HassJob, callback
 from homeassistant.helpers import config_validation as cv, template
 
 from .. import mqtt
+from .const import CONF_ENCODING, CONF_QOS, CONF_TOPIC, DEFAULT_ENCODING, DEFAULT_QOS
 
 # mypy: allow-untyped-defs
 
-CONF_ENCODING = "encoding"
-CONF_QOS = "qos"
-CONF_TOPIC = "topic"
-DEFAULT_ENCODING = "utf-8"
-DEFAULT_QOS = 0
 
-TRIGGER_SCHEMA = vol.Schema(
+TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_PLATFORM): mqtt.DOMAIN,
         vol.Required(CONF_TOPIC): mqtt.util.valid_subscribe_topic_template,
@@ -37,7 +33,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_attach_trigger(hass, config, action, automation_info):
     """Listen for state changes based on configuration."""
-    trigger_id = automation_info.get("trigger_id") if automation_info else None
+    trigger_data = automation_info["trigger_data"]
     topic = config[CONF_TOPIC]
     wanted_payload = config.get(CONF_PAYLOAD)
     value_template = config.get(CONF_VALUE_TEMPLATE)
@@ -74,12 +70,12 @@ async def async_attach_trigger(hass, config, action, automation_info):
 
         if wanted_payload is None or wanted_payload == payload:
             data = {
+                **trigger_data,
                 "platform": "mqtt",
                 "topic": mqttmsg.topic,
                 "payload": mqttmsg.payload,
                 "qos": mqttmsg.qos,
                 "description": f"mqtt topic {mqttmsg.topic}",
-                "id": trigger_id,
             }
 
             with suppress(ValueError):

@@ -53,10 +53,13 @@ class VerisureSmartcam(CoordinatorEntity, Camera):
         coordinator: VerisureDataUpdateCoordinator,
         serial_number: str,
         directory_path: str,
-    ):
+    ) -> None:
         """Initialize Verisure File Camera component."""
         super().__init__(coordinator)
         Camera.__init__(self)
+
+        self._attr_name = coordinator.data["cameras"][serial_number]["area"]
+        self._attr_unique_id = serial_number
 
         self.serial_number = serial_number
         self._directory_path = directory_path
@@ -64,29 +67,22 @@ class VerisureSmartcam(CoordinatorEntity, Camera):
         self._image_id = None
 
     @property
-    def name(self) -> str:
-        """Return the name of this entity."""
-        return self.coordinator.data["cameras"][self.serial_number]["area"]
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this entity."""
-        return self.serial_number
-
-    @property
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         area = self.coordinator.data["cameras"][self.serial_number]["area"]
-        return {
-            "name": area,
-            "suggested_area": area,
-            "manufacturer": "Verisure",
-            "model": "SmartCam",
-            "identifiers": {(DOMAIN, self.serial_number)},
-            "via_device": (DOMAIN, self.coordinator.entry.data[CONF_GIID]),
-        }
+        return DeviceInfo(
+            name=area,
+            suggested_area=area,
+            manufacturer="Verisure",
+            model="SmartCam",
+            identifiers={(DOMAIN, self.serial_number)},
+            via_device=(DOMAIN, self.coordinator.entry.data[CONF_GIID]),
+            configuration_url="https://mypages.verisure.com",
+        )
 
-    def camera_image(self) -> bytes | None:
+    def camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return image response."""
         self.check_imagelist()
         if not self._image:

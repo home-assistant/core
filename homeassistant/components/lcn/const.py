@@ -3,12 +3,23 @@ from itertools import product
 
 from homeassistant.const import (
     DEGREE,
+    ELECTRIC_POTENTIAL_VOLT,
     PERCENTAGE,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
     TEMP_KELVIN,
-    VOLT,
+    Platform,
 )
+
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.LIGHT,
+    Platform.SCENE,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 DOMAIN = "lcn"
 DATA_LCN = "lcn"
@@ -169,7 +180,7 @@ VAR_UNITS = [
     "PERCENT",
     "PPM",
     "VOLT",
-    VOLT,
+    ELECTRIC_POTENTIAL_VOLT,
     "AMPERE",
     "AMP",
     "A",
@@ -180,6 +191,35 @@ VAR_UNITS = [
 RELVARREF = ["CURRENT", "PROG"]
 
 SENDKEYCOMMANDS = ["HIT", "MAKE", "BREAK", "DONTSEND"]
+
+SENDKEYS = [
+    "A1",
+    "A2",
+    "A3",
+    "A4",
+    "A5",
+    "A6",
+    "A7",
+    "A8",
+    "B1",
+    "B2",
+    "B3",
+    "B4",
+    "B5",
+    "B6",
+    "B7",
+    "B8",
+    "C1",
+    "C2",
+    "C3",
+    "C4",
+    "C5",
+    "C6",
+    "C7",
+    "C8",
+]
+
+KEY_ACTIONS = ["HIT", "MAKE", "BREAK"]
 
 TIME_UNITS = [
     "SECONDS",

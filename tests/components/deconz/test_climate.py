@@ -347,7 +347,7 @@ async def test_climate_device_with_cooling_support(
             "0": {
                 "config": {
                     "battery": 25,
-                    "coolsetpoint": None,
+                    "coolsetpoint": 1111,
                     "fanmode": None,
                     "heatsetpoint": 2222,
                     "mode": "heat",
@@ -398,8 +398,10 @@ async def test_climate_device_with_cooling_support(
     }
     await mock_deconz_websocket(data=event_changed_sensor)
     await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     assert hass.states.get("climate.zen_01").state == HVAC_MODE_COOL
+    assert hass.states.get("climate.zen_01").attributes["temperature"] == 11.1
 
     # Verify service calls
 

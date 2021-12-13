@@ -5,15 +5,6 @@ from googlemaps.exceptions import ApiError
 import pytest
 
 
-@pytest.fixture(name="skip_notifications", autouse=True)
-def skip_notifications_fixture():
-    """Skip notification calls."""
-    with patch("homeassistant.components.persistent_notification.async_create"), patch(
-        "homeassistant.components.persistent_notification.async_dismiss"
-    ):
-        yield
-
-
 @pytest.fixture(name="validate_config_entry")
 def validate_config_entry_fixture():
     """Return valid config entry."""
@@ -32,6 +23,16 @@ def bypass_setup_fixture():
     """Bypass entry setup."""
     with patch(
         "homeassistant.components.google_travel_time.async_setup_entry",
+        return_value=True,
+    ):
+        yield
+
+
+@pytest.fixture(name="bypass_platform_setup")
+def bypass_platform_setup_fixture():
+    """Bypass platform setup."""
+    with patch(
+        "homeassistant.components.google_travel_time.sensor.async_setup_entry",
         return_value=True,
     ):
         yield

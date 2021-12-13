@@ -61,7 +61,7 @@ class DexcomConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class DexcomOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle a option flow for Dexcom."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 

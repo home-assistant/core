@@ -1,30 +1,33 @@
 """Support for AVM FRITZ!SmartHome devices."""
 from __future__ import annotations
 
-from datetime import timedelta
-
 from pyfritzhome import Fritzhome, FritzhomeDevice, LoginError
-import requests
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_ENTITY_ID,
-    ATTR_NAME,
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
+    TEMP_CELSIUS,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.entity import DeviceInfo, EntityDescription
+from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_CONNECTIONS, CONF_COORDINATOR, DOMAIN, LOGGER, PLATFORMS
+from .const import (
+    ATTR_STATE_DEVICE_LOCKED,
+    ATTR_STATE_LOCKED,
+    CONF_CONNECTIONS,
+    CONF_COORDINATOR,
+    DOMAIN,
+    LOGGER,
+    PLATFORMS,
+)
+from .coordinator import FritzboxDataUpdateCoordinator
+from .model import FritzExtraAttributes
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -45,43 +48,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         CONF_CONNECTIONS: fritz,
     }
 
-    def _update_fritz_devices() -> dict[str, FritzhomeDevice]:
-        """Update all fritzbox device data."""
-        try:
-            devices = fritz.get_devices()
-        except requests.exceptions.HTTPError:
-            # If the device rebooted, login again
-            try:
-                fritz.login()
-            except requests.exceptions.HTTPError as ex:
-                raise ConfigEntryAuthFailed from ex
-            devices = fritz.get_devices()
-
-        data = {}
-        for device in devices:
-            device.update()
-            data[device.ain] = device
-        return data
-
-    async def async_update_coordinator():
-        """Fetch all device data."""
-        return await hass.async_add_executor_job(_update_fritz_devices)
-
-    hass.data[DOMAIN][entry.entry_id][
-        CONF_COORDINATOR
-    ] = coordinator = DataUpdateCoordinator(
-        hass,
-        LOGGER,
-        name=f"{entry.entry_id}",
-        update_method=async_update_coordinator,
-        update_interval=timedelta(seconds=30),
-    )
+    coordinator = FritzboxDataUpdateCoordinator(hass, entry)
 
     await coordinator.async_config_entry_first_refresh()
 
+    hass.data[DOMAIN][entry.entry_id][CONF_COORDINATOR] = coordinator
+
+    def _update_unique_id(entry: RegistryEntry) -> dict[str, str] | None:
+        """Update unique ID of entity entry."""
+        if (
+            entry.unit_of_measurement == TEMP_CELSIUS
+            and "_temperature" not in entry.unique_id
+        ):
+            new_unique_id = f"{entry.unique_id}_temperature"
+            LOGGER.info(
+                "Migrating unique_id [%s] to [%s]", entry.unique_id, new_unique_id
+            )
+            return {"new_unique_id": new_unique_id}
+        return None
+
+    await async_migrate_entries(hass, entry.entry_id, _update_unique_id)
+
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
-    def logout_fritzbox(event):
+    def logout_fritzbox(event: Event) -> None:
         """Close connections to this fritzbox."""
         fritz.logout()
 
@@ -107,20 +97,30 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class FritzBoxEntity(CoordinatorEntity):
     """Basis FritzBox entity."""
 
+    coordinator: FritzboxDataUpdateCoordinator
+
     def __init__(
         self,
-        entity_info: dict[str, str],
-        coordinator: DataUpdateCoordinator,
+        coordinator: FritzboxDataUpdateCoordinator,
         ain: str,
-    ):
+        entity_description: EntityDescription | None = None,
+    ) -> None:
         """Initialize the FritzBox entity."""
         super().__init__(coordinator)
 
         self.ain = ain
-        self._name = entity_info[ATTR_NAME]
-        self._unique_id = entity_info[ATTR_ENTITY_ID]
-        self._unit_of_measurement = entity_info[ATTR_UNIT_OF_MEASUREMENT]
-        self._device_class = entity_info[ATTR_DEVICE_CLASS]
+        if entity_description is not None:
+            self.entity_description = entity_description
+            self._attr_name = f"{self.device.name} {entity_description.name}"
+            self._attr_unique_id = f"{ain}_{entity_description.key}"
+        else:
+            self._attr_name = self.device.name
+            self._attr_unique_id = ain
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and self.device.present
 
     @property
     def device(self) -> FritzhomeDevice:
@@ -128,32 +128,21 @@ class FritzBoxEntity(CoordinatorEntity):
         return self.coordinator.data[self.ain]
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
+        return DeviceInfo(
+            name=self.device.name,
+            identifiers={(DOMAIN, self.ain)},
+            manufacturer=self.device.manufacturer,
+            model=self.device.productname,
+            sw_version=self.device.fw_version,
+            configuration_url=self.coordinator.configuration_url,
+        )
+
+    @property
+    def extra_state_attributes(self) -> FritzExtraAttributes:
+        """Return the state attributes of the device."""
         return {
-            "name": self.device.name,
-            "identifiers": {(DOMAIN, self.ain)},
-            "manufacturer": self.device.manufacturer,
-            "model": self.device.productname,
-            "sw_version": self.device.fw_version,
+            ATTR_STATE_DEVICE_LOCKED: self.device.device_lock,
+            ATTR_STATE_LOCKED: self.device.lock,
         }
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of the device."""
-        return self._unique_id
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return self._unit_of_measurement
-
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return self._device_class

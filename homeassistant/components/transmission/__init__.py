@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
+    Platform,
 )
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
@@ -91,10 +92,11 @@ TRANS_SCHEMA = vol.All(
 )
 
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.All(cv.ensure_list, [TRANS_SCHEMA])}, extra=vol.ALLOW_EXTRA
+    vol.All(cv.deprecated(DOMAIN), {DOMAIN: vol.All(cv.ensure_list, [TRANS_SCHEMA])}),
+    extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS = ["sensor", "switch"]
+PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
 
 
 async def async_setup(hass, config):
@@ -440,12 +442,14 @@ class TransmissionData:
 
     def start_torrents(self):
         """Start all torrents."""
-        if len(self._torrents) <= 0:
+        if not self._torrents:
             return
         self._api.start_all()
 
     def stop_torrents(self):
         """Stop all active torrents."""
+        if not self._torrents:
+            return
         torrent_ids = [torrent.id for torrent in self._torrents]
         self._api.stop_torrent(torrent_ids)
 

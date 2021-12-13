@@ -1,4 +1,7 @@
 """Support for Cover devices."""
+from __future__ import annotations
+
+from dataclasses import dataclass
 from datetime import timedelta
 import functools as ft
 import logging
@@ -6,6 +9,8 @@ from typing import Any, final
 
 import voluptuous as vol
 
+from homeassistant.backports.enum import StrEnum
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     SERVICE_CLOSE_COVER,
     SERVICE_CLOSE_COVER_TILT,
@@ -22,11 +27,12 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_OPENING,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.loader import bind_hass
 
@@ -39,31 +45,38 @@ SCAN_INTERVAL = timedelta(seconds=15)
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
-# Refer to the cover dev docs for device class descriptions
-DEVICE_CLASS_AWNING = "awning"
-DEVICE_CLASS_BLIND = "blind"
-DEVICE_CLASS_CURTAIN = "curtain"
-DEVICE_CLASS_DAMPER = "damper"
-DEVICE_CLASS_DOOR = "door"
-DEVICE_CLASS_GARAGE = "garage"
-DEVICE_CLASS_GATE = "gate"
-DEVICE_CLASS_SHADE = "shade"
-DEVICE_CLASS_SHUTTER = "shutter"
-DEVICE_CLASS_WINDOW = "window"
 
-DEVICE_CLASSES = [
-    DEVICE_CLASS_AWNING,
-    DEVICE_CLASS_BLIND,
-    DEVICE_CLASS_CURTAIN,
-    DEVICE_CLASS_DAMPER,
-    DEVICE_CLASS_DOOR,
-    DEVICE_CLASS_GARAGE,
-    DEVICE_CLASS_GATE,
-    DEVICE_CLASS_SHADE,
-    DEVICE_CLASS_SHUTTER,
-    DEVICE_CLASS_WINDOW,
-]
-DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
+class CoverDeviceClass(StrEnum):
+    """Device class for cover."""
+
+    # Refer to the cover dev docs for device class descriptions
+    AWNING = "awning"
+    BLIND = "blind"
+    CURTAIN = "curtain"
+    DAMPER = "damper"
+    DOOR = "door"
+    GARAGE = "garage"
+    GATE = "gate"
+    SHADE = "shade"
+    SHUTTER = "shutter"
+    WINDOW = "window"
+
+
+DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(CoverDeviceClass))
+
+# DEVICE_CLASS* below are deprecated as of 2021.12
+# use the CoverDeviceClass enum instead.
+DEVICE_CLASSES = [cls.value for cls in CoverDeviceClass]
+DEVICE_CLASS_AWNING = CoverDeviceClass.AWNING.value
+DEVICE_CLASS_BLIND = CoverDeviceClass.BLIND.value
+DEVICE_CLASS_CURTAIN = CoverDeviceClass.CURTAIN.value
+DEVICE_CLASS_DAMPER = CoverDeviceClass.DAMPER.value
+DEVICE_CLASS_DOOR = CoverDeviceClass.DOOR.value
+DEVICE_CLASS_GARAGE = CoverDeviceClass.GARAGE.value
+DEVICE_CLASS_GATE = CoverDeviceClass.GATE.value
+DEVICE_CLASS_SHADE = CoverDeviceClass.SHADE.value
+DEVICE_CLASS_SHUTTER = CoverDeviceClass.SHUTTER.value
+DEVICE_CLASS_WINDOW = CoverDeviceClass.WINDOW.value
 
 SUPPORT_OPEN = 1
 SUPPORT_CLOSE = 2
@@ -154,44 +167,76 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    return await hass.data[DOMAIN].async_setup_entry(entry)
+    component: EntityComponent = hass.data[DOMAIN]
+    return await component.async_setup_entry(entry)
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.data[DOMAIN].async_unload_entry(entry)
+    component: EntityComponent = hass.data[DOMAIN]
+    return await component.async_unload_entry(entry)
+
+
+@dataclass
+class CoverEntityDescription(EntityDescription):
+    """A class that describes cover entities."""
+
+    device_class: CoverDeviceClass | str | None = None
 
 
 class CoverEntity(Entity):
     """Base class for cover entities."""
 
+    entity_description: CoverEntityDescription
+    _attr_current_cover_position: int | None = None
+    _attr_current_cover_tilt_position: int | None = None
+    _attr_device_class: CoverDeviceClass | str | None
+    _attr_is_closed: bool | None
+    _attr_is_closing: bool | None = None
+    _attr_is_opening: bool | None = None
+    _attr_state: None = None
+
+    _cover_is_last_toggle_direction_open = True
+
     @property
-    def current_cover_position(self):
+    def current_cover_position(self) -> int | None:
         """Return current position of cover.
 
         None is unknown, 0 is closed, 100 is fully open.
         """
+        return self._attr_current_cover_position
 
     @property
-    def current_cover_tilt_position(self):
+    def current_cover_tilt_position(self) -> int | None:
         """Return current position of cover tilt.
 
         None is unknown, 0 is closed, 100 is fully open.
         """
+        return self._attr_current_cover_tilt_position
 
     @property
-    def state(self):
+    def device_class(self) -> CoverDeviceClass | str | None:
+        """Return the class of this entity."""
+        if hasattr(self, "_attr_device_class"):
+            return self._attr_device_class
+        if hasattr(self, "entity_description"):
+            return self.entity_description.device_class
+        return None
+
+    @property
+    @final
+    def state(self) -> str | None:
         """Return the state of the cover."""
         if self.is_opening:
+            self._cover_is_last_toggle_direction_open = True
             return STATE_OPENING
         if self.is_closing:
+            self._cover_is_last_toggle_direction_open = False
             return STATE_CLOSING
 
-        closed = self.is_closed
-
-        if closed is None:
+        if (closed := self.is_closed) is None:
             return None
 
         return STATE_CLOSED if closed else STATE_OPEN
@@ -202,19 +247,20 @@ class CoverEntity(Entity):
         """Return the state attributes."""
         data = {}
 
-        current = self.current_cover_position
-        if current is not None:
-            data[ATTR_CURRENT_POSITION] = self.current_cover_position
+        if (current := self.current_cover_position) is not None:
+            data[ATTR_CURRENT_POSITION] = current
 
-        current_tilt = self.current_cover_tilt_position
-        if current_tilt is not None:
-            data[ATTR_CURRENT_TILT_POSITION] = self.current_cover_tilt_position
+        if (current_tilt := self.current_cover_tilt_position) is not None:
+            data[ATTR_CURRENT_TILT_POSITION] = current_tilt
 
         return data
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Flag supported features."""
+        if self._attr_supported_features is not None:
+            return self._attr_supported_features
+
         supported_features = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP
 
         if self.current_cover_position is not None:
@@ -231,17 +277,19 @@ class CoverEntity(Entity):
         return supported_features
 
     @property
-    def is_opening(self):
+    def is_opening(self) -> bool | None:
         """Return if the cover is opening or not."""
+        return self._attr_is_opening
 
     @property
-    def is_closing(self):
+    def is_closing(self) -> bool | None:
         """Return if the cover is closing or not."""
+        return self._attr_is_closing
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool | None:
         """Return if the cover is closed or not."""
-        raise NotImplementedError()
+        return self._attr_is_closed
 
     def open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
@@ -261,17 +309,23 @@ class CoverEntity(Entity):
 
     def toggle(self, **kwargs: Any) -> None:
         """Toggle the entity."""
-        if self.is_closed:
-            self.open_cover(**kwargs)
-        else:
-            self.close_cover(**kwargs)
+        fns = {
+            "open": self.open_cover,
+            "close": self.close_cover,
+            "stop": self.stop_cover,
+        }
+        function = self._get_toggle_function(fns)
+        function(**kwargs)
 
     async def async_toggle(self, **kwargs):
         """Toggle the entity."""
-        if self.is_closed:
-            await self.async_open_cover(**kwargs)
-        else:
-            await self.async_close_cover(**kwargs)
+        fns = {
+            "open": self.async_open_cover,
+            "close": self.async_close_cover,
+            "stop": self.async_stop_cover,
+        }
+        function = self._get_toggle_function(fns)
+        await function(**kwargs)
 
     def set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
@@ -339,14 +393,13 @@ class CoverEntity(Entity):
         else:
             await self.async_close_cover_tilt(**kwargs)
 
-
-class CoverDevice(CoverEntity):
-    """Representation of a cover (for backwards compatibility)."""
-
-    def __init_subclass__(cls, **kwargs):
-        """Print deprecation warning."""
-        super().__init_subclass__(**kwargs)
-        _LOGGER.warning(
-            "CoverDevice is deprecated, modify %s to extend CoverEntity",
-            cls.__name__,
-        )
+    def _get_toggle_function(self, fns):
+        if SUPPORT_STOP | self.supported_features and (
+            self.is_closing or self.is_opening
+        ):
+            return fns["stop"]
+        if self.is_closed:
+            return fns["open"]
+        if self._cover_is_last_toggle_direction_open:
+            return fns["close"]
+        return fns["open"]

@@ -106,8 +106,7 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
     @property
     def temperature_unit(self) -> str:
         """Return the unit of measurement."""
-        uom = self._node.aux_properties.get(PROP_UOM)
-        if not uom:
+        if not (uom := self._node.aux_properties.get(PROP_UOM)):
             return self.hass.config.units.temperature_unit
         if uom.value == UOM_ISY_CELSIUS:
             return TEMP_CELSIUS
@@ -117,16 +116,14 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
     @property
     def current_humidity(self) -> int | None:
         """Return the current humidity."""
-        humidity = self._node.aux_properties.get(PROP_HUMIDITY)
-        if not humidity:
+        if not (humidity := self._node.aux_properties.get(PROP_HUMIDITY)):
             return None
         return int(humidity.value)
 
     @property
     def hvac_mode(self) -> str | None:
         """Return hvac operation ie. heat, cool mode."""
-        hvac_mode = self._node.aux_properties.get(CMD_CLIMATE_MODE)
-        if not hvac_mode:
+        if not (hvac_mode := self._node.aux_properties.get(CMD_CLIMATE_MODE)):
             return None
 
         # Which state values used depends on the mode property's UOM:
@@ -203,7 +200,7 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
             return None
         return UOM_TO_STATES[UOM_FAN_MODES].get(fan_mode.value)
 
-    def set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
         target_temp = kwargs.get(ATTR_TEMPERATURE)
         target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
@@ -214,27 +211,27 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
             if self.hvac_mode == HVAC_MODE_HEAT:
                 target_temp_low = target_temp
         if target_temp_low is not None:
-            self._node.set_climate_setpoint_heat(int(target_temp_low))
+            await self._node.set_climate_setpoint_heat(int(target_temp_low))
             # Presumptive setting--event stream will correct if cmd fails:
             self._target_temp_low = target_temp_low
         if target_temp_high is not None:
-            self._node.set_climate_setpoint_cool(int(target_temp_high))
+            await self._node.set_climate_setpoint_cool(int(target_temp_high))
             # Presumptive setting--event stream will correct if cmd fails:
             self._target_temp_high = target_temp_high
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
-    def set_fan_mode(self, fan_mode: str) -> None:
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         _LOGGER.debug("Requested fan mode %s", fan_mode)
-        self._node.set_fan_mode(HA_FAN_TO_ISY.get(fan_mode))
+        await self._node.set_fan_mode(HA_FAN_TO_ISY.get(fan_mode))
         # Presumptive setting--event stream will correct if cmd fails:
         self._fan_mode = fan_mode
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
-    def set_hvac_mode(self, hvac_mode: str) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
         _LOGGER.debug("Requested operation mode %s", hvac_mode)
-        self._node.set_climate_mode(HA_HVAC_TO_ISY.get(hvac_mode))
+        await self._node.set_climate_mode(HA_HVAC_TO_ISY.get(hvac_mode))
         # Presumptive setting--event stream will correct if cmd fails:
         self._hvac_mode = hvac_mode
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()

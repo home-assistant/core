@@ -9,14 +9,15 @@
             "invalid_auth": "Ung\u00fcltige Authentifizierung",
             "unknown": "Unerwarteter Fehler"
         },
-        "flow_title": "Envoy {serial} ({host})",
+        "flow_title": "{serial} ({host})",
         "step": {
             "user": {
                 "data": {
                     "host": "Host",
                     "password": "Passwort",
                     "username": "Benutzername"
-                }
+                },
+                "description": "Bei neueren Modellen gib den Benutzernamen `envoy` ohne Passwort ein. F\u00fcr \u00e4ltere Modelle gib den Benutzernamen `installer` ohne Passwort ein. F\u00fcr alle anderen Modelle gib einen g\u00fcltigen Benutzernamen und ein Passwort ein."
             }
         }
     }

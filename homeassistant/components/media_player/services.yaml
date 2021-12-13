@@ -4,37 +4,48 @@ turn_on:
   name: Turn on
   description: Turn a media player power on.
   target:
+    entity:
+      domain: media_player
 
 turn_off:
   name: Turn off
   description: Turn a media player power off.
   target:
+    entity:
+      domain: media_player
 
 toggle:
   name: Toggle
   description: Toggles a media player power state.
   target:
+    entity:
+      domain: media_player
 
 volume_up:
   name: Turn up volume
   description: Turn a media player volume up.
   target:
+    entity:
+      domain: media_player
 
 volume_down:
   name: Turn down volume
   description: Turn a media player volume down.
   target:
+    entity:
+      domain: media_player
 
 volume_mute:
   name: Mute volume
   description: Mute a media player's volume.
   target:
+    entity:
+      domain: media_player
   fields:
     is_volume_muted:
       name: Muted
       description: True/false for mute/unmute.
       required: true
-      example: true
       selector:
         boolean:
 
@@ -42,60 +53,72 @@ volume_set:
   name: Set volume
   description: Set a media player's volume level.
   target:
+    entity:
+      domain: media_player
   fields:
     volume_level:
       name: Level
       description: Volume level to set as float.
       required: true
-      example: 0.6
       selector:
         number:
           min: 0
           max: 1
           step: 0.01
-          mode: slider
 
 media_play_pause:
   name: Play/Pause
   description: Toggle media player play/pause state.
   target:
+    entity:
+      domain: media_player
 
 media_play:
   name: Play
   description: Send the media player the command for play.
   target:
+    entity:
+      domain: media_player
 
 media_pause:
   name: Pause
   description: Send the media player the command for pause.
   target:
+    entity:
+      domain: media_player
 
 media_stop:
   name: Stop
   description: Send the media player the stop command.
   target:
+    entity:
+      domain: media_player
 
 media_next_track:
   name: Next
   description: Send the media player the command for next track.
   target:
+    entity:
+      domain: media_player
 
 media_previous_track:
   name: Previous
   description: Send the media player the command for previous track.
   target:
+    entity:
+      domain: media_player
 
 media_seek:
   name: Seek
-  description:
-    Send the media player the command to seek in current playing media.
+  description: Send the media player the command to seek in current playing media.
   target:
+    entity:
+      domain: media_player
   fields:
     seek_position:
       name: Position
       description: Position to seek to. The format is platform dependent.
       required: true
-      example: 100
       selector:
         number:
           min: 0
@@ -107,6 +130,8 @@ play_media:
   name: Play media
   description: Send the media player the command for playing media.
   target:
+    entity:
+      domain: media_player
   fields:
     media_content_id:
       name: Content ID
@@ -130,6 +155,8 @@ select_source:
   name: Select source
   description: Send the media player the command to change input source.
   target:
+    entity:
+      domain: media_player
   fields:
     source:
       name: Source
@@ -143,6 +170,8 @@ select_sound_mode:
   name: Select sound mode
   description: Send the media player the command to change sound mode.
   target:
+    entity:
+      domain: media_player
   fields:
     sound_mode:
       name: Sound mode
@@ -155,17 +184,20 @@ clear_playlist:
   name: Clear playlist
   description: Send the media player the command to clear players playlist.
   target:
+    entity:
+      domain: media_player
 
 shuffle_set:
   name: Shuffle
   description: Set shuffling state.
   target:
+    entity:
+      domain: media_player
   fields:
     shuffle:
       name: Shuffle
       description: True/false for enabling/disabling shuffle.
       required: true
-      example: true
       selector:
         boolean:
 
@@ -173,12 +205,13 @@ repeat_set:
   name: Repeat
   description: Set repeat mode
   target:
+    entity:
+      domain: media_player
   fields:
     repeat:
       name: Repeat mode
-      description: Repeat mode to set (off, all, one).
+      description: Repeat mode to set.
       required: true
-      example: "off"
       selector:
         select:
           options:
@@ -187,18 +220,22 @@ repeat_set:
             - "one"
 
 join:
+  name: Join
   description:
     Group players together. Only works on platforms with support for player
     groups.
-  name: Join
   target:
+    entity:
+      domain: media_player
   fields:
     group_members:
-      description:
-        The players which will be synced with the target player.
+      name: Group members
+      description: The players which will be synced with the target player.
       example:
         - "media_player.multiroom_player2"
         - "media_player.multiroom_player3"
+      selector:
+        object:
 
 unjoin:
   description:
@@ -206,3 +243,5 @@ unjoin:
     player groups.
   name: Unjoin
   target:
+    entity:
+      domain: media_player

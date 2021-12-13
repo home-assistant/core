@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
             "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
+            "cannot_connect": "Impossibile connettersi",
             "not_konn_panel": "Non \u00e8 un dispositivo Konnected.io riconosciuto",
             "unknown": "Errore imprevisto"
         },
@@ -32,7 +33,9 @@
             "not_konn_panel": "Non \u00e8 un dispositivo Konnected.io riconosciuto"
         },
         "error": {
-            "bad_host": "URL host API di sostituzione non valido"
+            "bad_host": "URL host API di sostituzione non valido",
+            "one": "Pi\u00f9",
+            "other": "Altri"
         },
         "step": {
             "options_binary": {

@@ -7,6 +7,7 @@
             "cannot_connect": "Tilkobling mislyktes",
             "invalid_auth": "Ugyldig godkjenning"
         },
+        "flow_title": "{device} ( {ip_address} )",
         "step": {
             "user": {
                 "data": {
@@ -15,7 +16,7 @@
                     "username": "Brukernavn"
                 },
                 "description": "Gi n\u00f8dvendig informasjon nedenfor.",
-                "title": "Sett opp GogoGate2 eller iSmartGate"
+                "title": "Sett opp Gogogate2 eller ismartgate"
             }
         }
     }

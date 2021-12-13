@@ -66,7 +66,13 @@ async def test_error(hass, caplog):
     """Test the Fido sensor errors."""
     caplog.set_level(logging.ERROR)
 
-    config = {}
+    config = {
+        "platform": "fido",
+        "name": "fido",
+        "username": "myusername",
+        "password": "password",
+        "monitored_variables": ["balance", "data_remaining"],
+    }
     fake_async_add_entities = MagicMock()
     with patch("homeassistant.components.fido.sensor.FidoClient", FidoClientMockError):
         await fido.async_setup_platform(hass, config, fake_async_add_entities)

@@ -17,6 +17,7 @@ forced_separate = [
 combine_as_imports = true
 
 [tool.pylint.MASTER]
+py-version = "3.8"
 ignore = [
     "tests",
 ]
@@ -25,12 +26,17 @@ ignore = [
 jobs = 2
 init-hook='from pylint.config.find_default_config_files import find_default_config_files; from pathlib import Path; import sys; sys.path.append(str(Path(Path(list(find_default_config_files())[0]).parent, "pylint/plugins")))'
 load-plugins = [
+    "pylint.extensions.code_style",
     "pylint.extensions.typing",
     "pylint_strict_informational",
-    "hass_logger"
+    "hass_constructor",
+    "hass_imports",
+    "hass_logger",
 ]
 persistent = false
-extension-pkg-whitelist = [
+extension-pkg-allow-list = [
+    "av.audio.stream",
+    "av.stream",
     "ciso8601",
     "cv2",
 ]
@@ -48,6 +54,7 @@ good-names = [
     "k",
     "Run",
     "T",
+    "ip",
 ]
 
 [tool.pylint."MESSAGES CONTROL"]
@@ -64,6 +71,11 @@ good-names = [
 # inconsistent-return-statements - doesn't handle raise
 # too-many-ancestors - it's too strict.
 # wrong-import-order - isort guards this
+# consider-using-f-string - str.format sometimes more readable
+# ---
+# Enable once current issues are fixed:
+# consider-using-namedtuple-or-dataclass (Pylint CodeStyle extension)
+# consider-using-assignment-expr (Pylint CodeStyle extension)
 disable = [
     "format",
     "abstract-class-little-used",
@@ -86,6 +98,9 @@ disable = [
     "too-many-boolean-expressions",
     "unused-argument",
     "wrong-import-order",
+    "consider-using-f-string",
+    "consider-using-namedtuple-or-dataclass",
+    "consider-using-assignment-expr",
 ]
 enable = [
     #"useless-suppression",  # temporarily every now and then to clean them up
@@ -99,6 +114,7 @@ score = false
 ignored-classes = [
     "_CountingAttr",  # for attrs
 ]
+mixin-class-rgx = ".*[Mm]ix[Ii]n"
 
 [tool.pylint.FORMAT]
 expected-line-ending-format = "LF"
@@ -111,8 +127,10 @@ overgeneral-exceptions = [
 ]
 
 [tool.pylint.TYPING]
-py-version = "3.8"
 runtime-typing = false
+
+[tool.pylint.CODE_STYLE]
+max-line-length-suggestions = 72
 
 [tool.pytest.ini_options]
 testpaths = [

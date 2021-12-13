@@ -6,13 +6,15 @@
             "connection_error": "Gagal terhubung"
         },
         "error": {
-            "discovery_error": "Gagal menemukan Motion Gateway"
+            "discovery_error": "Gagal menemukan Motion Gateway",
+            "invalid_interface": "Antarmuka jaringan tidak valid"
         },
         "flow_title": "Motion Blinds",
         "step": {
             "connect": {
                 "data": {
-                    "api_key": "Kunci API"
+                    "api_key": "Kunci API",
+                    "interface": "Antarmuka jaringan yang akan digunakan"
                 },
                 "description": "Anda akan memerlukan Kunci API 16 karakter, baca petunjuknya di https://www.home-assistant.io/integrations/motion_blinds/#retrieving-the-key",
                 "title": "Motion Blinds"
@@ -30,6 +32,17 @@
                     "host": "Alamat IP"
                 },
                 "description": "Hubungkan ke Motion Gateway Anda, jika alamat IP tidak disetel, penemuan otomatis akan digunakan",
+                "title": "Motion Blinds"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "wait_for_push": "Tunggu push multicast pada pembaruan"
+                },
+                "description": "Tentukan pengaturan opsional",
                 "title": "Motion Blinds"
             }
         }

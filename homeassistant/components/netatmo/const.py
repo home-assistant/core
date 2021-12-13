@@ -1,8 +1,33 @@
 """Constants used by the Netatmo component."""
+from homeassistant.const import Platform
+
 API = "api"
 
 DOMAIN = "netatmo"
 MANUFACTURER = "Netatmo"
+DEFAULT_ATTRIBUTION = f"Data provided by {MANUFACTURER}"
+
+PLATFORMS = [
+    Platform.CAMERA,
+    Platform.CLIMATE,
+    Platform.LIGHT,
+    Platform.SELECT,
+    Platform.SENSOR,
+]
+
+NETATMO_SCOPES = [
+    "access_camera",
+    "access_presence",
+    "read_camera",
+    "read_homecoach",
+    "read_presence",
+    "read_smokedetector",
+    "read_station",
+    "read_thermostat",
+    "write_camera",
+    "write_presence",
+    "write_thermostat",
+]
 
 MODEL_NAPLUG = "Relay"
 MODEL_NATHERM1 = "Smart Thermostat"
@@ -36,12 +61,17 @@ MODELS = {
     "public": MODEL_PUBLIC,
 }
 
+TYPE_SECURITY = "security"
+TYPE_ENERGY = "energy"
+TYPE_WEATHER = "weather"
+
 AUTH = "netatmo_auth"
 CONF_PUBLIC = "public_sensor_config"
 CAMERA_DATA = "netatmo_camera"
 HOME_DATA = "netatmo_home_data"
 DATA_HANDLER = "netatmo_data_handler"
 SIGNAL_NAME = "signal_name"
+NETATMO_CREATE_BATTERY = "netatmo_create_battery"
 
 CONF_CLOUDHOOK_URL = "cloudhook_url"
 CONF_WEATHER_AREAS = "weather_areas"
@@ -67,7 +97,7 @@ DATA_SCHEDULES = "netatmo_schedules"
 NETATMO_WEBHOOK_URL = None
 NETATMO_EVENT = "netatmo_event"
 
-DEFAULT_PERSON = "Unknown"
+DEFAULT_PERSON = "unknown"
 DEFAULT_DISCOVERY = True
 DEFAULT_WEBHOOKS = False
 
@@ -156,3 +186,9 @@ MODE_LIGHT_ON = "on"
 MODE_LIGHT_OFF = "off"
 MODE_LIGHT_AUTO = "auto"
 CAMERA_LIGHT_MODES = [MODE_LIGHT_ON, MODE_LIGHT_OFF, MODE_LIGHT_AUTO]
+
+WEBHOOK_ACTIVATION = "webhook_activation"
+WEBHOOK_DEACTIVATION = "webhook_deactivation"
+WEBHOOK_NACAMERA_CONNECTION = "NACamera-connection"
+WEBHOOK_PUSH_TYPE = "push_type"
+WEBHOOK_LIGHT_MODE = "NOC-light_mode"

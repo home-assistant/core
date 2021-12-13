@@ -36,5 +36,13 @@
         }
       }
     }
+  },
+  "system_health": {
+    "info": {
+      "host_reachable": "Host Reachable",
+      "device_connected": "ISY Connected",
+      "last_heartbeat": "Last Heartbeat Time",
+      "websocket_status": "Event Socket Status"
+    }
   }
 }

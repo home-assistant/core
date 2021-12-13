@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "GIO\u015a integration f\u00fcr diese Messstation ist bereits konfiguriert. "
+            "already_configured": "Standort ist bereits konfiguriert"
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",

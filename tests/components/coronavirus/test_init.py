@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 from aiohttp import ClientError
 
 from homeassistant.components.coronavirus.const import DOMAIN, OPTION_WORLDWIDE
-from homeassistant.config_entries import ENTRY_STATE_SETUP_RETRY
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -69,4 +69,4 @@ async def test_config_entry_not_ready(
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
-    assert entry.state == ENTRY_STATE_SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY

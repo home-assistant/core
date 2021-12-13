@@ -6,7 +6,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import DATA_CONFIG_ENTRIES, DATA_DEVICE, DATA_UPDATED, DOMAIN, YeelightEntity
+from .const import DATA_CONFIG_ENTRIES, DATA_DEVICE, DATA_UPDATED, DOMAIN
+from .entity import YeelightEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,6 +34,7 @@ class YeelightNightlightModeSensor(YeelightEntity, BinarySensorEntity):
                 self.async_write_ha_state,
             )
         )
+        await super().async_added_to_hass()
 
     @property
     def unique_id(self) -> str:

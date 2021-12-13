@@ -5,7 +5,13 @@ import pytest
 
 import homeassistant.components.automation as automation
 from homeassistant.components.lock import DOMAIN
-from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
+from homeassistant.const import (
+    STATE_JAMMED,
+    STATE_LOCKED,
+    STATE_LOCKING,
+    STATE_UNLOCKED,
+    STATE_UNLOCKING,
+)
 from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -65,6 +71,27 @@ async def test_get_triggers(hass, device_reg, entity_reg):
             "device_id": device_entry.id,
             "entity_id": f"{DOMAIN}.test_5678",
         },
+        {
+            "platform": "device",
+            "domain": DOMAIN,
+            "type": "unlocking",
+            "device_id": device_entry.id,
+            "entity_id": f"{DOMAIN}.test_5678",
+        },
+        {
+            "platform": "device",
+            "domain": DOMAIN,
+            "type": "locking",
+            "device_id": device_entry.id,
+            "entity_id": f"{DOMAIN}.test_5678",
+        },
+        {
+            "platform": "device",
+            "domain": DOMAIN,
+            "type": "jammed",
+            "device_id": device_entry.id,
+            "entity_id": f"{DOMAIN}.test_5678",
+        },
     ]
     triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
     assert_lists_same(triggers, expected_triggers)
@@ -81,7 +108,7 @@ async def test_get_trigger_capabilities(hass, device_reg, entity_reg):
     entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
 
     triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
-    assert len(triggers) == 2
+    assert len(triggers) == 5
     for trigger in triggers:
         capabilities = await async_get_device_automation_capabilities(
             hass, "trigger", trigger
@@ -195,7 +222,82 @@ async def test_if_fires_on_state_change_with_for(hass, calls):
                             )
                         },
                     },
-                }
+                },
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": "",
+                        "entity_id": entity_id,
+                        "type": "unlocking",
+                        "for": {"seconds": 5},
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": "turn_on {{ trigger.%s }}"
+                            % "}} - {{ trigger.".join(
+                                (
+                                    "platform",
+                                    "entity_id",
+                                    "from_state.state",
+                                    "to_state.state",
+                                    "for",
+                                )
+                            )
+                        },
+                    },
+                },
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": "",
+                        "entity_id": entity_id,
+                        "type": "jammed",
+                        "for": {"seconds": 5},
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": "turn_off {{ trigger.%s }}"
+                            % "}} - {{ trigger.".join(
+                                (
+                                    "platform",
+                                    "entity_id",
+                                    "from_state.state",
+                                    "to_state.state",
+                                    "for",
+                                )
+                            )
+                        },
+                    },
+                },
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": "",
+                        "entity_id": entity_id,
+                        "type": "locking",
+                        "for": {"seconds": 5},
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": "turn_on {{ trigger.%s }}"
+                            % "}} - {{ trigger.".join(
+                                (
+                                    "platform",
+                                    "entity_id",
+                                    "from_state.state",
+                                    "to_state.state",
+                                    "for",
+                                )
+                            )
+                        },
+                    },
+                },
             ]
         },
     )
@@ -213,4 +315,40 @@ async def test_if_fires_on_state_change_with_for(hass, calls):
     assert (
         calls[0].data["some"]
         == f"turn_off device - {entity_id} - unlocked - locked - 0:00:05"
+    )
+
+    hass.states.async_set(entity_id, STATE_UNLOCKING)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=16))
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+    await hass.async_block_till_done()
+    assert (
+        calls[1].data["some"]
+        == f"turn_on device - {entity_id} - locked - unlocking - 0:00:05"
+    )
+
+    hass.states.async_set(entity_id, STATE_JAMMED)
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=21))
+    await hass.async_block_till_done()
+    assert len(calls) == 3
+    await hass.async_block_till_done()
+    assert (
+        calls[2].data["some"]
+        == f"turn_off device - {entity_id} - unlocking - jammed - 0:00:05"
+    )
+
+    hass.states.async_set(entity_id, STATE_LOCKING)
+    await hass.async_block_till_done()
+    assert len(calls) == 3
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=27))
+    await hass.async_block_till_done()
+    assert len(calls) == 4
+    await hass.async_block_till_done()
+    assert (
+        calls[3].data["some"]
+        == f"turn_on device - {entity_id} - jammed - locking - 0:00:05"
     )

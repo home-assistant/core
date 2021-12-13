@@ -5,7 +5,7 @@ from unittest.mock import patch
 import requests_mock
 
 from homeassistant.components.aemet.const import DOMAIN
-from homeassistant.config_entries import ENTRY_STATE_LOADED, ENTRY_STATE_NOT_LOADED
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 import homeassistant.util.dt as dt_util
 
@@ -37,8 +37,8 @@ async def test_unload_entry(hass):
 
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-        assert config_entry.state == ENTRY_STATE_LOADED
+        assert config_entry.state is ConfigEntryState.LOADED
 
         await hass.config_entries.async_unload(config_entry.entry_id)
         await hass.async_block_till_done()
-        assert config_entry.state == ENTRY_STATE_NOT_LOADED
+        assert config_entry.state is ConfigEntryState.NOT_LOADED

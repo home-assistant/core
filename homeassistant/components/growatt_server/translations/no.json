@@ -16,7 +16,8 @@
             "user": {
                 "data": {
                     "name": "Navn",
-                    "password": "Navn",
+                    "password": "Passord",
+                    "url": "URL",
                     "username": "Brukernavn"
                 },
                 "title": "Skriv inn Growatt-informasjonen din"

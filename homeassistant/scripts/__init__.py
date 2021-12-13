@@ -15,10 +15,10 @@ from homeassistant.config import get_default_config_dir
 from homeassistant.requirements import pip_kwargs
 from homeassistant.util.package import install_package, is_installed, is_virtual_env
 
-# mypy: allow-untyped-defs, no-warn-return-any
+# mypy: allow-untyped-defs, disallow-any-generics, no-warn-return-any
 
 
-def run(args: list) -> int:
+def run(args: list[str]) -> int:
     """Run a script."""
     scripts = []
     path = os.path.dirname(__file__)

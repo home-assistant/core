@@ -6,7 +6,7 @@
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
-            "select_single": "W\u00e4hlen Sie eine Option aus."
+            "select_single": "W\u00e4hle eine Option aus."
         },
         "step": {
             "hubv1": {
@@ -14,7 +14,7 @@
                     "host": "IP-Adresse",
                     "port": "Port"
                 },
-                "description": "Konfigurieren Sie den Insteon Hub Version 1 (vor 2014).",
+                "description": "Konfiguriere den Insteon Hub Version 1 (vor 2014).",
                 "title": "Insteon Hub Version 1"
             },
             "hubv2": {
@@ -24,21 +24,21 @@
                     "port": "Port",
                     "username": "Benutzername"
                 },
-                "description": "Konfigurieren Sie den Insteon Hub Version 2.",
+                "description": "Konfiguriere den Insteon Hub Version 2.",
                 "title": "Insteon Hub Version 2"
             },
             "plm": {
                 "data": {
                     "device": "USB-Ger\u00e4te-Pfad"
                 },
-                "description": "Konfigurieren Sie das Insteon PowerLink Modem (PLM).",
+                "description": "Konfiguriere das Insteon PowerLink Modem (PLM).",
                 "title": "Insteon PLM"
             },
             "user": {
                 "data": {
                     "modem_type": "Modemtyp."
                 },
-                "description": "W\u00e4hlen Sie den Insteon-Modemtyp aus.",
+                "description": "W\u00e4hle den Insteon-Modemtyp aus.",
                 "title": "Insteon"
             }
         }
@@ -46,7 +46,7 @@
     "options": {
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
-            "input_error": "Ung\u00fcltige Eingaben, bitte \u00fcberpr\u00fcfen Sie Ihre Werte.",
+            "input_error": "Ung\u00fcltige Eingaben, bitte \u00fcberpr\u00fcfe deine Werte.",
             "select_single": "W\u00e4hle eine Option aus."
         },
         "step": {
@@ -56,7 +56,7 @@
                     "cat": "Ger\u00e4tekategorie (z. B. 0x10)",
                     "subcat": "Ger\u00e4teunterkategorie (z. B. 0x0a)"
                 },
-                "description": "F\u00fcgen Sie eine Ger\u00e4te\u00fcberschreibung hinzu.",
+                "description": "F\u00fcge eine Ger\u00e4te\u00fcberschreibung hinzu.",
                 "title": "Insteon"
             },
             "add_x10": {
@@ -66,7 +66,7 @@
                     "steps": "Dimmerstufen (nur f\u00fcr Lichtger\u00e4te, Voreinstellung 22)",
                     "unitcode": "Unitcode (1 - 16)"
                 },
-                "description": "\u00c4ndern Sie das Insteon Hub-Passwort.",
+                "description": "\u00c4ndere das Insteon Hub-Passwort.",
                 "title": "Insteon"
             },
             "change_hub_config": {
@@ -76,30 +76,30 @@
                     "port": "Port",
                     "username": "Benutzername"
                 },
-                "description": "\u00c4ndern Sie die Verbindungsinformationen des Insteon-Hubs. Sie m\u00fcssen Home Assistant neu starten, nachdem Sie diese \u00c4nderung vorgenommen haben. Dies \u00e4ndert nicht die Konfiguration des Hubs selbst. Um die Konfiguration im Hub zu \u00e4ndern, verwenden Sie die Hub-App.",
+                "description": "\u00c4ndere die Verbindungsinformationen des Insteon-Hubs. Du musst Home Assistant neu starten, nachdem du diese \u00c4nderung vorgenommen hast. Dies \u00e4ndert nicht die Konfiguration des Hubs selbst. Um die Konfiguration im Hub zu \u00e4ndern, verwende die Hub-App.",
                 "title": "Insteon"
             },
             "init": {
                 "data": {
-                    "add_override": "F\u00fcgen Sie eine Ger\u00e4te\u00fcberschreibung hinzu.",
-                    "add_x10": "F\u00fcgen Sie ein X10-Ger\u00e4t hinzu.",
-                    "change_hub_config": "\u00c4ndern Sie die Konfiguration des Hubs.",
-                    "remove_override": "Entfernen Sie eine Ger\u00e4te\u00fcbersteuerung.",
-                    "remove_x10": "Entfernen Sie ein X10-Ger\u00e4t."
+                    "add_override": "F\u00fcge eine Ger\u00e4te\u00fcberschreibung hinzu.",
+                    "add_x10": "F\u00fcge ein X10-Ger\u00e4t hinzu.",
+                    "change_hub_config": "\u00c4ndere die Konfiguration des Hubs.",
+                    "remove_override": "Entferne eine Ger\u00e4te\u00fcbersteuerung.",
+                    "remove_x10": "Entferne ein X10-Ger\u00e4t."
                 },
-                "description": "W\u00e4hlen Sie eine Option zum Konfigurieren aus.",
+                "description": "W\u00e4hle eine Option zum Konfigurieren aus.",
                 "title": "Insteon"
             },
             "remove_override": {
                 "data": {
-                    "address": "W\u00e4hlen Sie eine Ger\u00e4teadresse zum Entfernen"
+                    "address": "W\u00e4hle eine Ger\u00e4teadresse zum Entfernen"
                 },
                 "description": "Entfernen einer Ger\u00e4te\u00fcbersteuerung",
                 "title": "Insteon"
             },
             "remove_x10": {
                 "data": {
-                    "address": "W\u00e4hlen Sie eine Ger\u00e4teadresse zum Entfernen"
+                    "address": "W\u00e4hle eine Ger\u00e4teadresse zum Entfernen"
                 },
                 "description": "Ein X10-Ger\u00e4t entfernen",
                 "title": "Insteon"

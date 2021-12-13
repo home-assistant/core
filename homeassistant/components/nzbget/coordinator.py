@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 class NZBGetDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching NZBGet data."""
 
-    def __init__(self, hass: HomeAssistant, *, config: dict, options: dict):
+    def __init__(self, hass: HomeAssistant, *, config: dict, options: dict) -> None:
         """Initialize global NZBGet data updater."""
         self.nzbget = NZBGetAPI(
             config[CONF_HOST],

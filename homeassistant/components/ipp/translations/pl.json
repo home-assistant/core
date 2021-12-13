@@ -13,7 +13,7 @@
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
             "connection_upgrade": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia z drukark\u0105. Spr\u00f3buj ponownie z zaznaczon\u0105 opcj\u0105 SSL/TLS."
         },
-        "flow_title": "Drukarka: {name}",
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {
@@ -23,7 +23,7 @@
                     "ssl": "Certyfikat SSL",
                     "verify_ssl": "Weryfikacja certyfikatu SSL"
                 },
-                "description": "Skonfiguruj drukark\u0119 za pomoc\u0105 protoko\u0142u IPP (Internet Printing Protocol) w celu integracji z Home Assistantem.",
+                "description": "Skonfiguruj drukark\u0119 za pomoc\u0105 protoko\u0142u IPP (Internet Printing Protocol), aby zintegrowa\u0107 j\u0105 z Home Assistantem.",
                 "title": "Po\u0142\u0105cz swoj\u0105 drukark\u0119"
             },
             "zeroconf_confirm": {

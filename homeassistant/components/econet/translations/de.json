@@ -14,7 +14,8 @@
                 "data": {
                     "email": "E-Mail",
                     "password": "Passwort"
-                }
+                },
+                "title": "Rheem EcoNet-Konto einrichten"
             }
         }
     }

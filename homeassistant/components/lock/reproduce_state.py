@@ -11,7 +11,9 @@ from homeassistant.const import (
     SERVICE_LOCK,
     SERVICE_UNLOCK,
     STATE_LOCKED,
+    STATE_LOCKING,
     STATE_UNLOCKED,
+    STATE_UNLOCKING,
 )
 from homeassistant.core import Context, HomeAssistant, State
 
@@ -19,7 +21,7 @@ from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-VALID_STATES = {STATE_LOCKED, STATE_UNLOCKED}
+VALID_STATES = {STATE_LOCKED, STATE_UNLOCKED, STATE_LOCKING, STATE_UNLOCKING}
 
 
 async def _async_reproduce_state(
@@ -30,9 +32,7 @@ async def _async_reproduce_state(
     reproduce_options: dict[str, Any] | None = None,
 ) -> None:
     """Reproduce a single state."""
-    cur_state = hass.states.get(state.entity_id)
-
-    if cur_state is None:
+    if (cur_state := hass.states.get(state.entity_id)) is None:
         _LOGGER.warning("Unable to find entity %s", state.entity_id)
         return
 
@@ -48,9 +48,9 @@ async def _async_reproduce_state(
 
     service_data = {ATTR_ENTITY_ID: state.entity_id}
 
-    if state.state == STATE_LOCKED:
+    if state.state in {STATE_LOCKED, STATE_LOCKING}:
         service = SERVICE_LOCK
-    elif state.state == STATE_UNLOCKED:
+    elif state.state in {STATE_UNLOCKED, STATE_UNLOCKING}:
         service = SERVICE_UNLOCK
 
     await hass.services.async_call(

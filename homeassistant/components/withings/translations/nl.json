@@ -12,7 +12,7 @@
         "error": {
             "already_configured": "Account is al geconfigureerd"
         },
-        "flow_title": "Withings: {profile}",
+        "flow_title": "{profile}",
         "step": {
             "pick_implementation": {
                 "title": "Kies een authenticatie methode"

@@ -7,7 +7,7 @@
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
         },
-        "flow_title": "WLED: {name}",
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {
@@ -18,6 +18,15 @@
             "zeroconf_confirm": {
                 "description": "Czy chcesz doda\u0107 WLED o nazwie `{name}` do Home Assistanta?",
                 "title": "Wykryto urz\u0105dzenie WLED"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "keep_master_light": "Utw\u00f3rz encj\u0119 \"master light\", nawet z 1 segmentem LED."
+                }
             }
         }
     }

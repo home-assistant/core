@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "Taastuvastamine \u00f5nnestus"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendumine nurjus",
+            "invalid_api_key": "Vale API v\u00f5ti"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API v\u00f5ti",
+                    "description": "Taastuvasta Ambee konto"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "API v\u00f5ti",
+                    "latitude": "Laiuskraad",
+                    "longitude": "Pikkuskraad",
+                    "name": "Nimi"
+                },
+                "description": "Seadista Ambee sidumine Home Assistantiga."
+            }
+        }
+    }
+}

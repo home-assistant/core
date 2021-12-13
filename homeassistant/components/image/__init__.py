@@ -18,6 +18,7 @@ from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import collection
 from homeassistant.helpers.storage import Store
+from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
@@ -37,7 +38,7 @@ UPDATE_FIELDS = {
 }
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Image integration."""
     image_dir = pathlib.Path(hass.config.path(DOMAIN))
     hass.data[DOMAIN] = storage_collection = ImageStorageCollection(hass, image_dir)
@@ -159,7 +160,7 @@ class ImageServeView(HomeAssistantView):
 
     def __init__(
         self, image_folder: pathlib.Path, image_collection: ImageStorageCollection
-    ):
+    ) -> None:
         """Initialize image serve view."""
         self.transform_lock = asyncio.Lock()
         self.image_folder = image_folder

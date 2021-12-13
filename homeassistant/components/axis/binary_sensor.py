@@ -17,10 +17,7 @@ from axis.event_stream import (
 )
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
-    DEVICE_CLASS_LIGHT,
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_SOUND,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.core import callback
@@ -32,10 +29,10 @@ from .axis_base import AxisEventBase
 from .const import DOMAIN as AXIS_DOMAIN
 
 DEVICE_CLASS = {
-    CLASS_INPUT: DEVICE_CLASS_CONNECTIVITY,
-    CLASS_LIGHT: DEVICE_CLASS_LIGHT,
-    CLASS_MOTION: DEVICE_CLASS_MOTION,
-    CLASS_SOUND: DEVICE_CLASS_SOUND,
+    CLASS_INPUT: BinarySensorDeviceClass.CONNECTIVITY,
+    CLASS_LIGHT: BinarySensorDeviceClass.LIGHT,
+    CLASS_MOTION: BinarySensorDeviceClass.MOTION,
+    CLASS_SOUND: BinarySensorDeviceClass.SOUND,
 }
 
 
@@ -65,6 +62,8 @@ class AxisBinarySensor(AxisEventBase, BinarySensorEntity):
         """Initialize the Axis binary sensor."""
         super().__init__(event, device)
         self.cancel_scheduled_update = None
+
+        self._attr_device_class = DEVICE_CLASS.get(self.event.CLASS)
 
     @callback
     def update_callback(self, no_delay=False):
@@ -126,9 +125,4 @@ class AxisBinarySensor(AxisEventBase, BinarySensorEntity):
                 ):
                     return f"{self.device.name} {self.event.TYPE} {event_data[self.event.id].name}"
 
-        return super().name
-
-    @property
-    def device_class(self):
-        """Return the class of the sensor."""
-        return DEVICE_CLASS.get(self.event.CLASS)
+        return self._attr_name

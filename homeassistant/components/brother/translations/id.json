@@ -9,7 +9,7 @@
             "snmp_error": "Server SNMP dimatikan atau printer tidak didukung.",
             "wrong_host": "Nama host atau alamat IP tidak valid."
         },
-        "flow_title": "Printer Brother: {model} {serial_number}",
+        "flow_title": "{model} {serial_number}",
         "step": {
             "user": {
                 "data": {

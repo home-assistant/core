@@ -1,10 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Konto jest ju\u017c skonfigurowane"
+            "already_configured": "Konto jest ju\u017c skonfigurowane",
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
         },
         "error": {
-            "invalid_auth": "Niepoprawne uwierzytelnienie"
+            "invalid_auth": "Niepoprawne uwierzytelnienie",
+            "reauth_failed": "U\u017cyj tego samego u\u017cytkownika mydevolo co poprzednio."
         },
         "step": {
             "user": {

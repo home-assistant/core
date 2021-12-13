@@ -13,7 +13,7 @@
             "cannot_connect": "Gagal terhubung",
             "connection_upgrade": "Gagal terhubung ke printer. Coba lagi dengan mencentang opsi SSL/TLS."
         },
-        "flow_title": "Printer: {name}",
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {

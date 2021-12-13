@@ -1,6 +1,11 @@
 """The test for the threshold sensor platform."""
 
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN, TEMP_CELSIUS
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    TEMP_CELSIUS,
+)
 from homeassistant.setup import async_setup_component
 
 
@@ -283,7 +288,7 @@ async def test_sensor_in_range_with_hysteresis(hass):
     assert state.state == "on"
 
 
-async def test_sensor_in_range_unknown_state(hass):
+async def test_sensor_in_range_unknown_state(hass, caplog):
     """Test if source is within the range."""
     config = {
         "binary_sensor": {
@@ -321,6 +326,16 @@ async def test_sensor_in_range_unknown_state(hass):
 
     assert state.attributes.get("position") == "unknown"
     assert state.state == "off"
+
+    hass.states.async_set("sensor.test_monitored", STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.threshold")
+
+    assert state.attributes.get("position") == "unknown"
+    assert state.state == "off"
+
+    assert "State is not numerical" not in caplog.text
 
 
 async def test_sensor_lower_zero_threshold(hass):

@@ -11,11 +11,11 @@
         },
         "step": {
             "pick_implementation": {
-                "title": "Choisissez la m\u00e9thode d'authentification"
+                "title": "S\u00e9lectionner une m\u00e9thode d'authentification"
             },
             "reauth_confirm": {
                 "description": "L'int\u00e9gration de Spotify doit se r\u00e9-authentifier avec Spotify pour le compte: {account}",
-                "title": "R\u00e9-authentifier avec Spotify"
+                "title": "R\u00e9-authentifier l'int\u00e9gration"
             }
         }
     },

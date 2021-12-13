@@ -31,7 +31,7 @@ class HassAqualinkSensor(AqualinkEntity, SensorEntity):
         return self.dev.label
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return the measurement unit for the sensor."""
         if self.dev.name.endswith("_temp"):
             if self.dev.system.temp_unit == "F":
@@ -40,7 +40,7 @@ class HassAqualinkSensor(AqualinkEntity, SensorEntity):
         return None
 
     @property
-    def state(self) -> str | None:
+    def native_value(self) -> str | None:
         """Return the state of the sensor."""
         if self.dev.state == "":
             return None

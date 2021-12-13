@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "[%key:common::config_flow::abort::single_instance_allowed%]"
+        },
+        "step": {
+            "user": {
+                "description": "[%key:common::config_flow::description::confirm_setup%]"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Update interval",
+                    "tracked_asset_pairs": "Tracked Asset Pairs"
+                }
+            }
+        }
+    }
+}

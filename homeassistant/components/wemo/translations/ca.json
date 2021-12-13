@@ -9,5 +9,10 @@
                 "description": "Vols configurar Wemo?"
             }
         }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "long_press": "Bot\u00f3 Wemo premut durant 2 segons"
+        }
     }
 }

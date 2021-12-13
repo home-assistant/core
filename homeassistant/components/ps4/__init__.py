@@ -17,6 +17,7 @@ from homeassistant.const import (
     ATTR_LOCKED,
     CONF_REGION,
     CONF_TOKEN,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
@@ -25,7 +26,14 @@ from homeassistant.util import location
 from homeassistant.util.json import load_json, save_json
 
 from .config_flow import PlayStation4FlowHandler  # noqa: F401
-from .const import ATTR_MEDIA_IMAGE_URL, COMMANDS, DOMAIN, GAMES_FILE, PS4_DATA
+from .const import (
+    ATTR_MEDIA_IMAGE_URL,
+    COMMANDS,
+    COUNTRYCODE_NAMES,
+    DOMAIN,
+    GAMES_FILE,
+    PS4_DATA,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +46,7 @@ PS4_COMMAND_SCHEMA = vol.Schema(
     }
 )
 
-PLATFORMS = ["media_player"]
+PLATFORMS = [Platform.MEDIA_PLAYER]
 
 
 class PS4Data:
@@ -91,7 +99,7 @@ async def async_migrate_entry(hass, entry):
             hass.helpers.aiohttp_client.async_get_clientsession()
         )
         if loc:
-            country = loc.country_name
+            country = COUNTRYCODE_NAMES.get(loc.country_code)
             if country in COUNTRIES:
                 for device in data["devices"]:
                     device[CONF_REGION] = country

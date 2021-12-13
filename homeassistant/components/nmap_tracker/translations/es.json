@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "La ubicaci\u00f3n ya est\u00e1 configurada"
+        },
+        "error": {
+            "invalid_hosts": "Hosts no v\u00e1lidos"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "exclude": "Direcciones de red (separadas por comas) para excluir del escaneo",
+                    "home_interval": "N\u00famero m\u00ednimo de minutos entre los escaneos de los dispositivos activos (preservar la bater\u00eda)",
+                    "hosts": "Direcciones de red (separadas por comas) para escanear",
+                    "scan_options": "Opciones de escaneo configurables sin procesar para Nmap"
+                },
+                "description": "Configure los hosts que ser\u00e1n escaneados por Nmap. Las direcciones de red y los excluidos pueden ser direcciones IP (192.168.1.1), redes IP (192.168.0.0/24) o rangos IP (192.168.1.0-32)."
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_hosts": "Hosts no v\u00e1lidos"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "consider_home": "Segundos de espera hasta que se marca un dispositivo de seguimiento como no en casa despu\u00e9s de no ser visto.",
+                    "exclude": "Direcciones de red (separadas por comas) para excluir del escaneo",
+                    "home_interval": "N\u00famero m\u00ednimo de minutos entre los escaneos de los dispositivos activos (preservar la bater\u00eda)",
+                    "hosts": "Direcciones de red (separadas por comas) para escanear",
+                    "interval_seconds": "Intervalo de exploraci\u00f3n",
+                    "scan_options": "Opciones de escaneo configurables sin procesar para Nmap",
+                    "track_new_devices": "Seguimiento de nuevos dispositivos"
+                },
+                "description": "Configure los hosts que ser\u00e1n escaneados por Nmap. Las direcciones de red y los excluidos pueden ser direcciones IP (192.168.1.1), redes IP (192.168.0.0/24) o rangos IP (192.168.1.0-32)."
+            }
+        }
+    },
+    "title": "Rastreador de Nmap"
+}

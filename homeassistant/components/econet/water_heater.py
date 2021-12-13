@@ -113,8 +113,7 @@ class EcoNetWaterHeater(EcoNetEntity, WaterHeaterEntity):
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
-        target_temp = kwargs.get(ATTR_TEMPERATURE)
-        if target_temp is not None:
+        if (target_temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
             self.water_heater.set_set_point(target_temp)
         else:
             _LOGGER.error("A target temperature must be provided")

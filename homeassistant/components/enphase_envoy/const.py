@@ -1,30 +1,80 @@
 """The enphase_envoy component."""
 
 
-from homeassistant.const import ENERGY_WATT_HOUR, POWER_WATT
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntityDescription,
+    SensorStateClass,
+)
+from homeassistant.const import ENERGY_WATT_HOUR, POWER_WATT, Platform
 
 DOMAIN = "enphase_envoy"
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 
 
 COORDINATOR = "coordinator"
 NAME = "name"
 
-SENSORS = {
-    "production": ("Current Energy Production", POWER_WATT),
-    "daily_production": ("Today's Energy Production", ENERGY_WATT_HOUR),
-    "seven_days_production": (
-        "Last Seven Days Energy Production",
-        ENERGY_WATT_HOUR,
+SENSORS = (
+    SensorEntityDescription(
+        key="production",
+        name="Current Power Production",
+        native_unit_of_measurement=POWER_WATT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    "lifetime_production": ("Lifetime Energy Production", ENERGY_WATT_HOUR),
-    "consumption": ("Current Energy Consumption", POWER_WATT),
-    "daily_consumption": ("Today's Energy Consumption", ENERGY_WATT_HOUR),
-    "seven_days_consumption": (
-        "Last Seven Days Energy Consumption",
-        ENERGY_WATT_HOUR,
+    SensorEntityDescription(
+        key="daily_production",
+        name="Today's Energy Production",
+        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        device_class=SensorDeviceClass.ENERGY,
     ),
-    "lifetime_consumption": ("Lifetime Energy Consumption", ENERGY_WATT_HOUR),
-    "inverters": ("Inverter", POWER_WATT),
-}
+    SensorEntityDescription(
+        key="seven_days_production",
+        name="Last Seven Days Energy Production",
+        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.ENERGY,
+    ),
+    SensorEntityDescription(
+        key="lifetime_production",
+        name="Lifetime Energy Production",
+        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        device_class=SensorDeviceClass.ENERGY,
+    ),
+    SensorEntityDescription(
+        key="consumption",
+        name="Current Power Consumption",
+        native_unit_of_measurement=POWER_WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="daily_consumption",
+        name="Today's Energy Consumption",
+        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.ENERGY,
+    ),
+    SensorEntityDescription(
+        key="seven_days_consumption",
+        name="Last Seven Days Energy Consumption",
+        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.ENERGY,
+    ),
+    SensorEntityDescription(
+        key="lifetime_consumption",
+        name="Lifetime Energy Consumption",
+        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        device_class=SensorDeviceClass.ENERGY,
+    ),
+    SensorEntityDescription(
+        key="inverters",
+        name="Inverter",
+        native_unit_of_measurement=POWER_WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+)

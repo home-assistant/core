@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado"
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar",
+            "no_units": "No se pudo encontrar ning\u00fan grupo AirTouch 4."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "title": "Configura los detalles de conexi\u00f3n de tu AirTouch 4."
+            }
+        }
+    }
+}

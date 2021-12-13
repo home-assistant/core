@@ -16,7 +16,8 @@
             "user": {
                 "data": {
                     "name": "Naam",
-                    "password": "Naam",
+                    "password": "Wachtwoord",
+                    "url": "URL",
                     "username": "Gebruikersnaam"
                 },
                 "title": "Vul uw Growatt gegevens in"

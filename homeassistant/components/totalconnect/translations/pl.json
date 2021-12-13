@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Konto jest ju\u017c skonfigurowane",
+            "no_locations": "Brak dost\u0119pnych lokalizacji dla tego u\u017cytkownika, sprawd\u017a ustawienia TotalConnect.",
             "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
         },
         "error": {
@@ -11,9 +12,10 @@
         "step": {
             "locations": {
                 "data": {
-                    "location": "Lokalizacja"
+                    "location": "Lokalizacja",
+                    "usercode": "Kod u\u017cytkownika"
                 },
-                "description": "Wprowad\u017a kod u\u017cytkownika dla u\u017cytkownika w tej lokalizacji",
+                "description": "Wprowad\u017a kod u\u017cytkownika dla u\u017cytkownika w lokalizacji {location_id}",
                 "title": "Kody lokalizacji u\u017cytkownika"
             },
             "reauth_confirm": {

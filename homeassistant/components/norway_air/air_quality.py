@@ -24,6 +24,8 @@ CONF_FORECAST = "forecast"
 DEFAULT_FORECAST = 0
 DEFAULT_NAME = "Air quality Norway"
 
+OVERRIDE_URL = "https://aa015h6buqvih86i1.api.met.no/weatherapi/airqualityforecast/0.1/"
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_FORECAST, default=DEFAULT_FORECAST): vol.Coerce(int),
@@ -72,7 +74,9 @@ class AirSensor(AirQualityEntity):
     def __init__(self, name, coordinates, forecast, session):
         """Initialize the sensor."""
         self._name = name
-        self._api = metno.AirQualityData(coordinates, forecast, session)
+        self._api = metno.AirQualityData(
+            coordinates, forecast, session, api_url=OVERRIDE_URL
+        )
 
     @property
     def attribution(self) -> str:
@@ -92,31 +96,31 @@ class AirSensor(AirQualityEntity):
         """Return the name of the sensor."""
         return self._name
 
-    @property
+    @property  # type: ignore
     @round_state
     def air_quality_index(self):
         """Return the Air Quality Index (AQI)."""
         return self._api.data.get("aqi")
 
-    @property
+    @property  # type: ignore
     @round_state
     def nitrogen_dioxide(self):
         """Return the NO2 (nitrogen dioxide) level."""
         return self._api.data.get("no2_concentration")
 
-    @property
+    @property  # type: ignore
     @round_state
     def ozone(self):
         """Return the O3 (ozone) level."""
         return self._api.data.get("o3_concentration")
 
-    @property
+    @property  # type: ignore
     @round_state
     def particulate_matter_2_5(self):
         """Return the particulate matter 2.5 level."""
         return self._api.data.get("pm25_concentration")
 
-    @property
+    @property  # type: ignore
     @round_state
     def particulate_matter_10(self):
         """Return the particulate matter 10 level."""

@@ -1,6 +1,10 @@
 """Implement the services discovery feature from Hass.io for Add-ons."""
+from __future__ import annotations
+
 import asyncio
+from dataclasses import dataclass
 import logging
+from typing import Any
 
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPServiceUnavailable
@@ -8,7 +12,8 @@ from aiohttp.web_exceptions import HTTPServiceUnavailable
 from homeassistant import config_entries
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import ATTR_NAME, ATTR_SERVICE, EVENT_HOMEASSISTANT_START
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import BaseServiceInfo
 
 from .const import ATTR_ADDON, ATTR_CONFIG, ATTR_DISCOVERY, ATTR_UUID
 from .handler import HassioAPIError
@@ -16,8 +21,15 @@ from .handler import HassioAPIError
 _LOGGER = logging.getLogger(__name__)
 
 
+@dataclass
+class HassioServiceInfo(BaseServiceInfo):
+    """Prepared info from hassio entries."""
+
+    config: dict[str, Any]
+
+
 @callback
-def async_setup_discovery_view(hass: HomeAssistantView, hassio):
+def async_setup_discovery_view(hass: HomeAssistant, hassio):
     """Discovery setup."""
     hassio_discovery = HassIODiscovery(hass, hassio)
     hass.http.register_view(hassio_discovery)
@@ -49,7 +61,7 @@ class HassIODiscovery(HomeAssistantView):
     name = "api:hassio_push:discovery"
     url = "/api/hassio_push/discovery/{uuid}"
 
-    def __init__(self, hass: HomeAssistantView, hassio):
+    def __init__(self, hass: HomeAssistant, hassio):
         """Initialize WebView."""
         self.hass = hass
         self.hassio = hassio
@@ -88,7 +100,9 @@ class HassIODiscovery(HomeAssistantView):
 
         # Use config flow
         await self.hass.config_entries.flow.async_init(
-            service, context={"source": config_entries.SOURCE_HASSIO}, data=config_data
+            service,
+            context={"source": config_entries.SOURCE_HASSIO},
+            data=HassioServiceInfo(config=config_data),
         )
 
     async def async_process_del(self, data):

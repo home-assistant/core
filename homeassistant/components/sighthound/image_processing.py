@@ -55,8 +55,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error("Sighthound error %s setup aborted", exc)
         return
 
-    save_file_folder = config.get(CONF_SAVE_FILE_FOLDER)
-    if save_file_folder:
+    if save_file_folder := config.get(CONF_SAVE_FILE_FOLDER):
         save_file_folder = Path(save_file_folder)
 
     entities = []
@@ -74,6 +73,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 class SighthoundEntity(ImageProcessingEntity):
     """Create a sighthound entity."""
+
+    _attr_unit_of_measurement = ATTR_PEOPLE
 
     def __init__(
         self, api, camera_entity, name, save_file_folder, save_timestamped_file
@@ -163,11 +164,6 @@ class SighthoundEntity(ImageProcessingEntity):
     def state(self):
         """Return the state of the entity."""
         return self._state
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return ATTR_PEOPLE
 
     @property
     def extra_state_attributes(self):

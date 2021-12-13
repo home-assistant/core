@@ -11,7 +11,7 @@ from homeassistant.components.vera import (
     CONF_LIGHTS,
     DOMAIN,
 )
-from homeassistant.config_entries import ENTRY_STATE_NOT_LOADED
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -148,7 +148,7 @@ async def test_unload(
 
     for config_entry in entries:
         assert await hass.config_entries.async_unload(config_entry.entry_id)
-        assert config_entry.state == ENTRY_STATE_NOT_LOADED
+        assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_async_setup_entry_error(

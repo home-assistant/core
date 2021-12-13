@@ -1,4 +1,5 @@
 """Tests for Home Assistant View."""
+from http import HTTPStatus
 from unittest.mock import AsyncMock, Mock
 
 from aiohttp.web_exceptions import (
@@ -68,4 +69,4 @@ async def test_not_running(mock_request_with_stopping):
     response = await request_handler_factory(
         Mock(requires_auth=False), AsyncMock(side_effect=Unauthorized)
     )(mock_request_with_stopping)
-    assert response.status == 503
+    assert response.status == HTTPStatus.SERVICE_UNAVAILABLE

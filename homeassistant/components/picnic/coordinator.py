@@ -24,7 +24,7 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
         hass: HomeAssistant,
         picnic_api_client: PicnicAPI,
         config_entry: ConfigEntry,
-    ):
+    ) -> None:
         """Initialize the coordinator with the given Picnic API client."""
         self.picnic_api_client = picnic_api_client
         self.config_entry = config_entry

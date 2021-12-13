@@ -11,6 +11,8 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN
 
+# mypy: disallow-any-generics
+
 CONDITION_SCHEMA = toggle_entity.CONDITION_SCHEMA.extend(
     {vol.Required(CONF_DOMAIN): DOMAIN}
 )
@@ -18,12 +20,10 @@ CONDITION_SCHEMA = toggle_entity.CONDITION_SCHEMA.extend(
 
 @callback
 def async_condition_from_config(
-    config: ConfigType, config_validation: bool
+    hass: HomeAssistant, config: ConfigType
 ) -> ConditionCheckerType:
     """Evaluate state based on configuration."""
-    if config_validation:
-        config = CONDITION_SCHEMA(config)
-    return toggle_entity.async_condition_from_config(config)
+    return toggle_entity.async_condition_from_config(hass, config)
 
 
 async def async_get_conditions(
@@ -33,6 +33,8 @@ async def async_get_conditions(
     return await toggle_entity.async_get_conditions(hass, device_id, DOMAIN)
 
 
-async def async_get_condition_capabilities(hass: HomeAssistant, config: dict) -> dict:
+async def async_get_condition_capabilities(
+    hass: HomeAssistant, config: ConfigType
+) -> dict[str, vol.Schema]:
     """List condition capabilities."""
     return await toggle_entity.async_get_condition_capabilities(hass, config)

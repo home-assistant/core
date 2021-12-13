@@ -1,4 +1,5 @@
 """Test the frame helper."""
+# pylint: disable=protected-access
 from unittest.mock import Mock, patch
 
 import pytest
@@ -15,7 +16,7 @@ async def test_extract_frame_integration(caplog, mock_integration_frame):
     assert found_frame == mock_integration_frame
 
 
-async def test_extract_frame_integration_with_excluded_intergration(caplog):
+async def test_extract_frame_integration_with_excluded_integration(caplog):
     """Test extracting the current frame from integration context."""
     correct_frame = Mock(
         filename="/home/dev/homeassistant/components/mdns/light.py",
@@ -70,3 +71,24 @@ async def test_extract_frame_no_integration(caplog):
         ],
     ), pytest.raises(frame.MissingIntegrationFrame):
         frame.get_integration_frame()
+
+
+@pytest.mark.usefixtures("mock_integration_frame")
+@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
+async def test_prevent_flooding(caplog):
+    """Test to ensure a report is only written once to the log."""
+
+    what = "accessed hi instead of hello"
+    key = "/home/paulus/homeassistant/components/hue/light.py:23"
+
+    frame.report(what, error_if_core=False)
+    assert what in caplog.text
+    assert key in frame._REPORTED_INTEGRATIONS
+    assert len(frame._REPORTED_INTEGRATIONS) == 1
+
+    caplog.clear()
+
+    frame.report(what, error_if_core=False)
+    assert what not in caplog.text
+    assert key in frame._REPORTED_INTEGRATIONS
+    assert len(frame._REPORTED_INTEGRATIONS) == 1

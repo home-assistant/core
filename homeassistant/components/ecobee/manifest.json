@@ -3,7 +3,11 @@
   "name": "ecobee",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ecobee",
-  "requirements": ["python-ecobee-api==0.2.11"],
-  "codeowners": ["@marthoc"],
+  "requirements": [
+    "python-ecobee-api==0.2.14"
+  ],
+  "codeowners": [
+    "@marthoc"
+  ],
   "iot_class": "cloud_polling"
 }

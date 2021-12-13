@@ -85,7 +85,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the HomematicIP Cloud binary sensor from a config entry."""
     hap = hass.data[HMIPC_DOMAIN][config_entry.unique_id]
-    entities = [HomematicipCloudConnectionSensor(hap)]
+    entities: list[HomematicipGenericEntity] = [HomematicipCloudConnectionSensor(hap)]
     for device in hap.home.devices:
         if isinstance(device, AsyncAccelerationSensor):
             entities.append(HomematicipAccelerationSensor(hap, device))
@@ -172,12 +172,12 @@ class HomematicipCloudConnectionSensor(HomematicipGenericEntity, BinarySensorEnt
     def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
         # Adds a sensor to the existing HAP device
-        return {
-            "identifiers": {
+        return DeviceInfo(
+            identifiers={
                 # Serial numbers of Homematic IP device
                 (HMIPC_DOMAIN, self._home.id)
             }
-        }
+        )
 
     @property
     def icon(self) -> str:
@@ -218,8 +218,7 @@ class HomematicipBaseActionSensor(HomematicipGenericEntity, BinarySensorEntity):
         state_attr = super().extra_state_attributes
 
         for attr, attr_key in SAM_DEVICE_ATTRIBUTES.items():
-            attr_value = getattr(self._device, attr, None)
-            if attr_value:
+            if attr_value := getattr(self._device, attr, None):
                 state_attr[attr_key] = attr_value
 
         return state_attr
@@ -254,7 +253,7 @@ class HomematicipMultiContactInterface(HomematicipGenericEntity, BinarySensorEnt
         return DEVICE_CLASS_OPENING
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if the contact interface is on/open."""
         if self._device.functionalChannels[self._channel].windowState is None:
             return None
@@ -490,8 +489,7 @@ class HomematicipSecurityZoneSensorGroup(HomematicipGenericEntity, BinarySensorE
         state_attr = super().extra_state_attributes
 
         for attr, attr_key in GROUP_ATTRIBUTES.items():
-            attr_value = getattr(self._device, attr, None)
-            if attr_value:
+            if attr_value := getattr(self._device, attr, None):
                 state_attr[attr_key] = attr_value
 
         window_state = getattr(self._device, "windowState", None)
@@ -544,8 +542,8 @@ class HomematicipSecuritySensorGroup(
     @property
     def is_on(self) -> bool:
         """Return true if safety issue detected."""
-        parent_is_on = super().is_on
-        if parent_is_on:
+        if super().is_on:
+            # parent is on
             return True
 
         if (

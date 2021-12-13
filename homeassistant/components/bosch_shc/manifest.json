@@ -1,0 +1,13 @@
+{
+  "domain": "bosch_shc",
+  "name": "Bosch SHC",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/bosch_shc",
+  "requirements": ["boschshcpy==0.2.19"],
+  "zeroconf": [
+    {"type": "_http._tcp.local.", "name": "bosch shc*"}
+  ],
+  "iot_class": "local_push",
+  "codeowners": ["@tschamm"],
+  "after_dependencies": ["zeroconf"]
+}

@@ -16,7 +16,9 @@ DUNEHD_STATE = {"protocol_version": "4", "player_state": "navigator"}
 
 async def test_import(hass):
     """Test that the import works."""
-    with patch("pdunehd.DuneHDPlayer.update_state", return_value=DUNEHD_STATE):
+    with patch("homeassistant.components.dunehd.async_setup_entry"), patch(
+        "pdunehd.DuneHDPlayer.update_state", return_value=DUNEHD_STATE
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=CONFIG_HOSTNAME
         )
@@ -67,10 +69,10 @@ async def test_user_invalid_host(hass):
 async def test_user_very_long_host(hass):
     """Test that errors are shown when the host is longer than 253 chars."""
     long_host = (
-        "very_long_host_very_long_host_very_long_host_very_long_host_very_long"
-        "host_very_long_host_very_long_host_very_long_host_very_long_host_very_long_ho"
-        "st_very_long_host_very_long_host_very_long_host_very_long_host_very_long_host_"
-        "very_long_host_very_long_host"
+        "very_long_host_very_long_host_very_long_host_very_long_host_very_long_"
+        "host_very_long_host_very_long_host_very_long_host_very_long_host_very_long_"
+        "host_very_long_host_very_long_host_very_long_host_very_long_host_very_long_"
+        "host_very_long_host_very_long_host"
     )
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: long_host}
@@ -108,7 +110,9 @@ async def test_duplicate_error(hass):
 
 async def test_create_entry(hass):
     """Test that the user step works."""
-    with patch("pdunehd.DuneHDPlayer.update_state", return_value=DUNEHD_STATE):
+    with patch("homeassistant.components.dunehd.async_setup_entry"), patch(
+        "pdunehd.DuneHDPlayer.update_state", return_value=DUNEHD_STATE
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG_HOSTNAME
         )
@@ -120,7 +124,9 @@ async def test_create_entry(hass):
 
 async def test_create_entry_with_ipv6_address(hass):
     """Test that the user step works with device IPv6 address.."""
-    with patch("pdunehd.DuneHDPlayer.update_state", return_value=DUNEHD_STATE):
+    with patch("homeassistant.components.dunehd.async_setup_entry"), patch(
+        "pdunehd.DuneHDPlayer.update_state", return_value=DUNEHD_STATE
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},

@@ -1,0 +1,37 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_device": "Enheten er allerede konfigurert",
+            "cannot_connect": "Tilkobling mislyktes",
+            "no_unconfigured_devices": "Ingen ukonfigurerte enheter ble funnet.",
+            "switchbot_unsupported_type": "Switchbot-type st\u00f8ttes ikke.",
+            "unknown": "Uventet feil"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "user": {
+                "data": {
+                    "mac": "Enhetens MAC -adresse",
+                    "name": "Navn",
+                    "password": "Passord"
+                },
+                "title": "Sett opp Switchbot-enhet"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "retry_count": "Antall nye fors\u00f8k",
+                    "retry_timeout": "Tidsavbrudd mellom fors\u00f8k",
+                    "scan_timeout": "Hvor lenge skal jeg s\u00f8ke etter annonsedata",
+                    "update_time": "Tid mellom oppdateringer (sekunder)"
+                }
+            }
+        }
+    }
+}

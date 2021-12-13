@@ -8,7 +8,11 @@ activate_eco_mode_with_duration:
       name: Duration
       description: The duration of eco mode in minutes.
       required: true
-      example: 60
+      selector:
+        number:
+          min: 1
+          max: 1440
+          unit_of_measurement: "minutes"
     accesspoint_id:
       name: Accesspoint ID
       description: The ID of the Homematic IP Access Point
@@ -49,7 +53,6 @@ activate_vacation:
       name: Temperature
       description: the set temperature during the vacation mode.
       required: true
-      example: 18.5
       default: 18
       selector:
         number:
@@ -99,9 +102,8 @@ set_active_climate_profile:
         text:
     climate_profile_index:
       name: Climate profile index
-      description: The index of the climate profile (1 based)
+      description: The index of the climate profile.
       required: true
-      example: 1
       selector:
         number:
           min: 1
@@ -127,7 +129,6 @@ dump_hap_config:
     anonymize:
       name: Anonymize
       description: Should the Configuration be anonymized?
-      example: true
       default: true
       selector:
         boolean:

@@ -33,14 +33,20 @@
             "button": "\u6309\u9215",
             "button1": "\u7b2c\u4e00\u500b\u6309\u9215",
             "button2": "\u7b2c\u4e8c\u500b\u6309\u9215",
-            "button3": "\u7b2c\u4e09\u500b\u6309\u9215"
+            "button3": "\u7b2c\u4e09\u500b\u6309\u9215",
+            "button4": "\u7b2c\u56db\u500b\u6309\u9215"
         },
         "trigger_type": {
+            "btn_down": "\"{subtype}\" \u6309\u9215\u6309\u4e0b",
+            "btn_up": "\"{subtype}\" \u6309\u9215\u91cb\u653e",
             "double": "{subtype} \u96d9\u64ca",
-            "long": "{subtype} \u9577\u6309",
+            "double_push": "{subtype} \u96d9\u6309",
+            "long": "{subtype} \u9577\u9ede\u64ca",
+            "long_push": "{subtype} \u9577\u6309",
             "long_single": "{subtype} \u9577\u6309\u5f8c\u55ae\u64ca",
             "single": "{subtype} \u55ae\u64ca",
             "single_long": "{subtype} \u55ae\u64ca\u5f8c\u9577\u6309",
+            "single_push": "{subtype} \u55ae\u6309",
             "triple": "{subtype} \u4e09\u9023\u64ca"
         }
     }

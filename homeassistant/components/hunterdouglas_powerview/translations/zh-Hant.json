@@ -7,6 +7,7 @@
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
         },
+        "flow_title": "{name} ({host})",
         "step": {
             "link": {
                 "description": "\u662f\u5426\u8981\u8a2d\u5b9a {name} ({host})\uff1f",

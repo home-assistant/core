@@ -1,0 +1,28 @@
+{
+    "config": {
+        "step": {
+            "setup_serial": {
+                "title": "Dispositivo"
+            },
+            "setup_serial_manual_path": {
+                "title": "Ruta"
+            },
+            "user": {
+                "data": {
+                    "type": "Tipo de conecci\u00f3n"
+                },
+                "title": "Seleccione el tipo de conexi\u00f3n"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "time_between_update": "Tiempo m\u00ednimo entre actualizaciones de entidad [s]"
+                },
+                "title": "Opciones DSMR"
+            }
+        }
+    }
+}

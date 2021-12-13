@@ -4,10 +4,13 @@ from __future__ import annotations
 from pathlib import Path
 from urllib.parse import urlparse
 
+from awesomeversion import (
+    AwesomeVersion,
+    AwesomeVersionException,
+    AwesomeVersionStrategy,
+)
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
-
-from homeassistant.loader import validate_custom_integration_version
 
 from .model import Config, Integration
 
@@ -35,6 +38,7 @@ NO_IOT_CLASS = [
     "automation",
     "binary_sensor",
     "blueprint",
+    "button",
     "calendar",
     "camera",
     "climate",
@@ -88,7 +92,9 @@ NO_IOT_CLASS = [
     "scene",
     "script",
     "search",
+    "select",
     "sensor",
+    "siren",
     "stt",
     "switch",
     "system_health",
@@ -142,10 +148,19 @@ def verify_uppercase(value: str):
 
 def verify_version(value: str):
     """Verify the version."""
-    if not validate_custom_integration_version(value):
-        raise vol.Invalid(
-            f"'{value}' is not a valid version. This will cause a future version of Home Assistant to block this integration.",
+    try:
+        AwesomeVersion(
+            value,
+            [
+                AwesomeVersionStrategy.CALVER,
+                AwesomeVersionStrategy.SEMVER,
+                AwesomeVersionStrategy.SIMPLEVER,
+                AwesomeVersionStrategy.BUILDVER,
+                AwesomeVersionStrategy.PEP440,
+            ],
         )
+    except AwesomeVersionException:
+        raise vol.Invalid(f"'{value}' is not a valid version.")
     return value
 
 
@@ -172,6 +187,7 @@ MANIFEST_SCHEMA = vol.Schema(
                             str, verify_uppercase, verify_wildcard
                         ),
                         vol.Optional("manufacturer"): vol.All(str, verify_lowercase),
+                        vol.Optional("model"): vol.All(str, verify_lowercase),
                         vol.Optional("name"): vol.All(str, verify_lowercase),
                     }
                 ),
@@ -188,6 +204,18 @@ MANIFEST_SCHEMA = vol.Schema(
                         str, verify_uppercase, verify_wildcard
                     ),
                     vol.Optional("hostname"): vol.All(str, verify_lowercase),
+                }
+            )
+        ],
+        vol.Optional("usb"): [
+            vol.Schema(
+                {
+                    vol.Optional("vid"): vol.All(str, verify_uppercase),
+                    vol.Optional("pid"): vol.All(str, verify_uppercase),
+                    vol.Optional("serial_number"): vol.All(str, verify_lowercase),
+                    vol.Optional("manufacturer"): vol.All(str, verify_lowercase),
+                    vol.Optional("description"): vol.All(str, verify_lowercase),
+                    vol.Optional("known_devices"): [str],
                 }
             )
         ],
@@ -221,10 +249,7 @@ def validate_version(integration: Integration):
     Will be removed when the version key is no longer optional for custom integrations.
     """
     if not integration.manifest.get("version"):
-        integration.add_error(
-            "manifest",
-            "No 'version' key in the manifest file. This will cause a future version of Home Assistant to block this integration.",
-        )
+        integration.add_error("manifest", "No 'version' key in the manifest file.")
         return
 
 

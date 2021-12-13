@@ -65,7 +65,7 @@ class AccessoryAidStorage:
     persist over reboots.
     """
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry):
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Create a new entity map store."""
         self.hass = hass
         self.allocations = {}
@@ -82,8 +82,7 @@ class AccessoryAidStorage:
         aidstore = get_aid_storage_filename_for_entry_id(self._entry)
         self.store = Store(self.hass, AID_MANAGER_STORAGE_VERSION, aidstore)
 
-        raw_storage = await self.store.async_load()
-        if not raw_storage:
+        if not (raw_storage := await self.store.async_load()):
             # There is no data about aid allocations yet
             return
 
@@ -92,14 +91,13 @@ class AccessoryAidStorage:
 
     def get_or_allocate_aid_for_entity_id(self, entity_id: str):
         """Generate a stable aid for an entity id."""
-        entity = self._entity_registry.async_get(entity_id)
-        if not entity:
-            return self._get_or_allocate_aid(None, entity_id)
+        if not (entity := self._entity_registry.async_get(entity_id)):
+            return self.get_or_allocate_aid(None, entity_id)
 
         sys_unique_id = get_system_unique_id(entity)
-        return self._get_or_allocate_aid(sys_unique_id, entity_id)
+        return self.get_or_allocate_aid(sys_unique_id, entity_id)
 
-    def _get_or_allocate_aid(self, unique_id: str, entity_id: str):
+    def get_or_allocate_aid(self, unique_id: str, entity_id: str):
         """Allocate (and return) a new aid for an accessory."""
         if unique_id and unique_id in self.allocations:
             return self.allocations[unique_id]

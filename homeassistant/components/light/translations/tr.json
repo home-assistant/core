@@ -1,4 +1,22 @@
 {
+    "device_automation": {
+        "action_type": {
+            "brightness_decrease": "{entity_name} parlakl\u0131\u011f\u0131n\u0131 azalt",
+            "brightness_increase": "{entity_name} parlakl\u0131\u011f\u0131n\u0131 art\u0131r\u0131n",
+            "flash": "Fla\u015f {entity_name}",
+            "toggle": "{entity_name} de\u011fi\u015ftir",
+            "turn_off": "{entity_name} kapat",
+            "turn_on": "{entity_name} a\u00e7\u0131n"
+        },
+        "condition_type": {
+            "is_off": "{entity_name} kapal\u0131",
+            "is_on": "{entity_name} a\u00e7\u0131k"
+        },
+        "trigger_type": {
+            "turned_off": "{entity_name} kapat\u0131ld\u0131",
+            "turned_on": "{entity_name} a\u00e7\u0131ld\u0131"
+        }
+    },
     "state": {
         "_": {
             "off": "Kapal\u0131",
