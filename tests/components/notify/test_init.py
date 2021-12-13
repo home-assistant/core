@@ -20,7 +20,7 @@ from tests.common import MockConfigEntry
 
 async def test_same_targets(hass: HomeAssistant):
     """Test not changing the targets in a notify service."""
-    test = LegacyNotificationService(hass)
+    test = NotificationService(hass)
     await test.async_setup(hass, "notify", "test")
     await test.async_register_services()
     await hass.async_block_till_done()
@@ -35,7 +35,7 @@ async def test_same_targets(hass: HomeAssistant):
 
 async def test_change_targets(hass: HomeAssistant):
     """Test changing the targets in a notify service."""
-    test = LegacyNotificationService(hass)
+    test = NotificationService(hass)
     await test.async_setup(hass, "notify", "test")
     await test.async_register_services()
     await hass.async_block_till_done()
@@ -52,7 +52,7 @@ async def test_change_targets(hass: HomeAssistant):
 
 async def test_add_targets(hass: HomeAssistant):
     """Test adding the targets in a notify service."""
-    test = LegacyNotificationService(hass)
+    test = NotificationService(hass)
     await test.async_setup(hass, "notify", "test")
     await test.async_register_services()
     await hass.async_block_till_done()
@@ -69,7 +69,7 @@ async def test_add_targets(hass: HomeAssistant):
 
 async def test_remove_targets(hass: HomeAssistant):
     """Test removing targets from the targets in a notify service."""
-    test = LegacyNotificationService(hass)
+    test = NotificationService(hass)
     await test.async_setup(hass, "notify", "test")
     await test.async_register_services()
     await hass.async_block_till_done()
@@ -84,7 +84,7 @@ async def test_remove_targets(hass: HomeAssistant):
     assert test.registered_targets == {"test_c": 1}
 
 
-class LegacyNotificationService(notify.BaseNotificationService):
+class NotificationService(notify.BaseNotificationService):
     """A test class for legacy notification services."""
 
     def __init__(self, hass):
@@ -111,10 +111,6 @@ async def test_warn_template(hass, caplog):
     # We should only log it once
     assert caplog.text.count("Passing templates to notify service is deprecated") == 1
     assert hass.states.get("persistent_notification.notification") is not None
-
-
-class NotificationService(notify.NotifyService):
-    """A test class for notification services."""
 
 
 async def test_notify_service(
