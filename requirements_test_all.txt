@@ -1004,7 +1004,7 @@ pymata-express==1.19
 pymazda==0.2.2
 
 # homeassistant.components.melcloud
-pymelcloud==2.5.5
+pymelcloud==2.5.6
 
 # homeassistant.components.meteoclimatic
 pymeteoclimatic==0.0.6
