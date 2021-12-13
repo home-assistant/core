@@ -49,7 +49,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input:
             if user_input.get(CONF_CONN_TYPE) == CONF_TYPE_BLE:
                 if not user_input.get(CONF_UUID):
-                    return await self.async_step_ble_device()
+                    return await self.async_step_ble_device_manual()
             elif user_input.get(CONF_CONN_TYPE) == CONF_TYPE_WIFI:
                 if not user_input.get(CONF_IP_ADDRESS):
                     return await self.async_step_wifi_device()
@@ -58,6 +58,32 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema({vol.Required(CONF_CONN_TYPE): vol.In(conn_types)}),
+        )
+
+    async def async_step_ble_device_manual(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle the step to configure BLE device."""
+        if user_input:
+            if user_input.get(CONF_UUID):
+                unique_id = format_mac(user_input[CONF_UUID])
+                await self.async_set_unique_id(unique_id, raise_on_progress=False)
+                # self._abort_if_unique_id_configured()
+                user_input[CONF_CONN_TYPE] = CONF_TYPE_BLE
+                return self.async_create_entry(
+                    title=f"WalkingPad BLE {user_input[CONF_UUID]}",
+                    data=user_input,
+                )
+
+            return await self.async_step_ble_device()
+
+        return self.async_show_form(
+            step_id="ble_device_manual",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(CONF_UUID, default=""): str,
+                }
+            ),
         )
 
     async def async_step_ble_device(

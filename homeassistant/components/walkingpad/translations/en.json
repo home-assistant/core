@@ -1,16 +1,22 @@
 {
   "config": {
     "abort": {
-      "already_configured": "Defice is already configured.",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_devices_found": "No devices found. Try to restart WalkingPad.",
-      "ble_not_available": "Bluetooth is not available."
+      "ble_not_available": "Bluetooth is not available"
     },
     "error": {
-      "cannot_connect": "Failed to connect."
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "step": {
       "user": {
-        "description": "Choose connection type. Chinese versions of WalkingPad are usually connected via WiFi, European - via Bluetooth."
+        "description": "Choose connection type. Chinese versions of WalkingPad are usually connected via WiFi European - via Bluetooth."
+      },
+      "ble_device_manual": {
+        "description": "If you leave the field empty, Bluetooth discovery will be used to find devices.",
+        "data": {
+          "uuid": "UUID/MAC address"
+        }
       },
       "ble_device": {
         "data": {

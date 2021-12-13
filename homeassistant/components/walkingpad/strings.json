@@ -12,6 +12,12 @@
       "user": {
         "description": "Choose connection type. Chinese versions of WalkingPad are usually connected via WiFi European - via Bluetooth."
       },
+      "ble_device_manual": {
+        "description": "If you leave the field empty, Bluetooth discovery will be used to find devices.",
+        "data": {
+          "uuid": "UUID/MAC address"
+        }
+      },
       "ble_device": {
         "data": {
           "device": "Device"
