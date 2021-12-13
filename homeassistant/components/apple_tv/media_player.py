@@ -150,10 +150,11 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
         _LOGGER.debug("Updating app list")
         try:
             apps = await self.atv.apps.app_list()
-            self._app_list = {app.name: app.identifier for app in apps}
-            self.async_write_ha_state()
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Failed to update app list")
+        else:
+            self._app_list = {app.name: app.identifier for app in apps}
+            self.async_write_ha_state()
 
     @callback
     def async_device_disconnected(self):
