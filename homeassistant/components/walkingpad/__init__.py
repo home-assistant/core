@@ -78,7 +78,6 @@ class WalkingPadBaseDevice:
         self._config = config
         self._name = "WalkingPad"
         self._default_speed = config.options.get(CONF_DEFAULT_SPEED, DEFAULT_SPEED)
-        self._speed_user = self._default_speed
 
     @property
     def name(self) -> str | None:
@@ -94,10 +93,6 @@ class WalkingPadBaseDevice:
     def available(self) -> bool:
         """Return true if device is available."""
         raise NotImplementedError
-
-    async def set_speed_user(self, speed: float) -> None:
-        """Set user speed."""
-        self._speed_user = speed
 
     async def set_mode_standby(self) -> None:
         """Set mode to standby."""
@@ -199,15 +194,6 @@ class WalkingPadBLEDevice(WalkingPadBaseDevice):
         return self._dist
 
     @property
-    def speed_user(self) -> Any:
-        """Return speed set by user."""
-        if self.speed == 0:
-            speed = self._speed_user
-        else:
-            speed = self._speed
-        return speed
-
-    @property
     def default_speed(self) -> Any:
         """Return configured default speed."""
         return self._default_speed
@@ -279,7 +265,6 @@ class WalkingPadBLEDevice(WalkingPadBaseDevice):
 
     async def set_speed(self, speed: float) -> None:
         """Change speed."""
-        self._speed_user = speed / 10
         await self._walkingpad.change_speed(speed)
         await asyncio.sleep(AWAIT_SLEEP_INTERVAL)
 
@@ -422,22 +407,12 @@ class WalkingPadWiFiDevice(WalkingPadBaseDevice):
         return self._dist
 
     @property
-    def speed_user(self) -> Any:
-        """Return speed set by user."""
-        if self.speed == 0:
-            speed = self._speed_user
-        else:
-            speed = self._speed
-        return speed
-
-    @property
     def default_speed(self) -> Any:
         """Return configured default speed."""
         return self._default_speed
 
     async def set_speed(self, speed: float) -> None:
         """Change speed."""
-        self._speed_user = speed / 10
         await self._hass.async_add_executor_job(
             self._walkingpad_device.set_speed, speed / 10
         )

@@ -61,16 +61,11 @@ class WalkingPadRemote(WalkingPadEntity, RemoteEntity):
                 "dist": self.device.dist,
                 "max_speed": self.device.max_speed,
                 "min_speed": self.device.min_speed,
-                "speed_user": self.device.speed_user,
                 "default_speed": self.device.default_speed,
             }
             return attributes
         else:
             return None
-
-    async def set_speed_user(self, speed: float) -> None:
-        """Set user speed."""
-        await self.device.set_speed_user(speed)
 
     async def set_speed(self, speed: float) -> None:
         """Set current speed."""
