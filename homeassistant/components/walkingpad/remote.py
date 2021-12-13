@@ -10,8 +10,8 @@ from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import WalkingPadEntity
 from .const import DOMAIN
+from .models import WalkingPadEntity
 
 PARALLEL_UPDATES: Final = 1
 SCAN_INTERVAL: Final = timedelta(seconds=5)
