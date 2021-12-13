@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_MODE, CONF_NAME, CONF_PROTOCOL
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PROTOCOL
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import device_registry as dr
@@ -77,7 +77,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_PROTOCOL: user_input.get(CONF_PROTOCOL),
             },
             options={
-                CONF_MODE: user_input[CONF_MODE],
                 CONF_CUSTOM_EFFECT_COLORS: user_input[CONF_CUSTOM_EFFECT_COLORS],
                 CONF_CUSTOM_EFFECT_SPEED_PCT: user_input[CONF_CUSTOM_EFFECT_SPEED_PCT],
                 CONF_CUSTOM_EFFECT_TRANSITION: user_input[
@@ -90,7 +89,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle discovery via dhcp."""
         self._discovered_device = FluxLEDDiscovery(
             ipaddr=discovery_info.ip,
-            model=discovery_info.hostname,
+            model=None,
             id=discovery_info.macaddress.replace(":", ""),
             model_num=None,
             version_num=None,
