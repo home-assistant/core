@@ -234,6 +234,13 @@ class BlockSleepingClimate(
             "connections": {(device_registry.CONNECTION_NETWORK_MAC, self.wrapper.mac)}
         }
 
+    @property
+    def channel(self) -> str | None:
+        """Device channel."""
+        if self.block is not None:
+            return self.block.channel
+        return self.last_state_attributes.get("channel")
+
     def _check_is_off(self) -> bool:
         """Return if valve is off or on."""
         return bool(
@@ -244,15 +251,10 @@ class BlockSleepingClimate(
     async def set_state_full_path(self, **kwargs: Any) -> Any:
         """Set block state (HTTP request)."""
         _LOGGER.debug("Setting state for entity %s, state: %s", self.name, kwargs)
-        if self.block is None:
-            _LOGGER.warning(
-                "Setting state for entity %s before init, skipping", self.name
-            )
-            return None
         try:
             async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
                 return await self.wrapper.device.http_request(
-                    "get", f"thermostat/{self.block.channel}", kwargs
+                    "get", f"thermostat/{self.channel}", kwargs
                 )
         except (asyncio.TimeoutError, OSError) as err:
             _LOGGER.error(
