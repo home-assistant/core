@@ -326,7 +326,19 @@ class WalkingPadWiFiDevice(WalkingPadBaseDevice):
         self._walkingpad_device = Walkingpad(
             config.data[CONF_IP_ADDRESS], config.data[CONF_TOKEN]
         )
-        self._walkingpad_status = None
+        self._walkingpad_status = WalkingpadStatus(
+            {
+                "cal": 0,
+                "dist": 0,
+                "mode": 0,
+                "power": "on",
+                "sensitivity": 0,
+                "sp": 0,
+                "start_speed": 0,
+                "step": 0,
+                "time": 0,
+            }
+        )
         self._available = False
 
     @property
