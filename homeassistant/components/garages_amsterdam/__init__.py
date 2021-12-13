@@ -2,7 +2,7 @@
 from datetime import timedelta
 
 import async_timeout
-import garages_amsterdam
+from garages_amsterdam import GaragesAmsterdam
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -25,7 +25,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Garages Amsterdam config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if len(hass.config_entries.async_entries(DOMAIN)) == 1:
+
+    if unload_ok:
         hass.data.pop(DOMAIN)
 
     return unload_ok
@@ -42,9 +43,9 @@ async def get_coordinator(
         async with async_timeout.timeout(10):
             return {
                 garage.garage_name: garage
-                for garage in await garages_amsterdam.get_garages(
-                    aiohttp_client.async_get_clientsession(hass)
-                )
+                for garage in await GaragesAmsterdam(
+                    session=aiohttp_client.async_get_clientsession(hass)
+                ).all_garages()
             }
 
     coordinator = DataUpdateCoordinator(
