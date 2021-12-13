@@ -111,7 +111,7 @@ async def test_config_flow_auth_success(
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "auth"
-    assert result["errors"] == {}
+    assert result["errors"] is None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_TOKEN: "FK10000", CONF_REGION: "powiatwulkanowy", CONF_PIN: "000000"},
@@ -139,7 +139,7 @@ async def test_config_flow_auth_success_with_multiple_students(
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "auth"
-    assert result["errors"] == {}
+    assert result["errors"] is None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -360,7 +360,7 @@ async def test_multiple_config_entries(mock_account, mock_keystore, mock_student
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "auth"
-    assert result["errors"] == {}
+    assert result["errors"] is None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -528,7 +528,7 @@ async def test_multiple_config_entries_using_saved_credentials_3(mock_student, h
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "select_saved_credentials"
-    assert result["errors"] == {}
+    assert result["errors"] is None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -603,7 +603,7 @@ async def test_multiple_config_entries_using_saved_credentials_4(mock_student, h
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "select_saved_credentials"
-    assert result["errors"] == {}
+    assert result["errors"] is None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -686,7 +686,7 @@ async def test_multiple_config_entries_without_valid_saved_credentials(hass):
     ):
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "select_saved_credentials"
-        assert result["errors"] == {}
+        assert result["errors"] is None
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -763,7 +763,7 @@ async def test_multiple_config_entries_using_saved_credentials_with_connections_
     ):
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "select_saved_credentials"
-        assert result["errors"] == {}
+        assert result["errors"] is None
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -838,7 +838,7 @@ async def test_multiple_config_entries_using_saved_credentials_with_unknown_erro
     ):
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "select_saved_credentials"
-        assert result["errors"] == {}
+        assert result["errors"] is None
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -915,7 +915,7 @@ async def test_multiple_config_entries_using_saved_credentials_with_unknown_api_
     ):
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "select_saved_credentials"
-        assert result["errors"] == {}
+        assert result["errors"] is None
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -989,7 +989,7 @@ async def test_config_flow_auth_invalid_token(mock_keystore, hass):
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "auth"
-        assert result["errors"] == {}
+        assert result["errors"] is None
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -1015,7 +1015,7 @@ async def test_config_flow_auth_invalid_region(mock_keystore, hass):
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "auth"
-        assert result["errors"] == {}
+        assert result["errors"] is None
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -1041,7 +1041,7 @@ async def test_config_flow_auth_invalid_pin(mock_keystore, hass):
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "auth"
-        assert result["errors"] == {}
+        assert result["errors"] is None
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -1067,7 +1067,7 @@ async def test_config_flow_auth_expired_token(mock_keystore, hass):
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "auth"
-        assert result["errors"] == {}
+        assert result["errors"] is None
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -1093,7 +1093,7 @@ async def test_config_flow_auth_api_unknown_error(mock_keystore, hass):
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "auth"
-        assert result["errors"] == {}
+        assert result["errors"] is None
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -1119,7 +1119,7 @@ async def test_config_flow_auth_api_unknown_runtime_error(mock_keystore, hass):
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "auth"
-        assert result["errors"] == {}
+        assert result["errors"] is None
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -1145,7 +1145,7 @@ async def test_config_flow_auth_connection_error(mock_keystore, hass):
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "auth"
-        assert result["errors"] == {}
+        assert result["errors"] is None
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -1171,7 +1171,7 @@ async def test_config_flow_auth_unknown_error(mock_keystore, hass):
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "auth"
-        assert result["errors"] == {}
+        assert result["errors"] is None
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],

@@ -135,8 +135,7 @@ class VulcanCalendarData:
                     "The certificate is not authorized, please authorize integration again"
                 )
                 raise ConfigEntryAuthFailed from err
-            else:
-                _LOGGER.error("An API error has occurred: %s", err)
+            _LOGGER.error("An API error has occurred: %s", err)
             events = []
         except ClientConnectorError as err:
             if self._available:
@@ -193,8 +192,7 @@ class VulcanCalendarData:
                     "The certificate is not authorized, please authorize integration again"
                 )
                 raise ConfigEntryAuthFailed from err
-            else:
-                _LOGGER.error("An API error has occurred: %s", err)
+            _LOGGER.error("An API error has occurred: %s", err)
             return
         except ClientConnectorError as err:
             if self._available:

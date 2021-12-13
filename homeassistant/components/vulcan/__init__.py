@@ -35,8 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 "The certificate is not authorized, please authorize integration again"
             )
             raise ConfigEntryAuthFailed from err
-        else:
-            _LOGGER.error("Vulcan API error: %s", err)
+        _LOGGER.error("Vulcan API error: %s", err)
         return False
     except ClientConnectorError as err:
         if "connection_error" not in hass.data[DOMAIN]:
