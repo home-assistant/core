@@ -37,6 +37,7 @@ from tests.common import mock_restore_cache
 INITIAL_DATE = "2020-01-10"
 INITIAL_TIME = "23:45:56"
 INITIAL_DATETIME = f"{INITIAL_DATE} {INITIAL_TIME}"
+INITIAL_DATETIME_STATE = f"{INITIAL_DATE} {INITIAL_TIME}+00:00"
 
 ORIG_TIMEZONE = dt_util.DEFAULT_TIME_ZONE
 
@@ -136,7 +137,7 @@ async def test_set_datetime(hass):
     await async_set_date_and_time(hass, entity_id, dt_obj)
 
     state = hass.states.get(entity_id)
-    assert state.state == dt_obj.strftime(FMT_DATETIME)
+    assert state.state == dt_obj.strftime(FMT_DATETIME + "+00:00")
     assert state.attributes["has_time"]
     assert state.attributes["has_date"]
 
@@ -162,7 +163,7 @@ async def test_set_datetime_2(hass):
     await async_set_datetime(hass, entity_id, dt_obj)
 
     state = hass.states.get(entity_id)
-    assert state.state == dt_obj.strftime(FMT_DATETIME)
+    assert state.state == dt_obj.strftime(FMT_DATETIME + "+00:00")
     assert state.attributes["has_time"]
     assert state.attributes["has_date"]
 
@@ -188,7 +189,7 @@ async def test_set_datetime_3(hass):
     await async_set_timestamp(hass, entity_id, dt_util.as_utc(dt_obj).timestamp())
 
     state = hass.states.get(entity_id)
-    assert state.state == dt_obj.strftime(FMT_DATETIME)
+    assert state.state == dt_obj.strftime(FMT_DATETIME + "+00:00")
     assert state.attributes["has_time"]
     assert state.attributes["has_date"]
 
@@ -349,10 +350,10 @@ async def test_restore_state(hass):
     assert state_date.state == dt_obj.strftime(FMT_DATE)
 
     state_datetime = hass.states.get("input_datetime.test_datetime")
-    assert state_datetime.state == dt_obj.strftime(FMT_DATETIME)
+    assert state_datetime.state == dt_obj.strftime(FMT_DATETIME + "+00:00")
 
     state_bogus = hass.states.get("input_datetime.test_bogus_data")
-    assert state_bogus.state == initial.strftime(FMT_DATETIME)
+    assert state_bogus.state == initial.strftime(FMT_DATETIME + "+00:00")
 
     state_was_time = hass.states.get("input_datetime.test_was_time")
     assert state_was_time.state == default.strftime(FMT_DATE)
@@ -490,7 +491,7 @@ async def test_load_from_storage(hass, storage_setup):
     """Test set up from storage."""
     assert await storage_setup()
     state = hass.states.get(f"{DOMAIN}.datetime_from_storage")
-    assert state.state == INITIAL_DATETIME
+    assert state.state == INITIAL_DATETIME_STATE
     assert state.attributes.get(ATTR_EDITABLE)
 
 
@@ -510,11 +511,11 @@ async def test_editable_state_attribute(hass, storage_setup):
     )
 
     state = hass.states.get(f"{DOMAIN}.datetime_from_storage")
-    assert state.state == INITIAL_DATETIME
+    assert state.state == INITIAL_DATETIME_STATE
     assert state.attributes.get(ATTR_EDITABLE)
 
     state = hass.states.get(f"{DOMAIN}.from_yaml")
-    assert state.state == "2001-01-02 12:34:56"
+    assert state.state == "2001-01-02 12:34:56+00:00"
     assert not state.attributes[ATTR_EDITABLE]
 
 
@@ -574,7 +575,7 @@ async def test_update(hass, hass_ws_client, storage_setup):
 
     state = hass.states.get(input_entity_id)
     assert state.attributes[ATTR_FRIENDLY_NAME] == "datetime from storage"
-    assert state.state == INITIAL_DATETIME
+    assert state.state == INITIAL_DATETIME_STATE
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, input_id) == input_entity_id
 
     client = await hass_ws_client(hass)
@@ -615,7 +616,7 @@ async def test_ws_create(hass, hass_ws_client, storage_setup):
             "id": 6,
             "type": f"{DOMAIN}/create",
             CONF_NAME: "New DateTime",
-            CONF_INITIAL: "1991-01-02 01:02:03",
+            CONF_INITIAL: "1991-01-02 01:02:03+00:00",
             CONF_HAS_DATE: True,
             CONF_HAS_TIME: True,
         }
@@ -624,7 +625,7 @@ async def test_ws_create(hass, hass_ws_client, storage_setup):
     assert resp["success"]
 
     state = hass.states.get(input_entity_id)
-    assert state.state == "1991-01-02 01:02:03"
+    assert state.state == "1991-01-02 01:02:03+00:00"
     assert state.attributes[ATTR_FRIENDLY_NAME] == "New DateTime"
     assert state.attributes[ATTR_EDITABLE]
 
@@ -680,7 +681,7 @@ async def test_timestamp(hass):
         state_with_tz = hass.states.get("input_datetime.test_datetime_initial_with_tz")
         assert state_with_tz is not None
         # Timezone LA is UTC-8 => timestamp carries +01:00 => delta is -9 => 10:00 - 09:00 => 01:00
-        assert state_with_tz.state == "2020-12-13 01:00:00"
+        assert state_with_tz.state == "2020-12-13 01:00:00-08:00"
         assert (
             dt_util.as_local(
                 dt_util.utc_from_timestamp(state_with_tz.attributes[ATTR_TIMESTAMP])
@@ -693,7 +694,7 @@ async def test_timestamp(hass):
             "input_datetime.test_datetime_initial_without_tz"
         )
         assert state_without_tz is not None
-        assert state_without_tz.state == "2020-12-13 10:00:00"
+        assert state_without_tz.state == "2020-12-13 10:00:00-08:00"
         # Timezone LA is UTC-8 => timestamp has no zone (= assumed local) => delta to UTC is +8 => 10:00 + 08:00 => 18:00
         assert (
             dt_util.utc_from_timestamp(
@@ -736,7 +737,7 @@ async def test_timestamp(hass):
         state_with_tz_updated = hass.states.get(
             "input_datetime.test_datetime_initial_with_tz"
         )
-        assert state_with_tz_updated.state == "2020-12-13 10:00:00"
+        assert state_with_tz_updated.state == "2020-12-13 10:00:00-08:00"
         assert (
             state_with_tz_updated.attributes[ATTR_TIMESTAMP]
             == state_without_tz.attributes[ATTR_TIMESTAMP]
