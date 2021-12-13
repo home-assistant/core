@@ -25,6 +25,10 @@ DEV_TYPE_TO_HA = {
 FAN_MODE_AUTO = "auto"
 FAN_MODE_SLEEP = "sleep"
 
+NIGHT_LIGHT_OFF = "off"
+NIGHT_LIGHT_DIM = "dim"
+NIGHT_LIGHT_ON = "on"
+
 PRESET_MODES = {
     "LV-PUR131S": [FAN_MODE_AUTO, FAN_MODE_SLEEP],
     "Core200S": [FAN_MODE_SLEEP],
@@ -32,6 +36,10 @@ PRESET_MODES = {
 }
 SPEED_RANGE = (1, 3)  # off is not included
 
+NIGHT_LIGHT_MODES = {
+    "Core200S": [NIGHT_LIGHT_OFF, NIGHT_LIGHT_DIM, NIGHT_LIGHT_ON],
+    "Core400S": [NIGHT_LIGHT_OFF, NIGHT_LIGHT_DIM, NIGHT_LIGHT_ON]
+}
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the VeSync fan platform."""
@@ -167,21 +175,35 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
 
         self.schedule_update_ha_state()
 
+    def set_night_light(self, night_light_mode):
+        """Set the night light mode of device."""
+        if night_light_mode not in self.night_light_modes:
+            raise ValueError(
+                "{night_light_mode} is not one of the valid preset modes: {self.night_light_modes}"
+            )
+        if not self.smartfan.is_on:
+            return
+        
+        self.schedule_update_ha_state()
+        
     def turn_on(
         self,
         speed: str = None,
         percentage: int = None,
         preset_mode: str = None,
-        night_light: str = None,
+        night_light_mode: str = None,
         **kwargs,
     ) -> None:
         """Turn the device on."""
-        if night_light is not None:
-            self.self.smartfan.set_night_light(night_light)
-
         if preset_mode:
             self.set_preset_mode(preset_mode)
+            if night_light_mode:
+                set_night_light(night_light_mode)
             return
-        if percentage is None:
+        elif percentage is None:
             percentage = 50
+        
         self.set_percentage(percentage)
+        
+        if night_light_mode:
+            set_night_light(night_light_mode)
