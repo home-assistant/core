@@ -11,9 +11,12 @@
         "step": {
             "user": {
                 "data": {
+                    "client_id": "\u0130stemci Kimli\u011fi (iste\u011fe ba\u011fl\u0131)",
+                    "client_secret": "\u0130stemci Gizlili\u011fi (iste\u011fe ba\u011fl\u0131)",
                     "password": "Parola",
                     "username": "Kullan\u0131c\u0131 Ad\u0131"
-                }
+                },
+                "title": "Flick oturum a\u00e7ma kimlik bilgileri"
             }
         }
     }

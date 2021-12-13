@@ -1,16 +1,17 @@
 """Counter for the days until an HTTPS (TLS) certificate will expire."""
-from datetime import timedelta
+from __future__ import annotations
+
+from datetime import datetime, timedelta
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PORT,
-    DEVICE_CLASS_TIMESTAMP,
-    EVENT_HOMEASSISTANT_START,
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_START
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_call_later
@@ -76,7 +77,7 @@ class CertExpiryEntity(CoordinatorEntity):
 class SSLCertificateTimestamp(CertExpiryEntity, SensorEntity):
     """Implementation of the Cert Expiry timestamp sensor."""
 
-    _attr_device_class = DEVICE_CLASS_TIMESTAMP
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
 
     def __init__(self, coordinator) -> None:
         """Initialize a Cert Expiry timestamp sensor."""
@@ -85,8 +86,8 @@ class SSLCertificateTimestamp(CertExpiryEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.host}:{coordinator.port}-timestamp"
 
     @property
-    def native_value(self):
+    def native_value(self) -> datetime | None:
         """Return the state of the sensor."""
         if self.coordinator.data:
-            return self.coordinator.data.isoformat()
+            return self.coordinator.data
         return None

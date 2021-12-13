@@ -294,9 +294,7 @@ def get_media_player_features(state):
 
 def validate_media_player_features(state, feature_list):
     """Validate features for media players."""
-    supported_modes = get_media_player_features(state)
-
-    if not supported_modes:
+    if not (supported_modes := get_media_player_features(state)):
         _LOGGER.error("%s does not support any media_player features", state.entity_id)
         return False
 
@@ -317,7 +315,7 @@ def validate_media_player_features(state, feature_list):
     return True
 
 
-def show_setup_message(hass, entry_id, bridge_name, pincode, uri):
+def async_show_setup_message(hass, entry_id, bridge_name, pincode, uri):
     """Display persistent notification with setup information."""
     pin = pincode.decode()
     _LOGGER.info("Pincode: %s", pin)
@@ -336,12 +334,14 @@ def show_setup_message(hass, entry_id, bridge_name, pincode, uri):
         f"### {pin}\n"
         f"![image](/api/homekit/pairingqr?{entry_id}-{pairing_secret})"
     )
-    hass.components.persistent_notification.create(message, "HomeKit Pairing", entry_id)
+    hass.components.persistent_notification.async_create(
+        message, "HomeKit Pairing", entry_id
+    )
 
 
-def dismiss_setup_message(hass, entry_id):
+def async_dismiss_setup_message(hass, entry_id):
     """Dismiss persistent notification and remove QR code."""
-    hass.components.persistent_notification.dismiss(entry_id)
+    hass.components.persistent_notification.async_dismiss(entry_id)
 
 
 def convert_to_float(state):

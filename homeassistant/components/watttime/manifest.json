@@ -6,10 +6,6 @@
   "requirements": [
     "aiowatttime==0.1.1"
   ],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
-  "dependencies": [],
   "codeowners": [
     "@bachya"
   ],

@@ -1,7 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El host ya est\u00e1 configurado."
+            "already_configured": "El host ya est\u00e1 configurado.",
+            "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente",
+            "reconfigure_successful": "La reconfiguraci\u00f3n se realiz\u00f3 correctamente"
         },
         "error": {
             "cannot_connect": "No se pudo conectar",
@@ -31,10 +33,18 @@
             },
             "reauth": {
                 "data": {
-                    "password": "Contrase\u00f1a"
+                    "password": "Contrase\u00f1a",
+                    "username": "Usuario"
                 },
                 "description": "Raz\u00f3n: {details}",
-                "title": "Synology DSM Volver a autenticar la integraci\u00f3n"
+                "title": "Volver a autenticar la integraci\u00f3n Synology DSM"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Contrase\u00f1a",
+                    "username": "Usuario"
+                },
+                "title": "Volver a autenticar la integraci\u00f3n Synology DSM"
             },
             "user": {
                 "data": {

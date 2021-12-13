@@ -2,11 +2,10 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Callable
 import dataclasses
 from datetime import datetime
 import logging
-from typing import Callable
 
 import aiohttp
 import async_timeout
@@ -65,7 +64,7 @@ async def get_integration_info(
 ):
     """Get integration system health."""
     try:
-        with async_timeout.timeout(INFO_CALLBACK_TIMEOUT):
+        async with async_timeout.timeout(INFO_CALLBACK_TIMEOUT):
             data = await registration.info_callback(hass)
     except asyncio.TimeoutError:
         data = {"error": {"type": "failed", "error": "timeout"}}

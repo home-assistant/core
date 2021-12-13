@@ -35,17 +35,17 @@ MOCK_CURRENT_MEASUREMENTS = {
     },
     "electricityOut": {
         "measurement": None,
-        "thisDay": {"value": 0.0, "cost": 0.0},
-        "thisWeek": {"value": 0.0, "cost": 0.0},
-        "thisMonth": {"value": 0.0, "cost": 0.0},
-        "thisYear": {"value": 0.0, "cost": 0.0},
+        "thisDay": {"value": 1.51234, "cost": 0.0},
+        "thisWeek": {"value": 2.5, "cost": 0.0},
+        "thisMonth": {"value": 3.5, "cost": 0.0},
+        "thisYear": {"value": 4.5, "cost": 0.0},
     },
     "electricityOutLow": {
         "measurement": None,
-        "thisDay": {"value": 0.0, "cost": 0.0},
-        "thisWeek": {"value": 0.0, "cost": 0.0},
-        "thisMonth": {"value": 0.0, "cost": 0.0},
-        "thisYear": {"value": 0.0, "cost": 0.0},
+        "thisDay": {"value": 1.09281, "cost": 0.0},
+        "thisWeek": {"value": 2.0, "cost": 0.0},
+        "thisMonth": {"value": 3.0, "cost": 0.0},
+        "thisYear": {"value": 4.0, "cost": 0.0},
     },
     "gas": {
         "measurement": {

@@ -2,7 +2,6 @@
 import pytest
 
 from homeassistant.components.weather import (
-    ATTR_WEATHER_ATTRIBUTION,
     ATTR_WEATHER_HUMIDITY,
     ATTR_WEATHER_OZONE,
     ATTR_WEATHER_PRESSURE,
@@ -12,6 +11,7 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_SPEED,
     DOMAIN,
 )
+from homeassistant.const import ATTR_ATTRIBUTION
 
 
 @pytest.mark.parametrize("count,domain", [(1, DOMAIN)])
@@ -44,7 +44,7 @@ async def test_template_state_text(hass, start_ha):
     for attr, v_attr, value in [
         (
             "sensor.attribution",
-            ATTR_WEATHER_ATTRIBUTION,
+            ATTR_ATTRIBUTION,
             "The custom attribution",
         ),
         ("sensor.temperature", ATTR_WEATHER_TEMPERATURE, 22.3),

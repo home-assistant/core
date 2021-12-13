@@ -1,16 +1,19 @@
 """Support for OpenUV sensors."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TIME_MINUTES, UV_INDEX
+from homeassistant.const import DEVICE_CLASS_OZONE, TIME_MINUTES, UV_INDEX
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import as_local, parse_datetime
 
 from . import OpenUvEntity
 from .const import (
-    DATA_CLIENT,
     DATA_UV,
     DOMAIN,
     TYPE_CURRENT_OZONE_LEVEL,
@@ -46,14 +49,16 @@ SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=TYPE_CURRENT_OZONE_LEVEL,
         name="Current Ozone Level",
-        icon="mdi:vector-triangle",
+        device_class=DEVICE_CLASS_OZONE,
         native_unit_of_measurement="du",
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_CURRENT_UV_INDEX,
         name="Current UV Index",
         icon="mdi:weather-sunny",
         native_unit_of_measurement=UV_INDEX,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_CURRENT_UV_LEVEL,
@@ -65,42 +70,49 @@ SENSOR_DESCRIPTIONS = (
         name="Max UV Index",
         icon="mdi:weather-sunny",
         native_unit_of_measurement=UV_INDEX,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SAFE_EXPOSURE_TIME_1,
         name="Skin Type 1 Safe Exposure Time",
         icon="mdi:timer-outline",
         native_unit_of_measurement=TIME_MINUTES,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SAFE_EXPOSURE_TIME_2,
         name="Skin Type 2 Safe Exposure Time",
         icon="mdi:timer-outline",
         native_unit_of_measurement=TIME_MINUTES,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SAFE_EXPOSURE_TIME_3,
         name="Skin Type 3 Safe Exposure Time",
         icon="mdi:timer-outline",
         native_unit_of_measurement=TIME_MINUTES,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SAFE_EXPOSURE_TIME_4,
         name="Skin Type 4 Safe Exposure Time",
         icon="mdi:timer-outline",
         native_unit_of_measurement=TIME_MINUTES,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SAFE_EXPOSURE_TIME_5,
         name="Skin Type 5 Safe Exposure Time",
         icon="mdi:timer-outline",
         native_unit_of_measurement=TIME_MINUTES,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SAFE_EXPOSURE_TIME_6,
         name="Skin Type 6 Safe Exposure Time",
         icon="mdi:timer-outline",
         native_unit_of_measurement=TIME_MINUTES,
+        state_class=STATE_CLASS_MEASUREMENT,
     ),
 )
 
@@ -109,7 +121,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up a OpenUV sensor based on a config entry."""
-    openuv = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
+    openuv = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         [OpenUvSensor(openuv, description) for description in SENSOR_DESCRIPTIONS]
     )
@@ -121,9 +133,7 @@ class OpenUvSensor(OpenUvEntity, SensorEntity):
     @callback
     def update_from_latest_data(self) -> None:
         """Update the state."""
-        data = self.openuv.data[DATA_UV].get("result")
-
-        if not data:
+        if not (data := self.openuv.data[DATA_UV].get("result")):
             self._attr_available = False
             return
 
@@ -146,8 +156,7 @@ class OpenUvSensor(OpenUvEntity, SensorEntity):
                 self._attr_native_value = UV_LEVEL_LOW
         elif self.entity_description.key == TYPE_MAX_UV_INDEX:
             self._attr_native_value = data["uv_max"]
-            uv_max_time = parse_datetime(data["uv_max_time"])
-            if uv_max_time:
+            if uv_max_time := parse_datetime(data["uv_max_time"]):
                 self._attr_extra_state_attributes.update(
                     {ATTR_MAX_UV_TIME: as_local(uv_max_time)}
                 )

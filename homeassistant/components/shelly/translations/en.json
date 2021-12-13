@@ -37,17 +37,17 @@
             "button4": "Fourth button"
         },
         "trigger_type": {
+            "btn_down": "{subtype} button down",
+            "btn_up": "{subtype} button up",
             "double": "{subtype} double clicked",
-            "long": " {subtype} long clicked",
+            "double_push": "{subtype} double push",
+            "long": "{subtype} long clicked",
+            "long_push": "{subtype} long push",
             "long_single": "{subtype} long clicked and then single clicked",
             "single": "{subtype} single clicked",
             "single_long": "{subtype} single clicked and then long clicked",
-            "triple": "{subtype} triple clicked",
-            "btn_down": "{subtype} button down",
-            "btn_up": "{subtype} button up",
             "single_push": "{subtype} single push",
-            "double_push": "{subtype} double push",
-            "long_push": " {subtype} long push"
+            "triple": "{subtype} triple clicked"
         }
     }
 }

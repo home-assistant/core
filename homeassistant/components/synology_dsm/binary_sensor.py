@@ -1,6 +1,7 @@
 """Support for Synology DSM binary sensors."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
@@ -129,3 +130,11 @@ class SynoDSMUpgradeBinarySensor(SynoDSMBinarySensor):
     def available(self) -> bool:
         """Return True if entity is available."""
         return bool(self._api.upgrade)
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return firmware details."""
+        return {
+            "installed_version": self._api.information.version_string,
+            "latest_available_version": self._api.upgrade.available_version,
+        }

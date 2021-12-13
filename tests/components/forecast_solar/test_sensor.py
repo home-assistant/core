@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from homeassistant.components.forecast_solar.const import DOMAIN, ENTRY_TYPE_SERVICE
+from homeassistant.components.forecast_solar.const import DOMAIN
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     DOMAIN as SENSOR_DOMAIN,
@@ -141,7 +141,7 @@ async def test_sensors(
     assert device_entry.identifiers == {(DOMAIN, f"{entry_id}")}
     assert device_entry.manufacturer == "Forecast.Solar"
     assert device_entry.name == "Solar Production Forecast"
-    assert device_entry.entry_type == ENTRY_TYPE_SERVICE
+    assert device_entry.entry_type is dr.DeviceEntryType.SERVICE
     assert device_entry.model == "public"
     assert not device_entry.sw_version
 

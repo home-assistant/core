@@ -24,7 +24,8 @@
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
-      "not_konn_panel": "Not a recognized Konnected.io device"
+      "not_konn_panel": "Not a recognized Konnected.io device",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
   },
   "options": {

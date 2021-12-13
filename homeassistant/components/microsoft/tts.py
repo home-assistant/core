@@ -94,7 +94,7 @@ GENDERS = ["Female", "Male"]
 
 DEFAULT_LANG = "en-us"
 DEFAULT_GENDER = "Female"
-DEFAULT_TYPE = "ZiraRUS"
+DEFAULT_TYPE = "JennyNeural"
 DEFAULT_OUTPUT = "audio-16khz-128kbitrate-mono-mp3"
 DEFAULT_RATE = 0
 DEFAULT_VOLUME = 0

@@ -1,6 +1,5 @@
 """The test for the Template sensor platform."""
 from datetime import timedelta
-from os import path
 from unittest.mock import patch
 
 import pytest
@@ -11,7 +10,7 @@ from homeassistant.helpers.reload import SERVICE_RELOAD
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_time_changed, get_fixture_path
 
 
 @pytest.mark.parametrize("count,domain", [(1, "sensor")])
@@ -163,10 +162,10 @@ async def test_reloadable_handles_partial_valid_config(hass, start_ha):
     hass.states.async_set("sensor.test_sensor", "mytest")
     await hass.async_block_till_done()
     assert hass.states.get("sensor.state").state == "mytest"
-    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_all("sensor")) == 2
 
     await async_yaml_patch_helper(hass, "broken_configuration.yaml")
-    assert len(hass.states.async_all()) == 3
+    assert len(hass.states.async_all("sensor")) == 3
 
     assert hass.states.get("sensor.state") is None
     assert hass.states.get("sensor.watching_tv_in_master_bedroom").state == "off"
@@ -250,17 +249,9 @@ async def test_reload_sensors_that_reference_other_template_sensors(hass, start_
     assert hass.states.get("sensor.test3").state == "2"
 
 
-def _get_fixtures_base_path():
-    return path.dirname(path.dirname(path.dirname(__file__)))
-
-
 async def async_yaml_patch_helper(hass, filename):
     """Help update configuration.yaml."""
-    yaml_path = path.join(
-        _get_fixtures_base_path(),
-        "fixtures",
-        f"template/{filename}",
-    )
+    yaml_path = get_fixture_path(filename, "template")
     with patch.object(config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             DOMAIN,

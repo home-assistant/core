@@ -77,6 +77,7 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         """Initialize the Switchbot."""
         super().__init__(coordinator, idx, mac, name)
         self._attr_unique_id = idx
+        self._attr_is_closed = None
         self._device = device
 
     async def async_added_to_hass(self) -> None:

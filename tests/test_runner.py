@@ -117,3 +117,23 @@ def test_run_does_not_block_forever_with_shielded_task(hass, tmpdir, caplog):
     assert (
         "Task could not be canceled and was still running after shutdown" in caplog.text
     )
+
+
+async def test_unhandled_exception_traceback(hass, caplog):
+    """Test an unhandled exception gets a traceback in debug mode."""
+
+    async def _unhandled_exception():
+        raise Exception("This is unhandled")
+
+    try:
+        hass.loop.set_debug(True)
+        asyncio.create_task(_unhandled_exception())
+    finally:
+        hass.loop.set_debug(False)
+
+    await asyncio.sleep(0)
+    await asyncio.sleep(0)
+
+    assert "Task exception was never retrieved" in caplog.text
+    assert "This is unhandled" in caplog.text
+    assert "_unhandled_exception" in caplog.text

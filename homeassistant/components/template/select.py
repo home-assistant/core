@@ -13,7 +13,13 @@ from homeassistant.components.select.const import (
     ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
 )
-from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, CONF_STATE, CONF_UNIQUE_ID
+from homeassistant.const import (
+    CONF_ICON,
+    CONF_NAME,
+    CONF_OPTIMISTIC,
+    CONF_STATE,
+    CONF_UNIQUE_ID,
+)
 from homeassistant.core import Config, HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -21,7 +27,7 @@ from homeassistant.helpers.script import Script
 from homeassistant.helpers.template import Template, TemplateError
 
 from . import TriggerUpdateCoordinator
-from .const import CONF_AVAILABILITY
+from .const import CONF_AVAILABILITY, DOMAIN
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
 
@@ -41,6 +47,7 @@ SELECT_SCHEMA = vol.Schema(
         vol.Optional(CONF_AVAILABILITY): cv.template,
         vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
+        vol.Optional(CONF_ICON): cv.template,
     }
 )
 
@@ -64,6 +71,7 @@ async def _async_create_entities(
                 definition[ATTR_OPTIONS],
                 definition.get(CONF_OPTIMISTIC, DEFAULT_OPTIMISTIC),
                 unique_id,
+                definition.get(CONF_ICON),
             )
         )
     return entities
@@ -109,18 +117,20 @@ class TemplateSelect(TemplateEntity, SelectEntity):
         options_template: Template,
         optimistic: bool,
         unique_id: str | None,
+        icon_template: Template | None,
     ) -> None:
         """Initialize the select."""
-        super().__init__(availability_template=availability_template)
+        super().__init__(
+            availability_template=availability_template, icon_template=icon_template
+        )
         self._attr_name = DEFAULT_NAME
         name_template.hass = hass
         with contextlib.suppress(TemplateError):
             self._attr_name = name_template.async_render(parse_result=False)
         self._name_template = name_template
         self._value_template = value_template
-        domain = __name__.split(".")[-2]
         self._command_select_option = Script(
-            hass, command_select_option, self._attr_name, domain
+            hass, command_select_option, self._attr_name, DOMAIN
         )
         self._options_template = options_template
         self._attr_assumed_state = self._optimistic = optimistic
@@ -171,12 +181,11 @@ class TriggerSelectEntity(TriggerEntity, SelectEntity):
     ) -> None:
         """Initialize the entity."""
         super().__init__(hass, coordinator, config)
-        domain = __name__.split(".")[-2]
         self._command_select_option = Script(
             hass,
             config[CONF_SELECT_OPTION],
             self._rendered.get(CONF_NAME, DEFAULT_NAME),
-            domain,
+            DOMAIN,
         )
 
     @property

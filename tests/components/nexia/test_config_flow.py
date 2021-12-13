@@ -5,7 +5,7 @@ from nexia.const import BRAND_ASAIR, BRAND_NEXIA
 import pytest
 from requests.exceptions import ConnectTimeout, HTTPError
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
 from homeassistant.components.nexia.const import CONF_BRAND, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
@@ -13,7 +13,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 @pytest.mark.parametrize("brand", [BRAND_ASAIR, BRAND_NEXIA])
 async def test_form(hass, brand):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )

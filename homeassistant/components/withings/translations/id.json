@@ -12,7 +12,7 @@
         "error": {
             "already_configured": "Akun sudah dikonfigurasi"
         },
-        "flow_title": "Withings: {profile}",
+        "flow_title": "{profile}",
         "step": {
             "pick_implementation": {
                 "title": "Pilih Metode Autentikasi"

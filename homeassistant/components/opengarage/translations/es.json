@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "device_key": "Clave del dispositivo"
+                }
+            }
+        }
+    }
+}

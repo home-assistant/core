@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import aiohttp
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.mazda.config_flow import (
     MazdaAccountLockedException,
     MazdaAuthenticationException,
@@ -179,7 +179,7 @@ async def test_form_unknown_error(hass):
 
 async def test_reauth_flow(hass: HomeAssistant) -> None:
     """Test reauth works."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     mock_config = MockConfigEntry(
         domain=DOMAIN,
         unique_id=FIXTURE_USER_INPUT[CONF_EMAIL],

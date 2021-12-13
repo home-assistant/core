@@ -1,6 +1,9 @@
 """Helpers for Home Assistant dispatcher & internal component/platform."""
+from __future__ import annotations
+
+from collections.abc import Callable
 import logging
-from typing import Any, Callable
+from typing import Any
 
 from homeassistant.core import HassJob, HomeAssistant, callback
 from homeassistant.loader import bind_hass

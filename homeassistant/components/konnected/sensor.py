@@ -15,6 +15,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 
 from .const import DOMAIN as KONNECTED_DOMAIN, SIGNAL_DS18B20_NEW
 
@@ -111,7 +112,7 @@ class KonnectedSensor(SensorEntity):
             name += f" {description.name}"
         self._attr_name = name
 
-        self._attr_device_info = {"identifiers": {(KONNECTED_DOMAIN, device_id)}}
+        self._attr_device_info = DeviceInfo(identifiers={(KONNECTED_DOMAIN, device_id)})
 
     @property
     def native_value(self):

@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Callable
 import logging
-from typing import Any, Callable
+from typing import Any
 
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.loader import async_get_integration, bind_hass

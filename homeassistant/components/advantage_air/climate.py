@@ -10,6 +10,7 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_DRY,
     HVAC_MODE_FAN_ONLY,
     HVAC_MODE_HEAT,
+    HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
     SUPPORT_FAN_MODE,
     SUPPORT_TARGET_TEMPERATURE,
@@ -53,7 +54,7 @@ HASS_FAN_MODES = {v: k for k, v in ADVANTAGE_AIR_FAN_MODES.items()}
 FAN_SPEEDS = {FAN_LOW: 30, FAN_MEDIUM: 60, FAN_HIGH: 100}
 
 ADVANTAGE_AIR_SERVICE_SET_MYZONE = "set_myzone"
-ZONE_HVAC_MODES = [HVAC_MODE_OFF, HVAC_MODE_FAN_ONLY]
+ZONE_HVAC_MODES = [HVAC_MODE_OFF, HVAC_MODE_HEAT_COOL]
 
 PARALLEL_UPDATES = 0
 
@@ -169,7 +170,7 @@ class AdvantageAirZone(AdvantageAirClimateEntity):
     def hvac_mode(self):
         """Return the current state as HVAC mode."""
         if self._zone["state"] == ADVANTAGE_AIR_STATE_OPEN:
-            return HVAC_MODE_FAN_ONLY
+            return HVAC_MODE_HEAT_COOL
         return HVAC_MODE_OFF
 
     @property

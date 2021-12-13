@@ -26,6 +26,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.requirements import (
     RequirementsNotFound,
+    async_clear_install_history,
     async_get_integration_with_requirements,
 )
 import homeassistant.util.yaml.loader as yaml_loader
@@ -71,6 +72,7 @@ async def async_check_ha_config_file(  # noqa: C901
     This method is a coroutine.
     """
     result = HomeAssistantConfig()
+    async_clear_install_history(hass)
 
     def _pack_error(
         package: str, component: str, config: ConfigType, message: str

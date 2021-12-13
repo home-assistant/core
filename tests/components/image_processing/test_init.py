@@ -1,6 +1,8 @@
 """The tests for the image_processing component."""
 from unittest.mock import PropertyMock, patch
 
+import pytest
+
 import homeassistant.components.http as http
 import homeassistant.components.image_processing as ip
 from homeassistant.const import ATTR_ENTITY_PICTURE
@@ -9,6 +11,12 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component, async_capture_events
 from tests.components.image_processing import common
+
+
+@pytest.fixture
+def aiohttp_unused_port(loop, aiohttp_unused_port, socket_enabled):
+    """Return aiohttp_unused_port and allow opening sockets."""
+    return aiohttp_unused_port
 
 
 def get_url(hass):

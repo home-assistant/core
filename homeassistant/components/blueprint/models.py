@@ -255,8 +255,7 @@ class DomainBlueprints:
 
         def load_from_cache():
             """Load blueprint from cache."""
-            blueprint = self._blueprints[blueprint_path]
-            if blueprint is None:
+            if (blueprint := self._blueprints[blueprint_path]) is None:
                 raise FailedToLoad(
                     self.domain,
                     blueprint_path,

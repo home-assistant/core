@@ -1,10 +1,10 @@
 """Binary Sensor platform for Advantage Air integration."""
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_PROBLEM,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.helpers.entity import EntityCategory
 
 from .const import DOMAIN as ADVANTAGE_AIR_DOMAIN
 from .entity import AdvantageAirEntity
@@ -33,7 +33,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class AdvantageAirZoneFilter(AdvantageAirEntity, BinarySensorEntity):
     """Advantage Air Filter."""
 
-    _attr_device_class = DEVICE_CLASS_PROBLEM
+    _attr_device_class = BinarySensorDeviceClass.PROBLEM
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(self, instance, ac_key):
         """Initialize an Advantage Air Filter."""
@@ -52,7 +53,7 @@ class AdvantageAirZoneFilter(AdvantageAirEntity, BinarySensorEntity):
 class AdvantageAirZoneMotion(AdvantageAirEntity, BinarySensorEntity):
     """Advantage Air Zone Motion."""
 
-    _attr_device_class = DEVICE_CLASS_MOTION
+    _attr_device_class = BinarySensorDeviceClass.MOTION
 
     def __init__(self, instance, ac_key, zone_key):
         """Initialize an Advantage Air Zone Motion."""
@@ -65,13 +66,14 @@ class AdvantageAirZoneMotion(AdvantageAirEntity, BinarySensorEntity):
     @property
     def is_on(self):
         """Return if motion is detect."""
-        return self._zone["motion"]
+        return self._zone["motion"] == 20
 
 
 class AdvantageAirZoneMyZone(AdvantageAirEntity, BinarySensorEntity):
     """Advantage Air Zone MyZone."""
 
     _attr_entity_registry_enabled_default = False
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(self, instance, ac_key, zone_key):
         """Initialize an Advantage Air Zone MyZone."""

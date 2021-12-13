@@ -3,7 +3,7 @@
   "name": "GitHub",
   "documentation": "https://www.home-assistant.io/integrations/github",
   "requirements": [
-    "aiogithubapi==21.8.0"
+    "aiogithubapi==21.11.0"
   ],
   "codeowners": [
     "@timmo001",

@@ -16,6 +16,7 @@
             "invalid_ws_url": "URL de websocket no v\u00e1lida",
             "unknown": "Error inesperado"
         },
+        "flow_title": "{name}",
         "progress": {
             "install_addon": "Espera mientras termina la instalaci\u00f3n del complemento Z-Wave JS. Puede tardar varios minutos.",
             "start_addon": "Espere mientras se completa el inicio del complemento Z-Wave JS. Esto puede tardar unos segundos."
@@ -98,6 +99,11 @@
             },
             "install_addon": {
                 "title": "La instalaci\u00f3n del complemento Z-Wave JS ha comenzado"
+            },
+            "manual": {
+                "data": {
+                    "url": "URL"
+                }
             },
             "on_supervisor": {
                 "title": "Selecciona el m\u00e9todo de conexi\u00f3n"

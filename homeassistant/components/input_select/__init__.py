@@ -2,9 +2,11 @@
 from __future__ import annotations
 
 import logging
+from typing import Any, Dict, cast
 
 import voluptuous as vol
 
+from homeassistant.components.select import SelectEntity
 from homeassistant.const import (
     ATTR_EDITABLE,
     ATTR_OPTION,
@@ -55,7 +57,7 @@ UPDATE_FIELDS = {
 }
 
 
-def _cv_input_select(cfg):
+def _cv_input_select(cfg: dict[str, Any]) -> dict[str, Any]:
     """Configure validation helper for input select (voluptuous)."""
     options = cfg[CONF_OPTIONS]
     initial = cfg.get(CONF_INITIAL)
@@ -183,138 +185,137 @@ class InputSelectStorageCollection(collection.StorageCollection):
     CREATE_SCHEMA = vol.Schema(vol.All(CREATE_FIELDS, _cv_input_select))
     UPDATE_SCHEMA = vol.Schema(UPDATE_FIELDS)
 
-    async def _process_create_data(self, data: dict) -> dict:
+    async def _process_create_data(self, data: dict[str, Any]) -> dict[str, Any]:
         """Validate the config is valid."""
-        return self.CREATE_SCHEMA(data)
+        return cast(Dict[str, Any], self.CREATE_SCHEMA(data))
 
     @callback
-    def _get_suggested_id(self, info: dict) -> str:
+    def _get_suggested_id(self, info: dict[str, Any]) -> str:
         """Suggest an ID based on the config."""
-        return info[CONF_NAME]
+        return cast(str, info[CONF_NAME])
 
-    async def _update_data(self, data: dict, update_data: dict) -> dict:
+    async def _update_data(
+        self, data: dict[str, Any], update_data: dict[str, Any]
+    ) -> dict[str, Any]:
         """Return a new updated data object."""
         update_data = self.UPDATE_SCHEMA(update_data)
         return _cv_input_select({**data, **update_data})
 
 
-class InputSelect(RestoreEntity):
+class InputSelect(SelectEntity, RestoreEntity):
     """Representation of a select input."""
 
-    def __init__(self, config: dict) -> None:
+    _attr_should_poll = False
+    editable = True
+
+    def __init__(self, config: ConfigType) -> None:
         """Initialize a select input."""
-        self._config = config
-        self.editable = True
-        self._current_option = config.get(CONF_INITIAL)
+        self._attr_current_option = config.get(CONF_INITIAL)
+        self._attr_icon = config.get(CONF_ICON)
+        self._attr_name = config.get(CONF_NAME)
+        self._attr_options = config[CONF_OPTIONS]
+        self._attr_unique_id = config[CONF_ID]
 
     @classmethod
-    def from_yaml(cls, config: dict) -> InputSelect:
+    def from_yaml(cls, config: ConfigType) -> InputSelect:
         """Return entity instance initialized from yaml storage."""
         input_select = cls(config)
         input_select.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
         input_select.editable = False
         return input_select
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when entity about to be added."""
         await super().async_added_to_hass()
-        if self._current_option is not None:
+        if self.current_option is not None:
             return
 
         state = await self.async_get_last_state()
-        if not state or state.state not in self._options:
-            self._current_option = self._options[0]
+        if not state or state.state not in self.options:
+            self._attr_current_option = self.options[0]
         else:
-            self._current_option = state.state
+            self._attr_current_option = state.state
 
     @property
-    def should_poll(self):
-        """If entity should be polled."""
-        return False
-
-    @property
-    def name(self):
-        """Return the name of the select input."""
-        return self._config.get(CONF_NAME)
-
-    @property
-    def icon(self):
-        """Return the icon to be used for this entity."""
-        return self._config.get(CONF_ICON)
-
-    @property
-    def _options(self) -> list[str]:
-        """Return a list of selection options."""
-        return self._config[CONF_OPTIONS]
-
-    @property
-    def state(self):
-        """Return the state of the component."""
-        return self._current_option
-
-    @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, bool]:
         """Return the state attributes."""
-        return {ATTR_OPTIONS: self._config[ATTR_OPTIONS], ATTR_EDITABLE: self.editable}
+        return {ATTR_EDITABLE: self.editable}
 
-    @property
-    def unique_id(self) -> str | None:
-        """Return unique id for the entity."""
-        return self._config[CONF_ID]
-
-    @callback
-    def async_select_option(self, option):
+    async def async_select_option(self, option: str) -> None:
         """Select new option."""
-        if option not in self._options:
+        if option not in self.options:
             _LOGGER.warning(
                 "Invalid option: %s (possible options: %s)",
                 option,
-                ", ".join(self._options),
+                ", ".join(self.options),
             )
             return
-        self._current_option = option
+        self._attr_current_option = option
         self.async_write_ha_state()
 
     @callback
-    def async_select_index(self, idx):
+    def async_select_index(self, idx: int) -> None:
         """Select new option by index."""
-        new_index = idx % len(self._options)
-        self._current_option = self._options[new_index]
+        new_index = idx % len(self.options)
+        self._attr_current_option = self.options[new_index]
         self.async_write_ha_state()
 
     @callback
-    def async_offset_index(self, offset, cycle):
+    def async_offset_index(self, offset: int, cycle: bool) -> None:
         """Offset current index."""
-        current_index = self._options.index(self._current_option)
+
+        current_index = (
+            self.options.index(self.current_option)
+            if self.current_option is not None
+            else 0
+        )
+
         new_index = current_index + offset
         if cycle:
-            new_index = new_index % len(self._options)
-        else:
-            if new_index < 0:
-                new_index = 0
-            elif new_index >= len(self._options):
-                new_index = len(self._options) - 1
-        self._current_option = self._options[new_index]
+            new_index = new_index % len(self.options)
+        elif new_index < 0:
+            new_index = 0
+        elif new_index >= len(self.options):
+            new_index = len(self.options) - 1
+
+        self._attr_current_option = self.options[new_index]
         self.async_write_ha_state()
 
     @callback
-    def async_next(self, cycle):
+    def async_next(self, cycle: bool) -> None:
         """Select next option."""
+        # If there is no current option, first item is the next
+        if self.current_option is None:
+            self.async_select_index(0)
+            return
         self.async_offset_index(1, cycle)
 
     @callback
-    def async_previous(self, cycle):
+    def async_previous(self, cycle: bool) -> None:
         """Select previous option."""
+        # If there is no current option, last item is the previous
+        if self.current_option is None:
+            self.async_select_index(-1)
+            return
         self.async_offset_index(-1, cycle)
 
-    @callback
-    def async_set_options(self, options):
+    async def async_set_options(self, options: list[str]) -> None:
         """Set options."""
-        self._current_option = options[0]
-        self._config[CONF_OPTIONS] = options
+        self._attr_options = options
+
+        if self.current_option not in self.options:
+            _LOGGER.warning(
+                "Current option: %s no longer valid (possible options: %s)",
+                self.current_option,
+                ", ".join(self.options),
+            )
+            self._attr_current_option = options[0]
+
         self.async_write_ha_state()
 
-    async def async_update_config(self, config: dict) -> None:
+    async def async_update_config(self, config: ConfigType) -> None:
         """Handle when the config is updated."""
-        self._config = config
+        self._attr_icon = config.get(CONF_ICON)
+        self._attr_name = config.get(CONF_NAME)
+        self._attr_options = config[CONF_OPTIONS]
         self.async_write_ha_state()
