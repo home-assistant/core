@@ -29,7 +29,7 @@ from .const import (
 
 PARALLEL_UPDATES: Final = 1
 
-PLATFORMS: Final = ["remote"]
+PLATFORMS: Final = [Platform.REMOTE]
 
 _LOGGER = logging.getLogger(__name__)
 
