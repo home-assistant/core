@@ -147,7 +147,7 @@ DEVICE_CLASS_TO_GOOGLE_TYPES = {
     (cover.DOMAIN, cover.CoverDeviceClass.DOOR): TYPE_DOOR,
     (cover.DOMAIN, cover.CoverDeviceClass.AWNING): TYPE_AWNING,
     (cover.DOMAIN, cover.CoverDeviceClass.SHUTTER): TYPE_SHUTTER,
-    (switch.DOMAIN, switch.DEVICE_CLASS_SWITCH): TYPE_SWITCH,
+    (switch.DOMAIN, switch.SwitchDeviceClass.SWITCH): TYPE_SWITCH,
     (switch.DOMAIN, switch.SwitchDeviceClass.OUTLET): TYPE_OUTLET,
     (binary_sensor.DOMAIN, binary_sensor.BinarySensorDeviceClass.DOOR): TYPE_DOOR,
     (
