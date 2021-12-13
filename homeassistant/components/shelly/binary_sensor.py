@@ -17,12 +17,12 @@ from homeassistant.components.binary_sensor import (
     STATE_ON,
     BinarySensorEntity,
 )
-from homeassistant.components.shelly.const import CONF_SLEEP_PERIOD
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .const import CONF_SLEEP_PERIOD
 from .entity import (
     BlockAttributeDescription,
     RestAttributeDescription,

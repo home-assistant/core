@@ -1,6 +1,9 @@
 """Support for freedompro."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
+from typing import Final
 
 from pyfreedompro import get_list, get_states
 
@@ -14,7 +17,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [
+PLATFORMS: Final[list[Platform]] = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
     Platform.COVER,
