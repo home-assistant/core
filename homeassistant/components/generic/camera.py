@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_NAME,
     CONF_PASSWORD,
+    CONF_UNIQUE_ID,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
     HTTP_BASIC_AUTHENTICATION,
@@ -26,7 +27,6 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.reload import async_setup_reload_service
-from homeassistant.util import slugify
 
 from . import DOMAIN, PLATFORMS
 
@@ -61,6 +61,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         ),
         vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
         vol.Optional(CONF_RTSP_TRANSPORT): vol.In(ALLOWED_RTSP_TRANSPORT_PROTOCOLS),
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -82,12 +83,10 @@ class GenericCamera(Camera):
         self.hass = hass
         self._authentication = device_info.get(CONF_AUTHENTICATION)
         self._name = device_info.get(CONF_NAME)
+        self._attr_unique_id = device_info.get(CONF_UNIQUE_ID)
         self._still_image_url = device_info[CONF_STILL_IMAGE_URL]
         self._stream_source = device_info.get(CONF_STREAM_SOURCE)
         self._still_image_url.hass = hass
-        self._attr_unique_id = "_".join(
-            [DOMAIN, slugify(str(self._still_image_url.template))]
-        )
         if self._stream_source is not None:
             self._stream_source.hass = hass
         self._limit_refetch = device_info[CONF_LIMIT_REFETCH_TO_URL_CHANGE]

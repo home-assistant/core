@@ -32,6 +32,7 @@ async def test_fetching_url(hass, hass_client):
                 "still_image_url": "http://example.com",
                 "username": "user",
                 "password": "pass",
+                "unique_id": "ea10b8f0-ad4d-4780-90d5-d740d043d1b3",
             }
         },
     )
