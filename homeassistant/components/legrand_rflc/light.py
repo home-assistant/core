@@ -15,6 +15,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -67,16 +68,18 @@ class LegrandRflcSwitch(LightEntity):
         self, entry_unique_id, hub: lc7001.aio.Hub, zid: int, properties: Mapping
     ):
         """Initialize the Legrand RFLC Switch."""
-        self._entry_unique_id = entry_unique_id
         self._hub = hub
+        self._zid = zid
+        self._attr_unique_id = f"{entry_unique_id}:{zid}"
         self._attr_name = properties[hub.NAME]
         self._attr_is_on = properties[hub.POWER]
-        self._zid = zid
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique id of this entry's switch."""
-        return f"{self._entry_unique_id}:{self._zid}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._attr_unique_id)},
+            manufacturer="Legrand",
+            model=properties[hub.DEVICE_TYPE],
+            name=self._attr_name,
+            via_device=(DOMAIN, entry_unique_id),
+        )
 
     @property
     def available(self) -> bool:

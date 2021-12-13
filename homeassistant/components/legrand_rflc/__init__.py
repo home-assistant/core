@@ -17,6 +17,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
 )
 from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.helpers import device_registry
 
 from .const import DOMAIN
 
@@ -47,6 +48,13 @@ async def async_setup_entry(
             )
             hass.async_create_task(_reauth())
             raise asyncio.CancelledError("reauth")
+        device_registry.async_get(hass).async_get_or_create(
+            config_entry_id=entry_id,
+            identifiers={(DOMAIN, unique_id)},
+            manufacturer="Legrand",
+            name=entry.title,
+            model="LC7001",
+        )
         hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     async def _reauth() -> None:
