@@ -532,8 +532,8 @@ def color_temperature_to_rgbww(
     temperature: int, brightness: int, min_mireds: int, max_mireds: int
 ) -> tuple[int, int, int, int, int]:
     """Convert color temperature to rgbcw."""
-    max_min_temp_diff = max_mireds - min_mireds
-    warm = ((max_mireds - temperature) / max_min_temp_diff) * brightness
+    mired_range = max_mireds - min_mireds
+    warm = ((max_mireds - temperature) / mired_range) * brightness
     cold = brightness - warm
     return (0, 0, 0, round(cold), round(warm))
 
