@@ -1,6 +1,4 @@
 """Tests for LCN device triggers."""
-from unittest.mock import patch
-
 from pypck.inputs import ModSendKeysHost, ModStatusAccessControl
 from pypck.lcn_addr import LcnAddr
 from pypck.lcn_defs import AccessControlPeriphery, KeyAction, SendKeyCommand
@@ -13,12 +11,11 @@ from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from .conftest import MockPchkConnectionManager, get_device, init_integration
+from .conftest import get_device, init_integration
 
 from tests.common import assert_lists_same, async_get_device_automations
 
 
-@patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
 async def test_get_triggers_module_device(hass, entry):
     """Test we get the expected triggers from a LCN module device."""
     await init_integration(hass, entry)
@@ -55,7 +52,6 @@ async def test_get_triggers_module_device(hass, entry):
     assert_lists_same(triggers, expected_triggers)
 
 
-@patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
 async def test_get_triggers_non_module_device(hass, entry):
     """Test we get the expected triggers from a LCN non-module device."""
     not_included_types = ("transmitter", "transponder", "fingerprint", "send_keys")
@@ -70,10 +66,9 @@ async def test_get_triggers_non_module_device(hass, entry):
                 assert trigger[CONF_TYPE] not in not_included_types
 
 
-@patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
 async def test_if_fires_on_transponder_event(hass, calls, entry):
     """Test for transponder event triggers firing."""
-    await init_integration(hass, entry)
+    lcn_connection = await init_integration(hass, entry)
     address = (0, 7, False)
     device = get_device(hass, entry, address)
 
@@ -107,7 +102,6 @@ async def test_if_fires_on_transponder_event(hass, calls, entry):
         code="aabbcc",
     )
 
-    lcn_connection = MockPchkConnectionManager.return_value
     await lcn_connection.async_process_input(inp)
     await hass.async_block_till_done()
 
@@ -118,10 +112,9 @@ async def test_if_fires_on_transponder_event(hass, calls, entry):
     }
 
 
-@patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
 async def test_if_fires_on_fingerprint_event(hass, calls, entry):
     """Test for fingerprint event triggers firing."""
-    await init_integration(hass, entry)
+    lcn_connection = await init_integration(hass, entry)
     address = (0, 7, False)
     device = get_device(hass, entry, address)
 
@@ -155,7 +148,6 @@ async def test_if_fires_on_fingerprint_event(hass, calls, entry):
         code="aabbcc",
     )
 
-    lcn_connection = MockPchkConnectionManager.return_value
     await lcn_connection.async_process_input(inp)
     await hass.async_block_till_done()
 
@@ -166,10 +158,9 @@ async def test_if_fires_on_fingerprint_event(hass, calls, entry):
     }
 
 
-@patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
 async def test_if_fires_on_transmitter_event(hass, calls, entry):
     """Test for transmitter event triggers firing."""
-    await init_integration(hass, entry)
+    lcn_connection = await init_integration(hass, entry)
     address = (0, 7, False)
     device = get_device(hass, entry, address)
 
@@ -209,7 +200,6 @@ async def test_if_fires_on_transmitter_event(hass, calls, entry):
         action=KeyAction.HIT,
     )
 
-    lcn_connection = MockPchkConnectionManager.return_value
     await lcn_connection.async_process_input(inp)
     await hass.async_block_till_done()
 
@@ -223,10 +213,9 @@ async def test_if_fires_on_transmitter_event(hass, calls, entry):
     }
 
 
-@patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
 async def test_if_fires_on_send_keys_event(hass, calls, entry):
     """Test for send_keys event triggers firing."""
-    await init_integration(hass, entry)
+    lcn_connection = await init_integration(hass, entry)
     address = (0, 7, False)
     device = get_device(hass, entry, address)
 
@@ -261,7 +250,6 @@ async def test_if_fires_on_send_keys_event(hass, calls, entry):
         keys=[True, False, False, False, False, False, False, False],
     )
 
-    lcn_connection = MockPchkConnectionManager.return_value
     await lcn_connection.async_process_input(inp)
     await hass.async_block_till_done()
 
@@ -273,7 +261,6 @@ async def test_if_fires_on_send_keys_event(hass, calls, entry):
     }
 
 
-@patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
 async def test_get_transponder_trigger_capabilities(hass, entry):
     """Test we get the expected capabilities from a transponder device trigger."""
     await init_integration(hass, entry)
@@ -296,7 +283,6 @@ async def test_get_transponder_trigger_capabilities(hass, entry):
     ) == [{"name": "code", "optional": True, "type": "string", "lower": True}]
 
 
-@patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
 async def test_get_fingerprint_trigger_capabilities(hass, entry):
     """Test we get the expected capabilities from a fingerprint device trigger."""
     await init_integration(hass, entry)
@@ -319,7 +305,6 @@ async def test_get_fingerprint_trigger_capabilities(hass, entry):
     ) == [{"name": "code", "optional": True, "type": "string", "lower": True}]
 
 
-@patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
 async def test_get_transmitter_trigger_capabilities(hass, entry):
     """Test we get the expected capabilities from a transmitter device trigger."""
     await init_integration(hass, entry)
@@ -352,7 +337,6 @@ async def test_get_transmitter_trigger_capabilities(hass, entry):
     ]
 
 
-@patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
 async def test_get_send_keys_trigger_capabilities(hass, entry):
     """Test we get the expected capabilities from a send_keys device trigger."""
     await init_integration(hass, entry)
@@ -390,7 +374,6 @@ async def test_get_send_keys_trigger_capabilities(hass, entry):
     ]
 
 
-@patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager)
 async def test_unknown_trigger_capabilities(hass, entry):
     """Test we get empty capabilities if trigger is unknown."""
     await init_integration(hass, entry)
