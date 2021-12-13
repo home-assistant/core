@@ -11,7 +11,13 @@ from miio.walkingpad import OperationMode, Walkingpad, WalkingpadStatus
 from ph4_walkingpad.pad import Controller, WalkingPad
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_IP_ADDRESS, CONF_TOKEN, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    CONF_IP_ADDRESS,
+    CONF_TOKEN,
+    STATE_OFF,
+    STATE_ON,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
@@ -29,7 +35,7 @@ from .const import (
 
 PARALLEL_UPDATES: Final = 1
 
-PLATFORMS: Final = ["remote"]
+PLATFORMS: Final = [Platform.REMOTE]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -91,7 +97,7 @@ class WalkingPadBaseDevice:
 
     async def set_speed_user(self, speed: float) -> None:
         """Set user speed."""
-        self._speed_user = speed
+        self._speed_user = speed / 10
 
     async def set_mode_standby(self) -> None:
         """Set mode to standby."""
