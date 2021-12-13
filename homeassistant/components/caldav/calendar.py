@@ -161,6 +161,8 @@ class WebDavCalendarData:
         )
         event_list = []
         for event in vevent_list:
+            if not hasattr(event.instance, "vevent"):
+                continue
             vevent = event.instance.vevent
             if not self.is_matching(vevent, self.search):
                 continue
