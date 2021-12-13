@@ -21,16 +21,18 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
-from .const import CONFIG_ENTRY_UPDATE_SIGNAL_TEMPLATE, DEFAULT_SCAN_INTERVAL
+from .const import CONFIG_ENTRY_UPDATE_SIGNAL_TEMPLATE, DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -155,6 +157,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DATA_UPCLOUD] = UpCloudHassData()
     hass.data[DATA_UPCLOUD].coordinators[entry.data[CONF_USERNAME]] = coordinator
 
+    # Set up service in device registry
+    _ = device_registry.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id,
+        configuration_url="https://hub.upcloud.com",
+        default_manufacturer="UpCloud Ltd",
+        default_model="Control Panel",
+        default_name=f"{entry.data[CONF_USERNAME]}@hub.upcloud.com",
+        entry_type=device_registry.DeviceEntryType.SERVICE,
+        identifiers={(DOMAIN, f"{entry.data[CONF_USERNAME]}@hub")},
+    )
+
     # Forward entry setup
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
@@ -177,7 +190,7 @@ class UpCloudServerEntity(CoordinatorEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[dict[str, upcloud_api.Server]],
+        coordinator: UpCloudDataUpdateCoordinator,
         uuid: str,
     ) -> None:
         """Initialize the UpCloud server entity."""
@@ -235,3 +248,13 @@ class UpCloudServerEntity(CoordinatorEntity):
                 ATTR_MEMORY_AMOUNT,
             )
         }
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return info for device registry."""
+        assert self.coordinator.config_entry is not None
+        return DeviceInfo(
+            identifiers={
+                (DOMAIN, f"{self.coordinator.config_entry.data[CONF_USERNAME]}@hub")
+            },
+        )
