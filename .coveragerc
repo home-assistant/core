@@ -414,7 +414,6 @@ omit =
     homeassistant/components/geocaching/__init__.py
     homeassistant/components/geocaching/const.py
     homeassistant/components/geocaching/coordinator.py
-    homeassistant/components/geocaching/models.py
     homeassistant/components/geocaching/oauth.py
     homeassistant/components/geocaching/sensor.py
     homeassistant/components/github/__init__.py
