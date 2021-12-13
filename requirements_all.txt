@@ -2161,7 +2161,7 @@ simplepush==1.1.4
 simplisafe-python==2021.12.1
 
 # homeassistant.components.sisyphus
-sisyphus-control==3.0
+sisyphus-control==3.1.2
 
 # homeassistant.components.skybell
 skybellpy==0.6.3
