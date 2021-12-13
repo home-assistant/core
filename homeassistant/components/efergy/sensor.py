@@ -7,7 +7,6 @@ from re import sub
 from pyefergy import Efergy, exceptions
 import voluptuous as vol
 
-from homeassistant.components.efergy import EfergyEntity
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     SensorDeviceClass,
@@ -29,6 +28,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from . import EfergyEntity
 from .const import CONF_APPTOKEN, CONF_CURRENT_VALUES, DATA_KEY_API, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
