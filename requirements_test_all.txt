@@ -137,7 +137,7 @@ aiohomekit==0.6.4
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==3.0.3
+aiohue==3.0.4
 
 # homeassistant.components.apache_kafka
 aiokafka==0.6.0
@@ -266,7 +266,7 @@ bimmer_connected==0.8.5
 blebox_uniapi==1.3.3
 
 # homeassistant.components.blink
-blinkpy==0.17.0
+blinkpy==0.18.0
 
 # homeassistant.components.bond
 bond-api==0.1.15
@@ -497,7 +497,7 @@ ha-philipsjs==2.7.6
 habitipy==0.2.0
 
 # homeassistant.components.hangouts
-hangups==0.4.14
+hangups==0.4.16
 
 # homeassistant.components.cloud
 hass-nabucasa==0.50.0
@@ -743,7 +743,7 @@ pilight==0.1.1
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
-pillow==8.2.0
+pillow==8.3.2
 
 # homeassistant.components.plex
 plexapi==4.7.1
@@ -1382,7 +1382,7 @@ tololib==0.1.0b3
 toonapi==0.2.1
 
 # homeassistant.components.totalconnect
-total_connect_client==2021.11.4
+total_connect_client==2021.12
 
 # homeassistant.components.transmission
 transmissionrpc==0.11

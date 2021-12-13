@@ -4,13 +4,14 @@ from typing import Any
 from elmax_api.model.command import SwitchCommand
 from elmax_api.model.panel import PanelStatus
 
-from homeassistant.components.elmax import ElmaxCoordinator
-from homeassistant.components.elmax.common import ElmaxEntity
-from homeassistant.components.elmax.const import DOMAIN
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import HomeAssistantType
+
+from . import ElmaxCoordinator
+from .common import ElmaxEntity
+from .const import DOMAIN
 
 
 class ElmaxSwitch(ElmaxEntity, SwitchEntity):

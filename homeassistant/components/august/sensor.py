@@ -10,7 +10,6 @@ from yalexs.activity import ActivityType
 from yalexs.keypad import KeypadDetail
 from yalexs.lock import LockDetail
 
-from homeassistant.components.august import AugustData
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -22,6 +21,7 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.restore_state import RestoreEntity
 
+from . import AugustData
 from .const import (
     ATTR_OPERATION_AUTORELOCK,
     ATTR_OPERATION_KEYPAD,

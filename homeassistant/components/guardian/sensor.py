@@ -2,21 +2,16 @@
 from __future__ import annotations
 
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_TEMPERATURE,
-    ENTITY_CATEGORY_DIAGNOSTIC,
-    PERCENTAGE,
-    TEMP_FAHRENHEIT,
-    TIME_MINUTES,
-)
+from homeassistant.const import PERCENTAGE, TEMP_FAHRENHEIT, TIME_MINUTES
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import PairedSensorEntity, ValveControllerEntity
@@ -37,22 +32,22 @@ SENSOR_KIND_UPTIME = "uptime"
 SENSOR_DESCRIPTION_BATTERY = SensorEntityDescription(
     key=SENSOR_KIND_BATTERY,
     name="Battery",
-    device_class=DEVICE_CLASS_BATTERY,
-    entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    device_class=SensorDeviceClass.BATTERY,
+    entity_category=EntityCategory.DIAGNOSTIC,
     native_unit_of_measurement=PERCENTAGE,
 )
 SENSOR_DESCRIPTION_TEMPERATURE = SensorEntityDescription(
     key=SENSOR_KIND_TEMPERATURE,
     name="Temperature",
-    device_class=DEVICE_CLASS_TEMPERATURE,
+    device_class=SensorDeviceClass.TEMPERATURE,
     native_unit_of_measurement=TEMP_FAHRENHEIT,
-    state_class=STATE_CLASS_MEASUREMENT,
+    state_class=SensorStateClass.MEASUREMENT,
 )
 SENSOR_DESCRIPTION_UPTIME = SensorEntityDescription(
     key=SENSOR_KIND_UPTIME,
     name="Uptime",
     icon="mdi:timer",
-    entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+    entity_category=EntityCategory.DIAGNOSTIC,
     native_unit_of_measurement=TIME_MINUTES,
 )
 
