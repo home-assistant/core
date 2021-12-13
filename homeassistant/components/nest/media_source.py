@@ -21,10 +21,13 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 import logging
+import os
 
 from google_nest_sdm.camera_traits import CameraClipPreviewTrait, CameraEventImageTrait
 from google_nest_sdm.device import Device
 from google_nest_sdm.event import EventImageType, ImageEventBase
+from google_nest_sdm.event_media import EventMediaStore
+from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_DIRECTORY,
@@ -42,12 +45,14 @@ from homeassistant.components.media_source.models import (
     PlayMedia,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceRegistry
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.template import DATE_STR_FORMAT
-from homeassistant.util import dt as dt_util
+from homeassistant.util import dt as dt_util, raise_if_invalid_filename
 
 from .const import DATA_SUBSCRIBER, DOMAIN
 from .device_info import NestDeviceInfo
-from .events import MEDIA_SOURCE_EVENT_TITLE_MAP
+from .events import EVENT_NAME_MAP, MEDIA_SOURCE_EVENT_TITLE_MAP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,6 +60,156 @@ MEDIA_SOURCE_TITLE = "Nest"
 DEVICE_TITLE_FORMAT = "{device_name}: Recent Events"
 CLIP_TITLE_FORMAT = "{event_name} @ {event_time}"
 EVENT_MEDIA_API_URL_FORMAT = "/api/nest/event_media/{device_id}/{event_id}"
+
+STORAGE_KEY = "nest.event_media"
+STORAGE_VERSION = 1
+# Write events at most once per duration
+STORAGE_SAVE_DELAY_SECONDS = 5.0
+# Path under config directory
+MEDIA_PATH = f"{DOMAIN}/event_media"
+
+# Size of small in-memory disk cache to avoid excessive disk reads
+DISK_READ_LRU_MAX_SIZE = 32
+
+
+async def async_get_media_event_store(
+    hass: HomeAssistant, subscriber: GoogleNestSubscriber
+) -> EventMediaStore:
+    """Create the disk backed EventMediaStore."""
+    media_path = hass.config.path(MEDIA_PATH)
+    os.makedirs(media_path, exist_ok=True)
+    store = Store(hass, STORAGE_VERSION, STORAGE_KEY, private=True)
+    device_registry = await hass.helpers.device_registry.async_get_registry()
+    return NestEventMediaStore(subscriber, store, device_registry, media_path)
+
+
+class NestEventMediaStore(EventMediaStore):
+    """Storage hook to locally persist nest media for events.
+
+    This is interface is meant to provide two storage features:
+    - media storage of events (jpgs, mp4s)
+    - metadata about events (motion, person, etc)
+
+    The default implementation in nest is in memory, and this allows the data
+    to be backed by disk.
+
+    The nest event media manager internal to the subscriber manages the lifetime
+    of individual objects stored here (e.g. purging when going over storage
+    limits). This store manages the addition/deletion once instructed.
+    """
+
+    def __init__(
+        self,
+        subscriber: GoogleNestSubscriber,
+        store: Store,
+        device_registry: DeviceRegistry,
+        media_path: str,
+    ) -> None:
+        """Initialize NestEventMediaStore."""
+        self._subscriber = subscriber
+        self._store = store
+        self._device_registry = device_registry
+        self._media_path = media_path
+        self._data: dict | None = None
+        self._data_loaded = False
+        self._devices: Mapping[str, str] | None = {}
+
+    async def async_load(self) -> dict | None:
+        """Load data."""
+        if not self._data_loaded:
+            self._devices = await self._get_devices()
+            data = await self._store.async_load()
+            if data is None:
+                _LOGGER.debug("Loaded empty event store")
+                self._data = {}
+            elif isinstance(data, dict):
+                _LOGGER.debug("Loaded event store with %d records", len(data))
+                self._data = data
+            else:
+                _LOGGER.error(
+                    "Unexpected data in storage version=%s, key=%s",
+                    STORAGE_VERSION,
+                    STORAGE_KEY,
+                )
+            self._data_loaded = True
+        return self._data
+
+    async def async_save(self, data: dict | None) -> None:
+        """Save data."""
+        self._data = data
+
+        def provide_data() -> dict:
+            return {} if data is None else data
+
+        self._store.async_delay_save(provide_data, STORAGE_SAVE_DELAY_SECONDS)
+
+    def get_media_key(self, nest_device_id: str, event: ImageEventBase) -> str:
+        """Return the filename to use for the device and event."""
+        device_id_str = (
+            self._devices.get(nest_device_id, "unknown_device")
+            if self._devices
+            else "unknown_device"
+        )
+        event_id_str = event.event_session_id
+        try:
+            raise_if_invalid_filename(event_id_str)
+        except ValueError:
+            event_id_str = ""
+        time_str = str(int(event.timestamp.timestamp()))
+        event_type_str = EVENT_NAME_MAP.get(event.event_type, "event")
+        suffix = "jpg" if event.event_image_type == EventImageType.IMAGE else "mp4"
+        return f"{device_id_str}-{time_str}-{event_id_str}-{event_type_str}.{suffix}"
+
+    def get_media_filename(self, media_key: str) -> str:
+        """Return the filename in storage for a media key."""
+        return f"{self._media_path}/{media_key}"
+
+    async def async_load_media(self, media_key: str) -> bytes | None:
+        """Load media content."""
+        filename = self.get_media_filename(media_key)
+        if not os.path.exists(filename):
+            return None
+        _LOGGER.debug("Reading event media from disk store: %s", filename)
+        try:
+            with open(filename, "rb") as f:
+                return f.read()
+        except OSError as err:
+            _LOGGER.error("Unable to read media file: %s %s", filename, err)
+            return None
+
+    async def async_save_media(self, media_key: str, content: bytes) -> None:
+        """Write media content."""
+        filename = self.get_media_filename(media_key)
+        if os.path.exists(filename):
+            return
+        _LOGGER.debug("Saving event media to disk store: %s", filename)
+        try:
+            with open(filename, "wb") as f:
+                f.write(content)
+        except OSError as err:
+            _LOGGER.error("Unable to write media file: %s %s", filename, err)
+
+    async def async_remove_media(self, media_key: str) -> None:
+        """Remove media content."""
+        filename = self.get_media_filename(media_key)
+        if not os.path.exists(filename):
+            return None
+        _LOGGER.debug("Removing event media from disk store: %s", filename)
+        try:
+            os.remove(filename)
+        except OSError as err:
+            _LOGGER.error("Unable to remove media file: %s %s", filename, err)
+
+    async def _get_devices(self) -> Mapping[str, str]:
+        """Return a mapping of nest device id to home assistant device id."""
+        device_manager = await self._subscriber.async_get_device_manager()
+        devices = {}
+        for device in device_manager.devices.values():
+            if device_entry := self._device_registry.async_get_device(
+                {(DOMAIN, device.name)}
+            ):
+                devices[device.name] = device_entry.id
+        return devices
 
 
 async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
