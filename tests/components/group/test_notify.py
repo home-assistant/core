@@ -13,8 +13,8 @@ from tests.common import get_fixture_path
 
 async def test_send_message_with_data(hass):
     """Test sending a message with to a notify group."""
-    service1 = demo.DemoNotificationService(hass)
-    service2 = demo.DemoNotificationService(hass)
+    service1 = demo.DemoNotificationService()
+    service2 = demo.DemoNotificationService()
 
     service1.send_message = MagicMock(autospec=True)
     service2.send_message = MagicMock(autospec=True)
