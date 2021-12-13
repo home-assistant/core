@@ -97,7 +97,7 @@ class WalkingPadBaseDevice:
 
     async def set_speed_user(self, speed: float) -> None:
         """Set user speed."""
-        self._speed_user = speed / 10
+        self._speed_user = speed
 
     async def set_mode_standby(self) -> None:
         """Set mode to standby."""
