@@ -55,20 +55,25 @@ DEVICE_SPECIFIC_EVENT_TYPES = {
 }
 
 
-def check_device_trigger(
-    bridge: HueBridge, config: ConfigType, device_entry: DeviceEntry
+def check_invalid_device_trigger(
+    bridge: HueBridge,
+    config: ConfigType,
+    device_entry: DeviceEntry,
+    automation_info: AutomationTriggerInfo | None = None,
 ):
     """Check automation config for deprecated format."""
     # NOTE: Remove this check after 2022.6
     if isinstance(config["subtype"], int):
         return
     # found deprecated V1 style trigger, notify the user that it should be adjusted
-    dev_name = device_entry.name
     msg = (
-        f"Outdated device trigger found using Hue device {dev_name}. "
-        "Please manually fix the outdated automation(s) once."
+        f"Incompatible device trigger detected for "
+        f"[{device_entry.name}](/config/devices/device/{device_entry.id}) "
+        "Please manually fix the outdated automation(s) once to fix this issue."
     )
-    bridge.logger.warning(msg)
+    if automation_info:
+        automation_id = automation_info["variables"]["this"]["attributes"]["id"]  # type: ignore
+        msg += f"\n\n[Check it out](/config/automation/edit/{automation_id})."
     persistent_notification.async_create(
         bridge.hass,
         msg,
@@ -84,7 +89,7 @@ async def async_validate_trigger_config(
 ):
     """Validate config."""
     config = TRIGGER_SCHEMA(config)
-    check_device_trigger(bridge, config, device_entry)
+    check_invalid_device_trigger(bridge, config, device_entry)
     return config
 
 
@@ -108,7 +113,7 @@ async def async_attach_trigger(
             },
         }
     )
-    check_device_trigger(bridge, config, device_entry)
+    check_invalid_device_trigger(bridge, config, device_entry, automation_info)
     return await event_trigger.async_attach_trigger(
         hass, event_config, action, automation_info, platform_type="device"
     )
