@@ -10,7 +10,10 @@ from elmax_api.model.panel import PanelEntry
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.elmax.const import (
+from homeassistant.data_entry_flow import FlowResult
+from homeassistant.exceptions import HomeAssistantError
+
+from .const import (
     CONF_ELMAX_PANEL_ID,
     CONF_ELMAX_PANEL_NAME,
     CONF_ELMAX_PANEL_PIN,
@@ -18,8 +21,6 @@ from homeassistant.components.elmax.const import (
     CONF_ELMAX_USERNAME,
     DOMAIN,
 )
-from homeassistant.data_entry_flow import FlowResult
-from homeassistant.exceptions import HomeAssistantError
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -3,9 +3,10 @@
 from datetime import timedelta
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.components.streamlabswater import DOMAIN as STREAMLABSWATER_DOMAIN
 from homeassistant.const import VOLUME_GALLONS
 from homeassistant.util import Throttle
+
+from . import DOMAIN as STREAMLABSWATER_DOMAIN
 
 DEPENDENCIES = ["streamlabswater"]
 

@@ -6,7 +6,6 @@ from re import sub
 
 from pyefergy import Efergy, exceptions
 
-from homeassistant.components.efergy import EfergyEntity
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -18,6 +17,7 @@ from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_WATT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 
+from . import EfergyEntity
 from .const import CONF_CURRENT_VALUES, DATA_KEY_API, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
