@@ -1,6 +1,7 @@
 """Support for Apple TV media player."""
 import logging
 
+from pyatv import exceptions
 from pyatv.const import (
     DeviceState,
     FeatureName,
@@ -150,7 +151,9 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
         _LOGGER.debug("Updating app list")
         try:
             apps = await self.atv.apps.app_list()
-        except Exception:  # pylint: disable=broad-except
+        except exceptions.NotSupportedError:
+            _LOGGER.error("Listing apps is not supported")
+        except exceptions.ProtocolError:
             _LOGGER.exception("Failed to update app list")
         else:
             self._app_list = {app.name: app.identifier for app in apps}
