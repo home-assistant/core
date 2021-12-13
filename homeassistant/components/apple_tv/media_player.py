@@ -375,8 +375,8 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
 
     async def async_browse_media(
         self,
-        media_content_type: str | None = None,
-        media_content_id: str | None = None,
+        media_content_type=None,
+        media_content_id=None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
         return build_app_list(self._app_list)
