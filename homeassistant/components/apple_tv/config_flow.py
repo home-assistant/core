@@ -235,7 +235,9 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(self.device_identifier)
         # but be sure to update the address if its changed so the scanner
         # will probe the new address
-        self._abort_if_unique_id_configured(updates={CONF_ADDRESS: self.atv.address})
+        self._abort_if_unique_id_configured(
+            updates={CONF_ADDRESS: str(self.atv.address)}
+        )
         self.context["identifier"] = self.unique_id
         return await self.async_step_confirm()
 
@@ -280,15 +282,16 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
         }
         all_identifiers = set(self.atv.all_identifiers)
+        discovered_ip_address = str(self.atv.address)
         for entry in self._async_current_entries():
             if not all_identifiers.intersection(
                 entry.data.get(CONF_IDENTIFIERS, [entry.unique_id])
             ):
                 continue
-            if entry.data.get(CONF_ADDRESS) != self.atv.address:
+            if entry.data.get(CONF_ADDRESS) != discovered_ip_address:
                 self.hass.config_entries.async_update_entry(
                     entry,
-                    data={**entry.data, CONF_ADDRESS: self.atv.address},
+                    data={**entry.data, CONF_ADDRESS: discovered_ip_address},
                 )
                 self.hass.async_create_task(
                     self.hass.config_entries.async_reload(entry.entry_id)
