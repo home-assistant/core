@@ -143,10 +143,11 @@ class NestEventMediaStore(EventMediaStore):
 
         self._store.async_delay_save(provide_data, STORAGE_SAVE_DELAY_SECONDS)
 
-    def get_media_key(self, nest_device_id: str, event: ImageEventBase) -> str:
+    def get_media_key(self, device_id: str, event: ImageEventBase) -> str:
         """Return the filename to use for the device and event."""
+        # Convert a nest device id to a home assistant device id
         device_id_str = (
-            self._devices.get(nest_device_id, "unknown_device")
+            self._devices.get(device_id, "unknown_device")
             if self._devices
             else "unknown_device"
         )
@@ -171,8 +172,8 @@ class NestEventMediaStore(EventMediaStore):
             return None
         _LOGGER.debug("Reading event media from disk store: %s", filename)
         try:
-            with open(filename, "rb") as f:
-                return f.read()
+            with open(filename, "rb") as fd:
+                return fd.read()
         except OSError as err:
             _LOGGER.error("Unable to read media file: %s %s", filename, err)
             return None
@@ -184,8 +185,8 @@ class NestEventMediaStore(EventMediaStore):
             return
         _LOGGER.debug("Saving event media to disk store: %s", filename)
         try:
-            with open(filename, "wb") as f:
-                f.write(content)
+            with open(filename, "wb") as fd:
+                fd.write(content)
         except OSError as err:
             _LOGGER.error("Unable to write media file: %s %s", filename, err)
 
