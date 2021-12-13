@@ -333,7 +333,7 @@ class InputDatetime(RestoreEntity):
         if self.has_date:
             return self._current_datetime.date()
 
-        return self._current_datetime.strftime(FMT_TIME)
+        return self._current_datetime.time()
 
     @property
     def capability_attributes(self) -> dict:
