@@ -328,7 +328,7 @@ class InputDatetime(RestoreEntity):
             return None
 
         if self.has_date and self.has_time:
-            return self._current_datetime.strftime(FMT_DATETIME)
+            return self._current_datetime
 
         if self.has_date:
             return self._current_datetime.strftime(FMT_DATE)
