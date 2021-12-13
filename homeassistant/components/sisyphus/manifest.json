@@ -3,7 +3,7 @@
   "name": "Sisyphus",
   "documentation": "https://www.home-assistant.io/integrations/sisyphus",
   "requirements": [
-    "sisyphus-control==3.1.1"
+    "sisyphus-control==3.1.2"
   ],
   "codeowners": [
     "@jkeljo"
