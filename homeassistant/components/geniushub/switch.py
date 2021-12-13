@@ -3,7 +3,7 @@ from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.components.switch import DEVICE_CLASS_OUTLET, SwitchEntity
+from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.typing import ConfigType
@@ -55,7 +55,7 @@ class GeniusSwitch(GeniusZone, SwitchEntity):
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_OUTLET
+        return SwitchDeviceClass.OUTLET
 
     @property
     def is_on(self) -> bool:
