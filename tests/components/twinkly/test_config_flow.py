@@ -83,6 +83,36 @@ async def test_dhcp_can_confirm(hass):
     assert result["step_id"] == "discovery_confirm"
 
 
+async def test_dhcp_success(hass):
+    """Test DHCP discovery flow success."""
+    client = ClientMock()
+    with patch("twinkly_client.TwinklyClient", return_value=client):
+        result = await hass.config_entries.flow.async_init(
+            TWINKLY_DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=dhcp.DhcpServiceInfo(
+                hostname="Twinkly_XYZ",
+                ip="1.2.3.4",
+                macaddress="aa:bb:cc:dd:ee:ff",
+            ),
+        )
+        await hass.async_block_till_done()
+
+        assert result["type"] == "form"
+        assert result["step_id"] == "discovery_confirm"
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == client.id
+    assert result["data"] == {
+        CONF_ENTRY_HOST: "1.2.3.4",
+        CONF_ENTRY_ID: client.id,
+        CONF_ENTRY_NAME: client.id,
+        CONF_ENTRY_MODEL: TEST_MODEL,
+    }
+
+
 async def test_dhcp_already_exists(hass):
     """Test DHCP discovery flow that fails to connect."""
     client = ClientMock()
