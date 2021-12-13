@@ -1,5 +1,6 @@
 image: homeassistant/{machine}-homeassistant
 shadow_repository: ghcr.io/home-assistant
+version_tag: true
 build_from:
   aarch64: "ghcr.io/home-assistant/aarch64-homeassistant:"
   armv7: "ghcr.io/home-assistant/armv7-homeassistant:"
