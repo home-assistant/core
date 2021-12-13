@@ -334,15 +334,15 @@ class WalkingPadWiFiDevice(WalkingPadBaseDevice):
         )
         self._walkingpad_status = WalkingpadStatus(
             {
-                "cal": 0,
-                "dist": 0,
-                "mode": 0,
-                "power": "on",
-                "sensitivity": 0,
-                "sp": 0,
-                "start_speed": 0,
-                "step": 0,
-                "time": 0,
+                "cal": None,
+                "dist": None,
+                "mode": None,
+                "power": None,
+                "sensitivity": None,
+                "sp": None,
+                "start_speed": None,
+                "step": None,
+                "time": None,
             }
         )
         self._available = False
