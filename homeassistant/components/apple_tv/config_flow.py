@@ -282,16 +282,16 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
         }
         all_identifiers = set(self.atv.all_identifiers)
-        ip_address = str(self.atv.address)
+        discovered_ip_address = str(self.atv.address)
         for entry in self._async_current_entries():
             if not all_identifiers.intersection(
                 entry.data.get(CONF_IDENTIFIERS, [entry.unique_id])
             ):
                 continue
-            if entry.data.get(CONF_ADDRESS) != ip_address:
+            if entry.data.get(CONF_ADDRESS) != discovered_ip_address:
                 self.hass.config_entries.async_update_entry(
                     entry,
-                    data={**entry.data, CONF_ADDRESS: ip_address},
+                    data={**entry.data, CONF_ADDRESS: discovered_ip_address},
                 )
                 self.hass.async_create_task(
                     self.hass.config_entries.async_reload(entry.entry_id)
