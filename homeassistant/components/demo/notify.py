@@ -27,7 +27,7 @@ def get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> BaseNotificationService:
     """Get the legacy demo notification service."""
-    return LegacyDemoNotificationService()
+    return DemoNotificationService()
 
 
 class DemoNotifyService(NotifyService):
@@ -39,7 +39,7 @@ class DemoNotifyService(NotifyService):
         self.hass.bus.fire(EVENT_NOTIFY, kwargs)
 
 
-class LegacyDemoNotificationService(BaseNotificationService):
+class DemoNotificationService(BaseNotificationService):
     """Represent the legacy demo notification service."""
 
     @property
