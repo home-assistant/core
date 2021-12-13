@@ -170,10 +170,6 @@ class DeviceRegistryStore(storage.Store):
     ) -> dict[str, Any]:
         """Migrate to the new version."""
         if old_major_version < 2:
-            if old_minor_version < 3:
-                # Introduced in 2022.2
-                for device in old_data["devices"]:
-                    device["hw_version"] = device.get("hw_version")
             if old_minor_version < 2:
                 # From version 1.1
                 for device in old_data["devices"]:
@@ -200,6 +196,10 @@ class DeviceRegistryStore(storage.Store):
                 for device in old_data["deleted_devices"]:
                     # Introduced in 2021.2
                     device["orphaned_timestamp"] = device.get("orphaned_timestamp")
+            if old_minor_version < 3:
+                # Introduced in 2022.2
+                for device in old_data["devices"]:
+                    device["hw_version"] = device.get("hw_version")
 
         if old_major_version > 1:
             raise NotImplementedError
