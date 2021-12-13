@@ -45,7 +45,6 @@ from homeassistant.components.media_source.models import (
     PlayMedia,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.template import DATE_STR_FORMAT
 from homeassistant.util import dt as dt_util, raise_if_invalid_filename
@@ -77,10 +76,13 @@ async def async_get_media_event_store(
 ) -> EventMediaStore:
     """Create the disk backed EventMediaStore."""
     media_path = hass.config.path(MEDIA_PATH)
-    os.makedirs(media_path, exist_ok=True)
+
+    def mkdir() -> None:
+        os.makedirs(media_path, exist_ok=True)
+
+    await hass.async_add_executor_job(mkdir)
     store = Store(hass, STORAGE_VERSION, STORAGE_KEY, private=True)
-    device_registry = await hass.helpers.device_registry.async_get_registry()
-    return NestEventMediaStore(subscriber, store, device_registry, media_path)
+    return NestEventMediaStore(hass, subscriber, store, media_path)
 
 
 class NestEventMediaStore(EventMediaStore):
@@ -100,15 +102,15 @@ class NestEventMediaStore(EventMediaStore):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         subscriber: GoogleNestSubscriber,
         store: Store,
-        device_registry: DeviceRegistry,
         media_path: str,
     ) -> None:
         """Initialize NestEventMediaStore."""
+        self._hass = hass
         self._subscriber = subscriber
         self._store = store
-        self._device_registry = device_registry
         self._media_path = media_path
         self._data: dict | None = None
         self._data_loaded = False
@@ -168,12 +170,16 @@ class NestEventMediaStore(EventMediaStore):
     async def async_load_media(self, media_key: str) -> bytes | None:
         """Load media content."""
         filename = self.get_media_filename(media_key)
-        if not os.path.exists(filename):
-            return None
-        _LOGGER.debug("Reading event media from disk store: %s", filename)
+
+        def load_media(filename: str) -> bytes | None:
+            if not os.path.exists(filename):
+                return None
+            _LOGGER.debug("Reading event media from disk store: %s", filename)
+            with open(filename, "rb") as media:
+                return media.read()
+
         try:
-            with open(filename, "rb") as fd:
-                return fd.read()
+            return await self._hass.async_add_executor_job(load_media, filename)
         except OSError as err:
             _LOGGER.error("Unable to read media file: %s %s", filename, err)
             return None
@@ -181,32 +187,41 @@ class NestEventMediaStore(EventMediaStore):
     async def async_save_media(self, media_key: str, content: bytes) -> None:
         """Write media content."""
         filename = self.get_media_filename(media_key)
-        if os.path.exists(filename):
-            return
-        _LOGGER.debug("Saving event media to disk store: %s", filename)
+
+        def save_media(filename: str, content: bytes) -> None:
+            if os.path.exists(filename):
+                return
+            _LOGGER.debug("Saving event media to disk store: %s", filename)
+            with open(filename, "wb") as media:
+                media.write(content)
+
         try:
-            with open(filename, "wb") as fd:
-                fd.write(content)
+            await self._hass.async_add_executor_job(save_media, filename, content)
         except OSError as err:
             _LOGGER.error("Unable to write media file: %s %s", filename, err)
 
     async def async_remove_media(self, media_key: str) -> None:
         """Remove media content."""
         filename = self.get_media_filename(media_key)
-        if not os.path.exists(filename):
-            return None
-        _LOGGER.debug("Removing event media from disk store: %s", filename)
-        try:
+
+        def remove_media(filename: str) -> None:
+            if not os.path.exists(filename):
+                return None
+            _LOGGER.debug("Removing event media from disk store: %s", filename)
             os.remove(filename)
+
+        try:
+            await self._hass.async_add_executor_job(remove_media, filename)
         except OSError as err:
             _LOGGER.error("Unable to remove media file: %s %s", filename, err)
 
     async def _get_devices(self) -> Mapping[str, str]:
         """Return a mapping of nest device id to home assistant device id."""
+        device_registry = await self._hass.helpers.device_registry.async_get_registry()
         device_manager = await self._subscriber.async_get_device_manager()
         devices = {}
         for device in device_manager.devices.values():
-            if device_entry := self._device_registry.async_get_device(
+            if device_entry := device_registry.async_get_device(
                 {(DOMAIN, device.name)}
             ):
                 devices[device.name] = device_entry.id

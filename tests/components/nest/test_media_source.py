@@ -9,6 +9,7 @@ from http import HTTPStatus
 import shutil
 from typing import Generator
 from unittest.mock import Mock, patch
+import uuid
 
 import aiohttp
 from google_nest_sdm.device import Device
@@ -19,7 +20,6 @@ from homeassistant.components import media_source
 from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.components.media_source import const
 from homeassistant.components.media_source.error import Unresolvable
-from homeassistant.components.nest.media_source import MEDIA_PATH
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.template import DATE_STR_FORMAT
@@ -77,8 +77,12 @@ IMAGE_AUTHORIZATION_HEADERS = {"Authorization": "Basic g.0.eventToken"}
 @pytest.fixture(autouse=True)
 def cleanup_media_storage(hass):
     """Test cleanup, remove any media storage persisted during the test."""
-    yield
-    shutil.rmtree(hass.config.path(MEDIA_PATH))
+    tmp_path = str(uuid.uuid4())
+    m = Mock(spec=float)
+    m.return_value = tmp_path
+    with patch("homeassistant.components.nest.media_source.MEDIA_PATH", new_callable=m):
+        yield
+        shutil.rmtree(hass.config.path(tmp_path), ignore_errors=True)
 
 
 async def async_setup_devices(hass, auth, device_type, traits={}, events=[]):
@@ -522,16 +526,6 @@ async def test_camera_event_clip_preview(hass, auth, hass_client):
     ]
 
     client = await hass_client()
-    response = await client.get(media.url)
-    assert response.status == HTTPStatus.OK, "Response not matched: %s" % response
-    contents = await response.read()
-    assert contents == IMAGE_BYTES_FROM_EVENT
-
-    # Fetch again and read from cache. We prove the cache was used by forcing
-    # a server error.
-    auth.responses = [
-        aiohttp.web.Response(status=HTTPStatus.INTERNAL_SERVER_ERROR),
-    ]
     response = await client.get(media.url)
     assert response.status == HTTPStatus.OK, "Response not matched: %s" % response
     contents = await response.read()
