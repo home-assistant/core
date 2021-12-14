@@ -30,14 +30,13 @@ async def async_setup_entry(hass, config):
     loc_id = config.data.get(CONF_LOC_ID)
     dev_id = config.data.get(CONF_DEV_ID)
 
-    devices = []
+    devices = {}
 
     for location in client.locations_by_id.values():
-        for device in location.devices_by_id.values():
-            if (not loc_id or location.locationid == loc_id) and (
-                not dev_id or device.deviceid == dev_id
-            ):
-                devices.append(device)
+        if not loc_id or location.locationid == loc_id:
+            for device in location.devices_by_id.values():
+                if not dev_id or device.deviceid == dev_id:
+                    devices[device.deviceid] = device
 
     if len(devices) == 0:
         _LOGGER.debug("No devices found")
@@ -107,23 +106,30 @@ class HoneywellData:
         if self._client is None:
             return False
 
-        devices = [
+        refreshed_devices = [
             device
             for location in self._client.locations_by_id.values()
             for device in location.devices_by_id.values()
         ]
 
-        if len(devices) == 0:
-            _LOGGER.error("Failed to find any devices")
+        if len(refreshed_devices) == 0:
+            _LOGGER.error("Failed to find any devices after retry")
             return False
 
-        self.devices = devices
+        for updated_device in refreshed_devices:
+            if updated_device.deviceid in self.devices:
+                self.devices[updated_device.deviceid] = updated_device
+            else:
+                _LOGGER.info(
+                    "New device with ID %s detected, reload the honeywell integration if you want to access it in Home Assistant"
+                )
+
         await self._hass.config_entries.async_reload(self._config.entry_id)
         return True
 
     async def _refresh_devices(self):
         """Refresh each enabled device."""
-        for device in self.devices:
+        for device in self.devices.values():
             await self._hass.async_add_executor_job(device.refresh)
             await asyncio.sleep(UPDATE_LOOP_SLEEP_TIME)
 
@@ -143,11 +149,16 @@ class HoneywellData:
             ) as exp:
                 retries -= 1
                 if retries == 0:
+                    _LOGGER.error(
+                        "Ran out of retry attempts (3 attempts allocated). Error: %s",
+                        exp,
+                    )
                     raise exp
 
                 result = await self._retry()
 
                 if not result:
+                    _LOGGER.error("Retry result was empty. Error: %s", exp)
                     raise exp
 
-                _LOGGER.error("SomeComfort update failed, Retrying - Error: %s", exp)
+                _LOGGER.info("SomeComfort update failed, retrying. Error: %s", exp)
