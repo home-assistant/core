@@ -177,6 +177,7 @@ class DeviceInfo(TypedDict, total=False):
     name: str | None
     suggested_area: str | None
     sw_version: str | None
+    hw_version: str | None
     via_device: tuple[str, str]
 
 

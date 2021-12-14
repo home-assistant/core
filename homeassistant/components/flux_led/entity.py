@@ -15,7 +15,7 @@ from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import FluxLedUpdateCoordinator
-from .const import CONF_MINOR_VERSION, SIGNAL_STATE_UPDATED
+from .const import CONF_MINOR_VERSION, CONF_MODEL, SIGNAL_STATE_UPDATED
 
 
 def _async_device_info(
@@ -32,6 +32,7 @@ def _async_device_info(
         model=device.model,
         name=entry.data[CONF_NAME],
         sw_version=str(sw_version),
+        hw_version=entry.data.get(CONF_MODEL),
     )
 
 
