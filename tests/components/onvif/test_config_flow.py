@@ -8,6 +8,7 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.onvif import config_flow
 from homeassistant.components.onvif.const import CONF_SNAPSHOT_AUTH
 from homeassistant.components.onvif.models import DeviceInfo
+from homeassistant.const import HTTP_DIGEST_AUTHENTICATION
 
 from tests.common import MockConfigEntry
 
@@ -167,7 +168,7 @@ async def setup_onvif_integration(
             config_flow.CONF_PORT: PORT,
             config_flow.CONF_USERNAME: USERNAME,
             config_flow.CONF_PASSWORD: PASSWORD,
-            CONF_SNAPSHOT_AUTH: True,
+            CONF_SNAPSHOT_AUTH: HTTP_DIGEST_AUTHENTICATION,
         }
 
     config_entry = MockConfigEntry(
