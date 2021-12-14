@@ -15,9 +15,7 @@ from homematicip.base.enums import DoorCommand, DoorState
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    DEVICE_CLASS_BLIND,
-    DEVICE_CLASS_GARAGE,
-    DEVICE_CLASS_SHUTTER,
+    CoverDeviceClass,
     CoverEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -69,7 +67,7 @@ class HomematicipBlindModule(HomematicipGenericEntity, CoverEntity):
     @property
     def device_class(self) -> str:
         """Return the class of the cover."""
-        return DEVICE_CLASS_BLIND
+        return CoverDeviceClass.BLIND
 
     @property
     def current_cover_position(self) -> int | None:
@@ -162,7 +160,7 @@ class HomematicipMultiCoverShutter(HomematicipGenericEntity, CoverEntity):
     @property
     def device_class(self) -> str:
         """Return the class of the cover."""
-        return DEVICE_CLASS_SHUTTER
+        return CoverDeviceClass.SHUTTER
 
     @property
     def current_cover_position(self) -> int | None:
@@ -280,7 +278,7 @@ class HomematicipGarageDoorModule(HomematicipGenericEntity, CoverEntity):
     @property
     def device_class(self) -> str:
         """Return the class of the cover."""
-        return DEVICE_CLASS_GARAGE
+        return CoverDeviceClass.GARAGE
 
     @property
     def is_closed(self) -> bool | None:
@@ -311,7 +309,7 @@ class HomematicipCoverShutterGroup(HomematicipGenericEntity, CoverEntity):
     @property
     def device_class(self) -> str:
         """Return the class of the cover."""
-        return DEVICE_CLASS_SHUTTER
+        return CoverDeviceClass.SHUTTER
 
     @property
     def current_cover_position(self) -> int | None:
