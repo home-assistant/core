@@ -2284,7 +2284,7 @@ systembridge==2.2.3
 tahoma-api==0.0.16
 
 # homeassistant.components.tailscale
-tailscale==0.1.4
+tailscale==0.1.5
 
 # homeassistant.components.tank_utility
 tank_utility==1.4.0
