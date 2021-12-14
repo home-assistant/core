@@ -1,4 +1,10 @@
-"""Models for SQLAlchemy."""
+"""Models for SQLAlchemy.
+
+This file contains the model definitions for schema version 23,
+used by Home Assistant Core 2021.11.0, which adds the name column
+to statistics_meta.
+It is used to test the schema migration logic.
+"""
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -40,7 +46,7 @@ import homeassistant.util.dt as dt_util
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 24
+SCHEMA_VERSION = 23
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -289,7 +295,7 @@ class Statistics(Base, StatisticsBase):  # type: ignore
 
     __table_args__ = (
         # Used for fetching statistics for a certain entity at a specific time
-        Index("ix_statistics_statistic_id_start", "metadata_id", "start", unique=True),
+        Index("ix_statistics_statistic_id_start", "metadata_id", "start"),
     )
     __tablename__ = TABLE_STATISTICS
 
@@ -301,12 +307,7 @@ class StatisticsShortTerm(Base, StatisticsBase):  # type: ignore
 
     __table_args__ = (
         # Used for fetching statistics for a certain entity at a specific time
-        Index(
-            "ix_statistics_short_term_statistic_id_start",
-            "metadata_id",
-            "start",
-            unique=True,
-        ),
+        Index("ix_statistics_short_term_statistic_id_start", "metadata_id", "start"),
     )
     __tablename__ = TABLE_STATISTICS_SHORT_TERM
 
