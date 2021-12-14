@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any, Dict, TypeVar
 
-from pyfronius import FroniusError
+from pyfronius import BadStatusError, FroniusError
 
 from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.core import callback
@@ -118,7 +118,6 @@ class FroniusInverterUpdateCoordinator(FroniusCoordinatorBase):
     error_interval = timedelta(minutes=10)
     valid_descriptions = INVERTER_ENTITY_DESCRIPTIONS
 
-    MAX_FAILED_UPDATES = 2
     SILENT_RETRIES = 3
 
     def __init__(
@@ -138,7 +137,7 @@ class FroniusInverterUpdateCoordinator(FroniusCoordinatorBase):
                 data = await self.solar_net.fronius.current_inverter_data(
                     self.inverter_info.solar_net_id
                 )
-            except FroniusError as err:
+            except BadStatusError as err:
                 if silent_retry == (self.SILENT_RETRIES - 1):
                     raise err
                 continue

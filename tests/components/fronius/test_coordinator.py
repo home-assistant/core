@@ -1,7 +1,7 @@
 """Test the Fronius update coordinators."""
 from unittest.mock import patch
 
-from pyfronius import FroniusError
+from pyfronius import BadStatusError, FroniusError
 
 from homeassistant.components.fronius.coordinator import (
     FroniusInverterUpdateCoordinator,
@@ -28,21 +28,21 @@ async def test_adaptive_update_interval(hass, aioclient_mock):
         mock_inverter_data.assert_called_once()
         mock_inverter_data.reset_mock()
 
-        mock_inverter_data.side_effect = FroniusError
-        # first 2 requests at default interval - 4th has different interval
+        mock_inverter_data.side_effect = FroniusError()
+        # first 3 bad requests at default interval - 4th has different interval
         for _ in range(3):
             async_fire_time_changed(
                 hass, dt.utcnow() + FroniusInverterUpdateCoordinator.default_interval
             )
             await hass.async_block_till_done()
-        # 3 silent retries for inverter endpoint * 2 request intervals = 9
-        assert mock_inverter_data.call_count == 6
+        assert mock_inverter_data.call_count == 3
         mock_inverter_data.reset_mock()
+
         async_fire_time_changed(
             hass, dt.utcnow() + FroniusInverterUpdateCoordinator.error_interval
         )
         await hass.async_block_till_done()
-        assert mock_inverter_data.call_count == 3
+        assert mock_inverter_data.call_count == 1
         mock_inverter_data.reset_mock()
 
         mock_inverter_data.side_effect = None
@@ -59,3 +59,15 @@ async def test_adaptive_update_interval(hass, aioclient_mock):
         )
         await hass.async_block_till_done()
         mock_inverter_data.assert_called_once()
+        mock_inverter_data.reset_mock()
+
+        # BadStatusError on inverter endpoints have special handling
+        mock_inverter_data.side_effect = BadStatusError("mock_endpoint", 8)
+        # first 3 requests at default interval - 4th has different interval
+        for _ in range(3):
+            async_fire_time_changed(
+                hass, dt.utcnow() + FroniusInverterUpdateCoordinator.default_interval
+            )
+            await hass.async_block_till_done()
+        # BadStatusError does 3 silent retries for inverter endpoint * 3 request intervals = 9
+        assert mock_inverter_data.call_count == 9
