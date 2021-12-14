@@ -64,6 +64,7 @@ class TwinklyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: dhcp.DhcpServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle dhcp discovery for twinkly."""
+        self._async_abort_entries_match({CONF_ENTRY_HOST: discovery_info.ip})
         device_info = await twinkly_client.TwinklyClient(
             discovery_info.ip
         ).get_device_info()
