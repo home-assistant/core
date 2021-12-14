@@ -184,11 +184,11 @@ class Thermostat(ZhaEntity, ClimateEntity):
 
         unoccupied_cooling_setpoint = self._thrm.unoccupied_cooling_setpoint
         if unoccupied_cooling_setpoint is not None:
-            data[ATTR_UNOCCP_HEAT_SETPT] = unoccupied_cooling_setpoint
+            data[ATTR_UNOCCP_COOL_SETPT] = unoccupied_cooling_setpoint
 
         unoccupied_heating_setpoint = self._thrm.unoccupied_heating_setpoint
         if unoccupied_heating_setpoint is not None:
-            data[ATTR_UNOCCP_COOL_SETPT] = unoccupied_heating_setpoint
+            data[ATTR_UNOCCP_HEAT_SETPT] = unoccupied_heating_setpoint
         return data
 
     @property
