@@ -1,5 +1,4 @@
 """Representation of a switchMultilevel."""
-
 from homeassistant.components.number import NumberEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -15,7 +14,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     @callback
     def add_new_device(new_device):
-        switch = ZWaveMeNumber(new_device, config_entry.id)
+        switch = ZWaveMeNumber(new_device, config_entry.entry_id)
         async_add_entities(
             [
                 switch,

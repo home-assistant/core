@@ -1,5 +1,4 @@
 """The Z-Wave-Me WS integration."""
-import asyncio
 import logging
 
 from zwave_me_ws import ZWaveMe, ZWaveMeData
@@ -16,9 +15,11 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, entry):
     """Set up Z-Wave-Me from a config entry."""
+    hass.data[DOMAIN] = {}
     hass.data[DOMAIN][entry.entry_id] = ZWaveMeController(hass, entry)
-    if hass.data[DOMAIN][entry.entry_id].async_establish_connection():
+    if await hass.data[DOMAIN][entry.entry_id].async_establish_connection():
         hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+        hass.data[DOMAIN][entry.entry_id].zwave_api.get_devices()
         return True
     return False
 
@@ -46,20 +47,16 @@ class ZWaveMeController:
         )
         self.platforms_inited = False
 
-    async def async_establish_connection(self, hass):
-        """Try to establish connection with ZWave-Me."""
-        established = asyncio.Future()
-        loop = asyncio.get_running_loop()
-        hass.async_add_job(
-            self.zwave_api.get_connection,
-            lambda result: loop.call_soon_threadsafe(established, result),
-        )
-
-        return await established
+    async def async_establish_connection(self):
+        """Get connection status."""
+        is_connected = await self.zwave_api.get_connection()
+        if is_connected:
+            self.platforms_inited = True
+        return is_connected
 
     def add_device(self, device: ZWaveMeData) -> None:
         """Send signal to create device."""
-        if device.deviceType in ZWAVE_PLATFORMS:
+        if device.deviceType in ZWAVE_PLATFORMS and self.platforms_inited:
             if device.id in self.device_ids:
                 dispatcher_send(self._hass, "ZWAVE_ME_INFO_" + device.id, device)
             else:
@@ -83,10 +80,10 @@ class ZWaveMeEntity(Entity):
 
     def __init__(self, device, entry_id):
         """Initialize the device."""
+        self.device = device
         self._attr_name = device.title
         self._attr_unique_id = self.device.id
         self._attr_should_poll = False
-        self.device = device
         self.entry_id = entry_id
 
     async def async_added_to_hass(self) -> None:

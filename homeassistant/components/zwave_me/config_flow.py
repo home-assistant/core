@@ -2,6 +2,7 @@
 
 import logging
 
+from url_normalize import url_normalize
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -33,9 +34,16 @@ class ZWaveMeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if self.url == vol.UNDEFINED:
                 self.url = user_input["url"]
             self.token = user_input["token"]
-
             if not self.url.startswith(("ws://", "wss://")):
-                self.url = f"ws://{self.url}:8083"
+                self.url = f"ws://{self.url}"
+            self.url = url_normalize(self.url, default_scheme="ws")
+            if "://" not in self.url:
+                errors[CONF_URL] = "invalid_url"
+                return self.async_show_form(
+                    step_id="user",
+                    data_schema=schema,
+                    errors=errors,
+                )
 
             await self.async_set_unique_id(DOMAIN + self.url)
             return self.async_create_entry(

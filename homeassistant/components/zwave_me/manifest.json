@@ -3,7 +3,10 @@
   "name": "Z-Wave.Me",
   "documentation": "https://github.com/Z-Wave-Me/ha-core",
   "iot_class": "cloud_push",
-  "requirements": ["zwave_me_ws==0.1.9"],
+  "requirements": [
+    "zwave_me_ws==0.1.10",
+    "url-normalize==1.4.1"
+  ],
   "after_dependencies": ["zeroconf"],
   "zeroconf": [{"type":"_hap._tcp.local.", "name": "*z.wave-me*"}],
   "config_flow": true,

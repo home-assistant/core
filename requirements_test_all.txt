@@ -1410,6 +1410,7 @@ upcloud-api==2.0.0
 
 # homeassistant.components.huawei_lte
 # homeassistant.components.syncthru
+# homeassistant.components.zwave_me
 url-normalize==1.4.1
 
 # homeassistant.components.uvc
@@ -1509,4 +1510,4 @@ zigpy==0.42.0
 zwave-js-server-python==0.33.0
 
 # homeassistant.components.zwave_me
-zwave_me_ws==0.1.9
+zwave_me_ws==0.1.10
