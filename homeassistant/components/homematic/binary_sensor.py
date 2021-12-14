@@ -13,7 +13,7 @@ SENSOR_TYPES_CLASS = {
     "MaxShutterContact": BinarySensorDeviceClass.OPENING,
     "Motion": BinarySensorDeviceClass.MOTION,
     "MotionV2": BinarySensorDeviceClass.MOTION,
-    "PresenceIP": BinarySensorDeviceClass.PRESENCE,
+    "PresenceIP": BinarySensorDeviceClass.MOTION,
     "Remote": None,
     "RemoteMotion": None,
     "ShutterContact": BinarySensorDeviceClass.OPENING,
