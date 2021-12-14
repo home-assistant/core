@@ -614,7 +614,7 @@ class SimpliSafe:
             )
             
             if self._api.websocket.connected:
-                # If a websocket connection is open, reconnet to use the
+                # If a websocket connection is open, reconnect it to use the
                 # new access token:
                 asyncio.create_task(self._api.websocket.async_reconnect())
 
