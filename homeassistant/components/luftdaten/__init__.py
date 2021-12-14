@@ -100,9 +100,13 @@ def _async_fixup_sensor_id(hass, config_entry, sensor_id):
 
 async def async_setup_entry(hass, config_entry):
     """Set up Luftdaten as config entry."""
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][DATA_LUFTDATEN_CLIENT] = {}
-    hass.data[DOMAIN][DATA_LUFTDATEN_LISTENER] = {}
+    hass.data.setdefault(
+        DOMAIN,
+        {
+            DATA_LUFTDATEN_CLIENT: {},
+            DATA_LUFTDATEN_LISTENER: {},
+        },
+    )
 
     if not isinstance(config_entry.data[CONF_SENSOR_ID], int):
         _async_fixup_sensor_id(hass, config_entry, config_entry.data[CONF_SENSOR_ID])
