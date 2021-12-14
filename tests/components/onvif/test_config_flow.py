@@ -6,6 +6,8 @@ from zeep.exceptions import Fault
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.onvif import config_flow
+from homeassistant.components.onvif.const import CONF_SNAPSHOT_AUTH
+from homeassistant.components.onvif.models import DeviceInfo
 
 from tests.common import MockConfigEntry
 
@@ -17,6 +19,9 @@ USERNAME = "admin"
 PASSWORD = "12345"
 MAC = "aa:bb:cc:dd:ee"
 SERIAL_NUMBER = "ABCDEFGHIJK"
+MANUFACTURER = "TestManufacturer"
+MODEL = "TestModel"
+FIRMWARE_VERSION = "TestFirmwareVersion"
 
 DISCOVERY = [
     {
@@ -129,6 +134,15 @@ def setup_mock_discovery(
 def setup_mock_device(mock_device):
     """Prepare mock ONVIFDevice."""
     mock_device.async_setup = AsyncMock(return_value=True)
+    mock_device.available = True
+    mock_device.name = NAME
+    mock_device.info = DeviceInfo(
+        MANUFACTURER,
+        MODEL,
+        FIRMWARE_VERSION,
+        SERIAL_NUMBER,
+        MAC,
+    )
 
     def mock_constructor(hass, config):
         """Fake the controller constructor."""
@@ -153,6 +167,7 @@ async def setup_onvif_integration(
             config_flow.CONF_PORT: PORT,
             config_flow.CONF_USERNAME: USERNAME,
             config_flow.CONF_PASSWORD: PASSWORD,
+            CONF_SNAPSHOT_AUTH: True,
         }
 
     config_entry = MockConfigEntry(
@@ -176,9 +191,10 @@ async def setup_onvif_integration(
         # no discovery
         mock_discovery.return_value = []
         setup_mock_device(mock_device)
+        mock_device.device = mock_onvif_camera
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-    return config_entry
+    return config_entry, mock_onvif_camera, mock_device
 
 
 async def test_flow_discovered_devices(hass):
@@ -616,7 +632,7 @@ async def test_flow_import_onvif_auth_error(hass):
 
 async def test_option_flow(hass):
     """Test config flow options."""
-    entry = await setup_onvif_integration(hass)
+    entry, _, _ = await setup_onvif_integration(hass)
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 

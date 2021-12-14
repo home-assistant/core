@@ -65,7 +65,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up ONVIF from a config entry."""
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
-
     if not entry.options:
         await async_populate_options(hass, entry)
 
