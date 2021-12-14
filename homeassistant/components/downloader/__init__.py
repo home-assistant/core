@@ -1,11 +1,13 @@
 """Support for functionality to download files."""
 from http import HTTPStatus
+import enum
 import logging
 import os
 import re
 import threading
 
 import requests
+from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -17,6 +19,10 @@ ATTR_FILENAME = "filename"
 ATTR_SUBDIR = "subdir"
 ATTR_URL = "url"
 ATTR_OVERWRITE = "overwrite"
+ATTR_ASYNC = "async"
+ATTR_AUTH_TYPE = "auth_type"
+ATTR_USERNAME = "username"
+ATTR_PASSWORD = "password"
 
 CONF_DOWNLOAD_DIR = "download_dir"
 
@@ -26,12 +32,21 @@ DOWNLOAD_COMPLETED_EVENT = "download_completed"
 
 SERVICE_DOWNLOAD_FILE = "download_file"
 
+class AuthType(enum.Enum):
+    none = "none"
+    basic = "basic"
+    digest = "digest"
+
 SERVICE_DOWNLOAD_FILE_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_URL): cv.url,
         vol.Optional(ATTR_SUBDIR): cv.string,
         vol.Optional(ATTR_FILENAME): cv.string,
         vol.Optional(ATTR_OVERWRITE, default=False): cv.boolean,
+        vol.Optional(ATTR_ASYNC, default=True): cv.boolean,
+        vol.Optional(ATTR_AUTH_TYPE): cv.enum(AuthType),
+        vol.Optional(ATTR_USERNAME): cv.string,
+        vol.Optional(ATTR_PASSWORD): cv.string,
     }
 )
 
@@ -70,13 +85,26 @@ def setup(hass, config):
 
                 overwrite = service.data.get(ATTR_OVERWRITE)
 
+                auth_type = service.data.get(ATTR_AUTH_TYPE)
+
+                username = service.data.get(ATTR_USERNAME)
+
+                password = service.data.get(ATTR_PASSWORD)
+
+                if auth_type == AuthType.basic:
+                    auth_scheme = HTTPBasicAuth(username, password)
+                elif auth_type == AuthType.digest:
+                    auth_scheme = HTTPDigestAuth(username, password)
+                else:
+                    auth_scheme = None
+
                 if subdir:
                     # Check the path
                     raise_if_invalid_path(subdir)
 
                 final_path = None
 
-                req = requests.get(url, stream=True, timeout=10)
+                req = requests.get(url, stream=True, timeout=10, auth=auth_scheme)
 
                 if req.status_code != HTTPStatus.OK:
                     _LOGGER.warning(
@@ -163,7 +191,12 @@ def setup(hass, config):
                 if final_path and os.path.isfile(final_path):
                     os.remove(final_path)
 
-        threading.Thread(target=do_download).start()
+        is_async = service.data.get(ATTR_ASYNC)
+
+        if is_async:
+            threading.Thread(target=do_download).start()
+        else:
+            do_download()
 
     hass.services.register(
         DOMAIN,

@@ -27,3 +27,30 @@ download_file:
       default: false
       selector:
         boolean:
+    async:
+      name: Asynchronous
+      description: Whether to download in background without waiting or not.
+      default: true
+      selector:
+        boolean:
+    auth_type:
+      name: Auth Type
+      description: Authentication type.
+      selector:
+        select:
+          options:
+            - none
+            - basic
+            - digest
+    username:
+      name: Username
+      description: Username for authentication (Optional).
+      example: "my_username"
+      selector:
+        text:
+    password:
+      name: Password
+      description: Password for authentication (Optional).
+      example: "MyPa$$w0rd"
+      selector:
+        text:
