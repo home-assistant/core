@@ -58,9 +58,9 @@ class MockPchkConnectionManager(PchkConnectionManager):
 
     @patch.object(pypck.connection, "ModuleConnection", MockModuleConnection)
     @patch.object(pypck.connection, "GroupConnection", MockGroupConnection)
-    def get_address_conn(self, addr):
+    def get_address_conn(self, addr, request_serials=False):
         """Get LCN address connection."""
-        return super().get_address_conn(addr, request_serials=False)
+        return super().get_address_conn(addr, request_serials)
 
     send_command = AsyncMock()
 
@@ -101,6 +101,7 @@ def create_config_entry_myhome():
     return create_config_entry("myhome")
 
 
+@pytest.fixture(name="lcn_connection")
 async def init_integration(hass, entry):
     """Set up the LCN integration in Home Assistant."""
     lcn_connection = MockPchkConnectionManager(
@@ -119,7 +120,7 @@ async def init_integration(hass, entry):
     with patch("pypck.connection.PchkConnectionManager", return_value=lcn_connection):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-    return lcn_connection
+        yield lcn_connection
 
 
 async def setup_component(hass):

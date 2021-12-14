@@ -12,13 +12,11 @@ from homeassistant.components.lcn.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .conftest import MockPchkConnectionManager, init_integration, setup_component
+from .conftest import MockPchkConnectionManager, setup_component
 
 
-async def test_async_setup_entry(hass, entry):
+async def test_async_setup_entry(hass, entry, lcn_connection):
     """Test a successful setup entry and unload of entry."""
-    await init_integration(hass, entry)
-
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert entry.state == ConfigEntryState.LOADED
 
@@ -31,10 +29,12 @@ async def test_async_setup_entry(hass, entry):
 
 async def test_async_setup_multiple_entries(hass, entry, entry2):
     """Test a successful setup and unload of multiple entries."""
-    for config_entry in (entry, entry2):
-        await init_integration(hass, config_entry)
-        assert config_entry.state == ConfigEntryState.LOADED
-        await hass.async_block_till_done()
+    with patch("pypck.connection.PchkConnectionManager", MockPchkConnectionManager):
+        for config_entry in (entry, entry2):
+            config_entry.add_to_hass(hass)
+            await hass.config_entries.async_setup(config_entry.entry_id)
+            await hass.async_block_till_done()
+            assert config_entry.state == ConfigEntryState.LOADED
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 2
 

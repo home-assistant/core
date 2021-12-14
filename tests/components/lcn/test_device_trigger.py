@@ -11,14 +11,13 @@ from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from .conftest import get_device, init_integration
+from .conftest import get_device
 
 from tests.common import assert_lists_same, async_get_device_automations
 
 
-async def test_get_triggers_module_device(hass, entry):
+async def test_get_triggers_module_device(hass, entry, lcn_connection):
     """Test we get the expected triggers from a LCN module device."""
-    await init_integration(hass, entry)
     device = get_device(hass, entry, (0, 7, False))
 
     expected_triggers = [
@@ -52,11 +51,10 @@ async def test_get_triggers_module_device(hass, entry):
     assert_lists_same(triggers, expected_triggers)
 
 
-async def test_get_triggers_non_module_device(hass, entry):
+async def test_get_triggers_non_module_device(hass, lcn_connection):
     """Test we get the expected triggers from a LCN non-module device."""
     not_included_types = ("transmitter", "transponder", "fingerprint", "send_keys")
 
-    await init_integration(hass, entry)
     device_registry = dr.async_get(hass)
     for device_id in device_registry.devices:
         device = device_registry.async_get(device_id)
@@ -66,9 +64,8 @@ async def test_get_triggers_non_module_device(hass, entry):
                 assert trigger[CONF_TYPE] not in not_included_types
 
 
-async def test_if_fires_on_transponder_event(hass, calls, entry):
+async def test_if_fires_on_transponder_event(hass, calls, entry, lcn_connection):
     """Test for transponder event triggers firing."""
-    lcn_connection = await init_integration(hass, entry)
     address = (0, 7, False)
     device = get_device(hass, entry, address)
 
@@ -112,9 +109,8 @@ async def test_if_fires_on_transponder_event(hass, calls, entry):
     }
 
 
-async def test_if_fires_on_fingerprint_event(hass, calls, entry):
+async def test_if_fires_on_fingerprint_event(hass, calls, entry, lcn_connection):
     """Test for fingerprint event triggers firing."""
-    lcn_connection = await init_integration(hass, entry)
     address = (0, 7, False)
     device = get_device(hass, entry, address)
 
@@ -158,9 +154,8 @@ async def test_if_fires_on_fingerprint_event(hass, calls, entry):
     }
 
 
-async def test_if_fires_on_transmitter_event(hass, calls, entry):
+async def test_if_fires_on_transmitter_event(hass, calls, entry, lcn_connection):
     """Test for transmitter event triggers firing."""
-    lcn_connection = await init_integration(hass, entry)
     address = (0, 7, False)
     device = get_device(hass, entry, address)
 
@@ -213,9 +208,8 @@ async def test_if_fires_on_transmitter_event(hass, calls, entry):
     }
 
 
-async def test_if_fires_on_send_keys_event(hass, calls, entry):
+async def test_if_fires_on_send_keys_event(hass, calls, entry, lcn_connection):
     """Test for send_keys event triggers firing."""
-    lcn_connection = await init_integration(hass, entry)
     address = (0, 7, False)
     device = get_device(hass, entry, address)
 
@@ -261,9 +255,8 @@ async def test_if_fires_on_send_keys_event(hass, calls, entry):
     }
 
 
-async def test_get_transponder_trigger_capabilities(hass, entry):
+async def test_get_transponder_trigger_capabilities(hass, entry, lcn_connection):
     """Test we get the expected capabilities from a transponder device trigger."""
-    await init_integration(hass, entry)
     address = (0, 7, False)
     device = get_device(hass, entry, address)
 
@@ -283,9 +276,8 @@ async def test_get_transponder_trigger_capabilities(hass, entry):
     ) == [{"name": "code", "optional": True, "type": "string", "lower": True}]
 
 
-async def test_get_fingerprint_trigger_capabilities(hass, entry):
+async def test_get_fingerprint_trigger_capabilities(hass, entry, lcn_connection):
     """Test we get the expected capabilities from a fingerprint device trigger."""
-    await init_integration(hass, entry)
     address = (0, 7, False)
     device = get_device(hass, entry, address)
 
@@ -305,9 +297,8 @@ async def test_get_fingerprint_trigger_capabilities(hass, entry):
     ) == [{"name": "code", "optional": True, "type": "string", "lower": True}]
 
 
-async def test_get_transmitter_trigger_capabilities(hass, entry):
+async def test_get_transmitter_trigger_capabilities(hass, entry, lcn_connection):
     """Test we get the expected capabilities from a transmitter device trigger."""
-    await init_integration(hass, entry)
     address = (0, 7, False)
     device = get_device(hass, entry, address)
 
@@ -337,9 +328,8 @@ async def test_get_transmitter_trigger_capabilities(hass, entry):
     ]
 
 
-async def test_get_send_keys_trigger_capabilities(hass, entry):
+async def test_get_send_keys_trigger_capabilities(hass, entry, lcn_connection):
     """Test we get the expected capabilities from a send_keys device trigger."""
-    await init_integration(hass, entry)
     address = (0, 7, False)
     device = get_device(hass, entry, address)
 
@@ -374,9 +364,8 @@ async def test_get_send_keys_trigger_capabilities(hass, entry):
     ]
 
 
-async def test_unknown_trigger_capabilities(hass, entry):
+async def test_unknown_trigger_capabilities(hass, entry, lcn_connection):
     """Test we get empty capabilities if trigger is unknown."""
-    await init_integration(hass, entry)
     address = (0, 7, False)
     device = get_device(hass, entry, address)
 
