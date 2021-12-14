@@ -423,7 +423,7 @@ class TibberDataCoordinator(update_coordinator.DataUpdateCoordinator):
             hass,
             _LOGGER,
             name=f"Tibber {tibber_connection.name}",
-            update_method=tibber_connection.fetch_conumption_data_active_homes,
+            update_method=tibber_connection.fetch_consumption_data_active_homes,
         )
 
         async def _async_request_refresh_wrapper(_):
