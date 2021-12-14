@@ -606,7 +606,7 @@ class SimpliSafe:
 
         @callback
         def async_save_refresh_token(token: str) -> None:
-            """Save a new refresh token."""
+            """Save a refresh token to the config entry."""
             LOGGER.info("Saving new refresh token to HASS storage")
             self._hass.config_entries.async_update_entry(
                 self.entry,
