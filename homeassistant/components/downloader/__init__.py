@@ -32,10 +32,12 @@ DOWNLOAD_COMPLETED_EVENT = "download_completed"
 
 SERVICE_DOWNLOAD_FILE = "download_file"
 
+
 class AuthType(enum.Enum):
     none = "none"
     basic = "basic"
     digest = "digest"
+
 
 SERVICE_DOWNLOAD_FILE_SCHEMA = vol.Schema(
     {
