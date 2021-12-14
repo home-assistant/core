@@ -100,7 +100,7 @@ class HumidifierDehumidifier(HomeAccessory):
                 value=self._hk_device_class,
                 properties={
                     PROP_MIN_VALUE: self._hk_device_class,
-                    PROP_MAX_VALUE: self._hk_device_class
+                    PROP_MAX_VALUE: self._hk_device_class,
                 },
                 valid_values={
                     HC_HASS_TO_HOMEKIT_DEVICE_CLASS_NAME[
