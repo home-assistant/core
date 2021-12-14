@@ -10,8 +10,8 @@ from aiohue.v2.models.resource import SensingService
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENTITY_CATEGORY_CONFIG
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .bridge import HueBridge
@@ -62,7 +62,7 @@ async def async_setup_entry(
 class HueSensingServiceEnabledEntity(HueBaseEntity, SwitchEntity):
     """Representation of a Switch entity from Hue SensingService."""
 
-    _attr_entity_category = ENTITY_CATEGORY_CONFIG
+    _attr_entity_category = EntityCategory.CONFIG
     _attr_device_class = SwitchDeviceClass.SWITCH
 
     def __init__(
