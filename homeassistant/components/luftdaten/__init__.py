@@ -5,7 +5,6 @@ import logging
 
 from luftdaten import Luftdaten
 from luftdaten.exceptions import LuftdatenError
-import voluptuous as vol
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
 from homeassistant.config_entries import SOURCE_IMPORT
@@ -14,7 +13,6 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_SCAN_INTERVAL,
     CONF_SENSORS,
-    CONF_SHOW_ON_MAP,
     PERCENTAGE,
     PRESSURE_PA,
     TEMP_CELSIUS,
@@ -26,7 +24,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
-from .config_flow import configured_sensors, duplicate_stations
+from .config_flow import duplicate_stations
 from .const import CONF_SENSOR_ID, DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -90,32 +88,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 )
 SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
-SENSOR_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=SENSOR_KEYS): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_KEYS)]
-        )
-    }
-)
-
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: vol.Schema(
-                {
-                    vol.Required(CONF_SENSOR_ID): cv.positive_int,
-                    vol.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
-                    vol.Optional(CONF_SHOW_ON_MAP, default=False): cv.boolean,
-                    vol.Optional(
-                        CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
-                    ): cv.time_period,
-                }
-            )
-        },
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 @callback
@@ -125,38 +98,15 @@ def _async_fixup_sensor_id(hass, config_entry, sensor_id):
     )
 
 
-async def async_setup(hass, config):
-    """Set up the Luftdaten component."""
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][DATA_LUFTDATEN_CLIENT] = {}
-    hass.data[DOMAIN][DATA_LUFTDATEN_LISTENER] = {}
-
-    if DOMAIN not in config:
-        return True
-
-    conf = config[DOMAIN]
-    station_id = conf[CONF_SENSOR_ID]
-
-    if station_id not in configured_sensors(hass):
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data={
-                    CONF_SENSORS: conf[CONF_SENSORS],
-                    CONF_SENSOR_ID: conf[CONF_SENSOR_ID],
-                    CONF_SHOW_ON_MAP: conf[CONF_SHOW_ON_MAP],
-                },
-            )
-        )
-
-    hass.data[DOMAIN][CONF_SCAN_INTERVAL] = conf[CONF_SCAN_INTERVAL]
-
-    return True
-
-
 async def async_setup_entry(hass, config_entry):
     """Set up Luftdaten as config entry."""
+    hass.data.setdefault(
+        DOMAIN,
+        {
+            DATA_LUFTDATEN_CLIENT: {},
+            DATA_LUFTDATEN_LISTENER: {},
+        },
+    )
 
     if not isinstance(config_entry.data[CONF_SENSOR_ID], int):
         _async_fixup_sensor_id(hass, config_entry, config_entry.data[CONF_SENSOR_ID])
