@@ -237,13 +237,13 @@ class PM25Sensor(AirQualitySensor):
         density = convert_to_float(new_state.state)
         if not density:
             return
-            if self.char_density.value != density:
-                self.char_density.set_value(density)
-                _LOGGER.debug("%s: Set density to %d", self.entity_id, density)
-            air_quality = density_to_air_quality_pm25(density)
-            if self.char_quality.value != air_quality:
-                self.char_quality.set_value(air_quality)
-                _LOGGER.debug("%s: Set air_quality to %d", self.entity_id, air_quality)
+        if self.char_density.value != density:
+            self.char_density.set_value(density)
+            _LOGGER.debug("%s: Set density to %d", self.entity_id, density)
+        air_quality = density_to_air_quality_pm25(density)
+        if self.char_quality.value != air_quality:
+            self.char_quality.set_value(air_quality)
+            _LOGGER.debug("%s: Set air_quality to %d", self.entity_id, air_quality)
 
 
 @TYPES.register("CarbonMonoxideSensor")
