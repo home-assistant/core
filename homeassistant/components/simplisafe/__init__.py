@@ -605,8 +605,8 @@ class SimpliSafe:
         )
 
         @callback
-        def async_on_refresh_token(token: str) -> None:
-            """Store a new refresh token to the config entry."""
+        def async_handle_refresh_token(token: str) -> None:
+            """Handle a new refresh token."""
             LOGGER.info("Saving new refresh token to HASS storage")
             self._hass.config_entries.async_update_entry(
                 self.entry,
@@ -619,7 +619,7 @@ class SimpliSafe:
                 asyncio.create_task(self._api.websocket.async_reconnect())
 
         self.entry.async_on_unload(
-            self._api.add_refresh_token_callback(async_on_refresh_token)
+            self._api.add_refresh_token_callback(async_handle_refresh_token)
         )
 
         async_save_refresh_token(self._api.refresh_token)
