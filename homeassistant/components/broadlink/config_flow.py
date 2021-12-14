@@ -128,9 +128,6 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             _LOGGER.error("Failed to connect to the device at %s: %s", host, err_msg)
 
-            if self.source == config_entries.SOURCE_IMPORT:
-                return self.async_abort(reason=errors["base"])
-
         data_schema = {
             vol.Required(CONF_HOST): str,
             vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
@@ -172,15 +169,6 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         else:
             await self.async_set_unique_id(device.mac.hex())
-            if self.source == config_entries.SOURCE_IMPORT:
-                _LOGGER.warning(
-                    "%s (%s at %s) is ready to be configured. Click "
-                    "Configuration in the sidebar, click Integrations and "
-                    "click Configure on the device to complete the setup",
-                    device.name,
-                    device.model,
-                    device.host[0],
-                )
 
             if device.is_locked:
                 return await self.async_step_unlock()
@@ -294,11 +282,6 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="finish", data_schema=vol.Schema(data_schema), errors=errors
         )
-
-    async def async_step_import(self, import_info):
-        """Import a device."""
-        self._async_abort_entries_match({CONF_HOST: import_info[CONF_HOST]})
-        return await self.async_step_user(import_info)
 
     async def async_step_reauth(self, data):
         """Reauthenticate to the device."""
