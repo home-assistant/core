@@ -18,27 +18,32 @@ async def test_adaptive_update_interval(hass, aioclient_mock):
     with patch("pyfronius.Fronius.current_inverter_data") as mock_inverter_data:
         mock_responses(aioclient_mock)
         await setup_fronius_integration(hass)
-        assert mock_inverter_data.call_count == 1
+        mock_inverter_data.assert_called_once()
+        mock_inverter_data.reset_mock()
 
         async_fire_time_changed(
             hass, dt.utcnow() + FroniusInverterUpdateCoordinator.default_interval
         )
         await hass.async_block_till_done()
-        assert mock_inverter_data.call_count == 2
+        mock_inverter_data.assert_called_once()
+        mock_inverter_data.reset_mock()
 
         mock_inverter_data.side_effect = FroniusError
-        # first 3 requests at default interval - 4th has different interval
-        for _ in range(4):
+        # first 2 requests at default interval - 4th has different interval
+        for _ in range(3):
             async_fire_time_changed(
                 hass, dt.utcnow() + FroniusInverterUpdateCoordinator.default_interval
             )
             await hass.async_block_till_done()
-        assert mock_inverter_data.call_count == 5
+        # 3 silent retries for inverter endpoint * 2 request intervals = 9
+        assert mock_inverter_data.call_count == 6
+        mock_inverter_data.reset_mock()
         async_fire_time_changed(
             hass, dt.utcnow() + FroniusInverterUpdateCoordinator.error_interval
         )
         await hass.async_block_till_done()
-        assert mock_inverter_data.call_count == 6
+        assert mock_inverter_data.call_count == 3
+        mock_inverter_data.reset_mock()
 
         mock_inverter_data.side_effect = None
         # next successful request resets to default interval
@@ -46,10 +51,11 @@ async def test_adaptive_update_interval(hass, aioclient_mock):
             hass, dt.utcnow() + FroniusInverterUpdateCoordinator.error_interval
         )
         await hass.async_block_till_done()
-        assert mock_inverter_data.call_count == 7
+        mock_inverter_data.assert_called_once()
+        mock_inverter_data.reset_mock()
 
         async_fire_time_changed(
             hass, dt.utcnow() + FroniusInverterUpdateCoordinator.default_interval
         )
         await hass.async_block_till_done()
-        assert mock_inverter_data.call_count == 8
+        mock_inverter_data.assert_called_once()
