@@ -86,7 +86,7 @@ class ServiceIntegration:
         if platform is None:
             raise ValueError("Config entry was never loaded!")
 
-        await platform.async_reset()
+        await platform.async_destroy()
         return True
 
     async def _async_shutdown(self, event: Event) -> None:

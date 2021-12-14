@@ -233,7 +233,7 @@ async def test_setup_entry_and_reset(
     mock_service_platform: ServicePlatform,
     mock_platform_service: PlatformService,
 ) -> None:
-    """Test we can set up an entry and reset the platform."""
+    """Test we can set up an entry and destroy the platform."""
     platform, _, entry = mock_platform
     full_platform_name = f"{mock_service_platform.domain}.{entry.domain}"
 
@@ -260,7 +260,7 @@ async def test_setup_entry_and_reset(
     )
     assert mock_service_platform.config_entry is entry
 
-    await mock_service_platform.async_reset()
+    await mock_service_platform.async_destroy()
 
     assert len(hass.services.async_services()) == 0
 
@@ -347,7 +347,7 @@ async def test_setup_entry_platform_try_again(
     assert (__name__, logging.DEBUG, log_message) in caplog.record_tuples
 
 
-@pytest.mark.parametrize("platform_call", ["async_reset", "async_shutdown"])
+@pytest.mark.parametrize("platform_call", ["async_destroy", "async_shutdown"])
 @pytest.mark.parametrize(
     "core_state, call_later_calls, retry_listeners",
     [(CoreState.running, 1, 0), (CoreState.starting, 0, 1)],
@@ -458,7 +458,9 @@ async def test_adding_removing_same_service_twice(
     await hass.async_block_till_done()
     assert len(hass.services.async_services()) == 1
 
-    await mock_service_platform.async_reset()
+    await asyncio.gather(
+        *[service.async_remove() for service in mock_service_platform.services.values()]
+    )
 
     assert len(hass.services.async_services()) == 0
 
@@ -479,7 +481,9 @@ async def test_adding_removing_same_service_twice(
     assert len(hass.services.async_services()) == 1
     assert hass.services.has_service(DOMAIN, mock_platform_service.service_name)
 
-    await mock_service_platform.async_reset()
+    await asyncio.gather(
+        *[service.async_remove() for service in mock_service_platform.services.values()]
+    )
 
     assert len(hass.services.async_services()) == 0
 
@@ -687,7 +691,7 @@ async def test_get_platforms(
     assert len(platforms) == 1
     assert platforms[0] is service_platform
 
-    await service_platform.async_reset()
+    await service_platform.async_destroy()
     platforms = async_get_platforms(hass, ENTRY_DOMAIN)
 
     # Resetting the platform doesn't remove the platform.

@@ -416,8 +416,8 @@ class ServicePlatform:
 
         service.async_on_remove(remove_service_cb)
 
-    async def async_reset(self) -> None:
-        """Remove all services and reset data."""
+    async def async_destroy(self) -> None:
+        """Remove all services and data."""
         self.async_cancel_retry_setup()
 
         if not self.services:
@@ -428,8 +428,7 @@ class ServicePlatform:
         await asyncio.gather(*tasks)
 
         self._setup_complete = False
-
-        # FIXME: Should we remove the platform instance from hass.data[DATA_SERVICE_PLATFORM]?
+        self.hass.data[DATA_SERVICE_PLATFORM][self.platform_name].remove(self)
 
     async def _async_register_service(
         self,
