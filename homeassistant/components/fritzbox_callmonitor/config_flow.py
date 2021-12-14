@@ -6,13 +6,7 @@ from requests.exceptions import ConnectionError as RequestsConnectionError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import callback
 
 from .base import FritzBoxPhonebook
@@ -133,10 +127,6 @@ class FritzBoxCallMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return FritzBoxCallMonitorOptionsFlowHandler(config_entry)
 
-    async def async_step_import(self, user_input=None):
-        """Handle configuration by yaml file."""
-        return await self.async_step_user(user_input)
-
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
 
@@ -161,10 +151,6 @@ class FritzBoxCallMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if result != RESULT_SUCCESS:
             return self.async_abort(reason=result)
-
-        if self.context["source"] == config_entries.SOURCE_IMPORT:
-            self._phonebook_id = user_input[CONF_PHONEBOOK]
-            self._phonebook_name = user_input[CONF_NAME]
 
         elif len(self._phonebook_ids) > 1:
             return await self.async_step_phonebook()
