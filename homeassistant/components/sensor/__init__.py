@@ -215,7 +215,7 @@ class SensorEntityDescription(EntityDescription):
     """A class that describes sensor entities."""
 
     device_class: SensorDeviceClass | str | None = None
-    last_reset: datetime | None = None  # Deprecated, to be removed in 2021.11
+    last_reset: datetime | None = None
     native_unit_of_measurement: str | None = None
     state_class: SensorStateClass | str | None = None
     unit_of_measurement: None = None  # Type override, use native_unit_of_measurement
@@ -247,7 +247,7 @@ class SensorEntity(Entity):
 
     entity_description: SensorEntityDescription
     _attr_device_class: SensorDeviceClass | str | None
-    _attr_last_reset: datetime | None  # Deprecated, to be removed in 2021.11
+    _attr_last_reset: datetime | None
     _attr_native_unit_of_measurement: str | None
     _attr_native_value: StateType | date | datetime = None
     _attr_state_class: SensorStateClass | str | None
