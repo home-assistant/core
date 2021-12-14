@@ -47,7 +47,6 @@ from homeassistant.components.plex.const import PLEX_URI_SCHEME
 from homeassistant.components.plex.services import lookup_plex_media
 from homeassistant.const import (
     CAST_APP_ID_HOMEASSISTANT_LOVELACE,
-    CAST_APP_ID_HOMEASSISTANT_MEDIA,
     EVENT_HOMEASSISTANT_STOP,
     STATE_IDLE,
     STATE_OFF,
@@ -818,7 +817,6 @@ class DynamicCastGroup:
             self._cast_info.cast_info,
             ChromeCastZeroconf.get_zeroconf(),
         )
-        chromecast.media_controller.app_id = CAST_APP_ID_HOMEASSISTANT_MEDIA
         self._chromecast = chromecast
 
         if CAST_MULTIZONE_MANAGER_KEY not in self.hass.data:
