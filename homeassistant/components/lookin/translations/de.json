@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "no_devices_found": "Keine Ger\u00e4te im Netzwerk gefunden"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "no_devices_found": "Keine Ger\u00e4te im Netzwerk gefunden",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "device_name": {
+                "data": {
+                    "name": "Name"
+                }
+            },
+            "discovery_confirm": {
+                "description": "M\u00f6chtest du {name} ({host}) einrichten?"
+            },
+            "user": {
+                "data": {
+                    "ip_address": "IP-Adresse"
+                }
+            }
+        }
+    }
+}

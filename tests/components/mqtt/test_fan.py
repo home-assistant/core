@@ -1590,9 +1590,11 @@ async def test_discovery_removal_fan(hass, mqtt_mock, caplog):
 
 async def test_discovery_update_fan(hass, mqtt_mock, caplog):
     """Test update of discovered fan."""
-    data1 = '{ "name": "Beer", "command_topic": "test_topic" }'
-    data2 = '{ "name": "Milk", "command_topic": "test_topic" }'
-    await help_test_discovery_update(hass, mqtt_mock, caplog, fan.DOMAIN, data1, data2)
+    config1 = {"name": "Beer", "command_topic": "test_topic"}
+    config2 = {"name": "Milk", "command_topic": "test_topic"}
+    await help_test_discovery_update(
+        hass, mqtt_mock, caplog, fan.DOMAIN, config1, config2
+    )
 
 
 async def test_discovery_update_unchanged_fan(hass, mqtt_mock, caplog):

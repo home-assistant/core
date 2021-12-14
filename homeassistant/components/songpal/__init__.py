@@ -24,8 +24,7 @@ PLATFORMS = ["media_player"]
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up songpal environment."""
-    conf = config.get(DOMAIN)
-    if conf is None:
+    if (conf := config.get(DOMAIN)) is None:
         return True
     for config_entry in conf:
         hass.async_create_task(

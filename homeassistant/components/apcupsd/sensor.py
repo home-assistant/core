@@ -120,7 +120,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         icon="mdi:timer-outline",
     ),
     SensorEntityDescription(
-        key="endapc",
+        key="end apc",
         name="Date and Time",
         icon="mdi:calendar-clock",
     ),

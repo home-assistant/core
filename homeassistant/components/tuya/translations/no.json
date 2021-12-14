@@ -6,7 +6,8 @@
             "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
         },
         "error": {
-            "invalid_auth": "Ugyldig godkjenning"
+            "invalid_auth": "Ugyldig godkjenning",
+            "login_error": "P\u00e5loggingsfeil ( {code} ): {msg}"
         },
         "flow_title": "Tuya konfigurasjon",
         "step": {
@@ -25,13 +26,16 @@
             },
             "user": {
                 "data": {
-                    "country_code": "Din landskode for kontoen din (f.eks. 1 for USA eller 86 for Kina)",
+                    "access_id": "Tuya IoT Access ID",
+                    "access_secret": "Tuya IoT Access Secret",
+                    "country_code": "Land",
                     "password": "Passord",
                     "platform": "Appen der kontoen din er registrert",
+                    "region": "Region",
                     "tuya_project_type": "Tuya -skyprosjekttype",
-                    "username": "Brukernavn"
+                    "username": "Account"
                 },
-                "description": "Angi Tuya-legitimasjonen din.",
+                "description": "Skriv inn Tuya -legitimasjonen din",
                 "title": "Tuya Integrasjon"
             }
         }

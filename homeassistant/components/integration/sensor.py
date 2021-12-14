@@ -124,8 +124,7 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
         await super().async_added_to_hass()
-        state = await self.async_get_last_state()
-        if state:
+        if state := await self.async_get_last_state():
             try:
                 self._state = Decimal(state.state)
             except (DecimalException, ValueError) as err:
@@ -156,6 +155,7 @@ class IntegrationSensor(RestoreEntity, SensorEntity):
 
             if (
                 old_state is None
+                or new_state is None
                 or old_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
                 or new_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
             ):

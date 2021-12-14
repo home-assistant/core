@@ -68,9 +68,7 @@ class SkyHubDeviceScanner(DeviceScanner):
         """Ensure the information from the Sky Hub is up to date."""
         _LOGGER.debug("Scanning")
 
-        data = await self._hub.async_get_skyhub_data()
-
-        if not data:
+        if not (data := await self._hub.async_get_skyhub_data()):
             return
 
         self.last_results = data

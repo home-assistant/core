@@ -15,6 +15,9 @@
                 "title": "S\u00e9lectionner l'identifiant du compte Kamereon"
             },
             "reauth_confirm": {
+                "data": {
+                    "password": "Mot de passe"
+                },
                 "title": "R\u00e9-authentifier l'int\u00e9gration"
             },
             "user": {

@@ -17,7 +17,9 @@ from homeassistant.components.binary_sensor import (
     STATE_ON,
     BinarySensorEntity,
 )
+from homeassistant.components.shelly.const import CONF_SLEEP_PERIOD
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -41,16 +43,24 @@ from .utils import (
 
 SENSORS: Final = {
     ("device", "overtemp"): BlockAttributeDescription(
-        name="Overheating", device_class=DEVICE_CLASS_PROBLEM
+        name="Overheating",
+        device_class=DEVICE_CLASS_PROBLEM,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     ("device", "overpower"): BlockAttributeDescription(
-        name="Overpowering", device_class=DEVICE_CLASS_PROBLEM
+        name="Overpowering",
+        device_class=DEVICE_CLASS_PROBLEM,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     ("light", "overpower"): BlockAttributeDescription(
-        name="Overpowering", device_class=DEVICE_CLASS_PROBLEM
+        name="Overpowering",
+        device_class=DEVICE_CLASS_PROBLEM,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     ("relay", "overpower"): BlockAttributeDescription(
-        name="Overpowering", device_class=DEVICE_CLASS_PROBLEM
+        name="Overpowering",
+        device_class=DEVICE_CLASS_PROBLEM,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     ("sensor", "dwIsOpened"): BlockAttributeDescription(
         name="Door",
@@ -106,6 +116,7 @@ REST_SENSORS: Final = {
         value=lambda status, _: status["cloud"]["connected"],
         device_class=DEVICE_CLASS_CONNECTIVITY,
         default_enabled=False,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     "fwupdate": RestAttributeDescription(
         name="Firmware Update",
@@ -115,7 +126,9 @@ REST_SENSORS: Final = {
         extra_state_attributes=lambda status: {
             "latest_stable_version": status["update"]["new_version"],
             "installed_version": status["update"]["old_version"],
+            "beta_version": status["update"].get("beta_version", ""),
         },
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
 }
 
@@ -134,6 +147,7 @@ RPC_SENSORS: Final = {
         name="Cloud",
         device_class=DEVICE_CLASS_CONNECTIVITY,
         default_enabled=False,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     "fwupdate": RpcAttributeDescription(
         key="sys",
@@ -141,10 +155,12 @@ RPC_SENSORS: Final = {
         name="Firmware Update",
         device_class=DEVICE_CLASS_UPDATE,
         default_enabled=False,
-        extra_state_attributes=lambda status: {
+        extra_state_attributes=lambda status, shelly: {
             "latest_stable_version": status.get("stable", {"version": ""})["version"],
+            "installed_version": shelly["ver"],
             "beta_version": status.get("beta", {"version": ""})["version"],
         },
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
 }
 
@@ -160,7 +176,7 @@ async def async_setup_entry(
             hass, config_entry, async_add_entities, RPC_SENSORS, RpcBinarySensor
         )
 
-    if config_entry.data["sleep_period"]:
+    if config_entry.data[CONF_SLEEP_PERIOD]:
         await async_setup_entry_attribute_entities(
             hass,
             config_entry,

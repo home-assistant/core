@@ -209,8 +209,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
 
     def _setpoint_value(self, setpoint_type: ThermostatSetpointType) -> ZwaveValue:
         """Optionally return a ZwaveValue for a setpoint."""
-        val = self._setpoint_values[setpoint_type]
-        if val is None:
+        if (val := self._setpoint_values[setpoint_type]) is None:
             raise ValueError("Value requested is not available")
 
         return val
@@ -231,8 +230,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
             mode_id = int(mode_id)
             if mode_id in THERMOSTAT_MODES:
                 # treat value as hvac mode
-                hass_mode = ZW_HVAC_MODE_MAP.get(mode_id)
-                if hass_mode:
+                if hass_mode := ZW_HVAC_MODE_MAP.get(mode_id):
                     all_modes[hass_mode] = mode_id
             else:
                 # treat value as hvac preset
@@ -470,8 +468,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
-        hvac_mode_id = self._hvac_modes.get(hvac_mode)
-        if hvac_mode_id is None:
+        if (hvac_mode_id := self._hvac_modes.get(hvac_mode)) is None:
             raise ValueError(f"Received an invalid hvac mode: {hvac_mode}")
 
         if not self._current_mode:

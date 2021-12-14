@@ -38,6 +38,7 @@ from homeassistant.setup import async_setup_component
 from .conftest import TEST_ENTITY_NAME, TEST_MODBUS_HOST, TEST_PORT_TCP, ReadResult
 
 ENTITY_ID = f"{LIGHT_DOMAIN}.{TEST_ENTITY_NAME}"
+ENTITY_ID2 = f"{ENTITY_ID}2"
 
 
 @pytest.mark.parametrize(
@@ -223,7 +224,6 @@ async def test_restore_state_light(hass, mock_test_state, mock_modbus):
 async def test_light_service_turn(hass, caplog, mock_pymodbus):
     """Run test for service turn_on/turn_off."""
 
-    ENTITY_ID2 = f"{ENTITY_ID}2"
     config = {
         MODBUS_DOMAIN: {
             CONF_TYPE: TCP,

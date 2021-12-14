@@ -13,6 +13,20 @@ DEFAULT_ATTRIBUTION = f"Data provided by {MANUFACTURER}"
 
 PLATFORMS = [CAMERA_DOMAIN, CLIMATE_DOMAIN, LIGHT_DOMAIN, SELECT_DOMAIN, SENSOR_DOMAIN]
 
+NETATMO_SCOPES = [
+    "access_camera",
+    "access_presence",
+    "read_camera",
+    "read_homecoach",
+    "read_presence",
+    "read_smokedetector",
+    "read_station",
+    "read_thermostat",
+    "write_camera",
+    "write_presence",
+    "write_thermostat",
+]
+
 MODEL_NAPLUG = "Relay"
 MODEL_NATHERM1 = "Smart Thermostat"
 MODEL_NRV = "Smart Radiator Valves"
@@ -45,12 +59,17 @@ MODELS = {
     "public": MODEL_PUBLIC,
 }
 
+TYPE_SECURITY = "security"
+TYPE_ENERGY = "energy"
+TYPE_WEATHER = "weather"
+
 AUTH = "netatmo_auth"
 CONF_PUBLIC = "public_sensor_config"
 CAMERA_DATA = "netatmo_camera"
 HOME_DATA = "netatmo_home_data"
 DATA_HANDLER = "netatmo_data_handler"
 SIGNAL_NAME = "signal_name"
+NETATMO_CREATE_BATTERY = "netatmo_create_battery"
 
 CONF_CLOUDHOOK_URL = "cloudhook_url"
 CONF_WEATHER_AREAS = "weather_areas"

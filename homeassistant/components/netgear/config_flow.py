@@ -1,4 +1,5 @@
 """Config flow to configure the Netgear integration."""
+import logging
 from urllib.parse import urlparse
 
 from pynetgear import DEFAULT_HOST, DEFAULT_PORT, DEFAULT_USER
@@ -16,9 +17,18 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME, DEFAULT_NAME, DOMAIN
+from .const import (
+    CONF_CONSIDER_HOME,
+    DEFAULT_CONSIDER_HOME,
+    DEFAULT_NAME,
+    DOMAIN,
+    MODELS_V2,
+    ORBI_PORT,
+)
 from .errors import CannotLoginException
 from .router import get_api
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def _discovery_schema_with_defaults(discovery_info):
@@ -113,22 +123,32 @@ class NetgearFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Import a config entry."""
         return await self.async_step_user(user_input)
 
-    async def async_step_ssdp(self, discovery_info: dict) -> FlowResult:
+    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Initialize flow from ssdp."""
         updated_data = {}
 
-        device_url = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION])
+        device_url = urlparse(discovery_info.ssdp_location)
         if device_url.hostname:
             updated_data[CONF_HOST] = device_url.hostname
-        if device_url.port:
-            updated_data[CONF_PORT] = device_url.port
         if device_url.scheme == "https":
             updated_data[CONF_SSL] = True
         else:
             updated_data[CONF_SSL] = False
 
-        await self.async_set_unique_id(discovery_info[ssdp.ATTR_UPNP_SERIAL])
+        _LOGGER.debug("Netgear ssdp discovery info: %s", discovery_info)
+
+        await self.async_set_unique_id(discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL])
         self._abort_if_unique_id_configured(updates=updated_data)
+
+        updated_data[CONF_PORT] = DEFAULT_PORT
+        for model in MODELS_V2:
+            if discovery_info.upnp.get(ssdp.ATTR_UPNP_MODEL_NUMBER, "").startswith(
+                model
+            ) or discovery_info.upnp.get(ssdp.ATTR_UPNP_MODEL_NAME, "").startswith(
+                model
+            ):
+                updated_data[CONF_PORT] = ORBI_PORT
+
         self.placeholders.update(updated_data)
         self.discovered = True
 

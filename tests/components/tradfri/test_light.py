@@ -10,7 +10,7 @@ from pytradfri.device.light_control import LightControl
 
 from homeassistant.components import tradfri
 
-from . import MOCK_GATEWAY_ID
+from . import GATEWAY_ID
 
 from tests.common import MockConfigEntry
 
@@ -109,7 +109,7 @@ async def setup_integration(hass):
             "identity": "mock-identity",
             "key": "mock-key",
             "import_groups": True,
-            "gateway_id": MOCK_GATEWAY_ID,
+            "gateway_id": GATEWAY_ID,
         },
     )
 
@@ -139,6 +139,7 @@ def mock_light(test_features=None, test_state=None, light_number=0):
         has_socket_control=False,
         has_blind_control=False,
         has_signal_repeater_control=False,
+        has_air_purifier_control=False,
     )
     _mock_light.name = f"tradfri_light_{light_number}"
 
@@ -153,7 +154,7 @@ def mock_light(test_features=None, test_state=None, light_number=0):
     return _mock_light
 
 
-async def test_light(hass, mock_gateway, api_factory):
+async def test_light(hass, mock_gateway, mock_api_factory):
     """Test that lights are correctly added."""
     features = {"can_set_dimmer": True, "can_set_color": True, "can_set_temp": True}
 
@@ -176,7 +177,7 @@ async def test_light(hass, mock_gateway, api_factory):
     assert lamp_1.attributes["hs_color"] == (0.549, 0.153)
 
 
-async def test_light_observed(hass, mock_gateway, api_factory):
+async def test_light_observed(hass, mock_gateway, mock_api_factory):
     """Test that lights are correctly observed."""
     light = mock_light()
     mock_gateway.mock_devices.append(light)
@@ -184,7 +185,7 @@ async def test_light_observed(hass, mock_gateway, api_factory):
     assert len(light.observe.mock_calls) > 0
 
 
-async def test_light_available(hass, mock_gateway, api_factory):
+async def test_light_available(hass, mock_gateway, mock_api_factory):
     """Test light available property."""
     light = mock_light({"state": True}, light_number=1)
     light.reachable = True
@@ -225,7 +226,7 @@ def create_all_turn_on_cases():
 async def test_turn_on(
     hass,
     mock_gateway,
-    api_factory,
+    mock_api_factory,
     test_features,
     test_data,
     expected_result,
@@ -288,7 +289,7 @@ async def test_turn_on(
             assert states.attributes[result] == pytest.approx(value, abs=0.01)
 
 
-async def test_turn_off(hass, mock_gateway, api_factory):
+async def test_turn_off(hass, mock_gateway, mock_api_factory):
     """Test turning off a light."""
     state = {"state": True, "dimmer": 100}
 
@@ -341,7 +342,7 @@ def mock_group(test_state=None, group_number=0):
     return _mock_group
 
 
-async def test_group(hass, mock_gateway, api_factory):
+async def test_group(hass, mock_gateway, mock_api_factory):
     """Test that groups are correctly added."""
     mock_gateway.mock_groups.append(mock_group())
     state = {"state": True, "dimmer": 100}
@@ -358,7 +359,7 @@ async def test_group(hass, mock_gateway, api_factory):
     assert group.attributes["brightness"] == 100
 
 
-async def test_group_turn_on(hass, mock_gateway, api_factory):
+async def test_group_turn_on(hass, mock_gateway, mock_api_factory):
     """Test turning on a group."""
     group = mock_group()
     group2 = mock_group(group_number=1)
@@ -391,7 +392,7 @@ async def test_group_turn_on(hass, mock_gateway, api_factory):
     group3.set_dimmer.assert_called_with(100, transition_time=10)
 
 
-async def test_group_turn_off(hass, mock_gateway, api_factory):
+async def test_group_turn_off(hass, mock_gateway, mock_api_factory):
     """Test turning off a group."""
     group = mock_group({"state": True})
     mock_gateway.mock_groups.append(group)

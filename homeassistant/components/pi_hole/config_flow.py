@@ -170,5 +170,5 @@ class PiHoleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, host: str, location: str, tls: bool, verify_tls: bool
     ) -> None:
         session = async_get_clientsession(self.hass, verify_tls)
-        pi_hole = Hole(host, self.hass.loop, session, location=location, tls=tls)
+        pi_hole = Hole(host, session, location=location, tls=tls)
         await pi_hole.get_data()

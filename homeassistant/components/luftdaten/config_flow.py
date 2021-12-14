@@ -13,7 +13,6 @@ from homeassistant.const import (
     CONF_SHOW_ON_MAP,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import aiohttp_client
 import homeassistant.helpers.config_validation as cv
 
 from .const import CONF_SENSOR_ID, DEFAULT_SCAN_INTERVAL, DOMAIN
@@ -69,8 +68,7 @@ class LuftDatenFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if sensor_id in configured_sensors(self.hass):
             return self._show_form({CONF_SENSOR_ID: "already_configured"})
 
-        session = aiohttp_client.async_get_clientsession(self.hass)
-        luftdaten = Luftdaten(user_input[CONF_SENSOR_ID], self.hass.loop, session)
+        luftdaten = Luftdaten(user_input[CONF_SENSOR_ID])
         try:
             await luftdaten.get_data()
             valid = await luftdaten.validate_sensor()

@@ -93,7 +93,7 @@ class PointFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "follow_link"
 
         try:
-            with async_timeout.timeout(10):
+            async with async_timeout.timeout(10):
                 url = await self._get_authorization_url()
         except asyncio.TimeoutError:
             return self.async_abort(reason="authorize_url_timeout")
@@ -131,7 +131,7 @@ class PointFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         _LOGGER.debug(
             "Should close all flows below %s",
-            self.hass.config_entries.flow.async_progress(),
+            self._async_in_progress(),
         )
         # Remove notification if no other discovery config entries in progress
 

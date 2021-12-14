@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "A vez\u00e9rl\u0151 webhelye m\u00e1r konfigur\u00e1lva van",
             "configuration_updated": "A konfigur\u00e1ci\u00f3 friss\u00edtve.",
-            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt"
+            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt."
         },
         "error": {
             "faulty_credentials": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",

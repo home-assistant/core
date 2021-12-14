@@ -12,7 +12,8 @@
             "user": {
                 "data": {
                     "email": "E-mail",
-                    "password": "Wachtwoord"
+                    "password": "Wachtwoord",
+                    "timeout": "Timeout"
                 },
                 "title": "Maak verbinding met uw Sense Energy Monitor"
             }

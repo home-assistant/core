@@ -4,7 +4,7 @@
             "single_instance_allowed": "M\u00e1r konfigur\u00e1lva van. Csak egy konfigur\u00e1ci\u00f3 lehets\u00e9ges."
         },
         "create_entry": {
-            "default": "\n\nAndroidon, nyissa meg [az OwnTracks appot]({android_url}), majd v\u00e1lassza ki a Preferences -> Connection men\u00fct. V\u00e1ltoztassa meg az al\u00e1bbi be\u00e1ll\u00edt\u00e1sokat:\n - Mode: Private HTTP\n - Host: {webhook_url}\n - Identification:\n   - Username: `<Your name>`\n   - Device ID: `<Your device name>`\n\niOS-en, nyissa meg [az OwnTracks appot]({ios_url}), kattintson az (i) ikonra bal oldalon fel\u00fcl -> settings. V\u00e1ltoztassa meg az al\u00e1bbi be\u00e1ll\u00edt\u00e1sokat:\n - Mode: HTTP\n - URL: {webhook_url}\n - Turn on authentication\n - UserID: `<Your name>`\n\n{secret}\n\nN\u00e9zze meg [a dokument\u00e1ci\u00f3t]({docs_url}) tov\u00e1bbi inform\u00e1ci\u00f3k\u00e9rt."
+            "default": "\n\nAndroidon, nyissa meg [az OwnTracks appot]({android_url}), majd v\u00e1lassza ki a Preferences -> Connection men\u00fct. V\u00e1ltoztassa meg az al\u00e1bbi be\u00e1ll\u00edt\u00e1sokat:\n - Mode: Private HTTP\n - Host: {webhook_url}\n - Identification:\n   - Username: `'<Your name>'`\n   - Device ID: `'<Your device name>'`\n\niOS-en, nyissa meg [az OwnTracks appot]({ios_url}), kattintson az (i) ikonra bal oldalon fel\u00fcl -> settings. V\u00e1ltoztassa meg az al\u00e1bbi be\u00e1ll\u00edt\u00e1sokat:\n - Mode: HTTP\n - URL: {webhook_url}\n - Turn on authentication\n - UserID: `'<Your name>'`\n\n{secret}\n\nN\u00e9zze meg [a dokument\u00e1ci\u00f3t]({docs_url}) tov\u00e1bbi inform\u00e1ci\u00f3k\u00e9rt."
         },
         "step": {
             "user": {

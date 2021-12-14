@@ -13,6 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_GAS,
+    DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
     ENERGY_KILO_WATT_HOUR,
@@ -142,6 +143,17 @@ SENSOR_ENTITIES: tuple[ToonSensorEntityDescription, ...] = (
         cls=ToonDisplayDeviceSensor,
     ),
     ToonSensorEntityDescription(
+        key="current_humidity",
+        name="Humidity",
+        section="thermostat",
+        measurement="current_humidity",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=DEVICE_CLASS_HUMIDITY,
+        entity_registry_enabled_default=False,
+        state_class=STATE_CLASS_MEASUREMENT,
+        cls=ToonDisplayDeviceSensor,
+    ),
+    ToonSensorEntityDescription(
         key="gas_average",
         name="Average Gas Usage",
         section="gas_usage",
@@ -186,7 +198,6 @@ SENSOR_ENTITIES: tuple[ToonSensorEntityDescription, ...] = (
         native_unit_of_measurement=VOLUME_CUBIC_METERS,
         state_class=STATE_CLASS_TOTAL_INCREASING,
         device_class=DEVICE_CLASS_GAS,
-        entity_registry_enabled_default=False,
         cls=ToonGasMeterDeviceSensor,
     ),
     ToonSensorEntityDescription(
@@ -244,7 +255,6 @@ SENSOR_ENTITIES: tuple[ToonSensorEntityDescription, ...] = (
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
         state_class=STATE_CLASS_TOTAL_INCREASING,
-        entity_registry_enabled_default=False,
         cls=ToonElectricityMeterDeviceSensor,
     ),
     ToonSensorEntityDescription(
@@ -255,7 +265,6 @@ SENSOR_ENTITIES: tuple[ToonSensorEntityDescription, ...] = (
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
         state_class=STATE_CLASS_TOTAL_INCREASING,
-        entity_registry_enabled_default=False,
         cls=ToonElectricityMeterDeviceSensor,
     ),
     ToonSensorEntityDescription(
@@ -276,7 +285,6 @@ SENSOR_ENTITIES: tuple[ToonSensorEntityDescription, ...] = (
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
         state_class=STATE_CLASS_TOTAL_INCREASING,
-        entity_registry_enabled_default=False,
         cls=ToonElectricityMeterDeviceSensor,
     ),
     ToonSensorEntityDescription(
@@ -287,7 +295,6 @@ SENSOR_ENTITIES: tuple[ToonSensorEntityDescription, ...] = (
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
         state_class=STATE_CLASS_TOTAL_INCREASING,
-        entity_registry_enabled_default=False,
         cls=ToonElectricityMeterDeviceSensor,
     ),
     ToonSensorEntityDescription(
@@ -391,6 +398,7 @@ SENSOR_ENTITIES_SOLAR: tuple[ToonSensorEntityDescription, ...] = (
         measurement="day_produced_solar",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=DEVICE_CLASS_ENERGY,
+        state_class=STATE_CLASS_TOTAL_INCREASING,
         cls=ToonSolarDeviceSensor,
     ),
     ToonSensorEntityDescription(

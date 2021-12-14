@@ -1,0 +1,54 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u30b5\u30fc\u30d3\u30b9\u306f\u3059\u3067\u306b\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u3059",
+            "already_in_progress": "\u69cb\u6210\u30d5\u30ed\u30fc\u306f\u3059\u3067\u306b\u9032\u884c\u4e2d\u3067\u3059",
+            "auth_new_token_not_granted_error": "\u65b0\u3057\u304f\u4f5c\u6210\u3057\u305f\u30c8\u30fc\u30af\u30f3\u304cHyperion UI\u3067\u627f\u8a8d\u3055\u308c\u307e\u305b\u3093\u3067\u3057\u305f",
+            "auth_new_token_not_work_error": "\u65b0\u3057\u304f\u4f5c\u6210\u3055\u308c\u305f\u30c8\u30fc\u30af\u30f3\u3092\u4f7f\u7528\u3057\u305f\u8a8d\u8a3c\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
+            "auth_required_error": "\u627f\u8a8d\u304c\u5fc5\u8981\u304b\u3069\u3046\u304b\u3092\u5224\u65ad\u3067\u304d\u307e\u305b\u3093\u3067\u3057\u305f",
+            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
+            "no_id": "Hyperion Ambilight\u30a4\u30f3\u30b9\u30bf\u30f3\u30b9\u306f\u305d\u306eID\u3092\u30ec\u30dd\u30fc\u30c8\u3057\u3066\u3044\u307e\u305b\u3093",
+            "reauth_successful": "\u518d\u8a8d\u8a3c\u306b\u6210\u529f\u3057\u307e\u3057\u305f"
+        },
+        "error": {
+            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
+            "invalid_access_token": "\u7121\u52b9\u306a\u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3"
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "create_token": "\u65b0\u3057\u3044\u30c8\u30fc\u30af\u30f3\u3092\u81ea\u52d5\u7684\u306b\u4f5c\u6210\u3059\u308b",
+                    "token": "\u307e\u305f\u306f\u65e2\u5b58\u306e\u30c8\u30fc\u30af\u30f3\u3092\u63d0\u4f9b\u3057\u307e\u3059"
+                },
+                "description": "Hyperion Ambilight\u30b5\u30fc\u30d0\u30fc\u3078\u306e\u8a8d\u8a3c\u8a2d\u5b9a"
+            },
+            "confirm": {
+                "description": "\u3053\u306eHyperion Ambilight\u3092Home Assistant\u306b\u8ffd\u52a0\u3057\u307e\u3059\u304b\uff1f \n\n**Host:** {host}\n**Port:** {port}\n**ID**: {id}",
+                "title": "Hyperion Ambilight\u30b5\u30fc\u30d3\u30b9\u306e\u8ffd\u52a0\u3092\u78ba\u8a8d"
+            },
+            "create_token": {
+                "description": "\u4ee5\u4e0b\u306e\u3001\u9001\u4fe1(submit)\u3092\u9078\u629e\u3057\u3066\u3001\u65b0\u3057\u3044\u8a8d\u8a3c\u30c8\u30fc\u30af\u30f3\u3092\u30ea\u30af\u30a8\u30b9\u30c8\u3057\u307e\u3059\u3002\u30ea\u30af\u30a8\u30b9\u30c8\u3092\u627f\u8a8d\u3059\u308b\u305f\u3081\u306b\u3001Hyperion UI\u306b\u30ea\u30c0\u30a4\u30ec\u30af\u30c8\u3055\u308c\u307e\u3059\u3002\u8868\u793a\u3055\u308c\u305fID\u304c \"{auth_id}\" \u3067\u3042\u308b\u3053\u3068\u3092\u78ba\u8a8d\u3057\u3066\u304f\u3060\u3055\u3044\u3002",
+                "title": "\u65b0\u3057\u3044\u8a8d\u8a3c\u30c8\u30fc\u30af\u30f3\u3092\u81ea\u52d5\u7684\u306b\u4f5c\u6210\u3057\u307e\u3059"
+            },
+            "create_token_external": {
+                "title": "Hyperion UI\u3067\u65b0\u3057\u3044\u30c8\u30fc\u30af\u30f3\u306e\u53d7\u3051\u5165\u308c\u308b"
+            },
+            "user": {
+                "data": {
+                    "host": "\u30db\u30b9\u30c8",
+                    "port": "\u30dd\u30fc\u30c8"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "effect_show_list": "Hyperion effects\u3092\u8868\u793a",
+                    "priority": "\u8272\u3068\u30a8\u30d5\u30a7\u30af\u30c8\u306b\u4f7f\u7528\u3059\u308bHyperion\u306e\u512a\u5148\u9806\u4f4d"
+                }
+            }
+        }
+    }
+}

@@ -5,6 +5,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
     BinarySensorEntity,
 )
+from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import DISPATCHER_REMOTE_UPDATE, DOMAIN
@@ -28,6 +29,7 @@ class CloudRemoteBinary(BinarySensorEntity):
     _attr_device_class = DEVICE_CLASS_CONNECTIVITY
     _attr_should_poll = False
     _attr_unique_id = "cloud-remote-ui-connectivity"
+    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
 
     def __init__(self, cloud):
         """Initialize the binary sensor."""

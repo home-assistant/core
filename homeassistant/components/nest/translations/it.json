@@ -18,6 +18,13 @@
             "unknown": "Errore imprevisto"
         },
         "step": {
+            "auth": {
+                "data": {
+                    "code": "Token di accesso"
+                },
+                "description": "Per collegare l'account Google, [authorize your account]({url}).\n\nDopo l'autorizzazione, copia-incolla il codice PIN fornito.",
+                "title": "Connetti l'account Google"
+            },
             "init": {
                 "data": {
                     "flow_impl": "Provider"

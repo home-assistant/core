@@ -1,6 +1,8 @@
 """Support for Ambient Weather Station sensors."""
 from __future__ import annotations
 
+from datetime import datetime
+
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
     STATE_CLASS_TOTAL_INCREASING,
@@ -39,7 +41,7 @@ from . import (
     AmbientStation,
     AmbientWeatherEntity,
 )
-from .const import ATTR_LAST_DATA, DATA_CLIENT, DOMAIN
+from .const import ATTR_LAST_DATA, DOMAIN
 
 TYPE_24HOURRAININ = "24hourrainin"
 TYPE_BAROMABSIN = "baromabsin"
@@ -609,7 +611,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Ambient PWS sensors based on a config entry."""
-    ambient = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
+    ambient = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
         [
@@ -643,6 +645,11 @@ class AmbientWeatherSensor(AmbientWeatherEntity, SensorEntity):
     @callback
     def update_from_latest_data(self) -> None:
         """Fetch new state data for the sensor."""
-        self._attr_native_value = self._ambient.stations[self._mac_address][
-            ATTR_LAST_DATA
-        ][self.entity_description.key]
+        raw = self._ambient.stations[self._mac_address][ATTR_LAST_DATA][
+            self.entity_description.key
+        ]
+
+        if self.entity_description.key == TYPE_LASTRAIN:
+            self._attr_native_value = datetime.strptime(raw, "%Y-%m-%dT%H:%M:%S.%f%z")
+        else:
+            self._attr_native_value = raw

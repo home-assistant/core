@@ -78,8 +78,7 @@ class KeyedRateLimit:
         if rate_limit is None:
             return None
 
-        last_triggered = self._last_triggered.get(key)
-        if not last_triggered:
+        if not (last_triggered := self._last_triggered.get(key)):
             return None
 
         next_call_time = last_triggered + rate_limit

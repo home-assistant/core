@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Dit SimpliSafe-account is al in gebruik.",
-            "reauth_successful": "Herauthenticatie was succesvol"
+            "reauth_successful": "Herauthenticatie was succesvol",
+            "wrong_account": "De opgegeven gebruikersgegevens komen niet overeen met deze SimpliSafe-account."
         },
         "error": {
             "identifier_exists": "Account bestaat al",
@@ -11,6 +12,13 @@
             "unknown": "Onverwachte fout"
         },
         "step": {
+            "input_auth_code": {
+                "data": {
+                    "auth_code": "Autorisatie Code"
+                },
+                "description": "Voer de autorisatiecode in van de SimpliSafe web app URL:",
+                "title": "Autorisatie voltooien"
+            },
             "mfa": {
                 "description": "Controleer uw e-mail voor een link van SimpliSafe. Nadat u de link hebt geverifieerd, kom hier terug om de installatie van de integratie te voltooien.",
                 "title": "SimpliSafe Multi-Factor Authenticatie"
@@ -28,6 +36,7 @@
                     "password": "Wachtwoord",
                     "username": "E-mail"
                 },
+                "description": "Met ingang van 2021 is SimpliSafe overgestapt op een nieuw authenticatiemechanisme via de webapp. Vanwege technische beperkingen is er een handmatige stap aan het einde van dit proces; zorg ervoor dat u de [documentatie](http://home-assistant.io/integrations/simplisafe#getting-an-authorization-code) leest voordat u begint.\n\nWanneer u er klaar voor bent, klikt u op [hier]({url}) om de SimpliSafe web app te openen en uw inloggegevens in te voeren. Wanneer het proces is voltooid, gaat u hier terug en klikt u op Verzenden.",
                 "title": "Vul uw gegevens in"
             }
         }

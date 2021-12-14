@@ -42,7 +42,7 @@
             "double": "{subtype} clicat dues vegades",
             "double_push": "{subtype} clicat dues vegades",
             "long": "{subtype} clicat durant una estona",
-            "long_push": "{subtype} clicat durant una estona",
+            "long_push": "{subtype} premut durant una estona",
             "long_single": "{subtype} clicat durant una estona i despr\u00e9s r\u00e0pid",
             "single": "{subtype} clicat una vegada",
             "single_long": "{subtype} clicat r\u00e0pid i, despr\u00e9s, durant una estona",

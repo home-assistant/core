@@ -14,6 +14,7 @@ from homeassistant.const import (
     DEVICE_CLASS_ILLUMINANCE,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     STATE_UNAVAILABLE,
 )
 from homeassistant.helpers import entity_registry as er
@@ -92,6 +93,8 @@ async def test_sensors(hass, aioclient_mock, mock_deconz_websocket):
 
     assert len(hass.states.async_all()) == 6
 
+    ent_reg = er.async_get(hass)
+
     light_level_sensor = hass.states.get("sensor.light_level_sensor")
     assert light_level_sensor.state == "999.8"
     assert light_level_sensor.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_ILLUMINANCE
@@ -109,6 +112,10 @@ async def test_sensors(hass, aioclient_mock, mock_deconz_websocket):
     switch_2_battery_level = hass.states.get("sensor.switch_2_battery_level")
     assert switch_2_battery_level.state == "100"
     assert switch_2_battery_level.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_BATTERY
+    assert (
+        ent_reg.async_get("sensor.switch_2_battery_level").entity_category
+        == ENTITY_CATEGORY_DIAGNOSTIC
+    )
 
     assert not hass.states.get("sensor.daylight_sensor")
 

@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 from datetime import datetime
+from types import MappingProxyType
+from typing import Any
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
@@ -65,7 +67,9 @@ def async_migrate_legacy_entries(
 
 
 @callback
-def async_migrate_yaml_entries(hass: HomeAssistant, conf: ConfigType) -> None:
+def async_migrate_yaml_entries(
+    hass: HomeAssistant, conf: ConfigType | MappingProxyType[str, Any]
+) -> None:
     """Migrate yaml to config entries."""
     for device_type in (CONF_LIGHT, CONF_SWITCH, CONF_STRIP, CONF_DIMMER):
         for device in conf.get(device_type, []):

@@ -82,8 +82,7 @@ async def async_get_service(hass, config, discovery_info=None):
             del aws_config[CONF_CREDENTIAL_NAME]
 
     if session is None:
-        profile = aws_config.get(CONF_PROFILE_NAME)
-        if profile is not None:
+        if (profile := aws_config.get(CONF_PROFILE_NAME)) is not None:
             session = aiobotocore.AioSession(profile=profile)
             del aws_config[CONF_PROFILE_NAME]
         else:

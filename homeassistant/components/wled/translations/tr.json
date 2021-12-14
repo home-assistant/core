@@ -7,16 +7,26 @@
         "error": {
             "cannot_connect": "Ba\u011flanma hatas\u0131"
         },
-        "flow_title": "WLED: {name}",
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {
-                    "host": "Ana Bilgisayar"
+                    "host": "Ana bilgisayar"
                 },
                 "description": "WLED'inizi Home Assistant ile t\u00fcmle\u015ftirmek i\u00e7in ayarlay\u0131n."
             },
             "zeroconf_confirm": {
-                "description": "Home Assistant'a '{name}' adl\u0131 WLED'i eklemek istiyor musunuz?"
+                "description": "{name} ` adl\u0131 WLED'i Home Assistant'a eklemek istiyor musunuz?",
+                "title": "Bulunan WLED cihaz\u0131"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "keep_master_light": "1 LED segmenti ile bile ana \u0131\u015f\u0131\u011f\u0131 koruyun."
+                }
             }
         }
     }

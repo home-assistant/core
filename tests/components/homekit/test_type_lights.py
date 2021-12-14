@@ -546,7 +546,7 @@ async def test_light_restore(hass, hk_driver, events):
         suggested_object_id="all_info_set",
         capabilities={"supported_color_modes": ["brightness"], "max": 100},
         supported_features=5,
-        device_class="mock-device-class",
+        original_device_class="mock-device-class",
     )
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START, {})

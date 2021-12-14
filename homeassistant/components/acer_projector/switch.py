@@ -111,8 +111,7 @@ class AcerSwitch(SwitchEntity):
         """Write msg, obtain answer and format output."""
         # answers are formatted as ***\answer\r***
         awns = self._write_read(msg)
-        match = re.search(r"\r(.+)\r", awns)
-        if match:
+        if match := re.search(r"\r(.+)\r", awns):
             return match.group(1)
         return STATE_UNKNOWN
 
@@ -129,8 +128,7 @@ class AcerSwitch(SwitchEntity):
             self._attr_available = False
 
         for key in self._attributes:
-            msg = CMD_DICT.get(key)
-            if msg:
+            if msg := CMD_DICT.get(key):
                 awns = self._write_read_format(msg)
                 self._attributes[key] = awns
         self._attr_extra_state_attributes = self._attributes

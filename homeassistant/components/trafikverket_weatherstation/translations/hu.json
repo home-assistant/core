@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "A fi\u00f3k m\u00e1r konfigur\u00e1lva van"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API kulcs",
+                    "conditions": "Megfigyelt k\u00f6r\u00fclm\u00e9nyek",
+                    "name": "Felhaszn\u00e1l\u00f3n\u00e9v",
+                    "station": "\u00c1llom\u00e1s"
+                }
+            }
+        }
+    }
+}

@@ -1,4 +1,6 @@
 """Test the habitica module."""
+from http import HTTPStatus
+
 import pytest
 
 from homeassistant.components.habitica.const import (
@@ -82,7 +84,7 @@ def common_requests(aioclient_mock):
 
     aioclient_mock.post(
         "https://habitica.com/api/v3/tasks/user",
-        status=201,
+        status=HTTPStatus.CREATED,
         json={"data": TEST_API_CALL_ARGS},
     )
 

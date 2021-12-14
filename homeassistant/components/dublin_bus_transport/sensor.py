@@ -6,12 +6,13 @@ https://data.gov.ie/dataset/real-time-passenger-information-rtpi-for-dublin-bus-
 """
 from contextlib import suppress
 from datetime import datetime, timedelta
+from http import HTTPStatus
 
 import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, HTTP_OK, TIME_MINUTES
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, TIME_MINUTES
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
@@ -144,7 +145,7 @@ class PublicTransportData:
 
         response = requests.get(_RESOURCE, params, timeout=10)
 
-        if response.status_code != HTTP_OK:
+        if response.status_code != HTTPStatus.OK:
             self.info = [
                 {ATTR_DUE_AT: "n/a", ATTR_ROUTE: self.route, ATTR_DUE_IN: "n/a"}
             ]

@@ -1,4 +1,4 @@
-"""UniFi Controller abstraction."""
+"""UniFi Network abstraction."""
 from __future__ import annotations
 
 import asyncio
@@ -39,7 +39,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers import aiohttp_client, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 from homeassistant.helpers.event import async_track_time_interval
@@ -90,7 +90,7 @@ DEVICE_CONNECTED = (
 
 
 class UniFiController:
-    """Manages a single UniFi Controller."""
+    """Manages a single UniFi Network instance."""
 
     def __init__(self, hass, config_entry):
         """Initialize the system."""
@@ -198,7 +198,7 @@ class UniFiController:
         if signal == SIGNAL_CONNECTION_STATE:
 
             if data == STATE_DISCONNECTED and self.available:
-                LOGGER.warning("Lost connection to UniFi controller")
+                LOGGER.warning("Lost connection to UniFi Network")
 
             if (data == STATE_RUNNING and not self.available) or (
                 data == STATE_DISCONNECTED and self.available
@@ -209,7 +209,7 @@ class UniFiController:
                 if not self.available:
                     self.hass.loop.call_later(RETRY_TIMER, self.reconnect, True)
                 else:
-                    LOGGER.info("Connected to UniFi controller")
+                    LOGGER.info("Connected to UniFi Network")
 
         elif signal == SIGNAL_DATA and data:
 
@@ -301,7 +301,7 @@ class UniFiController:
             unifi_wireless_clients.update_data(self.wireless_clients, self.config_entry)
 
     async def async_setup(self):
-        """Set up a UniFi controller."""
+        """Set up a UniFi Network instance."""
         try:
             self.api = await get_controller(
                 self.hass,
@@ -333,7 +333,7 @@ class UniFiController:
         self._site_role = description[0]["site_role"]
 
         # Restore clients that are not a part of active clients list.
-        entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
+        entity_registry = er.async_get(self.hass)
         for entry in async_entries_for_config_entry(
             entity_registry, self.config_entry.entry_id
         ):
@@ -413,13 +413,13 @@ class UniFiController:
     def reconnect(self, log=False) -> None:
         """Prepare to reconnect UniFi session."""
         if log:
-            LOGGER.info("Will try to reconnect to UniFi controller")
+            LOGGER.info("Will try to reconnect to UniFi Network")
         self.hass.loop.create_task(self.async_reconnect())
 
     async def async_reconnect(self) -> None:
-        """Try to reconnect UniFi session."""
+        """Try to reconnect UniFi Network session."""
         try:
-            with async_timeout.timeout(5):
+            async with async_timeout.timeout(5):
                 await self.api.login()
                 self.api.start_websocket()
 
@@ -488,13 +488,17 @@ async def get_controller(
     )
 
     try:
-        with async_timeout.timeout(10):
+        async with async_timeout.timeout(10):
             await controller.check_unifi_os()
             await controller.login()
         return controller
 
     except aiounifi.Unauthorized as err:
-        LOGGER.warning("Connected to UniFi at %s but not registered: %s", host, err)
+        LOGGER.warning(
+            "Connected to UniFi Network at %s but not registered: %s",
+            host,
+            err,
+        )
         raise AuthenticationRequired from err
 
     except (
@@ -503,13 +507,17 @@ async def get_controller(
         aiounifi.ServiceUnavailable,
         aiounifi.RequestError,
     ) as err:
-        LOGGER.error("Error connecting to the UniFi controller at %s: %s", host, err)
+        LOGGER.error("Error connecting to the UniFi Network at %s: %s", host, err)
         raise CannotConnect from err
 
     except aiounifi.LoginRequired as err:
-        LOGGER.warning("Connected to UniFi at %s but login required: %s", host, err)
+        LOGGER.warning(
+            "Connected to UniFi Network at %s but login required: %s",
+            host,
+            err,
+        )
         raise AuthenticationRequired from err
 
     except aiounifi.AiounifiException as err:
-        LOGGER.exception("Unknown UniFi communication error occurred: %s", err)
+        LOGGER.exception("Unknown UniFi Network communication error occurred: %s", err)
         raise AuthenticationRequired from err

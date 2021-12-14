@@ -1,4 +1,5 @@
 """Support for monitoring energy usage using the DTE energy bridge."""
+from http import HTTPStatus
 import logging
 
 import requests
@@ -9,7 +10,7 @@ from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
     SensorEntity,
 )
-from homeassistant.const import CONF_NAME, HTTP_OK
+from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -90,7 +91,7 @@ class DteEnergyBridgeSensor(SensorEntity):
             )
             return
 
-        if response.status_code != HTTP_OK:
+        if response.status_code != HTTPStatus.OK:
             _LOGGER.warning(
                 "Invalid status_code from DTE Energy Bridge: %s (%s)",
                 response.status_code,

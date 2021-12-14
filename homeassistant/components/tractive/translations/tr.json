@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "reauth_failed_existing": "Yap\u0131land\u0131rma giri\u015fi g\u00fcncellenemedi, l\u00fctfen entegrasyonu kald\u0131r\u0131n ve yeniden kurun.",
+            "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu"
+        },
+        "error": {
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
+            "unknown": "Beklenmeyen hata"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "E-posta",
+                    "password": "Parola"
+                }
+            }
+        }
+    }
+}

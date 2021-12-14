@@ -11,28 +11,37 @@
             "resources": {
                 "data": {
                     "resources": "Kaynaklar"
-                }
+                },
+                "title": "\u0130zlenecek Kaynaklar\u0131 Se\u00e7in"
             },
             "ups": {
                 "data": {
-                    "alias": "Takma ad"
-                }
+                    "alias": "Takma ad",
+                    "resources": "Kaynaklar"
+                },
+                "title": "\u0130zlenecek UPS'i Se\u00e7in"
             },
             "user": {
                 "data": {
-                    "host": "Ana Bilgisayar",
+                    "host": "Ana bilgisayar",
                     "password": "Parola",
                     "port": "Port",
                     "username": "Kullan\u0131c\u0131 Ad\u0131"
-                }
+                },
+                "title": "NUT sunucusuna ba\u011flan\u0131n"
             }
         }
     },
     "options": {
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "unknown": "Beklenmeyen hata"
+        },
         "step": {
             "init": {
                 "data": {
-                    "resources": "Kaynaklar"
+                    "resources": "Kaynaklar",
+                    "scan_interval": "Tarama Aral\u0131\u011f\u0131 (saniye)"
                 },
                 "description": "Sens\u00f6r Kaynaklar\u0131'n\u0131 se\u00e7in."
             }

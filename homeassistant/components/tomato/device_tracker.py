@@ -1,4 +1,5 @@
 """Support for Tomato routers."""
+from http import HTTPStatus
 import json
 import logging
 import re
@@ -18,8 +19,6 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
-    HTTP_OK,
-    HTTP_UNAUTHORIZED,
 )
 import homeassistant.helpers.config_validation as cv
 
@@ -104,7 +103,7 @@ class TomatoDeviceScanner(DeviceScanner):
 
             # Calling and parsing the Tomato api here. We only need the
             # wldev and dhcpd_lease values.
-            if response.status_code == HTTP_OK:
+            if response.status_code == HTTPStatus.OK:
 
                 for param, value in self.parse_api_pattern.findall(response.text):
 
@@ -112,7 +111,7 @@ class TomatoDeviceScanner(DeviceScanner):
                         self.last_results[param] = json.loads(value.replace("'", '"'))
                 return True
 
-            if response.status_code == HTTP_UNAUTHORIZED:
+            if response.status_code == HTTPStatus.UNAUTHORIZED:
                 # Authentication error
                 _LOGGER.exception(
                     "Failed to authenticate, please check your username and password"

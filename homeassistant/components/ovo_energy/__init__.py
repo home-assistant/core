@@ -13,6 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
@@ -111,9 +112,9 @@ class OVOEnergyDeviceEntity(OVOEnergyEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information about this OVO Energy instance."""
-        return {
-            "identifiers": {(DOMAIN, self._client.account_id)},
-            "manufacturer": "OVO Energy",
-            "name": self._client.username,
-            "entry_type": "service",
-        }
+        return DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, self._client.account_id)},
+            manufacturer="OVO Energy",
+            name=self._client.username,
+        )

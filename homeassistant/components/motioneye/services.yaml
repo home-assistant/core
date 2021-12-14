@@ -1,0 +1,110 @@
+set_text_overlay:
+  name: Set Text Overlay
+  description: Sets the text overlay for a camera.
+  target:
+    device:
+      integration: motioneye
+    entity:
+      integration: motioneye
+  fields:
+    left_text:
+      name: Left Text Overlay
+      description: Text to display on the left
+      required: false
+      advanced: false
+      example: "timestamp"
+      default: ""
+      selector:
+        select:
+          options:
+            - "disabled"
+            - "camera-name"
+            - "timestamp"
+            - "custom-text"
+    custom_left_text:
+      name: Left Custom Text
+      description: Custom text to display on the left
+      required: false
+      advanced: false
+      example: "Hello on the left!"
+      default: ""
+      selector:
+        text:
+          multiline: true
+    right_text:
+      name: Right Text Overlay
+      description: Text to display on the right
+      required: false
+      advanced: false
+      example: "timestamp"
+      default: ""
+      selector:
+        select:
+          options:
+            - "disabled"
+            - "camera-name"
+            - "timestamp"
+            - "custom-text"
+    custom_right_text:
+      name: Right Custom Text
+      description: Custom text to display on the right
+      required: false
+      advanced: false
+      example: "Hello on the right!"
+      default: ""
+      selector:
+        text:
+          multiline: true
+
+action:
+  name: Action
+  description: Trigger a motionEye action
+  target:
+    device:
+      integration: motioneye
+    entity:
+      integration: motioneye
+  fields:
+    action:
+      name: Action
+      description: Action to trigger
+      required: true
+      advanced: false
+      example: "snapshot"
+      default: ""
+      selector:
+        select:
+          options:
+            - "snapshot"
+            - "record_start"
+            - "record_stop"
+            - "lock"
+            - "unlock"
+            - "light_on"
+            - "light_off"
+            - "alarm_on"
+            - "alarm_off"
+            - "up"
+            - "right"
+            - "down"
+            - "left"
+            - "zoom_in"
+            - "zoom_out"
+            - "preset1"
+            - "preset2"
+            - "preset3"
+            - "preset4"
+            - "preset5"
+            - "preset6"
+            - "preset7"
+            - "preset8"
+            - "preset9"
+
+snapshot:
+  name: Snapshot
+  description: Trigger a motionEye still snapshot
+  target:
+    device:
+      integration: motioneye
+    entity:
+      integration: motioneye

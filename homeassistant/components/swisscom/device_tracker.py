@@ -65,8 +65,7 @@ class SwisscomDeviceScanner(DeviceScanner):
             return False
 
         _LOGGER.info("Loading data from Swisscom Internet Box")
-        data = self.get_swisscom_data()
-        if not data:
+        if not (data := self.get_swisscom_data()):
             return False
 
         active_clients = [client for client in data.values() if client["status"]]

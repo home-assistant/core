@@ -230,9 +230,8 @@ class EvoZone(EvoChild, EvoClimateEntity):
     async def async_set_temperature(self, **kwargs) -> None:
         """Set a new target temperature."""
         temperature = kwargs["temperature"]
-        until = kwargs.get("until")
 
-        if until is None:
+        if (until := kwargs.get("until")) is None:
             if self._evo_device.setpointStatus["setpointMode"] == EVO_FOLLOW:
                 await self._update_schedule()
                 until = dt_util.parse_datetime(self.setpoints.get("next_sp_from", ""))
