@@ -306,7 +306,12 @@ async def test_grouped_lights(hass, mock_bridge_v2, v2_resources_test_data):
     await hass.services.async_call(
         "light",
         "turn_on",
-        {"entity_id": test_light_id, "brightness_pct": 100, "xy_color": (0.123, 0.123)},
+        {
+            "entity_id": test_light_id,
+            "brightness_pct": 100,
+            "xy_color": (0.123, 0.123),
+            "transition": 6,
+        },
         blocking=True,
     )
 
@@ -319,6 +324,9 @@ async def test_grouped_lights(hass, mock_bridge_v2, v2_resources_test_data):
         )
         assert mock_bridge_v2.mock_requests[index]["json"]["color"]["xy"]["x"] == 0.123
         assert mock_bridge_v2.mock_requests[index]["json"]["color"]["xy"]["y"] == 0.123
+        assert (
+            mock_bridge_v2.mock_requests[index]["json"]["dynamics"]["duration"] == 6000
+        )
 
     # Now generate update events by emitting the json we've sent as incoming events
     for index in range(0, 3):
@@ -357,3 +365,24 @@ async def test_grouped_lights(hass, mock_bridge_v2, v2_resources_test_data):
     test_light = hass.states.get(test_light_id)
     assert test_light is not None
     assert test_light.state == "off"
+
+    # Test calling the turn off service on a grouped light with transition
+    mock_bridge_v2.mock_requests.clear()
+    test_light_id = "light.test_zone"
+    await hass.services.async_call(
+        "light",
+        "turn_off",
+        {
+            "entity_id": test_light_id,
+            "transition": 6,
+        },
+        blocking=True,
+    )
+
+    # PUT request should have been sent to ALL group lights with correct params
+    assert len(mock_bridge_v2.mock_requests) == 3
+    for index in range(0, 3):
+        assert mock_bridge_v2.mock_requests[index]["json"]["on"]["on"] is False
+        assert (
+            mock_bridge_v2.mock_requests[index]["json"]["dynamics"]["duration"] == 6000
+        )

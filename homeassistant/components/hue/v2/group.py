@@ -193,12 +193,31 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
-        await self.bridge.async_request_call(
-            self.controller.set_state,
-            id=self.resource.id,
-            on=False,
-            allowed_errors=ALLOWED_ERRORS,
-        )
+        transition = kwargs.get(ATTR_TRANSITION)
+        if transition is not None:
+            # hue transition duration is in milliseconds
+            transition = int(transition * 1000)
+
+        # NOTE: a grouped_light can only handle turn on/off
+        # To set other features, you'll have to control the attached lights
+        if transition is None:
+            await self.bridge.async_request_call(
+                self.controller.set_state,
+                id=self.resource.id,
+                on=False,
+                allowed_errors=ALLOWED_ERRORS,
+            )
+            return
+
+        # redirect all other feature commands to underlying lights
+        for light in self.controller.get_lights(self.resource.id):
+            await self.bridge.async_request_call(
+                self.api.lights.set_state,
+                light.id,
+                on=False,
+                transition_time=transition,
+                allowed_errors=ALLOWED_ERRORS,
+            )
 
     @callback
     def on_update(self) -> None:
