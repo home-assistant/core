@@ -7,7 +7,7 @@ from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, ButtonDevic
 from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.helpers import entity_registry as er
 
-from .test_config_flow import MAC, setup_onvif_integration
+from . import MAC, setup_onvif_integration
 
 
 async def test_reboot_button(hass):
