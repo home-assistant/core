@@ -69,7 +69,9 @@ class ZWaveMeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
         entry = await self.async_set_unique_id(DOMAIN + self.url)
+        self._abort_if_unique_id_configured()
         if entry is None:
             return self.async_show_form(
                 step_id="user", data_schema=schema, errors=errors
             )
+
