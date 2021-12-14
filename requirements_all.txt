@@ -64,6 +64,7 @@ PyViCare==2.13.1
 PyXiaomiGateway==0.13.4
 
 # homeassistant.components.bmp280
+# homeassistant.components.dht
 # homeassistant.components.mcp23017
 # homeassistant.components.rpi_gpio
 # homeassistant.components.rpi_rf
