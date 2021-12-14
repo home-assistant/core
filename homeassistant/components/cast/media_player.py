@@ -50,7 +50,6 @@ from homeassistant.const import (
     CAST_APP_ID_HOMEASSISTANT_MEDIA,
     EVENT_HOMEASSISTANT_STOP,
     STATE_IDLE,
-    STATE_OFF,
     STATE_PAUSED,
     STATE_PLAYING,
 )
@@ -566,7 +565,7 @@ class CastDevice(MediaPlayerEntity):
         if self.app_id is not None and self.app_id != pychromecast.IDLE_APP_ID:
             return STATE_PLAYING
         if self._chromecast is not None and self._chromecast.is_idle:
-            return STATE_OFF
+            return STATE_IDLE
         return None
 
     @property
