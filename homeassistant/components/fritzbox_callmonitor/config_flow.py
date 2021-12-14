@@ -152,12 +152,11 @@ class FritzBoxCallMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if result != RESULT_SUCCESS:
             return self.async_abort(reason=result)
 
-        elif len(self._phonebook_ids) > 1:
+        if len(self._phonebook_ids) > 1:
             return await self.async_step_phonebook()
 
-        else:
-            self._phonebook_id = DEFAULT_PHONEBOOK
-            self._phonebook_name = await self._get_name_of_phonebook(self._phonebook_id)
+        self._phonebook_id = DEFAULT_PHONEBOOK
+        self._phonebook_name = await self._get_name_of_phonebook(self._phonebook_id)
 
         await self.async_set_unique_id(f"{self._serial_number}-{self._phonebook_id}")
         self._abort_if_unique_id_configured()
