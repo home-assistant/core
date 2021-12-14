@@ -16,10 +16,11 @@ from .const import (
     VS_FANS,
     VS_LIGHTS,
     VS_MANAGER,
+    VS_SENSORS,
     VS_SWITCHES,
 )
 
-PLATFORMS = ["switch", "fan", "light"]
+PLATFORMS = ["switch", "fan", "light", "sensor"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,6 +52,7 @@ async def async_setup_entry(hass, config_entry):
     switches = hass.data[DOMAIN][VS_SWITCHES] = []
     fans = hass.data[DOMAIN][VS_FANS] = []
     lights = hass.data[DOMAIN][VS_LIGHTS] = []
+    sensors = hass.data[DOMAIN][VS_SENSORS] = []
 
     hass.data[DOMAIN][VS_DISPATCHERS] = []
 
@@ -66,17 +68,23 @@ async def async_setup_entry(hass, config_entry):
         lights.extend(device_dict[VS_LIGHTS])
         hass.async_create_task(forward_setup(config_entry, Platform.LIGHT))
 
+    if device_dict[VS_SENSORS]:
+        sensors.extend(device_dict[VS_SENSORS])
+        hass.async_create_task(forward_setup(config_entry, Platform.SENSOR))
+
     async def async_new_device_discovery(service):
         """Discover if new devices should be added."""
         manager = hass.data[DOMAIN][VS_MANAGER]
         switches = hass.data[DOMAIN][VS_SWITCHES]
         fans = hass.data[DOMAIN][VS_FANS]
         lights = hass.data[DOMAIN][VS_LIGHTS]
+        sensors = hass.data[DOMAIN][VS_SENSORS]
 
         dev_dict = await async_process_devices(hass, manager)
         switch_devs = dev_dict.get(VS_SWITCHES, [])
         fan_devs = dev_dict.get(VS_FANS, [])
         light_devs = dev_dict.get(VS_LIGHTS, [])
+        sensor_devs = dev_dict.get(VS_SENSORS, [])
 
         switch_set = set(switch_devs)
         new_switches = list(switch_set.difference(switches))
@@ -107,6 +115,16 @@ async def async_setup_entry(hass, config_entry):
         if new_lights and not lights:
             lights.extend(new_lights)
             hass.async_create_task(forward_setup(config_entry, "light"))
+
+        sensor_set = set(sensor_devs)
+        new_sensors = list(sensor_set.difference(sensors))
+        if new_sensors and sensors:
+            sensors.extend(new_sensors)
+            async_dispatcher_send(hass, VS_DISCOVERY.format(VS_SENSORS), new_sensors)
+            return
+        if new_sensors and not sensors:
+            sensors.extend(new_sensors)
+            hass.async_create_task(forward_setup(config_entry, "sensor"))
 
     hass.services.async_register(
         DOMAIN, SERVICE_UPDATE_DEVS, async_new_device_discovery
