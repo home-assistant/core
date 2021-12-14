@@ -59,7 +59,7 @@ from .const import CONF_STATE_CLASS  # noqa: F401
 
 _LOGGER: Final = logging.getLogger(__name__)
 
-ATTR_LAST_RESET: Final = "last_reset"  # Deprecated, to be removed in 2021.11
+ATTR_LAST_RESET: Final = "last_reset"
 ATTR_STATE_CLASS: Final = "state_class"
 
 DOMAIN: Final = "sensor"
@@ -280,7 +280,7 @@ class SensorEntity(Entity):
         return None
 
     @property
-    def last_reset(self) -> datetime | None:  # Deprecated, to be removed in 2021.11
+    def last_reset(self) -> datetime | None:
         """Return the time when the sensor was last reset, if any."""
         if hasattr(self, "_attr_last_reset"):
             return self._attr_last_reset
