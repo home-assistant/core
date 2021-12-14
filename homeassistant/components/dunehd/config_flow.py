@@ -72,23 +72,6 @@ class DuneHDConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(
-        self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
-        """Handle configuration by yaml file."""
-        assert user_input is not None
-        host: str = user_input[CONF_HOST]
-
-        self._async_abort_entries_match({CONF_HOST: host})
-
-        try:
-            await self.init_device(host)
-        except CannotConnect:
-            _LOGGER.error("Import aborted, cannot connect to %s", host)
-            return self.async_abort(reason="cannot_connect")
-        else:
-            return self.async_create_entry(title=host, data=user_input)
-
     def host_already_configured(self, host: str) -> bool:
         """See if we already have a dunehd entry matching user input configured."""
         existing_hosts = {

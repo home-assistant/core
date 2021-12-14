@@ -4,12 +4,8 @@ from __future__ import annotations
 from typing import Any, Final
 
 from pdunehd import DuneHDPlayer
-import voluptuous as vol
 
-from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
-    MediaPlayerEntity,
-)
+from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -18,32 +14,13 @@ from homeassistant.components.media_player.const import (
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    STATE_OFF,
-    STATE_ON,
-    STATE_PAUSED,
-    STATE_PLAYING,
-)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import ATTR_MANUFACTURER, DEFAULT_NAME, DOMAIN
-
-CONF_SOURCES: Final = "sources"
-
-PLATFORM_SCHEMA: Final = PARENT_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_SOURCES): vol.Schema({cv.string: cv.string}),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
 
 DUNEHD_PLAYER_SUPPORT: Final[int] = (
     SUPPORT_PAUSE
@@ -53,22 +30,6 @@ DUNEHD_PLAYER_SUPPORT: Final[int] = (
     | SUPPORT_NEXT_TRACK
     | SUPPORT_PLAY
 )
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the Dune HD media player platform."""
-    host: str = config[CONF_HOST]
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data={CONF_HOST: host}
-        )
-    )
 
 
 async def async_setup_entry(
