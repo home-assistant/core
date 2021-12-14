@@ -472,7 +472,6 @@ class SimpliSafe:
         """Initialize."""
         self._api = api
         self._hass = hass
-        self._initialized = False
         self._system_notifications: dict[int, set[SystemNotification]] = {}
         self.entry = entry
         self.initial_event_to_use: dict[int, dict[str, Any]] = {}
@@ -606,18 +605,23 @@ class SimpliSafe:
         )
 
         @callback
-        def async_handle_refresh_token(token: str) -> None:
-            """Handle a new refresh token."""
+        def async_save_refresh_token(token: str) -> None:
+            """Save a new refresh token."""
             LOGGER.info("Saving new refresh token to HASS storage")
             self._hass.config_entries.async_update_entry(
                 self.entry,
                 data={**self.entry.data, CONF_TOKEN: token},
             )
 
+        @callback
+        def async_handle_refresh_token(token: str) -> None:
+            """Handle a new refresh token."""
+            async_save_refresh_token(token)
+
             if TYPE_CHECKING:
                 assert self._api.websocket
 
-            if self._initialized and self._api.websocket.connected:
+            if self._api.websocket.connected:
                 # If a websocket connection is open, reconnect it to use the
                 # new access token:
                 asyncio.create_task(self._api.websocket.async_reconnect())
@@ -626,9 +630,8 @@ class SimpliSafe:
             self._api.add_refresh_token_callback(async_handle_refresh_token)
         )
 
-        async_handle_refresh_token(self._api.refresh_token)
-
-        self._initialized = True
+        # Save the refresh token we got on entry setup:
+        async_save_refresh_token(self._api.refresh_token)
 
     async def async_update(self) -> None:
         """Get updated data from SimpliSafe."""
