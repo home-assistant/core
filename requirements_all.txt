@@ -1140,6 +1140,9 @@ onvif-zeep-async==1.2.0
 # homeassistant.components.opengarage
 open-garage==0.2.0
 
+# homeassistant.components.open_meteo
+open-meteo==0.2.1
+
 # homeassistant.components.opencv
 # opencv-python-headless==4.5.2.54
 
