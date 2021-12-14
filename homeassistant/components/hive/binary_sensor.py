@@ -2,11 +2,7 @@
 from datetime import timedelta
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_OPENING,
-    DEVICE_CLASS_SMOKE,
-    DEVICE_CLASS_SOUND,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.helpers.entity import DeviceInfo
@@ -15,12 +11,12 @@ from . import HiveEntity
 from .const import ATTR_MODE, DOMAIN
 
 DEVICETYPE = {
-    "contactsensor": DEVICE_CLASS_OPENING,
-    "motionsensor": DEVICE_CLASS_MOTION,
-    "Connectivity": DEVICE_CLASS_CONNECTIVITY,
-    "SMOKE_CO": DEVICE_CLASS_SMOKE,
-    "DOG_BARK": DEVICE_CLASS_SOUND,
-    "GLASS_BREAK": DEVICE_CLASS_SOUND,
+    "contactsensor": BinarySensorDeviceClass.OPENING,
+    "motionsensor": BinarySensorDeviceClass.MOTION,
+    "Connectivity": BinarySensorDeviceClass.CONNECTIVITY,
+    "SMOKE_CO": BinarySensorDeviceClass.SMOKE,
+    "DOG_BARK": BinarySensorDeviceClass.SOUND,
+    "GLASS_BREAK": BinarySensorDeviceClass.SOUND,
 }
 PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=15)
