@@ -7,7 +7,7 @@ from luftdaten import Luftdaten
 from luftdaten.exceptions import LuftdatenError
 import voluptuous as vol
 
-from homeassistant.components.sensor import SensorEntityDescription
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -15,9 +15,6 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_SENSORS,
     CONF_SHOW_ON_MAP,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_PRESSURE,
-    DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     PRESSURE_PA,
     TEMP_CELSIUS,
@@ -55,28 +52,28 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key=SENSOR_TEMPERATURE,
         name="Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
     SensorEntityDescription(
         key=SENSOR_HUMIDITY,
         name="Humidity",
         icon="mdi:water-percent",
         native_unit_of_measurement=PERCENTAGE,
-        device_class=DEVICE_CLASS_HUMIDITY,
+        device_class=SensorDeviceClass.HUMIDITY,
     ),
     SensorEntityDescription(
         key=SENSOR_PRESSURE,
         name="Pressure",
         icon="mdi:arrow-down-bold",
         native_unit_of_measurement=PRESSURE_PA,
-        device_class=DEVICE_CLASS_PRESSURE,
+        device_class=SensorDeviceClass.PRESSURE,
     ),
     SensorEntityDescription(
         key=SENSOR_PRESSURE_AT_SEALEVEL,
         name="Pressure at sealevel",
         icon="mdi:download",
         native_unit_of_measurement=PRESSURE_PA,
-        device_class=DEVICE_CLASS_PRESSURE,
+        device_class=SensorDeviceClass.PRESSURE,
     ),
     SensorEntityDescription(
         key=SENSOR_PM10,
