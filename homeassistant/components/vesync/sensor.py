@@ -72,10 +72,6 @@ class VeSyncSensorEntity(VeSyncBaseEntity, SensorEntity):
 class VeSyncPowerSensor(VeSyncSensorEntity):
     """Representation of current power use for a VeSync outlet."""
 
-    def __init__(self, plug):
-        """Initialize the VeSync outlet device."""
-        super().__init__(plug)
-
     @property
     def unique_id(self):
         """Return unique ID for power sensor on device."""
