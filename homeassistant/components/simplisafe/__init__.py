@@ -605,16 +605,21 @@ class SimpliSafe:
         )
 
         @callback
-        def async_save_refresh_token(token: str) -> None:
-            """Save a refresh token to the config entry."""
+        def async_on_refresh_token(token: str) -> None:
+            """Store a new refresh token to the config entry."""
             LOGGER.info("Saving new refresh token to HASS storage")
             self._hass.config_entries.async_update_entry(
                 self.entry,
                 data={**self.entry.data, CONF_TOKEN: token},
             )
+            
+            if self._api.websocket.connected:
+                # If a websocket connection is open, reconnet to use the
+                # new access token:
+                asyncio.create_task(self._api.websocket.async_reconnect())
 
         self.entry.async_on_unload(
-            self._api.add_refresh_token_callback(async_save_refresh_token)
+            self._api.add_refresh_token_callback(async_on_refresh_token)
         )
 
         async_save_refresh_token(self._api.refresh_token)
