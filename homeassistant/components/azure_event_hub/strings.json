@@ -31,7 +31,8 @@
       },
       "abort": {
         "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-        "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+        "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+        "invalid_import": "Imported config from configuration.yaml is invalid, please fix or remove and use the config flow."
       }
     },
     "options": {

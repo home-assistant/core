@@ -35,7 +35,7 @@ def mock_get_eventhub_properties_fixture():
 @pytest.fixture(name="filter_schema")
 def mock_filter_schema():
     """Return an empty filter."""
-    yield {}
+    return {}
 
 
 @pytest.fixture(name="entry")
@@ -59,7 +59,7 @@ async def mock_entry_fixture(hass, filter_schema, mock_create_batch, mock_send_b
         utcnow() + timedelta(seconds=entry.options[CONF_SEND_INTERVAL]),
     )
     await hass.async_block_till_done()
-    yield entry
+    return entry
 
 
 # fixtures for init tests
@@ -68,7 +68,7 @@ async def mock_entry_with_one_event(hass, entry):
     """Use the entry and add a single test event to the queue."""
     assert entry.state == ConfigEntryState.LOADED
     hass.states.async_set("sensor.test", STATE_ON)
-    yield entry
+    return entry
 
 
 @dataclass
@@ -76,7 +76,7 @@ class FilterTest:
     """Class for capturing a filter test."""
 
     entity_id: str
-    should_pass: bool
+    expected_count: int
 
 
 @pytest.fixture(name="mock_send_batch")

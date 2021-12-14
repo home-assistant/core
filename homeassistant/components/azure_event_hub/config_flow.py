@@ -60,8 +60,8 @@ async def validate_data(data: dict[str, Any]) -> dict[str, str] | None:
         await client.test_connection()
     except EventHubError:
         return {"base": "cannot_connect"}
-    except Exception as exc:  # pylint: disable=broad-except
-        _LOGGER.warning("Unknown error: %s", exc)
+    except Exception:  # pylint: disable=broad-except
+        _LOGGER.exception("Unknown error")
         return {"base": "unknown"}
     return None
 
@@ -83,7 +83,9 @@ class AEHConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return AEHOptionsFlowHandler(config_entry)
 
-    async def async_step_user(self, user_input: dict[str, Any] = None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the initial user step."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -98,18 +100,11 @@ class AEHConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_sas()
 
     async def async_step_conn_string(
-        self, user_input: dict[str, Any] = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the connection string steps."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id=STEP_CONN_STRING,
-                data_schema=CONN_STRING_SCHEMA,
-                description_placeholders=self._data[CONF_EVENT_HUB_INSTANCE_NAME],
-                last_step=True,
-            )
         errors = await self.async_update_and_validate_data(user_input)
-        if errors is not None:
+        if user_input is None or errors is not None:
             return self.async_show_form(
                 step_id=STEP_CONN_STRING,
                 data_schema=CONN_STRING_SCHEMA,
@@ -124,18 +119,12 @@ class AEHConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             options=self._options,
         )
 
-    async def async_step_sas(self, user_input: dict[str, Any] = None) -> FlowResult:
+    async def async_step_sas(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the sas steps."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id=STEP_SAS,
-                data_schema=SAS_SCHEMA,
-                description_placeholders=self._data[CONF_EVENT_HUB_INSTANCE_NAME],
-                last_step=True,
-            )
-
         errors = await self.async_update_and_validate_data(user_input)
-        if errors is not None:
+        if user_input is None or errors is not None:
             return self.async_show_form(
                 step_id=STEP_SAS,
                 data_schema=SAS_SCHEMA,
@@ -159,6 +148,9 @@ class AEHConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if CONF_MAX_DELAY in import_config:
             self._options[CONF_MAX_DELAY] = import_config.pop(CONF_MAX_DELAY)
         self._data = import_config
+        errors = await validate_data(self._data)
+        if errors:
+            return self.async_abort(reason="invalid_import")
         return self.async_create_entry(
             title=self._data[CONF_EVENT_HUB_INSTANCE_NAME],
             data=self._data,
@@ -166,9 +158,11 @@ class AEHConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_update_and_validate_data(
-        self, user_input: dict[str, Any]
+        self, user_input: dict[str, Any] | None
     ) -> dict[str, str] | None:
         """Validate the input."""
+        if user_input is None:
+            return None
         self._data.update(user_input)
         return await validate_data(self._data)
 
@@ -181,17 +175,15 @@ class AEHOptionsFlowHandler(config_entries.OptionsFlow):
         self.config_entry = config_entry
         self.options = deepcopy(dict(config_entry.options))
 
-    async def async_step_init(self, user_input: dict[str, Any] = None) -> FlowResult:
-        """Manage the AEH options."""
-        return await self.async_step_options()
-
-    async def async_step_options(self, user_input: dict[str, Any] = None) -> FlowResult:
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Manage the AEH options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
         return self.async_show_form(
-            step_id="options",
+            step_id="init",
             data_schema=vol.Schema(
                 {
                     vol.Required(

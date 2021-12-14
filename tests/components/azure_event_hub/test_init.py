@@ -84,9 +84,17 @@ async def test_failed_test_connection(hass, mock_get_eventhub_properties):
 
 
 async def test_send_batch_error(hass, entry_with_one_event, mock_send_batch):
-    """Test a error in send_batch."""
+    """Test a error in send_batch, including recovering at the next interval."""
     mock_send_batch.reset_mock()
-    mock_send_batch.side_effect = EventHubError("Test")
+    mock_send_batch.side_effect = [EventHubError("Test"), None]
+    async_fire_time_changed(
+        hass,
+        utcnow() + timedelta(seconds=entry_with_one_event.options[CONF_SEND_INTERVAL]),
+    )
+    await hass.async_block_till_done()
+    mock_send_batch.assert_called_once()
+    mock_send_batch.reset_mock()
+
     async_fire_time_changed(
         hass,
         utcnow() + timedelta(seconds=entry_with_one_event.options[CONF_SEND_INTERVAL]),
@@ -134,12 +142,12 @@ async def test_full_batch(hass, entry_with_one_event, mock_create_batch):
                 "include_entities": ["binary_sensor.included"],
             },
             [
-                FilterTest("climate.excluded", False),
-                FilterTest("light.included", True),
-                FilterTest("sensor.excluded_test", False),
-                FilterTest("sensor.included_test", True),
-                FilterTest("binary_sensor.included", True),
-                FilterTest("binary_sensor.excluded", False),
+                FilterTest("climate.excluded", 0),
+                FilterTest("light.included", 1),
+                FilterTest("sensor.excluded_test", 0),
+                FilterTest("sensor.included_test", 1),
+                FilterTest("binary_sensor.included", 1),
+                FilterTest("binary_sensor.excluded", 0),
             ],
         ),
         (
@@ -149,12 +157,12 @@ async def test_full_batch(hass, entry_with_one_event, mock_create_batch):
                 "exclude_entities": ["binary_sensor.excluded"],
             },
             [
-                FilterTest("climate.excluded", False),
-                FilterTest("light.included", True),
-                FilterTest("sensor.excluded_test", False),
-                FilterTest("sensor.included_test", True),
-                FilterTest("binary_sensor.included", True),
-                FilterTest("binary_sensor.excluded", False),
+                FilterTest("climate.excluded", 0),
+                FilterTest("light.included", 1),
+                FilterTest("sensor.excluded_test", 0),
+                FilterTest("sensor.included_test", 1),
+                FilterTest("binary_sensor.included", 1),
+                FilterTest("binary_sensor.excluded", 0),
             ],
         ),
         (
@@ -166,11 +174,11 @@ async def test_full_batch(hass, entry_with_one_event, mock_create_batch):
                 "exclude_entities": ["light.excluded"],
             },
             [
-                FilterTest("light.included", True),
-                FilterTest("light.excluded_test", False),
-                FilterTest("light.excluded", False),
-                FilterTest("sensor.included_test", True),
-                FilterTest("climate.included_test", False),
+                FilterTest("light.included", 1),
+                FilterTest("light.excluded_test", 0),
+                FilterTest("light.excluded", 0),
+                FilterTest("sensor.included_test", 1),
+                FilterTest("climate.included_test", 0),
             ],
         ),
         (
@@ -181,12 +189,12 @@ async def test_full_batch(hass, entry_with_one_event, mock_create_batch):
                 "exclude_entities": ["light.excluded"],
             },
             [
-                FilterTest("climate.excluded", False),
-                FilterTest("climate.included", True),
-                FilterTest("switch.excluded_test", False),
-                FilterTest("sensor.excluded_test", True),
-                FilterTest("light.excluded", False),
-                FilterTest("light.included", True),
+                FilterTest("climate.excluded", 0),
+                FilterTest("climate.included", 1),
+                FilterTest("switch.excluded_test", 0),
+                FilterTest("sensor.excluded_test", 1),
+                FilterTest("light.excluded", 0),
+                FilterTest("light.included", 1),
             ],
         ),
     ],
@@ -203,8 +211,5 @@ async def test_filter(hass, entry, tests, mock_create_batch):
             hass, utcnow() + timedelta(seconds=entry.options[CONF_SEND_INTERVAL])
         )
         await hass.async_block_till_done()
-        if test.should_pass:
-            mock_create_batch.add.assert_called_once()
-            mock_create_batch.add.reset_mock()
-        else:
-            mock_create_batch.add.assert_not_called()
+        assert mock_create_batch.add.call_count == test.expected_count
+        mock_create_batch.add.reset_mock()
