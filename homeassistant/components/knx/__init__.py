@@ -29,6 +29,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_TYPE,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
@@ -251,16 +252,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
 
     hass.config_entries.async_setup_platforms(
-        entry, [platform for platform in SUPPORTED_PLATFORMS if platform in config]
+        entry,
+        [
+            platform
+            for platform in SUPPORTED_PLATFORMS
+            if platform in config and platform is not Platform.NOTIFY
+        ],
     )
 
-    # set up notify platform, no entry support for notify component yet,
-    # have to use discovery to load platform.
-    if NotifySchema.PLATFORM in conf:
+    # set up notify platform, no entry support for notify component yet
+    if NotifySchema.PLATFORM in config:
         hass.async_create_task(
-            discovery.async_load_platform(
-                hass, "notify", DOMAIN, conf[NotifySchema.PLATFORM], config
-            )
+            discovery.async_load_platform(hass, "notify", DOMAIN, {}, {})
         )
 
     hass.services.async_register(
@@ -312,6 +315,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             platform
             for platform in SUPPORTED_PLATFORMS
             if platform in hass.data[DATA_KNX_CONFIG]
+            and platform is not Platform.NOTIFY
         ],
     )
     if unload_ok:

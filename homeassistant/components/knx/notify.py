@@ -11,7 +11,8 @@ from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DOMAIN, KNX_ADDRESS
+from .const import DATA_KNX_CONFIG, DOMAIN, KNX_ADDRESS
+from .schema import NotifySchema
 
 
 async def async_get_service(
@@ -20,10 +21,10 @@ async def async_get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> KNXNotificationService | None:
     """Get the KNX notification service."""
-    if not discovery_info:
+    if not hass.data[DATA_KNX_CONFIG].get(NotifySchema.PLATFORM):
         return None
 
-    platform_config: dict = discovery_info
+    platform_config: dict = hass.data[DATA_KNX_CONFIG].get(NotifySchema.PLATFORM)
     xknx: XKNX = hass.data[DOMAIN].xknx
 
     notification_devices = []
