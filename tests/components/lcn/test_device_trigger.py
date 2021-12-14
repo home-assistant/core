@@ -58,7 +58,8 @@ async def test_get_triggers_non_module_device(hass, lcn_connection):
     device_registry = dr.async_get(hass)
     for device_id in device_registry.devices:
         device = device_registry.async_get(device_id)
-        if device.model.startswith(("LCN host", "LCN group", "LCN resource")):
+        identifier = next(iter(device.identifiers))
+        if (identifier[1].count("-") != 1) or device.model.startswith("LCN group"):
             triggers = await async_get_device_automations(hass, "trigger", device_id)
             for trigger in triggers:
                 assert trigger[CONF_TYPE] not in not_included_types
