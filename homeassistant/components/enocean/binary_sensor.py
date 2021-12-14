@@ -1,36 +1,9 @@
 """Support for EnOcean binary sensors."""
-import voluptuous as vol
-
-from homeassistant.components.binary_sensor import (
-    DEVICE_CLASSES_SCHEMA,
-    PLATFORM_SCHEMA,
-    BinarySensorEntity,
-)
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_ID, CONF_NAME
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.binary_sensor import BinarySensorEntity
 
 from .device import EnOceanEntity
 
-DEFAULT_NAME = "EnOcean binary sensor"
-DEPENDENCIES = ["enocean"]
 EVENT_BUTTON_PRESSED = "button_pressed"
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-    }
-)
-
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Binary Sensor platform for EnOcean."""
-    dev_id = config.get(CONF_ID)
-    dev_name = config.get(CONF_NAME)
-    device_class = config.get(CONF_DEVICE_CLASS)
-
-    add_entities([EnOceanBinarySensor(dev_id, dev_name, device_class)])
 
 
 class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):

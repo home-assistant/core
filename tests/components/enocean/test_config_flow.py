@@ -133,36 +133,3 @@ async def test_manual_flow_with_invalid_path(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "manual"
     assert CONF_DEVICE in result["errors"]
-
-
-async def test_import_flow_with_valid_path(hass):
-    """Test the import flow with a valid path."""
-    DATA_TO_IMPORT = {CONF_DEVICE: "/valid/path/to/import"}
-
-    with patch(DONGLE_VALIDATE_PATH_METHOD, Mock(return_value=True)):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=DATA_TO_IMPORT,
-        )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["data"][CONF_DEVICE] == DATA_TO_IMPORT[CONF_DEVICE]
-
-
-async def test_import_flow_with_invalid_path(hass):
-    """Test the import flow with an invalid path."""
-    DATA_TO_IMPORT = {CONF_DEVICE: "/invalid/path/to/import"}
-
-    with patch(
-        DONGLE_VALIDATE_PATH_METHOD,
-        Mock(return_value=False),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=DATA_TO_IMPORT,
-        )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "invalid_dongle_path"

@@ -1,40 +1,15 @@
 """Support for EnOcean light sources."""
 import math
 
-import voluptuous as vol
-
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
     LightEntity,
 )
-from homeassistant.const import CONF_ID, CONF_NAME
-import homeassistant.helpers.config_validation as cv
 
 from .device import EnOceanEntity
 
-CONF_SENDER_ID = "sender_id"
-
-DEFAULT_NAME = "EnOcean Light"
 SUPPORT_ENOCEAN = SUPPORT_BRIGHTNESS
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_ID, default=[]): vol.All(cv.ensure_list, [vol.Coerce(int)]),
-        vol.Required(CONF_SENDER_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
-
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the EnOcean light platform."""
-    sender_id = config.get(CONF_SENDER_ID)
-    dev_name = config.get(CONF_NAME)
-    dev_id = config.get(CONF_ID)
-
-    add_entities([EnOceanLight(sender_id, dev_id, dev_name)])
 
 
 class EnOceanLight(EnOceanEntity, LightEntity):

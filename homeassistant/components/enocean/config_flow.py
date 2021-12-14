@@ -6,7 +6,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_DEVICE
 
 from . import dongle
-from .const import DOMAIN, ERROR_INVALID_DONGLE_PATH, LOGGER
+from .const import DOMAIN, ERROR_INVALID_DONGLE_PATH
 
 
 class EnOceanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -19,18 +19,6 @@ class EnOceanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the EnOcean config flow."""
         self.dongle_path = None
         self.discovery_info = None
-
-    async def async_step_import(self, data=None):
-        """Import a yaml configuration."""
-
-        if not await self.validate_enocean_conf(data):
-            LOGGER.warning(
-                "Cannot import yaml configuration: %s is not a valid dongle path",
-                data[CONF_DEVICE],
-            )
-            return self.async_abort(reason="invalid_dongle_path")
-
-        return self.create_enocean_entry(data)
 
     async def async_step_user(self, user_input=None):
         """Handle an EnOcean config flow start."""

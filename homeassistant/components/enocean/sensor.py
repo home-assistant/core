@@ -1,26 +1,19 @@
 """Support for EnOcean sensors."""
 from __future__ import annotations
 
-import voluptuous as vol
-
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONF_DEVICE_CLASS,
-    CONF_ID,
-    CONF_NAME,
     PERCENTAGE,
     POWER_WATT,
     STATE_CLOSED,
     STATE_OPEN,
     TEMP_CELSIUS,
 )
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .device import EnOceanEntity
@@ -29,8 +22,6 @@ CONF_MAX_TEMP = "max_temp"
 CONF_MIN_TEMP = "min_temp"
 CONF_RANGE_FROM = "range_from"
 CONF_RANGE_TO = "range_to"
-
-DEFAULT_NAME = "EnOcean sensor"
 
 SENSOR_TYPE_HUMIDITY = "humidity"
 SENSOR_TYPE_POWER = "powersensor"
@@ -69,56 +60,6 @@ SENSOR_DESC_WINDOWHANDLE = SensorEntityDescription(
     name="WindowHandle",
     icon="mdi:window",
 )
-
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_DEVICE_CLASS, default=SENSOR_TYPE_POWER): cv.string,
-        vol.Optional(CONF_MAX_TEMP, default=40): vol.Coerce(int),
-        vol.Optional(CONF_MIN_TEMP, default=0): vol.Coerce(int),
-        vol.Optional(CONF_RANGE_FROM, default=255): cv.positive_int,
-        vol.Optional(CONF_RANGE_TO, default=0): cv.positive_int,
-    }
-)
-
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up an EnOcean sensor device."""
-    dev_id = config[CONF_ID]
-    dev_name = config[CONF_NAME]
-    sensor_type = config[CONF_DEVICE_CLASS]
-
-    entities: list[EnOceanSensor] = []
-    if sensor_type == SENSOR_TYPE_TEMPERATURE:
-        temp_min = config[CONF_MIN_TEMP]
-        temp_max = config[CONF_MAX_TEMP]
-        range_from = config[CONF_RANGE_FROM]
-        range_to = config[CONF_RANGE_TO]
-        entities = [
-            EnOceanTemperatureSensor(
-                dev_id,
-                dev_name,
-                SENSOR_DESC_TEMPERATURE,
-                scale_min=temp_min,
-                scale_max=temp_max,
-                range_from=range_from,
-                range_to=range_to,
-            )
-        ]
-
-    elif sensor_type == SENSOR_TYPE_HUMIDITY:
-        entities = [EnOceanHumiditySensor(dev_id, dev_name, SENSOR_DESC_HUMIDITY)]
-
-    elif sensor_type == SENSOR_TYPE_POWER:
-        entities = [EnOceanPowerSensor(dev_id, dev_name, SENSOR_DESC_POWER)]
-
-    elif sensor_type == SENSOR_TYPE_WINDOWHANDLE:
-        entities = [EnOceanWindowHandle(dev_id, dev_name, SENSOR_DESC_WINDOWHANDLE)]
-
-    if entities:
-        add_entities(entities)
 
 
 class EnOceanSensor(EnOceanEntity, RestoreEntity, SensorEntity):
