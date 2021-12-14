@@ -44,8 +44,7 @@ def log_messages(
 
 def add_subscription(hass, message_callback, subscription):
     """Prepare debug data for subscription."""
-    entity_id = getattr(message_callback, "__entity_id", None)
-    if entity_id:
+    if entity_id := getattr(message_callback, "__entity_id", None):
         debug_info = hass.data.setdefault(
             DATA_MQTT_DEBUG_INFO, {"entities": {}, "triggers": {}}
         )

@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "\u6b64 SimpliSafe \u5e33\u865f\u5df2\u88ab\u4f7f\u7528\u3002",
-            "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f"
+            "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f",
+            "wrong_account": "\u6240\u4ee5\u63d0\u4f9b\u7684\u6191\u8b49\u8207 Simplisafe \u5e33\u865f\u4e0d\u7b26\u3002"
         },
         "error": {
             "identifier_exists": "\u5e33\u865f\u5df2\u8a3b\u518a",
@@ -11,6 +12,13 @@
             "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
         },
         "step": {
+            "input_auth_code": {
+                "data": {
+                    "auth_code": "\u8a8d\u8b49\u78bc"
+                },
+                "description": "\u8f38\u5165\u7531 SimpliSafe \u7db2\u9801 App URL \u6240\u53d6\u5f97\u4e4b\u8a8d\u8b49\u78bc\uff1a",
+                "title": "\u5b8c\u6210\u8a8d\u8b49"
+            },
             "mfa": {
                 "description": "\u8acb\u6aa2\u67e5\u4f86\u81ea SimpliSafe \u7684\u90f5\u4ef6\u4ee5\u53d6\u5f97\u9023\u7d50\u3002\u78ba\u8a8d\u9023\u7d50\u5f8c\uff0c\u518d\u56de\u5230\u6b64\u8655\u4ee5\u5b8c\u6210\u6574\u5408\u5b89\u88dd\u3002",
                 "title": "SimpliSafe \u591a\u6b65\u9a5f\u9a57\u8b49"
@@ -28,6 +36,7 @@
                     "password": "\u5bc6\u78bc",
                     "username": "\u96fb\u5b50\u90f5\u4ef6"
                 },
+                "description": "SimpliSafe \u81ea 2021 \u958b\u59cb\u8b8a\u66f4\u70ba\u900f\u904e Web App \u65b9\u5f0f\u7684\u8a8d\u8b49\u6a5f\u5236\u3002\u7531\u65bc\u6280\u8853\u9650\u5236\u3001\u65bc\u6b64\u904e\u7a0b\u7d50\u675f\u6642\u5c07\u6703\u6709\u4e00\u6b65\u624b\u52d5\u968e\u6bb5\uff1b\u65bc\u958b\u59cb\u524d\u3001\u8acb\u78ba\u5b9a\u53c3\u95b1 [\u76f8\u95dc\u6587\u4ef6](http://home-assistant.io/integrations/simplisafe#getting-an-authorization-code)\u3002\n\n\u6e96\u5099\u5c31\u7dd2\u5f8c\u3001\u9ede\u9078 [\u6b64\u8655]({url}) \u4ee5\u958b\u555f SimpliSafe Web App \u4e26\u8f38\u5165\u9a57\u8b49\u3002\u5b8c\u6210\u5f8c\u56de\u5230\u9019\u88e1\u9ede\u9078\u50b3\u9001\u3002",
                 "title": "\u586b\u5beb\u8cc7\u8a0a\u3002"
             }
         }

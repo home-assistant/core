@@ -26,6 +26,7 @@ from homeassistant.util.color import (
     color_temperature_mired_to_kelvin as mired_to_kelvin,
 )
 
+from . import legacy_device_id
 from .const import DOMAIN
 from .coordinator import TPLinkDataUpdateCoordinator
 from .entity import CoordinatedTPLinkEntity, async_refresh_after
@@ -58,7 +59,14 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
         """Initialize the switch."""
         super().__init__(device, coordinator)
         # For backwards compat with pyHS100
-        self._attr_unique_id = self.device.mac.replace(":", "").upper()
+        if self.device.is_dimmer:
+            # Dimmers used to use the switch format since
+            # pyHS100 treated them as SmartPlug but the old code
+            # created them as lights
+            # https://github.com/home-assistant/core/blob/2021.9.7/homeassistant/components/tplink/common.py#L86
+            self._attr_unique_id = legacy_device_id(device)
+        else:
+            self._attr_unique_id = self.device.mac.replace(":", "").upper()
 
     @async_refresh_after
     async def async_turn_on(self, **kwargs: Any) -> None:

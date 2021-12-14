@@ -5,6 +5,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
+    STATE_CLASS_MEASUREMENT,
     SensorEntity,
     SensorEntityDescription,
 )
@@ -44,6 +45,7 @@ SENSOR_DESC_TEMPERATURE = SensorEntityDescription(
     native_unit_of_measurement=TEMP_CELSIUS,
     icon="mdi:thermometer",
     device_class=DEVICE_CLASS_TEMPERATURE,
+    state_class=STATE_CLASS_MEASUREMENT,
 )
 
 SENSOR_DESC_HUMIDITY = SensorEntityDescription(
@@ -52,6 +54,7 @@ SENSOR_DESC_HUMIDITY = SensorEntityDescription(
     native_unit_of_measurement=PERCENTAGE,
     icon="mdi:water-percent",
     device_class=DEVICE_CLASS_HUMIDITY,
+    state_class=STATE_CLASS_MEASUREMENT,
 )
 
 SENSOR_DESC_POWER = SensorEntityDescription(
@@ -60,6 +63,7 @@ SENSOR_DESC_POWER = SensorEntityDescription(
     native_unit_of_measurement=POWER_WATT,
     icon="mdi:power-plug",
     device_class=DEVICE_CLASS_POWER,
+    state_class=STATE_CLASS_MEASUREMENT,
 )
 
 SENSOR_DESC_WINDOWHANDLE = SensorEntityDescription(
@@ -135,8 +139,7 @@ class EnOceanSensor(EnOceanEntity, RestoreEntity, SensorEntity):
         if self._attr_native_value is not None:
             return
 
-        state = await self.async_get_last_state()
-        if state is not None:
+        if (state := await self.async_get_last_state()) is not None:
             self._attr_native_value = state.state
 
     def value_changed(self, packet):

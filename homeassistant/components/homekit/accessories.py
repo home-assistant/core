@@ -4,6 +4,7 @@ import logging
 from pyhap.accessory import Accessory, Bridge
 from pyhap.accessory_driver import AccessoryDriver
 from pyhap.const import CATEGORY_OTHER
+from pyhap.util import callback as pyhap_callback
 
 from homeassistant.components import cover
 from homeassistant.components.cover import (
@@ -80,10 +81,10 @@ from .const import (
 )
 from .util import (
     accessory_friendly_name,
+    async_dismiss_setup_message,
+    async_show_setup_message,
     convert_to_float,
-    dismiss_setup_message,
     format_sw_version,
-    show_setup_message,
     validate_media_player_features,
 )
 
@@ -195,7 +196,14 @@ def get_accessory(hass, driver, state, aid, config):  # noqa: C901
     elif state.domain == "remote" and features & SUPPORT_ACTIVITY:
         a_type = "ActivityRemote"
 
-    elif state.domain in ("automation", "input_boolean", "remote", "scene", "script"):
+    elif state.domain in (
+        "automation",
+        "button",
+        "input_boolean",
+        "remote",
+        "scene",
+        "script",
+    ):
         a_type = "Switch"
 
     elif state.domain in ("input_select", "select"):
@@ -413,8 +421,7 @@ class HomeAccessory(Accessory):
     @ha_callback
     def async_update_linked_battery_callback(self, event):
         """Handle linked battery sensor state change listener callback."""
-        new_state = event.data.get("new_state")
-        if new_state is None:
+        if (new_state := event.data.get("new_state")) is None:
             return
         if self.linked_battery_charging_sensor:
             battery_charging_state = None
@@ -425,8 +432,7 @@ class HomeAccessory(Accessory):
     @ha_callback
     def async_update_linked_battery_charging_callback(self, event):
         """Handle linked battery charging sensor state change listener callback."""
-        new_state = event.data.get("new_state")
-        if new_state is None:
+        if (new_state := event.data.get("new_state")) is None:
             return
         self.async_update_battery(None, new_state.state == STATE_ON)
 
@@ -524,8 +530,7 @@ class HomeBridge(Bridge):
 
     async def async_get_snapshot(self, info):
         """Get snapshot from accessory if supported."""
-        acc = self.accessories.get(info["aid"])
-        if acc is None:
+        if (acc := self.accessories.get(info["aid"])) is None:
             raise ValueError("Requested snapshot for missing accessory")
         if not hasattr(acc, "async_get_snapshot"):
             raise ValueError(
@@ -546,13 +551,15 @@ class HomeDriver(AccessoryDriver):
         self._bridge_name = bridge_name
         self._entry_title = entry_title
 
+    @pyhap_callback
     def pair(self, client_uuid, client_public, client_permissions):
         """Override super function to dismiss setup message if paired."""
         success = super().pair(client_uuid, client_public, client_permissions)
         if success:
-            dismiss_setup_message(self.hass, self._entry_id)
+            async_dismiss_setup_message(self.hass, self._entry_id)
         return success
 
+    @pyhap_callback
     def unpair(self, client_uuid):
         """Override super function to show setup message if unpaired."""
         super().unpair(client_uuid)
@@ -560,7 +567,7 @@ class HomeDriver(AccessoryDriver):
         if self.state.paired:
             return
 
-        show_setup_message(
+        async_show_setup_message(
             self.hass,
             self._entry_id,
             accessory_friendly_name(self._entry_title, self.accessory),

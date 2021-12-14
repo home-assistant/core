@@ -100,7 +100,7 @@ async def test_get_conditions_no_state(hass, device_reg, entity_reg):
             "test",
             f"5678_{device_class}",
             device_id=device_entry.id,
-            device_class=device_class,
+            original_device_class=device_class,
             unit_of_measurement=UNITS_OF_MEASUREMENT.get(device_class),
         ).entity_id
 
@@ -155,7 +155,7 @@ async def test_get_condition_capabilities(
         "test",
         platform.ENTITIES["battery"].unique_id,
         device_id=device_entry.id,
-        device_class=device_class_reg,
+        original_device_class=device_class_reg,
         unit_of_measurement=unit_reg,
     ).entity_id
     if set_state:

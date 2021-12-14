@@ -52,6 +52,8 @@ class LeafBatterySensor(LeafEntity, SensorEntity):
     @property
     def native_value(self):
         """Battery state percentage."""
+        if self.car.data[DATA_BATTERY] is None:
+            return None
         return round(self.car.data[DATA_BATTERY])
 
     @property
@@ -95,6 +97,9 @@ class LeafRangeSensor(LeafEntity, SensorEntity):
             ret = self.car.data[DATA_RANGE_AC]
         else:
             ret = self.car.data[DATA_RANGE_AC_OFF]
+
+        if ret is None:
+            return None
 
         if not self.car.hass.config.units.is_metric or self.car.force_miles:
             ret = IMPERIAL_SYSTEM.length(ret, METRIC_SYSTEM.length_unit)

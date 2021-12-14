@@ -1,8 +1,9 @@
 """Test Websocket API http module."""
+import asyncio
 from datetime import timedelta
 from unittest.mock import patch
 
-from aiohttp import WSMsgType
+from aiohttp import ServerDisconnectedError, WSMsgType, web
 import pytest
 
 from homeassistant.components.websocket_api import const, http
@@ -80,3 +81,14 @@ async def test_non_json_message(hass, websocket_client, caplog):
         f"Unable to serialize to JSON. Bad data found at $.result[0](State: test_domain.entity).attributes.bad={bad_data}(<class 'object'>"
         in caplog.text
     )
+
+
+async def test_prepare_fail(hass, hass_ws_client, caplog):
+    """Test failing to prepare."""
+    with patch(
+        "homeassistant.components.websocket_api.http.web.WebSocketResponse.prepare",
+        side_effect=(asyncio.TimeoutError, web.WebSocketResponse.prepare),
+    ), pytest.raises(ServerDisconnectedError):
+        await hass_ws_client(hass)
+
+    assert "Timeout preparing request" in caplog.text

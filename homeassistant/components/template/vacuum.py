@@ -43,7 +43,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.script import Script
 
-from .const import CONF_AVAILABILITY_TEMPLATE
+from .const import CONF_AVAILABILITY_TEMPLATE, DOMAIN
 from .template_entity import TemplateEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -187,43 +187,41 @@ class TemplateVacuum(TemplateEntity, StateVacuumEntity):
         self._fan_speed_template = fan_speed_template
         self._supported_features = SUPPORT_START
 
-        domain = __name__.split(".")[-2]
-
-        self._start_script = Script(hass, start_action, friendly_name, domain)
+        self._start_script = Script(hass, start_action, friendly_name, DOMAIN)
 
         self._pause_script = None
         if pause_action:
-            self._pause_script = Script(hass, pause_action, friendly_name, domain)
+            self._pause_script = Script(hass, pause_action, friendly_name, DOMAIN)
             self._supported_features |= SUPPORT_PAUSE
 
         self._stop_script = None
         if stop_action:
-            self._stop_script = Script(hass, stop_action, friendly_name, domain)
+            self._stop_script = Script(hass, stop_action, friendly_name, DOMAIN)
             self._supported_features |= SUPPORT_STOP
 
         self._return_to_base_script = None
         if return_to_base_action:
             self._return_to_base_script = Script(
-                hass, return_to_base_action, friendly_name, domain
+                hass, return_to_base_action, friendly_name, DOMAIN
             )
             self._supported_features |= SUPPORT_RETURN_HOME
 
         self._clean_spot_script = None
         if clean_spot_action:
             self._clean_spot_script = Script(
-                hass, clean_spot_action, friendly_name, domain
+                hass, clean_spot_action, friendly_name, DOMAIN
             )
             self._supported_features |= SUPPORT_CLEAN_SPOT
 
         self._locate_script = None
         if locate_action:
-            self._locate_script = Script(hass, locate_action, friendly_name, domain)
+            self._locate_script = Script(hass, locate_action, friendly_name, DOMAIN)
             self._supported_features |= SUPPORT_LOCATE
 
         self._set_fan_speed_script = None
         if set_fan_speed_action:
             self._set_fan_speed_script = Script(
-                hass, set_fan_speed_action, friendly_name, domain
+                hass, set_fan_speed_action, friendly_name, DOMAIN
             )
             self._supported_features |= SUPPORT_FAN_SPEED
 

@@ -2,6 +2,7 @@
 from homeassistant.components.light import SUPPORT_BRIGHTNESS, SUPPORT_TRANSITION
 from homeassistant.const import CONF_HOST  # noqa: F401 pylint: disable=unused-import
 
+ATTR_AUTO = "Auto"
 ATTR_DIMMER = "dimmer"
 ATTR_HUE = "hue"
 ATTR_SAT = "saturation"
@@ -20,7 +21,9 @@ DOMAIN = "tradfri"
 KEY_API = "tradfri_api"
 DEVICES = "tradfri_devices"
 GROUPS = "tradfri_groups"
+SIGNAL_GW = "tradfri.gw_status"
 KEY_SECURITY_CODE = "security_code"
 SUPPORTED_GROUP_FEATURES = SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
 SUPPORTED_LIGHT_FEATURES = SUPPORT_TRANSITION
-PLATFORMS = ["cover", "light", "sensor", "switch"]
+PLATFORMS = ["cover", "fan", "light", "sensor", "switch"]
+TIMEOUT_API = 30

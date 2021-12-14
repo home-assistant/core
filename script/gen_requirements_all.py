@@ -63,8 +63,8 @@ CONSTRAINT_PATH = os.path.join(
 CONSTRAINT_BASE = """
 pycryptodome>=3.6.6
 
-# Constrain urllib3 to ensure we deal with CVE-2019-11236 & CVE-2019-11324
-urllib3>=1.24.3
+# Constrain urllib3 to ensure we deal with CVE-2020-26137 and CVE-2021-33503
+urllib3>=1.26.5
 
 # Constrain H11 to ensure we get a new enough version to support non-rfc line endings
 h11>=0.12.0
@@ -106,6 +106,10 @@ regex==2021.8.28
 # anyio has a bug that was fixed in 3.3.1
 # can remove after httpx/httpcore updates its anyio version pin
 anyio>=3.3.1
+
+# websockets 10.0 is broken with AWS
+# https://github.com/aaugustin/websockets/issues/1065
+websockets==9.1
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (

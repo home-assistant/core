@@ -24,7 +24,7 @@
                     "auto_start": "Autostart (deactiveer als je de homekit.start service handmatig aanroept)",
                     "devices": "Apparaten (triggers)"
                 },
-                "description": "Deze instellingen hoeven alleen te worden aangepast als HomeKit niet functioneert.",
+                "description": "Voor elk geselecteerd apparaat worden programmeerbare schakelaars gemaakt. Wanneer een apparaattrigger wordt geactiveerd, kan HomeKit worden geconfigureerd om een automatisering of sc\u00e8ne uit te voeren.",
                 "title": "Geavanceerde configuratie"
             },
             "cameras": {

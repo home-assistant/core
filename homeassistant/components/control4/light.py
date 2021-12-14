@@ -122,7 +122,6 @@ async def async_setup_entry(
         entity_list.append(
             Control4Light(
                 entry_data,
-                entry,
                 item_coordinator,
                 item_name,
                 item_id,
@@ -143,7 +142,6 @@ class Control4Light(Control4Entity, LightEntity):
     def __init__(
         self,
         entry_data: dict,
-        entry: ConfigEntry,
         coordinator: DataUpdateCoordinator,
         name: str,
         idx: int,
@@ -156,7 +154,6 @@ class Control4Light(Control4Entity, LightEntity):
         """Initialize Control4 light entity."""
         super().__init__(
             entry_data,
-            entry,
             coordinator,
             name,
             idx,

@@ -54,7 +54,7 @@ set_clock:
       selector:
         text:
     time:
-      name: Name
+      name: Time
       description: Optional time in 24h format which will be provided to the thermostat. Defaults to the current time.
       example: "19:34"
       selector:

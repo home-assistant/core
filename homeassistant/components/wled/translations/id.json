@@ -20,5 +20,14 @@
                 "title": "Peranti WLED yang ditemukan"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "keep_master_light": "Pertahankan cahaya master, bahkan dengan 1 segmen LED."
+                }
+            }
+        }
     }
 }

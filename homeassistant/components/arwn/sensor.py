@@ -95,8 +95,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         if not sensors:
             return
 
-        store = hass.data.get(DATA_ARWN)
-        if store is None:
+        if (store := hass.data.get(DATA_ARWN)) is None:
             store = hass.data[DATA_ARWN] = {}
 
         if isinstance(sensors, ArwnSensor):

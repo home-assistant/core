@@ -190,8 +190,7 @@ class SuplaChannel(CoordinatorEntity):
         """Return True if entity is available."""
         if self.channel_data is None:
             return False
-        state = self.channel_data.get("state")
-        if state is None:
+        if (state := self.channel_data.get("state")) is None:
             return False
         return state.get("connected")
 

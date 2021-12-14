@@ -69,11 +69,6 @@ class DelugeSwitch(ToggleEntity):
         return self._name
 
     @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
-
-    @property
     def is_on(self):
         """Return true if device is on."""
         return self._state == STATE_ON

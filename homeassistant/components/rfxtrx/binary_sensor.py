@@ -109,14 +109,12 @@ async def async_setup_entry(
     discovery_info = config_entry.data
 
     def get_sensor_description(type_string: str):
-        description = SENSOR_TYPES_DICT.get(type_string)
-        if description is None:
-            description = BinarySensorEntityDescription(key=type_string)
+        if (description := SENSOR_TYPES_DICT.get(type_string)) is None:
+            return BinarySensorEntityDescription(key=type_string)
         return description
 
     for packet_id, entity_info in discovery_info[CONF_DEVICES].items():
-        event = get_rfx_object(packet_id)
-        if event is None:
+        if (event := get_rfx_object(packet_id)) is None:
             _LOGGER.error("Invalid device: %s", packet_id)
             continue
         if not supported(event):

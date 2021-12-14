@@ -1,5 +1,4 @@
 """API for Honeywell Lyric bound to Home Assistant OAuth."""
-import logging
 from typing import cast
 
 from aiohttp import BasicAuth, ClientSession
@@ -7,8 +6,6 @@ from aiolyric.client import LyricClient
 
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class ConfigEntryLyricClient(LyricClient):

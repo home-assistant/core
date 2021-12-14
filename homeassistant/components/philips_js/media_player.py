@@ -45,6 +45,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import LOGGER as _LOGGER, PhilipsTVDataUpdateCoordinator
@@ -187,8 +188,7 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
 
     async def async_select_source(self, source):
         """Set the input source."""
-        source_id = _inverted(self._sources).get(source)
-        if source_id:
+        if source_id := _inverted(self._sources).get(source):
             await self._tv.setSource(source_id)
         await self._async_update_soon()
 
@@ -316,8 +316,7 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     @property
     def app_name(self):
         """Name of the current running app."""
-        app = self._tv.applications.get(self._tv.application_id)
-        if app:
+        if app := self._tv.applications.get(self._tv.application_id):
             return app.get("label")
 
     @property
@@ -326,17 +325,17 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         return self._unique_id
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
-        return {
-            "name": self._system["name"],
-            "identifiers": {
+        return DeviceInfo(
+            identifiers={
                 (DOMAIN, self._unique_id),
             },
-            "model": self._system.get("model"),
-            "manufacturer": "Philips",
-            "sw_version": self._system.get("softwareversion"),
-        }
+            manufacturer="Philips",
+            model=self._system.get("model"),
+            sw_version=self._system.get("softwareversion"),
+            name=self._system["name"],
+        )
 
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
@@ -350,8 +349,7 @@ class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
             else:
                 _LOGGER.error("Unable to find channel <%s>", media_id)
         elif media_type == MEDIA_TYPE_APP:
-            app = self._tv.applications.get(media_id)
-            if app:
+            if app := self._tv.applications.get(media_id):
                 await self._tv.setApplication(app["intent"])
                 await self._async_update_soon()
             else:

@@ -1,4 +1,6 @@
 """The tests for the Home Assistant HTTP component."""
+from http import HTTPStatus
+
 # pylint: disable=protected-access
 from ipaddress import ip_address
 import os
@@ -19,12 +21,9 @@ from homeassistant.components.http.ban import (
     setup_bans,
 )
 from homeassistant.components.http.view import request_handler_factory
-from homeassistant.const import HTTP_FORBIDDEN
 from homeassistant.setup import async_setup_component
 
 from . import mock_real_ip
-
-from tests.common import async_mock_service
 
 SUPERVISOR_IP = "1.2.3.4"
 BANNED_IPS = ["200.201.202.203", "100.64.0.2"]
@@ -67,14 +66,16 @@ async def test_access_from_banned_ip(hass, aiohttp_client):
     for remote_addr in BANNED_IPS:
         set_real_ip(remote_addr)
         resp = await client.get("/")
-        assert resp.status == HTTP_FORBIDDEN
+        assert resp.status == HTTPStatus.FORBIDDEN
 
 
 @pytest.mark.parametrize(
     "remote_addr, bans, status",
     list(
         zip(
-            BANNED_IPS_WITH_SUPERVISOR, [1, 1, 0], [HTTP_FORBIDDEN, HTTP_FORBIDDEN, 401]
+            BANNED_IPS_WITH_SUPERVISOR,
+            [1, 1, 0],
+            [HTTPStatus.FORBIDDEN, HTTPStatus.FORBIDDEN, HTTPStatus.UNAUTHORIZED],
         )
     ),
 )
@@ -106,7 +107,7 @@ async def test_access_from_supervisor_ip(
         "homeassistant.components.http.ban.open", m_open, create=True
     ):
         resp = await client.get("/")
-        assert resp.status == 401
+        assert resp.status == HTTPStatus.UNAUTHORIZED
         assert len(app[KEY_BANNED_IPS]) == bans
         assert m_open.call_count == bans
 
@@ -136,8 +137,6 @@ async def test_ban_middleware_loaded_by_default(hass):
 
 async def test_ip_bans_file_creation(hass, aiohttp_client):
     """Testing if banned IP file created."""
-    notification_calls = async_mock_service(hass, "persistent_notification", "create")
-
     app = web.Application()
     app["hass"] = hass
 
@@ -159,24 +158,26 @@ async def test_ip_bans_file_creation(hass, aiohttp_client):
 
     with patch("homeassistant.components.http.ban.open", m_open, create=True):
         resp = await client.get("/")
-        assert resp.status == 401
+        assert resp.status == HTTPStatus.UNAUTHORIZED
         assert len(app[KEY_BANNED_IPS]) == len(BANNED_IPS)
         assert m_open.call_count == 0
 
         resp = await client.get("/")
-        assert resp.status == 401
+        assert resp.status == HTTPStatus.UNAUTHORIZED
         assert len(app[KEY_BANNED_IPS]) == len(BANNED_IPS) + 1
         m_open.assert_called_once_with(
             hass.config.path(IP_BANS_FILE), "a", encoding="utf8"
         )
 
         resp = await client.get("/")
-        assert resp.status == HTTP_FORBIDDEN
+        assert resp.status == HTTPStatus.FORBIDDEN
         assert m_open.call_count == 1
 
-        assert len(notification_calls) == 3
         assert (
-            notification_calls[0].data["message"]
+            len(notifications := hass.states.async_all("persistent_notification")) == 2
+        )
+        assert (
+            notifications[0].attributes["message"]
             == "Login attempt or request with invalid authentication from example.com (200.201.202.204). See the log for details."
         )
 
@@ -218,19 +219,19 @@ async def test_failed_login_attempts_counter(hass, aiohttp_client):
     client = await aiohttp_client(app)
 
     resp = await client.get("/auth_false")
-    assert resp.status == 401
+    assert resp.status == HTTPStatus.UNAUTHORIZED
     assert app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip] == 1
 
     resp = await client.get("/auth_false")
-    assert resp.status == 401
+    assert resp.status == HTTPStatus.UNAUTHORIZED
     assert app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip] == 2
 
     resp = await client.get("/")
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip] == 2
 
     # This used to check that with trusted networks we reset login attempts
     # We no longer support trusted networks.
     resp = await client.get("/auth_true")
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip] == 2

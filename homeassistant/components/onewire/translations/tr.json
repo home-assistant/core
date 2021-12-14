@@ -10,14 +10,16 @@
         "step": {
             "owserver": {
                 "data": {
-                    "host": "Ana Bilgisayar",
+                    "host": "Ana bilgisayar",
                     "port": "Port"
-                }
+                },
+                "title": "Sunucu ayr\u0131nt\u0131lar\u0131n\u0131 ayarla"
             },
             "user": {
                 "data": {
                     "type": "Ba\u011flant\u0131 t\u00fcr\u00fc"
-                }
+                },
+                "title": "1-Wire'\u0131 kurun"
             }
         }
     }

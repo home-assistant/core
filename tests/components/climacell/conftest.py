@@ -7,15 +7,6 @@ import pytest
 from tests.common import load_fixture
 
 
-@pytest.fixture(name="skip_notifications", autouse=True)
-def skip_notifications_fixture():
-    """Skip notification calls."""
-    with patch("homeassistant.components.persistent_notification.async_create"), patch(
-        "homeassistant.components.persistent_notification.async_dismiss"
-    ):
-        yield
-
-
 @pytest.fixture(name="climacell_config_flow_connect", autouse=True)
 def climacell_config_flow_connect():
     """Mock valid climacell config flow setup."""

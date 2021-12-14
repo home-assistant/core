@@ -184,8 +184,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
     async def async_set_temperature(self, **kwargs):
         """Set new operation mode and target temperatures."""
         # Operation state
-        operation_state = kwargs.get(ATTR_HVAC_MODE)
-        if operation_state:
+        if operation_state := kwargs.get(ATTR_HVAC_MODE):
             mode = STATE_TO_MODE[operation_state]
             await self._device.set_thermostat_mode(mode, set_status=True)
             await self.async_update()
@@ -235,8 +234,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
         supported_modes = self._device.status.supported_thermostat_modes
         if isinstance(supported_modes, Iterable):
             for mode in supported_modes:
-                state = MODE_TO_STATE.get(mode)
-                if state is not None:
+                if (state := MODE_TO_STATE.get(mode)) is not None:
                     modes.add(state)
                 else:
                     _LOGGER.debug(
@@ -363,8 +361,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
         """Set new target temperature."""
         tasks = []
         # operation mode
-        operation_mode = kwargs.get(ATTR_HVAC_MODE)
-        if operation_mode:
+        if operation_mode := kwargs.get(ATTR_HVAC_MODE):
             if operation_mode == HVAC_MODE_OFF:
                 tasks.append(self._device.switch_off(set_status=True))
             else:
@@ -398,8 +395,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
         """Update the calculated fields of the AC."""
         modes = {HVAC_MODE_OFF}
         for mode in self._device.status.supported_ac_modes:
-            state = AC_MODE_TO_STATE.get(mode)
-            if state is not None:
+            if (state := AC_MODE_TO_STATE.get(mode)) is not None:
                 modes.add(state)
             else:
                 _LOGGER.debug(

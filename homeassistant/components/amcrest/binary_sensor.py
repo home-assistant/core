@@ -215,8 +215,7 @@ class AmcrestBinarySensor(BinarySensorEntity):
             log_update_error(_LOGGER, "update", self.name, "binary sensor", error)
             return
 
-        event_code = self.entity_description.event_code
-        if event_code is None:
+        if (event_code := self.entity_description.event_code) is None:
             _LOGGER.error("Binary sensor %s event code not set", self.name)
             return
 
@@ -228,12 +227,10 @@ class AmcrestBinarySensor(BinarySensorEntity):
 
     def _update_unique_id(self) -> None:
         """Set the unique id."""
-        if self._attr_unique_id is None:
-            serial_number = self._api.serial_number
-            if serial_number:
-                self._attr_unique_id = (
-                    f"{serial_number}-{self.entity_description.key}-{self._channel}"
-                )
+        if self._attr_unique_id is None and (serial_number := self._api.serial_number):
+            self._attr_unique_id = (
+                f"{serial_number}-{self.entity_description.key}-{self._channel}"
+            )
 
     async def async_on_demand_update(self) -> None:
         """Update state."""

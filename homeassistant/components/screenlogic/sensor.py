@@ -1,6 +1,4 @@
 """Support for a ScreenLogic Sensor."""
-import logging
-
 from screenlogicpy.const import (
     CHEM_DOSING_STATE,
     DATA as SL_DATA,
@@ -16,8 +14,6 @@ from homeassistant.components.sensor import (
 
 from . import ScreenlogicEntity
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 SUPPORTED_CHEM_SENSORS = (
     "calcium_harness",
@@ -38,8 +34,6 @@ SUPPORTED_CHEM_SENSORS = (
 )
 
 SUPPORTED_SCG_SENSORS = (
-    "scg_level1",
-    "scg_level2",
     "scg_salt_ppm",
     "scg_super_chlor_timer",
 )
@@ -55,7 +49,7 @@ SL_DEVICE_TYPE_TO_HA_DEVICE_CLASS = {
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up entry."""
     entities = []
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
     equipment_flags = coordinator.data[SL_DATA.KEY_CONFIG]["equipment_flags"]
 
     # Generic sensors

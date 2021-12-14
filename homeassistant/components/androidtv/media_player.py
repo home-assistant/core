@@ -533,8 +533,7 @@ class ADBDevice(MediaPlayerEntity):
     @adb_decorator()
     async def adb_command(self, cmd):
         """Send an ADB command to an Android TV / Fire TV device."""
-        key = KEYS.get(cmd)
-        if key:
+        if key := KEYS.get(cmd):
             await self.aftv.adb_shell(f"input keyevent {key}")
             return
 

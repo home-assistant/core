@@ -49,8 +49,7 @@ async def async_setup_entry(
 
     entities = []
     for packet_id, entity_info in discovery_info[CONF_DEVICES].items():
-        event = get_rfx_object(packet_id)
-        if event is None:
+        if (event := get_rfx_object(packet_id)) is None:
             _LOGGER.error("Invalid device: %s", packet_id)
             continue
         if not supported(event):
@@ -66,7 +65,7 @@ async def async_setup_entry(
         entity = RfxtrxCover(
             event.device,
             device_id,
-            signal_repetitions=entity_info[CONF_SIGNAL_REPETITIONS],
+            signal_repetitions=entity_info.get(CONF_SIGNAL_REPETITIONS, 1),
             venetian_blind_mode=entity_info.get(CONF_VENETIAN_BLIND_MODE),
         )
         entities.append(entity)

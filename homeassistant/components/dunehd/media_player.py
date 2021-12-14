@@ -131,11 +131,11 @@ class DuneHDPlayerEntity(MediaPlayerEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        return {
-            "identifiers": {(DOMAIN, self._unique_id)},
-            "name": DEFAULT_NAME,
-            "manufacturer": ATTR_MANUFACTURER,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._unique_id)},
+            manufacturer=ATTR_MANUFACTURER,
+            name=DEFAULT_NAME,
+        )
 
     @property
     def volume_level(self) -> float:

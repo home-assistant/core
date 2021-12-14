@@ -7,7 +7,7 @@ from flipr_api import FliprAPIRestClient
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -88,10 +88,10 @@ class FliprEntity(CoordinatorEntity):
             flipr_id = coordinator.config_entry.data[CONF_FLIPR_ID]
             self._attr_unique_id = f"{flipr_id}-{description.key}"
 
-            self._attr_device_info = {
-                "identifiers": {(DOMAIN, flipr_id)},
-                "name": NAME,
-                "manufacturer": MANUFACTURER,
-            }
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, flipr_id)},
+                manufacturer=MANUFACTURER,
+                name=NAME,
+            )
 
             self._attr_name = f"Flipr {flipr_id} {description.name}"

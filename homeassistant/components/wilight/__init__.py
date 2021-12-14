@@ -3,7 +3,7 @@
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .parent_device import WiLightParent
 
@@ -30,7 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload WiLight config entry."""
 
     # Unload entities for this entry/device.
@@ -78,16 +78,16 @@ class WiLightDevice(Entity):
         return self._unique_id
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        return {
-            "name": self._name,
-            "identifiers": {(DOMAIN, self._unique_id)},
-            "model": self._model,
-            "manufacturer": "WiLight",
-            "sw_version": self._sw_version,
-            "via_device": (DOMAIN, self._device_id),
-        }
+        return DeviceInfo(
+            name=self._name,
+            identifiers={(DOMAIN, self._unique_id)},
+            model=self._model,
+            manufacturer="WiLight",
+            sw_version=self._sw_version,
+            via_device=(DOMAIN, self._device_id),
+        )
 
     @property
     def available(self):

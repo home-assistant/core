@@ -55,8 +55,7 @@ async def async_setup(hass, config):
     hass.data.setdefault(DOMAIN, {})
 
     for platform in PLATFORMS:
-        confs = config.get(platform)
-        if confs is None:
+        if (confs := config.get(platform)) is None:
             continue
 
         for conf in confs:

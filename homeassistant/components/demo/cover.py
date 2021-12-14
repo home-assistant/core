@@ -1,4 +1,6 @@
 """Demo platform for the cover component."""
+from __future__ import annotations
+
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
@@ -8,9 +10,11 @@ from homeassistant.components.cover import (
     SUPPORT_OPEN_TILT,
     SUPPORT_SET_TILT_POSITION,
     SUPPORT_STOP_TILT,
+    CoverDeviceClass,
     CoverEntity,
 )
 from homeassistant.core import callback
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.event import async_track_utc_time_change
 
 from . import DOMAIN
@@ -27,7 +31,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 hass,
                 "cover_4",
                 "Garage Door",
-                device_class="garage",
+                device_class=CoverDeviceClass.GARAGE,
                 supported_features=(SUPPORT_OPEN | SUPPORT_CLOSE),
             ),
             DemoCover(
@@ -86,15 +90,15 @@ class DemoCover(CoverEntity):
             self._closed = self.current_cover_position <= 0
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device info."""
-        return {
-            "identifiers": {
+        return DeviceInfo(
+            identifiers={
                 # Serial numbers are unique identifiers within a specific domain
                 (DOMAIN, self.unique_id)
             },
-            "name": self.name,
-        }
+            name=self.name,
+        )
 
     @property
     def unique_id(self):
@@ -137,7 +141,7 @@ class DemoCover(CoverEntity):
         return self._is_opening
 
     @property
-    def device_class(self):
+    def device_class(self) -> CoverDeviceClass | None:
         """Return the class of this device, from component DEVICE_CLASSES."""
         return self._device_class
 

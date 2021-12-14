@@ -1,10 +1,11 @@
 """AVM FRITZ!Box binary sensors."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-import datetime
+from datetime import datetime, timedelta
 import logging
-from typing import Any, Callable, Literal
+from typing import Any, Literal
 
 from fritzconnection.core.exceptions import (
     FritzActionError,
@@ -27,6 +28,7 @@ from homeassistant.const import (
     DATA_RATE_KILOBITS_PER_SECOND,
     DATA_RATE_KILOBYTES_PER_SECOND,
     DEVICE_CLASS_TIMESTAMP,
+    ENTITY_CATEGORY_DIAGNOSTIC,
     SIGNAL_STRENGTH_DECIBELS,
 )
 from homeassistant.core import HomeAssistant
@@ -39,30 +41,29 @@ from .const import DOMAIN, DSL_CONNECTION, UPTIME_DEVIATION
 _LOGGER = logging.getLogger(__name__)
 
 
-def _uptime_calculation(seconds_uptime: float, last_value: str | None) -> str:
+def _uptime_calculation(seconds_uptime: float, last_value: datetime | None) -> datetime:
     """Calculate uptime with deviation."""
-    delta_uptime = utcnow() - datetime.timedelta(seconds=seconds_uptime)
+    delta_uptime = utcnow() - timedelta(seconds=seconds_uptime)
 
     if (
         not last_value
-        or abs(
-            (delta_uptime - datetime.datetime.fromisoformat(last_value)).total_seconds()
-        )
-        > UPTIME_DEVIATION
+        or abs((delta_uptime - last_value).total_seconds()) > UPTIME_DEVIATION
     ):
-        return delta_uptime.replace(microsecond=0).isoformat()
+        return delta_uptime
 
     return last_value
 
 
-def _retrieve_device_uptime_state(status: FritzStatus, last_value: str) -> str:
+def _retrieve_device_uptime_state(
+    status: FritzStatus, last_value: datetime
+) -> datetime:
     """Return uptime from device."""
     return _uptime_calculation(status.device_uptime, last_value)
 
 
 def _retrieve_connection_uptime_state(
-    status: FritzStatus, last_value: str | None
-) -> str:
+    status: FritzStatus, last_value: datetime | None
+) -> datetime:
     """Return uptime from connection."""
     return _uptime_calculation(status.connection_uptime, last_value)
 
@@ -165,12 +166,14 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         key="device_uptime",
         name="Device Uptime",
         device_class=DEVICE_CLASS_TIMESTAMP,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         value_fn=_retrieve_device_uptime_state,
     ),
     FritzSensorEntityDescription(
         key="connection_uptime",
         name="Connection Uptime",
         device_class=DEVICE_CLASS_TIMESTAMP,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         value_fn=_retrieve_connection_uptime_state,
     ),
     FritzSensorEntityDescription(
@@ -194,6 +197,7 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         name="Max Connection Upload Throughput",
         native_unit_of_measurement=DATA_RATE_KILOBITS_PER_SECOND,
         icon="mdi:upload",
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         value_fn=_retrieve_max_kb_s_sent_state,
     ),
     FritzSensorEntityDescription(
@@ -201,6 +205,7 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         name="Max Connection Download Throughput",
         native_unit_of_measurement=DATA_RATE_KILOBITS_PER_SECOND,
         icon="mdi:download",
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         value_fn=_retrieve_max_kb_s_received_state,
     ),
     FritzSensorEntityDescription(

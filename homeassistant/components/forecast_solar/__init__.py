@@ -25,11 +25,9 @@ PLATFORMS = ["sensor"]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Forecast.Solar from a config entry."""
-    api_key = entry.options.get(CONF_API_KEY)
     # Our option flow may cause it to be an empty string,
     # this if statement is here to catch that.
-    if not api_key:
-        api_key = None
+    api_key = entry.options.get(CONF_API_KEY) or None
 
     session = async_get_clientsession(hass)
     forecast = ForecastSolar(

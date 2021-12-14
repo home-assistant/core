@@ -4,7 +4,7 @@ import upb_lib
 
 from homeassistant.const import ATTR_COMMAND, CONF_FILE_PATH, CONF_HOST
 from homeassistant.core import callback
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import (
     ATTR_ADDRESS,
@@ -31,8 +31,7 @@ async def async_setup_entry(hass, config_entry):
     hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     def _element_changed(element, changeset):
-        change = changeset.get("last_change")
-        if change is None:
+        if (change := changeset.get("last_change")) is None:
             return
         if change.get("command") is None:
             return
@@ -120,12 +119,12 @@ class UpbAttachedEntity(UpbEntity):
     """Base class for UPB attached entities."""
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Device info for the entity."""
-        return {
-            "name": self._element.name,
-            "identifiers": {(DOMAIN, self._element.index)},
-            "sw_version": self._element.version,
-            "manufacturer": self._element.manufacturer,
-            "model": self._element.product,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._element.index)},
+            manufacturer=self._element.manufacturer,
+            model=self._element.product,
+            name=self._element.name,
+            sw_version=self._element.version,
+        )

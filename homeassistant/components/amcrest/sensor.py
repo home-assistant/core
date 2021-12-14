@@ -96,18 +96,14 @@ class AmcrestSensor(SensorEntity):
         _LOGGER.debug("Updating %s sensor", self.name)
 
         sensor_type = self.entity_description.key
-        if self._attr_unique_id is None:
-            serial_number = self._api.serial_number
-            if serial_number:
-                self._attr_unique_id = f"{serial_number}-{sensor_type}-{self._channel}"
+        if self._attr_unique_id is None and (serial_number := self._api.serial_number):
+            self._attr_unique_id = f"{serial_number}-{sensor_type}-{self._channel}"
 
         try:
-            if self._attr_unique_id is None:
-                serial_number = self._api.serial_number
-                if serial_number:
-                    self._attr_unique_id = (
-                        f"{serial_number}-{sensor_type}-{self._channel}"
-                    )
+            if self._attr_unique_id is None and (
+                serial_number := self._api.serial_number
+            ):
+                self._attr_unique_id = f"{serial_number}-{sensor_type}-{self._channel}"
 
             if sensor_type == SENSOR_PTZ_PRESET:
                 self._attr_native_value = self._api.ptz_presets_count

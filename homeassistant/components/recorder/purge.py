@@ -6,11 +6,12 @@ from datetime import datetime
 import logging
 from typing import TYPE_CHECKING
 
+from sqlalchemy import func
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.expression import distinct
 
 from .const import MAX_ROWS_TO_PURGE
-from .models import Events, RecorderRuns, States
+from .models import Events, RecorderRuns, States, StatisticsRuns, StatisticsShortTerm
 from .repack import repack_database
 from .util import retryable_database_job, session_scope
 
@@ -37,18 +38,32 @@ def purge_old_data(
         # Purge a max of MAX_ROWS_TO_PURGE, based on the oldest states or events record
         event_ids = _select_event_ids_to_purge(session, purge_before)
         state_ids = _select_state_ids_to_purge(session, purge_before, event_ids)
+        statistics_runs = _select_statistics_runs_to_purge(session, purge_before)
+        short_term_statistics = _select_short_term_statistics_to_purge(
+            session, purge_before
+        )
+
         if state_ids:
             _purge_state_ids(instance, session, state_ids)
 
         if event_ids:
             _purge_event_ids(session, event_ids)
-            # If states or events purging isn't processing the purge_before yet,
-            # return false, as we are not done yet.
+
+        if statistics_runs:
+            _purge_statistics_runs(session, statistics_runs)
+
+        if short_term_statistics:
+            _purge_short_term_statistics(session, short_term_statistics)
+
+        if event_ids or statistics_runs or short_term_statistics:
+            # Return false, as we might not be done yet.
             _LOGGER.debug("Purging hasn't fully completed yet")
             return False
+
         if apply_filter and _purge_filtered_data(instance, session) is False:
             _LOGGER.debug("Cleanup filtered data hasn't fully completed yet")
             return False
+
         _purge_old_recorder_runs(instance, session, purge_before)
     if repack:
         repack_database(instance)
@@ -81,6 +96,41 @@ def _select_state_ids_to_purge(
     )
     _LOGGER.debug("Selected %s state ids to remove", len(states))
     return {state.state_id for state in states}
+
+
+def _select_statistics_runs_to_purge(
+    session: Session, purge_before: datetime
+) -> list[int]:
+    """Return a list of statistic runs to purge, but take care to keep the newest run."""
+    statistic_runs = (
+        session.query(StatisticsRuns.run_id)
+        .filter(StatisticsRuns.start < purge_before)
+        .limit(MAX_ROWS_TO_PURGE)
+        .all()
+    )
+    statistic_runs_list = [run.run_id for run in statistic_runs]
+    # Exclude the newest statistics run
+    if (
+        last_run := session.query(func.max(StatisticsRuns.run_id)).scalar()
+    ) and last_run in statistic_runs_list:
+        statistic_runs_list.remove(last_run)
+
+    _LOGGER.debug("Selected %s statistic runs to remove", len(statistic_runs))
+    return statistic_runs_list
+
+
+def _select_short_term_statistics_to_purge(
+    session: Session, purge_before: datetime
+) -> list[int]:
+    """Return a list of short term statistics to purge."""
+    statistics = (
+        session.query(StatisticsShortTerm.id)
+        .filter(StatisticsShortTerm.start < purge_before)
+        .limit(MAX_ROWS_TO_PURGE)
+        .all()
+    )
+    _LOGGER.debug("Selected %s short term statistics to remove", len(statistics))
+    return [statistic.id for statistic in statistics]
 
 
 def _purge_state_ids(instance: Recorder, session: Session, state_ids: set[int]) -> None:
@@ -123,6 +173,28 @@ def _evict_purged_states_from_old_states_cache(
     # Evict any purged state from the old states cache
     for purged_state_id in purged_state_ids.intersection(old_state_reversed):
         old_states.pop(old_state_reversed[purged_state_id], None)
+
+
+def _purge_statistics_runs(session: Session, statistics_runs: list[int]) -> None:
+    """Delete by run_id."""
+    deleted_rows = (
+        session.query(StatisticsRuns)
+        .filter(StatisticsRuns.run_id.in_(statistics_runs))
+        .delete(synchronize_session=False)
+    )
+    _LOGGER.debug("Deleted %s statistic runs", deleted_rows)
+
+
+def _purge_short_term_statistics(
+    session: Session, short_term_statistics: list[int]
+) -> None:
+    """Delete by id."""
+    deleted_rows = (
+        session.query(StatisticsShortTerm)
+        .filter(StatisticsShortTerm.id.in_(short_term_statistics))
+        .delete(synchronize_session=False)
+    )
+    _LOGGER.debug("Deleted %s short term statistics", deleted_rows)
 
 
 def _purge_event_ids(session: Session, event_ids: list[int]) -> None:

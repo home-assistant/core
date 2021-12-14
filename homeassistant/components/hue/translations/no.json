@@ -35,6 +35,10 @@
     },
     "device_automation": {
         "trigger_subtype": {
+            "1": "F\u00f8rste knapp",
+            "2": "Andre knapp",
+            "3": "Tredje knapp",
+            "4": "Fjerde knapp",
             "button_1": "F\u00f8rste knapp",
             "button_2": "Andre knapp",
             "button_3": "Tredje knapp",
@@ -47,11 +51,16 @@
             "turn_on": "Sl\u00e5 p\u00e5"
         },
         "trigger_type": {
+            "double_short_release": "Begge \"{subtype}\" er utgitt",
+            "initial_press": "Knappen \"{subtype}\" ble f\u00f8rst trykket",
+            "long_release": "Knapp \"{subtype}\" slippes etter lang trykk",
             "remote_button_long_release": "\"{subtype}\"-knappen sluppet etter langt trykk",
             "remote_button_short_press": "\"{subtype}\" -knappen ble trykket",
             "remote_button_short_release": "\"{subtype}\"-knappen sluppet",
             "remote_double_button_long_press": "Begge \"{subtype}\" utgitt etter lang trykk",
-            "remote_double_button_short_press": "Begge \"{subtype}\" utgitt"
+            "remote_double_button_short_press": "Begge \"{subtype}\" utgitt",
+            "repeat": "Knappen \" {subtype} \" holdt nede",
+            "short_release": "Knapp \"{subtype}\" slippes etter kort trykk"
         }
     },
     "options": {
@@ -59,6 +68,7 @@
             "init": {
                 "data": {
                     "allow_hue_groups": "Tillat Hue-grupper",
+                    "allow_hue_scenes": "Tillat Hue-scener",
                     "allow_unreachable": "Tillat uoppn\u00e5elige p\u00e6rer \u00e5 rapportere sin tilstand riktig"
                 }
             }

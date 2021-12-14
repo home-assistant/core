@@ -96,18 +96,18 @@ class HomematicipGenericEntity(Entity):
         """Return device specific attributes."""
         # Only physical devices should be HA devices.
         if isinstance(self._device, AsyncDevice):
-            return {
-                "identifiers": {
+            return DeviceInfo(
+                identifiers={
                     # Serial numbers of Homematic IP device
                     (HMIPC_DOMAIN, self._device.id)
                 },
-                "name": self._device.label,
-                "manufacturer": self._device.oem,
-                "model": self._device.modelType,
-                "sw_version": self._device.firmwareVersion,
+                manufacturer=self._device.oem,
+                model=self._device.modelType,
+                name=self._device.label,
+                sw_version=self._device.firmwareVersion,
                 # Link to the homematic ip access point.
-                "via_device": (HMIPC_DOMAIN, self._device.homeId),
-            }
+                via_device=(HMIPC_DOMAIN, self._device.homeId),
+            )
         return None
 
     async def async_added_to_hass(self) -> None:
@@ -139,13 +139,13 @@ class HomematicipGenericEntity(Entity):
         if self.hmip_device_removed:
             try:
                 del self._hap.hmip_device_by_entity_id[self.entity_id]
-                await self.async_remove_from_registries()
+                self.async_remove_from_registries()
             except KeyError as err:
                 _LOGGER.debug("Error removing HMIP device from registry: %s", err)
 
-    async def async_remove_from_registries(self) -> None:
+    @callback
+    def async_remove_from_registries(self) -> None:
         """Remove entity/device from registry."""
-
         # Remove callback from device.
         self._device.remove_callback(self._async_device_changed)
         self._device.remove_callback(self._async_device_removed)
@@ -153,19 +153,17 @@ class HomematicipGenericEntity(Entity):
         if not self.registry_entry:
             return
 
-        device_id = self.registry_entry.device_id
-        if device_id:
+        if device_id := self.registry_entry.device_id:
             # Remove from device registry.
-            device_registry = await dr.async_get_registry(self.hass)
+            device_registry = dr.async_get(self.hass)
             if device_id in device_registry.devices:
                 # This will also remove associated entities from entity registry.
                 device_registry.async_remove_device(device_id)
         else:
             # Remove from entity registry.
             # Only relevant for entities that do not belong to a device.
-            entity_id = self.registry_entry.entity_id
-            if entity_id:
-                entity_registry = await er.async_get_registry(self.hass)
+            if entity_id := self.registry_entry.entity_id:
+                entity_registry = er.async_get(self.hass)
                 if entity_id in entity_registry.entities:
                     entity_registry.async_remove(entity_id)
 
@@ -240,16 +238,14 @@ class HomematicipGenericEntity(Entity):
 
         if isinstance(self._device, AsyncDevice):
             for attr, attr_key in DEVICE_ATTRIBUTES.items():
-                attr_value = getattr(self._device, attr, None)
-                if attr_value:
+                if attr_value := getattr(self._device, attr, None):
                     state_attr[attr_key] = attr_value
 
             state_attr[ATTR_IS_GROUP] = False
 
         if isinstance(self._device, AsyncGroup):
             for attr, attr_key in GROUP_ATTRIBUTES.items():
-                attr_value = getattr(self._device, attr, None)
-                if attr_value:
+                if attr_value := getattr(self._device, attr, None):
                     state_attr[attr_key] = attr_value
 
             state_attr[ATTR_IS_GROUP] = True

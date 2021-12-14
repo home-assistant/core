@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import COORDINATOR, DOMAIN, NAME, SENSORS
@@ -169,13 +170,13 @@ class Envoy(CoordinatorEntity, SensorEntity):
         return None
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device_info of the device."""
         if not self._device_serial_number:
             return None
-        return {
-            "identifiers": {(DOMAIN, str(self._device_serial_number))},
-            "name": self._device_name,
-            "model": "Envoy",
-            "manufacturer": "Enphase",
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, str(self._device_serial_number))},
+            manufacturer="Enphase",
+            model="Envoy",
+            name=self._device_name,
+        )

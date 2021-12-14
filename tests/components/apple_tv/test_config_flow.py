@@ -7,15 +7,19 @@ from pyatv.const import Protocol
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
+from homeassistant.components import zeroconf
 from homeassistant.components.apple_tv.const import CONF_START_OFF, DOMAIN
 
 from tests.common import MockConfigEntry
 
-DMAP_SERVICE = {
-    "type": "_touch-able._tcp.local.",
-    "name": "dmapid.something",
-    "properties": {"CtlN": "Apple TV"},
-}
+DMAP_SERVICE = zeroconf.ZeroconfServiceInfo(
+    host="mock_host",
+    hostname="mock_hostname",
+    name="dmapid.something",
+    port=None,
+    properties={"CtlN": "Apple TV"},
+    type="_touch-able._tcp.local.",
+)
 
 
 @pytest.fixture(autouse=True)
@@ -399,10 +403,14 @@ async def test_zeroconf_unsupported_service_aborts(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data={
-            "type": "_dummy._tcp.local.",
-            "properties": {},
-        },
+        data=zeroconf.ZeroconfServiceInfo(
+            host="mock_host",
+            hostname="mock_hostname",
+            name="mock_name",
+            port=None,
+            properties={},
+            type="_dummy._tcp.local.",
+        ),
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "unknown"
@@ -413,10 +421,14 @@ async def test_zeroconf_add_mrp_device(hass, mrp_device, pairing):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data={
-            "type": "_mediaremotetv._tcp.local.",
-            "properties": {"UniqueIdentifier": "mrpid", "Name": "Kitchen"},
-        },
+        data=zeroconf.ZeroconfServiceInfo(
+            host="mock_host",
+            hostname="mock_hostname",
+            name="mock_name",
+            port=None,
+            properties={"UniqueIdentifier": "mrpid", "Name": "Kitchen"},
+            type="_mediaremotetv._tcp.local.",
+        ),
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["description_placeholders"] == {"name": "MRP Device"}

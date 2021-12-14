@@ -1,6 +1,5 @@
 """Support for Belkin WeMo lights."""
 import asyncio
-import logging
 
 from pywemo.ouimeaux_device import bridge
 
@@ -18,13 +17,12 @@ from homeassistant.components.light import (
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 import homeassistant.util.color as color_util
 
 from .const import DOMAIN as WEMO_DOMAIN
 from .entity import WemoEntity
 from .wemo_device import DeviceCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 SUPPORT_WEMO = (
     SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_COLOR | SUPPORT_TRANSITION
@@ -102,15 +100,15 @@ class WemoLight(WemoEntity, LightEntity):
         return self.light.uniqueID
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        return {
-            "name": self.name,
-            "connections": {(CONNECTION_ZIGBEE, self._unique_id)},
-            "identifiers": {(WEMO_DOMAIN, self._unique_id)},
-            "model": self._model_name,
-            "manufacturer": "Belkin",
-        }
+        return DeviceInfo(
+            connections={(CONNECTION_ZIGBEE, self._unique_id)},
+            identifiers={(WEMO_DOMAIN, self._unique_id)},
+            manufacturer="Belkin",
+            model=self._model_name,
+            name=self.name,
+        )
 
     @property
     def brightness(self):
@@ -120,8 +118,7 @@ class WemoLight(WemoEntity, LightEntity):
     @property
     def hs_color(self):
         """Return the hs color values of this light."""
-        xy_color = self.light.state.get("color_xy")
-        if xy_color:
+        if xy_color := self.light.state.get("color_xy"):
             return color_util.color_xy_to_hs(*xy_color)
         return None
 

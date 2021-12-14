@@ -56,7 +56,6 @@ class OPNSenseDeviceScanner(DeviceScanner):
         """Return the extra attrs of the given device."""
         if device not in self.last_results:
             return None
-        mfg = self.last_results[device].get("manufacturer")
-        if not mfg:
+        if not (mfg := self.last_results[device].get("manufacturer")):
             return {}
         return {"manufacturer": mfg}
