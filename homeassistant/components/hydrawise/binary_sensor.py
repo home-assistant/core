@@ -6,9 +6,8 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
-    DEVICE_CLASS_MOISTURE,
     PLATFORM_SCHEMA,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -22,14 +21,14 @@ _LOGGER = logging.getLogger(__name__)
 BINARY_SENSOR_STATUS = BinarySensorEntityDescription(
     key="status",
     name="Status",
-    device_class=DEVICE_CLASS_CONNECTIVITY,
+    device_class=BinarySensorDeviceClass.CONNECTIVITY,
 )
 
 BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
         key="is_watering",
         name="Watering",
-        device_class=DEVICE_CLASS_MOISTURE,
+        device_class=BinarySensorDeviceClass.MOISTURE,
     ),
 )
 
