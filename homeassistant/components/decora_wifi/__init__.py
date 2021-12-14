@@ -1,4 +1,5 @@
 """Support for the myLeviton decora_wifi component."""
+from __future__ import annotations
 
 import logging
 
@@ -13,16 +14,10 @@ from .const import DOMAIN, PLATFORMS
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config):
-    """Set up the Decora Wifi component."""
-    hass.data.setdefault(DOMAIN, {})
-    return True
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Decora Wifi from a config entry."""
 
-    conf_data = dict(entry.data)
+    conf_data = entry.data
     email = conf_data[CONF_USERNAME]
     password = conf_data[CONF_PASSWORD]
 
@@ -43,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     session: DecoraWifiPlatform = hass.data[DOMAIN].get(entry.entry_id, None)
     if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):

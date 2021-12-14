@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -10,6 +12,8 @@ from homeassistant.data_entry_flow import FlowResult
 
 from .common import CommFailed, DecoraWifiPlatform, LoginFailed
 from .const import CONF_TITLE, DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @config_entries.HANDLERS.register(DOMAIN)
@@ -25,9 +29,13 @@ class DecoraWifiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, data=None) -> FlowResult:
         """Handle import from yaml."""
-        if data is not None:
-            return await self.async_step_user_validate(data)
-        return self.async_abort(reason="import_failed")
+        self._async_abort_entries_match({CONF_USERNAME: data[CONF_USERNAME].lower()})
+        _LOGGER.warning(
+            "Configuring decora_wifi via yaml is deprecated; the configuration for"
+            " %s is being migrated to a config entry and can be safely removed",
+            data[CONF_USERNAME],
+        )
+        return await self.async_step_user_validate(data)
 
     async def async_step_user(self, user_input=None) -> FlowResult:
         """Handle user-initiated setup config flow."""

@@ -45,8 +45,6 @@ async def test_user_flow(hass: HomeAssistant):
         "homeassistant.components.decora_wifi.common.ResidentialAccount",
         side_effect=FakeDecoraWiFiResidentialAccount,
     ), patch(
-        "homeassistant.components.decora_wifi.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.decora_wifi.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -60,7 +58,6 @@ async def test_user_flow(hass: HomeAssistant):
         CONF_USERNAME: USERNAME,
         CONF_PASSWORD: PASSWORD,
     }
-    mock_setup.assert_called_once()
     mock_setup_entry.assert_called_once()
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
@@ -209,11 +206,3 @@ async def test_reauth_validate_invalid_login(hass: HomeAssistant):
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result2["step_id"] == "reauth_validate"
     assert result2["errors"] == {"base": "invalid_auth"}
-
-
-async def test_import_abort_on_no_data(hass: HomeAssistant):
-    """Test that import flow aborts if None is passed for data."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=None
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
