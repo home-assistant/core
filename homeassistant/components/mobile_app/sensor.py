@@ -1,11 +1,7 @@
 """Sensor platform for mobile_app."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import (
-    SensorDeviceClass,
-    SensorEntity,
-    SensorStateClass,
-)
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import (
     CONF_NAME,
     CONF_UNIQUE_ID,
@@ -97,7 +93,7 @@ class MobileAppSensor(MobileAppEntity, SensorEntity):
         if (
             self.device_class
             in (
-                SensorStateClass.DATE,
+                SensorDeviceClass.DATE,
                 SensorDeviceClass.TIMESTAMP,
             )
             and (timestamp := dt_util.parse_datetime(state)) is not None
