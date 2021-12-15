@@ -5,7 +5,9 @@ import datetime
 from nessclient import ArmingState, Client
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import DEVICE_CLASSES
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
+)
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_STATE,
@@ -41,7 +43,9 @@ ZONE_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ZONE_NAME): cv.string,
         vol.Required(CONF_ZONE_ID): cv.positive_int,
-        vol.Optional(CONF_ZONE_TYPE, default=DEFAULT_ZONE_TYPE): vol.In(DEVICE_CLASSES),
+        vol.Optional(
+            CONF_ZONE_TYPE, default=DEFAULT_ZONE_TYPE
+        ): BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
     }
 )
 
