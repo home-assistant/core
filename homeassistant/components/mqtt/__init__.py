@@ -22,6 +22,8 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import websocket_api
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_NAME,
     CONF_CLIENT_ID,
     CONF_DISCOVERY,
     CONF_PASSWORD,
@@ -45,6 +47,7 @@ from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.exceptions import HomeAssistantError, TemplateError, Unauthorized
 from homeassistant.helpers import config_validation as cv, event, template
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.frame import report
 from homeassistant.helpers.typing import ConfigType, ServiceDataType
 from homeassistant.loader import bind_hass
@@ -257,14 +260,21 @@ class MqttCommandTemplate:
     def __init__(
         self,
         command_template: template.Template | None,
-        hass: HomeAssistant,
+        entity: Entity | HomeAssistant,
     ) -> None:
         """Instantiate a command template."""
         self._attr_command_template = command_template
         if command_template is None:
             return
 
-        command_template.hass = hass
+        if isinstance(entity, HomeAssistant):
+            command_template.hass = entity
+            return
+
+        self._entity = entity
+        self._variables = [ATTR_ENTITY_ID, ATTR_NAME]
+
+        command_template.hass = entity.hass
 
     @callback
     def async_render(
@@ -293,6 +303,9 @@ class MqttCommandTemplate:
             return value
 
         values = {"value": value}
+        if hasattr(self, "_variables"):
+            for key in self._variables:
+                values[key] = getattr(self._entity, key)
         if variables is not None:
             values.update(variables)
         return _convert_outgoing_payload(

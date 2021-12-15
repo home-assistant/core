@@ -333,9 +333,7 @@ class MqttFan(MqttEntity, FanEntity):
             self._supported_features |= SUPPORT_PRESET_MODE
 
         for key, tpl in self._command_templates.items():
-            self._command_templates[key] = MqttCommandTemplate(
-                tpl, self.hass
-            ).async_render
+            self._command_templates[key] = MqttCommandTemplate(tpl, self).async_render
 
         for key, tpl in self._value_templates.items():
             if tpl is None:
