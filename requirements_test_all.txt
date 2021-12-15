@@ -131,7 +131,7 @@ aiohomekit==0.6.4
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==3.0.3
+aiohue==3.0.5
 
 # homeassistant.components.apache_kafka
 aiokafka==0.6.0
@@ -281,7 +281,7 @@ broadlink==0.18.0
 brother==1.1.0
 
 # homeassistant.components.brunt
-brunt==1.0.0
+brunt==1.0.1
 
 # homeassistant.components.bsblan
 bsblan==0.4.0
@@ -375,7 +375,7 @@ emulated_roku==0.2.1
 enocean==0.50
 
 # homeassistant.components.environment_canada
-env_canada==0.5.18
+env_canada==0.5.20
 
 # homeassistant.components.enphase_envoy
 envoy_reader==0.20.1
@@ -461,7 +461,7 @@ google-api-python-client==1.6.4
 google-cloud-pubsub==2.1.0
 
 # homeassistant.components.nest
-google-nest-sdm==0.4.6
+google-nest-sdm==0.4.8
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -515,7 +515,7 @@ hole==0.7.0
 holidays==0.11.3.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20211212.0
+home-assistant-frontend==20211215.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -808,7 +808,7 @@ pyMetno==0.9.0
 pyRFXtrx==0.27.0
 
 # homeassistant.components.tibber
-pyTibber==0.21.0
+pyTibber==0.21.1
 
 # homeassistant.components.nextbus
 py_nextbusnext==0.1.5
@@ -850,7 +850,7 @@ pybotvac==0.0.22
 pycfdns==1.2.2
 
 # homeassistant.components.cast
-pychromecast==10.1.1
+pychromecast==10.2.1
 
 # homeassistant.components.climacell
 pyclimacell==0.18.2
@@ -995,7 +995,7 @@ pymata-express==1.19
 pymazda==0.2.2
 
 # homeassistant.components.melcloud
-pymelcloud==2.5.5
+pymelcloud==2.5.6
 
 # homeassistant.components.meteoclimatic
 pymeteoclimatic==0.0.6
@@ -1109,7 +1109,7 @@ pysignalclirestapi==0.3.4
 pysma==0.6.9
 
 # homeassistant.components.smappee
-pysmappee==0.2.27
+pysmappee==0.2.29
 
 # homeassistant.components.smartthings
 pysmartapp==0.3.3
@@ -1145,7 +1145,7 @@ python-juicenet==1.0.2
 python-kasa==0.4.0
 
 # homeassistant.components.xiaomi_miio
-python-miio==0.5.9.1
+python-miio==0.5.9.2
 
 # homeassistant.components.nest
 python-nest==4.1.0
@@ -1352,7 +1352,7 @@ surepy==0.7.2
 systembridge==2.2.3
 
 # homeassistant.components.tailscale
-tailscale==0.1.4
+tailscale==0.1.5
 
 # homeassistant.components.tellduslive
 tellduslive==0.10.11
@@ -1370,7 +1370,7 @@ tololib==0.1.0b3
 toonapi==0.2.1
 
 # homeassistant.components.totalconnect
-total_connect_client==2021.11.4
+total_connect_client==2021.12
 
 # homeassistant.components.transmission
 transmissionrpc==0.11
