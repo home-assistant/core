@@ -65,6 +65,8 @@ CONSTRAINT_BASE = """
 # https://github.com/home-assistant/core/issues/61756
 pillow==8.2.0
 
+# Constrain pycryptodome to avoid vulnerability
+# see https://github.com/home-assistant/core/pull/16238
 pycryptodome>=3.6.6
 
 # Constrain urllib3 to ensure we deal with CVE-2020-26137 and CVE-2021-33503
