@@ -13,7 +13,9 @@ from homeassistant.components.sensor import (
     DEVICE_CLASSES_SCHEMA,
     ENTITY_ID_FORMAT,
     STATE_CLASSES_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
+    SensorStateClass,
 )
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
@@ -21,8 +23,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
-    DEVICE_CLASS_DATE,
-    DEVICE_CLASS_TIMESTAMP,
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
@@ -200,14 +200,14 @@ class MqttSensor(MqttEntity, SensorEntity):
                 )
 
             if payload is not None and self.device_class in (
-                DEVICE_CLASS_DATE,
-                DEVICE_CLASS_TIMESTAMP,
+                SensorStateClass.DATE,
+                SensorDeviceClass.TIMESTAMP,
             ):
                 if (payload := dt_util.parse_datetime(payload)) is None:
                     _LOGGER.warning(
                         "Invalid state message '%s' from '%s'", msg.payload, msg.topic
                     )
-                elif self.device_class == DEVICE_CLASS_DATE:
+                elif self.device_class == SensorDeviceClass.DATE:
                     payload = payload.date()
 
             self._state = payload
