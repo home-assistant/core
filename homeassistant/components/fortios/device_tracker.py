@@ -50,13 +50,17 @@ def get_scanner(hass, config):
     version = status_json["version"][1:]
     _LOGGER.debug("FortiOS version: %s", version)
 
-    fos_major, fos_minor, fos_patch = [int(x, 10) for x in version.split('.')]
+    fos_major, fos_minor, fos_patch = [int(x, 10) for x in version.split(".")]
 
-    if fos_major < 6 or (fos_major == 6 and fos_minor < 4) or \
-       (fos_major == 6 and fos_minor == 4 and fos_patch < 3):
+    if (
+        fos_major < 6
+        or (fos_major == 6 and fos_minor < 4)
+        or (fos_major == 6 and fos_minor == 4 and fos_patch < 3)
+    ):
         _LOGGER.error(
             "Unsupported FortiOS version :  %s. \
-            Version 6.4.3 and newer are supported", version
+            Version 6.4.3 and newer are supported",
+            version
         )
         return None
 
@@ -109,8 +113,12 @@ class FortiOSDeviceScanner(DeviceScanner):
                     _LOGGER.debug("Getting device name=%s", name)
                     return name
                 except KeyError as kex:
-                    _LOGGER.debug("No hostname found for %s in \
-                    client data: %s", device, kex)
+                    _LOGGER.debug(
+                        "No hostname found for %s in \
+                    client data: %s",
+                    device,
+                    kex
+                    )
                     return device.replace(":", "_")
 
         return None
