@@ -1,11 +1,10 @@
 """The Nina integration."""
 from __future__ import annotations
 
-from datetime import timedelta
 from typing import Any
 
 from async_timeout import timeout
-from pynina import ApiError, Nina, Warning as NinaWarning
+from pynina import ApiError, Nina
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -59,33 +58,26 @@ class NINADataUpdateCoordinator(DataUpdateCoordinator):
         self.warnings: dict[str, Any] = {}
         self.corona_filter: bool = corona_filter
 
-        for region in regions.keys():
+        for region in regions:
             self._nina.addRegion(region)
 
-        update_interval: timedelta = SCAN_INTERVAL
-
-        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=update_interval)
+        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data."""
-
-        try:
-            async with timeout(10):
+        async with timeout(10):
+            try:
                 await self._nina.update()
-                return self._parse_data()
-        except ApiError as err:
-            raise UpdateFailed(err) from err
+            except ApiError as err:
+                raise UpdateFailed(err) from err
+            return self._parse_data()
 
     def _parse_data(self) -> dict[str, Any]:
         """Parse warning data."""
 
         return_data: dict[str, Any] = {}
 
-        for (
-            region_id
-        ) in self._nina.warnings:  # pylint: disable=consider-using-dict-items
-            raw_warnings: list[NinaWarning] = self._nina.warnings[region_id]
-
+        for region_id, raw_warnings in self._nina.warnings.items():
             warnings_for_regions: list[Any] = []
 
             for raw_warn in raw_warnings:

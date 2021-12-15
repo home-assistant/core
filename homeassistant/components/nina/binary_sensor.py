@@ -53,18 +53,16 @@ class NINAMessage(CoordinatorEntity, BinarySensorEntity):
         self,
         coordinator: NINADataUpdateCoordinator,
         region: str,
-        regionName: str,
+        region_name: str,
         slotID: int,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
 
         self._region: str = region
-        self._region_name: str = regionName
+        self._region_name: str = region_name
         self._slot_id: int = slotID
         self._warning_index: int = slotID - 1
-
-        self._coordinator: NINADataUpdateCoordinator = coordinator
 
         self._attr_name: str = f"Warning: {self._region_name} {self._slot_id}"
         self._attr_unique_id: str = f"{self._region}-{self._slot_id}"
@@ -73,17 +71,17 @@ class NINAMessage(CoordinatorEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return the state of the sensor."""
-        return len(self._coordinator.data[self._region]) > self._warning_index
+        return len(self.coordinator.data[self._region]) > self._warning_index
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return extra attributes of the sensor."""
         if (
-            not len(self._coordinator.data[self._region]) > self._warning_index
+            not len(self.coordinator.data[self._region]) > self._warning_index
         ) or not self.is_on:
             return {}
 
-        data: dict[str, Any] = self._coordinator.data[self._region][self._warning_index]
+        data: dict[str, Any] = self.coordinator.data[self._region][self._warning_index]
 
         return {
             ATTR_HEADLINE: data[ATTR_HEADLINE],
