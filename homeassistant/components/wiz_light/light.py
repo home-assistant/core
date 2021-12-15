@@ -45,7 +45,8 @@ SCAN_INTERVAL = timedelta(seconds=15)
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the WiZ Light platform from config_flow."""
     # Assign configuration variables.
-    wizbulb = hass.data[DOMAIN][entry.entry_id]
+    wiz_data = hass.data[DOMAIN][entry.entry_id]
+    wizbulb = WizBulbEntity(wiz_data.bulb, entry.data.get(CONF_NAME), wiz_data.mac_addr, wiz_data.bulb_type)    
     # Add devices with defined name
     async_add_entities([wizbulb], update_before_add=True)
     return True
