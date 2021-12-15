@@ -1,13 +1,15 @@
 """Sensor platform for mobile_app."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.const import (
     CONF_NAME,
     CONF_UNIQUE_ID,
     CONF_WEBHOOK_ID,
-    DEVICE_CLASS_DATE,
-    DEVICE_CLASS_TIMESTAMP,
     STATE_UNKNOWN,
 )
 from homeassistant.core import callback
@@ -95,12 +97,12 @@ class MobileAppSensor(MobileAppEntity, SensorEntity):
         if (
             self.device_class
             in (
-                DEVICE_CLASS_DATE,
-                DEVICE_CLASS_TIMESTAMP,
+                SensorStateClass.DATE,
+                SensorDeviceClass.TIMESTAMP,
             )
             and (timestamp := dt_util.parse_datetime(state)) is not None
         ):
-            if self.device_class == DEVICE_CLASS_DATE:
+            if self.device_class == SensorDeviceClass.DATE:
                 return timestamp.date()
             return timestamp
 
