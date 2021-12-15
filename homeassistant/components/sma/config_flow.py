@@ -108,18 +108,3 @@ class SmaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
-
-    async def async_step_import(
-        self, import_config: dict[str, Any] | None
-    ) -> FlowResult:
-        """Import a config flow from configuration."""
-        device_info = await validate_input(self.hass, import_config)
-
-        # If unique is configured import was already run
-        # This means remap was already done, so we can abort
-        await self.async_set_unique_id(device_info["serial"])
-        self._abort_if_unique_id_configured(import_config)
-
-        return self.async_create_entry(
-            title=import_config[CONF_HOST], data=import_config
-        )
