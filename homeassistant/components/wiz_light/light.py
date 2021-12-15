@@ -92,11 +92,6 @@ class WizBulbEntity(LightEntity):
         return self._hscolor
 
     @property
-    def name(self):
-        """Return the ip as name of the device if any."""
-        return self._name
-
-    @property
     def unique_id(self):
         """Return light unique_id."""
         return self._mac
