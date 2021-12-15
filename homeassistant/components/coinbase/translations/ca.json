@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "unknown": "Error inesperat"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Clau API",
+                    "api_token": "Secret API",
+                    "currencies": "Monedes del saldo del compte",
+                    "exchange_rates": "Tipus de canvi"
+                },
+                "description": "Introdueix els detalls de la teva clau API tal com els proporciona Coinbase.",
+                "title": "Detalls de la clau API de Coinbase"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "currency_unavaliable": "L'API de Coinbase no proporciona algun/s dels saldos de moneda que has sol\u00b7licitat.",
+            "exchange_rate_unavaliable": "L'API de Coinbase no proporciona algun/s dels tipus de canvi que has sol\u00b7licitat.",
+            "unknown": "Error inesperat"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "account_balance_currencies": "Saldos de cartera a informar.",
+                    "exchange_base": "Moneda base per als sensors de canvi de tipus.",
+                    "exchange_rate_currencies": "Tipus de canvi a informar."
+                },
+                "description": "Ajusta les opcions de Coinbase"
+            }
+        }
+    }
+}

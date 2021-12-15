@@ -178,6 +178,10 @@
             "off": "\u6b63\u5e38",
             "on": "\u89e6\u53d1"
         },
+        "update": {
+            "off": "\u5df2\u662f\u6700\u65b0",
+            "on": "\u6709\u66f4\u65b0"
+        },
         "vibration": {
             "off": "\u6b63\u5e38",
             "on": "\u89e6\u53d1"

@@ -1,11 +1,17 @@
 """Support for QNAP NAS Sensors."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
 from qnapstats import QNAPStats
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import (
     ATTR_NAME,
     CONF_HOST,
@@ -18,6 +24,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     DATA_GIBIBYTES,
     DATA_RATE_MEBIBYTES_PER_SECOND,
+    DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     TEMP_CELSIUS,
 )
@@ -55,42 +62,117 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 NOTIFICATION_ID = "qnap_notification"
 NOTIFICATION_TITLE = "QNAP Sensor Setup"
 
-_SYSTEM_MON_COND = {
-    "status": ["Status", None, "mdi:checkbox-marked-circle-outline"],
-    "system_temp": ["System Temperature", TEMP_CELSIUS, "mdi:thermometer"],
-}
-_CPU_MON_COND = {
-    "cpu_temp": ["CPU Temperature", TEMP_CELSIUS, "mdi:thermometer"],
-    "cpu_usage": ["CPU Usage", PERCENTAGE, "mdi:chip"],
-}
-_MEMORY_MON_COND = {
-    "memory_free": ["Memory Available", DATA_GIBIBYTES, "mdi:memory"],
-    "memory_used": ["Memory Used", DATA_GIBIBYTES, "mdi:memory"],
-    "memory_percent_used": ["Memory Usage", PERCENTAGE, "mdi:memory"],
-}
-_NETWORK_MON_COND = {
-    "network_link_status": ["Network Link", None, "mdi:checkbox-marked-circle-outline"],
-    "network_tx": ["Network Up", DATA_RATE_MEBIBYTES_PER_SECOND, "mdi:upload"],
-    "network_rx": ["Network Down", DATA_RATE_MEBIBYTES_PER_SECOND, "mdi:download"],
-}
-_DRIVE_MON_COND = {
-    "drive_smart_status": ["SMART Status", None, "mdi:checkbox-marked-circle-outline"],
-    "drive_temp": ["Temperature", TEMP_CELSIUS, "mdi:thermometer"],
-}
-_VOLUME_MON_COND = {
-    "volume_size_used": ["Used Space", DATA_GIBIBYTES, "mdi:chart-pie"],
-    "volume_size_free": ["Free Space", DATA_GIBIBYTES, "mdi:chart-pie"],
-    "volume_percentage_used": ["Volume Used", PERCENTAGE, "mdi:chart-pie"],
-}
-
-_MONITORED_CONDITIONS = (
-    list(_SYSTEM_MON_COND)
-    + list(_CPU_MON_COND)
-    + list(_MEMORY_MON_COND)
-    + list(_NETWORK_MON_COND)
-    + list(_DRIVE_MON_COND)
-    + list(_VOLUME_MON_COND)
+_SYSTEM_MON_COND: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="status",
+        name="Status",
+        icon="mdi:checkbox-marked-circle-outline",
+    ),
+    SensorEntityDescription(
+        key="system_temp",
+        name="System Temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+    ),
 )
+_CPU_MON_COND: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="cpu_temp",
+        name="CPU Temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+    ),
+    SensorEntityDescription(
+        key="cpu_usage",
+        name="CPU Usage",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:chip",
+    ),
+)
+_MEMORY_MON_COND: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="memory_free",
+        name="Memory Available",
+        native_unit_of_measurement=DATA_GIBIBYTES,
+        icon="mdi:memory",
+    ),
+    SensorEntityDescription(
+        key="memory_used",
+        name="Memory Used",
+        native_unit_of_measurement=DATA_GIBIBYTES,
+        icon="mdi:memory",
+    ),
+    SensorEntityDescription(
+        key="memory_percent_used",
+        name="Memory Usage",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:memory",
+    ),
+)
+_NETWORK_MON_COND: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="network_link_status",
+        name="Network Link",
+        icon="mdi:checkbox-marked-circle-outline",
+    ),
+    SensorEntityDescription(
+        key="network_tx",
+        name="Network Up",
+        native_unit_of_measurement=DATA_RATE_MEBIBYTES_PER_SECOND,
+        icon="mdi:upload",
+    ),
+    SensorEntityDescription(
+        key="network_rx",
+        name="Network Down",
+        native_unit_of_measurement=DATA_RATE_MEBIBYTES_PER_SECOND,
+        icon="mdi:download",
+    ),
+)
+_DRIVE_MON_COND: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="drive_smart_status",
+        name="SMART Status",
+        icon="mdi:checkbox-marked-circle-outline",
+    ),
+    SensorEntityDescription(
+        key="drive_temp",
+        name="Temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=DEVICE_CLASS_TEMPERATURE,
+    ),
+)
+_VOLUME_MON_COND: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="volume_size_used",
+        name="Used Space",
+        native_unit_of_measurement=DATA_GIBIBYTES,
+        icon="mdi:chart-pie",
+    ),
+    SensorEntityDescription(
+        key="volume_size_free",
+        name="Free Space",
+        native_unit_of_measurement=DATA_GIBIBYTES,
+        icon="mdi:chart-pie",
+    ),
+    SensorEntityDescription(
+        key="volume_percentage_used",
+        name="Volume Used",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:chart-pie",
+    ),
+)
+
+SENSOR_KEYS: list[str] = [
+    desc.key
+    for desc in (
+        *_SYSTEM_MON_COND,
+        *_CPU_MON_COND,
+        *_MEMORY_MON_COND,
+        *_NETWORK_MON_COND,
+        *_DRIVE_MON_COND,
+        *_VOLUME_MON_COND,
+    )
+]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -102,7 +184,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_MONITORED_CONDITIONS): vol.All(
-            cv.ensure_list, [vol.In(_MONITORED_CONDITIONS)]
+            cv.ensure_list, [vol.In(SENSOR_KEYS)]
         ),
         vol.Optional(CONF_NICS): cv.ensure_list,
         vol.Optional(CONF_DRIVES): cv.ensure_list,
@@ -120,40 +202,61 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if not api.data:
         raise PlatformNotReady
 
+    monitored_conditions = config[CONF_MONITORED_CONDITIONS]
     sensors = []
 
     # Basic sensors
-    for variable in config[CONF_MONITORED_CONDITIONS]:
-        if variable in _SYSTEM_MON_COND:
-            sensors.append(QNAPSystemSensor(api, variable, _SYSTEM_MON_COND[variable]))
-        if variable in _CPU_MON_COND:
-            sensors.append(QNAPCPUSensor(api, variable, _CPU_MON_COND[variable]))
-        if variable in _MEMORY_MON_COND:
-            sensors.append(QNAPMemorySensor(api, variable, _MEMORY_MON_COND[variable]))
+    sensors.extend(
+        [
+            QNAPSystemSensor(api, description)
+            for description in _SYSTEM_MON_COND
+            if description.key in monitored_conditions
+        ]
+    )
+    sensors.extend(
+        [
+            QNAPCPUSensor(api, description)
+            for description in _CPU_MON_COND
+            if description.key in monitored_conditions
+        ]
+    )
+    sensors.extend(
+        [
+            QNAPMemorySensor(api, description)
+            for description in _MEMORY_MON_COND
+            if description.key in monitored_conditions
+        ]
+    )
 
     # Network sensors
-    for nic in config.get(CONF_NICS, api.data["system_stats"]["nics"]):
-        sensors += [
-            QNAPNetworkSensor(api, variable, _NETWORK_MON_COND[variable], nic)
-            for variable in config[CONF_MONITORED_CONDITIONS]
-            if variable in _NETWORK_MON_COND
+    sensors.extend(
+        [
+            QNAPNetworkSensor(api, description, nic)
+            for nic in config.get(CONF_NICS, api.data["system_stats"]["nics"])
+            for description in _NETWORK_MON_COND
+            if description.key in monitored_conditions
         ]
+    )
 
     # Drive sensors
-    for drive in config.get(CONF_DRIVES, api.data["smart_drive_health"]):
-        sensors += [
-            QNAPDriveSensor(api, variable, _DRIVE_MON_COND[variable], drive)
-            for variable in config[CONF_MONITORED_CONDITIONS]
-            if variable in _DRIVE_MON_COND
+    sensors.extend(
+        [
+            QNAPDriveSensor(api, description, drive)
+            for drive in config.get(CONF_DRIVES, api.data["smart_drive_health"])
+            for description in _DRIVE_MON_COND
+            if description.key in monitored_conditions
         ]
+    )
 
     # Volume sensors
-    for volume in config.get(CONF_VOLUMES, api.data["volumes"]):
-        sensors += [
-            QNAPVolumeSensor(api, variable, _VOLUME_MON_COND[variable], volume)
-            for variable in config[CONF_MONITORED_CONDITIONS]
-            if variable in _VOLUME_MON_COND
+    sensors.extend(
+        [
+            QNAPVolumeSensor(api, description, volume)
+            for volume in config.get(CONF_VOLUMES, api.data["volumes"])
+            for description in _VOLUME_MON_COND
+            if description.key in monitored_conditions
         ]
+    )
 
     add_entities(sensors)
 
@@ -202,12 +305,9 @@ class QNAPStatsAPI:
 class QNAPSensor(SensorEntity):
     """Base class for a QNAP sensor."""
 
-    def __init__(self, api, variable, variable_info, monitor_device=None):
+    def __init__(self, api, description: SensorEntityDescription, monitor_device=None):
         """Initialize the sensor."""
-        self.var_id = variable
-        self.var_name = variable_info[0]
-        self.var_units = variable_info[1]
-        self.var_icon = variable_info[2]
+        self.entity_description = description
         self.monitor_device = monitor_device
         self._api = api
 
@@ -217,18 +317,10 @@ class QNAPSensor(SensorEntity):
         server_name = self._api.data["system_stats"]["system"]["name"]
 
         if self.monitor_device is not None:
-            return f"{server_name} {self.var_name} ({self.monitor_device})"
-        return f"{server_name} {self.var_name}"
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return self.var_icon
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self.var_units
+            return (
+                f"{server_name} {self.entity_description.name} ({self.monitor_device})"
+            )
+        return f"{server_name} {self.entity_description.name}"
 
     def update(self):
         """Get the latest data for the states."""
@@ -239,11 +331,11 @@ class QNAPCPUSensor(QNAPSensor):
     """A QNAP sensor that monitors CPU stats."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
-        if self.var_id == "cpu_temp":
+        if self.entity_description.key == "cpu_temp":
             return self._api.data["system_stats"]["cpu"]["temp_c"]
-        if self.var_id == "cpu_usage":
+        if self.entity_description.key == "cpu_usage":
             return self._api.data["system_stats"]["cpu"]["usage_percent"]
 
 
@@ -251,19 +343,19 @@ class QNAPMemorySensor(QNAPSensor):
     """A QNAP sensor that monitors memory stats."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         free = float(self._api.data["system_stats"]["memory"]["free"]) / 1024
-        if self.var_id == "memory_free":
+        if self.entity_description.key == "memory_free":
             return round_nicely(free)
 
         total = float(self._api.data["system_stats"]["memory"]["total"]) / 1024
 
         used = total - free
-        if self.var_id == "memory_used":
+        if self.entity_description.key == "memory_used":
             return round_nicely(used)
 
-        if self.var_id == "memory_percent_used":
+        if self.entity_description.key == "memory_percent_used":
             return round(used / total * 100)
 
     @property
@@ -279,17 +371,17 @@ class QNAPNetworkSensor(QNAPSensor):
     """A QNAP sensor that monitors network stats."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
-        if self.var_id == "network_link_status":
+        if self.entity_description.key == "network_link_status":
             nic = self._api.data["system_stats"]["nics"][self.monitor_device]
             return nic["link_status"]
 
         data = self._api.data["bandwidth"][self.monitor_device]
-        if self.var_id == "network_tx":
+        if self.entity_description.key == "network_tx":
             return round_nicely(data["tx"] / 1024 / 1024)
 
-        if self.var_id == "network_rx":
+        if self.entity_description.key == "network_rx":
             return round_nicely(data["rx"] / 1024 / 1024)
 
     @property
@@ -312,12 +404,12 @@ class QNAPSystemSensor(QNAPSensor):
     """A QNAP sensor that monitors overall system health."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
-        if self.var_id == "status":
+        if self.entity_description.key == "status":
             return self._api.data["system_health"]
 
-        if self.var_id == "system_temp":
+        if self.entity_description.key == "system_temp":
             return int(self._api.data["system_stats"]["system"]["temp_c"])
 
     @property
@@ -341,14 +433,14 @@ class QNAPDriveSensor(QNAPSensor):
     """A QNAP sensor that monitors HDD/SSD drive stats."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         data = self._api.data["smart_drive_health"][self.monitor_device]
 
-        if self.var_id == "drive_smart_status":
+        if self.entity_description.key == "drive_smart_status":
             return data["health"]
 
-        if self.var_id == "drive_temp":
+        if self.entity_description.key == "drive_temp":
             return int(data["temp_c"]) if data["temp_c"] is not None else 0
 
     @property
@@ -356,7 +448,7 @@ class QNAPDriveSensor(QNAPSensor):
         """Return the name of the sensor, if any."""
         server_name = self._api.data["system_stats"]["system"]["name"]
 
-        return f"{server_name} {self.var_name} (Drive {self.monitor_device})"
+        return f"{server_name} {self.entity_description.name} (Drive {self.monitor_device})"
 
     @property
     def extra_state_attributes(self):
@@ -375,21 +467,21 @@ class QNAPVolumeSensor(QNAPSensor):
     """A QNAP sensor that monitors storage volume stats."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         data = self._api.data["volumes"][self.monitor_device]
 
         free_gb = int(data["free_size"]) / 1024 / 1024 / 1024
-        if self.var_id == "volume_size_free":
+        if self.entity_description.key == "volume_size_free":
             return round_nicely(free_gb)
 
         total_gb = int(data["total_size"]) / 1024 / 1024 / 1024
 
         used_gb = total_gb - free_gb
-        if self.var_id == "volume_size_used":
+        if self.entity_description.key == "volume_size_used":
             return round_nicely(used_gb)
 
-        if self.var_id == "volume_percentage_used":
+        if self.entity_description.key == "volume_percentage_used":
             return round(used_gb / total_gb * 100)
 
     @property

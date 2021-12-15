@@ -17,5 +17,16 @@
                 "title": "Introdueix la teva informaci\u00f3"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "from_window": "\u00cdndex UV d'inicialitzaci\u00f3 de la finestra protectora",
+                    "to_window": "\u00cdndex UV de finalitzaci\u00f3 de la finestra protectora"
+                },
+                "title": "Configura OpenUV"
+            }
+        }
     }
 }

@@ -1,0 +1,34 @@
+[{
+   "entities" : {
+      "activity" : "mockActivity2",
+      "house" : "123",
+      "device" : "online_with_doorsense",
+      "callingUser" : "mockUserId2",
+      "otherUser" : "deleted"
+   },
+   "callingUser" : {
+      "LastName" : "elven princess",
+      "UserID" : "mockUserId2",
+      "FirstName" : "Your favorite"
+   },
+   "otherUser" : {
+      "LastName" : "User",
+      "UserName" : "deleteduser",
+      "FirstName" : "Unknown",
+      "UserID" : "deleted",
+      "PhoneNo" : "deleted"
+   },
+   "deviceType" : "lock",
+   "deviceName" : "MockHouseTDoor",
+   "action" : "locking",
+   "dateTime" : 1582007218000,
+   "info" : {
+      "remote" : true,
+      "DateLogActionID" : "ABC+Time"
+   },
+   "deviceID" : "online_with_doorsense",
+   "house" : {
+      "houseName" : "MockHouse",
+      "houseID" : "123"
+   }
+}]

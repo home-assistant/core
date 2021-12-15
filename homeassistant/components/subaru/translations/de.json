@@ -33,9 +33,9 @@
         "step": {
             "init": {
                 "data": {
-                    "update_enabled": "Aktivieren Sie die Fahrzeugabfrage"
+                    "update_enabled": "Aktiviere die Fahrzeugabfrage"
                 },
-                "description": "Wenn diese Option aktiviert ist, sendet die Fahrzeugabfrage alle 2 Stunden einen Fernbefehl an Ihr Fahrzeug, um neue Sensordaten zu erhalten. Ohne Fahrzeugabfrage werden neue Sensordaten nur empfangen, wenn das Fahrzeug automatisch Daten sendet (normalerweise nach dem Abstellen des Motors).",
+                "description": "Wenn diese Option aktiviert ist, sendet die Fahrzeugabfrage alle 2 Stunden einen Fernbefehl an dein Fahrzeug, um neue Sensordaten zu erhalten. Ohne Fahrzeugabfrage werden neue Sensordaten nur empfangen, wenn das Fahrzeug automatisch Daten sendet (normalerweise nach dem Abstellen des Motors).",
                 "title": "Subaru Starlink Optionen"
             }
         }

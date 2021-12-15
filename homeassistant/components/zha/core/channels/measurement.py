@@ -1,5 +1,5 @@
 """Measurement channels module for Zigbee Home Automation."""
-import zigpy.zcl.clusters.measurement as measurement
+from zigpy.zcl.clusters import measurement
 
 from .. import registries
 from ..const import (
@@ -62,6 +62,30 @@ class RelativeHumidity(ZigbeeChannel):
     ]
 
 
+@registries.ZIGBEE_CHANNEL_REGISTRY.register(measurement.SoilMoisture.cluster_id)
+class SoilMoisture(ZigbeeChannel):
+    """Soil Moisture measurement channel."""
+
+    REPORT_CONFIG = [
+        {
+            "attr": "measured_value",
+            "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 100),
+        }
+    ]
+
+
+@registries.ZIGBEE_CHANNEL_REGISTRY.register(measurement.LeafWetness.cluster_id)
+class LeafWetness(ZigbeeChannel):
+    """Leaf Wetness measurement channel."""
+
+    REPORT_CONFIG = [
+        {
+            "attr": "measured_value",
+            "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 100),
+        }
+    ]
+
+
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(
     measurement.TemperatureMeasurement.cluster_id
 )
@@ -95,6 +119,20 @@ class CarbonMonoxideConcentration(ZigbeeChannel):
 )
 class CarbonDioxideConcentration(ZigbeeChannel):
     """Carbon Dioxide measurement channel."""
+
+    REPORT_CONFIG = [
+        {
+            "attr": "measured_value",
+            "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 0.000001),
+        }
+    ]
+
+
+@registries.ZIGBEE_CHANNEL_REGISTRY.register(
+    measurement.FormaldehydeConcentration.cluster_id
+)
+class FormaldehydeConcentration(ZigbeeChannel):
+    """Formaldehyde measurement channel."""
 
     REPORT_CONFIG = [
         {

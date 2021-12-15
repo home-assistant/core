@@ -1,8 +1,6 @@
 """Config flow for MySensors."""
 from __future__ import annotations
 
-from contextlib import suppress
-import logging
 import os
 from typing import Any
 
@@ -19,18 +17,20 @@ from homeassistant.components.mqtt import (
     valid_publish_topic,
     valid_subscribe_topic,
 )
-from homeassistant.components.mysensors import (
-    CONF_DEVICE,
-    DEFAULT_BAUD_RATE,
-    DEFAULT_TCP_PORT,
-    is_persistence_file,
-)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
-from . import CONF_RETAIN, CONF_VERSION, DEFAULT_VERSION
+from . import (
+    CONF_DEVICE,
+    CONF_RETAIN,
+    CONF_VERSION,
+    DEFAULT_BAUD_RATE,
+    DEFAULT_TCP_PORT,
+    DEFAULT_VERSION,
+    is_persistence_file,
+)
 from .const import (
     CONF_BAUD_RATE,
     CONF_GATEWAY_TYPE,
@@ -47,15 +47,12 @@ from .const import (
 )
 from .gateway import MQTT_COMPONENT, is_serial_port, is_socket_address, try_connect
 
-_LOGGER = logging.getLogger(__name__)
-
 
 def _get_schema_common(user_input: dict[str, str]) -> dict:
     """Create a schema with options common to all gateway types."""
     schema = {
         vol.Required(
             CONF_VERSION,
-            default="",
             description={
                 "suggested_value": user_input.get(CONF_VERSION, DEFAULT_VERSION)
             },
@@ -67,14 +64,14 @@ def _get_schema_common(user_input: dict[str, str]) -> dict:
 
 def _validate_version(version: str) -> dict[str, str]:
     """Validate a version string from the user."""
-    version_okay = False
-    with suppress(AwesomeVersionStrategyException):
-        version_okay = bool(
-            AwesomeVersion.ensure_strategy(
-                version,
-                [AwesomeVersionStrategy.SIMPLEVER, AwesomeVersionStrategy.SEMVER],
-            )
+    version_okay = True
+    try:
+        AwesomeVersion(
+            version,
+            [AwesomeVersionStrategy.SIMPLEVER, AwesomeVersionStrategy.SEMVER],
         )
+    except AwesomeVersionStrategyException:
+        version_okay = False
 
     if version_okay:
         return {}

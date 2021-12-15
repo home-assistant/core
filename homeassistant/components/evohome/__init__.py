@@ -5,6 +5,7 @@ Such systems include evohome, Round Thermostat, and others.
 from __future__ import annotations
 
 from datetime import datetime as dt, timedelta
+from http import HTTPStatus
 import logging
 import re
 from typing import Any
@@ -19,8 +20,6 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
-    HTTP_SERVICE_UNAVAILABLE,
-    HTTP_TOO_MANY_REQUESTS,
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -158,13 +157,13 @@ def _handle_exception(err) -> bool:
         )
 
     except aiohttp.ClientResponseError:
-        if err.status == HTTP_SERVICE_UNAVAILABLE:
+        if err.status == HTTPStatus.SERVICE_UNAVAILABLE:
             _LOGGER.warning(
                 "The vendor says their server is currently unavailable. "
                 "Check the vendor's service status page"
             )
 
-        elif err.status == HTTP_TOO_MANY_REQUESTS:
+        elif err.status == HTTPStatus.TOO_MANY_REQUESTS:
             _LOGGER.warning(
                 "The vendor's API rate limit has been exceeded. "
                 "If this message persists, consider increasing the %s",
@@ -531,7 +530,7 @@ class EvoDevice(Entity):
             return
         if payload["unique_id"] != self._unique_id:
             return
-        if payload["service"] in [SVC_SET_ZONE_OVERRIDE, SVC_RESET_ZONE_OVERRIDE]:
+        if payload["service"] in (SVC_SET_ZONE_OVERRIDE, SVC_RESET_ZONE_OVERRIDE):
             await self.async_zone_svc_request(payload["service"], payload["data"])
             return
         await self.async_tcs_svc_request(payload["service"], payload["data"])
@@ -653,10 +652,10 @@ class EvoChild(EvoDevice):
             this_sp_day = -1 if sp_idx == -1 else 0
             next_sp_day = 1 if sp_idx + 1 == len(day["Switchpoints"]) else 0
 
-            for key, offset, idx in [
+            for key, offset, idx in (
                 ("this", this_sp_day, sp_idx),
                 ("next", next_sp_day, (sp_idx + 1) * (1 - next_sp_day)),
-            ]:
+            ):
                 sp_date = (day_time + timedelta(days=offset)).strftime("%Y-%m-%d")
                 day = self._schedule["DailySchedules"][(day_of_week + offset) % 7]
                 switchpoint = day["Switchpoints"][idx]

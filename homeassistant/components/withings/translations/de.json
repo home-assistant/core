@@ -12,7 +12,7 @@
         "error": {
             "already_configured": "Konto wurde bereits konfiguriert"
         },
-        "flow_title": "Withings: {profile}",
+        "flow_title": "{profile}",
         "step": {
             "pick_implementation": {
                 "title": "W\u00e4hle die Authentifizierungsmethode"

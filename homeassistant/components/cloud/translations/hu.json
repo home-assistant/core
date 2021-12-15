@@ -10,6 +10,7 @@
             "relayer_connected": "K\u00f6zvet\u00edt\u0151 csatlakoztatva",
             "remote_connected": "T\u00e1voli csatlakoz\u00e1s",
             "remote_enabled": "T\u00e1voli hozz\u00e1f\u00e9r\u00e9s enged\u00e9lyezve",
+            "remote_server": "T\u00e1voli szerver",
             "subscription_expiration": "El\u0151fizet\u00e9s lej\u00e1rata"
         }
     }

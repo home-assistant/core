@@ -8,6 +8,11 @@
             "webhook_error": "SmartThings \u65e0\u6cd5\u9a8c\u8bc1 `base_url` \u4e2d\u914d\u7f6e\u7684\u7aef\u70b9\u3002\u8bf7\u67e5\u770b\u7ec4\u4ef6\u9700\u6c42\u3002"
         },
         "step": {
+            "pat": {
+                "data": {
+                    "access_token": "\u8bbf\u95ee\u4ee4\u724c"
+                }
+            },
             "user": {
                 "description": "\u8bf7\u8f93\u5165\u6309\u7167[\u8bf4\u660e]({component_url})\u521b\u5efa\u7684 SmartThings [\u4e2a\u4eba\u8bbf\u95ee\u4ee4\u724c]({token_url})\u3002",
                 "title": "\u8f93\u5165\u4e2a\u4eba\u8bbf\u95ee\u4ee4\u724c"

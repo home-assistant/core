@@ -17,6 +17,7 @@ import homeassistant.helpers.device_registry as dr
 import homeassistant.util.dt as dt_util
 
 from .common import async_enable_traffic, make_zcl_header
+from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
 
 from tests.common import async_fire_time_changed
 
@@ -32,9 +33,9 @@ def zigpy_device(zigpy_device_mock):
 
         endpoints = {
             3: {
-                "in_clusters": in_clusters,
-                "out_clusters": [],
-                "device_type": zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
+                SIG_EP_INPUT: in_clusters,
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
             }
         }
         return zigpy_device_mock(endpoints)
@@ -53,9 +54,9 @@ def zigpy_device_mains(zigpy_device_mock):
 
         endpoints = {
             3: {
-                "in_clusters": in_clusters,
-                "out_clusters": [],
-                "device_type": zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
+                SIG_EP_INPUT: in_clusters,
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
             }
         }
         return zigpy_device_mock(
@@ -83,9 +84,9 @@ async def ota_zha_device(zha_device_restored, zigpy_device_mock):
     zigpy_dev = zigpy_device_mock(
         {
             1: {
-                "in_clusters": [general.Basic.cluster_id],
-                "out_clusters": [general.Ota.cluster_id],
-                "device_type": 0x1234,
+                SIG_EP_INPUT: [general.Basic.cluster_id],
+                SIG_EP_OUTPUT: [general.Ota.cluster_id],
+                SIG_EP_TYPE: 0x1234,
             }
         },
         "00:11:22:33:44:55:66:77",
@@ -192,7 +193,7 @@ async def test_check_available_unsuccessful(
     assert basic_ch.read_attributes.await_args[0][0] == ["manufacturer"]
     assert zha_device.available is True
 
-    # not even trying to update, device is unavailble
+    # not even trying to update, device is unavailable
     _send_time_changed(hass, 91)
     await hass.async_block_till_done()
     assert basic_ch.read_attributes.await_count == 2

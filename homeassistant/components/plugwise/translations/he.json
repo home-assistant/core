@@ -10,6 +10,9 @@
         },
         "flow_title": "{name}",
         "step": {
+            "user": {
+                "description": "\u05de\u05d5\u05e6\u05e8:"
+            },
             "user_gateway": {
                 "data": {
                     "host": "\u05db\u05ea\u05d5\u05d1\u05ea IP",

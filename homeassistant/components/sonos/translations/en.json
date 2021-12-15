@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "no_devices_found": "No devices found on the network",
+            "not_sonos_device": "Discovered device is not a Sonos device",
             "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
         "step": {

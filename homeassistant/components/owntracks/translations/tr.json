@@ -2,6 +2,15 @@
     "config": {
         "abort": {
             "single_instance_allowed": "Zaten yap\u0131land\u0131r\u0131lm\u0131\u015f. Yaln\u0131zca tek bir konfig\u00fcrasyon m\u00fcmk\u00fcnd\u00fcr."
+        },
+        "create_entry": {
+            "default": "\n\n Android'de [OwnTracks uygulamas\u0131n\u0131]( {android_url} ) a\u00e7\u0131n, tercihler - > ba\u011flant\u0131'ya gidin. A\u015fa\u011f\u0131daki ayarlar\u0131 de\u011fi\u015ftirin:\n - Mod: \u00d6zel HTTP\n - Ana makine: {webhook_url}\n - Kimlik:\n - Kullan\u0131c\u0131 ad\u0131: `' <Your name> ''\n - Cihaz Kimli\u011fi: `' <Your device name> '` \n\n iOS'ta [OwnTracks uygulamas\u0131n\u0131]( {ios_url} ) a\u00e7\u0131n, sol \u00fcstteki (i) simgesine - > ayarlara dokunun. A\u015fa\u011f\u0131daki ayarlar\u0131 de\u011fi\u015ftirin:\n - Mod: HTTP\n - URL: {webhook_url}\n - Kimlik do\u011frulamay\u0131 a\u00e7\n - Kullan\u0131c\u0131 Kimli\u011fi: `' <Your name> '' \n\n {secret}\n\n Daha fazla bilgi i\u00e7in [belgelere]( {docs_url}"
+        },
+        "step": {
+            "user": {
+                "description": "OwnTracks'i kurmak istedi\u011finizden emin misiniz?",
+                "title": "OwnTracks'i kurun"
+            }
         }
     }
 }

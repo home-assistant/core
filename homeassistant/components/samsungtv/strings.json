@@ -14,7 +14,7 @@
       },
       "reauth_confirm": {
         "description": "After submitting, accept the the popup on {device} requesting authorization within 30 seconds."
-      }      
+      }
     },
     "error": {
       "auth_missing": "[%key:component::samsungtv::config::abort::auth_missing%]"

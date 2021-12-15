@@ -1,4 +1,6 @@
 """Config flow to configure the LCN integration."""
+from __future__ import annotations
+
 import logging
 
 import pypck
@@ -11,13 +13,19 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_DIM_MODE, CONF_SK_NUM_TRIES, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_config_entry(hass, data):
+def get_config_entry(
+    hass: HomeAssistant, data: ConfigType
+) -> config_entries.ConfigEntry | None:
     """Check config entries for already configured entries based on the ip address/port."""
     return next(
         (
@@ -30,7 +38,7 @@ def get_config_entry(hass, data):
     )
 
 
-async def validate_connection(host_name, data):
+async def validate_connection(host_name: str, data: ConfigType) -> ConfigType:
     """Validate if a connection to LCN can be established."""
     host = data[CONF_IP_ADDRESS]
     port = data[CONF_PORT]
@@ -62,7 +70,7 @@ class LcnFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_import(self, data):
+    async def async_step_import(self, data: ConfigType) -> FlowResult:
         """Import existing configuration from LCN."""
         host_name = data[CONF_HOST]
         # validate the imported connection parameters
@@ -83,9 +91,16 @@ class LcnFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="connection_timeout")
 
         # check if we already have a host with the same address configured
-        entry = get_config_entry(self.hass, data)
-        if entry:
+        if entry := get_config_entry(self.hass, data):
             entry.source = config_entries.SOURCE_IMPORT
+
+            # Cleanup entity and device registry, if we imported from configuration.yaml to
+            # remove orphans when entities were removed from configuration
+            entity_registry = er.async_get(self.hass)
+            entity_registry.async_clear_config_entry(entry.entry_id)
+            device_registry = dr.async_get(self.hass)
+            device_registry.async_clear_config_entry(entry.entry_id)
+
             self.hass.config_entries.async_update_entry(entry, data=data)
             return self.async_abort(reason="existing_configuration_updated")
 

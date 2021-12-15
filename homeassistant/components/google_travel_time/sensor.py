@@ -22,6 +22,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import CoreState, HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
@@ -196,7 +198,7 @@ class GoogleTravelTimeSensor(SensorEntity):
             await self.first_update()
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if self._matrix is None:
             return None
@@ -209,13 +211,13 @@ class GoogleTravelTimeSensor(SensorEntity):
         return None
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
-        return {
-            "name": DOMAIN,
-            "identifiers": {(DOMAIN, self._api_key)},
-            "entry_type": "service",
-        }
+        return DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, self._api_key)},
+            name=DOMAIN,
+        )
 
     @property
     def unique_id(self) -> str:
@@ -250,7 +252,7 @@ class GoogleTravelTimeSensor(SensorEntity):
         return res
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         return self._unit_of_measurement
 

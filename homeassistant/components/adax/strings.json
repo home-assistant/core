@@ -1,0 +1,34 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "connection_type": "Select connection type"
+        },
+        "description": "Select connection type. Local requires heaters with bluetooth"
+      },
+      "local": {
+        "data": {
+          "wifi_ssid": "Wi-Fi SSID",
+          "wifi_pswd": "Wi-Fi Password"
+        },
+        "description": "Reset the heater by pressing + and OK until display shows 'Reset'. Then press and hold OK button on the heater until the blue led starts blinking before pressing Submit. Configuring heater might take some minutes."
+      },
+      "cloud": {
+        "data": {
+          "account_id": "Account ID",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "heater_not_available": "Heater not available. Try to reset the heater by pressing + and OK for some seconds.",
+      "heater_not_found": "Heater not found. Try to move the heater closer to Home Assistant computer.",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    }
+  }
+}

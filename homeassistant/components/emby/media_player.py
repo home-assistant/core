@@ -86,7 +86,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         """Handle devices which are added to Emby."""
         new_devices = []
         active_devices = []
-        for dev_id in emby.devices:
+        for dev_id, dev in emby.devices.items():
             active_devices.append(dev_id)
             if (
                 dev_id not in active_emby_devices
@@ -96,9 +96,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 active_emby_devices[dev_id] = new
                 new_devices.append(new)
 
-            elif (
-                dev_id in inactive_emby_devices and emby.devices[dev_id].state != "Off"
-            ):
+            elif dev_id in inactive_emby_devices and dev.state != "Off":
                 add = inactive_emby_devices.pop(dev_id)
                 active_emby_devices[dev_id] = add
                 _LOGGER.debug("Showing %s, item: %s", dev_id, add)

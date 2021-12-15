@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 import aiohttp
 from aiomodernforms import ModernFormsConnectionError
 
+from homeassistant.components import zeroconf
 from homeassistant.components.modern_forms.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONTENT_TYPE_JSON
@@ -39,15 +40,20 @@ async def test_full_user_flow_implementation(
     assert result.get("type") == RESULT_TYPE_FORM
     assert "flow_id" in result
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_HOST: "192.168.1.123"}
-    )
+    with patch(
+        "homeassistant.components.modern_forms.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_HOST: "192.168.1.123"}
+        )
 
-    assert result.get("title") == "ModernFormsFan"
-    assert "data" in result
-    assert result.get("type") == RESULT_TYPE_CREATE_ENTRY
-    assert result["data"][CONF_HOST] == "192.168.1.123"
-    assert result["data"][CONF_MAC] == "AA:BB:CC:DD:EE:FF"
+    assert result2.get("title") == "ModernFormsFan"
+    assert "data" in result2
+    assert result2.get("type") == RESULT_TYPE_CREATE_ENTRY
+    assert result2["data"][CONF_HOST] == "192.168.1.123"
+    assert result2["data"][CONF_MAC] == "AA:BB:CC:DD:EE:FF"
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_full_zeroconf_flow_implementation(
@@ -63,7 +69,14 @@ async def test_full_zeroconf_flow_implementation(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data={"host": "192.168.1.123", "hostname": "example.local.", "properties": {}},
+        data=zeroconf.ZeroconfServiceInfo(
+            host="192.168.1.123",
+            hostname="example.local.",
+            name="mock_name",
+            port=None,
+            properties={},
+            type="mock_type",
+        ),
     )
 
     flows = hass.config_entries.flow.async_progress()
@@ -125,7 +138,14 @@ async def test_zeroconf_connection_error(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data={"host": "192.168.1.123", "hostname": "example.local.", "properties": {}},
+        data=zeroconf.ZeroconfServiceInfo(
+            host="192.168.1.123",
+            hostname="example.local.",
+            name="mock_name",
+            port=None,
+            properties={},
+            type="mock_type",
+        ),
     )
 
     assert result.get("type") == RESULT_TYPE_ABORT
@@ -149,7 +169,14 @@ async def test_zeroconf_confirm_connection_error(
             CONF_HOST: "example.com",
             CONF_NAME: "test",
         },
-        data={"host": "192.168.1.123", "hostname": "example.com.", "properties": {}},
+        data=zeroconf.ZeroconfServiceInfo(
+            host="192.168.1.123",
+            hostname="example.com.",
+            name="mock_name",
+            port=None,
+            properties={},
+            type="mock_type",
+        ),
     )
 
     assert result.get("type") == RESULT_TYPE_ABORT
@@ -166,12 +193,26 @@ async def test_user_device_exists_abort(
         headers={"Content-Type": CONTENT_TYPE_JSON},
     )
 
-    await init_integration(hass, aioclient_mock)
+    await init_integration(hass, aioclient_mock, skip_setup=True)
+
+    await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={
+            "host": "192.168.1.123",
+            "hostname": "example.local.",
+            "properties": {CONF_MAC: "AA:BB:CC:DD:EE:FF"},
+        },
+    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={CONF_HOST: "192.168.1.123"},
+        data={
+            "host": "192.168.1.123",
+            "hostname": "example.local.",
+            "properties": {CONF_MAC: "AA:BB:CC:DD:EE:FF"},
+        },
     )
 
     assert result.get("type") == RESULT_TYPE_ABORT
@@ -182,16 +223,29 @@ async def test_zeroconf_with_mac_device_exists_abort(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test we abort zeroconf flow if a Modern Forms device already configured."""
-    await init_integration(hass, aioclient_mock)
+    await init_integration(hass, aioclient_mock, skip_setup=True)
 
-    result = await hass.config_entries.flow.async_init(
+    await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
+        context={"source": SOURCE_USER},
         data={
             "host": "192.168.1.123",
             "hostname": "example.local.",
             "properties": {CONF_MAC: "AA:BB:CC:DD:EE:FF"},
         },
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=zeroconf.ZeroconfServiceInfo(
+            host="192.168.1.123",
+            hostname="example.local.",
+            name="mock_name",
+            port=None,
+            properties={CONF_MAC: "AA:BB:CC:DD:EE:FF"},
+            type="mock_type",
+        ),
     )
 
     assert result.get("type") == RESULT_TYPE_ABORT

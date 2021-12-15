@@ -14,6 +14,7 @@ from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     CONF_WEBHOOK_ID,
+    Platform,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -32,7 +33,7 @@ CONF_MQTT_TOPIC = "mqtt_topic"
 CONF_REGION_MAPPING = "region_mapping"
 CONF_EVENTS_ONLY = "events_only"
 BEACON_DEV_ID = "beacon"
-PLATFORMS = ["device_tracker"]
+PLATFORMS = [Platform.DEVICE_TRACKER]
 
 DEFAULT_OWNTRACKS_TOPIC = "owntracks/#"
 
@@ -242,9 +243,7 @@ class OwnTracksContext:
     @callback
     def async_valid_accuracy(self, message):
         """Check if we should ignore this message."""
-        acc = message.get("acc")
-
-        if acc is None:
+        if (acc := message.get("acc")) is None:
             return False
 
         try:

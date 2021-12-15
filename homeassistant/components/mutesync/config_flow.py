@@ -16,7 +16,7 @@ from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
 
-STEP_USER_DATA_SCHEMA = vol.Schema({"host": str})
+STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required("host"): str})
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:

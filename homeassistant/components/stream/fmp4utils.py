@@ -5,7 +5,7 @@ from collections.abc import Generator
 
 
 def find_box(
-    mp4_bytes: bytes | memoryview, target_type: bytes, box_start: int = 0
+    mp4_bytes: bytes, target_type: bytes, box_start: int = 0
 ) -> Generator[int, None, None]:
     """Find location of first box (or sub_box if box_start provided) of given type."""
     if box_start == 0:
@@ -23,16 +23,6 @@ def find_box(
         if box_header[4:8] == target_type:
             yield index
         index += int.from_bytes(box_header[0:4], byteorder="big")
-
-
-def get_init_and_moof_data(segment: memoryview) -> tuple[bytes, bytes]:
-    """Get the init and moof data from a segment."""
-    moof_location = next(find_box(segment, b"moof"), 0)
-    mfra_location = next(find_box(segment, b"mfra"), len(segment))
-    return (
-        segment[:moof_location].tobytes(),
-        segment[moof_location:mfra_location].tobytes(),
-    )
 
 
 def get_codec_string(mp4_bytes: bytes) -> str:

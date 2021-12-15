@@ -1,10 +1,9 @@
 """Platform for binarysensor integration."""
 from boschshcpy import SHCBatteryDevice, SHCSession, SHCShutterContact
+from boschshcpy.device import SHCDevice
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_DOOR,
-    DEVICE_CLASS_WINDOW,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 
@@ -50,37 +49,37 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 class ShutterContactSensor(SHCEntity, BinarySensorEntity):
-    """Representation of a SHC shutter contact sensor."""
+    """Representation of an SHC shutter contact sensor."""
+
+    def __init__(self, device: SHCDevice, parent_id: str, entry_id: str) -> None:
+        """Initialize an SHC shutter contact sensor.."""
+        super().__init__(device, parent_id, entry_id)
+        switcher = {
+            "ENTRANCE_DOOR": BinarySensorDeviceClass.DOOR,
+            "REGULAR_WINDOW": BinarySensorDeviceClass.WINDOW,
+            "FRENCH_WINDOW": BinarySensorDeviceClass.DOOR,
+            "GENERIC": BinarySensorDeviceClass.WINDOW,
+        }
+        self._attr_device_class = switcher.get(
+            self._device.device_class, BinarySensorDeviceClass.WINDOW
+        )
 
     @property
     def is_on(self):
         """Return the state of the sensor."""
         return self._device.state == SHCShutterContact.ShutterContactService.State.OPEN
 
-    @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        switcher = {
-            "ENTRANCE_DOOR": DEVICE_CLASS_DOOR,
-            "REGULAR_WINDOW": DEVICE_CLASS_WINDOW,
-            "FRENCH_WINDOW": DEVICE_CLASS_DOOR,
-            "GENERIC": DEVICE_CLASS_WINDOW,
-        }
-        return switcher.get(self._device.device_class, DEVICE_CLASS_WINDOW)
-
 
 class BatterySensor(SHCEntity, BinarySensorEntity):
-    """Representation of a SHC battery reporting sensor."""
+    """Representation of an SHC battery reporting sensor."""
 
-    @property
-    def unique_id(self):
-        """Return the unique ID of this sensor."""
-        return f"{self._device.serial}_battery"
+    _attr_device_class = BinarySensorDeviceClass.BATTERY
 
-    @property
-    def name(self):
-        """Return the name of this sensor."""
-        return f"{self._device.name} Battery"
+    def __init__(self, device: SHCDevice, parent_id: str, entry_id: str) -> None:
+        """Initialize an SHC battery reporting sensor."""
+        super().__init__(device, parent_id, entry_id)
+        self._attr_name = f"{device.name} Battery"
+        self._attr_unique_id = f"{device.serial}_battery"
 
     @property
     def is_on(self):
@@ -88,8 +87,3 @@ class BatterySensor(SHCEntity, BinarySensorEntity):
         return (
             self._device.batterylevel != SHCBatteryDevice.BatteryLevelService.State.OK
         )
-
-    @property
-    def device_class(self):
-        """Return the class of the sensor."""
-        return DEVICE_CLASS_BATTERY

@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "discovery_requires_supervisor": "\u0397 \u03b1\u03bd\u03b1\u03ba\u03ac\u03bb\u03c5\u03c8\u03b7 \u03b1\u03c0\u03b1\u03b9\u03c4\u03b5\u03af \u03c4\u03bf\u03bd \u03b5\u03c0\u03cc\u03c0\u03c4\u03b7.",
+            "not_zwave_device": "\u0397 \u03c3\u03c5\u03c3\u03ba\u03b5\u03c5\u03ae \u03c0\u03bf\u03c5 \u03b1\u03bd\u03b1\u03ba\u03b1\u03bb\u03cd\u03c6\u03b8\u03b7\u03ba\u03b5 \u03b4\u03b5\u03bd \u03b5\u03af\u03bd\u03b1\u03b9 \u03c3\u03c5\u03c3\u03ba\u03b5\u03c5\u03ae Z-Wave."
+        },
+        "flow_title": "{name}",
+        "step": {
+            "usb_confirm": {
+                "description": "\u0398\u03ad\u03bb\u03b5\u03c4\u03b5 \u03bd\u03b1 \u03c1\u03c5\u03b8\u03bc\u03af\u03c3\u03b5\u03c4\u03b5 \u03c4\u03bf {name} \u03bc\u03b5 \u03c4\u03bf \u03c0\u03c1\u03cc\u03c3\u03b8\u03b5\u03c4\u03bf Z-Wave JS;"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "zwave_js.value_updated.config_parameter": "\u0391\u03bb\u03bb\u03b1\u03b3\u03ae \u03c4\u03b9\u03bc\u03ae\u03c2 \u03c3\u03c4\u03b7\u03bd \u03c0\u03b1\u03c1\u03ac\u03bc\u03b5\u03c4\u03c1\u03bf config {subtype}",
+            "zwave_js.value_updated.value": "\u0391\u03bb\u03bb\u03b1\u03b3\u03ae \u03c4\u03b9\u03bc\u03ae\u03c2 \u03c3\u03b5 \u03c4\u03b9\u03bc\u03ae Z-Wave JS"
+        }
+    }
+}

@@ -1,5 +1,6 @@
 """Notify platform tests for mobile_app."""
 from datetime import datetime, timedelta
+from unittest.mock import patch
 
 import pytest
 
@@ -117,6 +118,7 @@ async def test_notify_works(hass, aioclient_mock, setup_push_receiver):
     assert call_json["message"] == "Hello world"
     assert call_json["registration_info"]["app_id"] == "io.homeassistant.mobile_app"
     assert call_json["registration_info"]["app_version"] == "1.0"
+    assert call_json["registration_info"]["webhook_id"] == "mock-webhook_id"
 
 
 async def test_notify_ws_works(
@@ -136,6 +138,18 @@ async def test_notify_ws_works(
     sub_result = await client.receive_json()
     assert sub_result["success"]
 
+    # Subscribe twice, it should forward all messages to 2nd subscription
+    await client.send_json(
+        {
+            "id": 6,
+            "type": "mobile_app/push_notification_channel",
+            "webhook_id": "mock-webhook_id",
+        }
+    )
+
+    sub_result = await client.receive_json()
+    assert sub_result["success"]
+
     assert await hass.services.async_call(
         "notify", "mobile_app_test", {"message": "Hello world"}, blocking=True
     )
@@ -144,13 +158,14 @@ async def test_notify_ws_works(
 
     msg_result = await client.receive_json()
     assert msg_result["event"] == {"message": "Hello world"}
+    assert msg_result["id"] == 6  # This is the new subscription
 
     # Unsubscribe, now it should go over http
     await client.send_json(
         {
-            "id": 6,
+            "id": 7,
             "type": "unsubscribe_events",
-            "subscription": 5,
+            "subscription": 6,
         }
     )
     sub_result = await client.receive_json()
@@ -165,7 +180,7 @@ async def test_notify_ws_works(
     # Test non-existing webhook ID
     await client.send_json(
         {
-            "id": 7,
+            "id": 8,
             "type": "mobile_app/push_notification_channel",
             "webhook_id": "non-existing",
         }
@@ -180,7 +195,7 @@ async def test_notify_ws_works(
     # Test webhook ID linked to other user
     await client.send_json(
         {
-            "id": 8,
+            "id": 9,
             "type": "mobile_app/push_notification_channel",
             "webhook_id": "webhook_id_2",
         }
@@ -191,3 +206,130 @@ async def test_notify_ws_works(
         "code": "unauthorized",
         "message": "User not linked to this webhook ID",
     }
+
+
+async def test_notify_ws_confirming_works(
+    hass, aioclient_mock, setup_push_receiver, hass_ws_client
+):
+    """Test notify confirming works."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "mobile_app/push_notification_channel",
+            "webhook_id": "mock-webhook_id",
+            "support_confirm": True,
+        }
+    )
+
+    sub_result = await client.receive_json()
+    assert sub_result["success"]
+
+    # Sent a message that will be delivered locally
+    assert await hass.services.async_call(
+        "notify", "mobile_app_test", {"message": "Hello world"}, blocking=True
+    )
+
+    msg_result = await client.receive_json()
+    confirm_id = msg_result["event"].pop("hass_confirm_id")
+    assert confirm_id is not None
+    assert msg_result["event"] == {"message": "Hello world"}
+
+    # Try to confirm with incorrect confirm ID
+    await client.send_json(
+        {
+            "id": 6,
+            "type": "mobile_app/push_notification_confirm",
+            "webhook_id": "mock-webhook_id",
+            "confirm_id": "incorrect-confirm-id",
+        }
+    )
+
+    result = await client.receive_json()
+    assert not result["success"]
+    assert result["error"] == {
+        "code": "not_found",
+        "message": "Push notification channel not found",
+    }
+
+    # Confirm with correct confirm ID
+    await client.send_json(
+        {
+            "id": 7,
+            "type": "mobile_app/push_notification_confirm",
+            "webhook_id": "mock-webhook_id",
+            "confirm_id": confirm_id,
+        }
+    )
+
+    result = await client.receive_json()
+    assert result["success"]
+
+    # Drop local push channel and try to confirm another message
+    await client.send_json(
+        {
+            "id": 8,
+            "type": "unsubscribe_events",
+            "subscription": 5,
+        }
+    )
+    sub_result = await client.receive_json()
+    assert sub_result["success"]
+
+    await client.send_json(
+        {
+            "id": 9,
+            "type": "mobile_app/push_notification_confirm",
+            "webhook_id": "mock-webhook_id",
+            "confirm_id": confirm_id,
+        }
+    )
+
+    result = await client.receive_json()
+    assert not result["success"]
+    assert result["error"] == {
+        "code": "not_found",
+        "message": "Push notification channel not found",
+    }
+
+
+async def test_notify_ws_not_confirming(
+    hass, aioclient_mock, setup_push_receiver, hass_ws_client
+):
+    """Test we go via cloud when failed to confirm."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "mobile_app/push_notification_channel",
+            "webhook_id": "mock-webhook_id",
+            "support_confirm": True,
+        }
+    )
+
+    sub_result = await client.receive_json()
+    assert sub_result["success"]
+
+    assert await hass.services.async_call(
+        "notify", "mobile_app_test", {"message": "Hello world 1"}, blocking=True
+    )
+
+    with patch(
+        "homeassistant.components.mobile_app.push_notification.PUSH_CONFIRM_TIMEOUT", 0
+    ):
+        assert await hass.services.async_call(
+            "notify", "mobile_app_test", {"message": "Hello world 2"}, blocking=True
+        )
+        await hass.async_block_till_done()
+
+    # When we fail, all unconfirmed ones and failed one are sent via cloud
+    assert len(aioclient_mock.mock_calls) == 2
+
+    # All future ones also go via cloud
+    assert await hass.services.async_call(
+        "notify", "mobile_app_test", {"message": "Hello world 3"}, blocking=True
+    )
+
+    assert len(aioclient_mock.mock_calls) == 3

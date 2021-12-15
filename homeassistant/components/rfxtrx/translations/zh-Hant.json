@@ -35,6 +35,16 @@
             }
         }
     },
+    "device_automation": {
+        "action_type": {
+            "send_command": "\u50b3\u9001\u547d\u4ee4\uff1a{subtype}",
+            "send_status": "\u50b3\u9001\u72c0\u614b\u66f4\u65b0\uff1a{subtype}"
+        },
+        "trigger_type": {
+            "command": "\u63a5\u6536\u547d\u4ee4\uff1a{subtype}",
+            "status": "\u63a5\u6536\u72c0\u614b\uff1a{subtype}"
+        }
+    },
     "options": {
         "error": {
             "already_configured_device": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",

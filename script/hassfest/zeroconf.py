@@ -28,7 +28,7 @@ def generate_and_validate(integrations: dict[str, Integration]):
     for domain in sorted(integrations):
         integration = integrations[domain]
 
-        if not integration.manifest:
+        if not integration.manifest or not integration.config_flow:
             continue
 
         service_types = integration.manifest.get("zeroconf", [])

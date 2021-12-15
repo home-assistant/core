@@ -5,13 +5,15 @@ from homeassistant.components.weather import WeatherEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
-from .const import ATTRIBUTION, CONDITION_CLASSES, DOMAIN
+from .const import ATTRIBUTION, CONDITION_CLASSES, DOMAIN, MANUFACTURER, MODEL
 
 
 def format_condition(condition):
@@ -51,6 +53,17 @@ class MeteoclimaticWeather(CoordinatorEntity, WeatherEntity):
     def unique_id(self):
         """Return the unique id of the sensor."""
         return self._unique_id
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, self.platform.config_entry.unique_id)},
+            manufacturer=MANUFACTURER,
+            model=MODEL,
+            name=self.coordinator.name,
+        )
 
     @property
     def condition(self):

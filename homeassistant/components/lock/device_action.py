@@ -5,7 +5,6 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
@@ -17,6 +16,7 @@ from homeassistant.const import (
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import get_supported_features
 
 from . import DOMAIN, SUPPORT_OPEN
 
@@ -30,7 +30,9 @@ ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
 )
 
 
-async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
+async def async_get_actions(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, str]]:
     """List device actions for Lock devices."""
     registry = await entity_registry.async_get_registry(hass)
     actions = []
@@ -39,6 +41,8 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
     for entry in entity_registry.async_entries_for_device(registry, device_id):
         if entry.domain != DOMAIN:
             continue
+
+        supported_features = get_supported_features(hass, entry.entity_id)
 
         # Add actions for each entity that belongs to this integration
         base_action = {
@@ -50,11 +54,8 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
         actions.append({**base_action, CONF_TYPE: "lock"})
         actions.append({**base_action, CONF_TYPE: "unlock"})
 
-        state = hass.states.get(entry.entity_id)
-        if state:
-            features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-            if features & (SUPPORT_OPEN):
-                actions.append({**base_action, CONF_TYPE: "open"})
+        if supported_features & (SUPPORT_OPEN):
+            actions.append({**base_action, CONF_TYPE: "open"})
 
     return actions
 

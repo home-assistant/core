@@ -2,10 +2,21 @@
 
 import pytest
 
+from homeassistant.components import device_tracker
 from homeassistant.components.mqtt.discovery import ALREADY_DISCOVERED
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNKNOWN
 
+from .test_common import help_test_setting_blocked_attribute_via_mqtt_json_message
+
 from tests.common import async_fire_mqtt_message, mock_device_registry, mock_registry
+
+DEFAULT_CONFIG = {
+    device_tracker.DOMAIN: {
+        "platform": "mqtt",
+        "name": "test",
+        "state_topic": "test-topic",
+    }
+}
 
 
 @pytest.fixture
@@ -360,3 +371,10 @@ async def test_setting_device_tracker_location_via_lat_lon_message(
     state = hass.states.get("device_tracker.test")
     assert state.attributes["latitude"] == 32.87336
     assert state.state == STATE_UNKNOWN
+
+
+async def test_setting_blocked_attribute_via_mqtt_json_message(hass, mqtt_mock):
+    """Test the setting of attribute via MQTT with JSON payload."""
+    await help_test_setting_blocked_attribute_via_mqtt_json_message(
+        hass, mqtt_mock, device_tracker.DOMAIN, DEFAULT_CONFIG, None
+    )

@@ -1,6 +1,28 @@
 sync_clock:
   name: Sync clock
   description: Sync the velbus modules clock to the Home Assistant clock, this is the same as the 'sync clock' from VelbusLink
+  fields:
+    interface:
+      name: Interface
+      description: The velbus interface to send the command to, this will be the same value as used during configuration
+      required: true
+      example: "192.168.1.5:27015"
+      default: ''
+      selector:
+        text:
+
+scan:
+  name: Scan
+  description: Scan the velbus modules, this will be need if you see unknown module warnings in the logs, or when you added new modules
+  fields:
+    interface:
+      name: Interface
+      description: The velbus interface to send the command to, this will be the same value as used during configuration
+      required: true
+      example: "192.168.1.5:27015"
+      default: ''
+      selector:
+        text:
 
 set_memo_text:
   name: Set memo text
@@ -8,6 +30,14 @@ set_memo_text:
     Set the memo text to the display of modules like VMBGPO, VMBGPOD
     Be sure the page(s) of the module is configured to display the memo text.
   fields:
+    interface:
+      name: Interface
+      description: The velbus interface to send the command to, this will be the same value as used during configuration
+      required: true
+      example: "192.168.1.5:27015"
+      default: ''
+      selector:
+        text:
     address:
       name: Address
       description: >
@@ -16,8 +46,8 @@ set_memo_text:
       required: true
       selector:
         number:
-          min: 0
-          max: 255
+          min: 1
+          max: 254
     memo_text:
       name: Memo text
       description: >

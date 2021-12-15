@@ -3,6 +3,11 @@ from enum import Enum
 from typing import Final
 
 from homeassistant.components.climate.const import (
+    CURRENT_HVAC_COOL,
+    CURRENT_HVAC_DRY,
+    CURRENT_HVAC_FAN,
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_OFF,
     HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
     HVAC_MODE_DRY,
@@ -15,24 +20,32 @@ from homeassistant.components.climate.const import (
     PRESET_NONE,
     PRESET_SLEEP,
 )
+from homeassistant.const import Platform
 
 DOMAIN: Final = "knx"
 
 # Address is used for configuration and services by the same functions so the key has to match
 KNX_ADDRESS: Final = "address"
 
-CONF_KNX_ROUTING: Final = "routing"
-CONF_KNX_TUNNELING: Final = "tunneling"
-CONF_KNX_INDIVIDUAL_ADDRESS: Final = "individual_address"
 CONF_INVERT: Final = "invert"
 CONF_KNX_EXPOSE: Final = "expose"
+CONF_KNX_INDIVIDUAL_ADDRESS: Final = "individual_address"
+CONF_KNX_CONNECTION_TYPE: Final = "connection_type"
+CONF_KNX_AUTOMATIC: Final = "automatic"
+CONF_KNX_ROUTING: Final = "routing"
+CONF_KNX_TUNNELING: Final = "tunneling"
+CONF_PAYLOAD: Final = "payload"
+CONF_PAYLOAD_LENGTH: Final = "payload_length"
+CONF_RESET_AFTER: Final = "reset_after"
+CONF_RESPOND_TO_READ: Final = "respond_to_read"
 CONF_STATE_ADDRESS: Final = "state_address"
 CONF_SYNC_STATE: Final = "sync_state"
-CONF_RESET_AFTER: Final = "reset_after"
+CONF_KNX_INITIAL_CONNECTION_TYPES: Final = [CONF_KNX_TUNNELING, CONF_KNX_ROUTING]
+
+DATA_KNX_CONFIG: Final = "knx_config"
 
 ATTR_COUNTER: Final = "counter"
 ATTR_SOURCE: Final = "source"
-ATTR_LAST_KNX_UPDATE: Final = "last_knx_update"
 
 
 class ColorTempModes(Enum):
@@ -42,20 +55,21 @@ class ColorTempModes(Enum):
     RELATIVE = "DPT-5.001"
 
 
-class SupportedPlatforms(Enum):
-    """Supported platforms."""
-
-    BINARY_SENSOR = "binary_sensor"
-    CLIMATE = "climate"
-    COVER = "cover"
-    FAN = "fan"
-    LIGHT = "light"
-    NOTIFY = "notify"
-    SCENE = "scene"
-    SENSOR = "sensor"
-    SWITCH = "switch"
-    WEATHER = "weather"
-
+SUPPORTED_PLATFORMS: Final = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.FAN,
+    Platform.LIGHT,
+    Platform.NOTIFY,
+    Platform.NUMBER,
+    Platform.SCENE,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.WEATHER,
+]
 
 # Map KNX controller modes to HA modes. This list might not be complete.
 CONTROLLER_MODES: Final = {
@@ -66,6 +80,14 @@ CONTROLLER_MODES: Final = {
     "Off": HVAC_MODE_OFF,
     "Fan only": HVAC_MODE_FAN_ONLY,
     "Dry": HVAC_MODE_DRY,
+}
+
+CURRENT_HVAC_ACTIONS: Final = {
+    HVAC_MODE_HEAT: CURRENT_HVAC_HEAT,
+    HVAC_MODE_COOL: CURRENT_HVAC_COOL,
+    HVAC_MODE_OFF: CURRENT_HVAC_OFF,
+    HVAC_MODE_FAN_ONLY: CURRENT_HVAC_FAN,
+    HVAC_MODE_DRY: CURRENT_HVAC_DRY,
 }
 
 PRESET_MODES: Final = {

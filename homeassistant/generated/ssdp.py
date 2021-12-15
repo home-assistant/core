@@ -83,6 +83,20 @@ SSDP = {
             "manufacturer": "DIRECTV"
         }
     ],
+    "dlna_dmr": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+            "st": "urn:schemas-upnp-org:device:MediaRenderer:1"
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:2",
+            "st": "urn:schemas-upnp-org:device:MediaRenderer:2"
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:3",
+            "st": "urn:schemas-upnp-org:device:MediaRenderer:3"
+        }
+    ],
     "fritz": [
         {
             "st": "urn:schemas-upnp-org:device:fritzbox:1"
@@ -151,6 +165,32 @@ SSDP = {
             "manufacturer": "konnected.io"
         }
     ],
+    "nanoleaf": [
+        {
+            "st": "Nanoleaf_aurora:light"
+        },
+        {
+            "st": "nanoleaf:nl29"
+        },
+        {
+            "st": "nanoleaf:nl42"
+        },
+        {
+            "st": "nanoleaf:nl52"
+        }
+    ],
+    "netgear": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
+            "manufacturer": "NETGEAR, Inc."
+        }
+    ],
+    "octoprint": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:Basic:1",
+            "manufacturer": "The OctoPrint Project"
+        }
+    ],
     "roku": [
         {
             "deviceType": "urn:roku-com:device:player:1-0",
@@ -214,6 +254,11 @@ SSDP = {
     "wilight": [
         {
             "manufacturer": "All Automacao Ltda"
+        }
+    ],
+    "yamaha_musiccast": [
+        {
+            "manufacturer": "Yamaha Corporation"
         }
     ]
 }

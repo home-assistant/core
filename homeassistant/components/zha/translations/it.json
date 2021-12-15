@@ -1,13 +1,18 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
+            "not_zha_device": "Questo dispositivo non \u00e8 un dispositivo zha",
+            "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione.",
+            "usb_probe_failed": "Impossibile interrogare il dispositivo USB"
         },
         "error": {
             "cannot_connect": "Impossibile connettersi"
         },
         "flow_title": "{name}",
         "step": {
+            "confirm": {
+                "description": "Vuoi configurare {name}?"
+            },
             "pick_radio": {
                 "data": {
                     "radio_type": "Tipo di radio"

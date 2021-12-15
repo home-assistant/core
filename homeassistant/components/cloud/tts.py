@@ -15,14 +15,10 @@ SUPPORT_LANGUAGES = list({key[0] for key in MAP_VOICE})
 
 def validate_lang(value):
     """Validate chosen gender or language."""
-    lang = value.get(CONF_LANG)
-
-    if lang is None:
+    if (lang := value.get(CONF_LANG)) is None:
         return value
 
-    gender = value.get(CONF_GENDER)
-
-    if gender is None:
+    if (gender := value.get(CONF_GENDER)) is None:
         gender = value[CONF_GENDER] = next(
             (chk_gender for chk_lang, chk_gender in MAP_VOICE if chk_lang == lang), None
         )

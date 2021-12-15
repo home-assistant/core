@@ -166,20 +166,20 @@ async def test_invalid_config(hass):
     """Ensure nothing is created when config is wrong."""
     assert await async_setup_component(hass, "sensor", INVALID_CONFIG)
 
-    assert not hass.states.async_entity_ids()
+    assert not hass.states.async_entity_ids("sensor")
 
 
 async def test_add_package(hass):
     """Ensure package is added correctly when user add a new package."""
     package = Package(
-        "456",
-        206,
-        "friendly name 1",
-        "info text 1",
-        "location 1",
-        "2020-08-10 10:32",
-        206,
-        2,
+        tracking_number="456",
+        destination_country=206,
+        friendly_name="friendly name 1",
+        info_text="info text 1",
+        location="location 1",
+        timestamp="2020-08-10 10:32",
+        origin_country=206,
+        package_type=2,
     )
     ProfileMock.package_list = [package]
 
@@ -188,14 +188,14 @@ async def test_add_package(hass):
     assert len(hass.states.async_entity_ids()) == 1
 
     package2 = Package(
-        "789",
-        206,
-        "friendly name 2",
-        "info text 2",
-        "location 2",
-        "2020-08-10 14:25",
-        206,
-        2,
+        tracking_number="789",
+        destination_country=206,
+        friendly_name="friendly name 2",
+        info_text="info text 2",
+        location="location 2",
+        timestamp="2020-08-10 14:25",
+        origin_country=206,
+        package_type=2,
     )
     ProfileMock.package_list = [package, package2]
 
@@ -208,24 +208,24 @@ async def test_add_package(hass):
 async def test_remove_package(hass):
     """Ensure entity is not there anymore if package is not there."""
     package1 = Package(
-        "456",
-        206,
-        "friendly name 1",
-        "info text 1",
-        "location 1",
-        "2020-08-10 10:32",
-        206,
-        2,
+        tracking_number="456",
+        destination_country=206,
+        friendly_name="friendly name 1",
+        info_text="info text 1",
+        location="location 1",
+        timestamp="2020-08-10 10:32",
+        origin_country=206,
+        package_type=2,
     )
     package2 = Package(
-        "789",
-        206,
-        "friendly name 2",
-        "info text 2",
-        "location 2",
-        "2020-08-10 14:25",
-        206,
-        2,
+        tracking_number="789",
+        destination_country=206,
+        friendly_name="friendly name 2",
+        info_text="info text 2",
+        location="location 2",
+        timestamp="2020-08-10 14:25",
+        origin_country=206,
+        package_type=2,
     )
 
     ProfileMock.package_list = [package1, package2]
@@ -248,14 +248,14 @@ async def test_remove_package(hass):
 async def test_friendly_name_changed(hass):
     """Test friendly name change."""
     package = Package(
-        "456",
-        206,
-        "friendly name 1",
-        "info text 1",
-        "location 1",
-        "2020-08-10 10:32",
-        206,
-        2,
+        tracking_number="456",
+        destination_country=206,
+        friendly_name="friendly name 1",
+        info_text="info text 1",
+        location="location 1",
+        timestamp="2020-08-10 10:32",
+        origin_country=206,
+        package_type=2,
     )
     ProfileMock.package_list = [package]
 
@@ -265,14 +265,14 @@ async def test_friendly_name_changed(hass):
     assert len(hass.states.async_entity_ids()) == 1
 
     package = Package(
-        "456",
-        206,
-        "friendly name 2",
-        "info text 1",
-        "location 1",
-        "2020-08-10 10:32",
-        206,
-        2,
+        tracking_number="456",
+        destination_country=206,
+        friendly_name="friendly name 2",
+        info_text="info text 1",
+        location="location 1",
+        timestamp="2020-08-10 10:32",
+        origin_country=206,
+        package_type=2,
     )
     ProfileMock.package_list = [package]
 
@@ -289,15 +289,15 @@ async def test_friendly_name_changed(hass):
 async def test_delivered_not_shown(hass):
     """Ensure delivered packages are not shown."""
     package = Package(
-        "456",
-        206,
-        "friendly name 1",
-        "info text 1",
-        "location 1",
-        "2020-08-10 10:32",
-        206,
-        2,
-        40,
+        tracking_number="456",
+        destination_country=206,
+        friendly_name="friendly name 1",
+        info_text="info text 1",
+        location="location 1",
+        timestamp="2020-08-10 10:32",
+        origin_country=206,
+        package_type=2,
+        status=40,
     )
     ProfileMock.package_list = [package]
 
@@ -312,15 +312,15 @@ async def test_delivered_not_shown(hass):
 async def test_delivered_shown(hass):
     """Ensure delivered packages are show when user choose to show them."""
     package = Package(
-        "456",
-        206,
-        "friendly name 1",
-        "info text 1",
-        "location 1",
-        "2020-08-10 10:32",
-        206,
-        2,
-        40,
+        tracking_number="456",
+        destination_country=206,
+        friendly_name="friendly name 1",
+        info_text="info text 1",
+        location="location 1",
+        timestamp="2020-08-10 10:32",
+        origin_country=206,
+        package_type=2,
+        status=40,
     )
     ProfileMock.package_list = [package]
 
@@ -335,14 +335,14 @@ async def test_delivered_shown(hass):
 async def test_becomes_delivered_not_shown_notification(hass):
     """Ensure notification is triggered when package becomes delivered."""
     package = Package(
-        "456",
-        206,
-        "friendly name 1",
-        "info text 1",
-        "location 1",
-        "2020-08-10 10:32",
-        206,
-        2,
+        tracking_number="456",
+        destination_country=206,
+        friendly_name="friendly name 1",
+        info_text="info text 1",
+        location="location 1",
+        timestamp="2020-08-10 10:32",
+        origin_country=206,
+        package_type=2,
     )
     ProfileMock.package_list = [package]
 
@@ -352,15 +352,15 @@ async def test_becomes_delivered_not_shown_notification(hass):
     assert len(hass.states.async_entity_ids()) == 1
 
     package_delivered = Package(
-        "456",
-        206,
-        "friendly name 1",
-        "info text 1",
-        "location 1",
-        "2020-08-10 10:32",
-        206,
-        2,
-        40,
+        tracking_number="456",
+        destination_country=206,
+        friendly_name="friendly name 1",
+        info_text="info text 1",
+        location="location 1",
+        timestamp="2020-08-10 10:32",
+        origin_country=206,
+        package_type=2,
+        status=40,
     )
     ProfileMock.package_list = [package_delivered]
 
@@ -391,14 +391,14 @@ async def test_summary_correctly_updated(hass):
 async def test_utc_timestamp(hass):
     """Ensure package timestamp is converted correctly from HA-defined time zone to UTC."""
     package = Package(
-        "456",
-        206,
-        "friendly name 1",
-        "info text 1",
-        "location 1",
-        "2020-08-10 10:32",
-        206,
-        2,
+        tracking_number="456",
+        destination_country=206,
+        friendly_name="friendly name 1",
+        info_text="info text 1",
+        location="location 1",
+        timestamp="2020-08-10 10:32",
+        origin_country=206,
+        package_type=2,
         tz="Asia/Jakarta",
     )
     ProfileMock.package_list = [package]

@@ -2,6 +2,7 @@
 import logging
 
 from fritzconnection.core.exceptions import FritzConnectionException, FritzSecurityError
+from fritzconnection.core.logger import fritzlogger
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -11,7 +12,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .common import FritzBoxTools, FritzData
@@ -19,6 +20,13 @@ from .const import DATA_FRITZ, DOMAIN, PLATFORMS
 from .services import async_setup_services, async_unload_services
 
 _LOGGER = logging.getLogger(__name__)
+
+level = _LOGGER.getEffectiveLevel()
+_LOGGER.info(
+    "Setting logging level of fritzconnection: %s", logging.getLevelName(level)
+)
+fritzlogger.set_level(level)
+fritzlogger.enable()
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -47,7 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DATA_FRITZ] = FritzData()
 
     @callback
-    def _async_unload(event):
+    def _async_unload(event: Event) -> None:
         fritz_tools.async_unload()
 
     entry.async_on_unload(
@@ -83,7 +91,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def update_listener(hass: HomeAssistant, entry: ConfigEntry):
+async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Update when config_entry options update."""
     if entry.options:
         await hass.config_entries.async_reload(entry.entry_id)

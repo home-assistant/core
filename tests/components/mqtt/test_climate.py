@@ -8,6 +8,8 @@ import voluptuous as vol
 
 from homeassistant.components.climate import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP
 from homeassistant.components.climate.const import (
+    ATTR_HVAC_ACTION,
+    CURRENT_HVAC_ACTIONS,
     DOMAIN as CLIMATE_DOMAIN,
     HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
@@ -23,6 +25,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
+from homeassistant.components.mqtt.climate import MQTT_CLIMATE_ATTRIBUTES_BLOCKED
 from homeassistant.const import STATE_OFF
 from homeassistant.setup import async_setup_component
 
@@ -45,6 +48,7 @@ from .test_common import (
     help_test_entity_id_update_subscriptions,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
+    help_test_setting_blocked_attribute_via_mqtt_json_message,
     help_test_unique_id,
     help_test_update_with_json_attrs_bad_JSON,
     help_test_update_with_json_attrs_not_dict,
@@ -430,6 +434,28 @@ async def test_receive_mqtt_temperature(hass, mqtt_mock):
     assert state.attributes.get("current_temperature") == 47
 
 
+async def test_handle_action_received(hass, mqtt_mock):
+    """Test getting the action received via MQTT."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    config["climate"]["action_topic"] = "action"
+    assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
+    await hass.async_block_till_done()
+
+    # Cycle through valid modes and also check for wrong input such as "None" (str(None))
+    async_fire_mqtt_message(hass, "action", "None")
+    state = hass.states.get(ENTITY_CLIMATE)
+    hvac_action = state.attributes.get(ATTR_HVAC_ACTION)
+    assert hvac_action is None
+    # Redefine actions according to https://developers.home-assistant.io/docs/core/entity/climate/#hvac-action
+    actions = ["off", "heating", "cooling", "drying", "idle", "fan"]
+    assert all(elem in actions for elem in CURRENT_HVAC_ACTIONS)
+    for action in actions:
+        async_fire_mqtt_message(hass, "action", action)
+        state = hass.states.get(ENTITY_CLIMATE)
+        hvac_action = state.attributes.get(ATTR_HVAC_ACTION)
+        assert hvac_action == action
+
+
 async def test_set_away_mode_pessimistic(hass, mqtt_mock):
     """Test setting of the away mode."""
     config = copy.deepcopy(DEFAULT_CONFIG)
@@ -488,21 +514,6 @@ async def test_set_away_mode(hass, mqtt_mock):
     )
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("preset_mode") == "away"
-
-
-async def test_set_hvac_action(hass, mqtt_mock):
-    """Test setting of the HVAC action."""
-    config = copy.deepcopy(DEFAULT_CONFIG)
-    config["climate"]["action_topic"] = "action"
-    assert await async_setup_component(hass, CLIMATE_DOMAIN, config)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("hvac_action") is None
-
-    async_fire_mqtt_message(hass, "action", "cool")
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("hvac_action") == "cool"
 
 
 async def test_set_hold_pessimistic(hass, mqtt_mock):
@@ -777,9 +788,9 @@ async def test_get_with_templates(hass, mqtt_mock, caplog):
     assert state.attributes.get("current_temperature") == 74656
 
     # Action
-    async_fire_mqtt_message(hass, "action", '"cool"')
+    async_fire_mqtt_message(hass, "action", '"cooling"')
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("hvac_action") == "cool"
+    assert state.attributes.get("hvac_action") == "cooling"
 
 
 async def test_set_with_templates(hass, mqtt_mock, caplog):
@@ -923,6 +934,13 @@ async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
     )
 
 
+async def test_setting_blocked_attribute_via_mqtt_json_message(hass, mqtt_mock):
+    """Test the setting of attribute via MQTT with JSON payload."""
+    await help_test_setting_blocked_attribute_via_mqtt_json_message(
+        hass, mqtt_mock, CLIMATE_DOMAIN, DEFAULT_CONFIG, MQTT_CLIMATE_ATTRIBUTES_BLOCKED
+    )
+
+
 async def test_setting_attribute_with_template(hass, mqtt_mock):
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_with_template(
@@ -982,10 +1000,10 @@ async def test_discovery_removal_climate(hass, mqtt_mock, caplog):
 
 async def test_discovery_update_climate(hass, mqtt_mock, caplog):
     """Test update of discovered climate."""
-    data1 = '{ "name": "Beer" }'
-    data2 = '{ "name": "Milk" }'
+    config1 = {"name": "Beer"}
+    config2 = {"name": "Milk"}
     await help_test_discovery_update(
-        hass, mqtt_mock, caplog, CLIMATE_DOMAIN, data1, data2
+        hass, mqtt_mock, caplog, CLIMATE_DOMAIN, config1, config2
     )
 
 

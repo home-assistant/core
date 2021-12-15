@@ -1,4 +1,5 @@
 """Test Z-Wave config panel."""
+from http import HTTPStatus
 import json
 from unittest.mock import MagicMock, patch
 
@@ -7,7 +8,6 @@ import pytest
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import config
 from homeassistant.components.zwave import DATA_NETWORK, const
-from homeassistant.const import HTTP_NOT_FOUND
 
 from tests.mock.zwave import MockEntityValues, MockNode, MockValue
 
@@ -33,7 +33,7 @@ async def test_get_device_config(client):
     with patch("homeassistant.components.config._read", mock_read):
         resp = await client.get("/api/config/zwave/device_config/hello.beer")
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     result = await resp.json()
 
     assert result == {"free": "beer"}
@@ -64,7 +64,7 @@ async def test_update_device_config(client):
             data=json.dumps({"polling_intensity": 2}),
         )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     result = await resp.json()
     assert result == {"result": "ok"}
 
@@ -80,7 +80,7 @@ async def test_update_device_config_invalid_key(client):
         data=json.dumps({"polling_intensity": 2}),
     )
 
-    assert resp.status == 400
+    assert resp.status == HTTPStatus.BAD_REQUEST
 
 
 async def test_update_device_config_invalid_data(client):
@@ -90,7 +90,7 @@ async def test_update_device_config_invalid_data(client):
         data=json.dumps({"invalid_option": 2}),
     )
 
-    assert resp.status == 400
+    assert resp.status == HTTPStatus.BAD_REQUEST
 
 
 async def test_update_device_config_invalid_json(client):
@@ -99,7 +99,7 @@ async def test_update_device_config_invalid_json(client):
         "/api/config/zwave/device_config/hello.beer", data="not json"
     )
 
-    assert resp.status == 400
+    assert resp.status == HTTPStatus.BAD_REQUEST
 
 
 async def test_get_values(hass, client):
@@ -121,7 +121,7 @@ async def test_get_values(hass, client):
 
     resp = await client.get("/api/zwave/values/1")
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     result = await resp.json()
 
     assert result == {
@@ -147,7 +147,7 @@ async def test_get_groups(hass, client):
 
     resp = await client.get("/api/zwave/groups/2")
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     result = await resp.json()
 
     assert result == {
@@ -169,7 +169,7 @@ async def test_get_groups_nogroups(hass, client):
 
     resp = await client.get("/api/zwave/groups/2")
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     result = await resp.json()
 
     assert result == {}
@@ -182,7 +182,7 @@ async def test_get_groups_nonode(hass, client):
 
     resp = await client.get("/api/zwave/groups/2")
 
-    assert resp.status == HTTP_NOT_FOUND
+    assert resp.status == HTTPStatus.NOT_FOUND
     result = await resp.json()
 
     assert result == {"message": "Node not found"}
@@ -206,7 +206,7 @@ async def test_get_config(hass, client):
 
     resp = await client.get("/api/zwave/config/2")
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     result = await resp.json()
 
     assert result == {
@@ -232,7 +232,7 @@ async def test_get_config_noconfig_node(hass, client):
 
     resp = await client.get("/api/zwave/config/2")
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     result = await resp.json()
 
     assert result == {}
@@ -245,7 +245,7 @@ async def test_get_config_nonode(hass, client):
 
     resp = await client.get("/api/zwave/config/2")
 
-    assert resp.status == HTTP_NOT_FOUND
+    assert resp.status == HTTPStatus.NOT_FOUND
     result = await resp.json()
 
     assert result == {"message": "Node not found"}
@@ -258,7 +258,7 @@ async def test_get_usercodes_nonode(hass, client):
 
     resp = await client.get("/api/zwave/usercodes/2")
 
-    assert resp.status == HTTP_NOT_FOUND
+    assert resp.status == HTTPStatus.NOT_FOUND
     result = await resp.json()
 
     assert result == {"message": "Node not found"}
@@ -278,7 +278,7 @@ async def test_get_usercodes(hass, client):
 
     resp = await client.get("/api/zwave/usercodes/18")
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     result = await resp.json()
 
     assert result == {"0": {"code": "1234", "label": "label", "length": 4}}
@@ -294,7 +294,7 @@ async def test_get_usercode_nousercode_node(hass, client):
 
     resp = await client.get("/api/zwave/usercodes/18")
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     result = await resp.json()
 
     assert result == {}
@@ -314,7 +314,7 @@ async def test_get_usercodes_no_genreuser(hass, client):
 
     resp = await client.get("/api/zwave/usercodes/18")
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     result = await resp.json()
 
     assert result == {}
@@ -324,7 +324,7 @@ async def test_save_config_no_network(hass, client):
     """Test saving configuration without network data."""
     resp = await client.post("/api/zwave/saveconfig")
 
-    assert resp.status == HTTP_NOT_FOUND
+    assert resp.status == HTTPStatus.NOT_FOUND
     result = await resp.json()
     assert result == {"message": "No Z-Wave network data found"}
 
@@ -335,7 +335,7 @@ async def test_save_config(hass, client):
 
     resp = await client.post("/api/zwave/saveconfig")
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     result = await resp.json()
     assert network.write_config.called
     assert result == {"message": "Z-Wave configuration saved to file"}
@@ -367,7 +367,7 @@ async def test_get_protection_values(hass, client):
 
     resp = await client.get("/api/zwave/protection/18")
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     result = await resp.json()
     assert node.get_protections.called
     assert node.get_protection_item.called
@@ -401,7 +401,7 @@ async def test_get_protection_values_nonexisting_node(hass, client):
 
     resp = await client.get("/api/zwave/protection/18")
 
-    assert resp.status == HTTP_NOT_FOUND
+    assert resp.status == HTTPStatus.NOT_FOUND
     result = await resp.json()
     assert not node.get_protections.called
     assert not node.get_protection_item.called
@@ -419,7 +419,7 @@ async def test_get_protection_values_without_protectionclass(hass, client):
 
     resp = await client.get("/api/zwave/protection/18")
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     result = await resp.json()
     assert not node.get_protections.called
     assert not node.get_protection_item.called
@@ -452,10 +452,10 @@ async def test_set_protection_value(hass, client):
         data=json.dumps({"value_id": "123456", "selection": "Protection by Sequence"}),
     )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     result = await resp.json()
     assert node.set_protection.called
-    assert result == {"message": "Protection setting succsessfully set"}
+    assert result == {"message": "Protection setting successfully set"}
 
 
 async def test_set_protection_value_failed(hass, client):
@@ -484,7 +484,7 @@ async def test_set_protection_value_failed(hass, client):
         data=json.dumps({"value_id": "123456", "selection": "Protecton by Sequence"}),
     )
 
-    assert resp.status == 202
+    assert resp.status == HTTPStatus.ACCEPTED
     result = await resp.json()
     assert node.set_protection.called
     assert result == {"message": "Protection setting did not complete"}
@@ -516,7 +516,7 @@ async def test_set_protection_value_nonexisting_node(hass, client):
         data=json.dumps({"value_id": "123456", "selection": "Protecton by Sequence"}),
     )
 
-    assert resp.status == HTTP_NOT_FOUND
+    assert resp.status == HTTPStatus.NOT_FOUND
     result = await resp.json()
     assert not node.set_protection.called
     assert result == {"message": "Node not found"}
@@ -536,7 +536,7 @@ async def test_set_protection_value_missing_class(hass, client):
         data=json.dumps({"value_id": "123456", "selection": "Protecton by Sequence"}),
     )
 
-    assert resp.status == HTTP_NOT_FOUND
+    assert resp.status == HTTPStatus.NOT_FOUND
     result = await resp.json()
     assert not node.set_protection.called
     assert result == {"message": "No protection commandclass on this node"}

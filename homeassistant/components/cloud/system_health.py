@@ -33,6 +33,7 @@ async def system_health_info(hass):
         data["remote_connected"] = cloud.remote.is_connected
         data["alexa_enabled"] = client.prefs.alexa_enabled
         data["google_enabled"] = client.prefs.google_enabled
+        data["remote_server"] = cloud.remote.snitun_server
 
     data["can_reach_cert_server"] = system_health.async_check_can_reach_url(
         hass, cloud.acme_directory_server

@@ -5,15 +5,8 @@ from typing import Final
 
 import voluptuous as vol
 
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_CUSTOM_BYPASS,
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_ARM_NIGHT,
-)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
     CONF_CONDITION,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
@@ -23,12 +16,14 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMED_VACATION,
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import condition, config_validation as cv, entity_registry
 from homeassistant.helpers.config_validation import DEVICE_CONDITION_BASE_SCHEMA
+from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from . import DOMAIN
@@ -37,8 +32,14 @@ from .const import (
     CONDITION_ARMED_CUSTOM_BYPASS,
     CONDITION_ARMED_HOME,
     CONDITION_ARMED_NIGHT,
+    CONDITION_ARMED_VACATION,
     CONDITION_DISARMED,
     CONDITION_TRIGGERED,
+    SUPPORT_ALARM_ARM_AWAY,
+    SUPPORT_ALARM_ARM_CUSTOM_BYPASS,
+    SUPPORT_ALARM_ARM_HOME,
+    SUPPORT_ALARM_ARM_NIGHT,
+    SUPPORT_ALARM_ARM_VACATION,
 )
 
 CONDITION_TYPES: Final[set[str]] = {
@@ -47,6 +48,7 @@ CONDITION_TYPES: Final[set[str]] = {
     CONDITION_ARMED_HOME,
     CONDITION_ARMED_AWAY,
     CONDITION_ARMED_NIGHT,
+    CONDITION_ARMED_VACATION,
     CONDITION_ARMED_CUSTOM_BYPASS,
 }
 
@@ -70,13 +72,7 @@ async def async_get_conditions(
         if entry.domain != DOMAIN:
             continue
 
-        state = hass.states.get(entry.entity_id)
-
-        # We need a state or else we can't populate the different armed conditions
-        if state is None:
-            continue
-
-        supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
+        supported_features = get_supported_features(hass, entry.entity_id)
 
         # Add conditions for each entity that belongs to this integration
         base_condition = {
@@ -96,6 +92,8 @@ async def async_get_conditions(
             conditions.append({**base_condition, CONF_TYPE: CONDITION_ARMED_AWAY})
         if supported_features & SUPPORT_ALARM_ARM_NIGHT:
             conditions.append({**base_condition, CONF_TYPE: CONDITION_ARMED_NIGHT})
+        if supported_features & SUPPORT_ALARM_ARM_VACATION:
+            conditions.append({**base_condition, CONF_TYPE: CONDITION_ARMED_VACATION})
         if supported_features & SUPPORT_ALARM_ARM_CUSTOM_BYPASS:
             conditions.append(
                 {**base_condition, CONF_TYPE: CONDITION_ARMED_CUSTOM_BYPASS}
@@ -104,12 +102,11 @@ async def async_get_conditions(
     return conditions
 
 
+@callback
 def async_condition_from_config(
-    config: ConfigType, config_validation: bool
+    hass: HomeAssistant, config: ConfigType
 ) -> condition.ConditionCheckerType:
     """Create a function to test a device condition."""
-    if config_validation:
-        config = CONDITION_SCHEMA(config)
     if config[CONF_TYPE] == CONDITION_TRIGGERED:
         state = STATE_ALARM_TRIGGERED
     elif config[CONF_TYPE] == CONDITION_DISARMED:
@@ -120,6 +117,8 @@ def async_condition_from_config(
         state = STATE_ALARM_ARMED_AWAY
     elif config[CONF_TYPE] == CONDITION_ARMED_NIGHT:
         state = STATE_ALARM_ARMED_NIGHT
+    elif config[CONF_TYPE] == CONDITION_ARMED_VACATION:
+        state = STATE_ALARM_ARMED_VACATION
     elif config[CONF_TYPE] == CONDITION_ARMED_CUSTOM_BYPASS:
         state = STATE_ALARM_ARMED_CUSTOM_BYPASS
 

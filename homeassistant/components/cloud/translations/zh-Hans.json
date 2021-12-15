@@ -10,6 +10,7 @@
             "relayer_connected": "\u901a\u8fc7\u4ee3\u7406\u8fde\u63a5",
             "remote_connected": "\u8fdc\u7a0b\u8fde\u63a5",
             "remote_enabled": "\u5df2\u542f\u7528\u8fdc\u7a0b\u63a7\u5236",
+            "remote_server": "\u8fdc\u7a0b\u670d\u52a1\u5668",
             "subscription_expiration": "\u8ba2\u9605\u5230\u671f\u65f6\u95f4"
         }
     }

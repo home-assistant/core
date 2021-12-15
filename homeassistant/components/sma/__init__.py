@@ -20,6 +20,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -32,6 +33,7 @@ from .const import (
     DOMAIN,
     PLATFORMS,
     PYSMA_COORDINATOR,
+    PYSMA_DEVICE_INFO,
     PYSMA_OBJECT,
     PYSMA_REMOVE_LISTENER,
     PYSMA_SENSORS,
@@ -60,8 +62,7 @@ def _parse_legacy_options(
     )
 
     # Parsing of sensors configuration
-    config_sensors = entry.data.get(CONF_SENSORS)
-    if not config_sensors:
+    if not (config_sensors := entry.data.get(CONF_SENSORS)):
         return []
 
     # Support import of legacy config that should have been removed from 0.99, but was still functional
@@ -141,8 +142,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     session = async_get_clientsession(hass, verify_ssl=verify_ssl)
     sma = pysma.SMA(session, url, password, group)
 
-    # Get all device sensors
-    sensor_def = await sma.get_sensors()
+    try:
+        # Get updated device info
+        sma_device_info = await sma.device_info()
+        # Get all device sensors
+        sensor_def = await sma.get_sensors()
+    except (
+        pysma.exceptions.SmaReadException,
+        pysma.exceptions.SmaConnectionException,
+    ) as exc:
+        raise ConfigEntryNotReady from exc
+
+    # Create DeviceInfo object from sma_device_info
+    device_info = DeviceInfo(
+        configuration_url=url,
+        identifiers={(DOMAIN, entry.unique_id)},
+        manufacturer=sma_device_info["manufacturer"],
+        model=sma_device_info["type"],
+        name=sma_device_info["name"],
+        sw_version=sma_device_info["sw_version"],
+    )
 
     # Parse legacy options if initial setup was done from yaml
     if entry.source == SOURCE_IMPORT:
@@ -152,9 +171,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Define the coordinator
     async def async_update_data():
         """Update the used SMA sensors."""
-        values = await sma.read(sensor_def)
-        if not values:
-            raise UpdateFailed
+        try:
+            await sma.read(sensor_def)
+        except (
+            pysma.exceptions.SmaReadException,
+            pysma.exceptions.SmaConnectionException,
+        ) as exc:
+            raise UpdateFailed(exc) from exc
 
     interval = timedelta(
         seconds=entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
@@ -189,6 +212,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         PYSMA_COORDINATOR: coordinator,
         PYSMA_SENSORS: sensor_def,
         PYSMA_REMOVE_LISTENER: remove_stop_listener,
+        PYSMA_DEVICE_INFO: device_info,
     }
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)

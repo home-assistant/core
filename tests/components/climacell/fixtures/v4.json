@@ -1,0 +1,2384 @@
+{
+  "current": {
+    "temperature": 44.13,
+    "humidity": 22.71,
+    "pressureSeaLevel": 30.35,
+    "windSpeed": 9.33,
+    "windDirection": 315.14,
+    "weatherCode": 1000,
+    "visibility": 8.15,
+    "pollutantO3": 46.53,
+    "windGust": 12.64,
+    "cloudCover": 100,
+    "precipitationType": 1,
+    "particulateMatter25": 0.15,
+    "particulateMatter10": 0.57,
+    "pollutantNO2": 10.67,
+    "pollutantCO": 0.63,
+    "pollutantSO2": 1.65,
+    "epaIndex": 24,
+    "epaPrimaryPollutant": 0,
+    "epaHealthConcern": 0,
+    "mepIndex": 23,
+    "mepPrimaryPollutant": 1,
+    "mepHealthConcern": 0,
+    "treeIndex": 0,
+    "weedIndex": 0,
+    "grassIndex": 0,
+    "fireIndex": 10,
+    "temperatureApparent": 101.3,
+    "dewPoint": 72.82,
+    "pressureSurfaceLevel": 29.47,
+    "solarGHI": 0,
+    "cloudBase": 0.74,
+    "cloudCeiling": 0.74
+  },
+  "forecasts": {
+    "nowcast": [
+      {
+        "startTime": "2021-03-07T17:48:00Z",
+        "values": {
+          "temperatureMin": 44.13,
+          "temperatureMax": 44.13,
+          "windSpeed": 9.33,
+          "windDirection": 315.14,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T17:53:00Z",
+        "values": {
+          "temperatureMin": 43.9,
+          "temperatureMax": 43.9,
+          "windSpeed": 9.31,
+          "windDirection": 315.14,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T17:58:00Z",
+        "values": {
+          "temperatureMin": 43.68,
+          "temperatureMax": 43.68,
+          "windSpeed": 9.28,
+          "windDirection": 315.14,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T18:03:00Z",
+        "values": {
+          "temperatureMin": 43.66,
+          "temperatureMax": 43.66,
+          "windSpeed": 9.26,
+          "windDirection": 315.14,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T18:08:00Z",
+        "values": {
+          "temperatureMin": 43.79,
+          "temperatureMax": 43.79,
+          "windSpeed": 9.22,
+          "windDirection": 315.14,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T18:13:00Z",
+        "values": {
+          "temperatureMin": 43.92,
+          "temperatureMax": 43.92,
+          "windSpeed": 9.17,
+          "windDirection": 315.14,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T18:18:00Z",
+        "values": {
+          "temperatureMin": 44.04,
+          "temperatureMax": 44.04,
+          "windSpeed": 9.13,
+          "windDirection": 315.14,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T18:23:00Z",
+        "values": {
+          "temperatureMin": 44.17,
+          "temperatureMax": 44.17,
+          "windSpeed": 9.06,
+          "windDirection": 315.14,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T18:28:00Z",
+        "values": {
+          "temperatureMin": 44.31,
+          "temperatureMax": 44.31,
+          "windSpeed": 9.02,
+          "windDirection": 315.14,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T18:33:00Z",
+        "values": {
+          "temperatureMin": 44.44,
+          "temperatureMax": 44.44,
+          "windSpeed": 8.97,
+          "windDirection": 321.71,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T18:38:00Z",
+        "values": {
+          "temperatureMin": 44.56,
+          "temperatureMax": 44.56,
+          "windSpeed": 8.93,
+          "windDirection": 321.71,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T18:43:00Z",
+        "values": {
+          "temperatureMin": 44.69,
+          "temperatureMax": 44.69,
+          "windSpeed": 8.88,
+          "windDirection": 321.71,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T18:48:00Z",
+        "values": {
+          "temperatureMin": 44.82,
+          "temperatureMax": 44.82,
+          "windSpeed": 8.84,
+          "windDirection": 321.71,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T18:53:00Z",
+        "values": {
+          "temperatureMin": 44.94,
+          "temperatureMax": 44.94,
+          "windSpeed": 8.79,
+          "windDirection": 321.71,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T18:58:00Z",
+        "values": {
+          "temperatureMin": 45.07,
+          "temperatureMax": 45.07,
+          "windSpeed": 8.75,
+          "windDirection": 321.71,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T19:03:00Z",
+        "values": {
+          "temperatureMin": 45.16,
+          "temperatureMax": 45.16,
+          "windSpeed": 8.75,
+          "windDirection": 321.71,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T19:08:00Z",
+        "values": {
+          "temperatureMin": 45.23,
+          "temperatureMax": 45.23,
+          "windSpeed": 8.75,
+          "windDirection": 321.71,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T19:13:00Z",
+        "values": {
+          "temperatureMin": 45.28,
+          "temperatureMax": 45.28,
+          "windSpeed": 8.77,
+          "windDirection": 321.71,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T19:18:00Z",
+        "values": {
+          "temperatureMin": 45.36,
+          "temperatureMax": 45.36,
+          "windSpeed": 8.79,
+          "windDirection": 321.71,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T19:23:00Z",
+        "values": {
+          "temperatureMin": 45.43,
+          "temperatureMax": 45.43,
+          "windSpeed": 8.81,
+          "windDirection": 321.71,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T19:28:00Z",
+        "values": {
+          "temperatureMin": 45.5,
+          "temperatureMax": 45.5,
+          "windSpeed": 8.81,
+          "windDirection": 321.71,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T19:33:00Z",
+        "values": {
+          "temperatureMin": 45.55,
+          "temperatureMax": 45.55,
+          "windSpeed": 8.84,
+          "windDirection": 323.38,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T19:38:00Z",
+        "values": {
+          "temperatureMin": 45.63,
+          "temperatureMax": 45.63,
+          "windSpeed": 8.86,
+          "windDirection": 323.38,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T19:43:00Z",
+        "values": {
+          "temperatureMin": 45.7,
+          "temperatureMax": 45.7,
+          "windSpeed": 8.88,
+          "windDirection": 323.38,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T19:48:00Z",
+        "values": {
+          "temperatureMin": 45.75,
+          "temperatureMax": 45.75,
+          "windSpeed": 8.9,
+          "windDirection": 323.38,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T19:53:00Z",
+        "values": {
+          "temperatureMin": 45.82,
+          "temperatureMax": 45.82,
+          "windSpeed": 8.9,
+          "windDirection": 323.38,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T19:58:00Z",
+        "values": {
+          "temperatureMin": 45.9,
+          "temperatureMax": 45.9,
+          "windSpeed": 8.93,
+          "windDirection": 323.38,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T20:03:00Z",
+        "values": {
+          "temperatureMin": 45.88,
+          "temperatureMax": 45.88,
+          "windSpeed": 8.97,
+          "windDirection": 323.38,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T20:08:00Z",
+        "values": {
+          "temperatureMin": 45.82,
+          "temperatureMax": 45.82,
+          "windSpeed": 9.02,
+          "windDirection": 323.38,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T20:13:00Z",
+        "values": {
+          "temperatureMin": 45.75,
+          "temperatureMax": 45.75,
+          "windSpeed": 9.06,
+          "windDirection": 323.38,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T20:18:00Z",
+        "values": {
+          "temperatureMin": 45.7,
+          "temperatureMax": 45.7,
+          "windSpeed": 9.1,
+          "windDirection": 323.38,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T20:23:00Z",
+        "values": {
+          "temperatureMin": 45.63,
+          "temperatureMax": 45.63,
+          "windSpeed": 9.15,
+          "windDirection": 323.38,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T20:28:00Z",
+        "values": {
+          "temperatureMin": 45.57,
+          "temperatureMax": 45.57,
+          "windSpeed": 9.19,
+          "windDirection": 323.38,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T20:33:00Z",
+        "values": {
+          "temperatureMin": 45.5,
+          "temperatureMax": 45.5,
+          "windSpeed": 9.24,
+          "windDirection": 318.43,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T20:38:00Z",
+        "values": {
+          "temperatureMin": 45.45,
+          "temperatureMax": 45.45,
+          "windSpeed": 9.28,
+          "windDirection": 318.43,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T20:43:00Z",
+        "values": {
+          "temperatureMin": 45.39,
+          "temperatureMax": 45.39,
+          "windSpeed": 9.33,
+          "windDirection": 318.43,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T20:48:00Z",
+        "values": {
+          "temperatureMin": 45.32,
+          "temperatureMax": 45.32,
+          "windSpeed": 9.37,
+          "windDirection": 318.43,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T20:53:00Z",
+        "values": {
+          "temperatureMin": 45.27,
+          "temperatureMax": 45.27,
+          "windSpeed": 9.42,
+          "windDirection": 318.43,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T20:58:00Z",
+        "values": {
+          "temperatureMin": 45.19,
+          "temperatureMax": 45.19,
+          "windSpeed": 9.46,
+          "windDirection": 318.43,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T21:03:00Z",
+        "values": {
+          "temperatureMin": 45.14,
+          "temperatureMax": 45.14,
+          "windSpeed": 9.4,
+          "windDirection": 318.43,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T21:08:00Z",
+        "values": {
+          "temperatureMin": 45.07,
+          "temperatureMax": 45.07,
+          "windSpeed": 9.24,
+          "windDirection": 318.43,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T21:13:00Z",
+        "values": {
+          "temperatureMin": 45.01,
+          "temperatureMax": 45.01,
+          "windSpeed": 9.08,
+          "windDirection": 318.43,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T21:18:00Z",
+        "values": {
+          "temperatureMin": 44.94,
+          "temperatureMax": 44.94,
+          "windSpeed": 8.95,
+          "windDirection": 318.43,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T21:23:00Z",
+        "values": {
+          "temperatureMin": 44.89,
+          "temperatureMax": 44.89,
+          "windSpeed": 8.79,
+          "windDirection": 318.43,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T21:28:00Z",
+        "values": {
+          "temperatureMin": 44.82,
+          "temperatureMax": 44.82,
+          "windSpeed": 8.63,
+          "windDirection": 318.43,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T21:33:00Z",
+        "values": {
+          "temperatureMin": 44.76,
+          "temperatureMax": 44.76,
+          "windSpeed": 8.5,
+          "windDirection": 320.9,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T21:38:00Z",
+        "values": {
+          "temperatureMin": 44.69,
+          "temperatureMax": 44.69,
+          "windSpeed": 8.34,
+          "windDirection": 320.9,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T21:43:00Z",
+        "values": {
+          "temperatureMin": 44.64,
+          "temperatureMax": 44.64,
+          "windSpeed": 8.19,
+          "windDirection": 320.9,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T21:48:00Z",
+        "values": {
+          "temperatureMin": 44.56,
+          "temperatureMax": 44.56,
+          "windSpeed": 8.05,
+          "windDirection": 320.9,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T21:53:00Z",
+        "values": {
+          "temperatureMin": 44.51,
+          "temperatureMax": 44.51,
+          "windSpeed": 7.9,
+          "windDirection": 320.9,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T21:58:00Z",
+        "values": {
+          "temperatureMin": 44.44,
+          "temperatureMax": 44.44,
+          "windSpeed": 7.74,
+          "windDirection": 320.9,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T22:03:00Z",
+        "values": {
+          "temperatureMin": 44.26,
+          "temperatureMax": 44.26,
+          "windSpeed": 7.47,
+          "windDirection": 320.9,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T22:08:00Z",
+        "values": {
+          "temperatureMin": 44.01,
+          "temperatureMax": 44.01,
+          "windSpeed": 7.14,
+          "windDirection": 320.9,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T22:13:00Z",
+        "values": {
+          "temperatureMin": 43.74,
+          "temperatureMax": 43.74,
+          "windSpeed": 6.78,
+          "windDirection": 320.9,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T22:18:00Z",
+        "values": {
+          "temperatureMin": 43.48,
+          "temperatureMax": 43.48,
+          "windSpeed": 6.44,
+          "windDirection": 320.9,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T22:23:00Z",
+        "values": {
+          "temperatureMin": 43.23,
+          "temperatureMax": 43.23,
+          "windSpeed": 6.08,
+          "windDirection": 320.9,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T22:28:00Z",
+        "values": {
+          "temperatureMin": 42.98,
+          "temperatureMax": 42.98,
+          "windSpeed": 5.75,
+          "windDirection": 320.9,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T22:33:00Z",
+        "values": {
+          "temperatureMin": 42.71,
+          "temperatureMax": 42.71,
+          "windSpeed": 5.39,
+          "windDirection": 322.11,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T22:38:00Z",
+        "values": {
+          "temperatureMin": 42.46,
+          "temperatureMax": 42.46,
+          "windSpeed": 5.06,
+          "windDirection": 322.11,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T22:43:00Z",
+        "values": {
+          "temperatureMin": 42.21,
+          "temperatureMax": 42.21,
+          "windSpeed": 4.7,
+          "windDirection": 322.11,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T22:48:00Z",
+        "values": {
+          "temperatureMin": 41.94,
+          "temperatureMax": 41.94,
+          "windSpeed": 4.36,
+          "windDirection": 322.11,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T22:53:00Z",
+        "values": {
+          "temperatureMin": 41.68,
+          "temperatureMax": 41.68,
+          "windSpeed": 4,
+          "windDirection": 322.11,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T22:58:00Z",
+        "values": {
+          "temperatureMin": 41.43,
+          "temperatureMax": 41.43,
+          "windSpeed": 3.67,
+          "windDirection": 322.11,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T23:03:00Z",
+        "values": {
+          "temperatureMin": 41.16,
+          "temperatureMax": 41.16,
+          "windSpeed": 3.6,
+          "windDirection": 322.11,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T23:08:00Z",
+        "values": {
+          "temperatureMin": 40.91,
+          "temperatureMax": 40.91,
+          "windSpeed": 3.76,
+          "windDirection": 322.11,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T23:13:00Z",
+        "values": {
+          "temperatureMin": 40.66,
+          "temperatureMax": 40.66,
+          "windSpeed": 3.91,
+          "windDirection": 322.11,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T23:18:00Z",
+        "values": {
+          "temperatureMin": 40.41,
+          "temperatureMax": 40.41,
+          "windSpeed": 4.05,
+          "windDirection": 322.11,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T23:23:00Z",
+        "values": {
+          "temperatureMin": 40.14,
+          "temperatureMax": 40.14,
+          "windSpeed": 4.21,
+          "windDirection": 322.11,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T23:28:00Z",
+        "values": {
+          "temperatureMin": 39.88,
+          "temperatureMax": 39.88,
+          "windSpeed": 4.36,
+          "windDirection": 322.11,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T23:33:00Z",
+        "values": {
+          "temperatureMin": 39.63,
+          "temperatureMax": 39.63,
+          "windSpeed": 4.5,
+          "windDirection": 295.94,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T23:38:00Z",
+        "values": {
+          "temperatureMin": 39.38,
+          "temperatureMax": 39.38,
+          "windSpeed": 4.65,
+          "windDirection": 295.94,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T23:43:00Z",
+        "values": {
+          "temperatureMin": 39.11,
+          "temperatureMax": 39.11,
+          "windSpeed": 4.79,
+          "windDirection": 295.94,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      }
+    ],
+    "hourly": [
+      {
+        "startTime": "2021-03-07T17:48:00Z",
+        "values": {
+          "temperatureMin": 44.13,
+          "temperatureMax": 44.13,
+          "windSpeed": 9.33,
+          "windDirection": 315.14,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T18:48:00Z",
+        "values": {
+          "temperatureMin": 44.82,
+          "temperatureMax": 44.82,
+          "windSpeed": 8.84,
+          "windDirection": 321.71,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T19:48:00Z",
+        "values": {
+          "temperatureMin": 45.75,
+          "temperatureMax": 45.75,
+          "windSpeed": 8.9,
+          "windDirection": 323.38,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T20:48:00Z",
+        "values": {
+          "temperatureMin": 45.32,
+          "temperatureMax": 45.32,
+          "windSpeed": 9.37,
+          "windDirection": 318.43,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T21:48:00Z",
+        "values": {
+          "temperatureMin": 44.56,
+          "temperatureMax": 44.56,
+          "windSpeed": 8.05,
+          "windDirection": 320.9,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T22:48:00Z",
+        "values": {
+          "temperatureMin": 41.94,
+          "temperatureMax": 41.94,
+          "windSpeed": 4.36,
+          "windDirection": 322.11,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-07T23:48:00Z",
+        "values": {
+          "temperatureMin": 38.86,
+          "temperatureMax": 38.86,
+          "windSpeed": 4.94,
+          "windDirection": 295.94,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-08T00:48:00Z",
+        "values": {
+          "temperatureMin": 36.18,
+          "temperatureMax": 36.18,
+          "windSpeed": 5.59,
+          "windDirection": 11.94,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-08T01:48:00Z",
+        "values": {
+          "temperatureMin": 34.3,
+          "temperatureMax": 34.3,
+          "windSpeed": 5.57,
+          "windDirection": 13.68,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-08T02:48:00Z",
+        "values": {
+          "temperatureMin": 32.88,
+          "temperatureMax": 32.88,
+          "windSpeed": 5.41,
+          "windDirection": 14.93,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-08T03:48:00Z",
+        "values": {
+          "temperatureMin": 31.91,
+          "temperatureMax": 31.91,
+          "windSpeed": 4.61,
+          "windDirection": 26.07,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-08T04:48:00Z",
+        "values": {
+          "temperatureMin": 29.17,
+          "temperatureMax": 29.17,
+          "windSpeed": 2.59,
+          "windDirection": 51.27,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-08T05:48:00Z",
+        "values": {
+          "temperatureMin": 27.37,
+          "temperatureMax": 27.37,
+          "windSpeed": 3.31,
+          "windDirection": 343.25,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-08T06:48:00Z",
+        "values": {
+          "temperatureMin": 26.73,
+          "temperatureMax": 26.73,
+          "windSpeed": 4.27,
+          "windDirection": 341.46,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-08T07:48:00Z",
+        "values": {
+          "temperatureMin": 26.38,
+          "temperatureMax": 26.38,
+          "windSpeed": 3.53,
+          "windDirection": 322.34,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-08T08:48:00Z",
+        "values": {
+          "temperatureMin": 26.15,
+          "temperatureMax": 26.15,
+          "windSpeed": 3.65,
+          "windDirection": 294.69,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-08T09:48:00Z",
+        "values": {
+          "temperatureMin": 30.07,
+          "temperatureMax": 30.07,
+          "windSpeed": 3.2,
+          "windDirection": 325.32,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-08T10:48:00Z",
+        "values": {
+          "temperatureMin": 31.03,
+          "temperatureMax": 31.03,
+          "windSpeed": 2.84,
+          "windDirection": 322.27,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-08T11:48:00Z",
+        "values": {
+          "temperatureMin": 27.23,
+          "temperatureMax": 27.23,
+          "windSpeed": 5.59,
+          "windDirection": 310.14,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-08T12:48:00Z",
+        "values": {
+          "temperatureMin": 29.21,
+          "temperatureMax": 29.21,
+          "windSpeed": 7.05,
+          "windDirection": 324.8,
+          "weatherCode": 1100,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-08T13:48:00Z",
+        "values": {
+          "temperatureMin": 33.19,
+          "temperatureMax": 33.19,
+          "windSpeed": 6.46,
+          "windDirection": 335.16,
+          "weatherCode": 1101,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-08T14:48:00Z",
+        "values": {
+          "temperatureMin": 37.02,
+          "temperatureMax": 37.02,
+          "windSpeed": 5.88,
+          "windDirection": 324.49,
+          "weatherCode": 1001,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-08T15:48:00Z",
+        "values": {
+          "temperatureMin": 40.01,
+          "temperatureMax": 40.01,
+          "windSpeed": 5.55,
+          "windDirection": 310.68,
+          "weatherCode": 1001,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-08T16:48:00Z",
+        "values": {
+          "temperatureMin": 42.37,
+          "temperatureMax": 42.37,
+          "windSpeed": 5.46,
+          "windDirection": 304.18,
+          "weatherCode": 1101,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-08T17:48:00Z",
+        "values": {
+          "temperatureMin": 44.62,
+          "temperatureMax": 44.62,
+          "windSpeed": 4.99,
+          "windDirection": 301.19,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-08T18:48:00Z",
+        "values": {
+          "temperatureMin": 46.78,
+          "temperatureMax": 46.78,
+          "windSpeed": 4.72,
+          "windDirection": 295.05,
+          "weatherCode": 1100,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-08T19:48:00Z",
+        "values": {
+          "temperatureMin": 48.42,
+          "temperatureMax": 48.42,
+          "windSpeed": 4.81,
+          "windDirection": 287.4,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-08T20:48:00Z",
+        "values": {
+          "temperatureMin": 49.28,
+          "temperatureMax": 49.28,
+          "windSpeed": 4.74,
+          "windDirection": 282.48,
+          "weatherCode": 1100,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-08T21:48:00Z",
+        "values": {
+          "temperatureMin": 48.72,
+          "temperatureMax": 48.72,
+          "windSpeed": 2.51,
+          "windDirection": 268.74,
+          "weatherCode": 1100,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-08T22:48:00Z",
+        "values": {
+          "temperatureMin": 44.37,
+          "temperatureMax": 44.37,
+          "windSpeed": 3.56,
+          "windDirection": 180.04,
+          "weatherCode": 1101,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-08T23:48:00Z",
+        "values": {
+          "temperatureMin": 39.9,
+          "temperatureMax": 39.9,
+          "windSpeed": 4.68,
+          "windDirection": 177.89,
+          "weatherCode": 1101,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-09T00:48:00Z",
+        "values": {
+          "temperatureMin": 37.87,
+          "temperatureMax": 37.87,
+          "windSpeed": 5.21,
+          "windDirection": 197.47,
+          "weatherCode": 1101,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-09T01:48:00Z",
+        "values": {
+          "temperatureMin": 36.91,
+          "temperatureMax": 36.91,
+          "windSpeed": 5.46,
+          "windDirection": 209.77,
+          "weatherCode": 1100,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-09T02:48:00Z",
+        "values": {
+          "temperatureMin": 36.64,
+          "temperatureMax": 36.64,
+          "windSpeed": 6.11,
+          "windDirection": 210.14,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-09T03:48:00Z",
+        "values": {
+          "temperatureMin": 36.63,
+          "temperatureMax": 36.63,
+          "windSpeed": 6.4,
+          "windDirection": 216,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-09T04:48:00Z",
+        "values": {
+          "temperatureMin": 36.23,
+          "temperatureMax": 36.23,
+          "windSpeed": 6.22,
+          "windDirection": 223.92,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-09T05:48:00Z",
+        "values": {
+          "temperatureMin": 35.58,
+          "temperatureMax": 35.58,
+          "windSpeed": 5.75,
+          "windDirection": 229.68,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-09T06:48:00Z",
+        "values": {
+          "temperatureMin": 34.68,
+          "temperatureMax": 34.68,
+          "windSpeed": 5.21,
+          "windDirection": 235.24,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-09T07:48:00Z",
+        "values": {
+          "temperatureMin": 33.69,
+          "temperatureMax": 33.69,
+          "windSpeed": 4.81,
+          "windDirection": 237.24,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-09T08:48:00Z",
+        "values": {
+          "temperatureMin": 32.74,
+          "temperatureMax": 32.74,
+          "windSpeed": 4.52,
+          "windDirection": 239.35,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-09T09:48:00Z",
+        "values": {
+          "temperatureMin": 32.05,
+          "temperatureMax": 32.05,
+          "windSpeed": 4.32,
+          "windDirection": 245.68,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-09T10:48:00Z",
+        "values": {
+          "temperatureMin": 31.57,
+          "temperatureMax": 31.57,
+          "windSpeed": 4.14,
+          "windDirection": 248.11,
+          "weatherCode": 1100,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-09T11:48:00Z",
+        "values": {
+          "temperatureMin": 32.92,
+          "temperatureMax": 32.92,
+          "windSpeed": 4.32,
+          "windDirection": 249.54,
+          "weatherCode": 1100,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-09T12:48:00Z",
+        "values": {
+          "temperatureMin": 38.5,
+          "temperatureMax": 38.5,
+          "windSpeed": 4.7,
+          "windDirection": 253.3,
+          "weatherCode": 1100,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-09T13:48:00Z",
+        "values": {
+          "temperatureMin": 46.08,
+          "temperatureMax": 46.08,
+          "windSpeed": 4.41,
+          "windDirection": 258.49,
+          "weatherCode": 1100,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-09T14:48:00Z",
+        "values": {
+          "temperatureMin": 53.26,
+          "temperatureMax": 53.26,
+          "windSpeed": 4.9,
+          "windDirection": 260.49,
+          "weatherCode": 1101,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-09T15:48:00Z",
+        "values": {
+          "temperatureMin": 58.15,
+          "temperatureMax": 58.15,
+          "windSpeed": 5.55,
+          "windDirection": 261.29,
+          "weatherCode": 1100,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-09T16:48:00Z",
+        "values": {
+          "temperatureMin": 61.56,
+          "temperatureMax": 61.56,
+          "windSpeed": 6.35,
+          "windDirection": 264.3,
+          "weatherCode": 1101,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-09T17:48:00Z",
+        "values": {
+          "temperatureMin": 64,
+          "temperatureMax": 64,
+          "windSpeed": 6.6,
+          "windDirection": 257.54,
+          "weatherCode": 1101,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-09T18:48:00Z",
+        "values": {
+          "temperatureMin": 65.79,
+          "temperatureMax": 65.79,
+          "windSpeed": 6.96,
+          "windDirection": 253.12,
+          "weatherCode": 1100,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-09T19:48:00Z",
+        "values": {
+          "temperatureMin": 66.74,
+          "temperatureMax": 66.74,
+          "windSpeed": 6.8,
+          "windDirection": 259.46,
+          "weatherCode": 1100,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-09T20:48:00Z",
+        "values": {
+          "temperatureMin": 66.96,
+          "temperatureMax": 66.96,
+          "windSpeed": 6.33,
+          "windDirection": 294.25,
+          "weatherCode": 1101,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-09T21:48:00Z",
+        "values": {
+          "temperatureMin": 64.35,
+          "temperatureMax": 64.35,
+          "windSpeed": 3.91,
+          "windDirection": 279.37,
+          "weatherCode": 1100,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-09T22:48:00Z",
+        "values": {
+          "temperatureMin": 61.07,
+          "temperatureMax": 61.07,
+          "windSpeed": 3.65,
+          "windDirection": 218.19,
+          "weatherCode": 1100,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-09T23:48:00Z",
+        "values": {
+          "temperatureMin": 56.3,
+          "temperatureMax": 56.3,
+          "windSpeed": 4.09,
+          "windDirection": 208.3,
+          "weatherCode": 1101,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-10T00:48:00Z",
+        "values": {
+          "temperatureMin": 53.19,
+          "temperatureMax": 53.19,
+          "windSpeed": 4.21,
+          "windDirection": 216.42,
+          "weatherCode": 1102,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-10T01:48:00Z",
+        "values": {
+          "temperatureMin": 51.94,
+          "temperatureMax": 51.94,
+          "windSpeed": 3.38,
+          "windDirection": 257.19,
+          "weatherCode": 1001,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-10T02:48:00Z",
+        "values": {
+          "temperatureMin": 49.82,
+          "temperatureMax": 49.82,
+          "windSpeed": 2.71,
+          "windDirection": 288.85,
+          "weatherCode": 1001,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-10T03:48:00Z",
+        "values": {
+          "temperatureMin": 48.24,
+          "temperatureMax": 48.24,
+          "windSpeed": 2.8,
+          "windDirection": 334.41,
+          "weatherCode": 1001,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-10T04:48:00Z",
+        "values": {
+          "temperatureMin": 47.44,
+          "temperatureMax": 47.44,
+          "windSpeed": 2.26,
+          "windDirection": 342.01,
+          "weatherCode": 1001,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-10T05:48:00Z",
+        "values": {
+          "temperatureMin": 45.59,
+          "temperatureMax": 45.59,
+          "windSpeed": 2.35,
+          "windDirection": 2.43,
+          "weatherCode": 1001,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-10T06:48:00Z",
+        "values": {
+          "temperatureMin": 43.43,
+          "temperatureMax": 43.43,
+          "windSpeed": 2.3,
+          "windDirection": 336.56,
+          "weatherCode": 1001,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-10T07:48:00Z",
+        "values": {
+          "temperatureMin": 41.11,
+          "temperatureMax": 41.11,
+          "windSpeed": 2.71,
+          "windDirection": 4.41,
+          "weatherCode": 1001,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-10T08:48:00Z",
+        "values": {
+          "temperatureMin": 39.58,
+          "temperatureMax": 39.58,
+          "windSpeed": 3.4,
+          "windDirection": 21.26,
+          "weatherCode": 1001,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-10T09:48:00Z",
+        "values": {
+          "temperatureMin": 39.85,
+          "temperatureMax": 39.85,
+          "windSpeed": 3.31,
+          "windDirection": 22.76,
+          "weatherCode": 1001,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-10T10:48:00Z",
+        "values": {
+          "temperatureMin": 37.85,
+          "temperatureMax": 37.85,
+          "windSpeed": 4.03,
+          "windDirection": 29.3,
+          "weatherCode": 1101,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-10T11:48:00Z",
+        "values": {
+          "temperatureMin": 38.97,
+          "temperatureMax": 38.97,
+          "windSpeed": 3.15,
+          "windDirection": 21.82,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-10T12:48:00Z",
+        "values": {
+          "temperatureMin": 44.31,
+          "temperatureMax": 44.31,
+          "windSpeed": 3.53,
+          "windDirection": 14.25,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-10T13:48:00Z",
+        "values": {
+          "temperatureMin": 50.25,
+          "temperatureMax": 50.25,
+          "windSpeed": 2.82,
+          "windDirection": 42.41,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-10T14:48:00Z",
+        "values": {
+          "temperatureMin": 54.97,
+          "temperatureMax": 54.97,
+          "windSpeed": 2.53,
+          "windDirection": 87.81,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-10T15:48:00Z",
+        "values": {
+          "temperatureMin": 58.46,
+          "temperatureMax": 58.46,
+          "windSpeed": 3.09,
+          "windDirection": 125.82,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-10T16:48:00Z",
+        "values": {
+          "temperatureMin": 61.21,
+          "temperatureMax": 61.21,
+          "windSpeed": 4.03,
+          "windDirection": 157.54,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-10T17:48:00Z",
+        "values": {
+          "temperatureMin": 63.36,
+          "temperatureMax": 63.36,
+          "windSpeed": 5.21,
+          "windDirection": 166.66,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-10T18:48:00Z",
+        "values": {
+          "temperatureMin": 64.83,
+          "temperatureMax": 64.83,
+          "windSpeed": 6.93,
+          "windDirection": 189.24,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-10T19:48:00Z",
+        "values": {
+          "temperatureMin": 65.23,
+          "temperatureMax": 65.23,
+          "windSpeed": 8.95,
+          "windDirection": 194.58,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-10T20:48:00Z",
+        "values": {
+          "temperatureMin": 64.98,
+          "temperatureMax": 64.98,
+          "windSpeed": 9.4,
+          "windDirection": 193.22,
+          "weatherCode": 1100,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-10T21:48:00Z",
+        "values": {
+          "temperatureMin": 64.06,
+          "temperatureMax": 64.06,
+          "windSpeed": 8.55,
+          "windDirection": 186.39,
+          "weatherCode": 1100,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-10T22:48:00Z",
+        "values": {
+          "temperatureMin": 61.9,
+          "temperatureMax": 61.9,
+          "windSpeed": 7.49,
+          "windDirection": 171.81,
+          "weatherCode": 1100,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-10T23:48:00Z",
+        "values": {
+          "temperatureMin": 59.4,
+          "temperatureMax": 59.4,
+          "windSpeed": 7.54,
+          "windDirection": 165.51,
+          "weatherCode": 1100,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-11T00:48:00Z",
+        "values": {
+          "temperatureMin": 57.63,
+          "temperatureMax": 57.63,
+          "windSpeed": 8.12,
+          "windDirection": 171.94,
+          "weatherCode": 1102,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-11T01:48:00Z",
+        "values": {
+          "temperatureMin": 56.17,
+          "temperatureMax": 56.17,
+          "windSpeed": 8.7,
+          "windDirection": 176.84,
+          "weatherCode": 1001,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-11T02:48:00Z",
+        "values": {
+          "temperatureMin": 55.36,
+          "temperatureMax": 55.36,
+          "windSpeed": 9.42,
+          "windDirection": 184.14,
+          "weatherCode": 1001,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-11T03:48:00Z",
+        "values": {
+          "temperatureMin": 54.88,
+          "temperatureMax": 54.88,
+          "windSpeed": 10,
+          "windDirection": 195.54,
+          "weatherCode": 1001,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-11T04:48:00Z",
+        "values": {
+          "temperatureMin": 54.14,
+          "temperatureMax": 54.14,
+          "windSpeed": 10.4,
+          "windDirection": 200.56,
+          "weatherCode": 1001,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-11T05:48:00Z",
+        "values": {
+          "temperatureMin": 53.46,
+          "temperatureMax": 53.46,
+          "windSpeed": 10.04,
+          "windDirection": 198.08,
+          "weatherCode": 1001,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-11T06:48:00Z",
+        "values": {
+          "temperatureMin": 52.11,
+          "temperatureMax": 52.11,
+          "windSpeed": 10.02,
+          "windDirection": 199.54,
+          "weatherCode": 1101,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-11T07:48:00Z",
+        "values": {
+          "temperatureMin": 51.64,
+          "temperatureMax": 51.64,
+          "windSpeed": 10.51,
+          "windDirection": 202.73,
+          "weatherCode": 1102,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-11T08:48:00Z",
+        "values": {
+          "temperatureMin": 50.79,
+          "temperatureMax": 50.79,
+          "windSpeed": 10.38,
+          "windDirection": 203.35,
+          "weatherCode": 1001,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-11T09:48:00Z",
+        "values": {
+          "temperatureMin": 49.93,
+          "temperatureMax": 49.93,
+          "windSpeed": 9.51,
+          "windDirection": 210.36,
+          "weatherCode": 1001,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-11T10:48:00Z",
+        "values": {
+          "temperatureMin": 49.1,
+          "temperatureMax": 49.1,
+          "windSpeed": 8.61,
+          "windDirection": 210.6,
+          "weatherCode": 1001,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-11T11:48:00Z",
+        "values": {
+          "temperatureMin": 48.42,
+          "temperatureMax": 48.42,
+          "windSpeed": 9.15,
+          "windDirection": 211.29,
+          "weatherCode": 1001,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-11T12:48:00Z",
+        "values": {
+          "temperatureMin": 48.9,
+          "temperatureMax": 48.9,
+          "windSpeed": 10.25,
+          "windDirection": 215.59,
+          "weatherCode": 1001,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-11T13:48:00Z",
+        "values": {
+          "temperatureMin": 50.54,
+          "temperatureMax": 50.54,
+          "windSpeed": 10.18,
+          "windDirection": 215.48,
+          "weatherCode": 1102,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-11T14:48:00Z",
+        "values": {
+          "temperatureMin": 53.19,
+          "temperatureMax": 53.19,
+          "windSpeed": 9.4,
+          "windDirection": 208.76,
+          "weatherCode": 1101,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-11T15:48:00Z",
+        "values": {
+          "temperatureMin": 56.19,
+          "temperatureMax": 56.19,
+          "windSpeed": 9.73,
+          "windDirection": 197.59,
+          "weatherCode": 1101,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-11T16:48:00Z",
+        "values": {
+          "temperatureMin": 59.34,
+          "temperatureMax": 59.34,
+          "windSpeed": 10.69,
+          "windDirection": 204.29,
+          "weatherCode": 1100,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-11T17:48:00Z",
+        "values": {
+          "temperatureMin": 62.35,
+          "temperatureMax": 62.35,
+          "windSpeed": 11.81,
+          "windDirection": 204.56,
+          "weatherCode": 1100,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-11T18:48:00Z",
+        "values": {
+          "temperatureMin": 64.6,
+          "temperatureMax": 64.6,
+          "windSpeed": 13.09,
+          "windDirection": 206.85,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-11T19:48:00Z",
+        "values": {
+          "temperatureMin": 65.91,
+          "temperatureMax": 65.91,
+          "windSpeed": 13.82,
+          "windDirection": 204.82,
+          "weatherCode": 1100,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-11T20:48:00Z",
+        "values": {
+          "temperatureMin": 66.22,
+          "temperatureMax": 66.22,
+          "windSpeed": 14.54,
+          "windDirection": 208.43,
+          "weatherCode": 1100,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-11T21:48:00Z",
+        "values": {
+          "temperatureMin": 65.46,
+          "temperatureMax": 65.46,
+          "windSpeed": 13.2,
+          "windDirection": 208.3,
+          "weatherCode": 1101,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-11T22:48:00Z",
+        "values": {
+          "temperatureMin": 64.35,
+          "temperatureMax": 64.35,
+          "windSpeed": 12.35,
+          "windDirection": 208.58,
+          "weatherCode": 1101,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-11T23:48:00Z",
+        "values": {
+          "temperatureMin": 62.85,
+          "temperatureMax": 62.85,
+          "windSpeed": 12.86,
+          "windDirection": 205.39,
+          "weatherCode": 1101,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-12T00:48:00Z",
+        "values": {
+          "temperatureMin": 61.75,
+          "temperatureMax": 61.75,
+          "windSpeed": 14.7,
+          "windDirection": 209.51,
+          "weatherCode": 1102,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-12T01:48:00Z",
+        "values": {
+          "temperatureMin": 61.2,
+          "temperatureMax": 61.2,
+          "windSpeed": 15.57,
+          "windDirection": 211.47,
+          "weatherCode": 1001,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-12T02:48:00Z",
+        "values": {
+          "temperatureMin": 60.46,
+          "temperatureMax": 60.46,
+          "windSpeed": 14.94,
+          "windDirection": 211.57,
+          "weatherCode": 1001,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-12T03:48:00Z",
+        "values": {
+          "temperatureMin": 59.94,
+          "temperatureMax": 59.94,
+          "windSpeed": 14.29,
+          "windDirection": 208.93,
+          "weatherCode": 1001,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-12T04:48:00Z",
+        "values": {
+          "temperatureMin": 59.52,
+          "temperatureMax": 59.52,
+          "windSpeed": 14.36,
+          "windDirection": 217.91,
+          "weatherCode": 1001,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      }
+    ],
+    "daily": [
+      {
+        "startTime": "2021-03-07T11:00:00Z",
+        "values": {
+          "temperatureMin": 26.11,
+          "temperatureMax": 45.93,
+          "windSpeed": 9.49,
+          "windDirection": 239.6,
+          "weatherCode": 1000,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-08T11:00:00Z",
+        "values": {
+          "temperatureMin": 26.28,
+          "temperatureMax": 49.42,
+          "windSpeed": 7.24,
+          "windDirection": 262.82,
+          "weatherCode": 1102,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-09T11:00:00Z",
+        "values": {
+          "temperatureMin": 31.48,
+          "temperatureMax": 66.98,
+          "windSpeed": 7.05,
+          "windDirection": 229.3,
+          "weatherCode": 1102,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-10T11:00:00Z",
+        "values": {
+          "temperatureMin": 37.32,
+          "temperatureMax": 65.28,
+          "windSpeed": 10.64,
+          "windDirection": 149.91,
+          "weatherCode": 1102,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-11T11:00:00Z",
+        "values": {
+          "temperatureMin": 48.29,
+          "temperatureMax": 66.25,
+          "windSpeed": 15.69,
+          "windDirection": 210.45,
+          "weatherCode": 1102,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-12T11:00:00Z",
+        "values": {
+          "temperatureMin": 53.83,
+          "temperatureMax": 67.91,
+          "windSpeed": 12.3,
+          "windDirection": 217.98,
+          "weatherCode": 4000,
+          "precipitationIntensityAvg": 0.0002,
+          "precipitationProbability": 25
+        }
+      },
+      {
+        "startTime": "2021-03-13T11:00:00Z",
+        "values": {
+          "temperatureMin": 42.91,
+          "temperatureMax": 54.48,
+          "windSpeed": 9.72,
+          "windDirection": 58.79,
+          "weatherCode": 1001,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 25
+        }
+      },
+      {
+        "startTime": "2021-03-14T10:00:00Z",
+        "values": {
+          "temperatureMin": 33.35,
+          "temperatureMax": 42.91,
+          "windSpeed": 16.25,
+          "windDirection": 70.25,
+          "weatherCode": 5101,
+          "precipitationIntensityAvg": 0.0393,
+          "precipitationProbability": 95
+        }
+      },
+      {
+        "startTime": "2021-03-15T10:00:00Z",
+        "values": {
+          "temperatureMin": 29.35,
+          "temperatureMax": 43.67,
+          "windSpeed": 15.89,
+          "windDirection": 84.47,
+          "weatherCode": 5001,
+          "precipitationIntensityAvg": 0.0024,
+          "precipitationProbability": 55
+        }
+      },
+      {
+        "startTime": "2021-03-16T10:00:00Z",
+        "values": {
+          "temperatureMin": 29.1,
+          "temperatureMax": 43,
+          "windSpeed": 6.71,
+          "windDirection": 103.85,
+          "weatherCode": 1102,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-17T10:00:00Z",
+        "values": {
+          "temperatureMin": 34.32,
+          "temperatureMax": 52.4,
+          "windSpeed": 7.27,
+          "windDirection": 145.41,
+          "weatherCode": 1102,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 0
+        }
+      },
+      {
+        "startTime": "2021-03-18T10:00:00Z",
+        "values": {
+          "temperatureMin": 41.32,
+          "temperatureMax": 54.07,
+          "windSpeed": 6.58,
+          "windDirection": 62.99,
+          "weatherCode": 1001,
+          "precipitationIntensityAvg": 0,
+          "precipitationProbability": 10
+        }
+      },
+      {
+        "startTime": "2021-03-19T10:00:00Z",
+        "values": {
+          "temperatureMin": 39.4,
+          "temperatureMax": 48.94,
+          "windSpeed": 13.91,
+          "windDirection": 68.54,
+          "weatherCode": 4000,
+          "precipitationIntensityAvg": 0.0048,
+          "precipitationProbability": 55
+        }
+      },
+      {
+        "startTime": "2021-03-20T10:00:00Z",
+        "values": {
+          "temperatureMin": 35.06,
+          "temperatureMax": 40.12,
+          "windSpeed": 17.35,
+          "windDirection": 56.98,
+          "weatherCode": 5001,
+          "precipitationIntensityAvg": 0.002,
+          "precipitationProbability": 33.3
+        }
+      },
+      {
+        "startTime": "2021-03-21T10:00:00Z",
+        "values": {
+          "temperatureMin": 33.66,
+          "temperatureMax": 66.54,
+          "windSpeed": 15.93,
+          "windDirection": 82.57,
+          "weatherCode": 5001,
+          "precipitationIntensityAvg": 0.0004,
+          "precipitationProbability": 45
+        }
+      }
+    ]
+  }
+}

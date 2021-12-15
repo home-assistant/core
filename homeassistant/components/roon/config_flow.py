@@ -18,7 +18,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema({"host": str})
+DATA_SCHEMA = vol.Schema({vol.Required("host"): str})
 
 TIMEOUT = 120
 

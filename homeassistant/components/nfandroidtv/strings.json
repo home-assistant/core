@@ -1,0 +1,21 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Notifications for Android TV / Fire TV",
+        "description": "This integration requires the Notifications for Android TV app.\n\nFor Android TV: https://play.google.com/store/apps/details?id=de.cyberdream.androidtv.notifications.google\nFor Fire TV: https://www.amazon.com/Christian-Fees-Notifications-for-Fire/dp/B00OESCXEK\n\nYou should set up either DHCP reservation on your router (refer to your router's user manual) or a static IP address on the device. If not, the device will eventually become unavailable.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "name": "[%key:common::config_flow::data::name%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  }
+}

@@ -20,9 +20,18 @@
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "pairing_failure": "Unable to pair: {error_id}",
       "invalid_pin": "Invalid PIN"
-},
+    },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "allow_notify": "Allow usage of data notification service."
+        }
+      }
     }
   },
   "device_automation": {

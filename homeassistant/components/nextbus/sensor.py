@@ -146,7 +146,7 @@ class NextBusDepartureSensor(SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return current state of the sensor."""
         return self._state
 
@@ -218,6 +218,4 @@ class NextBusDepartureSensor(SensorEntity):
         )
 
         latest_prediction = maybe_first(predictions)
-        self._state = utc_from_timestamp(
-            int(latest_prediction["epochTime"]) / 1000
-        ).isoformat()
+        self._state = utc_from_timestamp(int(latest_prediction["epochTime"]) / 1000)

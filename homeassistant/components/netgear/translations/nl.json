@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al ingesteld"
+        },
+        "error": {
+            "config": "Verbindings- of inlogfout; controleer uw configuratie"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host (optioneel)",
+                    "password": "Wachtwoord",
+                    "port": "Poort (optioneel)",
+                    "ssl": "Gebruikt een SSL certificaat",
+                    "username": "Gebruikersnaam (optioneel)"
+                },
+                "description": "Standaard host: {host}\nStandaard poort: {port}\nStandaard gebruikersnaam: {username}",
+                "title": "Netgear"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "consider_home": "Overweeg thuis tijd (seconden)"
+                },
+                "description": "Optionele instellingen opgeven",
+                "title": "Netgear"
+            }
+        }
+    }
+}

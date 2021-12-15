@@ -69,7 +69,6 @@ MOCK_CUSTOM_SENSOR2 = {
 MOCK_SETUP_DATA = dict(
     {
         "custom": {},
-        "device_info": MOCK_DEVICE,
         "sensors": [],
     },
     **MOCK_USER_INPUT,
@@ -91,7 +90,6 @@ MOCK_CUSTOM_SETUP_DATA = dict(
                 "unit": MOCK_CUSTOM_SENSOR2["unit"],
             },
         },
-        "device_info": MOCK_DEVICE,
         "sensors": [],
     },
     **MOCK_USER_INPUT,

@@ -33,7 +33,7 @@ class XboxSensorEntity(XboxBaseSensorEntity, SensorEntity):
     """Representation of a Xbox presence state."""
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the requested attribute."""
         if not self.coordinator.last_update_success:
             return None

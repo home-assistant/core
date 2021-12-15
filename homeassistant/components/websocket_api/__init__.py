@@ -21,6 +21,8 @@ from .const import (  # noqa: F401
     ERR_UNAUTHORIZED,
     ERR_UNKNOWN_COMMAND,
     ERR_UNKNOWN_ERROR,
+    AsyncWebSocketCommandHandler,
+    WebSocketCommandHandler,
 )
 from .decorators import (  # noqa: F401
     async_response,
@@ -56,8 +58,7 @@ def async_register_command(
         schema = handler._ws_schema  # type: ignore[attr-defined]
     else:
         command = command_or_handler
-    handlers = hass.data.get(DOMAIN)
-    if handlers is None:
+    if (handlers := hass.data.get(DOMAIN)) is None:
         handlers = hass.data[DOMAIN] = {}
     handlers[command] = (handler, schema)
 

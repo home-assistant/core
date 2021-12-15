@@ -4,8 +4,8 @@ from unittest.mock import ANY, patch
 from haphilipsjs import PairingFailure
 from pytest import fixture
 
-from homeassistant import config_entries
-from homeassistant.components.philips_js.const import DOMAIN
+from homeassistant import config_entries, data_entry_flow
+from homeassistant.components.philips_js.const import CONF_ALLOW_NOTIFY, DOMAIN
 
 from . import (
     MOCK_CONFIG,
@@ -17,13 +17,17 @@ from . import (
     MOCK_USERNAME,
 )
 
+from tests.common import MockConfigEntry
 
-@fixture(autouse=True)
-def mock_setup_entry():
+
+@fixture(autouse=True, name="mock_setup_entry")
+def mock_setup_entry_fixture():
     """Disable component setup."""
     with patch(
         "homeassistant.components.philips_js.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
+    ) as mock_setup_entry, patch(
+        "homeassistant.components.philips_js.async_unload_entry", return_value=True
+    ):
         yield mock_setup_entry
 
 
@@ -226,3 +230,28 @@ async def test_pair_grant_failed(hass, mock_tv_pairable, mock_setup_entry):
         "reason": "pairing_failure",
         "type": "abort",
     }
+
+
+async def test_options_flow(hass):
+    """Test config flow options."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="123456",
+        data=MOCK_CONFIG_PAIRED,
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={CONF_ALLOW_NOTIFY: True}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert config_entry.options == {CONF_ALLOW_NOTIFY: True}

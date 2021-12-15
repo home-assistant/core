@@ -8,14 +8,14 @@ from async_timeout import timeout
 from python_awair import Awair
 from python_awair.exceptions import AuthError
 
-from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import API_TIMEOUT, DOMAIN, LOGGER, UPDATE_INTERVAL, AwairResult
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass, config_entry) -> bool:
@@ -58,13 +58,13 @@ class AwairDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> Any | None:
         """Update data via Awair client library."""
-        with timeout(API_TIMEOUT):
+        async with timeout(API_TIMEOUT):
             try:
                 LOGGER.debug("Fetching users and devices")
                 user = await self._awair.user()
                 devices = await user.devices()
                 results = await gather(
-                    *[self._fetch_air_data(device) for device in devices]
+                    *(self._fetch_air_data(device) for device in devices)
                 )
                 return {result.device.uuid: result for result in results}
             except AuthError as err:
@@ -74,6 +74,7 @@ class AwairDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _fetch_air_data(self, device):
         """Fetch latest air quality data."""
+        # pylint: disable=no-self-use
         LOGGER.debug("Fetching data for %s", device.uuid)
         air_data = await device.air_data_latest()
         LOGGER.debug(air_data)

@@ -54,7 +54,7 @@ class SharkIqUpdateCoordinator(DataUpdateCoordinator):
         """Asynchronously update the data for a single vacuum."""
         dsn = sharkiq.serial_number
         _LOGGER.debug("Updating sharkiq data for device DSN %s", dsn)
-        with timeout(API_TIMEOUT):
+        async with timeout(API_TIMEOUT):
             await sharkiq.async_update()
 
     async def _async_update_data(self) -> bool:
@@ -69,7 +69,7 @@ class SharkIqUpdateCoordinator(DataUpdateCoordinator):
 
             _LOGGER.debug("Updating sharkiq data")
             online_vacs = (self.shark_vacs[dsn] for dsn in self.online_dsns)
-            await asyncio.gather(*[self._async_update_vacuum(v) for v in online_vacs])
+            await asyncio.gather(*(self._async_update_vacuum(v) for v in online_vacs))
         except (
             SharkIqAuthError,
             SharkIqNotAuthedError,

@@ -1,13 +1,8 @@
 """Support for Rheem EcoNet water heaters."""
 from pyeconet.equipment import EquipmentType
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import (
-    DEVICE_CLASS_SIGNAL_STRENGTH,
-    ENERGY_KILO_WATT_HOUR,
-    PERCENTAGE,
-    VOLUME_GALLONS,
-)
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.const import ENERGY_KILO_WATT_HOUR, PERCENTAGE, VOLUME_GALLONS
 
 from . import EcoNetEntity
 from .const import DOMAIN, EQUIPMENT
@@ -44,7 +39,7 @@ SENSOR_NAMES_TO_UNIT_OF_MEASUREMENT = {
     WATER_USAGE_TODAY: VOLUME_GALLONS,
     POWER_USAGE_TODAY: None,  # Depends on unit type
     ALERT_COUNT: None,
-    WIFI_SIGNAL: DEVICE_CLASS_SIGNAL_STRENGTH,
+    WIFI_SIGNAL: SensorDeviceClass.SIGNAL_STRENGTH,
     RUNNING_STATE: None,  # This is just a string
 }
 
@@ -82,7 +77,7 @@ class EcoNetSensor(EcoNetEntity, SensorEntity):
         self._device_name = device_name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return sensors state."""
         value = getattr(self._econet, SENSOR_NAMES_TO_ATTRIBUTES[self._device_name])
         if isinstance(value, float):
@@ -90,7 +85,7 @@ class EcoNetSensor(EcoNetEntity, SensorEntity):
         return value
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         unit_of_measurement = SENSOR_NAMES_TO_UNIT_OF_MEASUREMENT[self._device_name]
         if self._device_name == POWER_USAGE_TODAY:

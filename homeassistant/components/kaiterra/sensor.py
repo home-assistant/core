@@ -1,13 +1,20 @@
 """Support for Kaiterra Temperature ahn Humidity Sensors."""
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import CONF_DEVICE_ID, CONF_NAME, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import (
+    CONF_DEVICE_ID,
+    CONF_NAME,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_TEMPERATURE,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import DISPATCHER_KAITERRA, DOMAIN
 
 SENSORS = [
-    {"name": "Temperature", "prop": "rtemp", "device_class": "temperature"},
-    {"name": "Humidity", "prop": "rhumid", "device_class": "humidity"},
+    {"name": "Temperature", "prop": "rtemp", "device_class": DEVICE_CLASS_TEMPERATURE},
+    {"name": "Humidity", "prop": "rhumid", "device_class": DEVICE_CLASS_HUMIDITY},
 ]
 
 
@@ -63,7 +70,7 @@ class KaiterraSensor(SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state."""
         return self._sensor.get("value")
 
@@ -73,7 +80,7 @@ class KaiterraSensor(SensorEntity):
         return f"{self._device_id}_{self._kind}"
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         if not self._sensor.get("units"):
             return None

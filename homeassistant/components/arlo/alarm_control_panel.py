@@ -14,6 +14,7 @@ from homeassistant.components.alarm_control_panel.const import (
 )
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
+    ATTR_DEVICE_ID,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
@@ -32,8 +33,6 @@ ARMED = "armed"
 CONF_HOME_MODE_NAME = "home_mode_name"
 CONF_AWAY_MODE_NAME = "away_mode_name"
 CONF_NIGHT_MODE_NAME = "night_mode_name"
-
-DISARMED = "disarmed"
 
 ICON = "mdi:security"
 
@@ -69,18 +68,22 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class ArloBaseStation(AlarmControlPanelEntity):
     """Representation of an Arlo Alarm Control Panel."""
 
+    _attr_supported_features = (
+        SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_NIGHT
+    )
+    _attr_icon = ICON
+
     def __init__(self, data, home_mode_name, away_mode_name, night_mode_name):
         """Initialize the alarm control panel."""
         self._base_station = data
         self._home_mode_name = home_mode_name
         self._away_mode_name = away_mode_name
         self._night_mode_name = night_mode_name
-        self._state = None
-
-    @property
-    def icon(self):
-        """Return icon."""
-        return ICON
+        self._attr_name = data.name
+        self._attr_extra_state_attributes = {
+            ATTR_ATTRIBUTION: ATTRIBUTION,
+            ATTR_DEVICE_ID: data.device_id,
+        }
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -95,28 +98,15 @@ class ArloBaseStation(AlarmControlPanelEntity):
         """Call update method."""
         self.async_schedule_update_ha_state(True)
 
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_NIGHT
-
     def update(self):
         """Update the state of the device."""
         _LOGGER.debug("Updating Arlo Alarm Control Panel %s", self.name)
         mode = self._base_station.mode
-        if mode:
-            self._state = self._get_state_from_mode(mode)
-        else:
-            self._state = None
+        self._attr_state = self._get_state_from_mode(mode) if mode else None
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""
-        self._base_station.mode = DISARMED
+        self._base_station.mode = STATE_ALARM_DISARMED
 
     def alarm_arm_away(self, code=None):
         """Send arm away command. Uses custom mode."""
@@ -130,24 +120,11 @@ class ArloBaseStation(AlarmControlPanelEntity):
         """Send arm night command. Uses custom mode."""
         self._base_station.mode = self._night_mode_name
 
-    @property
-    def name(self):
-        """Return the name of the base station."""
-        return self._base_station.name
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
-            "device_id": self._base_station.device_id,
-        }
-
     def _get_state_from_mode(self, mode):
         """Convert Arlo mode to Home Assistant state."""
         if mode == ARMED:
             return STATE_ALARM_ARMED_AWAY
-        if mode == DISARMED:
+        if mode == STATE_ALARM_DISARMED:
             return STATE_ALARM_DISARMED
         if mode == self._home_mode_name:
             return STATE_ALARM_ARMED_HOME

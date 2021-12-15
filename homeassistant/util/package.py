@@ -63,6 +63,7 @@ def install_package(
     target: str | None = None,
     constraints: str | None = None,
     find_links: str | None = None,
+    timeout: int | None = None,
     no_cache_dir: bool | None = False,
 ) -> bool:
     """Install a package on PyPi. Accepts pip compatible package strings.
@@ -73,6 +74,8 @@ def install_package(
     _LOGGER.info("Attempting install of %s", package)
     env = os.environ.copy()
     args = [sys.executable, "-m", "pip", "install", "--quiet", package]
+    if timeout:
+        args += ["--timeout", str(timeout)]
     if no_cache_dir:
         args.append("--no-cache-dir")
     if upgrade:
@@ -90,6 +93,7 @@ def install_package(
             # Workaround for incompatible prefix setting
             # See http://stackoverflow.com/a/4495175
             args += ["--prefix="]
+    _LOGGER.debug("Running pip command: args=%s", args)
     with Popen(args, stdin=PIPE, stdout=PIPE, stderr=PIPE, env=env) as process:
         _, stderr = process.communicate()
         if process.returncode != 0:

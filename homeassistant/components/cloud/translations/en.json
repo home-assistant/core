@@ -10,6 +10,7 @@
             "relayer_connected": "Relayer Connected",
             "remote_connected": "Remote Connected",
             "remote_enabled": "Remote Enabled",
+            "remote_server": "Remote Server",
             "subscription_expiration": "Subscription Expiration"
         }
     }

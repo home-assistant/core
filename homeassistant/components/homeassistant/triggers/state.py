@@ -3,20 +3,24 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any
 
 import voluptuous as vol
 
 from homeassistant import exceptions
 from homeassistant.const import CONF_ATTRIBUTE, CONF_FOR, CONF_PLATFORM, MATCH_ALL
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, State, callback
-from homeassistant.helpers import config_validation as cv, template
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_registry as er,
+    template,
+)
 from homeassistant.helpers.event import (
     Event,
     async_track_same_state,
     async_track_state_change_event,
     process_state_match,
 )
+from homeassistant.helpers.typing import ConfigType
 
 # mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs
@@ -27,42 +31,51 @@ CONF_ENTITY_ID = "entity_id"
 CONF_FROM = "from"
 CONF_TO = "to"
 
-BASE_SCHEMA = {
-    vol.Required(CONF_PLATFORM): "state",
-    vol.Required(CONF_ENTITY_ID): cv.entity_ids,
-    vol.Optional(CONF_FOR): cv.positive_time_period_template,
-    vol.Optional(CONF_ATTRIBUTE): cv.match_all,
-}
-
-TRIGGER_STATE_SCHEMA = vol.Schema(
+BASE_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
-        **BASE_SCHEMA,
-        # These are str on purpose. Want to catch YAML conversions
-        vol.Optional(CONF_FROM): vol.Any(str, [str]),
-        vol.Optional(CONF_TO): vol.Any(str, [str]),
+        vol.Required(CONF_PLATFORM): "state",
+        vol.Required(CONF_ENTITY_ID): cv.entity_ids_or_uuids,
+        vol.Optional(CONF_FOR): cv.positive_time_period_template,
+        vol.Optional(CONF_ATTRIBUTE): cv.match_all,
     }
 )
 
-TRIGGER_ATTRIBUTE_SCHEMA = vol.Schema(
+TRIGGER_STATE_SCHEMA = BASE_SCHEMA.extend(
     {
-        **BASE_SCHEMA,
+        # These are str on purpose. Want to catch YAML conversions
+        vol.Optional(CONF_FROM): vol.Any(str, [str], None),
+        vol.Optional(CONF_TO): vol.Any(str, [str], None),
+    }
+)
+
+TRIGGER_ATTRIBUTE_SCHEMA = BASE_SCHEMA.extend(
+    {
         vol.Optional(CONF_FROM): cv.match_all,
         vol.Optional(CONF_TO): cv.match_all,
     }
 )
 
 
-def TRIGGER_SCHEMA(value: Any) -> dict:  # pylint: disable=invalid-name
-    """Validate trigger."""
-    if not isinstance(value, dict):
+async def async_validate_trigger_config(
+    hass: HomeAssistant, config: ConfigType
+) -> ConfigType:
+    """Validate trigger config."""
+    if not isinstance(config, dict):
         raise vol.Invalid("Expected a dictionary")
 
     # We use this approach instead of vol.Any because
     # this gives better error messages.
-    if CONF_ATTRIBUTE in value:
-        return TRIGGER_ATTRIBUTE_SCHEMA(value)
+    if CONF_ATTRIBUTE in config:
+        config = TRIGGER_ATTRIBUTE_SCHEMA(config)
+    else:
+        config = TRIGGER_STATE_SCHEMA(config)
 
-    return TRIGGER_STATE_SCHEMA(value)
+    registry = er.async_get(hass)
+    config[CONF_ENTITY_ID] = er.async_resolve_entity_ids(
+        registry, cv.entity_ids_or_uuids(config[CONF_ENTITY_ID])
+    )
+
+    return config
 
 
 async def async_attach_trigger(
@@ -74,12 +87,16 @@ async def async_attach_trigger(
     platform_type: str = "state",
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
-    entity_id = config.get(CONF_ENTITY_ID)
-    from_state = config.get(CONF_FROM, MATCH_ALL)
-    to_state = config.get(CONF_TO, MATCH_ALL)
+    entity_ids = config[CONF_ENTITY_ID]
+    if (from_state := config.get(CONF_FROM)) is None:
+        from_state = MATCH_ALL
+    if (to_state := config.get(CONF_TO)) is None:
+        to_state = MATCH_ALL
     time_delta = config.get(CONF_FOR)
     template.attach(hass, time_delta)
-    match_all = from_state == MATCH_ALL and to_state == MATCH_ALL
+    # If neither CONF_FROM or CONF_TO are specified,
+    # fire on all changes to the state or an attribute
+    match_all = CONF_FROM not in config and CONF_TO not in config
     unsub_track_same = {}
     period: dict[str, timedelta] = {}
     match_from_state = process_state_match(from_state)
@@ -87,10 +104,8 @@ async def async_attach_trigger(
     attribute = config.get(CONF_ATTRIBUTE)
     job = HassJob(action)
 
-    trigger_id = automation_info.get("trigger_id") if automation_info else None
-    _variables = {}
-    if automation_info:
-        _variables = automation_info.get("variables") or {}
+    trigger_data = automation_info["trigger_data"]
+    _variables = automation_info["variables"] or {}
 
     @callback
     def state_automation_listener(event: Event):
@@ -134,6 +149,7 @@ async def async_attach_trigger(
                 job,
                 {
                     "trigger": {
+                        **trigger_data,
                         "platform": platform_type,
                         "entity_id": entity,
                         "from_state": from_s,
@@ -141,7 +157,6 @@ async def async_attach_trigger(
                         "for": time_delta if not time_delta else period[entity],
                         "attribute": attribute,
                         "description": f"state of {entity}",
-                        "id": trigger_id,
                     }
                 },
                 event.context,
@@ -171,10 +186,11 @@ async def async_attach_trigger(
             )
             return
 
-        def _check_same_state(_, _2, new_st: State):
+        def _check_same_state(_, _2, new_st: State | None) -> bool:
             if new_st is None:
                 return False
 
+            cur_value: str | None
             if attribute is None:
                 cur_value = new_st.state
             else:
@@ -193,7 +209,7 @@ async def async_attach_trigger(
             entity_ids=entity,
         )
 
-    unsub = async_track_state_change_event(hass, entity_id, state_automation_listener)
+    unsub = async_track_state_change_event(hass, entity_ids, state_automation_listener)
 
     @callback
     def async_remove():

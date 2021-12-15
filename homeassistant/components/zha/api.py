@@ -363,6 +363,7 @@ def cv_group_member(value: Any) -> GroupMember:
     {
         vol.Required(TYPE): "zha/group/add",
         vol.Required(GROUP_NAME): cv.string,
+        vol.Optional(GROUP_ID): cv.positive_int,
         vol.Optional(ATTR_MEMBERS): vol.All(cv.ensure_list, [cv_group_member]),
     }
 )
@@ -371,7 +372,8 @@ async def websocket_add_group(hass, connection, msg):
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     group_name = msg[GROUP_NAME]
     members = msg.get(ATTR_MEMBERS)
-    group = await zha_gateway.async_create_zigpy_group(group_name, members)
+    group_id = msg.get(GROUP_ID)
+    group = await zha_gateway.async_create_zigpy_group(group_name, members, group_id)
     connection.send_result(msg[ID], group.group_info)
 
 
@@ -1143,10 +1145,8 @@ def async_load_api(hass):
         strobe = service.data.get(ATTR_WARNING_DEVICE_STROBE)
         level = service.data.get(ATTR_LEVEL)
 
-        zha_device = zha_gateway.get_device(ieee)
-        if zha_device is not None:
-            channel = _get_ias_wd_channel(zha_device)
-            if channel:
+        if (zha_device := zha_gateway.get_device(ieee)) is not None:
+            if channel := _get_ias_wd_channel(zha_device):
                 await channel.issue_squawk(mode, strobe, level)
             else:
                 _LOGGER.error(
@@ -1187,10 +1187,8 @@ def async_load_api(hass):
         duty_mode = service.data.get(ATTR_WARNING_DEVICE_STROBE_DUTY_CYCLE)
         intensity = service.data.get(ATTR_WARNING_DEVICE_STROBE_INTENSITY)
 
-        zha_device = zha_gateway.get_device(ieee)
-        if zha_device is not None:
-            channel = _get_ias_wd_channel(zha_device)
-            if channel:
+        if (zha_device := zha_gateway.get_device(ieee)) is not None:
+            if channel := _get_ias_wd_channel(zha_device):
                 await channel.issue_start_warning(
                     mode, strobe, level, duration, duty_mode, intensity
                 )

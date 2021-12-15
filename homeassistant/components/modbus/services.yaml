@@ -66,3 +66,25 @@ write_register:
       default: "modbus_hub"
       selector:
         text:
+stop:
+  name: Stop
+  description: Stop modbus hub.
+  fields:
+    hub:
+      name: Hub
+      description: Modbus hub name.
+      example: "hub1"
+      default: "modbus_hub"
+      selector:
+        text:
+restart:
+  name: Restart
+  description: Restart modbus hub (if running stop then start).
+  fields:
+    hub:
+      name: Hub
+      description: Modbus hub name.
+      example: "hub1"
+      default: "modbus_hub"
+      selector:
+        text:

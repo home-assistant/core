@@ -1,13 +1,18 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Al geconfigureerd. Slechts een enkele configuratie mogelijk."
+            "not_zha_device": "Dit apparaat is niet een zha-apparaat.",
+            "single_instance_allowed": "Al geconfigureerd. Slechts een enkele configuratie mogelijk.",
+            "usb_probe_failed": "Kon het USB apparaat niet onderzoeken"
         },
         "error": {
             "cannot_connect": "Kan geen verbinding maken"
         },
         "flow_title": "{name}",
         "step": {
+            "confirm": {
+                "description": "Wilt u {name} instellen?"
+            },
             "pick_radio": {
                 "data": {
                     "radio_type": "Radio type"
@@ -37,11 +42,11 @@
         "zha_alarm_options": {
             "alarm_arm_requires_code": "Code vereist voor inschakelacties",
             "alarm_failed_tries": "Het aantal opeenvolgende foute codes om het alarm te activeren",
-            "alarm_master_code": "Mastercode voor het alarm bedieningspaneel",
-            "title": "Alarm bedieningspaneel Opties"
+            "alarm_master_code": "Mastercode voor het alarmbedieningspaneel",
+            "title": "Alarmbedieningspaneelopties"
         },
         "zha_options": {
-            "consider_unavailable_battery": "Overweeg apparaten met batterijvoeding als onbeschikbaar na (seconden)",
+            "consider_unavailable_battery": "Beschouw apparaten met batterijvoeding als onbeschikbaar na (seconden)",
             "consider_unavailable_mains": "Beschouw apparaten op netvoeding als onbeschikbaar na (seconden)",
             "default_light_transition": "Standaard licht transitietijd (seconden)",
             "enable_identify_on_join": "Schakel het identificatie-effect in wanneer apparaten in het netwerk komen",
@@ -70,7 +75,7 @@
             "face_4": "met gezicht 4 geactiveerd",
             "face_5": "met gezicht 5 geactiveerd",
             "face_6": "met gezicht 6 geactiveerd",
-            "face_any": "Met elk/opgegeven gezicht (en) geactiveerd",
+            "face_any": "Met elk/opgegeven gezicht(en) geactiveerd",
             "left": "Links",
             "open": "Open",
             "right": "Rechts",

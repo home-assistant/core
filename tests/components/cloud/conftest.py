@@ -12,7 +12,7 @@ from . import mock_cloud, mock_cloud_prefs
 @pytest.fixture(autouse=True)
 def mock_user_data():
     """Mock os module."""
-    with patch("hass_nabucasa.Cloud.write_user_info") as writer:
+    with patch("hass_nabucasa.Cloud._write_user_info") as writer:
         yield writer
 
 
@@ -48,6 +48,8 @@ def mock_cloud_login(hass, mock_cloud_setup):
         },
         "test",
     )
+    with patch.object(hass.data[const.DOMAIN].auth, "async_check_token"):
+        yield
 
 
 @pytest.fixture

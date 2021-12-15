@@ -35,7 +35,7 @@ class AdsSwitch(AdsEntity, SwitchEntity):
         await self.async_initialize_device(self._ads_var, self._ads_hub.PLCTYPE_BOOL)
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return True if the entity is on."""
         return self._state_dict[STATE_KEY_STATE]
 

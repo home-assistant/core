@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "cannot_connect": "Ha fallat la connexi\u00f3"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm": {
+                "description": "Vols comen\u00e7ar la configuraci\u00f3?"
+            },
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3"
+                },
+                "description": "Configura la integraci\u00f3 d'un ventilador Modern Forms amb Home Assistant."
+            },
+            "zeroconf_confirm": {
+                "description": "Vols afegir el ventilador de Modern Forms anomenat `{name}` a Home Assistant?",
+                "title": "Dispositiu ventilador Modern Forms descobert"
+            }
+        }
+    },
+    "title": "Modern Forms"
+}

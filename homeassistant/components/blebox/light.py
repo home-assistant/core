@@ -29,13 +29,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class BleBoxLightEntity(BleBoxEntity, LightEntity):
     """Representation of BleBox lights."""
 
-    @property
-    def supported_color_modes(self):
-        """Return supported color modes."""
-        return {self.color_mode}
+    def __init__(self, feature):
+        """Initialize a BleBox light."""
+        super().__init__(feature)
+        self._attr_supported_color_modes = {self.color_mode}
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return if light is on."""
         return self._feature.is_on
 
@@ -56,8 +56,7 @@ class BleBoxLightEntity(BleBoxEntity, LightEntity):
     @property
     def rgbw_color(self):
         """Return the hue and saturation."""
-        rgbw_hex = self._feature.rgbw_hex
-        if rgbw_hex is None:
+        if (rgbw_hex := self._feature.rgbw_hex) is None:
             return None
 
         return tuple(rgb_hex_to_rgb_list(rgbw_hex)[0:4])
