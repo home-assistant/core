@@ -52,7 +52,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     return True
 
 
-class WizBulb(LightEntity):
+class WizBulbEntity(LightEntity):
     """Representation of WiZ Light bulb."""
 
     def __init__(self, light: wizlight, name):
