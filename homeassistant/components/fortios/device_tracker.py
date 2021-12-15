@@ -60,7 +60,7 @@ def get_scanner(hass, config):
         _LOGGER.error(
             "Unsupported FortiOS version :  %s. \
             Version 6.4.3 and newer are supported",
-            version
+            version,
         )
         return None
 
@@ -116,8 +116,8 @@ class FortiOSDeviceScanner(DeviceScanner):
                     _LOGGER.debug(
                         "No hostname found for %s in \
                     client data: %s",
-                    device,
-                    kex
+                        device,
+                        kex
                     )
                     return device.replace(":", "_")
 
