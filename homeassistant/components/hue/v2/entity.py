@@ -47,6 +47,20 @@ class HueBaseEntity(Entity):
             self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, self.device.id)},
             )
+        # some (3th party) Hue lights report their connection status incorrectly
+        # causing the zigbee availability to report as disconnected while in fact
+        # it can be controlled. Although this is in fact something the device manufacturer
+        # should fix, we work around it here. If the light is reported unavailable at
+        # startup, we ignore the availability status of the zigbee connection
+        self._ignore_availability = False
+        if self.device is None:
+            return
+        if zigbee := self.bridge.api.devices.get_zigbee_connectivity(self.device.id):
+            self._ignore_availability = (
+                # Official Hue lights are reliable
+                self.device.product_data.manufacturer_name != "Signify Netherlands B.V."
+                and zigbee.status != ConnectivityServiceStatus.CONNECTED
+            )
 
     @property
     def name(self) -> str:
@@ -64,7 +78,7 @@ class HueBaseEntity(Entity):
         type_title = RESOURCE_TYPE_NAMES.get(
             self.resource.type, self.resource.type.value.replace("_", " ").title()
         )
-        return f"{dev_name}: {type_title}"
+        return f"{dev_name} {type_title}"
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
@@ -98,10 +112,12 @@ class HueBaseEntity(Entity):
     def available(self) -> bool:
         """Return entity availability."""
         if self.device is None:
-            # devices without a device attached should be always available
+            # entities without a device attached should be always available
             return True
         if self.resource.type == ResourceTypes.ZIGBEE_CONNECTIVITY:
             # the zigbee connectivity sensor itself should be always available
+            return True
+        if self._ignore_availability:
             return True
         if zigbee := self.bridge.api.devices.get_zigbee_connectivity(self.device.id):
             # all device-attached entities get availability from the zigbee connectivity

@@ -50,6 +50,14 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return HueOptionsFlowHandler(config_entry)
 
+    @classmethod
+    @callback
+    def async_supports_options_flow(
+        cls, config_entry: config_entries.ConfigEntry
+    ) -> bool:
+        """Return options flow support for this handler."""
+        return config_entry.data.get(CONF_API_VERSION, 1) == 1
+
     def __init__(self) -> None:
         """Initialize the Hue flow."""
         self.bridge: DiscoveredHueBridge | None = None
@@ -216,16 +224,17 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if not url.hostname:
             return self.async_abort(reason="not_hue_bridge")
 
-        bridge = await self._get_bridge(
+        # abort if we already have exactly this bridge id/host
+        # reload the integration if the host got updated
+        bridge_id = normalize_bridge_id(discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL])
+        await self.async_set_unique_id(bridge_id)
+        self._abort_if_unique_id_configured(
+            updates={CONF_HOST: url.hostname}, reload_on_update=True
+        )
+
+        self.bridge = await self._get_bridge(
             url.hostname, discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL]
         )
-
-        await self.async_set_unique_id(bridge.id)
-        self._abort_if_unique_id_configured(
-            updates={CONF_HOST: bridge.host}, reload_on_update=False
-        )
-
-        self.bridge = bridge
         return await self.async_step_link()
 
     async def async_step_zeroconf(
@@ -236,17 +245,18 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         This flow is triggered by the Zeroconf component. It will check if the
         host is already configured and delegate to the import step if not.
         """
-        bridge = await self._get_bridge(
-            discovery_info.host,
-            discovery_info.properties["bridgeid"],
-        )
-
-        await self.async_set_unique_id(bridge.id)
+        # abort if we already have exactly this bridge id/host
+        # reload the integration if the host got updated
+        bridge_id = normalize_bridge_id(discovery_info.properties["bridgeid"])
+        await self.async_set_unique_id(bridge_id)
         self._abort_if_unique_id_configured(
-            updates={CONF_HOST: bridge.host}, reload_on_update=False
+            updates={CONF_HOST: discovery_info.host}, reload_on_update=True
         )
 
-        self.bridge = bridge
+        # we need to query the other capabilities too
+        self.bridge = await self._get_bridge(
+            discovery_info.host, discovery_info.properties["bridgeid"]
+        )
         return await self.async_step_link()
 
     async def async_step_homekit(
@@ -289,10 +299,6 @@ class HueOptionsFlowHandler(config_entries.OptionsFlow):
         """Manage Hue options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
-
-        if self.config_entry.data.get(CONF_API_VERSION, 1) > 1:
-            # Options for Hue are only applicable to V1 bridges.
-            return self.async_show_form(step_id="init")
 
         return self.async_show_form(
             step_id="init",

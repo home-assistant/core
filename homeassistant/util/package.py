@@ -93,6 +93,7 @@ def install_package(
             # Workaround for incompatible prefix setting
             # See http://stackoverflow.com/a/4495175
             args += ["--prefix="]
+    _LOGGER.debug("Running pip command: args=%s", args)
     with Popen(args, stdin=PIPE, stdout=PIPE, stderr=PIPE, env=env) as process:
         _, stderr = process.communicate()
         if process.returncode != 0:

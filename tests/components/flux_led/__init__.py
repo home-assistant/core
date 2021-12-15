@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import contextmanager
 import datetime
 from typing import Callable
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -66,6 +67,7 @@ def _mocked_bulb() -> AIOWifiLedBulb:
         bulb.data_receive_callback = callback
 
     bulb.device_type = DeviceType.Bulb
+    bulb.requires_turn_on = True
     bulb.async_setup = AsyncMock(side_effect=_save_setup_callback)
     bulb.effect_list = ["some_effect"]
     bulb.async_set_custom_pattern = AsyncMock()
@@ -115,6 +117,7 @@ def _mocked_switch() -> AIOWifiLedBulb:
         switch.data_receive_callback = callback
 
     switch.device_type = DeviceType.Switch
+    switch.requires_turn_on = True
     switch.async_setup = AsyncMock(side_effect=_save_setup_callback)
     switch.async_stop = AsyncMock()
     switch.async_update = AsyncMock()
@@ -160,11 +163,20 @@ def _patch_discovery(device=None, no_device=False):
     async def _discovery(*args, **kwargs):
         if no_device:
             raise OSError
-        return [FLUX_DISCOVERY]
+        return [] if no_device else [device or FLUX_DISCOVERY]
 
-    return patch(
-        "homeassistant.components.flux_led.AIOBulbScanner.async_scan", new=_discovery
-    )
+    @contextmanager
+    def _patcher():
+        with patch(
+            "homeassistant.components.flux_led.AIOBulbScanner.async_scan",
+            new=_discovery,
+        ), patch(
+            "homeassistant.components.flux_led.AIOBulbScanner.getBulbInfo",
+            return_value=[] if no_device else [device or FLUX_DISCOVERY],
+        ):
+            yield
+
+    return _patcher()
 
 
 def _patch_wifibulb(device=None, no_device=False):

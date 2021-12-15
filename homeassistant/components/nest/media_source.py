@@ -18,14 +18,13 @@ https://developers.google.com/nest/device-access/api/camera#handle_camera_events
 
 from __future__ import annotations
 
-from collections import OrderedDict
 from collections.abc import Mapping
 from dataclasses import dataclass
 import logging
 
 from google_nest_sdm.camera_traits import CameraClipPreviewTrait, CameraEventImageTrait
 from google_nest_sdm.device import Device
-from google_nest_sdm.event import ImageEventBase
+from google_nest_sdm.event import EventImageType, ImageEventBase
 
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_DIRECTORY,
@@ -42,11 +41,13 @@ from homeassistant.components.media_source.models import (
     MediaSourceItem,
     PlayMedia,
 )
-from homeassistant.components.nest.const import DATA_SUBSCRIBER, DOMAIN
-from homeassistant.components.nest.device_info import NestDeviceInfo
-from homeassistant.components.nest.events import MEDIA_SOURCE_EVENT_TITLE_MAP
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers.template import DATE_STR_FORMAT
+from homeassistant.util import dt as dt_util
+
+from .const import DATA_SUBSCRIBER, DOMAIN
+from .device_info import NestDeviceInfo
+from .events import MEDIA_SOURCE_EVENT_TITLE_MAP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,6 +64,9 @@ async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
 
 async def get_media_source_devices(hass: HomeAssistant) -> Mapping[str, Device]:
     """Return a mapping of device id to eligible Nest event media devices."""
+    if DATA_SUBSCRIBER not in hass.data[DOMAIN]:
+        # Integration unloaded, or is legacy nest integration
+        return {}
     subscriber = hass.data[DOMAIN][DATA_SUBSCRIBER]
     device_manager = await subscriber.async_get_device_manager()
     device_registry = await hass.helpers.device_registry.async_get_registry()
@@ -137,7 +141,7 @@ class NestMediaSource(MediaSource):
             raise Unresolvable(
                 "Unable to find device with identifier: %s" % item.identifier
             )
-        events = _get_events(device)
+        events = await _get_events(device)
         if media_id.event_id not in events:
             raise Unresolvable(
                 "Unable to find event with identifier: %s" % item.identifier
@@ -180,16 +184,16 @@ class NestMediaSource(MediaSource):
             # Browse a specific device and return child events
             browse_device = _browse_device(media_id, device)
             browse_device.children = []
-            events = _get_events(device)
+            events = await _get_events(device)
             for child_event in events.values():
-                event_id = MediaId(media_id.device_id, child_event.event_id)
+                event_id = MediaId(media_id.device_id, child_event.event_session_id)
                 browse_device.children.append(
                     _browse_event(event_id, device, child_event)
                 )
             return browse_device
 
         # Browse a specific event
-        events = _get_events(device)
+        events = await _get_events(device)
         if not (event := events.get(media_id.event_id)):
             raise BrowseError(
                 "Unable to find event with identiifer: %s" % item.identifier
@@ -201,9 +205,10 @@ class NestMediaSource(MediaSource):
         return await get_media_source_devices(self.hass)
 
 
-def _get_events(device: Device) -> Mapping[str, ImageEventBase]:
+async def _get_events(device: Device) -> Mapping[str, ImageEventBase]:
     """Return relevant events for the specified device."""
-    return OrderedDict({e.event_id: e for e in device.event_media_manager.events})
+    events = await device.event_media_manager.async_events()
+    return {e.event_session_id: e for e in events}
 
 
 def _browse_root() -> BrowseMediaSource:
@@ -250,9 +255,9 @@ def _browse_event(
         media_content_type=MEDIA_TYPE_IMAGE,
         title=CLIP_TITLE_FORMAT.format(
             event_name=MEDIA_SOURCE_EVENT_TITLE_MAP.get(event.event_type, "Event"),
-            event_time=dt_util.as_local(event.timestamp),
+            event_time=dt_util.as_local(event.timestamp).strftime(DATE_STR_FORMAT),
         ),
-        can_play=True,
+        can_play=(event.event_image_type == EventImageType.CLIP_PREVIEW),
         can_expand=False,
         thumbnail=None,
         children=[],

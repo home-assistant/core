@@ -706,12 +706,7 @@ async def test_options_flow_v2(hass):
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "init"
-    # V2 bridge does not have config options
-    assert result["data_schema"] is None
+    assert config_flow.HueFlowHandler.async_supports_options_flow(entry) is False
 
 
 async def test_bridge_zeroconf(hass, aioclient_mock):

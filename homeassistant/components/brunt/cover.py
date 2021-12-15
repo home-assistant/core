@@ -10,10 +10,10 @@ from brunt import BruntClientAsync, Thing
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    DEVICE_CLASS_SHADE,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
+    CoverDeviceClass,
     CoverEntity,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -101,7 +101,7 @@ class BruntDevice(CoordinatorEntity, CoverEntity):
         self._remove_update_listener = None
 
         self._attr_name = self._thing.NAME
-        self._attr_device_class = DEVICE_CLASS_SHADE
+        self._attr_device_class = CoverDeviceClass.SHADE
         self._attr_supported_features = COVER_FEATURES
         self._attr_attribution = ATTRIBUTION
         self._attr_device_info = DeviceInfo(

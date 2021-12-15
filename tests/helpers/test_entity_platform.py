@@ -519,7 +519,7 @@ async def test_registry_respect_entity_disabled(hass):
                 unique_id="1234",
                 # Using component.async_add_entities is equal to platform "domain"
                 platform="test_platform",
-                disabled_by=er.DISABLED_USER,
+                disabled_by=er.RegistryEntryDisabler.USER,
             )
         },
     )
@@ -1077,7 +1077,7 @@ async def test_entity_disabled_by_integration(hass):
     entry_default = registry.async_get_or_create(DOMAIN, DOMAIN, "default")
     assert entry_default.disabled_by is None
     entry_disabled = registry.async_get_or_create(DOMAIN, DOMAIN, "disabled")
-    assert entry_disabled.disabled_by == er.DISABLED_INTEGRATION
+    assert entry_disabled.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
 async def test_entity_disabled_by_device(hass: HomeAssistant):
@@ -1115,7 +1115,7 @@ async def test_entity_disabled_by_device(hass: HomeAssistant):
     registry = er.async_get(hass)
 
     entry_disabled = registry.async_get_or_create(DOMAIN, DOMAIN, "disabled")
-    assert entry_disabled.disabled_by == er.DISABLED_DEVICE
+    assert entry_disabled.disabled_by is er.RegistryEntryDisabler.DEVICE
 
 
 async def test_entity_info_added_to_entity_registry(hass):

@@ -7,7 +7,7 @@ from ipaddress import IPv4Address, IPv6Address
 import logging
 from urllib.parse import urlparse
 
-from async_upnp_client.search import SsdpSearchListener
+from async_upnp_client.search import SsdpHeaders, SsdpSearchListener
 
 from homeassistant import config_entries
 from homeassistant.components import network, ssdp
@@ -174,10 +174,9 @@ class YeelightScanner:
         # of another discovery
         async_call_later(self._hass, 1, _async_start_flow)
 
-    async def _async_process_entry(self, response: ssdp.SsdpServiceInfo):
+    async def _async_process_entry(self, headers: SsdpHeaders):
         """Process a discovery."""
-        _LOGGER.debug("Discovered via SSDP: %s", response)
-        headers = response.ssdp_headers
+        _LOGGER.debug("Discovered via SSDP: %s", headers)
         unique_id = headers["id"]
         host = urlparse(headers["location"]).hostname
         current_entry = self._unique_id_capabilities.get(unique_id)

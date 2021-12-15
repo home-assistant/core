@@ -32,11 +32,12 @@
             },
             "user": {
                 "data": {
+                    "auth_code": "Yetkilendirme Kodu",
                     "code": "Kod (Home Assistant kullan\u0131c\u0131 aray\u00fcz\u00fcnde kullan\u0131l\u0131r)",
                     "password": "Parola",
-                    "username": "E-posta adresi"
+                    "username": "E-posta"
                 },
-                "description": "2021'den itibaren SimpliSafe, web uygulamas\u0131 arac\u0131l\u0131\u011f\u0131yla yeni bir kimlik do\u011frulama mekanizmas\u0131na ge\u00e7ti. Teknik s\u0131n\u0131rlamalar nedeniyle bu i\u015flemin sonunda manuel bir ad\u0131m vard\u0131r; l\u00fctfen ba\u015flamadan \u00f6nce [belgeleri](http://home-assistant.io/integrations/simplisafe#getting-an-authorization-code) okudu\u011funuzdan emin olun. \n\n Haz\u0131r oldu\u011funuzda SimpliSafe web uygulamas\u0131n\u0131 a\u00e7mak ve kimlik bilgilerinizi girmek i\u00e7in [buray\u0131]( {url} \u0130\u015flem tamamland\u0131\u011f\u0131nda buraya d\u00f6n\u00fcn ve G\u00f6nder'e t\u0131klay\u0131n.",
+                "description": "SimpliSafe, SimpliSafe web uygulamas\u0131 arac\u0131l\u0131\u011f\u0131yla Home Assistant ile kimlik do\u011frulamas\u0131 yapar. Teknik s\u0131n\u0131rlamalar nedeniyle bu i\u015flemin sonunda manuel bir ad\u0131m vard\u0131r; l\u00fctfen ba\u015flamadan \u00f6nce [belgeleri]( {docs_url} \n\n 1. SimpliSafe web uygulamas\u0131n\u0131 a\u00e7mak ve kimlik bilgilerinizi girmek i\u00e7in [buraya]( {url} \n\n 2. Oturum a\u00e7ma i\u015flemi tamamland\u0131\u011f\u0131nda buraya d\u00f6n\u00fcn ve yetkilendirme kodunu a\u015fa\u011f\u0131ya girin.",
                 "title": "Bilgilerinizi doldurun."
             }
         }
