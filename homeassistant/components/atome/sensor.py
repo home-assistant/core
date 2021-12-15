@@ -60,7 +60,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     atome_client = AtomeClient(username, password)
     if not atome_client.login():
-        _LOGGER.error("No login available.")
+        _LOGGER.error("No login available for atome server")
         return
 
     data = AtomeData(atome_client)
