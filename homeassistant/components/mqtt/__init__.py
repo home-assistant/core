@@ -317,6 +317,36 @@ class MqttCommandTemplate:
         )
 
 
+class MqttValueTemplate:
+    """Class for rendering MQTT value template with possible json values."""
+
+    def __init__(
+        self,
+        value_template: template.Template | None,
+        hass: HomeAssistant,
+    ) -> None:
+        """Instantiate a value template."""
+        self._attr_value_template = value_template
+        if value_template is None:
+            return
+
+        value_template.hass = hass
+
+    @callback
+    def async_render_with_possible_json_value(
+        self,
+        payload: ReceivePayloadType,
+        variables: template.TemplateVarsType = None,
+    ) -> ReceivePayloadType:
+        """Render with possible json value or pass-though a received MQTT value."""
+        if self._attr_value_template is None:
+            return payload
+
+        return self._attr_value_template.async_render_with_possible_json_value(
+            payload, variables=variables
+        )
+
+
 @dataclass
 class MqttServiceInfo(BaseServiceInfo):
     """Prepared info from mqtt entries."""
