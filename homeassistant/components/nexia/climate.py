@@ -58,6 +58,8 @@ from .coordinator import NexiaDataUpdateCoordinator
 from .entity import NexiaThermostatZoneEntity
 from .util import percent_conv
 
+PARALLEL_UPDATES = 1
+
 SERVICE_SET_AIRCLEANER_MODE = "set_aircleaner_mode"
 SERVICE_SET_HUMIDIFY_SETPOINT = "set_humidify_setpoint"
 SERVICE_SET_HVAC_RUN_MODE = "set_hvac_run_mode"
