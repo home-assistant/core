@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
+    BinarySensorDeviceClass,
 )
 from homeassistant.const import (
     ATTR_CODE,
@@ -38,7 +39,7 @@ SIGNAL_ARMING_STATE_CHANGED = "ness_alarm.arming_state_changed"
 
 ZoneChangedData = namedtuple("ZoneChangedData", ["zone_id", "state"])
 
-DEFAULT_ZONE_TYPE = "motion"
+DEFAULT_ZONE_TYPE = BinarySensorDeviceClass.MOTION
 ZONE_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ZONE_NAME): cv.string,
