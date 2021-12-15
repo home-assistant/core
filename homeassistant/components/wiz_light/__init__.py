@@ -29,7 +29,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     except (WizLightTimeOutError, WizLightConnectionError) as err:
         raise ConfigEntryNotReady from err
 
-    hass.data[DOMAIN][entry.entry_id] = wizbulb
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = WizData(
+         bulb=bulb,
+         mac_addr=mac_addr,
+         bulb_type=bulb_type
+    )
     for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
