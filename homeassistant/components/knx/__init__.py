@@ -45,6 +45,7 @@ from .const import (
     CONF_KNX_INDIVIDUAL_ADDRESS,
     CONF_KNX_ROUTING,
     CONF_KNX_TUNNELING,
+    DATA_HASS_CONFIG,
     DATA_KNX_CONFIG,
     DOMAIN,
     KNX_ADDRESS,
@@ -196,6 +197,7 @@ SERVICE_KNX_EXPOSURE_REGISTER_SCHEMA = vol.Any(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Start the KNX integration."""
+    hass.data[DATA_HASS_CONFIG] = config
     conf: ConfigType | None = config.get(DOMAIN)
 
     if conf is None:
@@ -263,7 +265,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # set up notify platform, no entry support for notify component yet
     if NotifySchema.PLATFORM in config:
         hass.async_create_task(
-            discovery.async_load_platform(hass, "notify", DOMAIN, {}, config)
+            discovery.async_load_platform(
+                hass, "notify", DOMAIN, {}, hass.data[DATA_HASS_CONFIG]
+            )
         )
 
     hass.services.async_register(
