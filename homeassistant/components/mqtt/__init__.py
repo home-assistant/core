@@ -87,6 +87,7 @@ from .const import (
     PROTOCOL_311,
 )
 from .discovery import LAST_DISCOVERY
+from .mixins import MqttEntity
 from .models import (
     AsyncMessageCallbackType,
     MessageCallbackType,
@@ -98,6 +99,8 @@ from .models import (
 from .util import _VALID_QOS_SCHEMA, valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
+
+_SENTINEL = object()
 
 DATA_MQTT = "mqtt"
 
@@ -323,23 +326,22 @@ class MqttValueTemplate:
     def __init__(
         self,
         value_template: template.Template | None,
-        hass: HomeAssistant,
-        variables: template.TemplateVarsType = None,
+        entity: MqttEntity,
     ) -> None:
         """Instantiate a value template."""
         self._attr_value_template = value_template
         if value_template is None:
             return
 
-        value_template.hass = hass
+        value_template.hass = entity.hass
 
-        if variables is not None:
-            self._variables = variables
+        self._variables = {"entity_id": entity.entity_id}
 
     @callback
     def async_render_with_possible_json_value(
         self,
         payload: ReceivePayloadType,
+        default: ReceivePayloadType | object = _SENTINEL,
         variables: template.TemplateVarsType = None,
     ) -> ReceivePayloadType:
         """Render with possible json value or pass-though a received MQTT value."""
@@ -347,14 +349,18 @@ class MqttValueTemplate:
             return payload
 
         values: dict[str, Any] = {}
-        if self._variables is not None:
-            values.update(self._variables)
+        values.update(self._variables)
 
         if variables is not None:
             values.update(variables)
 
+        if default == _SENTINEL:
+            return self._attr_value_template.async_render_with_possible_json_value(
+                payload, variables=values
+            )
+
         return self._attr_value_template.async_render_with_possible_json_value(
-            payload, variables=values
+            payload, default, variables=values
         )
 
 
