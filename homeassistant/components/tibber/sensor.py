@@ -89,6 +89,12 @@ RT_SENSORS: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
+        key="estimatedHourConsumption",
+        name="Estimated consumption current hour",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+    ),
+    SensorEntityDescription(
         key="accumulatedProduction",
         name="accumulated production",
         device_class=SensorDeviceClass.ENERGY,
@@ -308,7 +314,6 @@ class TibberSensorElPrice(TibberSensor):
         ):
             _LOGGER.debug("Asking for new data")
             await self._fetch_data()
-
         elif (
             self._tibber_home.current_price_total
             and self._last_updated
