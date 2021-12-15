@@ -1,6 +1,6 @@
 """WiZ Light integration."""
 import logging
-
+from dataclasses import dataclass
 from pywizlight import wizlight
 from pywizlight.exceptions import WizLightConnectionError, WizLightTimeOutError
 
