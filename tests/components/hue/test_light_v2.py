@@ -243,7 +243,7 @@ async def test_grouped_lights(hass, mock_bridge_v2, v2_resources_test_data):
 
         assert entity_entry
         assert entity_entry.disabled
-        assert entity_entry.disabled_by == er.DISABLED_INTEGRATION
+        assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
         # entity should not have a device assigned
         assert entity_entry.device_id is None
 

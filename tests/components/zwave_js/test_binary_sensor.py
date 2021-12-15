@@ -89,7 +89,7 @@ async def test_disabled_legacy_sensor(hass, multisensor_6, integration):
     entry = registry.async_get(entity_id)
     assert entry
     assert entry.disabled
-    assert entry.disabled_by == er.DISABLED_INTEGRATION
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
     # Test enabling legacy entity
     updated_entry = registry.async_update_entity(
