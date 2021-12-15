@@ -202,14 +202,8 @@ class LocalMillSensor(CoordinatorEntity, SensorEntity):
         self._attr_name = (
             f"{coordinator.mill_data_connection.name} {entity_description.name}"
         )
-        self._update_attr()
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._update_attr()
-        self.async_write_ha_state()
-
-    @callback
-    def _update_attr(self) -> None:
-        self._attr_native_value = self.coordinator.data[self.entity_description.key]
+    @property
+    def native_value(self):
+        """Return the native value of the sensor."""
+        return self.coordinator.data[self.entity_description.key]

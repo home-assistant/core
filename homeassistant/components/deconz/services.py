@@ -5,7 +5,6 @@ from types import MappingProxyType
 from pydeconz.utils import normalize_bridge_id
 import voluptuous as vol
 
-from homeassistant.components.deconz.gateway import DeconzGateway
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import (
     config_validation as cv,
@@ -20,6 +19,7 @@ from homeassistant.helpers.entity_registry import (
 
 from .config_flow import get_master_gateway
 from .const import CONF_BRIDGE_ID, DOMAIN, LOGGER
+from .gateway import DeconzGateway
 
 DECONZ_SERVICES = "deconz_services"
 

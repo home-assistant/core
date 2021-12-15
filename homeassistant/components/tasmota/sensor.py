@@ -81,6 +81,7 @@ SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },
     hc.SENSOR_DEWPOINT: {
+        DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
         ICON: "mdi:weather-rainy",
         STATE_CLASS: SensorStateClass.MEASUREMENT,
     },

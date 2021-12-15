@@ -521,6 +521,10 @@ DHCP = [
         "macaddress": "D81F12*"
     },
     {
+        "domain": "twinkly",
+        "hostname": "twinkly_*"
+    },
+    {
         "domain": "verisure",
         "macaddress": "0023C1*"
     },
