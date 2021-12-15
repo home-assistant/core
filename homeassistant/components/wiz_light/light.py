@@ -355,6 +355,8 @@ class WizBulbEntity(LightEntity):
 
     def featuremap(self):
         """Map the features from WizLight Class."""
+        if not self._bulbtype:
+            return SUPPORT_FEATURES_RGB
         features = 0
         try:
             # Map features for better reading
