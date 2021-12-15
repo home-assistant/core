@@ -23,13 +23,13 @@ from .const import DOMAIN as KONNECTED_DOMAIN, SIGNAL_DS18B20_NEW
 
 SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     "temperature": SensorEntityDescription(
-        key=SensorDeviceClass.TEMPERATURE,
+        key="temperature",
         name="Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     "humidity": SensorEntityDescription(
-        key=SensorDeviceClass.HUMIDITY,
+        key="humidity",
         name="Humidity",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
@@ -132,7 +132,7 @@ class KonnectedSensor(SensorEntity):
     @callback
     def async_set_state(self, state):
         """Update the sensor's state."""
-        if self.entity_description.key == SensorDeviceClass.HUMIDITY:
+        if self.entity_description.key == "humidity":
             self._state = int(float(state))
         else:
             self._state = round(float(state), 1)
