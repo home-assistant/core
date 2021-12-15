@@ -24,7 +24,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     _LOGGER.debug("Get bulb with IP: %s", ip_address)
     try:
         bulb = wizlight(ip_address)
-        wizbulb = WizBulb(bulb, entry.data.get(CONF_NAME))
         await wizbulb.get_bulb_type()
         await wizbulb.get_mac()
     except (WizLightTimeOutError, WizLightConnectionError) as err:
