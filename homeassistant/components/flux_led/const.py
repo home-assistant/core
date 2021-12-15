@@ -33,7 +33,6 @@ API: Final = "flux_api"
 
 SIGNAL_STATE_UPDATED = "flux_led_{}_state_updated"
 
-CONF_AUTOMATIC_ADD: Final = "automatic_add"
 DEFAULT_NETWORK_SCAN_INTERVAL: Final = 120
 DEFAULT_SCAN_INTERVAL: Final = 5
 DEFAULT_EFFECT_SPEED: Final = 50
@@ -50,21 +49,11 @@ FLUX_LED_EXCEPTIONS: Final = (
 STARTUP_SCAN_TIMEOUT: Final = 5
 DISCOVER_SCAN_TIMEOUT: Final = 10
 
-CONF_DEVICES: Final = "devices"
-CONF_CUSTOM_EFFECT: Final = "custom_effect"
 CONF_MODEL: Final = "model"
 CONF_MINOR_VERSION: Final = "minor_version"
 CONF_REMOTE_ACCESS_ENABLED: Final = "remote_access_enabled"
 CONF_REMOTE_ACCESS_HOST: Final = "remote_access_host"
 CONF_REMOTE_ACCESS_PORT: Final = "remote_access_port"
-
-MODE_AUTO: Final = "auto"
-MODE_RGB: Final = "rgb"
-MODE_RGBW: Final = "rgbw"
-
-# This mode enables white value to be controlled by brightness.
-# RGB value is ignored when this mode is specified.
-MODE_WHITE: Final = "w"
 
 TRANSITION_GRADUAL: Final = "gradual"
 TRANSITION_JUMP: Final = "jump"
