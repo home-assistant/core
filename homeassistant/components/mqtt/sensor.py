@@ -195,7 +195,6 @@ class MqttSensor(MqttEntity, SensorEntity):
                 variables = {"entity_id": self.entity_id}
                 payload = template.async_render_with_possible_json_value(
                     payload,
-                    self._state,
                     variables=variables,
                 )
 
@@ -220,7 +219,6 @@ class MqttSensor(MqttEntity, SensorEntity):
                 variables = {"entity_id": self.entity_id}
                 payload = template.async_render_with_possible_json_value(
                     payload,
-                    self._state,
                     variables=variables,
                 )
             if not payload:

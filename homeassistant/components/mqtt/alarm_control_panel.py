@@ -165,7 +165,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
             value_template = self._config.get(CONF_VALUE_TEMPLATE)
             if value_template is not None:
                 payload = value_template.async_render_with_possible_json_value(
-                    msg.payload, self._state
+                    msg.payload
                 )
             if payload not in (
                 STATE_ALARM_DISARMED,
