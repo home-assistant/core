@@ -117,7 +117,7 @@ class FortiOSDeviceScanner(DeviceScanner):
                         "No hostname found for %s in \
                     client data: %s",
                         device,
-                        kex
+                        kex,
                     )
                     return device.replace(":", "_")
 
