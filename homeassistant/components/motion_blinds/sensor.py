@@ -1,12 +1,8 @@
 """Support for Motion Blinds sensors."""
 from motionblinds import BlindType
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import (
-    PERCENTAGE,
-    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    SensorDeviceClass,
-)
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.const import PERCENTAGE, SIGNAL_STRENGTH_DECIBELS_MILLIWATT
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
