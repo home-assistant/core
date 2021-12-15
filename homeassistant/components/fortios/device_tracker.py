@@ -50,7 +50,7 @@ def get_scanner(hass, config):
     version = status_json["version"][1:]
     _LOGGER.debug("FortiOS version: %s", version)
 
-    fos_major, fos_minor, fos_patch = [int(x, 10) for x in version.split(".")]
+    fos_major, fos_minor, fos_patch = (int(x, 10) for x in version.split("."))
 
     if (
         fos_major < 6
