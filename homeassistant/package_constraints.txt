@@ -21,7 +21,7 @@ httpx==0.21.0
 ifaddr==0.1.7
 jinja2==3.0.3
 paho-mqtt==1.6.1
-pillow==8.3.2
+pillow==8.2.0
 pip>=8.0.3,<20.3
 pyserial==3.5
 python-slugify==4.0.1
@@ -34,6 +34,8 @@ voluptuous-serialize==2.4.0
 voluptuous==0.12.2
 yarl==1.6.3
 zeroconf==0.37.0
+
+# Constrain pillow to 8.2.0 because later versions are causing issues in nightly builds.
 
 pycryptodome>=3.6.6
 
