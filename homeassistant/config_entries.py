@@ -137,7 +137,7 @@ class ConfigEntryDisabler(StrEnum):
     USER = "user"
 
 
-# DISABLED_* are deprecated, to be removed in 2022.3
+# DISABLED_* is deprecated, to be removed in 2022.3
 DISABLED_USER = ConfigEntryDisabler.USER.value
 
 RELOAD_AFTER_UPDATE_DELAY = 30
