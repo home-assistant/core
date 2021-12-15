@@ -612,10 +612,24 @@ class SimpliSafe:
                 data={**self.entry.data, CONF_TOKEN: token},
             )
 
+        @callback
+        def async_handle_refresh_token(token: str) -> None:
+            """Handle a new refresh token."""
+            async_save_refresh_token(token)
+
+            if TYPE_CHECKING:
+                assert self._api.websocket
+
+            if self._api.websocket.connected:
+                # If a websocket connection is open, reconnect it to use the
+                # new access token:
+                asyncio.create_task(self._api.websocket.async_reconnect())
+
         self.entry.async_on_unload(
-            self._api.add_refresh_token_callback(async_save_refresh_token)
+            self._api.add_refresh_token_callback(async_handle_refresh_token)
         )
 
+        # Save the refresh token we got on entry setup:
         async_save_refresh_token(self._api.refresh_token)
 
     async def async_update(self) -> None:

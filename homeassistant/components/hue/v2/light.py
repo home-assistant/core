@@ -6,17 +6,20 @@ from typing import Any
 from aiohue import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
 from aiohue.v2.controllers.lights import LightsController
+from aiohue.v2.models.feature import AlertEffectType
 from aiohue.v2.models.light import Light
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
+    ATTR_FLASH,
     ATTR_TRANSITION,
     ATTR_XY_COLOR,
     COLOR_MODE_BRIGHTNESS,
     COLOR_MODE_COLOR_TEMP,
     COLOR_MODE_ONOFF,
     COLOR_MODE_XY,
+    SUPPORT_FLASH,
     SUPPORT_TRANSITION,
     LightEntity,
 )
@@ -31,6 +34,7 @@ from .entity import HueBaseEntity
 ALLOWED_ERRORS = [
     "device (light) has communication issues, command (on) may not have effect",
     'device (light) is "soft off", command (on) may not have effect',
+    "attribute (supportedAlertActions) cannot be written",
 ]
 
 
@@ -68,6 +72,7 @@ class HueLight(HueBaseEntity, LightEntity):
     ) -> None:
         """Initialize the light."""
         super().__init__(bridge, controller, resource)
+        self._attr_supported_features |= SUPPORT_FLASH
         self.resource = resource
         self.controller = controller
         self._supported_color_modes = set()
@@ -154,6 +159,7 @@ class HueLight(HueBaseEntity, LightEntity):
         xy_color = kwargs.get(ATTR_XY_COLOR)
         color_temp = kwargs.get(ATTR_COLOR_TEMP)
         brightness = kwargs.get(ATTR_BRIGHTNESS)
+        flash = kwargs.get(ATTR_FLASH)
         if brightness is not None:
             # Hue uses a range of [0, 100] to control brightness.
             brightness = float((brightness / 255) * 100)
@@ -169,12 +175,14 @@ class HueLight(HueBaseEntity, LightEntity):
             color_xy=xy_color,
             color_temp=color_temp,
             transition_time=transition,
+            alert=AlertEffectType.BREATHE if flash is not None else None,
             allowed_errors=ALLOWED_ERRORS,
         )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         transition = kwargs.get(ATTR_TRANSITION)
+        flash = kwargs.get(ATTR_FLASH)
         if transition is not None:
             # hue transition duration is in milliseconds
             transition = int(transition * 1000)
@@ -183,5 +191,6 @@ class HueLight(HueBaseEntity, LightEntity):
             id=self.resource.id,
             on=False,
             transition_time=transition,
+            alert=AlertEffectType.BREATHE if flash is not None else None,
             allowed_errors=ALLOWED_ERRORS,
         )
