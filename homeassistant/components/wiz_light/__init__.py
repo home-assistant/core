@@ -24,8 +24,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     _LOGGER.debug("Get bulb with IP: %s", ip_address)
     try:
         bulb = wizlight(ip_address)
-        await wizbulb.get_bulb_type()
-        await wizbulb.get_mac()
+        mac_addr = await bulb.getMac()
+        bulb_type = await bulb.get_bulbtype()
     except (WizLightTimeOutError, WizLightConnectionError) as err:
         raise ConfigEntryNotReady from err
 
