@@ -86,7 +86,7 @@ async def async_setup_platform(
     """Set up the template select."""
     if discovery_info is None:
         _LOGGER.warning(
-            "Template number entities can only be configured under template:"
+            "Template select entities can only be configured under template:"
         )
         return
 

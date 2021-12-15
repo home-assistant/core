@@ -1,4 +1,6 @@
 """Support for RFXtrx switches."""
+from __future__ import annotations
+
 import logging
 
 import RFXtrx as rfxtrxmod
@@ -10,6 +12,7 @@ from homeassistant.core import callback
 from . import (
     DEFAULT_SIGNAL_REPETITIONS,
     DOMAIN,
+    DeviceTuple,
     RfxtrxCommandEntity,
     connect_auto_add,
     get_device_id,
@@ -44,7 +47,7 @@ async def async_setup_entry(
 ):
     """Set up config entry."""
     discovery_info = config_entry.data
-    device_ids = set()
+    device_ids: set[DeviceTuple] = set()
 
     # Add switch from config file
     entities = []
@@ -79,16 +82,18 @@ async def async_setup_entry(
             return
         device_ids.add(device_id)
 
+        device: rfxtrxmod.RFXtrxDevice = event.device
+
         _LOGGER.info(
             "Added switch (Device ID: %s Class: %s Sub: %s, Event: %s)",
-            event.device.id_string.lower(),
-            event.device.__class__.__name__,
-            event.device.subtype,
+            device.id_string.lower(),
+            device.__class__.__name__,
+            device.subtype,
             "".join(f"{x:02x}" for x in event.data),
         )
 
         entity = RfxtrxSwitch(
-            event.device, device_id, DEFAULT_SIGNAL_REPETITIONS, event=event
+            device, device_id, DEFAULT_SIGNAL_REPETITIONS, event=event
         )
         async_add_entities([entity])
 
@@ -108,8 +113,9 @@ class RfxtrxSwitch(RfxtrxCommandEntity, SwitchEntity):
             if old_state is not None:
                 self._state = old_state.state == STATE_ON
 
-    def _apply_event(self, event):
+    def _apply_event(self, event: rfxtrxmod.RFXtrxEvent) -> None:
         """Apply command from rfxtrx."""
+        assert isinstance(event, rfxtrxmod.ControlEvent)
         super()._apply_event(event)
         if event.values["Command"] in COMMAND_ON_LIST:
             self._state = True
@@ -117,7 +123,9 @@ class RfxtrxSwitch(RfxtrxCommandEntity, SwitchEntity):
             self._state = False
 
     @callback
-    def _handle_event(self, event, device_id):
+    def _handle_event(
+        self, event: rfxtrxmod.RFXtrxEvent, device_id: DeviceTuple
+    ) -> None:
         """Check if event applies to me and update."""
         if self._event_applies(event, device_id):
             self._apply_event(event)

@@ -403,15 +403,3 @@ class CoverEntity(Entity):
         if self._cover_is_last_toggle_direction_open:
             return fns["close"]
         return fns["open"]
-
-
-class CoverDevice(CoverEntity):
-    """Representation of a cover (for backwards compatibility)."""
-
-    def __init_subclass__(cls, **kwargs):
-        """Print deprecation warning."""
-        super().__init_subclass__(**kwargs)
-        _LOGGER.warning(
-            "CoverDevice is deprecated, modify %s to extend CoverEntity",
-            cls.__name__,
-        )

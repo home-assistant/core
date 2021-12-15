@@ -362,14 +362,14 @@ class AsusWrtRouter:
             SENSORS_TYPE_COUNT: SENSORS_CONNECTED_DEVICE,
             SENSORS_TYPE_LOAD_AVG: SENSORS_LOAD_AVG,
             SENSORS_TYPE_RATES: SENSORS_RATES,
-            SENSORS_TYPE_TEMPERATURES: SENSORS_TEMPERATURES,
         }
+        sensors_types[
+            SENSORS_TYPE_TEMPERATURES
+        ] = await self._get_available_temperature_sensors()
 
         for sensor_type, sensor_names in sensors_types.items():
-            if sensor_type == SENSORS_TYPE_TEMPERATURES:
-                sensor_names = await self._get_available_temperature_sensors()
-                if not sensor_names:
-                    continue
+            if not sensor_names:
+                continue
             coordinator = await self._sensors_data_handler.get_coordinator(
                 sensor_type, sensor_type != SENSORS_TYPE_COUNT
             )

@@ -2,6 +2,8 @@
 
 from datetime import timedelta
 
+from homeassistant.const import Platform
+
 DOMAIN = "yeelight"
 
 
@@ -100,4 +102,4 @@ UPDATE_REQUEST_PROPERTIES = [
 ]
 
 
-PLATFORMS = ["binary_sensor", "light"]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.LIGHT]

@@ -15,8 +15,9 @@ from homeassistant.const import (
     ATTR_VIA_DEVICE,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
-from homeassistant.core import CoreState, callback
+from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import (
@@ -98,14 +99,14 @@ DEFAULT_CONF_REFRESH_VALUE = False
 DEFAULT_CONF_REFRESH_DELAY = 5
 
 PLATFORMS = [
-    "binary_sensor",
-    "climate",
-    "cover",
-    "fan",
-    "lock",
-    "light",
-    "sensor",
-    "switch",
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.FAN,
+    Platform.LIGHT,
+    Platform.LOCK,
+    Platform.SENSOR,
+    Platform.SWITCH,
 ]
 
 RENAME_NODE_SCHEMA = vol.Schema(
@@ -341,7 +342,9 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, config_entry):  # noqa: C901
+async def async_setup_entry(  # noqa: C901
+    hass: HomeAssistant, config_entry: config_entries.ConfigEntry
+) -> bool:
     """Set up Z-Wave from a config entry.
 
     Will automatically load components to support devices found on the network.
@@ -1021,10 +1024,7 @@ async def async_setup_entry(hass, config_entry):  # noqa: C901
 
     hass.services.async_register(DOMAIN, const.SERVICE_START_NETWORK, start_zwave)
 
-    for entry_component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, entry_component)
-        )
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     return True
 

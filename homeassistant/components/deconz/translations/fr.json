@@ -11,7 +11,7 @@
         "error": {
             "no_key": "Impossible d'obtenir une cl\u00e9 d'API"
         },
-        "flow_title": "Passerelle deCONZ Zigbee ({host})",
+        "flow_title": "{host}",
         "step": {
             "hassio_confirm": {
                 "description": "Voulez-vous configurer Home Assistant pour qu'il se connecte \u00e0 la passerelle deCONZ fournie par le module compl\u00e9mentaire Hass.io {addon} ?",

@@ -6,11 +6,17 @@ from homeassistant.const import (
     DEVICE_CLASS_GAS,
     ENERGY_KILO_WATT_HOUR,
     VOLUME_CUBIC_METERS,
+    Platform,
 )
 
 DOMAIN = "vicare"
 
-PLATFORMS = ["climate", "sensor", "binary_sensor", "water_heater"]
+PLATFORMS = [
+    Platform.CLIMATE,
+    Platform.SENSOR,
+    Platform.BINARY_SENSOR,
+    Platform.WATER_HEATER,
+]
 
 VICARE_DEVICE_CONFIG = "device_conf"
 VICARE_API = "api"

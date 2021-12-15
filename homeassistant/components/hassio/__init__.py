@@ -20,8 +20,10 @@ from homeassistant.const import (
     ATTR_MANUFACTURER,
     ATTR_NAME,
     EVENT_CORE_CONFIG_UPDATE,
+    HASSIO_USER_NAME,
     SERVICE_HOMEASSISTANT_RESTART,
     SERVICE_HOMEASSISTANT_STOP,
+    Platform,
 )
 from homeassistant.core import DOMAIN as HASS_DOMAIN, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -68,7 +70,7 @@ _LOGGER = logging.getLogger(__name__)
 
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
-PLATFORMS = ["binary_sensor", "sensor"]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 CONF_FRONTEND_REPO = "development_repo"
 
@@ -439,11 +441,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
             # Migrate old name
             if user.name == "Hass.io":
-                await hass.auth.async_update_user(user, name="Supervisor")
+                await hass.auth.async_update_user(user, name=HASSIO_USER_NAME)
 
     if refresh_token is None:
         user = await hass.auth.async_create_system_user(
-            "Supervisor", group_ids=[GROUP_ID_ADMIN]
+            HASSIO_USER_NAME, group_ids=[GROUP_ID_ADMIN]
         )
         refresh_token = await hass.auth.async_create_refresh_token(user)
         data["hassio_user"] = user.id

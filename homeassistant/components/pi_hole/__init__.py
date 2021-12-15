@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SSL,
     CONF_VERIFY_SSL,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -150,11 +151,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 @callback
-def _async_platforms(entry: ConfigEntry) -> list[str]:
+def _async_platforms(entry: ConfigEntry) -> list[Platform]:
     """Return platforms to be loaded / unloaded."""
-    platforms = ["binary_sensor", "sensor"]
+    platforms = [Platform.BINARY_SENSOR, Platform.SENSOR]
     if not entry.data[CONF_STATISTICS_ONLY]:
-        platforms.append("switch")
+        platforms.append(Platform.SWITCH)
     return platforms
 
 

@@ -252,7 +252,19 @@ async def test_migration_1_1_to_1_2(hass, hass_storage):
                     "model": "model",
                     "name": "name",
                     "sw_version": "version",
-                }
+                },
+                # Invalid entry type
+                {
+                    "config_entries": [None],
+                    "connections": [],
+                    "entry_type": "INVALID_VALUE",
+                    "id": "invalid-entry-type",
+                    "identifiers": [["serial", "mock-id-invalid-entry"]],
+                    "manufacturer": None,
+                    "model": None,
+                    "name": None,
+                    "sw_version": None,
+                },
             ],
         },
     }
@@ -300,7 +312,23 @@ async def test_migration_1_1_to_1_2(hass, hass_storage):
                     "name_by_user": None,
                     "sw_version": "new_version",
                     "via_device_id": None,
-                }
+                },
+                {
+                    "area_id": None,
+                    "config_entries": [None],
+                    "configuration_url": None,
+                    "connections": [],
+                    "disabled_by": None,
+                    "entry_type": None,
+                    "id": "invalid-entry-type",
+                    "identifiers": [["serial", "mock-id-invalid-entry"]],
+                    "manufacturer": None,
+                    "model": None,
+                    "name_by_user": None,
+                    "name": None,
+                    "sw_version": None,
+                    "via_device_id": None,
+                },
             ],
             "deleted_devices": [],
         },
@@ -1314,7 +1342,7 @@ async def test_disable_config_entry_disables_devices(hass, registry):
     assert entry2.disabled
 
     await hass.config_entries.async_set_disabled_by(
-        config_entry.entry_id, config_entries.DISABLED_USER
+        config_entry.entry_id, config_entries.ConfigEntryDisabler.USER
     )
     await hass.async_block_till_done()
 
@@ -1354,7 +1382,7 @@ async def test_only_disable_device_if_all_config_entries_are_disabled(hass, regi
     assert not entry1.disabled
 
     await hass.config_entries.async_set_disabled_by(
-        config_entry1.entry_id, config_entries.DISABLED_USER
+        config_entry1.entry_id, config_entries.ConfigEntryDisabler.USER
     )
     await hass.async_block_till_done()
 
@@ -1362,7 +1390,7 @@ async def test_only_disable_device_if_all_config_entries_are_disabled(hass, regi
     assert not entry1.disabled
 
     await hass.config_entries.async_set_disabled_by(
-        config_entry2.entry_id, config_entries.DISABLED_USER
+        config_entry2.entry_id, config_entries.ConfigEntryDisabler.USER
     )
     await hass.async_block_till_done()
 

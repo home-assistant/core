@@ -1,4 +1,5 @@
 """Constants for the Subaru integration."""
+from homeassistant.const import Platform
 
 DOMAIN = "subaru"
 FETCH_INTERVAL = 300
@@ -31,7 +32,7 @@ API_GEN_2 = "g2"
 MANUFACTURER = "Subaru Corp."
 
 PLATFORMS = [
-    "sensor",
+    Platform.SENSOR,
 ]
 
 ICONS = {

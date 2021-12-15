@@ -30,11 +30,12 @@ from homeassistant.const import (
     ENTITY_CATEGORY_DIAGNOSTIC,
     PERCENTAGE,
     TEMP_CELSIUS,
+    Platform,
 )
 from homeassistant.helpers.entity import EntityDescription
 
 DOMAIN = "synology_dsm"
-PLATFORMS = ["binary_sensor", "camera", "sensor", "switch"]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.CAMERA, Platform.SENSOR, Platform.SWITCH]
 COORDINATOR_CAMERAS = "coordinator_cameras"
 COORDINATOR_CENTRAL = "coordinator_central"
 COORDINATOR_SWITCHES = "coordinator_switches"

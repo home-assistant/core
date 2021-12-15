@@ -12,6 +12,7 @@
                 "data": {
                     "host": "Host",
                     "individual_address": "Alamat individu untuk koneksi",
+                    "local_ip": "IP lokal (kosongkan jika tidak yakin)",
                     "port": "Port",
                     "route_back": "Dirutekan Kembali/Mode NAT"
                 },
@@ -54,6 +55,7 @@
             "tunnel": {
                 "data": {
                     "host": "Host",
+                    "local_ip": "IP lokal (kosongkan jika tidak yakin)",
                     "port": "Port",
                     "route_back": "Dirutekan Kembali/Mode NAT"
                 }
