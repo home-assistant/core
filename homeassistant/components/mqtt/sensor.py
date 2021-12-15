@@ -15,7 +15,6 @@ from homeassistant.components.sensor import (
     STATE_CLASSES_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
-    SensorStateClass,
 )
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
@@ -200,7 +199,7 @@ class MqttSensor(MqttEntity, SensorEntity):
                 )
 
             if payload is not None and self.device_class in (
-                SensorStateClass.DATE,
+                SensorDeviceClass.DATE,
                 SensorDeviceClass.TIMESTAMP,
             ):
                 if (payload := dt_util.parse_datetime(payload)) is None:
