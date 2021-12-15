@@ -2,7 +2,7 @@
 from datetime import timedelta
 import logging
 
-from pykeyatome.client import AtomeClient, PyAtomeError
+from pykeyatome.client import AtomeClient
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -57,11 +57,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     username = config[CONF_USERNAME]
     password = config[CONF_PASSWORD]
 
-    try:
-        atome_client = AtomeClient(username, password)
-        atome_client.login()
-    except PyAtomeError as exp:
-        _LOGGER.error(exp)
+    atome_client = AtomeClient(username, password)
+    if not atome_client.login():
+        _LOGGER.error("no login available")
         return
 
     data = AtomeData(atome_client)

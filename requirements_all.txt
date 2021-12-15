@@ -1580,7 +1580,7 @@ pyisy==3.0.0
 pyitachip2ir==0.0.7
 
 # homeassistant.components.atome
-pykeyatome==1.1.2
+pykeyatome==1.2.0
 
 # homeassistant.components.kira
 pykira==0.1.1
