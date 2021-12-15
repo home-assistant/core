@@ -68,7 +68,8 @@ class WizBulbEntity(LightEntity):
         self._effect = None
         self._scenes: list[str] = []
         self._bulbtype: BulbType = None
-        self._mac = None
+        self._mac = mac_addr
+        self._attr_unique_id = mac_addr
         # new init states
         # self._attr_device_info = self.get_device_info()
         self._attr_min_mireds = self.get_min_mireds()
