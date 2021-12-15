@@ -40,9 +40,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
-    # unload wiz_light bulb
-    hass.data[DOMAIN].pop(entry.entry_id)
-    # Remove config entry
-    await hass.config_entries.async_forward_entry_unload(entry, "light")
-
-    return True
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        hass.data[DOMAIN].pop(entry.entry_id)
+    return unload_ok
