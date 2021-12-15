@@ -62,7 +62,11 @@ CONSTRAINT_PATH = os.path.join(
 )
 CONSTRAINT_BASE = """
 # Constrain pillow to 8.2.0 because later versions are causing issues in nightly builds.
+# https://github.com/home-assistant/core/issues/61756
+pillow==8.2.0
 
+# Constrain pycryptodome to avoid vulnerability
+# see https://github.com/home-assistant/core/pull/16238
 pycryptodome>=3.6.6
 
 # Constrain urllib3 to ensure we deal with CVE-2020-26137 and CVE-2021-33503
@@ -184,7 +188,7 @@ def gather_recursive_requirements(domain, seen=None):
     seen.add(domain)
     integration = Integration(Path(f"homeassistant/components/{domain}"))
     integration.load_manifest()
-    reqs = set(integration.requirements)
+    reqs = {x for x in integration.requirements if x not in CONSTRAINT_BASE}
     for dep_domain in integration.dependencies:
         reqs.update(gather_recursive_requirements(dep_domain, seen))
     return reqs
