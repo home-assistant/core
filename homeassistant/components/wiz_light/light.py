@@ -60,7 +60,7 @@ class WizBulbEntity(LightEntity):
         self._light = light
         self._state = None
         self._brightness = None
-        self._name = name
+        self._attr_name = name
         self._rgb_color = None
         self._temperature = None
         self._hscolor = None
