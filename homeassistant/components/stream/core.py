@@ -5,6 +5,7 @@ import asyncio
 from collections import deque
 from collections.abc import Iterable
 import datetime
+from io import BytesIO
 from typing import TYPE_CHECKING
 
 from aiohttp import web
@@ -19,6 +20,8 @@ from homeassistant.util.decorator import Registry
 from .const import ATTR_STREAMS, DOMAIN
 
 if TYPE_CHECKING:
+    from av import Packet
+
     from . import Stream
 
 PROVIDERS = Registry()
@@ -356,3 +359,46 @@ class StreamView(HomeAssistantView):
     ) -> web.StreamResponse:
         """Handle the stream request."""
         raise NotImplementedError()
+
+
+class KeyFrame:
+    """Hold the last keyframe.
+
+    The keyframe can be either a Packet or a jpeg of bytes. This is so that a
+    new keyframe assignment can remain atomic to avoid threading issues.
+    """
+
+    def __init__(self) -> None:
+        """Initialize."""
+
+        # Keep import here so that we can import stream integration without installing reqs
+        # pylint: disable=import-outside-toplevel
+        from homeassistant.components.camera.img_util import TurboJPEGSingleton
+
+        self.keyframe: Packet | bytes | None = None
+        self.turbojpeg = TurboJPEGSingleton.instance()
+        self.get_bytes = self._get_bytes
+        if not self.turbojpeg:
+            self.get_bytes = lambda: None
+
+    def _get_bytes(self) -> bytes | None:
+        """Get the keyframe as bytes."""
+
+        # Keep import here so that we can import stream integration without installing reqs
+        # pylint: disable=import-outside-toplevel
+        from av import Packet
+
+        last_packet_or_image = self.keyframe
+        if isinstance(last_packet_or_image, Packet):
+            # decode packet (try up to 3 times)
+            for _i in range(3):
+                # pylint: disable=maybe-no-member
+                if frames := last_packet_or_image.decode():
+                    break
+            if frames:
+                image_file = BytesIO()
+                bgr_array = frames[0].to_ndarray(format="bgr24")
+                image_file.write(self.turbojpeg.encode(bgr_array))
+                self.keyframe = last_packet_or_image = image_file.getvalue()
+                image_file.close()
+        return last_packet_or_image

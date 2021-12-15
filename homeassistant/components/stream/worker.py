@@ -14,7 +14,7 @@ import av
 
 from homeassistant.core import HomeAssistant
 
-from . import redact_credentials
+from . import KeyFrame, redact_credentials
 from .const import (
     ATTR_SETTINGS,
     AUDIO_CODECS,
@@ -439,6 +439,7 @@ def stream_worker(
     source: str,
     options: dict[str, str],
     stream_state: StreamState,
+    last_keyframe: KeyFrame,
     quit_event: Event,
 ) -> None:
     """Handle consuming streams."""
@@ -535,3 +536,5 @@ def stream_worker(
                 raise StreamWorkerError("Error demuxing stream: %s" % str(ex)) from ex
 
             muxer.mux_packet(packet)
+            if packet.is_keyframe and packet.stream.type == "video":
+                last_keyframe.keyframe = packet
