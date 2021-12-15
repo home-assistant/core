@@ -383,6 +383,7 @@ class KNXModule:
         if _conn_type == CONF_KNX_ROUTING:
             return ConnectionConfig(
                 connection_type=ConnectionType.ROUTING,
+                local_ip=self.config.get(ConnectionSchema.CONF_KNX_LOCAL_IP),
                 auto_reconnect=True,
             )
         if _conn_type == CONF_KNX_TUNNELING:
