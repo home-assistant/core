@@ -179,6 +179,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(existing_unique_id)
             self._abort_if_unique_id_configured(updates={CONF_ADDRESS: host})
 
+        self._async_abort_entries_match({CONF_ADDRESS: host})
         await self._async_aggregate_discoveries(host, unique_id)
         # Scan for the device in order to extract _all_ unique identifiers assigned to
         # it. Not doing it like this will yield multiple config flows for the same
