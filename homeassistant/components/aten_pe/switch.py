@@ -91,7 +91,9 @@ class AtenSwitch(SwitchEntity):
 
     _attr_device_class = SwitchDeviceClass.OUTLET
 
-    def __init__(self, device, info, mac, outlet, name):
+    def __init__(
+        self, device: AtenPE, info: DeviceInfo, mac: str, outlet: str, name: str
+    ) -> None:
         """Initialize an ATEN PE switch."""
         self._device = device
         self._outlet = outlet
