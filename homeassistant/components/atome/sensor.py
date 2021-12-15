@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 
+# Import AtomeClient to connect to server
 from pykeyatome.client import AtomeClient
 import voluptuous as vol
 
