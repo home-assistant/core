@@ -34,10 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
          mac_addr=mac_addr,
          bulb_type=bulb_type
     )
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
 
