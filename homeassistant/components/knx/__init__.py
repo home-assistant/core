@@ -29,6 +29,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_TYPE,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
@@ -44,6 +45,7 @@ from .const import (
     CONF_KNX_INDIVIDUAL_ADDRESS,
     CONF_KNX_ROUTING,
     CONF_KNX_TUNNELING,
+    DATA_HASS_CONFIG,
     DATA_KNX_CONFIG,
     DOMAIN,
     KNX_ADDRESS,
@@ -195,6 +197,7 @@ SERVICE_KNX_EXPOSURE_REGISTER_SCHEMA = vol.Any(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Start the KNX integration."""
+    hass.data[DATA_HASS_CONFIG] = config
     conf: ConfigType | None = config.get(DOMAIN)
 
     if conf is None:
@@ -251,15 +254,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
 
     hass.config_entries.async_setup_platforms(
-        entry, [platform for platform in SUPPORTED_PLATFORMS if platform in config]
+        entry,
+        [
+            platform
+            for platform in SUPPORTED_PLATFORMS
+            if platform in config and platform is not Platform.NOTIFY
+        ],
     )
 
-    # set up notify platform, no entry support for notify component yet,
-    # have to use discovery to load platform.
-    if NotifySchema.PLATFORM in conf:
+    # set up notify platform, no entry support for notify component yet
+    if NotifySchema.PLATFORM in config:
         hass.async_create_task(
             discovery.async_load_platform(
-                hass, "notify", DOMAIN, conf[NotifySchema.PLATFORM], config
+                hass, "notify", DOMAIN, {}, hass.data[DATA_HASS_CONFIG]
             )
         )
 
@@ -312,6 +319,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             platform
             for platform in SUPPORTED_PLATFORMS
             if platform in hass.data[DATA_KNX_CONFIG]
+            and platform is not Platform.NOTIFY
         ],
     )
     if unload_ok:
