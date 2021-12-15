@@ -104,23 +104,28 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle zeroconf discovery."""
-        port = discovery_info[zeroconf.ATTR_PORT]
-        zctype = discovery_info[zeroconf.ATTR_TYPE]
-        name = discovery_info[zeroconf.ATTR_NAME].replace(f".{zctype}", "")
+        host = discovery_info.host
+
+        # Avoid probing devices that already have an entry
+        self._async_abort_entries_match({CONF_HOST: host})
+
+        port = discovery_info.port
+        zctype = discovery_info.type
+        name = discovery_info.name.replace(f".{zctype}", "")
         tls = zctype == "_ipps._tcp.local."
-        base_path = discovery_info[zeroconf.ATTR_PROPERTIES].get("rp", "ipp/print")
+        base_path = discovery_info.properties.get("rp", "ipp/print")
 
         self.context.update({"title_placeholders": {"name": name}})
 
         self.discovery_info.update(
             {
-                CONF_HOST: discovery_info[zeroconf.ATTR_HOST],
+                CONF_HOST: host,
                 CONF_PORT: port,
                 CONF_SSL: tls,
                 CONF_VERIFY_SSL: False,
                 CONF_BASE_PATH: f"/{base_path}",
                 CONF_NAME: name,
-                CONF_UUID: discovery_info[zeroconf.ATTR_PROPERTIES].get("UUID"),
+                CONF_UUID: discovery_info.properties.get("UUID"),
             }
         )
 

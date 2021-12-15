@@ -8,9 +8,8 @@ from busio import I2C
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    DEVICE_CLASS_PRESSURE,
-    DEVICE_CLASS_TEMPERATURE,
     PLATFORM_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
 )
 from homeassistant.const import CONF_NAME, PRESSURE_HPA, TEMP_CELSIUS
@@ -87,7 +86,7 @@ class Bmp280TemperatureSensor(Bmp280Sensor):
     def __init__(self, bmp280: Adafruit_BMP280_I2C, name: str) -> None:
         """Initialize the entity."""
         super().__init__(
-            bmp280, f"{name} Temperature", TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE
+            bmp280, f"{name} Temperature", TEMP_CELSIUS, SensorDeviceClass.TEMPERATURE
         )
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
@@ -112,7 +111,7 @@ class Bmp280PressureSensor(Bmp280Sensor):
     def __init__(self, bmp280: Adafruit_BMP280_I2C, name: str) -> None:
         """Initialize the entity."""
         super().__init__(
-            bmp280, f"{name} Pressure", PRESSURE_HPA, DEVICE_CLASS_PRESSURE
+            bmp280, f"{name} Pressure", PRESSURE_HPA, SensorDeviceClass.PRESSURE
         )
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)

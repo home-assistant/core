@@ -1,4 +1,5 @@
 """Test the Logitech Squeezebox config flow."""
+
 from http import HTTPStatus
 from unittest.mock import patch
 
@@ -215,7 +216,7 @@ async def test_dhcp_discovery_no_server_found(hass):
     with patch(
         "homeassistant.components.squeezebox.config_flow.async_discover",
         mock_failed_discover,
-    ):
+    ), patch("homeassistant.components.squeezebox.config_flow.TIMEOUT", 0.1):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},

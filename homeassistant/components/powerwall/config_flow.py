@@ -60,7 +60,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle dhcp discovery."""
-        self.ip_address = discovery_info[dhcp.IP_ADDRESS]
+        self.ip_address = discovery_info.ip
         self._async_abort_entries_match({CONF_IP_ADDRESS: self.ip_address})
         self.context["title_placeholders"] = {CONF_IP_ADDRESS: self.ip_address}
         return await self.async_step_user()

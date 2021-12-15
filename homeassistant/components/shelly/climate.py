@@ -19,15 +19,13 @@ from homeassistant.components.climate.const import (
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
-from homeassistant.components.shelly import BlockDeviceWrapper
-from homeassistant.components.shelly.entity import ShellyBlockEntity
-from homeassistant.components.shelly.utils import get_device_entry_gen
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
+from . import BlockDeviceWrapper
 from .const import (
     AIOSHELLY_DEVICE_TIMEOUT_SEC,
     BLOCK,
@@ -35,6 +33,8 @@ from .const import (
     DOMAIN,
     SHTRV_01_TEMPERATURE_SETTINGS,
 )
+from .entity import ShellyBlockEntity
+from .utils import get_device_entry_gen
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -48,6 +48,9 @@ async def async_setup_entry(
 
     if get_device_entry_gen(config_entry) == 2:
         return
+
+    device_block: Block | None = None
+    sensor_block: Block | None = None
 
     wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][BLOCK]
     for block in wrapper.device.blocks:
@@ -176,7 +179,10 @@ class ShellyClimate(ShellyBlockEntity, RestoreEntity, ClimateEntity):
             return
 
         preset_index = self._attr_preset_modes.index(preset_mode)
-        await self.set_state_full_path(
-            schedule=(0 if preset_index == 0 else 1),
-            schedule_profile=f"{preset_index}",
-        )
+
+        if preset_index == 0:
+            await self.set_state_full_path(schedule=0)
+        else:
+            await self.set_state_full_path(
+                schedule=1, schedule_profile=f"{preset_index}"
+            )

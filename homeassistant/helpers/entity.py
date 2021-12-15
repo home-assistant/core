@@ -15,6 +15,7 @@ from typing import Any, Final, Literal, TypedDict, final
 
 import voluptuous as vol
 
+from homeassistant.backports.enum import StrEnum
 from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -179,6 +180,24 @@ class DeviceInfo(TypedDict, total=False):
     via_device: tuple[str, str]
 
 
+class EntityCategory(StrEnum):
+    """Category of an entity.
+
+    An entity with a category will:
+    - Not be exposed to cloud, Alexa, or Google Assistant components
+    - Not be included in indirect service calls to devices or areas
+    """
+
+    # Config: An entity which allows changing the configuration of a device
+    CONFIG = "config"
+
+    # Diagnostic: An entity exposing some configuration parameter or diagnostics of a device
+    DIAGNOSTIC = "diagnostic"
+
+    # System: An entity which is not useful for the user to interact with
+    SYSTEM = "system"
+
+
 @dataclass
 class EntityDescription:
     """A class that describes Home Assistant entities."""
@@ -187,7 +206,9 @@ class EntityDescription:
     key: str
 
     device_class: str | None = None
-    entity_category: Literal["config", "diagnostic", "system"] | None = None
+    entity_category: EntityCategory | Literal[
+        "config", "diagnostic", "system"
+    ] | None = None
     entity_registry_enabled_default: bool = True
     force_update: bool = False
     icon: str | None = None
@@ -220,6 +241,9 @@ class Entity(ABC):
     # If we reported this entity is updated while disabled
     _disabled_reported = False
 
+    # If we reported this entity is using deprecated device_state_attributes
+    _deprecated_device_state_attributes_reported = False
+
     # Protect for multiple updates
     _update_staged = False
 
@@ -246,7 +270,7 @@ class Entity(ABC):
     _attr_context_recent_time: timedelta = timedelta(seconds=5)
     _attr_device_class: str | None
     _attr_device_info: DeviceInfo | None = None
-    _attr_entity_category: str | None
+    _attr_entity_category: EntityCategory | str | None
     _attr_entity_picture: str | None = None
     _attr_entity_registry_enabled_default: bool
     _attr_extra_state_attributes: MutableMapping[str, Any]
@@ -414,7 +438,7 @@ class Entity(ABC):
         return self._attr_attribution
 
     @property
-    def entity_category(self) -> str | None:
+    def entity_category(self) -> EntityCategory | str | None:
         """Return the category of the entity, if any."""
         if hasattr(self, "_attr_entity_category"):
             return self._attr_entity_category
@@ -517,7 +541,10 @@ class Entity(ABC):
             extra_state_attributes = self.extra_state_attributes
             # Backwards compatibility for "device_state_attributes" deprecated in 2021.4
             # Warning added in 2021.12, will be removed in 2022.4
-            if self.device_state_attributes is not None:
+            if (
+                self.device_state_attributes is not None
+                and not self._deprecated_device_state_attributes_reported
+            ):
                 report_issue = self._suggest_report_issue()
                 _LOGGER.warning(
                     "Entity %s (%s) implements device_state_attributes. Please %s",
@@ -525,6 +552,7 @@ class Entity(ABC):
                     type(self),
                     report_issue,
                 )
+                self._deprecated_device_state_attributes_reported = True
             if extra_state_attributes is None:
                 extra_state_attributes = self.device_state_attributes
             attr.update(extra_state_attributes or {})

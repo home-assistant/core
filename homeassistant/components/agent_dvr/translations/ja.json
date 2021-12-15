@@ -5,7 +5,7 @@
         },
         "error": {
             "already_in_progress": "\u69cb\u6210\u30d5\u30ed\u30fc\u306f\u3059\u3067\u306b\u9032\u884c\u4e2d\u3067\u3059",
-            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u305f"
+            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u307e\u3057\u305f"
         },
         "step": {
             "user": {

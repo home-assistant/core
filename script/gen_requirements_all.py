@@ -61,6 +61,8 @@ CONSTRAINT_PATH = os.path.join(
     os.path.dirname(__file__), "../homeassistant/package_constraints.txt"
 )
 CONSTRAINT_BASE = """
+# Constrain pillow to 8.2.0 because later versions are causing issues in nightly builds.
+
 pycryptodome>=3.6.6
 
 # Constrain urllib3 to ensure we deal with CVE-2020-26137 and CVE-2021-33503
@@ -110,6 +112,9 @@ anyio>=3.3.1
 # websockets 10.0 is broken with AWS
 # https://github.com/aaugustin/websockets/issues/1065
 websockets==9.1
+
+# pytest_asyncio breaks our test suite. We rely on pytest-aiohttp instead
+pytest_asyncio==1000000000.0.0
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (

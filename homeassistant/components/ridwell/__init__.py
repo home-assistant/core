@@ -9,7 +9,7 @@ from aioridwell.client import RidwellAccount, RidwellPickupEvent
 from aioridwell.errors import InvalidCredentialsError, RidwellError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
@@ -19,7 +19,7 @@ from .const import DATA_ACCOUNT, DATA_COORDINATOR, DOMAIN, LOGGER
 
 DEFAULT_UPDATE_INTERVAL = timedelta(hours=1)
 
-PLATFORMS: list[str] = ["sensor"]
+PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

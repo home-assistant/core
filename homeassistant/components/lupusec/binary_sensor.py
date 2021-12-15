@@ -1,4 +1,5 @@
 """Support for Lupusec Security System binary sensors."""
+# pylint: disable=import-error
 from datetime import timedelta
 
 import lupupy.constants as CONST

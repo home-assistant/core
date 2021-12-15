@@ -277,6 +277,8 @@ class RainMachineActivitySwitch(RainMachineBaseSwitch):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         if not self.coordinator.data[self.entity_description.uid]["active"]:
+            self._attr_is_on = False
+            self.async_write_ha_state()
             raise HomeAssistantError(
                 f"Cannot turn on an inactive program/zone: {self.name}"
             )

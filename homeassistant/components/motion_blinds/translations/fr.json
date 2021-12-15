@@ -6,13 +6,15 @@
             "connection_error": "\u00c9chec de connexion"
         },
         "error": {
-            "discovery_error": "Impossible de d\u00e9couvrir une Motion Gateway"
+            "discovery_error": "Impossible de d\u00e9couvrir une Motion Gateway",
+            "invalid_interface": "Interface r\u00e9seau non valide"
         },
         "flow_title": "Stores de mouvement",
         "step": {
             "connect": {
                 "data": {
-                    "api_key": "Cl\u00e9 d'API"
+                    "api_key": "Cl\u00e9 d'API",
+                    "interface": "Interface r\u00e9seau \u00e0 utiliser"
                 },
                 "description": "Vous aurez besoin de la cl\u00e9 API de 16 caract\u00e8res, voir https://www.home-assistant.io/integrations/motion_blinds/#retrieving-the-key pour les instructions",
                 "title": "Stores de mouvement"
@@ -31,6 +33,17 @@
                 },
                 "description": "Connectez-vous \u00e0 votre Motion Gateway, si l'adresse IP n'est pas d\u00e9finie, la d\u00e9tection automatique est utilis\u00e9e",
                 "title": "Stores de mouvement"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "wait_for_push": "Attendre la mise \u00e0 jour de la diffusion group\u00e9e"
+                },
+                "description": "Sp\u00e9cifiez les param\u00e8tres optionnels",
+                "title": "Store motoris\u00e9"
             }
         }
     }

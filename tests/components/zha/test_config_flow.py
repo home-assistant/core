@@ -8,12 +8,8 @@ import zigpy.config
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 
 from homeassistant import config_entries
-from homeassistant.components import usb, zeroconf
-from homeassistant.components.ssdp import (
-    ATTR_SSDP_LOCATION,
-    ATTR_UPNP_MANUFACTURER_URL,
-    ATTR_UPNP_SERIAL,
-)
+from homeassistant.components import ssdp, usb, zeroconf
+from homeassistant.components.ssdp import ATTR_UPNP_MANUFACTURER_URL, ATTR_UPNP_SERIAL
 from homeassistant.components.zha import config_flow
 from homeassistant.components.zha.core.const import (
     CONF_BAUDRATE,
@@ -281,11 +277,15 @@ async def test_discovery_via_usb_deconz_already_discovered(detect_mock, hass):
     """Test usb flow -- deconz discovered."""
     result = await hass.config_entries.flow.async_init(
         "deconz",
-        data={
-            ATTR_SSDP_LOCATION: "http://1.2.3.4:80/",
-            ATTR_UPNP_MANUFACTURER_URL: "http://www.dresden-elektronik.de",
-            ATTR_UPNP_SERIAL: "0000000000000000",
-        },
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="http://1.2.3.4:80/",
+            upnp={
+                ATTR_UPNP_MANUFACTURER_URL: "http://www.dresden-elektronik.de",
+                ATTR_UPNP_SERIAL: "0000000000000000",
+            },
+        ),
         context={"source": SOURCE_SSDP},
     )
     await hass.async_block_till_done()

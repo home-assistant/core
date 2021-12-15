@@ -59,27 +59,6 @@ async def test_show_form(hass):
     assert result["step_id"] == "user"
 
 
-async def test_step_import(hass):
-    """Test that the import step works."""
-    conf = {CONF_SENSOR_ID: "12345abcde", CONF_SHOW_ON_MAP: False}
-
-    flow = config_flow.LuftDatenFlowHandler()
-    flow.hass = hass
-
-    with patch("luftdaten.Luftdaten.get_data", return_value=True), patch(
-        "luftdaten.Luftdaten.validate_sensor", return_value=True
-    ):
-        result = await flow.async_step_import(import_config=conf)
-
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == "12345abcde"
-        assert result["data"] == {
-            CONF_SENSOR_ID: "12345abcde",
-            CONF_SHOW_ON_MAP: False,
-            CONF_SCAN_INTERVAL: 600,
-        }
-
-
 async def test_step_user(hass):
     """Test that the user step works."""
     conf = {

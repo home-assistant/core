@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "authorize_url_timeout": "Time-out tijdens genereren autorisatie url.",
+            "invalid_access_token": "Ongeldig toegangstoken",
             "missing_configuration": "De component is niet geconfigureerd. Gelieve de documentatie volgen.",
             "no_url_available": "Geen URL beschikbaar. Voor informatie over deze fout, [check de helpsectie]({docs_url})",
             "reauth_successful": "Herauthenticatie was succesvol",
@@ -12,10 +13,13 @@
             "default": "Succesvol geauthenticeerd"
         },
         "error": {
+            "bad_project_id": "Voer een geldige Cloud Project ID in (controleer Cloud Console)",
             "internal_error": "Interne foutvalidatiecode",
             "invalid_pin": "Ongeldige PIN-code",
+            "subscriber_error": "Onbekende abonneefout, zie logs",
             "timeout": "Time-out validatie van code",
-            "unknown": "Onverwachte fout"
+            "unknown": "Onverwachte fout",
+            "wrong_project_id": "Voer een geldig Cloud Project ID in (found Device Acces Project ID)"
         },
         "step": {
             "auth": {
@@ -41,6 +45,13 @@
             },
             "pick_implementation": {
                 "title": "Kies een authenticatie methode"
+            },
+            "pubsub": {
+                "data": {
+                    "cloud_project_id": "Google Cloud Project ID"
+                },
+                "description": "Bezoek de [Cloud Console]({url}) om uw Google Cloud Project ID te vinden.",
+                "title": "Google Cloud configureren"
             },
             "reauth_confirm": {
                 "description": "De Nest-integratie moet uw account opnieuw verifi\u00ebren",

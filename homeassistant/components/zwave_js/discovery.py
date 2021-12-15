@@ -47,6 +47,7 @@ from .discovery_data_template import (
     ConfigurableFanSpeedDataTemplate,
     CoverTiltDataTemplate,
     DynamicCurrentTempClimateDataTemplate,
+    FixedFanSpeedDataTemplate,
     NumericSensorDataTemplate,
     ZwaveValueID,
 )
@@ -230,11 +231,35 @@ DISCOVERY_SCHEMAS = [
         product_type={0x4944},
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
-    # GE/Jasco fan controllers using switch multilevel CC
+    # GE/Jasco - In-Wall Smart Fan Control - 12730 / ZW4002
+    ZWaveDiscoverySchema(
+        platform="fan",
+        hint="configured_fan_speed",
+        manufacturer_id={0x0063},
+        product_id={0x3034},
+        product_type={0x4944},
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+        data_template=FixedFanSpeedDataTemplate(
+            speeds=[33, 67, 99],
+        ),
+    ),
+    # GE/Jasco - In-Wall Smart Fan Control - 14287 / ZW4002
+    ZWaveDiscoverySchema(
+        platform="fan",
+        hint="configured_fan_speed",
+        manufacturer_id={0x0063},
+        product_id={0x3131},
+        product_type={0x4944},
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+        data_template=FixedFanSpeedDataTemplate(
+            speeds=[32, 66, 99],
+        ),
+    ),
+    # GE/Jasco - In-Wall Smart Fan Control - 14314 / ZW4002
     ZWaveDiscoverySchema(
         platform="fan",
         manufacturer_id={0x0063},
-        product_id={0x3034, 0x3131, 0x3138},
+        product_id={0x3138},
         product_type={0x4944},
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),

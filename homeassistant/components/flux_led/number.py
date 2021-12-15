@@ -4,8 +4,7 @@ from __future__ import annotations
 from typing import cast
 
 from homeassistant import config_entries
-from homeassistant.components.number import NumberEntity
-from homeassistant.components.number.const import MODE_SLIDER
+from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -47,7 +46,7 @@ class FluxNumber(FluxEntity, CoordinatorEntity, NumberEntity):
     _attr_min_value = 1
     _attr_max_value = 100
     _attr_step = 1
-    _attr_mode = MODE_SLIDER
+    _attr_mode = NumberMode.SLIDER
     _attr_icon = "mdi:speedometer"
 
     def __init__(
@@ -73,7 +72,7 @@ class FluxNumber(FluxEntity, CoordinatorEntity, NumberEntity):
             raise HomeAssistantError(
                 "Speed can only be adjusted when an effect is active"
             )
-        if self._device.original_addressable and not self._device.is_on:
+        if not self._device.speed_adjust_off and not self._device.is_on:
             raise HomeAssistantError("Speed can only be adjusted when the light is on")
         await self._device.async_set_effect(
             current_effect, new_speed, _effect_brightness(self._device.brightness)

@@ -250,6 +250,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     description=SmappeeSensorEntityDescription(
                         key="load",
                         name=measurement.name,
+                        native_unit_of_measurement=POWER_WATT,
                         sensor_id=measurement_id,
                         device_class=DEVICE_CLASS_POWER,
                         state_class=STATE_CLASS_MEASUREMENT,
@@ -319,7 +320,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     ),
                 )
                 for actuator_id, actuator in service_location.actuators.items()
-                if actuator.type == "SWITCH"
+                if actuator.type == "SWITCH" and not service_location.local_polling
             ]
         )
 

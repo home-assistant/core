@@ -119,7 +119,18 @@ async def test_light_turn_on_service(hass, mock_bridge_v2, v2_resources_test_dat
     )
     assert len(mock_bridge_v2.mock_requests) == 2
     assert mock_bridge_v2.mock_requests[1]["json"]["on"]["on"] is True
-    assert mock_bridge_v2.mock_requests[1]["json"]["dynamics"]["duration"] == 600
+    assert mock_bridge_v2.mock_requests[1]["json"]["dynamics"]["duration"] == 6000
+
+    # test again with sending flash/alert
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": test_light_id, "flash": "long"},
+        blocking=True,
+    )
+    assert len(mock_bridge_v2.mock_requests) == 3
+    assert mock_bridge_v2.mock_requests[2]["json"]["on"]["on"] is True
+    assert mock_bridge_v2.mock_requests[2]["json"]["alert"]["action"] == "breathe"
 
 
 async def test_light_turn_off_service(hass, mock_bridge_v2, v2_resources_test_data):
@@ -164,7 +175,7 @@ async def test_light_turn_off_service(hass, mock_bridge_v2, v2_resources_test_da
     )
     assert len(mock_bridge_v2.mock_requests) == 2
     assert mock_bridge_v2.mock_requests[1]["json"]["on"]["on"] is False
-    assert mock_bridge_v2.mock_requests[1]["json"]["dynamics"]["duration"] == 600
+    assert mock_bridge_v2.mock_requests[1]["json"]["dynamics"]["duration"] == 6000
 
 
 async def test_light_added(hass, mock_bridge_v2):
@@ -173,7 +184,7 @@ async def test_light_added(hass, mock_bridge_v2):
 
     await setup_platform(hass, mock_bridge_v2, "light")
 
-    test_entity_id = "light.hue_mocked_device"
+    test_entity_id = "light.hue_fake_light"
 
     # verify entity does not exist before we start
     assert hass.states.get(test_entity_id) is None
@@ -186,7 +197,7 @@ async def test_light_added(hass, mock_bridge_v2):
     test_entity = hass.states.get(test_entity_id)
     assert test_entity is not None
     assert test_entity.state == "off"
-    assert test_entity.attributes["friendly_name"] == FAKE_DEVICE["metadata"]["name"]
+    assert test_entity.attributes["friendly_name"] == FAKE_LIGHT["metadata"]["name"]
 
 
 async def test_light_availability(hass, mock_bridge_v2, v2_resources_test_data):
@@ -210,13 +221,6 @@ async def test_light_availability(hass, mock_bridge_v2, v2_resources_test_data):
                 "id": "1987ba66-c21d-48d0-98fb-121d939a71f3",
                 "status": status,
                 "type": "zigbee_connectivity",
-            },
-        )
-        mock_bridge_v2.api.emit_event(
-            "update",
-            {
-                "id": "02cba059-9c2c-4d45-97e4-4f79b1bfbaa1",
-                "type": "light",
             },
         )
         await hass.async_block_till_done()
@@ -302,7 +306,12 @@ async def test_grouped_lights(hass, mock_bridge_v2, v2_resources_test_data):
     await hass.services.async_call(
         "light",
         "turn_on",
-        {"entity_id": test_light_id, "brightness_pct": 100, "xy_color": (0.123, 0.123)},
+        {
+            "entity_id": test_light_id,
+            "brightness_pct": 100,
+            "xy_color": (0.123, 0.123),
+            "transition": 6,
+        },
         blocking=True,
     )
 
@@ -315,6 +324,9 @@ async def test_grouped_lights(hass, mock_bridge_v2, v2_resources_test_data):
         )
         assert mock_bridge_v2.mock_requests[index]["json"]["color"]["xy"]["x"] == 0.123
         assert mock_bridge_v2.mock_requests[index]["json"]["color"]["xy"]["y"] == 0.123
+        assert (
+            mock_bridge_v2.mock_requests[index]["json"]["dynamics"]["duration"] == 6000
+        )
 
     # Now generate update events by emitting the json we've sent as incoming events
     for index in range(0, 3):
@@ -353,3 +365,24 @@ async def test_grouped_lights(hass, mock_bridge_v2, v2_resources_test_data):
     test_light = hass.states.get(test_light_id)
     assert test_light is not None
     assert test_light.state == "off"
+
+    # Test calling the turn off service on a grouped light with transition
+    mock_bridge_v2.mock_requests.clear()
+    test_light_id = "light.test_zone"
+    await hass.services.async_call(
+        "light",
+        "turn_off",
+        {
+            "entity_id": test_light_id,
+            "transition": 6,
+        },
+        blocking=True,
+    )
+
+    # PUT request should have been sent to ALL group lights with correct params
+    assert len(mock_bridge_v2.mock_requests) == 3
+    for index in range(0, 3):
+        assert mock_bridge_v2.mock_requests[index]["json"]["on"]["on"] is False
+        assert (
+            mock_bridge_v2.mock_requests[index]["json"]["dynamics"]["duration"] == 6000
+        )

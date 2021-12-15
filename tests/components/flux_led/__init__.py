@@ -2,20 +2,20 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import contextmanager
+import datetime
 from typing import Callable
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from flux_led import DeviceType
 from flux_led.aio import AIOWifiLedBulb
 from flux_led.const import (
-    ATTR_ID,
-    ATTR_IPADDR,
-    ATTR_MODEL,
-    ATTR_MODEL_DESCRIPTION,
     COLOR_MODE_CCT as FLUX_COLOR_MODE_CCT,
     COLOR_MODE_RGB as FLUX_COLOR_MODE_RGB,
 )
+from flux_led.models_db import MODEL_MAP
 from flux_led.protocol import LEDENETRawState
+from flux_led.scanner import FluxLEDDiscovery
 
 from homeassistant.components import dhcp
 from homeassistant.core import HomeAssistant
@@ -23,14 +23,14 @@ from homeassistant.core import HomeAssistant
 MODULE = "homeassistant.components.flux_led"
 MODULE_CONFIG_FLOW = "homeassistant.components.flux_led.config_flow"
 IP_ADDRESS = "127.0.0.1"
+MODEL_NUM_HEX = "0x35"
 MODEL = "AZ120444"
-MODEL_DESCRIPTION = "RGBW Controller"
+MODEL_DESCRIPTION = "Bulb RGBCW"
 MAC_ADDRESS = "aa:bb:cc:dd:ee:ff"
 FLUX_MAC_ADDRESS = "aabbccddeeff"
 SHORT_MAC_ADDRESS = "ddeeff"
 
 DEFAULT_ENTRY_TITLE = f"{MODEL_DESCRIPTION} {SHORT_MAC_ADDRESS}"
-DEFAULT_ENTRY_TITLE_PARTIAL = f"{MODEL} {SHORT_MAC_ADDRESS}"
 
 
 DHCP_DISCOVERY = dhcp.DhcpServiceInfo(
@@ -38,17 +38,26 @@ DHCP_DISCOVERY = dhcp.DhcpServiceInfo(
     ip=IP_ADDRESS,
     macaddress=MAC_ADDRESS,
 )
-FLUX_DISCOVERY_PARTIAL = {
-    ATTR_IPADDR: IP_ADDRESS,
-    ATTR_MODEL: MODEL,
-    ATTR_ID: FLUX_MAC_ADDRESS,
-}
-FLUX_DISCOVERY = {
-    ATTR_IPADDR: IP_ADDRESS,
-    ATTR_MODEL: MODEL,
-    ATTR_ID: FLUX_MAC_ADDRESS,
-    ATTR_MODEL_DESCRIPTION: MODEL_DESCRIPTION,
-}
+FLUX_DISCOVERY_PARTIAL = FluxLEDDiscovery(
+    ipaddr=IP_ADDRESS,
+    model=MODEL,
+    id=FLUX_MAC_ADDRESS,
+    model_num=None,
+    version_num=None,
+    firmware_date=None,
+    model_info=None,
+    model_description=None,
+)
+FLUX_DISCOVERY = FluxLEDDiscovery(
+    ipaddr=IP_ADDRESS,
+    model=MODEL,
+    id=FLUX_MAC_ADDRESS,
+    model_num=0x25,
+    version_num=0x04,
+    firmware_date=datetime.date(2021, 5, 5),
+    model_info=MODEL,
+    model_description=MODEL_DESCRIPTION,
+)
 
 
 def _mocked_bulb() -> AIOWifiLedBulb:
@@ -58,6 +67,7 @@ def _mocked_bulb() -> AIOWifiLedBulb:
         bulb.data_receive_callback = callback
 
     bulb.device_type = DeviceType.Bulb
+    bulb.requires_turn_on = True
     bulb.async_setup = AsyncMock(side_effect=_save_setup_callback)
     bulb.effect_list = ["some_effect"]
     bulb.async_set_custom_pattern = AsyncMock()
@@ -85,12 +95,12 @@ def _mocked_bulb() -> AIOWifiLedBulb:
     bulb.getWhiteTemperature = MagicMock(return_value=(2700, 128))
     bulb.brightness = 128
     bulb.model_num = 0x35
+    bulb.model_data = MODEL_MAP[0x35]
     bulb.effect = None
     bulb.speed = 50
-    bulb.model = "Smart Bulb (0x35)"
+    bulb.model = "Bulb RGBCW (0x35)"
     bulb.version_num = 8
-    bulb.original_addressable = False
-    bulb.addressable = False
+    bulb.speed_adjust_off = True
     bulb.rgbwcapable = True
     bulb.color_modes = {FLUX_COLOR_MODE_RGB, FLUX_COLOR_MODE_CCT}
     bulb.color_mode = FLUX_COLOR_MODE_RGB
@@ -107,13 +117,15 @@ def _mocked_switch() -> AIOWifiLedBulb:
         switch.data_receive_callback = callback
 
     switch.device_type = DeviceType.Switch
+    switch.requires_turn_on = True
     switch.async_setup = AsyncMock(side_effect=_save_setup_callback)
     switch.async_stop = AsyncMock()
     switch.async_update = AsyncMock()
     switch.async_turn_off = AsyncMock()
     switch.async_turn_on = AsyncMock()
     switch.model_num = 0x97
-    switch.model = "Smart Switch (0x97)"
+    switch.model_data = MODEL_MAP[0x97]
+    switch.model = "Switch (0x97)"
     switch.version_num = 0x97
     switch.raw_state = LEDENETRawState(
         0, 0x97, 0, 0x61, 0x97, 50, 255, 0, 0, 50, 8, 0, 0, 0
@@ -151,11 +163,20 @@ def _patch_discovery(device=None, no_device=False):
     async def _discovery(*args, **kwargs):
         if no_device:
             raise OSError
-        return [FLUX_DISCOVERY]
+        return [] if no_device else [device or FLUX_DISCOVERY]
 
-    return patch(
-        "homeassistant.components.flux_led.AIOBulbScanner.async_scan", new=_discovery
-    )
+    @contextmanager
+    def _patcher():
+        with patch(
+            "homeassistant.components.flux_led.AIOBulbScanner.async_scan",
+            new=_discovery,
+        ), patch(
+            "homeassistant.components.flux_led.AIOBulbScanner.getBulbInfo",
+            return_value=[] if no_device else [device or FLUX_DISCOVERY],
+        ):
+            yield
+
+    return _patcher()
 
 
 def _patch_wifibulb(device=None, no_device=False):

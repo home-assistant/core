@@ -25,6 +25,7 @@ from .. import (  # noqa: F401 pylint: disable=unused-import,
     lock,
     number,
     sensor,
+    siren,
     switch,
 )
 from .channels import base

@@ -9,7 +9,6 @@ from homeassistant.components.sensor import (
     STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
 )
-from homeassistant.components.youless import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE,
@@ -28,6 +27,8 @@ from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
+
+from . import DOMAIN
 
 
 async def async_setup_entry(

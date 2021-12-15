@@ -12,6 +12,7 @@
                 "data": {
                     "host": "Amfitri\u00f3",
                     "individual_address": "Adre\u00e7a individual de la connexi\u00f3",
+                    "local_ip": "IP local (deixa-ho en blanc si no n'est\u00e0s segur/a)",
                     "port": "Port",
                     "route_back": "Encaminament de retorn / Mode NAT"
                 },
@@ -54,6 +55,7 @@
             "tunnel": {
                 "data": {
                     "host": "Amfitri\u00f3",
+                    "local_ip": "IP local (deixa-ho en blanc si no n'est\u00e0s segur/a)",
                     "port": "Port",
                     "route_back": "Encaminament de retorn / Mode NAT"
                 }

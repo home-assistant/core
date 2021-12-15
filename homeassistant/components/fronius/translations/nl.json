@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd",
+            "invalid_host": "Ongeldige hostnaam of IP-adres"
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "unknown": "Onverwachte fout"
+        },
+        "flow_title": "{device}",
+        "step": {
+            "confirm_discovery": {
+                "description": "Wilt u {device} toevoegen aan Home Assistant?"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Configureer het IP-adres of de lokale hostnaam van uw Fronius-apparaat.",
+                "title": "Fronius SolarNet"
+            }
+        }
+    }
+}

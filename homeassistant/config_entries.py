@@ -34,7 +34,9 @@ import homeassistant.util.uuid as uuid_util
 
 if TYPE_CHECKING:
     from homeassistant.components.dhcp import DhcpServiceInfo
-    from homeassistant.components.mqtt.discovery import MqttServiceInfo
+    from homeassistant.components.hassio import HassioServiceInfo
+    from homeassistant.components.mqtt import MqttServiceInfo
+    from homeassistant.components.ssdp import SsdpServiceInfo
     from homeassistant.components.usb import UsbServiceInfo
     from homeassistant.components.zeroconf import ZeroconfServiceInfo
 
@@ -1161,6 +1163,12 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         """Get the options flow for this handler."""
         raise data_entry_flow.UnknownHandler
 
+    @classmethod
+    @callback
+    def async_supports_options_flow(cls, config_entry: ConfigEntry) -> bool:
+        """Return options flow support for this handler."""
+        return cls.async_get_options_flow is not ConfigFlow.async_get_options_flow
+
     @callback
     def _async_abort_entries_match(
         self, match_dict: dict[str, Any] | None = None
@@ -1352,10 +1360,10 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         )
 
     async def async_step_hassio(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: HassioServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by HASS IO discovery."""
-        return await self.async_step_discovery(discovery_info)
+        return await self.async_step_discovery(discovery_info.config)
 
     async def async_step_homekit(
         self, discovery_info: ZeroconfServiceInfo
@@ -1370,10 +1378,10 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         return await self.async_step_discovery(dataclasses.asdict(discovery_info))
 
     async def async_step_ssdp(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: SsdpServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by SSDP discovery."""
-        return await self.async_step_discovery(discovery_info)
+        return await self.async_step_discovery(dataclasses.asdict(discovery_info))
 
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo

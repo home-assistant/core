@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_UPDATE,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -33,7 +33,7 @@ class WLEDUpdateBinarySensor(WLEDEntity, BinarySensorEntity):
     """Defines a WLED firmware binary sensor."""
 
     _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
-    _attr_device_class = DEVICE_CLASS_UPDATE
+    _attr_device_class = BinarySensorDeviceClass.UPDATE
 
     def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
         """Initialize the button entity."""
