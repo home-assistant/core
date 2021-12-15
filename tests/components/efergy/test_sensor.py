@@ -89,7 +89,7 @@ async def test_sensor_readings(
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "EUR"
     assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
     entity = ent_reg.async_get("sensor.power_usage_728386")
-    assert entity.disabled_by == er.DISABLED_INTEGRATION
+    assert entity.disabled_by is er.RegistryEntryDisabler.INTEGRATION
     ent_reg.async_update_entity(entity.entity_id, **{"disabled_by": None})
     await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
