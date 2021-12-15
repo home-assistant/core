@@ -240,8 +240,13 @@ async def async_setup_entry(hass, entry, async_add_entities):
             )
         if home.has_active_subscription and not home.has_real_time_consumption:
             if coordinator is None:
-                coordinator = TibberDataCoordinator(tibber_connection, hass)
-                await coordinator.async_refresh()
+                coordinator = update_coordinator.DataUpdateCoordinator(
+                    hass,
+                    _LOGGER,
+                    name=f"Tibber {tibber_connection.name}",
+                    update_method=tibber_connection.fetch_consumption_data_active_homes,
+                    update_interval=timedelta(hours=1),
+                )
             for entity_description in SENSORS:
                 entities.append(TibberDataSensor(home, coordinator, entity_description))
 
@@ -378,14 +383,13 @@ class TibberDataSensor(TibberSensor, update_coordinator.CoordinatorEntity):
     def __init__(
         self,
         tibber_home,
-        coordinator: TibberDataCoordinator,
+        coordinator: update_coordinator.DataUpdateCoordinator,
         entity_description: SensorEntityDescription,
     ):
         """Initialize the sensor."""
         super().__init__(coordinator=coordinator, tibber_home=tibber_home)
         self.entity_description = entity_description
 
-        self._attr_available = False
         self._attr_unique_id = (
             f"{self._tibber_home.home_id}_{self.entity_description.key}"
         )
@@ -394,44 +398,18 @@ class TibberDataSensor(TibberSensor, update_coordinator.CoordinatorEntity):
             self._attr_native_unit_of_measurement = self._tibber_home.currency
 
         self._device_name = self._home_name
-        self._update_attr()
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._update_attr()
-        self.async_write_ha_state()
+    @property
+    def native_value(self):
+        """Return the value of the sensor."""
+        return getattr(self._tibber_home, self.entity_description.key)
 
-    @callback
-    def _update_attr(self) -> None:
+    @property
+    def extra_state_attributes(self):
+        """Return the extra state attributes."""
         if self.entity_description.key == "peak_hour":
-            self._attr_extra_state_attributes = {
-                "Time of max hour": self._tibber_home.peak_hour_time
-            }
-        self._attr_native_value = getattr(
-            self._tibber_home, self.entity_description.key
-        )
-
-
-class TibberDataCoordinator(update_coordinator.DataUpdateCoordinator):
-    """Handle Tibber consumption data."""
-
-    def __init__(self, tibber_connection, hass):
-        """Initialize the data handler."""
-        self.hass = hass
-        super().__init__(
-            hass,
-            _LOGGER,
-            name=f"Tibber {tibber_connection.name}",
-            update_method=tibber_connection.fetch_consumption_data_active_homes,
-        )
-
-        async def _async_request_refresh_wrapper(_):
-            await self.async_request_refresh()
-
-        hass.helpers.event.async_track_time_change(
-            _async_request_refresh_wrapper, minute=1, second=randrange(0, 59)
-        )
+            return {"Time of max hour": self._tibber_home.peak_hour_time}
+        return None
 
 
 class TibberSensorRT(TibberSensor, update_coordinator.CoordinatorEntity):
