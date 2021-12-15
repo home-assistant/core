@@ -28,6 +28,10 @@ async def validate_input(data):
         weather_data = ECWeather(coordinates=(lat, lon), language=lang)
     await weather_data.update()
 
+    if lat is None or lon is None:
+        lat = weather_data.lat
+        lon = weather_data.lon
+
     return {
         CONF_TITLE: weather_data.metadata.get("location"),
         CONF_STATION: weather_data.station_id,
