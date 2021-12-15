@@ -42,21 +42,6 @@ SUPPORT_FEATURES_WHITE = SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP
 SCAN_INTERVAL = timedelta(seconds=15)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the WiZ Light platform from legacy config."""
-    # Assign configuration variables.
-    # The configuration check takes care they are present.
-    ip_address = config[CONF_HOST]
-    try:
-        bulb = wizlight(ip_address)
-    except WizLightConnectionError:
-        _LOGGER.error("Can't add bulb with ip %s", ip_address)
-        return False
-
-    # Add devices
-    async_add_entities([WizBulb(bulb, config[CONF_NAME])], update_before_add=True)
-
-
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the WiZ Light platform from config_flow."""
     # Assign configuration variables.
