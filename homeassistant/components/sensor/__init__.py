@@ -59,7 +59,7 @@ from .const import CONF_STATE_CLASS  # noqa: F401
 
 _LOGGER: Final = logging.getLogger(__name__)
 
-ATTR_LAST_RESET: Final = "last_reset"  # Deprecated, to be removed in 2021.11
+ATTR_LAST_RESET: Final = "last_reset"
 ATTR_STATE_CLASS: Final = "state_class"
 
 DOMAIN: Final = "sensor"
@@ -215,7 +215,7 @@ class SensorEntityDescription(EntityDescription):
     """A class that describes sensor entities."""
 
     device_class: SensorDeviceClass | str | None = None
-    last_reset: datetime | None = None  # Deprecated, to be removed in 2021.11
+    last_reset: datetime | None = None
     native_unit_of_measurement: str | None = None
     state_class: SensorStateClass | str | None = None
     unit_of_measurement: None = None  # Type override, use native_unit_of_measurement
@@ -247,7 +247,7 @@ class SensorEntity(Entity):
 
     entity_description: SensorEntityDescription
     _attr_device_class: SensorDeviceClass | str | None
-    _attr_last_reset: datetime | None  # Deprecated, to be removed in 2021.11
+    _attr_last_reset: datetime | None
     _attr_native_unit_of_measurement: str | None
     _attr_native_value: StateType | date | datetime = None
     _attr_state_class: SensorStateClass | str | None
@@ -280,7 +280,7 @@ class SensorEntity(Entity):
         return None
 
     @property
-    def last_reset(self) -> datetime | None:  # Deprecated, to be removed in 2021.11
+    def last_reset(self) -> datetime | None:
         """Return the time when the sensor was last reset, if any."""
         if hasattr(self, "_attr_last_reset"):
             return self._attr_last_reset
