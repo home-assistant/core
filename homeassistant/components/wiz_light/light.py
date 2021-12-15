@@ -91,10 +91,6 @@ class WizBulbEntity(LightEntity):
         """Return the hs color value."""
         return self._hscolor
 
-    @property
-    def unique_id(self):
-        """Return light unique_id."""
-        return self._mac
 
     @property
     def is_on(self):
