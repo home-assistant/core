@@ -16,6 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -70,13 +71,13 @@ async def async_setup_platform(
         _LOGGER.error("Failed to initialize %s:%s: %s", node, serv, str(exc))
         raise PlatformNotReady from exc
 
-    info = {
-        "connections": {(CONNECTION_NETWORK_MAC, mac)},
-        "name": name,
-        "manufacturer": "ATEN",
-        "model": model,
-        "sw_version": sw_version,
-    }
+    info = DeviceInfo(
+        connections={(CONNECTION_NETWORK_MAC, mac)},
+        manufacturer="ATEN",
+        model=model,
+        name=name,
+        sw_version=sw_version,
+    )
 
     switches = []
     async for outlet in outlets:
