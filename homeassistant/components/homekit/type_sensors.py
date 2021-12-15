@@ -11,6 +11,8 @@ from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
+    DEVICE_CLASS_CO,
+    DEVICE_CLASS_CO2,
     STATE_HOME,
     STATE_ON,
     TEMP_CELSIUS,
@@ -64,12 +66,10 @@ class SI(NamedTuple):
 
 
 BINARY_SENSOR_SERVICE_MAP: dict[str, SI] = {
-    BinarySensorDeviceClass.CO: SI(
+    DEVICE_CLASS_CO: SI(
         SERV_CARBON_MONOXIDE_SENSOR, CHAR_CARBON_MONOXIDE_DETECTED, int
     ),
-    BinarySensorDeviceClass.CO2: SI(
-        SERV_CARBON_DIOXIDE_SENSOR, CHAR_CARBON_DIOXIDE_DETECTED, int
-    ),
+    DEVICE_CLASS_CO2: SI(SERV_CARBON_DIOXIDE_SENSOR, CHAR_CARBON_DIOXIDE_DETECTED, int),
     BinarySensorDeviceClass.DOOR: SI(
         SERV_CONTACT_SENSOR, CHAR_CONTACT_SENSOR_STATE, int
     ),
