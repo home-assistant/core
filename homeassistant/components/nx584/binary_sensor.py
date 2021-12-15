@@ -8,7 +8,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASSES,
+    DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
     PLATFORM_SCHEMA,
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -25,7 +25,7 @@ DEFAULT_HOST = "localhost"
 DEFAULT_PORT = "5007"
 DEFAULT_SSL = False
 
-ZONE_TYPES_SCHEMA = vol.Schema({cv.positive_int: vol.In(DEVICE_CLASSES)})
+ZONE_TYPES_SCHEMA = vol.Schema({cv.positive_int: BINARY_SENSOR_DEVICE_CLASSES_SCHEMA})
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
