@@ -1,9 +1,7 @@
 """Weather component that handles meteorological data for your location."""
 from __future__ import annotations
 
-from abc import abstractmethod
 from datetime import datetime
-import logging
 from typing import Any
 
 from pytomorrowio.const import DAILY, FORECASTS, HOURLY, NOWCAST, WeatherCode
@@ -22,13 +20,9 @@ from homeassistant.components.weather import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
-    LENGTH_FEET,
-    LENGTH_KILOMETERS,
-    LENGTH_METERS,
+    LENGTH_INCHES,
     LENGTH_MILES,
-    PRESSURE_HPA,
     PRESSURE_INHG,
-    SPEED_KILOMETERS_PER_HOUR,
     SPEED_MILES_PER_HOUR,
     TEMP_FAHRENHEIT,
 )
@@ -36,9 +30,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sun import is_up
 from homeassistant.util import dt as dt_util
-from homeassistant.util.distance import convert as distance_convert
-from homeassistant.util.pressure import convert as pressure_convert
-from homeassistant.util.speed import convert as speed_convert
 
 from . import TomorrowioDataUpdateCoordinator, TomorrowioEntity
 from .const import (
@@ -63,8 +54,6 @@ from .const import (
     TMRW_ATTR_WIND_SPEED,
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -81,8 +70,14 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class BaseTomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
-    """Base Tomorrow.io weather entity."""
+class TomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
+    """Entity that talks to Tomorrow.io v4 API to retrieve weather data."""
+
+    _attr_temperature_unit = TEMP_FAHRENHEIT
+    _attr_pressure_unit = PRESSURE_INHG
+    _attr_wind_speed_unit = SPEED_MILES_PER_HOUR
+    _attr_visibility_unit = LENGTH_MILES
+    _attr_precipitation_unit = LENGTH_INCHES
 
     def __init__(
         self,
@@ -99,13 +94,6 @@ class BaseTomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
         )
         self._attr_name = f"{config_entry.data[CONF_NAME]} - {forecast_type.title()}"
         self._attr_unique_id = f"{config_entry.unique_id}_{forecast_type}"
-
-    @staticmethod
-    @abstractmethod
-    def _translate_condition(
-        condition: int | None, sun_is_up: bool = True
-    ) -> str | None:
-        """Translate Tomorrow.io condition into an HA condition."""
 
     def _forecast_dict(
         self,
@@ -127,21 +115,6 @@ class BaseTomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
         else:
             translated_condition = self._translate_condition(condition, True)
 
-        if self.hass.config.units.is_metric:
-            if precipitation:
-                precipitation = round(
-                    distance_convert(precipitation / 12, LENGTH_FEET, LENGTH_METERS)
-                    * 1000,
-                    4,
-                )
-            if wind_speed:
-                wind_speed = round(
-                    speed_convert(
-                        wind_speed, SPEED_MILES_PER_HOUR, SPEED_KILOMETERS_PER_HOUR
-                    ),
-                    4,
-                )
-
         data = {
             ATTR_FORECAST_TIME: forecast_dt.isoformat(),
             ATTR_FORECAST_CONDITION: translated_condition,
@@ -154,57 +127,6 @@ class BaseTomorrowioWeatherEntity(TomorrowioEntity, WeatherEntity):
         }
 
         return {k: v for k, v in data.items() if v is not None}
-
-    @property
-    @abstractmethod
-    def _pressure(self):
-        """Return the raw pressure."""
-
-    @property
-    def pressure(self):
-        """Return the pressure."""
-        if self.hass.config.units.is_metric and self._pressure:
-            return round(
-                pressure_convert(self._pressure, PRESSURE_INHG, PRESSURE_HPA), 4
-            )
-        return self._pressure
-
-    @property
-    @abstractmethod
-    def _wind_speed(self):
-        """Return the raw wind speed."""
-
-    @property
-    def wind_speed(self):
-        """Return the wind speed."""
-        if self.hass.config.units.is_metric and self._wind_speed:
-            return round(
-                speed_convert(
-                    self._wind_speed, SPEED_MILES_PER_HOUR, SPEED_KILOMETERS_PER_HOUR
-                ),
-                4,
-            )
-        return self._wind_speed
-
-    @property
-    @abstractmethod
-    def _visibility(self):
-        """Return the raw visibility."""
-
-    @property
-    def visibility(self):
-        """Return the visibility."""
-        if self.hass.config.units.is_metric and self._visibility:
-            return round(
-                distance_convert(self._visibility, LENGTH_MILES, LENGTH_KILOMETERS), 4
-            )
-        return self._visibility
-
-
-class TomorrowioWeatherEntity(BaseTomorrowioWeatherEntity):
-    """Entity that talks to Tomorrow.io v4 API to retrieve weather data."""
-
-    _attr_temperature_unit = TEMP_FAHRENHEIT
 
     @staticmethod
     def _translate_condition(
@@ -227,7 +149,7 @@ class TomorrowioWeatherEntity(BaseTomorrowioWeatherEntity):
         return self._get_current_property(TMRW_ATTR_TEMPERATURE)
 
     @property
-    def _pressure(self):
+    def pressure(self):
         """Return the raw pressure."""
         return self._get_current_property(TMRW_ATTR_PRESSURE)
 
@@ -237,7 +159,7 @@ class TomorrowioWeatherEntity(BaseTomorrowioWeatherEntity):
         return self._get_current_property(TMRW_ATTR_HUMIDITY)
 
     @property
-    def _wind_speed(self):
+    def wind_speed(self):
         """Return the raw wind speed."""
         return self._get_current_property(TMRW_ATTR_WIND_SPEED)
 
@@ -260,7 +182,7 @@ class TomorrowioWeatherEntity(BaseTomorrowioWeatherEntity):
         )
 
     @property
-    def _visibility(self):
+    def visibility(self):
         """Return the raw visibility."""
         return self._get_current_property(TMRW_ATTR_VISIBILITY)
 

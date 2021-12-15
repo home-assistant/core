@@ -4,7 +4,6 @@ from __future__ import annotations
 from abc import abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
-import logging
 from typing import Any
 
 from pytomorrowio.const import (
@@ -74,8 +73,6 @@ from .const import (
     TMRW_ATTR_SULPHUR_DIOXIDE,
     TMRW_ATTR_WIND_GUST,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
