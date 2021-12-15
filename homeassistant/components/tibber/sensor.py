@@ -314,6 +314,7 @@ class TibberSensorElPrice(TibberSensor):
         ):
             _LOGGER.debug("Asking for new data")
             await self._fetch_data()
+
         elif (
             self._tibber_home.current_price_total
             and self._last_updated
