@@ -1,11 +1,12 @@
 """WiZ Light integration."""
-import logging
 from dataclasses import dataclass
-from pywizlight import wizlight
+import logging
+
+from pywizlight import BulbType, wizlight
 from pywizlight.exceptions import WizLightConnectionError, WizLightTimeOutError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
@@ -16,8 +17,6 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["light"]
 
 
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up the wiz_light integration from a config entry."""
     ip_address = entry.data.get(CONF_HOST)
@@ -26,13 +25,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         bulb = wizlight(ip_address)
         mac_addr = await bulb.getMac()
         bulb_type = await bulb.get_bulbtype()
-    except (WizLightTimeOutError, WizLightConnectionError) as err:
+    except (
+        WizLightTimeOutError,
+        WizLightConnectionError,
+        ConnectionRefusedError,
+    ) as err:
         raise ConfigEntryNotReady from err
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = WizData(
-         bulb=bulb,
-         mac_addr=mac_addr,
-         bulb_type=bulb_type
+        bulb=bulb, mac_addr=mac_addr, bulb_type=bulb_type
     )
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
@@ -43,3 +44,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
+
+
+@dataclass
+class WizData:
+    """Data for the wiz integration."""
+
+    bulb: wizlight
+    mac_addr: str
+    bulb_type: BulbType

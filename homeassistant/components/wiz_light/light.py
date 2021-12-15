@@ -6,11 +6,7 @@ import logging
 
 from pywizlight import PilotBuilder, wizlight
 from pywizlight.bulblibrary import BulbType
-from pywizlight.exceptions import (
-    WizLightConnectionError,
-    WizLightNotKnownBulb,
-    WizLightTimeOutError,
-)
+from pywizlight.exceptions import WizLightNotKnownBulb, WizLightTimeOutError
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -24,7 +20,7 @@ from homeassistant.components.light import (
     SUPPORT_EFFECT,
     LightEntity,
 )
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_NAME
 import homeassistant.util.color as color_utils
 
 from .const import DOMAIN
@@ -46,7 +42,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the WiZ Light platform from config_flow."""
     # Assign configuration variables.
     wiz_data = hass.data[DOMAIN][entry.entry_id]
-    wizbulb = WizBulbEntity(wiz_data.bulb, entry.data.get(CONF_NAME), wiz_data.mac_addr, wiz_data.bulb_type)    
+    wizbulb = WizBulbEntity(
+        wiz_data.bulb, entry.data.get(CONF_NAME), wiz_data.mac_addr, wiz_data.bulb_type
+    )
     # Add devices with defined name
     async_add_entities([wizbulb], update_before_add=True)
     return True
@@ -67,7 +65,7 @@ class WizBulbEntity(LightEntity):
         self._available = None
         self._effect = None
         self._scenes: list[str] = []
-        self._bulbtype: BulbType = None
+        self._bulbtype: BulbType = bulb_type
         self._mac = mac_addr
         self._attr_unique_id = mac_addr
         # new init states
@@ -90,7 +88,6 @@ class WizBulbEntity(LightEntity):
     def hs_color(self):
         """Return the hs color value."""
         return self._hscolor
-
 
     @property
     def is_on(self):
@@ -233,7 +230,7 @@ class WizBulbEntity(LightEntity):
         """Get device specific attributes."""
         return {
             "identifiers": {(DOMAIN, self._mac)},
-            "name": self._name,
+            "name": self._attr_name,
             "manufacturer": "WiZ Light Platform",
             "model": f"{self._bulbtype.name} Mac: {self._mac}",
         }
