@@ -7,7 +7,7 @@ from homeassistant.components.switchbot.const import (
     CONF_SCAN_TIMEOUT,
     CONF_TIME_BETWEEN_UPDATE_COMMAND,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_MAC, CONF_NAME, CONF_PASSWORD, CONF_SENSOR_TYPE
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
@@ -15,13 +15,7 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_FORM,
 )
 
-from . import (
-    USER_INPUT,
-    USER_INPUT_CURTAIN,
-    YAML_CONFIG,
-    _patch_async_setup_entry,
-    init_integration,
-)
+from . import USER_INPUT, USER_INPUT_CURTAIN, _patch_async_setup_entry, init_integration
 
 DOMAIN = "switchbot"
 
@@ -88,24 +82,6 @@ async def test_user_form_valid_mac(hass):
     )
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "no_unconfigured_devices"
-
-
-async def test_async_step_import(hass):
-    """Test the config import flow."""
-
-    with _patch_async_setup_entry() as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=YAML_CONFIG
-        )
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result["data"] == {
-        CONF_MAC: "e7:89:43:99:99:99",
-        CONF_NAME: "test-name",
-        CONF_PASSWORD: "test-password",
-        CONF_SENSOR_TYPE: "bot",
-    }
-
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_user_form_exception(hass, switchbot_config_flow):

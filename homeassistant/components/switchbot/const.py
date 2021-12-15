@@ -5,7 +5,6 @@ MANUFACTURER = "switchbot"
 # Config Attributes
 ATTR_BOT = "bot"
 ATTR_CURTAIN = "curtain"
-DEFAULT_NAME = "Switchbot"
 SUPPORTED_MODEL_TYPES = {"WoHand": ATTR_BOT, "WoCurtain": ATTR_CURTAIN}
 
 # Config Defaults
