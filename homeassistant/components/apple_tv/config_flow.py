@@ -1,4 +1,6 @@
 """Config flow for Apple TV integration."""
+from __future__ import annotations
+
 import asyncio
 from collections import deque
 from ipaddress import ip_address
@@ -98,12 +100,19 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         re-used, otherwise the newly discovered identifier is used instead.
         """
         all_identifiers = set(self.atv.all_identifiers)
+        if unique_id := self._entry_unique_id_from_identifers(all_identifiers):
+            return unique_id
+        return self.atv.identifier
+
+    @callback
+    def _entry_unique_id_from_identifers(self, all_identifiers: set[str]) -> str | None:
+        """Search existing entries for an identifier and return the unique id."""
         for entry in self._async_current_entries():
             if all_identifiers.intersection(
                 entry.data.get(CONF_IDENTIFIERS, [entry.unique_id])
             ):
                 return entry.unique_id
-        return self.atv.identifier
+        return None
 
     async def async_step_reauth(self, user_input=None):
         """Handle initial step when updating invalid credentials."""
@@ -166,6 +175,19 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if unique_id is None:
             return self.async_abort(reason="unknown")
 
+        if existing_unique_id := self._entry_unique_id_from_identifers({unique_id}):
+            await self.async_set_unique_id(existing_unique_id)
+            self._abort_if_unique_id_configured(updates={CONF_ADDRESS: host})
+
+        await self._async_aggregate_discoveries(host, unique_id)
+        # Scan for the device in order to extract _all_ unique identifiers assigned to
+        # it. Not doing it like this will yield multiple config flows for the same
+        # device, one per protocol, which is undesired.
+        self.scan_filter = host
+        return await self.async_find_device_wrapper(self.async_found_zeroconf_device)
+
+    async def _async_aggregate_discoveries(self, host: str, unique_id: str) -> None:
+        """Wait for multiple zeroconf services to be discovered an aggregate them."""
         #
         # Suppose we have a device with three services: A, B and C. Let's assume
         # service A is discovered by Zeroconf, triggering a device scan that also finds
@@ -195,18 +217,15 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # apple_tv device has multiple services that are discovered by
         # zeroconf.
         #
+        self._async_check_and_update_in_progress(host, unique_id)
         await asyncio.sleep(DISCOVERY_AGGREGATION_TIME)
-
-        self._async_check_in_progress_and_set_address(host, unique_id)
-
-        # Scan for the device in order to extract _all_ unique identifiers assigned to
-        # it. Not doing it like this will yield multiple config flows for the same
-        # device, one per protocol, which is undesired.
-        self.scan_filter = host
-        return await self.async_find_device_wrapper(self.async_found_zeroconf_device)
+        # Check again after sleeping since we want to do everything
+        # we can to avoid expensive probes
+        self._async_check_and_update_in_progress(host, unique_id)
+        self.context[CONF_ADDRESS] = host
 
     @callback
-    def _async_check_in_progress_and_set_address(self, host: str, unique_id: str):
+    def _async_check_and_update_in_progress(self, host: str, unique_id: str) -> None:
         """Check for in-progress flows and update them with identifiers if needed.
 
         This code must not await between checking in progress and setting the host
@@ -226,7 +245,6 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 # Add potentially new identifiers from this device to the existing flow
                 context["all_identifiers"].append(unique_id)
             raise data_entry_flow.AbortFlow("already_in_progress")
-        self.context[CONF_ADDRESS] = host
 
     async def async_found_zeroconf_device(self, user_input=None):
         """Handle device found after Zeroconf discovery."""
