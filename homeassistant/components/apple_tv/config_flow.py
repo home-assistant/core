@@ -223,15 +223,13 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Check again after sleeping since we want to do everything
         # we can to avoid expensive probes
         self._async_check_and_update_in_progress(host, unique_id)
+        # Host must only be set AFTER checking and updating in progress
+        # flows or we will have a race condition where no flows move forward.
         self.context[CONF_ADDRESS] = host
 
     @callback
     def _async_check_and_update_in_progress(self, host: str, unique_id: str) -> None:
-        """Check for in-progress flows and update them with identifiers if needed.
-
-        This code must not await between checking in progress and setting the host
-        or it will have a race condition where no flows move forward.
-        """
+        """Check for in-progress flows and update them with identifiers if needed."""
         for flow in self._async_in_progress(include_uninitialized=True):
             context = flow["context"]
             if (
