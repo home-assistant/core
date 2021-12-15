@@ -263,7 +263,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # set up notify platform, no entry support for notify component yet
     if NotifySchema.PLATFORM in config:
         hass.async_create_task(
-            discovery.async_load_platform(hass, "notify", DOMAIN, {}, {})
+            discovery.async_load_platform(hass, "notify", DOMAIN, {}, config)
         )
 
     hass.services.async_register(

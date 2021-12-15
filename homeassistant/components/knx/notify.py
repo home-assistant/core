@@ -21,24 +21,25 @@ async def async_get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> KNXNotificationService | None:
     """Get the KNX notification service."""
-    if not hass.data[DATA_KNX_CONFIG].get(NotifySchema.PLATFORM):
-        return None
+    if platform_config := hass.data[DATA_KNX_CONFIG].get(NotifySchema.PLATFORM):
+        xknx: XKNX = hass.data[DOMAIN].xknx
 
-    platform_config: dict = hass.data[DATA_KNX_CONFIG].get(NotifySchema.PLATFORM)
-    xknx: XKNX = hass.data[DOMAIN].xknx
-
-    notification_devices = []
-    for device_config in platform_config:
-        notification_devices.append(
-            XknxNotification(
-                xknx,
-                name=device_config[CONF_NAME],
-                group_address=device_config[KNX_ADDRESS],
+        notification_devices = []
+        for device_config in platform_config:
+            notification_devices.append(
+                XknxNotification(
+                    xknx,
+                    name=device_config[CONF_NAME],
+                    group_address=device_config[KNX_ADDRESS],
+                )
             )
+        return (
+            KNXNotificationService(notification_devices)
+            if notification_devices
+            else None
         )
-    return (
-        KNXNotificationService(notification_devices) if notification_devices else None
-    )
+
+    return None
 
 
 class KNXNotificationService(BaseNotificationService):
