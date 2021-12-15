@@ -21,7 +21,6 @@ httpx==0.21.0
 ifaddr==0.1.7
 jinja2==3.0.3
 paho-mqtt==1.6.1
-pillow==8.2.0
 pip>=8.0.3,<20.3
 pyserial==3.5
 python-slugify==4.0.1
@@ -36,7 +35,11 @@ yarl==1.6.3
 zeroconf==0.37.0
 
 # Constrain pillow to 8.2.0 because later versions are causing issues in nightly builds.
+# https://github.com/home-assistant/core/issues/61756
+pillow==8.2.0
 
+# Constrain pycryptodome to avoid vulnerability
+# see https://github.com/home-assistant/core/pull/16238
 pycryptodome>=3.6.6
 
 # Constrain urllib3 to ensure we deal with CVE-2020-26137 and CVE-2021-33503
