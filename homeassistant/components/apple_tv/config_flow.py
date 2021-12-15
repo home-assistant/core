@@ -220,8 +220,8 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         #
         self._async_check_and_update_in_progress(host, unique_id)
         await asyncio.sleep(DISCOVERY_AGGREGATION_TIME)
-        # Check again after sleeping since we want to do everything
-        # we can to avoid expensive probes
+        # Check again after sleeping in case another flow
+        # has made progress while we yielded to the event loop
         self._async_check_and_update_in_progress(host, unique_id)
         # Host must only be set AFTER checking and updating in progress
         # flows or we will have a race condition where no flows move forward.
