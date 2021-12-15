@@ -137,8 +137,10 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Required(
                 ConnectionSchema.CONF_KNX_ROUTE_BACK, default=False
             ): vol.Coerce(bool),
-            vol.Optional(ConnectionSchema.CONF_KNX_LOCAL_IP): str,
         }
+
+        if self.show_advanced_options:
+            fields[vol.Optional(ConnectionSchema.CONF_KNX_LOCAL_IP)] = str
 
         return self.async_show_form(
             step_id="manual_tunnel", data_schema=vol.Schema(fields), errors=errors
@@ -195,6 +197,9 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_KNX_INDIVIDUAL_ADDRESS: user_input[
                         CONF_KNX_INDIVIDUAL_ADDRESS
                     ],
+                    ConnectionSchema.CONF_KNX_LOCAL_IP: user_input.get(
+                        ConnectionSchema.CONF_KNX_LOCAL_IP
+                    ),
                     CONF_KNX_CONNECTION_TYPE: CONF_KNX_ROUTING,
                 },
             )
@@ -210,6 +215,9 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 ConnectionSchema.CONF_KNX_MCAST_PORT, default=DEFAULT_MCAST_PORT
             ): cv.port,
         }
+
+        if self.show_advanced_options:
+            fields[vol.Optional(ConnectionSchema.CONF_KNX_LOCAL_IP)] = str
 
         return self.async_show_form(
             step_id="routing", data_schema=vol.Schema(fields), errors=errors
@@ -306,7 +314,6 @@ class KNXOptionsFlowHandler(OptionsFlow):
                         vol.Required(
                             CONF_PORT, default=self.current_config.get(CONF_PORT, 3671)
                         ): cv.port,
-                        vol.Optional(ConnectionSchema.CONF_KNX_LOCAL_IP): str,
                         vol.Required(
                             ConnectionSchema.CONF_KNX_ROUTE_BACK,
                             default=self.current_config.get(
@@ -381,6 +388,14 @@ class KNXOptionsFlowHandler(OptionsFlow):
         }
 
         if self.show_advanced_options:
+            data_schema[
+                vol.Optional(
+                    ConnectionSchema.CONF_KNX_LOCAL_IP,
+                    default=self.current_config.get(
+                        ConnectionSchema.CONF_KNX_LOCAL_IP,
+                    ),
+                )
+            ] = str
             data_schema[
                 vol.Required(
                     ConnectionSchema.CONF_KNX_STATE_UPDATER,
