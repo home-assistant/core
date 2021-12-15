@@ -36,16 +36,6 @@ class TVWeatherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return str(err)
         return "connected"
 
-    async def async_step_import(self, config: dict):
-        """Import a configuration from config.yaml."""
-
-        self.context.update(
-            {"title_placeholders": {CONF_STATION: f"YAML import {DOMAIN}"}}
-        )
-
-        self._async_abort_entries_match({CONF_STATION: config[CONF_STATION]})
-        return await self.async_step_user(user_input=config)
-
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
         errors = {}
