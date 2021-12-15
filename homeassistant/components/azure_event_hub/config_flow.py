@@ -150,7 +150,7 @@ class AEHConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._data = import_config
         errors = await validate_data(self._data)
         if errors:
-            return self.async_abort(reason="invalid_import")
+            return self.async_abort(reason=errors["base"])
         return self.async_create_entry(
             title=self._data[CONF_EVENT_HUB_INSTANCE_NAME],
             data=self._data,

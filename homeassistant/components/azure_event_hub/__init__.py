@@ -100,7 +100,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady("Could not connect to Azure Event Hub") from err
     hass.data[DOMAIN][DATA_HUB] = hub
     entry.async_on_unload(entry.add_update_listener(async_update_listener))
-    return await hass.data[DOMAIN][DATA_HUB].async_start()
+    await hub.async_start()
+    return True
 
 
 async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -139,7 +140,7 @@ class AzureEventHub:
         self._next_send_remover: Callable[[], None] | None = None
         self.shutdown = False
 
-    async def async_start(self) -> bool:
+    async def async_start(self) -> None:
         """Start the recorder, suppress logging and register the callbacks and do the first send after five seconds, to capture the startup events."""
         # suppress the INFO and below logging on the underlying packages, they are very verbose, even at INFO
         logging.getLogger("uamqp").setLevel(logging.WARNING)
@@ -152,7 +153,6 @@ class AzureEventHub:
         self._next_send_remover = async_call_later(
             self.hass, self._send_interval, self.async_send
         )
-        return True
 
     async def async_stop(self) -> None:
         """Shut down the AEH by queueing None and calling send."""
