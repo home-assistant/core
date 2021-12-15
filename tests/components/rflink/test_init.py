@@ -10,6 +10,7 @@ from homeassistant.components.rflink import (
     CONF_KEEPALIVE_IDLE,
     CONF_RECONNECT_INTERVAL,
     DATA_ENTITY_LOOKUP,
+    DEFAULT_TCP_KEEPALIVE_IDLE_TIMER,
     DOMAIN as RFLINK_DOMAIN,
     EVENT_KEY_COMMAND,
     EVENT_KEY_SENSOR,
@@ -403,7 +404,13 @@ async def test_keepalive(hass, monkeypatch, caplog):
     }
 
     # setup mocking rflink module
-    _, _, _, _ = await mock_rflink(hass, config, domain, monkeypatch)
+    _, mock_create, _, _ = await mock_rflink(hass, config, domain, monkeypatch)
+
+    assert mock_create.call_args_list[0][1]["host"] == "10.10.0.1"
+    assert mock_create.call_args_list[0][1]["port"] == 1234
+    assert (
+        mock_create.call_args_list[0][1]["keepalive"] is None
+    )  # negative keepalive is not allowed
     assert (
         f"A bogus TCP Keepalive IDLE timer was provided ({keepalive_value} secs)"
         in caplog.text
@@ -423,7 +430,13 @@ async def test2_keepalive(hass, monkeypatch, caplog):
     }
 
     # setup mocking rflink module
-    _, _, _, _ = await mock_rflink(hass, config, domain, monkeypatch)
+    _, mock_create, _, _ = await mock_rflink(hass, config, domain, monkeypatch)
+
+    assert mock_create.call_args_list[0][1]["host"] == "10.10.0.1"
+    assert mock_create.call_args_list[0][1]["port"] == 1234
+    assert (
+        mock_create.call_args_list[0][1]["keepalive"] == keepalive_value
+    )  # very short keepalive is allowed but warned
     assert (
         f"A very short TCP Keepalive IDLE timer was provided ({keepalive_value} secs)"
         in caplog.text
@@ -438,5 +451,28 @@ async def test3_keepalive(hass, monkeypatch, caplog):
     }
 
     # setup mocking rflink module
-    _, _, _, _ = await mock_rflink(hass, config, domain, monkeypatch)
+    _, mock_create, _, _ = await mock_rflink(hass, config, domain, monkeypatch)
+
+    assert mock_create.call_args_list[0][1]["host"] == "10.10.0.1"
+    assert mock_create.call_args_list[0][1]["port"] == 1234
+    assert (
+        mock_create.call_args_list[0][1]["keepalive"] is None
+    )  # keepalive=0 will disable it
+    assert "TCP Keepalive IDLE timer was provided" not in caplog.text
+
+
+async def test_default_keepalive(hass, monkeypatch, caplog):
+    """Validate keepalive=0 value."""
+    domain = RFLINK_DOMAIN
+    config = {RFLINK_DOMAIN: {CONF_HOST: "10.10.0.1", CONF_PORT: 1234}}
+
+    # setup mocking rflink module
+    _, mock_create, _, _ = await mock_rflink(hass, config, domain, monkeypatch)
+
+    assert mock_create.call_args_list[0][1]["host"] == "10.10.0.1"
+    assert mock_create.call_args_list[0][1]["port"] == 1234
+    assert (
+        mock_create.call_args_list[0][1]["keepalive"]
+        == DEFAULT_TCP_KEEPALIVE_IDLE_TIMER
+    )  # no keepalive config will default it
     assert "TCP Keepalive IDLE timer was provided" not in caplog.text
