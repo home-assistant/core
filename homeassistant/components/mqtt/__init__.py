@@ -324,6 +324,7 @@ class MqttValueTemplate:
         self,
         value_template: template.Template | None,
         hass: HomeAssistant,
+        variables: template.TemplateVarsType = None,
     ) -> None:
         """Instantiate a value template."""
         self._attr_value_template = value_template
@@ -331,6 +332,9 @@ class MqttValueTemplate:
             return
 
         value_template.hass = hass
+
+        if variables is not None:
+            self._variables = variables
 
     @callback
     def async_render_with_possible_json_value(
@@ -342,8 +346,15 @@ class MqttValueTemplate:
         if self._attr_value_template is None:
             return payload
 
+        values: dict[str, Any] = {}
+        if self._variables is not None:
+            values.update(self._variables)
+
+        if variables is not None:
+            values.update(variables)
+
         return self._attr_value_template.async_render_with_possible_json_value(
-            payload, variables=variables
+            payload, variables=values
         )
 
 
