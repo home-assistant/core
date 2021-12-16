@@ -1190,7 +1190,8 @@ async def test_migrate_from_yaml_with_custom_effect(hass: HomeAssistant) -> None
         return [FLUX_DISCOVERY] if address == IP_ADDRESS else []
 
     with patch(
-        "homeassistant.components.flux_led.AIOBulbScanner.async_scan", new=_discovery
+        "homeassistant.components.flux_led.discovery.AIOBulbScanner.async_scan",
+        new=_discovery,
     ), _patch_wifibulb():
         await async_setup_component(hass, LIGHT_DOMAIN, config)
         await hass.async_block_till_done()
@@ -1245,7 +1246,8 @@ async def test_migrate_from_yaml_no_custom_effect(hass: HomeAssistant) -> None:
         return [FLUX_DISCOVERY] if address == IP_ADDRESS else []
 
     with patch(
-        "homeassistant.components.flux_led.AIOBulbScanner.async_scan", new=_discovery
+        "homeassistant.components.flux_led.discovery.AIOBulbScanner.async_scan",
+        new=_discovery,
     ), _patch_wifibulb():
         await async_setup_component(hass, LIGHT_DOMAIN, config)
         await hass.async_block_till_done()

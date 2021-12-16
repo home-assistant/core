@@ -24,14 +24,15 @@ def _async_device_info(
     version_num = device.version_num
     if minor_version := entry.data.get(CONF_MINOR_VERSION):
         sw_version = version_num + int(hex(minor_version)[2:]) / 100
+        sw_version_str = f"{sw_version:0.3f}"
     else:
-        sw_version = device.version_num
+        sw_version_str = str(device.version_num)
     return DeviceInfo(
         connections={(dr.CONNECTION_NETWORK_MAC, unique_id)},
         manufacturer="Zengge",
         model=device.model,
         name=entry.data[CONF_NAME],
-        sw_version=str(sw_version),
+        sw_version=sw_version_str,
         hw_version=entry.data.get(CONF_MODEL),
     )
 
