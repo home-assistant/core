@@ -62,7 +62,9 @@ async def test_filter_only_config(hass):
 async def test_unload_entry(hass, entry, mock_create_batch):
     """Test being able to unload an entry.
 
-    Queue should be empty, so adding events to the batch should not be called, this verifies that the unload, calls async_stop, which calls async_send and shuts down the hub.
+    Queue should be empty, so adding events to the batch should not be called,
+    this verifies that the unload, calls async_stop, which calls async_send and
+    shuts down the hub.
     """
     assert await hass.config_entries.async_unload(entry.entry_id)
     mock_create_batch.add.assert_not_called()
@@ -119,10 +121,7 @@ async def test_late_event(hass, entry_with_one_event, mock_create_batch):
 
 
 async def test_full_batch(hass, entry_with_one_event, mock_create_batch):
-    """Test the full batch behaviour.
-
-    Can't use async_send, because that causes a loop with this side_effect.
-    """
+    """Test the full batch behaviour."""
     mock_create_batch.add.side_effect = [ValueError, None]
     async_fire_time_changed(
         hass,
@@ -203,7 +202,8 @@ async def test_full_batch(hass, entry_with_one_event, mock_create_batch):
 async def test_filter(hass, entry, tests, mock_create_batch):
     """Test different filters.
 
-    Filter_schema is also a fixture which is replaced by the filter_schema in the parametrize and added to the entry fixture.
+    Filter_schema is also a fixture which is replaced by the filter_schema
+    in the parametrize and added to the entry fixture.
     """
     for test in tests:
         hass.states.async_set(test.entity_id, STATE_ON)
