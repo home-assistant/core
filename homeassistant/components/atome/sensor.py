@@ -111,7 +111,8 @@ class AtomeData:
     def _retrieve_live(self):
         values = self.atome_client.get_live()
         if (
-            values.get("last")
+            values is not None
+            and values.get("last")
             and values.get("subscribed")
             and (values.get("isConnected") is not None)
         ):
@@ -140,7 +141,7 @@ class AtomeData:
     def _retrieve_period_usage(self, period_type):
         """Return current daily/weekly/monthly/yearly power usage."""
         values = self.atome_client.get_consumption(period_type)
-        if values.get("total") and values.get("price"):
+        if values is not None and values.get("total") and values.get("price"):
             period_usage = values["total"] / 1000
             period_price = values["price"]
             _LOGGER.debug("Updating Atome %s data. Got: %d", period_type, period_usage)
