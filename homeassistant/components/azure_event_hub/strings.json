@@ -41,8 +41,7 @@
         "options": {
           "title": "Options for the Azure Event Hub.",
           "data": {
-            "send_interval": "Interval for sending batches to the hub.",
-            "max_delay": "Max delay before discarding a message."
+            "send_interval": "Interval between sending batches to the hub."
           }
         }
       }

@@ -189,11 +189,7 @@ class AEHOptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Required(
                         CONF_SEND_INTERVAL,
                         default=self.options.get(CONF_SEND_INTERVAL),
-                    ): int,
-                    vol.Required(
-                        CONF_MAX_DELAY,
-                        default=self.options.get(CONF_MAX_DELAY),
-                    ): int,
+                    ): int
                 }
             ),
             last_step=True,

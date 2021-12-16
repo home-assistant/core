@@ -33,6 +33,7 @@ from .const import (
     CONF_SEND_INTERVAL,
     DATA_FILTER,
     DATA_HUB,
+    DEFAULT_MAX_DELAY,
     DOMAIN,
 )
 
@@ -62,7 +63,8 @@ async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
 
     Adds an empty filter to hass data.
     Tries to get a filter from yaml, if present set to hass data.
-    If config is empty after getting the filter, return, otherwise emit deprecated warning and pass the rest to the config flow.
+    If config is empty after getting the filter, return, otherwise emit
+    deprecated warning and pass the rest to the config flow.
     """
     hass.data.setdefault(DOMAIN, {DATA_FILTER: FILTER_SCHEMA({})})
     if DOMAIN not in yaml_config:
@@ -92,7 +94,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         AzureEventHubClient.from_input(**entry.data),
         hass.data[DOMAIN][DATA_FILTER],
         entry.options[CONF_SEND_INTERVAL],
-        entry.options[CONF_MAX_DELAY],
+        entry.options.get(CONF_MAX_DELAY),
     )
     try:
         await hub.async_test_connection()
@@ -125,7 +127,7 @@ class AzureEventHub:
         client: AzureEventHubClient,
         entities_filter: vol.Schema,
         send_interval: int,
-        max_delay: int,
+        max_delay: int | None = None,
     ) -> None:
         """Initialize the listener."""
         self.hass = hass
@@ -135,21 +137,27 @@ class AzureEventHub:
         self._client = client
         self._entities_filter = entities_filter
         self._send_interval = send_interval
-        self._max_delay = max_delay
+        self._max_delay = max_delay if max_delay else DEFAULT_MAX_DELAY
         self._listener_remover: Callable[[], None] | None = None
         self._next_send_remover: Callable[[], None] | None = None
         self.shutdown = False
 
     async def async_start(self) -> None:
-        """Start the recorder, suppress logging and register the callbacks and do the first send after five seconds, to capture the startup events."""
-        # suppress the INFO and below logging on the underlying packages, they are very verbose, even at INFO
+        """Start the hub.
+
+        This suppresses logging and register the listener and
+        schedules the first send.
+        """
+        # suppress the INFO and below logging on the underlying packages,
+        # they are very verbose, even at INFO
         logging.getLogger("uamqp").setLevel(logging.WARNING)
         logging.getLogger("azure.eventhub").setLevel(logging.WARNING)
 
         self._listener_remover = self.hass.bus.async_listen(
             MATCH_ALL, self.async_listen
         )
-        # schedule the first send after 10 seconds to capture startup events, after that each send will schedule the next after the interval.
+        # schedule the first send after 10 seconds to capture startup events,
+        # after that each send will schedule the next after the interval.
         self._next_send_remover = async_call_later(
             self.hass, self._send_interval, self.async_send
         )
@@ -198,9 +206,12 @@ class AzureEventHub:
     async def fill_batch(self, client) -> tuple[EventDataBatch, int]:
         """Return a batch of events formatted for writing.
 
-        Uses get_nowait instead of await get, because the functions batches and doesn't wait for each single event, the send function is called.
+        Uses get_nowait instead of await get, because the functions batches and
+        doesn't wait for each single event, the send function is called.
 
-        Throws ValueError on add to batch when the EventDataBatch object reaches max_size. Put the item back in the queue and the next batch will include it.
+        Throws ValueError on add to batch when the EventDataBatch object reaches
+        max_size. Put the item back in the queue and the next batch will include
+        it.
         """
         event_batch = await client.create_batch()
         dequeue_count = 0
@@ -249,4 +260,3 @@ class AzureEventHub:
     def update_options(self, new_options: dict[str, Any]) -> None:
         """Update options."""
         self._send_interval = new_options[CONF_SEND_INTERVAL]
-        self._max_delay = new_options[CONF_MAX_DELAY]
