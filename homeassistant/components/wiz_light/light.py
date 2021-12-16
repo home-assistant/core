@@ -5,8 +5,10 @@ from datetime import timedelta
 import logging
 
 from pywizlight import PilotBuilder, wizlight
-from pywizlight.bulblibrary import BulbType
+from pywizlight.bulblibrary import BulbClass, BulbType
 from pywizlight.exceptions import WizLightNotKnownBulb, WizLightTimeOutError
+from pywizlight.rgbcw import convertHSfromRGBCW
+from pywizlight.scenes import get_id_from_scene_name
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -105,10 +107,10 @@ class WizBulbEntity(LightEntity):
             pilot = PilotBuilder(rgb=kwargs.get(ATTR_RGB_COLOR), brightness=brightness)
 
         if ATTR_HS_COLOR in kwargs:
-            rgb = color_utils.color_hs_to_RGB(
-                kwargs[ATTR_HS_COLOR][0], kwargs[ATTR_HS_COLOR][1]
+            pilot = PilotBuilder(
+                hucolor=(kwargs[ATTR_HS_COLOR][0], kwargs[ATTR_HS_COLOR][1]),
+                brightness=brightness,
             )
-            pilot = PilotBuilder(rgb=rgb, brightness=brightness)
         else:
             colortemp = None
             if ATTR_COLOR_TEMP in kwargs:
@@ -124,7 +126,7 @@ class WizBulbEntity(LightEntity):
 
             sceneid = None
             if ATTR_EFFECT in kwargs:
-                sceneid = self._light.get_id_from_scene_name(kwargs[ATTR_EFFECT])
+                sceneid = get_id_from_scene_name(kwargs[ATTR_EFFECT])
 
             if sceneid == 1000:  # rhythm
                 pilot = PilotBuilder()
@@ -142,7 +144,7 @@ class WizBulbEntity(LightEntity):
 
             sceneid = None
             if ATTR_EFFECT in kwargs:
-                sceneid = self._light.get_id_from_scene_name(kwargs[ATTR_EFFECT])
+                sceneid = get_id_from_scene_name(kwargs[ATTR_EFFECT])
 
             if sceneid == 1000:  # rhythm
                 pilot = PilotBuilder()
@@ -166,28 +168,36 @@ class WizBulbEntity(LightEntity):
         """Return the coldest color_temp that this light supports."""
         if self._bulbtype is None:
             return color_utils.color_temperature_kelvin_to_mired(6500)
+        if self._bulbtype.bulb_type != BulbClass.DW:
+            # If bulbtype is TW or RGB then return the kelvin value
+            try:
+                return color_utils.color_temperature_kelvin_to_mired(
+                    self._bulbtype.kelvin_range.max
+                )
 
-        try:
-            return color_utils.color_temperature_kelvin_to_mired(
-                self._bulbtype.kelvin_range.max
-            )
-
-        except WizLightNotKnownBulb:
-            _LOGGER.info("Kelvin is not present in the library. Fallback to 6500")
-            return color_utils.color_temperature_kelvin_to_mired(6500)
+            except WizLightNotKnownBulb:
+                _LOGGER.info("Kelvin is not present in the library. Fallback to 6500")
+                return color_utils.color_temperature_kelvin_to_mired(6500)
+        else:
+            # DW bulbs have a fixed range of color temperature
+            return 0
 
     def get_max_mireds(self) -> int:
         """Return the warmest color_temp that this light supports."""
         if self._bulbtype is None:
             return color_utils.color_temperature_kelvin_to_mired(2200)
-
-        try:
-            return color_utils.color_temperature_kelvin_to_mired(
-                self._bulbtype.kelvin_range.min
-            )
-        except WizLightNotKnownBulb:
-            _LOGGER.info("Kelvin is not present in the library. Fallback to 2200")
-            return color_utils.color_temperature_kelvin_to_mired(2200)
+        if self._bulbtype.bulb_type != BulbClass.DW:
+            # If bulbtype is TW or RGB then return the kelvin value
+            try:
+                return color_utils.color_temperature_kelvin_to_mired(
+                    self._bulbtype.kelvin_range.min
+                )
+            except WizLightNotKnownBulb:
+                _LOGGER.info("Kelvin is not present in the library. Fallback to 2200")
+                return color_utils.color_temperature_kelvin_to_mired(2200)
+        else:
+            # DW bulbs have a fixed range of color temperature
+            return 0
 
     def get_supported_features(self) -> int:
         """Flag supported features."""
@@ -312,7 +322,7 @@ class WizBulbEntity(LightEntity):
             if warmwhite is None:
                 return
 
-            self._hscolor = self._light.convertHSfromRGBCW(rgb, warmwhite)
+            self._hscolor = convertHSfromRGBCW(rgb, warmwhite)
 
         # pylint: disable=broad-except
         except Exception:
