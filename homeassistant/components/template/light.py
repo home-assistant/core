@@ -567,9 +567,13 @@ class LightTemplate(TemplateEntity, LightEntity):
     @callback
     def _update_color(self, render):
         """Update the hs_color from the template."""
+        if render is None:
+            self._color = None
+            return
+
         h_str = s_str = None
         if isinstance(render, str):
-            if render in (None, "None", ""):
+            if render in ("None", ""):
                 self._color = None
                 return
             h_str, s_str = map(
