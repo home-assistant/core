@@ -32,7 +32,10 @@ BASE_BINARY_SENSOR_TYPES: tuple[SystemBridgeBinarySensorEntityDescription, ...] 
         key="version_available",
         name="New Version Available",
         device_class=DEVICE_CLASS_UPDATE,
-        value=lambda bridge: bridge.information.updates.available,
+        value=lambda bridge: bridge.information.updates.available
+        if bridge.information.updates is not None
+        and bridge.information.updates is not {}
+        else False,
     ),
 )
 
