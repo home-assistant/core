@@ -8,7 +8,10 @@ import herepy
 from herepy.here_enum import RouteMode
 import voluptuous as vol
 
-from homeassistant.components.here_travel_time import HERETravelTimeData
+from homeassistant.components.here_travel_time import (
+    HereTravelTimeDataUpdateCoordinator,
+)
+from homeassistant.components.here_travel_time.const import HERETravelTimeConfig
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -174,30 +177,29 @@ async def async_setup_platform(
         destination = None
         destination_entity_id = config[CONF_DESTINATION_ENTITY_ID]
 
-    travel_mode = config[CONF_MODE]
     traffic_mode = config[CONF_TRAFFIC_MODE]
-    route_mode = config[CONF_ROUTE_MODE]
     name = config[CONF_NAME]
-    units = config.get(CONF_UNIT_SYSTEM, hass.config.units.name)
-    arrival = config.get(CONF_ARRIVAL)
-    departure = config.get(CONF_DEPARTURE)
 
-    here_data = HERETravelTimeData(
+    here_travel_time_config = HERETravelTimeConfig(
+        origin=origin,
+        destination=destination,
+        origin_entity_id=origin_entity_id,
+        destination_entity_id=destination_entity_id,
+        travel_mode=config[CONF_MODE],
+        route_mode=config[CONF_ROUTE_MODE],
+        units=config.get(CONF_UNIT_SYSTEM, hass.config.units.name),
+        arrival=config.get(CONF_ARRIVAL),
+        departure=config.get(CONF_DEPARTURE),
+    )
+
+    coordinator = HereTravelTimeDataUpdateCoordinator(
         hass,
         here_client,
-        origin,
-        destination,
-        origin_entity_id,
-        destination_entity_id,
-        travel_mode,
-        route_mode,
-        units,
-        arrival,
-        departure,
+        here_travel_time_config,
     )
-    await here_data.async_setup()
+    await coordinator.async_config_entry_first_refresh()
 
-    sensor = HERETravelTimeSensor(name, traffic_mode, here_data)
+    sensor = HERETravelTimeSensor(name, traffic_mode, coordinator)
 
     async_add_entities([sensor])
 
@@ -231,14 +233,12 @@ class HERETravelTimeSensor(SensorEntity, CoordinatorEntity):
         self,
         name: str,
         traffic_mode: str,
-        here_data: HERETravelTimeData,
+        coordinator: HereTravelTimeDataUpdateCoordinator,
     ) -> None:
         """Initialize the sensor."""
         self._name = name
         self._traffic_mode = traffic_mode
-        self._here_data = here_data
-        assert here_data.coordinator is not None
-        super().__init__(here_data.coordinator)
+        super().__init__(coordinator)
 
     @property
     def native_value(self) -> str | None:
@@ -266,8 +266,8 @@ class HERETravelTimeSensor(SensorEntity, CoordinatorEntity):
         """Return the state attributes."""
         if self.coordinator.data is not None:
             res = {
-                ATTR_UNIT_SYSTEM: self._here_data.units,
-                ATTR_MODE: self._here_data.travel_mode,
+                ATTR_UNIT_SYSTEM: self.coordinator.config.units,
+                ATTR_MODE: self.coordinator.config.travel_mode,
                 ATTR_TRAFFIC_MODE: self._traffic_mode,
                 **self.coordinator.data,
             }
@@ -284,12 +284,12 @@ class HERETravelTimeSensor(SensorEntity, CoordinatorEntity):
     @property
     def icon(self) -> str:
         """Icon to use in the frontend depending on travel_mode."""
-        if self._here_data.travel_mode == TRAVEL_MODE_BICYCLE:
+        if self.coordinator.config.travel_mode == TRAVEL_MODE_BICYCLE:
             return ICON_BICYCLE
-        if self._here_data.travel_mode == TRAVEL_MODE_PEDESTRIAN:
+        if self.coordinator.config.travel_mode == TRAVEL_MODE_PEDESTRIAN:
             return ICON_PEDESTRIAN
-        if self._here_data.travel_mode in TRAVEL_MODES_PUBLIC:
+        if self.coordinator.config.travel_mode in TRAVEL_MODES_PUBLIC:
             return ICON_PUBLIC
-        if self._here_data.travel_mode == TRAVEL_MODE_TRUCK:
+        if self.coordinator.config.travel_mode == TRAVEL_MODE_TRUCK:
             return ICON_TRUCK
         return ICON_CAR

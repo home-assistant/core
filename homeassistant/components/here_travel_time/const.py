@@ -1,6 +1,8 @@
 """Constants for the HERE Travel Time integration."""
 from __future__ import annotations
 
+from dataclasses import dataclass
+from datetime import datetime
 from typing import TypedDict
 
 from homeassistant.const import (
@@ -22,6 +24,21 @@ class HERERoutingData(TypedDict):
     ATTR_DESTINATION: str
     ATTR_ORIGIN_NAME: str
     ATTR_DESTINATION_NAME: str
+
+
+@dataclass
+class HERETravelTimeConfig:
+    """Configuration for HereTravelTimeDataUpdateCoordinator."""
+
+    origin: str | None
+    destination: str | None
+    origin_entity_id: str | None
+    destination_entity_id: str | None
+    travel_mode: str
+    route_mode: str
+    units: str
+    arrival: datetime
+    departure: datetime
 
 
 DOMAIN = "here_travel_time"

@@ -28,6 +28,7 @@ from .const import (
     TRAFFIC_MODE_ENABLED,
     TRAVEL_MODES_VEHICLE,
     HERERoutingData,
+    HERETravelTimeConfig,
 )
 
 PLATFORMS = ["sensor"]
@@ -35,72 +36,52 @@ PLATFORMS = ["sensor"]
 _LOGGER = logging.getLogger(__name__)
 
 
-class HERETravelTimeData:
-    """HERETravelTime data object."""
+class HereTravelTimeDataUpdateCoordinator(DataUpdateCoordinator):
+    """HERETravelTime DataUpdateCoordinator."""
 
     def __init__(
         self,
         hass: HomeAssistant,
         api: RoutingApi,
-        origin: str | None,
-        destination: str | None,
-        origin_entity_id: str | None,
-        destination_entity_id: str | None,
-        travel_mode: str,
-        route_mode: str,
-        units: str,
-        arrival: datetime,
-        departure: datetime,
+        config: HERETravelTimeConfig,
     ) -> None:
         """Initialize."""
-        self._hass = hass
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
+        )
         self._api = api
-        self.coordinator: DataUpdateCoordinator[HERERoutingData | None] | None = None
-        self.origin = origin
-        self.origin_entity_id = origin_entity_id
-        self.destination = destination
-        self.destination_entity_id = destination_entity_id
-        self.travel_mode = travel_mode
-        self.route_mode = route_mode
-        self.arrival = arrival
-        self.departure = departure
-        self.units = units
+        self.config = config
 
-    async def async_update(self) -> HERERoutingData | None:
+    async def _async_update_data(self) -> HERERoutingData | None:
         """Get the latest data from the HERE Routing API."""
         try:
             async with async_timeout.timeout(10):
-                return await self._hass.async_add_executor_job(self._update)
+                return await self.hass.async_add_executor_job(self._update)
         except NoRouteFoundError as error:
             raise UpdateFailed(NO_ROUTE_ERROR_MESSAGE) from error
 
-    async def async_setup(self) -> None:
-        """Set up the HERETravelTime integration."""
-        self.coordinator = DataUpdateCoordinator(
-            self._hass,
-            _LOGGER,
-            name=DOMAIN,
-            update_method=self.async_update,
-            update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
-        )
-        await self.coordinator.async_config_entry_first_refresh()
-
     def _update(self) -> HERERoutingData | None:
         """Get the latest data from the HERE Routing API."""
-        if self.origin_entity_id is not None:
-            self.origin = find_coordinates(self._hass, self.origin_entity_id)
+        if self.config.origin_entity_id is not None:
+            origin = find_coordinates(self.hass, self.config.origin_entity_id)
+        else:
+            origin = self.config.origin
 
-        if self.destination_entity_id is not None:
-            self.destination = find_coordinates(self._hass, self.destination_entity_id)
-        if self.destination is not None and self.origin is not None:
-            # Convert location to HERE friendly location
-            destination = self.destination.split(",")
-            origin = self.origin.split(",")
+        if self.config.destination_entity_id is not None:
+            destination = find_coordinates(self.hass, self.config.destination_entity_id)
+        else:
+            destination = self.config.destination
+        if destination is not None and origin is not None:
+            here_formatted_destination = destination.split(",")
+            here_formatted_origin = origin.split(",")
             arrival: str | None = None
             departure: str | None = "now"
-            if (arrival := self.arrival) is not None:
+            if (arrival := self.config.arrival) is not None:
                 arrival = convert_time_to_isodate(arrival)
-            if (departure := self.departure) is not None:
+            if (departure := self.config.departure) is not None:
                 departure = convert_time_to_isodate(departure)
 
             if departure is None and arrival is None:
@@ -108,22 +89,22 @@ class HERETravelTimeData:
 
             _LOGGER.debug(
                 "Requesting route for origin: %s, destination: %s, route_mode: %s, mode: %s, traffic_mode: %s, arrival: %s, departure: %s",
-                origin,
-                destination,
-                RouteMode[self.route_mode],
-                RouteMode[self.travel_mode],
+                here_formatted_origin,
+                here_formatted_destination,
+                RouteMode[self.config.route_mode],
+                RouteMode[self.config.travel_mode],
                 RouteMode[TRAFFIC_MODE_ENABLED],
                 arrival,
                 departure,
             )
 
             response: RoutingResponse = self._api.public_transport_timetable(
-                origin,
-                destination,
+                here_formatted_origin,
+                here_formatted_destination,
                 True,
                 [
-                    RouteMode[self.route_mode],
-                    RouteMode[self.travel_mode],
+                    RouteMode[self.config.route_mode],
+                    RouteMode[self.config.travel_mode],
                     RouteMode[TRAFFIC_MODE_ENABLED],
                 ],
                 arrival=arrival,
@@ -145,9 +126,9 @@ class HERETravelTimeData:
             waypoint: list = route[0]["waypoint"]
             distance: float = summary["distance"]
             traffic_time: float = summary["baseTime"]
-            if self.travel_mode in TRAVEL_MODES_VEHICLE:
+            if self.config.travel_mode in TRAVEL_MODES_VEHICLE:
                 traffic_time = summary["trafficTime"]
-            if self.units == CONF_UNIT_SYSTEM_IMPERIAL:
+            if self.config.units == CONF_UNIT_SYSTEM_IMPERIAL:
                 # Convert to miles.
                 distance = distance / 1609.344
             else:
@@ -159,8 +140,8 @@ class HERETravelTimeData:
                 ATTR_DURATION_IN_TRAFFIC: traffic_time / 60,
                 ATTR_DISTANCE: distance,
                 ATTR_ROUTE: response.route_short,
-                ATTR_ORIGIN: ",".join(origin),
-                ATTR_DESTINATION: ",".join(destination),
+                ATTR_ORIGIN: ",".join(here_formatted_origin),
+                ATTR_DESTINATION: ",".join(here_formatted_destination),
                 ATTR_ORIGIN_NAME: waypoint[0]["mappedRoadName"],
                 ATTR_DESTINATION_NAME: waypoint[1]["mappedRoadName"],
             }
