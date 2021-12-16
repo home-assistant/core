@@ -183,6 +183,7 @@ MANIFEST_SCHEMA = vol.Schema(
                 vol.Schema(
                     {
                         vol.Required("type"): str,
+                        vol.Optional("am"): vol.All(str, verify_lowercase),
                         vol.Optional("macaddress"): vol.All(
                             str, verify_uppercase, verify_wildcard
                         ),
