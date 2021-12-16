@@ -7,16 +7,12 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
-    STATE_CLASS_MEASUREMENT,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
-from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_TEMPERATURE,
-)
+from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -34,28 +30,28 @@ SENSOR_LIGHT = "light"
 SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     SENSOR_TEMPERATURE: SensorEntityDescription(
         key=SENSOR_TEMPERATURE,
-        device_class=DEVICE_CLASS_TEMPERATURE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SENSOR_AMBIENT_TEMPERATURE: SensorEntityDescription(
         key=SENSOR_AMBIENT_TEMPERATURE,
-        device_class=DEVICE_CLASS_TEMPERATURE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SENSOR_HUMIDITY: SensorEntityDescription(
         key=SENSOR_HUMIDITY,
-        device_class=DEVICE_CLASS_HUMIDITY,
-        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SENSOR_MOISTURE: SensorEntityDescription(
         key=SENSOR_MOISTURE,
         device_class=SENSOR_MOISTURE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SENSOR_LIGHT: SensorEntityDescription(
         key=SENSOR_LIGHT,
-        device_class=DEVICE_CLASS_ILLUMINANCE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=SensorDeviceClass.ILLUMINANCE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 }
 
