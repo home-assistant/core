@@ -1,10 +1,12 @@
 """The Z-Wave-Me WS integration."""
+import asyncio
 import logging
 
 from zwave_me_ws import ZWaveMe, ZWaveMeData
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
 
@@ -16,12 +18,12 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, entry):
     """Set up Z-Wave-Me from a config entry."""
     hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][entry.entry_id] = ZWaveMeController(hass, entry)
-    if await hass.data[DOMAIN][entry.entry_id].async_establish_connection():
+    controller = hass.data[DOMAIN][entry.entry_id] = ZWaveMeController(hass, entry)
+    if await controller.async_establish_connection():
         hass.config_entries.async_setup_platforms(entry, PLATFORMS)
-        hass.data[DOMAIN][entry.entry_id].zwave_api.get_devices()
+        controller.zwave_api.get_devices()
         return True
-    return False
+    raise ConfigEntryNotReady()
 
 
 async def async_unload_entry(hass, entry):
@@ -36,13 +38,13 @@ class ZWaveMeController:
         """Create the API instance."""
         self.device_ids: set = set()
         self._hass = hass
-        self._config = config
+        self.config = config
         self.zwave_api = ZWaveMe(
             on_device_create=self.on_device_create,
             on_device_update=self.on_device_update,
             on_new_device=self.add_device,
-            token=self._config.data["token"],
-            url=self._config.data["url"],
+            token=self.config.data["token"],
+            url=self.config.data["url"],
             platforms=ZWAVE_PLATFORMS,
         )
         self.platforms_inited = False
@@ -58,10 +60,10 @@ class ZWaveMeController:
         """Send signal to create device."""
         if device.deviceType in ZWAVE_PLATFORMS and self.platforms_inited:
             if device.id in self.device_ids:
-                dispatcher_send(self._hass, "ZWAVE_ME_INFO_" + device.id, device)
+                dispatcher_send(self._hass, f"ZWAVE_ME_INFO_{device.id}", device)
             else:
                 dispatcher_send(
-                    self._hass, "ZWAVE_ME_NEW_" + device.deviceType.upper(), device
+                    self._hass, f"ZWAVE_ME_NEW_{device.deviceType.upper()}", device
                 )
                 self.device_ids.add(device.id)
 
@@ -72,19 +74,32 @@ class ZWaveMeController:
 
     def on_device_update(self, new_info: ZWaveMeData) -> None:
         """Send signal to update device."""
-        dispatcher_send(self._hass, "ZWAVE_ME_INFO_" + new_info.id, new_info)
+        dispatcher_send(self._hass, f"ZWAVE_ME_INFO_{new_info.id}", new_info)
+
+
+async def async_setup_platforms(
+    hass: HomeAssistant, entry: ConfigEntry, controller: ZWaveMeController
+) -> None:
+    """Set up platforms."""
+    await asyncio.gather(
+        *[
+            hass.config_entries.async_forward_entry_setup(entry, platform)
+            for platform in PLATFORMS
+        ]
+    )
+    await hass.async_add_executor_job(controller.zwave_api.get_devices)
 
 
 class ZWaveMeEntity(Entity):
     """Representation of a ZWaveMe device."""
 
-    def __init__(self, device, entry_id):
+    def __init__(self, controller, device):
         """Initialize the device."""
+        self.controller = controller
         self.device = device
         self._attr_name = device.title
-        self._attr_unique_id = self.device.id
+        self._attr_unique_id = f"{self.controller.config.unique_id}-{self.device.id}"
         self._attr_should_poll = False
-        self.entry_id = entry_id
 
     async def async_added_to_hass(self) -> None:
         """Connect to an updater."""
