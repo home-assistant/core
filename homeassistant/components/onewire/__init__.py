@@ -1,6 +1,8 @@
 """The 1-Wire component."""
 import logging
 
+from pyownet import protocol
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -18,7 +20,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     onewirehub = OneWireHub(hass)
     try:
         await onewirehub.initialize(entry)
-    except CannotConnect as exc:
+    except (
+        CannotConnect,  # Failed to connect to the server
+        protocol.OwnetError,  # Connected to server, but failed to list the devices
+    ) as exc:
         raise ConfigEntryNotReady() from exc
 
     hass.data[DOMAIN][entry.entry_id] = onewirehub
