@@ -14,7 +14,7 @@ import av
 
 from homeassistant.core import HomeAssistant
 
-from . import KeyFrame, redact_credentials
+from . import KeyFrameConverter, redact_credentials
 from .const import (
     ATTR_SETTINGS,
     AUDIO_CODECS,
@@ -439,7 +439,7 @@ def stream_worker(
     source: str,
     options: dict[str, str],
     stream_state: StreamState,
-    last_keyframe: KeyFrame,
+    keyframe_converter: KeyFrameConverter,
     quit_event: Event,
 ) -> None:
     """Handle consuming streams."""
@@ -539,5 +539,9 @@ def stream_worker(
 
             muxer.mux_packet(packet)
 
-            if packet.is_keyframe and packet.stream.type == "video":
-                last_keyframe.keyframe = packet
+            if (
+                keyframe_converter.image_requested
+                and packet.is_keyframe
+                and packet.stream.type == "video"
+            ):
+                keyframe_converter.generate_keyframe_image(packet)

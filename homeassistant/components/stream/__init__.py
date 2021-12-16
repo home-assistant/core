@@ -50,7 +50,7 @@ from .const import (
     STREAM_RESTART_RESET_TIME,
     TARGET_SEGMENT_DURATION_NON_LL_HLS,
 )
-from .core import PROVIDERS, IdleTimer, KeyFrame, StreamOutput, StreamSettings
+from .core import PROVIDERS, IdleTimer, KeyFrameConverter, StreamOutput, StreamSettings
 from .hls import HlsStreamOutput, async_setup_hls
 
 _LOGGER = logging.getLogger(__name__)
@@ -216,7 +216,7 @@ class Stream:
         self._thread_quit = threading.Event()
         self._outputs: dict[str, StreamOutput] = {}
         self._fast_restart_once = False
-        self.last_keyframe = KeyFrame()
+        self.keyframe_converter = KeyFrameConverter()
         self._available: bool = True
         self._update_callback: Callable[[], None] | None = None
         self._logger = (
@@ -330,7 +330,7 @@ class Stream:
                     self.source,
                     self.options,
                     stream_state,
-                    self.last_keyframe,
+                    self.keyframe_converter,
                     self._thread_quit,
                 )
             except StreamWorkerError as err:
@@ -424,7 +424,7 @@ class Stream:
             await hls.recv()
             recorder.prepend(list(hls.get_segments())[-num_segments:])
 
-    async def get_image(self) -> bytes | None:
+    async def get_image(self) -> bytes:
         """Fetch an image from the Stream and return it as a jpeg in bytes."""
 
-        return await self.hass.async_add_executor_job(self.last_keyframe.get_bytes)
+        return await self.keyframe_converter.get_keyframe_image()

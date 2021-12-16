@@ -42,3 +42,5 @@ STREAM_RESTART_RESET_TIME = 300  # Reset wait_timeout after this many seconds
 CONF_LL_HLS = "ll_hls"
 CONF_PART_DURATION = "part_duration"
 CONF_SEGMENT_DURATION = "segment_duration"
+
+KEYFRAME_TIMEOUT = 60  # Number of seconds to wait for the next keyframe in get_image

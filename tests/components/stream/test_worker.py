@@ -13,6 +13,7 @@ pushed to the output streams. The packet sequence can be used to exercise
 failure modes or corner cases like how out of order packets are handled.
 """
 
+import asyncio
 import fractions
 import io
 import logging
@@ -23,7 +24,7 @@ from unittest.mock import patch
 import av
 import pytest
 
-from homeassistant.components.stream import KeyFrame, Stream, create_stream
+from homeassistant.components.stream import KeyFrameConverter, Stream, create_stream
 from homeassistant.components.stream.const import (
     ATTR_SETTINGS,
     CONF_LL_HLS,
@@ -45,7 +46,7 @@ from homeassistant.components.stream.worker import (
 )
 from homeassistant.setup import async_setup_component
 
-from tests.components.camera.common import mock_turbo_jpeg
+from tests.components.camera.common import EMPTY_8_6_JPEG, mock_turbo_jpeg
 from tests.components.stream.common import generate_h264_video, generate_h265_video
 from tests.components.stream.test_ll_hls import TEST_PART_DURATION
 
@@ -265,7 +266,9 @@ class MockPyAv:
 def run_worker(hass, stream, stream_source):
     """Run the stream worker under test."""
     stream_state = StreamState(hass, stream.outputs)
-    stream_worker(stream_source, {}, stream_state, KeyFrame(), threading.Event())
+    stream_worker(
+        stream_source, {}, stream_state, KeyFrameConverter(), threading.Event()
+    )
 
 
 async def async_decode_stream(hass, packets, py_av=None):
@@ -880,12 +883,12 @@ async def test_get_image(hass, record_worker_sync):
     with patch.object(hass.config, "is_allowed_path", return_value=True):
         await stream.async_record("/example/path")
 
+    assert stream.keyframe_converter._image == b""
+    image_future = asyncio.create_task(stream.get_image())
+
     await record_worker_sync.join()
 
-    assert isinstance(stream.last_keyframe.keyframe, av.Packet)
-
-    image = await stream.get_image()
-    assert image == stream.last_keyframe.keyframe
-    assert isinstance(image, bytes)
+    image = await image_future
+    assert image == EMPTY_8_6_JPEG
 
     stream.stop()
