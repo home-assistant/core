@@ -1298,7 +1298,7 @@ psutil==5.8.0
 pulsectl==20.2.4
 
 # homeassistant.components.pure_energie
-pure-energie==0.1.1
+pure-energie==0.2.0
 
 # homeassistant.components.androidtv
 pure-python-adb[async]==0.3.0.dev0
