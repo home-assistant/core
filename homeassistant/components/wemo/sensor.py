@@ -87,7 +87,7 @@ class InsightTodayEnergy(InsightSensor):
         key="todaymw",
         name="Today Energy",
         device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.OTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
     )
 
