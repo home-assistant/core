@@ -111,7 +111,7 @@ class GlancesData:
     async def async_update(self):
         """Get the latest data from the Glances REST API."""
         try:
-            await self.api.get_data()
+            await self.api.get_data("all")
             self.available = True
         except exceptions.GlancesApiError:
             _LOGGER.error("Unable to fetch data from Glances")
@@ -123,7 +123,7 @@ class GlancesData:
         """Set up the Glances client."""
         try:
             self.api = get_api(self.hass, self.config_entry.data)
-            await self.api.get_data()
+            await self.api.get_data("all")
             self.available = True
             _LOGGER.debug("Successfully connected to Glances")
 
