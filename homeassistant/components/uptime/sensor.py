@@ -48,6 +48,6 @@ class UptimeSensor(SensorEntity):
     def __init__(self, name: str) -> None:
         """Initialize the uptime sensor."""
         self._attr_name: str = name
-        self._attr_device_class: str = SensorDeviceClass.TIMESTAMP
+        self._attr_device_class = SensorDeviceClass.TIMESTAMP
         self._attr_should_poll: bool = False
         self._attr_native_value = dt_util.utcnow()
