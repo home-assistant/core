@@ -1,6 +1,7 @@
 """Constants for the Solar-Log integration."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from homeassistant.components.sensor import (
@@ -14,6 +15,7 @@ from homeassistant.const import (
     PERCENTAGE,
     POWER_WATT,
 )
+from homeassistant.util.dt import as_local
 
 DOMAIN = "solarlog"
 
@@ -26,7 +28,7 @@ DEFAULT_NAME = "solarlog"
 class SolarLogSensorEntityDescription(SensorEntityDescription):
     """Describes Solarlog sensor entity."""
 
-    factor: float | None = None
+    value: Callable = round
 
 
 SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
@@ -34,6 +36,7 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
         key="time",
         name="last update",
         device_class=SensorDeviceClass.TIMESTAMP,
+        value=as_local,
     ),
     SolarLogSensorEntityDescription(
         key="power_ac",
@@ -68,36 +71,41 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
         name="yield day",
         icon="mdi:solar-power",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        factor=0.001,
+        device_class=SensorDeviceClass.ENERGY,
+        value=lambda value: round(value / 1000, 3),
     ),
     SolarLogSensorEntityDescription(
         key="yield_yesterday",
         name="yield yesterday",
         icon="mdi:solar-power",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        factor=0.001,
+        device_class=SensorDeviceClass.ENERGY,
+        value=lambda value: round(value / 1000, 3),
     ),
     SolarLogSensorEntityDescription(
         key="yield_month",
         name="yield month",
         icon="mdi:solar-power",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        factor=0.001,
+        device_class=SensorDeviceClass.ENERGY,
+        value=lambda value: round(value / 1000, 3),
     ),
     SolarLogSensorEntityDescription(
         key="yield_year",
         name="yield year",
         icon="mdi:solar-power",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        factor=0.001,
+        device_class=SensorDeviceClass.ENERGY,
+        value=lambda value: round(value / 1000, 3),
     ),
     SolarLogSensorEntityDescription(
         key="yield_total",
         name="yield total",
         icon="mdi:solar-power",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
-        factor=0.001,
+        value=lambda value: round(value / 1000, 3),
     ),
     SolarLogSensorEntityDescription(
         key="consumption_ac",
@@ -111,28 +119,28 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
         name="consumption day",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
-        factor=0.001,
+        value=lambda value: round(value / 1000, 3),
     ),
     SolarLogSensorEntityDescription(
         key="consumption_yesterday",
         name="consumption yesterday",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
-        factor=0.001,
+        value=lambda value: round(value / 1000, 3),
     ),
     SolarLogSensorEntityDescription(
         key="consumption_month",
         name="consumption month",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
-        factor=0.001,
+        value=lambda value: round(value / 1000, 3),
     ),
     SolarLogSensorEntityDescription(
         key="consumption_year",
         name="consumption year",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
-        factor=0.001,
+        value=lambda value: round(value / 1000, 3),
     ),
     SolarLogSensorEntityDescription(
         key="consumption_total",
@@ -140,7 +148,7 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
-        factor=0.001,
+        value=lambda value: round(value / 1000, 3),
     ),
     SolarLogSensorEntityDescription(
         key="total_power",
@@ -164,7 +172,7 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
-        factor=100,
+        value=lambda value: round(value * 100, 1),
     ),
     SolarLogSensorEntityDescription(
         key="efficiency",
@@ -172,7 +180,7 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
-        factor=100,
+        value=lambda value: round(value * 100, 1),
     ),
     SolarLogSensorEntityDescription(
         key="power_available",
@@ -188,6 +196,6 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
-        factor=100,
+        value=lambda value: round(value * 100, 1),
     ),
 )
