@@ -16,6 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, CoreState, State
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.event import async_track_state_change
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_component, mock_restore_cache
@@ -196,6 +197,46 @@ async def test_reload(hass, hass_admin_user):
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_1") is None
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_2") is not None
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_3") is not None
+
+
+async def test_reload_not_changing_state(hass, storage_setup):
+    """Test reload not changing state."""
+    assert await storage_setup()
+    state_changes = []
+
+    def state_changed_listener(entity_id, from_s, to_s):
+        state_changes.append(to_s)
+
+    state = hass.states.get(f"{DOMAIN}.from_storage")
+    assert state is not None
+
+    async_track_state_change(hass, [f"{DOMAIN}.from_storage"], state_changed_listener)
+
+    # Pressing button changes state
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: state.entity_id},
+        True,
+    )
+    await hass.async_block_till_done()
+    assert len(state_changes) == 1
+
+    # Reloading does not
+    with patch(
+        "homeassistant.config.load_yaml_config_file", autospec=True, return_value={}
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RELOAD,
+            blocking=True,
+        )
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get(f"{DOMAIN}.from_storage")
+    assert state is not None
+    assert len(state_changes) == 1
 
 
 async def test_load_from_storage(hass, storage_setup):
