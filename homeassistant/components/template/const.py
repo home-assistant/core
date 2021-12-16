@@ -11,7 +11,6 @@ PLATFORM_STORAGE_KEY = "template_platforms"
 PLATFORMS = [
     "alarm_control_panel",
     "binary_sensor",
-    "button",
     "cover",
     "fan",
     "light",
