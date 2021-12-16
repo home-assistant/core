@@ -528,6 +528,16 @@ def color_temperature_to_rgb(
     return red, green, blue
 
 
+def color_temperature_to_rgbww(
+    temperature: int, brightness: int, min_mireds: int, max_mireds: int
+) -> tuple[int, int, int, int, int]:
+    """Convert color temperature to rgbcw."""
+    mired_range = max_mireds - min_mireds
+    warm = ((max_mireds - temperature) / mired_range) * brightness
+    cold = brightness - warm
+    return (0, 0, 0, round(cold), round(warm))
+
+
 def _clamp(color_component: float, minimum: float = 0, maximum: float = 255) -> float:
     """
     Clamp the given color component value between the given min and max values.

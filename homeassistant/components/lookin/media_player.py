@@ -10,8 +10,7 @@ from aiolookin import Remote
 from aiolookin.models import UDPCommandType, UDPEvent
 
 from homeassistant.components.media_player import (
-    DEVICE_CLASS_RECEIVER,
-    DEVICE_CLASS_TV,
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
 )
 from homeassistant.components.media_player.const import (
@@ -34,7 +33,10 @@ from .models import LookinData
 
 LOGGER = logging.getLogger(__name__)
 
-_TYPE_TO_DEVICE_CLASS = {"01": DEVICE_CLASS_TV, "02": DEVICE_CLASS_RECEIVER}
+_TYPE_TO_DEVICE_CLASS = {
+    "01": MediaPlayerDeviceClass.TV,
+    "02": MediaPlayerDeviceClass.RECEIVER,
+}
 
 _FUNCTION_NAME_TO_FEATURE = {
     "power": SUPPORT_TURN_OFF,
