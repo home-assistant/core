@@ -7,9 +7,8 @@ from typing import Any
 
 from aioridwell.client import RidwellAccount, RidwellPickupEvent
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DEVICE_CLASS_DATE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -40,7 +39,7 @@ async def async_setup_entry(
 class RidwellSensor(CoordinatorEntity, SensorEntity):
     """Define a Ridwell pickup sensor."""
 
-    _attr_device_class = DEVICE_CLASS_DATE
+    _attr_device_class = SensorDeviceClass.DATE
 
     def __init__(
         self, coordinator: DataUpdateCoordinator, account: RidwellAccount
