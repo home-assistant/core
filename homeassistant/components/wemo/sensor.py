@@ -2,17 +2,12 @@
 import asyncio
 
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
-from homeassistant.const import (
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_POWER,
-    ENERGY_KILO_WATT_HOUR,
-    POWER_WATT,
-)
+from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_WATT
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import convert
@@ -69,8 +64,8 @@ class InsightCurrentPower(InsightSensor):
     entity_description = SensorEntityDescription(
         key="currentpower",
         name="Current Power",
-        device_class=DEVICE_CLASS_POWER,
-        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=POWER_WATT,
     )
 
@@ -91,8 +86,8 @@ class InsightTodayEnergy(InsightSensor):
     entity_description = SensorEntityDescription(
         key="todaymw",
         name="Today Energy",
-        device_class=DEVICE_CLASS_ENERGY,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
     )
 
