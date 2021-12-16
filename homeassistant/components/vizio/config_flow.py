@@ -71,7 +71,7 @@ def _get_config_schema(input_dict: dict[str, Any] = None) -> vol.Schema:
             ): vol.All(
                 str,
                 vol.Lower,
-                vol.Coerce(MediaPlayerDeviceClass),
+                vol.In([MediaPlayerDeviceClass.TV, MediaPlayerDeviceClass.SPEAKER]),
             ),
             vol.Optional(
                 CONF_ACCESS_TOKEN, default=input_dict.get(CONF_ACCESS_TOKEN, "")
