@@ -1342,7 +1342,7 @@ async def test_disable_config_entry_disables_devices(hass, registry):
     assert entry2.disabled
 
     await hass.config_entries.async_set_disabled_by(
-        config_entry.entry_id, config_entries.DISABLED_USER
+        config_entry.entry_id, config_entries.ConfigEntryDisabler.USER
     )
     await hass.async_block_till_done()
 
@@ -1382,7 +1382,7 @@ async def test_only_disable_device_if_all_config_entries_are_disabled(hass, regi
     assert not entry1.disabled
 
     await hass.config_entries.async_set_disabled_by(
-        config_entry1.entry_id, config_entries.DISABLED_USER
+        config_entry1.entry_id, config_entries.ConfigEntryDisabler.USER
     )
     await hass.async_block_till_done()
 
@@ -1390,7 +1390,7 @@ async def test_only_disable_device_if_all_config_entries_are_disabled(hass, regi
     assert not entry1.disabled
 
     await hass.config_entries.async_set_disabled_by(
-        config_entry2.entry_id, config_entries.DISABLED_USER
+        config_entry2.entry_id, config_entries.ConfigEntryDisabler.USER
     )
     await hass.async_block_till_done()
 
