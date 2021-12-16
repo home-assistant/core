@@ -13,10 +13,11 @@ import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ID, ENTITY_CATEGORY_CONFIG
+from homeassistant.const import ATTR_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -181,7 +182,7 @@ async def async_setup_entry(
                     RainMachineSwitchDescription(
                         key=f"{kind}_{uid}_enabled",
                         name=f"{data['name']} Enabled",
-                        entity_category=ENTITY_CATEGORY_CONFIG,
+                        entity_category=EntityCategory.CONFIG,
                         icon="mdi:cog",
                         uid=uid,
                     ),
