@@ -26,6 +26,10 @@ async def async_setup_entry(
     async_add_entities([FluxPowerState(coordinator.device, entry)])
 
 
+def _human_readable_option(const_option: str) -> str:
+    return const_option.replace("_", " ").title()
+
+
 class FluxPowerState(FluxBaseEntity, SelectEntity):
     """Representation of a Flux power restore state option."""
 
@@ -42,8 +46,10 @@ class FluxPowerState(FluxBaseEntity, SelectEntity):
         self._attr_name = f"{entry.data[CONF_NAME]} Power Restored"
         if entry.unique_id:
             self._attr_unique_id = f"{entry.unique_id}_power_restored"
-        self._attr_options = [option.name for option in PowerRestoreState]
-        self._name_to_state = {option.name: option for option in PowerRestoreState}
+        self._name_to_state = {
+            _human_readable_option(option.name): option for option in PowerRestoreState
+        }
+        self._attr_options = list(self._name_to_state)
         self._async_set_current_option_from_device()
 
     @callback
