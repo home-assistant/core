@@ -6,8 +6,7 @@ import logging
 import RFXtrx as rfxtrxmod
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_SMOKE,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -61,23 +60,23 @@ SENSOR_STATUS_OFF = [
 SENSOR_TYPES = (
     BinarySensorEntityDescription(
         key="X10 Security Motion Detector",
-        device_class=DEVICE_CLASS_MOTION,
+        device_class=BinarySensorDeviceClass.MOTION,
     ),
     BinarySensorEntityDescription(
         key="KD101 Smoke Detector",
-        device_class=DEVICE_CLASS_SMOKE,
+        device_class=BinarySensorDeviceClass.SMOKE,
     ),
     BinarySensorEntityDescription(
         key="Visonic Powercode Motion Detector",
-        device_class=DEVICE_CLASS_MOTION,
+        device_class=BinarySensorDeviceClass.MOTION,
     ),
     BinarySensorEntityDescription(
         key="Alecto SA30 Smoke Detector",
-        device_class=DEVICE_CLASS_SMOKE,
+        device_class=BinarySensorDeviceClass.SMOKE,
     ),
     BinarySensorEntityDescription(
         key="RM174RF Smoke Detector",
-        device_class=DEVICE_CLASS_SMOKE,
+        device_class=BinarySensorDeviceClass.SMOKE,
     ),
 )
 
