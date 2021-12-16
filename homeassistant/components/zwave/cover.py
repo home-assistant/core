@@ -156,7 +156,7 @@ class ZwaveGarageDoorBase(ZWaveDeviceEntity, CoverEntity):
 
     @property
     def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
+        """Return the class of this device, from CoverDeviceClass."""
         return "garage"
 
     @property
