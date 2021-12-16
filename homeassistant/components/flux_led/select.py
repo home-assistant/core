@@ -40,7 +40,7 @@ class FluxPowerState(FluxBaseEntity, SelectEntity):
         device: AIOWifiLedBulb,
         entry: config_entries.ConfigEntry,
     ) -> None:
-        """Initialize the select."""
+        """Initialize the power state select."""
         super().__init__(device, entry)
         self._attr_entity_category = EntityCategory.CONFIG
         self._attr_name = f"{entry.data[CONF_NAME]} Power Restored"
@@ -54,12 +54,13 @@ class FluxPowerState(FluxBaseEntity, SelectEntity):
 
     @callback
     def _async_set_current_option_from_device(self) -> None:
+        """Set the option from the current power state."""
         restore_states = self._device.power_restore_states
         assert restore_states is not None
         self._attr_current_option = _human_readable_option(restore_states.channel1.name)
 
     async def async_select_option(self, option: str) -> None:
-        """Change the Select Entity Option."""
+        """Change the power state."""
         await self._device.async_set_power_restore(channel1=self._name_to_state[option])
         self._async_set_current_option_from_device()
         self.async_write_ha_state()
