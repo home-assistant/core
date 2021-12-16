@@ -16,7 +16,7 @@ from homeassistant.components import zone as zone_cmp
 from homeassistant.components.device_automation import (
     async_get_device_automation_platform,
 )
-from homeassistant.components.sensor import DEVICE_CLASS_TIMESTAMP
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_GPS_ACCURACY,
@@ -720,7 +720,7 @@ def time(
             )
         elif after_entity.attributes.get(
             ATTR_DEVICE_CLASS
-        ) == DEVICE_CLASS_TIMESTAMP and after_entity.state not in (
+        ) is SensorDeviceClass.TIMESTAMP and after_entity.state not in (
             STATE_UNAVAILABLE,
             STATE_UNKNOWN,
         ):
@@ -744,7 +744,7 @@ def time(
             )
         elif before_entity.attributes.get(
             ATTR_DEVICE_CLASS
-        ) == DEVICE_CLASS_TIMESTAMP and before_entity.state not in (
+        ) is SensorDeviceClass.TIMESTAMP and before_entity.state not in (
             STATE_UNAVAILABLE,
             STATE_UNKNOWN,
         ):
