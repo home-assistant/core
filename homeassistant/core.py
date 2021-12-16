@@ -114,7 +114,7 @@ class ConfigSource(StrEnum):
     YAML = "yaml"
 
 
-# SOURCE_* are deprecated as of Home Assistant > 2021.1, use ConfigSource instead
+# SOURCE_* are deprecated as of Home Assistant > 2021.12, use ConfigSource instead
 SOURCE_DISCOVERED = ConfigSource.DISCOVERED.value
 SOURCE_STORAGE = ConfigSource.STORAGE.value
 SOURCE_YAML = ConfigSource.YAML.value
