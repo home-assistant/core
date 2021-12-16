@@ -21,7 +21,7 @@ async def async_setup_entry(
     entry: config_entries.ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Flux switches."""
+    """Set up the Flux selects."""
     coordinator: FluxLedUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities([FluxPowerState(coordinator.device, entry)])
 
