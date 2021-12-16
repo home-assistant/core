@@ -45,6 +45,7 @@ from homeassistant.components.stream.worker import (
 )
 from homeassistant.setup import async_setup_component
 
+from tests.components.camera.common import mock_turbo_jpeg
 from tests.components.stream.common import generate_h264_video, generate_h265_video
 from tests.components.stream.test_ll_hls import TEST_PART_DURATION
 
@@ -96,6 +97,11 @@ class FakeAvInputStream:
             name = "aac"
 
         self.codec = FakeCodec()
+
+        class FakeCodecContext:
+            thread_type = "SLICE"
+
+        self.codec_context = FakeCodecContext()
 
     def __str__(self) -> str:
         """Return a stream name for debugging."""
@@ -862,7 +868,13 @@ async def test_get_image(hass, record_worker_sync):
     await async_setup_component(hass, "stream", {"stream": {}})
 
     source = generate_h264_video()
-    stream = create_stream(hass, source, {})
+
+    # Since libjpeg-turbo is not installed on the CI runner, we use a mock
+    with patch(
+        "homeassistant.components.camera.img_util.TurboJPEGSingleton"
+    ) as mock_turbo_jpeg_singleton:
+        mock_turbo_jpeg_singleton.instance.return_value = mock_turbo_jpeg()
+        stream = create_stream(hass, source, {})
 
     # use record_worker_sync to grab output segments
     with patch.object(hass.config, "is_allowed_path", return_value=True):
@@ -871,6 +883,7 @@ async def test_get_image(hass, record_worker_sync):
     await record_worker_sync.join()
 
     assert isinstance(stream.last_keyframe.keyframe, av.Packet)
+
     image = await stream.get_image()
     assert image == stream.last_keyframe.keyframe
     assert isinstance(image, bytes)
