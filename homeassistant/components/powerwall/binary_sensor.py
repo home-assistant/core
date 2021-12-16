@@ -2,11 +2,9 @@
 from tesla_powerwall import GridStatus, MeterType
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_BATTERY_CHARGING,
-    DEVICE_CLASS_CONNECTIVITY,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.const import DEVICE_CLASS_POWER
 
 from .const import (
     DOMAIN,
@@ -61,7 +59,7 @@ class PowerWallRunningSensor(PowerWallEntity, BinarySensorEntity):
     @property
     def device_class(self):
         """Device Class."""
-        return DEVICE_CLASS_POWER
+        return BinarySensorDeviceClass.POWER
 
     @property
     def unique_id(self):
@@ -85,7 +83,7 @@ class PowerWallConnectedSensor(PowerWallEntity, BinarySensorEntity):
     @property
     def device_class(self):
         """Device Class."""
-        return DEVICE_CLASS_CONNECTIVITY
+        return BinarySensorDeviceClass.CONNECTIVITY
 
     @property
     def unique_id(self):
@@ -109,7 +107,7 @@ class PowerWallGridServicesActiveSensor(PowerWallEntity, BinarySensorEntity):
     @property
     def device_class(self):
         """Device Class."""
-        return DEVICE_CLASS_POWER
+        return BinarySensorDeviceClass.POWER
 
     @property
     def unique_id(self):
@@ -133,7 +131,7 @@ class PowerWallGridStatusSensor(PowerWallEntity, BinarySensorEntity):
     @property
     def device_class(self):
         """Device Class."""
-        return DEVICE_CLASS_POWER
+        return BinarySensorDeviceClass.POWER
 
     @property
     def unique_id(self):
@@ -157,7 +155,7 @@ class PowerWallChargingStatusSensor(PowerWallEntity, BinarySensorEntity):
     @property
     def device_class(self):
         """Device Class."""
-        return DEVICE_CLASS_BATTERY_CHARGING
+        return BinarySensorDeviceClass.BATTERY_CHARGING
 
     @property
     def unique_id(self):
