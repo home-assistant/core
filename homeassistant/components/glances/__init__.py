@@ -14,7 +14,6 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_SSL,
     CONF_USERNAME,
-    CONF_VERIFY_SSL,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -49,7 +48,6 @@ GLANCES_SCHEMA = vol.All(
             vol.Optional(CONF_USERNAME): cv.string,
             vol.Optional(CONF_PASSWORD): cv.string,
             vol.Optional(CONF_SSL, default=False): cv.boolean,
-            vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
             vol.Optional(CONF_VERSION, default=DEFAULT_VERSION): vol.In([2, 3]),
         }
     )
@@ -174,6 +172,4 @@ def get_api(hass, entry):
     """Return the api from glances_api."""
     params = entry.copy()
     params.pop(CONF_NAME)
-    verify_ssl = params.pop(CONF_VERIFY_SSL)
-    session = async_get_clientsession(hass, verify_ssl)
-    return Glances(hass.loop, session, **params)
+    return Glances(**params)
