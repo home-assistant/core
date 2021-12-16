@@ -30,7 +30,11 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .api import ConfigEntryLyricClient, LyricLocalOAuth2Implementation
+from .api import (
+    ConfigEntryLyricClient,
+    LyricLocalOAuth2Implementation,
+    OAuth2SessionLyric,
+)
 from .config_flow import OAuth2FlowHandler
 from .const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 
@@ -84,22 +88,34 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     session = aiohttp_client.async_get_clientsession(hass)
-    oauth_session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
+    oauth_session = OAuth2SessionLyric(hass, entry, implementation)
 
     client = ConfigEntryLyricClient(session, oauth_session)
 
     client_id = hass.data[DOMAIN][CONF_CLIENT_ID]
     lyric = Lyric(client, client_id)
 
+    async def async_get_data() -> Lyric:
+        """Get data from the API."""
+        async with async_timeout.timeout(60):
+            await lyric.get_locations()
+        return lyric
+
     async def async_update_data() -> Lyric:
         """Fetch data from Lyric."""
-        await oauth_session.async_ensure_token_valid()
         try:
-            async with async_timeout.timeout(60):
-                await lyric.get_locations()
-            return lyric
-        except LyricAuthenticationException as exception:
-            raise ConfigEntryAuthFailed from exception
+            return await async_get_data()
+        except LyricAuthenticationException:
+            # Attempt to update the token before failing.
+            # Honeywell appear to have issues keeping tokens saved.
+            try:
+                _LOGGER.info("Authentication failed. Attempting to refresh token")
+                await oauth_session.force_refresh_token()
+                return await async_get_data()
+            except LyricAuthenticationException as exception:
+                raise ConfigEntryAuthFailed from exception
+            except (LyricException, ClientResponseError) as exception:
+                raise UpdateFailed(exception) from exception
         except (LyricException, ClientResponseError) as exception:
             raise UpdateFailed(exception) from exception
 
