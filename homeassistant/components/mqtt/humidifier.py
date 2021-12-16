@@ -10,9 +10,8 @@ from homeassistant.components.humidifier import (
     ATTR_MODE,
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MIN_HUMIDITY,
-    DEVICE_CLASS_DEHUMIDIFIER,
-    DEVICE_CLASS_HUMIDIFIER,
     SUPPORT_MODES,
+    HumidifierDeviceClass,
     HumidifierEntity,
 )
 from homeassistant.const import (
@@ -96,8 +95,10 @@ _PLATFORM_SCHEMA_BASE = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
             CONF_MODE_COMMAND_TOPIC, "available_modes"
         ): mqtt.valid_publish_topic,
         vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_DEVICE_CLASS, default=DEVICE_CLASS_HUMIDIFIER): vol.In(
-            [DEVICE_CLASS_HUMIDIFIER, DEVICE_CLASS_DEHUMIDIFIER]
+        vol.Optional(
+            CONF_DEVICE_CLASS, default=HumidifierDeviceClass.HUMIDIFIER
+        ): vol.In(
+            [HumidifierDeviceClass.HUMIDIFIER, HumidifierDeviceClass.DEHUMIDIFIER]
         ),
         vol.Optional(CONF_MODE_COMMAND_TEMPLATE): cv.template,
         vol.Optional(CONF_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
