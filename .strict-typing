@@ -95,6 +95,7 @@ homeassistant.components.notify.*
 homeassistant.components.notion.*
 homeassistant.components.number.*
 homeassistant.components.onewire.*
+homeassistant.components.open_meteo.*
 homeassistant.components.openuv.*
 homeassistant.components.persistent_notification.*
 homeassistant.components.pi_hole.*
