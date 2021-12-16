@@ -1,11 +1,10 @@
 """Tests for the Abode sensor device."""
 from homeassistant.components.abode import ATTR_DEVICE_ID
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
-    DEVICE_CLASS_HUMIDITY,
     PERCENTAGE,
     TEMP_CELSIUS,
 )
@@ -35,7 +34,7 @@ async def test_attributes(hass):
     assert state.attributes.get("device_type") == "LM"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Environment Sensor Humidity"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_HUMIDITY
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.HUMIDITY
 
     state = hass.states.get("sensor.environment_sensor_lux")
     assert state.state == "1.0"

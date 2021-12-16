@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any, Callable
 from urllib.parse import urlparse
 
 from awesomeversion import (
@@ -11,6 +12,8 @@ from awesomeversion import (
 )
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
+
+from homeassistant.helpers import config_validation as cv
 
 from .model import Config, Integration
 
@@ -171,6 +174,20 @@ def verify_wildcard(value: str):
     return value
 
 
+def verify_lower_case_dict(*keys: Any) -> Callable[[dict], dict]:
+    """Validate that at least one key exists."""
+
+    def validate(obj: dict) -> dict:
+        """Test values in dict are lowercase."""
+        if not isinstance(obj, dict):
+            raise vol.Invalid("expected dictionary")
+
+        for v in obj.values():
+            verify_lowercase(v)
+
+    return validate
+
+
 MANIFEST_SCHEMA = vol.Schema(
     {
         vol.Required("domain"): str,
@@ -180,17 +197,24 @@ MANIFEST_SCHEMA = vol.Schema(
         vol.Optional("zeroconf"): [
             vol.Any(
                 str,
-                vol.Schema(
-                    {
-                        vol.Required("type"): str,
-                        vol.Optional("am"): vol.All(str, verify_lowercase),
-                        vol.Optional("macaddress"): vol.All(
-                            str, verify_uppercase, verify_wildcard
-                        ),
-                        vol.Optional("manufacturer"): vol.All(str, verify_lowercase),
-                        vol.Optional("model"): vol.All(str, verify_lowercase),
-                        vol.Optional("name"): vol.All(str, verify_lowercase),
-                    }
+                vol.All(
+                    cv.deprecated("macaddress"),
+                    cv.deprecated("model"),
+                    cv.deprecated("manufacturer"),
+                    vol.Schema(
+                        {
+                            vol.Required("type"): str,
+                            vol.Optional("macaddress"): vol.All(
+                                str, verify_uppercase, verify_wildcard
+                            ),
+                            vol.Optional("manufacturer"): vol.All(
+                                str, verify_lowercase
+                            ),
+                            vol.Optional("model"): vol.All(str, verify_lowercase),
+                            vol.Optional("name"): vol.All(str, verify_lowercase),
+                            vol.Optional("properties"): verify_lower_case_dict,
+                        }
+                    ),
                 ),
             )
         ],

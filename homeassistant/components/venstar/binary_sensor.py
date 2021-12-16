@@ -1,6 +1,6 @@
 """Alarm sensors for the Venstar Thermostat."""
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_PROBLEM,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 
@@ -23,7 +23,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
 class VenstarBinarySensor(VenstarEntity, BinarySensorEntity):
     """Represent a Venstar alert."""
 
-    _attr_device_class = DEVICE_CLASS_PROBLEM
+    _attr_device_class = BinarySensorDeviceClass.PROBLEM
 
     def __init__(self, coordinator, config, alert):
         """Initialize the alert."""

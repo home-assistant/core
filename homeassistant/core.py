@@ -323,7 +323,10 @@ class HomeAssistant:
         _async_create_timer(self)
 
     def add_job(self, target: Callable[..., Any], *args: Any) -> None:
-        """Add job to the executor pool.
+        """Add a job to be executed by the event loop or by an executor.
+
+        If the job is either a coroutine or decorated with @callback, it will be
+        run by the event loop, if not it will be run by an executor.
 
         target: target to call.
         args: parameters for method to call.
@@ -336,7 +339,10 @@ class HomeAssistant:
     def async_add_job(
         self, target: Callable[..., Any], *args: Any
     ) -> asyncio.Future | None:
-        """Add a job from within the event loop.
+        """Add a job to be executed by the event loop or by an executor.
+
+        If the job is either a coroutine or decorated with @callback, it will be
+        run by the event loop, if not it will be run by an executor.
 
         This method must be run in the event loop.
 
