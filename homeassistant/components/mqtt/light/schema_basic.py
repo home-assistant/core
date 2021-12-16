@@ -51,7 +51,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.util.color as color_util
 
-from .. import subscription
+from .. import MqttCommandTemplate, subscription
 from ... import mqtt
 from ..const import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC
 from ..debug_info import log_messages
@@ -330,9 +330,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         for key in COMMAND_TEMPLATE_KEYS:
             command_templates[key] = None
         for key in COMMAND_TEMPLATE_KEYS & config.keys():
-            tpl = config[key]
-            command_templates[key] = tpl.async_render
-            tpl.hass = self.hass
+            command_templates[key] = MqttCommandTemplate(config[key], self).async_render
         self._command_templates = command_templates
 
         optimistic = config[CONF_OPTIMISTIC]
@@ -844,7 +842,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
                     keys.append("white")
                 elif color_mode == COLOR_MODE_RGBWW:
                     keys.extend(["cold_white", "warm_white"])
-                rgb_color_str = tpl(zip(keys, color))
+                rgb_color_str = tpl(variables=zip(keys, color))
             else:
                 rgb_color_str = ",".join(str(channel) for channel in color)
             return rgb_color_str
@@ -1010,9 +1008,8 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             and self._topic[CONF_COLOR_TEMP_COMMAND_TOPIC] is not None
         ):
             color_temp = int(kwargs[ATTR_COLOR_TEMP])
-            tpl = self._command_templates[CONF_COLOR_TEMP_COMMAND_TEMPLATE]
-            if tpl:
-                color_temp = tpl({"value": color_temp})
+            if tpl := self._command_templates[CONF_COLOR_TEMP_COMMAND_TEMPLATE]:
+                color_temp = tpl(variables={"value": color_temp})
 
             await publish(CONF_COLOR_TEMP_COMMAND_TOPIC, color_temp)
             should_update |= set_optimistic(
