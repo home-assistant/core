@@ -32,55 +32,47 @@ _LOGGER = logging.getLogger(__name__)
 DATA_LUFTDATEN = "luftdaten"
 DATA_LUFTDATEN_CLIENT = "data_luftdaten_client"
 DATA_LUFTDATEN_LISTENER = "data_luftdaten_listener"
-DEFAULT_ATTRIBUTION = "Data provided by luftdaten.info"
 
 PLATFORMS = [Platform.SENSOR]
-
-SENSOR_HUMIDITY = "humidity"
-SENSOR_PM10 = "P1"
-SENSOR_PM2_5 = "P2"
-SENSOR_PRESSURE = "pressure"
-SENSOR_PRESSURE_AT_SEALEVEL = "pressure_at_sealevel"
-SENSOR_TEMPERATURE = "temperature"
 
 TOPIC_UPDATE = f"{DOMAIN}_data_update"
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
-        key=SENSOR_TEMPERATURE,
+        key="temperature",
         name="Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     SensorEntityDescription(
-        key=SENSOR_HUMIDITY,
+        key="humidity",
         name="Humidity",
         icon="mdi:water-percent",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
     ),
     SensorEntityDescription(
-        key=SENSOR_PRESSURE,
+        key="pressure",
         name="Pressure",
         icon="mdi:arrow-down-bold",
         native_unit_of_measurement=PRESSURE_PA,
         device_class=SensorDeviceClass.PRESSURE,
     ),
     SensorEntityDescription(
-        key=SENSOR_PRESSURE_AT_SEALEVEL,
+        key="pressure_at_sealevel",
         name="Pressure at sealevel",
         icon="mdi:download",
         native_unit_of_measurement=PRESSURE_PA,
         device_class=SensorDeviceClass.PRESSURE,
     ),
     SensorEntityDescription(
-        key=SENSOR_PM10,
+        key="P1",
         name="PM10",
         icon="mdi:thought-bubble",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     ),
     SensorEntityDescription(
-        key=SENSOR_PM2_5,
+        key="P2",
         name="PM2.5",
         icon="mdi:thought-bubble-outline",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
