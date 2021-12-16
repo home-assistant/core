@@ -176,7 +176,6 @@ class InverterEntity(CoordinatorEntity, SensorEntity):
         self._attr_icon = "mdi:solar-power"
         self._attr_name = "PV Inverter"
         self._attr_native_unit_of_measurement = POWER_WATT
-        self._attr_extra_state_attributes = {"serial_number": inverter.serial_number}
         self._inverter: Inverter = inverter
         self._previous_value = None
 
@@ -200,11 +199,6 @@ class InverterEntity(CoordinatorEntity, SensorEntity):
         )
         self._previous_value = new_value
         return new_value
-
-    @property
-    def state_attributes(self):
-        """Return the inverter state attributes."""
-        return self.coordinator.data
 
 
 class InverterSensor(CoordinatorEntity, SensorEntity):
