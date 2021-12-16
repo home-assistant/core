@@ -13,15 +13,15 @@ from homeassistant.const import (
 class HERERoutingData(TypedDict):
     """Routing information calculated from a herepy.RoutingResponse."""
 
-    attribution: str | None
-    base_time: float
-    traffic_time: float
-    distance: float
-    route: str
-    origin: str
-    destination: str
-    origin_name: str
-    destination_name: str
+    ATTR_ATTRIBUTION: str | None
+    ATTR_DURATION: float
+    ATTR_DURATION_IN_TRAFFIC: float
+    ATTR_DISTANCE: float
+    ATTR_ROUTE: str
+    ATTR_ORIGIN: str
+    ATTR_DESTINATION: str
+    ATTR_ORIGIN_NAME: str
+    ATTR_DESTINATION_NAME: str
 
 
 DOMAIN = "here_travel_time"

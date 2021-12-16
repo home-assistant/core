@@ -7,13 +7,21 @@ import logging
 import async_timeout
 from herepy import NoRouteFoundError, RouteMode, RoutingApi, RoutingResponse
 
-from homeassistant.const import CONF_UNIT_SYSTEM_IMPERIAL
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_UNIT_SYSTEM_IMPERIAL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.location import find_coordinates
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt
 
 from .const import (
+    ATTR_DESTINATION,
+    ATTR_DESTINATION_NAME,
+    ATTR_DISTANCE,
+    ATTR_DURATION,
+    ATTR_DURATION_IN_TRAFFIC,
+    ATTR_ORIGIN,
+    ATTR_ORIGIN_NAME,
+    ATTR_ROUTE,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     NO_ROUTE_ERROR_MESSAGE,
@@ -146,15 +154,15 @@ class HERETravelTimeData:
                 # Convert to kilometers
                 distance = distance / 1000
             return {
-                "attribution": attribution,
-                "base_time": summary["baseTime"],
-                "traffic_time": traffic_time,
-                "distance": distance,
-                "route": response.route_short,
-                "origin": ",".join(origin),
-                "destination": ",".join(destination),
-                "origin_name": waypoint[0]["mappedRoadName"],
-                "destination_name": waypoint[1]["mappedRoadName"],
+                ATTR_ATTRIBUTION: attribution,
+                ATTR_DURATION: summary["baseTime"] / 60,
+                ATTR_DURATION_IN_TRAFFIC: traffic_time / 60,
+                ATTR_DISTANCE: distance,
+                ATTR_ROUTE: response.route_short,
+                ATTR_ORIGIN: ",".join(origin),
+                ATTR_DESTINATION: ",".join(destination),
+                ATTR_ORIGIN_NAME: waypoint[0]["mappedRoadName"],
+                ATTR_DESTINATION_NAME: waypoint[1]["mappedRoadName"],
             }
         return None
 

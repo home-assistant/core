@@ -245,11 +245,13 @@ class HERETravelTimeSensor(SensorEntity, CoordinatorEntity):
         """Return the state of the sensor."""
         if self.coordinator.data is not None:
             if self._traffic_mode:
-                if (time := self.coordinator.data.get("traffic_time")) is not None:
-                    return str(round(time / 60))
+                if (
+                    time := self.coordinator.data.get(ATTR_DURATION_IN_TRAFFIC)
+                ) is not None:
+                    return str(round(time))
             else:
-                if (time := self.coordinator.data.get("base_time")) is not None:
-                    return str(round(time / 60))
+                if (time := self.coordinator.data.get(ATTR_DURATION)) is not None:
+                    return str(round(time))
         return None
 
     @property
@@ -267,17 +269,10 @@ class HERETravelTimeSensor(SensorEntity, CoordinatorEntity):
                 ATTR_UNIT_SYSTEM: self._here_data.units,
                 ATTR_MODE: self._here_data.travel_mode,
                 ATTR_TRAFFIC_MODE: self._traffic_mode,
-                ATTR_DURATION: self.coordinator.data["base_time"] / 60,
-                ATTR_DISTANCE: self.coordinator.data["distance"],
-                ATTR_ROUTE: self.coordinator.data["route"],
-                ATTR_DURATION_IN_TRAFFIC: self.coordinator.data["traffic_time"] / 60,
-                ATTR_ORIGIN: self.coordinator.data["origin"],
-                ATTR_DESTINATION: self.coordinator.data["destination"],
-                ATTR_ORIGIN_NAME: self.coordinator.data["origin_name"],
-                ATTR_DESTINATION_NAME: self.coordinator.data["destination_name"],
+                **self.coordinator.data,
             }
-            if (attribution := self.coordinator.data.get("attribution")) is not None:
-                res[ATTR_ATTRIBUTION] = attribution
+            if res[ATTR_ATTRIBUTION] is None:
+                res.pop(ATTR_ATTRIBUTION)
             return res
         return None
 
