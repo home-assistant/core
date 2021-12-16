@@ -1,4 +1,4 @@
-"""Support to keep track of user controlled buttons for within automations."""
+"""Support to keep track of user controlled buttons which can be used in automations."""
 from __future__ import annotations
 
 import logging
