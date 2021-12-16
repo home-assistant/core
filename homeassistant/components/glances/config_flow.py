@@ -10,7 +10,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SCAN_INTERVAL,
     CONF_SSL,
-    CONF_USERNAME
+    CONF_USERNAME,
 )
 from homeassistant.core import callback
 
