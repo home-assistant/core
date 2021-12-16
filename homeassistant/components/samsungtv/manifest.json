@@ -14,7 +14,7 @@
     }
   ],
   "zeroconf": [
-    {"type":"_airplay._tcp.local.","manufacturer":"samsung*"}
+    {"type":"_airplay._tcp.local.","properties":{"manufacturer":"samsung*"}}
   ],
   "dhcp": [
     {
