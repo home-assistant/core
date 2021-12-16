@@ -137,7 +137,7 @@ aiohomekit==0.6.4
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==3.0.4
+aiohue==3.0.6
 
 # homeassistant.components.apache_kafka
 aiokafka==0.6.0
@@ -384,7 +384,7 @@ emulated_roku==0.2.1
 enocean==0.50
 
 # homeassistant.components.environment_canada
-env_canada==0.5.18
+env_canada==0.5.20
 
 # homeassistant.components.enphase_envoy
 envoy_reader==0.20.1
@@ -470,7 +470,7 @@ google-api-python-client==1.6.4
 google-cloud-pubsub==2.1.0
 
 # homeassistant.components.nest
-google-nest-sdm==0.4.6
+google-nest-sdm==0.4.8
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -524,7 +524,7 @@ hole==0.7.0
 holidays==0.11.3.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20211212.0
+home-assistant-frontend==20211215.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -746,7 +746,7 @@ pilight==0.1.1
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
-pillow==8.3.2
+pillow==8.2.0
 
 # homeassistant.components.plex
 plexapi==4.7.1
@@ -817,7 +817,7 @@ pyMetno==0.9.0
 pyRFXtrx==0.27.0
 
 # homeassistant.components.tibber
-pyTibber==0.21.0
+pyTibber==0.21.1
 
 # homeassistant.components.nextbus
 py_nextbusnext==0.1.5
@@ -844,7 +844,7 @@ pyatag==0.3.5.3
 pyatmo==6.2.0
 
 # homeassistant.components.apple_tv
-pyatv==0.9.7
+pyatv==0.9.8
 
 # homeassistant.components.balboa
 pybalboa==0.13
@@ -859,7 +859,7 @@ pybotvac==0.0.22
 pycfdns==1.2.2
 
 # homeassistant.components.cast
-pychromecast==10.1.1
+pychromecast==10.2.1
 
 # homeassistant.components.climacell
 pyclimacell==0.18.2
@@ -1157,7 +1157,7 @@ python-juicenet==1.0.2
 python-kasa==0.4.0
 
 # homeassistant.components.xiaomi_miio
-python-miio==0.5.9.1
+python-miio==0.5.9.2
 
 # homeassistant.components.nest
 python-nest==4.1.0
