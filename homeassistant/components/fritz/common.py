@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 import logging
 from types import MappingProxyType
-from typing import Any, TypedDict
+from typing import Any, TypedDict, cast
 
 from fritzconnection import FritzConnection
 from fritzconnection.core.exceptions import (
@@ -315,6 +315,25 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
         _LOGGER.debug("Checking host info for FRITZ!Box router %s", self.host)
         self._update_available, self._latest_firmware = self._update_device_info()
 
+    async def async_trigger_firmware_update(self) -> bool:
+        """Trigger firmware update."""
+        results = await self.hass.async_add_executor_job(
+            self.connection.call_action, "UserInterface:1", "X_AVM-DE_DoUpdate"
+        )
+        return cast(bool, results["NewX_AVM-DE_UpdateState"])
+
+    async def async_trigger_reboot(self) -> None:
+        """Trigger device reboot."""
+        await self.hass.async_add_executor_job(
+            self.connection.call_action, "DeviceConfig1", "Reboot"
+        )
+
+    async def async_trigger_reconnect(self) -> None:
+        """Trigger device reconnect."""
+        await self.hass.async_add_executor_job(
+            self.connection.call_action, "WANIPConn1", "ForceTermination"
+        )
+
     async def service_fritzbox(
         self, service_call: ServiceCall, config_entry: ConfigEntry
     ) -> None:
@@ -326,12 +345,18 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
 
         try:
             if service_call.service == SERVICE_REBOOT:
+                _LOGGER.warning(
+                    'Service "fritz.reboot" is deprecated, please use the corresponding button entity instead'
+                )
                 await self.hass.async_add_executor_job(
                     self.connection.call_action, "DeviceConfig1", "Reboot"
                 )
                 return
 
             if service_call.service == SERVICE_RECONNECT:
+                _LOGGER.warning(
+                    'Service "fritz.reconnect" is deprecated, please use the corresponding button entity instead'
+                )
                 await self.hass.async_add_executor_job(
                     self.connection.call_action,
                     "WANIPConn1",
