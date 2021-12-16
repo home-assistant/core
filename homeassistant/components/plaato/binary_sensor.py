@@ -39,8 +39,8 @@ class PlaatoBinarySensor(PlaatoEntity, BinarySensorEntity):
         return False
 
     @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
+    def device_class(self) -> BinarySensorDeviceClass | None:
+        """Return the class of this device, from BinarySensorDeviceClass."""
         if self._coordinator is None:
             return None
         if self._sensor_type is PlaatoKeg.Pins.LEAK_DETECTION:

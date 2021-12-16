@@ -63,7 +63,7 @@ class PlaatoSensor(PlaatoEntity, SensorEntity):
     """Representation of a Plaato Sensor."""
 
     @property
-    def device_class(self) -> str | None:
+    def device_class(self) -> SensorDeviceClass | None:
         """Return the class of this device, from SensorDeviceClass."""
         if (
             self._coordinator is not None
