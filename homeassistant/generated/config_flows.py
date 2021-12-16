@@ -250,6 +250,7 @@ FLOWS = [
     "prosegur",
     "ps4",
     "pvoutput",
+    "pure_energie",
     "pvpc_hourly_pricing",
     "rachio",
     "rainforest_eagle",

@@ -1297,6 +1297,9 @@ psutil==5.8.0
 # homeassistant.components.pulseaudio_loopback
 pulsectl==20.2.4
 
+# homeassistant.components.pure_energie
+pure-energie==0.1.1
+
 # homeassistant.components.androidtv
 pure-python-adb[async]==0.3.0.dev0
 
