@@ -87,7 +87,6 @@ from .const import (
     PROTOCOL_311,
 )
 from .discovery import LAST_DISCOVERY
-from .mixins import MqttEntity
 from .models import (
     AsyncMessageCallbackType,
     MessageCallbackType,
@@ -326,16 +325,23 @@ class MqttValueTemplate:
     def __init__(
         self,
         value_template: template.Template | None,
-        entity: MqttEntity,
+        entity: Entity | HomeAssistant,
+        config_attributes: template.TemplateVarsType = None,
     ) -> None:
         """Instantiate a value template."""
         self._attr_value_template = value_template
+        self._config_attributes = config_attributes
         if value_template is None:
             return
 
-        value_template.hass = entity.hass
+        if isinstance(entity, HomeAssistant):
+            value_template.hass = entity
+            return
 
-        self._variables = {"entity_id": entity.entity_id}
+        self._entity = entity
+        self._variables = [ATTR_ENTITY_ID, ATTR_NAME]
+
+        value_template.hass = entity.hass
 
     @callback
     def async_render_with_possible_json_value(
@@ -349,19 +355,30 @@ class MqttValueTemplate:
             return payload
 
         values: dict[str, Any] = {}
-        values.update(self._variables)
 
         if variables is not None:
             values.update(variables)
 
+        if self._config_attributes is not None:
+            values.update(self._config_attributes)
+
+        if hasattr(self, "_variables"):
+            for key in self._variables:
+                values[key] = getattr(self._entity, key, None)
+
         if default == _SENTINEL:
             return self._attr_value_template.async_render_with_possible_json_value(
-                payload, variables=values
+                payload, variables=values or None
             )
 
         return self._attr_value_template.async_render_with_possible_json_value(
             payload, default, variables=values
         )
+
+    @property
+    def value_template(self) -> template.Template | None:
+        """Return the active value template or None."""
+        return self._attr_value_template
 
 
 @dataclass
