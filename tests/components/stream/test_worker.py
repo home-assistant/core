@@ -883,7 +883,7 @@ async def test_get_image(hass, record_worker_sync):
     with patch.object(hass.config, "is_allowed_path", return_value=True):
         await stream.async_record("/example/path")
 
-    assert stream.keyframe_converter._image == b""
+    assert stream._keyframe_converter._image == b""
     image_future = asyncio.create_task(stream.get_image())
 
     await record_worker_sync.join()

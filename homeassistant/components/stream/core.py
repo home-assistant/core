@@ -372,35 +372,47 @@ class KeyFrameConverter:
         from homeassistant.components.camera.img_util import TurboJPEGSingleton
 
         self.image_requested = False
+        self.packet: Packet = None
         self._image = b""
         self._event = asyncio.Event()
-        self.turbojpeg = TurboJPEGSingleton.instance()
-        if not self.turbojpeg:
-            self.get_bytes = lambda: b""
+        self.generate_image = self._generate_image
+        self._turbojpeg = TurboJPEGSingleton.instance()
+        if not self._turbojpeg:
+            self.generate_image = lambda: None
 
-    async def get_keyframe_image(self, timeout: int = KEYFRAME_TIMEOUT) -> bytes:
-        """Get the next keyframe image."""
+    async def get_image(self) -> bytes:
+        """
+        Fetch an image from the Stream and return it as a jpeg in bytes.
+
+        This is called from outside the worker.
+        """
         self.image_requested = True
         try:
-            async with async_timeout.timeout(timeout):
+            async with async_timeout.timeout(KEYFRAME_TIMEOUT):
                 await self._event.wait()
         except asyncio.TimeoutError:
             return b""
         return self._image
 
-    def generate_keyframe_image(self, keyframe_packet: Packet) -> None:
-        """Generate the keyframe image in the worker."""
+    def check_generate_image(self) -> None:
+        """Generate the image if necessary and signal it is done from the worker."""
+        if self.packet:
+            self.generate_image()
+            self.packet = None
+        if self._image:
+            self.image_requested = False
+            self._event.set()
+            self._event.clear()
 
-        self.image_requested = False
+    def _generate_image(self) -> None:
+        """Generate the keyframe image in the worker."""
         # decode packet (try up to 3 times)
         for _i in range(3):
-            if frames := keyframe_packet.decode():
+            if frames := self.packet.decode():
                 break
         if frames:
             image_file = BytesIO()
             bgr_array = frames[0].to_ndarray(format="bgr24")
-            image_file.write(self.turbojpeg.encode(bgr_array))
+            image_file.write(self._turbojpeg.encode(bgr_array))
             self._image = image_file.getvalue()
             image_file.close()
-            self._event.set()
-            self._event.clear()

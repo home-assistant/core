@@ -216,7 +216,7 @@ class Stream:
         self._thread_quit = threading.Event()
         self._outputs: dict[str, StreamOutput] = {}
         self._fast_restart_once = False
-        self.keyframe_converter = KeyFrameConverter()
+        self._keyframe_converter = KeyFrameConverter()
         self._available: bool = True
         self._update_callback: Callable[[], None] | None = None
         self._logger = (
@@ -330,7 +330,7 @@ class Stream:
                     self.source,
                     self.options,
                     stream_state,
-                    self.keyframe_converter,
+                    self._keyframe_converter,
                     self._thread_quit,
                 )
             except StreamWorkerError as err:
@@ -426,5 +426,4 @@ class Stream:
 
     async def get_image(self) -> bytes:
         """Fetch an image from the Stream and return it as a jpeg in bytes."""
-
-        return await self.keyframe_converter.get_keyframe_image()
+        return await self._keyframe_converter.get_image()

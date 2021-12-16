@@ -539,9 +539,8 @@ def stream_worker(
 
             muxer.mux_packet(packet)
 
-            if (
-                keyframe_converter.image_requested
-                and packet.is_keyframe
-                and packet.stream.type == "video"
-            ):
-                keyframe_converter.generate_keyframe_image(packet)
+            if packet.is_keyframe and packet.stream.type == "video":
+                keyframe_converter.packet = packet
+
+            if keyframe_converter.image_requested:
+                keyframe_converter.check_generate_image()
