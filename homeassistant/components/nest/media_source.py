@@ -161,7 +161,7 @@ class NestEventMediaStore(EventMediaStore):
         time_str = str(int(event.timestamp.timestamp()))
         event_type_str = EVENT_NAME_MAP.get(event.event_type, "event")
         suffix = "jpg" if event.event_image_type == EventImageType.IMAGE else "mp4"
-        return f"{device_id_str}-{time_str}-{event_id_str}-{event_type_str}.{suffix}"
+        return f"{device_id_str}/{time_str}-{event_id_str}-{event_type_str}.{suffix}"
 
     def get_media_filename(self, media_key: str) -> str:
         """Return the filename in storage for a media key."""
@@ -189,7 +189,11 @@ class NestEventMediaStore(EventMediaStore):
         filename = self.get_media_filename(media_key)
 
         def save_media(filename: str, content: bytes) -> None:
+            os.makedirs(os.path.dirname(filename), exist_ok=True)
             if os.path.exists(filename):
+                _LOGGER.debug(
+                    "Event media already exists, not overwriting: %s", filename
+                )
                 return
             _LOGGER.debug("Saving event media to disk store: %s", filename)
             with open(filename, "wb") as media:
