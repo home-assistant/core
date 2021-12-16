@@ -26,9 +26,6 @@ CONF_TEMPORARY_OVRD_MODE = "temporary_override_mode"
 DATA_GATEWAYS = "gateways"
 DATA_OPENTHERM_GW = "opentherm_gw"
 
-DEVICE_CLASS_COLD = "cold"
-DEVICE_CLASS_HEAT = "heat"
-
 DOMAIN = "opentherm_gw"
 
 SERVICE_RESET_GATEWAY = "reset_gateway"
@@ -85,27 +82,27 @@ BINARY_SENSOR_INFO = {
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
     ],
     gw_vars.DATA_SLAVE_CH_ACTIVE: [
-        DEVICE_CLASS_HEAT,
+        BinarySensorDeviceClass.HEAT,
         "Boiler Central Heating {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
     ],
     gw_vars.DATA_SLAVE_DHW_ACTIVE: [
-        DEVICE_CLASS_HEAT,
+        BinarySensorDeviceClass.HEAT,
         "Boiler Hot Water {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
     ],
     gw_vars.DATA_SLAVE_FLAME_ON: [
-        DEVICE_CLASS_HEAT,
+        BinarySensorDeviceClass.HEAT,
         "Boiler Flame {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
     ],
     gw_vars.DATA_SLAVE_COOLING_ACTIVE: [
-        DEVICE_CLASS_COLD,
+        BinarySensorDeviceClass.COLD,
         "Boiler Cooling {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
     ],
     gw_vars.DATA_SLAVE_CH2_ACTIVE: [
-        DEVICE_CLASS_HEAT,
+        BinarySensorDeviceClass.HEAT,
         "Boiler Central Heating 2 {}",
         [gw_vars.BOILER, gw_vars.THERMOSTAT],
     ],
