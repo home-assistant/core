@@ -14,7 +14,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     @callback
     def add_new_device(new_device):
-        switch = ZWaveMeNumber(new_device, config_entry.entry_id)
+        controller = hass.data[DOMAIN][config_entry.entry_id]
+        switch = ZWaveMeNumber(controller, new_device)
+
         async_add_entities(
             [
                 switch,
@@ -38,6 +40,6 @@ class ZWaveMeNumber(ZWaveMeEntity, NumberEntity):
 
     def set_value(self, value: float) -> None:
         """Update the current value."""
-        self.hass.data[DOMAIN][self.entry_id].zwave_api.send_command(
+        self.controller.zwave_api.send_command(
             self.device.id, f"exact?level={str(round(value))}"
         )
