@@ -7,7 +7,6 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_FRIENDLY_NAME, DEVICE_CLASS_DATE
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -22,8 +21,6 @@ ATTR_NEXT_PICKUP_TYPES = "next_pickup_types"
 ATTR_NEXT_PICKUP_DATE = "next_pickup_date"
 
 DEFAULT_NAME = "Waste Pickup"
-
-PLATFORM_SCHEMA = cv.deprecated(DOMAIN)
 
 
 @callback

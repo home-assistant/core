@@ -16,6 +16,10 @@ ZEROCONF = {
             "domain": "apple_tv"
         },
         {
+            "domain": "apple_tv",
+            "model": "audioaccessory*"
+        },
+        {
             "domain": "samsungtv",
             "manufacturer": "samsung*"
         }
