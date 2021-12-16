@@ -5,8 +5,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, Literal
 
-from homeassistant.components.sensor import SensorEntityDescription
-from homeassistant.const import CURRENCY_EURO, DEVICE_CLASS_TIMESTAMP
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
+from homeassistant.const import CURRENCY_EURO
 from homeassistant.helpers.typing import StateType
 
 DOMAIN = "picnic"
@@ -69,7 +69,7 @@ SENSOR_TYPES: tuple[PicnicSensorEntityDescription, ...] = (
     ),
     PicnicSensorEntityDescription(
         key=SENSOR_SELECTED_SLOT_START,
-        device_class=DEVICE_CLASS_TIMESTAMP,
+        device_class=SensorDeviceClass.TIMESTAMP,
         icon="mdi:calendar-start",
         entity_registry_enabled_default=True,
         data_type="slot_data",
@@ -77,7 +77,7 @@ SENSOR_TYPES: tuple[PicnicSensorEntityDescription, ...] = (
     ),
     PicnicSensorEntityDescription(
         key=SENSOR_SELECTED_SLOT_END,
-        device_class=DEVICE_CLASS_TIMESTAMP,
+        device_class=SensorDeviceClass.TIMESTAMP,
         icon="mdi:calendar-end",
         entity_registry_enabled_default=True,
         data_type="slot_data",
@@ -85,7 +85,7 @@ SENSOR_TYPES: tuple[PicnicSensorEntityDescription, ...] = (
     ),
     PicnicSensorEntityDescription(
         key=SENSOR_SELECTED_SLOT_MAX_ORDER_TIME,
-        device_class=DEVICE_CLASS_TIMESTAMP,
+        device_class=SensorDeviceClass.TIMESTAMP,
         icon="mdi:clock-alert-outline",
         entity_registry_enabled_default=True,
         data_type="slot_data",
@@ -105,14 +105,14 @@ SENSOR_TYPES: tuple[PicnicSensorEntityDescription, ...] = (
     ),
     PicnicSensorEntityDescription(
         key=SENSOR_LAST_ORDER_SLOT_START,
-        device_class=DEVICE_CLASS_TIMESTAMP,
+        device_class=SensorDeviceClass.TIMESTAMP,
         icon="mdi:calendar-start",
         data_type="last_order_data",
         value_fn=lambda last_order: last_order.get("slot", {}).get("window_start"),
     ),
     PicnicSensorEntityDescription(
         key=SENSOR_LAST_ORDER_SLOT_END,
-        device_class=DEVICE_CLASS_TIMESTAMP,
+        device_class=SensorDeviceClass.TIMESTAMP,
         icon="mdi:calendar-end",
         data_type="last_order_data",
         value_fn=lambda last_order: last_order.get("slot", {}).get("window_end"),
@@ -125,7 +125,7 @@ SENSOR_TYPES: tuple[PicnicSensorEntityDescription, ...] = (
     ),
     PicnicSensorEntityDescription(
         key=SENSOR_LAST_ORDER_ETA_START,
-        device_class=DEVICE_CLASS_TIMESTAMP,
+        device_class=SensorDeviceClass.TIMESTAMP,
         icon="mdi:clock-start",
         entity_registry_enabled_default=True,
         data_type="last_order_data",
@@ -133,7 +133,7 @@ SENSOR_TYPES: tuple[PicnicSensorEntityDescription, ...] = (
     ),
     PicnicSensorEntityDescription(
         key=SENSOR_LAST_ORDER_ETA_END,
-        device_class=DEVICE_CLASS_TIMESTAMP,
+        device_class=SensorDeviceClass.TIMESTAMP,
         icon="mdi:clock-end",
         entity_registry_enabled_default=True,
         data_type="last_order_data",
@@ -141,7 +141,7 @@ SENSOR_TYPES: tuple[PicnicSensorEntityDescription, ...] = (
     ),
     PicnicSensorEntityDescription(
         key=SENSOR_LAST_ORDER_DELIVERY_TIME,
-        device_class=DEVICE_CLASS_TIMESTAMP,
+        device_class=SensorDeviceClass.TIMESTAMP,
         icon="mdi:timeline-clock",
         entity_registry_enabled_default=True,
         data_type="last_order_data",
