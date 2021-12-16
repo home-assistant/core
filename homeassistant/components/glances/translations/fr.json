@@ -16,7 +16,6 @@
                     "port": "Port",
                     "ssl": "Utilise un certificat SSL",
                     "username": "Nom d'utilisateur",
-                    "verify_ssl": "V\u00e9rifier le certificat SSL",
                     "version": "Glances API Version (2 ou 3)"
                 },
                 "title": "Installation de Glances"

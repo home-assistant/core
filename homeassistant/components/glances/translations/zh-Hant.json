@@ -16,7 +16,6 @@
                     "port": "\u901a\u8a0a\u57e0",
                     "ssl": "\u4f7f\u7528 SSL \u8a8d\u8b49",
                     "username": "\u4f7f\u7528\u8005\u540d\u7a31",
-                    "verify_ssl": "\u78ba\u8a8d SSL \u8a8d\u8b49",
                     "version": "Glances API \u7248\u672c\uff082 \u6216 3\uff09"
                 },
                 "title": "\u8a2d\u5b9a Glances"

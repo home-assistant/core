@@ -16,7 +16,6 @@
                     "port": "Poort",
                     "ssl": "Gebruik een SSL-certificaat",
                     "username": "Gebruikersnaam",
-                    "verify_ssl": "SSL-certificaat verifi\u00ebren",
                     "version": "Glances API-versie (2 of 3)"
                 },
                 "title": "Glances instellen"

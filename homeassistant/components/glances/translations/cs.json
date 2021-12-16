@@ -16,7 +16,6 @@
                     "port": "Port",
                     "ssl": "Pou\u017e\u00edv\u00e1 SSL certifik\u00e1t",
                     "username": "U\u017eivatelsk\u00e9 jm\u00e9no",
-                    "verify_ssl": "Ov\u011b\u0159it certifik\u00e1t SSL",
                     "version": "Verze API pro Glances (2 nebo 3)"
                 },
                 "title": "Nastavte Glances"

@@ -16,7 +16,6 @@
                     "port": "Puerto",
                     "ssl": "Use SSL/TLS para conectarse al sistema Glances",
                     "username": "Nombre de usuario",
-                    "verify_ssl": "Verificar la certificaci\u00f3n del sistema",
                     "version": "Versi\u00f3n de API de Glances (2 o 3)"
                 },
                 "title": "Configurar Glances"

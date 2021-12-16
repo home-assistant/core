@@ -16,7 +16,6 @@
                     "port": "\u30dd\u30fc\u30c8",
                     "ssl": "SSL\u8a3c\u660e\u66f8\u3092\u4f7f\u7528\u3059\u308b",
                     "username": "\u30e6\u30fc\u30b6\u30fc\u540d",
-                    "verify_ssl": "SSL\u8a3c\u660e\u66f8\u3092\u78ba\u8a8d\u3059\u308b",
                     "version": "Glances API\u30d0\u30fc\u30b8\u30e7\u30f3(2\u307e\u305f\u306f3)"
                 },
                 "title": "Glances\u306e\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7"

@@ -16,7 +16,6 @@
                     "port": "Vrata",
                     "ssl": "Za povezavo s sistemom Glances uporabite SSL/TLS",
                     "username": "Uporabni\u0161ko ime",
-                    "verify_ssl": "Preverite veljavnost potrdila sistema",
                     "version": "Glances API Version (2 ali 3)"
                 },
                 "title": "Nastavite Glances"
