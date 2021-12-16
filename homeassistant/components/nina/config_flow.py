@@ -8,6 +8,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
@@ -46,7 +47,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="single_instance_allowed")
 
         if not self._all_region_codes_sorted:
-            nina: Nina = Nina()
+            nina: Nina = Nina(async_get_clientsession(self.hass))
 
             try:
                 self._all_region_codes_sorted = self.swap_key_value(
