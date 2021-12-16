@@ -201,6 +201,11 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
     ),
     SensorEntityDescription(
+        key="peak_hour_time",
+        name="Time of max hour consumption",
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+    SensorEntityDescription(
         key="month_cons",
         name="Monthly net consumption",
         device_class=SensorDeviceClass.ENERGY,
@@ -403,13 +408,6 @@ class TibberDataSensor(TibberSensor, update_coordinator.CoordinatorEntity):
     def native_value(self):
         """Return the value of the sensor."""
         return getattr(self._tibber_home, self.entity_description.key)
-
-    @property
-    def extra_state_attributes(self):
-        """Return the extra state attributes."""
-        if self.entity_description.key == "peak_hour":
-            return {"Time of max hour": self._tibber_home.peak_hour_time}
-        return None
 
 
 class TibberSensorRT(TibberSensor, update_coordinator.CoordinatorEntity):
