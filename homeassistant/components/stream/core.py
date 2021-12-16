@@ -376,8 +376,8 @@ class KeyFrame:
         from homeassistant.components.camera.img_util import TurboJPEGSingleton
 
         self.keyframe: Packet | bytes | None = None
-        self.turbojpeg = TurboJPEGSingleton.instance()
         self.get_bytes = self._get_bytes
+        self.turbojpeg = TurboJPEGSingleton.instance()
         if not self.turbojpeg:
             self.get_bytes = lambda: None
 
