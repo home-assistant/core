@@ -90,7 +90,7 @@ class NestEventMediaStore(EventMediaStore):
 
     This is interface is meant to provide two storage features:
     - media storage of events (jpgs, mp4s)
-    - metadata about events (motion, person, etc)
+    - metadata about events (e.g. motion, person), filename of the media, etc.
 
     The default implementation in nest is in memory, and this allows the data
     to be backed by disk.
@@ -146,7 +146,7 @@ class NestEventMediaStore(EventMediaStore):
         self._store.async_delay_save(provide_data, STORAGE_SAVE_DELAY_SECONDS)
 
     def get_media_key(self, device_id: str, event: ImageEventBase) -> str:
-        """Return the filename to use for the device and event."""
+        """Return the filename to use for a new event."""
         # Convert a nest device id to a home assistant device id
         device_id_str = (
             self._devices.get(device_id, "unknown_device")
