@@ -3,8 +3,7 @@
 from pyplaato.plaato import PlaatoKeg
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_OPENING,
-    DEVICE_CLASS_PROBLEM,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 
@@ -45,6 +44,6 @@ class PlaatoBinarySensor(PlaatoEntity, BinarySensorEntity):
         if self._coordinator is None:
             return None
         if self._sensor_type is PlaatoKeg.Pins.LEAK_DETECTION:
-            return DEVICE_CLASS_PROBLEM
+            return BinarySensorDeviceClass.PROBLEM
         if self._sensor_type is PlaatoKeg.Pins.POURING:
-            return DEVICE_CLASS_OPENING
+            return BinarySensorDeviceClass.OPENING
