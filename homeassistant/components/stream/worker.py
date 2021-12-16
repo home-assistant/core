@@ -454,6 +454,8 @@ def stream_worker(
         video_stream = container.streams.video[0]
     except (KeyError, IndexError) as ex:
         raise StreamWorkerError("Stream has no video") from ex
+    # Since we are only decoding one frame at a time we don't need threading
+    video_stream.codec_context.thread_type = "NONE"
     try:
         audio_stream = container.streams.audio[0]
     except (KeyError, IndexError):
