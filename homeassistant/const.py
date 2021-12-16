@@ -273,6 +273,7 @@ EVENT_TIME_CHANGED: Final = "time_changed"
 # #### DEVICE CLASSES ####
 # DEVICE_CLASS_* below are deprecated as of 2021.12
 # use the SensorDeviceClass enum instead.
+DEVICE_CLASS_APPARENT_POWER: Final = "apparent_power"
 DEVICE_CLASS_AQI: Final = "aqi"
 DEVICE_CLASS_BATTERY: Final = "battery"
 DEVICE_CLASS_CO: Final = "carbon_monoxide"
@@ -295,6 +296,7 @@ DEVICE_CLASS_PM25: Final = "pm25"
 DEVICE_CLASS_POWER_FACTOR: Final = "power_factor"
 DEVICE_CLASS_POWER: Final = "power"
 DEVICE_CLASS_PRESSURE: Final = "pressure"
+DEVICE_CLASS_REACTIVE_POWER: Final = "reactive_power"
 DEVICE_CLASS_SIGNAL_STRENGTH: Final = "signal_strength"
 DEVICE_CLASS_SULPHUR_DIOXIDE = "sulphur_dioxide"
 DEVICE_CLASS_TEMPERATURE: Final = "temperature"
@@ -458,11 +460,17 @@ ATTR_TEMPERATURE: Final = "temperature"
 
 
 # #### UNITS OF MEASUREMENT ####
+# Apparent power units
+APPARENT_POWER_VA: Final = "VA"
+
 # Power units
 POWER_WATT: Final = "W"
 POWER_KILO_WATT: Final = "kW"
 POWER_VOLT_AMPERE: Final = "VA"
 POWER_BTU_PER_HOUR: Final = "BTU/h"
+
+# Reactive power units
+REACTIVE_POWER_VAR: Final = "var"
 
 # Energy units
 ENERGY_WATT_HOUR: Final = "Wh"
