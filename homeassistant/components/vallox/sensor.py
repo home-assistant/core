@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
@@ -107,7 +107,9 @@ class ValloxFilterRemainingSensor(ValloxSensor):
         days_remaining_delta = timedelta(days=days_remaining)
         now = datetime.utcnow().replace(hour=13, minute=0, second=0, microsecond=0)
 
-        return now + days_remaining_delta
+        return datetime.fromtimestamp(
+            (now + days_remaining_delta).timestamp(), tz=timezone.utc
+        )
 
 
 class ValloxCellStateSensor(ValloxSensor):
