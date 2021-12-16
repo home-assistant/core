@@ -6,9 +6,7 @@ from dataclasses import dataclass
 import logging
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
-    DEVICE_CLASS_PLUG,
-    DEVICE_CLASS_PROBLEM,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -62,14 +60,14 @@ BINARY_SENSOR_TYPES = (
         key=ATTR_WATER_TANK_DETACHED,
         name="Water Tank",
         icon="mdi:car-coolant-level",
-        device_class=DEVICE_CLASS_CONNECTIVITY,
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
         value=lambda value: not value,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     XiaomiMiioBinarySensorDescription(
         key=ATTR_POWERSUPPLY_ATTACHED,
         name="Power Supply",
-        device_class=DEVICE_CLASS_PLUG,
+        device_class=BinarySensorDeviceClass.PLUG,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
 )
@@ -83,7 +81,7 @@ VACUUM_SENSORS = {
         icon="mdi:square-rounded",
         parent_key=VacuumCoordinatorDataAttributes.status,
         entity_registry_enabled_default=True,
-        device_class=DEVICE_CLASS_CONNECTIVITY,
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     ATTR_WATER_BOX_ATTACHED: XiaomiMiioBinarySensorDescription(
@@ -92,7 +90,7 @@ VACUUM_SENSORS = {
         icon="mdi:water",
         parent_key=VacuumCoordinatorDataAttributes.status,
         entity_registry_enabled_default=True,
-        device_class=DEVICE_CLASS_CONNECTIVITY,
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     ATTR_WATER_SHORTAGE: XiaomiMiioBinarySensorDescription(
@@ -101,7 +99,7 @@ VACUUM_SENSORS = {
         icon="mdi:water",
         parent_key=VacuumCoordinatorDataAttributes.status,
         entity_registry_enabled_default=True,
-        device_class=DEVICE_CLASS_PROBLEM,
+        device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
 }
@@ -114,7 +112,7 @@ VACUUM_SENSORS_SEPARATE_MOP = {
         icon="mdi:square-rounded",
         parent_key=VacuumCoordinatorDataAttributes.status,
         entity_registry_enabled_default=True,
-        device_class=DEVICE_CLASS_CONNECTIVITY,
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
 }
