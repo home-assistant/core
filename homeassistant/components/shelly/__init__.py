@@ -69,7 +69,6 @@ from .utils import (
 BLOCK_PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
-    Platform.CLIMATE,
     Platform.COVER,
     Platform.LIGHT,
     Platform.SENSOR,
@@ -77,6 +76,7 @@ BLOCK_PLATFORMS: Final = [
 ]
 BLOCK_SLEEPING_PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
     Platform.SENSOR,
 ]
 RPC_PLATFORMS: Final = [
