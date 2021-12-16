@@ -241,7 +241,7 @@ class AzureEventHub:
 
         if dropped:
             _LOGGER.warning(
-                "Dropped %d old events, consider increasing the max_delay", dropped
+                "Dropped %d old events, consider filtering messages.", dropped
             )
 
         return event_batch, dequeue_count
