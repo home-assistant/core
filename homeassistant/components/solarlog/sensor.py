@@ -1,6 +1,4 @@
 """Platform for solarlog sensors."""
-from typing import cast
-
 from homeassistant.components.sensor import SensorEntity, StateType
 from homeassistant.helpers import update_coordinator
 from homeassistant.helpers.entity import DeviceInfo
@@ -43,4 +41,4 @@ class SolarlogSensor(update_coordinator.CoordinatorEntity, SensorEntity):
     def native_value(self):
         """Return the native sensor value."""
         state = getattr(self.coordinator.data, self.entity_description.key)
-        return cast(StateType, self.entity_description.value(state))
+        return self.entity_description.value(state)
