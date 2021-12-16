@@ -53,7 +53,7 @@ HOMEKIT_TYPES = [
 UPPER_MATCH_PROPS = {"macaddress"}
 # Keys we support matching against in properties that are always matched in
 # lower case. ex: ZeroconfServiceInfo.properties["model"]
-LOWER_MATCH_PROPS = {"manufacturer", "model"}
+LOWER_MATCH_PROPS = {"am", "manufacturer", "model"}
 # Top level keys we support matching against in properties that are always matched in
 # lower case. ex: ZeroconfServiceInfo.name
 LOWER_MATCH_ATTRS = {"name"}
