@@ -16,7 +16,6 @@ from . import ElmaxCoordinator
 from .common import ElmaxEntity
 from .const import DOMAIN
 
-
 _LOGGER = logging.getLogger(__name__)
 
 
