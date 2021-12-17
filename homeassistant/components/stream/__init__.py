@@ -435,9 +435,8 @@ class Stream:
         This should only be called from the main thread.
         """
         # Use a lock to ensure only one thread is working on the keyframe at a time
-        await self._keyframe_converter.lock.acquire()
-        self._keyframe_converter.image = await self.hass.async_add_executor_job(
-            self._keyframe_converter.generate_image, width, height
-        )
-        self._keyframe_converter.lock.release()
+        async with self._keyframe_converter.lock:
+            self._keyframe_converter.image = await self.hass.async_add_executor_job(
+                self._keyframe_converter.generate_image, width, height
+            )
         return self._keyframe_converter.image
