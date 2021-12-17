@@ -171,7 +171,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DOMAIN] = {"client": client, "coordinator": coordinator, "name": name}
 
     async def _async_load_platform_delayed(*_: Any) -> None:
-        await coordinator.async_refresh()
+        await coordinator.async_config_entry_first_refresh()
         hass.async_create_task(async_load_platform(hass, "sensor", DOMAIN, {}, config))
         hass.async_create_task(async_load_platform(hass, "fan", DOMAIN, {}, config))
 
