@@ -1,4 +1,4 @@
-"""Fixtures for P1 Monitor integration tests."""
+"""Fixtures for Pure Energie integration tests."""
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
