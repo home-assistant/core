@@ -298,7 +298,7 @@ class IPMAWeather(WeatherEntity):
                         if int(float(data_in.precipitation_probability)) >= 0
                         else None
                     ),
-                    ATTR_FORECAST_WIND_SPEED: data_in.wind_strength,
+                    ATTR_FORECAST_WIND_SPEED: float(data_in.wind_strength),
                     ATTR_FORECAST_WIND_BEARING: data_in.wind_direction,
                 }
                 for data_in in forecast_filtered
@@ -319,7 +319,7 @@ class IPMAWeather(WeatherEntity):
                     ATTR_FORECAST_TEMP_LOW: data_in.min_temperature,
                     ATTR_FORECAST_TEMP: data_in.max_temperature,
                     ATTR_FORECAST_PRECIPITATION_PROBABILITY: data_in.precipitation_probability,
-                    ATTR_FORECAST_WIND_SPEED: data_in.wind_strength,
+                    ATTR_FORECAST_WIND_SPEED: float(data_in.wind_strength),
                     ATTR_FORECAST_WIND_BEARING: data_in.wind_direction,
                 }
                 for data_in in forecast_filtered

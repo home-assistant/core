@@ -19,6 +19,7 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_SPEED,
     DOMAIN as WEATHER_DOMAIN,
 )
+from homeassistant.const import SPEED_KILOMETERS_PER_HOUR
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import now
 
@@ -131,6 +132,7 @@ class MockLocation:
 
 async def test_setup_configuration(hass):
     """Test for successfully setting up the IPMA platform."""
+    hass.config.units.wind_speed_unit = SPEED_KILOMETERS_PER_HOUR
     with patch(
         "homeassistant.components.ipma.weather.async_get_location",
         return_value=MockLocation(),
@@ -198,7 +200,7 @@ async def test_daily_forecast(hass):
     assert forecast.get(ATTR_FORECAST_TEMP) == 16.2
     assert forecast.get(ATTR_FORECAST_TEMP_LOW) == 10.6
     assert forecast.get(ATTR_FORECAST_PRECIPITATION_PROBABILITY) == "100.0"
-    assert forecast.get(ATTR_FORECAST_WIND_SPEED) == "10"
+    assert forecast.get(ATTR_FORECAST_WIND_SPEED) == 10
     assert forecast.get(ATTR_FORECAST_WIND_BEARING) == "S"
 
 
@@ -222,5 +224,5 @@ async def test_hourly_forecast(hass):
     assert forecast.get(ATTR_FORECAST_CONDITION) == "rainy"
     assert forecast.get(ATTR_FORECAST_TEMP) == 7.7
     assert forecast.get(ATTR_FORECAST_PRECIPITATION_PROBABILITY) == 80.0
-    assert forecast.get(ATTR_FORECAST_WIND_SPEED) == "32.7"
+    assert forecast.get(ATTR_FORECAST_WIND_SPEED) == 32.7
     assert forecast.get(ATTR_FORECAST_WIND_BEARING) == "S"
