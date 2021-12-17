@@ -199,32 +199,32 @@ class DeconzBaseLight(DeconzDevice, LightEntity):
         """Turn on light."""
         data: dict[str, bool | float | int | str | tuple[float, float]] = {"on": True}
 
-        if ATTR_BRIGHTNESS in kwargs:
-            data["brightness"] = kwargs[ATTR_BRIGHTNESS]
+        if attr_brightness := kwargs.get(ATTR_BRIGHTNESS):
+            data["brightness"] = attr_brightness
 
-        if ATTR_COLOR_TEMP in kwargs:
-            data["color_temperature"] = kwargs[ATTR_COLOR_TEMP]
+        if attr_color_temp := kwargs.get(ATTR_COLOR_TEMP):
+            data["color_temperature"] = attr_color_temp
 
-        if ATTR_HS_COLOR in kwargs:
+        if attr_hs_color := kwargs.get(ATTR_HS_COLOR):
             if COLOR_MODE_XY in self._attr_supported_color_modes:
-                data["xy"] = color_hs_to_xy(*kwargs[ATTR_HS_COLOR])
+                data["xy"] = color_hs_to_xy(*attr_hs_color)
             else:
-                data["hue"] = int(kwargs[ATTR_HS_COLOR][0] / 360 * 65535)
-                data["saturation"] = int(kwargs[ATTR_HS_COLOR][1] / 100 * 255)
+                data["hue"] = int(attr_hs_color[0] / 360 * 65535)
+                data["saturation"] = int(attr_hs_color[1] / 100 * 255)
 
         if ATTR_XY_COLOR in kwargs:
             data["xy"] = kwargs[ATTR_XY_COLOR]
 
-        if ATTR_TRANSITION in kwargs:
-            data["transition_time"] = int(kwargs[ATTR_TRANSITION] * 10)
+        if attr_transition := kwargs.get(ATTR_TRANSITION):
+            data["transition_time"] = int(attr_transition * 10)
         elif "IKEA" in self._device.manufacturer:
             data["transition_time"] = 0
 
-        if (alert := FLASH_TO_DECONZ.get(kwargs.get(ATTR_FLASH))) is not None:
+        if (alert := FLASH_TO_DECONZ.get(kwargs.get(ATTR_FLASH, ""))) is not None:
             data["alert"] = alert
             del data["on"]
 
-        if (effect := EFFECT_TO_DECONZ.get(kwargs.get(ATTR_EFFECT))) is not None:
+        if (effect := EFFECT_TO_DECONZ.get(kwargs.get(ATTR_EFFECT, ""))) is not None:
             data["effect"] = effect
 
         await self._device.set_state(**data)
@@ -240,7 +240,7 @@ class DeconzBaseLight(DeconzDevice, LightEntity):
             data["brightness"] = 0
             data["transition_time"] = int(kwargs[ATTR_TRANSITION] * 10)
 
-        if (alert := FLASH_TO_DECONZ.get(kwargs.get(ATTR_FLASH))) is not None:
+        if (alert := FLASH_TO_DECONZ.get(kwargs.get(ATTR_FLASH, ""))) is not None:
             data["alert"] = alert
             del data["on"]
 
