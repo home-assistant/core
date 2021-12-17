@@ -22,7 +22,13 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_BEARING,
     ATTR_WEATHER_WIND_SPEED,
 )
-from homeassistant.const import ATTR_ATTRIBUTION, ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    ATTR_ENTITY_ID,
+    PRESSURE_HPA,
+    SPEED_KILOMETERS_PER_HOUR,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
@@ -33,6 +39,8 @@ from tests.components.accuweather import init_integration
 
 async def test_weather_without_forecast(hass):
     """Test states of the weather without forecast."""
+    hass.config.units.pressure_unit = PRESSURE_HPA
+    hass.config.units.wind_speed_unit = SPEED_KILOMETERS_PER_HOUR
     await init_integration(hass)
     registry = er.async_get(hass)
 
@@ -56,6 +64,8 @@ async def test_weather_without_forecast(hass):
 
 async def test_weather_with_forecast(hass):
     """Test states of the weather with forecast."""
+    hass.config.units.pressure_unit = PRESSURE_HPA
+    hass.config.units.wind_speed_unit = SPEED_KILOMETERS_PER_HOUR
     await init_integration(hass, forecast=True)
     registry = er.async_get(hass)
 
