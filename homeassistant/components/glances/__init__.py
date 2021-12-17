@@ -47,6 +47,7 @@ GLANCES_SCHEMA = vol.All(
             vol.Optional(CONF_USERNAME): cv.string,
             vol.Optional(CONF_PASSWORD): cv.string,
             vol.Optional(CONF_SSL, default=False): cv.boolean,
+            vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
             vol.Optional(CONF_VERSION, default=DEFAULT_VERSION): vol.In([2, 3]),
         }
     )
