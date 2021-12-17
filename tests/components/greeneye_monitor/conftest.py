@@ -5,13 +5,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from homeassistant.components.greeneye_monitor import DOMAIN
-from homeassistant.const import (
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_VOLTAGE,
-    ELECTRIC_POTENTIAL_VOLT,
-    POWER_WATT,
-)
+from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.const import ELECTRIC_POTENTIAL_VOLT, POWER_WATT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import (
     RegistryEntry,
@@ -45,7 +40,7 @@ def assert_temperature_sensor_registered(
 ):
     """Assert that a temperature sensor entity was registered properly."""
     sensor = assert_sensor_registered(hass, serial_number, "temp", number, name)
-    assert sensor.original_device_class == DEVICE_CLASS_TEMPERATURE
+    assert sensor.original_device_class is SensorDeviceClass.TEMPERATURE
 
 
 def assert_pulse_counter_registered(
@@ -67,7 +62,7 @@ def assert_power_sensor_registered(
     """Assert that a power sensor entity was registered properly."""
     sensor = assert_sensor_registered(hass, serial_number, "current", number, name)
     assert sensor.unit_of_measurement == POWER_WATT
-    assert sensor.original_device_class == DEVICE_CLASS_POWER
+    assert sensor.original_device_class is SensorDeviceClass.POWER
 
 
 def assert_voltage_sensor_registered(
@@ -76,7 +71,7 @@ def assert_voltage_sensor_registered(
     """Assert that a voltage sensor entity was registered properly."""
     sensor = assert_sensor_registered(hass, serial_number, "volts", number, name)
     assert sensor.unit_of_measurement == ELECTRIC_POTENTIAL_VOLT
-    assert sensor.original_device_class == DEVICE_CLASS_VOLTAGE
+    assert sensor.original_device_class is SensorDeviceClass.VOLTAGE
 
 
 def assert_sensor_registered(

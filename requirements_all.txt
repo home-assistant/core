@@ -576,7 +576,7 @@ dweepy==0.3.0
 dynalite_devices==0.1.46
 
 # homeassistant.components.ebusd
-ebusdpy==0.0.16
+ebusdpy==0.0.17
 
 # homeassistant.components.ecoal_boiler
 ecoaliface==0.4.0
@@ -744,7 +744,7 @@ google-cloud-pubsub==2.1.0
 google-cloud-texttospeech==0.4.0
 
 # homeassistant.components.nest
-google-nest-sdm==0.4.8
+google-nest-sdm==0.4.9
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -1174,7 +1174,7 @@ orvibo==1.1.1
 ovoenergy==1.1.12
 
 # homeassistant.components.p1_monitor
-p1monitor==1.0.0
+p1monitor==1.0.1
 
 # homeassistant.components.mqtt
 # homeassistant.components.shiftr
