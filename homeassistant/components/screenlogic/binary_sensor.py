@@ -2,14 +2,14 @@
 from screenlogicpy.const import DATA as SL_DATA, DEVICE_TYPE, EQUIPMENT, ON_OFF
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_PROBLEM,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 
 from . import ScreenlogicEntity
 from .const import DOMAIN
 
-SL_DEVICE_TYPE_TO_HA_DEVICE_CLASS = {DEVICE_TYPE.ALARM: DEVICE_CLASS_PROBLEM}
+SL_DEVICE_TYPE_TO_HA_DEVICE_CLASS = {DEVICE_TYPE.ALARM: BinarySensorDeviceClass.PROBLEM}
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
