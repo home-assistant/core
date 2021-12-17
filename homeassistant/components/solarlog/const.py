@@ -28,7 +28,7 @@ DEFAULT_NAME = "solarlog"
 class SolarLogSensorEntityDescription(SensorEntityDescription):
     """Describes Solarlog sensor entity."""
 
-    value: Callable = round
+    value: Callable[[float], int] = round
 
 
 SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
