@@ -74,7 +74,8 @@
                     "off_delay": "Penundaan mematikan",
                     "off_delay_enabled": "Aktifkan penundaan mematikan",
                     "replace_device": "Pilih perangkat yang akan diganti",
-                    "signal_repetitions": "Jumlah pengulangan sinyal"
+                    "signal_repetitions": "Jumlah pengulangan sinyal",
+                    "venetian_blind_mode": "Mode penutup kerai Venesia"
                 },
                 "title": "Konfigurasi opsi perangkat"
             }
