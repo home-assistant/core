@@ -88,9 +88,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up iCloud from legacy config file."""
-
-    conf = config.get(DOMAIN)
-    if conf is None:
+    if (conf := config.get(DOMAIN)) is None:
         return True
 
     for account_conf in conf:
@@ -169,9 +167,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     def update_account(service: ServiceDataType) -> None:
         """Call the update function of an iCloud account."""
-        account = service.data.get(ATTR_ACCOUNT)
-
-        if account is None:
+        if (account := service.data.get(ATTR_ACCOUNT)) is None:
             for account in hass.data[DOMAIN].values():
                 account.keep_alive()
         else:

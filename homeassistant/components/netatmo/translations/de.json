@@ -4,6 +4,7 @@
             "authorize_url_timeout": "Zeit\u00fcberschreitung beim Erstellen der Authorisierungs-URL.",
             "missing_configuration": "Die Komponente ist nicht konfiguriert. Bitte der Dokumentation folgen.",
             "no_url_available": "Keine URL verf\u00fcgbar. Informationen zu diesem Fehler findest du [im Hilfebereich]({docs_url}).",
+            "reauth_successful": "Die erneute Authentifizierung war erfolgreich",
             "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
         },
         "create_entry": {
@@ -12,6 +13,10 @@
         "step": {
             "pick_implementation": {
                 "title": "W\u00e4hle die Authentifizierungsmethode"
+            },
+            "reauth_confirm": {
+                "description": "Die Netatmo-Integration muss dein Konto erneut authentifizieren",
+                "title": "Integration erneut authentifizieren"
             }
         }
     },

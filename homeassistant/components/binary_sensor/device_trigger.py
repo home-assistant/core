@@ -32,6 +32,7 @@ from . import (
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_PRESENCE,
     DEVICE_CLASS_PROBLEM,
+    DEVICE_CLASS_RUNNING,
     DEVICE_CLASS_SAFETY,
     DEVICE_CLASS_SMOKE,
     DEVICE_CLASS_SOUND,
@@ -78,6 +79,8 @@ CONF_PRESENT = "present"
 CONF_NOT_PRESENT = "not_present"
 CONF_PROBLEM = "problem"
 CONF_NO_PROBLEM = "no_problem"
+CONF_RUNNING = "running"
+CONF_NOT_RUNNING = "not_running"
 CONF_UNSAFE = "unsafe"
 CONF_NOT_UNSAFE = "not_unsafe"
 CONF_SMOKE = "smoke"
@@ -111,6 +114,7 @@ TURNED_ON = [
     CONF_POWERED,
     CONF_PRESENT,
     CONF_PROBLEM,
+    CONF_RUNNING,
     CONF_SMOKE,
     CONF_SOUND,
     CONF_UNSAFE,
@@ -139,6 +143,7 @@ TURNED_OFF = [
     CONF_NO_LIGHT,
     CONF_NO_MOTION,
     CONF_NO_PROBLEM,
+    CONF_NOT_RUNNING,
     CONF_NO_SMOKE,
     CONF_NO_SOUND,
     CONF_NO_VIBRATION,
@@ -175,6 +180,7 @@ ENTITY_TRIGGERS = {
     DEVICE_CLASS_POWER: [{CONF_TYPE: CONF_POWERED}, {CONF_TYPE: CONF_NOT_POWERED}],
     DEVICE_CLASS_PRESENCE: [{CONF_TYPE: CONF_PRESENT}, {CONF_TYPE: CONF_NOT_PRESENT}],
     DEVICE_CLASS_PROBLEM: [{CONF_TYPE: CONF_PROBLEM}, {CONF_TYPE: CONF_NO_PROBLEM}],
+    DEVICE_CLASS_RUNNING: [{CONF_TYPE: CONF_RUNNING}, {CONF_TYPE: CONF_NOT_RUNNING}],
     DEVICE_CLASS_SAFETY: [{CONF_TYPE: CONF_UNSAFE}, {CONF_TYPE: CONF_NOT_UNSAFE}],
     DEVICE_CLASS_SMOKE: [{CONF_TYPE: CONF_SMOKE}, {CONF_TYPE: CONF_NO_SMOKE}],
     DEVICE_CLASS_SOUND: [{CONF_TYPE: CONF_SOUND}, {CONF_TYPE: CONF_NO_SOUND}],
@@ -214,7 +220,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
     if CONF_FOR in config:
         state_config[CONF_FOR] = config[CONF_FOR]
 
-    state_config = state_trigger.TRIGGER_SCHEMA(state_config)
+    state_config = await state_trigger.async_validate_trigger_config(hass, state_config)
     return await state_trigger.async_attach_trigger(
         hass, state_config, action, automation_info, platform_type="device"
     )

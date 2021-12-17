@@ -94,11 +94,13 @@ async def test_temperature_climate(hass, expected, mock_do_cycle):
         {
             CONF_CLIMATES: [
                 {
+                    CONF_COUNT: 2,
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_TARGET_TEMP: 117,
                     CONF_ADDRESS: 117,
                     CONF_SLAVE: 10,
                     CONF_SCAN_INTERVAL: 0,
+                    CONF_DATA_TYPE: DataType.INT32,
                 }
             ]
         },

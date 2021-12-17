@@ -88,7 +88,17 @@ DHCP = [
     },
     {
         "domain": "flux_led",
+        "macaddress": "ACCF23*",
+        "hostname": "[ba][lk]*"
+    },
+    {
+        "domain": "flux_led",
         "macaddress": "B4E842*",
+        "hostname": "[ba][lk]*"
+    },
+    {
+        "domain": "flux_led",
+        "macaddress": "F0FE6B*",
         "hostname": "[ba][lk]*"
     },
     {
@@ -98,40 +108,16 @@ DHCP = [
     },
     {
         "domain": "flux_led",
-        "hostname": "zengge_06_*"
-    },
-    {
-        "domain": "flux_led",
-        "hostname": "zengge_07_*"
-    },
-    {
-        "domain": "flux_led",
-        "hostname": "zengge_21_*"
-    },
-    {
-        "domain": "flux_led",
-        "hostname": "zengge_33_*"
-    },
-    {
-        "domain": "flux_led",
-        "hostname": "zengge_35_*"
-    },
-    {
-        "domain": "flux_led",
-        "hostname": "zengge_41_*"
-    },
-    {
-        "domain": "flux_led",
-        "hostname": "zengge_0e_*"
-    },
-    {
-        "domain": "flux_led",
-        "hostname": "zengge_00_*"
+        "hostname": "zengge_[0-9a-f][0-9a-f]_*"
     },
     {
         "domain": "flux_led",
         "macaddress": "C82E47*",
         "hostname": "sta*"
+    },
+    {
+        "domain": "fronius",
+        "macaddress": "0003AC*"
     },
     {
         "domain": "goalzero",
@@ -145,6 +131,11 @@ DHCP = [
         "domain": "guardian",
         "hostname": "gvc*",
         "macaddress": "30AEA4*"
+    },
+    {
+        "domain": "guardian",
+        "hostname": "gvc*",
+        "macaddress": "B4E62D*"
     },
     {
         "domain": "guardian",
@@ -283,6 +274,11 @@ DHCP = [
         "macaddress": "A4D578*"
     },
     {
+        "domain": "simplisafe",
+        "hostname": "simplisafe*",
+        "macaddress": "30AEA4*"
+    },
+    {
         "domain": "smartthings",
         "hostname": "st*",
         "macaddress": "24FD5B*"
@@ -327,9 +323,38 @@ DHCP = [
         "hostname": "tado*"
     },
     {
+        "domain": "tesla_wall_connector",
+        "hostname": "teslawallconnector_*",
+        "macaddress": "DC44271*"
+    },
+    {
+        "domain": "tesla_wall_connector",
+        "hostname": "teslawallconnector_*",
+        "macaddress": "98ED5C*"
+    },
+    {
+        "domain": "tesla_wall_connector",
+        "hostname": "teslawallconnector_*",
+        "macaddress": "4CFCAA*"
+    },
+    {
+        "domain": "tolo",
+        "hostname": "usr-tcp232-ed2"
+    },
+    {
         "domain": "toon",
         "hostname": "eneco-*",
         "macaddress": "74C63B*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "k[lp]*",
+        "macaddress": "60A4B7*"
+    },
+    {
+        "domain": "tplink",
+        "hostname": "k[lp]*",
+        "macaddress": "005F67*"
     },
     {
         "domain": "tplink",
@@ -496,8 +521,16 @@ DHCP = [
         "macaddress": "D81F12*"
     },
     {
+        "domain": "twinkly",
+        "hostname": "twinkly_*"
+    },
+    {
         "domain": "verisure",
         "macaddress": "0023C1*"
+    },
+    {
+        "domain": "vicare",
+        "macaddress": "B87424*"
     },
     {
         "domain": "yeelight",

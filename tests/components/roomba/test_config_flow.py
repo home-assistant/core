@@ -5,7 +5,7 @@ import pytest
 from roombapy import RoombaConnectionError, RoombaInfo
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
+from homeassistant.components import dhcp
 from homeassistant.components.roomba import config_flow
 from homeassistant.components.roomba.const import CONF_BLID, CONF_CONTINUOUS, DOMAIN
 from homeassistant.const import CONF_DELAY, CONF_HOST, CONF_PASSWORD
@@ -16,30 +16,30 @@ MOCK_IP = "1.2.3.4"
 VALID_CONFIG = {CONF_HOST: MOCK_IP, CONF_BLID: "BLID", CONF_PASSWORD: "password"}
 
 DHCP_DISCOVERY_DEVICES = [
-    {
-        IP_ADDRESS: MOCK_IP,
-        MAC_ADDRESS: "50:14:79:DD:EE:FF",
-        HOSTNAME: "irobot-blid",
-    },
-    {
-        IP_ADDRESS: MOCK_IP,
-        MAC_ADDRESS: "80:A5:89:DD:EE:FF",
-        HOSTNAME: "roomba-blid",
-    },
+    dhcp.DhcpServiceInfo(
+        ip=MOCK_IP,
+        macaddress="50:14:79:DD:EE:FF",
+        hostname="irobot-blid",
+    ),
+    dhcp.DhcpServiceInfo(
+        ip=MOCK_IP,
+        macaddress="80:A5:89:DD:EE:FF",
+        hostname="roomba-blid",
+    ),
 ]
 
 
 DHCP_DISCOVERY_DEVICES_WITHOUT_MATCHING_IP = [
-    {
-        IP_ADDRESS: "4.4.4.4",
-        MAC_ADDRESS: "50:14:79:DD:EE:FF",
-        HOSTNAME: "irobot-blid",
-    },
-    {
-        IP_ADDRESS: "5.5.5.5",
-        MAC_ADDRESS: "80:A5:89:DD:EE:FF",
-        HOSTNAME: "roomba-blid",
-    },
+    dhcp.DhcpServiceInfo(
+        ip="4.4.4.4",
+        macaddress="50:14:79:DD:EE:FF",
+        hostname="irobot-blid",
+    ),
+    dhcp.DhcpServiceInfo(
+        ip="5.5.5.5",
+        macaddress="80:A5:89:DD:EE:FF",
+        hostname="roomba-blid",
+    ),
 ]
 
 
@@ -815,11 +815,11 @@ async def test_dhcp_discovery_with_ignored(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data={
-                IP_ADDRESS: MOCK_IP,
-                MAC_ADDRESS: "AA:BB:CC:DD:EE:FF",
-                HOSTNAME: "irobot-blid",
-            },
+            data=dhcp.DhcpServiceInfo(
+                ip=MOCK_IP,
+                macaddress="AA:BB:CC:DD:EE:FF",
+                hostname="irobot-blid",
+            ),
         )
         await hass.async_block_till_done()
 
@@ -838,11 +838,11 @@ async def test_dhcp_discovery_already_configured_host(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data={
-                IP_ADDRESS: MOCK_IP,
-                MAC_ADDRESS: "AA:BB:CC:DD:EE:FF",
-                HOSTNAME: "irobot-blid",
-            },
+            data=dhcp.DhcpServiceInfo(
+                ip=MOCK_IP,
+                macaddress="AA:BB:CC:DD:EE:FF",
+                hostname="irobot-blid",
+            ),
         )
         await hass.async_block_till_done()
 
@@ -864,11 +864,11 @@ async def test_dhcp_discovery_already_configured_blid(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data={
-                IP_ADDRESS: MOCK_IP,
-                MAC_ADDRESS: "AA:BB:CC:DD:EE:FF",
-                HOSTNAME: "irobot-blid",
-            },
+            data=dhcp.DhcpServiceInfo(
+                ip=MOCK_IP,
+                macaddress="AA:BB:CC:DD:EE:FF",
+                hostname="irobot-blid",
+            ),
         )
         await hass.async_block_till_done()
 
@@ -890,11 +890,11 @@ async def test_dhcp_discovery_not_irobot(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data={
-                IP_ADDRESS: MOCK_IP,
-                MAC_ADDRESS: "AA:BB:CC:DD:EE:FF",
-                HOSTNAME: "Notirobot-blid",
-            },
+            data=dhcp.DhcpServiceInfo(
+                ip=MOCK_IP,
+                macaddress="AA:BB:CC:DD:EE:FF",
+                hostname="Notirobot-blid",
+            ),
         )
         await hass.async_block_till_done()
 
@@ -911,11 +911,11 @@ async def test_dhcp_discovery_partial_hostname(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data={
-                IP_ADDRESS: MOCK_IP,
-                MAC_ADDRESS: "AA:BB:CC:DD:EE:FF",
-                HOSTNAME: "irobot-blid",
-            },
+            data=dhcp.DhcpServiceInfo(
+                ip=MOCK_IP,
+                macaddress="AA:BB:CC:DD:EE:FF",
+                hostname="irobot-blid",
+            ),
         )
         await hass.async_block_till_done()
 
@@ -928,11 +928,11 @@ async def test_dhcp_discovery_partial_hostname(hass):
         result2 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data={
-                IP_ADDRESS: MOCK_IP,
-                MAC_ADDRESS: "AA:BB:CC:DD:EE:FF",
-                HOSTNAME: "irobot-blidthatislonger",
-            },
+            data=dhcp.DhcpServiceInfo(
+                ip=MOCK_IP,
+                macaddress="AA:BB:CC:DD:EE:FF",
+                hostname="irobot-blidthatislonger",
+            ),
         )
         await hass.async_block_till_done()
 
@@ -949,11 +949,11 @@ async def test_dhcp_discovery_partial_hostname(hass):
         result3 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data={
-                IP_ADDRESS: MOCK_IP,
-                MAC_ADDRESS: "AA:BB:CC:DD:EE:FF",
-                HOSTNAME: "irobot-bl",
-            },
+            data=dhcp.DhcpServiceInfo(
+                ip=MOCK_IP,
+                macaddress="AA:BB:CC:DD:EE:FF",
+                hostname="irobot-bl",
+            ),
         )
         await hass.async_block_till_done()
 

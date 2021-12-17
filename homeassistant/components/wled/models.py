@@ -19,6 +19,6 @@ class WLEDEntity(CoordinatorEntity):
             name=self.coordinator.data.info.name,
             manufacturer=self.coordinator.data.info.brand,
             model=self.coordinator.data.info.product,
-            sw_version=self.coordinator.data.info.version,
+            sw_version=str(self.coordinator.data.info.version),
             configuration_url=f"http://{self.coordinator.wled.host}",
         )

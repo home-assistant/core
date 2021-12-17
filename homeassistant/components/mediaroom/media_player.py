@@ -75,11 +75,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Mediaroom platform."""
-    known_hosts = hass.data.get(DATA_MEDIAROOM)
-    if known_hosts is None:
+    if (known_hosts := hass.data.get(DATA_MEDIAROOM)) is None:
         known_hosts = hass.data[DATA_MEDIAROOM] = []
-    host = config.get(CONF_HOST)
-    if host:
+    if host := config.get(CONF_HOST):
         async_add_entities(
             [
                 MediaroomDevice(
@@ -90,18 +88,18 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 )
             ]
         )
-        hass.data[DATA_MEDIAROOM].append(host)
+        known_hosts.append(host)
 
     _LOGGER.debug("Trying to discover Mediaroom STB")
 
     def callback_notify(notify):
         """Process NOTIFY message from STB."""
-        if notify.ip_address in hass.data[DATA_MEDIAROOM]:
+        if notify.ip_address in known_hosts:
             dispatcher_send(hass, SIGNAL_STB_NOTIFY, notify)
             return
 
         _LOGGER.debug("Discovered new stb %s", notify.ip_address)
-        hass.data[DATA_MEDIAROOM].append(notify.ip_address)
+        known_hosts.append(notify.ip_address)
         new_stb = MediaroomDevice(
             host=notify.ip_address, device_id=notify.device_uuid, optimistic=False
         )

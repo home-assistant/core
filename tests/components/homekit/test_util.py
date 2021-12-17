@@ -25,21 +25,21 @@ from homeassistant.components.homekit.const import (
 )
 from homeassistant.components.homekit.util import (
     accessory_friendly_name,
+    async_dismiss_setup_message,
     async_find_next_available_port,
     async_port_is_available,
+    async_show_setup_message,
     cleanup_name_for_homekit,
     convert_to_float,
     density_to_air_quality,
-    dismiss_setup_message,
     format_sw_version,
-    show_setup_message,
     state_needs_accessory_mode,
     temperature_to_homekit,
     temperature_to_states,
     validate_entity_config as vec,
     validate_media_player_features,
 )
-from homeassistant.components.persistent_notification import create, dismiss
+from homeassistant.components.persistent_notification import async_create, async_dismiss
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_SUPPORTED_FEATURES,
@@ -231,7 +231,7 @@ def test_density_to_air_quality():
     assert density_to_air_quality(300) == 5
 
 
-async def test_show_setup_msg(hass, hk_driver, mock_get_source_ip):
+async def test_async_show_setup_msg(hass, hk_driver, mock_get_source_ip):
     """Test show setup message as persistence notification."""
     pincode = b"123-45-678"
 
@@ -239,10 +239,11 @@ async def test_show_setup_msg(hass, hk_driver, mock_get_source_ip):
     assert entry
 
     with patch(
-        "homeassistant.components.persistent_notification.create", side_effect=create
+        "homeassistant.components.persistent_notification.async_create",
+        side_effect=async_create,
     ) as mock_create:
-        await hass.async_add_executor_job(
-            show_setup_message, hass, entry.entry_id, "bridge_name", pincode, "X-HM://0"
+        async_show_setup_message(
+            hass, entry.entry_id, "bridge_name", pincode, "X-HM://0"
         )
         await hass.async_block_till_done()
     assert hass.data[DOMAIN][entry.entry_id][HOMEKIT_PAIRING_QR_SECRET]
@@ -253,12 +254,13 @@ async def test_show_setup_msg(hass, hk_driver, mock_get_source_ip):
     assert pincode.decode() in mock_create.mock_calls[0][1][1]
 
 
-async def test_dismiss_setup_msg(hass):
+async def test_async_dismiss_setup_msg(hass):
     """Test dismiss setup message."""
     with patch(
-        "homeassistant.components.persistent_notification.dismiss", side_effect=dismiss
+        "homeassistant.components.persistent_notification.async_dismiss",
+        side_effect=async_dismiss,
     ) as mock_dismiss:
-        await hass.async_add_executor_job(dismiss_setup_message, hass, "entry_id")
+        async_dismiss_setup_message(hass, "entry_id")
         await hass.async_block_till_done()
 
     assert len(mock_dismiss.mock_calls) == 1

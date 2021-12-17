@@ -164,7 +164,6 @@ async def test_general_and_feed_in_price_sensor(
 ) -> None:
     """Test the Feed In sensor."""
     assert len(hass.states.async_all()) == 6
-    print(hass.states)
     price = hass.states.get("sensor.mock_title_feed_in_price")
     assert price
     assert price.state == "-0.08"

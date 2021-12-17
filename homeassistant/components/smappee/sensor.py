@@ -18,6 +18,7 @@ from homeassistant.const import (
     ENERGY_WATT_HOUR,
     POWER_WATT,
 )
+from homeassistant.helpers.entity import DeviceInfo
 
 from .const import DOMAIN
 
@@ -249,6 +250,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     description=SmappeeSensorEntityDescription(
                         key="load",
                         name=measurement.name,
+                        native_unit_of_measurement=POWER_WATT,
                         sensor_id=measurement_id,
                         device_class=DEVICE_CLASS_POWER,
                         state_class=STATE_CLASS_MEASUREMENT,
@@ -318,7 +320,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     ),
                 )
                 for actuator_id, actuator in service_location.actuators.items()
-                if actuator.type == "SWITCH"
+                if actuator.type == "SWITCH" and not service_location.local_polling
             ]
         )
 
@@ -372,15 +374,15 @@ class SmappeeSensor(SensorEntity):
         )
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info for this sensor."""
-        return {
-            "identifiers": {(DOMAIN, self._service_location.device_serial_number)},
-            "name": self._service_location.service_location_name,
-            "manufacturer": "Smappee",
-            "model": self._service_location.device_model,
-            "sw_version": self._service_location.firmware_version,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._service_location.device_serial_number)},
+            manufacturer="Smappee",
+            model=self._service_location.device_model,
+            name=self._service_location.service_location_name,
+            sw_version=self._service_location.firmware_version,
+        )
 
     async def async_update(self):
         """Get the latest data from Smappee and update the state."""

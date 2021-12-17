@@ -2,10 +2,7 @@
 
 import voluptuous as vol
 
-from homeassistant.components.humidifier.const import (
-    DEVICE_CLASS_DEHUMIDIFIER,
-    DEVICE_CLASS_HUMIDIFIER,
-)
+from homeassistant.components.humidifier import HumidifierDeviceClass
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers import config_validation as cv, discovery
 
@@ -34,7 +31,7 @@ HYGROSTAT_SCHEMA = vol.Schema(
         vol.Required(CONF_HUMIDIFIER): cv.entity_id,
         vol.Required(CONF_SENSOR): cv.entity_id,
         vol.Optional(CONF_DEVICE_CLASS): vol.In(
-            [DEVICE_CLASS_HUMIDIFIER, DEVICE_CLASS_DEHUMIDIFIER]
+            [HumidifierDeviceClass.HUMIDIFIER, HumidifierDeviceClass.DEHUMIDIFIER]
         ),
         vol.Optional(CONF_MAX_HUMIDITY): vol.Coerce(int),
         vol.Optional(CONF_MIN_DUR): vol.All(cv.time_period, cv.positive_timedelta),

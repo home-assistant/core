@@ -118,8 +118,7 @@ class I2CHatsManager(threading.Thread):
     def register_board(self, board, address):
         """Register I2C-HAT."""
         with self._lock:
-            i2c_hat = self._i2c_hats.get(address)
-            if i2c_hat is None:
+            if (i2c_hat := self._i2c_hats.get(address)) is None:
                 # This is a Pi module and can't be installed in CI without
                 # breaking the build.
                 # pylint: disable=import-outside-toplevel,import-error

@@ -12,12 +12,12 @@ from pylutron_caseta.smartbridge import Smartbridge
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import (
     ACTION_PRESS,
@@ -63,7 +63,14 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS = ["light", "switch", "cover", "scene", "fan", "binary_sensor"]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.COVER,
+    Platform.FAN,
+    Platform.LIGHT,
+    Platform.SCENE,
+    Platform.SWITCH,
+]
 
 
 async def async_setup(hass, base_config):
@@ -123,7 +130,7 @@ async def async_setup_entry(hass, config_entry):
 
     devices = bridge.get_devices()
     bridge_device = devices[BRIDGE_DEVICE_ID]
-    await _async_register_bridge_device(hass, config_entry.entry_id, bridge_device)
+    _async_register_bridge_device(hass, config_entry.entry_id, bridge_device)
     # Store this bridge (keyed by entry_id) so it can be retrieved by the
     # platforms we're setting up.
     hass.data[DOMAIN][config_entry.entry_id] = {
@@ -164,7 +171,7 @@ async def async_setup_lip(hass, config_entry, lip_devices):
 
     _LOGGER.debug("Connected to Lutron Caseta bridge via LIP at %s:23", host)
     button_devices_by_lip_id = _async_merge_lip_leap_data(lip_devices, bridge)
-    button_devices_by_dr_id = await _async_register_button_devices(
+    button_devices_by_dr_id = _async_register_button_devices(
         hass, config_entry_id, bridge_device, button_devices_by_lip_id
     )
     _async_subscribe_pico_remote_events(hass, lip, button_devices_by_lip_id)
@@ -193,17 +200,17 @@ def _async_merge_lip_leap_data(lip_devices, bridge):
         if leap_device_data is None:
             continue
         for key in ("type", "model", "serial"):
-            val = leap_device_data.get(key)
-            if val is not None:
+            if (val := leap_device_data.get(key)) is not None:
                 device[key] = val
 
     _LOGGER.debug("Button Devices: %s", button_devices_by_id)
     return button_devices_by_id
 
 
-async def _async_register_bridge_device(hass, config_entry_id, bridge_device):
+@callback
+def _async_register_bridge_device(hass, config_entry_id, bridge_device):
     """Register the bridge device in the device registry."""
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         name=bridge_device["name"],
         manufacturer=MANUFACTURER,
@@ -213,11 +220,12 @@ async def _async_register_bridge_device(hass, config_entry_id, bridge_device):
     )
 
 
-async def _async_register_button_devices(
+@callback
+def _async_register_button_devices(
     hass, config_entry_id, bridge_device, button_devices_by_id
 ):
     """Register button devices (Pico Remotes) in the device registry."""
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     button_devices_by_dr_id = {}
 
     for device in button_devices_by_id.values():
@@ -330,16 +338,17 @@ class LutronCasetaDevice(Entity):
         return str(self.serial)
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        return {
-            "identifiers": {(DOMAIN, self.serial)},
-            "name": self.name,
-            "suggested_area": self._device["name"].split("_")[0],
-            "manufacturer": MANUFACTURER,
-            "model": f"{self._device['model']} ({self._device['type']})",
-            "via_device": (DOMAIN, self._bridge_device["serial"]),
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.serial)},
+            manufacturer=MANUFACTURER,
+            model=f"{self._device['model']} ({self._device['type']})",
+            name=self.name,
+            suggested_area=self._device["name"].split("_")[0],
+            via_device=(DOMAIN, self._bridge_device["serial"]),
+            configuration_url="https://device-login.lutron.com",
+        )
 
     @property
     def extra_state_attributes(self):

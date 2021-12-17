@@ -8,7 +8,7 @@
         "error": {
             "cannot_connect": "Ba\u011flanma hatas\u0131"
         },
-        "flow_title": "Lutron Cas\u00e9ta {name} ( {host} )",
+        "flow_title": "{name} ({host})",
         "step": {
             "import_failed": {
                 "description": "Configuration.yaml'den i\u00e7e aktar\u0131lan k\u00f6pr\u00fc (ana bilgisayar: {host}) kurulamad\u0131.",

@@ -10,7 +10,13 @@ from requests.exceptions import RequestException
 
 from homeassistant import exceptions
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_HOST, CONF_PLATFORM, CONF_PORT, CONF_TOKEN
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PLATFORM,
+    CONF_PORT,
+    CONF_TOKEN,
+    Platform,
+)
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -30,7 +36,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["binary_sensor", "lock"]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.LOCK]
 UPDATE_INTERVAL = timedelta(seconds=30)
 
 
@@ -55,8 +61,7 @@ async def async_setup(hass, config):
     hass.data.setdefault(DOMAIN, {})
 
     for platform in PLATFORMS:
-        confs = config.get(platform)
-        if confs is None:
+        if (confs := config.get(platform)) is None:
             continue
 
         for conf in confs:

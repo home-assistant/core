@@ -316,7 +316,9 @@ async def websocket_device_automation_get_action_capabilities(hass, connection, 
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "device_automation/condition/capabilities",
-        vol.Required("condition"): dict,
+        vol.Required("condition"): cv.DEVICE_CONDITION_BASE_SCHEMA.extend(
+            {}, extra=vol.ALLOW_EXTRA
+        ),
     }
 )
 @websocket_api.async_response
@@ -333,7 +335,9 @@ async def websocket_device_automation_get_condition_capabilities(hass, connectio
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "device_automation/trigger/capabilities",
-        vol.Required("trigger"): dict,
+        vol.Required("trigger"): DEVICE_TRIGGER_BASE_SCHEMA.extend(
+            {}, extra=vol.ALLOW_EXTRA
+        ),
     }
 )
 @websocket_api.async_response

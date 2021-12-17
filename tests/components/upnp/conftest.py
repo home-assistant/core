@@ -30,17 +30,21 @@ TEST_USN = f"{TEST_UDN}::{TEST_ST}"
 TEST_LOCATION = "http://192.168.1.1/desc.xml"
 TEST_HOSTNAME = urlparse(TEST_LOCATION).hostname
 TEST_FRIENDLY_NAME = "friendly name"
-TEST_DISCOVERY = {
-    ssdp.ATTR_SSDP_LOCATION: TEST_LOCATION,
-    ssdp.ATTR_SSDP_ST: TEST_ST,
-    ssdp.ATTR_SSDP_USN: TEST_USN,
-    ssdp.ATTR_UPNP_UDN: TEST_UDN,
-    "usn": TEST_USN,
-    "location": TEST_LOCATION,
-    "_host": TEST_HOSTNAME,
-    "_udn": TEST_UDN,
-    "friendlyName": TEST_FRIENDLY_NAME,
-}
+TEST_DISCOVERY = ssdp.SsdpServiceInfo(
+    ssdp_usn=TEST_USN,
+    ssdp_st=TEST_ST,
+    ssdp_location=TEST_LOCATION,
+    upnp={
+        ssdp.ATTR_UPNP_UDN: TEST_UDN,
+        "usn": TEST_USN,
+        "location": TEST_LOCATION,
+        "_udn": TEST_UDN,
+        "friendlyName": TEST_FRIENDLY_NAME,
+    },
+    ssdp_headers={
+        "_host": TEST_HOSTNAME,
+    },
+)
 
 
 class MockDevice:
@@ -52,6 +56,7 @@ class MockDevice:
         self._udn = udn
         self.traffic_times_polled = 0
         self.status_times_polled = 0
+        self._timestamp = dt.utcnow()
 
     @classmethod
     async def async_create_device(cls, hass, ssdp_location) -> "MockDevice":
@@ -108,7 +113,7 @@ class MockDevice:
         """Get traffic data."""
         self.traffic_times_polled += 1
         return {
-            TIMESTAMP: dt.utcnow(),
+            TIMESTAMP: self._timestamp,
             BYTES_RECEIVED: 0,
             BYTES_SENT: 0,
             PACKETS_RECEIVED: 0,
@@ -188,7 +193,10 @@ async def ssdp_no_discovery():
     ) as mock_register, patch(
         "homeassistant.components.ssdp.async_get_discovery_info_by_st",
         return_value=[],
-    ) as mock_get_info:
+    ) as mock_get_info, patch(
+        "homeassistant.components.upnp.config_flow.SSDP_SEARCH_TIMEOUT",
+        0.1,
+    ):
         yield (mock_register, mock_get_info)
 
 

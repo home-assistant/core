@@ -33,6 +33,7 @@
                     "s2_unauthenticated_key": "S2 Unauthenticated Key",
                     "usb_path": "USB Device Path"
                 },
+                "description": "The add-on will generate security keys if those fields are left empty.",
                 "title": "Enter the Z-Wave JS add-on configuration"
             },
             "hassio_confirm": {
@@ -119,6 +120,7 @@
                     "s2_unauthenticated_key": "S2 Unauthenticated Key",
                     "usb_path": "USB Device Path"
                 },
+                "description": "The add-on will generate security keys if those fields are left empty.",
                 "title": "Enter the Z-Wave JS add-on configuration"
             },
             "install_addon": {

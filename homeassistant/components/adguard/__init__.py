@@ -6,7 +6,7 @@ import logging
 from adguardhome import AdGuardHome, AdGuardHomeConnectionError, AdGuardHomeError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_HASSIO, ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -16,11 +16,13 @@ from homeassistant.const import (
     CONF_URL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import (
@@ -45,7 +47,7 @@ SERVICE_REFRESH_SCHEMA = vol.Schema(
     {vol.Optional(CONF_FORCE, default=False): cv.boolean}
 )
 
-PLATFORMS = ["sensor", "switch"]
+PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -196,14 +198,23 @@ class AdGuardHomeDeviceEntity(AdGuardHomeEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information about this AdGuard Home instance."""
-        return {
-            "identifiers": {
+        if self._entry.source == SOURCE_HASSIO:
+            config_url = "homeassistant://hassio/ingress/a0d7b954_adguard"
+        else:
+            if self.adguard.tls:
+                config_url = f"https://{self.adguard.host}:{self.adguard.port}"
+            else:
+                config_url = f"http://{self.adguard.host}:{self.adguard.port}"
+
+        return DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={
                 (DOMAIN, self.adguard.host, self.adguard.port, self.adguard.base_path)  # type: ignore
             },
-            "name": "AdGuard Home",
-            "manufacturer": "AdGuard Team",
-            "sw_version": self.hass.data[DOMAIN][self._entry.entry_id].get(
+            manufacturer="AdGuard Team",
+            name="AdGuard Home",
+            sw_version=self.hass.data[DOMAIN][self._entry.entry_id].get(
                 DATA_ADGUARD_VERSION
             ),
-            "entry_type": "service",
-        }
+            configuration_url=config_url,
+        )

@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
-from enum import Enum
 from functools import partial
 import logging
 
@@ -12,7 +11,7 @@ from miio.powerstrip import PowerMode
 import voluptuous as vol
 
 from homeassistant.components.switch import (
-    DEVICE_CLASS_SWITCH,
+    SwitchDeviceClass,
     SwitchEntity,
     SwitchEntityDescription,
 )
@@ -22,10 +21,10 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_HOST,
     CONF_TOKEN,
-    ENTITY_CATEGORY_CONFIG,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import EntityCategory
 
 from .const import (
     CONF_DEVICE,
@@ -207,7 +206,7 @@ SWITCH_TYPES = (
         icon="mdi:volume-high",
         method_on="async_set_buzzer_on",
         method_off="async_set_buzzer_off",
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.CONFIG,
     ),
     XiaomiMiioSwitchDescription(
         key=ATTR_CHILD_LOCK,
@@ -216,7 +215,7 @@ SWITCH_TYPES = (
         icon="mdi:lock",
         method_on="async_set_child_lock_on",
         method_off="async_set_child_lock_off",
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.CONFIG,
     ),
     XiaomiMiioSwitchDescription(
         key=ATTR_DRY,
@@ -225,7 +224,7 @@ SWITCH_TYPES = (
         icon="mdi:hair-dryer",
         method_on="async_set_dry_on",
         method_off="async_set_dry_off",
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.CONFIG,
     ),
     XiaomiMiioSwitchDescription(
         key=ATTR_CLEAN,
@@ -235,7 +234,7 @@ SWITCH_TYPES = (
         method_on="async_set_clean_on",
         method_off="async_set_clean_off",
         available_with_device_off=False,
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.CONFIG,
     ),
     XiaomiMiioSwitchDescription(
         key=ATTR_LED,
@@ -244,7 +243,7 @@ SWITCH_TYPES = (
         icon="mdi:led-outline",
         method_on="async_set_led_on",
         method_off="async_set_led_off",
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.CONFIG,
     ),
     XiaomiMiioSwitchDescription(
         key=ATTR_LEARN_MODE,
@@ -253,7 +252,7 @@ SWITCH_TYPES = (
         icon="mdi:school-outline",
         method_on="async_set_learn_mode_on",
         method_off="async_set_learn_mode_off",
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.CONFIG,
     ),
     XiaomiMiioSwitchDescription(
         key=ATTR_AUTO_DETECT,
@@ -261,7 +260,7 @@ SWITCH_TYPES = (
         name="Auto Detect",
         method_on="async_set_auto_detect_on",
         method_off="async_set_auto_detect_off",
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.CONFIG,
     ),
     XiaomiMiioSwitchDescription(
         key=ATTR_IONIZER,
@@ -270,7 +269,7 @@ SWITCH_TYPES = (
         icon="mdi:shimmer",
         method_on="async_set_ionizer_on",
         method_off="async_set_ionizer_off",
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.CONFIG,
     ),
 )
 
@@ -474,14 +473,6 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
             return False
         return super().available
 
-    @staticmethod
-    def _extract_value_from_attribute(state, attribute):
-        value = getattr(state, attribute)
-        if isinstance(value, Enum):
-            return value.value
-
-        return value
-
     async def async_turn_on(self, **kwargs) -> None:
         """Turn on an option of the miio device."""
         method = getattr(self, self.entity_description.method_on)
@@ -630,7 +621,7 @@ class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
 class XiaomiGatewaySwitch(XiaomiGatewayDevice, SwitchEntity):
     """Representation of a XiaomiGatewaySwitch."""
 
-    _attr_device_class = DEVICE_CLASS_SWITCH
+    _attr_device_class = SwitchDeviceClass.SWITCH
 
     def __init__(self, coordinator, sub_device, entry, variable):
         """Initialize the XiaomiSensor."""

@@ -11,6 +11,7 @@ from homeassistant.components.kraken.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_START
+from homeassistant.helpers.device_registry import DeviceEntryType
 import homeassistant.util.dt as dt_util
 
 from .const import (
@@ -226,6 +227,92 @@ async def test_sensor(hass):
             "sensor.xbt_usd_opening_price_today"
         )
         assert xbt_usd_opening_price_today.state == "0.0003513"
+
+
+async def test_sensors_available_after_restart(hass):
+    """Test that all sensors are added again after a restart."""
+    utcnow = dt_util.utcnow()
+    # Patching 'utcnow' to gain more control over the timed update.
+    with patch("homeassistant.util.dt.utcnow", return_value=utcnow), patch(
+        "pykrakenapi.KrakenAPI.get_tradable_asset_pairs",
+        return_value=TRADEABLE_ASSET_PAIR_RESPONSE,
+    ), patch(
+        "pykrakenapi.KrakenAPI.get_ticker_information",
+        return_value=TICKER_INFORMATION_RESPONSE,
+    ):
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            options={
+                CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
+                CONF_TRACKED_ASSET_PAIRS: [DEFAULT_TRACKED_ASSET_PAIR],
+            },
+        )
+
+        device_registry = await hass.helpers.device_registry.async_get_registry()
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, "XBT_USD")},
+            name="XBT USD",
+            manufacturer="Kraken.com",
+            entry_type=DeviceEntryType.SERVICE,
+        )
+        entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(entry.entry_id)
+
+        await hass.async_block_till_done()
+
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
+
+        sensor = hass.states.get("sensor.xbt_usd_ask")
+        assert sensor.state == "0.0003494"
+
+
+async def test_sensors_added_after_config_update(hass):
+    """Test that sensors are added when another tracked asset pair is added."""
+    utcnow = dt_util.utcnow()
+    # Patching 'utcnow' to gain more control over the timed update.
+    with patch("homeassistant.util.dt.utcnow", return_value=utcnow), patch(
+        "pykrakenapi.KrakenAPI.get_tradable_asset_pairs",
+        return_value=TRADEABLE_ASSET_PAIR_RESPONSE,
+    ), patch(
+        "pykrakenapi.KrakenAPI.get_ticker_information",
+        return_value=TICKER_INFORMATION_RESPONSE,
+    ):
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            options={
+                CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
+                CONF_TRACKED_ASSET_PAIRS: [DEFAULT_TRACKED_ASSET_PAIR],
+            },
+        )
+
+        entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(entry.entry_id)
+
+        await hass.async_block_till_done()
+
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
+
+        assert hass.states.get("sensor.xbt_usd_ask")
+        assert not hass.states.get("sensor.ada_xbt_ask")
+
+        hass.config_entries.async_update_entry(
+            entry,
+            options={
+                CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
+                CONF_TRACKED_ASSET_PAIRS: [DEFAULT_TRACKED_ASSET_PAIR, "ADA/XBT"],
+            },
+        )
+        async_fire_time_changed(
+            hass, utcnow + timedelta(seconds=DEFAULT_SCAN_INTERVAL * 2)
+        )
+        await hass.async_block_till_done()
+
+        assert hass.states.get("sensor.ada_xbt_ask")
 
 
 async def test_missing_pair_marks_sensor_unavailable(hass):

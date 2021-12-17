@@ -57,7 +57,7 @@ def get_sysbus_config_entry(hass: HomeAssistant) -> ConfigEntry:
         data={
             CONF_TYPE: CONF_TYPE_SYSBUS,
             CONF_MOUNT_DIR: DEFAULT_SYSBUS_MOUNT_DIR,
-            "names": {
+            CONF_NAMES: {
                 "10-111111111111": "My DS18B20",
             },
         },

@@ -1,4 +1,5 @@
 """Tests for the Abode module."""
+from http import HTTPStatus
 from unittest.mock import patch
 
 from abodepy.exceptions import AbodeAuthenticationException, AbodeException
@@ -12,7 +13,7 @@ from homeassistant.components.abode import (
 )
 from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_USERNAME, HTTP_BAD_REQUEST
+from homeassistant.const import CONF_USERNAME
 
 from .common import setup_platform
 
@@ -68,7 +69,9 @@ async def test_invalid_credentials(hass):
     """Test Abode credentials changing."""
     with patch(
         "homeassistant.components.abode.Abode",
-        side_effect=AbodeAuthenticationException((HTTP_BAD_REQUEST, "auth error")),
+        side_effect=AbodeAuthenticationException(
+            (HTTPStatus.BAD_REQUEST, "auth error")
+        ),
     ), patch(
         "homeassistant.components.abode.config_flow.AbodeFlowHandler.async_step_reauth",
         return_value={"type": data_entry_flow.RESULT_TYPE_FORM},

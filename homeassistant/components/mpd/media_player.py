@@ -140,9 +140,7 @@ class MpdDevice(MediaPlayerEntity):
         self._status = await self._client.status()
         self._currentsong = await self._client.currentsong()
 
-        position = self._status.get("elapsed")
-
-        if position is None:
+        if (position := self._status.get("elapsed")) is None:
             position = self._status.get("time")
 
             if isinstance(position, str) and ":" in position:
@@ -257,16 +255,14 @@ class MpdDevice(MediaPlayerEntity):
     @property
     def media_image_hash(self):
         """Hash value for media image."""
-        file = self._currentsong.get("file")
-        if file:
+        if file := self._currentsong.get("file"):
             return hashlib.sha256(file.encode("utf-8")).hexdigest()[:16]
 
         return None
 
     async def async_get_media_image(self):
         """Fetch media image of current playing track."""
-        file = self._currentsong.get("file")
-        if not file:
+        if not (file := self._currentsong.get("file")):
             return None, None
 
         # not all MPD implementations and versions support the `albumart` and `fetchpicture` commands

@@ -333,14 +333,14 @@ async def test_sensor_restore(hass, hk_driver, events):
         "generic",
         "1234",
         suggested_object_id="temperature",
-        device_class="temperature",
+        original_device_class="temperature",
     )
     registry.async_get_or_create(
         "sensor",
         "generic",
         "12345",
         suggested_object_id="humidity",
-        device_class="humidity",
+        original_device_class="humidity",
         unit_of_measurement=PERCENTAGE,
     )
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START, {})

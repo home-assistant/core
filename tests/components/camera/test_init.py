@@ -1,6 +1,7 @@
 """The tests for the camera component."""
 import asyncio
 import base64
+from http import HTTPStatus
 import io
 from unittest.mock import Mock, PropertyMock, mock_open, patch
 
@@ -15,12 +16,7 @@ from homeassistant.components.camera.const import (
 from homeassistant.components.camera.prefs import CameraEntityPreferences
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.config import async_process_ha_core_config
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    EVENT_HOMEASSISTANT_START,
-    HTTP_BAD_GATEWAY,
-    HTTP_OK,
-)
+from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_START
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
@@ -481,14 +477,14 @@ async def test_camera_proxy_stream(hass, mock_camera, hass_client):
     client = await hass_client()
 
     response = await client.get("/api/camera_proxy_stream/camera.demo_camera")
-    assert response.status == HTTP_OK
+    assert response.status == HTTPStatus.OK
 
     with patch(
         "homeassistant.components.demo.camera.DemoCamera.handle_async_mjpeg_stream",
         return_value=None,
     ):
         response = await client.get("/api/camera_proxy_stream/camera.demo_camera")
-        assert response.status == HTTP_BAD_GATEWAY
+        assert response.status == HTTPStatus.BAD_GATEWAY
 
 
 async def test_websocket_web_rtc_offer(

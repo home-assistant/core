@@ -10,7 +10,7 @@ from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CON
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
-from . import APIRatelimitExceeded, CO2Error, InvalidAuth, UnknownError, get_data
+from . import APIRatelimitExceeded, CO2Error, InvalidAuth, get_data
 from .const import CONF_COUNTRY_CODE, DOMAIN
 from .util import get_extra_name
 
@@ -172,7 +172,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "invalid_auth"
         except APIRatelimitExceeded:
             errors["base"] = "api_ratelimit"
-        except UnknownError:
+        except Exception:  # pylint: disable=broad-except
             errors["base"] = "unknown"
         else:
             return self.async_create_entry(

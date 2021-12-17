@@ -1,7 +1,6 @@
 """Models for SQLAlchemy."""
 from __future__ import annotations
 
-from collections.abc import Iterable
 from datetime import datetime, timedelta
 import json
 import logging
@@ -41,7 +40,7 @@ import homeassistant.util.dt as dt_util
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 22
+SCHEMA_VERSION = 24
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -231,7 +230,7 @@ class StatisticResult(TypedDict):
     """
 
     meta: StatisticMetaData
-    stat: Iterable[StatisticData]
+    stat: StatisticData
 
 
 class StatisticDataBase(TypedDict):
@@ -290,7 +289,7 @@ class Statistics(Base, StatisticsBase):  # type: ignore
 
     __table_args__ = (
         # Used for fetching statistics for a certain entity at a specific time
-        Index("ix_statistics_statistic_id_start", "metadata_id", "start"),
+        Index("ix_statistics_statistic_id_start", "metadata_id", "start", unique=True),
     )
     __tablename__ = TABLE_STATISTICS
 
@@ -302,7 +301,12 @@ class StatisticsShortTerm(Base, StatisticsBase):  # type: ignore
 
     __table_args__ = (
         # Used for fetching statistics for a certain entity at a specific time
-        Index("ix_statistics_short_term_statistic_id_start", "metadata_id", "start"),
+        Index(
+            "ix_statistics_short_term_statistic_id_start",
+            "metadata_id",
+            "start",
+            unique=True,
+        ),
     )
     __tablename__ = TABLE_STATISTICS_SHORT_TERM
 
@@ -310,10 +314,12 @@ class StatisticsShortTerm(Base, StatisticsBase):  # type: ignore
 class StatisticMetaData(TypedDict):
     """Statistic meta data class."""
 
-    statistic_id: str
-    unit_of_measurement: str | None
     has_mean: bool
     has_sum: bool
+    name: str | None
+    source: str
+    statistic_id: str
+    unit_of_measurement: str | None
 
 
 class StatisticsMeta(Base):  # type: ignore
@@ -329,23 +335,12 @@ class StatisticsMeta(Base):  # type: ignore
     unit_of_measurement = Column(String(255))
     has_mean = Column(Boolean)
     has_sum = Column(Boolean)
+    name = Column(String(255))
 
     @staticmethod
-    def from_meta(
-        source: str,
-        statistic_id: str,
-        unit_of_measurement: str | None,
-        has_mean: bool,
-        has_sum: bool,
-    ) -> StatisticsMeta:
+    def from_meta(meta: StatisticMetaData) -> StatisticsMeta:
         """Create object from meta data."""
-        return StatisticsMeta(
-            source=source,
-            statistic_id=statistic_id,
-            unit_of_measurement=unit_of_measurement,
-            has_mean=has_mean,
-            has_sum=has_sum,
-        )
+        return StatisticsMeta(**meta)
 
 
 class RecorderRuns(Base):  # type: ignore

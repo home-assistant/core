@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El servei ja est\u00e0 configurat",
+            "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "unknown": "Error inesperat"
+        },
+        "step": {
+            "sas": {
+                "data": {
+                    "event_hub_namespace": "Event Hub Namespace",
+                    "event_hub_sas_key": "Clau SAS de l'Event Hub",
+                    "event_hub_sas_policy": "Pol\u00edtica SAS de l'Event Hub"
+                },
+                "title": "M\u00e8tode de credencials SAS"
+            },
+            "user": {
+                "data": {
+                    "event_hub_instance_name": "Nom de la inst\u00e0ncia Event Hub"
+                },
+                "title": "Configuraci\u00f3 de la integraci\u00f3 Azure Event Hub"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "options": {
+                "title": "Opcions d'Azure Event Hub."
+            }
+        }
+    }
+}

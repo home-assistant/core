@@ -662,8 +662,8 @@ async def help_test_discovery_update(
     mqtt_mock,
     caplog,
     domain,
-    discovery_data1,
-    discovery_data2,
+    discovery_config1,
+    discovery_config2,
     state_data1=None,
     state_data2=None,
 ):
@@ -671,6 +671,14 @@ async def help_test_discovery_update(
 
     This is a test helper for the MqttDiscoveryUpdate mixin.
     """
+    # Add some future configuration to the configurations
+    config1 = copy.deepcopy(discovery_config1)
+    config1["some_future_option_1"] = "future_option_1"
+    config2 = copy.deepcopy(discovery_config2)
+    config2["some_future_option_2"] = "future_option_2"
+    discovery_data1 = json.dumps(config1)
+    discovery_data2 = json.dumps(config2)
+
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", discovery_data1)
     await hass.async_block_till_done()
 

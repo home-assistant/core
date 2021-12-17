@@ -37,7 +37,7 @@ class DlnaDmrData:
         """Initialize global data."""
         self.lock = asyncio.Lock()
         session = aiohttp_client.async_get_clientsession(hass, verify_ssl=False)
-        self.requester = AiohttpSessionRequester(session, with_sleep=False)
+        self.requester = AiohttpSessionRequester(session, with_sleep=True)
         self.upnp_factory = UpnpFactory(self.requester, non_strict=True)
         self.event_notifiers = {}
         self.event_notifier_refs = defaultdict(int)

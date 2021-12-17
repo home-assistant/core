@@ -10,14 +10,15 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.const import (
     CONF_MONITORED_VARIABLES,
     CONF_NAME,
     DATA_RATE_MEGABITS_PER_SECOND,
-    DEVICE_CLASS_TIMESTAMP,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
@@ -48,12 +49,14 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="current_down_bandwidth",
         name="Currently Used Download Bandwidth",
         native_unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
+        state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:download",
     ),
     SensorEntityDescription(
         key="current_up_bandwidth",
         name="Currently Used Upload Bandwidth",
         native_unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
+        state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:upload",
     ),
     SensorEntityDescription(
@@ -117,7 +120,7 @@ class BboxUptimeSensor(SensorEntity):
     """Bbox uptime sensor."""
 
     _attr_attribution = ATTRIBUTION
-    _attr_device_class = DEVICE_CLASS_TIMESTAMP
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
 
     def __init__(self, bbox_data, name, description: SensorEntityDescription):
         """Initialize the sensor."""
@@ -128,10 +131,9 @@ class BboxUptimeSensor(SensorEntity):
     def update(self):
         """Get the latest data from Bbox and update the state."""
         self.bbox_data.update()
-        uptime = utcnow() - timedelta(
+        self._attr_native_value = utcnow() - timedelta(
             seconds=self.bbox_data.router_infos["device"]["uptime"]
         )
-        self._attr_native_value = uptime.replace(microsecond=0).isoformat()
 
 
 class BboxSensor(SensorEntity):

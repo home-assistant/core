@@ -1,5 +1,7 @@
 """Support for Nexia / Trane XL thermostats."""
 from nexia.const import (
+    HOLD_PERMANENT,
+    HOLD_RESUME_SCHEDULE,
     OPERATION_MODE_AUTO,
     OPERATION_MODE_COOL,
     OPERATION_MODE_HEAT,
@@ -14,6 +16,7 @@ import voluptuous as vol
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_HUMIDITY,
+    ATTR_HVAC_MODE,
     ATTR_MAX_HUMIDITY,
     ATTR_MIN_HUMIDITY,
     ATTR_TARGET_TEMP_HIGH,
@@ -45,6 +48,7 @@ from .const import (
     ATTR_DEHUMIDIFY_SUPPORTED,
     ATTR_HUMIDIFY_SETPOINT,
     ATTR_HUMIDIFY_SUPPORTED,
+    ATTR_RUN_MODE,
     ATTR_ZONE_STATUS,
     DOMAIN,
     SIGNAL_THERMOSTAT_UPDATE,
@@ -56,6 +60,7 @@ from .util import percent_conv
 
 SERVICE_SET_AIRCLEANER_MODE = "set_aircleaner_mode"
 SERVICE_SET_HUMIDIFY_SETPOINT = "set_humidify_setpoint"
+SERVICE_SET_HVAC_RUN_MODE = "set_hvac_run_mode"
 
 SET_AIRCLEANER_SCHEMA = {
     vol.Required(ATTR_AIRCLEANER_MODE): cv.string,
@@ -65,6 +70,17 @@ SET_HUMIDITY_SCHEMA = {
     vol.Required(ATTR_HUMIDITY): vol.All(vol.Coerce(int), vol.Range(min=35, max=65)),
 }
 
+SET_HVAC_RUN_MODE_SCHEMA = vol.All(
+    cv.has_at_least_one_key(ATTR_RUN_MODE, ATTR_HVAC_MODE),
+    cv.make_entity_service_schema(
+        {
+            vol.Optional(ATTR_RUN_MODE): vol.In([HOLD_PERMANENT, HOLD_RESUME_SCHEDULE]),
+            vol.Optional(ATTR_HVAC_MODE): vol.In(
+                [HVAC_MODE_HEAT, HVAC_MODE_COOL, HVAC_MODE_AUTO]
+            ),
+        }
+    ),
+)
 
 #
 # Nexia has two bits to determine hvac mode
@@ -101,6 +117,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
     platform.async_register_entity_service(
         SERVICE_SET_AIRCLEANER_MODE, SET_AIRCLEANER_SCHEMA, SERVICE_SET_AIRCLEANER_MODE
+    )
+    platform.async_register_entity_service(
+        SERVICE_SET_HVAC_RUN_MODE, SET_HVAC_RUN_MODE_SCHEMA, SERVICE_SET_HVAC_RUN_MODE
     )
 
     entities = []
@@ -186,6 +205,17 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
     def set_fan_mode(self, fan_mode):
         """Set new target fan mode."""
         self._thermostat.set_fan_mode(fan_mode)
+        self._signal_thermostat_update()
+
+    def set_hvac_run_mode(self, run_mode, hvac_mode):
+        """Set the hvac run mode."""
+        if run_mode is not None:
+            if run_mode == HOLD_PERMANENT:
+                self._zone.call_permanent_hold()
+            else:
+                self._zone.call_return_to_schedule()
+        if hvac_mode is not None:
+            self._zone.set_mode(mode=HA_TO_NEXIA_HVAC_MODE_MAP[hvac_mode])
         self._signal_thermostat_update()
 
     @property

@@ -44,7 +44,7 @@ async def test_upnp_sensors(hass: HomeAssistant, setup_integration: MockConfigEn
     # Second poll.
     mock_device.async_get_traffic_data = AsyncMock(
         return_value={
-            TIMESTAMP: dt_util.utcnow() + UPDATE_INTERVAL,
+            TIMESTAMP: mock_device._timestamp + UPDATE_INTERVAL,
             BYTES_RECEIVED: 10240,
             BYTES_SENT: 20480,
             PACKETS_RECEIVED: 30,
@@ -94,7 +94,7 @@ async def test_derived_upnp_sensors(
     # Second poll.
     mock_device.async_get_traffic_data = AsyncMock(
         return_value={
-            TIMESTAMP: dt_util.utcnow() + UPDATE_INTERVAL,
+            TIMESTAMP: mock_device._timestamp + UPDATE_INTERVAL,
             BYTES_RECEIVED: int(10240 * UPDATE_INTERVAL.total_seconds()),
             BYTES_SENT: int(20480 * UPDATE_INTERVAL.total_seconds()),
             PACKETS_RECEIVED: int(30 * UPDATE_INTERVAL.total_seconds()),

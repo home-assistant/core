@@ -1,4 +1,6 @@
 """Support for RFXtrx lights."""
+from __future__ import annotations
+
 import logging
 
 import RFXtrx as rfxtrxmod
@@ -13,6 +15,7 @@ from homeassistant.core import callback
 
 from . import (
     DEFAULT_SIGNAL_REPETITIONS,
+    DeviceTuple,
     RfxtrxCommandEntity,
     connect_auto_add,
     get_device_id,
@@ -30,7 +33,7 @@ _LOGGER = logging.getLogger(__name__)
 SUPPORT_RFXTRX = SUPPORT_BRIGHTNESS
 
 
-def supported(event):
+def supported(event: rfxtrxmod.RFXtrxEvent):
     """Return whether an event supports light."""
     return (
         isinstance(event.device, rfxtrxmod.LightingDevice)
@@ -45,13 +48,12 @@ async def async_setup_entry(
 ):
     """Set up config entry."""
     discovery_info = config_entry.data
-    device_ids = set()
+    device_ids: set[DeviceTuple] = set()
 
     # Add switch from config file
     entities = []
     for packet_id, entity_info in discovery_info[CONF_DEVICES].items():
-        event = get_rfx_object(packet_id)
-        if event is None:
+        if (event := get_rfx_object(packet_id)) is None:
             _LOGGER.error("Invalid device: %s", packet_id)
             continue
         if not supported(event):
@@ -73,7 +75,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
     @callback
-    def light_update(event, device_id):
+    def light_update(event: rfxtrxmod.RFXtrxEvent, device_id: DeviceTuple):
         """Handle light updates from the RFXtrx gateway."""
         if not supported(event):
             return
@@ -104,6 +106,7 @@ class RfxtrxLight(RfxtrxCommandEntity, LightEntity):
     """Representation of a RFXtrx light."""
 
     _brightness = 0
+    _device: rfxtrxmod.LightingDevice
 
     async def async_added_to_hass(self):
         """Restore RFXtrx device state (ON/OFF)."""
@@ -150,8 +153,9 @@ class RfxtrxLight(RfxtrxCommandEntity, LightEntity):
         self._brightness = 0
         self.async_write_ha_state()
 
-    def _apply_event(self, event):
+    def _apply_event(self, event: rfxtrxmod.RFXtrxEvent):
         """Apply command from rfxtrx."""
+        assert isinstance(event, rfxtrxmod.ControlEvent)
         super()._apply_event(event)
         if event.values["Command"] in COMMAND_ON_LIST:
             self._state = True

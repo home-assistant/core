@@ -64,20 +64,17 @@ async def async_setup(hass, config):
     lwlink = LWLink(host)
     hass.data[LIGHTWAVE_LINK] = lwlink
 
-    lights = config[DOMAIN][CONF_LIGHTS]
-    if lights:
+    if lights := config[DOMAIN][CONF_LIGHTS]:
         hass.async_create_task(
             async_load_platform(hass, "light", DOMAIN, lights, config)
         )
 
-    switches = config[DOMAIN][CONF_SWITCHES]
-    if switches:
+    if switches := config[DOMAIN][CONF_SWITCHES]:
         hass.async_create_task(
             async_load_platform(hass, "switch", DOMAIN, switches, config)
         )
 
-    trv = config[DOMAIN][CONF_TRV]
-    if trv:
+    if trv := config[DOMAIN][CONF_TRV]:
         trvs = trv[CONF_TRVS]
         proxy_ip = trv[CONF_PROXY_IP]
         proxy_port = trv[CONF_PROXY_PORT]

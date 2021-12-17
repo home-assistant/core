@@ -1,5 +1,6 @@
 """Support for The Things Network's Data storage integration."""
 import asyncio
+from http import HTTPStatus
 import logging
 
 import aiohttp
@@ -13,8 +14,6 @@ from homeassistant.const import (
     ATTR_TIME,
     CONF_DEVICE_ID,
     CONTENT_TYPE_JSON,
-    HTTP_NOT_FOUND,
-    HTTP_UNAUTHORIZED,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -125,7 +124,7 @@ class TtnDataStorage:
         """Get the current state from The Things Network Data Storage."""
         try:
             session = async_get_clientsession(self._hass)
-            with async_timeout.timeout(DEFAULT_TIMEOUT):
+            async with async_timeout.timeout(DEFAULT_TIMEOUT):
                 response = await session.get(self._url, headers=self._headers)
 
         except (asyncio.TimeoutError, aiohttp.ClientError):
@@ -134,15 +133,15 @@ class TtnDataStorage:
 
         status = response.status
 
-        if status == 204:
+        if status == HTTPStatus.NO_CONTENT:
             _LOGGER.error("The device is not available: %s", self._device_id)
             return None
 
-        if status == HTTP_UNAUTHORIZED:
+        if status == HTTPStatus.UNAUTHORIZED:
             _LOGGER.error("Not authorized for Application ID: %s", self._app_id)
             return None
 
-        if status == HTTP_NOT_FOUND:
+        if status == HTTPStatus.NOT_FOUND:
             _LOGGER.error("Application ID is not available: %s", self._app_id)
             return None
 

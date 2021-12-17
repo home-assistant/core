@@ -1,4 +1,6 @@
 """Test the webhook component."""
+from http import HTTPStatus
+
 import pytest
 
 from homeassistant.config import async_process_ha_core_config
@@ -24,13 +26,13 @@ async def test_unregistering_webhook(hass, mock_client):
     hass.components.webhook.async_register("test", "Test hook", webhook_id, handle)
 
     resp = await mock_client.post(f"/api/webhook/{webhook_id}")
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert len(hooks) == 1
 
     hass.components.webhook.async_unregister(webhook_id)
 
     resp = await mock_client.post(f"/api/webhook/{webhook_id}")
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert len(hooks) == 1
 
 
@@ -54,14 +56,14 @@ async def test_async_generate_path(hass):
 async def test_posting_webhook_nonexisting(hass, mock_client):
     """Test posting to a nonexisting webhook."""
     resp = await mock_client.post("/api/webhook/non-existing")
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
 
 
 async def test_posting_webhook_invalid_json(hass, mock_client):
     """Test posting to a nonexisting webhook."""
     hass.components.webhook.async_register("test", "Test hook", "hello", None)
     resp = await mock_client.post("/api/webhook/hello", data="not-json")
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
 
 
 async def test_posting_webhook_json(hass, mock_client):
@@ -76,7 +78,7 @@ async def test_posting_webhook_json(hass, mock_client):
     hass.components.webhook.async_register("test", "Test hook", webhook_id, handle)
 
     resp = await mock_client.post(f"/api/webhook/{webhook_id}", json={"data": True})
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert len(hooks) == 1
     assert hooks[0][0] is hass
     assert hooks[0][1] == webhook_id
@@ -95,7 +97,7 @@ async def test_posting_webhook_no_data(hass, mock_client):
     hass.components.webhook.async_register("test", "Test hook", webhook_id, handle)
 
     resp = await mock_client.post(f"/api/webhook/{webhook_id}")
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert len(hooks) == 1
     assert hooks[0][0] is hass
     assert hooks[0][1] == webhook_id
@@ -115,7 +117,7 @@ async def test_webhook_put(hass, mock_client):
     hass.components.webhook.async_register("test", "Test hook", webhook_id, handle)
 
     resp = await mock_client.put(f"/api/webhook/{webhook_id}")
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert len(hooks) == 1
     assert hooks[0][0] is hass
     assert hooks[0][1] == webhook_id
@@ -134,7 +136,7 @@ async def test_webhook_head(hass, mock_client):
     hass.components.webhook.async_register("test", "Test hook", webhook_id, handle)
 
     resp = await mock_client.head(f"/api/webhook/{webhook_id}")
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert len(hooks) == 1
     assert hooks[0][0] is hass
     assert hooks[0][1] == webhook_id

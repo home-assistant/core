@@ -158,6 +158,7 @@ async def poll_control_device(zha_device_restored, zigpy_device_mock):
             {
                 "active_power",
                 "active_power_max",
+                "apparent_power",
                 "rms_current",
                 "rms_current_max",
                 "rms_voltage",

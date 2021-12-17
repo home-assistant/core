@@ -2,9 +2,9 @@
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_MOVING,
     DEVICE_CLASSES_SCHEMA,
     PLATFORM_SCHEMA,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
@@ -40,7 +40,7 @@ class AdsBinarySensor(AdsEntity, BinarySensorEntity):
     def __init__(self, ads_hub, name, ads_var, device_class):
         """Initialize ADS binary sensor."""
         super().__init__(ads_hub, name, ads_var)
-        self._attr_device_class = device_class or DEVICE_CLASS_MOVING
+        self._attr_device_class = device_class or BinarySensorDeviceClass.MOVING
 
     async def async_added_to_hass(self):
         """Register device notification."""

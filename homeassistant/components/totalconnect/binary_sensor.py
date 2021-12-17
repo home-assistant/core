@@ -1,8 +1,6 @@
 """Interfaces with TotalConnect sensors."""
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_DOOR,
-    DEVICE_CLASS_GAS,
-    DEVICE_CLASS_SMOKE,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 
@@ -13,7 +11,7 @@ async def async_setup_entry(hass, entry, async_add_entities) -> None:
     """Set up TotalConnect device sensors based on a config entry."""
     sensors = []
 
-    client_locations = hass.data[DOMAIN][entry.entry_id].locations
+    client_locations = hass.data[DOMAIN][entry.entry_id].client.locations
 
     for location_id, location in client_locations.items():
         for zone_id, zone in location.zones.items():
@@ -63,13 +61,17 @@ class TotalConnectBinarySensor(BinarySensorEntity):
 
     @property
     def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
+        """Return the class of this device, from BinarySensorDeviceClass."""
         if self._zone.is_type_security():
-            return DEVICE_CLASS_DOOR
+            return BinarySensorDeviceClass.DOOR
         if self._zone.is_type_fire():
-            return DEVICE_CLASS_SMOKE
+            return BinarySensorDeviceClass.SMOKE
         if self._zone.is_type_carbon_monoxide():
-            return DEVICE_CLASS_GAS
+            return BinarySensorDeviceClass.GAS
+        if self._zone.is_type_motion():
+            return BinarySensorDeviceClass.MOTION
+        if self._zone.is_type_medical():
+            return BinarySensorDeviceClass.SAFETY
         return None
 
     @property
@@ -80,5 +82,6 @@ class TotalConnectBinarySensor(BinarySensorEntity):
             "location_id": self._location_id,
             "low_battery": self._is_low_battery,
             "tampered": self._is_tampered,
+            "partition": self._zone.partition,
         }
         return attributes

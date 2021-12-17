@@ -6,8 +6,12 @@ from i2csense.bh1750 import BH1750  # pylint: disable=import-error
 import smbus
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import CONF_NAME, DEVICE_CLASS_ILLUMINANCE, LIGHT_LUX
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
+)
+from homeassistant.const import CONF_NAME, LIGHT_LUX
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -96,7 +100,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class BH1750Sensor(SensorEntity):
     """Implementation of the BH1750 sensor."""
 
-    _attr_device_class = DEVICE_CLASS_ILLUMINANCE
+    _attr_device_class = SensorDeviceClass.ILLUMINANCE
 
     def __init__(self, bh1750_sensor, name, unit, multiplier=1.0):
         """Initialize the sensor."""

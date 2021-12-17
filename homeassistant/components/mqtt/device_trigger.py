@@ -47,7 +47,6 @@ from .mixins import (
     MQTT_ENTITY_DEVICE_INFO_SCHEMA,
     cleanup_device_registry,
     device_info_from_config,
-    validate_device_has_at_least_one_identifier,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -85,7 +84,7 @@ TRIGGER_DISCOVERY_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
         vol.Required(CONF_TYPE): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE, default=None): vol.Any(None, cv.string),
     },
-    validate_device_has_at_least_one_identifier,
+    extra=vol.REMOVE_EXTRA,
 )
 
 DEVICE_TRIGGERS = "mqtt_device_triggers"

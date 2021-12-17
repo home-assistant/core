@@ -1,4 +1,5 @@
 """Tests for the mobile_app HTTP API."""
+from http import HTTPStatus
 import json
 from unittest.mock import patch
 
@@ -32,7 +33,7 @@ async def test_registration(hass, hass_client, hass_admin_user):
     assert add_user_dev_track.mock_calls[0][1][1] == hass_admin_user.id
     assert add_user_dev_track.mock_calls[0][1][2] == "device_tracker.test_1"
 
-    assert resp.status == 201
+    assert resp.status == HTTPStatus.CREATED
     register_json = await resp.json()
     assert CONF_WEBHOOK_ID in register_json
     assert CONF_SECRET in register_json
@@ -71,7 +72,7 @@ async def test_registration_encryption(hass, hass_client):
 
     resp = await api_client.post("/api/mobile_app/registrations", json=REGISTER)
 
-    assert resp.status == 201
+    assert resp.status == HTTPStatus.CREATED
     register_json = await resp.json()
 
     keylen = SecretBox.KEY_SIZE
@@ -89,7 +90,7 @@ async def test_registration_encryption(hass, hass_client):
         f"/api/webhook/{register_json[CONF_WEBHOOK_ID]}", json=container
     )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
 
     webhook_json = await resp.json()
     assert "encrypted_data" in webhook_json

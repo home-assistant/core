@@ -695,6 +695,7 @@ class AlexaSpeaker(AlexaCapability):
         "en-US",
         "es-ES",
         "es-MX",
+        "fr-FR",  # Not documented as of 2021-12-04, see PR #60489
         "it-IT",
         "ja-JP",
     }
@@ -752,6 +753,7 @@ class AlexaStepSpeaker(AlexaCapability):
         "en-IN",
         "en-US",
         "es-ES",
+        "fr-FR",  # Not documented as of 2021-12-04, see PR #60489
         "it-IT",
     }
 
@@ -1535,7 +1537,9 @@ class AlexaRangeController(AlexaCapability):
                 labels=["Percentage", AlexaGlobalCatalog.SETTING_FAN_SPEED],
                 min_value=0,
                 max_value=100,
-                precision=percentage_step if percentage_step else 100,
+                # precision must be a divider of 100 and must be an integer; set step
+                # size to 1 for a consistent behavior except for on/off fans
+                precision=1 if percentage_step else 100,
                 unit=AlexaGlobalCatalog.UNIT_PERCENT,
             )
             return self._resource.serialize_capability_resources()
