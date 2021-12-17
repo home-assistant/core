@@ -29,7 +29,7 @@ DEFAULT_NAME = "solarlog"
 class SolarLogSensorEntityDescription(SensorEntityDescription):
     """Describes Solarlog sensor entity."""
 
-    value: Callable[[float, int], float] | Callable[[datetime], datetime] | None = None
+    value: Callable[[float | int], float] | Callable[[datetime], datetime] | None = None
 
 
 SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
