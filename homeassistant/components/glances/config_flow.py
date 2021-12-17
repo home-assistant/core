@@ -11,6 +11,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_SSL,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
 )
 from homeassistant.core import callback
 
@@ -35,6 +36,7 @@ DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
         vol.Required(CONF_VERSION, default=DEFAULT_VERSION): int,
         vol.Optional(CONF_SSL, default=False): bool,
+        vol.Optional(CONF_VERIFY_SSL, default=False): bool,
     }
 )
 
