@@ -12,6 +12,7 @@ from simplipy.errors import (
     EndpointUnavailableError,
     InvalidCredentialsError,
     SimplipyError,
+    WebsocketError,
 )
 from simplipy.system import SystemNotification
 from simplipy.system.v3 import (
@@ -521,7 +522,21 @@ class SimpliSafe:
         """Define a callback for connecting to the websocket."""
         if TYPE_CHECKING:
             assert self._api.websocket
-        await self._api.websocket.async_listen()
+
+        should_reconnect = True
+
+        try:
+            await self._api.websocket.async_listen()
+        except asyncio.CancelledError:
+            should_reconnect = False
+        except WebsocketError as err:
+            LOGGER.error("Failed to listen to websocket: %s", err)
+        except Exception as err:  # pylint: disable=broad-except
+            LOGGER.error("Unknown exception while listening to websocket: %s", err)
+
+        if should_reconnect:
+            LOGGER.info("Disconnected from websocket; reconnecting")
+            self._hass.async_create_task(self._api.websocket.async_reconnect())
 
     @callback
     def _async_websocket_on_event(self, event: WebsocketEvent) -> None:
@@ -624,7 +639,7 @@ class SimpliSafe:
             if self._api.websocket.connected:
                 # If a websocket connection is open, reconnect it to use the
                 # new access token:
-                asyncio.create_task(self._api.websocket.async_reconnect())
+                self._hass.async_create_task(self._api.websocket.async_reconnect())
 
         self.entry.async_on_unload(
             self._api.add_refresh_token_callback(async_handle_refresh_token)
