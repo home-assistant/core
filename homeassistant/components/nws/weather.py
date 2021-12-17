@@ -19,12 +19,14 @@ from homeassistant.const import (
     SPEED_KILOMETERS_PER_HOUR,
     SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 from homeassistant.util.speed import convert as convert_speed
+from homeassistant.util.temperature import convert as convert_temperature
 
 from . import base_unique_id, device_info
 from .const import (
@@ -223,7 +225,6 @@ class NWSWeather(WeatherEntity):
                 ATTR_FORECAST_DETAILED_DESCRIPTION: forecast_entry.get(
                     "detailedForecast"
                 ),
-                ATTR_FORECAST_TEMP: forecast_entry.get("temperature"),
                 ATTR_FORECAST_TIME: forecast_entry.get("startTime"),
             }
 
@@ -239,8 +240,15 @@ class NWSWeather(WeatherEntity):
             data[ATTR_FORECAST_PRECIPITATION_PROBABILITY] = precip
 
             data[ATTR_FORECAST_WIND_BEARING] = forecast_entry.get("windBearing")
-            wind_speed = forecast_entry.get("windSpeedAvg")
-            if wind_speed is not None:
+            if (temperature := forecast_entry.get("temperature")) is not None:
+                data[ATTR_FORECAST_TEMP] = convert_temperature(
+                    temperature, TEMP_FAHRENHEIT, TEMP_CELSIUS
+                )
+            else:
+                data[
+                    ATTR_FORECAST_TEMP
+                ] = None  # data[ATTR_FORECAST_TEMP] must be defined
+            if (wind_speed := forecast_entry.get("windSpeedAvg")) is not None:
                 data[ATTR_FORECAST_WIND_SPEED] = convert_speed(
                     wind_speed, SPEED_MILES_PER_HOUR, SPEED_KILOMETERS_PER_HOUR
                 )
