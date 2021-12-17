@@ -54,7 +54,7 @@ def get_scanner(hass, config):
     if current_version < minimum_version:
         _LOGGER.error(
             "Unsupported FortiOS version :  %s.\
-            Version %s and newer are supported.",
+            Version %s and newer are supported",
             current_version,
             minimum_version,
         )
