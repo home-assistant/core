@@ -201,6 +201,9 @@ class WebDavCalendarData:
         # and they would not be properly parsed using their original start/end dates.
         new_events = []
         for event in results:
+            if not hasattr(event.instance, "vevent"):
+                _LOGGER.warning("Skipped event with missing 'vevent' property")
+                continue
             vevent = event.instance.vevent
             for start_dt in vevent.getrruleset() or []:
                 _start_of_today = start_of_today
