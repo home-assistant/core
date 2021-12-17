@@ -26,7 +26,12 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_BEARING,
     ATTR_WEATHER_WIND_SPEED,
 )
-from homeassistant.const import ATTR_ATTRIBUTION, STATE_UNKNOWN
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    PRESSURE_HPA,
+    SPEED_KILOMETERS_PER_HOUR,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import utcnow
 
@@ -40,6 +45,8 @@ async def test_setup_hass(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, api_response: str
 ) -> None:
     """Test for successfully setting up the smhi integration."""
+    hass.config.units.pressure_unit = PRESSURE_HPA
+    hass.config.units.wind_speed_unit = SPEED_KILOMETERS_PER_HOUR
     uri = APIURL_TEMPLATE.format(TEST_CONFIG["longitude"], TEST_CONFIG["latitude"])
     aioclient_mock.get(uri, text=api_response)
 
@@ -64,7 +71,7 @@ async def test_setup_hass(
     assert state.attributes[ATTR_WEATHER_PRESSURE] == 1024
     assert state.attributes[ATTR_WEATHER_TEMPERATURE] == 17
     assert state.attributes[ATTR_WEATHER_VISIBILITY] == 50
-    assert state.attributes[ATTR_WEATHER_WIND_SPEED] == 7
+    assert state.attributes[ATTR_WEATHER_WIND_SPEED] == 6.84
     assert state.attributes[ATTR_WEATHER_WIND_BEARING] == 134
     assert len(state.attributes["forecast"]) == 4
 
