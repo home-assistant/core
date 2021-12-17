@@ -20,8 +20,7 @@ async def async_setup_entry(hass, entry):
     hass.data[DOMAIN] = {}
     controller = hass.data[DOMAIN][entry.entry_id] = ZWaveMeController(hass, entry)
     if await controller.async_establish_connection():
-        hass.config_entries.async_setup_platforms(entry, PLATFORMS)
-        controller.zwave_api.get_devices()
+        await async_setup_platforms(hass, entry, controller)
         return True
     raise ConfigEntryNotReady()
 
