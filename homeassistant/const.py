@@ -6,7 +6,7 @@ from typing import Final
 from homeassistant.backports.enum import StrEnum
 
 MAJOR_VERSION: Final = 2022
-MINOR_VERSION: Final = 1
+MINOR_VERSION: Final = 2
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -756,3 +756,6 @@ ENTITY_CATEGORIES: Final[list[str]] = [
 CAST_APP_ID_HOMEASSISTANT_MEDIA: Final = "B45F4572"
 # The ID of the Home Assistant Lovelace Cast App
 CAST_APP_ID_HOMEASSISTANT_LOVELACE: Final = "A078F6B0"
+
+# User used by Supervisor
+HASSIO_USER_NAME = "Supervisor"

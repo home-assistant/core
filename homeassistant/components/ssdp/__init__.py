@@ -103,22 +103,20 @@ class SsdpServiceInfo(
 ):
     """Prepared info from ssdp/upnp entries."""
 
-    # Used to prevent log flooding. To be removed in 2022.6
-    _warning_logged: bool = False
-
     def __getitem__(self, name: str) -> Any:
         """
         Allow property access by name for compatibility reason.
 
         Deprecated, and will be removed in version 2022.6.
         """
-        if not self._warning_logged:
-            report(
-                f"accessed discovery_info['{name}'] instead of discovery_info.{name}; this will fail in version 2022.6",
-                exclude_integrations={DOMAIN},
-                error_if_core=False,
-            )
-            self._warning_logged = True
+        report(
+            f"accessed discovery_info['{name}'] instead of discovery_info.{name}, "
+            f"discovery_info.upnp['{name}'] "
+            f"or discovery_info.ssdp_headers['{name}']; "
+            "this will fail in version 2022.6",
+            exclude_integrations={DOMAIN},
+            error_if_core=False,
+        )
         # Use a property if it is available, fallback to upnp data
         if hasattr(self, name):
             return getattr(self, name)
@@ -132,13 +130,14 @@ class SsdpServiceInfo(
 
         Deprecated, and will be removed in version 2022.6.
         """
-        if not self._warning_logged:
-            report(
-                f"accessed discovery_info.get('{name}') instead of discovery_info.{name}; this will fail in version 2022.6",
-                exclude_integrations={DOMAIN},
-                error_if_core=False,
-            )
-            self._warning_logged = True
+        report(
+            f"accessed discovery_info.get('{name}') instead of discovery_info.{name}, "
+            f"discovery_info.upnp.get('{name}') "
+            f"or discovery_info.ssdp_headers.get('{name}'); "
+            "this will fail in version 2022.6",
+            exclude_integrations={DOMAIN},
+            error_if_core=False,
+        )
         if hasattr(self, name):
             return getattr(self, name)
         return self.upnp.get(name, self.ssdp_headers.get(name, default))
@@ -149,14 +148,14 @@ class SsdpServiceInfo(
 
         Deprecated, and will be removed in version 2022.6.
         """
-        if not self._warning_logged:
-            report(
-                "accessed discovery_info.__contains__() instead of discovery_info.upnp.__contains__() "
-                "or discovery_info.ssdp_headers.__contains__(); this will fail in version 2022.6",
-                exclude_integrations={DOMAIN},
-                error_if_core=False,
-            )
-            self._warning_logged = True
+        report(
+            f"accessed discovery_info.__contains__('{name}') "
+            f"instead of discovery_info.upnp.__contains__('{name}') "
+            f"or discovery_info.ssdp_headers.__contains__('{name}'); "
+            "this will fail in version 2022.6",
+            exclude_integrations={DOMAIN},
+            error_if_core=False,
+        )
         if hasattr(self, name):
             return getattr(self, name) is not None
         return name in self.upnp or name in self.ssdp_headers

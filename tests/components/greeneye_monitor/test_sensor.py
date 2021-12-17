@@ -7,7 +7,10 @@ from homeassistant.components.greeneye_monitor.sensor import (
 )
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_registry import async_get as get_entity_registry
+from homeassistant.helpers.entity_registry import (
+    RegistryEntryDisabler,
+    async_get as get_entity_registry,
+)
 
 from .common import (
     SINGLE_MONITOR_CONFIG_POWER_SENSORS,
@@ -161,5 +164,7 @@ def connect_monitor(monitors: AsyncMock, serial_number: int) -> MagicMock:
 async def disable_entity(hass: HomeAssistant, entity_id: str) -> None:
     """Disable the given entity."""
     entity_registry = get_entity_registry(hass)
-    entity_registry.async_update_entity(entity_id, disabled_by="user")
+    entity_registry.async_update_entity(
+        entity_id, disabled_by=RegistryEntryDisabler.USER
+    )
     await hass.async_block_till_done()

@@ -33,6 +33,7 @@
                     "s2_unauthenticated_key": "Chiave S2 non autenticata",
                     "usb_path": "Percorso del dispositivo USB"
                 },
+                "description": "Il componente aggiuntivo generer\u00e0 chiavi di sicurezza se questi campi vengono lasciati vuoti.",
                 "title": "Accedi alla configurazione del componente aggiuntivo Z-Wave JS"
             },
             "hassio_confirm": {
@@ -119,6 +120,7 @@
                     "s2_unauthenticated_key": "Chiave S2 non autenticata",
                     "usb_path": "Percorso del dispositivo USB"
                 },
+                "description": "Il componente aggiuntivo generer\u00e0 chiavi di sicurezza se questi campi vengono lasciati vuoti.",
                 "title": "Entra nella configurazione del componente aggiuntivo Z-Wave JS"
             },
             "install_addon": {

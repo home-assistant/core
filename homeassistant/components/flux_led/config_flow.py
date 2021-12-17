@@ -94,6 +94,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             firmware_date=None,
             model_info=None,
             model_description=None,
+            remote_access_enabled=None,
+            remote_access_host=None,
+            remote_access_port=None,
         )
         return await self._async_handle_discovery()
 
@@ -238,7 +241,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FluxLEDDiscovery:
         """Try to connect."""
         self._async_abort_entries_match({CONF_HOST: host})
-        if device := await async_discover_device(self.hass, host):
+        if (device := await async_discover_device(self.hass, host)) and device[
+            ATTR_MODEL_DESCRIPTION
+        ]:
+            # Older models do not return enough information
+            # to build the model description via UDP so we have
+            # to fallback to making a tcp connection to avoid
+            # identifying the device as the chip model number
+            # AKA `HF-LPB100-ZJ200`
             return device
         bulb = async_wifi_bulb_for_host(host)
         try:
@@ -254,6 +264,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             firmware_date=None,
             model_info=None,
             model_description=bulb.model_data.description,
+            remote_access_enabled=None,
+            remote_access_host=None,
+            remote_access_port=None,
         )
 
 

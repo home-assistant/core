@@ -4,12 +4,15 @@ import re
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
+)
 from homeassistant.const import (
     ATTR_LOCATION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
-    DEVICE_CLASS_TEMPERATURE,
     TEMP_CELSIUS,
 )
 import homeassistant.helpers.config_validation as cv
@@ -135,7 +138,7 @@ class ECSensor(CoordinatorEntity, SensorEntity):
             "humidex",
         ):
             self._unit = TEMP_CELSIUS
-            self._device_class = DEVICE_CLASS_TEMPERATURE
+            self._device_class = SensorDeviceClass.TEMPERATURE
         else:
             self._unit = sensor_data.get("unit")
 

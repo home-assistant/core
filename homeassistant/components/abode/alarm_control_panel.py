@@ -5,14 +5,13 @@ from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_HOME,
 )
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_DISARMED,
 )
 
 from . import AbodeDevice
-from .const import ATTRIBUTION, DOMAIN
+from .const import DOMAIN
 
 ICON = "mdi:security"
 
@@ -61,7 +60,6 @@ class AbodeAlarm(AbodeDevice, alarm.AlarmControlPanelEntity):
     def extra_state_attributes(self):
         """Return the state attributes."""
         return {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
             "device_id": self._device.device_id,
             "battery_backup": self._device.battery,
             "cellular_backup": self._device.is_cellular,

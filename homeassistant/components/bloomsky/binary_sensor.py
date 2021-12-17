@@ -2,8 +2,8 @@
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_MOISTURE,
     PLATFORM_SCHEMA,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.const import CONF_MONITORED_CONDITIONS
@@ -11,7 +11,7 @@ import homeassistant.helpers.config_validation as cv
 
 from . import DOMAIN
 
-SENSOR_TYPES = {"Rain": DEVICE_CLASS_MOISTURE, "Night": None}
+SENSOR_TYPES = {"Rain": BinarySensorDeviceClass.MOISTURE, "Night": None}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {

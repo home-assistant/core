@@ -6,25 +6,28 @@ from typing import Any
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
 from aiohue.v2.controllers.groups import GroupedLight, Room, Zone
+from aiohue.v2.models.feature import AlertEffectType
 
-from homeassistant.components.group.light import LightGroup
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
+    ATTR_FLASH,
     ATTR_TRANSITION,
     ATTR_XY_COLOR,
     COLOR_MODE_BRIGHTNESS,
     COLOR_MODE_COLOR_TEMP,
     COLOR_MODE_ONOFF,
     COLOR_MODE_XY,
+    SUPPORT_FLASH,
     SUPPORT_TRANSITION,
+    LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from ..bridge import HueBridge
-from ..const import DOMAIN
+from ..const import CONF_ALLOW_HUE_GROUPS, DOMAIN
 from .entity import HueBaseEntity
 
 ALLOWED_ERRORS = [
@@ -32,6 +35,7 @@ ALLOWED_ERRORS = [
     'device (groupedLight) is "soft off", command (on) may not have effect',
     "device (light) has communication issues, command (on) may not have effect",
     'device (light) is "soft off", command (on) may not have effect',
+    "attribute (supportedAlertActions) cannot be written",
 ]
 
 
@@ -73,11 +77,10 @@ async def async_setup_entry(
     )
 
 
-class GroupedHueLight(HueBaseEntity, LightGroup):
+class GroupedHueLight(HueBaseEntity, LightEntity):
     """Representation of a Grouped Hue light."""
 
-    # Entities for Hue groups are disabled by default
-    _attr_entity_registry_enabled_default = False
+    _attr_icon = "mdi:lightbulb-group"
 
     def __init__(
         self, bridge: HueBridge, resource: GroupedLight, group: Room | Zone
@@ -89,7 +92,14 @@ class GroupedHueLight(HueBaseEntity, LightGroup):
         self.group = group
         self.controller = controller
         self.api: HueBridgeV2 = bridge.api
+        self._attr_supported_features |= SUPPORT_FLASH
         self._attr_supported_features |= SUPPORT_TRANSITION
+
+        # Entities for Hue groups are disabled by default
+        # unless they were enabled in old version (legacy option)
+        self._attr_entity_registry_enabled_default = bridge.config_entry.data.get(
+            CONF_ALLOW_HUE_GROUPS, False
+        )
 
         self._update_values()
 
@@ -141,12 +151,13 @@ class GroupedHueLight(HueBaseEntity, LightGroup):
         xy_color = kwargs.get(ATTR_XY_COLOR)
         color_temp = kwargs.get(ATTR_COLOR_TEMP)
         brightness = kwargs.get(ATTR_BRIGHTNESS)
+        flash = kwargs.get(ATTR_FLASH)
         if brightness is not None:
             # Hue uses a range of [0, 100] to control brightness.
             brightness = float((brightness / 255) * 100)
         if transition is not None:
-            # hue transition duration is in steps of 100 ms
-            transition = int(transition * 100)
+            # hue transition duration is in milliseconds
+            transition = int(transition * 1000)
 
         # NOTE: a grouped_light can only handle turn on/off
         # To set other features, you'll have to control the attached lights
@@ -155,6 +166,7 @@ class GroupedHueLight(HueBaseEntity, LightGroup):
             and xy_color is None
             and color_temp is None
             and transition is None
+            and flash is None
         ):
             await self.bridge.async_request_call(
                 self.controller.set_state,
@@ -175,17 +187,37 @@ class GroupedHueLight(HueBaseEntity, LightGroup):
                 color_xy=xy_color if light.supports_color else None,
                 color_temp=color_temp if light.supports_color_temperature else None,
                 transition_time=transition,
+                alert=AlertEffectType.BREATHE if flash is not None else None,
                 allowed_errors=ALLOWED_ERRORS,
             )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
-        await self.bridge.async_request_call(
-            self.controller.set_state,
-            id=self.resource.id,
-            on=False,
-            allowed_errors=ALLOWED_ERRORS,
-        )
+        transition = kwargs.get(ATTR_TRANSITION)
+        if transition is not None:
+            # hue transition duration is in milliseconds
+            transition = int(transition * 1000)
+
+        # NOTE: a grouped_light can only handle turn on/off
+        # To set other features, you'll have to control the attached lights
+        if transition is None:
+            await self.bridge.async_request_call(
+                self.controller.set_state,
+                id=self.resource.id,
+                on=False,
+                allowed_errors=ALLOWED_ERRORS,
+            )
+            return
+
+        # redirect all other feature commands to underlying lights
+        for light in self.controller.get_lights(self.resource.id):
+            await self.bridge.async_request_call(
+                self.api.lights.set_state,
+                light.id,
+                on=False,
+                transition_time=transition,
+                allowed_errors=ALLOWED_ERRORS,
+            )
 
     @callback
     def on_update(self) -> None:

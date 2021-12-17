@@ -3,12 +3,7 @@ from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_GAS,
-    DEVICE_CLASS_MOISTURE,
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_OCCUPANCY,
-    DEVICE_CLASS_OPENING,
-    DEVICE_CLASS_SMOKE,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.core import callback
@@ -19,7 +14,7 @@ from . import KNOWN_DEVICES, HomeKitEntity
 class HomeKitMotionSensor(HomeKitEntity, BinarySensorEntity):
     """Representation of a Homekit motion sensor."""
 
-    _attr_device_class = DEVICE_CLASS_MOTION
+    _attr_device_class = BinarySensorDeviceClass.MOTION
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity is tracking."""
@@ -34,7 +29,7 @@ class HomeKitMotionSensor(HomeKitEntity, BinarySensorEntity):
 class HomeKitContactSensor(HomeKitEntity, BinarySensorEntity):
     """Representation of a Homekit contact sensor."""
 
-    _attr_device_class = DEVICE_CLASS_OPENING
+    _attr_device_class = BinarySensorDeviceClass.OPENING
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity is tracking."""
@@ -49,7 +44,7 @@ class HomeKitContactSensor(HomeKitEntity, BinarySensorEntity):
 class HomeKitSmokeSensor(HomeKitEntity, BinarySensorEntity):
     """Representation of a Homekit smoke sensor."""
 
-    _attr_device_class = DEVICE_CLASS_SMOKE
+    _attr_device_class = BinarySensorDeviceClass.SMOKE
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity is tracking."""
@@ -64,7 +59,7 @@ class HomeKitSmokeSensor(HomeKitEntity, BinarySensorEntity):
 class HomeKitCarbonMonoxideSensor(HomeKitEntity, BinarySensorEntity):
     """Representation of a Homekit BO sensor."""
 
-    _attr_device_class = DEVICE_CLASS_GAS
+    _attr_device_class = BinarySensorDeviceClass.GAS
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity is tracking."""
@@ -79,7 +74,7 @@ class HomeKitCarbonMonoxideSensor(HomeKitEntity, BinarySensorEntity):
 class HomeKitOccupancySensor(HomeKitEntity, BinarySensorEntity):
     """Representation of a Homekit occupancy sensor."""
 
-    _attr_device_class = DEVICE_CLASS_OCCUPANCY
+    _attr_device_class = BinarySensorDeviceClass.OCCUPANCY
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity is tracking."""
@@ -94,7 +89,7 @@ class HomeKitOccupancySensor(HomeKitEntity, BinarySensorEntity):
 class HomeKitLeakSensor(HomeKitEntity, BinarySensorEntity):
     """Representation of a Homekit leak sensor."""
 
-    _attr_device_class = DEVICE_CLASS_MOISTURE
+    _attr_device_class = BinarySensorDeviceClass.MOISTURE
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity is tracking."""

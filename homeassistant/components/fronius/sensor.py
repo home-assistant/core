@@ -784,15 +784,22 @@ class MeterSensor(_FroniusSensorEntity):
         self._entity_id_prefix = f"meter_{solar_net_id}"
         super().__init__(coordinator, key, solar_net_id)
         meter_data = self._device_data()
+        # S0 meters connected directly to inverters respond "n.a." as serial number
+        # `model` contains the inverter id: "S0 Meter at inverter 1"
+        if (meter_uid := meter_data["serial"]["value"]) == "n.a.":
+            meter_uid = (
+                f"{coordinator.solar_net.solar_net_device_id}:"
+                f'{meter_data["model"]["value"]}'
+            )
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, meter_data["serial"]["value"])},
+            identifiers={(DOMAIN, meter_uid)},
             manufacturer=meter_data["manufacturer"]["value"],
             model=meter_data["model"]["value"],
             name=meter_data["model"]["value"],
             via_device=(DOMAIN, coordinator.solar_net.solar_net_device_id),
         )
-        self._attr_unique_id = f'{meter_data["serial"]["value"]}-{key}'
+        self._attr_unique_id = f"{meter_uid}-{key}"
 
 
 class OhmpilotSensor(_FroniusSensorEntity):

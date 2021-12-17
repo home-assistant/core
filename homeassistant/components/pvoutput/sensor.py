@@ -9,10 +9,10 @@ import voluptuous as vol
 
 from homeassistant.components.rest.data import RestData
 from homeassistant.components.sensor import (
-    DEVICE_CLASS_ENERGY,
     PLATFORM_SCHEMA,
-    STATE_CLASS_TOTAL_INCREASING,
+    SensorDeviceClass,
     SensorEntity,
+    SensorStateClass,
 )
 from homeassistant.const import (
     ATTR_DATE,
@@ -25,7 +25,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.template import Template
 
 _LOGGER = logging.getLogger(__name__)
 _ENDPOINT = "https://pvoutput.org/service/r2/getstatus.jsp"
@@ -60,10 +59,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     method = "GET"
     payload = auth = None
     verify_ssl = DEFAULT_VERIFY_SSL
-    headers = {
-        "X-Pvoutput-Apikey": Template(api_key, hass),
-        "X-Pvoutput-SystemId": Template(system_id, hass),
-    }
+    headers = {"X-Pvoutput-Apikey": api_key, "X-Pvoutput-SystemId": system_id}
 
     rest = RestData(hass, method, _ENDPOINT, auth, headers, None, payload, verify_ssl)
     await rest.async_update()
@@ -78,8 +74,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class PvoutputSensor(SensorEntity):
     """Representation of a PVOutput sensor."""
 
-    _attr_state_class = STATE_CLASS_TOTAL_INCREASING
-    _attr_device_class = DEVICE_CLASS_ENERGY
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
+    _attr_device_class = SensorDeviceClass.ENERGY
     _attr_native_unit_of_measurement = ENERGY_WATT_HOUR
 
     def __init__(self, rest, name):
