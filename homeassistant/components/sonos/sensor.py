@@ -1,14 +1,11 @@
 """Entity representing a Sonos battery level."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import (
-    DEVICE_CLASS_BATTERY,
-    ENTITY_CATEGORY_DIAGNOSTIC,
-    PERCENTAGE,
-)
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.const import PERCENTAGE
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import EntityCategory
 
 from .const import SONOS_CREATE_AUDIO_FORMAT_SENSOR, SONOS_CREATE_BATTERY
 from .entity import SonosEntity
@@ -45,8 +42,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class SonosBatteryEntity(SonosEntity, SensorEntity):
     """Representation of a Sonos Battery entity."""
 
-    _attr_device_class = DEVICE_CLASS_BATTERY
-    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
+    _attr_device_class = SensorDeviceClass.BATTERY
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_native_unit_of_measurement = PERCENTAGE
 
     def __init__(self, speaker: SonosSpeaker) -> None:
@@ -73,7 +70,7 @@ class SonosBatteryEntity(SonosEntity, SensorEntity):
 class SonosAudioInputFormatSensorEntity(SonosEntity, SensorEntity):
     """Representation of a Sonos audio import format sensor entity."""
 
-    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_icon = "mdi:import"
     _attr_should_poll = True
 
