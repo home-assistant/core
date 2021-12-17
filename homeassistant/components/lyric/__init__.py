@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from http import HTTPStatus
 import logging
 
 from aiohttp.client_exceptions import ClientResponseError
@@ -102,7 +103,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 await oauth_session.async_ensure_token_valid()
             else:
                 await oauth_session.force_refresh_token()
+        except ClientResponseError as exception:
+            if (
+                exception.status == HTTPStatus.UNAUTHORIZED
+                or exception.status == HTTPStatus.FORBIDDEN
+            ):
+                raise ConfigEntryAuthFailed from exception
+            else:
+                raise UpdateFailed(exception) from exception
 
+        try:
             async with async_timeout.timeout(60):
                 await lyric.get_locations()
             return lyric
