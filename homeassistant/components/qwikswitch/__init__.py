@@ -221,7 +221,7 @@ async def async_setup(hass, config):
     @callback
     def async_start(_):
         """Start listening."""
-        hass.async_add_job(qsusb.listen, callback_qs_listen)
+        qsusb.listen(callback_qs_listen)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, async_start)
 
