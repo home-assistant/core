@@ -11,6 +11,8 @@
         "step": {
             "user": {
                 "data": {
+                    "name": "Name",
+                    "scan_interval": "Scan Interval (seconds)",
                     "client_id": "API Key",
                     "heating_type": "Heating type",
                     "password": "Password",
