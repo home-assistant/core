@@ -375,7 +375,7 @@ class KeyFrameConverter:
         self._turbojpeg = TurboJPEGSingleton.instance()
         self.lock = asyncio.Lock()
 
-    def generate_image(self) -> bytes | None:
+    def generate_image(self, width: int | None, height: int | None) -> bytes | None:
         """Generate the keyframe image. This is called in an executor thread."""
         if not (self._turbojpeg and self.packet):
             return self.image
@@ -387,6 +387,9 @@ class KeyFrameConverter:
             if frames := packet.decode():
                 break
         if frames:
-            bgr_array = frames[0].to_ndarray(format="bgr24")
+            frame = frames[0]
+            if width and height:
+                frame = frame.reformat(width=width, height=height)
+            bgr_array = frame.to_ndarray(format="bgr24")
             image = bytes(self._turbojpeg.encode(bgr_array))
         return image

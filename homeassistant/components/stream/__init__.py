@@ -424,7 +424,11 @@ class Stream:
             await hls.recv()
             recorder.prepend(list(hls.get_segments())[-num_segments:])
 
-    async def get_image(self) -> bytes | None:
+    async def get_image(
+        self,
+        width: int | None = None,
+        height: int | None = None,
+    ) -> bytes | None:
         """
         Fetch an image from the Stream and return it as a jpeg in bytes.
 
@@ -433,7 +437,7 @@ class Stream:
         # Use a lock to ensure only one thread is working on the keyframe at a time
         await self._keyframe_converter.lock.acquire()
         self._keyframe_converter.image = await self.hass.async_add_executor_job(
-            self._keyframe_converter.generate_image
+            self._keyframe_converter.generate_image, width, height
         )
         self._keyframe_converter.lock.release()
         return self._keyframe_converter.image
