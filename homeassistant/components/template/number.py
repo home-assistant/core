@@ -41,7 +41,7 @@ DEFAULT_OPTIMISTIC = False
 NUMBER_SCHEMA = (
     vol.Schema(
         {
-            vol.Optional(CONF_NAME): cv.template,
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.template,
             vol.Required(CONF_STATE): cv.template,
             vol.Required(CONF_SET_VALUE): cv.SCRIPT_SCHEMA,
             vol.Required(ATTR_STEP): cv.template,
@@ -106,7 +106,7 @@ class TemplateNumber(TemplateEntity, NumberEntity):
         unique_id: str | None,
     ) -> None:
         """Initialize the number."""
-        super().__init__(hass, config=config, fallback_name=DEFAULT_NAME)
+        super().__init__(hass, config=config)
         self._value_template = config[CONF_STATE]
         self._command_set_value = Script(
             hass, config[CONF_SET_VALUE], self._attr_name, DOMAIN
