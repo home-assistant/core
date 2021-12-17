@@ -190,7 +190,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if "efr32" in local_name:
                 self._radio_type = RadioType.ezsp.name
             elif "zigate" in local_name:
-                self._rafio_type = RadioType.zigate.name
+                self._radio_type = RadioType.zigate.name
             else:
                 self._radio_type = RadioType.znp.name
         )
