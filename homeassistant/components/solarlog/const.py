@@ -28,7 +28,7 @@ DEFAULT_NAME = "solarlog"
 class SolarLogSensorEntityDescription(SensorEntityDescription):
     """Describes Solarlog sensor entity."""
 
-    value: Callable[[float | int], float] = round
+    value: Callable[[float, int], float] | Callable[[datetime], datetime] | None = None
 
 
 SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
@@ -36,7 +36,7 @@ SENSOR_TYPES: tuple[SolarLogSensorEntityDescription, ...] = (
         key="time",
         name="last update",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value=as_local,  # type: ignore[arg-type]
+        value=as_local,
     ),
     SolarLogSensorEntityDescription(
         key="power_ac",
