@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import datetime
 
 from homeassistant.components.sensor import (
-    DEVICE_CLASS_TIMESTAMP,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
@@ -157,7 +157,10 @@ class OpenWeatherMapForecastSensor(AbstractOpenWeatherMapSensor):
             return None
 
         value = forecasts[0].get(self.entity_description.key, None)
-        if value and self.entity_description.device_class == DEVICE_CLASS_TIMESTAMP:
+        if (
+            value
+            and self.entity_description.device_class is SensorDeviceClass.TIMESTAMP
+        ):
             return dt_util.parse_datetime(value)
 
         return value

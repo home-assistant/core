@@ -8,9 +8,9 @@ import zigpy.profiles.zha as zha
 import zigpy.zcl.clusters.general as general
 import zigpy.zcl.clusters.lighting as lighting
 
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.zha.core.group import GroupMember
 from homeassistant.components.zha.core.store import TOMBSTONE_LIFETIME
+from homeassistant.const import Platform
 
 from .common import async_enable_traffic, async_find_group_entity_id, get_zha_gateway
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
@@ -144,7 +144,7 @@ async def test_gateway_group_methods(hass, device_light_1, device_light_2, coord
     for member in zha_group.members:
         assert member.device.ieee in member_ieee_addresses
 
-    entity_id = async_find_group_entity_id(hass, LIGHT_DOMAIN, zha_group)
+    entity_id = async_find_group_entity_id(hass, Platform.LIGHT, zha_group)
     assert hass.states.get(entity_id) is not None
 
     # test get group by name
@@ -158,7 +158,7 @@ async def test_gateway_group_methods(hass, device_light_1, device_light_2, coord
     assert zha_gateway.async_get_group_by_name(zha_group.name) is None
 
     # the group entity should be cleaned up
-    assert entity_id not in hass.states.async_entity_ids(LIGHT_DOMAIN)
+    assert entity_id not in hass.states.async_entity_ids(Platform.LIGHT)
 
     # test creating a group with 1 member
     zha_group = await zha_gateway.async_create_zigpy_group(
@@ -172,7 +172,7 @@ async def test_gateway_group_methods(hass, device_light_1, device_light_2, coord
         assert member.device.ieee in [device_light_1.ieee]
 
     # the group entity should not have been cleaned up
-    assert entity_id not in hass.states.async_entity_ids(LIGHT_DOMAIN)
+    assert entity_id not in hass.states.async_entity_ids(Platform.LIGHT)
 
     with patch("zigpy.zcl.Cluster.request", side_effect=asyncio.TimeoutError):
         await zha_group.members[0].async_remove_from_group()
