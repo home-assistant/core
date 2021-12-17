@@ -23,6 +23,7 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.const import CONF_NAME
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 import homeassistant.util.color as color_utils
 
 from .const import DOMAIN
@@ -44,9 +45,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the WiZ Light platform from config_flow."""
     # Assign configuration variables.
     wiz_data = hass.data[DOMAIN][entry.entry_id]
-    wizbulb = WizBulbEntity(
-        wiz_data.bulb, entry.data.get(CONF_NAME), wiz_data.mac_addr, wiz_data.bulb_type
-    )
+    wizbulb = WizBulbEntity(wiz_data.bulb, entry.data.get(CONF_NAME), wiz_data.scenes)
     # Add devices with defined name
     async_add_entities([wizbulb], update_before_add=True)
     return True
@@ -55,7 +54,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class WizBulbEntity(LightEntity):
     """Representation of WiZ Light bulb."""
 
-    def __init__(self, light: wizlight, name, mac_addr, bulb_type):
+    def __init__(self, light: wizlight, name, scenes):
         """Initialize an WiZLight."""
         self._light = light
         self._state = None
@@ -66,10 +65,10 @@ class WizBulbEntity(LightEntity):
         self._hscolor = None
         self._available = None
         self._effect = None
-        self._scenes: list[str] = []
-        self._bulbtype: BulbType = bulb_type
-        self._mac = mac_addr
-        self._attr_unique_id = mac_addr
+        self._scenes: list[str] = scenes
+        self._bulbtype: BulbType = light.bulbtype
+        self._mac = light.mac
+        self._attr_unique_id = light.mac
         # new init states
         # self._attr_device_info = self.get_device_info()
         self._attr_min_mireds = self.get_min_mireds()
@@ -168,41 +167,54 @@ class WizBulbEntity(LightEntity):
         """Return the coldest color_temp that this light supports."""
         if self._bulbtype is None:
             return color_utils.color_temperature_kelvin_to_mired(6500)
-        if self._bulbtype.bulb_type != BulbClass.DW:
-            # If bulbtype is TW or RGB then return the kelvin value
-            try:
-                return color_utils.color_temperature_kelvin_to_mired(
-                    self._bulbtype.kelvin_range.max
-                )
-
-            except WizLightNotKnownBulb:
-                _LOGGER.info("Kelvin is not present in the library. Fallback to 6500")
-                return color_utils.color_temperature_kelvin_to_mired(6500)
-        else:
-            # DW bulbs have a fixed range of color temperature
+        # DW bulbs have no kelvin
+        if self._bulbtype.bulb_type == BulbClass.DW:
             return 0
+        # If bulbtype is TW or RGB then return the kelvin value
+        try:
+            return color_utils.color_temperature_kelvin_to_mired(
+                self._bulbtype.kelvin_range.max
+            )
+        except WizLightNotKnownBulb:
+            _LOGGER.info("Kelvin is not present in the library. Fallback to 6500")
+            return color_utils.color_temperature_kelvin_to_mired(6500)
 
     def get_max_mireds(self) -> int:
         """Return the warmest color_temp that this light supports."""
         if self._bulbtype is None:
             return color_utils.color_temperature_kelvin_to_mired(2200)
-        if self._bulbtype.bulb_type != BulbClass.DW:
-            # If bulbtype is TW or RGB then return the kelvin value
-            try:
-                return color_utils.color_temperature_kelvin_to_mired(
-                    self._bulbtype.kelvin_range.min
-                )
-            except WizLightNotKnownBulb:
-                _LOGGER.info("Kelvin is not present in the library. Fallback to 2200")
-                return color_utils.color_temperature_kelvin_to_mired(2200)
-        else:
-            # DW bulbs have a fixed range of color temperature
+        # DW bulbs have no kelvin
+        if self._bulbtype.bulb_type == BulbClass.DW:
             return 0
+        # If bulbtype is TW or RGB then return the kelvin value
+        try:
+            return color_utils.color_temperature_kelvin_to_mired(
+                self._bulbtype.kelvin_range.min
+            )
+        except WizLightNotKnownBulb:
+            _LOGGER.info("Kelvin is not present in the library. Fallback to 2200")
+            return color_utils.color_temperature_kelvin_to_mired(2200)
 
     def get_supported_features(self) -> int:
         """Flag supported features."""
         if self._bulbtype:
-            return self.featuremap()
+            features = 0
+            try:
+                # Map features for better reading
+                if self._bulbtype.features.brightness:
+                    features = features | SUPPORT_BRIGHTNESS
+                if self._bulbtype.features.color:
+                    features = features | SUPPORT_COLOR
+                if self._bulbtype.features.effect:
+                    features = features | SUPPORT_EFFECT
+                if self._bulbtype.features.color_tmp:
+                    features = features | SUPPORT_COLOR_TEMP
+                return features
+            except WizLightNotKnownBulb:
+                _LOGGER.info(
+                    "Bulb is not present in the library. Fallback to full feature"
+                )
+                return SUPPORT_FEATURES_RGB
         # fallback
         return SUPPORT_FEATURES_RGB
 
@@ -233,13 +245,12 @@ class WizBulbEntity(LightEntity):
             self.update_temperature()
             self.update_color()
             self.update_effect()
-            await self.update_scene_list()
 
     @property
     def device_info(self):
         """Get device specific attributes."""
         return {
-            "identifiers": {(DOMAIN, self._mac)},
+            "connections": {(CONNECTION_NETWORK_MAC, self._mac)},
             "name": self._attr_name,
             "manufacturer": "WiZ Light Platform",
             "model": f"{self._bulbtype.name} Mac: {self._mac}",
@@ -349,33 +360,9 @@ class WizBulbEntity(LightEntity):
                 "[wizlight %s] Bulbtype update failed - Timeout", self._light.ip
             )
 
-    async def update_scene_list(self):
-        """Update the scene list."""
-        self._scenes = await self._light.getSupportedScenes()
-
     async def get_mac(self):
         """Get the mac from the bulb."""
         try:
             self._mac = await self._light.getMac()
         except WizLightTimeOutError:
             _LOGGER.debug("[wizlight %s] Mac update failed - Timeout", self._light.ip)
-
-    def featuremap(self):
-        """Map the features from WizLight Class."""
-        if not self._bulbtype:
-            return SUPPORT_FEATURES_RGB
-        features = 0
-        try:
-            # Map features for better reading
-            if self._bulbtype.features.brightness:
-                features = features | SUPPORT_BRIGHTNESS
-            if self._bulbtype.features.color:
-                features = features | SUPPORT_COLOR
-            if self._bulbtype.features.effect:
-                features = features | SUPPORT_EFFECT
-            if self._bulbtype.features.color_tmp:
-                features = features | SUPPORT_COLOR_TEMP
-            return features
-        except WizLightNotKnownBulb:
-            _LOGGER.info("Bulb is not present in the library. Fallback to full feature")
-            return SUPPORT_FEATURES_RGB
