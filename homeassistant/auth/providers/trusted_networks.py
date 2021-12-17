@@ -97,7 +97,7 @@ class TrustedNetworksAuthProvider(AuthProvider):
     @property
     def support_mfa(self) -> bool:
         """Trusted Networks auth provider does not support MFA."""
-        return False
+        return True
 
     async def async_login_flow(self, context: dict[str, Any] | None) -> LoginFlow:
         """Return a flow to login."""
