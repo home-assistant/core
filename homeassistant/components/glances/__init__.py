@@ -20,6 +20,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
@@ -59,6 +60,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+CUSTOM_HTTP_CLIENT = 'custom_http_client'
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Configure Glances using config flow only."""
@@ -173,7 +175,6 @@ def get_api(hass, entry):
     """Return the api from glances_api."""
     params = entry.copy()
     params.pop(CONF_NAME)
-
-    # popping CONF_VERIFY_SSL for backward compatibility after it was deprecated
-    params.pop(CONF_VERIFY_SSL, None)
-    return Glances(**params)
+    verify_ssl = params.pop(CONF_VERIFY_SSL)
+    httpx_client = get_async_client(hass, verify_ssl=False)
+    return Glances(custom_httpx_client=httpx_client,  **params)
