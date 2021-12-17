@@ -38,8 +38,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Pure Energie config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        coordinator = hass.data[DOMAIN].pop(entry.entry_id)
-        await coordinator.pure_energie.close()
+        del hass.data[DOMAIN][entry.entry_id]
     return unload_ok
 
 
@@ -74,8 +73,7 @@ class PureEnergieDataUpdateCoordinator(DataUpdateCoordinator[PureEnergieData]):
     async def _async_update_data(self) -> PureEnergieData:
         """Fetch data from Pure Energie Meter."""
         data: PureEnergieData = {
-            SERVICE_DEVICE: await self.pure_energie.device(),
             SERVICE_SMARTMETER: await self.pure_energie.smartmeter(),
+            SERVICE_DEVICE: await self.pure_energie.device(),
         }
-
         return data

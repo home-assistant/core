@@ -13,6 +13,6 @@ SERVICE_DEVICE: Final = "device"
 SERVICE_SMARTMETER: Final = "smartmeter"
 
 SERVICES: dict[str, str] = {
-    # SERVICE_DEVICE: "Device",
     SERVICE_SMARTMETER: "Pure Energie Meter",
+    SERVICE_DEVICE: "Device",
 }
