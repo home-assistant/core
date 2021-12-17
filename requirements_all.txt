@@ -573,7 +573,7 @@ dweepy==0.3.0
 dynalite_devices==0.1.46
 
 # homeassistant.components.ebusd
-ebusdpy==0.0.16
+ebusdpy==0.0.17
 
 # homeassistant.components.ecoal_boiler
 ecoaliface==0.4.0
