@@ -4,7 +4,9 @@
 # myobj = gTTS(text=mytext, lang=language, slow=False)
 # myobj.save("welcome.wav")
 
-# import os
+import os
+
+import pyttsx3
 
 # os.system("sudo aplay -r 2500 welcome.mp3")
 
@@ -23,8 +25,8 @@
 # play(song)
 
 
-import pyttsx3
-
+os.system("sudo su - vscode")
+print("user changed")
 engine = pyttsx3.init()
 engine.say("I will speak this text")
 engine.runAndWait()

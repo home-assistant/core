@@ -30,6 +30,8 @@ RUN \
         portaudio19-dev \
         python-all-dev \
         python3-all-dev \
+        pulseaudio-utils \
+        mpg321 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -48,5 +50,31 @@ RUN pip3 install -r requirements.txt \
    && pip3 install -r requirements_test.txt \
    && rm -rf requirements.txt requirements_test.txt requirements_test_pre_commit.txt homeassistant/
 
+# ENV uname vscode
+# Set up the user
+# RUN export uname=$uname uid=2000 gid=2000 && \
+#     mkdir -p "/home/${uname}" && \
+#     echo "${uname}:x:${uid}:${gid}:${uname} User,,,:/home/${uname}:/bin/bash" >> /etc/passwd && \
+#     echo "${uname}:x:${uid}:" >> /etc/group && \
+#     mkdir -p /etc/sudoers.d && \
+#     echo "${uname} ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/${uname} && \
+#     chmod 0440 /etc/sudoers.d/${uname} && \
+#     chown ${uid}:${gid} -R /home/${uname} && \
+#     gpasswd -a ${uname} audio
+
+# RUN echo "${uname} ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/${uname} && \
+#     chmod 0440 /etc/sudoers.d/${uname} && \
+#     chown ${uid}:${gid} -R /home/${uname} && \
+#     gpasswd -a ${uname} audio
+
+RUN gpasswd -a root audio
+# RUN gpasswd -a root pulse
+# RUN gpasswd -a root pulse-access
+COPY pulse-client.conf /etc/pulse/client.conf
+# COPY pulse-client.conf /etc/pulse/client.conf.d/client.conf
+# COPY test_audio.py /home/${uname}
+# COPY test_mic.py /home/${uname}
+
+# USER ${uname}
 # Set the default shell to bash instead of sh
 ENV SHELL /bin/bash

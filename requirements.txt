@@ -27,3 +27,4 @@ pyaudio
 SpeechRecognition
 playsound
 gTTS
+pyttsx3
