@@ -49,12 +49,11 @@ def get_scanner(hass, config):
 
     status_json = fgt.monitor("system/status", "")
 
-    current_version = AwesomeVersion(status_json["version"][1:])
+    current_version = AwesomeVersion(status_json["version"])
     minimum_version = AwesomeVersion("6.4.3")
     if current_version < minimum_version:
         _LOGGER.error(
-            "Unsupported FortiOS version: %s."
-            "Version %s and newer are supported",
+            "Unsupported FortiOS version: %s. Version %s and newer are supported",
             current_version,
             minimum_version,
         )
