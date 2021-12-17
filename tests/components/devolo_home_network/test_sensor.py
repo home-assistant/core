@@ -90,7 +90,7 @@ async def test_update_neighboring_wifi_networks(hass: HomeAssistant):
         assert state.state == "1"
 
         er = entity_registry.async_get(hass)
-        assert er.async_get(state_key).entity_category == EntityCategory.DIAGNOSTIC
+        assert er.async_get(state_key).entity_category is EntityCategory.DIAGNOSTIC
 
         # Emulate device failure
         with patch(
