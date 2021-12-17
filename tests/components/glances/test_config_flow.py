@@ -25,6 +25,7 @@ DEMO_USER_INPUT = {
     "version": VERSION,
     "port": PORT,
     "ssl": False,
+    "verify_ssl": True,
 }
 
 
