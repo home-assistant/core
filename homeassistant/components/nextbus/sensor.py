@@ -5,8 +5,12 @@ import logging
 from py_nextbus import NextBusClient
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import CONF_NAME, DEVICE_CLASS_TIMESTAMP
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
+)
+from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.dt import utc_from_timestamp
 
@@ -112,7 +116,7 @@ class NextBusDepartureSensor(SensorEntity):
     the future using fuzzy logic and matching.
     """
 
-    _attr_device_class = DEVICE_CLASS_TIMESTAMP
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
     _attr_icon = "mdi:bus"
 
     def __init__(self, client, agency, route, stop, name=None):
