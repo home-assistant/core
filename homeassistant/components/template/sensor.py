@@ -205,8 +205,6 @@ class SensorTemplate(TemplateEntity, SensorEntity):
                 ENTITY_ID_FORMAT, object_id, hass=hass
             )
 
-        self._friendly_name_template = config.get(CONF_NAME)
-
         self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
         self._template = config.get(CONF_STATE)
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)

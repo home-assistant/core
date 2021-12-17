@@ -242,8 +242,7 @@ class TemplateEntity(Entity):
             self._friendly_name_template = config.get(CONF_NAME)
 
         # Try to render the name as it can influence the entity ID
-        if fallback_name is not None:
-            self._attr_name = fallback_name
+        self._attr_name = fallback_name
         if self._friendly_name_template:
             self._friendly_name_template.hass = hass
             with contextlib.suppress(TemplateError):
