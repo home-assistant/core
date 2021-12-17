@@ -175,5 +175,5 @@ def get_api(hass, entry):
     params.pop(CONF_NAME)
 
     # popping CONF_VERIFY_SSL for backward compatibility after it was deprecated
-    params.pop(CONF_VERIFY_SSL, false)
+    params.pop(CONF_VERIFY_SSL, None)
     return Glances(**params)
