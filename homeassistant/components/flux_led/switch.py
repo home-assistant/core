@@ -125,7 +125,7 @@ class FluxMusicSwitch(FluxEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the microphone on."""
-        if self._device.requires_turn_on and not self.is_on:
+        if self._device.requires_turn_on and not self._device.is_on:
             await self._device.async_turn_on()
         await self._device.async_set_music_mode()
         self.async_write_ha_state()
