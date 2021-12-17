@@ -381,9 +381,11 @@ class KeyFrameConverter:
         if not (self._turbojpeg and self.packet):
             return self.image
         image = None
+        packet = self.packet
+        self.packet = None
         # decode packet (try up to 3 times)
         for _i in range(3):
-            if frames := self.packet.decode():
+            if frames := packet.decode():
                 break
         if frames:
             image_file = BytesIO()
