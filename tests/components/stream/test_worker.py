@@ -13,7 +13,6 @@ pushed to the output streams. The packet sequence can be used to exercise
 failure modes or corner cases like how out of order packets are handled.
 """
 
-import asyncio
 import fractions
 import io
 import logging
@@ -883,12 +882,10 @@ async def test_get_image(hass, record_worker_sync):
     with patch.object(hass.config, "is_allowed_path", return_value=True):
         await stream.async_record("/example/path")
 
-    assert stream._keyframe_converter._image is None
-    image_future = asyncio.create_task(stream.get_image())
+    assert stream._keyframe_converter.image is None
 
     await record_worker_sync.join()
 
-    image = await image_future
-    assert image == EMPTY_8_6_JPEG
+    assert await stream.get_image() == EMPTY_8_6_JPEG
 
     stream.stop()

@@ -17,7 +17,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util.decorator import Registry
 
-from .const import ATTR_STREAMS, DOMAIN, KEYFRAME_TIMEOUT
+from .const import ATTR_STREAMS, DOMAIN
 
 if TYPE_CHECKING:
     from av import Packet
@@ -362,14 +362,7 @@ class StreamView(HomeAssistantView):
 
 
 class KeyFrameConverter:
-    """
-    Generate and hold the keyframe as a jpeg.
-
-    get_image is called from outside the worker. It sets the image_requested flag
-    and waits for an event from the worker.
-    check_generate_image and generate_image are called in the worker when the
-    image_requested flag is set.
-    """
+    """Generate and hold the keyframe as a jpeg."""
 
     def __init__(self) -> None:
         """Initialize."""
@@ -378,40 +371,15 @@ class KeyFrameConverter:
         # pylint: disable=import-outside-toplevel
         from homeassistant.components.camera.img_util import TurboJPEGSingleton
 
-        self.image_requested = False
         self.packet: Packet = None
-        self._image: bytes | None = None
-        self._event = asyncio.Event()
+        self.image: bytes | None = None
         self._turbojpeg = TurboJPEGSingleton.instance()
-
-    async def get_image(self) -> bytes | None:
-        """
-        Fetch an image from the Stream and return it as a jpeg in bytes.
-
-        This is called from outside the worker.
-        """
-        self.image_requested = True
-        try:
-            async with async_timeout.timeout(KEYFRAME_TIMEOUT):
-                await self._event.wait()
-        except asyncio.TimeoutError:
-            return None
-        return self._image
-
-    def check_generate_image(self) -> None:
-        """Generate the image if necessary and signal it is done from the worker."""
-        if self.packet:
-            self._image = self.generate_image()
-            self.packet = None
-        if self._image:
-            self.image_requested = False
-            self._event.set()
-            self._event.clear()
+        self.lock = asyncio.Lock()
 
     def generate_image(self) -> bytes | None:
-        """Generate the keyframe image in the worker."""
-        if not self._turbojpeg:
-            return None
+        """Generate the keyframe image. This is called in an executor thread."""
+        if not (self._turbojpeg and self.packet):
+            return self.image
         image = None
         # decode packet (try up to 3 times)
         for _i in range(3):
