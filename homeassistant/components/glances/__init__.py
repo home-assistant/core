@@ -20,9 +20,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -59,8 +59,6 @@ CONFIG_SCHEMA = vol.Schema(
     vol.All(cv.deprecated(DOMAIN), {DOMAIN: vol.All(cv.ensure_list, [GLANCES_SCHEMA])}),
     extra=vol.ALLOW_EXTRA,
 )
-
-CUSTOM_HTTP_CLIENT = 'custom_http_client'
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Configure Glances using config flow only."""
