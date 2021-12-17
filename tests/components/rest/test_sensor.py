@@ -264,7 +264,7 @@ async def test_setup_timestamp(hass, caplog):
     )
     state = hass.states.get("sensor.rest_sensor")
     assert state.state == "unknown"
-    assert state.attributes[ATTR_DEVICE_CLASS] is SensorDeviceClass.TIMESTAMP
+    assert state.attributes[ATTR_DEVICE_CLASS] is SensorDeviceClass.TIMESTAMP.value
     assert "sensor.rest_sensor rendered invalid timestamp" in caplog.text
 
     # Bad response: No timezone
@@ -279,7 +279,7 @@ async def test_setup_timestamp(hass, caplog):
     )
     state = hass.states.get("sensor.rest_sensor")
     assert state.state == "unknown"
-    assert state.attributes[ATTR_DEVICE_CLASS] is SensorDeviceClass.TIMESTAMP
+    assert state.attributes[ATTR_DEVICE_CLASS] is SensorDeviceClass.TIMESTAMP.value
     assert "sensor.rest_sensor rendered timestamp without timezone" in caplog.text
 
 
