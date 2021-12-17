@@ -5,7 +5,6 @@ import asyncio
 from collections import deque
 from collections.abc import Iterable
 import datetime
-from io import BytesIO
 from typing import TYPE_CHECKING
 
 from aiohttp import web
@@ -388,9 +387,6 @@ class KeyFrameConverter:
             if frames := packet.decode():
                 break
         if frames:
-            image_file = BytesIO()
             bgr_array = frames[0].to_ndarray(format="bgr24")
-            image_file.write(self._turbojpeg.encode(bgr_array))
-            image = image_file.getvalue()
-            image_file.close()
+            image = bytes(self._turbojpeg.encode(bgr_array))
         return image
