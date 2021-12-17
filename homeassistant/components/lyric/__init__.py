@@ -95,27 +95,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     client_id = hass.data[DOMAIN][CONF_CLIENT_ID]
     lyric = Lyric(client, client_id)
 
-    async def async_get_data() -> Lyric:
-        """Get data from the API."""
-        async with async_timeout.timeout(60):
-            await lyric.get_locations()
-        return lyric
-
-    async def async_update_data() -> Lyric:
+    async def async_update_data(force_refresh_token: bool = False) -> Lyric:
         """Fetch data from Lyric."""
         try:
-            return await async_get_data()
-        except LyricAuthenticationException:
+            if not force_refresh_token:
+                await oauth_session.async_ensure_token_valid()
+            else:
+                await oauth_session.force_refresh_token()
+
+            async with async_timeout.timeout(60):
+                await lyric.get_locations()
+            return lyric
+        except LyricAuthenticationException as exception:
             # Attempt to refresh the token before failing.
             # Honeywell appear to have issues keeping tokens saved.
-            try:
-                _LOGGER.info("Authentication failed. Attempting to refresh token")
-                await oauth_session.force_refresh_token()
-                return await async_get_data()
-            except LyricAuthenticationException as exception:
-                raise ConfigEntryAuthFailed from exception
-            except (LyricException, ClientResponseError) as exception:
-                raise UpdateFailed(exception) from exception
+            _LOGGER.info("Authentication failed. Attempting to refresh token")
+            if not force_refresh_token:
+                return await async_update_data(True)
+            raise ConfigEntryAuthFailed from exception
         except (LyricException, ClientResponseError) as exception:
             raise UpdateFailed(exception) from exception
 
