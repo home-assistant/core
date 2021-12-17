@@ -362,7 +362,14 @@ class StreamView(HomeAssistantView):
 
 
 class KeyFrameConverter:
-    """Generate and hold the keyframe as a jpeg."""
+    """
+    Generate and hold the keyframe as a jpeg.
+
+    get_image is called from outside the worker. It sets the image_requested flag
+    and waits for an event from the worker.
+    check_generate_image and generate_image are called in the worker when the
+    image_requested flag is set.
+    """
 
     def __init__(self) -> None:
         """Initialize."""
@@ -373,14 +380,11 @@ class KeyFrameConverter:
 
         self.image_requested = False
         self.packet: Packet = None
-        self._image = b""
+        self._image: bytes | None = None
         self._event = asyncio.Event()
-        self.generate_image = self._generate_image
         self._turbojpeg = TurboJPEGSingleton.instance()
-        if not self._turbojpeg:
-            self.generate_image = lambda: None
 
-    async def get_image(self) -> bytes:
+    async def get_image(self) -> bytes | None:
         """
         Fetch an image from the Stream and return it as a jpeg in bytes.
 
@@ -391,21 +395,24 @@ class KeyFrameConverter:
             async with async_timeout.timeout(KEYFRAME_TIMEOUT):
                 await self._event.wait()
         except asyncio.TimeoutError:
-            return b""
+            return None
         return self._image
 
     def check_generate_image(self) -> None:
         """Generate the image if necessary and signal it is done from the worker."""
         if self.packet:
-            self.generate_image()
+            self._image = self.generate_image()
             self.packet = None
         if self._image:
             self.image_requested = False
             self._event.set()
             self._event.clear()
 
-    def _generate_image(self) -> None:
+    def generate_image(self) -> bytes | None:
         """Generate the keyframe image in the worker."""
+        if not self._turbojpeg:
+            return None
+        image = None
         # decode packet (try up to 3 times)
         for _i in range(3):
             if frames := self.packet.decode():
@@ -414,5 +421,6 @@ class KeyFrameConverter:
             image_file = BytesIO()
             bgr_array = frames[0].to_ndarray(format="bgr24")
             image_file.write(self._turbojpeg.encode(bgr_array))
-            self._image = image_file.getvalue()
+            image = image_file.getvalue()
             image_file.close()
+        return image

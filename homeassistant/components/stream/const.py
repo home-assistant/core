@@ -43,4 +43,4 @@ CONF_LL_HLS = "ll_hls"
 CONF_PART_DURATION = "part_duration"
 CONF_SEGMENT_DURATION = "segment_duration"
 
-KEYFRAME_TIMEOUT = 60  # Number of seconds to wait for the next keyframe in get_image
+KEYFRAME_TIMEOUT = 10  # Number of seconds to wait for the worker to get the keyframe

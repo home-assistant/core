@@ -424,6 +424,6 @@ class Stream:
             await hls.recv()
             recorder.prepend(list(hls.get_segments())[-num_segments:])
 
-    async def get_image(self) -> bytes:
+    async def get_image(self) -> bytes | None:
         """Fetch an image from the Stream and return it as a jpeg in bytes."""
         return await self._keyframe_converter.get_image()
