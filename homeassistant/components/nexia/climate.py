@@ -11,6 +11,7 @@ from nexia.const import (
     SYSTEM_STATUS_IDLE,
     UNIT_FAHRENHEIT,
 )
+from nexia.util import find_humidity_setpoint
 import voluptuous as vol
 
 from homeassistant.components.climate import ClimateEntity
@@ -58,7 +59,7 @@ from .coordinator import NexiaDataUpdateCoordinator
 from .entity import NexiaThermostatZoneEntity
 from .util import percent_conv
 
-PARALLEL_UPDATES = 1
+PARALLEL_UPDATES = 1  # keep data in sync with only one connection at a time
 
 SERVICE_SET_AIRCLEANER_MODE = "set_aircleaner_mode"
 SERVICE_SET_HUMIDIFY_SETPOINT = "set_humidify_setpoint"
@@ -233,9 +234,9 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
     def set_humidity(self, humidity):
         """Dehumidify target."""
         if self._thermostat.has_dehumidify_support():
-            self._thermostat.set_dehumidify_setpoint(humidity / 100.0)
+            self.set_dehumidify_setpoint(humidity)
         else:
-            self._thermostat.set_humidify_setpoint(humidity / 100.0)
+            self.set_humidify_setpoint(humidity)
         self._signal_thermostat_update()
 
     @property
@@ -455,7 +456,22 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
 
     def set_humidify_setpoint(self, humidity):
         """Set the humidify setpoint."""
-        self._thermostat.set_humidify_setpoint(humidity / 100.0)
+        target_humidity = find_humidity_setpoint(humidity / 100.0)
+        if self._thermostat.get_humidify_setpoint() == target_humidity:
+            # Trying to set the humidify setpoint to the
+            # same value will cause the api to timeout
+            return
+        self._thermostat.set_humidify_setpoint(target_humidity)
+        self._signal_thermostat_update()
+
+    def set_dehumidify_setpoint(self, humidity):
+        """Set the dehumidify setpoint."""
+        target_humidity = find_humidity_setpoint(humidity / 100.0)
+        if self._thermostat.get_dehumidify_setpoint() == target_humidity:
+            # Trying to set the dehumidify setpoint to the
+            # same value will cause the api to timeout
+            return
+        self._thermostat.set_dehumidify_setpoint(target_humidity)
         self._signal_thermostat_update()
 
     def _signal_thermostat_update(self):
