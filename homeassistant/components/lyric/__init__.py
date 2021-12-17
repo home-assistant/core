@@ -106,8 +106,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except ClientResponseError as exception:
             if exception.status in (HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN):
                 raise ConfigEntryAuthFailed from exception
-            else:
-                raise UpdateFailed(exception) from exception
+            raise UpdateFailed(exception) from exception
 
         try:
             async with async_timeout.timeout(60):
