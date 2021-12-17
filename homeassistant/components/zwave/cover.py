@@ -6,6 +6,7 @@ from homeassistant.components.cover import (
     DOMAIN,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
+    CoverDeviceClass,
     CoverEntity,
 )
 from homeassistant.core import callback
