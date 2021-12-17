@@ -1,6 +1,6 @@
 """Support for MAX! binary sensors via MAX! Cube."""
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_WINDOW,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 
@@ -43,7 +43,7 @@ class MaxCubeShutter(BinarySensorEntity):
     @property
     def device_class(self):
         """Return the class of this sensor."""
-        return DEVICE_CLASS_WINDOW
+        return BinarySensorDeviceClass.WINDOW
 
     @property
     def is_on(self):
