@@ -10,9 +10,7 @@
                     "password": "[%key:common::config_flow::data::password%]",
                     "client_id": "[%key:common::config_flow::data::api_key%]",
                     "heating_type": "Heating type"
-                },
-                "description": "Setup ViCare to control your Viessmann device.\nMinimum needed: username, password, API key.",
-                "title": "Setup ViCare"
+                }
             }
         },
         "error": {
