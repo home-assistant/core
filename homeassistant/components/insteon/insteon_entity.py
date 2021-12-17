@@ -3,6 +3,7 @@ import functools
 import logging
 
 from pyinsteon import devices
+from pyinsteon.extended_property import ON_LEVEL, RAMP_RATE
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
@@ -75,7 +76,14 @@ class InsteonEntity(Entity):
     @property
     def extra_state_attributes(self):
         """Provide attributes for display on device card."""
-        return {"insteon_address": self.address, "insteon_group": self.group}
+        ramprate = self.get_device_property(RAMP_RATE)
+        onamount = self.get_device_property(ON_LEVEL)
+        return {
+            "insteon_address": self.address,
+            "insteon_group": self.group,
+            "insteon_ramprate": ramprate,
+            "insteon_onlevel": onamount,
+        }
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -147,6 +155,15 @@ class InsteonEntity(Entity):
     def _print_aldb(self):
         """Print the device ALDB to the log file."""
         print_aldb_to_log(self._insteon_device.aldb)
+
+    def get_device_property(self, name: str):
+        """Get a single Insteon device property value (raw)."""
+        value = None
+        if name in self._insteon_device.properties:
+            prop = self._insteon_device.properties[name]
+            if prop is not None:
+                value = prop.value if prop.new_value is None else prop.new_value
+        return value
 
     def _get_label(self):
         """Get the device label for grouped devices."""
