@@ -37,7 +37,7 @@ DEFAULT_OPTIMISTIC = False
 SELECT_SCHEMA = (
     vol.Schema(
         {
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.template,
+            vol.Optional(CONF_NAME): cv.template,
             vol.Required(CONF_STATE): cv.template,
             vol.Required(CONF_SELECT_OPTION): cv.SCRIPT_SCHEMA,
             vol.Required(ATTR_OPTIONS): cv.template,

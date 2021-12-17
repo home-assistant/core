@@ -41,7 +41,7 @@ DEFAULT_OPTIMISTIC = False
 NUMBER_SCHEMA = (
     vol.Schema(
         {
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.template,
+            vol.Optional(CONF_NAME): cv.template,
             vol.Required(CONF_STATE): cv.template,
             vol.Required(CONF_SET_VALUE): cv.SCRIPT_SCHEMA,
             vol.Required(ATTR_STEP): cv.template,
