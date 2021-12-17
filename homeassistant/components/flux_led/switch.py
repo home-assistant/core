@@ -140,7 +140,7 @@ class FluxMusicSwitch(FluxEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return true if microphone is is on."""
-        return self._device.effect == MODE_MUSIC
+        return self._device.is_on and self._device.effect == MODE_MUSIC
 
     @property
     def icon(self) -> str:
