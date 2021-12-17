@@ -164,6 +164,16 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Smart Water Timer
+    # No documentation available - https://www.moeshouse.com/products/smart-bluetooth-sprinkler-water-timer-with-rain-delay-filter-washer-programmable-irrigation-timer-with-automatic-and-manual-watering-for-standard-outdoor-garden-faucet-lawn-bluetooth-hub-required-for-irrigation-history
+    "sfkzq": (
+        NumberEntityDescription(
+            key=DPCode.COUNTDOWN,
+            name="Countdown",
+            icon="mdi:timer-outline",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     # Siren Alarm
     # https://developer.tuya.com/en/docs/iot/categorysgbj?id=Kaiuz37tlpbnu
     "sgbj": (

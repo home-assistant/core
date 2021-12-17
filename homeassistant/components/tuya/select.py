@@ -77,6 +77,21 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             icon="mdi:thermometer-lines",
         ),
     ),
+    # Smart Water Timer
+    "sfkzq": (
+        SelectEntityDescription(
+            key=DPCode.SMART_WEATHER,
+            name="Smart Weather",
+            icon="mdi:weather-partly-cloudy",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SelectEntityDescription(
+            key=DPCode.WEATHER_DELAY,
+            name="Weather Delay",
+            icon="mdi:weather-cloudy-clock",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     # Siren Alarm
     # https://developer.tuya.com/en/docs/iot/categorysgbj?id=Kaiuz37tlpbnu
     "sgbj": (
