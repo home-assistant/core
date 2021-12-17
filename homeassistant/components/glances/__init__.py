@@ -173,7 +173,7 @@ def get_api(hass, entry):
     """Return the api from glances_api."""
     params = entry.copy()
     params.pop(CONF_NAME)
-    
+
     # poping CONF_VERIFY_SSL for backward compatibility after it was deprecated
     verify_ssl = params.pop(CONF_VERIFY_SSL)
     return Glances(**params)
