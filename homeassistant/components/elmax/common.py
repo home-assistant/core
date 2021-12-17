@@ -6,7 +6,12 @@ import logging
 from logging import Logger
 
 import async_timeout
-from elmax_api.exceptions import ElmaxApiError, ElmaxBadLoginError, ElmaxBadPinError
+from elmax_api.exceptions import (
+    ElmaxApiError,
+    ElmaxBadLoginError,
+    ElmaxBadPinError,
+    ElmaxNetworkError,
+)
 from elmax_api.http import Elmax
 from elmax_api.model.actuator import Actuator
 from elmax_api.model.endpoint import DeviceEndpoint
@@ -116,6 +121,10 @@ class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
             raise ConfigEntryAuthFailed("Refused username/password") from err
         except ElmaxApiError as err:
             raise UpdateFailed(f"Error communicating with ELMAX API: {err}") from err
+        except ElmaxNetworkError as err:
+            raise UpdateFailed(
+                "A network error occurred while communicating with Elmax cloud."
+            ) from err
 
 
 class ElmaxEntity(CoordinatorEntity):
