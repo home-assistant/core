@@ -9,7 +9,7 @@ from samsungctl import exceptions
 from samsungtvws.exceptions import ConnectionFailure
 from websocket import WebSocketException
 
-from homeassistant.components.media_player import DEVICE_CLASS_TV
+from homeassistant.components.media_player import MediaPlayerDeviceClass
 from homeassistant.components.media_player.const import (
     ATTR_INPUT_SOURCE,
     ATTR_MEDIA_CONTENT_ID,
@@ -517,7 +517,7 @@ async def test_device_class(hass, remote):
     """Test for device_class property."""
     await setup_samsungtv(hass, MOCK_CONFIG)
     state = hass.states.get(ENTITY_ID)
-    assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_TV
+    assert state.attributes[ATTR_DEVICE_CLASS] is MediaPlayerDeviceClass.TV.value
 
 
 async def test_turn_off_websocket(hass, remotews):
