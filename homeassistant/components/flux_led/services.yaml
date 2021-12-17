@@ -115,7 +115,7 @@ set_music_mode:
         number:
           min: 1
           step: 1
-          max: 100
+          max: 16
     foreground_color:
       description: The foreground RGB color
       example: "[255, 100, 100]"

@@ -126,7 +126,7 @@ SET_MUSIC_MODE_DICT: Final = {
         vol.Range(min=0, max=100), vol.Coerce(int)
     ),
     vol.Optional(ATTR_EFFECT, default=1): vol.All(
-        vol.Range(min=1, max=100), vol.Coerce(int)
+        vol.Range(min=1, max=16), vol.Coerce(int)
     ),
     vol.Optional(ATTR_FOREGROUND_COLOR): vol.All(
         vol.Coerce(tuple), vol.ExactSequence((cv.byte,) * 3)
