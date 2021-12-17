@@ -89,6 +89,10 @@ MODE_ATTRS = {
     ATTR_WHITE,
 }
 
+ATTR_FOREGROUND_COLOR: Final = "foreground_color"
+ATTR_BACKGROUND_COLOR: Final = "background_color"
+ATTR_SENSITIVITY: Final = "sensitivity"
+
 # Constant color temp values for 2 flux_led special modes
 # Warm-white and Cool-white modes
 COLOR_TEMP_WARM_VS_COLD_WHITE_CUT_OFF: Final = 285
@@ -97,6 +101,7 @@ EFFECT_CUSTOM: Final = "custom"
 
 SERVICE_CUSTOM_EFFECT: Final = "set_custom_effect"
 SERVICE_SET_ZONES: Final = "set_zones"
+SERVICE_SET_MUSIC_MODE: Final = "set_music_mode"
 
 CUSTOM_EFFECT_DICT: Final = {
     vol.Required(CONF_COLORS): vol.All(
@@ -109,6 +114,25 @@ CUSTOM_EFFECT_DICT: Final = {
     ),
     vol.Optional(CONF_TRANSITION, default=TRANSITION_GRADUAL): vol.All(
         cv.string, vol.In([TRANSITION_GRADUAL, TRANSITION_JUMP, TRANSITION_STROBE])
+    ),
+}
+
+
+SET_MUSIC_MODE_DICT: Final = {
+    vol.Optional(ATTR_FOREGROUND_COLOR): vol.All(
+        vol.Coerce(tuple), vol.ExactSequence((cv.byte,) * 3)
+    ),
+    vol.Optional(ATTR_BACKGROUND_COLOR): vol.All(
+        vol.Coerce(tuple), vol.ExactSequence((cv.byte,) * 3)
+    ),
+    vol.Optional(ATTR_SENSITIVITY, default=100): vol.All(
+        vol.Range(min=0, max=100), vol.Coerce(int)
+    ),
+    vol.Optional(ATTR_BRIGHTNESS, default=100): vol.All(
+        vol.Range(min=0, max=100), vol.Coerce(int)
+    ),
+    vol.Optional(ATTR_EFFECT, default=1): vol.All(
+        vol.Range(min=1, max=100), vol.Coerce(int)
     ),
 }
 
@@ -209,6 +233,11 @@ async def async_setup_entry(
         SERVICE_SET_ZONES,
         SET_ZONES_DICT,
         "async_set_zones",
+    )
+    platform.async_register_entity_service(
+        SERVICE_SET_MUSIC_MODE,
+        SET_MUSIC_MODE_DICT,
+        "async_set_music_mode",
     )
     options = entry.options
 
@@ -409,4 +438,21 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
             colors,
             speed_pct,
             _str_to_multi_color_effect(effect),
+        )
+
+    async def async_set_music_mode(
+        self,
+        foreground_color: tuple[int, int, int] | None,
+        background_color: tuple[int, int, int] | None,
+        sensitivity: int | None,
+        brightness: int | None,
+        effect: int | None,
+    ) -> None:
+        """Configure music mode."""
+        await self._device.async_set_music_mode(
+            sensitivity=sensitivity,
+            brightness=brightness,
+            effect=effect,
+            foreground_color=foreground_color,
+            background_color=background_color,
         )
