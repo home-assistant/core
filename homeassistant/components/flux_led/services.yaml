@@ -84,18 +84,6 @@ set_music_mode:
       integration: flux_led
       domain: light
   fields:
-    foreground_color:
-      description: The foreground RGB color
-      example: "[255, 100, 100]"
-      required: false
-      selector:
-        object:
-    background_color:
-      description: The background RGB color
-      example: "[255, 100, 100]"
-      required: false
-      selector:
-        object:
     sensitivity:
       description: Microphone sensitivity (0-100)
       example: 80
@@ -128,3 +116,15 @@ set_music_mode:
           min: 1
           step: 1
           max: 100
+    foreground_color:
+      description: The foreground RGB color
+      example: "[255, 100, 100]"
+      required: false
+      selector:
+        object:
+    background_color:
+      description: The background RGB color
+      example: "[255, 100, 100]"
+      required: false
+      selector:
+        object:

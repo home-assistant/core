@@ -119,12 +119,6 @@ CUSTOM_EFFECT_DICT: Final = {
 
 
 SET_MUSIC_MODE_DICT: Final = {
-    vol.Optional(ATTR_FOREGROUND_COLOR): vol.All(
-        vol.Coerce(tuple), vol.ExactSequence((cv.byte,) * 3)
-    ),
-    vol.Optional(ATTR_BACKGROUND_COLOR): vol.All(
-        vol.Coerce(tuple), vol.ExactSequence((cv.byte,) * 3)
-    ),
     vol.Optional(ATTR_SENSITIVITY, default=100): vol.All(
         vol.Range(min=0, max=100), vol.Coerce(int)
     ),
@@ -133,6 +127,12 @@ SET_MUSIC_MODE_DICT: Final = {
     ),
     vol.Optional(ATTR_EFFECT, default=1): vol.All(
         vol.Range(min=1, max=100), vol.Coerce(int)
+    ),
+    vol.Optional(ATTR_FOREGROUND_COLOR): vol.All(
+        vol.Coerce(tuple), vol.ExactSequence((cv.byte,) * 3)
+    ),
+    vol.Optional(ATTR_BACKGROUND_COLOR): vol.All(
+        vol.Coerce(tuple), vol.ExactSequence((cv.byte,) * 3)
     ),
 }
 
@@ -442,11 +442,11 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
 
     async def async_set_music_mode(
         self,
-        foreground_color: tuple[int, int, int] | None,
-        background_color: tuple[int, int, int] | None,
-        sensitivity: int | None,
-        brightness: int | None,
-        effect: int | None,
+        sensitivity: int,
+        brightness: int,
+        effect: int,
+        foreground_color: tuple[int, int, int] | None = None,
+        background_color: tuple[int, int, int] | None = None,
     ) -> None:
         """Configure music mode."""
         await self._device.async_set_music_mode(
