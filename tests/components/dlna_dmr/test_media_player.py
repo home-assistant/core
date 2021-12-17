@@ -381,7 +381,7 @@ async def test_event_subscribe_rejected(
 
     Device state will instead be obtained via polling in async_update.
     """
-    dmr_device_mock.async_subscribe_services.side_effect = UpnpResponseError(501)
+    dmr_device_mock.async_subscribe_services.side_effect = UpnpResponseError(status=501)
 
     mock_entity_id = await setup_mock_component(hass, config_entry_mock)
     mock_state = hass.states.get(mock_entity_id)
