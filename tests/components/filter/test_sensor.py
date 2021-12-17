@@ -282,7 +282,7 @@ async def test_setup(hass):
         state = hass.states.get("sensor.test")
         assert state.attributes["icon"] == "mdi:test"
         assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TEMPERATURE
-        assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.TOTAL_INCREASING
+        assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.TOTAL_INCREASING
         assert state.state == "1.0"
 
 
