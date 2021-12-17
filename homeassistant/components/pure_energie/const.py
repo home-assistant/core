@@ -7,7 +7,7 @@ from typing import Final
 
 DOMAIN: Final = "pure_energie"
 LOGGER = logging.getLogger(__package__)
-SCAN_INTERVAL = timedelta(seconds=5)
+SCAN_INTERVAL = timedelta(seconds=10)
 
 SERVICE_DEVICE: Final = "device"
 SERVICE_SMARTMETER: Final = "smartmeter"
