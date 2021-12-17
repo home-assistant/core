@@ -186,7 +186,7 @@ aiohomekit==0.6.4
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==3.0.5
+aiohue==3.0.6
 
 # homeassistant.components.imap
 aioimaplib==0.9.0
@@ -440,7 +440,7 @@ brother==1.1.0
 brottsplatskartan==0.0.1
 
 # homeassistant.components.brunt
-brunt==1.0.1
+brunt==1.0.2
 
 # homeassistant.components.bsblan
 bsblan==0.4.0
@@ -573,7 +573,7 @@ dweepy==0.3.0
 dynalite_devices==0.1.46
 
 # homeassistant.components.ebusd
-ebusdpy==0.0.16
+ebusdpy==0.0.17
 
 # homeassistant.components.ecoal_boiler
 ecoaliface==0.4.0
@@ -658,7 +658,7 @@ fjaraskupan==1.0.2
 flipr-api==1.4.1
 
 # homeassistant.components.flux_led
-flux_led==0.26.7
+flux_led==0.26.15
 
 # homeassistant.components.homekit
 fnvhash==0.1.0
@@ -738,7 +738,7 @@ google-cloud-pubsub==2.1.0
 google-cloud-texttospeech==0.4.0
 
 # homeassistant.components.nest
-google-nest-sdm==0.4.8
+google-nest-sdm==0.4.9
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
