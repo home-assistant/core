@@ -108,6 +108,4 @@ class PureEnergieSensorEntity(CoordinatorEntity, SensorEntity):
         value = getattr(
             self.coordinator.data[self._service_key], self.entity_description.key
         )
-        if isinstance(value, str):
-            return value.lower()
         return value

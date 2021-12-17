@@ -73,7 +73,7 @@ class PureEnergieDataUpdateCoordinator(DataUpdateCoordinator[PureEnergieData]):
     async def _async_update_data(self) -> PureEnergieData:
         """Fetch data from Pure Energie Meter."""
         data: PureEnergieData = {
-            SERVICE_SMARTMETER: await self.pure_energie.smartmeter(),
             SERVICE_DEVICE: await self.pure_energie.device(),
+            SERVICE_SMARTMETER: await self.pure_energie.smartmeter(),
         }
         return data

@@ -14,5 +14,4 @@ SERVICE_SMARTMETER: Final = "smartmeter"
 
 SERVICES: dict[str, str] = {
     SERVICE_SMARTMETER: "Pure Energie Meter",
-    SERVICE_DEVICE: "Device",
 }
