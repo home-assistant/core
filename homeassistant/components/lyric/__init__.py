@@ -115,7 +115,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except LyricAuthenticationException as exception:
             # Attempt to refresh the token before failing.
             # Honeywell appear to have issues keeping tokens saved.
-            _LOGGER.info("Authentication failed. Attempting to refresh token")
+            _LOGGER.debug("Authentication failed. Attempting to refresh token")
             if not force_refresh_token:
                 return await async_update_data(force_refresh_token=True)
             raise ConfigEntryAuthFailed from exception
