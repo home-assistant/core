@@ -60,6 +60,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Configure Glances using config flow only."""
     if DOMAIN in config:
