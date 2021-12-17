@@ -15,6 +15,15 @@ from .const import DOMAIN, PLATFORMS, ZWAVE_PLATFORMS
 _LOGGER = logging.getLogger(__name__)
 
 
+async def get_uuid(url, token):
+    conn = ZWaveMe(url=url, token=token)
+    uuid = None
+    if await conn.get_connection():
+        uuid = await conn.get_uuid()
+    await conn.close_ws()
+    return uuid
+
+
 async def async_setup_entry(hass, entry):
     """Set up Z-Wave-Me from a config entry."""
     hass.data[DOMAIN] = {}
@@ -77,7 +86,7 @@ class ZWaveMeController:
 
 
 async def async_setup_platforms(
-    hass: HomeAssistant, entry: ConfigEntry, controller: ZWaveMeController
+        hass: HomeAssistant, entry: ConfigEntry, controller: ZWaveMeController
 ) -> None:
     """Set up platforms."""
     await asyncio.gather(

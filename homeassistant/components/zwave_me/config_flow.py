@@ -7,10 +7,13 @@ import voluptuous as vol
 from zwave_me_ws import ZWaveMe
 
 from homeassistant import config_entries
+from . import get_uuid
 
 from .const import CONF_TOKEN, CONF_URL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+
 
 
 class ZWaveMeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -54,17 +57,14 @@ class ZWaveMeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     data_schema=schema,
                     errors=errors,
                 )
-            conn = ZWaveMe(url=self.url, token=self.token)
-            if await conn.get_connection():
-                uuid = await conn.get_uuid()
-                if uuid is not None:
-                    await self.async_set_unique_id(uuid + self.url)
-                    self._abort_if_unique_id_configured()
-                    await conn.close_ws()
-                    return self.async_create_entry(
-                        title=self.url,
-                        data={"url": self.url, "token": self.token},
-                    )
+            uuid = await get_uuid(self.url, self.token)
+            if uuid is not None:
+                await self.async_set_unique_id(uuid + self.url)
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(
+                    title=self.url,
+                    data={"url": self.url, "token": self.token},
+                )
             errors[CONF_URL] = "could_not_retrieve_data"
         return self.async_show_form(
             step_id="user",
