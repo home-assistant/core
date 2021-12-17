@@ -17,6 +17,7 @@ from .. import mqtt
 from .const import (
     ATTR_DISCOVERY_HASH,
     ATTR_DISCOVERY_TOPIC,
+    CONF_ENCODING,
     CONF_QOS,
     CONF_TOPIC,
     DOMAIN,
@@ -185,6 +186,7 @@ class MQTTTagScanner:
                     "topic": self._config[CONF_TOPIC],
                     "msg_callback": tag_scanned,
                     "qos": self._config[CONF_QOS],
+                    "encoding": self._config[CONF_ENCODING] or None,
                 }
             },
         )

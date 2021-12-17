@@ -214,6 +214,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
                 "topic": self._config.get(CONF_STATE_TOPIC),
                 "msg_callback": state_message_received,
                 "qos": self._config[CONF_QOS],
+                "encoding": self._config[CONF_ENCODING] or None,
             }
         self._sub_state = await subscription.async_subscribe_topics(
             self.hass, self._sub_state, topics

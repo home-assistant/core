@@ -254,6 +254,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
                         "topic": self._topics[CONF_STATE_TOPIC],
                         "msg_callback": state_received,
                         "qos": self._config[CONF_QOS],
+                        "encoding": self._config[CONF_ENCODING] or None,
                     }
                 },
             )

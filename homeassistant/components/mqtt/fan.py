@@ -385,6 +385,7 @@ class MqttFan(MqttEntity, FanEntity):
                 "topic": self._topic[CONF_STATE_TOPIC],
                 "msg_callback": state_received,
                 "qos": self._config[CONF_QOS],
+                "encoding": self._config[CONF_ENCODING] or None,
             }
 
         @callback
@@ -429,6 +430,7 @@ class MqttFan(MqttEntity, FanEntity):
                 "topic": self._topic[CONF_PERCENTAGE_STATE_TOPIC],
                 "msg_callback": percentage_received,
                 "qos": self._config[CONF_QOS],
+                "encoding": self._config[CONF_ENCODING] or None,
             }
             self._percentage = None
 
@@ -461,6 +463,7 @@ class MqttFan(MqttEntity, FanEntity):
                 "topic": self._topic[CONF_PRESET_MODE_STATE_TOPIC],
                 "msg_callback": preset_mode_received,
                 "qos": self._config[CONF_QOS],
+                "encoding": self._config[CONF_ENCODING] or None,
             }
             self._preset_mode = None
 
@@ -483,6 +486,7 @@ class MqttFan(MqttEntity, FanEntity):
                 "topic": self._topic[CONF_OSCILLATION_STATE_TOPIC],
                 "msg_callback": oscillation_received,
                 "qos": self._config[CONF_QOS],
+                "encoding": self._config[CONF_ENCODING] or None,
             }
             self._oscillation = False
 
