@@ -517,7 +517,7 @@ async def test_device_class(hass, remote):
     """Test for device_class property."""
     await setup_samsungtv(hass, MOCK_CONFIG)
     state = hass.states.get(ENTITY_ID)
-    assert state.attributes[ATTR_DEVICE_CLASS] is MediaPlayerDeviceClass.TV
+    assert state.attributes[ATTR_DEVICE_CLASS] is MediaPlayerDeviceClass.TV.value
 
 
 async def test_turn_off_websocket(hass, remotews):
