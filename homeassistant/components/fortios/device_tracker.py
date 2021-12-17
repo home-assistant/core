@@ -5,6 +5,7 @@ This component is part of the device_tracker platform.
 """
 import logging
 
+from awesomeversion import AwesomeVersion
 from fortiosapi import FortiOSAPI
 import voluptuous as vol
 
@@ -15,7 +16,6 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.const import CONF_HOST, CONF_TOKEN, CONF_VERIFY_SSL
 import homeassistant.helpers.config_validation as cv
-from awesomeversion import AwesomeVersion
 
 _LOGGER = logging.getLogger(__name__)
 DEFAULT_VERIFY_SSL = False
@@ -53,10 +53,10 @@ def get_scanner(hass, config):
     minimum_version = AwesomeVersion("6.4.3")
     if current_version < minimum_version:
         _LOGGER.error(
-            "Unsupported FortiOS version :  %s.",
-            "Version %s and newer are supported.",
+            "Unsupported FortiOS version :  %s.\
+            Version %s and newer are supported.",
             current_version,
-            minimum_version
+            minimum_version,
         )
         return None
 
