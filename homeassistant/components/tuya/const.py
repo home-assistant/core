@@ -167,6 +167,7 @@ class DPCode(str, Enum):
     CONTROL = "control"
     CONTROL_2 = "control_2"
     CONTROL_3 = "control_3"
+    COUNTDOWN = "countdown"
     CRY_DETECTION_SWITCH = "cry_detection_switch"
     CUP_NUMBER = "cup_number"  # NUmber of cups
     CUR_CURRENT = "cur_current"  # Actual current
@@ -255,6 +256,7 @@ class DPCode(str, Enum):
     SHOCK_STATE = "shock_state"  # Vibration status
     SIREN_SWITCH = "siren_switch"
     SITUATION_SET = "situation_set"
+    SMART_WEATHER = "smart_weather"
     SMOKE_SENSOR_STATE = "smoke_sensor_state"
     SMOKE_SENSOR_STATUS = "smoke_sensor_status"
     SMOKE_SENSOR_VALUE = "smoke_sensor_value"
@@ -319,11 +321,13 @@ class DPCode(str, Enum):
     WATER_RESET = "water_reset"  # Resetting of water usage days
     WATER_SET = "water_set"  # Water level
     WATERSENSOR_STATE = "watersensor_state"
+    WEATHER_DELAY = "weather_delay"
     WET = "wet"  # Humidification
     WIRELESS_BATTERYLOCK = "wireless_batterylock"
     WIRELESS_ELECTRICITY = "wireless_electricity"
     WORK_MODE = "work_mode"  # Working mode
     WORK_POWER = "work_power"
+    WORK_STATE = "work_state"
 
 
 @dataclass
