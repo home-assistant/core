@@ -21,7 +21,7 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_BEARING,
     ATTR_WEATHER_WIND_SPEED,
 )
-from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.const import ATTR_ATTRIBUTION, PRESSURE_HPA
 import homeassistant.util.dt as dt_util
 
 from .util import async_init_integration
@@ -29,6 +29,8 @@ from .util import async_init_integration
 
 async def test_aemet_weather(hass):
     """Test states of the weather."""
+
+    hass.config.units.pressure_unit = PRESSURE_HPA
 
     now = dt_util.parse_datetime("2021-01-09 12:00:00+00:00")
     with patch("homeassistant.util.dt.now", return_value=now), patch(
