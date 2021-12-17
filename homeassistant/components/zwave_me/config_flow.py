@@ -4,16 +4,13 @@ import logging
 
 from url_normalize import url_normalize
 import voluptuous as vol
-from zwave_me_ws import ZWaveMe
 
 from homeassistant import config_entries
-from . import get_uuid
 
+from . import get_uuid
 from .const import CONF_TOKEN, CONF_URL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-
 
 
 class ZWaveMeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

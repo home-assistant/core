@@ -7,7 +7,8 @@ from homeassistant.components.zwave_me.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM, FlowResult,
+    RESULT_TYPE_FORM,
+    FlowResult,
 )
 
 MOCK_ZEROCONF_DATA = zeroconf.ZeroconfServiceInfo(
@@ -34,7 +35,7 @@ async def test_form(hass: HomeAssistant) -> None:
         with patch(
             "homeassistant.components.zwave_me.get_uuid",
             return_value="12345678",
-        ) as q:
+        ):
             result = await hass.config_entries.flow.async_init(
                 DOMAIN, context={"source": config_entries.SOURCE_USER}
             )

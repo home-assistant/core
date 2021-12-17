@@ -16,6 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def get_uuid(url, token):
+    """Get an uuid from Z-Wave-Me."""
     conn = ZWaveMe(url=url, token=token)
     uuid = None
     if await conn.get_connection():
@@ -86,7 +87,7 @@ class ZWaveMeController:
 
 
 async def async_setup_platforms(
-        hass: HomeAssistant, entry: ConfigEntry, controller: ZWaveMeController
+    hass: HomeAssistant, entry: ConfigEntry, controller: ZWaveMeController
 ) -> None:
     """Set up platforms."""
     await asyncio.gather(
