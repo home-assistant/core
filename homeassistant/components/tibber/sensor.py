@@ -8,6 +8,12 @@ from random import randrange
 
 import aiohttp
 
+from homeassistant.components.recorder.models import StatisticData, StatisticMetaData
+from homeassistant.components.recorder.statistics import (
+    async_add_external_statistics,
+    get_last_statistics,
+    statistics_during_period,
+)
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -235,6 +241,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         try:
             await home.update_info()
         except asyncio.TimeoutError as err:
+            print(err)
             _LOGGER.error("Timeout connecting to Tibber home: %s ", err)
             raise PlatformNotReady() from err
         except aiohttp.ClientError as err:
@@ -251,13 +258,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
             )
         if home.has_active_subscription and not home.has_real_time_consumption:
             if coordinator is None:
-                coordinator = update_coordinator.DataUpdateCoordinator(
-                    hass,
-                    _LOGGER,
-                    name=f"Tibber {tibber_connection.name}",
-                    update_method=tibber_connection.fetch_consumption_data_active_homes,
-                    update_interval=timedelta(hours=1),
-                )
+                coordinator = TibberDataCoordinator(tibber_connection, hass)
             for entity_description in SENSORS:
                 entities.append(TibberDataSensor(home, coordinator, entity_description))
 
@@ -514,3 +515,89 @@ class TibberRtDataCoordinator(update_coordinator.DataUpdateCoordinator):
             _LOGGER.error(errors[0])
             return None
         return self.data.get("data", {}).get("liveMeasurement")
+
+
+class TibberDataCoordinator(update_coordinator.DataUpdateCoordinator):
+    """Handle Tibber data and insert statistics."""
+
+    def __init__(self, tibber_connection, hass):
+        """Initialize the data handler."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=f"Tibber {tibber_connection.name}",
+            update_interval=timedelta(hours=1),
+        )
+        self._tibber_connection = tibber_connection
+
+    async def _async_update_data(self):
+        """Update data via API."""
+        await self._tibber_connection.fetch_consumption_data_active_homes()
+        await self._insert_statistics()
+
+    async def _insert_statistics(self):
+        """Insert Tibber statistics."""
+        for home in self._tibber_connection.get_homes():
+            if not home.hourly_consumption_data:
+                continue
+
+            statistic_id = (
+                f"{TIBBER_DOMAIN}:{home.home_id.replace('-', '')}_energy_consumption"
+            )
+
+            last_stats = await self.hass.async_add_executor_job(
+                get_last_statistics, self.hass, 1, statistic_id, True
+            )
+
+            if not last_stats:
+                hourly_consumption_data = await home.get_historic_data(5 * 365 * 24)
+
+                _sum = 0
+                last_stats_time = None
+            else:
+                hourly_consumption_data = home.hourly_consumption_data
+
+                start = dt_util.parse_datetime(
+                    hourly_consumption_data[0]["from"]
+                ) - timedelta(hours=1)
+                stat = await self.hass.async_add_executor_job(
+                    statistics_during_period,
+                    self.hass,
+                    start,
+                    None,
+                    [statistic_id],
+                    "hour",
+                    True,
+                )
+                _sum = stat[statistic_id][0]["sum"]
+                last_stats_time = stat[statistic_id][0]["start"]
+
+            statistics = []
+
+            for data in hourly_consumption_data:
+                if data.get("consumption") is None:
+                    continue
+
+                start = dt_util.parse_datetime(data["from"])
+                if last_stats_time is not None and start <= last_stats_time:
+                    continue
+
+                _sum += data["consumption"]
+
+                statistics.append(
+                    StatisticData(
+                        start=start,
+                        state=data["consumption"],
+                        sum=_sum,
+                    )
+                )
+
+            metadata = StatisticMetaData(
+                has_mean=False,
+                has_sum=True,
+                name=f"{home.name} consumption",
+                source=TIBBER_DOMAIN,
+                statistic_id=statistic_id,
+                unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+            )
+            async_add_external_statistics(self.hass, metadata, statistics)
