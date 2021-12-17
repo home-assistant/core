@@ -18,13 +18,13 @@ class ZWaveMeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize flow."""
-        self.url = vol.UNDEFINED
-        self.token = vol.UNDEFINED
+        self.url = None
+        self.token = None
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user or started with zeroconf."""
         errors = {}
-        if self.url == vol.UNDEFINED:
+        if self.url is None:
             schema = vol.Schema(
                 {
                     vol.Required(CONF_URL): str,
@@ -39,7 +39,7 @@ class ZWaveMeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         if user_input is not None:
-            if self.url == vol.UNDEFINED:
+            if self.url is None:
                 self.url = user_input["url"]
 
             self.token = user_input["token"]
@@ -48,7 +48,7 @@ class ZWaveMeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.url = url_normalize(self.url, default_scheme="ws")
             if "://" not in self.url:
                 errors[CONF_URL] = "invalid_url"
-                self.url = vol.UNDEFINED
+                self.url = None
                 return self.async_show_form(
                     step_id="user",
                     data_schema=schema,
@@ -76,4 +76,5 @@ class ZWaveMeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         This flow is triggered by the discovery component.
         """
         self.url = discovery_info.host
+        await self._async_handle_discovery_without_unique_id()
         return await self.async_step_user()

@@ -27,17 +27,22 @@ async def get_uuid(url, token):
 
 async def async_setup_entry(hass, entry):
     """Set up Z-Wave-Me from a config entry."""
-    hass.data[DOMAIN] = {}
+    hass.data.setdefault(DOMAIN, {})
     controller = hass.data[DOMAIN][entry.entry_id] = ZWaveMeController(hass, entry)
     if await controller.async_establish_connection():
-        await async_setup_platforms(hass, entry, controller)
+        hass.async_create_task(async_setup_platforms(hass, entry, controller))
         return True
     raise ConfigEntryNotReady()
 
 
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        controller = hass.data[DOMAIN].pop(entry.entry_id)
+        hass.async_create_task(controller.zwave_api.close_ws())
+    return unload_ok
 
 
 class ZWaveMeController:
@@ -61,8 +66,6 @@ class ZWaveMeController:
     async def async_establish_connection(self):
         """Get connection status."""
         is_connected = await self.zwave_api.get_connection()
-        if is_connected:
-            self.platforms_inited = True
         return is_connected
 
     def add_device(self, device: ZWaveMeData) -> None:
@@ -96,6 +99,8 @@ async def async_setup_platforms(
             for platform in PLATFORMS
         ]
     )
+    controller.platforms_inited = True
+
     await hass.async_add_executor_job(controller.zwave_api.get_devices)
 
 
