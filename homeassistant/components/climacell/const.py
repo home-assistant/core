@@ -17,7 +17,7 @@ from pyclimacell.const import (
     WeatherCode,
 )
 
-from homeassistant.components.sensor import SensorEntityDescription
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_CLOUDY,
@@ -37,9 +37,6 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
-    DEVICE_CLASS_CO,
-    DEVICE_CLASS_PRESSURE,
-    DEVICE_CLASS_TEMPERATURE,
     IRRADIATION_BTUS_PER_HOUR_SQUARE_FOOT,
     IRRADIATION_WATTS_PER_SQUARE_METER,
     LENGTH_KILOMETERS,
@@ -180,7 +177,7 @@ CC_SENSOR_TYPES = (
         unit_metric=TEMP_CELSIUS,
         metric_conversion=lambda val: temp_convert(val, TEMP_FAHRENHEIT, TEMP_CELSIUS),
         is_metric_check=True,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
     ClimaCellSensorEntityDescription(
         key=CC_ATTR_DEW_POINT,
@@ -189,7 +186,7 @@ CC_SENSOR_TYPES = (
         unit_metric=TEMP_CELSIUS,
         metric_conversion=lambda val: temp_convert(val, TEMP_FAHRENHEIT, TEMP_CELSIUS),
         is_metric_check=True,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
     ClimaCellSensorEntityDescription(
         key=CC_ATTR_PRESSURE_SURFACE_LEVEL,
@@ -200,7 +197,7 @@ CC_SENSOR_TYPES = (
             val, PRESSURE_INHG, PRESSURE_HPA
         ),
         is_metric_check=True,
-        device_class=DEVICE_CLASS_PRESSURE,
+        device_class=SensorDeviceClass.PRESSURE,
     ),
     ClimaCellSensorEntityDescription(
         key=CC_ATTR_SOLAR_GHI,
@@ -283,7 +280,7 @@ CC_SENSOR_TYPES = (
         name="Carbon Monoxide",
         unit_imperial=CONCENTRATION_PARTS_PER_MILLION,
         unit_metric=CONCENTRATION_PARTS_PER_MILLION,
-        device_class=DEVICE_CLASS_CO,
+        device_class=SensorDeviceClass.CO,
     ),
     ClimaCellSensorEntityDescription(
         key=CC_ATTR_SULFUR_DIOXIDE,
@@ -436,7 +433,7 @@ CC_V3_SENSOR_TYPES = (
         name="Carbon Monoxide",
         unit_imperial=CONCENTRATION_PARTS_PER_MILLION,
         unit_metric=CONCENTRATION_PARTS_PER_MILLION,
-        device_class=DEVICE_CLASS_CO,
+        device_class=SensorDeviceClass.CO,
     ),
     ClimaCellSensorEntityDescription(
         key=CC_V3_ATTR_SULFUR_DIOXIDE,
