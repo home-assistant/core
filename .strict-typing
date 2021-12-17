@@ -151,6 +151,7 @@ homeassistant.components.water_heater.*
 homeassistant.components.watttime.*
 homeassistant.components.weather.*
 homeassistant.components.websocket_api.*
+homeassistant.components.wemo.*
 homeassistant.components.zodiac.*
 homeassistant.components.zeroconf.*
 homeassistant.components.zone.*
