@@ -175,4 +175,4 @@ def get_api(hass, entry):
     params.pop(CONF_NAME)
     verify_ssl = params.pop(CONF_VERIFY_SSL)
     httpx_client = get_async_client(hass, verify_ssl=False)
-    return Glances(custom_httpx_client=httpx_client,  **params)
+    return Glances(custom_httpx_client=httpx_client, **params)
