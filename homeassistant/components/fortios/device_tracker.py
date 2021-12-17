@@ -15,6 +15,7 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.const import CONF_HOST, CONF_TOKEN, CONF_VERIFY_SSL
 import homeassistant.helpers.config_validation as cv
+from awesomeversion import AwesomeVersion
 
 _LOGGER = logging.getLogger(__name__)
 DEFAULT_VERIFY_SSL = False
@@ -47,20 +48,15 @@ def get_scanner(hass, config):
         return None
 
     status_json = fgt.monitor("system/status", "")
-    version = status_json["version"][1:]
-    _LOGGER.debug("FortiOS version: %s", version)
 
-    fos_major, fos_minor, fos_patch = (int(x, 10) for x in version.split("."))
-
-    if (
-        fos_major < 6
-        or (fos_major == 6 and fos_minor < 4)
-        or (fos_major == 6 and fos_minor == 4 and fos_patch < 3)
-    ):
+    current_version = AwesomeVersion(status_json["version"][1:])
+    minimum_version = AwesomeVersion("6.4.3")
+    if current_version < minimum_version:
         _LOGGER.error(
-            "Unsupported FortiOS version :  %s. \
-            Version 6.4.3 and newer are supported",
-            version,
+            "Unsupported FortiOS version :  %s.",
+            "Version %s and newer are supported.",
+            current_version,
+            minimum_version
         )
         return None
 
