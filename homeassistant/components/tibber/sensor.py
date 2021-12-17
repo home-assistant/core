@@ -241,7 +241,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
         try:
             await home.update_info()
         except asyncio.TimeoutError as err:
-            print(err)
             _LOGGER.error("Timeout connecting to Tibber home: %s ", err)
             raise PlatformNotReady() from err
         except aiohttp.ClientError as err:
