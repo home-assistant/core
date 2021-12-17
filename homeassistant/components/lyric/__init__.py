@@ -104,10 +104,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             else:
                 await oauth_session.force_refresh_token()
         except ClientResponseError as exception:
-            if (
-                exception.status == HTTPStatus.UNAUTHORIZED
-                or exception.status == HTTPStatus.FORBIDDEN
-            ):
+            if exception.status in (HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN):
                 raise ConfigEntryAuthFailed from exception
             else:
                 raise UpdateFailed(exception) from exception
