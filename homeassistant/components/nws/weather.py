@@ -156,42 +156,37 @@ class NWSWeather(WeatherEntity):
     @property
     def temperature(self):
         """Return the current temperature in degrees C."""
-        temp_c = None
         if self.observation:
-            temp_c = self.observation.get("temperature")
-        return temp_c
+            return self.observation.get("temperature")
+        return None
 
     @property
     def pressure(self):
         """Return the current pressure in Pa."""
-        pressure_pa = None
         if self.observation:
-            pressure_pa = self.observation.get("seaLevelPressure")
-        return pressure_pa
+            return self.observation.get("seaLevelPressure")
+        return None
 
     @property
     def humidity(self):
-        """Return the name of the sensor."""
-        humidity = None
+        """Return the current humidity as a percentage."""
         if self.observation:
-            humidity = self.observation.get("relativeHumidity")
-        return humidity
+            return self.observation.get("relativeHumidity")
+        return None
 
     @property
     def wind_speed(self):
-        """Return the current windspeed."""
-        wind_km_hr = None
+        """Return the current windspeed in km/h."""
         if self.observation:
-            wind_km_hr = self.observation.get("windSpeed")
-        return wind_km_hr
+            return self.observation.get("windSpeed")
+        return None
 
     @property
     def wind_bearing(self):
         """Return the current wind bearing (degrees)."""
-        wind_bearing = None
         if self.observation:
-            wind_bearing = self.observation.get("windDirection")
-        return wind_bearing
+            return self.observation.get("windDirection")
+        return None
 
     @property
     def condition(self):
@@ -209,10 +204,9 @@ class NWSWeather(WeatherEntity):
     @property
     def visibility(self):
         """Return visibility in meters."""
-        vis_m = None
         if self.observation:
-            vis_m = self.observation.get("visibility")
-        return vis_m
+            return self.observation.get("visibility")
+        return None
 
     @property
     def forecast(self):
