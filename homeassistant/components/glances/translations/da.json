@@ -16,6 +16,7 @@
                     "port": "Port",
                     "ssl": "Brug SSL/TLS til at oprette forbindelse til Glances-systemet",
                     "username": "Brugernavn",
+                    "verify_ssl": "Bekr\u00e6ft certificering af systemet",
                     "version": "Glances API version (2 eller 3)"
                 },
                 "title": "Ops\u00e6tning af Glances"

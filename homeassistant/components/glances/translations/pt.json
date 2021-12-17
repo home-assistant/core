@@ -14,7 +14,8 @@
                     "password": "Palavra-passe",
                     "port": "Porta",
                     "ssl": "Utiliza um certificado SSL",
-                    "username": "Nome de Utilizador"
+                    "username": "Nome de Utilizador",
+                    "verify_ssl": "Verificar o certificado SSL"
                 }
             }
         }

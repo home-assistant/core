@@ -16,6 +16,7 @@
                     "port": "Port",
                     "ssl": "Certyfikat SSL",
                     "username": "Nazwa u\u017cytkownika",
+                    "verify_ssl": "Weryfikacja certyfikatu SSL",
                     "version": "Glances wersja API (2 lub 3)"
                 },
                 "title": "Konfiguracja Glances"

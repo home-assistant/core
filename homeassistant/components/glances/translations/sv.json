@@ -16,6 +16,7 @@
                     "port": "Port",
                     "ssl": "Anv\u00e4nd SSL / TLS f\u00f6r att ansluta till Glances-systemet",
                     "username": "Anv\u00e4ndarnamn",
+                    "verify_ssl": "Verifiera certifieringen av systemet",
                     "version": "Glances API-version (2 eller 3)"
                 },
                 "title": "St\u00e4ll in Glances"

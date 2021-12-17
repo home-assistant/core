@@ -16,6 +16,7 @@
                     "port": "Port",
                     "ssl": "SSL sertifikas\u0131 kullan\u0131r",
                     "username": "Kullan\u0131c\u0131 Ad\u0131",
+                    "verify_ssl": "SSL sertifikas\u0131n\u0131 do\u011frulay\u0131n",
                     "version": "Glances API S\u00fcr\u00fcm\u00fc (2 veya 3)"
                 },
                 "title": "Glances Kurulumu"

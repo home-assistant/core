@@ -16,6 +16,7 @@
                     "port": "Port",
                     "ssl": "Kasutab SSL serti",
                     "username": "Kasutajanimi",
+                    "verify_ssl": "Kontrolli SSL sertifikaati",
                     "version": "Glances API versioon (2 v\u00f5i 3)"
                 },
                 "title": "Seadista Glances"
