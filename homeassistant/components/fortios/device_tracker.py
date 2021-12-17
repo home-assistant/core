@@ -53,8 +53,8 @@ def get_scanner(hass, config):
     minimum_version = AwesomeVersion("6.4.3")
     if current_version < minimum_version:
         _LOGGER.error(
-            "Unsupported FortiOS version :  %s.\
-            Version %s and newer are supported",
+            "Unsupported FortiOS version: %s."
+            "Version %s and newer are supported",
             current_version,
             minimum_version,
         )
@@ -110,8 +110,7 @@ class FortiOSDeviceScanner(DeviceScanner):
                     return name
                 except KeyError as kex:
                     _LOGGER.debug(
-                        "No hostname found for %s in \
-                    client data: %s",
+                        "No hostname found for %s in client data: %s",
                         device,
                         kex,
                     )
