@@ -156,8 +156,8 @@ async def test_sensors_without_corona_filter(hass: HomeAssistant) -> None:
         )
         assert state_w1.attributes.get(ATTR_ID) == "mow.DE-BW-S-SE018-20211102-18-001"
         assert state_w1.attributes.get(ATTR_SENT) == "2021-11-02T19:07:16+00:00"
-        assert state_w1.attributes.get(ATTR_START) == ""
-        assert state_w1.attributes.get(ATTR_EXPIRES) == ""
+        assert state_w1.attributes.get(ATTR_START) is None
+        assert state_w1.attributes.get(ATTR_EXPIRES) is None
 
         assert entry_w1.unique_id == "083350000000-1"
         assert state_w1.attributes.get("device_class") == BinarySensorDeviceClass.SAFETY

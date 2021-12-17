@@ -100,11 +100,11 @@ class NINADataUpdateCoordinator(DataUpdateCoordinator):
         return return_data
 
     @staticmethod
-    def _to_utc(input_time: str) -> str:
+    def _to_utc(input_time: str) -> str | None:
         if input_time:
             return (
                 dt.datetime.fromisoformat(input_time)
                 .astimezone(dt_util.UTC)
                 .isoformat()
             )
-        return ""
+        return None
