@@ -54,19 +54,13 @@ class ZWaveMeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     data_schema=schema,
                     errors=errors,
                 )
-            _LOGGER.warning("WHO")
             conn = ZWaveMe(url=self.url, token=self.token)
-            _LOGGER.warning("conn")
             if await conn.get_connection():
-                _LOGGER.warning("conn2")
                 uuid = await conn.get_uuid()
-                _LOGGER.warning("conn3 %s", uuid)
                 if uuid is not None:
                     await self.async_set_unique_id(uuid + self.url)
-                    _LOGGER.warning("conn4")
                     self._abort_if_unique_id_configured()
                     await conn.close_ws()
-                    _LOGGER.warning("conn5")
                     return self.async_create_entry(
                         title=self.url,
                         data={"url": self.url, "token": self.token},
