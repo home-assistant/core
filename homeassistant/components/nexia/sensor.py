@@ -2,14 +2,8 @@
 
 from nexia.const import UNIT_CELSIUS
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import (
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_TEMPERATURE,
-    PERCENTAGE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-)
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.const import PERCENTAGE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 
 from .const import DOMAIN
 from .coordinator import NexiaDataUpdateCoordinator
@@ -86,7 +80,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     thermostat,
                     "get_outdoor_temperature",
                     "Outdoor Temperature",
-                    DEVICE_CLASS_TEMPERATURE,
+                    SensorDeviceClass.TEMPERATURE,
                     unit,
                 )
             )
@@ -98,7 +92,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     thermostat,
                     "get_relative_humidity",
                     "Relative Humidity",
-                    DEVICE_CLASS_HUMIDITY,
+                    SensorDeviceClass.HUMIDITY,
                     PERCENTAGE,
                     percent_conv,
                 )
@@ -119,7 +113,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     zone,
                     "get_temperature",
                     "Temperature",
-                    DEVICE_CLASS_TEMPERATURE,
+                    SensorDeviceClass.TEMPERATURE,
                     unit,
                     None,
                 )

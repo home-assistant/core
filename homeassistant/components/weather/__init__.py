@@ -262,29 +262,31 @@ class WeatherEntity(Entity):
                         self.temperature_unit,
                         self.precision,
                     )
-                if ATTR_FORECAST_PRESSURE in forecast_entry:
+                if (
+                    native_pressure := forecast_entry.get(ATTR_FORECAST_PRESSURE)
+                ) is not None:
                     if (unit := self.pressure_unit) is not None:
                         pressure = round(
-                            self.hass.config.units.pressure(
-                                forecast_entry[ATTR_FORECAST_PRESSURE], unit
-                            ),
+                            self.hass.config.units.pressure(native_pressure, unit),
                             ROUNDING_PRECISION,
                         )
                         forecast_entry[ATTR_FORECAST_PRESSURE] = pressure
-                if ATTR_FORECAST_WIND_SPEED in forecast_entry:
+                if (
+                    native_wind_speed := forecast_entry.get(ATTR_FORECAST_WIND_SPEED)
+                ) is not None:
                     if (unit := self.wind_speed_unit) is not None:
                         wind_speed = round(
-                            self.hass.config.units.wind_speed(
-                                forecast_entry[ATTR_FORECAST_WIND_SPEED], unit
-                            ),
+                            self.hass.config.units.wind_speed(native_wind_speed, unit),
                             ROUNDING_PRECISION,
                         )
                         forecast_entry[ATTR_FORECAST_WIND_SPEED] = wind_speed
-                if ATTR_FORECAST_PRECIPITATION in forecast_entry:
+                if (
+                    native_precip := forecast_entry.get(ATTR_FORECAST_PRECIPITATION)
+                ) is not None:
                     if (unit := self.precipitation_unit) is not None:
                         precipitation = round(
                             self.hass.config.units.accumulated_precipitation(
-                                forecast_entry[ATTR_FORECAST_PRECIPITATION], unit
+                                native_precip, unit
                             ),
                             ROUNDING_PRECISION,
                         )

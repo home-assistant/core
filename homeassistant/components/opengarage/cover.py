@@ -5,10 +5,10 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.cover import (
-    DEVICE_CLASS_GARAGE,
     PLATFORM_SCHEMA,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
+    CoverDeviceClass,
     CoverEntity,
 )
 from homeassistant.const import (
@@ -76,7 +76,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class OpenGarageCover(OpenGarageEntity, CoverEntity):
     """Representation of a OpenGarage cover."""
 
-    _attr_device_class = DEVICE_CLASS_GARAGE
+    _attr_device_class = CoverDeviceClass.GARAGE
     _attr_supported_features = SUPPORT_OPEN | SUPPORT_CLOSE
 
     def __init__(self, open_garage_data_coordinator, device_id):

@@ -18,7 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CoreState, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, template
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
@@ -91,7 +91,7 @@ async def test_mqtt_disconnects_on_home_assistant_stop(hass, mqtt_mock):
     assert mqtt_mock.async_disconnect.called
 
 
-async def test_publish_(hass, mqtt_mock):
+async def test_publish(hass, mqtt_mock):
     """Test the publish function."""
     await mqtt.async_publish(hass, "test-topic", "test-payload")
     await hass.async_block_till_done()
@@ -136,6 +136,57 @@ async def test_publish_(hass, mqtt_mock):
         True,
     )
     mqtt_mock.reset_mock()
+
+    # test binary pass-through
+    mqtt.publish(
+        hass,
+        "test-topic3",
+        b"\xde\xad\xbe\xef",
+        0,
+        False,
+    )
+    await hass.async_block_till_done()
+    assert mqtt_mock.async_publish.called
+    assert mqtt_mock.async_publish.call_args[0] == (
+        "test-topic3",
+        b"\xde\xad\xbe\xef",
+        0,
+        False,
+    )
+    mqtt_mock.reset_mock()
+
+
+async def test_convert_outgoing_payload(hass):
+    """Test the converting of outgoing MQTT payloads without template."""
+    command_template = mqtt.MqttCommandTemplate(None, hass)
+    assert command_template.async_render(b"\xde\xad\xbe\xef") == b"\xde\xad\xbe\xef"
+
+    assert (
+        command_template.async_render("b'\\xde\\xad\\xbe\\xef'")
+        == "b'\\xde\\xad\\xbe\\xef'"
+    )
+
+    assert command_template.async_render(1234) == 1234
+
+    assert command_template.async_render(1234.56) == 1234.56
+
+    assert command_template.async_render(None) is None
+
+
+async def test_command_template_value(hass):
+    """Test the rendering of MQTT command template."""
+
+    variables = {"id": 1234, "some_var": "beer"}
+
+    # test rendering value
+    tpl = template.Template("{{ value + 1 }}", hass)
+    cmd_tpl = mqtt.MqttCommandTemplate(tpl, hass)
+    assert cmd_tpl.async_render(4321) == "4322"
+
+    # test variables at rendering
+    tpl = template.Template("{{ some_var }}", hass)
+    cmd_tpl = mqtt.MqttCommandTemplate(tpl, hass)
+    assert cmd_tpl.async_render(None, variables=variables) == "beer"
 
 
 async def test_service_call_without_topic_does_not_publish(hass, mqtt_mock):
@@ -260,6 +311,20 @@ async def test_service_call_with_template_payload_renders_template(hass, mqtt_mo
     )
     assert mqtt_mock.async_publish.called
     assert mqtt_mock.async_publish.call_args[0][1] == "8"
+    mqtt_mock.reset_mock()
+
+    await hass.services.async_call(
+        mqtt.DOMAIN,
+        mqtt.SERVICE_PUBLISH,
+        {
+            mqtt.ATTR_TOPIC: "test/topic",
+            mqtt.ATTR_PAYLOAD_TEMPLATE: "{{ (4+4) | pack('B') }}",
+        },
+        blocking=True,
+    )
+    assert mqtt_mock.async_publish.called
+    assert mqtt_mock.async_publish.call_args[0][1] == b"\x08"
+    mqtt_mock.reset_mock()
 
 
 async def test_service_call_with_bad_template(hass, mqtt_mock):

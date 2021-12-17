@@ -1,6 +1,6 @@
 """Support for Satel Integra zone states- represented as binary sensors."""
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_SMOKE,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.core import callback
@@ -88,7 +88,7 @@ class SatelIntegraBinarySensor(BinarySensorEntity):
     @property
     def icon(self):
         """Icon for device by its type."""
-        if self._zone_type == DEVICE_CLASS_SMOKE:
+        if self._zone_type is BinarySensorDeviceClass.SMOKE:
             return "mdi:fire"
 
     @property
