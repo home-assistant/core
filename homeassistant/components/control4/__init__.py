@@ -1,8 +1,11 @@
 """The Control4 integration."""
 from __future__ import annotations
+import asyncio
 
 import json
 import logging
+from typing import Callable
+from functools import partial
 
 from aiohttp import client_exceptions
 from pyControl4.account import C4Account
@@ -16,6 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.event import async_call_later
 
 from .const import (
     CONF_ACCOUNT,
@@ -39,37 +43,49 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Control4 from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     entry_data = hass.data[DOMAIN].setdefault(entry.entry_id, {})
-    account_session = aiohttp_client.async_get_clientsession(hass)
+    # account_session = aiohttp_client.async_get_clientsession(hass)
 
     config = entry.data
-    account = C4Account(config[CONF_USERNAME], config[CONF_PASSWORD], account_session)
-    try:
-        await account.getAccountBearerToken()
-    except client_exceptions.ClientError as exception:
-        _LOGGER.error("Error connecting to Control4 account API: %s", exception)
-        raise ConfigEntryNotReady from exception
-    except BadCredentials as exception:
-        _LOGGER.error(
-            "Error authenticating with Control4 account API, incorrect username or password: %s",
-            exception,
-        )
-        return False
+    # account = C4Account(config[CONF_USERNAME], config[CONF_PASSWORD], account_session)
+    # try:
+    #     await account.getAccountBearerToken()
+    # except client_exceptions.ClientError as exception:
+    #     _LOGGER.error("Error connecting to Control4 account API: %s", exception)
+    #     raise ConfigEntryNotReady from exception
+    # except BadCredentials as exception:
+    #     _LOGGER.error(
+    #         "Error authenticating with Control4 account API, incorrect username or password: %s",
+    #         exception,
+    #     )
+    #     return False
 
-    entry_data[CONF_ACCOUNT] = account
+    # entry_data[CONF_ACCOUNT] = account
 
+    # controller_unique_id = config[CONF_CONTROLLER_UNIQUE_ID]
+    # entry_data[CONF_CONTROLLER_UNIQUE_ID] = controller_unique_id
+
+    # director_token_dict = await account.getDirectorBearerToken(controller_unique_id)
+    # director_session = aiohttp_client.async_get_clientsession(hass, verify_ssl=False)
+    # director = C4Director(
+    #     config[CONF_HOST], director_token_dict[CONF_TOKEN], director_session
+    # )
+    # entry_data[CONF_DIRECTOR] = director
+    # entry_data[CONF_DIRECTOR_TOKEN_EXPIRATION] = director_token_dict["token_expiration"]
+    # _LOGGER.info(director_token_dict["token_expiration"])
+    # async_track_point_in_utc_time(
+    #     hass, refresh_tokens, entry_data[CONF_DIRECTOR_TOKEN_EXPIRATION]
+    # )
+
+    await refresh_tokens(hass, entry)
+    account = entry_data[CONF_ACCOUNT]
+    director = entry_data[CONF_DIRECTOR]
+    # Copy controller unique id from config to entry_data for use by entities
     controller_unique_id = config[CONF_CONTROLLER_UNIQUE_ID]
     entry_data[CONF_CONTROLLER_UNIQUE_ID] = controller_unique_id
 
-    director_token_dict = await account.getDirectorBearerToken(controller_unique_id)
-    director_session = aiohttp_client.async_get_clientsession(hass, verify_ssl=False)
-    director = C4Director(
-        config[CONF_HOST], director_token_dict[CONF_TOKEN], director_session
-    )
-    entry_data[CONF_DIRECTOR] = director
-    entry_data[CONF_DIRECTOR_TOKEN_EXPIRATION] = director_token_dict["token_expiration"]
-
+    websocket_session = aiohttp_client.async_get_clientsession(hass, verify_ssl=False)
     websocket = C4Websocket(
-        config[CONF_HOST], director_token_dict[CONF_TOKEN], director_session
+        config[CONF_HOST], director.director_bearer_token, websocket_session
     )
     entry_data[CONF_WEBSOCKET] = websocket
     await websocket.sio_connect()
@@ -130,6 +146,48 @@ async def get_items_of_category(hass: HomeAssistant, entry: ConfigEntry, categor
     director = hass.data[DOMAIN][entry.entry_id][CONF_DIRECTOR]
     return_list = await director.getAllItemsByCategory(category)
     return json.loads(return_list)
+
+
+async def refresh_tokens(hass: HomeAssistant, entry: ConfigEntry):
+    """Store updated authentication and director tokens in hass.data."""
+    config = entry.data
+    account_session = aiohttp_client.async_get_clientsession(hass)
+
+    account = C4Account(config[CONF_USERNAME], config[CONF_PASSWORD], account_session)
+    try:
+        await account.getAccountBearerToken()
+    except client_exceptions.ClientError as exception:
+        _LOGGER.error("Error connecting to Control4 account API: %s", exception)
+        raise ConfigEntryNotReady from exception
+    except BadCredentials as exception:
+        _LOGGER.error(
+            "Error authenticating with Control4 account API, incorrect username or password: %s",
+            exception,
+        )
+        return False
+
+    controller_unique_id = config[CONF_CONTROLLER_UNIQUE_ID]
+    director_token_dict = await account.getDirectorBearerToken(controller_unique_id)
+    director_session = aiohttp_client.async_get_clientsession(hass, verify_ssl=False)
+
+    director = C4Director(
+        config[CONF_HOST], director_token_dict[CONF_TOKEN], director_session
+    )
+
+    _LOGGER.debug("Saving new tokens in hass data")
+    entry_data = hass.data[DOMAIN][entry.entry_id]
+    entry_data[CONF_ACCOUNT] = account
+    entry_data[CONF_DIRECTOR] = director
+    entry_data[CONF_DIRECTOR_TOKEN_EXPIRATION] = director_token_dict["validSeconds"]
+    async_call_later(
+        hass,
+        entry_data[CONF_DIRECTOR_TOKEN_EXPIRATION],
+        partial(refresh_tokens_callable, hass, entry),
+    )
+
+
+def refresh_tokens_callable(hass: HomeAssistant, entry: ConfigEntry) -> Callable:
+    return asyncio.run(refresh_tokens(hass, entry))
 
 
 class Control4Entity(Entity):
