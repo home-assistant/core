@@ -5,8 +5,8 @@ import asyncio
 from datetime import timedelta
 
 from aioridwell import async_get_client
-from aioridwell.client import RidwellAccount, RidwellPickupEvent
 from aioridwell.errors import InvalidCredentialsError, RidwellError
+from aioridwell.model import RidwellAccount, RidwellPickupEvent
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
