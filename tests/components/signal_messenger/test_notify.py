@@ -12,6 +12,7 @@ from tests.components.signal_messenger.conftest import (
     NUMBER_FROM,
     NUMBERS_TO,
     SIGNAL_SEND_PATH_SUFIX,
+    URL,
 )
 
 BASE_COMPONENT = "notify"
@@ -89,6 +90,26 @@ def send_message_with_attachment(signal_notification_service, deprecated=False):
         tf.write("attachment_data")
         data = {"attachment": tf.name} if deprecated else {"attachments": [tf.name]}
         signal_notification_service.send_message(MESSAGE, **{"data": data})
+
+def test_send_message_with_attachment_as_url(
+    signal_notification_service, signal_requests_mock, caplog
+):
+    """Test send message with attachment."""
+    with caplog.at_level(
+        logging.DEBUG, logger="homeassistant.components.signal_messenger.notify"
+    ):
+        send_message_with_attachment_as_url(signal_notification_service)
+
+    assert "Sending signal message" in caplog.text
+    assert signal_requests_mock.called
+    assert signal_requests_mock.call_count == 2
+    assert_sending_requests(signal_requests_mock, 1)
+
+
+def send_message_with_attachment_as_url(signal_notification_service):
+    """Send message with attachment from URL."""
+    data = {"urls": [URL]}
+    signal_notification_service.send_message(MESSAGE, **{"data": data})
 
 
 def assert_sending_requests(signal_requests_mock, attachments_num=0):
