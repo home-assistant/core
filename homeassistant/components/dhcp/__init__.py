@@ -46,6 +46,8 @@ from homeassistant.loader import async_get_dhcp
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.network import is_invalid, is_link_local, is_loopback
 
+from .const import DOMAIN
+
 FILTER = "udp and (port 67 or 68)"
 REQUESTED_ADDR = "requested_addr"
 MESSAGE_TYPE = "message-type"
@@ -66,24 +68,35 @@ class DhcpServiceInfo(BaseServiceInfo):
     hostname: str
     macaddress: str
 
-    # Used to prevent log flooding. To be removed in 2022.6
-    _warning_logged: bool = False
-
     def __getitem__(self, name: str) -> Any:
         """
-        Allow property access by name for compatibility reason.
+        Enable method for compatibility reason.
 
         Deprecated, and will be removed in version 2022.6.
         """
-        if not self._warning_logged:
-            report(
-                f"accessed discovery_info['{name}'] instead of discovery_info.{name}; this will fail in version 2022.6",
-                exclude_integrations={"dhcp"},
-                error_if_core=False,
-                level=logging.DEBUG,
-            )
-            self._warning_logged = True
+        report(
+            f"accessed discovery_info['{name}'] instead of discovery_info.{name}; "
+            "this will fail in version 2022.6",
+            exclude_integrations={DOMAIN},
+            error_if_core=False,
+        )
         return getattr(self, name)
+
+    def get(self, name: str, default: Any = None) -> Any:
+        """
+        Enable method for compatibility reason.
+
+        Deprecated, and will be removed in version 2022.6.
+        """
+        report(
+            f"accessed discovery_info.get('{name}') instead of discovery_info.{name}; "
+            "this will fail in version 2022.6",
+            exclude_integrations={DOMAIN},
+            error_if_core=False,
+        )
+        if hasattr(self, name):
+            return getattr(self, name)
+        return default
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

@@ -7,18 +7,12 @@ from urllib.parse import urlparse
 from rokuecp import Roku, RokuError
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
-from homeassistant.components.ssdp import (
-    ATTR_SSDP_LOCATION,
-    ATTR_UPNP_FRIENDLY_NAME,
-    ATTR_UPNP_SERIAL,
-)
+from homeassistant.components import ssdp, zeroconf
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import DOMAIN
 
@@ -92,9 +86,9 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # If we already have the host configured do
         # not open connections to it if we can avoid it.
-        self._async_abort_entries_match({CONF_HOST: discovery_info[zeroconf.ATTR_HOST]})
+        self._async_abort_entries_match({CONF_HOST: discovery_info.host})
 
-        self.discovery_info.update({CONF_HOST: discovery_info[zeroconf.ATTR_HOST]})
+        self.discovery_info.update({CONF_HOST: discovery_info.host})
 
         try:
             info = await validate_input(self.hass, self.discovery_info)
@@ -107,7 +101,7 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
 
         await self.async_set_unique_id(info["serial_number"])
         self._abort_if_unique_id_configured(
-            updates={CONF_HOST: discovery_info[zeroconf.ATTR_HOST]},
+            updates={CONF_HOST: discovery_info.host},
         )
 
         self.context.update({"title_placeholders": {"name": info["title"]}})
@@ -115,11 +109,11 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_discovery_confirm()
 
-    async def async_step_ssdp(self, discovery_info: DiscoveryInfoType) -> FlowResult:
+    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Handle a flow initialized by discovery."""
-        host = urlparse(discovery_info[ATTR_SSDP_LOCATION]).hostname
-        name = discovery_info[ATTR_UPNP_FRIENDLY_NAME]
-        serial_number = discovery_info[ATTR_UPNP_SERIAL]
+        host = urlparse(discovery_info.ssdp_location).hostname
+        name = discovery_info.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME]
+        serial_number = discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL]
 
         await self.async_set_unique_id(serial_number)
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})

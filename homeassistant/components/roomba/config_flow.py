@@ -80,13 +80,13 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle dhcp discovery."""
-        self._async_abort_entries_match({CONF_HOST: discovery_info[dhcp.IP_ADDRESS]})
+        self._async_abort_entries_match({CONF_HOST: discovery_info.ip})
 
-        if not discovery_info[dhcp.HOSTNAME].startswith(("irobot-", "roomba-")):
+        if not discovery_info.hostname.startswith(("irobot-", "roomba-")):
             return self.async_abort(reason="not_irobot_device")
 
-        self.host = discovery_info[dhcp.IP_ADDRESS]
-        self.blid = _async_blid_from_hostname(discovery_info[dhcp.HOSTNAME])
+        self.host = discovery_info.ip
+        self.blid = _async_blid_from_hostname(discovery_info.hostname)
         await self.async_set_unique_id(self.blid)
         self._abort_if_unique_id_configured(updates={CONF_HOST: self.host})
 

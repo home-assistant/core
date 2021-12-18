@@ -4,11 +4,11 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_BATTERY_CHARGING,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import EntityCategory
 
 from .const import SONOS_CREATE_BATTERY
 from .entity import SonosEntity
@@ -32,22 +32,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class SonosPowerEntity(SonosEntity, BinarySensorEntity):
     """Representation of a Sonos power entity."""
 
-    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_device_class = BinarySensorDeviceClass.BATTERY_CHARGING
 
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID of the sensor."""
-        return f"{self.soco.uid}-power"
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return f"{self.speaker.zone_name} Power"
-
-    @property
-    def device_class(self) -> str:
-        """Return the entity's device class."""
-        return DEVICE_CLASS_BATTERY_CHARGING
+    def __init__(self, speaker: SonosSpeaker) -> None:
+        """Initialize the power entity binary sensor."""
+        super().__init__(speaker)
+        self._attr_unique_id = f"{self.soco.uid}-power"
+        self._attr_name = f"{self.speaker.zone_name} Power"
 
     async def _async_poll(self) -> None:
         """Poll the device for the current state."""

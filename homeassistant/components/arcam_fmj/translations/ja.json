@@ -7,6 +7,9 @@
         },
         "flow_title": "{host}",
         "step": {
+            "confirm": {
+                "description": "Home Assistant\u306bArcam FMJ on `{host}` \u3092\u8ffd\u52a0\u3057\u307e\u3059\u304b\uff1f"
+            },
             "user": {
                 "data": {
                     "host": "\u30db\u30b9\u30c8",

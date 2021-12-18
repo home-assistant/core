@@ -3,9 +3,7 @@ from boschshcpy import SHCBatteryDevice, SHCSession, SHCShutterContact
 from boschshcpy.device import SHCDevice
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_DOOR,
-    DEVICE_CLASS_WINDOW,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 
@@ -57,13 +55,13 @@ class ShutterContactSensor(SHCEntity, BinarySensorEntity):
         """Initialize an SHC shutter contact sensor.."""
         super().__init__(device, parent_id, entry_id)
         switcher = {
-            "ENTRANCE_DOOR": DEVICE_CLASS_DOOR,
-            "REGULAR_WINDOW": DEVICE_CLASS_WINDOW,
-            "FRENCH_WINDOW": DEVICE_CLASS_DOOR,
-            "GENERIC": DEVICE_CLASS_WINDOW,
+            "ENTRANCE_DOOR": BinarySensorDeviceClass.DOOR,
+            "REGULAR_WINDOW": BinarySensorDeviceClass.WINDOW,
+            "FRENCH_WINDOW": BinarySensorDeviceClass.DOOR,
+            "GENERIC": BinarySensorDeviceClass.WINDOW,
         }
         self._attr_device_class = switcher.get(
-            self._device.device_class, DEVICE_CLASS_WINDOW
+            self._device.device_class, BinarySensorDeviceClass.WINDOW
         )
 
     @property
@@ -75,7 +73,7 @@ class ShutterContactSensor(SHCEntity, BinarySensorEntity):
 class BatterySensor(SHCEntity, BinarySensorEntity):
     """Representation of an SHC battery reporting sensor."""
 
-    _attr_device_class = DEVICE_CLASS_BATTERY
+    _attr_device_class = BinarySensorDeviceClass.BATTERY
 
     def __init__(self, device: SHCDevice, parent_id: str, entry_id: str) -> None:
         """Initialize an SHC battery reporting sensor."""

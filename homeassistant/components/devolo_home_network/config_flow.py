@@ -77,16 +77,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle zerooconf discovery."""
-        if discovery_info[zeroconf.ATTR_PROPERTIES]["MT"] in ["2600", "2601"]:
+        if discovery_info.properties["MT"] in ["2600", "2601"]:
             return self.async_abort(reason="home_control")
 
-        await self.async_set_unique_id(discovery_info[zeroconf.ATTR_PROPERTIES]["SN"])
+        await self.async_set_unique_id(discovery_info.properties["SN"])
         self._abort_if_unique_id_configured()
 
-        self.context[CONF_HOST] = discovery_info[zeroconf.ATTR_HOST]
+        self.context[CONF_HOST] = discovery_info.host
         self.context["title_placeholders"] = {
-            PRODUCT: discovery_info[zeroconf.ATTR_PROPERTIES]["Product"],
-            CONF_NAME: discovery_info[zeroconf.ATTR_HOSTNAME].split(".")[0],
+            PRODUCT: discovery_info.properties["Product"],
+            CONF_NAME: discovery_info.hostname.split(".")[0],
         }
 
         return await self.async_step_zeroconf_confirm()

@@ -10,8 +10,10 @@
         "step": {
             "user": {
                 "data": {
+                    "name": "\u3053\u306e\u3001velbus connection\u306e\u540d\u524d",
                     "port": "\u63a5\u7d9a\u6587\u5b57\u5217"
-                }
+                },
+                "title": "velbus connection\u30bf\u30a4\u30d7\u306e\u5b9a\u7fa9"
             }
         }
     }

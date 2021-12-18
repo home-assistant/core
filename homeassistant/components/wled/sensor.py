@@ -8,16 +8,14 @@ from datetime import datetime, timedelta
 from wled import Device as WLEDDevice
 
 from homeassistant.components.sensor import (
-    DEVICE_CLASS_CURRENT,
     STATE_CLASS_MEASUREMENT,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DATA_BYTES,
-    DEVICE_CLASS_SIGNAL_STRENGTH,
-    DEVICE_CLASS_TIMESTAMP,
     ELECTRIC_CURRENT_MILLIAMPERE,
     ENTITY_CATEGORY_DIAGNOSTIC,
     PERCENTAGE,
@@ -52,7 +50,7 @@ SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
         key="estimated_current",
         name="Estimated Current",
         native_unit_of_measurement=ELECTRIC_CURRENT_MILLIAMPERE,
-        device_class=DEVICE_CLASS_CURRENT,
+        device_class=SensorDeviceClass.CURRENT,
         state_class=STATE_CLASS_MEASUREMENT,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         value_fn=lambda device: device.info.leds.power,
@@ -68,13 +66,13 @@ SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
         name="Max Current",
         native_unit_of_measurement=ELECTRIC_CURRENT_MILLIAMPERE,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
-        device_class=DEVICE_CLASS_CURRENT,
+        device_class=SensorDeviceClass.CURRENT,
         value_fn=lambda device: device.info.leds.max_power,
     ),
     WLEDSensorEntityDescription(
         key="uptime",
         name="Uptime",
-        device_class=DEVICE_CLASS_TIMESTAMP,
+        device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda device: (utcnow() - timedelta(seconds=device.info.uptime)),
@@ -102,7 +100,7 @@ SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
         key="wifi_rssi",
         name="Wi-Fi RSSI",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-        device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda device: device.info.wifi.rssi if device.info.wifi else None,

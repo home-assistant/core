@@ -177,7 +177,9 @@ async def _configure_almond_for_ha(
         user = await hass.auth.async_get_user(data["almond_user"])
 
     if user is None:
-        user = await hass.auth.async_create_system_user("Almond", [GROUP_ID_ADMIN])
+        user = await hass.auth.async_create_system_user(
+            "Almond", group_ids=[GROUP_ID_ADMIN]
+        )
         data["almond_user"] = user.id
         await store.async_save(data)
 

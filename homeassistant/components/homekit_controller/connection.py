@@ -244,6 +244,7 @@ class HKDevice:
                 manufacturer=info.value(CharacteristicsTypes.MANUFACTURER, ""),
                 model=info.value(CharacteristicsTypes.MODEL, ""),
                 sw_version=info.value(CharacteristicsTypes.FIRMWARE_REVISION, ""),
+                hw_version=info.value(CharacteristicsTypes.HARDWARE_REVISION, ""),
             )
 
             if accessory.aid != 1:

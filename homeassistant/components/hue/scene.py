@@ -60,6 +60,19 @@ class HueSceneEntity(HueBaseEntity, SceneEntity):
         super().__init__(bridge, controller, resource)
         self.resource = resource
         self.controller = controller
+        self.group = self.controller.get_group(self.resource.id)
+
+    async def async_added_to_hass(self) -> None:
+        """Call when entity is added."""
+        await super().async_added_to_hass()
+        # Add value_changed callback for group to catch name changes.
+        self.async_on_remove(
+            self.bridge.api.groups.subscribe(
+                self._handle_event,
+                self.group.id,
+                (EventType.RESOURCE_UPDATED),
+            )
+        )
 
     @property
     def name(self) -> str:
@@ -83,8 +96,8 @@ class HueSceneEntity(HueBaseEntity, SceneEntity):
         """Activate Hue scene."""
         transition = kwargs.get("transition")
         if transition is not None:
-            # hue transition duration is in steps of 100 ms
-            transition = int(transition * 100)
+            # hue transition duration is in milliseconds
+            transition = int(transition * 1000)
         dynamic = kwargs.get("dynamic", self.is_dynamic)
         await self.bridge.async_request_call(
             self.controller.recall,
@@ -96,7 +109,6 @@ class HueSceneEntity(HueBaseEntity, SceneEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the optional state attributes."""
-        group = self.controller.get_group(self.resource.id)
         brightness = None
         if palette := self.resource.palette:
             if palette.dimming:
@@ -108,8 +120,8 @@ class HueSceneEntity(HueBaseEntity, SceneEntity):
                     brightness = action.action.dimming.brightness
                     break
         return {
-            "group_name": group.metadata.name,
-            "group_type": group.type.value,
+            "group_name": self.group.metadata.name,
+            "group_type": self.group.type.value,
             "name": self.resource.metadata.name,
             "speed": self.resource.speed,
             "brightness": brightness,

@@ -366,7 +366,11 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
                     self.wrapper.model,
                 )
 
-        if set_mode and self.wrapper.model in DUAL_MODE_LIGHT_MODELS:
+        if (
+            set_mode
+            and set_mode != self.mode
+            and self.wrapper.model in DUAL_MODE_LIGHT_MODELS
+        ):
             params["mode"] = set_mode
 
         self.control_result = await self.set_state(**params)

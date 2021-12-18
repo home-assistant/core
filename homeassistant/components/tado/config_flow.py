@@ -88,8 +88,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle HomeKit discovery."""
         self._async_abort_entries_match()
         properties = {
-            key.lower(): value
-            for (key, value) in discovery_info[zeroconf.ATTR_PROPERTIES].items()
+            key.lower(): value for (key, value) in discovery_info.properties.items()
         }
         await self.async_set_unique_id(properties[zeroconf.ATTR_PROPERTIES_ID])
         self._abort_if_unique_id_configured()

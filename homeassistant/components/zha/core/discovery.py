@@ -25,6 +25,7 @@ from .. import (  # noqa: F401 pylint: disable=unused-import,
     lock,
     number,
     sensor,
+    siren,
     switch,
 )
 from .channels import base
@@ -233,6 +234,7 @@ class GroupProbe:
             unsub()
             self._unsubs.remove(unsub)
 
+    @callback
     def _reprobe_group(self, group_id: int) -> None:
         """Reprobe a group for entities after its members change."""
         zha_gateway = self._hass.data[zha_const.DATA_ZHA][zha_const.DATA_ZHA_GATEWAY]

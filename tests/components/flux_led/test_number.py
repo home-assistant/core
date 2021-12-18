@@ -41,11 +41,11 @@ async def test_number_unique_id(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
-    with _patch_discovery(device=bulb), _patch_wifibulb(device=bulb):
+    with _patch_discovery(), _patch_wifibulb(device=bulb):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "number.rgbw_controller_ddeeff_effect_speed"
+    entity_id = "number.bulb_rgbcw_ddeeff_effect_speed"
     entity_registry = er.async_get(hass)
     assert entity_registry.async_get(entity_id).unique_id == MAC_ADDRESS
 
@@ -64,14 +64,14 @@ async def test_rgb_light_effect_speed(hass: HomeAssistant) -> None:
     bulb.color_modes = {FLUX_COLOR_MODE_RGB}
     bulb.color_mode = FLUX_COLOR_MODE_RGB
 
-    with _patch_discovery(device=bulb), _patch_wifibulb(device=bulb):
+    with _patch_discovery(), _patch_wifibulb(device=bulb):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
 
     await async_mock_device_turn_on(hass, bulb)
 
-    light_entity_id = "light.rgbw_controller_ddeeff"
-    number_entity_id = "number.rgbw_controller_ddeeff_effect_speed"
+    light_entity_id = "light.bulb_rgbcw_ddeeff"
+    number_entity_id = "number.bulb_rgbcw_ddeeff_effect_speed"
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             NUMBER_DOMAIN,
@@ -129,14 +129,14 @@ async def test_original_addressable_light_effect_speed(hass: HomeAssistant) -> N
     bulb.color_mode = FLUX_COLOR_MODE_RGB
     bulb.effect = "7 colors change gradually"
     bulb.speed = 50
-    with _patch_discovery(device=bulb), _patch_wifibulb(device=bulb):
+    with _patch_discovery(), _patch_wifibulb(device=bulb):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
 
     await async_mock_device_turn_on(hass, bulb)
 
-    light_entity_id = "light.rgbw_controller_ddeeff"
-    number_entity_id = "number.rgbw_controller_ddeeff_effect_speed"
+    light_entity_id = "light.bulb_rgbcw_ddeeff"
+    number_entity_id = "number.bulb_rgbcw_ddeeff_effect_speed"
 
     state = hass.states.get(light_entity_id)
     assert state.state == STATE_ON
@@ -186,14 +186,14 @@ async def test_addressable_light_effect_speed(hass: HomeAssistant) -> None:
     bulb.color_mode = FLUX_COLOR_MODE_RGB
     bulb.effect = "RBM 1"
     bulb.speed = 50
-    with _patch_discovery(device=bulb), _patch_wifibulb(device=bulb):
+    with _patch_discovery(), _patch_wifibulb(device=bulb):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
 
     await async_mock_device_turn_on(hass, bulb)
 
-    light_entity_id = "light.rgbw_controller_ddeeff"
-    number_entity_id = "number.rgbw_controller_ddeeff_effect_speed"
+    light_entity_id = "light.bulb_rgbcw_ddeeff"
+    number_entity_id = "number.bulb_rgbcw_ddeeff_effect_speed"
 
     state = hass.states.get(light_entity_id)
     assert state.state == STATE_ON

@@ -2,11 +2,13 @@
 import asyncio
 import logging
 
-from homeassistant.components.humidifier import PLATFORM_SCHEMA, HumidifierEntity
+from homeassistant.components.humidifier import (
+    PLATFORM_SCHEMA,
+    HumidifierDeviceClass,
+    HumidifierEntity,
+)
 from homeassistant.components.humidifier.const import (
     ATTR_HUMIDITY,
-    DEVICE_CLASS_DEHUMIDIFIER,
-    DEVICE_CLASS_HUMIDIFIER,
     MODE_AWAY,
     MODE_NORMAL,
     SUPPORT_MODES,
@@ -146,7 +148,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         self._remove_stale_tracking = None
         self._is_away = False
         if not self._device_class:
-            self._device_class = DEVICE_CLASS_HUMIDIFIER
+            self._device_class = HumidifierDeviceClass.HUMIDIFIER
 
     async def async_added_to_hass(self):
         """Run when entity about to be added."""
@@ -185,7 +187,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
             if old_state.state:
                 self._state = old_state.state == STATE_ON
         if self._target_humidity is None:
-            if self._device_class == DEVICE_CLASS_HUMIDIFIER:
+            if self._device_class == HumidifierDeviceClass.HUMIDIFIER:
                 self._target_humidity = self.min_humidity
             else:
                 self._target_humidity = self.max_humidity
@@ -396,8 +398,10 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
             too_dry = self._target_humidity - self._cur_humidity >= dry_tolerance
             too_wet = self._cur_humidity - self._target_humidity >= wet_tolerance
             if self._is_device_active:
-                if (self._device_class == DEVICE_CLASS_HUMIDIFIER and too_wet) or (
-                    self._device_class == DEVICE_CLASS_DEHUMIDIFIER and too_dry
+                if (
+                    self._device_class == HumidifierDeviceClass.HUMIDIFIER and too_wet
+                ) or (
+                    self._device_class == HumidifierDeviceClass.DEHUMIDIFIER and too_dry
                 ):
                     _LOGGER.info("Turning off humidifier %s", self._switch_entity_id)
                     await self._async_device_turn_off()
@@ -405,8 +409,10 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
                     # The time argument is passed only in keep-alive case
                     await self._async_device_turn_on()
             else:
-                if (self._device_class == DEVICE_CLASS_HUMIDIFIER and too_dry) or (
-                    self._device_class == DEVICE_CLASS_DEHUMIDIFIER and too_wet
+                if (
+                    self._device_class == HumidifierDeviceClass.HUMIDIFIER and too_dry
+                ) or (
+                    self._device_class == HumidifierDeviceClass.DEHUMIDIFIER and too_wet
                 ):
                     _LOGGER.info("Turning on humidifier %s", self._switch_entity_id)
                     await self._async_device_turn_on()

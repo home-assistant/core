@@ -9,14 +9,8 @@ from wolf_smartset.models import (
     Temperature,
 )
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import (
-    DEVICE_CLASS_PRESSURE,
-    DEVICE_CLASS_TEMPERATURE,
-    PRESSURE_BAR,
-    TEMP_CELSIUS,
-    TIME_HOURS,
-)
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.const import PRESSURE_BAR, TEMP_CELSIUS, TIME_HOURS
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import COORDINATOR, DEVICE_ID, DOMAIN, PARAMETERS, STATES
@@ -106,7 +100,7 @@ class WolfLinkTemperature(WolfLinkSensor):
     @property
     def device_class(self):
         """Return the device_class."""
-        return DEVICE_CLASS_TEMPERATURE
+        return SensorDeviceClass.TEMPERATURE
 
     @property
     def native_unit_of_measurement(self):
@@ -120,7 +114,7 @@ class WolfLinkPressure(WolfLinkSensor):
     @property
     def device_class(self):
         """Return the device_class."""
-        return DEVICE_CLASS_PRESSURE
+        return SensorDeviceClass.PRESSURE
 
     @property
     def native_unit_of_measurement(self):

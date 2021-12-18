@@ -6,8 +6,8 @@ import functools
 import voluptuous as vol
 
 from homeassistant.components import button
-from homeassistant.components.button import ButtonEntity
-from homeassistant.const import CONF_NAME
+from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.reload import async_setup_reload_service
@@ -25,6 +25,7 @@ DEFAULT_PAYLOAD_PRESS = "PRESS"
 PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Optional(CONF_DEVICE_CLASS): button.DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PAYLOAD_PRESS, default=DEFAULT_PAYLOAD_PRESS): cv.string,
         vol.Optional(CONF_RETAIN, default=mqtt.DEFAULT_RETAIN): cv.boolean,
@@ -73,6 +74,11 @@ class MqttButton(MqttEntity, ButtonEntity):
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
+
+    @property
+    def device_class(self) -> ButtonDeviceClass | None:
+        """Return the device class of the sensor."""
+        return self._config.get(CONF_DEVICE_CLASS)
 
     async def async_press(self, **kwargs):
         """Turn the device on.

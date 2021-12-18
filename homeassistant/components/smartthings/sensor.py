@@ -38,6 +38,7 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
     VOLUME_CUBIC_METERS,
 )
+from homeassistant.util import dt as dt_util
 
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
@@ -656,7 +657,12 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
     @property
     def native_value(self):
         """Return the state of the sensor."""
-        return self._device.status.attributes[self._attribute].value
+        value = self._device.status.attributes[self._attribute].value
+
+        if self._device_class != DEVICE_CLASS_TIMESTAMP:
+            return value
+
+        return dt_util.parse_datetime(value)
 
     @property
     def device_class(self):

@@ -11,13 +11,14 @@ from regenmaschine.controller import Controller
 from regenmaschine.errors import RainMachineError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_IP_ADDRESS,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -56,7 +57,7 @@ DEFAULT_UPDATE_INTERVAL = timedelta(seconds=15)
 
 CONFIG_SCHEMA = cv.deprecated(DOMAIN)
 
-PLATFORMS = ["binary_sensor", "sensor", "switch"]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
 
 UPDATE_INTERVALS = {
     DATA_PROVISION_SETTINGS: timedelta(minutes=1),
@@ -313,9 +314,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 
-    if len(hass.config_entries.async_entries(DOMAIN)) == 1:
-        # If this is the last instance of RainMachine, deregister any services defined
-        # during integration setup:
+    loaded_entries = [
+        entry
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        if entry.state == ConfigEntryState.LOADED
+    ]
+    if len(loaded_entries) == 1:
+        # If this is the last loaded instance of RainMachine, deregister any services
+        # defined during integration setup:
         for service_name in (
             SERVICE_NAME_PAUSE_WATERING,
             SERVICE_NAME_PUSH_WEATHER_DATA,

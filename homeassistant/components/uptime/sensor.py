@@ -3,12 +3,12 @@ from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import (
-    CONF_NAME,
-    CONF_UNIT_OF_MEASUREMENT,
-    DEVICE_CLASS_TIMESTAMP,
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
 )
+from homeassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -48,6 +48,6 @@ class UptimeSensor(SensorEntity):
     def __init__(self, name: str) -> None:
         """Initialize the uptime sensor."""
         self._attr_name: str = name
-        self._attr_device_class: str = DEVICE_CLASS_TIMESTAMP
+        self._attr_device_class = SensorDeviceClass.TIMESTAMP
         self._attr_should_poll: bool = False
         self._attr_native_value = dt_util.utcnow()

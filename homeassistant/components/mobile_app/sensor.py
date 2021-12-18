@@ -1,13 +1,12 @@
 """Sensor platform for mobile_app."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import (
     CONF_NAME,
     CONF_UNIQUE_ID,
     CONF_WEBHOOK_ID,
-    DEVICE_CLASS_DATE,
-    DEVICE_CLASS_TIMESTAMP,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import callback
 from homeassistant.helpers import entity_registry as er
@@ -88,16 +87,18 @@ class MobileAppSensor(MobileAppEntity, SensorEntity):
     @property
     def native_value(self):
         """Return the state of the sensor."""
+        if (state := self._config[ATTR_SENSOR_STATE]) in (None, STATE_UNKNOWN):
+            return None
+
         if (
-            (state := self._config[ATTR_SENSOR_STATE]) is not None
-            and self.device_class
+            self.device_class
             in (
-                DEVICE_CLASS_DATE,
-                DEVICE_CLASS_TIMESTAMP,
+                SensorDeviceClass.DATE,
+                SensorDeviceClass.TIMESTAMP,
             )
             and (timestamp := dt_util.parse_datetime(state)) is not None
         ):
-            if self.device_class == DEVICE_CLASS_DATE:
+            if self.device_class == SensorDeviceClass.DATE:
                 return timestamp.date()
             return timestamp
 

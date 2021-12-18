@@ -1,4 +1,6 @@
 """Demo platform for the cover component."""
+from __future__ import annotations
+
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
@@ -8,6 +10,7 @@ from homeassistant.components.cover import (
     SUPPORT_OPEN_TILT,
     SUPPORT_SET_TILT_POSITION,
     SUPPORT_STOP_TILT,
+    CoverDeviceClass,
     CoverEntity,
 )
 from homeassistant.core import callback
@@ -28,7 +31,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 hass,
                 "cover_4",
                 "Garage Door",
-                device_class="garage",
+                device_class=CoverDeviceClass.GARAGE,
                 supported_features=(SUPPORT_OPEN | SUPPORT_CLOSE),
             ),
             DemoCover(
@@ -138,7 +141,7 @@ class DemoCover(CoverEntity):
         return self._is_opening
 
     @property
-    def device_class(self):
+    def device_class(self) -> CoverDeviceClass | None:
         """Return the class of this device, from component DEVICE_CLASSES."""
         return self._device_class
 

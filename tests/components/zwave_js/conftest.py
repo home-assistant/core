@@ -326,10 +326,10 @@ def window_cover_state_fixture():
     return json.loads(load_fixture("zwave_js/chain_actuator_zws12_state.json"))
 
 
-@pytest.fixture(name="in_wall_smart_fan_control_state", scope="session")
-def in_wall_smart_fan_control_state_fixture():
+@pytest.fixture(name="fan_generic_state", scope="session")
+def fan_generic_state_fixture():
     """Load the fan node state fixture data."""
-    return json.loads(load_fixture("zwave_js/in_wall_smart_fan_control_state.json"))
+    return json.loads(load_fixture("zwave_js/fan_generic_state.json"))
 
 
 @pytest.fixture(name="hs_fc200_state", scope="session")
@@ -695,10 +695,10 @@ def window_cover_fixture(client, chain_actuator_zws12_state):
     return node
 
 
-@pytest.fixture(name="in_wall_smart_fan_control")
-def in_wall_smart_fan_control_fixture(client, in_wall_smart_fan_control_state):
+@pytest.fixture(name="fan_generic")
+def fan_generic_fixture(client, fan_generic_state):
     """Mock a fan node."""
-    node = Node(client, copy.deepcopy(in_wall_smart_fan_control_state))
+    node = Node(client, copy.deepcopy(fan_generic_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 

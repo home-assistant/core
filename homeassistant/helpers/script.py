@@ -270,6 +270,16 @@ async def async_validate_action_config(
         )
 
     elif action_type == cv.SCRIPT_ACTION_REPEAT:
+        if CONF_UNTIL in config[CONF_REPEAT]:
+            conditions = await condition.async_validate_conditions_config(
+                hass, config[CONF_REPEAT][CONF_UNTIL]
+            )
+            config[CONF_REPEAT][CONF_UNTIL] = conditions
+        if CONF_WHILE in config[CONF_REPEAT]:
+            conditions = await condition.async_validate_conditions_config(
+                hass, config[CONF_REPEAT][CONF_WHILE]
+            )
+            config[CONF_REPEAT][CONF_WHILE] = conditions
         config[CONF_REPEAT][CONF_SEQUENCE] = await async_validate_actions_config(
             hass, config[CONF_REPEAT][CONF_SEQUENCE]
         )
@@ -281,6 +291,10 @@ async def async_validate_action_config(
             )
 
         for choose_conf in config[CONF_CHOOSE]:
+            conditions = await condition.async_validate_conditions_config(
+                hass, choose_conf[CONF_CONDITIONS]
+            )
+            choose_conf[CONF_CONDITIONS] = conditions
             choose_conf[CONF_SEQUENCE] = await async_validate_actions_config(
                 hass, choose_conf[CONF_SEQUENCE]
             )
@@ -1038,6 +1052,7 @@ class Script:
         if self._change_listener_job:
             self._hass.async_run_hass_job(self._change_listener_job)
 
+    @callback
     def _chain_change_listener(self, sub_script: Script) -> None:
         if sub_script.is_running:
             self.last_action = sub_script.last_action
@@ -1275,7 +1290,7 @@ class Script:
         else:
             config_cache_key = frozenset((k, str(v)) for k, v in config.items())
         if not (cond := self._config_cache.get(config_cache_key)):
-            cond = await condition.async_from_config(self._hass, config, False)
+            cond = await condition.async_from_config(self._hass, config)
             self._config_cache[config_cache_key] = cond
         return cond
 

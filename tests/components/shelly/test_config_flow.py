@@ -26,7 +26,9 @@ DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
     type="mock_type",
 )
 MOCK_CONFIG = {
-    "wifi": {"ap": {"ssid": "Test name"}},
+    "sys": {
+        "device": {"name": "Test name"},
+    },
 }
 
 

@@ -40,13 +40,13 @@
             "btn_down": "{subtype} button down",
             "btn_up": "{subtype} button up",
             "double": "{subtype} \u30c0\u30d6\u30eb\u30af\u30ea\u30c3\u30af",
-            "double_push": "{subtype} double push",
+            "double_push": "{subtype} \u30c0\u30d6\u30eb\u30d7\u30c3\u30b7\u30e5",
             "long": "{subtype} \u30ed\u30f3\u30b0\u30af\u30ea\u30c3\u30af",
             "long_push": "{subtype} long push",
             "long_single": "{subtype} \u30ed\u30f3\u30b0\u30af\u30ea\u30c3\u30af\u3057\u3066\u304b\u3089\u30b7\u30f3\u30b0\u30eb\u30af\u30ea\u30c3\u30af",
             "single": "{subtype} \u30b7\u30f3\u30b0\u30eb\u30af\u30ea\u30c3\u30af",
             "single_long": "{subtype} \u30b7\u30f3\u30b0\u30eb\u30af\u30ea\u30c3\u30af\u3057\u3066\u304b\u3089\u30ed\u30f3\u30b0\u30af\u30ea\u30c3\u30af",
-            "single_push": "{subtype} single push",
+            "single_push": "{subtype} \u30b7\u30f3\u30b0\u30eb\u30d7\u30c3\u30b7\u30e5",
             "triple": "{subtype} 3\u56de\u30af\u30ea\u30c3\u30af"
         }
     }

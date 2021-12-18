@@ -6,12 +6,13 @@ import async_timeout
 from mullvad_api import MullvadAPI
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import update_coordinator
 
 from .const import DOMAIN
 
-PLATFORMS = ["binary_sensor"]
+PLATFORMS = [Platform.BINARY_SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: dict) -> bool:

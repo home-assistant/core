@@ -17,7 +17,7 @@
         "step": {
             "init": {
                 "data": {
-                    "host": "Ana bilgisayar"
+                    "host": "Sunucu"
                 },
                 "title": "Hue k\u00f6pr\u00fcs\u00fcn\u00fc se\u00e7in"
             },
@@ -27,7 +27,7 @@
             },
             "manual": {
                 "data": {
-                    "host": "Ana bilgisayar"
+                    "host": "Sunucu"
                 },
                 "title": "Bir Hue k\u00f6pr\u00fcs\u00fcn\u00fc manuel olarak yap\u0131land\u0131rma"
             }

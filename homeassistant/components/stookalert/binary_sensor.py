@@ -7,8 +7,8 @@ import stookalert
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_SAFETY,
     PLATFORM_SCHEMA,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -72,7 +72,7 @@ class StookalertBinarySensor(BinarySensorEntity):
     """Defines a Stookalert binary sensor."""
 
     _attr_attribution = ATTRIBUTION
-    _attr_device_class = DEVICE_CLASS_SAFETY
+    _attr_device_class = BinarySensorDeviceClass.SAFETY
 
     def __init__(self, client: stookalert.stookalert, entry: ConfigEntry) -> None:
         """Initialize a Stookalert device."""

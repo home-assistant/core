@@ -45,13 +45,13 @@ jobs:
           ) > .env_file
 
       - name: Upload env_file
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@v2.3.1
         with:
           name: env_file
           path: ./.env_file
 
       - name: Upload requirements_diff
-        uses: actions/upload-artifact@v2.2.4
+        uses: actions/upload-artifact@v2.3.1
         with:
           name: requirements_diff
           path: ./requirements_diff.txt

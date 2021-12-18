@@ -12,6 +12,7 @@ from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_HOME,
     SUPPORT_ALARM_ARM_NIGHT,
     SUPPORT_ALARM_ARM_VACATION,
+    SUPPORT_ALARM_TRIGGER,
 )
 from homeassistant.const import (
     CONF_CODE,
@@ -33,7 +34,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType
 
-from . import PLATFORMS, subscription
+from . import PLATFORMS, MqttCommandTemplate, subscription
 from .. import mqtt
 from .const import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC, DOMAIN
 from .debug_info import log_messages
@@ -43,12 +44,14 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_CODE_ARM_REQUIRED = "code_arm_required"
 CONF_CODE_DISARM_REQUIRED = "code_disarm_required"
+CONF_CODE_TRIGGER_REQUIRED = "code_trigger_required"
 CONF_PAYLOAD_DISARM = "payload_disarm"
 CONF_PAYLOAD_ARM_HOME = "payload_arm_home"
 CONF_PAYLOAD_ARM_AWAY = "payload_arm_away"
 CONF_PAYLOAD_ARM_NIGHT = "payload_arm_night"
 CONF_PAYLOAD_ARM_VACATION = "payload_arm_vacation"
 CONF_PAYLOAD_ARM_CUSTOM_BYPASS = "payload_arm_custom_bypass"
+CONF_PAYLOAD_TRIGGER = "payload_trigger"
 CONF_COMMAND_TEMPLATE = "command_template"
 
 MQTT_ALARM_ATTRIBUTES_BLOCKED = frozenset(
@@ -66,6 +69,7 @@ DEFAULT_ARM_AWAY = "ARM_AWAY"
 DEFAULT_ARM_HOME = "ARM_HOME"
 DEFAULT_ARM_CUSTOM_BYPASS = "ARM_CUSTOM_BYPASS"
 DEFAULT_DISARM = "DISARM"
+DEFAULT_TRIGGER = "TRIGGER"
 DEFAULT_NAME = "MQTT Alarm"
 
 REMOTE_CODE = "REMOTE_CODE"
@@ -76,6 +80,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_CODE): cv.string,
         vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
         vol.Optional(CONF_CODE_DISARM_REQUIRED, default=True): cv.boolean,
+        vol.Optional(CONF_CODE_TRIGGER_REQUIRED, default=True): cv.boolean,
         vol.Optional(
             CONF_COMMAND_TEMPLATE, default=DEFAULT_COMMAND_TEMPLATE
         ): cv.template,
@@ -91,6 +96,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
             CONF_PAYLOAD_ARM_CUSTOM_BYPASS, default=DEFAULT_ARM_CUSTOM_BYPASS
         ): cv.string,
         vol.Optional(CONF_PAYLOAD_DISARM, default=DEFAULT_DISARM): cv.string,
+        vol.Optional(CONF_PAYLOAD_TRIGGER, default=DEFAULT_TRIGGER): cv.string,
         vol.Optional(CONF_RETAIN, default=mqtt.DEFAULT_RETAIN): cv.boolean,
         vol.Required(CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
@@ -144,8 +150,9 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         value_template = self._config.get(CONF_VALUE_TEMPLATE)
         if value_template is not None:
             value_template.hass = self.hass
-        command_template = self._config[CONF_COMMAND_TEMPLATE]
-        command_template.hass = self.hass
+        self._command_template = MqttCommandTemplate(
+            self._config[CONF_COMMAND_TEMPLATE], self.hass
+        ).async_render
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
@@ -203,6 +210,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
             | SUPPORT_ALARM_ARM_NIGHT
             | SUPPORT_ALARM_ARM_VACATION
             | SUPPORT_ALARM_ARM_CUSTOM_BYPASS
+            | SUPPORT_ALARM_TRIGGER
         )
 
     @property
@@ -286,11 +294,21 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         action = self._config[CONF_PAYLOAD_ARM_CUSTOM_BYPASS]
         await self._publish(code, action)
 
+    async def async_alarm_trigger(self, code=None):
+        """Send trigger command.
+
+        This method is a coroutine.
+        """
+        code_required = self._config[CONF_CODE_TRIGGER_REQUIRED]
+        if code_required and not self._validate_code(code, "triggering"):
+            return
+        action = self._config[CONF_PAYLOAD_TRIGGER]
+        await self._publish(code, action)
+
     async def _publish(self, code, action):
         """Publish via mqtt."""
-        command_template = self._config[CONF_COMMAND_TEMPLATE]
-        values = {"action": action, "code": code}
-        payload = command_template.async_render(**values, parse_result=False)
+        variables = {"action": action, "code": code}
+        payload = self._command_template(None, variables=variables)
         await mqtt.async_publish(
             self.hass,
             self._config[CONF_COMMAND_TOPIC],

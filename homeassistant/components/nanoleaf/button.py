@@ -4,10 +4,11 @@ from aionanoleaf import Nanoleaf
 
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENTITY_CATEGORY_CONFIG
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import NanoleafEntryData
 from .const import DOMAIN
 from .entity import NanoleafEntity
 
@@ -16,8 +17,8 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Nanoleaf button."""
-    nanoleaf: Nanoleaf = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([NanoleafIdentifyButton(nanoleaf)])
+    entry_data: NanoleafEntryData = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities([NanoleafIdentifyButton(entry_data.device)])
 
 
 class NanoleafIdentifyButton(NanoleafEntity, ButtonEntity):
@@ -29,7 +30,7 @@ class NanoleafIdentifyButton(NanoleafEntity, ButtonEntity):
         self._attr_unique_id = f"{nanoleaf.serial_no}_identify"
         self._attr_name = f"Identify {nanoleaf.name}"
         self._attr_icon = "mdi:magnify"
-        self._attr_entity_category = ENTITY_CATEGORY_CONFIG
+        self._attr_entity_category = EntityCategory.CONFIG
 
     async def async_press(self) -> None:
         """Identify the Nanoleaf."""

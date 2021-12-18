@@ -3,12 +3,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.const import (
-    DEVICE_CLASS_TIMESTAMP,
-    PERCENTAGE,
-    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
 )
+from homeassistant.const import PERCENTAGE, SIGNAL_STRENGTH_DECIBELS_MILLIWATT
 from homeassistant.core import callback
 from homeassistant.helpers.icon import icon_for_battery_level
 
@@ -164,7 +164,7 @@ class HistoryRingSensor(RingSensor):
         if self._latest_event is None:
             return None
 
-        return self._latest_event["created_at"].isoformat()
+        return self._latest_event["created_at"]
 
     @property
     def extra_state_attributes(self):
@@ -209,7 +209,7 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription, ...] = (
         name="Last Activity",
         category=["doorbots", "authorized_doorbots", "stickup_cams"],
         icon="mdi:history",
-        device_class=DEVICE_CLASS_TIMESTAMP,
+        device_class=SensorDeviceClass.TIMESTAMP,
         cls=HistoryRingSensor,
     ),
     RingSensorEntityDescription(
@@ -218,7 +218,7 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription, ...] = (
         category=["doorbots", "authorized_doorbots"],
         icon="mdi:history",
         kind="ding",
-        device_class=DEVICE_CLASS_TIMESTAMP,
+        device_class=SensorDeviceClass.TIMESTAMP,
         cls=HistoryRingSensor,
     ),
     RingSensorEntityDescription(
@@ -227,7 +227,7 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription, ...] = (
         category=["doorbots", "authorized_doorbots", "stickup_cams"],
         icon="mdi:history",
         kind="motion",
-        device_class=DEVICE_CLASS_TIMESTAMP,
+        device_class=SensorDeviceClass.TIMESTAMP,
         cls=HistoryRingSensor,
     ),
     RingSensorEntityDescription(

@@ -256,7 +256,7 @@ def register_lcn_host_device(hass: HomeAssistant, config_entry: ConfigEntry) -> 
         identifiers={(DOMAIN, config_entry.entry_id)},
         manufacturer="Issendorff",
         name=config_entry.title,
-        model="PCHK",
+        model=f"LCN host ({config_entry.data[CONF_IP_ADDRESS]}:{config_entry.data[CONF_PORT]})",
     )
 
 

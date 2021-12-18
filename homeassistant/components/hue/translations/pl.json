@@ -35,10 +35,10 @@
     },
     "device_automation": {
         "trigger_subtype": {
-            "1": "Pierwszy przycisk",
-            "2": "Drugi przycisk",
-            "3": "Trzeci przycisk",
-            "4": "Czwarty przycisk",
+            "1": "pierwszy",
+            "2": "drugi",
+            "3": "trzeci",
+            "4": "czwarty",
             "button_1": "pierwszy",
             "button_2": "drugi",
             "button_3": "trzeci",
@@ -51,16 +51,16 @@
             "turn_on": "w\u0142\u0105cznik"
         },
         "trigger_type": {
-            "double_short_release": "Przycisk \"{subtype}\" zwolniony",
-            "initial_press": "Przycisk \"{subtype}\" wci\u015bni\u0119ty pocz\u0105tkowo",
-            "long_release": "Przycisk \"{subtype}\" zwolniony po d\u0142ugim przyci\u015bni\u0119ciu",
+            "double_short_release": "przycisk \"{subtype}\" zostanie zwolniony",
+            "initial_press": "przycisk \"{subtype}\" zostanie lekko naci\u015bni\u0119ty",
+            "long_release": "przycisk \"{subtype}\" zostanie zwolniony po d\u0142ugim naci\u015bni\u0119ciu",
             "remote_button_long_release": "przycisk \"{subtype}\" zostanie zwolniony po d\u0142ugim naci\u015bni\u0119ciu",
             "remote_button_short_press": "przycisk \"{subtype}\" zostanie naci\u015bni\u0119ty",
             "remote_button_short_release": "przycisk \"{subtype}\" zostanie zwolniony",
             "remote_double_button_long_press": "oba przyciski \"{subtype}\" zostan\u0105 zwolnione po d\u0142ugim naci\u015bni\u0119ciu",
             "remote_double_button_short_press": "oba przyciski \"{subtype}\" zostan\u0105 zwolnione",
-            "repeat": "Przycisk \"{subtype}\" przytrzymany",
-            "short_release": "Przycisk \"{subtype}\" zwolniony po kr\u00f3tkim naci\u015bni\u0119ciu"
+            "repeat": "przycisk \"{subtype}\" zostanie przytrzymany",
+            "short_release": "przycisk \"{subtype}\" zostanie zwolniony po kr\u00f3tkim naci\u015bni\u0119ciu"
         }
     },
     "options": {

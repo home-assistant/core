@@ -1,9 +1,9 @@
 """The forked_daapd component."""
-from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
+from homeassistant.const import Platform
 
 from .const import DOMAIN, HASS_DATA_REMOVE_LISTENERS_KEY, HASS_DATA_UPDATER_KEY
 
-PLATFORMS = [MP_DOMAIN]
+PLATFORMS = [Platform.MEDIA_PLAYER]
 
 
 async def async_setup_entry(hass, entry):

@@ -1,15 +1,17 @@
 """Support for DHT and DS18B20 sensors attached to a Konnected device."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import (
     CONF_DEVICES,
     CONF_NAME,
     CONF_SENSORS,
     CONF_TYPE,
     CONF_ZONE,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     TEMP_CELSIUS,
 )
@@ -21,16 +23,16 @@ from .const import DOMAIN as KONNECTED_DOMAIN, SIGNAL_DS18B20_NEW
 
 SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     "temperature": SensorEntityDescription(
-        key=DEVICE_CLASS_TEMPERATURE,
+        key="temperature",
         name="Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
     "humidity": SensorEntityDescription(
-        key=DEVICE_CLASS_HUMIDITY,
+        key="humidity",
         name="Humidity",
         native_unit_of_measurement=PERCENTAGE,
-        device_class=DEVICE_CLASS_HUMIDITY,
+        device_class=SensorDeviceClass.HUMIDITY,
     ),
 }
 
@@ -130,7 +132,7 @@ class KonnectedSensor(SensorEntity):
     @callback
     def async_set_state(self, state):
         """Update the sensor's state."""
-        if self.entity_description.key == DEVICE_CLASS_HUMIDITY:
+        if self.entity_description.key == "humidity":
             self._state = int(float(state))
         else:
             self._state = round(float(state), 1)

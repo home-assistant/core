@@ -15,7 +15,7 @@
             "init": {
                 "data": {
                     "hapid": "\u30a2\u30af\u30bb\u30b9\u30dd\u30a4\u30f3\u30c8ID (SGTIN)",
-                    "name": "\u540d\u524d(\u30aa\u30d7\u30b7\u30e7\u30f3\u3002\u5168\u30c7\u30d0\u30a4\u30b9\u306e\u540d\u524d\u306e\u30d7\u30ec\u30d5\u30a3\u30c3\u30af\u30b9\u3068\u3057\u3066\u4f7f\u7528)",
+                    "name": "\u540d\u524d(\u30aa\u30d7\u30b7\u30e7\u30f3\u3001\u5168\u30c7\u30d0\u30a4\u30b9\u306e\u540d\u524d\u306e\u30d7\u30ec\u30d5\u30a3\u30c3\u30af\u30b9\u3068\u3057\u3066\u4f7f\u7528)",
                     "pin": "PIN\u30b3\u30fc\u30c9"
                 },
                 "title": "HomematicIP Access point\u3092\u9078\u629e"

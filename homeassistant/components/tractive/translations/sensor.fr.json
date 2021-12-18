@@ -1,0 +1,10 @@
+{
+    "state": {
+        "tractive__tracker_state": {
+            "not_reporting": "Ne pas signaler",
+            "operational": "Op\u00e9rationnel",
+            "system_shutdown_user": "Arr\u00eater l'h\u00f4te",
+            "system_startup": "D\u00e9marrage du syst\u00e8me"
+        }
+    }
+}
