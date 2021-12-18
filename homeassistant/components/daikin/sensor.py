@@ -115,7 +115,7 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        value_func=lambda device: round(device.energy_consumption(time="today"), 2),
+        value_func=lambda device: round(device.today_total_energy_consumption, 2),
     ),
 )
 
