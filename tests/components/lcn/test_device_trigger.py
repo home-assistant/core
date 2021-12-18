@@ -51,18 +51,21 @@ async def test_get_triggers_module_device(hass, entry, lcn_connection):
     assert_lists_same(triggers, expected_triggers)
 
 
-async def test_get_triggers_non_module_device(hass, lcn_connection):
+async def test_get_triggers_non_module_device(hass, entry, lcn_connection):
     """Test we get the expected triggers from a LCN non-module device."""
     not_included_types = ("transmitter", "transponder", "fingerprint", "send_keys")
 
     device_registry = dr.async_get(hass)
-    for device_id in device_registry.devices:
-        device = device_registry.async_get(device_id)
-        identifier = next(iter(device.identifiers))
-        if (identifier[1].count("-") != 1) or device.model.startswith("LCN group"):
-            triggers = await async_get_device_automations(hass, "trigger", device_id)
-            for trigger in triggers:
-                assert trigger[CONF_TYPE] not in not_included_types
+    host_device = device_registry.async_get_device({(DOMAIN, entry.entry_id)})
+    group_device = get_device(hass, entry, (0, 5, True))
+    resource_device = device_registry.async_get_device(
+        {(DOMAIN, f"{entry.entry_id}-m000007-output1")}
+    )
+
+    for device in (host_device, group_device, resource_device):
+        triggers = await async_get_device_automations(hass, "trigger", device.id)
+        for trigger in triggers:
+            assert trigger[CONF_TYPE] not in not_included_types
 
 
 async def test_if_fires_on_transponder_event(hass, calls, entry, lcn_connection):
