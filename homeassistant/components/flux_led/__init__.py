@@ -194,6 +194,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             # Only update the entry once we have verified the unique id
             # is either missing or we have verified it matches
             async_update_entry_from_discovery(hass, entry, discovery)
+        device.discovery = discovery
 
     coordinator = FluxLedUpdateCoordinator(hass, device, entry)
     hass.data[DOMAIN][entry.entry_id] = coordinator
