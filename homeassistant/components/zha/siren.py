@@ -49,7 +49,7 @@ from .core.registries import ZHA_ENTITIES
 from .core.typing import ChannelType, ZhaDeviceType
 from .entity import ZhaEntity
 
-STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.SIREN)
+MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, Platform.SIREN)
 DEFAULT_DURATION = 5  # seconds
 
 
@@ -74,7 +74,7 @@ async def async_setup_entry(
     config_entry.async_on_unload(unsub)
 
 
-@STRICT_MATCH(channel_names=CHANNEL_IAS_WD)
+@MULTI_MATCH(channel_names=CHANNEL_IAS_WD)
 class ZHASiren(ZhaEntity, SirenEntity):
     """Representation of a ZHA siren."""
 
