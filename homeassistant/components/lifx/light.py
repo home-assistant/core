@@ -68,6 +68,7 @@ MESSAGE_RETRIES = 8
 UNAVAILABLE_GRACE = 90
 
 FIX_MAC_FW = AwesomeVersion("3.70")
+SWITCH_PRODUCT_IDS = [70, 71, 89]
 
 SERVICE_LIFX_SET_STATE = "set_state"
 
@@ -364,33 +365,37 @@ class LIFXManager:
 
     async def register_new_bulb(self, bulb):
         """Handle newly detected bulb."""
-        if bulb.mac_addr in self.entities:
-            entity = self.entities[bulb.mac_addr]
-            entity.registered = True
-            _LOGGER.debug("%s register AGAIN", entity.who)
-            await entity.update_hass()
+        # Read initial state
+        ack = AwaitAioLIFX().wait
+
+        # Get the product info first so that LIFX Switches
+        # can be ignored.
+        version_resp = await ack(bulb.get_version)
+        if version_resp:
+            if bulb.product in SWITCH_PRODUCT_IDS:
+                _LOGGER.debug(
+                    "%s (%s) ignoring unsupported LIFX Switch",
+                    bulb.ip_addr,
+                    bulb.mac_addr,
+                )
+                return False
+
+        color_resp = await ack(bulb.get_color)
+
+        if color_resp is None and version_resp is None:
+            _LOGGER.error("Failed to initialize %s", bulb.ip_addr)
+            bulb.registered = False
         else:
-            _LOGGER.debug("%s register NEW", bulb.ip_addr)
+            bulb.timeout = MESSAGE_TIMEOUT
+            bulb.retry_count = MESSAGE_RETRIES
+            bulb.unregister_timeout = UNAVAILABLE_GRACE
 
-            # Read initial state
-            ack = AwaitAioLIFX().wait
-
-            # Used to populate sw_version
-            # no need to wait as we do not
-            # need it until later
-            bulb.get_hostfirmware()
-
-            color_resp = await ack(bulb.get_color)
-            if color_resp:
-                version_resp = await ack(bulb.get_version)
-
-            if color_resp is None or version_resp is None:
-                _LOGGER.error("Failed to initialize %s", bulb.ip_addr)
-                bulb.registered = False
+            if bulb.mac_addr in self.entities:
+                entity = self.entities[bulb.mac_addr]
+                entity.registered = True
+                _LOGGER.debug("%s register AGAIN", entity.who)
             else:
-                bulb.timeout = MESSAGE_TIMEOUT
-                bulb.retry_count = MESSAGE_RETRIES
-                bulb.unregister_timeout = UNAVAILABLE_GRACE
+                _LOGGER.debug("%s (%s) register NEW", bulb.ip_addr, bulb.label)
 
                 if lifx_features(bulb)["multizone"]:
                     entity = LIFXStrip(bulb, self.effects_conductor)
@@ -402,6 +407,8 @@ class LIFXManager:
                 _LOGGER.debug("%s register READY", entity.who)
                 self.entities[bulb.mac_addr] = entity
                 self.async_add_entities([entity], True)
+
+            await entity.async_update()
 
     @callback
     def unregister(self, bulb):
