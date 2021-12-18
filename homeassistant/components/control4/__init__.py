@@ -43,38 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Control4 from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     entry_data = hass.data[DOMAIN].setdefault(entry.entry_id, {})
-    # account_session = aiohttp_client.async_get_clientsession(hass)
-
     config = entry.data
-    # account = C4Account(config[CONF_USERNAME], config[CONF_PASSWORD], account_session)
-    # try:
-    #     await account.getAccountBearerToken()
-    # except client_exceptions.ClientError as exception:
-    #     _LOGGER.error("Error connecting to Control4 account API: %s", exception)
-    #     raise ConfigEntryNotReady from exception
-    # except BadCredentials as exception:
-    #     _LOGGER.error(
-    #         "Error authenticating with Control4 account API, incorrect username or password: %s",
-    #         exception,
-    #     )
-    #     return False
-
-    # entry_data[CONF_ACCOUNT] = account
-
-    # controller_unique_id = config[CONF_CONTROLLER_UNIQUE_ID]
-    # entry_data[CONF_CONTROLLER_UNIQUE_ID] = controller_unique_id
-
-    # director_token_dict = await account.getDirectorBearerToken(controller_unique_id)
-    # director_session = aiohttp_client.async_get_clientsession(hass, verify_ssl=False)
-    # director = C4Director(
-    #     config[CONF_HOST], director_token_dict[CONF_TOKEN], director_session
-    # )
-    # entry_data[CONF_DIRECTOR] = director
-    # entry_data[CONF_DIRECTOR_TOKEN_EXPIRATION] = director_token_dict["token_expiration"]
-    # _LOGGER.info(director_token_dict["token_expiration"])
-    # async_track_point_in_utc_time(
-    #     hass, refresh_tokens, entry_data[CONF_DIRECTOR_TOKEN_EXPIRATION]
-    # )
 
     await refresh_tokens(hass, entry)
     account = entry_data[CONF_ACCOUNT]
