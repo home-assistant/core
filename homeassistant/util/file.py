@@ -36,7 +36,10 @@ def write_utf8_file_atomic(
     try:
         with AtomicWriter(filename, overwrite=True).open() as fdesc:
             if not private:
-                os.fchmod(fdesc.fileno(), 0o644)
+                if os.name == 'nt':
+                    os.chmod(filename, 0o644)
+                else:
+                    os.fchmod(fdesc.fileno(), 0o644)
             fdesc.write(utf8_data)
     except OSError as error:
         _LOGGER.exception("Saving file failed: %s", filename)
@@ -63,7 +66,10 @@ def write_utf8_file(
             fdesc.write(utf8_data)
             tmp_filename = fdesc.name
             if not private:
-                os.fchmod(fdesc.fileno(), 0o644)
+                if os.name == 'nt':
+                    os.chmod(tmp_filename, 0o644)
+                else:
+                    os.fchmod(fdesc.fileno(), 0o644)
         os.replace(tmp_filename, filename)
     except OSError as error:
         _LOGGER.exception("Saving file failed: %s", filename)
