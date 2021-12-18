@@ -20,7 +20,7 @@ SIGNAL_SEND_PATH_SUFIX = "/v2/send"
 MESSAGE = "Testing Signal Messenger platform :)"
 NUMBER_FROM = "+43443434343"
 NUMBERS_TO = ["+435565656565"]
-URL_ATTACHMENT = "https://www.home-assistant.io/images/favicon-192x192-full.png"
+URL_ATTACHMENT = "http://127.0.0.1:8080/image.jpg"
 
 
 @pytest.fixture
@@ -36,5 +36,11 @@ def signal_requests_mock(requests_mock):
         "http://127.0.0.1:8080/v1/about",
         status_code=HTTPStatus.OK,
         json={"versions": ["v1", "v2"]},
+    )
+    requests_mock.register_uri(
+        "GET",
+        "http://127.0.0.1:8080/image.jpg",
+        status_code=HTTPStatus.OK,
+        content=None,
     )
     return requests_mock
