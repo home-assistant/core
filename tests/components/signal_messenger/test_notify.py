@@ -91,6 +91,7 @@ def send_message_with_attachment(signal_notification_service, deprecated=False):
         data = {"attachment": tf.name} if deprecated else {"attachments": [tf.name]}
         signal_notification_service.send_message(MESSAGE, **{"data": data})
 
+
 def test_send_message_with_attachment_as_url(
     signal_notification_service, signal_requests_mock, caplog
 ):
@@ -102,7 +103,7 @@ def test_send_message_with_attachment_as_url(
 
     assert "Sending signal message" in caplog.text
     assert signal_requests_mock.called
-    assert signal_requests_mock.call_count == 2
+    assert signal_requests_mock.call_count == 3
     assert_sending_requests(signal_requests_mock, 1)
 
 
