@@ -4,10 +4,7 @@ import json
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import (
-    CONF_DIRECTOR,
-    DOMAIN,
-)
+from .const import CONF_DIRECTOR, DOMAIN
 
 
 async def director_get_entry_variables(

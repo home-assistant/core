@@ -1,11 +1,11 @@
 """The Control4 integration."""
 from __future__ import annotations
-import asyncio
 
+import asyncio
+from functools import partial
 import json
 import logging
 from typing import Callable
-from functools import partial
 
 from aiohttp import client_exceptions
 from pyControl4.account import C4Account
