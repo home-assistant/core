@@ -1,24 +1,26 @@
 """Support for Ridwell buttons."""
 from __future__ import annotations
 
+from aioridwell.model import EventState, RidwellPickupEvent
+
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RidwellEntity
-from .const import DATA_ACCOUNT, DATA_COORDINATOR, DOMAIN, LOGGER
+from .const import DATA_ACCOUNT, DATA_COORDINATOR, DOMAIN
 
-BUTTON_OPT_IN = "opt_in"
-BUTTON_OPT_OUT = "opt_out"
+BUTTON_TYPE_OPT_IN = "opt_in"
+BUTTON_TYPE_OPT_OUT = "opt_out"
 
 BUTTON_DESCRIPTIONS = (
     ButtonEntityDescription(
-        key=BUTTON_OPT_IN,
+        key=BUTTON_TYPE_OPT_IN,
         name="Opt In to Next Pickup",
     ),
     ButtonEntityDescription(
-        key=BUTTON_OPT_OUT,
+        key=BUTTON_TYPE_OPT_OUT,
         name="Opt Out from Next Pickup",
     ),
 )
@@ -45,4 +47,15 @@ class RidwellButton(RidwellEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Press the button."""
-        LOGGER.error("HERE")
+        event: RidwellPickupEvent = self.coordinator.data[self._account.account_id]
+
+        if self.entity_description.key == BUTTON_TYPE_OPT_IN:
+            if event.state == EventState.SCHEDULED:
+                raise ValueError(f"Already opted into {event.pickup_date} pickup")
+            await event.async_opt_in()
+        else:
+            if event.state == EventState.SKIPPED:
+                raise ValueError(f"Already opted out of {event.pickup_date} pickup")
+            await event.async_opt_out()
+
+        await self.coordinator.async_request_refresh()
