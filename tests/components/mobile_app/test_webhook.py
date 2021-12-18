@@ -347,6 +347,24 @@ async def test_webhook_update_location_with_gps(
     assert state.attributes["altitude"] == -10
 
 
+async def test_webhook_update_location_with_gps_without_accuracy(
+    hass, webhook_client, create_registrations
+):
+    """Test that location can be updated."""
+    resp = await webhook_client.post(
+        "/api/webhook/{}".format(create_registrations[1]["webhook_id"]),
+        json={
+            "type": "update_location",
+            "data": {"gps": [1, 2]},
+        },
+    )
+
+    assert resp.status == HTTPStatus.OK
+
+    state = hass.states.get("device_tracker.test_1_2")
+    assert state.state == STATE_UNKNOWN
+
+
 async def test_webhook_update_location_with_location_name(
     hass, webhook_client, create_registrations
 ):
