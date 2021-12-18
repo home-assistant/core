@@ -592,6 +592,10 @@ class SimpliSafe:
 
             if self._websocket_reconnect_task:
                 self._websocket_reconnect_task.cancel()
+                try:
+                    await self._websocket_reconnect_task
+                except asyncio.CancelledError:
+                    LOGGER.debug("Websocket reconnection task successfully canceled")
 
             await self._api.websocket.async_disconnect()
 
@@ -647,7 +651,7 @@ class SimpliSafe:
                 # If a websocket connection is open, reconnect it to use the
                 # new access token:
                 self._websocket_reconnect_task = self._hass.async_create_task(
-                    self._api.websocket.async_reconnect()
+                    self._async_websocket_connect()
                 )
 
         self.entry.async_on_unload(
