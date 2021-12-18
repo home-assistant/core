@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING, Any, cast
 from simplipy import API
 from simplipy.device import Device, DeviceTypes
 from simplipy.errors import (
-    ConnectionClosedError,
     EndpointUnavailableError,
     InvalidCredentialsError,
     SimplipyError,
@@ -532,8 +531,6 @@ class SimpliSafe:
             await self._api.websocket.async_listen()
         except asyncio.CancelledError:
             should_reconnect = False
-        except ConnectionClosedError:
-            LOGGER.info("Connection to websocket was closed")
         except WebsocketError as err:
             LOGGER.error("Failed to connect to websocket: %s", err)
         except Exception as err:  # pylint: disable=broad-except
