@@ -217,6 +217,11 @@ DHCP = [
         "macaddress": "000145*"
     },
     {
+        "domain": "pure_energie",
+        "hostname": "smartbridge-*",
+        "macaddress": "84DF0C*"
+    },
+    {
         "domain": "rachio",
         "hostname": "rachio-*",
         "macaddress": "009D6B*"
