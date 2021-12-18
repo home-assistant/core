@@ -62,6 +62,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     websocket = C4Websocket(
         config[CONF_HOST], director.director_bearer_token, websocket_session
     )
+    # Silence C4Websocket related loggers, that would otherwise spam INFO logs with debugging messages
+    logging.getLogger("socketio.client").setLevel(logging.WARNING)
+    logging.getLogger("engineio.client").setLevel(logging.WARNING)
+    logging.getLogger("charset_normalizer").setLevel(logging.ERROR)
     entry_data[CONF_WEBSOCKET] = websocket
     await websocket.sio_connect()
 
@@ -206,7 +210,17 @@ class Control4Entity(Entity):
             self._idx,
             self._update_callback,
         )
-        _LOGGER.debug("Registering device %s for callback", self._device_id)
+        _LOGGER.debug("Registering item id %s for callback", self._idx)
+        await self.hass.async_add_executor_job(
+            self.entry_data[CONF_WEBSOCKET].add_device_callback,
+            self._device_id,
+            self._update_callback,
+        )
+        _LOGGER.debug(
+            "Registering parent device %s of item id %s for callback",
+            self._device_id,
+            self._idx,
+        )
         return True
 
     async def _update_callback(self, device, message):
