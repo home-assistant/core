@@ -10,8 +10,8 @@ from homeassistant.components.recorder.models import States
 from homeassistant.components.recorder.util import execute, session_scope
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
-    STATE_CLASS_MEASUREMENT,
     SensorEntity,
+    SensorStateClass,
 )
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
@@ -350,7 +350,7 @@ class StatisticsSensor(SensorEntity):
         """Return the state class of this entity."""
         if self._state_characteristic in STATS_NOT_A_NUMBER:
             return None
-        return STATE_CLASS_MEASUREMENT
+        return SensorStateClass.MEASUREMENT
 
     @property
     def native_value(self):
