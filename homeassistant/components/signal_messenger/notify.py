@@ -1,5 +1,6 @@
 """Signal Messenger for notify component."""
 import logging
+import requests
 
 from pysignalclirestapi import SignalCliRestApi, SignalCliRestApiError
 import voluptuous as vol
@@ -18,6 +19,7 @@ CONF_RECP_NR = "recipients"
 CONF_SIGNAL_CLI_REST_API = "url"
 ATTR_FILENAME = "attachment"
 ATTR_FILENAMES = "attachments"
+ATTR_URLS = "urls"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -51,7 +53,6 @@ class SignalNotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Send a message to a one or more recipients.
-
         Additionally a file can be attached.
         """
 
@@ -60,6 +61,8 @@ class SignalNotificationService(BaseNotificationService):
         data = kwargs.get(ATTR_DATA)
 
         filenames = None
+        attachments_as_bytes = []
+
         if data is not None:
             if ATTR_FILENAMES in data:
                 filenames = data[ATTR_FILENAMES]
@@ -71,9 +74,18 @@ class SignalNotificationService(BaseNotificationService):
                     filenames = [data[ATTR_FILENAME]]
                 else:
                     filenames.append(data[ATTR_FILENAME])
+            
+            if ATTR_URLS in data:
+                urls = data[ATTR_URLS]
+                for url in urls:
+                    try:
+                        attachments_as_bytes.append((requests.get(url, verify=False, timeout=10)).content)
+                    except Exception as ex:
+                        _LOGGER.error("%s", ex)
+                        raise ex
 
         try:
-            self._signal_cli_rest_api.send_message(message, self._recp_nrs, filenames)
+            self._signal_cli_rest_api.send_message(message, self._recp_nrs, filenames, attachments_as_bytes)
         except SignalCliRestApiError as ex:
             _LOGGER.error("%s", ex)
             raise ex
