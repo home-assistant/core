@@ -312,8 +312,8 @@ async def webhook_render_template(hass, config_entry, data):
 @validate_schema(
     {
         vol.Optional(ATTR_LOCATION_NAME): cv.string,
-        vol.Required(ATTR_GPS): cv.gps,
-        vol.Required(ATTR_GPS_ACCURACY): cv.positive_int,
+        vol.Optional(ATTR_GPS): cv.gps,
+        vol.Optional(ATTR_GPS_ACCURACY): cv.positive_int,
         vol.Optional(ATTR_BATTERY): cv.positive_int,
         vol.Optional(ATTR_SPEED): cv.positive_int,
         vol.Optional(ATTR_ALTITUDE): vol.Coerce(float),
