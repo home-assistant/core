@@ -160,6 +160,7 @@ class XiaomiGatewayDevice(CoordinatorEntity, Entity):
             name=self._sub_device.name,
             model=self._sub_device.model,
             sw_version=self._sub_device.firmware_version,
+            hw_version=self._sub_device.zigbee_model,
         )
 
     @property
