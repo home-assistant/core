@@ -4,7 +4,7 @@ from __future__ import annotations
 from flux_led.aio import AIOWifiLedBulb
 
 from homeassistant import config_entries
-from homeassistant.components.select import SelectEntity
+from homeassistant.components.button import ButtonEntity
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
@@ -25,7 +25,7 @@ async def async_setup_entry(
     async_add_entities([FluxRestartButton(coordinator.device, entry)])
 
 
-class FluxRestartButton(FluxBaseEntity, SelectEntity):
+class FluxRestartButton(FluxBaseEntity, ButtonEntity):
     """Representation of a Flux restart button."""
 
     _attr_should_poll = False
