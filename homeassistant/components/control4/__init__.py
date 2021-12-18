@@ -5,7 +5,7 @@ import asyncio
 from functools import partial
 import json
 import logging
-from typing import Callable
+from collections.abc import Callable
 
 from aiohttp import client_exceptions
 from pyControl4.account import C4Account
@@ -154,10 +154,11 @@ async def refresh_tokens(hass: HomeAssistant, entry: ConfigEntry):
     entry_data[CONF_ACCOUNT] = account
     entry_data[CONF_DIRECTOR] = director
     entry_data[CONF_DIRECTOR_TOKEN_EXPIRATION] = director_token_dict["validSeconds"]
+    callable_partial = partial(refresh_tokens_callable, hass, entry)
     async_call_later(
         hass,
         entry_data[CONF_DIRECTOR_TOKEN_EXPIRATION],
-        partial(refresh_tokens_callable, hass, entry),
+        callable_partial,
     )
 
 
