@@ -36,6 +36,8 @@ SENSOR_LAST_ORDER_ETA_END = "last_order_eta_end"
 SENSOR_LAST_ORDER_DELIVERY_TIME = "last_order_delivery_time"
 SENSOR_LAST_ORDER_TOTAL_PRICE = "last_order_total_price"
 
+DATE_TIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%f%z"
+
 
 @dataclass
 class PicnicRequiredKeysMixin:

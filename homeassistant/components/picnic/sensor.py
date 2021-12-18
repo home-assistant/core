@@ -1,9 +1,10 @@
 """Definition of Picnic sensors."""
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any, cast
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
@@ -18,6 +19,7 @@ from .const import (
     ADDRESS,
     ATTRIBUTION,
     CONF_COORDINATOR,
+    DATE_TIME_FORMAT,
     DOMAIN,
     SENSOR_TYPES,
     PicnicSensorEntityDescription,
@@ -69,7 +71,17 @@ class PicnicSensor(SensorEntity, CoordinatorEntity):
             if self.coordinator.data is not None
             else {}
         )
-        return self.entity_description.value_fn(data_set)
+        value = self.entity_description.value_fn(data_set)
+
+        # Convert to datetime object if the device class is timestamp
+        if value and self.device_class == SensorDeviceClass.TIMESTAMP:
+            try:
+                value = datetime.strptime(value, DATE_TIME_FORMAT)
+            except ValueError:
+                value = None
+
+        # Return the value
+        return value
 
     @property
     def available(self) -> bool:
