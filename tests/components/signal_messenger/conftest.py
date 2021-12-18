@@ -20,7 +20,7 @@ SIGNAL_SEND_PATH_SUFIX = "/v2/send"
 MESSAGE = "Testing Signal Messenger platform :)"
 NUMBER_FROM = "+43443434343"
 NUMBERS_TO = ["+435565656565"]
-URL = "https://www.home-assistant.io/images/favicon-192x192-full.png"
+URL_ATTACHMENT = "https://www.home-assistant.io/images/favicon-192x192-full.png"
 
 
 @pytest.fixture

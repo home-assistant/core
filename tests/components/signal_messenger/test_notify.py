@@ -12,7 +12,7 @@ from tests.components.signal_messenger.conftest import (
     NUMBER_FROM,
     NUMBERS_TO,
     SIGNAL_SEND_PATH_SUFIX,
-    URL,
+    URL_ATTACHMENT,
 )
 
 BASE_COMPONENT = "notify"
@@ -108,7 +108,7 @@ def test_send_message_with_attachment_as_url(
 
 def send_message_with_attachment_as_url(signal_notification_service):
     """Send message with attachment from URL."""
-    data = {"urls": [URL]}
+    data = {"urls": [URL_ATTACHMENT]}
     signal_notification_service.send_message(MESSAGE, **{"data": data})
 
 
