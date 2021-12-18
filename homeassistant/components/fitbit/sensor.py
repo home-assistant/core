@@ -114,7 +114,7 @@ def request_app_setup(
     except NoURLAvailableError:
         _LOGGER.error(
             "Could not find an SSL enabled URL for your Home Assistant instance. "
-            "Fitbit requires that your Home Assistant instance is accessible via HTTPS."
+            "Fitbit requires that your Home Assistant instance is accessible via HTTPS"
         )
         return
 
