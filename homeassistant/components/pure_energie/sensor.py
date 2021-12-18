@@ -58,7 +58,6 @@ async def async_setup_entry(
             coordinator=hass.data[DOMAIN][entry.entry_id],
             description=description,
             service_key=service_key,
-            name=entry.title,
             service=SERVICES[service_key],
         )
         for service_key, service_sensors in SENSORS.items()
@@ -77,14 +76,13 @@ class PureEnergieSensorEntity(CoordinatorEntity, SensorEntity):
         coordinator: PureEnergieDataUpdateCoordinator,
         description: SensorEntityDescription,
         service_key: Literal["smartmeter"],
-        name: str,
         service: str,
     ) -> None:
         """Initialize Pure Energie sensor."""
         super().__init__(coordinator=coordinator)
         self._service_key = service_key
 
-        self.entity_id = f"{SENSOR_DOMAIN}.{name}_{description.key}"
+        self.entity_id = f"{SENSOR_DOMAIN}.pem_{description.key}"
         self.entity_description = description
         self._attr_unique_id = (
             f"{coordinator.config_entry.entry_id}_{service_key}_{description.key}"
