@@ -61,7 +61,7 @@ class DeviceCoordinator(DataUpdateCoordinator):
             )
         else:
             updated = self.wemo.subscription_update(event_type, params)
-            self.hass.add_job(self._async_subscription_callback(updated))
+            self.hass.create_task(self._async_subscription_callback(updated))
 
     async def _async_subscription_callback(self, updated: bool) -> None:
         """Update the state by the Wemo device."""

@@ -1,13 +1,11 @@
 """Support for monitoring a Sense energy sensor."""
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL,
+    SensorDeviceClass,
     SensorEntity,
+    SensorStateClass,
 )
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_POWER,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
@@ -157,7 +155,7 @@ class SenseActiveSensor(SensorEntity):
     _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
     _attr_should_poll = False
     _attr_available = False
-    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
         self,
@@ -250,8 +248,8 @@ class SenseVoltageSensor(SensorEntity):
 class SenseTrendsSensor(CoordinatorEntity, SensorEntity):
     """Implementation of a Sense energy sensor."""
 
-    _attr_device_class = DEVICE_CLASS_ENERGY
-    _attr_state_class = STATE_CLASS_TOTAL
+    _attr_device_class = SensorDeviceClass.ENERGY
+    _attr_state_class = SensorStateClass.TOTAL
     _attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
     _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
     _attr_icon = ICON
@@ -299,10 +297,10 @@ class SenseEnergyDevice(SensorEntity):
     """Implementation of a Sense energy device."""
 
     _attr_available = False
-    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = POWER_WATT
     _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
-    _attr_device_class = DEVICE_CLASS_POWER
+    _attr_device_class = SensorDeviceClass.POWER
     _attr_should_poll = False
 
     def __init__(self, sense_devices_data, device, sense_monitor_id):
