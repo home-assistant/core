@@ -69,7 +69,6 @@ async def async_setup_climate_entities(
 ) -> None:
     """Set up online climate devices."""
 
-    _LOGGER.info("Setup online climate device %s", wrapper.name)
     device_block: Block | None = None
     sensor_block: Block | None = None
 
@@ -82,6 +81,7 @@ async def async_setup_climate_entities(
             sensor_block = block
 
     if sensor_block and device_block:
+        _LOGGER.info("Setup online climate device %s", wrapper.name)
         async_add_entities([BlockSleepingClimate(wrapper, sensor_block, device_block)])
 
 
