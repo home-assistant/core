@@ -162,6 +162,7 @@ async def refresh_tokens(hass: HomeAssistant, entry: ConfigEntry):
 
 
 def refresh_tokens_callable(hass: HomeAssistant, entry: ConfigEntry) -> Callable:
+    """Callable wrapper of refresh_tokens()."""
     return asyncio.run(refresh_tokens(hass, entry))
 
 
