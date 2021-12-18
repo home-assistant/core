@@ -1031,7 +1031,7 @@ pymyq==3.1.4
 pymysensors==0.22.1
 
 # homeassistant.components.netgear
-pynetgear==0.7.0
+pynetgear==0.8.0
 
 # homeassistant.components.nina
 pynina==0.1.4
