@@ -2,10 +2,10 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from functools import partial
 import json
 import logging
-from collections.abc import Callable
 
 from aiohttp import client_exceptions
 from pyControl4.account import C4Account
