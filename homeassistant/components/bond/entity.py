@@ -78,6 +78,8 @@ class BondEntity(Entity):
                 device_info[ATTR_MODEL] = self._hub.model
             if self._hub.fw_ver is not None:
                 device_info[ATTR_SW_VERSION] = self._hub.fw_ver
+            if self._hub.mcu_ver is not None:
+                device_info["hw_version"] = self._hub.mcu_ver
         else:
             model_data = []
             if self._device.branding_profile:
