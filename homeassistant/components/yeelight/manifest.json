@@ -3,7 +3,7 @@
   "name": "Yeelight",
   "documentation": "https://www.home-assistant.io/integrations/yeelight",
   "requirements": ["yeelight==0.7.8", "async-upnp-client==0.23.0"],
-  "codeowners": ["@rytilahti", "@zewelor", "@shenxn", "@starkillerOG"],
+  "codeowners": ["@zewelor", "@shenxn", "@starkillerOG"],
   "config_flow": true,
   "dependencies": ["network"],
   "quality_scale": "platinum",
