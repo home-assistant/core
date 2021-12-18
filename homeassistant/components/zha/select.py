@@ -6,11 +6,11 @@ import functools
 
 from zigpy.zcl.clusters.security import IasWd
 
-from homeassistant.components.select import DOMAIN as SELECT_DOMAIN, SelectEntity
+from homeassistant.components.select import SelectEntity
 from homeassistant.components.zha.core.registries import ZHA_ENTITIES
 from homeassistant.components.zha.core.typing import ChannelType, ZhaDeviceType
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENTITY_CATEGORY_CONFIG, STATE_UNKNOWN
+from homeassistant.const import ENTITY_CATEGORY_CONFIG, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -19,7 +19,7 @@ from .core import discovery
 from .core.const import CHANNEL_IAS_WD, DATA_ZHA, SIGNAL_ADD_ENTITIES, Strobe
 from .entity import ZhaEntity
 
-MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, SELECT_DOMAIN)
+MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, Platform.SELECT)
 
 
 async def async_setup_entry(
@@ -28,7 +28,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Zigbee Home Automation siren from config entry."""
-    entities_to_create = hass.data[DATA_ZHA][SELECT_DOMAIN]
+    entities_to_create = hass.data[DATA_ZHA][Platform.SELECT]
 
     unsub = async_dispatcher_connect(
         hass,
