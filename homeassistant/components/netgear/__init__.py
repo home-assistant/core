@@ -1,5 +1,6 @@
 """Support for Netgear routers."""
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
