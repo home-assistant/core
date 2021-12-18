@@ -92,7 +92,6 @@ async def async_restore_climate_entities(
     wrapper: BlockDeviceWrapper,
 ) -> None:
     """Restore sleeping climate devices."""
-    _LOGGER.info("Setup sleeping climate device %s", wrapper.name)
 
     ent_reg = await entity_registry.async_get_registry(hass)
     entries = entity_registry.async_entries_for_config_entry(
@@ -104,6 +103,7 @@ async def async_restore_climate_entities(
         if entry.domain != CLIMATE_DOMAIN:
             continue
 
+        _LOGGER.info("Setup sleeping climate device %s", wrapper.name)
         _LOGGER.debug("Found entry %s [%s]", entry.original_name, entry.domain)
         async_add_entities([BlockSleepingClimate(wrapper, None, None, entry)])
 
