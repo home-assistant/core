@@ -4,12 +4,12 @@ from __future__ import annotations
 from aiomusiccast.capabilities import OptionSetter
 
 from homeassistant.components.select import SelectEntity
-from homeassistant.components.yamaha_musiccast.const import DEVICE_CLASS_MAPPING
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN, MusicCastCapabilityEntity, MusicCastDataUpdateCoordinator
+from .const import DEVICE_CLASS_MAPPING
 
 
 async def async_setup_entry(
