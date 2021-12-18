@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any, cast
 from simplipy import API
 from simplipy.device import Device, DeviceTypes
 from simplipy.errors import (
+    ConnectionClosedError,
     EndpointUnavailableError,
     InvalidCredentialsError,
     SimplipyError,
@@ -474,6 +475,7 @@ class SimpliSafe:
         self._api = api
         self._hass = hass
         self._system_notifications: dict[int, set[SystemNotification]] = {}
+        self._websocket_reconnect_task: asyncio.Task | None = None
         self.entry = entry
         self.initial_event_to_use: dict[int, dict[str, Any]] = {}
         self.systems: dict[int, SystemType] = {}
@@ -518,7 +520,7 @@ class SimpliSafe:
 
         self._system_notifications[system.system_id] = latest_notifications
 
-    async def _async_websocket_on_connect(self) -> None:
+    async def _async_websocket_connect(self) -> None:
         """Define a callback for connecting to the websocket."""
         if TYPE_CHECKING:
             assert self._api.websocket
@@ -526,17 +528,22 @@ class SimpliSafe:
         should_reconnect = True
 
         try:
+            await self._api.websocket.async_connect()
             await self._api.websocket.async_listen()
         except asyncio.CancelledError:
             should_reconnect = False
+        except ConnectionClosedError:
+            LOGGER.info("Connection to websocket was closed")
         except WebsocketError as err:
-            LOGGER.error("Failed to listen to websocket: %s", err)
+            LOGGER.error("Failed to connect to websocket: %s", err)
         except Exception as err:  # pylint: disable=broad-except
-            LOGGER.error("Unknown exception while listening to websocket: %s", err)
+            LOGGER.error("Unknown exception while connecting to websocket: %s", err)
 
         if should_reconnect:
             LOGGER.info("Disconnected from websocket; reconnecting")
-            self._hass.async_create_task(self._api.websocket.async_reconnect())
+            self._websocket_reconnect_task = self._hass.async_create_task(
+                self._async_websocket_connect()
+            )
 
     @callback
     def _async_websocket_on_event(self, event: WebsocketEvent) -> None:
@@ -576,17 +583,20 @@ class SimpliSafe:
             assert self._api.refresh_token
             assert self._api.websocket
 
-        self._api.websocket.add_connect_callback(self._async_websocket_on_connect)
         self._api.websocket.add_event_callback(self._async_websocket_on_event)
-        asyncio.create_task(self._api.websocket.async_connect())
+        self._websocket_reconnect_task = asyncio.create_task(
+            self._async_websocket_connect()
+        )
 
         async def async_websocket_disconnect_listener(_: Event) -> None:
             """Define an event handler to disconnect from the websocket."""
             if TYPE_CHECKING:
                 assert self._api.websocket
 
-            if self._api.websocket.connected:
-                await self._api.websocket.async_disconnect()
+            if self._websocket_reconnect_task:
+                self._websocket_reconnect_task.cancel()
+
+            await self._api.websocket.async_disconnect()
 
         self.entry.async_on_unload(
             self._hass.bus.async_listen_once(
@@ -639,7 +649,9 @@ class SimpliSafe:
             if self._api.websocket.connected:
                 # If a websocket connection is open, reconnect it to use the
                 # new access token:
-                self._hass.async_create_task(self._api.websocket.async_reconnect())
+                self._websocket_reconnect_task = self._hass.async_create_task(
+                    self._api.websocket.async_reconnect()
+                )
 
         self.entry.async_on_unload(
             self._api.add_refresh_token_callback(async_handle_refresh_token)
