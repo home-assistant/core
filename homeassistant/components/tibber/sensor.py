@@ -257,7 +257,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
             )
         if home.has_active_subscription and not home.has_real_time_consumption:
             if coordinator is None:
-                coordinator = TibberDataCoordinator(tibber_connection, hass)
+                coordinator = TibberDataCoordinator(hass, tibber_connection)
             for entity_description in SENSORS:
                 entities.append(TibberDataSensor(home, coordinator, entity_description))
 
@@ -519,7 +519,7 @@ class TibberRtDataCoordinator(update_coordinator.DataUpdateCoordinator):
 class TibberDataCoordinator(update_coordinator.DataUpdateCoordinator):
     """Handle Tibber data and insert statistics."""
 
-    def __init__(self, tibber_connection, hass):
+    def __init__(self, hass, tibber_connection):
         """Initialize the data handler."""
         super().__init__(
             hass,

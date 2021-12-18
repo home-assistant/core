@@ -1,5 +1,5 @@
 {
-  "after_dependencies": ["recorder"],
+  "dependencies": ["recorder"],
   "domain": "tibber",
   "name": "Tibber",
   "documentation": "https://www.home-assistant.io/integrations/tibber",
