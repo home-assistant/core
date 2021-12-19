@@ -193,7 +193,7 @@ def async_process_zeroconf_match_dict(entry: dict[str, Any]) -> dict[str, Any]:
     for moved_prop in MOVED_ZEROCONF_PROPS:
         if value := entry_without_type.pop(moved_prop, None):
             _LOGGER.warning(
-                'Matching the zeroconf property "%s" at top-level is depercated and should be moved into a properties dict; Check the developer documentation',
+                'Matching the zeroconf property "%s" at top-level is deprecated and should be moved into a properties dict; Check the developer documentation',
                 moved_prop,
             )
             if "properties" not in entry_without_type:
