@@ -29,6 +29,7 @@ class FluxRestartButton(FluxBaseEntity, ButtonEntity):
     """Representation of a Flux restart button."""
 
     _attr_should_poll = False
+    _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
         self,
@@ -37,7 +38,6 @@ class FluxRestartButton(FluxBaseEntity, ButtonEntity):
     ) -> None:
         """Initialize the reboot button."""
         super().__init__(device, entry)
-        self._attr_entity_category = EntityCategory.CONFIG
         self._attr_name = f"{entry.data[CONF_NAME]} Restart"
         if entry.unique_id:
             self._attr_unique_id = f"{entry.unique_id}_restart"
