@@ -20,6 +20,7 @@ from flux_led.const import (
     ATTR_REMOTE_ACCESS_PORT,
     ATTR_VERSION_NUM,
 )
+from flux_led.const import ATTR_ID
 from flux_led.scanner import FluxLEDDiscovery
 
 from homeassistant import config_entries
@@ -49,10 +50,15 @@ from .const import (
     DISCOVER_SCAN_TIMEOUT,
     DOMAIN,
     FLUX_LED_DISCOVERY,
-    FLUX_LED_DISCOVERY_LOCK,
     FLUX_LED_EXCEPTIONS,
     SIGNAL_STATE_UPDATED,
     STARTUP_SCAN_TIMEOUT,
+)
+from .discovery import (
+    async_discover_device,
+    async_discover_devices,
+    async_name_from_discovery,
+    async_trigger_discovery,
 )
 
 CONF_TO_DISCOVERY: Final = {
@@ -126,52 +132,6 @@ def async_update_entry_from_discovery(
     if updates:
         return hass.config_entries.async_update_entry(entry, **updates)
     return False
-
-
-async def async_discover_devices(
-    hass: HomeAssistant, timeout: int, address: str | None = None
-) -> list[FluxLEDDiscovery]:
-    """Discover flux led devices."""
-    domain_data = hass.data.setdefault(DOMAIN, {})
-    if FLUX_LED_DISCOVERY_LOCK not in domain_data:
-        domain_data[FLUX_LED_DISCOVERY_LOCK] = asyncio.Lock()
-    async with domain_data[FLUX_LED_DISCOVERY_LOCK]:
-        scanner = AIOBulbScanner()
-        try:
-            discovered = await scanner.async_scan(timeout=timeout, address=address)
-        except OSError as ex:
-            _LOGGER.debug("Scanning failed with error: %s", ex)
-            return []
-        else:
-            return discovered
-
-
-async def async_discover_device(
-    hass: HomeAssistant, host: str
-) -> FluxLEDDiscovery | None:
-    """Direct discovery at a single ip instead of broadcast."""
-    # If we are missing the unique_id we should be able to fetch it
-    # from the device by doing a directed discovery at the host only
-    for device in await async_discover_devices(hass, DISCOVER_SCAN_TIMEOUT, host):
-        if device[ATTR_IPADDR] == host:
-            return device
-    return None
-
-
-@callback
-def async_trigger_discovery(
-    hass: HomeAssistant,
-    discovered_devices: list[FluxLEDDiscovery],
-) -> None:
-    """Trigger config flows for discovered devices."""
-    for device in discovered_devices:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_DISCOVERY},
-                data={**device},
-            )
-        )
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -253,7 +213,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         device.discovery = discovery
 
     coordinator = FluxLedUpdateCoordinator(hass, device, entry)
-    hass.data[DOMAIN][entry.entry_id] = coordinator
     platforms = PLATFORMS_BY_TYPE[device.device_type]
     hass.config_entries.async_setup_platforms(entry, platforms)
 

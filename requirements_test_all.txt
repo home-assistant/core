@@ -179,7 +179,7 @@ aiopylgtv==0.4.0
 aiorecollect==1.0.8
 
 # homeassistant.components.ridwell
-aioridwell==0.2.0
+aioridwell==2021.12.2
 
 # homeassistant.components.shelly
 aioshelly==1.0.5
@@ -242,7 +242,7 @@ arcam-fmj==0.12.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.23.0
+async-upnp-client==0.23.1
 
 # homeassistant.components.aurora
 auroranoaa==0.0.2
@@ -1245,7 +1245,7 @@ restrictedpython==5.2
 rflink==0.0.58
 
 # homeassistant.components.ring
-ring_doorbell==0.7.1
+ring_doorbell==0.7.2
 
 # homeassistant.components.roku
 rokuecp==0.8.5

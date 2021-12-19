@@ -24,6 +24,7 @@ from . import (
     async_update_entry_from_discovery,
     async_wifi_bulb_for_host,
 )
+from . import async_update_entry_from_discovery, async_wifi_bulb_for_host
 from .const import (
     CONF_CUSTOM_EFFECT_COLORS,
     CONF_CUSTOM_EFFECT_SPEED_PCT,
@@ -35,6 +36,11 @@ from .const import (
     TRANSITION_GRADUAL,
     TRANSITION_JUMP,
     TRANSITION_STROBE,
+)
+from .discovery import (
+    async_discover_device,
+    async_discover_devices,
+    async_name_from_discovery,
 )
 
 CONF_DEVICE: Final = "device"
