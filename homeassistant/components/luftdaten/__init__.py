@@ -7,7 +7,6 @@ from luftdaten import Luftdaten
 from luftdaten.exceptions import LuftdatenError
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
-from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONF_MONITORED_CONDITIONS,
@@ -18,13 +17,11 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     Platform,
 )
-from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
-from .config_flow import duplicate_stations
 from .const import CONF_SENSOR_ID, DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -83,13 +80,6 @@ SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
-@callback
-def _async_fixup_sensor_id(hass, config_entry, sensor_id):
-    hass.config_entries.async_update_entry(
-        config_entry, data={**config_entry.data, CONF_SENSOR_ID: int(sensor_id)}
-    )
-
-
 async def async_setup_entry(hass, config_entry):
     """Set up Luftdaten as config entry."""
     hass.data.setdefault(
@@ -100,19 +90,11 @@ async def async_setup_entry(hass, config_entry):
         },
     )
 
-    if not isinstance(config_entry.data[CONF_SENSOR_ID], int):
-        _async_fixup_sensor_id(hass, config_entry, config_entry.data[CONF_SENSOR_ID])
-
-    if (
-        config_entry.data[CONF_SENSOR_ID] in duplicate_stations(hass)
-        and config_entry.source == SOURCE_IMPORT
-    ):
-        _LOGGER.warning(
-            "Removing duplicate sensors for station %s",
-            config_entry.data[CONF_SENSOR_ID],
+    # For backwards compat, set unique ID
+    if config_entry.unique_id is None:
+        hass.config_entries.async_update_entry(
+            config_entry, unique_id=config_entry.data[CONF_SENSOR_ID]
         )
-        hass.async_create_task(hass.config_entries.async_remove(config_entry.entry_id))
-        return False
 
     try:
         luftdaten = LuftDatenData(

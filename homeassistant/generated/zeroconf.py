@@ -25,6 +25,12 @@ ZEROCONF = {
             }
         },
         {
+            "domain": "apple_tv",
+            "properties": {
+                "am": "airport*"
+            }
+        },
+        {
             "domain": "samsungtv",
             "properties": {
                 "manufacturer": "samsung*"
@@ -261,7 +267,19 @@ ZEROCONF = {
         {
             "domain": "apple_tv",
             "properties": {
+                "am": "appletv*"
+            }
+        },
+        {
+            "domain": "apple_tv",
+            "properties": {
                 "am": "audioaccessory*"
+            }
+        },
+        {
+            "domain": "apple_tv",
+            "properties": {
+                "am": "airport*"
             }
         }
     ],
