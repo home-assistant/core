@@ -90,7 +90,7 @@ async def test_initial_state_offline(hass: HomeAssistant):
     assert device.manufacturer == "LEDWORKS"
 
 
-async def test_turn_on(hass: HomeAssistant):
+async def test_turn_on_off(hass: HomeAssistant):
     """Test support of the light.turn_on service."""
     client = ClientMock()
     client.state = False
@@ -108,6 +108,15 @@ async def test_turn_on(hass: HomeAssistant):
 
     assert state.state == "on"
     assert state.attributes["brightness"] == 51
+
+    await hass.services.async_call(
+        "light", "turn_off", service_data={"entity_id": entity.entity_id}
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity.entity_id)
+
+    assert state.state == "off"
 
 
 async def test_turn_on_with_brightness(hass: HomeAssistant):
