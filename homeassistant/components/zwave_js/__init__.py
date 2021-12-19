@@ -355,6 +355,11 @@ async def async_setup_entry(  # noqa: C901
         assert device
         if replaced:
             discovered_value_ids.pop(device.id, None)
+
+            async_dispatcher_send(
+                hass,
+                f"{DOMAIN}_{client.driver.controller.home_id}.{node.node_id}.node_status_remove_entity",
+            )
         else:
             remove_device(device)
 
