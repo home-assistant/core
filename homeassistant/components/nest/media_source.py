@@ -135,12 +135,12 @@ class NestEventMediaStore(EventMediaStore):
                 )
         return self._data
 
-    async def async_save(self, data: dict | None) -> None:
+    async def async_save(self, data: dict) -> None:  # type: ignore[override]
         """Save data."""
         self._data = data
 
         def provide_data() -> dict:
-            return {} if self._data is None else self._data
+            return data
 
         self._store.async_delay_save(provide_data, STORAGE_SAVE_DELAY_SECONDS)
 
