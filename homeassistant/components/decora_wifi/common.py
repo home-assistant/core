@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import logging
+from typing import Callable
+
 from decora_wifi import DecoraWiFiSession
 from decora_wifi.models.iot_switch import IotSwitch
 from decora_wifi.models.person import Person
@@ -9,12 +12,15 @@ from decora_wifi.models.residence import Residence
 from decora_wifi.models.residential_account import ResidentialAccount
 from decora_wifi.models.residential_permission import ResidentialPermission
 
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import LIGHT_DOMAIN, PLATFORMS
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class DecoraWifiError(HomeAssistantError):
@@ -40,14 +46,16 @@ class LoginMismatch(DecoraWifiError):
 class DecoraWifiPlatform:
     """Class to hold decora_wifi platform sessions and related methods."""
 
-    def __init__(self, email: str, password: str) -> None:
+    def __init__(self, hass: HomeAssistant, email: str, password: str) -> None:
         """Iniialize session holder."""
+        self._hass = hass
         self._session = None
         self._email = email
         self._name = f"Decora_Wifi - {self._email}"
         self._password = password
         self._iot_switches: dict[str, IotSwitch] = {}
         self._logged_in = False
+        self._remove_stop_listener: Callable | None = None
 
     @property
     def active_platforms(self) -> list[str]:
@@ -125,6 +133,22 @@ class DecoraWifiPlatform:
             platform = DecoraWifiPlatform.classify_device(switch)
             self._iot_switches[platform].append(switch)
 
+    def _set_stop_listener(self):
+        """Set up a bus listener to logout on EVENT_HOMEASSISTANT_STOP."""
+
+        def logout(event):
+            """Log out."""
+            try:
+                self.teardown()
+            except CommFailed:
+                _LOGGER.debug(
+                    "Communication with myLeviton failed while attempting to logout"
+                )
+
+        self._remove_stop_listener = self._hass.bus.listen(
+            EVENT_HOMEASSISTANT_STOP, logout
+        )
+
     def refresh_devices(self):
         """Refresh this object's devices."""
         self._iot_switches: dict[str, IotSwitch] = {
@@ -137,18 +161,21 @@ class DecoraWifiPlatform:
         self._iot_switches = {platform: [] for platform in PLATFORMS}
         self._session = DecoraWiFiSession()
         self._api_login()
+        self._set_stop_listener()
         self._api_get_devices()
 
     def teardown(self):
-        """Clean up the session on object deletion."""
+        """Clean up the session in preparation for object deletion."""
         self._api_logout()
+        self._remove_stop_listener()
+        self._remove_stop_listener = None
 
     @staticmethod
     async def async_setup_decora_wifi(hass: HomeAssistant, email: str, password: str):
         """Set up a decora wifi session."""
 
         def setup_platform() -> DecoraWifiPlatform:
-            platform = DecoraWifiPlatform(email, password)
+            platform = DecoraWifiPlatform(hass, email, password)
             platform.setup()
             return platform
 
