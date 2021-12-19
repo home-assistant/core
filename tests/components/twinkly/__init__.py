@@ -21,6 +21,7 @@ class ClientMock:
         self.is_offline = False
         self.state = True
         self.brightness = {"mode": "enabled", "value": 10}
+        self.color = None
 
         self.id = str(uuid4())
         self.device_info = {
@@ -73,3 +74,10 @@ class ClientMock:
     def change_name(self, new_name: str) -> None:
         """Change the name of this virtual device."""
         self.device_info[DEV_NAME] = new_name
+
+    async def set_static_colour(self, colour) -> None:
+        """Set static color."""
+        self.color = colour
+
+    async def interview(self) -> None:
+        """Interview."""
