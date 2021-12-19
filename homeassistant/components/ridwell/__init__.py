@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
+from typing import Any
 
 from aioridwell import async_get_client
 from aioridwell.errors import InvalidCredentialsError, RidwellError
@@ -10,7 +11,7 @@ from aioridwell.model import RidwellAccount, RidwellPickupEvent
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, entity_registry as er
 from homeassistant.helpers.entity import EntityDescription
@@ -106,12 +107,14 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if version == 1:
         version = entry.version = 2
 
-        ent_reg = er.async_get(hass)
-        [entity_entry] = [
-            e for e in ent_reg.entities.values() if e.config_entry_id == entry.entry_id
-        ]
-        new_unique_id = f"{entity_entry.unique_id}_{SENSOR_TYPE_NEXT_PICKUP}"
-        ent_reg.async_update_entity(entity_entry.entity_id, new_unique_id=new_unique_id)
+        @callback
+        def migrate_unique_id(entity_entry: er.RegistryEntry) -> dict[str, Any]:
+            """Migrate the unique ID to a new format."""
+            return {
+                "new_unique_id": f"{entity_entry.unique_id}_{SENSOR_TYPE_NEXT_PICKUP}"
+            }
+
+        await er.async_migrate_entries(hass, entry.entry_id, migrate_unique_id)
 
     LOGGER.info("Migration to version %s successful", version)
 
