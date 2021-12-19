@@ -1,9 +1,7 @@
 {
-  "title": "Elmax Cloud Setup",
   "config": {
     "step": {
       "user": {
-        "title": "Account Login",
         "description": "Please login to the Elmax cloud using your credentials",
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
@@ -11,7 +9,6 @@
         }
       },
       "panels": {
-        "title": "Panel selection",
         "description": "Select which panel you would like to control with this integration. Please note that the panel must be ON in order to be configured.",
         "data": {
           "panel_name": "Panel Name",

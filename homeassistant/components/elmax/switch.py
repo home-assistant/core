@@ -62,11 +62,6 @@ class ElmaxSwitch(ElmaxEntity, SwitchEntity):
         if await self._wait_for_state_change():
             self.async_write_ha_state()
 
-    @property
-    def assumed_state(self) -> bool:
-        """Return True if unable to access real state of the entity."""
-        return False
-
 
 async def async_setup_entry(
     hass: HomeAssistantType,
