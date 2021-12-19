@@ -353,7 +353,9 @@ async def async_setup_entry(  # noqa: C901
         device = dev_reg.async_get_device({dev_id})
         # We assert because we know the device exists
         assert device
-        if not replaced:
+        if replaced:
+            discovered_value_ids.pop(device.id, None)
+        else:
             remove_device(device)
 
     @callback
