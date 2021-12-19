@@ -14,8 +14,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import FluxLedUpdateCoordinator
 from .const import CONF_MINOR_VERSION, CONF_MODEL, SIGNAL_STATE_UPDATED
+from .coordinator import FluxLedUpdateCoordinator
 
 
 def _async_device_info(

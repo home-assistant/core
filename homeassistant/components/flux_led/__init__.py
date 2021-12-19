@@ -14,11 +14,9 @@ from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STARTED, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     DISCOVER_SCAN_TIMEOUT,
@@ -28,6 +26,7 @@ from .const import (
     SIGNAL_STATE_UPDATED,
     STARTUP_SCAN_TIMEOUT,
 )
+from .coordinator import FluxLedUpdateCoordinator
 from .discovery import (
     async_clear_discovery_cache,
     async_discover_device,
@@ -134,32 +133,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         del hass.data[DOMAIN][entry.entry_id]
         await device.async_stop()
     return unload_ok
-
-
-class FluxLedUpdateCoordinator(DataUpdateCoordinator):
-    """DataUpdateCoordinator to gather data for a specific flux_led device."""
-
-    def __init__(
-        self, hass: HomeAssistant, device: AIOWifiLedBulb, entry: ConfigEntry
-    ) -> None:
-        """Initialize DataUpdateCoordinator to gather data for specific device."""
-        self.device = device
-        self.entry = entry
-        super().__init__(
-            hass,
-            _LOGGER,
-            name=self.device.ipaddr,
-            update_interval=timedelta(seconds=10),
-            # We don't want an immediate refresh since the device
-            # takes a moment to reflect the state change
-            request_refresh_debouncer=Debouncer(
-                hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
-            ),
-        )
-
-    async def _async_update_data(self) -> None:
-        """Fetch all device and sensor data from api."""
-        try:
-            await self.device.async_update()
-        except FLUX_LED_EXCEPTIONS as ex:
-            raise UpdateFailed(ex) from ex
