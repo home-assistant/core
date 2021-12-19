@@ -57,6 +57,9 @@ FLUX_DISCOVERY = FluxLEDDiscovery(
     firmware_date=datetime.date(2021, 5, 5),
     model_info=MODEL,
     model_description=MODEL_DESCRIPTION,
+    remote_access_enabled=True,
+    remote_access_host="the.cloud",
+    remote_access_port=8816,
 )
 
 
@@ -80,6 +83,9 @@ def _mocked_bulb() -> AIOWifiLedBulb:
     bulb.async_turn_off = AsyncMock()
     bulb.async_turn_on = AsyncMock()
     bulb.async_set_levels = AsyncMock()
+    bulb.async_set_zones = AsyncMock()
+    bulb.async_disable_remote_access = AsyncMock()
+    bulb.async_enable_remote_access = AsyncMock()
     bulb.min_temp = 2700
     bulb.max_temp = 6500
     bulb.getRgb = MagicMock(return_value=[255, 0, 0])

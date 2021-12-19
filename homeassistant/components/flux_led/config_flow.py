@@ -10,13 +10,13 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_MODE, CONF_NAME, CONF_PROTOCOL
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PROTOCOL
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import DiscoveryInfoType
 
-from . import async_update_entry_from_discovery, async_wifi_bulb_for_host
+from . import async_wifi_bulb_for_host
 from .const import (
     CONF_CUSTOM_EFFECT_COLORS,
     CONF_CUSTOM_EFFECT_SPEED_PCT,
@@ -33,6 +33,8 @@ from .discovery import (
     async_discover_device,
     async_discover_devices,
     async_name_from_discovery,
+    async_populate_data_from_discovery,
+    async_update_entry_from_discovery,
 )
 
 CONF_DEVICE: Final = "device"
@@ -73,7 +75,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_PROTOCOL: user_input.get(CONF_PROTOCOL),
             },
             options={
-                CONF_MODE: user_input[CONF_MODE],
                 CONF_CUSTOM_EFFECT_COLORS: user_input[CONF_CUSTOM_EFFECT_COLORS],
                 CONF_CUSTOM_EFFECT_SPEED_PCT: user_input[CONF_CUSTOM_EFFECT_SPEED_PCT],
                 CONF_CUSTOM_EFFECT_TRANSITION: user_input[
@@ -86,7 +87,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle discovery via dhcp."""
         self._discovered_device = FluxLEDDiscovery(
             ipaddr=discovery_info.ip,
-            model=discovery_info.hostname,
+            model=None,
             id=discovery_info.macaddress.replace(":", ""),
             model_num=None,
             version_num=None,
@@ -115,11 +116,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         mac = dr.format_mac(mac_address)
         host = device[ATTR_IPADDR]
         await self.async_set_unique_id(mac)
-        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
         for entry in self._async_current_entries(include_ignore=False):
-            if entry.data[CONF_HOST] == host:
-                if not entry.unique_id:
-                    async_update_entry_from_discovery(self.hass, entry, device)
+            if entry.unique_id == mac or entry.data[CONF_HOST] == host:
+                if async_update_entry_from_discovery(self.hass, entry, device):
+                    self.hass.async_create_task(
+                        self.hass.config_entries.async_reload(entry.entry_id)
+                    )
                 return self.async_abort(reason="already_configured")
         self.context[CONF_HOST] = host
         for progress in self._async_in_progress():
@@ -164,12 +166,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Create a config entry from a device."""
         self._async_abort_entries_match({CONF_HOST: device[ATTR_IPADDR]})
         name = async_name_from_discovery(device)
+        data: dict[str, Any] = {
+            CONF_HOST: device[ATTR_IPADDR],
+            CONF_NAME: name,
+        }
+        async_populate_data_from_discovery(data, data, device)
         return self.async_create_entry(
             title=name,
-            data={
-                CONF_HOST: device[ATTR_IPADDR],
-                CONF_NAME: name,
-            },
+            data=data,
         )
 
     async def async_step_user(
@@ -259,7 +263,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             model=model,
             id=mac_address,
             model_num=bulb.model_num,
-            version_num=bulb.version_num,
+            version_num=None,  # This is the minor version number
             firmware_date=None,
             model_info=None,
             model_description=bulb.model_data.description,

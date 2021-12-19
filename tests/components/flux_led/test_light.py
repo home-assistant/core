@@ -1,6 +1,6 @@
 """Tests for light platform."""
 from datetime import timedelta
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, Mock, patch
 
 from flux_led.const import (
     COLOR_MODE_ADDRESSABLE as FLUX_COLOR_MODE_ADDRESSABLE,
@@ -21,6 +21,11 @@ from homeassistant.components.flux_led.const import (
     CONF_CUSTOM_EFFECT_SPEED_PCT,
     CONF_CUSTOM_EFFECT_TRANSITION,
     CONF_DEVICES,
+    CONF_MINOR_VERSION,
+    CONF_MODEL,
+    CONF_REMOTE_ACCESS_ENABLED,
+    CONF_REMOTE_ACCESS_HOST,
+    CONF_REMOTE_ACCESS_PORT,
     CONF_SPEED_PCT,
     CONF_TRANSITION,
     DOMAIN,
@@ -59,8 +64,10 @@ from homeassistant.util.dt import utcnow
 
 from . import (
     DEFAULT_ENTRY_TITLE,
+    FLUX_DISCOVERY,
     IP_ADDRESS,
     MAC_ADDRESS,
+    MODEL,
     _mocked_bulb,
     _patch_discovery,
     _patch_wifibulb,
@@ -1145,7 +1152,26 @@ async def test_migrate_from_yaml_with_custom_effect(hass: HomeAssistant) -> None
             }
         ],
     }
-    with _patch_discovery(), _patch_wifibulb():
+
+    last_address = None
+
+    async def _discovery(self, *args, address=None, **kwargs):
+        # Only return discovery results when doing directed discovery
+        nonlocal last_address
+        last_address = address
+        return [FLUX_DISCOVERY] if address == IP_ADDRESS else []
+
+    def _mock_getBulbInfo(*args, **kwargs):
+        nonlocal last_address
+        return [FLUX_DISCOVERY] if last_address == IP_ADDRESS else []
+
+    with patch(
+        "homeassistant.components.flux_led.discovery.AIOBulbScanner.async_scan",
+        new=_discovery,
+    ), patch(
+        "homeassistant.components.flux_led.discovery.AIOBulbScanner.getBulbInfo",
+        new=_mock_getBulbInfo,
+    ), _patch_wifibulb():
         await async_setup_component(hass, LIGHT_DOMAIN, config)
         await hass.async_block_till_done()
         await hass.async_block_till_done()
@@ -1165,9 +1191,13 @@ async def test_migrate_from_yaml_with_custom_effect(hass: HomeAssistant) -> None
         CONF_HOST: IP_ADDRESS,
         CONF_NAME: "flux_lamppost",
         CONF_PROTOCOL: "ledenet",
+        CONF_MODEL: MODEL,
+        CONF_REMOTE_ACCESS_ENABLED: True,
+        CONF_REMOTE_ACCESS_HOST: "the.cloud",
+        CONF_REMOTE_ACCESS_PORT: 8816,
+        CONF_MINOR_VERSION: 0x04,
     }
     assert migrated_entry.options == {
-        CONF_MODE: "auto",
         CONF_CUSTOM_EFFECT_COLORS: "[(255, 0, 0), (255, 255, 0), (0, 255, 0)]",
         CONF_CUSTOM_EFFECT_SPEED_PCT: 30,
         CONF_CUSTOM_EFFECT_TRANSITION: "strobe",
@@ -1189,7 +1219,26 @@ async def test_migrate_from_yaml_no_custom_effect(hass: HomeAssistant) -> None:
             }
         ],
     }
-    with _patch_discovery(), _patch_wifibulb():
+
+    last_address = None
+
+    async def _discovery(self, *args, address=None, **kwargs):
+        # Only return discovery results when doing directed discovery
+        nonlocal last_address
+        last_address = address
+        return [FLUX_DISCOVERY] if address == IP_ADDRESS else []
+
+    def _mock_getBulbInfo(*args, **kwargs):
+        nonlocal last_address
+        return [FLUX_DISCOVERY] if last_address == IP_ADDRESS else []
+
+    with patch(
+        "homeassistant.components.flux_led.discovery.AIOBulbScanner.async_scan",
+        new=_discovery,
+    ), patch(
+        "homeassistant.components.flux_led.discovery.AIOBulbScanner.getBulbInfo",
+        new=_mock_getBulbInfo,
+    ), _patch_wifibulb():
         await async_setup_component(hass, LIGHT_DOMAIN, config)
         await hass.async_block_till_done()
         await hass.async_block_till_done()
@@ -1209,9 +1258,13 @@ async def test_migrate_from_yaml_no_custom_effect(hass: HomeAssistant) -> None:
         CONF_HOST: IP_ADDRESS,
         CONF_NAME: "flux_lamppost",
         CONF_PROTOCOL: "ledenet",
+        CONF_MODEL: MODEL,
+        CONF_REMOTE_ACCESS_ENABLED: True,
+        CONF_REMOTE_ACCESS_HOST: "the.cloud",
+        CONF_REMOTE_ACCESS_PORT: 8816,
+        CONF_MINOR_VERSION: 0x04,
     }
     assert migrated_entry.options == {
-        CONF_MODE: "auto",
         CONF_CUSTOM_EFFECT_COLORS: None,
         CONF_CUSTOM_EFFECT_SPEED_PCT: 50,
         CONF_CUSTOM_EFFECT_TRANSITION: "gradual",
