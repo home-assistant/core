@@ -16,15 +16,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import DiscoveryInfoType
 
-from . import (
-    async_discover_device,
-    async_discover_devices,
-    async_name_from_discovery,
-    async_populate_data_from_discovery,
-    async_update_entry_from_discovery,
-    async_wifi_bulb_for_host,
-)
-from . import async_update_entry_from_discovery, async_wifi_bulb_for_host
+from . import async_wifi_bulb_for_host
 from .const import (
     CONF_CUSTOM_EFFECT_COLORS,
     CONF_CUSTOM_EFFECT_SPEED_PCT,
@@ -41,6 +33,8 @@ from .discovery import (
     async_discover_device,
     async_discover_devices,
     async_name_from_discovery,
+    async_populate_data_from_discovery,
+    async_update_entry_from_discovery,
 )
 
 CONF_DEVICE: Final = "device"

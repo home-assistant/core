@@ -2,19 +2,52 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
 import logging
+from typing import Any, Final
 
 from flux_led.aioscanner import AIOBulbScanner
-from flux_led.const import ATTR_ID, ATTR_IPADDR, ATTR_MODEL, ATTR_MODEL_DESCRIPTION
+from flux_led.const import (
+    ATTR_ID,
+    ATTR_IPADDR,
+    ATTR_MODEL,
+    ATTR_MODEL_DESCRIPTION,
+    ATTR_REMOTE_ACCESS_ENABLED,
+    ATTR_REMOTE_ACCESS_HOST,
+    ATTR_REMOTE_ACCESS_PORT,
+    ATTR_VERSION_NUM,
+)
 from flux_led.scanner import FluxLEDDiscovery
 
 from homeassistant import config_entries
 from homeassistant.components import network
+from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
+from homeassistant.util.network import is_ip_address
 
-from .const import DISCOVER_SCAN_TIMEOUT, DOMAIN
+from .const import (
+    CONF_MINOR_VERSION,
+    CONF_MODEL,
+    CONF_REMOTE_ACCESS_ENABLED,
+    CONF_REMOTE_ACCESS_HOST,
+    CONF_REMOTE_ACCESS_PORT,
+    DISCOVER_SCAN_TIMEOUT,
+    DOMAIN,
+    FLUX_LED_DISCOVERY,
+)
 
 _LOGGER = logging.getLogger(__name__)
+
+
+CONF_TO_DISCOVERY: Final = {
+    CONF_HOST: ATTR_IPADDR,
+    CONF_REMOTE_ACCESS_ENABLED: ATTR_REMOTE_ACCESS_ENABLED,
+    CONF_REMOTE_ACCESS_HOST: ATTR_REMOTE_ACCESS_HOST,
+    CONF_REMOTE_ACCESS_PORT: ATTR_REMOTE_ACCESS_PORT,
+    CONF_MINOR_VERSION: ATTR_VERSION_NUM,
+    CONF_MODEL: ATTR_MODEL,
+}
 
 
 @callback
@@ -27,6 +60,62 @@ def async_name_from_discovery(device: FluxLEDDiscovery) -> str:
     if device[ATTR_MODEL_DESCRIPTION]:
         return f"{device[ATTR_MODEL_DESCRIPTION]} {short_mac}"
     return f"{device[ATTR_MODEL]} {short_mac}"
+
+
+@callback
+def async_populate_data_from_discovery(
+    current_data: Mapping[str, Any],
+    data_updates: dict[str, Any],
+    device: FluxLEDDiscovery,
+) -> None:
+    """Copy discovery data into config entry data."""
+    for conf_key, discovery_key in CONF_TO_DISCOVERY.items():
+        if (
+            device.get(discovery_key) is not None
+            and current_data.get(conf_key) != device[discovery_key]  # type: ignore[misc]
+        ):
+            data_updates[conf_key] = device[discovery_key]  # type: ignore[misc]
+
+
+@callback
+def async_update_entry_from_discovery(
+    hass: HomeAssistant, entry: config_entries.ConfigEntry, device: FluxLEDDiscovery
+) -> bool:
+    """Update a config entry from a flux_led discovery."""
+    data_updates: dict[str, Any] = {}
+    mac_address = device[ATTR_ID]
+    assert mac_address is not None
+    updates: dict[str, Any] = {}
+    if not entry.unique_id:
+        updates["unique_id"] = dr.format_mac(mac_address)
+    async_populate_data_from_discovery(entry.data, data_updates, device)
+    if not entry.data.get(CONF_NAME) or is_ip_address(entry.data[CONF_NAME]):
+        updates["title"] = data_updates[CONF_NAME] = async_name_from_discovery(device)
+    if data_updates:
+        updates["data"] = {**entry.data, **data_updates}
+    if updates:
+        return hass.config_entries.async_update_entry(entry, **updates)
+    return False
+
+
+@callback
+def async_get_discovery(hass: HomeAssistant, host: str) -> FluxLEDDiscovery | None:
+    """Check if a device was already discovered via a broadcast discovery."""
+    discoveries: list[FluxLEDDiscovery] = hass.data[DOMAIN][FLUX_LED_DISCOVERY]
+    for discovery in discoveries:
+        if discovery[ATTR_IPADDR] == host:
+            return discovery
+    return None
+
+
+@callback
+def async_clear_discovery_cache(hass: HomeAssistant, host: str) -> None:
+    """Clear the host from the discovery cache."""
+    domain_data = hass.data[DOMAIN]
+    discoveries: list[FluxLEDDiscovery] = domain_data[FLUX_LED_DISCOVERY]
+    domain_data[FLUX_LED_DISCOVERY] = [
+        discovery for discovery in discoveries if discovery[ATTR_IPADDR] != host
+    ]
 
 
 async def async_discover_devices(
