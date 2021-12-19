@@ -283,6 +283,20 @@ ZEROCONF = {
             }
         }
     ],
+    "_sideplay._tcp.local.": [
+        {
+            "domain": "ecobee",
+            "properties": {
+                "mdl": "eb-*"
+            }
+        },
+        {
+            "domain": "ecobee",
+            "properties": {
+                "mdl": "ecobee*"
+            }
+        }
+    ],
     "_sonos._tcp.local.": [
         {
             "domain": "sonos"
