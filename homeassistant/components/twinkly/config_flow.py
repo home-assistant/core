@@ -48,7 +48,7 @@ class TwinklyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 device_info = await Twinkly(
                     host, async_get_clientsession(self.hass)
-                ).get_device_info()
+                ).get_details()
 
                 await self.async_set_unique_id(device_info[DEV_ID])
                 self._abort_if_unique_id_configured()
@@ -70,7 +70,7 @@ class TwinklyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._async_abort_entries_match({CONF_ENTRY_HOST: discovery_info.ip})
         device_info = await Twinkly(
             discovery_info.ip, async_get_clientsession(self.hass)
-        ).get_device_info()
+        ).get_details()
         await self.async_set_unique_id(device_info[DEV_ID])
         self._abort_if_unique_id_configured(
             updates={CONF_ENTRY_HOST: discovery_info.ip}
