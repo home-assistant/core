@@ -2,6 +2,7 @@
 from boschshcpy import (
     SHCCamera360,
     SHCCameraEyes,
+    SHCLightSwitch,
     SHCSession,
     SHCSmartPlug,
     SHCSmartPlugCompact,
@@ -26,6 +27,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         entities.append(
             SmartPlugSwitch(
+                device=switch,
+                parent_id=session.information.unique_id,
+                entry_id=config_entry.entry_id,
+            )
+        )
+
+    for switch in session.device_helper.light_switches:
+
+        entities.append(
+            LightSwitch(
                 device=switch,
                 parent_id=session.information.unique_id,
                 entry_id=config_entry.entry_id,
@@ -82,6 +93,49 @@ class SmartPlugSwitch(SHCEntity, SwitchEntity):
     def is_on(self):
         """Return the switch state is currently on or off."""
         return self._device.state == SHCSmartPlug.PowerSwitchService.State.ON
+
+    @property
+    def today_energy_kwh(self):
+        """Return the total energy usage in kWh."""
+        return self._device.energyconsumption / 1000.0
+
+    @property
+    def current_power_w(self):
+        """Return the current power usage in W."""
+        return self._device.powerconsumption
+
+    def turn_on(self, **kwargs):
+        """Turn the switch on."""
+        self._device.state = True
+
+    def turn_off(self, **kwargs):
+        """Turn the switch off."""
+        self._device.state = False
+
+    def toggle(self, **kwargs):
+        """Toggle the switch."""
+        self._device.state = not self.is_on
+
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes."""
+        return {
+            "routing": self._device.routing.name,
+        }
+
+
+class LightSwitch(SHCEntity, SwitchEntity):
+    """Representation of a SHC light switch."""
+
+    @property
+    def device_class(self):
+        """Return the class of this device."""
+        return DEVICE_CLASS_SWITCH
+
+    @property
+    def is_on(self):
+        """Return the switch state is currently on or off."""
+        return self._device.state == SHCLightSwitch.PowerSwitchService.State.ON
 
     @property
     def today_energy_kwh(self):
