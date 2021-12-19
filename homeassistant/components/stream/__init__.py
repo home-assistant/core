@@ -16,7 +16,7 @@ to always keep workers active.
 """
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 import logging
 import re
 import secrets
@@ -204,7 +204,8 @@ class Stream:
         self._thread_quit = threading.Event()
         self._outputs: dict[str, StreamOutput] = {}
         self._fast_restart_once = False
-        self._available = True
+        self._available: bool = True
+        self._update_callback: Callable[[], None] | None = None
 
     def endpoint_url(self, fmt: str) -> str:
         """Start the stream and returns a url for the output format."""
@@ -260,6 +261,17 @@ class Stream:
         """Return False if the stream is started and known to be unavailable."""
         return self._available
 
+    def set_update_callback(self, update_callback: Callable[[], None]) -> None:
+        """Set callback to run when state changes."""
+        self._update_callback = update_callback
+
+    @callback
+    def _async_update_state(self, available: bool) -> None:
+        """Set state and Run callback to notify state has been updated."""
+        self._available = available
+        if self._update_callback:
+            self._update_callback()
+
     def start(self) -> None:
         """Start a stream."""
         if self._thread is None or not self._thread.is_alive():
@@ -292,8 +304,7 @@ class Stream:
         wait_timeout = 0
         while not self._thread_quit.wait(timeout=wait_timeout):
             start_time = time.time()
-
-            self._available = True
+            self.hass.add_job(self._async_update_state, True)
             try:
                 stream_worker(
                     self.source,
@@ -303,7 +314,6 @@ class Stream:
                 )
             except StreamWorkerError as err:
                 _LOGGER.error("Error from stream worker: %s", str(err))
-                self._available = False
 
             stream_state.discontinuity()
             if not self.keepalive or self._thread_quit.is_set():
@@ -314,6 +324,7 @@ class Stream:
                     continue
                 break
 
+            self.hass.add_job(self._async_update_state, False)
             # To avoid excessive restarts, wait before restarting
             # As the required recovery time may be different for different setups, start
             # with trying a short wait_timeout and increase it on each reconnection attempt.
