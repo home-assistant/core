@@ -17,17 +17,10 @@ from homeassistant.components.flux_led.const import (
     CONF_REMOTE_ACCESS_HOST,
     CONF_REMOTE_ACCESS_PORT,
     DOMAIN,
-    MODE_RGB,
     TRANSITION_JUMP,
     TRANSITION_STROBE,
 )
-from homeassistant.const import (
-    CONF_DEVICE,
-    CONF_HOST,
-    CONF_MAC,
-    CONF_NAME,
-    CONF_PROTOCOL,
-)
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_FORM
 
@@ -215,56 +208,6 @@ async def test_discovery_no_device(hass: HomeAssistant):
 
     assert result2["type"] == "abort"
     assert result2["reason"] == "no_devices_found"
-
-
-async def test_import(hass: HomeAssistant):
-    """Test import from yaml."""
-    config = {
-        CONF_HOST: IP_ADDRESS,
-        CONF_MAC: MAC_ADDRESS,
-        CONF_NAME: "floor lamp",
-        CONF_PROTOCOL: "ledenet",
-        CONF_MODEL: MODE_RGB,
-        CONF_CUSTOM_EFFECT_COLORS: "[255,0,0], [0,0,255]",
-        CONF_CUSTOM_EFFECT_SPEED_PCT: 30,
-        CONF_CUSTOM_EFFECT_TRANSITION: TRANSITION_STROBE,
-    }
-
-    # Success
-    with _patch_discovery(), _patch_wifibulb(), patch(
-        f"{MODULE}.async_setup", return_value=True
-    ) as mock_setup, patch(
-        f"{MODULE}.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == "create_entry"
-    assert result["title"] == "floor lamp"
-    assert result["data"] == {
-        CONF_HOST: IP_ADDRESS,
-        CONF_NAME: "floor lamp",
-        CONF_PROTOCOL: "ledenet",
-    }
-    assert result["options"] == {
-        CONF_CUSTOM_EFFECT_COLORS: "[255,0,0], [0,0,255]",
-        CONF_CUSTOM_EFFECT_SPEED_PCT: 30,
-        CONF_CUSTOM_EFFECT_TRANSITION: TRANSITION_STROBE,
-    }
-    mock_setup.assert_called_once()
-    mock_setup_entry.assert_called_once()
-
-    # Duplicate
-    with _patch_discovery(), _patch_wifibulb():
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == "abort"
-    assert result["reason"] == "already_configured"
 
 
 async def test_manual_working_discovery(hass: HomeAssistant):
@@ -584,7 +527,6 @@ async def test_options(hass: HomeAssistant):
         domain=DOMAIN,
         data={CONF_HOST: IP_ADDRESS, CONF_NAME: DEFAULT_ENTRY_TITLE},
         options={
-            CONF_MODEL: MODE_RGB,
             CONF_CUSTOM_EFFECT_COLORS: "[255,0,0], [0,0,255]",
             CONF_CUSTOM_EFFECT_SPEED_PCT: 30,
             CONF_CUSTOM_EFFECT_TRANSITION: TRANSITION_STROBE,

@@ -1,7 +1,6 @@
 """Config flow for Flux LED/MagicLight."""
 from __future__ import annotations
 
-import logging
 from typing import Any, Final, cast
 
 from flux_led.const import ATTR_ID, ATTR_IPADDR, ATTR_MODEL, ATTR_MODEL_DESCRIPTION
@@ -10,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PROTOCOL
+from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import device_registry as dr
@@ -40,9 +39,6 @@ from .discovery import (
 CONF_DEVICE: Final = "device"
 
 
-_LOGGER = logging.getLogger(__name__)
-
-
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Magic Home Integration."""
 
@@ -58,30 +54,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def async_get_options_flow(config_entry: config_entries.ConfigEntry) -> OptionsFlow:
         """Get the options flow for the Flux LED component."""
         return OptionsFlow(config_entry)
-
-    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
-        """Handle configuration via YAML import."""
-        _LOGGER.debug("Importing configuration from YAML for flux_led")
-        host = user_input[CONF_HOST]
-        self._async_abort_entries_match({CONF_HOST: host})
-        if mac := user_input[CONF_MAC]:
-            await self.async_set_unique_id(dr.format_mac(mac), raise_on_progress=False)
-            self._abort_if_unique_id_configured(updates={CONF_HOST: host})
-        return self.async_create_entry(
-            title=user_input[CONF_NAME],
-            data={
-                CONF_HOST: host,
-                CONF_NAME: user_input[CONF_NAME],
-                CONF_PROTOCOL: user_input.get(CONF_PROTOCOL),
-            },
-            options={
-                CONF_CUSTOM_EFFECT_COLORS: user_input[CONF_CUSTOM_EFFECT_COLORS],
-                CONF_CUSTOM_EFFECT_SPEED_PCT: user_input[CONF_CUSTOM_EFFECT_SPEED_PCT],
-                CONF_CUSTOM_EFFECT_TRANSITION: user_input[
-                    CONF_CUSTOM_EFFECT_TRANSITION
-                ],
-            },
-        )
 
     async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle discovery via dhcp."""
