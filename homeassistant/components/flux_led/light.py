@@ -5,7 +5,6 @@ import ast
 import logging
 from typing import Any, Final
 
-from flux_led.const import ATTR_ID, ATTR_IPADDR
 from flux_led.utils import (
     color_temp_to_white_levels,
     rgbcw_brightness,
@@ -24,24 +23,15 @@ from homeassistant.components.light import (
     ATTR_RGBWW_COLOR,
     ATTR_WHITE,
     COLOR_MODE_RGBWW,
-    PLATFORM_SCHEMA,
     SUPPORT_EFFECT,
     SUPPORT_TRANSITION,
     LightEntity,
 )
-from homeassistant.const import (
-    ATTR_MODE,
-    CONF_DEVICES,
-    CONF_HOST,
-    CONF_MAC,
-    CONF_NAME,
-    CONF_PROTOCOL,
-)
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.color import (
     color_temperature_kelvin_to_mired,
@@ -49,9 +39,7 @@ from homeassistant.util.color import (
 )
 
 from .const import (
-    CONF_AUTOMATIC_ADD,
     CONF_COLORS,
-    CONF_CUSTOM_EFFECT,
     CONF_CUSTOM_EFFECT_COLORS,
     CONF_CUSTOM_EFFECT_SPEED_PCT,
     CONF_CUSTOM_EFFECT_TRANSITION,
@@ -59,11 +47,6 @@ from .const import (
     CONF_TRANSITION,
     DEFAULT_EFFECT_SPEED,
     DOMAIN,
-    FLUX_LED_DISCOVERY,
-    MODE_AUTO,
-    MODE_RGB,
-    MODE_RGBW,
-    MODE_WHITE,
     TRANSITION_GRADUAL,
     TRANSITION_JUMP,
     TRANSITION_STROBE,
@@ -104,70 +87,6 @@ CUSTOM_EFFECT_DICT: Final = {
         cv.string, vol.In([TRANSITION_GRADUAL, TRANSITION_JUMP, TRANSITION_STROBE])
     ),
 }
-
-CUSTOM_EFFECT_SCHEMA: Final = vol.Schema(CUSTOM_EFFECT_DICT)
-
-DEVICE_SCHEMA: Final = vol.Schema(
-    {
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(ATTR_MODE, default=MODE_AUTO): vol.All(
-            cv.string, vol.In([MODE_AUTO, MODE_RGBW, MODE_RGB, MODE_WHITE])
-        ),
-        vol.Optional(CONF_PROTOCOL): vol.All(cv.string, vol.In(["ledenet"])),
-        vol.Optional(CONF_CUSTOM_EFFECT): CUSTOM_EFFECT_SCHEMA,
-    }
-)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA},
-        vol.Optional(CONF_AUTOMATIC_ADD, default=False): cv.boolean,
-    }
-)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> bool:
-    """Set up the flux led platform."""
-    domain_data = hass.data[DOMAIN]
-    discovered_mac_by_host = {
-        device[ATTR_IPADDR]: device[ATTR_ID]
-        for device in domain_data[FLUX_LED_DISCOVERY]
-    }
-    for host, device_config in config.get(CONF_DEVICES, {}).items():
-        _LOGGER.warning(
-            "Configuring flux_led via yaml is deprecated; the configuration for"
-            " %s has been migrated to a config entry and can be safely removed",
-            host,
-        )
-        custom_effects = device_config.get(CONF_CUSTOM_EFFECT, {})
-        custom_effect_colors = None
-        if CONF_COLORS in custom_effects:
-            custom_effect_colors = str(custom_effects[CONF_COLORS])
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_IMPORT},
-                data={
-                    CONF_HOST: host,
-                    CONF_MAC: discovered_mac_by_host.get(host),
-                    CONF_NAME: device_config[CONF_NAME],
-                    CONF_PROTOCOL: device_config.get(CONF_PROTOCOL),
-                    CONF_CUSTOM_EFFECT_COLORS: custom_effect_colors,
-                    CONF_CUSTOM_EFFECT_SPEED_PCT: custom_effects.get(
-                        CONF_SPEED_PCT, DEFAULT_EFFECT_SPEED
-                    ),
-                    CONF_CUSTOM_EFFECT_TRANSITION: custom_effects.get(
-                        CONF_TRANSITION, TRANSITION_GRADUAL
-                    ),
-                },
-            )
-        )
-    return True
 
 
 async def async_setup_entry(
