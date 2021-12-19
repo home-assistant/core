@@ -225,7 +225,7 @@ def h264_video():
     return generate_h264_video()
 
 
-@pytest.fixture(scope="package")
+@pytest.fixture(scope="package", autouse=True)
 def fixture_teardown():
     """Destroy package level test state."""
     yield
