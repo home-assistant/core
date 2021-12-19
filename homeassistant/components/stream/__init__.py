@@ -217,7 +217,7 @@ class Stream:
         self._available: bool = True
         self._update_callback: Callable[[], None] | None = None
         self._logger = (
-            logging.getLogger(f"__package__.stream.{stream_label}")
+            logging.getLogger(f"{__package__}.stream.{stream_label}")
             if stream_label
             else _LOGGER
         )
