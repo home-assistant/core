@@ -3102,37 +3102,35 @@ def test_urlencode(hass):
     assert tpl.async_render() == "the%20quick%20brown%20fox%20%3D%20true"
 
 
-def test_ternary(hass: HomeAssistant) -> None:
-    """Test the ternary function/filter."""
-    tpl = template.Template("{{ (1 == 1) | ternary }}", hass)
+def test_iif(hass: HomeAssistant) -> None:
+    """Test the immediate if function/filter."""
+    tpl = template.Template("{{ (1 == 1) | iif }}", hass)
     assert tpl.async_render() is True
 
-    tpl = template.Template("{{ (1 == 2) | ternary }}", hass)
+    tpl = template.Template("{{ (1 == 2) | iif }}", hass)
     assert tpl.async_render() is False
 
-    tpl = template.Template("{{ (1 == 1) | ternary('yes') }}", hass)
+    tpl = template.Template("{{ (1 == 1) | iif('yes') }}", hass)
     assert tpl.async_render() == "yes"
 
-    tpl = template.Template("{{ (1 == 2) | ternary('yes') }}", hass)
+    tpl = template.Template("{{ (1 == 2) | iif('yes') }}", hass)
     assert tpl.async_render() is False
 
-    tpl = template.Template("{{ (1 == 2) | ternary('yes', 'no') }}", hass)
+    tpl = template.Template("{{ (1 == 2) | iif('yes', 'no') }}", hass)
+    assert tpl.async_render() == "no"
+
+    tpl = template.Template("{{ not_exists | default(None) | iif('yes', 'no') }}", hass)
     assert tpl.async_render() == "no"
 
     tpl = template.Template(
-        "{{ not_exists | default(None) | ternary('yes', 'no') }}", hass
-    )
-    assert tpl.async_render() == "no"
-
-    tpl = template.Template(
-        "{{ not_exists | default(None) | ternary('yes', 'no', 'unknown') }}", hass
+        "{{ not_exists | default(None) | iif('yes', 'no', 'unknown') }}", hass
     )
     assert tpl.async_render() == "unknown"
 
-    tpl = template.Template("{{ ternary(1 == 1) }}", hass)
+    tpl = template.Template("{{ iif(1 == 1) }}", hass)
     assert tpl.async_render() is True
 
-    tpl = template.Template("{{ ternary(1 == 2, 'yes', 'no') }}", hass)
+    tpl = template.Template("{{ iif(1 == 2, 'yes', 'no') }}", hass)
     assert tpl.async_render() == "no"
 
 
