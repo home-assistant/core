@@ -21,7 +21,7 @@ BUTTON_DESCRIPTIONS = (
     ),
     ButtonEntityDescription(
         key=BUTTON_TYPE_OPT_OUT,
-        name="Opt Out from Next Pickup",
+        name="Opt Out of Next Pickup",
     ),
 )
 
