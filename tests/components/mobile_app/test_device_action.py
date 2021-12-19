@@ -16,7 +16,9 @@ async def test_get_actions(hass, push_registration):
     ]
 
     capabilitites = await device_automation._async_get_device_automation_capabilities(
-        hass, "action", {"domain": DOMAIN, "device_id": device_id, "type": "notify"}
+        hass,
+        device_automation.DeviceAutomationType.ACTION,
+        {"domain": DOMAIN, "device_id": device_id, "type": "notify"},
     )
     assert "extra_fields" in capabilitites
 
