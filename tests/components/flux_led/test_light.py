@@ -1,6 +1,6 @@
 """Tests for light platform."""
 from datetime import timedelta
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock
 
 from flux_led.const import (
     COLOR_MODE_ADDRESSABLE as FLUX_COLOR_MODE_ADDRESSABLE,
@@ -54,10 +54,8 @@ from homeassistant.util.dt import utcnow
 
 from . import (
     DEFAULT_ENTRY_TITLE,
-    FLUX_DISCOVERY,
     IP_ADDRESS,
     MAC_ADDRESS,
-    MODEL,
     _mocked_bulb,
     _patch_discovery,
     _patch_wifibulb,

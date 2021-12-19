@@ -20,14 +20,7 @@ from homeassistant.components.flux_led.const import (
     TRANSITION_JUMP,
     TRANSITION_STROBE,
 )
-from homeassistant.const import (
-    CONF_DEVICE,
-    CONF_HOST,
-    CONF_MAC,
-    CONF_MODE,
-    CONF_NAME,
-    CONF_PROTOCOL,
-)
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_FORM
 
