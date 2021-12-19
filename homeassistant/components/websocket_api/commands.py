@@ -44,6 +44,7 @@ def async_register_commands(
     async_reg(hass, handle_call_service)
     async_reg(hass, handle_entity_source)
     async_reg(hass, handle_execute_script)
+    async_reg(hass, handle_fire_event)
     async_reg(hass, handle_get_config)
     async_reg(hass, handle_get_services)
     async_reg(hass, handle_get_states)
@@ -526,3 +527,22 @@ async def handle_execute_script(
     script_obj = Script(hass, msg["sequence"], f"{const.DOMAIN} script", const.DOMAIN)
     await script_obj.async_run(msg.get("variables"), context=context)
     connection.send_message(messages.result_message(msg["id"], {"context": context}))
+
+
+@decorators.websocket_command(
+    {
+        vol.Required("type"): "fire_event",
+        vol.Required("event_type"): str,
+        vol.Optional("event_data"): dict,
+    }
+)
+@decorators.require_admin
+@decorators.async_response
+async def handle_fire_event(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle fire event command."""
+    context = connection.context(msg)
+
+    hass.bus.async_fire(msg["event_type"], msg.get("event_data"), context=context)
+    connection.send_result(msg["id"], {"context": context})
