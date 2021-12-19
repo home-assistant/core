@@ -14,13 +14,13 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import FluxLedUpdateCoordinator
 from .const import (
     CONF_REMOTE_ACCESS_ENABLED,
     CONF_REMOTE_ACCESS_HOST,
     CONF_REMOTE_ACCESS_PORT,
     DOMAIN,
 )
+from .coordinator import FluxLedUpdateCoordinator
 from .discovery import async_clear_discovery_cache
 from .entity import FluxBaseEntity, FluxOnOffEntity
 
