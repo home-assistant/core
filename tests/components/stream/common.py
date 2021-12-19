@@ -26,7 +26,7 @@ AUDIO_SAMPLE_RATE = 8000
 
 def stream_teardown():
     """Perform test teardown."""
-    frame_image_data.cache._clear()
+    frame_image_data.cache_clear()
 
 
 def generate_audio_frame(pcm_mulaw=False):
@@ -43,7 +43,7 @@ def generate_audio_frame(pcm_mulaw=False):
     return audio_frame
 
 
-@functools.cache
+@functools.lru_cache(maxsize=1024)
 def frame_image_data(frame_i, total_frames):
     """Generate image content for a frame of a video."""
     img = np.empty((480, 320, 3))
