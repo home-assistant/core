@@ -101,7 +101,7 @@ async def test_config_entry_retry(hass: HomeAssistant) -> None:
     "discovery,title",
     [
         (FLUX_DISCOVERY, DEFAULT_ENTRY_TITLE),
-        (FLUX_DISCOVERY_PARTIAL, "AZ120444 ddeeff"),
+        (FLUX_DISCOVERY_PARTIAL, DEFAULT_ENTRY_TITLE),
     ],
 )
 async def test_config_entry_fills_unique_id_with_directed_discovery(
@@ -112,17 +112,24 @@ async def test_config_entry_fills_unique_id_with_directed_discovery(
         domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=None
     )
     config_entry.add_to_hass(hass)
+    last_address = None
 
     async def _discovery(self, *args, address=None, **kwargs):
         # Only return discovery results when doing directed discovery
-        return [discovery] if address == IP_ADDRESS else []
+        nonlocal last_address
+        last_address = address
+        return [FLUX_DISCOVERY] if address == IP_ADDRESS else []
+
+    def _mock_getBulbInfo(*args, **kwargs):
+        nonlocal last_address
+        return [FLUX_DISCOVERY] if last_address == IP_ADDRESS else []
 
     with patch(
         "homeassistant.components.flux_led.discovery.AIOBulbScanner.async_scan",
         new=_discovery,
     ), patch(
         "homeassistant.components.flux_led.discovery.AIOBulbScanner.getBulbInfo",
-        return_value=[discovery],
+        new=_mock_getBulbInfo,
     ), _patch_wifibulb():
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()

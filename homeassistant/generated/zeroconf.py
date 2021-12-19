@@ -283,6 +283,20 @@ ZEROCONF = {
             }
         }
     ],
+    "_sideplay._tcp.local.": [
+        {
+            "domain": "ecobee",
+            "properties": {
+                "mdl": "eb-*"
+            }
+        },
+        {
+            "domain": "ecobee",
+            "properties": {
+                "mdl": "ecobee*"
+            }
+        }
+    ],
     "_sonos._tcp.local.": [
         {
             "domain": "sonos"
@@ -344,6 +358,7 @@ HOMEKIT = {
     "BSB002": "hue",
     "C105X": "roku",
     "C135X": "roku",
+    "EB-*": "ecobee",
     "Healty Home Coach": "netatmo",
     "Iota": "abode",
     "LIFX": "lifx",
@@ -361,6 +376,7 @@ HOMEKIT = {
     "Welcome": "netatmo",
     "Wemo": "wemo",
     "YL*": "yeelight",
+    "ecobee*": "ecobee",
     "iSmartGate": "gogogate2",
     "iZone": "izone",
     "tado": "tado"
