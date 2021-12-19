@@ -47,7 +47,7 @@ WEMO_MODEL_DISPATCH = {
 
 _LOGGER = logging.getLogger(__name__)
 
-HostPortTuple = Tuple[str, Optional[str]]
+HostPortTuple = Tuple[str, Optional[int]]
 
 
 def coerce_host_port(value: str) -> HostPortTuple:
@@ -55,16 +55,12 @@ def coerce_host_port(value: str) -> HostPortTuple:
 
     Returns (host, None) or (host, port) respectively.
     """
-    port: str | None = None
-    host, _, port = value.partition(":")
+    host, _, port_str = value.partition(":")
 
     if not host:
         raise vol.Invalid("host cannot be empty")
 
-    if port:
-        port = cv.port(port)
-    else:
-        port = None
+    port = cv.port(port_str) if port_str else None
 
     return host, port
 
@@ -254,7 +250,7 @@ class WemoDiscovery:
                     )
 
 
-def validate_static_config(host: str, port: str | None) -> pywemo.WeMoDevice | None:
+def validate_static_config(host: str, port: int | None) -> pywemo.WeMoDevice | None:
     """Handle a static config."""
     url = pywemo.setup_url_for_address(host, port)
 
