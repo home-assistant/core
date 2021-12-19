@@ -114,22 +114,20 @@ class WemoSwitch(WemoEntity, SwitchEntity):
     @property
     def current_power_w(self) -> float | None:
         """Return the current power usage in W."""
-        if isinstance(self.wemo, Insight):
-            watts = convert(self.wemo.insight_params.get("currentpower"), float, 0.0)
-            assert isinstance(watts, float)
-            return watts / 1000.0
-        return None
+        if not isinstance(self.wemo, Insight):
+            return None
+        watts = convert(self.wemo.insight_params.get("currentpower"), float, 0.0)
+        assert isinstance(watts, float)
+        return watts / 1000.0
 
     @property
     def today_energy_kwh(self) -> float | None:
         """Return the today total energy usage in kWh."""
-        if isinstance(self.wemo, Insight):
-            milliwatt_seconds = convert(
-                self.wemo.insight_params.get("todaymw"), float, 0.0
-            )
-            assert isinstance(milliwatt_seconds, float)
-            return round(milliwatt_seconds / (1000.0 * 1000.0 * 60), 2)
-        return None
+        if not isinstance(self.wemo, Insight):
+            return None
+        milliwatt_seconds = convert(self.wemo.insight_params.get("todaymw"), float, 0.0)
+        assert isinstance(milliwatt_seconds, float)
+        return round(milliwatt_seconds / (1000.0 * 1000.0 * 60), 2)
 
     @property
     def detail_state(self) -> str:
