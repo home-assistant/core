@@ -5,6 +5,7 @@ from typing import Any
 
 from flux_led import DeviceType
 from flux_led.aio import AIOWifiLedBulb
+from flux_led.const import MODE_MUSIC
 
 from homeassistant import config_entries
 from homeassistant.components.switch import SwitchEntity
@@ -22,7 +23,7 @@ from .const import (
 )
 from .coordinator import FluxLedUpdateCoordinator
 from .discovery import async_clear_discovery_cache
-from .entity import FluxBaseEntity, FluxOnOffEntity
+from .entity import FluxBaseEntity, FluxEntity, FluxOnOffEntity
 
 
 async def async_setup_entry(
@@ -32,19 +33,18 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Flux lights."""
     coordinator: FluxLedUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    entities: list[FluxSwitch | FluxRemoteAccessSwitch] = []
+    entities: list[FluxSwitch | FluxRemoteAccessSwitch | FluxMusicSwitch] = []
+    unique_id = entry.unique_id
+    name = entry.data[CONF_NAME]
 
     if coordinator.device.device_type == DeviceType.Switch:
-        entities.append(
-            FluxSwitch(
-                coordinator,
-                entry.unique_id,
-                entry.data[CONF_NAME],
-            )
-        )
+        entities.append(FluxSwitch(coordinator, unique_id, name))
 
     if entry.data.get(CONF_REMOTE_ACCESS_HOST):
         entities.append(FluxRemoteAccessSwitch(coordinator.device, entry))
+
+    if coordinator.device.microphone:
+        entities.append(FluxMusicSwitch(coordinator, unique_id, name))
 
     if entities:
         async_add_entities(entities)
@@ -107,3 +107,43 @@ class FluxRemoteAccessSwitch(FluxBaseEntity, SwitchEntity):
     def icon(self) -> str:
         """Return icon based on state."""
         return "mdi:cloud-outline" if self.is_on else "mdi:cloud-off-outline"
+
+
+class FluxMusicSwitch(FluxEntity, SwitchEntity):
+    """Representation of a Flux music switch."""
+
+    def __init__(
+        self,
+        coordinator: FluxLedUpdateCoordinator,
+        unique_id: str | None,
+        name: str,
+    ) -> None:
+        """Initialize the flux music switch."""
+        super().__init__(coordinator, unique_id, name)
+        self._attr_name = f"{name} Music"
+        if unique_id:
+            self._attr_unique_id = f"{unique_id}_music"
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the microphone on."""
+        if self._device.requires_turn_on and not self._device.is_on:
+            await self._device.async_turn_on()
+        await self._device.async_set_music_mode()
+        self.async_write_ha_state()
+        await self.coordinator.async_request_refresh()
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the microphone off."""
+        await self._device.async_set_levels(*self._device.rgb, brightness=255)
+        self.async_write_ha_state()
+        await self.coordinator.async_request_refresh()
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if microphone is is on."""
+        return self._device.is_on and self._device.effect == MODE_MUSIC
+
+    @property
+    def icon(self) -> str:
+        """Return icon based on state."""
+        return "mdi:microphone" if self.is_on else "mdi:microphone-off"
