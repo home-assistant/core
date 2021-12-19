@@ -1185,13 +1185,24 @@ async def test_migrate_from_yaml_with_custom_effect(hass: HomeAssistant) -> None
         ],
     }
 
+    last_address = None
+
     async def _discovery(self, *args, address=None, **kwargs):
         # Only return discovery results when doing directed discovery
+        nonlocal last_address
+        last_address = address
         return [FLUX_DISCOVERY] if address == IP_ADDRESS else []
+
+    def _mock_getBulbInfo(*args, **kwargs):
+        nonlocal last_address
+        return [FLUX_DISCOVERY] if last_address == IP_ADDRESS else []
 
     with patch(
         "homeassistant.components.flux_led.discovery.AIOBulbScanner.async_scan",
         new=_discovery,
+    ), patch(
+        "homeassistant.components.flux_led.discovery.AIOBulbScanner.getBulbInfo",
+        new=_mock_getBulbInfo,
     ), _patch_wifibulb():
         await async_setup_component(hass, LIGHT_DOMAIN, config)
         await hass.async_block_till_done()
@@ -1241,13 +1252,24 @@ async def test_migrate_from_yaml_no_custom_effect(hass: HomeAssistant) -> None:
         ],
     }
 
+    last_address = None
+
     async def _discovery(self, *args, address=None, **kwargs):
         # Only return discovery results when doing directed discovery
+        nonlocal last_address
+        last_address = address
         return [FLUX_DISCOVERY] if address == IP_ADDRESS else []
+
+    def _mock_getBulbInfo(*args, **kwargs):
+        nonlocal last_address
+        return [FLUX_DISCOVERY] if last_address == IP_ADDRESS else []
 
     with patch(
         "homeassistant.components.flux_led.discovery.AIOBulbScanner.async_scan",
         new=_discovery,
+    ), patch(
+        "homeassistant.components.flux_led.discovery.AIOBulbScanner.getBulbInfo",
+        new=_mock_getBulbInfo,
     ), _patch_wifibulb():
         await async_setup_component(hass, LIGHT_DOMAIN, config)
         await hass.async_block_till_done()

@@ -12,14 +12,25 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers import aiohttp_client, entity_registry as er
+from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
-from .const import DATA_ACCOUNT, DATA_COORDINATOR, DOMAIN, LOGGER
+from .const import (
+    DATA_ACCOUNT,
+    DATA_COORDINATOR,
+    DOMAIN,
+    LOGGER,
+    SENSOR_TYPE_NEXT_PICKUP,
+)
 
 DEFAULT_UPDATE_INTERVAL = timedelta(hours=1)
 
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.SWITCH]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -82,3 +93,43 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate an old config entry."""
+    version = entry.version
+
+    LOGGER.debug("Migrating from version %s", version)
+
+    # 1 -> 2: Update unique ID of existing, single sensor entity to be consistent with
+    # common format for platforms going forward:
+    if version == 1:
+        version = entry.version = 2
+
+        ent_reg = er.async_get(hass)
+        [entity_entry] = [
+            e for e in ent_reg.entities.values() if e.config_entry_id == entry.entry_id
+        ]
+        new_unique_id = f"{entity_entry.unique_id}_{SENSOR_TYPE_NEXT_PICKUP}"
+        ent_reg.async_update_entity(entity_entry.entity_id, new_unique_id=new_unique_id)
+
+    LOGGER.info("Migration to version %s successful", version)
+
+    return True
+
+
+class RidwellEntity(CoordinatorEntity):
+    """Define a base Ridwell entity."""
+
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator,
+        account: RidwellAccount,
+        description: EntityDescription,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+
+        self._account = account
+        self._attr_unique_id = f"{account.account_id}_{description.key}"
+        self.entity_description = description

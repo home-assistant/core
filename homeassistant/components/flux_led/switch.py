@@ -15,13 +15,14 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import FluxLedUpdateCoordinator, _async_clear_discovery_cache
+from . import FluxLedUpdateCoordinator
 from .const import (
     CONF_REMOTE_ACCESS_ENABLED,
     CONF_REMOTE_ACCESS_HOST,
     CONF_REMOTE_ACCESS_PORT,
     DOMAIN,
 )
+from .discovery import async_clear_discovery_cache
 from .entity import FluxBaseEntity, FluxEntity, FluxOnOffEntity
 
 
@@ -62,6 +63,7 @@ class FluxRemoteAccessSwitch(FluxBaseEntity, SwitchEntity):
     """Representation of a Flux remote access switch."""
 
     _attr_should_poll = False
+    _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
         self,
@@ -70,7 +72,6 @@ class FluxRemoteAccessSwitch(FluxBaseEntity, SwitchEntity):
     ) -> None:
         """Initialize the light."""
         super().__init__(device, entry)
-        self._attr_entity_category = EntityCategory.CONFIG
         self._attr_name = f"{entry.data[CONF_NAME]} Remote Access"
         if entry.unique_id:
             self._attr_unique_id = f"{entry.unique_id}_remote_access"
@@ -85,7 +86,7 @@ class FluxRemoteAccessSwitch(FluxBaseEntity, SwitchEntity):
 
     async def _async_update_entry(self, new_state: bool) -> None:
         """Update the entry with the new state on success."""
-        _async_clear_discovery_cache(self.hass, self._device.ipaddr)
+        async_clear_discovery_cache(self.hass, self._device.ipaddr)
         self.hass.config_entries.async_update_entry(
             self.entry,
             data={**self.entry.data, CONF_REMOTE_ACCESS_ENABLED: new_state},
