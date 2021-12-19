@@ -49,7 +49,7 @@ class VelbusLight(VelbusEntity, LightEntity):
     """Representation of a Velbus light."""
 
     _channel: VelbusDimmer
-    _attr_supported_feature = SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
+    _attr_supported_features = SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
 
     @property
     def is_on(self) -> bool:
@@ -90,13 +90,18 @@ class VelbusLight(VelbusEntity, LightEntity):
         )
         await getattr(self._channel, attr)(*args)
 
+    @property
+    def supported_features(self) -> int:
+        """Flag supported features."""
+        return self._attr_supported_features
+
 
 class VelbusButtonLight(VelbusEntity, LightEntity):
     """Representation of a Velbus light."""
 
     _channel: VelbusButton
     _attr_entity_registry_enabled_default = False
-    _attr_supported_feature = SUPPORT_FLASH
+    _attr_supported_features = SUPPORT_FLASH
 
     def __init__(self, channel: VelbusChannel) -> None:
         """Initialize the button light (led)."""
@@ -125,3 +130,8 @@ class VelbusButtonLight(VelbusEntity, LightEntity):
         """Instruct the velbus light to turn off."""
         attr, *args = "set_led_state", "off"
         await getattr(self._channel, attr)(*args)
+
+    @property
+    def supported_features(self) -> int:
+        """Flag supported features."""
+        return self._attr_supported_features
