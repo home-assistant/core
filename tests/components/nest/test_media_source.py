@@ -8,7 +8,7 @@ import datetime
 from http import HTTPStatus
 import shutil
 from typing import Generator
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 import uuid
 
 import aiohttp
@@ -78,9 +78,7 @@ IMAGE_AUTHORIZATION_HEADERS = {"Authorization": "Basic g.0.eventToken"}
 def cleanup_media_storage(hass):
     """Test cleanup, remove any media storage persisted during the test."""
     tmp_path = str(uuid.uuid4())
-    m = Mock(spec=float)
-    m.return_value = tmp_path
-    with patch("homeassistant.components.nest.media_source.MEDIA_PATH", new_callable=m):
+    with patch("homeassistant.components.nest.media_source.MEDIA_PATH", new=tmp_path):
         yield
         shutil.rmtree(hass.config.path(tmp_path), ignore_errors=True)
 
@@ -725,11 +723,9 @@ async def test_multiple_devices(hass, auth, hass_client):
 @pytest.fixture
 def event_store() -> Generator[None, None, None]:
     """Persist changes to event store immediately."""
-    m = Mock(spec=float)
-    m.return_value = 0
     with patch(
         "homeassistant.components.nest.media_source.STORAGE_SAVE_DELAY_SECONDS",
-        new_callable=m,
+        new=0,
     ):
         yield
 
@@ -947,9 +943,7 @@ async def test_camera_event_media_eviction(hass, auth, hass_client):
     """Test media files getting evicted from the cache."""
 
     # Set small cache size for testing eviction
-    m = Mock(spec=float)
-    m.return_value = 5
-    with patch("homeassistant.components.nest.EVENT_MEDIA_CACHE_SIZE", new_callable=m):
+    with patch("homeassistant.components.nest.EVENT_MEDIA_CACHE_SIZE", new=5):
         subscriber = await async_setup_devices(
             hass,
             auth,
