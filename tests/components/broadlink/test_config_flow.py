@@ -545,6 +545,183 @@ async def test_flow_do_not_unlock(hass):
     assert mock_api.set_lock.call_count == 0
 
 
+async def test_flow_import_works(hass):
+    """Test an import flow."""
+    device = get_device("Living Room")
+    mock_api = device.get_mock_api()
+
+    with patch(DEVICE_HELLO, return_value=mock_api) as mock_hello:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={"host": device.host},
+        )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "finish"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"name": device.name},
+    )
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == device.name
+    assert result["data"]["host"] == device.host
+    assert result["data"]["mac"] == device.mac
+    assert result["data"]["type"] == device.devtype
+
+    assert mock_api.auth.call_count == 1
+    assert mock_hello.call_count == 1
+
+
+async def test_flow_import_already_in_progress(hass):
+    """Test we do not import more than one flow per device."""
+    device = get_device("Living Room")
+    data = {"host": device.host}
+
+    with patch(DEVICE_HELLO, return_value=device.get_mock_api()):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=data
+        )
+
+    with patch(DEVICE_HELLO, return_value=device.get_mock_api()):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=data
+        )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_in_progress"
+
+
+async def test_flow_import_host_already_configured(hass):
+    """Test we do not import a host that is already configured."""
+    device = get_device("Living Room")
+    mock_entry = device.get_mock_entry()
+    mock_entry.add_to_hass(hass)
+    mock_api = device.get_mock_api()
+
+    with patch(DEVICE_HELLO, return_value=mock_api):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={"host": device.host},
+        )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+
+
+async def test_flow_import_mac_already_configured(hass):
+    """Test we do not import more than one config entry per device.
+
+    We need to abort the flow and update the existing entry.
+    """
+    device = get_device("Living Room")
+    mock_entry = device.get_mock_entry()
+    mock_entry.add_to_hass(hass)
+
+    device.host = "192.168.1.16"
+    mock_api = device.get_mock_api()
+
+    with patch(DEVICE_HELLO, return_value=mock_api):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={"host": device.host},
+        )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+
+    assert mock_entry.data["host"] == device.host
+    assert mock_entry.data["mac"] == device.mac
+    assert mock_entry.data["type"] == device.devtype
+    assert mock_api.auth.call_count == 0
+
+
+async def test_flow_import_device_not_found(hass):
+    """Test we handle a device not found in the import step."""
+    with patch(DEVICE_HELLO, side_effect=blke.NetworkTimeoutError()):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={"host": "192.168.1.32"},
+        )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "cannot_connect"
+
+
+async def test_flow_import_device_not_supported(hass):
+    """Test we handle a device not supported in the import step."""
+    device = get_device("Kitchen")
+    mock_api = device.get_mock_api()
+
+    with patch(DEVICE_HELLO, return_value=mock_api):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={"host": device.host},
+        )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "not_supported"
+
+
+async def test_flow_import_invalid_ip_address(hass):
+    """Test we handle an invalid IP address in the import step."""
+    with patch(DEVICE_HELLO, side_effect=OSError(errno.EINVAL, None)):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={"host": "0.0.0.1"},
+        )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "invalid_host"
+
+
+async def test_flow_import_invalid_hostname(hass):
+    """Test we handle an invalid hostname in the import step."""
+    with patch(DEVICE_HELLO, side_effect=OSError(socket.EAI_NONAME, None)):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={"host": "hotdog.local"},
+        )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "invalid_host"
+
+
+async def test_flow_import_network_unreachable(hass):
+    """Test we handle a network unreachable in the import step."""
+    with patch(DEVICE_HELLO, side_effect=OSError(errno.ENETUNREACH, None)):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={"host": "192.168.1.64"},
+        )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "cannot_connect"
+
+
+async def test_flow_import_os_error(hass):
+    """Test we handle an OS error in the import step."""
+    with patch(DEVICE_HELLO, side_effect=OSError()):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={"host": "192.168.1.64"},
+        )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "unknown"
+
+
 async def test_flow_reauth_works(hass):
     """Test a reauthentication flow."""
     device = get_device("Living Room")
