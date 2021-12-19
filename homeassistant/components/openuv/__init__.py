@@ -169,7 +169,7 @@ class OpenUV:
             data = await self.client.uv_index()
         except OpenUvError as err:
             raise HomeAssistantError(
-                f"Error during protection data update: {err}"
+                f"Error during uv index data update: {err}"
             ) from err
 
         self.data[DATA_UV] = data
