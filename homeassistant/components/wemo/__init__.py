@@ -144,8 +144,8 @@ class WemoDispatcher:
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize the WemoDispatcher."""
         self._config_entry = config_entry
-        self._added_serial_numbers: MutableSet[str] = set()
-        self._loaded_components: MutableSet[str] = set()
+        self._added_serial_numbers: set[str] = set()
+        self._loaded_components: set[str] = set()
 
     async def async_add_unique_device(
         self, hass: HomeAssistant, wemo: pywemo.WeMoDevice
