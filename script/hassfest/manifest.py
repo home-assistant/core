@@ -175,7 +175,7 @@ def verify_wildcard(value: str):
 
 
 def verify_lower_case_dict(*keys: Any) -> Callable[[dict], dict]:
-    """Validate that at least one key exists."""
+    """Verify all values are lowercase."""
 
     def validate(obj: dict) -> dict:
         """Test values in dict are lowercase."""
