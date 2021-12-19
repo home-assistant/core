@@ -45,7 +45,7 @@ from homeassistant.components.media_source.models import (
     PlayMedia,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.template import DATE_STR_FORMAT
 from homeassistant.util import dt as dt_util, raise_if_invalid_filename
@@ -220,11 +220,13 @@ class NestEventMediaStore(EventMediaStore):
 
     async def _get_devices(self) -> Mapping[str, str]:
         """Return a mapping of nest device id to home assistant device id."""
-        dr = device_registry.async_get(self._hass)
+        device_registry = dr.async_get(self._hass)
         device_manager = await self._subscriber.async_get_device_manager()
         devices = {}
         for device in device_manager.devices.values():
-            if device_entry := dr.async_get_device({(DOMAIN, device.name)}):
+            if device_entry := device_registry.async_get_device(
+                {(DOMAIN, device.name)}
+            ):
                 devices[device.name] = device_entry.id
         return devices
 
@@ -241,7 +243,7 @@ async def get_media_source_devices(hass: HomeAssistant) -> Mapping[str, Device]:
         return {}
     subscriber = hass.data[DOMAIN][DATA_SUBSCRIBER]
     device_manager = await subscriber.async_get_device_manager()
-    dr = device_registry.async_get(hass)
+    device_registry = dr.async_get(hass)
     devices = {}
     for device in device_manager.devices.values():
         if not (
@@ -249,7 +251,7 @@ async def get_media_source_devices(hass: HomeAssistant) -> Mapping[str, Device]:
             or CameraClipPreviewTrait.NAME in device.traits
         ):
             continue
-        if device_entry := dr.async_get_device({(DOMAIN, device.name)}):
+        if device_entry := device_registry.async_get_device({(DOMAIN, device.name)}):
             devices[device_entry.id] = device
     return devices
 
