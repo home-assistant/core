@@ -38,7 +38,7 @@ async def test_setup_entry(hass: HomeAssistant):
     with patch(
         "homeassistant.config_entries.ConfigEntries.async_forward_entry_setup",
         side_effect=setup_mock,
-    ):
+    ), patch("homeassistant.components.twinkly.Twinkly", return_value=True):
         await async_setup_entry(hass, config_entry)
 
     assert hass.data[TWINKLY_DOMAIN][id] is not None

@@ -93,8 +93,8 @@ async def test_initial_state_offline(hass: HomeAssistant):
 async def test_turn_on(hass: HomeAssistant):
     """Test support of the light.turn_on service."""
     client = ClientMock()
-    client.is_on = False
-    client.brightness = 20
+    client.state = False
+    client.brightness = {"mode": "enabled", "value": 20}
     entity, _, _ = await _create_entries(hass, client)
 
     assert hass.states.get(entity.entity_id).state == "off"
@@ -113,8 +113,8 @@ async def test_turn_on(hass: HomeAssistant):
 async def test_turn_on_with_brightness(hass: HomeAssistant):
     """Test support of the light.turn_on service with a brightness parameter."""
     client = ClientMock()
-    client.is_on = False
-    client.brightness = 20
+    client.state = False
+    client.brightness = {"mode": "enabled", "value": 20}
     entity, _, _ = await _create_entries(hass, client)
 
     assert hass.states.get(entity.entity_id).state == "off"
@@ -197,7 +197,7 @@ async def _create_entries(
     def get_client_mock(client, _):
         return client
 
-    with patch("twinkly_client.TwinklyClient", side_effect=get_client_mock):
+    with patch("homeassistant.components.twinkly.Twinkly", return_value=client):
         config_entry = MockConfigEntry(
             domain=TWINKLY_DOMAIN,
             data={

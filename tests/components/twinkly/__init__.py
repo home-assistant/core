@@ -19,8 +19,8 @@ class ClientMock:
     def __init__(self) -> None:
         """Create a mocked client."""
         self.is_offline = False
-        self.is_on = True
-        self.brightness = 10
+        self.state = True
+        self.brightness = {"mode": "enabled", "value": 10}
 
         self.id = str(uuid4())
         self.device_info = {
@@ -36,21 +36,27 @@ class ClientMock:
 
     async def get_details(self):
         """Get the mocked device info."""
-        # if self.is_offline:
-        #     raise ClientConnectionError()
+        if self.is_offline:
+            raise ClientConnectionError()
         return self.device_info
 
-    async def get_is_on(self) -> bool:
+    async def is_on(self) -> bool:
         """Get the mocked on/off state."""
         if self.is_offline:
             raise ClientConnectionError()
-        return self.is_on
+        return self.state
 
-    async def set_is_on(self, is_on: bool) -> None:
-        """Set the mocked on/off state."""
+    async def turn_on(self) -> None:
+        """Set the mocked on state."""
         if self.is_offline:
             raise ClientConnectionError()
-        self.is_on = is_on
+        self.state = True
+
+    async def turn_off(self) -> None:
+        """Set the mocked off state."""
+        if self.is_offline:
+            raise ClientConnectionError()
+        self.state = False
 
     async def get_brightness(self) -> int:
         """Get the mocked brightness."""
