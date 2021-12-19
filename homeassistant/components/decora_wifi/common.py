@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 import logging
-from typing import Callable
 
 from decora_wifi import DecoraWiFiSession
 from decora_wifi.models.iot_switch import IotSwitch
@@ -27,10 +27,6 @@ class DecoraWifiError(HomeAssistantError):
     """Base for errors raised when the decora_wifi integration encounters an issue."""
 
 
-class CommFailed(DecoraWifiError):
-    """Raised when DecoraWifiPlatform.login() fails to communicate with the myLeviton Service."""
-
-
 class SessionEntityNotFound(DecoraWifiError):
     """Raised if a platform fails to find the session entity during setup."""
 
@@ -39,8 +35,8 @@ class LoginFailed(DecoraWifiError):
     """Raised when DecoraWifiPlatform.login() fails to log in."""
 
 
-class LoginMismatch(DecoraWifiError):
-    """Raised if the userid returned on reauth does not match the userid cached when the integration was originally set up."""
+class CommFailed(DecoraWifiError):
+    """Raised when DecoraWifiPlatform.login() fails to communicate with the myLeviton Service."""
 
 
 class DecoraWifiPlatform:
@@ -80,7 +76,6 @@ class DecoraWifiPlatform:
             if user is None:
                 raise LoginFailed
         except ValueError as exc:
-            self._logged_in = False
             raise CommFailed from exc
         self._logged_in = True
 
@@ -104,7 +99,6 @@ class DecoraWifiPlatform:
         try:
             perms.extend(self._session.user.get_residential_permissions())
         except ValueError as exc:
-            self._logged_in = False
             raise CommFailed from exc
 
         # Gather residences for which the logged in user has permissions
