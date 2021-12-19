@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Callable
 from urllib.parse import urlparse
 
 from awesomeversion import (
@@ -174,20 +173,6 @@ def verify_wildcard(value: str):
     return value
 
 
-def verify_lower_case_dict(*keys: Any) -> Callable[[dict], dict]:
-    """Validate that at least one key exists."""
-
-    def validate(obj: dict) -> dict:
-        """Test values in dict are lowercase."""
-        if not isinstance(obj, dict):
-            raise vol.Invalid("expected dictionary")
-
-        for v in obj.values():
-            verify_lowercase(v)
-
-    return validate
-
-
 MANIFEST_SCHEMA = vol.Schema(
     {
         vol.Required("domain"): str,
@@ -212,7 +197,9 @@ MANIFEST_SCHEMA = vol.Schema(
                             ),
                             vol.Optional("model"): vol.All(str, verify_lowercase),
                             vol.Optional("name"): vol.All(str, verify_lowercase),
-                            vol.Optional("properties"): verify_lower_case_dict,
+                            vol.Optional("properties"): vol.Schema(
+                                {str: verify_lowercase}
+                            ),
                         }
                     ),
                 ),
