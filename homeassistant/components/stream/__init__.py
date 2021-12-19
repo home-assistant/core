@@ -16,14 +16,14 @@ to always keep workers active.
 """
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 import logging
 import re
 import secrets
 import threading
 import time
 from types import MappingProxyType
-from typing import Callable, cast
+from typing import cast
 
 import voluptuous as vol
 
@@ -261,10 +261,11 @@ class Stream:
         """Return False if the stream is started and known to be unavailable."""
         return self._available
 
-    def set_update_callback(self, callback: Callable[[], None]) -> None:
+    def set_update_callback(self, cb: Callable[[], None]) -> None:
         """Set callback to run when state changes."""
-        self._update_callback = callback
+        self._update_callback = cb
 
+    @callback
     def _async_update_state(self, available: bool) -> None:
         """Set state and Run callback to notify state has been updated."""
         self._available = available
