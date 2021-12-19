@@ -1,7 +1,6 @@
 """Elmax switch platform."""
 import asyncio
 import logging
-import time
 from typing import Any
 
 from elmax_api.model.command import SwitchCommand
@@ -27,25 +26,25 @@ class ElmaxSwitch(ElmaxEntity, SwitchEntity):
         """Return True if entity is on."""
         return self.coordinator.get_actuator_state(self._device.endpoint_id).opened
 
-    async def _wait_for_state_change(self, timeout=5.0) -> bool:
+    async def _wait_for_state_change(self) -> bool:
         """Refresh data and wait until the state state changes."""
-        start_ts = time.time()
         old_state = self.coordinator.get_actuator_state(self._device.endpoint_id).opened
-        new_state = old_state
-        while new_state == old_state:
-            # Check for timeout
-            if (time.time() - start_ts) > timeout:
-                _LOGGER.warning(
-                    "Timeout occurred while waiting for state change from Elmax cloud"
-                )
-                return False
-            # Otherwise sleep a bit and then trigger an update
-            await asyncio.sleep(0.5)
+
+        # Wait a bit at first to let Elmax cloud assimilate the new state.
+        await asyncio.sleep(2.0)
+        await self.coordinator.async_refresh()
+        new_state = self.coordinator.get_actuator_state(self._device.endpoint_id).opened
+
+        # First check attempt.
+        if new_state == old_state:
+            # Otherwise sleep a bit more and then trigger a final update.
+            await asyncio.sleep(5.0)
             await self.coordinator.async_refresh()
             new_state = self.coordinator.get_actuator_state(
                 self._device.endpoint_id
             ).opened
-        return True
+
+        return new_state != old_state
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
