@@ -64,12 +64,6 @@ class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
         """Return the last fetched panel status."""
         return self.data
 
-    def get_endpoint_state(self, endpoint_id: str) -> DeviceEndpoint:
-        """Return the last fetched status for the given endpoint-id."""
-        if self._state_by_endpoint is not None:
-            return self._state_by_endpoint.get(endpoint_id)
-        raise HomeAssistantError("Unknown endpoint_id")
-
     def get_actuator_state(self, actuator_id: str) -> Actuator:
         """Return state of a specific actuator."""
         if self._state_by_endpoint is not None:
