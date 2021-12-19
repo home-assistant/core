@@ -23,7 +23,7 @@ import secrets
 import threading
 import time
 from types import MappingProxyType
-from typing import Any, cast
+from typing import cast
 
 import voluptuous as vol
 
@@ -59,14 +59,6 @@ STREAM_SOURCE_REDACT_PATTERN = [
     (re.compile(r"//.*:.*@"), "//****:****@"),
     (re.compile(r"\?auth=.*"), "?auth=****"),
 ]
-
-
-class StreamLoggerAdapter(logging.LoggerAdapter):
-    """A LoggerAdapter that appends stream information to the logging call."""
-
-    def process(self, msg: str, kwargs: Any) -> tuple[str, Any]:
-        """Append additional stream specific logging information."""
-        return "[{}] {}".format(self.extra["stream_label"], msg), kwargs
 
 
 def redact_credentials(data: str) -> str:
@@ -224,11 +216,11 @@ class Stream:
         self._fast_restart_once = False
         self._available: bool = True
         self._update_callback: Callable[[], None] | None = None
-        self._logger: logging.Logger | logging.LoggerAdapter = _LOGGER
-        if self._stream_label:
-            self._logger = StreamLoggerAdapter(
-                self._logger, {"stream_label": self._stream_label}
-            )
+        self._logger = (
+            logging.getLogger(f"__package__.stream.{stream_label}")
+            if stream_label
+            else _LOGGER
+        )
 
     def endpoint_url(self, fmt: str) -> str:
         """Start the stream and returns a url for the output format."""
