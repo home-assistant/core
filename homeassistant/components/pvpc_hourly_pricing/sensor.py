@@ -7,7 +7,7 @@ from typing import Any
 
 from aiopvpc import PVPCData
 
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CURRENCY_EURO, ENERGY_KILO_WATT_HOUR
 from homeassistant.core import HomeAssistant, callback
@@ -54,7 +54,7 @@ class ElecPriceSensor(RestoreEntity, SensorEntity):
     _attr_icon = ICON
     _attr_native_unit_of_measurement = UNIT
     _attr_should_poll = False
-    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, name, unique_id, pvpc_data_handler):
         """Initialize the sensor object."""

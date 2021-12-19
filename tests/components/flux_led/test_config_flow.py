@@ -11,6 +11,11 @@ from homeassistant.components.flux_led.const import (
     CONF_CUSTOM_EFFECT_COLORS,
     CONF_CUSTOM_EFFECT_SPEED_PCT,
     CONF_CUSTOM_EFFECT_TRANSITION,
+    CONF_MINOR_VERSION,
+    CONF_MODEL,
+    CONF_REMOTE_ACCESS_ENABLED,
+    CONF_REMOTE_ACCESS_HOST,
+    CONF_REMOTE_ACCESS_PORT,
     DOMAIN,
     MODE_RGB,
     TRANSITION_JUMP,
@@ -20,7 +25,6 @@ from homeassistant.const import (
     CONF_DEVICE,
     CONF_HOST,
     CONF_MAC,
-    CONF_MODE,
     CONF_NAME,
     CONF_PROTOCOL,
 )
@@ -34,6 +38,7 @@ from . import (
     FLUX_DISCOVERY_PARTIAL,
     IP_ADDRESS,
     MAC_ADDRESS,
+    MODEL,
     MODULE,
     _patch_discovery,
     _patch_wifibulb,
@@ -88,7 +93,16 @@ async def test_discovery(hass: HomeAssistant):
 
     assert result3["type"] == "create_entry"
     assert result3["title"] == DEFAULT_ENTRY_TITLE
-    assert result3["data"] == {CONF_HOST: IP_ADDRESS, CONF_NAME: DEFAULT_ENTRY_TITLE}
+    assert result3["data"] == {
+        CONF_MINOR_VERSION: 4,
+        CONF_HOST: IP_ADDRESS,
+        CONF_NAME: DEFAULT_ENTRY_TITLE,
+        CONF_MODEL: MODEL,
+        CONF_REMOTE_ACCESS_ENABLED: True,
+        CONF_REMOTE_ACCESS_HOST: "the.cloud",
+        CONF_REMOTE_ACCESS_PORT: 8816,
+        CONF_MINOR_VERSION: 0x04,
+    }
     mock_setup.assert_called_once()
     mock_setup_entry.assert_called_once()
 
@@ -160,8 +174,14 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant):
         assert result3["type"] == "create_entry"
         assert result3["title"] == DEFAULT_ENTRY_TITLE
         assert result3["data"] == {
+            CONF_MINOR_VERSION: 4,
             CONF_HOST: IP_ADDRESS,
             CONF_NAME: DEFAULT_ENTRY_TITLE,
+            CONF_MODEL: MODEL,
+            CONF_REMOTE_ACCESS_ENABLED: True,
+            CONF_REMOTE_ACCESS_HOST: "the.cloud",
+            CONF_REMOTE_ACCESS_PORT: 8816,
+            CONF_MINOR_VERSION: 0x04,
         }
         await hass.async_block_till_done()
 
@@ -204,7 +224,7 @@ async def test_import(hass: HomeAssistant):
         CONF_MAC: MAC_ADDRESS,
         CONF_NAME: "floor lamp",
         CONF_PROTOCOL: "ledenet",
-        CONF_MODE: MODE_RGB,
+        CONF_MODEL: MODE_RGB,
         CONF_CUSTOM_EFFECT_COLORS: "[255,0,0], [0,0,255]",
         CONF_CUSTOM_EFFECT_SPEED_PCT: 30,
         CONF_CUSTOM_EFFECT_TRANSITION: TRANSITION_STROBE,
@@ -229,7 +249,6 @@ async def test_import(hass: HomeAssistant):
         CONF_PROTOCOL: "ledenet",
     }
     assert result["options"] == {
-        CONF_MODE: MODE_RGB,
         CONF_CUSTOM_EFFECT_COLORS: "[255,0,0], [0,0,255]",
         CONF_CUSTOM_EFFECT_SPEED_PCT: 30,
         CONF_CUSTOM_EFFECT_TRANSITION: TRANSITION_STROBE,
@@ -278,7 +297,16 @@ async def test_manual_working_discovery(hass: HomeAssistant):
         await hass.async_block_till_done()
     assert result4["type"] == "create_entry"
     assert result4["title"] == DEFAULT_ENTRY_TITLE
-    assert result4["data"] == {CONF_HOST: IP_ADDRESS, CONF_NAME: DEFAULT_ENTRY_TITLE}
+    assert result4["data"] == {
+        CONF_MINOR_VERSION: 4,
+        CONF_HOST: IP_ADDRESS,
+        CONF_NAME: DEFAULT_ENTRY_TITLE,
+        CONF_MODEL: MODEL,
+        CONF_REMOTE_ACCESS_ENABLED: True,
+        CONF_REMOTE_ACCESS_HOST: "the.cloud",
+        CONF_REMOTE_ACCESS_PORT: 8816,
+        CONF_MINOR_VERSION: 0x04,
+    }
 
     # Duplicate
     result = await hass.config_entries.flow.async_init(
@@ -376,7 +404,16 @@ async def test_discovered_by_discovery(hass):
         await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
-    assert result2["data"] == {CONF_HOST: IP_ADDRESS, CONF_NAME: DEFAULT_ENTRY_TITLE}
+    assert result2["data"] == {
+        CONF_MINOR_VERSION: 4,
+        CONF_HOST: IP_ADDRESS,
+        CONF_NAME: DEFAULT_ENTRY_TITLE,
+        CONF_MODEL: MODEL,
+        CONF_REMOTE_ACCESS_ENABLED: True,
+        CONF_REMOTE_ACCESS_HOST: "the.cloud",
+        CONF_REMOTE_ACCESS_PORT: 8816,
+        CONF_MINOR_VERSION: 0x04,
+    }
     assert mock_async_setup.called
     assert mock_async_setup_entry.called
 
@@ -402,7 +439,16 @@ async def test_discovered_by_dhcp_udp_responds(hass):
         await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
-    assert result2["data"] == {CONF_HOST: IP_ADDRESS, CONF_NAME: DEFAULT_ENTRY_TITLE}
+    assert result2["data"] == {
+        CONF_MINOR_VERSION: 4,
+        CONF_HOST: IP_ADDRESS,
+        CONF_NAME: DEFAULT_ENTRY_TITLE,
+        CONF_MODEL: MODEL,
+        CONF_REMOTE_ACCESS_ENABLED: True,
+        CONF_REMOTE_ACCESS_HOST: "the.cloud",
+        CONF_REMOTE_ACCESS_PORT: 8816,
+        CONF_MINOR_VERSION: 0x04,
+    }
     assert mock_async_setup.called
     assert mock_async_setup_entry.called
 
@@ -538,7 +584,7 @@ async def test_options(hass: HomeAssistant):
         domain=DOMAIN,
         data={CONF_HOST: IP_ADDRESS, CONF_NAME: DEFAULT_ENTRY_TITLE},
         options={
-            CONF_MODE: MODE_RGB,
+            CONF_MODEL: MODE_RGB,
             CONF_CUSTOM_EFFECT_COLORS: "[255,0,0], [0,0,255]",
             CONF_CUSTOM_EFFECT_SPEED_PCT: 30,
             CONF_CUSTOM_EFFECT_TRANSITION: TRANSITION_STROBE,

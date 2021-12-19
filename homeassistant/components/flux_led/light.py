@@ -34,7 +34,6 @@ from homeassistant.const import (
     CONF_DEVICES,
     CONF_HOST,
     CONF_MAC,
-    CONF_MODE,
     CONF_NAME,
     CONF_PROTOCOL,
 )
@@ -158,7 +157,6 @@ async def async_setup_platform(
                     CONF_MAC: discovered_mac_by_host.get(host),
                     CONF_NAME: device_config[CONF_NAME],
                     CONF_PROTOCOL: device_config.get(CONF_PROTOCOL),
-                    CONF_MODE: device_config.get(ATTR_MODE, MODE_AUTO),
                     CONF_CUSTOM_EFFECT_COLORS: custom_effect_colors,
                     CONF_CUSTOM_EFFECT_SPEED_PCT: custom_effects.get(
                         CONF_SPEED_PCT, DEFAULT_EFFECT_SPEED

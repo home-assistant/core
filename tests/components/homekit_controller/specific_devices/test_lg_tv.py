@@ -63,6 +63,7 @@ async def test_lg_tv(hass):
     assert device.model == "OLED55B9PUA"
     assert device.sw_version == "04.71.04"
     assert device.via_device_id is None
+    assert device.hw_version == "1"
 
     # A TV has media player device triggers
     triggers = await async_get_device_automations(hass, "trigger", device.id)

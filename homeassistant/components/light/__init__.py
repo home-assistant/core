@@ -382,14 +382,22 @@ async def async_setup(hass, config):  # noqa: C901
                 params[ATTR_WHITE_VALUE] = rgbw_color[3]
 
         # If a color temperature is specified, emulate it if not supported by the light
-        if (
-            ATTR_COLOR_TEMP in params
-            and COLOR_MODE_COLOR_TEMP not in legacy_supported_color_modes
-        ):
-            color_temp = params.pop(ATTR_COLOR_TEMP)
-            if color_supported(legacy_supported_color_modes):
-                temp_k = color_util.color_temperature_mired_to_kelvin(color_temp)
-                params[ATTR_HS_COLOR] = color_util.color_temperature_to_hs(temp_k)
+        if ATTR_COLOR_TEMP in params:
+            if (
+                supported_color_modes
+                and COLOR_MODE_COLOR_TEMP not in supported_color_modes
+                and COLOR_MODE_RGBWW in supported_color_modes
+            ):
+                color_temp = params.pop(ATTR_COLOR_TEMP)
+                brightness = params.get(ATTR_BRIGHTNESS, light.brightness)
+                params[ATTR_RGBWW_COLOR] = color_util.color_temperature_to_rgbww(
+                    color_temp, brightness, light.min_mireds, light.max_mireds
+                )
+            elif COLOR_MODE_COLOR_TEMP not in legacy_supported_color_modes:
+                color_temp = params.pop(ATTR_COLOR_TEMP)
+                if color_supported(legacy_supported_color_modes):
+                    temp_k = color_util.color_temperature_mired_to_kelvin(color_temp)
+                    params[ATTR_HS_COLOR] = color_util.color_temperature_to_hs(temp_k)
 
         # If a color is specified, convert to the color space supported by the light
         # Backwards compatibility: Fall back to hs color if light.supported_color_modes

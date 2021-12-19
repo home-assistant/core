@@ -11,13 +11,13 @@ from homeassistant.components.wled.const import SCAN_INTERVAL
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ICON,
-    ENTITY_CATEGORY_CONFIG,
     SERVICE_SELECT_OPTION,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity import EntityCategory
 import homeassistant.util.dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
@@ -90,7 +90,7 @@ async def test_color_palette_state(
     entry = entity_registry.async_get("select.wled_rgb_light_segment_1_color_palette")
     assert entry
     assert entry.unique_id == "aabbccddeeff_palette_1"
-    assert entry.entity_category == ENTITY_CATEGORY_CONFIG
+    assert entry.entity_category is EntityCategory.CONFIG
 
 
 async def test_color_palette_segment_change_state(
