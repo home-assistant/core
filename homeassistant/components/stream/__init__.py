@@ -304,7 +304,7 @@ class Stream:
         wait_timeout = 0
         while not self._thread_quit.wait(timeout=wait_timeout):
             start_time = time.time()
-            self.hass.loop.call_soon_threadsafe(self._async_update_state, True)
+            self.hass.add_job(self._async_update_state, True)
             try:
                 stream_worker(
                     self.source,
@@ -324,7 +324,7 @@ class Stream:
                     continue
                 break
 
-            self.hass.loop.call_soon_threadsafe(self._async_update_state, False)
+            self.hass.add_job(self._async_update_state, False)
             # To avoid excessive restarts, wait before restarting
             # As the required recovery time may be different for different setups, start
             # with trying a short wait_timeout and increase it on each reconnection attempt.
