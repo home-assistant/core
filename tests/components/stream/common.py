@@ -26,7 +26,6 @@ AUDIO_SAMPLE_RATE = 8000
 
 def stream_teardown():
     """Perform test teardown."""
-    print(frame_image_data.cache_info())
     frame_image_data.cache_clear()
 
 
