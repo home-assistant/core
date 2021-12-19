@@ -90,11 +90,6 @@ class VelbusLight(VelbusEntity, LightEntity):
         )
         await getattr(self._channel, attr)(*args)
 
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return self._attr_supported_features
-
 
 class VelbusButtonLight(VelbusEntity, LightEntity):
     """Representation of a Velbus light."""
@@ -130,8 +125,3 @@ class VelbusButtonLight(VelbusEntity, LightEntity):
         """Instruct the velbus light to turn off."""
         attr, *args = "set_led_state", "off"
         await getattr(self._channel, attr)(*args)
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return self._attr_supported_features
