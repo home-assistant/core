@@ -362,6 +362,7 @@ HOMEKIT = {
     "Welcome": "netatmo",
     "Wemo": "wemo",
     "YL*": "yeelight",
+    "ecobee*": "ecobee",
     "iSmartGate": "gogogate2",
     "iZone": "izone",
     "tado": "tado"

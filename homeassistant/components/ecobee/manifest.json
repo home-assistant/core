@@ -10,7 +10,7 @@
     "@marthoc"
   ],
   "homekit": {
-    "models": ["EB-*"]
+    "models": ["EB-*", "ecobee*"]
   },
   "iot_class": "cloud_polling"
 }
