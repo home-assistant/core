@@ -26,6 +26,7 @@ from .const import (
     ATTR_AREA_NAME,
     ATTR_BUTTON_NUMBER,
     ATTR_DEVICE_NAME,
+    ATTR_LEAP_BUTTON_NUMBER,
     ATTR_SERIAL,
     ATTR_TYPE,
     BRIDGE_DEVICE,
@@ -242,15 +243,6 @@ def _async_subscribe_pico_remote_events(
             )
             return
         lip_button_number = sub_type_to_lip_button[sub_type]
-        _LOGGER.debug(
-            "Firing event: button_id=%s event_type=%s device=%s sub_type_to_lip_button=%s leap_button_to_sub_type=%s lip_button_number=%s",
-            button_id,
-            event_type,
-            device,
-            sub_type_to_lip_button,
-            leap_button_to_sub_type,
-            lip_button_number,
-        )
 
         hass.bus.async_fire(
             LUTRON_CASETA_BUTTON_EVENT,
@@ -258,6 +250,7 @@ def _async_subscribe_pico_remote_events(
                 ATTR_SERIAL: device["serial"],
                 ATTR_TYPE: type_,
                 ATTR_BUTTON_NUMBER: lip_button_number,
+                ATTR_LEAP_BUTTON_NUMBER: button_number,
                 ATTR_DEVICE_NAME: name,
                 ATTR_AREA_NAME: name.split("_")[0],
                 ATTR_ACTION: action,
