@@ -14,7 +14,7 @@ TEST_MODEL = "twinkly_test_device_model"
 
 
 class ClientMock:
-    """A mock of the twinkly_client.TwinklyClient."""
+    """A mock of the ttls.client.Twinkly."""
 
     def __init__(self) -> None:
         """Create a mocked client."""
@@ -34,10 +34,10 @@ class ClientMock:
         """Get the mocked host."""
         return TEST_HOST
 
-    async def get_device_info(self):
+    async def get_details(self):
         """Get the mocked device info."""
-        if self.is_offline:
-            raise ClientConnectionError()
+        # if self.is_offline:
+        #     raise ClientConnectionError()
         return self.device_info
 
     async def get_is_on(self) -> bool:
