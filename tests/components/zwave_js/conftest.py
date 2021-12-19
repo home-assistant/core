@@ -166,13 +166,13 @@ def uninstall_addon_fixture():
         yield uninstall_addon
 
 
-@pytest.fixture(name="create_shapshot")
-def create_snapshot_fixture():
-    """Mock create snapshot."""
+@pytest.fixture(name="create_backup")
+def create_backup_fixture():
+    """Mock create backup."""
     with patch(
-        "homeassistant.components.zwave_js.addon.async_create_snapshot"
-    ) as create_shapshot:
-        yield create_shapshot
+        "homeassistant.components.zwave_js.addon.async_create_backup"
+    ) as create_backup:
+        yield create_backup
 
 
 @pytest.fixture(name="controller_state", scope="session")
@@ -326,10 +326,16 @@ def window_cover_state_fixture():
     return json.loads(load_fixture("zwave_js/chain_actuator_zws12_state.json"))
 
 
-@pytest.fixture(name="in_wall_smart_fan_control_state", scope="session")
-def in_wall_smart_fan_control_state_fixture():
+@pytest.fixture(name="fan_generic_state", scope="session")
+def fan_generic_state_fixture():
     """Load the fan node state fixture data."""
-    return json.loads(load_fixture("zwave_js/in_wall_smart_fan_control_state.json"))
+    return json.loads(load_fixture("zwave_js/fan_generic_state.json"))
+
+
+@pytest.fixture(name="hs_fc200_state", scope="session")
+def hs_fc200_state_fixture():
+    """Load the HS FC200+ node state fixture data."""
+    return json.loads(load_fixture("zwave_js/fan_hs_fc200_state.json"))
 
 
 @pytest.fixture(name="gdc_zw062_state", scope="session")
@@ -348,6 +354,18 @@ def iblinds_v2_state_fixture():
 def qubino_shutter_state_fixture():
     """Load the Qubino Shutter node state fixture data."""
     return json.loads(load_fixture("zwave_js/cover_qubino_shutter_state.json"))
+
+
+@pytest.fixture(name="aeotec_nano_shutter_state", scope="session")
+def aeotec_nano_shutter_state_fixture():
+    """Load the Aeotec Nano Shutter node state fixture data."""
+    return json.loads(load_fixture("zwave_js/cover_aeotec_nano_shutter_state.json"))
+
+
+@pytest.fixture(name="fibaro_fgr222_shutter_state", scope="session")
+def fibaro_fgr222_shutter_state_fixture():
+    """Load the Fibaro FGR222 node state fixture data."""
+    return json.loads(load_fixture("zwave_js/cover_fibaro_fgr222_state.json"))
 
 
 @pytest.fixture(name="aeon_smart_switch_6_state", scope="session")
@@ -427,6 +445,32 @@ def zem_31_state_fixture():
 def wallmote_central_scene_state_fixture():
     """Load the wallmote central scene node state fixture data."""
     return json.loads(load_fixture("zwave_js/wallmote_central_scene_state.json"))
+
+
+@pytest.fixture(name="ge_in_wall_dimmer_switch_state", scope="session")
+def ge_in_wall_dimmer_switch_state_fixture():
+    """Load the ge in-wall dimmer switch node state fixture data."""
+    return json.loads(load_fixture("zwave_js/ge_in_wall_dimmer_switch_state.json"))
+
+
+@pytest.fixture(name="aeotec_zw164_siren_state", scope="session")
+def aeotec_zw164_siren_state_fixture():
+    """Load the aeotec zw164 siren node state fixture data."""
+    return json.loads(load_fixture("zwave_js/aeotec_zw164_siren_state.json"))
+
+
+@pytest.fixture(name="lock_popp_electric_strike_lock_control_state", scope="session")
+def lock_popp_electric_strike_lock_control_state_fixture():
+    """Load the popp electric strike lock control node state fixture data."""
+    return json.loads(
+        load_fixture("zwave_js/lock_popp_electric_strike_lock_control_state.json")
+    )
+
+
+@pytest.fixture(name="fortrezz_ssa1_siren_state", scope="session")
+def fortrezz_ssa1_siren_state_fixture():
+    """Load the fortrezz ssa1 siren node state fixture data."""
+    return json.loads(load_fixture("zwave_js/fortrezz_ssa1_siren_state.json"))
 
 
 @pytest.fixture(name="client")
@@ -651,10 +695,18 @@ def window_cover_fixture(client, chain_actuator_zws12_state):
     return node
 
 
-@pytest.fixture(name="in_wall_smart_fan_control")
-def in_wall_smart_fan_control_fixture(client, in_wall_smart_fan_control_state):
+@pytest.fixture(name="fan_generic")
+def fan_generic_fixture(client, fan_generic_state):
     """Mock a fan node."""
-    node = Node(client, copy.deepcopy(in_wall_smart_fan_control_state))
+    node = Node(client, copy.deepcopy(fan_generic_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="hs_fc200")
+def hs_fc200_fixture(client, hs_fc200_state):
+    """Mock a fan node."""
+    node = Node(client, copy.deepcopy(hs_fc200_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 
@@ -703,6 +755,22 @@ def qubino_shutter_cover_fixture(client, qubino_shutter_state):
     return node
 
 
+@pytest.fixture(name="aeotec_nano_shutter")
+def aeotec_nano_shutter_cover_fixture(client, aeotec_nano_shutter_state):
+    """Mock a Aeotec Nano Shutter node."""
+    node = Node(client, copy.deepcopy(aeotec_nano_shutter_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="fibaro_fgr222_shutter")
+def fibaro_fgr222_shutter_cover_fixture(client, fibaro_fgr222_shutter_state):
+    """Mock a Fibaro FGR222 Shutter node."""
+    node = Node(client, copy.deepcopy(fibaro_fgr222_shutter_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
 @pytest.fixture(name="aeon_smart_switch_6")
 def aeon_smart_switch_6_fixture(client, aeon_smart_switch_6_state):
     """Mock an AEON Labs (ZW096) Smart Switch 6 node."""
@@ -731,6 +799,16 @@ def inovelli_lzw36_fixture(client, inovelli_lzw36_state):
 def lock_id_lock_as_id150(client, lock_id_lock_as_id150_state):
     """Mock an id lock id-150 lock node."""
     node = Node(client, copy.deepcopy(lock_id_lock_as_id150_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="lock_id_lock_as_id150_not_ready")
+def node_not_ready(client, lock_id_lock_as_id150_state):
+    """Mock an id lock id-150 lock node that's not ready."""
+    state = copy.deepcopy(lock_id_lock_as_id150_state)
+    state["ready"] = False
+    node = Node(client, state)
     client.driver.controller.nodes[node.node_id] = node
     return node
 
@@ -785,6 +863,40 @@ def zen_31_fixture(client, zen_31_state):
 def wallmote_central_scene_fixture(client, wallmote_central_scene_state):
     """Mock a wallmote central scene node."""
     node = Node(client, copy.deepcopy(wallmote_central_scene_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="ge_in_wall_dimmer_switch")
+def ge_in_wall_dimmer_switch_fixture(client, ge_in_wall_dimmer_switch_state):
+    """Mock a ge in-wall dimmer switch scene node."""
+    node = Node(client, copy.deepcopy(ge_in_wall_dimmer_switch_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="aeotec_zw164_siren")
+def aeotec_zw164_siren_fixture(client, aeotec_zw164_siren_state):
+    """Mock a aeotec zw164 siren node."""
+    node = Node(client, copy.deepcopy(aeotec_zw164_siren_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="lock_popp_electric_strike_lock_control")
+def lock_popp_electric_strike_lock_control_fixture(
+    client, lock_popp_electric_strike_lock_control_state
+):
+    """Mock a popp electric strike lock control node."""
+    node = Node(client, copy.deepcopy(lock_popp_electric_strike_lock_control_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="fortrezz_ssa1_siren")
+def fortrezz_ssa1_siren_fixture(client, fortrezz_ssa1_siren_state):
+    """Mock a fortrezz ssa1 siren node."""
+    node = Node(client, copy.deepcopy(fortrezz_ssa1_siren_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 

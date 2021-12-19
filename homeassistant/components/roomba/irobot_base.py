@@ -24,7 +24,7 @@ from homeassistant.components.vacuum import (
     StateVacuumEntity,
 )
 import homeassistant.helpers.device_registry as dr
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 import homeassistant.util.dt as dt_util
 
 from . import roomba_reported_state
@@ -96,18 +96,19 @@ class IRobotEntity(Entity):
     @property
     def device_info(self):
         """Return the device info of the vacuum cleaner."""
-        info = {
-            "identifiers": {(DOMAIN, self.robot_unique_id)},
-            "manufacturer": "iRobot",
-            "name": str(self._name),
-            "sw_version": self._version,
-            "model": self._sku,
-        }
+        connections = None
         if mac_address := self.vacuum_state.get("hwPartsRev", {}).get(
             "wlan0HwAddr", self.vacuum_state.get("mac")
         ):
-            info["connections"] = {(dr.CONNECTION_NETWORK_MAC, mac_address)}
-        return info
+            connections = {(dr.CONNECTION_NETWORK_MAC, mac_address)}
+        return DeviceInfo(
+            connections=connections,
+            identifiers={(DOMAIN, self.robot_unique_id)},
+            manufacturer="iRobot",
+            model=self._sku,
+            name=str(self._name),
+            sw_version=self._version,
+        )
 
     @property
     def _battery_level(self):
@@ -212,7 +213,7 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
             pos_x = pos_state.get("point", {}).get("x")
             pos_y = pos_state.get("point", {}).get("y")
             theta = pos_state.get("theta")
-            if all(item is not None for item in [pos_x, pos_y, theta]):
+            if all(item is not None for item in (pos_x, pos_y, theta)):
                 position = f"({pos_x}, {pos_y}, {theta})"
             state_attrs[ATTR_POSITION] = position
 

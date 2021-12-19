@@ -1,6 +1,9 @@
 """samsungctl and samsungtvws bridge classes."""
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 import contextlib
+from typing import Any
 
 from samsungctl import Remote
 from samsungctl.exceptions import AccessDenied, ConnectionClosed, UnhandledResponse
@@ -17,6 +20,7 @@ from homeassistant.const import (
     CONF_TIMEOUT,
     CONF_TOKEN,
 )
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import (
@@ -37,7 +41,7 @@ from .const import (
 )
 
 
-def mac_from_device_info(info):
+def mac_from_device_info(info: dict[str, Any]) -> str | None:
     """Extract the mac address from the device info."""
     dev_info = info.get("device", {})
     if dev_info.get("networkType") == "wireless" and dev_info.get("wifiMac"):
@@ -45,12 +49,18 @@ def mac_from_device_info(info):
     return None
 
 
-async def async_get_device_info(hass, bridge, host):
+async def async_get_device_info(
+    hass: HomeAssistant,
+    bridge: SamsungTVWSBridge | SamsungTVLegacyBridge | None,
+    host: str,
+) -> tuple[int | None, str | None, dict[str, Any] | None]:
     """Fetch the port, method, and device info."""
     return await hass.async_add_executor_job(_get_device_info, bridge, host)
 
 
-def _get_device_info(bridge, host):
+def _get_device_info(
+    bridge: SamsungTVWSBridge | SamsungTVLegacyBridge, host: str
+) -> tuple[int | None, str | None, dict[str, Any] | None]:
     """Fetch the port, method, and device info."""
     if bridge and bridge.port:
         return bridge.port, bridge.method, bridge.device_info()
@@ -72,40 +82,42 @@ class SamsungTVBridge(ABC):
     """The Base Bridge abstract class."""
 
     @staticmethod
-    def get_bridge(method, host, port=None, token=None):
+    def get_bridge(
+        method: str, host: str, port: int | None = None, token: str | None = None
+    ) -> SamsungTVLegacyBridge | SamsungTVWSBridge:
         """Get Bridge instance."""
         if method == METHOD_LEGACY or port == LEGACY_PORT:
             return SamsungTVLegacyBridge(method, host, port)
         return SamsungTVWSBridge(method, host, port, token)
 
-    def __init__(self, method, host, port):
+    def __init__(self, method: str, host: str, port: int | None = None) -> None:
         """Initialize Bridge."""
         self.port = port
         self.method = method
         self.host = host
-        self.token = None
-        self._remote = None
-        self._callback = None
+        self.token: str | None = None
+        self._remote: Remote | None = None
+        self._callback: CALLBACK_TYPE | None = None
 
-    def register_reauth_callback(self, func):
+    def register_reauth_callback(self, func: CALLBACK_TYPE) -> None:
         """Register a callback function."""
         self._callback = func
 
     @abstractmethod
-    def try_connect(self):
+    def try_connect(self) -> str | None:
         """Try to connect to the TV."""
 
     @abstractmethod
-    def device_info(self):
+    def device_info(self) -> dict[str, Any] | None:
         """Try to gather infos of this TV."""
 
     @abstractmethod
-    def mac_from_device(self):
+    def mac_from_device(self) -> str | None:
         """Try to fetch the mac address of the TV."""
 
-    def is_on(self):
+    def is_on(self) -> bool:
         """Tells if the TV is on."""
-        if self._remote:
+        if self._remote is not None:
             self.close_remote()
 
         try:
@@ -121,7 +133,7 @@ class SamsungTVBridge(ABC):
             # Different reasons, e.g. hostname not resolveable
             return False
 
-    def send_key(self, key):
+    def send_key(self, key: str) -> None:
         """Send a key to the tv and handles exceptions."""
         try:
             # recreate connection if connection was dead
@@ -146,14 +158,14 @@ class SamsungTVBridge(ABC):
             pass
 
     @abstractmethod
-    def _send_key(self, key):
+    def _send_key(self, key: str) -> None:
         """Send the key."""
 
     @abstractmethod
-    def _get_remote(self, avoid_open: bool = False):
+    def _get_remote(self, avoid_open: bool = False) -> Remote:
         """Get Remote object."""
 
-    def close_remote(self):
+    def close_remote(self) -> None:
         """Close remote object."""
         try:
             if self._remote is not None:
@@ -163,16 +175,16 @@ class SamsungTVBridge(ABC):
         except OSError:
             LOGGER.debug("Could not establish connection")
 
-    def _notify_callback(self):
+    def _notify_callback(self) -> None:
         """Notify access denied callback."""
-        if self._callback:
+        if self._callback is not None:
             self._callback()
 
 
 class SamsungTVLegacyBridge(SamsungTVBridge):
     """The Bridge for Legacy TVs."""
 
-    def __init__(self, method, host, port):
+    def __init__(self, method: str, host: str, port: int | None) -> None:
         """Initialize Bridge."""
         super().__init__(method, host, LEGACY_PORT)
         self.config = {
@@ -185,11 +197,11 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
             CONF_TIMEOUT: 1,
         }
 
-    def mac_from_device(self):
+    def mac_from_device(self) -> None:
         """Try to fetch the mac address of the TV."""
         return None
 
-    def try_connect(self):
+    def try_connect(self) -> str:
         """Try to connect to the Legacy TV."""
         config = {
             CONF_NAME: VALUE_CONF_NAME,
@@ -209,18 +221,18 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
         except AccessDenied:
             LOGGER.debug("Working but denied config: %s", config)
             return RESULT_AUTH_MISSING
-        except UnhandledResponse:
-            LOGGER.debug("Working but unsupported config: %s", config)
+        except UnhandledResponse as err:
+            LOGGER.debug("Working but unsupported config: %s, error: %s", config, err)
             return RESULT_NOT_SUPPORTED
         except (ConnectionClosed, OSError) as err:
             LOGGER.debug("Failing config: %s, error: %s", config, err)
             return RESULT_CANNOT_CONNECT
 
-    def device_info(self):
+    def device_info(self) -> None:
         """Try to gather infos of this device."""
         return None
 
-    def _get_remote(self, avoid_open: bool = False):
+    def _get_remote(self, avoid_open: bool = False) -> Remote:
         """Create or return a remote control instance."""
         if self._remote is None:
             # We need to create a new instance to reconnect.
@@ -238,11 +250,12 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
                 pass
         return self._remote
 
-    def _send_key(self, key):
+    def _send_key(self, key: str) -> None:
         """Send the key using legacy protocol."""
-        self._get_remote().control(key)
+        if remote := self._get_remote():
+            remote.control(key)
 
-    def stop(self):
+    def stop(self) -> None:
         """Stop Bridge."""
         LOGGER.debug("Stopping SamsungTVLegacyBridge")
         self.close_remote()
@@ -251,17 +264,19 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
 class SamsungTVWSBridge(SamsungTVBridge):
     """The Bridge for WebSocket TVs."""
 
-    def __init__(self, method, host, port, token=None):
+    def __init__(
+        self, method: str, host: str, port: int | None = None, token: str | None = None
+    ) -> None:
         """Initialize Bridge."""
         super().__init__(method, host, port)
         self.token = token
 
-    def mac_from_device(self):
+    def mac_from_device(self) -> str | None:
         """Try to fetch the mac address of the TV."""
         info = self.device_info()
         return mac_from_device_info(info) if info else None
 
-    def try_connect(self):
+    def try_connect(self) -> str:
         """Try to connect to the Websocket TV."""
         for self.port in WEBSOCKET_PORTS:
             config = {
@@ -285,12 +300,14 @@ class SamsungTVWSBridge(SamsungTVBridge):
                 ) as remote:
                     remote.open()
                     self.token = remote.token
-                    if self.token:
+                    if self.token is None:
                         config[CONF_TOKEN] = "*****"
                 LOGGER.debug("Working config: %s", config)
                 return RESULT_SUCCESS
-            except WebSocketException:
-                LOGGER.debug("Working but unsupported config: %s", config)
+            except WebSocketException as err:
+                LOGGER.debug(
+                    "Working but unsupported config: %s, error: %s", config, err
+                )
                 result = RESULT_NOT_SUPPORTED
             except (OSError, ConnectionFailure) as err:
                 LOGGER.debug("Failing config: %s, error: %s", config, err)
@@ -301,21 +318,23 @@ class SamsungTVWSBridge(SamsungTVBridge):
 
         return RESULT_CANNOT_CONNECT
 
-    def device_info(self):
+    def device_info(self) -> dict[str, Any] | None:
         """Try to gather infos of this TV."""
-        remote = self._get_remote(avoid_open=True)
-        if not remote:
-            return None
-        with contextlib.suppress(HttpApiError):
-            return remote.rest_device_info()
+        if remote := self._get_remote(avoid_open=True):
+            with contextlib.suppress(HttpApiError):
+                device_info: dict[str, Any] = remote.rest_device_info()
+                return device_info
 
-    def _send_key(self, key):
+        return None
+
+    def _send_key(self, key: str) -> None:
         """Send the key using websocket protocol."""
         if key == "KEY_POWEROFF":
             key = "KEY_POWER"
-        self._get_remote().send_key(key)
+        if remote := self._get_remote():
+            remote.send_key(key)
 
-    def _get_remote(self, avoid_open: bool = False):
+    def _get_remote(self, avoid_open: bool = False) -> Remote:
         """Create or return a remote control instance."""
         if self._remote is None:
             # We need to create a new instance to reconnect.
@@ -340,7 +359,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
                 self._remote = None
         return self._remote
 
-    def stop(self):
+    def stop(self) -> None:
         """Stop Bridge."""
         LOGGER.debug("Stopping SamsungTVWSBridge")
         self.close_remote()

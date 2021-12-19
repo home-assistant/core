@@ -1,10 +1,14 @@
 {
     "config": {
+        "abort": {
+            "no_devices_found": "A\u011fda cihaz bulunamad\u0131"
+        },
         "step": {
             "user": {
                 "data": {
                     "id": "Ana bilgisayar kimli\u011fi"
-                }
+                },
+                "title": "Eklemek i\u00e7in bir merkez se\u00e7in"
             }
         }
     }

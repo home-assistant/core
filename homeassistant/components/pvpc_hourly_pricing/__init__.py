@@ -13,6 +13,7 @@ from homeassistant.helpers.entity_registry import (
     async_get,
     async_migrate_entries,
 )
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_POWER,
@@ -41,7 +42,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the electricity price sensor from configuration.yaml."""
     for conf in config.get(DOMAIN, []):
         hass.async_create_task(

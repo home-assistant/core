@@ -1,0 +1,15 @@
+{
+    "config": {
+        "error": {
+            "token_unauthorized": "The token is invalid or no longer authorised."
+        },
+        "step": {
+            "authorize": {
+                "title": "Authorise Home Assistant"
+            },
+            "select_location": {
+                "description": "Please select the SmartThings Location you wish to add to Home Assistant.  We will then open a new window and ask you to login and authorise installation of the Home Assistant integration into the selected location."
+            }
+        }
+    }
+}

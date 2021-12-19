@@ -6,6 +6,7 @@ from forecast_solar import ForecastSolarConnectionError
 from homeassistant.components.forecast_solar.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -17,8 +18,7 @@ async def test_load_unload_config_entry(
 ) -> None:
     """Test the Forecast.Solar configuration entry loading/unloading."""
     mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await async_setup_component(hass, "forecast_solar", {})
 
     assert mock_config_entry.state == ConfigEntryState.LOADED
 

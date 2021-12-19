@@ -1,20 +1,19 @@
 """Support for MySensors switches."""
 from __future__ import annotations
 
-from contextlib import suppress
 from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.components import mysensors
 from homeassistant.components.switch import DOMAIN, SwitchEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from ...config_entries import ConfigEntry
-from ...helpers.dispatcher import async_dispatcher_connect
 from .const import (
     DOMAIN as MYSENSORS_DOMAIN,
     MYSENSORS_DISCOVERY,
@@ -108,18 +107,6 @@ async def async_setup_entry(
 
 class MySensorsSwitch(mysensors.device.MySensorsEntity, SwitchEntity):
     """Representation of the value of a MySensors Switch child node."""
-
-    @property
-    def current_power_w(self) -> float | None:
-        """Return the current power usage in W."""
-        set_req = self.gateway.const.SetReq
-        value = self._values.get(set_req.V_WATT)
-        float_value: float | None = None
-        if value is not None:
-            with suppress(ValueError):
-                float_value = float(value)
-
-        return float_value
 
     @property
     def is_on(self) -> bool:

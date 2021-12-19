@@ -26,7 +26,7 @@ async def test_show_form(hass):
 async def test_invalid_auth(hass):
     """Test that errors are shown when API key is invalid."""
     with patch(
-        "homeassistant.components.freedompro.config_flow.list",
+        "homeassistant.components.freedompro.config_flow.get_list",
         return_value={
             "state": False,
             "code": -201,

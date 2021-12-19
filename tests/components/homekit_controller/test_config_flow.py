@@ -4,12 +4,14 @@ import unittest.mock
 from unittest.mock import AsyncMock, patch
 
 import aiohomekit
+from aiohomekit.exceptions import AuthenticationError
 from aiohomekit.model import Accessories, Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components import zeroconf
 from homeassistant.components.homekit_controller import config_flow
 from homeassistant.components.homekit_controller.const import KNOWN_DEVICES
 from homeassistant.helpers import device_registry
@@ -132,19 +134,20 @@ def get_flow_context(hass, result):
     return flow["context"]
 
 
-def get_device_discovery_info(device, upper_case_props=False, missing_csharp=False):
+def get_device_discovery_info(
+    device, upper_case_props=False, missing_csharp=False
+) -> zeroconf.ZeroconfServiceInfo:
     """Turn a aiohomekit format zeroconf entry into a homeassistant one."""
     record = device.info
-    result = {
-        "host": record["address"],
-        "port": record["port"],
-        "hostname": record["name"],
-        "type": "_hap._tcp.local.",
-        "name": record["name"],
-        "properties": {
+    result = zeroconf.ZeroconfServiceInfo(
+        host=record["address"],
+        hostname=record["name"],
+        name=record["name"],
+        port=record["port"],
+        properties={
             "md": record["md"],
             "pv": record["pv"],
-            "id": device.device_id,
+            zeroconf.ATTR_PROPERTIES_ID: device.device_id,
             "c#": record["c#"],
             "s#": record["s#"],
             "ff": record["ff"],
@@ -152,14 +155,15 @@ def get_device_discovery_info(device, upper_case_props=False, missing_csharp=Fal
             "sf": 0x01,  # record["sf"],
             "sh": "",
         },
-    }
+        type="_hap._tcp.local.",
+    )
 
     if missing_csharp:
-        del result["properties"]["c#"]
+        del result.properties["c#"]
 
     if upper_case_props:
-        result["properties"] = {
-            key.upper(): val for (key, val) in result["properties"].items()
+        result.properties = {
+            key.upper(): val for (key, val) in result.properties.items()
         }
 
     return result
@@ -251,7 +255,7 @@ async def test_pair_already_paired_1(hass, controller):
     discovery_info = get_device_discovery_info(device)
 
     # Flag device as already paired
-    discovery_info["properties"]["sf"] = 0x0
+    discovery_info.properties["sf"] = 0x0
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
@@ -269,7 +273,7 @@ async def test_id_missing(hass, controller):
     discovery_info = get_device_discovery_info(device)
 
     # Remove id from device
-    del discovery_info["properties"]["id"]
+    del discovery_info.properties[zeroconf.ATTR_PROPERTIES_ID]
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
@@ -285,8 +289,8 @@ async def test_discovery_ignored_model(hass, controller):
     """Already paired."""
     device = setup_mock_accessory(controller)
     discovery_info = get_device_discovery_info(device)
-    discovery_info["properties"]["id"] = "AA:BB:CC:DD:EE:FF"
-    discovery_info["properties"]["md"] = "HHKBridge1,1"
+    discovery_info.properties[zeroconf.ATTR_PROPERTIES_ID] = "AA:BB:CC:DD:EE:FF"
+    discovery_info.properties["md"] = "HHKBridge1,1"
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
@@ -313,7 +317,7 @@ async def test_discovery_ignored_hk_bridge(hass, controller):
         connections={(device_registry.CONNECTION_NETWORK_MAC, formatted_mac)},
     )
 
-    discovery_info["properties"]["id"] = "AA:BB:CC:DD:EE:FF"
+    discovery_info.properties[zeroconf.ATTR_PROPERTIES_ID] = "AA:BB:CC:DD:EE:FF"
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
@@ -340,7 +344,7 @@ async def test_discovery_does_not_ignore_non_homekit(hass, controller):
         connections={(device_registry.CONNECTION_NETWORK_MAC, formatted_mac)},
     )
 
-    discovery_info["properties"]["id"] = "AA:BB:CC:DD:EE:FF"
+    discovery_info.properties[zeroconf.ATTR_PROPERTIES_ID] = "AA:BB:CC:DD:EE:FF"
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
@@ -351,8 +355,48 @@ async def test_discovery_does_not_ignore_non_homekit(hass, controller):
     assert result["type"] == "form"
 
 
+async def test_discovery_broken_pairing_flag(hass, controller):
+    """
+    There is already a config entry for the pairing and its pairing flag is wrong in zeroconf.
+
+    We have seen this particular implementation error in 2 different devices.
+    """
+    await controller.add_paired_device(Accessories(), "00:00:00:00:00:00")
+
+    MockConfigEntry(
+        domain="homekit_controller",
+        data={"AccessoryPairingID": "00:00:00:00:00:00"},
+        unique_id="00:00:00:00:00:00",
+    ).add_to_hass(hass)
+
+    # We just added a mock config entry so it must be visible in hass
+    assert len(hass.config_entries.async_entries()) == 1
+
+    device = setup_mock_accessory(controller)
+    discovery_info = get_device_discovery_info(device)
+
+    # Make sure that we are pairable
+    assert discovery_info.properties["sf"] != 0x0
+
+    # Device is discovered
+    result = await hass.config_entries.flow.async_init(
+        "homekit_controller",
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+
+    # Should still be paired.
+    config_entry_count = len(hass.config_entries.async_entries())
+    assert config_entry_count == 1
+
+    # Even though discovered as pairable, we bail out as already paired.
+    assert result["reason"] == "already_paired"
+
+
 async def test_discovery_invalid_config_entry(hass, controller):
     """There is already a config entry for the pairing id but it's invalid."""
+    pairing = await controller.add_paired_device(Accessories(), "00:00:00:00:00:00")
+
     MockConfigEntry(
         domain="homekit_controller",
         data={"AccessoryPairingID": "00:00:00:00:00:00"},
@@ -366,11 +410,16 @@ async def test_discovery_invalid_config_entry(hass, controller):
     discovery_info = get_device_discovery_info(device)
 
     # Device is discovered
-    result = await hass.config_entries.flow.async_init(
-        "homekit_controller",
-        context={"source": config_entries.SOURCE_ZEROCONF},
-        data=discovery_info,
-    )
+    with patch.object(
+        pairing,
+        "list_accessories_and_characteristics",
+        side_effect=AuthenticationError("Invalid pairing keys"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            "homekit_controller",
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=discovery_info,
+        )
 
     # Discovery of a HKID that is in a pairable state but for which there is
     # already a config entry - in that case the stale config entry is
@@ -399,7 +448,7 @@ async def test_discovery_already_configured(hass, controller):
     discovery_info = get_device_discovery_info(device)
 
     # Set device as already paired
-    discovery_info["properties"]["sf"] = 0x00
+    discovery_info.properties["sf"] = 0x00
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
@@ -409,8 +458,8 @@ async def test_discovery_already_configured(hass, controller):
     )
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
-    assert entry.data["AccessoryIP"] == discovery_info["host"]
-    assert entry.data["AccessoryPort"] == discovery_info["port"]
+    assert entry.data["AccessoryIP"] == discovery_info.host
+    assert entry.data["AccessoryPort"] == discovery_info.port
 
 
 async def test_discovery_already_configured_update_csharp(hass, controller):
@@ -435,9 +484,9 @@ async def test_discovery_already_configured_update_csharp(hass, controller):
     discovery_info = get_device_discovery_info(device)
 
     # Set device as already paired
-    discovery_info["properties"]["sf"] = 0x00
-    discovery_info["properties"]["c#"] = 99999
-    discovery_info["properties"]["id"] = "AA:BB:CC:DD:EE:FF"
+    discovery_info.properties["sf"] = 0x00
+    discovery_info.properties["c#"] = 99999
+    discovery_info.properties[zeroconf.ATTR_PROPERTIES_ID] = "AA:BB:CC:DD:EE:FF"
 
     # Device is discovered
     result = await hass.config_entries.flow.async_init(
@@ -449,8 +498,8 @@ async def test_discovery_already_configured_update_csharp(hass, controller):
     assert result["reason"] == "already_configured"
     await hass.async_block_till_done()
 
-    assert entry.data["AccessoryIP"] == discovery_info["host"]
-    assert entry.data["AccessoryPort"] == discovery_info["port"]
+    assert entry.data["AccessoryIP"] == discovery_info.host
+    assert entry.data["AccessoryPort"] == discovery_info.port
     assert connection_mock.async_refresh_entity_map.await_count == 1
 
 

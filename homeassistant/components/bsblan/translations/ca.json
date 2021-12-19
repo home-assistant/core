@@ -16,7 +16,7 @@
                     "port": "Port",
                     "username": "Nom d'usuari"
                 },
-                "description": "Configura un dispositiu BSB-Lan per a integrar-lo amb Home Assistant.",
+                "description": "Configura la integraci\u00f3 d'un dispositiu BSB-Lan amb Home Assistant.",
                 "title": "Connexi\u00f3 amb dispositiu BSB-Lan"
             }
         }

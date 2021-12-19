@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from aioesphomeapi import BinarySensorInfo, BinarySensorState
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import DEVICE_CLASSES, BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -26,10 +26,6 @@ async def async_setup_entry(
     )
 
 
-# Pylint gets confused with the EsphomeEntity generics -> let mypy handle member checking
-# pylint: disable=no-member
-
-
 class EsphomeBinarySensor(
     EsphomeEntity[BinarySensorInfo, BinarySensorState], BinarySensorEntity
 ):
@@ -49,8 +45,10 @@ class EsphomeBinarySensor(
         return self._state.state
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> str | None:
         """Return the class of this device, from component DEVICE_CLASSES."""
+        if self._static_info.device_class not in DEVICE_CLASSES:
+            return None
         return self._static_info.device_class
 
     @property

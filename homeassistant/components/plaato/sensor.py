@@ -4,7 +4,7 @@ from __future__ import annotations
 from pyplaato.models.device import PlaatoDevice
 from pyplaato.plaato import PlaatoKeg
 
-from homeassistant.components.sensor import DEVICE_CLASS_TEMPERATURE, SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -63,23 +63,23 @@ class PlaatoSensor(PlaatoEntity, SensorEntity):
     """Representation of a Plaato Sensor."""
 
     @property
-    def device_class(self) -> str | None:
-        """Return the class of this device, from component DEVICE_CLASSES."""
+    def device_class(self) -> SensorDeviceClass | None:
+        """Return the class of this device, from SensorDeviceClass."""
         if (
             self._coordinator is not None
             and self._sensor_type == PlaatoKeg.Pins.TEMPERATURE
         ):
-            return DEVICE_CLASS_TEMPERATURE
+            return SensorDeviceClass.TEMPERATURE
         if self._sensor_type == ATTR_TEMP:
-            return DEVICE_CLASS_TEMPERATURE
+            return SensorDeviceClass.TEMPERATURE
         return None
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._sensor_data.sensors.get(self._sensor_type)
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._sensor_data.get_unit_of_measurement(self._sensor_type)

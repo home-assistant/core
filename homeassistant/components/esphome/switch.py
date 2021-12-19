@@ -29,17 +29,11 @@ async def async_setup_entry(
 
 
 # https://github.com/PyCQA/pylint/issues/3150 for all @esphome_state_property
-# Pylint gets confused with the EsphomeEntity generics -> let mypy handle member checking
-# pylint: disable=invalid-overridden-method,no-member
+# pylint: disable=invalid-overridden-method
 
 
 class EsphomeSwitch(EsphomeEntity[SwitchInfo, SwitchState], SwitchEntity):
     """A switch implementation for ESPHome."""
-
-    @property
-    def icon(self) -> str:
-        """Return the icon."""
-        return self._static_info.icon
 
     @property
     def assumed_state(self) -> bool:

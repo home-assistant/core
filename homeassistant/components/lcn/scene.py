@@ -8,8 +8,9 @@ import pypck
 from homeassistant.components.scene import DOMAIN as DOMAIN_SCENE, Scene
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_DOMAIN, CONF_ENTITIES, CONF_SCENE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
 from . import LcnEntity
 from .const import (
@@ -25,7 +26,7 @@ PARALLEL_UPDATES = 0
 
 
 def create_lcn_scene_entity(
-    hass: HomeAssistantType, entity_config: ConfigType, config_entry: ConfigEntry
+    hass: HomeAssistant, entity_config: ConfigType, config_entry: ConfigEntry
 ) -> LcnEntity:
     """Set up an entity for this domain."""
     device_connection = get_device_connection(
@@ -36,7 +37,7 @@ def create_lcn_scene_entity(
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:

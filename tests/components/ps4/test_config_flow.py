@@ -64,6 +64,7 @@ MOCK_MANUAL = {"Config Mode": "Manual Entry", CONF_IP_ADDRESS: MOCK_HOST}
 MOCK_LOCATION = location.LocationInfo(
     "0.0.0.0",
     "US",
+    "USD",
     "CA",
     "California",
     "San Diego",

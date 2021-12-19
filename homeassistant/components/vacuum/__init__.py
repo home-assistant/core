@@ -1,4 +1,5 @@
 """Support for vacuum cleaner robots (botvacs)."""
+from dataclasses import dataclass
 from datetime import timedelta
 from functools import partial
 import logging
@@ -24,7 +25,12 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA_BASE,
     make_entity_service_schema,
 )
-from homeassistant.helpers.entity import Entity, ToggleEntity
+from homeassistant.helpers.entity import (
+    Entity,
+    EntityDescription,
+    ToggleEntity,
+    ToggleEntityDescription,
+)
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.loader import bind_hass
@@ -34,6 +40,7 @@ from homeassistant.loader import bind_hass
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "vacuum"
+ENTITY_ID_FORMAT = DOMAIN + ".{}"
 SCAN_INTERVAL = timedelta(seconds=20)
 
 ATTR_BATTERY_ICON = "battery_icon"
@@ -258,8 +265,15 @@ class _BaseVacuum(Entity):
         )
 
 
+@dataclass
+class VacuumEntityDescription(ToggleEntityDescription):
+    """A class that describes vacuum entities."""
+
+
 class VacuumEntity(_BaseVacuum, ToggleEntity):
     """Representation of a vacuum cleaner robot."""
+
+    entity_description: VacuumEntityDescription
 
     @property
     def status(self):
@@ -327,19 +341,15 @@ class VacuumEntity(_BaseVacuum, ToggleEntity):
         """Not supported."""
 
 
-class VacuumDevice(VacuumEntity):
-    """Representation of a vacuum (for backwards compatibility)."""
-
-    def __init_subclass__(cls, **kwargs):
-        """Print deprecation warning."""
-        super().__init_subclass__(**kwargs)
-        _LOGGER.warning(
-            "VacuumDevice is deprecated, modify %s to extend VacuumEntity", cls.__name__
-        )
+@dataclass
+class StateVacuumEntityDescription(EntityDescription):
+    """A class that describes vacuum entities."""
 
 
 class StateVacuumEntity(_BaseVacuum):
     """Representation of a vacuum cleaner robot that supports states."""
+
+    entity_description: StateVacuumEntityDescription
 
     @property
     def state(self):
@@ -385,15 +395,3 @@ class StateVacuumEntity(_BaseVacuum):
 
     async def async_toggle(self, **kwargs):
         """Not supported."""
-
-
-class StateVacuumDevice(StateVacuumEntity):
-    """Representation of a vacuum (for backwards compatibility)."""
-
-    def __init_subclass__(cls, **kwargs):
-        """Print deprecation warning."""
-        super().__init_subclass__(**kwargs)
-        _LOGGER.warning(
-            "StateVacuumDevice is deprecated, modify %s to extend StateVacuumEntity",
-            cls.__name__,
-        )

@@ -2,6 +2,7 @@
 import logging
 
 from fritzconnection.core.exceptions import FritzConnectionException, FritzSecurityError
+from fritzconnection.core.logger import fritzlogger
 from requests.exceptions import ConnectionError as RequestsConnectionError
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -18,6 +19,13 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+level = _LOGGER.getEffectiveLevel()
+_LOGGER.info(
+    "Setting logging level of fritzconnection: %s", logging.getLevelName(level)
+)
+fritzlogger.set_level(level)
+fritzlogger.enable()
 
 
 async def async_setup_entry(hass, config_entry):

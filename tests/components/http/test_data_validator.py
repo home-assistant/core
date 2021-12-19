@@ -1,4 +1,5 @@
 """Test data validator decorator."""
+from http import HTTPStatus
 from unittest.mock import Mock
 
 from aiohttp import web
@@ -12,6 +13,7 @@ async def get_client(aiohttp_client, validator):
     """Generate a client that hits a view decorated with validator."""
     app = web.Application()
     app["hass"] = Mock(is_stopping=False)
+    app["allow_configured_cors"] = lambda _: None
 
     class TestView(HomeAssistantView):
         url = "/"
@@ -35,13 +37,13 @@ async def test_validator(aiohttp_client):
     )
 
     resp = await client.post("/", json={"test": "bla"})
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
 
     resp = await client.post("/", json={"test": 100})
-    assert resp.status == 400
+    assert resp.status == HTTPStatus.BAD_REQUEST
 
     resp = await client.post("/")
-    assert resp.status == 400
+    assert resp.status == HTTPStatus.BAD_REQUEST
 
 
 async def test_validator_allow_empty(aiohttp_client):
@@ -61,10 +63,10 @@ async def test_validator_allow_empty(aiohttp_client):
     )
 
     resp = await client.post("/", json={"test": "bla"})
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
 
     resp = await client.post("/", json={"test": 100})
-    assert resp.status == 400
+    assert resp.status == HTTPStatus.BAD_REQUEST
 
     resp = await client.post("/")
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK

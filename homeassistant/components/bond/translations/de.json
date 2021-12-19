@@ -19,7 +19,7 @@
             },
             "user": {
                 "data": {
-                    "access_token": "Zugriffstoken",
+                    "access_token": "Zugangstoken",
                     "host": "Host"
                 }
             }

@@ -53,7 +53,7 @@ class KaiterraApiData:
         """Get the data from Kaiterra API."""
 
         try:
-            with async_timeout.timeout(10):
+            async with async_timeout.timeout(10):
                 data = await self._api.get_latest_sensor_readings(self._devices)
         except (ClientResponseError, asyncio.TimeoutError):
             _LOGGER.debug("Couldn't fetch data from Kaiterra API")
@@ -72,9 +72,7 @@ class KaiterraApiData:
 
                 aqi, main_pollutant = None, None
                 for sensor_name, sensor in device.items():
-                    points = sensor.get("points")
-
-                    if not points:
+                    if not (points := sensor.get("points")):
                         continue
 
                     point = points[0]

@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
             "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
+            "cannot_connect": "Impossibile connettersi",
             "not_konn_panel": "Non \u00e8 un dispositivo Konnected.io riconosciuto",
             "unknown": "Errore imprevisto"
         },

@@ -1,4 +1,6 @@
 """Support to the Logi Circle cameras."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -12,6 +14,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 
 from .const import (
     ATTRIBUTION,
@@ -114,15 +117,15 @@ class LogiCam(Camera):
         return SUPPORT_ON_OFF
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return information about the device."""
-        return {
-            "name": self._camera.name,
-            "identifiers": {(LOGI_CIRCLE_DOMAIN, self._camera.id)},
-            "model": self._camera.model_name,
-            "sw_version": self._camera.firmware,
-            "manufacturer": DEVICE_BRAND,
-        }
+        return DeviceInfo(
+            identifiers={(LOGI_CIRCLE_DOMAIN, self._camera.id)},
+            manufacturer=DEVICE_BRAND,
+            model=self._camera.model_name,
+            name=self._camera.name,
+            sw_version=self._camera.firmware,
+        )
 
     @property
     def extra_state_attributes(self):
@@ -142,7 +145,9 @@ class LogiCam(Camera):
 
         return state
 
-    async def async_camera_image(self):
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return a still image from the camera."""
         return await self._camera.live_stream.download_jpeg()
 

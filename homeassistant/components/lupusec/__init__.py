@@ -1,4 +1,5 @@
 """Support for Lupusec Home Security system."""
+# pylint: disable=import-error
 import logging
 
 import lupupy

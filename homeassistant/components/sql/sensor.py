@@ -51,8 +51,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the SQL sensor platform."""
-    db_url = config.get(CONF_DB_URL)
-    if not db_url:
+    if not (db_url := config.get(CONF_DB_URL)):
         db_url = DEFAULT_URL.format(hass_config_path=hass.config.path(DEFAULT_DB_FILE))
 
     sess = None
@@ -123,12 +122,12 @@ class SQLSensor(SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the query's current state."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._unit_of_measurement
 

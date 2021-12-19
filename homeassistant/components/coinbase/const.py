@@ -1,6 +1,7 @@
 """Constants used for Coinbase."""
 
 CONF_CURRENCIES = "account_balance_currencies"
+CONF_EXCHANGE_BASE = "exchange_base"
 CONF_EXCHANGE_RATES = "exchange_rate_currencies"
 CONF_OPTIONS = "options"
 DOMAIN = "coinbase"
@@ -17,6 +18,8 @@ API_ACCOUNT_NATIVE_BALANCE = "native_balance"
 API_ACCOUNT_NAME = "name"
 API_ACCOUNTS_DATA = "data"
 API_RATES = "rates"
+API_RESOURCE_TYPE = "type"
+API_TYPE_VAULT = "vault"
 
 WALLETS = {
     "1INCH": "1INCH",
@@ -33,6 +36,7 @@ WALLETS = {
     "AOA": "AOA",
     "ARS": "ARS",
     "ATOM": "ATOM",
+    "AUCTION": "AUCTION",
     "AUD": "AUD",
     "AWG": "AWG",
     "AZN": "AZN",
@@ -67,6 +71,7 @@ WALLETS = {
     "CHZ": "CHZ",
     "CLF": "CLF",
     "CLP": "CLP",
+    "CLV": "CLV",
     "CNH": "CNH",
     "CNY": "CNY",
     "COMP": "COMP",
@@ -96,6 +101,7 @@ WALLETS = {
     "ETH": "ETH",
     "ETH2": "ETH2",
     "EUR": "EUR",
+    "FET": "FET",
     "FIL": "FIL",
     "FJD": "FJD",
     "FKP": "FKP",
@@ -187,9 +193,11 @@ WALLETS = {
     "PHP": "PHP",
     "PKR": "PKR",
     "PLN": "PLN",
+    "POLY": "POLY",
     "PYG": "PYG",
     "QAR": "QAR",
     "QNT": "QNT",
+    "RLY": "RLY",
     "REN": "REN",
     "REP": "REP",
     "REPV2": "REPV2",
@@ -203,6 +211,7 @@ WALLETS = {
     "SCR": "SCR",
     "SEK": "SEK",
     "SGD": "SGD",
+    "SHIB": "SHIB",
     "SHP": "SHP",
     "SKL": "SKL",
     "SLL": "SLL",
@@ -276,6 +285,7 @@ RATES = {
     "AOA": "AOA",
     "ARS": "ARS",
     "ATOM": "ATOM",
+    "AUCTION": "AUCTION",
     "AUD": "AUD",
     "AWG": "AWG",
     "AZN": "AZN",
@@ -308,6 +318,7 @@ RATES = {
     "CHF": "CHF",
     "CLF": "CLF",
     "CLP": "CLP",
+    "CLV": "CLV",
     "CNH": "CNH",
     "CNY": "CNY",
     "COMP": "COMP",
@@ -334,6 +345,7 @@ RATES = {
     "ETH": "ETH",
     "ETH2": "ETH2",
     "EUR": "EUR",
+    "FET": "FET",
     "FIL": "FIL",
     "FJD": "FJD",
     "FKP": "FKP",
@@ -419,8 +431,10 @@ RATES = {
     "PHP": "PHP",
     "PKR": "PKR",
     "PLN": "PLN",
+    "POLY": "POLY",
     "PYG": "PYG",
     "QAR": "QAR",
+    "RLY": "RLY",
     "REN": "REN",
     "REP": "REP",
     "RON": "RON",
@@ -432,6 +446,7 @@ RATES = {
     "SCR": "SCR",
     "SEK": "SEK",
     "SGD": "SGD",
+    "SHIB": "SHIB",
     "SHP": "SHP",
     "SKL": "SKL",
     "SLL": "SLL",

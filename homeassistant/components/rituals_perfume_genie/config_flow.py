@@ -1,5 +1,8 @@
 """Config flow for Rituals Perfume Genie integration."""
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 from aiohttp import ClientResponseError
 from pyrituals import Account, AuthenticationException
@@ -27,7 +30,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)

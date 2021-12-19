@@ -10,10 +10,11 @@
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3",
             "cloud_credentials_incomplete": "Credencials del n\u00favol incompletes, introdueix el nom d'usuari, la contrasenya i el pa\u00eds",
-            "cloud_login_error": "No s'ha pogut iniciar sessi\u00f3 a Xioami Miio Cloud, comprova les credencials.",
+            "cloud_login_error": "No s'ha pogut iniciar sessi\u00f3 a Xiaomi Miio Cloud, comprova les credencials.",
             "cloud_no_devices": "No s'han trobat dispositius en aquest compte al n\u00favol de Xiaomi Miio.",
             "no_device_selected": "No hi ha cap dispositiu seleccionat, selecciona'n un.",
-            "unknown_device": "No es reconeix el model del dispositiu, no es pot configurar el dispositiu mitjan\u00e7ant el flux de configuraci\u00f3."
+            "unknown_device": "No es reconeix el model del dispositiu, no es pot configurar el dispositiu mitjan\u00e7ant el flux de configuraci\u00f3.",
+            "wrong_token": "Error de verificaci\u00f3, token erroni"
         },
         "flow_title": "{name}",
         "step": {

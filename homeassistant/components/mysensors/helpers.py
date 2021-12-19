@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from collections.abc import Callable
 from enum import IntEnum
 import logging
-from typing import Callable
 
 from mysensors import BaseAsyncGateway, Message
 from mysensors.sensor import ChildSensor

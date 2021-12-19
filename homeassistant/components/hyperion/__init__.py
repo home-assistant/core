@@ -2,18 +2,16 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from contextlib import suppress
 import logging
-from typing import Any, Callable, cast
+from typing import Any, cast
 
 from awesomeversion import AwesomeVersion
 from hyperion import client, const as hyperion_const
 
-from homeassistant.components.camera.const import DOMAIN as CAMERA_DOMAIN
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -35,7 +33,7 @@ from .const import (
     SIGNAL_INSTANCE_REMOVE,
 )
 
-PLATFORMS = [LIGHT_DOMAIN, SWITCH_DOMAIN, CAMERA_DOMAIN]
+PLATFORMS = [Platform.LIGHT, Platform.SWITCH, Platform.CAMERA]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -273,10 +271,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def setup_then_listen() -> None:
         await asyncio.gather(
-            *[
+            *(
                 hass.config_entries.async_forward_entry_setup(entry, platform)
                 for platform in PLATFORMS
-            ]
+            )
         )
         assert hyperion_client
         if hyperion_client.instances is not None:
@@ -306,12 +304,12 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 
         # Disconnect the shared instance clients.
         await asyncio.gather(
-            *[
+            *(
                 config_data[CONF_INSTANCE_CLIENTS][
                     instance_num
                 ].async_client_disconnect()
                 for instance_num in config_data[CONF_INSTANCE_CLIENTS]
-            ]
+            )
         )
 
         # Disconnect the root client.

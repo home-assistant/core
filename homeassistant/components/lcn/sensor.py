@@ -1,6 +1,7 @@
 """Support for LCN sensors."""
 from __future__ import annotations
 
+from itertools import chain
 from typing import cast
 
 import pypck
@@ -14,8 +15,9 @@ from homeassistant.const import (
     CONF_SOURCE,
     CONF_UNIT_OF_MEASUREMENT,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
 from . import LcnEntity
 from .const import (
@@ -30,16 +32,15 @@ from .helpers import DeviceConnectionType, InputType, get_device_connection
 
 
 def create_lcn_sensor_entity(
-    hass: HomeAssistantType, entity_config: ConfigType, config_entry: ConfigEntry
+    hass: HomeAssistant, entity_config: ConfigType, config_entry: ConfigEntry
 ) -> LcnEntity:
     """Set up an entity for this domain."""
     device_connection = get_device_connection(
         hass, entity_config[CONF_ADDRESS], config_entry
     )
 
-    if (
-        entity_config[CONF_DOMAIN_DATA][CONF_SOURCE]
-        in VARIABLES + SETPOINTS + THRESHOLDS + S0_INPUTS
+    if entity_config[CONF_DOMAIN_DATA][CONF_SOURCE] in chain(
+        VARIABLES, SETPOINTS, THRESHOLDS, S0_INPUTS
     ):
         return LcnVariableSensor(
             entity_config, config_entry.entry_id, device_connection
@@ -49,7 +50,7 @@ def create_lcn_sensor_entity(
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
@@ -92,12 +93,12 @@ class LcnVariableSensor(LcnEntity, SensorEntity):
             await self.device_connection.cancel_status_request_handler(self.variable)
 
     @property
-    def state(self) -> str | None:
+    def native_value(self) -> str | None:
         """Return the state of the entity."""
         return self._value
 
     @property
-    def unit_of_measurement(self) -> str:
+    def native_unit_of_measurement(self) -> str:
         """Return the unit of measurement of this entity, if any."""
         return cast(str, self.unit.value)
 
@@ -144,7 +145,7 @@ class LcnLedLogicSensor(LcnEntity, SensorEntity):
             await self.device_connection.cancel_status_request_handler(self.source)
 
     @property
-    def state(self) -> str | None:
+    def native_value(self) -> str | None:
         """Return the state of the entity."""
         return self._value
 

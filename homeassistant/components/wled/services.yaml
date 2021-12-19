@@ -34,14 +34,13 @@ effect:
           max: 255
     reverse:
       name: Reverse effect
-      description:
-        Reverse the effect. Either true to reverse or false otherwise.
+      description: Reverse the effect. Either true to reverse or false otherwise.
       default: false
       selector:
         boolean:
 
 preset:
-  name: Set preset
+  name: Set preset (deprecated)
   description: Set a preset for the WLED device.
   target:
     entity:

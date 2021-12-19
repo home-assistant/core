@@ -48,7 +48,12 @@ ALERT_SCHEMA = vol.Schema(
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_STATE, default=STATE_ON): cv.string,
-        vol.Required(CONF_REPEAT): vol.All(cv.ensure_list, [vol.Coerce(float)]),
+        vol.Required(CONF_REPEAT): vol.All(
+            cv.ensure_list,
+            [vol.Coerce(float)],
+            # Minimum delay is 1 second = 0.016 minutes
+            [vol.Range(min=0.016)],
+        ),
         vol.Required(CONF_CAN_ACK, default=DEFAULT_CAN_ACK): cv.boolean,
         vol.Required(CONF_SKIP_FIRST, default=DEFAULT_SKIP_FIRST): cv.boolean,
         vol.Optional(CONF_ALERT_MESSAGE): cv.template,
@@ -206,7 +211,7 @@ class Alert(ToggleEntity):
         )
 
     @property
-    def state(self):
+    def state(self):  # pylint: disable=overridden-final-method
         """Return the alert status."""
         if self._firing:
             if self._ack:
@@ -216,8 +221,7 @@ class Alert(ToggleEntity):
 
     async def watched_entity_change(self, ev):
         """Determine if the alert should start or stop."""
-        to_state = ev.data.get("new_state")
-        if to_state is None:
+        if (to_state := ev.data.get("new_state")) is None:
             return
         _LOGGER.debug("Watched entity (%s) has changed", ev.data.get("entity_id"))
         if to_state.state == self._alert_state and not self._firing:

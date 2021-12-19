@@ -7,6 +7,7 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -29,21 +30,18 @@ class Device(CoordinatorEntity, SwitchEntity):
     def __init__(self, hass, api_key, device, coordinator):
         """Initialize the Freedompro switch."""
         super().__init__(coordinator)
-        self._hass = hass
-        self._session = aiohttp_client.async_get_clientsession(self._hass)
+        self._session = aiohttp_client.async_get_clientsession(hass)
         self._api_key = api_key
         self._attr_name = device["name"]
         self._attr_unique_id = device["uid"]
-        self._type = device["type"]
-        self._characteristics = device["characteristics"]
-        self._attr_device_info = {
-            "name": self._attr_name,
-            "identifiers": {
-                (DOMAIN, self._attr_unique_id),
+        self._attr_device_info = DeviceInfo(
+            identifiers={
+                (DOMAIN, self.unique_id),
             },
-            "model": self._type,
-            "manufacturer": "Freedompro",
-        }
+            manufacturer="Freedompro",
+            model=device["type"],
+            name=self.name,
+        )
         self._attr_is_on = False
 
     @callback
@@ -53,7 +51,7 @@ class Device(CoordinatorEntity, SwitchEntity):
             (
                 device
                 for device in self.coordinator.data
-                if device["uid"] == self._attr_unique_id
+                if device["uid"] == self.unique_id
             ),
             None,
         )
@@ -75,7 +73,7 @@ class Device(CoordinatorEntity, SwitchEntity):
         await put_state(
             self._session,
             self._api_key,
-            self._attr_unique_id,
+            self.unique_id,
             payload,
         )
         await self.coordinator.async_request_refresh()
@@ -87,7 +85,7 @@ class Device(CoordinatorEntity, SwitchEntity):
         await put_state(
             self._session,
             self._api_key,
-            self._attr_unique_id,
+            self.unique_id,
             payload,
         )
         await self.coordinator.async_request_refresh()

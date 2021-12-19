@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "Der Dienst ist bereits konfiguriert",
             "reauth_successful": "Die erneute Authentifizierung war erfolgreich",
-            "unknown": "Unerwateter Fehler"
+            "unknown": "Unerwarteter Fehler"
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen",
@@ -17,7 +17,7 @@
             },
             "user": {
                 "data": {
-                    "api_key": "API Schl\u00fcssel",
+                    "api_key": "API-Schl\u00fcssel",
                     "base_path": "Pfad zur API",
                     "host": "Host",
                     "port": "Port",

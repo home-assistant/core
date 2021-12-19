@@ -6,6 +6,15 @@
         },
         "error": {
             "not_found": "Nem tal\u00e1lhat\u00f3 eszk\u00f6z a h\u00e1l\u00f3zaton"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "code": "\u00c1llom\u00e1s k\u00f3dja"
+                },
+                "description": "Adja meg a meteorol\u00f3giai \u00e1llom\u00e1s k\u00f3dj\u00e1t (pl. ESCAT4300000043206B)",
+                "title": "Meteoklimatikus"
+            }
         }
     }
 }

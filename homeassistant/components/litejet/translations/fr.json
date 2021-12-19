@@ -15,5 +15,15 @@
                 "title": "Connectez-vous \u00e0 LiteJet"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "default_transition": "Transition par d\u00e9faut (secondes)"
+                },
+                "title": "Configurer LiteJet"
+            }
+        }
     }
 }

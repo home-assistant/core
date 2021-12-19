@@ -59,3 +59,13 @@ resume_watering:
       example: "Main House"
       selector:
         text:
+stop_watering:
+  name: Stop watering
+  description: Stop any currently running zones or schedules.
+  fields:
+    devices:
+      name: Devices
+      description: Name of controllers to stop. Defaults to all controllers on the account if not provided.
+      example: "Main House"
+      selector:
+        text:

@@ -8,9 +8,10 @@ from roombapy.getpassword import RoombaPassword
 import voluptuous as vol
 
 from homeassistant import config_entries, core
-from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS
+from homeassistant.components import dhcp
 from homeassistant.const import CONF_DELAY, CONF_HOST, CONF_NAME, CONF_PASSWORD
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 
 from . import CannotConnect, async_connect_or_timeout, async_disconnect_or_timeout
 from .const import (
@@ -77,15 +78,15 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 
-    async def async_step_dhcp(self, discovery_info):
+    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle dhcp discovery."""
-        self._async_abort_entries_match({CONF_HOST: discovery_info[IP_ADDRESS]})
+        self._async_abort_entries_match({CONF_HOST: discovery_info.ip})
 
-        if not discovery_info[HOSTNAME].startswith(("irobot-", "roomba-")):
+        if not discovery_info.hostname.startswith(("irobot-", "roomba-")):
             return self.async_abort(reason="not_irobot_device")
 
-        self.host = discovery_info[IP_ADDRESS]
-        self.blid = _async_blid_from_hostname(discovery_info[HOSTNAME])
+        self.host = discovery_info.ip
+        self.blid = _async_blid_from_hostname(discovery_info.hostname)
         await self.async_set_unique_id(self.blid)
         self._abort_if_unique_id_configured(updates={CONF_HOST: self.host})
 
@@ -175,17 +176,20 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="manual",
                 description_placeholders={AUTH_HELP_URL_KEY: AUTH_HELP_URL_VALUE},
                 data_schema=vol.Schema(
-                    {
-                        vol.Required(CONF_HOST, default=self.host): str,
-                        vol.Required(CONF_BLID, default=self.blid): str,
-                    }
+                    {vol.Required(CONF_HOST, default=self.host): str}
                 ),
             )
 
         self._async_abort_entries_match({CONF_HOST: user_input["host"]})
 
         self.host = user_input[CONF_HOST]
-        self.blid = user_input[CONF_BLID].upper()
+
+        devices = await _async_discover_roombas(self.hass, self.host)
+        if not devices:
+            return self.async_abort(reason="cannot_connect")
+        self.blid = devices[0].blid
+        self.name = devices[0].robot_name
+
         await self.async_set_unique_id(self.blid, raise_on_progress=False)
         self._abort_if_unique_id_configured()
         return await self.async_step_link()

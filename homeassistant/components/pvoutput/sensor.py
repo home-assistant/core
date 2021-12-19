@@ -1,4 +1,6 @@
 """Support for getting collected information from PVOutput."""
+from __future__ import annotations
+
 from collections import namedtuple
 from datetime import timedelta
 import logging
@@ -6,7 +8,12 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.rest.data import RestData
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.const import (
     ATTR_DATE,
     ATTR_TEMPERATURE,
@@ -14,12 +21,13 @@ from homeassistant.const import (
     ATTR_VOLTAGE,
     CONF_API_KEY,
     CONF_NAME,
+    ENERGY_WATT_HOUR,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
-_ENDPOINT = "http://pvoutput.org/service/r2/getstatus.jsp"
+_ENDPOINT = "https://pvoutput.org/service/r2/getstatus.jsp"
 
 ATTR_ENERGY_GENERATION = "energy_generation"
 ATTR_POWER_GENERATION = "power_generation"
@@ -66,10 +74,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class PvoutputSensor(SensorEntity):
     """Representation of a PVOutput sensor."""
 
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
+    _attr_device_class = SensorDeviceClass.ENERGY
+    _attr_native_unit_of_measurement = ENERGY_WATT_HOUR
+
     def __init__(self, rest, name):
         """Initialize a PVOutput sensor."""
         self.rest = rest
-        self._name = name
+        self._attr_name = name
         self.pvcoutput = None
         self.status = namedtuple(
             "status",
@@ -87,12 +99,7 @@ class PvoutputSensor(SensorEntity):
         )
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         if self.pvcoutput is not None:
             return self.pvcoutput.energy_generation
@@ -125,6 +132,7 @@ class PvoutputSensor(SensorEntity):
     def _async_update_from_rest_data(self):
         """Update state from the rest data."""
         try:
+            # https://pvoutput.org/help/api_specification.html#get-status-service
             self.pvcoutput = self.status._make(self.rest.data.split(","))
         except TypeError:
             self.pvcoutput = None

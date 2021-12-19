@@ -1,6 +1,8 @@
 """Config flow to configure zone component."""
 from __future__ import annotations
 
+from typing import Any
+
 from iaqualink import AqualinkClient, AqualinkLoginException
 import voluptuous as vol
 
@@ -16,7 +18,7 @@ class AqualinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(self, user_input: ConfigType | None = None):
+    async def async_step_user(self, user_input: dict[str, Any] | None = None):
         """Handle a flow start."""
         # Supporting a single account.
         entries = self._async_current_entries()

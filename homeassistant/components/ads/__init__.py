@@ -307,7 +307,7 @@ class AdsEntity(Entity):
             self._ads_hub.add_device_notification, ads_var, plctype, update
         )
         try:
-            with async_timeout.timeout(10):
+            async with async_timeout.timeout(10):
                 await self._event.wait()
         except asyncio.TimeoutError:
             _LOGGER.debug("Variable %s: Timeout during first update", ads_var)

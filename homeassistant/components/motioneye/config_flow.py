@@ -1,7 +1,6 @@
 """Config flow for motionEye integration."""
 from __future__ import annotations
 
-import logging
 from typing import Any, Dict, cast
 
 from motioneye_client.client import (
@@ -11,6 +10,7 @@ from motioneye_client.client import (
 )
 import voluptuous as vol
 
+from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     ConfigEntry,
@@ -21,11 +21,13 @@ from homeassistant.const import CONF_SOURCE, CONF_URL, CONF_WEBHOOK_ID
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import create_motioneye_client
 from .const import (
     CONF_ADMIN_PASSWORD,
     CONF_ADMIN_USERNAME,
+    CONF_STREAM_URL_TEMPLATE,
     CONF_SURVEILLANCE_PASSWORD,
     CONF_SURVEILLANCE_USERNAME,
     CONF_WEBHOOK_SET,
@@ -34,8 +36,6 @@ from .const import (
     DEFAULT_WEBHOOK_SET_OVERWRITE,
     DOMAIN,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -114,6 +114,7 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
             admin_password=user_input.get(CONF_ADMIN_PASSWORD),
             surveillance_username=user_input.get(CONF_SURVEILLANCE_USERNAME),
             surveillance_password=user_input.get(CONF_SURVEILLANCE_PASSWORD),
+            session=async_get_clientsession(self.hass),
         )
 
         errors = {}
@@ -162,9 +163,9 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a reauthentication flow."""
         return await self.async_step_user(config_data)
 
-    async def async_step_hassio(self, discovery_info: dict[str, Any]) -> FlowResult:
+    async def async_step_hassio(self, discovery_info: HassioServiceInfo) -> FlowResult:
         """Handle Supervisor discovery."""
-        self._hassio_discovery = discovery_info
+        self._hassio_discovery = discovery_info.config
         await self._async_handle_discovery_without_unique_id()
 
         return await self.async_step_hassio_confirm()
@@ -218,5 +219,20 @@ class MotionEyeOptionsFlow(OptionsFlow):
                 ),
             ): bool,
         }
+
+        if self.show_advanced_options:
+            # The input URL is not validated as being a URL, to allow for the possibility
+            # the template input won't be a valid URL until after it's rendered.
+            schema.update(
+                {
+                    vol.Required(
+                        CONF_STREAM_URL_TEMPLATE,
+                        default=self._config_entry.options.get(
+                            CONF_STREAM_URL_TEMPLATE,
+                            "",
+                        ),
+                    ): str
+                }
+            )
 
         return self.async_show_form(step_id="init", data_schema=vol.Schema(schema))

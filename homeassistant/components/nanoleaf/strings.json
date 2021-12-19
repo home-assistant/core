@@ -1,0 +1,28 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        }
+      },
+      "link": {
+        "title": "Link Nanoleaf",
+        "description": "Press and hold the power button on your Nanoleaf for 5 seconds until the button LEDs start flashing, then click **SUBMIT** within 30 seconds."
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "not_allowing_new_tokens": "Nanoleaf is not allowing new tokens, follow the instructions above.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_token": "[%key:common::config_flow::error::invalid_access_token%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  }
+}

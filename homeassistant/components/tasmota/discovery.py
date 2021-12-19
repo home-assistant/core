@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Callable
+from typing import Awaitable, Callable
 
 from hatasmota.discovery import (
     TasmotaDiscovery,
@@ -18,7 +18,7 @@ from hatasmota.models import DiscoveryHashType, TasmotaDeviceConfig
 from hatasmota.mqtt import TasmotaMQTTClient
 from hatasmota.sensor import TasmotaBaseSensorConfig
 
-import homeassistant.components.sensor as sensor
+from homeassistant.components import sensor
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dev_reg
@@ -34,7 +34,7 @@ TASMOTA_DISCOVERY_ENTITY_NEW = "tasmota_discovery_entity_new_{}"
 TASMOTA_DISCOVERY_ENTITY_UPDATED = "tasmota_discovery_entity_updated_{}_{}_{}_{}"
 TASMOTA_DISCOVERY_INSTANCE = "tasmota_discovery_instance"
 
-SetupDeviceCallback = Callable[[TasmotaDeviceConfig, str], None]
+SetupDeviceCallback = Callable[[TasmotaDeviceConfig, str], Awaitable[None]]
 
 
 def clear_discovery_hash(
@@ -119,7 +119,7 @@ async def async_start(
 
         _LOGGER.debug("Received discovery data for tasmota device: %s", mac)
         tasmota_device_config = tasmota_get_device_config(payload)
-        setup_device(tasmota_device_config, mac)
+        await setup_device(tasmota_device_config, mac)
 
         if not payload:
             return

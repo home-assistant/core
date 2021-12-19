@@ -3,11 +3,11 @@ import logging
 
 from construct.core import ChecksumError
 from micloud import MiCloud
+from micloud.micloudexception import MiCloudAccessDenied
 from miio import DeviceException, gateway
 from miio.gateway.gateway import GATEWAY_MODEL_EU
 
-from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -17,6 +17,8 @@ from .const import (
     CONF_CLOUD_SUBDEVICES,
     CONF_CLOUD_USERNAME,
     DOMAIN,
+    AuthException,
+    SetupException,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -59,8 +61,7 @@ class ConnectXiaomiGateway:
         self._cloud_password = self._config_entry.data.get(CONF_CLOUD_PASSWORD)
         self._cloud_country = self._config_entry.data.get(CONF_CLOUD_COUNTRY)
 
-        if not await self._hass.async_add_executor_job(self.connect_gateway):
-            return False
+        await self._hass.async_add_executor_job(self.connect_gateway)
 
         _LOGGER.debug(
             "%s %s %s detected",
@@ -68,7 +69,6 @@ class ConnectXiaomiGateway:
             self._gateway_info.firmware_version,
             self._gateway_info.hardware_version,
         )
-        return True
 
     def connect_gateway(self):
         """Connect the gateway in a way that can called by async_add_executor_job."""
@@ -78,14 +78,11 @@ class ConnectXiaomiGateway:
             self._gateway_info = self._gateway_device.info()
         except DeviceException as error:
             if isinstance(error.__cause__, ChecksumError):
-                raise ConfigEntryAuthFailed(error) from error
+                raise AuthException(error) from error
 
-            _LOGGER.error(
-                "DeviceException during setup of xiaomi gateway with host %s: %s",
-                self._host,
-                error,
-            )
-            return False
+            raise SetupException(
+                "DeviceException during setup of xiaomi gateway with host {self._host}"
+            ) from error
 
         # get the connected sub devices
         use_cloud = self._use_cloud or self._gateway_info.model == GATEWAY_MODEL_EU
@@ -109,27 +106,27 @@ class ConnectXiaomiGateway:
                 or self._cloud_password is None
                 or self._cloud_country is None
             ):
-                raise ConfigEntryAuthFailed(
+                raise AuthException(
                     "Missing cloud credentials in Xiaomi Miio configuration"
                 )
 
             try:
                 miio_cloud = MiCloud(self._cloud_username, self._cloud_password)
                 if not miio_cloud.login():
-                    raise ConfigEntryAuthFailed(
-                        "Could not login to Xioami Miio Cloud, check the credentials"
+                    raise SetupException(
+                        "Failed to login to Xiaomi Miio Cloud during setup of Xiaomi"
+                        " gateway with host {self._host}",
                     )
                 devices_raw = miio_cloud.get_devices(self._cloud_country)
                 self._gateway_device.get_devices_from_dict(devices_raw)
+            except MiCloudAccessDenied as error:
+                raise AuthException(
+                    "Could not login to Xiaomi Miio Cloud, check the credentials"
+                ) from error
             except DeviceException as error:
-                _LOGGER.error(
-                    "DeviceException during setup of xiaomi gateway with host %s: %s",
-                    self._host,
-                    error,
-                )
-                return False
-
-        return True
+                raise SetupException(
+                    f"DeviceException during setup of xiaomi gateway with host {self._host}"
+                ) from error
 
 
 class XiaomiGatewayDevice(CoordinatorEntity, Entity):
@@ -154,16 +151,17 @@ class XiaomiGatewayDevice(CoordinatorEntity, Entity):
         return self._name
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info of the gateway."""
-        return {
-            "identifiers": {(DOMAIN, self._sub_device.sid)},
-            "via_device": (DOMAIN, self._entry.unique_id),
-            "manufacturer": "Xiaomi",
-            "name": self._sub_device.name,
-            "model": self._sub_device.model,
-            "sw_version": self._sub_device.firmware_version,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._sub_device.sid)},
+            via_device=(DOMAIN, self._entry.unique_id),
+            manufacturer="Xiaomi",
+            name=self._sub_device.name,
+            model=self._sub_device.model,
+            sw_version=self._sub_device.firmware_version,
+            hw_version=self._sub_device.zigbee_model,
+        )
 
     @property
     def available(self):

@@ -58,12 +58,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class ParticulateMatterSensor(SensorEntity):
     """Representation of an Particulate matter sensor."""
 
-    def __init__(self, pmDataCollector, name, pmname):
+    def __init__(self, pm_data_collector, name, pmname):
         """Initialize a new PM sensor."""
         self._name = name
         self._pmname = pmname
         self._state = None
-        self._collector = pmDataCollector
+        self._collector = pm_data_collector
 
     @property
     def name(self):
@@ -71,12 +71,12 @@ class ParticulateMatterSensor(SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
 

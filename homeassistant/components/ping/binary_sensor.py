@@ -13,8 +13,8 @@ from icmplib import NameLookupError, async_ping
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
     PLATFORM_SCHEMA,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, STATE_ON
@@ -38,7 +38,7 @@ DEFAULT_PING_COUNT = 5
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
-PARALLEL_UPDATES = 0
+PARALLEL_UPDATES = 50
 
 PING_MATCHER = re.compile(
     r"(?P<min>\d+.\d+)\/(?P<avg>\d+.\d+)\/(?P<max>\d+.\d+)\/(?P<mdev>\d+.\d+)"
@@ -99,9 +99,9 @@ class PingBinarySensor(RestoreEntity, BinarySensorEntity):
         return self._available
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> BinarySensorDeviceClass:
         """Return the class of this sensor."""
-        return DEVICE_CLASS_CONNECTIVITY
+        return BinarySensorDeviceClass.CONNECTIVITY
 
     @property
     def is_on(self) -> bool:
@@ -256,14 +256,18 @@ class PingDataSubProcess(PingData):
                 )
 
             if sys.platform == "win32":
-                match = WIN32_PING_MATCHER.search(str(out_data).split("\n")[-1])
+                match = WIN32_PING_MATCHER.search(
+                    str(out_data).rsplit("\n", maxsplit=1)[-1]
+                )
                 rtt_min, rtt_avg, rtt_max = match.groups()
                 return {"min": rtt_min, "avg": rtt_avg, "max": rtt_max, "mdev": ""}
             if "max/" not in str(out_data):
-                match = PING_MATCHER_BUSYBOX.search(str(out_data).split("\n")[-1])
+                match = PING_MATCHER_BUSYBOX.search(
+                    str(out_data).rsplit("\n", maxsplit=1)[-1]
+                )
                 rtt_min, rtt_avg, rtt_max = match.groups()
                 return {"min": rtt_min, "avg": rtt_avg, "max": rtt_max, "mdev": ""}
-            match = PING_MATCHER.search(str(out_data).split("\n")[-1])
+            match = PING_MATCHER.search(str(out_data).rsplit("\n", maxsplit=1)[-1])
             rtt_min, rtt_avg, rtt_max, rtt_mdev = match.groups()
             return {"min": rtt_min, "avg": rtt_avg, "max": rtt_max, "mdev": rtt_mdev}
         except asyncio.TimeoutError:

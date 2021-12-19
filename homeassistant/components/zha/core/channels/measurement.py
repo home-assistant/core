@@ -1,5 +1,5 @@
 """Measurement channels module for Zigbee Home Automation."""
-import zigpy.zcl.clusters.measurement as measurement
+from zigpy.zcl.clusters import measurement
 
 from .. import registries
 from ..const import (
@@ -53,6 +53,30 @@ class PressureMeasurement(ZigbeeChannel):
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(measurement.RelativeHumidity.cluster_id)
 class RelativeHumidity(ZigbeeChannel):
     """Relative Humidity measurement channel."""
+
+    REPORT_CONFIG = [
+        {
+            "attr": "measured_value",
+            "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 100),
+        }
+    ]
+
+
+@registries.ZIGBEE_CHANNEL_REGISTRY.register(measurement.SoilMoisture.cluster_id)
+class SoilMoisture(ZigbeeChannel):
+    """Soil Moisture measurement channel."""
+
+    REPORT_CONFIG = [
+        {
+            "attr": "measured_value",
+            "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 100),
+        }
+    ]
+
+
+@registries.ZIGBEE_CHANNEL_REGISTRY.register(measurement.LeafWetness.cluster_id)
+class LeafWetness(ZigbeeChannel):
+    """Leaf Wetness measurement channel."""
 
     REPORT_CONFIG = [
         {

@@ -5,29 +5,24 @@ from devolo_home_control_api.devices.zwave import Zwave
 from devolo_home_control_api.homecontrol import HomeControl
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_DOOR,
-    DEVICE_CLASS_HEAT,
-    DEVICE_CLASS_MOISTURE,
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_PROBLEM,
-    DEVICE_CLASS_SAFETY,
-    DEVICE_CLASS_SMOKE,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .devolo_device import DevoloDeviceEntity
 
 DEVICE_CLASS_MAPPING = {
-    "Water alarm": DEVICE_CLASS_MOISTURE,
-    "Home Security": DEVICE_CLASS_MOTION,
-    "Smoke Alarm": DEVICE_CLASS_SMOKE,
-    "Heat Alarm": DEVICE_CLASS_HEAT,
-    "door": DEVICE_CLASS_DOOR,
-    "overload": DEVICE_CLASS_SAFETY,
+    "Water alarm": BinarySensorDeviceClass.MOISTURE,
+    "Home Security": BinarySensorDeviceClass.MOTION,
+    "Smoke Alarm": BinarySensorDeviceClass.SMOKE,
+    "Heat Alarm": BinarySensorDeviceClass.HEAT,
+    "door": BinarySensorDeviceClass.DOOR,
+    "overload": BinarySensorDeviceClass.SAFETY,
 }
 
 
@@ -81,32 +76,31 @@ class DevoloBinaryDeviceEntity(DevoloDeviceEntity, BinarySensorEntity):
             element_uid=element_uid,
         )
 
-        self._device_class = DEVICE_CLASS_MAPPING.get(
+        self._attr_device_class = DEVICE_CLASS_MAPPING.get(
             self._binary_sensor_property.sub_type
             or self._binary_sensor_property.sensor_type
         )
 
-        if self._device_class is None:
+        if self._attr_device_class is None:
             if device_instance.binary_sensor_property.get(element_uid).sub_type != "":
-                self._name += f" {device_instance.binary_sensor_property.get(element_uid).sub_type}"
+                self._attr_name += f" {device_instance.binary_sensor_property.get(element_uid).sub_type}"
             else:
-                self._name += f" {device_instance.binary_sensor_property.get(element_uid).sensor_type}"
+                self._attr_name += f" {device_instance.binary_sensor_property.get(element_uid).sensor_type}"
 
         self._value = self._binary_sensor_property.state
 
+        if self._attr_device_class == BinarySensorDeviceClass.SAFETY:
+            self._attr_entity_category = EntityCategory.DIAGNOSTIC
+
         if element_uid.startswith("devolo.WarningBinaryFI:"):
-            self._device_class = DEVICE_CLASS_PROBLEM
-            self._enabled_default = False
+            self._attr_device_class = BinarySensorDeviceClass.PROBLEM
+            self._attr_entity_category = EntityCategory.DIAGNOSTIC
+            self._attr_entity_registry_enabled_default = False
 
     @property
     def is_on(self) -> bool:
         """Return the state."""
         return bool(self._value)
-
-    @property
-    def device_class(self) -> str | None:
-        """Return device class."""
-        return self._device_class
 
 
 class DevoloRemoteControl(DevoloDeviceEntity, BinarySensorEntity):
@@ -131,12 +125,7 @@ class DevoloRemoteControl(DevoloDeviceEntity, BinarySensorEntity):
         )
 
         self._key = key
-        self._state = False
-
-    @property
-    def is_on(self) -> bool:
-        """Return the state."""
-        return self._state
+        self._attr_is_on = False
 
     def _sync(self, message: tuple) -> None:
         """Update the binary sensor state."""
@@ -144,11 +133,11 @@ class DevoloRemoteControl(DevoloDeviceEntity, BinarySensorEntity):
             message[0] == self._remote_control_property.element_uid
             and message[1] == self._key
         ):
-            self._state = True
+            self._attr_is_on = True
         elif (
             message[0] == self._remote_control_property.element_uid and message[1] == 0
         ):
-            self._state = False
+            self._attr_is_on = False
         else:
             self._generic_message(message)
         self.schedule_update_ha_state()

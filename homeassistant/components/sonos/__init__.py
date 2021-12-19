@@ -5,39 +5,38 @@ import asyncio
 from collections import OrderedDict
 import datetime
 from enum import Enum
+from functools import partial
 import logging
 import socket
 from urllib.parse import urlparse
 
-import pysonos
-from pysonos import events_asyncio
-from pysonos.core import SoCo
-from pysonos.exceptions import SoCoException
+from soco import events_asyncio
+import soco.config as soco_config
+from soco.core import SoCo
+from soco.exceptions import NotSupportedException, SoCoException
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_HOSTS,
-    EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STOP,
-)
+from homeassistant.const import CONF_HOSTS, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.event import async_track_time_interval, call_later
 
 from .alarms import SonosAlarms
 from .const import (
+    AVAILABILITY_CHECK_INTERVAL,
     DATA_SONOS,
     DATA_SONOS_DISCOVERY_MANAGER,
     DISCOVERY_INTERVAL,
     DOMAIN,
     PLATFORMS,
-    SONOS_GROUP_UPDATE,
+    SONOS_CHECK_ACTIVITY,
     SONOS_REBOOTED,
-    SONOS_SEEN,
+    SONOS_SPEAKER_ACTIVITY,
     UPNP_ST,
 )
 from .favorites import SonosFavorites
@@ -92,8 +91,10 @@ class SonosData:
         self.alarms: dict[str, SonosAlarms] = {}
         self.topology_condition = asyncio.Condition()
         self.hosts_heartbeat = None
+        self.discovery_ignored: set[str] = set()
         self.discovery_known: set[str] = set()
         self.boot_counts: dict[str, int] = {}
+        self.mdns_names: dict[str, str] = {}
 
 
 async def async_setup(hass, config):
@@ -114,7 +115,7 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Sonos from a config entry."""
-    pysonos.config.EVENTS_MODULE = events_asyncio
+    soco_config.EVENTS_MODULE = events_asyncio
 
     if DATA_SONOS not in hass.data:
         hass.data[DATA_SONOS] = SonosData()
@@ -124,9 +125,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hosts = config.get(CONF_HOSTS, [])
     _LOGGER.debug("Reached async_setup_entry, config=%s", config)
 
-    advertise_addr = config.get(CONF_ADVERTISE_ADDR)
-    if advertise_addr:
-        pysonos.config.EVENT_ADVERTISE_IP = advertise_addr
+    if advertise_addr := config.get(CONF_ADVERTISE_ADDR):
+        soco_config.EVENT_ADVERTISE_IP = advertise_addr
 
     if deprecated_address := config.get(CONF_INTERFACE_ADDR):
         _LOGGER.warning(
@@ -142,19 +142,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-def _create_soco(ip_address: str, source: SoCoCreationSource) -> SoCo | None:
-    """Create a soco instance and return if successful."""
-    try:
-        soco = pysonos.SoCo(ip_address)
-        # Ensure that the player is available and UID is cached
-        _ = soco.uid
-        _ = soco.volume
-        return soco
-    except (OSError, SoCoException) as ex:
-        _LOGGER.warning(
-            "Failed to connect to %s player '%s': %s", source.value, ip_address, ex
-        )
-    return None
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a Sonos config entry."""
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.data[DATA_SONOS_DISCOVERY_MANAGER].async_shutdown()
+    hass.data.pop(DATA_SONOS)
+    hass.data.pop(DATA_SONOS_DISCOVERY_MANAGER)
+    return unload_ok
 
 
 class SonosDiscoveryManager:
@@ -170,15 +164,39 @@ class SonosDiscoveryManager:
         self.hosts = hosts
         self.discovery_lock = asyncio.Lock()
 
-    async def _async_stop_event_listener(self, event: Event) -> None:
+    async def async_shutdown(self):
+        """Stop all running tasks."""
+        await self._async_stop_event_listener()
+        self._stop_manual_heartbeat()
+
+    def _create_soco(self, ip_address: str, source: SoCoCreationSource) -> SoCo | None:
+        """Create a soco instance and return if successful."""
+        if ip_address in self.data.discovery_ignored:
+            return None
+
+        try:
+            soco = SoCo(ip_address)
+            # Ensure that the player is available and UID is cached
+            uid = soco.uid
+            _ = soco.volume
+            return soco
+        except NotSupportedException as exc:
+            _LOGGER.debug("Device %s is not supported, ignoring: %s", uid, exc)
+            self.data.discovery_ignored.add(ip_address)
+        except (OSError, SoCoException) as ex:
+            _LOGGER.warning(
+                "Failed to connect to %s player '%s': %s", source.value, ip_address, ex
+            )
+        return None
+
+    async def _async_stop_event_listener(self, event: Event | None = None) -> None:
         await asyncio.gather(
-            *[speaker.async_unsubscribe() for speaker in self.data.discovered.values()],
-            return_exceptions=True,
+            *(speaker.async_offline() for speaker in self.data.discovered.values())
         )
         if events_asyncio.event_listener:
             await events_asyncio.event_listener.async_stop()
 
-    def _stop_manual_heartbeat(self, event: Event) -> None:
+    def _stop_manual_heartbeat(self, event: Event | None = None) -> None:
         if self.data.hosts_heartbeat:
             self.data.hosts_heartbeat()
             self.data.hosts_heartbeat = None
@@ -190,15 +208,15 @@ class SonosDiscoveryManager:
             _LOGGER.debug("Adding new speaker: %s", speaker_info)
             speaker = SonosSpeaker(self.hass, soco, speaker_info)
             self.data.discovered[soco.uid] = speaker
-            for coordinator, coord_dict in [
+            for coordinator, coord_dict in (
                 (SonosAlarms, self.data.alarms),
                 (SonosFavorites, self.data.favorites),
-            ]:
+            ):
                 if soco.household_id not in coord_dict:
                     new_coordinator = coordinator(self.hass, soco.household_id)
                     new_coordinator.setup(soco)
                     coord_dict[soco.household_id] = new_coordinator
-            speaker.setup()
+            speaker.setup(self.entry)
         except (OSError, SoCoException):
             _LOGGER.warning("Failed to add SonosSpeaker using %s", soco, exc_info=True)
 
@@ -214,24 +232,17 @@ class SonosDiscoveryManager:
                 ),
                 None,
             )
-
-            if known_uid:
-                dispatcher_send(self.hass, f"{SONOS_SEEN}-{known_uid}")
-            else:
-                soco = _create_soco(ip_addr, SoCoCreationSource.CONFIGURED)
+            if not known_uid:
+                soco = self._create_soco(ip_addr, SoCoCreationSource.CONFIGURED)
                 if soco and soco.is_visible:
                     self._discovered_player(soco)
 
-        self.data.hosts_heartbeat = self.hass.helpers.event.call_later(
-            DISCOVERY_INTERVAL.total_seconds(), self._manual_hosts
+        self.data.hosts_heartbeat = call_later(
+            self.hass, DISCOVERY_INTERVAL.total_seconds(), self._manual_hosts
         )
 
-    @callback
-    def _async_signal_update_groups(self, _event):
-        async_dispatcher_send(self.hass, SONOS_GROUP_UPDATE)
-
     def _discovered_ip(self, ip_address):
-        soco = _create_soco(ip_address, SoCoCreationSource.DISCOVERED)
+        soco = self._create_soco(ip_address, SoCoCreationSource.DISCOVERED)
         if soco and soco.is_visible:
             self._discovered_player(soco)
 
@@ -247,25 +258,41 @@ class SonosDiscoveryManager:
             if boot_seqnum and boot_seqnum > self.data.boot_counts[uid]:
                 self.data.boot_counts[uid] = boot_seqnum
                 if soco := await self.hass.async_add_executor_job(
-                    _create_soco, discovered_ip, SoCoCreationSource.REBOOTED
+                    self._create_soco, discovered_ip, SoCoCreationSource.REBOOTED
                 ):
                     async_dispatcher_send(self.hass, f"{SONOS_REBOOTED}-{uid}", soco)
             else:
-                async_dispatcher_send(self.hass, f"{SONOS_SEEN}-{uid}")
+                async_dispatcher_send(
+                    self.hass, f"{SONOS_SPEAKER_ACTIVITY}-{uid}", "discovery"
+                )
 
-    @callback
-    def _async_ssdp_discovered_player(self, info):
-        discovered_ip = urlparse(info[ssdp.ATTR_SSDP_LOCATION]).hostname
-        boot_seqnum = info.get("X-RINCON-BOOTSEQ")
-        uid = info.get(ssdp.ATTR_UPNP_UDN)
-        if uid.startswith("uuid:"):
-            uid = uid[5:]
+    async def _async_ssdp_discovered_player(
+        self, info: ssdp.SsdpServiceInfo, change: ssdp.SsdpChange
+    ) -> None:
+        if change == ssdp.SsdpChange.BYEBYE:
+            return
+
+        uid = info.upnp[ssdp.ATTR_UPNP_UDN]
+        if not uid.startswith("uuid:RINCON_"):
+            return
+
+        uid = uid[5:]
+        discovered_ip = urlparse(info.ssdp_location).hostname
+        boot_seqnum = info.ssdp_headers.get("X-RINCON-BOOTSEQ")
         self.async_discovered_player(
-            info, discovered_ip, uid, boot_seqnum, info.get("modelName")
+            "SSDP",
+            info,
+            discovered_ip,
+            uid,
+            boot_seqnum,
+            info.upnp.get(ssdp.ATTR_UPNP_MODEL_NAME),
+            None,
         )
 
     @callback
-    def async_discovered_player(self, info, discovered_ip, uid, boot_seqnum, model):
+    def async_discovered_player(
+        self, source, info, discovered_ip, uid, boot_seqnum, model, mdns_name
+    ):
         """Handle discovery via ssdp or zeroconf."""
         if model in DISCOVERY_IGNORED_MODELS:
             _LOGGER.debug("Ignoring device: %s", info)
@@ -273,8 +300,11 @@ class SonosDiscoveryManager:
         if boot_seqnum:
             boot_seqnum = int(boot_seqnum)
             self.data.boot_counts.setdefault(uid, boot_seqnum)
+        if mdns_name:
+            self.data.mdns_names[uid] = mdns_name
+
         if uid not in self.data.discovery_known:
-            _LOGGER.debug("New discovery uid=%s: %s", uid, info)
+            _LOGGER.debug("New %s discovery uid=%s: %s", source, uid, info)
             self.data.discovery_known.add(uid)
         asyncio.create_task(
             self._async_create_discovered_player(uid, discovered_ip, boot_seqnum)
@@ -283,14 +313,9 @@ class SonosDiscoveryManager:
     async def setup_platforms_and_discovery(self):
         """Set up platforms and discovery."""
         await asyncio.gather(
-            *[
+            *(
                 self.hass.config_entries.async_forward_entry_setup(self.entry, platform)
                 for platform in PLATFORMS
-            ]
-        )
-        self.entry.async_on_unload(
-            self.hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_START, self._async_signal_update_groups
             )
         )
         self.entry.async_on_unload(
@@ -309,7 +334,19 @@ class SonosDiscoveryManager:
             return
 
         self.entry.async_on_unload(
-            ssdp.async_register_callback(
+            await ssdp.async_register_callback(
                 self.hass, self._async_ssdp_discovered_player, {"st": UPNP_ST}
+            )
+        )
+
+        self.entry.async_on_unload(
+            async_track_time_interval(
+                self.hass,
+                partial(
+                    async_dispatcher_send,
+                    self.hass,
+                    SONOS_CHECK_ACTIVITY,
+                ),
+                AVAILABILITY_CHECK_INTERVAL,
             )
         )

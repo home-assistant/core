@@ -1,13 +1,18 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine."
+            "not_zha_device": "See seade ei ole zha seade",
+            "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine.",
+            "usb_probe_failed": "USB seadme k\u00fcsitlemine eba\u00f5nnestus"
         },
         "error": {
             "cannot_connect": "\u00dchendamine nurjus"
         },
         "flow_title": "{name}",
         "step": {
+            "confirm": {
+                "description": "Kas soovid seadistada teenust {name} ?"
+            },
             "pick_radio": {
                 "data": {
                     "radio_type": "Seadme raadio t\u00fc\u00fcp"

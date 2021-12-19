@@ -247,8 +247,7 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
 
         # Handle global detection area
         self._area = [0, 0, 1, 1]
-        area_config = model_config.get(CONF_AREA)
-        if area_config:
+        if area_config := model_config.get(CONF_AREA):
             self._area = [
                 area_config.get(CONF_TOP),
                 area_config.get(CONF_LEFT),
@@ -334,8 +333,7 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
 
     def process_image(self, image):
         """Process the image."""
-        model = self.hass.data[DOMAIN][CONF_MODEL]
-        if not model:
+        if not (model := self.hass.data[DOMAIN][CONF_MODEL]):
             _LOGGER.debug("Model not yet ready")
             return
 

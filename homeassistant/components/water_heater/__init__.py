@@ -1,6 +1,7 @@
 """Support for water heater devices."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 import functools as ft
 import logging
@@ -27,7 +28,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.util.temperature import convert as convert_temperature
@@ -135,9 +136,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
+@dataclass
+class WaterHeaterEntityEntityDescription(EntityDescription):
+    """A class that describes water heater entities."""
+
+
 class WaterHeaterEntity(Entity):
     """Base class for water heater entities."""
 
+    entity_description: WaterHeaterEntityEntityDescription
     _attr_current_operation: str | None = None
     _attr_current_temperature: float | None = None
     _attr_is_away_mode_on: bool | None = None
@@ -343,15 +350,3 @@ async def async_service_temperature_set(entity, service):
             kwargs[value] = temp
 
     await entity.async_set_temperature(**kwargs)
-
-
-class WaterHeaterDevice(WaterHeaterEntity):
-    """Representation of a water heater (for backwards compatibility)."""
-
-    def __init_subclass__(cls, **kwargs):
-        """Print deprecation warning."""
-        super().__init_subclass__(**kwargs)
-        _LOGGER.warning(
-            "WaterHeaterDevice is deprecated, modify %s to extend WaterHeaterEntity",
-            cls.__name__,
-        )

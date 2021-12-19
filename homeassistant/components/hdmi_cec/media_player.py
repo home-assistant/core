@@ -1,4 +1,6 @@
 """Support for HDMI CEC devices as media players."""
+from __future__ import annotations
+
 import logging
 
 from pycec.commands import CecCommand, KeyPressCommand, KeyReleaseCommand
@@ -149,7 +151,7 @@ class CecPlayerEntity(CecEntity, MediaPlayerEntity):
         self.send_keypress(KEY_VOLUME_DOWN)
 
     @property
-    def state(self) -> str:
+    def state(self) -> str | None:
         """Cache state of device."""
         return self._state
 

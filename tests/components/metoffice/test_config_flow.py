@@ -2,7 +2,7 @@
 import json
 from unittest.mock import patch
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
 from homeassistant.components.metoffice.const import DOMAIN
 
 from .const import (
@@ -26,7 +26,6 @@ async def test_form(hass, requests_mock):
     all_sites = json.dumps(mock_json["all_sites"])
     requests_mock.get("/public/data/val/wxfcs/all/json/sitelist/", text=all_sites)
 
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )

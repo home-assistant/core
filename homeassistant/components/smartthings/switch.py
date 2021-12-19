@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from pysmartthings import Attribute, Capability
+from pysmartthings import Capability
 
 from homeassistant.components.switch import SwitchEntity
 
@@ -47,16 +47,6 @@ class SmartThingsSwitch(SmartThingsEntity, SwitchEntity):
         # State is set optimistically in the command above, therefore update
         # the entity state ahead of receiving the confirming push updates
         self.async_write_ha_state()
-
-    @property
-    def current_power_w(self):
-        """Return the current power usage in W."""
-        return self._device.status.attributes[Attribute.power].value
-
-    @property
-    def today_energy_kwh(self):
-        """Return the today total energy usage in kWh."""
-        return self._device.status.attributes[Attribute.energy].value
 
     @property
     def is_on(self) -> bool:

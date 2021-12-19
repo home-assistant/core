@@ -14,7 +14,9 @@
                     "password": "Jelsz\u00f3",
                     "server": "Szerver",
                     "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
-                }
+                },
+                "description": "Adja meg a Dexcom Share hiteles\u00edt\u0151 adatait",
+                "title": "Dexcom integr\u00e1ci\u00f3 be\u00e1ll\u00edt\u00e1sa"
             }
         }
     },

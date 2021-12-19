@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
+from dataclasses import dataclass
 from datetime import timedelta
 import functools as ft
 import logging
@@ -24,7 +25,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA_BASE,
     make_entity_service_schema,
 )
-from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
@@ -142,9 +143,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await cast(EntityComponent, hass.data[DOMAIN]).async_unload_entry(entry)
 
 
+@dataclass
+class RemoteEntityDescription(ToggleEntityDescription):
+    """A class that describes remote entities."""
+
+
 class RemoteEntity(ToggleEntity):
     """Base class for remote entities."""
 
+    entity_description: RemoteEntityDescription
     _attr_activity_list: list[str] | None = None
     _attr_current_activity: str | None = None
     _attr_supported_features: int = 0
@@ -202,16 +209,4 @@ class RemoteEntity(ToggleEntity):
         """Delete commands from the database."""
         await self.hass.async_add_executor_job(
             ft.partial(self.delete_command, **kwargs)
-        )
-
-
-class RemoteDevice(RemoteEntity):
-    """Representation of a remote (for backwards compatibility)."""
-
-    def __init_subclass__(cls, **kwargs):
-        """Print deprecation warning."""
-        super().__init_subclass__(**kwargs)
-        _LOGGER.warning(
-            "RemoteDevice is deprecated, modify %s to extend RemoteEntity",
-            cls.__name__,
         )

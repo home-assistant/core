@@ -3,14 +3,15 @@ from __future__ import annotations
 
 from functools import partial
 
-from wled import Preset
+from wled import Live, Playlist, Preset
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import DEVICE_CLASS_WLED_LIVE_OVERRIDE, DOMAIN
 from .coordinator import WLEDDataUpdateCoordinator
 from .helpers import wled_exception_handler
 from .models import WLEDEntity
@@ -26,7 +27,13 @@ async def async_setup_entry(
     """Set up WLED select based on a config entry."""
     coordinator: WLEDDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    async_add_entities([WLEDPresetSelect(coordinator)])
+    async_add_entities(
+        [
+            WLEDLiveOverrideSelect(coordinator),
+            WLEDPlaylistSelect(coordinator),
+            WLEDPresetSelect(coordinator),
+        ]
+    )
 
     update_segments = partial(
         async_update_segments,
@@ -36,6 +43,32 @@ async def async_setup_entry(
     )
     coordinator.async_add_listener(update_segments)
     update_segments()
+
+
+class WLEDLiveOverrideSelect(WLEDEntity, SelectEntity):
+    """Defined a WLED Live Override select."""
+
+    _attr_device_class = DEVICE_CLASS_WLED_LIVE_OVERRIDE
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_icon = "mdi:theater"
+
+    def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
+        """Initialize WLED ."""
+        super().__init__(coordinator=coordinator)
+
+        self._attr_name = f"{coordinator.data.info.name} Live Override"
+        self._attr_unique_id = f"{coordinator.data.info.mac_address}_live_override"
+        self._attr_options = [str(live.value) for live in Live]
+
+    @property
+    def current_option(self) -> str:
+        """Return the current selected live override."""
+        return str(self.coordinator.data.state.lor.value)
+
+    @wled_exception_handler
+    async def async_select_option(self, option: str) -> None:
+        """Set WLED state to the selected live override state."""
+        await self.coordinator.wled.live(live=Live(int(option)))
 
 
 class WLEDPresetSelect(WLEDEntity, SelectEntity):
@@ -69,12 +102,45 @@ class WLEDPresetSelect(WLEDEntity, SelectEntity):
         await self.coordinator.wled.preset(preset=option)
 
 
+class WLEDPlaylistSelect(WLEDEntity, SelectEntity):
+    """Define a WLED Playlist select."""
+
+    _attr_icon = "mdi:play-speed"
+
+    def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
+        """Initialize WLED playlist."""
+        super().__init__(coordinator=coordinator)
+
+        self._attr_name = f"{coordinator.data.info.name} Playlist"
+        self._attr_unique_id = f"{coordinator.data.info.mac_address}_playlist"
+        self._attr_options = [
+            playlist.name for playlist in self.coordinator.data.playlists
+        ]
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return len(self.coordinator.data.playlists) > 0 and super().available
+
+    @property
+    def current_option(self) -> str | None:
+        """Return the currently selected playlist."""
+        if not isinstance(self.coordinator.data.state.playlist, Playlist):
+            return None
+        return self.coordinator.data.state.playlist.name
+
+    @wled_exception_handler
+    async def async_select_option(self, option: str) -> None:
+        """Set WLED segment to the selected playlist."""
+        await self.coordinator.wled.playlist(playlist=option)
+
+
 class WLEDPaletteSelect(WLEDEntity, SelectEntity):
     """Defines a WLED Palette select."""
 
+    _attr_entity_category = EntityCategory.CONFIG
     _attr_icon = "mdi:palette-outline"
     _segment: int
-    _attr_entity_registry_enabled_default = False
 
     def __init__(self, coordinator: WLEDDataUpdateCoordinator, segment: int) -> None:
         """Initialize WLED ."""

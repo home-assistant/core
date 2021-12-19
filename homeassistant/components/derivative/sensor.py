@@ -122,8 +122,7 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
         await super().async_added_to_hass()
-        state = await self.async_get_last_state()
-        if state is not None:
+        if (state := await self.async_get_last_state()) is not None:
             try:
                 self._state = Decimal(state.state)
             except SyntaxError as err:
@@ -136,8 +135,8 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
             new_state = event.data.get("new_state")
             if (
                 old_state is None
-                or old_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]
-                or new_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]
+                or old_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+                or new_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
             ):
                 return
 
@@ -196,12 +195,12 @@ class DerivativeSensor(RestoreEntity, SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return round(self._state, self._round_digits)
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
 

@@ -129,7 +129,7 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
     assert state.attributes[ATTR_COLOR_MODE] == "color_temp"
     assert state.attributes[ATTR_BRIGHTNESS] == 255
     assert state.attributes[ATTR_COLOR_TEMP] == 370
-    assert ATTR_RGB_COLOR not in state.attributes
+    assert ATTR_RGB_COLOR in state.attributes
 
     # Test turning on with same brightness
     await hass.services.async_call(
@@ -223,58 +223,23 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
         blocking=True,
     )
 
-    assert len(client.async_send_command.call_args_list) == 6
-    warm_args = client.async_send_command.call_args_list[0][0][0]  # red 255
-    assert warm_args["command"] == "node.set_value"
-    assert warm_args["nodeId"] == 39
-    assert warm_args["valueId"]["commandClassName"] == "Color Switch"
-    assert warm_args["valueId"]["commandClass"] == 51
-    assert warm_args["valueId"]["endpoint"] == 0
-    assert warm_args["valueId"]["metadata"]["label"] == "Target value (Red)"
-    assert warm_args["valueId"]["property"] == "targetColor"
-    assert warm_args["valueId"]["propertyName"] == "targetColor"
-    assert warm_args["value"] == 255
-
-    cold_args = client.async_send_command.call_args_list[1][0][0]  # green 76
-    assert cold_args["command"] == "node.set_value"
-    assert cold_args["nodeId"] == 39
-    assert cold_args["valueId"]["commandClassName"] == "Color Switch"
-    assert cold_args["valueId"]["commandClass"] == 51
-    assert cold_args["valueId"]["endpoint"] == 0
-    assert cold_args["valueId"]["metadata"]["label"] == "Target value (Green)"
-    assert cold_args["valueId"]["property"] == "targetColor"
-    assert cold_args["valueId"]["propertyName"] == "targetColor"
-    assert cold_args["value"] == 76
-    red_args = client.async_send_command.call_args_list[2][0][0]  # blue 255
-    assert red_args["command"] == "node.set_value"
-    assert red_args["nodeId"] == 39
-    assert red_args["valueId"]["commandClassName"] == "Color Switch"
-    assert red_args["valueId"]["commandClass"] == 51
-    assert red_args["valueId"]["endpoint"] == 0
-    assert red_args["valueId"]["metadata"]["label"] == "Target value (Blue)"
-    assert red_args["valueId"]["property"] == "targetColor"
-    assert red_args["valueId"]["propertyName"] == "targetColor"
-    assert red_args["value"] == 255
-    green_args = client.async_send_command.call_args_list[3][0][0]  # warm white 0
-    assert green_args["command"] == "node.set_value"
-    assert green_args["nodeId"] == 39
-    assert green_args["valueId"]["commandClassName"] == "Color Switch"
-    assert green_args["valueId"]["commandClass"] == 51
-    assert green_args["valueId"]["endpoint"] == 0
-    assert green_args["valueId"]["metadata"]["label"] == "Target value (Warm White)"
-    assert green_args["valueId"]["property"] == "targetColor"
-    assert green_args["valueId"]["propertyName"] == "targetColor"
-    assert green_args["value"] == 0
-    blue_args = client.async_send_command.call_args_list[4][0][0]  # cold white 0
-    assert blue_args["command"] == "node.set_value"
-    assert blue_args["nodeId"] == 39
-    assert blue_args["valueId"]["commandClassName"] == "Color Switch"
-    assert blue_args["valueId"]["commandClass"] == 51
-    assert blue_args["valueId"]["endpoint"] == 0
-    assert blue_args["valueId"]["metadata"]["label"] == "Target value (Cold White)"
-    assert blue_args["valueId"]["property"] == "targetColor"
-    assert blue_args["valueId"]["propertyName"] == "targetColor"
-    assert blue_args["value"] == 0
+    assert len(client.async_send_command.call_args_list) == 2
+    args = client.async_send_command.call_args_list[0][0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 39
+    assert args["valueId"]["commandClassName"] == "Color Switch"
+    assert args["valueId"]["commandClass"] == 51
+    assert args["valueId"]["endpoint"] == 0
+    assert args["valueId"]["metadata"]["label"] == "Target Color"
+    assert args["valueId"]["property"] == "targetColor"
+    assert args["valueId"]["propertyName"] == "targetColor"
+    assert args["value"] == {
+        "blue": 255,
+        "coldWhite": 0,
+        "green": 76,
+        "red": 255,
+        "warmWhite": 0,
+    }
 
     # Test rgb color update from value updated event
     red_event = Event(
@@ -328,7 +293,7 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
         blocking=True,
     )
 
-    assert len(client.async_send_command.call_args_list) == 6
+    assert len(client.async_send_command.call_args_list) == 2
 
     client.async_send_command.reset_mock()
 
@@ -344,8 +309,8 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
         blocking=True,
     )
 
-    assert len(client.async_send_command.call_args_list) == 6
-    args = client.async_send_command.call_args_list[5][0][0]
+    assert len(client.async_send_command.call_args_list) == 2
+    args = client.async_send_command.call_args_list[0][0][0]
     assert args["options"]["transitionDuration"] == "20s"
     client.async_send_command.reset_mock()
 
@@ -357,57 +322,23 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
         blocking=True,
     )
 
-    assert len(client.async_send_command.call_args_list) == 6
-    red_args = client.async_send_command.call_args_list[0][0][0]  # red 0
-    assert red_args["command"] == "node.set_value"
-    assert red_args["nodeId"] == 39
-    assert red_args["valueId"]["commandClassName"] == "Color Switch"
-    assert red_args["valueId"]["commandClass"] == 51
-    assert red_args["valueId"]["endpoint"] == 0
-    assert red_args["valueId"]["metadata"]["label"] == "Target value (Red)"
-    assert red_args["valueId"]["property"] == "targetColor"
-    assert red_args["valueId"]["propertyName"] == "targetColor"
-    assert red_args["value"] == 0
-    red_args = client.async_send_command.call_args_list[1][0][0]  # green 0
-    assert red_args["command"] == "node.set_value"
-    assert red_args["nodeId"] == 39
-    assert red_args["valueId"]["commandClassName"] == "Color Switch"
-    assert red_args["valueId"]["commandClass"] == 51
-    assert red_args["valueId"]["endpoint"] == 0
-    assert red_args["valueId"]["metadata"]["label"] == "Target value (Green)"
-    assert red_args["valueId"]["property"] == "targetColor"
-    assert red_args["valueId"]["propertyName"] == "targetColor"
-    assert red_args["value"] == 0
-    red_args = client.async_send_command.call_args_list[2][0][0]  # blue 0
-    assert red_args["command"] == "node.set_value"
-    assert red_args["nodeId"] == 39
-    assert red_args["valueId"]["commandClassName"] == "Color Switch"
-    assert red_args["valueId"]["commandClass"] == 51
-    assert red_args["valueId"]["endpoint"] == 0
-    assert red_args["valueId"]["metadata"]["label"] == "Target value (Blue)"
-    assert red_args["valueId"]["property"] == "targetColor"
-    assert red_args["valueId"]["propertyName"] == "targetColor"
-    assert red_args["value"] == 0
-    warm_args = client.async_send_command.call_args_list[3][0][0]  # warm white 0
-    assert warm_args["command"] == "node.set_value"
-    assert warm_args["nodeId"] == 39
-    assert warm_args["valueId"]["commandClassName"] == "Color Switch"
-    assert warm_args["valueId"]["commandClass"] == 51
-    assert warm_args["valueId"]["endpoint"] == 0
-    assert warm_args["valueId"]["metadata"]["label"] == "Target value (Warm White)"
-    assert warm_args["valueId"]["property"] == "targetColor"
-    assert warm_args["valueId"]["propertyName"] == "targetColor"
-    assert warm_args["value"] == 20
-    red_args = client.async_send_command.call_args_list[4][0][0]  # cold white
-    assert red_args["command"] == "node.set_value"
-    assert red_args["nodeId"] == 39
-    assert red_args["valueId"]["commandClassName"] == "Color Switch"
-    assert red_args["valueId"]["commandClass"] == 51
-    assert red_args["valueId"]["endpoint"] == 0
-    assert red_args["valueId"]["metadata"]["label"] == "Target value (Cold White)"
-    assert red_args["valueId"]["property"] == "targetColor"
-    assert red_args["valueId"]["propertyName"] == "targetColor"
-    assert red_args["value"] == 235
+    assert len(client.async_send_command.call_args_list) == 2
+    args = client.async_send_command.call_args_list[0][0][0]  # red 0
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 39
+    assert args["valueId"]["commandClassName"] == "Color Switch"
+    assert args["valueId"]["commandClass"] == 51
+    assert args["valueId"]["endpoint"] == 0
+    assert args["valueId"]["metadata"]["label"] == "Target Color"
+    assert args["valueId"]["property"] == "targetColor"
+    assert args["valueId"]["propertyName"] == "targetColor"
+    assert args["value"] == {
+        "blue": 0,
+        "coldWhite": 235,
+        "green": 0,
+        "red": 0,
+        "warmWhite": 20,
+    }
 
     client.async_send_command.reset_mock()
 
@@ -456,7 +387,7 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
     assert state.attributes[ATTR_COLOR_MODE] == "color_temp"
     assert state.attributes[ATTR_BRIGHTNESS] == 255
     assert state.attributes[ATTR_COLOR_TEMP] == 170
-    assert ATTR_RGB_COLOR not in state.attributes
+    assert ATTR_RGB_COLOR in state.attributes
 
     # Test turning on with same color temp
     await hass.services.async_call(
@@ -466,7 +397,7 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
         blocking=True,
     )
 
-    assert len(client.async_send_command.call_args_list) == 6
+    assert len(client.async_send_command.call_args_list) == 2
 
     client.async_send_command.reset_mock()
 
@@ -482,8 +413,8 @@ async def test_light(hass, client, bulb_6_multi_color, integration):
         blocking=True,
     )
 
-    assert len(client.async_send_command.call_args_list) == 6
-    args = client.async_send_command.call_args_list[5][0][0]
+    assert len(client.async_send_command.call_args_list) == 2
+    args = client.async_send_command.call_args_list[0][0][0]
     assert args["options"]["transitionDuration"] == "35s"
 
     client.async_send_command.reset_mock()
@@ -569,6 +500,7 @@ async def test_rgbw_light(hass, client, zen_31, integration):
             "type": "any",
             "readable": True,
             "writeable": True,
+            "valueChangeOptions": ["transitionDuration"],
         },
         "value": {"blue": 70, "green": 159, "red": 255, "warmWhite": 141},
     }

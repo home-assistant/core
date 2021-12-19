@@ -78,7 +78,7 @@ def load_codes(path):
     """Load KIRA codes from specified file."""
     codes = []
     if os.path.exists(path):
-        with open(path) as code_file:
+        with open(path, encoding="utf8") as code_file:
             data = yaml.safe_load(code_file) or []
         for code in data:
             try:
@@ -87,7 +87,7 @@ def load_codes(path):
                 # keep going
                 _LOGGER.warning("KIRA code invalid data: %s", exception)
     else:
-        with open(path, "w") as code_file:
+        with open(path, "w", encoding="utf8") as code_file:
             code_file.write("")
     return codes
 
