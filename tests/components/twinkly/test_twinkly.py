@@ -134,7 +134,7 @@ async def test_turn_on_with_brightness(hass: HomeAssistant):
     await hass.services.async_call(
         "light",
         "turn_on",
-        service_data={"entity_id": entity.entity_id, "brightness": 0},
+        service_data={"entity_id": entity.entity_id, "brightness": 1},
     )
     await hass.async_block_till_done()
 
