@@ -9,5 +9,8 @@
   "codeowners": [
     "@marthoc"
   ],
+  "homekit": {
+    "models": ["EB-*"]
+  },
   "iot_class": "cloud_polling"
 }
