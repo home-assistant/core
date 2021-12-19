@@ -72,7 +72,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Otherwise, it means we are handling now the "submission" of the user form.
         # In this case, let's try to log in to the Elmax cloud and retrieve the available panels.
         try:
-            client = await ConfigFlow._async_login(username=username, password=password)
+            client = await self._async_login(username=username, password=password)
 
         except ElmaxBadLoginError:
             return self.async_show_form(
@@ -185,7 +185,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # and verify its pin is correct.
             try:
                 # Test login.
-                client = await ConfigFlow._async_login(
+                client = await self._async_login(
                     username=self._reauth_username, password=password
                 )
 
