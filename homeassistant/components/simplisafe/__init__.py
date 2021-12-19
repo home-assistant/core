@@ -524,23 +524,20 @@ class SimpliSafe:
         if TYPE_CHECKING:
             assert self._api.websocket
 
-        should_reconnect = True
-
         try:
             await self._api.websocket.async_connect()
             await self._api.websocket.async_listen()
         except asyncio.CancelledError:
-            should_reconnect = False
+            raise
         except WebsocketError as err:
             LOGGER.error("Failed to connect to websocket: %s", err)
         except Exception as err:  # pylint: disable=broad-except
             LOGGER.error("Unknown exception while connecting to websocket: %s", err)
 
-        if should_reconnect:
-            LOGGER.info("Disconnected from websocket; reconnecting")
-            self._websocket_reconnect_task = self._hass.async_create_task(
-                self._async_websocket_connect()
-            )
+        LOGGER.info("Disconnected from websocket; reconnecting")
+        self._websocket_reconnect_task = self._hass.async_create_task(
+            self._async_websocket_connect()
+        )
 
     @callback
     def _async_websocket_on_event(self, event: WebsocketEvent) -> None:
