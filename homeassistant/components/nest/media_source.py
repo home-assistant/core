@@ -89,7 +89,7 @@ async def async_get_media_event_store(
 class NestEventMediaStore(EventMediaStore):
     """Storage hook to locally persist nest media for events.
 
-    This is interface is meant to provide two storage features:
+    This interface is meant to provide two storage features:
     - media storage of events (jpgs, mp4s)
     - metadata about events (e.g. motion, person), filename of the media, etc.
 
