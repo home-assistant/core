@@ -37,6 +37,7 @@ from tests.components.androidtv.patchers import isfile
 ADBKEY = "adbkey"
 ETH_MAC = "a1:b1:c1:d1:e1:f1"
 HOST = "127.0.0.1"
+VALID_DETECT_RULE = {"com.plexapp.android": {"paused": {"media_session_state": 3}}}
 
 # Android TV device with Python ADB implementation
 CONFIG_PYTHON_ADB = {
@@ -485,6 +486,7 @@ async def test_options_flow(hass):
                 CONF_SCREENCAP: True,
                 CONF_TURN_OFF_COMMAND: "off",
                 CONF_TURN_ON_COMMAND: "on",
+                CONF_STATE_DETECTION_RULES: json.dumps(VALID_DETECT_RULE),
             },
         )
 
