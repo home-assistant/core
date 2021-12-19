@@ -20,11 +20,7 @@ from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
-from tests.components.stream.common import (
-    FAKE_TIME,
-    DefaultSegment as Segment,
-    generate_h264_video,
-)
+from tests.components.stream.common import FAKE_TIME, DefaultSegment as Segment
 
 STREAM_SOURCE = "some-stream-source"
 INIT_BYTES = b"init"
@@ -118,7 +114,7 @@ def make_playlist(
     return "\n".join(response)
 
 
-async def test_hls_stream(hass, hls_stream, stream_worker_sync):
+async def test_hls_stream(hass, hls_stream, stream_worker_sync, h264_video):
     """
     Test hls stream.
 
@@ -130,8 +126,7 @@ async def test_hls_stream(hass, hls_stream, stream_worker_sync):
     stream_worker_sync.pause()
 
     # Setup demo HLS track
-    source = generate_h264_video()
-    stream = create_stream(hass, source, {})
+    stream = create_stream(hass, h264_video, {})
 
     # Request stream
     stream.add_provider(HLS_PROVIDER)
@@ -169,15 +164,14 @@ async def test_hls_stream(hass, hls_stream, stream_worker_sync):
     assert fail_response.status == HTTPStatus.NOT_FOUND
 
 
-async def test_stream_timeout(hass, hass_client, stream_worker_sync):
+async def test_stream_timeout(hass, hass_client, stream_worker_sync, h264_video):
     """Test hls stream timeout."""
     await async_setup_component(hass, "stream", {"stream": {}})
 
     stream_worker_sync.pause()
 
     # Setup demo HLS track
-    source = generate_h264_video()
-    stream = create_stream(hass, source, {})
+    stream = create_stream(hass, h264_video, {})
 
     # Request stream
     stream.add_provider(HLS_PROVIDER)
@@ -211,15 +205,16 @@ async def test_stream_timeout(hass, hass_client, stream_worker_sync):
     assert fail_response.status == HTTPStatus.NOT_FOUND
 
 
-async def test_stream_timeout_after_stop(hass, hass_client, stream_worker_sync):
+async def test_stream_timeout_after_stop(
+    hass, hass_client, stream_worker_sync, h264_video
+):
     """Test hls stream timeout after the stream has been stopped already."""
     await async_setup_component(hass, "stream", {"stream": {}})
 
     stream_worker_sync.pause()
 
     # Setup demo HLS track
-    source = generate_h264_video()
-    stream = create_stream(hass, source, {})
+    stream = create_stream(hass, h264_video, {})
 
     # Request stream
     stream.add_provider(HLS_PROVIDER)
