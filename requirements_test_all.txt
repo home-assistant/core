@@ -868,7 +868,7 @@ pydaikin==2.6.0
 pydeconz==85
 
 # homeassistant.components.dexcom
-pydexcom==0.2.1
+pydexcom==0.2.2
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
