@@ -101,7 +101,6 @@ CUSTOM_EFFECT_DICT: Final = {
     ),
 }
 
-
 SET_MUSIC_MODE_DICT: Final = {
     vol.Optional(ATTR_SENSITIVITY, default=100): vol.All(
         vol.Range(min=0, max=100), vol.Coerce(int)
