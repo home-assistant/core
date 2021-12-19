@@ -519,14 +519,14 @@ class SimpliSafe:
         self._system_notifications[system.system_id] = latest_notifications
 
     async def _async_start_websocket_loop(self) -> None:
-        """Define a callback for connecting to the websocket."""
+        """Start a websocket reconnection loop."""
         if TYPE_CHECKING:
             assert self._api.websocket
 
         should_reconnect = True
 
         try:
-            await self._api.websocket.async_reconnect()
+            await self._api.websocket.async_connect()
             await self._api.websocket.async_listen()
         except asyncio.CancelledError:
             LOGGER.debug("Request to cancel websocket loop received")
@@ -538,9 +538,24 @@ class SimpliSafe:
 
         if should_reconnect:
             LOGGER.info("Disconnected from websocket; reconnecting")
+            await self._async_cancel_websocket_loop()
             self._websocket_reconnect_task = self._hass.async_create_task(
                 self._async_start_websocket_loop()
             )
+
+    async def _async_cancel_websocket_loop(self) -> None:
+        """Stop any existing websocket reconnection loop."""
+        if self._websocket_reconnect_task:
+            self._websocket_reconnect_task.cancel()
+            try:
+                await self._websocket_reconnect_task
+            except asyncio.CancelledError:
+                LOGGER.debug("Websocket reconnection task successfully canceled")
+                self._websocket_reconnect_task = None
+
+            if TYPE_CHECKING:
+                assert self._api.websocket
+            await self._api.websocket.async_disconnect()
 
     @callback
     def _async_websocket_on_event(self, event: WebsocketEvent) -> None:
@@ -590,15 +605,7 @@ class SimpliSafe:
             if TYPE_CHECKING:
                 assert self._api.websocket
 
-            if self._websocket_reconnect_task:
-                self._websocket_reconnect_task.cancel()
-                try:
-                    await self._websocket_reconnect_task
-                except asyncio.CancelledError:
-                    LOGGER.debug("Websocket reconnection task successfully canceled")
-                    self._websocket_reconnect_task = None
-
-            await self._api.websocket.async_disconnect()
+            await self._async_cancel_websocket_loop()
 
         self.entry.async_on_unload(
             self._hass.bus.async_listen_once(
@@ -640,8 +647,7 @@ class SimpliSafe:
                 data={**self.entry.data, CONF_TOKEN: token},
             )
 
-        @callback
-        def async_handle_refresh_token(token: str) -> None:
+        async def async_handle_refresh_token(token: str) -> None:
             """Handle a new refresh token."""
             async_save_refresh_token(token)
 
@@ -649,6 +655,7 @@ class SimpliSafe:
                 assert self._api.websocket
 
             # Open a new websocket connection with the fresh token:
+            await self._async_cancel_websocket_loop()
             self._websocket_reconnect_task = self._hass.async_create_task(
                 self._async_start_websocket_loop()
             )
