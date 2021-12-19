@@ -100,6 +100,8 @@ class FroniusCoordinatorBase(
                 for key in self.unregistered_keys[solar_net_id].intersection(
                     device_data
                 ):
+                    if device_data[key]["value"] is None:
+                        continue
                     new_entities.append(entity_constructor(self, key, solar_net_id))
                     self.unregistered_keys[solar_net_id].remove(key)
             if new_entities:
