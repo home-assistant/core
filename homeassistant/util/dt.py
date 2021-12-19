@@ -5,15 +5,10 @@ import bisect
 from contextlib import suppress
 import datetime as dt
 import re
-import sys
 from typing import Any, cast
+import zoneinfo
 
 import ciso8601
-
-if sys.version_info[:2] >= (3, 9):
-    import zoneinfo
-else:
-    from backports import zoneinfo
 
 DATE_STR_FORMAT = "%Y-%m-%d"
 UTC = dt.timezone.utc

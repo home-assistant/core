@@ -1,5 +1,5 @@
 [tool.black]
-target-version = ["py38"]
+target-version = ["py39", "py310"]
 exclude = 'generated'
 
 [tool.isort]
@@ -17,7 +17,7 @@ forced_separate = [
 combine_as_imports = true
 
 [tool.pylint.MASTER]
-py-version = "3.8"
+py-version = "3.9"
 ignore = [
     "tests",
 ]
