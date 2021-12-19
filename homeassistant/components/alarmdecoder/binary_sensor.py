@@ -73,6 +73,7 @@ class AlarmDecoderBinarySensor(BinarySensorEntity):
         relay_chan,
     ):
         """Initialize the binary_sensor."""
+        self._zone_number = int(zone_number)
         self._zone_type = zone_type
         self._attr_name = zone_name
         self._rfid = zone_rfid
@@ -81,7 +82,7 @@ class AlarmDecoderBinarySensor(BinarySensorEntity):
         self._relay_chan = relay_chan
         self._attr_device_class = zone_type
         self._attr_extra_state_attributes = {
-            CONF_ZONE_NUMBER: int(zone_number),
+            CONF_ZONE_NUMBER: self._zone_number,
         }
 
     async def async_added_to_hass(self):
@@ -112,19 +113,13 @@ class AlarmDecoderBinarySensor(BinarySensorEntity):
 
     def _fault_callback(self, zone):
         """Update the zone's state, if needed."""
-        if (
-            zone is None
-            or int(zone) == self._attr_extra_state_attributes[CONF_ZONE_NUMBER]
-        ):
+        if zone is None or int(zone) == self._zone_number:
             self._attr_is_on = True
             self.schedule_update_ha_state()
 
     def _restore_callback(self, zone):
         """Update the zone's state, if needed."""
-        if zone is None or (
-            int(zone) == self._attr_extra_state_attributes[CONF_ZONE_NUMBER]
-            and not self._loop
-        ):
+        if zone is None or (int(zone) == self._zone_number and not self._loop):
             self._attr_is_on = False
             self.schedule_update_ha_state()
 
@@ -134,9 +129,7 @@ class AlarmDecoderBinarySensor(BinarySensorEntity):
             rfstate = message.value
             if self._loop:
                 self._attr_is_on = bool(message.loop[self._loop - 1])
-            attr = {
-                CONF_ZONE_NUMBER: self._attr_extra_state_attributes[CONF_ZONE_NUMBER]
-            }
+            attr = {CONF_ZONE_NUMBER: self._zone_number}
             if self._rfid and rfstate is not None:
                 attr[ATTR_RF_BIT0] = bool(rfstate & 0x01)
                 attr[ATTR_RF_LOW_BAT] = bool(rfstate & 0x02)
