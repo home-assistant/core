@@ -173,6 +173,14 @@ async def test_stream_timeout(hass, hass_client, stream_worker_sync, h264_video)
     # Setup demo HLS track
     stream = create_stream(hass, h264_video, {})
 
+    available_states = []
+
+    def update_callback() -> None:
+        nonlocal available_states
+        available_states.append(stream.available)
+
+    stream.set_update_callback(update_callback)
+
     # Request stream
     stream.add_provider(HLS_PROVIDER)
     stream.start()
@@ -203,6 +211,9 @@ async def test_stream_timeout(hass, hass_client, stream_worker_sync, h264_video)
     # Ensure playlist not accessible
     fail_response = await http_client.get(parsed_url.path)
     assert fail_response.status == HTTPStatus.NOT_FOUND
+
+    # Streams only marked as failure when keepalive is true
+    assert available_states == [True]
 
 
 async def test_stream_timeout_after_stop(
@@ -237,13 +248,21 @@ async def test_stream_keepalive(hass):
     # Setup demo HLS track
     source = "test_stream_keepalive_source"
     stream = create_stream(hass, source, {})
-    assert stream.available
     track = stream.add_provider(HLS_PROVIDER)
     track.num_segments = 2
+
+    available_states = []
+
+    def update_callback() -> None:
+        nonlocal available_states
+        available_states.append(stream.available)
+
+    stream.set_update_callback(update_callback)
 
     cur_time = 0
 
     def time_side_effect():
+        print("stream.available=%s", stream.available)
         nonlocal cur_time
         if cur_time >= 80:
             stream.keepalive = False  # Thread should exit and be joinable.
@@ -263,11 +282,14 @@ async def test_stream_keepalive(hass):
         stream._thread.join()
         stream._thread = None
         assert av_open.call_count == 2
-        assert not stream.available
+        await hass.async_block_till_done()
 
     # Stop stream, if it hasn't quit already
     stream.stop()
-    assert not stream.available
+
+    # Stream marked initially available, then marked as failed, then marked available
+    # before the final failure that exits the stream.
+    assert available_states == [True, False, True]
 
 
 async def test_hls_playlist_view_no_output(hass, hls_stream):
