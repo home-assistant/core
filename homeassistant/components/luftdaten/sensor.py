@@ -98,7 +98,7 @@ class LuftdatenSensor(CoordinatorEntity, SensorEntity):
         description: SensorEntityDescription,
         sensor_id: int,
         show_on_map: bool,
-    ):
+    ) -> None:
         """Initialize the Luftdaten sensor."""
         super().__init__(coordinator=coordinator)
         self.entity_description = description
@@ -115,7 +115,7 @@ class LuftdatenSensor(CoordinatorEntity, SensorEntity):
             ]
 
     @property
-    def native_value(self):
+    def native_value(self) -> float | None:
         """Return the state of the device."""
         if (
             not self.coordinator.data
