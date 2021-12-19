@@ -63,7 +63,8 @@ class AugustCamera(AugustEntityMixin, Camera):
     def _update_from_data(self):
         """Get the latest state of the sensor."""
         doorbell_activity = self._data.activity_stream.get_latest_device_activity(
-            self._device_id, {ActivityType.DOORBELL_MOTION}
+            self._device_id,
+            {ActivityType.DOORBELL_MOTION, ActivityType.DOORBELL_IMAGE_CAPTURE},
         )
 
         if doorbell_activity is not None:
