@@ -109,15 +109,6 @@ async def test_turn_on_off(hass: HomeAssistant):
     assert state.state == "on"
     assert state.attributes["brightness"] == 51
 
-    await hass.services.async_call(
-        "light", "turn_off", service_data={"entity_id": entity.entity_id}
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get(entity.entity_id)
-
-    assert state.state == "off"
-
 
 async def test_turn_on_with_brightness(hass: HomeAssistant):
     """Test support of the light.turn_on service with a brightness parameter."""
@@ -139,6 +130,18 @@ async def test_turn_on_with_brightness(hass: HomeAssistant):
 
     assert state.state == "on"
     assert state.attributes["brightness"] == 255
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        service_data={"entity_id": entity.entity_id, "brightness": 0},
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity.entity_id)
+
+    assert state.state == "off"
+    assert state.attributes["brightness"] == 0
 
 
 async def test_turn_on_with_color(hass: HomeAssistant):
