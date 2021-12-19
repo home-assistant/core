@@ -124,6 +124,7 @@ def _mocked_switch() -> AIOWifiLedBulb:
 
     switch.device_type = DeviceType.Switch
     switch.requires_turn_on = True
+    switch.async_reboot = AsyncMock()
     switch.async_setup = AsyncMock(side_effect=_save_setup_callback)
     switch.async_stop = AsyncMock()
     switch.async_update = AsyncMock()
