@@ -170,7 +170,7 @@ class TwinklyLight(LightEntity):
                         )
                     )
 
-        if not kwargs:
+        if not self._is_on:
             await self._client.turn_on()
 
     async def async_turn_off(self, **kwargs) -> None:

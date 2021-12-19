@@ -68,7 +68,7 @@ class ClientMock:
         """Set the mocked brightness."""
         if self.is_offline:
             raise ClientConnectionError()
-        self.brightness = brightness
+        self.brightness = {"mode": "enabled", "value": brightness}
 
     def change_name(self, new_name: str) -> None:
         """Change the name of this virtual device."""
