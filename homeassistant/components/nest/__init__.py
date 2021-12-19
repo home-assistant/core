@@ -89,9 +89,9 @@ INSTALLED_AUTH_DOMAIN = f"{DOMAIN}.installed"
 
 # Fetch media events with a disk backed cache, with a limit for each camera
 # device. The largest media items are mp4 clips at ~120kb each, and we target
-# ~500MB of storage per camera to try to balance a reasonable user experience
+# ~125MB of storage per camera to try to balance a reasonable user experience
 # for event history not not filling the disk.
-EVENT_MEDIA_CACHE_SIZE = 4096
+EVENT_MEDIA_CACHE_SIZE = 1024  # number of events
 
 
 class WebAuth(config_entry_oauth2_flow.LocalOAuth2Implementation):
