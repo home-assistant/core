@@ -177,7 +177,7 @@ async def test_setup_get(hass):
 
     state = hass.states.get("binary_sensor.foo")
     assert state.state == STATE_OFF
-    assert state.attributes[ATTR_DEVICE_CLASS] is BinarySensorDeviceClass.PLUG.value
+    assert state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.PLUG
 
 
 @respx.mock
