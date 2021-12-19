@@ -171,7 +171,7 @@ class AndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if entry.data[CONF_HOST] == import_config[CONF_HOST]:
                 _LOGGER.warning(
                     "Host [%s] already configured. This yaml configuration has already been imported. Please remove it",
-                    CONF_HOST,
+                    import_config[CONF_HOST],
                 )
                 return self.async_abort(reason="already_configured")
         self._import_options = import_config.pop(CONF_MIGRATION_OPTIONS, None)
