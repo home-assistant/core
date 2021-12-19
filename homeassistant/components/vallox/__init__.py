@@ -1,6 +1,7 @@
 """Support for Vallox ventilation units."""
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass, field
 import ipaddress
 import logging
@@ -25,6 +26,7 @@ from .const import (
     DEFAULT_FAN_SPEED_HOME,
     DEFAULT_NAME,
     DOMAIN,
+    INITIAL_COORDINATOR_UPDATE_RETRY_INTERVAL_SECONDS,
     METRIC_KEY_PROFILE_FAN_SPEED_AWAY,
     METRIC_KEY_PROFILE_FAN_SPEED_BOOST,
     METRIC_KEY_PROFILE_FAN_SPEED_HOME,
@@ -171,7 +173,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DOMAIN] = {"client": client, "coordinator": coordinator, "name": name}
 
     async def _async_load_platform_delayed(*_: Any) -> None:
-        await coordinator.async_refresh()
+        # We need a successful update before loading the platforms, because platform init code
+        # derives the UUIDs from the data the coordinator fetches.
+        while True:
+            await coordinator.async_refresh()
+            if coordinator.last_update_success:
+                break
+
+            await asyncio.sleep(INITIAL_COORDINATOR_UPDATE_RETRY_INTERVAL_SECONDS)
+
         hass.async_create_task(async_load_platform(hass, "sensor", DOMAIN, {}, config))
         hass.async_create_task(async_load_platform(hass, "fan", DOMAIN, {}, config))
 
