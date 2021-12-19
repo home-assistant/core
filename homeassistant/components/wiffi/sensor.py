@@ -3,19 +3,16 @@
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import (
-    DEGREE,
-    ENTITY_CATEGORY_DIAGNOSTIC,
-    PRESSURE_MBAR,
-    TEMP_CELSIUS,
-)
+from homeassistant.const import DEGREE, PRESSURE_MBAR, TEMP_CELSIUS
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import EntityCategory
 
 from . import WiffiEntity
-from .const import CREATE_ENTITY_SIGNAL
+from .const import CREATE_ENTITY_SIGNAL, NAME_TO_ENTITY_CAT
 from .wiffi_strings import (
     WIFFI_UOM_DEGREE,
     WIFFI_UOM_LUX,
@@ -62,19 +59,42 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_dispatcher_connect(hass, CREATE_ENTITY_SIGNAL, _create_entity)
 
 
+def create_number_entity_description(metric):
+    """Create an entity description from the received attributes."""
+    entity_description = SensorEntityDescription(
+        key=metric.description,
+        name=metric.description,
+        entity_category=NAME_TO_ENTITY_CAT.get(metric.description),
+        device_class=UOM_TO_DEVICE_CLASS_MAP.get(metric.unit_of_measurement),
+        native_unit_of_measurement=UOM_MAP.get(
+            metric.unit_of_measurement, metric.unit_of_measurement
+        ),
+    )
+    return entity_description
+
+
+def create_string_entity_description(metric):
+    """Create an entity description from the received attributes."""
+    entity_description = SensorEntityDescription(
+        key=metric.description,
+        name=metric.description,
+        entity_category=NAME_TO_ENTITY_CAT.get(metric.description),
+    )
+
+    if metric.description.endswith("_ip"):
+        entity_description.entity_category = EntityCategory.DIAGNOSTIC
+
+    return entity_description
+
+
 class NumberEntity(WiffiEntity, SensorEntity):
     """Entity for wiffi metrics which have a number value."""
 
     def __init__(self, device, metric, options):
         """Initialize the entity."""
-        super().__init__(device, metric, options, SensorEntityDescription)
+        super().__init__(device, metric, options)
 
-        self.entity_description.device_class = UOM_TO_DEVICE_CLASS_MAP.get(
-            metric.unit_of_measurement
-        )
-        self.entity_description.native_unit_of_measurement = UOM_MAP.get(
-            metric.unit_of_measurement, metric.unit_of_measurement
-        )
+        self.entity_description = create_number_entity_description(metric)
         if self._is_measurement_entity():
             self._attr_state_class = SensorStateClass.MEASUREMENT
         elif self._is_metered_entity():
@@ -96,7 +116,8 @@ class NumberEntity(WiffiEntity, SensorEntity):
         Called if a new message has been received from the wiffi device.
         """
         self.reset_expiration_date()
-        self.entity_description.unit_of_measurement = UOM_MAP.get(
+
+        self.entity_description.native_unit_of_measurement = UOM_MAP.get(
             metric.unit_of_measurement, metric.unit_of_measurement
         )
 
@@ -110,10 +131,9 @@ class StringEntity(WiffiEntity, SensorEntity):
 
     def __init__(self, device, metric, options):
         """Initialize the entity."""
-        super().__init__(device, metric, options, SensorEntityDescription)
+        super().__init__(device, metric, options)
 
-        if self.entity_description.key.endswith("_ip"):
-            self.entity_description.entity_category = ENTITY_CATEGORY_DIAGNOSTIC
+        self.entity_description = create_string_entity_description(metric)
 
         self._value = metric.value
         self.reset_expiration_date()

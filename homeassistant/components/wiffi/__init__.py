@@ -31,13 +31,6 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
-# map to determine HA entity category from wiffi's entity name
-NAME_TO_ENTITY_CAT = {
-    "rssi": ENTITY_CATEGORY_DIAGNOSTIC,
-    "uptime": ENTITY_CATEGORY_DIAGNOSTIC,
-    "ssid": ENTITY_CATEGORY_DIAGNOSTIC,
-}
-
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up wiffi from a config entry, config_entry contains data from config entry database."""
@@ -145,14 +138,8 @@ class WiffiIntegrationApi:
 class WiffiEntity(Entity):
     """Common functionality for all wiffi entities."""
 
-    def __init__(self, device, metric, options, entity_description_type):
+    def __init__(self, device, metric, options):
         """Initialize the base elements of a wiffi entity."""
-        self.entity_description = entity_description_type(
-            key=metric.description,
-            name=metric.description,
-            entity_category=NAME_TO_ENTITY_CAT.get(metric.description),
-        )
-
         self._id = generate_unique_id(device, metric)
         self._device_info = DeviceInfo(
             connections={(device_registry.CONNECTION_NETWORK_MAC, device.mac_address)},

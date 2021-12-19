@@ -8,7 +8,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import WiffiEntity
-from .const import CREATE_ENTITY_SIGNAL
+from .const import CREATE_ENTITY_SIGNAL, NAME_TO_ENTITY_CAT
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -31,12 +31,23 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_dispatcher_connect(hass, CREATE_ENTITY_SIGNAL, _create_entity)
 
 
+def create_binary_sensor_entity_description(metric):
+    """Create an entity description from the received attributes."""
+    entity_description = BinarySensorEntityDescription(
+        key=metric.description,
+        name=metric.description,
+        entity_category=NAME_TO_ENTITY_CAT.get(metric.description),
+    )
+    return entity_description
+
+
 class BoolEntity(WiffiEntity, BinarySensorEntity):
     """Entity for wiffi metrics which have a boolean value."""
 
     def __init__(self, device, metric, options):
         """Initialize the entity."""
-        super().__init__(device, metric, options, BinarySensorEntityDescription)
+        super().__init__(device, metric, options)
+        self.entity_description = create_binary_sensor_entity_description(metric)
         self._value = metric.value
         self.reset_expiration_date()
 
