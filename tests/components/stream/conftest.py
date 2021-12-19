@@ -25,7 +25,7 @@ import pytest
 from homeassistant.components.stream.core import Segment, StreamOutput
 from homeassistant.components.stream.worker import StreamState
 
-from .common import generate_h264_video
+from .common import generate_h264_video, stream_teardown
 
 TEST_TIMEOUT = 7.0  # Lower than 9s home assistant timeout
 
@@ -223,3 +223,10 @@ def hls_sync():
 def h264_video():
     """Generate a video, shared across tests."""
     return generate_h264_video()
+
+
+@pytest.fixture(scope="package")
+def fixture_teardown():
+    """Destroy package level test state."""
+    yield
+    stream_teardown()
