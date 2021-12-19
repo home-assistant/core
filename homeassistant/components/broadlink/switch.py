@@ -17,6 +17,8 @@ from homeassistant.const import (
     CONF_MAC,
     CONF_NAME,
     CONF_SWITCHES,
+    CONF_TIMEOUT,
+    CONF_TYPE,
     STATE_ON,
     Platform,
 )
@@ -39,15 +41,21 @@ SWITCH_SCHEMA = vol.Schema(
     }
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_MAC): mac_address,
-        vol.Optional(CONF_HOST): cv.string,
-        vol.Optional(CONF_SWITCHES, default=[]): vol.All(
-            cv.ensure_list,
-            [SWITCH_SCHEMA],
-        ),
-    }
+PLATFORM_SCHEMA = vol.All(
+    cv.deprecated(CONF_HOST),
+    cv.deprecated(CONF_SLOTS),
+    cv.deprecated(CONF_TIMEOUT),
+    cv.deprecated(CONF_TYPE),
+    PLATFORM_SCHEMA.extend(
+        {
+            vol.Required(CONF_MAC): mac_address,
+            vol.Optional(CONF_HOST): cv.string,
+            vol.Optional(CONF_SWITCHES, default=[]): vol.All(
+                cv.ensure_list,
+                [SWITCH_SCHEMA],
+            ),
+        }
+    ),
 )
 
 
