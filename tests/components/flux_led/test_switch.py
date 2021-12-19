@@ -119,12 +119,19 @@ async def test_music_mode_switch(hass: HomeAssistant) -> None:
     assert hass.states.get(entity_id).state == STATE_OFF
 
     bulb.effect = MODE_MUSIC
+    bulb.is_on = False
+    await hass.services.async_call(
+        SWITCH_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+    bulb.async_set_music_mode.assert_called_once()
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    bulb.async_set_music_mode.reset_mock()
     bulb.is_on = True
     await hass.services.async_call(
         SWITCH_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
     bulb.async_set_music_mode.assert_called_once()
-
     assert hass.states.get(entity_id).state == STATE_ON
 
     bulb.effect = None
@@ -132,5 +139,4 @@ async def test_music_mode_switch(hass: HomeAssistant) -> None:
         SWITCH_DOMAIN, "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
     bulb.async_set_levels.assert_called_once()
-
     assert hass.states.get(entity_id).state == STATE_OFF
