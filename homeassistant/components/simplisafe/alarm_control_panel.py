@@ -41,6 +41,7 @@ from homeassistant.const import (
     STATE_ALARM_TRIGGERED,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SimpliSafe, SimpliSafeEntity
@@ -173,8 +174,9 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
         try:
             await self._system.async_set_off()
         except SimplipyError as err:
-            LOGGER.error('Error while disarming "%s": %s', self._system.system_id, err)
-            return
+            raise HomeAssistantError(
+                f'Error while disarming "{self._system.system_id}": {err}'
+            ) from err
 
         self._attr_state = STATE_ALARM_DISARMED
         self.async_write_ha_state()
@@ -187,10 +189,9 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
         try:
             await self._system.async_set_home()
         except SimplipyError as err:
-            LOGGER.error(
-                'Error while arming "%s" (home): %s', self._system.system_id, err
-            )
-            return
+            raise HomeAssistantError(
+                f'Error while arming (home) "{self._system.system_id}": {err}'
+            ) from err
 
         self._attr_state = STATE_ALARM_ARMED_HOME
         self.async_write_ha_state()
@@ -203,10 +204,9 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanelEntity):
         try:
             await self._system.async_set_away()
         except SimplipyError as err:
-            LOGGER.error(
-                'Error while arming "%s" (away): %s', self._system.system_id, err
-            )
-            return
+            raise HomeAssistantError(
+                f'Error while arming (away) "{self._system.system_id}": {err}'
+            ) from err
 
         self._attr_state = STATE_ALARM_ARMING
         self.async_write_ha_state()
