@@ -1,7 +1,7 @@
 """Support for WeMo device discovery."""
 from __future__ import annotations
 
-from collections.abc import MutableSet, Sequence
+from collections.abc import Sequence
 import logging
 from typing import Any, Optional, Tuple
 
