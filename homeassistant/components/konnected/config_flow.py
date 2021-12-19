@@ -10,10 +10,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
-from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_DOOR,
-    DEVICE_CLASSES_SCHEMA,
-)
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_BINARY_SENSORS,
@@ -101,7 +98,9 @@ IO_SCHEMA = vol.Schema(
 BINARY_SENSOR_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ZONE): vol.In(ZONES),
-        vol.Required(CONF_TYPE, default=DEVICE_CLASS_DOOR): DEVICE_CLASSES_SCHEMA,
+        vol.Required(CONF_TYPE, default=BinarySensorDeviceClass.DOOR): vol.In(
+            [cls.value for cls in BinarySensorDeviceClass]
+        ),
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_INVERSE, default=False): cv.boolean,
     }
@@ -571,8 +570,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     {
                         vol.Required(
                             CONF_TYPE,
-                            default=current_cfg.get(CONF_TYPE, DEVICE_CLASS_DOOR),
-                        ): DEVICE_CLASSES_SCHEMA,
+                            default=current_cfg.get(
+                                CONF_TYPE, BinarySensorDeviceClass.DOOR
+                            ),
+                        ): vol.In([cls.value for cls in BinarySensorDeviceClass]),
                         vol.Optional(
                             CONF_NAME, default=current_cfg.get(CONF_NAME, vol.UNDEFINED)
                         ): str,
@@ -600,8 +601,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         {
                             vol.Required(
                                 CONF_TYPE,
-                                default=current_cfg.get(CONF_TYPE, DEVICE_CLASS_DOOR),
-                            ): DEVICE_CLASSES_SCHEMA,
+                                default=current_cfg.get(
+                                    CONF_TYPE, BinarySensorDeviceClass.DOOR
+                                ),
+                            ): vol.In([cls.value for cls in BinarySensorDeviceClass]),
                             vol.Optional(
                                 CONF_NAME,
                                 default=current_cfg.get(CONF_NAME, vol.UNDEFINED),
