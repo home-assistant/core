@@ -1,15 +1,13 @@
 """The Flux LED/MagicLight integration."""
 from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
 import logging
 from typing import Any, Final
 
 from flux_led import DeviceType
 from flux_led.aio import AIOWifiLedBulb
-from flux_led.aioscanner import AIOBulbScanner
-from flux_led.const import ATTR_ID, ATTR_IPADDR, ATTR_MODEL, ATTR_MODEL_DESCRIPTION
+from flux_led.const import ATTR_ID
 from flux_led.scanner import FluxLEDDiscovery
 
 from homeassistant import config_entries
@@ -33,10 +31,15 @@ from .const import (
     DISCOVER_SCAN_TIMEOUT,
     DOMAIN,
     FLUX_LED_DISCOVERY,
-    FLUX_LED_DISCOVERY_LOCK,
     FLUX_LED_EXCEPTIONS,
     SIGNAL_STATE_UPDATED,
     STARTUP_SCAN_TIMEOUT,
+)
+from .discovery import (
+    async_discover_device,
+    async_discover_devices,
+    async_name_from_discovery,
+    async_trigger_discovery,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -56,18 +59,6 @@ def async_wifi_bulb_for_host(host: str) -> AIOWifiLedBulb:
 
 
 @callback
-def async_name_from_discovery(device: FluxLEDDiscovery) -> str:
-    """Convert a flux_led discovery to a human readable name."""
-    mac_address = device[ATTR_ID]
-    if mac_address is None:
-        return device[ATTR_IPADDR]
-    short_mac = mac_address[-6:]
-    if device[ATTR_MODEL_DESCRIPTION]:
-        return f"{device[ATTR_MODEL_DESCRIPTION]} {short_mac}"
-    return f"{device[ATTR_MODEL]} {short_mac}"
-
-
-@callback
 def async_update_entry_from_discovery(
     hass: HomeAssistant, entry: config_entries.ConfigEntry, device: FluxLEDDiscovery
 ) -> None:
@@ -81,52 +72,6 @@ def async_update_entry_from_discovery(
         title=name,
         unique_id=dr.format_mac(mac_address),
     )
-
-
-async def async_discover_devices(
-    hass: HomeAssistant, timeout: int, address: str | None = None
-) -> list[FluxLEDDiscovery]:
-    """Discover flux led devices."""
-    domain_data = hass.data.setdefault(DOMAIN, {})
-    if FLUX_LED_DISCOVERY_LOCK not in domain_data:
-        domain_data[FLUX_LED_DISCOVERY_LOCK] = asyncio.Lock()
-    async with domain_data[FLUX_LED_DISCOVERY_LOCK]:
-        scanner = AIOBulbScanner()
-        try:
-            discovered = await scanner.async_scan(timeout=timeout, address=address)
-        except OSError as ex:
-            _LOGGER.debug("Scanning failed with error: %s", ex)
-            return []
-        else:
-            return discovered
-
-
-async def async_discover_device(
-    hass: HomeAssistant, host: str
-) -> FluxLEDDiscovery | None:
-    """Direct discovery at a single ip instead of broadcast."""
-    # If we are missing the unique_id we should be able to fetch it
-    # from the device by doing a directed discovery at the host only
-    for device in await async_discover_devices(hass, DISCOVER_SCAN_TIMEOUT, host):
-        if device[ATTR_IPADDR] == host:
-            return device
-    return None
-
-
-@callback
-def async_trigger_discovery(
-    hass: HomeAssistant,
-    discovered_devices: list[FluxLEDDiscovery],
-) -> None:
-    """Trigger config flows for discovered devices."""
-    for device in discovered_devices:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_DISCOVERY},
-                data={**device},
-            )
-        )
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -173,11 +118,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(
             str(ex) or f"Timed out trying to connect to {device.ipaddr}"
         ) from ex
+
     coordinator = FluxLedUpdateCoordinator(hass, device)
     hass.data[DOMAIN][entry.entry_id] = coordinator
-    hass.config_entries.async_setup_platforms(
-        entry, PLATFORMS_BY_TYPE[device.device_type]
-    )
+    platforms = PLATFORMS_BY_TYPE[device.device_type]
+    hass.config_entries.async_setup_platforms(entry, platforms)
     entry.async_on_unload(entry.add_update_listener(async_update_listener))
 
     return True
@@ -188,8 +133,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     device: AIOWifiLedBulb = hass.data[DOMAIN][entry.entry_id].device
     platforms = PLATFORMS_BY_TYPE[device.device_type]
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, platforms):
-        coordinator = hass.data[DOMAIN].pop(entry.entry_id)
-        await coordinator.device.async_stop()
+        del hass.data[DOMAIN][entry.entry_id]
+        await device.async_stop()
     return unload_ok
 
 
