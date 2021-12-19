@@ -64,7 +64,7 @@ class PicnicSensor(SensorEntity, CoordinatorEntity):
         self._attr_unique_id = f"{config_entry.unique_id}.{description.key}"
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the state of the entity."""
         data_set = (
             self.coordinator.data.get(self.entity_description.data_type, {})
@@ -73,15 +73,14 @@ class PicnicSensor(SensorEntity, CoordinatorEntity):
         )
         value = self.entity_description.value_fn(data_set)
 
-        # Convert to datetime object if the device class is timestamp
-        if value and self.device_class == SensorDeviceClass.TIMESTAMP:
-            try:
-                value = datetime.strptime(value, DATE_TIME_FORMAT)
-            except ValueError:
-                value = None
+        if not value or self.device_class != SensorDeviceClass.TIMESTAMP:
+            return value
 
-        # Return the value
-        return value
+        # Convert to datetime object if the device class is timestamp
+        try:
+            return datetime.strptime(str(value), DATE_TIME_FORMAT)
+        except ValueError:
+            return None
 
     @property
     def available(self) -> bool:
