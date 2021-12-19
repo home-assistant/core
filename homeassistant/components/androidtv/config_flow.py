@@ -1,4 +1,5 @@
 """Config flow to configure the Android TV integration."""
+import json
 import logging
 import os
 import socket
@@ -195,11 +196,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     def _save_config(self, data):
         """Save the updated options."""
-        state_det_rules = data.get(CONF_STATE_DETECTION_RULES)
-        if state_det_rules:
-            json_rules = validate_state_det_rules(state_det_rules)
-            if not json_rules:
+        str_state_det_rules = data.pop(CONF_STATE_DETECTION_RULES, None)
+        if str_state_det_rules:
+            json_rules = validate_state_det_rules(str_state_det_rules)
+            if json_rules is None:
                 return self._async_init_form(errors={"base": "invalid_det_rules"})
+            data[CONF_STATE_DETECTION_RULES] = json_rules
 
         data[CONF_APPS] = self._apps
         return self.async_create_entry(title="", data=data)
@@ -221,6 +223,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         apps_list = {k: f"{v} ({k})" if v else k for k, v in self._apps.items()}
         apps = {APPS_NEW_ID: "Add new", **apps_list}
         options = self.config_entry.options
+        state_det_rules = options.get(CONF_STATE_DETECTION_RULES)
+        str_state_det_rules = json.dumps(state_det_rules) if state_det_rules else ""
+
         data_schema = vol.Schema(
             {
                 vol.Optional(CONF_APPS): vol.In(apps),
@@ -252,9 +257,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 ): str,
                 vol.Optional(
                     CONF_STATE_DETECTION_RULES,
-                    description={
-                        "suggested_value": options.get(CONF_STATE_DETECTION_RULES, "")
-                    },
+                    description={"suggested_value": str_state_det_rules},
                 ): str,
             }
         )

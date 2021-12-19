@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from datetime import datetime
 import functools
-import json
 import logging
 
 from adb_shell.exceptions import (
@@ -189,21 +188,19 @@ async def async_setup_platform(
             config_data[key] = config[key]
 
     # get options
-    config_options = {}
-    for key in (
-        CONF_APPS,
-        CONF_EXCLUDE_UNNAMED_APPS,
-        CONF_GET_SOURCES,
-        CONF_SCREENCAP,
-        CONF_STATE_DETECTION_RULES,
-        CONF_TURN_OFF_COMMAND,
-        CONF_TURN_ON_COMMAND,
-    ):
-        if key in config:
-            if key == CONF_STATE_DETECTION_RULES:
-                config_options[key] = json.dumps(config[key])
-            else:
-                config_options[key] = config[key]
+    config_options = {
+        key: config[key]
+        for key in (
+            CONF_APPS,
+            CONF_EXCLUDE_UNNAMED_APPS,
+            CONF_GET_SOURCES,
+            CONF_SCREENCAP,
+            CONF_STATE_DETECTION_RULES,
+            CONF_TURN_OFF_COMMAND,
+            CONF_TURN_ON_COMMAND,
+        )
+        if key in config
+    }
 
     # save option to use with entry
     if config_options:

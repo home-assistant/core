@@ -70,11 +70,13 @@ def validate_state_det_rules(state_det_rules):
     if not state_det_rules:
         return None
 
-    try:
-        json_rules = json.loads(state_det_rules)
-    except ValueError:
-        _LOGGER.warning("Error loading state detection rules")
-        return None
+    json_rules = state_det_rules
+    if isinstance(state_det_rules, str):
+        try:
+            json_rules = json.loads(state_det_rules)
+        except ValueError:
+            _LOGGER.warning("Error loading state detection rules")
+            return None
     try:
         state_detection_rules_validator(json_rules, ValueError)
     except ValueError as exc:
