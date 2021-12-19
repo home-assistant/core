@@ -5,7 +5,7 @@ from collections.abc import Mapping
 from datetime import date, datetime
 from typing import Any
 
-from aioridwell.client import RidwellAccount, RidwellPickupEvent
+from aioridwell.model import RidwellAccount, RidwellPickupEvent
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -58,13 +58,13 @@ class RidwellSensor(CoordinatorEntity, SensorEntity):
 
         attrs: dict[str, Any] = {
             ATTR_PICKUP_TYPES: {},
-            ATTR_PICKUP_STATE: event.state,
+            ATTR_PICKUP_STATE: event.state.value,
         }
 
         for pickup in event.pickups:
             if pickup.name not in attrs[ATTR_PICKUP_TYPES]:
                 attrs[ATTR_PICKUP_TYPES][pickup.name] = {
-                    ATTR_CATEGORY: pickup.category,
+                    ATTR_CATEGORY: pickup.category.value,
                     ATTR_QUANTITY: pickup.quantity,
                 }
             else:

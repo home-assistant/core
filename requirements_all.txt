@@ -246,7 +246,7 @@ aiopylgtv==0.4.0
 aiorecollect==1.0.8
 
 # homeassistant.components.ridwell
-aioridwell==0.2.0
+aioridwell==2021.12.2
 
 # homeassistant.components.shelly
 aioshelly==1.0.5
@@ -339,7 +339,7 @@ asterisk_mbox==0.5.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.23.0
+async-upnp-client==0.23.1
 
 # homeassistant.components.supla
 asyncpysupla==0.0.5
@@ -1670,7 +1670,7 @@ pymyq==3.1.4
 pymysensors==0.22.1
 
 # homeassistant.components.netgear
-pynetgear==0.7.0
+pynetgear==0.8.0
 
 # homeassistant.components.netio
 pynetio==0.1.9.1
@@ -2082,7 +2082,7 @@ rjpl==0.3.6
 rocketchat-API==0.6.1
 
 # homeassistant.components.roku
-rokuecp==0.8.4
+rokuecp==0.8.5
 
 # homeassistant.components.roomba
 roombapy==1.6.4
@@ -2287,7 +2287,7 @@ systembridge==2.2.3
 tahoma-api==0.0.16
 
 # homeassistant.components.tailscale
-tailscale==0.1.5
+tailscale==0.1.6
 
 # homeassistant.components.tank_utility
 tank_utility==1.4.0
