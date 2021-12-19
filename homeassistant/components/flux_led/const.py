@@ -53,6 +53,10 @@ DISCOVER_SCAN_TIMEOUT: Final = 10
 CONF_DEVICES: Final = "devices"
 CONF_CUSTOM_EFFECT: Final = "custom_effect"
 CONF_MODEL: Final = "model"
+CONF_MINOR_VERSION: Final = "minor_version"
+CONF_REMOTE_ACCESS_ENABLED: Final = "remote_access_enabled"
+CONF_REMOTE_ACCESS_HOST: Final = "remote_access_host"
+CONF_REMOTE_ACCESS_PORT: Final = "remote_access_port"
 
 MODE_AUTO: Final = "auto"
 MODE_RGB: Final = "rgb"

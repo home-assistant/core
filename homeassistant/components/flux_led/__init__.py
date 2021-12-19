@@ -3,21 +3,14 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any, Final
+from typing import Any, Final, cast
 
 from flux_led import DeviceType
 from flux_led.aio import AIOWifiLedBulb
 from flux_led.const import ATTR_ID
-from flux_led.scanner import FluxLEDDiscovery
 
-from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    EVENT_HOMEASSISTANT_STARTED,
-    Platform,
-)
+from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STARTED, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -36,16 +29,18 @@ from .const import (
     STARTUP_SCAN_TIMEOUT,
 )
 from .discovery import (
+    async_clear_discovery_cache,
     async_discover_device,
     async_discover_devices,
-    async_name_from_discovery,
+    async_get_discovery,
     async_trigger_discovery,
+    async_update_entry_from_discovery,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS_BY_TYPE: Final = {
-    DeviceType.Bulb: [Platform.LIGHT, Platform.NUMBER],
+    DeviceType.Bulb: [Platform.LIGHT, Platform.NUMBER, Platform.SWITCH],
     DeviceType.Switch: [Platform.SWITCH],
 }
 DISCOVERY_INTERVAL: Final = timedelta(minutes=15)
@@ -56,22 +51,6 @@ REQUEST_REFRESH_DELAY: Final = 1.5
 def async_wifi_bulb_for_host(host: str) -> AIOWifiLedBulb:
     """Create a AIOWifiLedBulb from a host."""
     return AIOWifiLedBulb(host)
-
-
-@callback
-def async_update_entry_from_discovery(
-    hass: HomeAssistant, entry: config_entries.ConfigEntry, device: FluxLEDDiscovery
-) -> None:
-    """Update a config entry from a flux_led discovery."""
-    name = async_name_from_discovery(device)
-    mac_address = device[ATTR_ID]
-    assert mac_address is not None
-    hass.config_entries.async_update_entry(
-        entry,
-        data={**entry.data, CONF_NAME: name},
-        title=name,
-        unique_id=dr.format_mac(mac_address),
-    )
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -92,18 +71,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Update listener."""
-    await hass.config_entries.async_reload(entry.entry_id)
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Flux LED/MagicLight from a config entry."""
     host = entry.data[CONF_HOST]
-    if not entry.unique_id:
-        if discovery := await async_discover_device(hass, host):
-            async_update_entry_from_discovery(hass, entry, discovery)
-
     device: AIOWifiLedBulb = async_wifi_bulb_for_host(host)
     signal = SIGNAL_STATE_UPDATED.format(device.ipaddr)
 
@@ -119,11 +89,32 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             str(ex) or f"Timed out trying to connect to {device.ipaddr}"
         ) from ex
 
-    coordinator = FluxLedUpdateCoordinator(hass, device)
+    # UDP probe after successful connect only
+    directed_discovery = None
+    if discovery := async_get_discovery(hass, host):
+        directed_discovery = False
+    elif discovery := await async_discover_device(hass, host):
+        directed_discovery = True
+
+    if discovery:
+        if entry.unique_id:
+            assert discovery[ATTR_ID] is not None
+            mac = dr.format_mac(cast(str, discovery[ATTR_ID]))
+            if mac != entry.unique_id:
+                # The device is offline and another flux_led device is now using the ip address
+                raise ConfigEntryNotReady(
+                    f"Unexpected device found at {host}; Expected {entry.unique_id}, found {mac}"
+                )
+        if directed_discovery:
+            # Only update the entry once we have verified the unique id
+            # is either missing or we have verified it matches
+            async_update_entry_from_discovery(hass, entry, discovery)
+        device.discovery = discovery
+
+    coordinator = FluxLedUpdateCoordinator(hass, device, entry)
     hass.data[DOMAIN][entry.entry_id] = coordinator
     platforms = PLATFORMS_BY_TYPE[device.device_type]
     hass.config_entries.async_setup_platforms(entry, platforms)
-    entry.async_on_unload(entry.add_update_listener(async_update_listener))
 
     return True
 
@@ -133,6 +124,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     device: AIOWifiLedBulb = hass.data[DOMAIN][entry.entry_id].device
     platforms = PLATFORMS_BY_TYPE[device.device_type]
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, platforms):
+        # Make sure we probe the device again in case something has changed externally
+        async_clear_discovery_cache(hass, entry.data[CONF_HOST])
         del hass.data[DOMAIN][entry.entry_id]
         await device.async_stop()
     return unload_ok
@@ -142,12 +135,11 @@ class FluxLedUpdateCoordinator(DataUpdateCoordinator):
     """DataUpdateCoordinator to gather data for a specific flux_led device."""
 
     def __init__(
-        self,
-        hass: HomeAssistant,
-        device: AIOWifiLedBulb,
+        self, hass: HomeAssistant, device: AIOWifiLedBulb, entry: ConfigEntry
     ) -> None:
         """Initialize DataUpdateCoordinator to gather data for specific device."""
         self.device = device
+        self.entry = entry
         super().__init__(
             hass,
             _LOGGER,
