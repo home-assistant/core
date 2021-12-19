@@ -45,6 +45,7 @@ from homeassistant.components.media_source.models import (
     PlayMedia,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.template import DATE_STR_FORMAT
 from homeassistant.util import dt as dt_util, raise_if_invalid_filename
@@ -62,8 +63,8 @@ EVENT_MEDIA_API_URL_FORMAT = "/api/nest/event_media/{device_id}/{event_id}"
 
 STORAGE_KEY = "nest.event_media"
 STORAGE_VERSION = 1
-# Write events at most once per duration
-STORAGE_SAVE_DELAY_SECONDS = 5.0
+# Buffer writes every few minutes (plus guaranteed to be written at shutdown)
+STORAGE_SAVE_DELAY_SECONDS = 120
 # Path under config directory
 MEDIA_PATH = f"{DOMAIN}/event_media"
 
@@ -113,12 +114,11 @@ class NestEventMediaStore(EventMediaStore):
         self._store = store
         self._media_path = media_path
         self._data: dict | None = None
-        self._data_loaded = False
         self._devices: Mapping[str, str] | None = {}
 
     async def async_load(self) -> dict | None:
         """Load data."""
-        if not self._data_loaded:
+        if self._data is None:
             self._devices = await self._get_devices()
             data = await self._store.async_load()
             if data is None:
@@ -128,12 +128,11 @@ class NestEventMediaStore(EventMediaStore):
                 _LOGGER.debug("Loaded event store with %d records", len(data))
                 self._data = data
             else:
-                _LOGGER.error(
-                    "Unexpected data in storage version=%s, key=%s",
-                    STORAGE_VERSION,
-                    STORAGE_KEY,
+                raise ValueError(
+                    "Unexpected data in storage version={}, key={}".format(
+                        STORAGE_VERSION, STORAGE_KEY
+                    )
                 )
-            self._data_loaded = True
         return self._data
 
     async def async_save(self, data: dict | None) -> None:
@@ -141,7 +140,7 @@ class NestEventMediaStore(EventMediaStore):
         self._data = data
 
         def provide_data() -> dict:
-            return {} if data is None else data
+            return {} if self._data is None else self._data
 
         self._store.async_delay_save(provide_data, STORAGE_SAVE_DELAY_SECONDS)
 
@@ -149,7 +148,7 @@ class NestEventMediaStore(EventMediaStore):
         """Return the filename to use for a new event."""
         # Convert a nest device id to a home assistant device id
         device_id_str = (
-            self._devices.get(device_id, "unknown_device")
+            self._devices.get(device_id, f"{device_id}-unknown_device")
             if self._devices
             else "unknown_device"
         )
@@ -221,13 +220,11 @@ class NestEventMediaStore(EventMediaStore):
 
     async def _get_devices(self) -> Mapping[str, str]:
         """Return a mapping of nest device id to home assistant device id."""
-        device_registry = await self._hass.helpers.device_registry.async_get_registry()
+        dr = device_registry.async_get(self._hass)
         device_manager = await self._subscriber.async_get_device_manager()
         devices = {}
         for device in device_manager.devices.values():
-            if device_entry := device_registry.async_get_device(
-                {(DOMAIN, device.name)}
-            ):
+            if device_entry := dr.async_get_device({(DOMAIN, device.name)}):
                 devices[device.name] = device_entry.id
         return devices
 
@@ -244,7 +241,7 @@ async def get_media_source_devices(hass: HomeAssistant) -> Mapping[str, Device]:
         return {}
     subscriber = hass.data[DOMAIN][DATA_SUBSCRIBER]
     device_manager = await subscriber.async_get_device_manager()
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    dr = device_registry.async_get(hass)
     devices = {}
     for device in device_manager.devices.values():
         if not (
@@ -252,7 +249,7 @@ async def get_media_source_devices(hass: HomeAssistant) -> Mapping[str, Device]:
             or CameraClipPreviewTrait.NAME in device.traits
         ):
             continue
-        if device_entry := device_registry.async_get_device({(DOMAIN, device.name)}):
+        if device_entry := dr.async_get_device({(DOMAIN, device.name)}):
             devices[device_entry.id] = device
     return devices
 
