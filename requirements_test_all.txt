@@ -7,7 +7,7 @@
 AEMET-OpenData==0.2.1
 
 # homeassistant.components.adax
-Adax-local==0.1.1
+Adax-local==0.1.2
 
 # homeassistant.components.homekit
 HAP-python==4.3.0
