@@ -58,6 +58,8 @@ _UNDEF = object()  # Internal; not helpers.typing.UNDEFINED due to circular depe
 
 MAX_LOAD_CONCURRENTLY = 4
 
+MOVED_ZEROCONF_PROPS = ("macaddress", "model", "manufacturer")
+
 
 class Manifest(TypedDict, total=False):
     """
@@ -182,21 +184,42 @@ async def async_get_config_flows(hass: HomeAssistant) -> set[str]:
     return flows
 
 
-async def async_get_zeroconf(hass: HomeAssistant) -> dict[str, list[dict[str, str]]]:
+def async_process_zeroconf_match_dict(entry: dict[str, Any]) -> dict[str, Any]:
+    """Handle backwards compat with zeroconf matchers."""
+    entry_without_type: dict[str, Any] = entry.copy()
+    del entry_without_type["type"]
+    # These properties keys used to be at the top level, we relocate
+    # them for backwards compat
+    for moved_prop in MOVED_ZEROCONF_PROPS:
+        if value := entry_without_type.pop(moved_prop, None):
+            _LOGGER.warning(
+                'Matching the zeroconf property "%s" at top-level is deprecated and should be moved into a properties dict; Check the developer documentation',
+                moved_prop,
+            )
+            if "properties" not in entry_without_type:
+                prop_dict: dict[str, str] = {}
+                entry_without_type["properties"] = prop_dict
+            else:
+                prop_dict = entry_without_type["properties"]
+            prop_dict[moved_prop] = value.lower()
+    return entry_without_type
+
+
+async def async_get_zeroconf(
+    hass: HomeAssistant,
+) -> dict[str, list[dict[str, str | dict[str, str]]]]:
     """Return cached list of zeroconf types."""
-    zeroconf: dict[str, list[dict[str, str]]] = ZEROCONF.copy()
+    zeroconf: dict[str, list[dict[str, str | dict[str, str]]]] = ZEROCONF.copy()  # type: ignore[assignment]
 
     integrations = await async_get_custom_components(hass)
     for integration in integrations.values():
         if not integration.zeroconf:
             continue
         for entry in integration.zeroconf:
-            data = {"domain": integration.domain}
+            data: dict[str, str | dict[str, str]] = {"domain": integration.domain}
             if isinstance(entry, dict):
                 typ = entry["type"]
-                entry_without_type = entry.copy()
-                del entry_without_type["type"]
-                data.update(entry_without_type)
+                data.update(async_process_zeroconf_match_dict(entry))
             else:
                 typ = entry
 

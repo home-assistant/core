@@ -14,11 +14,15 @@ ZEROCONF = {
     "_airplay._tcp.local.": [
         {
             "domain": "apple_tv",
-            "model": "appletv*"
+            "properties": {
+                "model": "appletv*"
+            }
         },
         {
             "domain": "samsungtv",
-            "manufacturer": "samsung*"
+            "properties": {
+                "manufacturer": "samsung*"
+            }
         }
     ],
     "_api._udp.local.": [
@@ -29,19 +33,27 @@ ZEROCONF = {
     "_axis-video._tcp.local.": [
         {
             "domain": "axis",
-            "macaddress": "00408C*"
+            "properties": {
+                "macaddress": "00408c*"
+            }
         },
         {
             "domain": "axis",
-            "macaddress": "ACCC8E*"
+            "properties": {
+                "macaddress": "accc8e*"
+            }
         },
         {
             "domain": "axis",
-            "macaddress": "B8A44F*"
+            "properties": {
+                "macaddress": "b8a44f*"
+            }
         },
         {
             "domain": "doorbird",
-            "macaddress": "1CCAE3*"
+            "properties": {
+                "macaddress": "1ccae3*"
+            }
         }
     ],
     "_bond._tcp.local.": [
@@ -123,7 +135,9 @@ ZEROCONF = {
         },
         {
             "domain": "nam",
-            "manufacturer": "nettigo"
+            "properties": {
+                "manufacturer": "nettigo"
+            }
         },
         {
             "domain": "rachio",
