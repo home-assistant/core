@@ -81,7 +81,7 @@ async def async_setup_climate_entities(
             sensor_block = block
 
     if sensor_block and device_block:
-        _LOGGER.info("Setup online climate device %s", wrapper.name)
+        _LOGGER.debug("Setup online climate device %s", wrapper.name)
         async_add_entities([BlockSleepingClimate(wrapper, sensor_block, device_block)])
 
 
@@ -103,7 +103,7 @@ async def async_restore_climate_entities(
         if entry.domain != CLIMATE_DOMAIN:
             continue
 
-        _LOGGER.info("Setup sleeping climate device %s", wrapper.name)
+        _LOGGER.debug("Setup sleeping climate device %s", wrapper.name)
         _LOGGER.debug("Found entry %s [%s]", entry.original_name, entry.domain)
         async_add_entities([BlockSleepingClimate(wrapper, None, None, entry)])
 
