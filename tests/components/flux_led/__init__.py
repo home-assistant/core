@@ -130,6 +130,7 @@ def _mocked_switch() -> AIOWifiLedBulb:
         channel4=PowerRestoreState.LAST_STATE,
     )
     switch.requires_turn_on = True
+    switch.async_reboot = AsyncMock()
     switch.async_setup = AsyncMock(side_effect=_save_setup_callback)
     switch.async_set_power_restore = AsyncMock()
     switch.async_stop = AsyncMock()
