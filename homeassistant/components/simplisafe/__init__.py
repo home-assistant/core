@@ -527,6 +527,8 @@ class SimpliSafe:
         try:
             await self._api.websocket.async_connect()
             await self._api.websocket.async_listen()
+        except asyncio.CancelledError:
+            raise
         except WebsocketError as err:
             LOGGER.error("Failed to connect to websocket: %s", err)
         except Exception as err:  # pylint: disable=broad-except
