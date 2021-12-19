@@ -219,7 +219,7 @@ def hls_sync():
         yield sync
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="package")
 def h264_video():
     """Generate a video, shared across tests."""
     return generate_h264_video()
