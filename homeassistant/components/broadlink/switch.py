@@ -5,7 +5,11 @@ import logging
 from broadlink.exceptions import BroadlinkException
 import voluptuous as vol
 
-from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
+from homeassistant.components.switch import (
+    PLATFORM_SCHEMA,
+    SwitchDeviceClass,
+    SwitchEntity,
+)
 from homeassistant.const import (
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
@@ -35,7 +39,7 @@ SWITCH_SCHEMA = vol.Schema(
     }
 )
 
-PLATFORM_SCHEMA = vol.Schema(
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_MAC): mac_address,
         vol.Optional(CONF_HOST): cv.string,
