@@ -18,6 +18,42 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
+async def async_setup_entry(
+    hass: HomeAssistantType,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the Elmax switch platform."""
+    coordinator: ElmaxCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    known_devices = set()
+
+    def _discover_new_devices():
+        panel_status = coordinator.panel_status  # type: PanelStatus
+        # In case the panel is offline, its status will be None. In that case, simply do nothing
+        if panel_status is None:
+            return
+
+        # Otherwise, add all the entities we found
+        entities = []
+        for actuator in panel_status.actuators:
+            entity = ElmaxSwitch(
+                panel=coordinator.panel_entry,
+                elmax_device=actuator,
+                panel_version=panel_status.release,
+                coordinator=coordinator,
+            )
+            if entity.unique_id not in known_devices:
+                entities.append(entity)
+        async_add_entities(entities, True)
+        known_devices.update([entity.unique_id for entity in entities])
+
+    # Register a listener for the discovery of new devices
+    coordinator.async_add_listener(_discover_new_devices)
+
+    # Immediately run a discovery, so we don't need to wait for the next update
+    _discover_new_devices()
+
+
 class ElmaxSwitch(ElmaxEntity, SwitchEntity):
     """Implement the Elmax switch entity."""
 
@@ -61,39 +97,3 @@ class ElmaxSwitch(ElmaxEntity, SwitchEntity):
         )
         if await self._wait_for_state_change():
             self.async_write_ha_state()
-
-
-async def async_setup_entry(
-    hass: HomeAssistantType,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up the Elmax switch platform."""
-    coordinator: ElmaxCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-    known_devices = set()
-
-    def _discover_new_devices():
-        panel_status = coordinator.panel_status  # type: PanelStatus
-        # In case the panel is offline, its status will be None. In that case, simply do nothing
-        if panel_status is None:
-            return
-
-        # Otherwise, add all the entities we found
-        entities = []
-        for actuator in panel_status.actuators:
-            entity = ElmaxSwitch(
-                panel=coordinator.panel_entry,
-                elmax_device=actuator,
-                panel_version=panel_status.release,
-                coordinator=coordinator,
-            )
-            if entity.unique_id not in known_devices:
-                entities.append(entity)
-        async_add_entities(entities, True)
-        known_devices.update([entity.unique_id for entity in entities])
-
-    # Register a listener for the discovery of new devices
-    coordinator.async_add_listener(_discover_new_devices)
-
-    # Immediately run a discovery, so we don't need to wait for the next update
-    _discover_new_devices()
