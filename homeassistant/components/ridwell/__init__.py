@@ -30,7 +30,7 @@ from .const import (
 
 DEFAULT_UPDATE_INTERVAL = timedelta(hours=1)
 
-PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.SWITCH]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
