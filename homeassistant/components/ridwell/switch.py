@@ -17,7 +17,9 @@ from .const import DATA_ACCOUNT, DATA_COORDINATOR, DOMAIN
 SWITCH_TYPE_OPT_IN = "opt_in"
 
 SWITCH_DESCRIPTION = SwitchEntityDescription(
-    key=SWITCH_TYPE_OPT_IN, name="Opt In to Next Pickup", icon="mdi:calendar-check"
+    key=SWITCH_TYPE_OPT_IN,
+    name="Opt-In to Next Pickup",
+    icon="mdi:calendar-check",
 )
 
 
