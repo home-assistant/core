@@ -122,11 +122,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._username = username
         self._password = password
         # If everything went OK, proceed to panel selection.
-        return self.async_show_form(step_id="panels", data_schema=schema)
+        return await self.async_step_panels(user_input=None)
 
-    async def async_step_panels(self, user_input: dict[str, Any]) -> FlowResult:
+    async def async_step_panels(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle Panel selection step."""
-        errors = {}
+        errors: dict[str, Any] = {}
+        if user_input is None:
+            return self.async_show_form(
+                step_id="panels", data_schema=self._panels_schema, errors=errors
+            )
+
         panel_name = user_input[CONF_ELMAX_PANEL_NAME]
         panel_pin = user_input[CONF_ELMAX_PANEL_PIN]
 
