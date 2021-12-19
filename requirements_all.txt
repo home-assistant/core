@@ -209,9 +209,6 @@ aiolifx==0.7.0
 # homeassistant.components.lifx
 aiolifx_effects==0.2.2
 
-# homeassistant.components.lutron_caseta
-aiolip==1.1.6
-
 # homeassistant.components.lookin
 aiolookin==0.1.0
 
@@ -1625,7 +1622,7 @@ pylitejet==0.3.0
 pylitterbot==2021.12.0
 
 # homeassistant.components.lutron_caseta
-pylutron-caseta==0.11.0
+pylutron-caseta==0.13.0
 
 # homeassistant.components.lutron
 pylutron==0.2.8
