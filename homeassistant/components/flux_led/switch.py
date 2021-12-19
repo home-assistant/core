@@ -63,6 +63,7 @@ class FluxRemoteAccessSwitch(FluxBaseEntity, SwitchEntity):
     """Representation of a Flux remote access switch."""
 
     _attr_should_poll = False
+    _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
         self,
@@ -71,7 +72,6 @@ class FluxRemoteAccessSwitch(FluxBaseEntity, SwitchEntity):
     ) -> None:
         """Initialize the light."""
         super().__init__(device, entry)
-        self._attr_entity_category = EntityCategory.CONFIG
         self._attr_name = f"{entry.data[CONF_NAME]} Remote Access"
         if entry.unique_id:
             self._attr_unique_id = f"{entry.unique_id}_remote_access"
