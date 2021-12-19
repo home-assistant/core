@@ -116,9 +116,9 @@ class WemoSwitch(WemoEntity, SwitchEntity):
         """Return the current power usage in W."""
         if not isinstance(self.wemo, Insight):
             return None
-        watts = convert(self.wemo.insight_params.get("currentpower"), float, 0.0)
-        assert isinstance(watts, float)
-        return watts / 1000.0
+        milliwatts = convert(self.wemo.insight_params.get("currentpower"), float, 0.0)
+        assert isinstance(milliwatts, float)
+        return milliwatts / 1000.0
 
     @property
     def today_energy_kwh(self) -> float | None:

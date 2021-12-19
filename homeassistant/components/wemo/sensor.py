@@ -79,11 +79,11 @@ class InsightCurrentPower(InsightSensor):
     @property
     def native_value(self) -> StateType:
         """Return the current power consumption."""
-        val = convert(
+        milliwatts = convert(
             self.wemo.insight_params.get(self.entity_description.key), float, 0.0
         )
-        assert isinstance(val, float)
-        return val / 1000.0
+        assert isinstance(milliwatts, float)
+        return milliwatts / 1000.0
 
 
 class InsightTodayEnergy(InsightSensor):
