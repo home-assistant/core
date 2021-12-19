@@ -48,7 +48,6 @@ from homeassistant.util.color import (
     color_temperature_mired_to_kelvin,
 )
 
-from . import FluxLedUpdateCoordinator
 from .const import (
     CONF_AUTOMATIC_ADD,
     CONF_COLORS,
@@ -69,6 +68,7 @@ from .const import (
     TRANSITION_JUMP,
     TRANSITION_STROBE,
 )
+from .coordinator import FluxLedUpdateCoordinator
 from .entity import FluxOnOffEntity
 from .util import _effect_brightness, _flux_color_mode_to_hass, _hass_color_modes
 
