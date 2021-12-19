@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock
 
+from homeassistant.components.homekit.const import CHAR_PROGRAMMABLE_SWITCH_EVENT
 from homeassistant.components.homekit.type_triggers import DeviceTriggerAccessory
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.setup import async_setup_component
@@ -47,11 +48,16 @@ async def test_programmable_switch_button_fires_on_trigger(
     hk_driver.publish.reset_mock()
     hass.states.async_set("light.ceiling_lights", STATE_ON)
     await hass.async_block_till_done()
-    hk_driver.publish.assert_called_once()
+    assert len(hk_driver.publish.mock_calls) == 2  # one for on, one for toggle
+    for call in hk_driver.publish.mock_calls:
+        char = acc.get_characteristic(call.args[0]["aid"], call.args[0]["iid"])
+        assert char.display_name == CHAR_PROGRAMMABLE_SWITCH_EVENT
 
     hk_driver.publish.reset_mock()
     hass.states.async_set("light.ceiling_lights", STATE_OFF)
     await hass.async_block_till_done()
-    hk_driver.publish.assert_called_once()
-
+    assert len(hk_driver.publish.mock_calls) == 2  # one for on, one for toggle
+    for call in hk_driver.publish.mock_calls:
+        char = acc.get_characteristic(call.args[0]["aid"], call.args[0]["iid"])
+        assert char.display_name == CHAR_PROGRAMMABLE_SWITCH_EVENT
     await acc.stop()
