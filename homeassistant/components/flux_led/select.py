@@ -57,6 +57,7 @@ class FluxPowerState(FluxBaseEntity, SelectEntity):
         """Set the option from the current power state."""
         restore_states = self._device.power_restore_states
         assert restore_states is not None
+        assert restore_states.channel1 is not None
         self._attr_current_option = _human_readable_option(restore_states.channel1.name)
 
     async def async_select_option(self, option: str) -> None:
