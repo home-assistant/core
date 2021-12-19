@@ -72,8 +72,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Otherwise, it means we are handling now the "submission" of the user form.
         # In this case, let's try to log in to the Elmax cloud and retrieve the available panels.
         try:
-            client = Elmax(username=username, password=password)
-            await client.login()
+            client = await ConfigFlow._async_login(username=username, password=password)
 
         except ElmaxBadLoginError:
             return self.async_show_form(
@@ -186,8 +185,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # and verify its pin is correct.
             try:
                 # Test login.
-                client = Elmax(username=self._reauth_username, password=password)
-                await client.login()
+                client = await ConfigFlow._async_login(
+                    username=self._reauth_username, password=password
+                )
 
                 # Make sure the panel we are authenticating to is still available.
                 panels = [
@@ -246,6 +246,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm", data_schema=schema, errors=errors
         )
+
+    @staticmethod
+    async def _async_login(username: str, password: str) -> Elmax:
+        """Log in to the Elmax cloud and return the http client."""
+        client = Elmax(username=username, password=password)
+        await client.login()
+        return client
 
 
 class NoOnlinePanelsError(HomeAssistantError):
