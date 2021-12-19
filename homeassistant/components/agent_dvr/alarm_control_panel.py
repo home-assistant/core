@@ -62,12 +62,14 @@ class AgentBaseStation(AlarmControlPanelEntity):
             self._attr_state = None
             return
         if armed:
-            prof = (await self._client.get_active_profile()).lower()
+            prof = await self._client.get_active_profile()
             self._attr_state = STATE_ALARM_ARMED_AWAY
-            if prof == CONF_HOME_MODE_NAME:
-                self._attr_state = STATE_ALARM_ARMED_HOME
-            elif prof == CONF_NIGHT_MODE_NAME:
-                self._attr_state = STATE_ALARM_ARMED_NIGHT
+            if prof is not None:
+                prof = prof.lower()
+                if prof == CONF_HOME_MODE_NAME:
+                    self._attr_state = STATE_ALARM_ARMED_HOME
+                elif prof == CONF_NIGHT_MODE_NAME:
+                    self._attr_state = STATE_ALARM_ARMED_NIGHT
         else:
             self._attr_state = STATE_ALARM_DISARMED
 
