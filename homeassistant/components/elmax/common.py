@@ -59,11 +59,6 @@ class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
         """Return the panel entry."""
         return self._panel_entry
 
-    @property
-    def panel_status(self) -> PanelStatus | None:
-        """Return the last fetched panel status."""
-        return self.data
-
     def get_actuator_state(self, actuator_id: str) -> Actuator:
         """Return state of a specific actuator."""
         if self._state_by_endpoint is not None:

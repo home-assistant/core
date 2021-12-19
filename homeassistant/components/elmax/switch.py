@@ -28,7 +28,7 @@ async def async_setup_entry(
     known_devices = set()
 
     def _discover_new_devices():
-        panel_status: PanelStatus = coordinator.panel_status
+        panel_status: PanelStatus = coordinator.data
         # In case the panel is offline, its status will be None. In that case, simply do nothing
         if panel_status is None:
             return
