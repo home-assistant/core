@@ -167,8 +167,10 @@ class DecoraWifiPlatform:
     def teardown(self):
         """Clean up the session in preparation for object deletion."""
         self._api_logout()
-        self._remove_stop_listener()
-        self._remove_stop_listener = None
+        # Clean up the stop listener if it is set.
+        if self._remove_stop_listener:
+            self._remove_stop_listener()
+            self._remove_stop_listener = None
 
     @staticmethod
     async def async_setup_decora_wifi(hass: HomeAssistant, email: str, password: str):
