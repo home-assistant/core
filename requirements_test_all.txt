@@ -142,9 +142,6 @@ aiohue==3.0.6
 # homeassistant.components.apache_kafka
 aiokafka==0.6.0
 
-# homeassistant.components.lutron_caseta
-aiolip==1.1.6
-
 # homeassistant.components.lookin
 aiolookin==0.1.0
 
@@ -995,7 +992,7 @@ pylitejet==0.3.0
 pylitterbot==2021.12.0
 
 # homeassistant.components.lutron_caseta
-pylutron-caseta==0.11.0
+pylutron-caseta==0.13.0
 
 # homeassistant.components.mailgun
 pymailgunner==1.4
