@@ -261,9 +261,9 @@ class Stream:
         """Return False if the stream is started and known to be unavailable."""
         return self._available
 
-    def set_update_callback(self, cb: Callable[[], None]) -> None:
+    def set_update_callback(self, update_callback: Callable[[], None]) -> None:
         """Set callback to run when state changes."""
-        self._update_callback = cb
+        self._update_callback = update_callback
 
     @callback
     def _async_update_state(self, available: bool) -> None:
