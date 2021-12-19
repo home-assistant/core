@@ -16,17 +16,14 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
+from .common import DefaultSegment as Segment, generate_h264_video, remux_with_audio
+
 from tests.common import async_fire_time_changed
-from tests.components.stream.common import (
-    DefaultSegment as Segment,
-    generate_h264_video,
-    remux_with_audio,
-)
 
 MAX_ABORT_SEGMENTS = 20  # Abort test to avoid looping forever
 
 
-async def test_record_stream(hass, hass_client, record_worker_sync):
+async def test_record_stream(hass, hass_client, record_worker_sync, h264_video):
     """
     Test record stream.
 
@@ -37,8 +34,7 @@ async def test_record_stream(hass, hass_client, record_worker_sync):
     await async_setup_component(hass, "stream", {"stream": {}})
 
     # Setup demo track
-    source = generate_h264_video()
-    stream = create_stream(hass, source, {})
+    stream = create_stream(hass, h264_video, {})
     with patch.object(hass.config, "is_allowed_path", return_value=True):
         await stream.async_record("/example/path")
 
@@ -54,13 +50,12 @@ async def test_record_stream(hass, hass_client, record_worker_sync):
 
 
 async def test_record_lookback(
-    hass, hass_client, stream_worker_sync, record_worker_sync
+    hass, hass_client, stream_worker_sync, record_worker_sync, h264_video
 ):
     """Exercise record with loopback."""
     await async_setup_component(hass, "stream", {"stream": {}})
 
-    source = generate_h264_video()
-    stream = create_stream(hass, source, {})
+    stream = create_stream(hass, h264_video, {})
 
     # Start an HLS feed to enable lookback
     stream.add_provider(HLS_PROVIDER)
@@ -74,7 +69,7 @@ async def test_record_lookback(
     stream.stop()
 
 
-async def test_recorder_timeout(hass, hass_client, stream_worker_sync):
+async def test_recorder_timeout(hass, hass_client, stream_worker_sync, h264_video):
     """
     Test recorder timeout.
 
@@ -87,9 +82,7 @@ async def test_recorder_timeout(hass, hass_client, stream_worker_sync):
 
     with patch("homeassistant.components.stream.IdleTimer.fire") as mock_timeout:
         # Setup demo track
-        source = generate_h264_video()
-
-        stream = create_stream(hass, source, {})
+        stream = create_stream(hass, h264_video, {})
         with patch.object(hass.config, "is_allowed_path", return_value=True):
             await stream.async_record("/example/path")
         recorder = stream.add_provider(RECORDER_PROVIDER)
@@ -109,13 +102,11 @@ async def test_recorder_timeout(hass, hass_client, stream_worker_sync):
         await hass.async_block_till_done()
 
 
-async def test_record_path_not_allowed(hass, hass_client):
+async def test_record_path_not_allowed(hass, hass_client, h264_video):
     """Test where the output path is not allowed by home assistant configuration."""
     await async_setup_component(hass, "stream", {"stream": {}})
 
-    # Setup demo track
-    source = generate_h264_video()
-    stream = create_stream(hass, source, {})
+    stream = create_stream(hass, h264_video, {})
     with patch.object(
         hass.config, "is_allowed_path", return_value=False
     ), pytest.raises(HomeAssistantError):
@@ -136,15 +127,14 @@ def add_parts_to_segment(segment, source):
     ]
 
 
-async def test_recorder_save(tmpdir):
+async def test_recorder_save(tmpdir, h264_video):
     """Test recorder save."""
     # Setup
-    source = generate_h264_video()
     filename = f"{tmpdir}/test.mp4"
 
     # Run
     segment = Segment(sequence=1)
-    add_parts_to_segment(segment, source)
+    add_parts_to_segment(segment, h264_video)
     segment.duration = 4
     recorder_save_worker(filename, [segment])
 
@@ -152,18 +142,17 @@ async def test_recorder_save(tmpdir):
     assert os.path.exists(filename)
 
 
-async def test_recorder_discontinuity(tmpdir):
+async def test_recorder_discontinuity(tmpdir, h264_video):
     """Test recorder save across a discontinuity."""
     # Setup
-    source = generate_h264_video()
     filename = f"{tmpdir}/test.mp4"
 
     # Run
     segment_1 = Segment(sequence=1, stream_id=0)
-    add_parts_to_segment(segment_1, source)
+    add_parts_to_segment(segment_1, h264_video)
     segment_1.duration = 4
     segment_2 = Segment(sequence=2, stream_id=1)
-    add_parts_to_segment(segment_2, source)
+    add_parts_to_segment(segment_2, h264_video)
     segment_2.duration = 4
     recorder_save_worker(filename, [segment_1, segment_2])
     # Assert

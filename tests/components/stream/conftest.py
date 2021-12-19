@@ -25,6 +25,8 @@ import pytest
 from homeassistant.components.stream.core import Segment, StreamOutput
 from homeassistant.components.stream.worker import StreamState
 
+from .common import generate_h264_video
+
 TEST_TIMEOUT = 7.0  # Lower than 9s home assistant timeout
 
 
@@ -215,3 +217,9 @@ def hls_sync():
         side_effect=sync.response,
     ):
         yield sync
+
+
+@pytest.fixture(scope="module")
+def h264_video():
+    """Generate a video, shared across tests."""
+    return generate_h264_video()
