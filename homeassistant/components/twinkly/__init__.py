@@ -1,6 +1,6 @@
 """The twinkly component."""
 
-import twinkly_client
+from ttls.client import Twinkly
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -20,7 +20,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     uuid = entry.data[CONF_ENTRY_ID]
     host = entry.data[CONF_ENTRY_HOST]
 
-    hass.data.setdefault(DOMAIN, {})[uuid] = twinkly_client.TwinklyClient(
+    hass.data.setdefault(DOMAIN, {})[uuid] = Twinkly(
         host, async_get_clientsession(hass)
     )
 

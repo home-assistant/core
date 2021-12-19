@@ -148,31 +148,32 @@ class TwinklyLight(LightEntity):
             # If brightness is 0, the twinkly will only "disable" the brightness,
             # which means that it will be 100%.
             if brightness == 0:
-                await self._client.set_is_on(False)
+                await self._client.turn_off()
                 return
 
             await self._client.set_brightness(brightness)
 
-        await self._client.set_is_on(True)
+        await self._client.turn_on()
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn device off."""
-        await self._client.set_is_on(False)
+        await self._client.turn_off()
 
     async def async_update(self) -> None:
         """Asynchronously updates the device properties."""
         _LOGGER.info("Updating '%s'", self._client.host)
 
         try:
-            self._is_on = await self._client.get_is_on()
+            self._is_on = await self._client.is_on()
 
-            self._brightness = (
-                int(round((await self._client.get_brightness()) * 2.55))
-                if self._is_on
-                else 0
+            brightness = await self._client.get_brightness()
+            brightness_value = (
+                int(brightness["value"]) if brightness["mode"] == "enabled" else 100
             )
 
-            device_info = await self._client.get_device_info()
+            self._brightness = int(round(brightness_value * 2.55)) if self._is_on else 0
+
+            device_info = await self._client.get_details()
 
             if (
                 DEV_NAME in device_info

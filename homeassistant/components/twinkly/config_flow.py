@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 from aiohttp import ClientError
-import twinkly_client
+from ttls.client import Twinkly
 from voluptuous import Required, Schema
 
 from homeassistant import config_entries, data_entry_flow
@@ -45,7 +45,7 @@ class TwinklyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if host is not None:
             try:
-                device_info = await twinkly_client.TwinklyClient(host).get_device_info()
+                device_info = await Twinkly(host).get_device_info()
 
                 await self.async_set_unique_id(device_info[DEV_ID])
                 self._abort_if_unique_id_configured()
@@ -65,9 +65,7 @@ class TwinklyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> data_entry_flow.FlowResult:
         """Handle dhcp discovery for twinkly."""
         self._async_abort_entries_match({CONF_ENTRY_HOST: discovery_info.ip})
-        device_info = await twinkly_client.TwinklyClient(
-            discovery_info.ip
-        ).get_device_info()
+        device_info = await Twinkly(discovery_info.ip).get_device_info()
         await self.async_set_unique_id(device_info[DEV_ID])
         self._abort_if_unique_id_configured(
             updates={CONF_ENTRY_HOST: discovery_info.ip}
