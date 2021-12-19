@@ -8,7 +8,8 @@ from aiohttp import ClientError
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    SUPPORT_BRIGHTNESS,
+    ATTR_RGBW_COLOR,
+    COLOR_MODE_RGBW,
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -53,6 +54,10 @@ class TwinklyLight(LightEntity):
         self._hass = hass
         self._conf = conf
 
+        self._attr_supported_color_modes = {COLOR_MODE_RGBW}
+        self._attr_color_mode = COLOR_MODE_RGBW
+        self._attr_rgbw_color = (255, 255, 255, 0)
+
         # Those are saved in the config entry in order to have meaningful values even
         # if the device is currently offline.
         # They are expected to be updated using the device_info.
@@ -68,11 +73,6 @@ class TwinklyLight(LightEntity):
         self._brightness = 0
         self._is_available = False
         self._attributes = {ATTR_HOST: self._client.host}
-
-    @property
-    def supported_features(self):
-        """Get the features supported by this entity."""
-        return SUPPORT_BRIGHTNESS
 
     @property
     def should_poll(self) -> bool:
@@ -153,7 +153,25 @@ class TwinklyLight(LightEntity):
 
             await self._client.set_brightness(brightness)
 
-        await self._client.turn_on()
+        if ATTR_RGBW_COLOR in kwargs:
+            if kwargs[ATTR_RGBW_COLOR] != self._attr_rgbw_color:
+                self._attr_rgbw_color = kwargs[ATTR_RGBW_COLOR]
+
+                if isinstance(self._attr_rgbw_color, tuple):
+
+                    await self._client.interview()
+                    # Reagarrange from rgbw to wrgb
+                    await self._client.set_static_colour(
+                        (
+                            self._attr_rgbw_color[3],
+                            self._attr_rgbw_color[0],
+                            self._attr_rgbw_color[1],
+                            self._attr_rgbw_color[2],
+                        )
+                    )
+
+        if not kwargs:
+            await self._client.turn_on()
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn device off."""
