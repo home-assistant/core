@@ -29,7 +29,6 @@ from synology_dsm.exceptions import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     CONF_HOST,
     CONF_MAC,
     CONF_PASSWORD,
@@ -528,7 +527,7 @@ class SynologyDSMBaseEntity(CoordinatorEntity):
 
     entity_description: SynologyDSMEntityDescription
     unique_id: str
-    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+    _attr_attribution = ATTRIBUTION
 
     def __init__(
         self,
