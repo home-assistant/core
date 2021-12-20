@@ -254,7 +254,7 @@ async def async_validate_action_config(
 
     elif action_type == cv.SCRIPT_ACTION_DEVICE_AUTOMATION:
         platform = await device_automation.async_get_device_automation_platform(
-            hass, config[CONF_DOMAIN], "action"
+            hass, config[CONF_DOMAIN], device_automation.DeviceAutomationType.ACTION
         )
         if hasattr(platform, "async_validate_action_config"):
             config = await platform.async_validate_action_config(hass, config)  # type: ignore
@@ -590,7 +590,9 @@ class _ScriptRun:
         """Perform the device automation specified in the action."""
         self._step_log("device automation")
         platform = await device_automation.async_get_device_automation_platform(
-            self._hass, self._action[CONF_DOMAIN], "action"
+            self._hass,
+            self._action[CONF_DOMAIN],
+            device_automation.DeviceAutomationType.ACTION,
         )
         await platform.async_call_action_from_config(
             self._hass, self._action, self._variables, self._context

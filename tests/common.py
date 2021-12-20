@@ -69,7 +69,9 @@ CLIENT_REDIRECT_URI = "https://example.com/app/callback"
 
 
 async def async_get_device_automations(
-    hass: HomeAssistant, automation_type: str, device_id: str
+    hass: HomeAssistant,
+    automation_type: device_automation.DeviceAutomationType | str,
+    device_id: str,
 ) -> Any:
     """Get a device automation for a single device id."""
     automations = await device_automation.async_get_device_automations(
