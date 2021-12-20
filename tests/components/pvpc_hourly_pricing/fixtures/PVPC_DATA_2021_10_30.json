@@ -1,0 +1,154 @@
+{
+  "data": {
+    "type": "Precios mercado peninsular en tiempo real",
+    "id": "mer13",
+    "attributes": {
+      "title": "Precios mercado peninsular en tiempo real",
+      "last-update": "2021-10-29T20:17:00.000+02:00",
+      "description": null
+    },
+    "meta": {
+      "cache-control": {
+        "cache": "MISS"
+      }
+    }
+  },
+  "included": [
+    {
+      "type": "PVPC (\u20ac\/MWh)",
+      "id": "1001",
+      "groupId": null,
+      "attributes": {
+        "title": "PVPC (\u20ac\/MWh)",
+        "description": null,
+        "color": "#ffcf09",
+        "type": null,
+        "magnitude": "price",
+        "composite": false,
+        "last-update": "2021-10-29T20:17:00.000+02:00",
+        "values": [
+          {
+            "value": 131.04,
+            "percentage": 0.567174515235457,
+            "datetime": "2021-10-30T00:00:00.000+02:00"
+          },
+          {
+            "value": 120.55,
+            "percentage": 0.5722491218076521,
+            "datetime": "2021-10-30T01:00:00.000+02:00"
+          },
+          {
+            "value": 103.97,
+            "percentage": 0.5794137316094516,
+            "datetime": "2021-10-30T02:00:00.000+02:00"
+          },
+          {
+            "value": 92.51,
+            "percentage": 0.5911937627811861,
+            "datetime": "2021-10-30T03:00:00.000+02:00"
+          },
+          {
+            "value": 87.43,
+            "percentage": 0.5979346190671592,
+            "datetime": "2021-10-30T04:00:00.000+02:00"
+          },
+          {
+            "value": 90.89,
+            "percentage": 0.5981966565749638,
+            "datetime": "2021-10-30T05:00:00.000+02:00"
+          },
+          {
+            "value": 108.38,
+            "percentage": 0.5835038225476472,
+            "datetime": "2021-10-30T06:00:00.000+02:00"
+          },
+          {
+            "value": 125.68,
+            "percentage": 0.5772021677229724,
+            "datetime": "2021-10-30T07:00:00.000+02:00"
+          },
+          {
+            "value": 153.16,
+            "percentage": 0.5655625715446254,
+            "datetime": "2021-10-30T08:00:00.000+02:00"
+          },
+          {
+            "value": 184.85,
+            "percentage": 0.552219633148115,
+            "datetime": "2021-10-30T09:00:00.000+02:00"
+          },
+          {
+            "value": 188.57,
+            "percentage": 0.5485194019431032,
+            "datetime": "2021-10-30T10:00:00.000+02:00"
+          },
+          {
+            "value": 180.09,
+            "percentage": 0.5484195139777087,
+            "datetime": "2021-10-30T11:00:00.000+02:00"
+          },
+          {
+            "value": 176.28,
+            "percentage": 0.5486973573629658,
+            "datetime": "2021-10-30T12:00:00.000+02:00"
+          },
+          {
+            "value": 160.96,
+            "percentage": 0.5534124118961664,
+            "datetime": "2021-10-30T13:00:00.000+02:00"
+          },
+          {
+            "value": 149.34,
+            "percentage": 0.5544664736021385,
+            "datetime": "2021-10-30T14:00:00.000+02:00"
+          },
+          {
+            "value": 134.81,
+            "percentage": 0.5603774369206468,
+            "datetime": "2021-10-30T15:00:00.000+02:00"
+          },
+          {
+            "value": 164.28,
+            "percentage": 0.5517565661315241,
+            "datetime": "2021-10-30T16:00:00.000+02:00"
+          },
+          {
+            "value": 189.68,
+            "percentage": 0.5489378943103548,
+            "datetime": "2021-10-30T17:00:00.000+02:00"
+          },
+          {
+            "value": 206.4,
+            "percentage": 0.5513998717674717,
+            "datetime": "2021-10-30T18:00:00.000+02:00"
+          },
+          {
+            "value": 227.5,
+            "percentage": 0.5499021053394889,
+            "datetime": "2021-10-30T19:00:00.000+02:00"
+          },
+          {
+            "value": 233.31,
+            "percentage": 0.5484743053270017,
+            "datetime": "2021-10-30T20:00:00.000+02:00"
+          },
+          {
+            "value": 218.7,
+            "percentage": 0.5505903678155132,
+            "datetime": "2021-10-30T21:00:00.000+02:00"
+          },
+          {
+            "value": 189.1,
+            "percentage": 0.5552782263984731,
+            "datetime": "2021-10-30T22:00:00.000+02:00"
+          },
+          {
+            "value": 168.7,
+            "percentage": 0.5597955933103265,
+            "datetime": "2021-10-30T23:00:00.000+02:00"
+          }
+        ]
+      }
+    }
+  ]
+}
