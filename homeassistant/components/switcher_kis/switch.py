@@ -10,11 +10,7 @@ from aioswitcher.api import Command, SwitcherApi, SwitcherBaseResponse
 from aioswitcher.device import DeviceCategory, DeviceState
 import voluptuous as vol
 
-from homeassistant.components.switch import (
-    DEVICE_CLASS_OUTLET,
-    DEVICE_CLASS_SWITCH,
-    SwitchEntity,
-)
+from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
@@ -169,13 +165,13 @@ class SwitcherBaseSwitchEntity(CoordinatorEntity, SwitchEntity):
 class SwitcherPowerPlugSwitchEntity(SwitcherBaseSwitchEntity):
     """Representation of a Switcher power plug switch entity."""
 
-    _attr_device_class = DEVICE_CLASS_OUTLET
+    _attr_device_class = SwitchDeviceClass.OUTLET
 
 
 class SwitcherWaterHeaterSwitchEntity(SwitcherBaseSwitchEntity):
     """Representation of a Switcher water heater switch entity."""
 
-    _attr_device_class = DEVICE_CLASS_SWITCH
+    _attr_device_class = SwitchDeviceClass.SWITCH
 
     async def async_set_auto_off_service(self, auto_off: timedelta) -> None:
         """Use for handling setting device auto-off service calls."""
