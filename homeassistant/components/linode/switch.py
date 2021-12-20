@@ -53,11 +53,6 @@ class LinodeSwitch(SwitchEntity):
         self.data = None
         self._attr_extra_state_attributes = {}
 
-    @property
-    def is_on(self):
-        """Return true if switch is on."""
-        return self._attr_is_on
-
     def turn_on(self, **kwargs):
         """Boot-up the Node."""
         if self.data.status != "running":
