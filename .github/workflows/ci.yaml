@@ -517,10 +517,15 @@ jobs:
           key: >-
             ${{ runner.os }}-${{ matrix.python-version }}-${{
             steps.generate-python-key.outputs.key }}
-          restore-keys: |
-            ${{ runner.os }}-${{ matrix.python-version }}-venv-${{ env.CACHE_VERSION }}-${{ hashFiles('requirements_test.txt') }}-${{ hashFiles('requirements_all.txt') }}-
-            ${{ runner.os }}-${{ matrix.python-version }}-venv-${{ env.CACHE_VERSION }}-${{ hashFiles('requirements_test.txt') }}-
-            ${{ runner.os }}-${{ matrix.python-version }}-venv-${{ env.CACHE_VERSION }}-
+          # Temporary disabling the restore of environments when bumping
+          # a dependency. It seems that we are experiencing issues with
+          # restoring environments in GitHub Actions, although unclear why.
+          # First attempt: https://github.com/home-assistant/core/pull/62383
+          #
+          # restore-keys: |
+          #   ${{ runner.os }}-${{ matrix.python-version }}-venv-${{ env.CACHE_VERSION }}-${{ hashFiles('requirements_test.txt') }}-${{ hashFiles('requirements_all.txt') }}-
+          #   ${{ runner.os }}-${{ matrix.python-version }}-venv-${{ env.CACHE_VERSION }}-${{ hashFiles('requirements_test.txt') }}-
+          #   ${{ runner.os }}-${{ matrix.python-version }}-venv-${{ env.CACHE_VERSION }}-
       - name: Create full Python ${{ matrix.python-version }} virtual environment
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
