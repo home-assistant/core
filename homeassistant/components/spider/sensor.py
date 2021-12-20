@@ -1,15 +1,10 @@
 """Support for Spider Powerplugs (energy & power)."""
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
+    SensorDeviceClass,
     SensorEntity,
+    SensorStateClass,
 )
-from homeassistant.const import (
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_POWER,
-    ENERGY_KILO_WATT_HOUR,
-    POWER_WATT,
-)
+from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_WATT
 from homeassistant.helpers.entity import DeviceInfo
 
 from .const import DOMAIN
@@ -31,8 +26,8 @@ class SpiderPowerPlugEnergy(SensorEntity):
     """Representation of a Spider Power Plug (energy)."""
 
     _attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
-    _attr_device_class = DEVICE_CLASS_ENERGY
-    _attr_state_class = STATE_CLASS_TOTAL_INCREASING
+    _attr_device_class = SensorDeviceClass.ENERGY
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
 
     def __init__(self, api, power_plug) -> None:
         """Initialize the Spider Power Plug."""
@@ -72,8 +67,8 @@ class SpiderPowerPlugEnergy(SensorEntity):
 class SpiderPowerPlugPower(SensorEntity):
     """Representation of a Spider Power Plug (power)."""
 
-    _attr_device_class = DEVICE_CLASS_POWER
-    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_device_class = SensorDeviceClass.POWER
+    _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = POWER_WATT
 
     def __init__(self, api, power_plug) -> None:

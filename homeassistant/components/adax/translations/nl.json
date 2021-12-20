@@ -19,8 +19,8 @@
             },
             "local": {
                 "data": {
-                    "wifi_pswd": "Wifi wachtwoord",
-                    "wifi_ssid": "Wifi ssid"
+                    "wifi_pswd": "Wi-Fi Wachtwoord",
+                    "wifi_ssid": "Wi-Fi SSID"
                 },
                 "description": "Reset de kachel door op + en OK te drukken totdat het display 'Reset' toont. Houd vervolgens de OK-knop op de verwarming ingedrukt totdat de blauwe led begint te knipperen voordat u op Verzenden drukt. Het configureren van de verwarming kan enkele minuten duren."
             },

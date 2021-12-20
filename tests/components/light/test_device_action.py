@@ -2,6 +2,7 @@
 import pytest
 
 import homeassistant.components.automation as automation
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.light import (
     ATTR_SUPPORTED_COLOR_MODES,
     COLOR_MODE_BRIGHTNESS,
@@ -97,7 +98,9 @@ async def test_get_actions(hass, device_reg, entity_reg):
             "entity_id": f"{DOMAIN}.test_5678",
         },
     ]
-    actions = await async_get_device_automations(hass, "action", device_entry.id)
+    actions = await async_get_device_automations(
+        hass, DeviceAutomationType.ACTION, device_entry.id
+    )
     assert actions == expected_actions
 
 
@@ -116,7 +119,9 @@ async def test_get_action_capabilities(hass, device_reg, entity_reg):
         "5678",
         device_id=device_entry.id,
     ).entity_id
-    actions = await async_get_device_automations(hass, "action", device_entry.id)
+    actions = await async_get_device_automations(
+        hass, DeviceAutomationType.ACTION, device_entry.id
+    )
     assert len(actions) == 3
     action_types = {action["type"] for action in actions}
     assert action_types == {"turn_on", "toggle", "turn_off"}
@@ -260,7 +265,9 @@ async def test_get_action_capabilities_features(
             {"supported_features": supported_features_state, **attributes_state},
         )
 
-    actions = await async_get_device_automations(hass, "action", device_entry.id)
+    actions = await async_get_device_automations(
+        hass, DeviceAutomationType.ACTION, device_entry.id
+    )
     assert len(actions) == len(expected_actions)
     action_types = {action["type"] for action in actions}
     assert action_types == expected_actions

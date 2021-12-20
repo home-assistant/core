@@ -29,6 +29,7 @@ from homeassistant.components.recorder.statistics import (
 )
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import TEMP_CELSIUS
+from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
@@ -230,13 +231,19 @@ def test_rename_entity(hass_recorder):
     setup_component(hass, "sensor", {})
 
     entity_reg = mock_registry(hass)
-    reg_entry = entity_reg.async_get_or_create(
-        "sensor",
-        "test",
-        "unique_0000",
-        suggested_object_id="test1",
-    )
-    assert reg_entry.entity_id == "sensor.test1"
+
+    @callback
+    def add_entry():
+        reg_entry = entity_reg.async_get_or_create(
+            "sensor",
+            "test",
+            "unique_0000",
+            suggested_object_id="test1",
+        )
+        assert reg_entry.entity_id == "sensor.test1"
+
+    hass.add_job(add_entry)
+    hass.block_till_done()
 
     zero, four, states = record_states(hass)
     hist = history.get_significant_states(hass, zero, four)
@@ -274,7 +281,11 @@ def test_rename_entity(hass_recorder):
     stats = statistics_during_period(hass, zero, period="5minute")
     assert stats == {"sensor.test1": expected_stats1, "sensor.test2": expected_stats2}
 
-    entity_reg.async_update_entity(reg_entry.entity_id, new_entity_id="sensor.test99")
+    @callback
+    def rename_entry():
+        entity_reg.async_update_entity("sensor.test1", new_entity_id="sensor.test99")
+
+    hass.add_job(rename_entry)
     hass.block_till_done()
 
     stats = statistics_during_period(hass, zero, period="5minute")

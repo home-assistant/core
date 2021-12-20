@@ -17,22 +17,20 @@ from homeassistant.components.number.const import (
     DEFAULT_MIN_VALUE,
     DOMAIN as NUMBER_DOMAIN,
 )
-from homeassistant.const import (
-    CONF_ICON,
-    CONF_NAME,
-    CONF_OPTIMISTIC,
-    CONF_STATE,
-    CONF_UNIQUE_ID,
-)
+from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, CONF_STATE, CONF_UNIQUE_ID
 from homeassistant.core import Config, HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
-from homeassistant.helpers.template import Template, TemplateError
+from homeassistant.helpers.template import TemplateError
 
 from . import TriggerUpdateCoordinator
-from .const import CONF_AVAILABILITY, DOMAIN
-from .template_entity import TemplateEntity
+from .const import DOMAIN
+from .template_entity import (
+    TEMPLATE_ENTITY_AVAILABILITY_SCHEMA,
+    TEMPLATE_ENTITY_ICON_SCHEMA,
+    TemplateEntity,
+)
 from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,19 +40,21 @@ CONF_SET_VALUE = "set_value"
 DEFAULT_NAME = "Template Number"
 DEFAULT_OPTIMISTIC = False
 
-NUMBER_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.template,
-        vol.Required(CONF_STATE): cv.template,
-        vol.Required(CONF_SET_VALUE): cv.SCRIPT_SCHEMA,
-        vol.Required(ATTR_STEP): cv.template,
-        vol.Optional(ATTR_MIN, default=DEFAULT_MIN_VALUE): cv.template,
-        vol.Optional(ATTR_MAX, default=DEFAULT_MAX_VALUE): cv.template,
-        vol.Optional(CONF_AVAILABILITY): cv.template,
-        vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Optional(CONF_ICON): cv.template,
-    }
+NUMBER_SCHEMA = (
+    vol.Schema(
+        {
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.template,
+            vol.Required(CONF_STATE): cv.template,
+            vol.Required(CONF_SET_VALUE): cv.SCRIPT_SCHEMA,
+            vol.Required(ATTR_STEP): cv.template,
+            vol.Optional(ATTR_MIN, default=DEFAULT_MIN_VALUE): cv.template,
+            vol.Optional(ATTR_MAX, default=DEFAULT_MAX_VALUE): cv.template,
+            vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
+            vol.Optional(CONF_UNIQUE_ID): cv.string,
+        }
+    )
+    .extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA.schema)
+    .extend(TEMPLATE_ENTITY_ICON_SCHEMA.schema)
 )
 
 
@@ -67,21 +67,7 @@ async def _async_create_entities(
         unique_id = definition.get(CONF_UNIQUE_ID)
         if unique_id and unique_id_prefix:
             unique_id = f"{unique_id_prefix}-{unique_id}"
-        entities.append(
-            TemplateNumber(
-                hass,
-                definition[CONF_NAME],
-                definition[CONF_STATE],
-                definition.get(CONF_AVAILABILITY),
-                definition[CONF_SET_VALUE],
-                definition[ATTR_STEP],
-                definition[ATTR_MIN],
-                definition[ATTR_MAX],
-                definition[CONF_OPTIMISTIC],
-                unique_id,
-                definition.get(CONF_ICON),
-            )
-        )
+        entities.append(TemplateNumber(hass, definition, unique_id))
     return entities
 
 
@@ -118,34 +104,24 @@ class TemplateNumber(TemplateEntity, NumberEntity):
     def __init__(
         self,
         hass: HomeAssistant,
-        name_template: Template,
-        value_template: Template,
-        availability_template: Template | None,
-        command_set_value: dict[str, Any],
-        step_template: Template,
-        minimum_template: Template | None,
-        maximum_template: Template | None,
-        optimistic: bool,
+        config,
         unique_id: str | None,
-        icon_template: Template | None,
     ) -> None:
         """Initialize the number."""
-        super().__init__(
-            availability_template=availability_template, icon_template=icon_template
-        )
+        super().__init__(config=config)
         self._attr_name = DEFAULT_NAME
-        self._name_template = name_template
+        self._name_template = name_template = config[CONF_NAME]
         name_template.hass = hass
         with contextlib.suppress(TemplateError):
             self._attr_name = name_template.async_render(parse_result=False)
-        self._value_template = value_template
+        self._value_template = config[CONF_STATE]
         self._command_set_value = Script(
-            hass, command_set_value, self._attr_name, DOMAIN
+            hass, config[CONF_SET_VALUE], self._attr_name, DOMAIN
         )
-        self._step_template = step_template
-        self._min_value_template = minimum_template
-        self._max_value_template = maximum_template
-        self._attr_assumed_state = self._optimistic = optimistic
+        self._step_template = config[ATTR_STEP]
+        self._min_value_template = config[ATTR_MIN]
+        self._max_value_template = config[ATTR_MAX]
+        self._attr_assumed_state = self._optimistic = config[CONF_OPTIMISTIC]
         self._attr_unique_id = unique_id
         self._attr_value = None
         self._attr_step = None

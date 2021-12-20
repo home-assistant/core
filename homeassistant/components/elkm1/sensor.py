@@ -9,9 +9,10 @@ from elkm1_lib.util import pretty_const, username
 import voluptuous as vol
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import ELECTRIC_POTENTIAL_VOLT, ENTITY_CATEGORY_DIAGNOSTIC
+from homeassistant.const import ELECTRIC_POTENTIAL_VOLT
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
+from homeassistant.helpers.entity import EntityCategory
 
 from . import ElkAttachedEntity, create_elk_entities
 from .const import ATTR_VALUE, DOMAIN, ELK_USER_CODE_SERVICE_SCHEMA
@@ -158,7 +159,7 @@ class ElkKeypad(ElkSensor):
 class ElkPanel(ElkSensor):
     """Representation of an Elk-M1 Panel."""
 
-    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
     def icon(self):

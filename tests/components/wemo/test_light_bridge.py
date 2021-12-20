@@ -8,8 +8,8 @@ from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.components.light import ATTR_COLOR_TEMP
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
 from homeassistant.setup import async_setup_component
 
 from . import entity_test_helpers
@@ -76,7 +76,7 @@ async def test_available_after_update(
     pywemo_bridge_light.turn_on.side_effect = pywemo.exceptions.ActionException
     pywemo_bridge_light.state["onoff"] = 1
     await entity_test_helpers.test_avaliable_after_update(
-        hass, pywemo_registry, pywemo_device, wemo_entity, LIGHT_DOMAIN
+        hass, pywemo_registry, pywemo_device, wemo_entity, Platform.LIGHT
     )
 
 
@@ -88,13 +88,16 @@ async def test_light_update_entity(
 
     # On state.
     pywemo_bridge_light.state["onoff"] = 1
+    pywemo_bridge_light.state["temperature_mireds"] = 432
     await hass.services.async_call(
         HA_DOMAIN,
         SERVICE_UPDATE_ENTITY,
         {ATTR_ENTITY_ID: [wemo_entity.entity_id]},
         blocking=True,
     )
-    assert hass.states.get(wemo_entity.entity_id).state == STATE_ON
+    state = hass.states.get(wemo_entity.entity_id)
+    assert state.attributes.get(ATTR_COLOR_TEMP) == 432
+    assert state.state == STATE_ON
 
     # Off state.
     pywemo_bridge_light.state["onoff"] = 0

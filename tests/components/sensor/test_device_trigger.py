@@ -4,14 +4,9 @@ from datetime import timedelta
 import pytest
 
 import homeassistant.components.automation as automation
-from homeassistant.components.sensor import DOMAIN
+from homeassistant.components.sensor import DEVICE_CLASSES, DOMAIN, SensorDeviceClass
 from homeassistant.components.sensor.device_trigger import ENTITY_TRIGGERS
-from homeassistant.const import (
-    CONF_PLATFORM,
-    DEVICE_CLASS_BATTERY,
-    PERCENTAGE,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import CONF_PLATFORM, PERCENTAGE, STATE_UNKNOWN
 from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -26,10 +21,7 @@ from tests.common import (
     mock_registry,
 )
 from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
-from tests.testing_config.custom_components.test.sensor import (
-    DEVICE_CLASSES,
-    UNITS_OF_MEASUREMENT,
-)
+from tests.testing_config.custom_components.test.sensor import UNITS_OF_MEASUREMENT
 
 
 @pytest.fixture
@@ -93,8 +85,8 @@ async def test_get_triggers(hass, device_reg, entity_reg, enable_custom_integrat
 @pytest.mark.parametrize(
     "set_state,device_class_reg,device_class_state,unit_reg,unit_state",
     [
-        (False, DEVICE_CLASS_BATTERY, None, PERCENTAGE, None),
-        (True, None, DEVICE_CLASS_BATTERY, None, PERCENTAGE),
+        (False, SensorDeviceClass.BATTERY, None, PERCENTAGE, None),
+        (True, None, SensorDeviceClass.BATTERY, None, PERCENTAGE),
     ],
 )
 async def test_get_trigger_capabilities(

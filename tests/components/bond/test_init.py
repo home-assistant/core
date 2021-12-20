@@ -84,6 +84,7 @@ async def test_async_setup_entry_sets_up_hub_and_supported_domains(hass: HomeAss
             "bondid": "test-bond-id",
             "target": "test-model",
             "fw_ver": "test-version",
+            "mcu_ver": "test-hw-version",
         }
     ), patch_setup_entry("cover") as mock_cover_async_setup_entry, patch_setup_entry(
         "fan"
@@ -107,6 +108,7 @@ async def test_async_setup_entry_sets_up_hub_and_supported_domains(hass: HomeAss
     assert hub.manufacturer == "Olibra"
     assert hub.model == "test-model"
     assert hub.sw_version == "test-version"
+    assert hub.hw_version == "test-hw-version"
     assert hub.configuration_url == "http://some host"
 
     # verify supported domains are setup

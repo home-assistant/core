@@ -7,6 +7,7 @@
     "androidtv[async]==0.0.60",
     "pure-python-adb[async]==0.3.0.dev0"
   ],
-  "codeowners": ["@JeffLIrion"],
+  "codeowners": ["@JeffLIrion", "@ollo69"],
+  "config_flow": true,
   "iot_class": "local_polling"
 }
