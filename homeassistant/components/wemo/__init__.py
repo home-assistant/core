@@ -9,13 +9,8 @@ import pywemo
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DISCOVERY, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_DISCOVERY, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -32,17 +27,17 @@ MAX_CONCURRENCY = 3
 
 # Mapping from Wemo model_name to domain.
 WEMO_MODEL_DISPATCH = {
-    "Bridge": [LIGHT_DOMAIN],
-    "CoffeeMaker": [SWITCH_DOMAIN],
-    "Dimmer": [LIGHT_DOMAIN],
-    "Humidifier": [FAN_DOMAIN],
-    "Insight": [BINARY_SENSOR_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN],
-    "LightSwitch": [SWITCH_DOMAIN],
-    "Maker": [BINARY_SENSOR_DOMAIN, SWITCH_DOMAIN],
-    "Motion": [BINARY_SENSOR_DOMAIN],
-    "OutdoorPlug": [SWITCH_DOMAIN],
-    "Sensor": [BINARY_SENSOR_DOMAIN],
-    "Socket": [SWITCH_DOMAIN],
+    "Bridge": [Platform.LIGHT],
+    "CoffeeMaker": [Platform.SWITCH],
+    "Dimmer": [Platform.LIGHT],
+    "Humidifier": [Platform.FAN],
+    "Insight": [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH],
+    "LightSwitch": [Platform.SWITCH],
+    "Maker": [Platform.BINARY_SENSOR, Platform.SWITCH],
+    "Motion": [Platform.BINARY_SENSOR],
+    "OutdoorPlug": [Platform.SWITCH],
+    "Sensor": [Platform.BINARY_SENSOR],
+    "Socket": [Platform.SWITCH],
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -155,7 +150,7 @@ class WemoDispatcher:
             return
 
         coordinator = await async_register_device(hass, self._config_entry, wemo)
-        for component in WEMO_MODEL_DISPATCH.get(wemo.model_name, [SWITCH_DOMAIN]):
+        for component in WEMO_MODEL_DISPATCH.get(wemo.model_name, [Platform.SWITCH]):
             # Three cases:
             # - First time we see component, we need to load it and initialize the backlog
             # - Component is being loaded, add to backlog
