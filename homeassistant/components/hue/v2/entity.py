@@ -164,8 +164,13 @@ class HueBaseEntity(Entity):
                 self.logger.warning(
                     "Light %s changed state while reported as disconnected on the Zigbee mesh. "
                     "This is an indicator that routing is not working properly for this device. "
-                    "Home Assistant will ignore availability for this light from now on.",
+                    "Home Assistant will ignore availability for this light from now on. ",
+                    "Device details: %s %s (%s) fw: %s",
                     self.name,
+                    self.device.product_data.manufacturer_name,
+                    self.device.product_data.product_name,
+                    self.device.product_data.model_id,
+                    self.device.product_data.software_version,
                 )
                 # do we want to store this in some persistent storage?
                 self._ignore_availability = True
