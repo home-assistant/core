@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import cast
 
-from homeassistant import config_entries
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.const import ATTR_ATTRIBUTION, PERCENTAGE
 from homeassistant.helpers import update_coordinator
@@ -43,15 +42,6 @@ SENSORS = (
         unit_of_measurement=PERCENTAGE,
     ),
 )
-
-
-async def async_setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the CO2signal sensor."""
-    await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data=config,
-    )
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
