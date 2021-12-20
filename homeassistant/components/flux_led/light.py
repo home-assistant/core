@@ -372,6 +372,7 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
         background_color: tuple[int, int, int] | None = None,
     ) -> None:
         """Configure music mode."""
+        await self._async_ensure_device_on()
         await self._device.async_set_music_mode(
             sensitivity=sensitivity,
             brightness=brightness,
