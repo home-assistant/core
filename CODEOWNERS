@@ -478,8 +478,8 @@ homeassistant/components/knx/* @Julius2342 @farmio @marvin-w
 tests/components/knx/* @Julius2342 @farmio @marvin-w
 homeassistant/components/kodi/* @OnFreund @cgtobi
 tests/components/kodi/* @OnFreund @cgtobi
-homeassistant/components/konnected/* @heythisisnate @kit-klein
-tests/components/konnected/* @heythisisnate @kit-klein
+homeassistant/components/konnected/* @heythisisnate
+tests/components/konnected/* @heythisisnate
 homeassistant/components/kostal_plenticore/* @stegm
 tests/components/kostal_plenticore/* @stegm
 homeassistant/components/kraken/* @eifinger
