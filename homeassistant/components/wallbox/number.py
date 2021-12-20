@@ -6,7 +6,6 @@ from typing import Optional, cast
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DEVICE_CLASS_CURRENT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -24,7 +23,7 @@ NUMBER_TYPES: dict[str, WallboxNumberEntityDescription] = {
     CONF_MAX_CHARGING_CURRENT_KEY: WallboxNumberEntityDescription(
         key=CONF_MAX_CHARGING_CURRENT_KEY,
         name="Max. Charging Current",
-        device_class=DEVICE_CLASS_CURRENT,
+        device_class="current",
         min_value=6,
     ),
 }
