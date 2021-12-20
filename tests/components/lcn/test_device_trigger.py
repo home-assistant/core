@@ -5,6 +5,7 @@ from pypck.lcn_defs import AccessControlPeriphery, KeyAction, SendKeyCommand
 import voluptuous_serialize
 
 from homeassistant.components import automation
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.lcn import device_trigger
 from homeassistant.components.lcn.const import DOMAIN, KEY_ACTIONS, SENDKEYS
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
@@ -47,7 +48,9 @@ async def test_get_triggers_module_device(hass, entry, lcn_connection):
         },
     ]
 
-    triggers = await async_get_device_automations(hass, "trigger", device.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device.id
+    )
     assert_lists_same(triggers, expected_triggers)
 
 
@@ -63,7 +66,9 @@ async def test_get_triggers_non_module_device(hass, entry, lcn_connection):
     )
 
     for device in (host_device, group_device, resource_device):
-        triggers = await async_get_device_automations(hass, "trigger", device.id)
+        triggers = await async_get_device_automations(
+            hass, DeviceAutomationType.TRIGGER, device.id
+        )
         for trigger in triggers:
             assert trigger[CONF_TYPE] not in not_included_types
 
