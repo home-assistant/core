@@ -5,6 +5,7 @@ import ast
 import logging
 from typing import Any, Final
 
+from flux_led.const import MultiColorEffects
 from flux_led.utils import (
     color_temp_to_white_levels,
     rgbcw_brightness,
@@ -43,6 +44,7 @@ from .const import (
     CONF_CUSTOM_EFFECT_COLORS,
     CONF_CUSTOM_EFFECT_SPEED_PCT,
     CONF_CUSTOM_EFFECT_TRANSITION,
+    CONF_EFFECT,
     CONF_SPEED_PCT,
     CONF_TRANSITION,
     DEFAULT_EFFECT_SPEED,
@@ -53,7 +55,12 @@ from .const import (
 )
 from .coordinator import FluxLedUpdateCoordinator
 from .entity import FluxOnOffEntity
-from .util import _effect_brightness, _flux_color_mode_to_hass, _hass_color_modes
+from .util import (
+    _effect_brightness,
+    _flux_color_mode_to_hass,
+    _hass_color_modes,
+    _str_to_multi_color_effect,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,6 +80,7 @@ COLOR_TEMP_WARM_VS_COLD_WHITE_CUT_OFF: Final = 285
 EFFECT_CUSTOM: Final = "custom"
 
 SERVICE_CUSTOM_EFFECT: Final = "set_custom_effect"
+SERVICE_SET_ZONES: Final = "set_zones"
 
 CUSTOM_EFFECT_DICT: Final = {
     vol.Required(CONF_COLORS): vol.All(
@@ -85,6 +93,20 @@ CUSTOM_EFFECT_DICT: Final = {
     ),
     vol.Optional(CONF_TRANSITION, default=TRANSITION_GRADUAL): vol.All(
         cv.string, vol.In([TRANSITION_GRADUAL, TRANSITION_JUMP, TRANSITION_STROBE])
+    ),
+}
+
+SET_ZONES_DICT: Final = {
+    vol.Required(CONF_COLORS): vol.All(
+        cv.ensure_list,
+        vol.Length(min=1, max=2048),
+        [vol.All(vol.Coerce(tuple), vol.ExactSequence((cv.byte, cv.byte, cv.byte)))],
+    ),
+    vol.Optional(CONF_SPEED_PCT, default=50): vol.All(
+        vol.Range(min=0, max=100), vol.Coerce(int)
+    ),
+    vol.Optional(CONF_EFFECT, default=MultiColorEffects.STATIC.name.lower()): vol.All(
+        cv.string, vol.In([effect.name.lower() for effect in MultiColorEffects])
     ),
 }
 
@@ -102,6 +124,11 @@ async def async_setup_entry(
         SERVICE_CUSTOM_EFFECT,
         CUSTOM_EFFECT_DICT,
         "async_set_custom_effect",
+    )
+    platform.async_register_entity_service(
+        SERVICE_SET_ZONES,
+        SET_ZONES_DICT,
+        "async_set_zones",
     )
     options = entry.options
 
@@ -292,4 +319,14 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
             colors,
             speed_pct,
             transition,
+        )
+
+    async def async_set_zones(
+        self, colors: list[tuple[int, int, int]], speed_pct: int, effect: str
+    ) -> None:
+        """Set a colors for zones."""
+        await self._device.async_set_zones(
+            colors,
+            speed_pct,
+            _str_to_multi_color_effect(effect),
         )
