@@ -127,7 +127,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     hot_tolerance = config.get(CONF_HOT_TOLERANCE)
     keep_alive = config.get(CONF_KEEP_ALIVE)
     initial_hvac_mode = config.get(CONF_INITIAL_HVAC_MODE)
-    presets = {key: config[value] for key, value in CONF_PRESETS.items() if value in config}
+    presets = {
+        key: config[value] for key, value in CONF_PRESETS.items() if value in config
+    }
     precision = config.get(CONF_PRECISION)
     unit = hass.config.units.temperature_unit
     unique_id = config.get(CONF_UNIQUE_ID)
