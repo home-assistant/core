@@ -57,6 +57,9 @@ FLUX_DISCOVERY = FluxLEDDiscovery(
     firmware_date=datetime.date(2021, 5, 5),
     model_info=MODEL,
     model_description=MODEL_DESCRIPTION,
+    remote_access_enabled=True,
+    remote_access_host="the.cloud",
+    remote_access_port=8816,
 )
 
 
@@ -70,6 +73,7 @@ def _mocked_bulb() -> AIOWifiLedBulb:
     bulb.requires_turn_on = True
     bulb.async_setup = AsyncMock(side_effect=_save_setup_callback)
     bulb.effect_list = ["some_effect"]
+    bulb.async_set_music_mode = AsyncMock()
     bulb.async_set_custom_pattern = AsyncMock()
     bulb.async_set_preset_pattern = AsyncMock()
     bulb.async_set_effect = AsyncMock()
@@ -80,6 +84,9 @@ def _mocked_bulb() -> AIOWifiLedBulb:
     bulb.async_turn_off = AsyncMock()
     bulb.async_turn_on = AsyncMock()
     bulb.async_set_levels = AsyncMock()
+    bulb.async_set_zones = AsyncMock()
+    bulb.async_disable_remote_access = AsyncMock()
+    bulb.async_enable_remote_access = AsyncMock()
     bulb.min_temp = 2700
     bulb.max_temp = 6500
     bulb.getRgb = MagicMock(return_value=[255, 0, 0])
@@ -118,6 +125,7 @@ def _mocked_switch() -> AIOWifiLedBulb:
 
     switch.device_type = DeviceType.Switch
     switch.requires_turn_on = True
+    switch.async_reboot = AsyncMock()
     switch.async_setup = AsyncMock(side_effect=_save_setup_callback)
     switch.async_stop = AsyncMock()
     switch.async_update = AsyncMock()
@@ -168,10 +176,10 @@ def _patch_discovery(device=None, no_device=False):
     @contextmanager
     def _patcher():
         with patch(
-            "homeassistant.components.flux_led.AIOBulbScanner.async_scan",
+            "homeassistant.components.flux_led.discovery.AIOBulbScanner.async_scan",
             new=_discovery,
         ), patch(
-            "homeassistant.components.flux_led.AIOBulbScanner.getBulbInfo",
+            "homeassistant.components.flux_led.discovery.AIOBulbScanner.getBulbInfo",
             return_value=[] if no_device else [device or FLUX_DISCOVERY],
         ):
             yield

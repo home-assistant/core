@@ -6,14 +6,12 @@ import logging
 from pytrafikverket import TrafikverketTrain
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_NAME,
-    CONF_WEEKDAY,
-    DEVICE_CLASS_TIMESTAMP,
-    WEEKDAYS,
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
 )
+from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_WEEKDAY, WEEKDAYS
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
@@ -118,7 +116,7 @@ def next_departuredate(departure):
 class TrainSensor(SensorEntity):
     """Contains data about a train depature."""
 
-    _attr_device_class = DEVICE_CLASS_TIMESTAMP
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
 
     def __init__(self, train_api, name, from_station, to_station, weekday, time):
         """Initialize the sensor."""

@@ -6,12 +6,8 @@ import pytest
 
 from homeassistant.components.arlo import DATA_ARLO, sensor as arlo
 from homeassistant.components.arlo.sensor import SENSOR_TYPES
-from homeassistant.const import (
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_TEMPERATURE,
-    PERCENTAGE,
-)
+from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.const import PERCENTAGE
 
 
 def _get_named_tuple(input_dict):
@@ -157,12 +153,12 @@ def test_sensor_state_default(default_sensor):
 
 def test_sensor_device_class__battery(battery_sensor):
     """Test the battery device_class."""
-    assert battery_sensor.device_class == DEVICE_CLASS_BATTERY
+    assert battery_sensor.device_class == SensorDeviceClass.BATTERY
 
 
 def test_sensor_device_class(temperature_sensor):
     """Test the device_class property."""
-    assert temperature_sensor.device_class == DEVICE_CLASS_TEMPERATURE
+    assert temperature_sensor.device_class == SensorDeviceClass.TEMPERATURE
 
 
 def test_unit_of_measure(default_sensor, battery_sensor):
@@ -174,8 +170,8 @@ def test_unit_of_measure(default_sensor, battery_sensor):
 def test_device_class(default_sensor, temperature_sensor, humidity_sensor):
     """Test the device_class property."""
     assert default_sensor.device_class is None
-    assert temperature_sensor.device_class == DEVICE_CLASS_TEMPERATURE
-    assert humidity_sensor.device_class == DEVICE_CLASS_HUMIDITY
+    assert temperature_sensor.device_class == SensorDeviceClass.TEMPERATURE
+    assert humidity_sensor.device_class == SensorDeviceClass.HUMIDITY
 
 
 def test_attribution(default_sensor, temperature_sensor, humidity_sensor):

@@ -48,17 +48,9 @@ HOMEKIT_TYPES = [
     "_hap._udp.local.",
 ]
 
-# Keys we support matching against in properties that are always matched in
-# upper case. ex: ZeroconfServiceInfo.properties["macaddress"]
-UPPER_MATCH_PROPS = {"macaddress"}
-# Keys we support matching against in properties that are always matched in
-# lower case. ex: ZeroconfServiceInfo.properties["model"]
-LOWER_MATCH_PROPS = {"manufacturer", "model"}
 # Top level keys we support matching against in properties that are always matched in
 # lower case. ex: ZeroconfServiceInfo.name
 LOWER_MATCH_ATTRS = {"name"}
-# Everything we support matching
-ALL_MATCHERS = UPPER_MATCH_PROPS | LOWER_MATCH_PROPS | LOWER_MATCH_ATTRS
 
 CONF_DEFAULT_INTERFACE = "default_interface"
 CONF_IPV6 = "ipv6"
@@ -74,6 +66,8 @@ MAX_PROPERTY_VALUE_LEN = 230
 
 # Dns label max length
 MAX_NAME_LEN = 63
+
+ATTR_PROPERTIES: Final = "properties"
 
 # Attributes for ZeroconfServiceInfo[ATTR_PROPERTIES]
 ATTR_PROPERTIES_ID: Final = "id"
@@ -321,15 +315,28 @@ async def _async_register_hass_zc_service(
     await aio_zc.async_register_service(info, allow_name_change=True)
 
 
-def _match_against_data(matcher: dict[str, str], match_data: dict[str, str]) -> bool:
+def _match_against_data(
+    matcher: dict[str, str | dict[str, str]], match_data: dict[str, str]
+) -> bool:
     """Check a matcher to ensure all values in match_data match."""
+    for key in LOWER_MATCH_ATTRS:
+        if key not in matcher:
+            continue
+        if key not in match_data:
+            return False
+        match_val = matcher[key]
+        assert isinstance(match_val, str)
+        if not fnmatch.fnmatch(match_data[key], match_val):
+            return False
+    return True
+
+
+def _match_against_props(matcher: dict[str, str], props: dict[str, str]) -> bool:
+    """Check a matcher to ensure all values in props."""
     return not any(
         key
-        for key in ALL_MATCHERS
-        if key in matcher
-        and (
-            key not in match_data or not fnmatch.fnmatch(match_data[key], matcher[key])
-        )
+        for key in matcher
+        if key not in props or not fnmatch.fnmatch(props[key].lower(), matcher[key])
     )
 
 
@@ -340,7 +347,7 @@ class ZeroconfDiscovery:
         self,
         hass: HomeAssistant,
         zeroconf: HaZeroconf,
-        zeroconf_types: dict[str, list[dict[str, str]]],
+        zeroconf_types: dict[str, list[dict[str, str | dict[str, str]]]],
         homekit_models: dict[str, str],
         ipv6: bool,
     ) -> None:
@@ -436,22 +443,24 @@ class ZeroconfDiscovery:
         for key in LOWER_MATCH_ATTRS:
             attr_value: str = getattr(info, key)
             match_data[key] = attr_value.lower()
-        for key in UPPER_MATCH_PROPS:
-            if key in props:
-                match_data[key] = props[key].upper()
-        for key in LOWER_MATCH_PROPS:
-            if key in props:
-                match_data[key] = props[key].lower()
 
         # Not all homekit types are currently used for discovery
         # so not all service type exist in zeroconf_types
         for matcher in self.zeroconf_types.get(service_type, []):
-            if len(matcher) > 1 and not _match_against_data(matcher, match_data):
-                continue
+            if len(matcher) > 1:
+                if not _match_against_data(matcher, match_data):
+                    continue
+                if ATTR_PROPERTIES in matcher:
+                    matcher_props = matcher[ATTR_PROPERTIES]
+                    assert isinstance(matcher_props, dict)
+                    if not _match_against_props(matcher_props, props):
+                        continue
 
+            matcher_domain = matcher["domain"]
+            assert isinstance(matcher_domain, str)
             discovery_flow.async_create_flow(
                 self.hass,
-                matcher["domain"],
+                matcher_domain,
                 {"source": config_entries.SOURCE_ZEROCONF},
                 info,
             )

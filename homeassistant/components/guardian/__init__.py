@@ -21,6 +21,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -203,7 +204,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 async with client:
                     await func(call, client)
             except GuardianError as err:
-                LOGGER.error("Error while executing %s: %s", func.__name__, err)
+                raise HomeAssistantError(
+                    f"Error while executing {func.__name__}: {err}"
+                ) from err
 
         return wrapper
 

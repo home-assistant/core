@@ -254,12 +254,14 @@ async def test_climate_local_temp(hass, device_climate):
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 21.0
 
 
-async def test_climate_hvac_action_running_state(hass, device_climate):
+async def test_climate_hvac_action_running_state(hass, device_climate_sinope):
     """Test hvac action via running state."""
 
-    thrm_cluster = device_climate.device.endpoints[1].thermostat
-    entity_id = await find_entity_id(Platform.CLIMATE, device_climate, hass)
-    sensor_entity_id = await find_entity_id(Platform.SENSOR, device_climate, hass)
+    thrm_cluster = device_climate_sinope.device.endpoints[1].thermostat
+    entity_id = await find_entity_id(Platform.CLIMATE, device_climate_sinope, hass)
+    sensor_entity_id = await find_entity_id(
+        Platform.SENSOR, device_climate_sinope, hass, "hvac"
+    )
 
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_OFF
@@ -407,7 +409,7 @@ async def test_climate_hvac_action_pi_demand(hass, device_climate):
     entity_id = await find_entity_id(Platform.CLIMATE, device_climate, hass)
 
     state = hass.states.get(entity_id)
-    assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_OFF
+    assert ATTR_HVAC_ACTION not in state.attributes
 
     await send_attributes_report(hass, thrm_cluster, {0x0007: 10})
     state = hass.states.get(entity_id)

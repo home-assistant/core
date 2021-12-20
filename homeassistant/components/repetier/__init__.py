@@ -8,7 +8,7 @@ import logging
 import pyrepetier
 import voluptuous as vol
 
-from homeassistant.components.sensor import SensorEntityDescription
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -16,7 +16,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
     CONF_SENSORS,
-    DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     TEMP_CELSIUS,
 )
@@ -143,21 +142,21 @@ SENSOR_TYPES: dict[str, RepetierSensorEntityDescription] = {
         type="temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         name="_bed_",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
     "extruder_temperature": RepetierSensorEntityDescription(
         key="extruder_temperature",
         type="temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         name="_extruder_",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
     "chamber_temperature": RepetierSensorEntityDescription(
         key="chamber_temperature",
         type="temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         name="_chamber_",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
     "current_state": RepetierSensorEntityDescription(
         key="current_state",

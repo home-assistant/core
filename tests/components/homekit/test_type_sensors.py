@@ -1,7 +1,7 @@
 """Test different accessory types: Sensors."""
+from homeassistant.components.binary_sensor import DEVICE_CLASS_MOTION
 from homeassistant.components.homekit import get_accessory
 from homeassistant.components.homekit.const import (
-    DEVICE_CLASS_MOTION,
     PROP_CELSIUS,
     THRESHOLD_CO,
     THRESHOLD_CO2,
