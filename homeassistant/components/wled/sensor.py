@@ -8,10 +8,10 @@ from datetime import datetime, timedelta
 from wled import Device as WLEDDevice
 
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -51,7 +51,7 @@ SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
         name="Estimated Current",
         native_unit_of_measurement=ELECTRIC_CURRENT_MILLIAMPERE,
         device_class=SensorDeviceClass.CURRENT,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.info.leds.power,
     ),
@@ -82,7 +82,7 @@ SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
         name="Free Memory",
         icon="mdi:memory",
         native_unit_of_measurement=DATA_BYTES,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda device: device.info.free_heap,
