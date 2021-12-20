@@ -1,4 +1,6 @@
 """Support for Luftdaten sensors."""
+from __future__ import annotations
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
