@@ -28,7 +28,7 @@ from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
@@ -73,8 +73,6 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Aqualink component."""
     conf = config.get(DOMAIN)
-
-    hass.data[DOMAIN] = {}
 
     if conf is not None:
         hass.async_create_task(
@@ -175,10 +173,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         try:
             await systems[0].update()
-            cur = systems[0].online
         except AqualinkServiceException as svc_exception:
             _LOGGER.warning("Failed to refresh iAqualink state: %s", svc_exception)
         else:
+            cur = systems[0].online
             if cur is True and prev is not True:
                 _LOGGER.warning("Reconnected to iAqualink")
 
@@ -212,12 +210,12 @@ def refresh_system(func):
     return wrapper
 
 
-async def safe_exec(awaitable: Awaitable) -> None:
+async def try_await(awaitable: Awaitable) -> None:
     """Execute API call while catching service exceptions."""
     try:
         await awaitable
     except AqualinkServiceException as svc_exception:
-        _LOGGER.warning("Aqualink Service Exception raised: %s", svc_exception)
+        raise HomeAssistantError("Aqualink Exception raised") from svc_exception
 
 
 class AqualinkEntity(Entity):

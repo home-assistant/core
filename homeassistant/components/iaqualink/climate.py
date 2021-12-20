@@ -22,7 +22,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant
 
-from . import AqualinkEntity, refresh_system, safe_exec
+from . import AqualinkEntity, refresh_system, try_await
 from .const import CLIMATE_SUPPORTED_MODES, DOMAIN as AQUALINK_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -76,9 +76,9 @@ class HassAqualinkThermostat(AqualinkEntity, ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Turn the underlying heater switch on or off."""
         if hvac_mode == HVAC_MODE_HEAT:
-            await safe_exec(self.heater.turn_on())
+            await try_await(self.heater.turn_on())
         elif hvac_mode == HVAC_MODE_OFF:
-            await safe_exec(self.heater.turn_off())
+            await try_await(self.heater.turn_off())
         else:
             _LOGGER.warning("Unknown operation mode: %s", hvac_mode)
 
@@ -111,7 +111,7 @@ class HassAqualinkThermostat(AqualinkEntity, ClimateEntity):
     @refresh_system
     async def async_set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
-        await safe_exec(self.dev.set_temperature(int(kwargs[ATTR_TEMPERATURE])))
+        await try_await(self.dev.set_temperature(int(kwargs[ATTR_TEMPERATURE])))
 
     @property
     def sensor(self) -> AqualinkSensor:

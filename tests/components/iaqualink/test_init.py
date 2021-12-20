@@ -12,6 +12,7 @@ from iaqualink.device import (
     AqualinkThermostat,
 )
 from iaqualink.exception import AqualinkServiceException
+import pytest
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
@@ -19,12 +20,13 @@ from homeassistant.components.iaqualink import (
     DOMAIN,
     UPDATE_INTERVAL,
     AqualinkEntity,
-    safe_exec,
+    try_await,
 )
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed
@@ -322,14 +324,15 @@ async def test_entity_assumed_and_available(hass):
     assert ha_light.available is True
 
 
-async def test_safe_exec(hass):
-    """Test assumed_state and_available properties for all values of online."""
-    with patch("homeassistant.components.iaqualink._LOGGER.warning") as mock_warn:
-        async_noop = async_returns(None)
-        await safe_exec(async_noop())
-        mock_warn.assert_not_called()
+async def test_try_await(hass):
+    """Test try_await for all values of awaitable."""
+    async_noop = async_returns(None)
+    await try_await(async_noop())
 
-    with patch("homeassistant.components.iaqualink._LOGGER.warning") as mock_warn:
+    with pytest.raises(Exception):
+        async_ex = async_raises(Exception)
+        await try_await(async_ex())
+
+    with pytest.raises(HomeAssistantError):
         async_ex = async_raises(AqualinkServiceException)
-        await safe_exec(async_ex())
-        mock_warn.assert_called_once()
+        await try_await(async_ex())
