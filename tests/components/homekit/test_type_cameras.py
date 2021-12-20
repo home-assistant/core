@@ -8,6 +8,10 @@ from pyhap.accessory_driver import AccessoryDriver
 import pytest
 
 from homeassistant.components import camera, ffmpeg
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_MOTION,
+    DEVICE_CLASS_OCCUPANCY,
+)
 from homeassistant.components.camera.img_util import TurboJPEGSingleton
 from homeassistant.components.homekit.accessories import HomeBridge
 from homeassistant.components.homekit.const import (
@@ -20,8 +24,6 @@ from homeassistant.components.homekit.const import (
     CONF_STREAM_SOURCE,
     CONF_SUPPORT_AUDIO,
     CONF_VIDEO_CODEC,
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_OCCUPANCY,
     SERV_DOORBELL,
     SERV_MOTION_SENSOR,
     SERV_STATELESS_PROGRAMMABLE_SWITCH,

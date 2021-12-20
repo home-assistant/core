@@ -7,9 +7,8 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    DEVICE_CLASS_RECEIVER,
-    DEVICE_CLASS_TV,
     BrowseMedia,
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
 )
 from homeassistant.components.media_player.const import (
@@ -104,9 +103,9 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     def device_class(self) -> str | None:
         """Return the class of this device."""
         if self.coordinator.data.info.device_type == "tv":
-            return DEVICE_CLASS_TV
+            return MediaPlayerDeviceClass.TV
 
-        return DEVICE_CLASS_RECEIVER
+        return MediaPlayerDeviceClass.RECEIVER
 
     @property
     def state(self) -> str | None:

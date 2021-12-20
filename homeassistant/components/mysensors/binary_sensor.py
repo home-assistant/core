@@ -3,13 +3,9 @@ from __future__ import annotations
 
 from homeassistant.components import mysensors
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_MOISTURE,
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_SAFETY,
-    DEVICE_CLASS_SOUND,
-    DEVICE_CLASS_VIBRATION,
     DEVICE_CLASSES,
     DOMAIN,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -23,13 +19,13 @@ from .helpers import on_unload
 
 SENSORS = {
     "S_DOOR": "door",
-    "S_MOTION": DEVICE_CLASS_MOTION,
+    "S_MOTION": BinarySensorDeviceClass.MOTION,
     "S_SMOKE": "smoke",
-    "S_SPRINKLER": DEVICE_CLASS_SAFETY,
-    "S_WATER_LEAK": DEVICE_CLASS_SAFETY,
-    "S_SOUND": DEVICE_CLASS_SOUND,
-    "S_VIBRATION": DEVICE_CLASS_VIBRATION,
-    "S_MOISTURE": DEVICE_CLASS_MOISTURE,
+    "S_SPRINKLER": BinarySensorDeviceClass.SAFETY,
+    "S_WATER_LEAK": BinarySensorDeviceClass.SAFETY,
+    "S_SOUND": BinarySensorDeviceClass.SOUND,
+    "S_VIBRATION": BinarySensorDeviceClass.VIBRATION,
+    "S_MOISTURE": BinarySensorDeviceClass.MOISTURE,
 }
 
 

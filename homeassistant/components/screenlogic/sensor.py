@@ -6,11 +6,7 @@ from screenlogicpy.const import (
     EQUIPMENT,
 )
 
-from homeassistant.components.sensor import (
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_TEMPERATURE,
-    SensorEntity,
-)
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 
 from . import ScreenlogicEntity
 from .const import DOMAIN
@@ -41,8 +37,8 @@ SUPPORTED_SCG_SENSORS = (
 SUPPORTED_PUMP_SENSORS = ("currentWatts", "currentRPM", "currentGPM")
 
 SL_DEVICE_TYPE_TO_HA_DEVICE_CLASS = {
-    DEVICE_TYPE.TEMPERATURE: DEVICE_CLASS_TEMPERATURE,
-    DEVICE_TYPE.ENERGY: DEVICE_CLASS_POWER,
+    DEVICE_TYPE.TEMPERATURE: SensorDeviceClass.TEMPERATURE,
+    DEVICE_TYPE.ENERGY: SensorDeviceClass.POWER,
 }
 
 
