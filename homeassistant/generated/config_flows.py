@@ -139,6 +139,7 @@ FLOWS = [
     "hunterdouglas_powerview",
     "hvv_departures",
     "hyperion",
+    "hyundai_kia_connect",
     "ialarm",
     "iaqualink",
     "icloud",

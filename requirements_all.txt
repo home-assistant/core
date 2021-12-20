@@ -861,6 +861,9 @@ hydrawiser==0.2
 # homeassistant.components.hyperion
 hyperion-py==0.7.4
 
+# homeassistant.components.hyundai_kia_connect
+hyundai_kia_connect_api==1.7.0
+
 # homeassistant.components.bh1750
 # homeassistant.components.bme280
 # homeassistant.components.htu21d

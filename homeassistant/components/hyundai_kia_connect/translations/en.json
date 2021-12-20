@@ -1,0 +1,26 @@
+{
+    "title": "Hyundai / Kia Connect",
+    "config": {
+        "step": {
+            "user": {
+                "title": "Hyundai / Kia Connect - Authentication",
+                "description": "Set up your Hyundai (Bluelink) / Kia (Uvo) Connect to integrate with Home Assistant.",
+                "data": {
+                    "username": "Username",
+                    "password": "Password",
+                    "region": "Region",
+                    "brand": "Brand",
+                    "pin": "Pin (Required for CA)"
+                }
+            }
+        },
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Login failed into Hyundai (Bluelink) / Kia (Uvo) Connect Servers. Please use official app to logout and log back in and try again!",
+            "unknown": "Unexpected error"
+        }
+    }
+}
