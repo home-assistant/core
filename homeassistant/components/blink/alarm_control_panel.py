@@ -9,7 +9,7 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
 )
 
-from .const import DEFAULT_ATTRIBUTION, DOMAIN
+from .const import DEFAULT_ATTRIBUTION, DEFAULT_BRAND, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,6 +39,16 @@ class BlinkSyncModule(AlarmControlPanelEntity):
         self._name = name
         self._attr_unique_id = sync.serial
         self._attr_name = f"{DOMAIN} {name}"
+
+    @property
+    def device_info(self):
+        """Return device information for main camera."""
+
+        return {
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "name": self.name,
+            "manufacturer": DEFAULT_BRAND,
+        }
 
     def update(self):
         """Update the state of the device."""

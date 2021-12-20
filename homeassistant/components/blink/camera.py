@@ -35,9 +35,21 @@ class BlinkCamera(Camera):
         super().__init__()
         self.data = data
         self._attr_name = f"{DOMAIN} {name}"
+        self._camera_name = name
         self._camera = camera
         self._attr_unique_id = f"{camera.serial}-camera"
         _LOGGER.debug("Initialized blink camera %s", self.name)
+
+    @property
+    def device_info(self):
+        """Return device information for main camera."""
+
+        return {
+            "identifiers": {(DOMAIN, self._camera.serial)},
+            "name": self._camera_name,
+            "manufacturer": DEFAULT_BRAND,
+            "model": self._camera.camera_type,
+        }
 
     @property
     def extra_state_attributes(self):
