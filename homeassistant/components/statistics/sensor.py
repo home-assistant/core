@@ -192,10 +192,10 @@ async def async_setup_platform(
             StatisticsSensor(
                 source_entity_id=config[CONF_ENTITY_ID],
                 name=config[CONF_NAME],
-                unique_id=config.get(CONF_UNIQUE_ID, None),
+                unique_id=config.get(CONF_UNIQUE_ID),
                 state_characteristic=config[CONF_STATE_CHARACTERISTIC],
                 samples_max_buffer_size=config[CONF_SAMPLES_MAX_BUFFER_SIZE],
-                samples_max_age=config.get(CONF_MAX_AGE, None),
+                samples_max_age=config.get(CONF_MAX_AGE),
                 precision=config[CONF_PRECISION],
                 quantile_intervals=config[CONF_QUANTILE_INTERVALS],
                 quantile_method=config[CONF_QUANTILE_METHOD],
