@@ -35,7 +35,6 @@ from .const import (
     CONF_DIRECTOR_ALL_ITEMS,
     CONF_DIRECTOR_MODEL,
     CONF_DIRECTOR_SW_VERSION,
-    CONF_DIRECTOR_TOKEN_EXPIRATION,
     CONF_WEBSOCKET,
     DOMAIN,
 )
@@ -157,11 +156,10 @@ async def refresh_tokens(hass: HomeAssistant, entry: ConfigEntry):
     entry_data = hass.data[DOMAIN][entry.entry_id]
     entry_data[CONF_ACCOUNT] = account
     entry_data[CONF_DIRECTOR] = director
-    entry_data[CONF_DIRECTOR_TOKEN_EXPIRATION] = director_token_dict["validSeconds"]
     obj = RefreshTokensObject(hass, entry)
     async_call_later(
         hass=hass,
-        delay=entry_data[CONF_DIRECTOR_TOKEN_EXPIRATION],
+        delay=director_token_dict["validSeconds"],
         action=obj.refresh_tokens,
     )
 
