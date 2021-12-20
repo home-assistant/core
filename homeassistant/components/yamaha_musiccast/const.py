@@ -50,7 +50,6 @@ ENTITY_CATEGORY_MAPPING = {
     EntityType.CONFIG: EntityCategory.CONFIG,
     EntityType.REGULAR: None,
     EntityType.DIAGNOSTIC: EntityCategory.DIAGNOSTIC,
-    EntityType.SYSTEM: EntityCategory.SYSTEM,
 }
 
 DEVICE_CLASS_MAPPING = {
