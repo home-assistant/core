@@ -425,6 +425,8 @@ homeassistant/components/influxdb/* @fabaff @mdegat01
 tests/components/influxdb/* @fabaff @mdegat01
 homeassistant/components/input_boolean/* @home-assistant/core
 tests/components/input_boolean/* @home-assistant/core
+homeassistant/components/input_button/* @home-assistant/core
+tests/components/input_button/* @home-assistant/core
 homeassistant/components/input_datetime/* @home-assistant/core
 tests/components/input_datetime/* @home-assistant/core
 homeassistant/components/input_number/* @home-assistant/core
