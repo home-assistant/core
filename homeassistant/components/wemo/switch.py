@@ -143,7 +143,7 @@ class WemoSwitch(WemoEntity, SwitchEntity):
             if standby_state == WEMO_STANDBY:
                 return STATE_STANDBY
             return STATE_UNKNOWN
-        return ""
+        assert False  # Unreachable code statement.
 
     @property
     def icon(self) -> str | None:
