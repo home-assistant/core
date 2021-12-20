@@ -480,11 +480,9 @@ class Scanner:
         # If there are no changes from a search, do not trigger a config flow
         if source != SsdpSource.SEARCH_ALIVE:
             info_desc = await self._async_get_description_dict(location) or {}
-            info_with_desc = CaseInsensitiveDict()
-            info_with_desc.merge(combined_headers)
-            info_with_desc.merge(info_desc)
+            assert isinstance(combined_headers, CaseInsensitiveDict)
             matching_domains = self.integration_matchers.async_matching_domains(
-                info_with_desc
+                CaseInsensitiveDict({**combined_headers.as_dict(), **info_desc})
             )
 
         if not callbacks and not matching_domains:
