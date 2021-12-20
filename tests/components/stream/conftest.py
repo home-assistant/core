@@ -25,6 +25,8 @@ import pytest
 from homeassistant.components.stream.core import Segment, StreamOutput
 from homeassistant.components.stream.worker import StreamState
 
+from .common import generate_h264_video, stream_teardown
+
 TEST_TIMEOUT = 7.0  # Lower than 9s home assistant timeout
 
 
@@ -78,8 +80,9 @@ class SaveRecordWorkerSync:
     to avoid thread leaks in tests.
     """
 
-    def __init__(self):
+    def __init__(self, hass):
         """Initialize SaveRecordWorkerSync."""
+        self._hass = hass
         self._save_event = None
         self._segments = None
         self._save_thread = None
@@ -91,7 +94,7 @@ class SaveRecordWorkerSync:
         assert self._save_thread is None
         self._segments = segments
         self._save_thread = threading.current_thread()
-        self._save_event.set()
+        self._hass.loop.call_soon_threadsafe(self._save_event.set)
 
     async def get_segments(self):
         """Return the recorded video segments."""
@@ -115,7 +118,7 @@ class SaveRecordWorkerSync:
 @pytest.fixture()
 def record_worker_sync(hass):
     """Patch recorder_save_worker for clean thread shutdown for test."""
-    sync = SaveRecordWorkerSync()
+    sync = SaveRecordWorkerSync(hass)
     with patch(
         "homeassistant.components.stream.recorder.recorder_save_worker",
         side_effect=sync.recorder_save_worker,
@@ -214,3 +217,16 @@ def hls_sync():
         side_effect=sync.response,
     ):
         yield sync
+
+
+@pytest.fixture(scope="package")
+def h264_video():
+    """Generate a video, shared across tests."""
+    return generate_h264_video()
+
+
+@pytest.fixture(scope="package", autouse=True)
+def fixture_teardown():
+    """Destroy package level test state."""
+    yield
+    stream_teardown()

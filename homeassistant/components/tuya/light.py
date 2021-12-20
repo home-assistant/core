@@ -19,9 +19,9 @@ from homeassistant.components.light import (
     LightEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENTITY_CATEGORY_CONFIG
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantTuyaData
@@ -146,7 +146,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
         TuyaLightEntityDescription(
             key=DPCode.BASIC_INDICATOR,
             name="Indicator Light",
-            entity_category=ENTITY_CATEGORY_CONFIG,
+            entity_category=EntityCategory.CONFIG,
         ),
     ),
     # Dimmer Switch

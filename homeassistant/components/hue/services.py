@@ -146,8 +146,10 @@ async def hue_activate_scene_v2(
             continue
         # found match!
         if transition:
-            transition = transition * 100  # in steps of 100ms
-        await api.scenes.recall(scene.id, dynamic=dynamic, duration=transition)
+            transition = transition * 1000  # transition is in ms
+        await bridge.async_request_call(
+            api.scenes.recall, scene.id, dynamic=dynamic, duration=transition
+        )
         return True
     LOGGER.debug(
         "Unable to find scene %s for group %s on bridge %s",

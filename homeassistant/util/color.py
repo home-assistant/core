@@ -450,7 +450,9 @@ def color_rgb_to_rgbww(
     w_r, w_g, w_b = color_temperature_to_rgb(color_temp_kelvin)
 
     # Find the ratio of the midpoint white in the input rgb channels
-    white_level = min(r / w_r, g / w_g, b / w_b if w_b else 0)
+    white_level = min(
+        r / w_r if w_r else 0, g / w_g if w_g else 0, b / w_b if w_b else 0
+    )
 
     # Subtract the white portion from the rgb channels.
     rgb = (r - w_r * white_level, g - w_g * white_level, b - w_b * white_level)
@@ -526,6 +528,16 @@ def color_temperature_to_rgb(
     blue = _get_blue(tmp_internal)
 
     return red, green, blue
+
+
+def color_temperature_to_rgbww(
+    temperature: int, brightness: int, min_mireds: int, max_mireds: int
+) -> tuple[int, int, int, int, int]:
+    """Convert color temperature to rgbcw."""
+    mired_range = max_mireds - min_mireds
+    warm = ((max_mireds - temperature) / mired_range) * brightness
+    cold = brightness - warm
+    return (0, 0, 0, round(cold), round(warm))
 
 
 def _clamp(color_component: float, minimum: float = 0, maximum: float = 255) -> float:

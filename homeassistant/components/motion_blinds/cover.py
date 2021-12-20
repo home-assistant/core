@@ -8,12 +8,7 @@ import voluptuous as vol
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    DEVICE_CLASS_AWNING,
-    DEVICE_CLASS_BLIND,
-    DEVICE_CLASS_CURTAIN,
-    DEVICE_CLASS_GATE,
-    DEVICE_CLASS_SHADE,
-    DEVICE_CLASS_SHUTTER,
+    CoverDeviceClass,
     CoverEntity,
 )
 from homeassistant.helpers import config_validation as cv, entity_platform
@@ -35,29 +30,29 @@ _LOGGER = logging.getLogger(__name__)
 
 
 POSITION_DEVICE_MAP = {
-    BlindType.RollerBlind: DEVICE_CLASS_SHADE,
-    BlindType.RomanBlind: DEVICE_CLASS_SHADE,
-    BlindType.HoneycombBlind: DEVICE_CLASS_SHADE,
-    BlindType.DimmingBlind: DEVICE_CLASS_SHADE,
-    BlindType.DayNightBlind: DEVICE_CLASS_SHADE,
-    BlindType.RollerShutter: DEVICE_CLASS_SHUTTER,
-    BlindType.Switch: DEVICE_CLASS_SHUTTER,
-    BlindType.RollerGate: DEVICE_CLASS_GATE,
-    BlindType.Awning: DEVICE_CLASS_AWNING,
-    BlindType.Curtain: DEVICE_CLASS_CURTAIN,
-    BlindType.CurtainLeft: DEVICE_CLASS_CURTAIN,
-    BlindType.CurtainRight: DEVICE_CLASS_CURTAIN,
+    BlindType.RollerBlind: CoverDeviceClass.SHADE,
+    BlindType.RomanBlind: CoverDeviceClass.SHADE,
+    BlindType.HoneycombBlind: CoverDeviceClass.SHADE,
+    BlindType.DimmingBlind: CoverDeviceClass.SHADE,
+    BlindType.DayNightBlind: CoverDeviceClass.SHADE,
+    BlindType.RollerShutter: CoverDeviceClass.SHUTTER,
+    BlindType.Switch: CoverDeviceClass.SHUTTER,
+    BlindType.RollerGate: CoverDeviceClass.GATE,
+    BlindType.Awning: CoverDeviceClass.AWNING,
+    BlindType.Curtain: CoverDeviceClass.CURTAIN,
+    BlindType.CurtainLeft: CoverDeviceClass.CURTAIN,
+    BlindType.CurtainRight: CoverDeviceClass.CURTAIN,
 }
 
 TILT_DEVICE_MAP = {
-    BlindType.VenetianBlind: DEVICE_CLASS_BLIND,
-    BlindType.ShangriLaBlind: DEVICE_CLASS_BLIND,
-    BlindType.DoubleRoller: DEVICE_CLASS_SHADE,
-    BlindType.VerticalBlind: DEVICE_CLASS_BLIND,
+    BlindType.VenetianBlind: CoverDeviceClass.BLIND,
+    BlindType.ShangriLaBlind: CoverDeviceClass.BLIND,
+    BlindType.DoubleRoller: CoverDeviceClass.SHADE,
+    BlindType.VerticalBlind: CoverDeviceClass.BLIND,
 }
 
 TDBU_DEVICE_MAP = {
-    BlindType.TopDownBottomUp: DEVICE_CLASS_SHADE,
+    BlindType.TopDownBottomUp: CoverDeviceClass.SHADE,
 }
 
 

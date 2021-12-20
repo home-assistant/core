@@ -12,7 +12,6 @@ from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
 from homeassistant.components.homeassistant.triggers import event as event_trigger
-from homeassistant.components.rfxtrx.const import EVENT_RFXTRX_EVENT
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     CONF_DEVICE_ID,
@@ -24,6 +23,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN
+from .const import EVENT_RFXTRX_EVENT
 from .helpers import async_get_device_object
 
 CONF_SUBTYPE = "subtype"

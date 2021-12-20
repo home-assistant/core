@@ -14,11 +14,27 @@ ZEROCONF = {
     "_airplay._tcp.local.": [
         {
             "domain": "apple_tv",
-            "model": "appletv*"
+            "properties": {
+                "model": "appletv*"
+            }
+        },
+        {
+            "domain": "apple_tv",
+            "properties": {
+                "model": "audioaccessory*"
+            }
+        },
+        {
+            "domain": "apple_tv",
+            "properties": {
+                "am": "airport*"
+            }
         },
         {
             "domain": "samsungtv",
-            "manufacturer": "samsung*"
+            "properties": {
+                "manufacturer": "samsung*"
+            }
         }
     ],
     "_api._udp.local.": [
@@ -26,22 +42,35 @@ ZEROCONF = {
             "domain": "guardian"
         }
     ],
+    "_appletv-v2._tcp.local.": [
+        {
+            "domain": "apple_tv"
+        }
+    ],
     "_axis-video._tcp.local.": [
         {
             "domain": "axis",
-            "macaddress": "00408C*"
+            "properties": {
+                "macaddress": "00408c*"
+            }
         },
         {
             "domain": "axis",
-            "macaddress": "ACCC8E*"
+            "properties": {
+                "macaddress": "accc8e*"
+            }
         },
         {
             "domain": "axis",
-            "macaddress": "B8A44F*"
+            "properties": {
+                "macaddress": "b8a44f*"
+            }
         },
         {
             "domain": "doorbird",
-            "macaddress": "1CCAE3*"
+            "properties": {
+                "macaddress": "1ccae3*"
+            }
         }
     ],
     "_bond._tcp.local.": [
@@ -112,6 +141,11 @@ ZEROCONF = {
             "domain": "homekit"
         }
     ],
+    "_hscp._tcp.local.": [
+        {
+            "domain": "apple_tv"
+        }
+    ],
     "_http._tcp.local.": [
         {
             "domain": "bosch_shc",
@@ -123,7 +157,9 @@ ZEROCONF = {
         },
         {
             "domain": "nam",
-            "manufacturer": "nettigo"
+            "properties": {
+                "manufacturer": "nettigo"
+            }
         },
         {
             "domain": "rachio",
@@ -227,6 +263,40 @@ ZEROCONF = {
             "name": "brother*"
         }
     ],
+    "_raop._tcp.local.": [
+        {
+            "domain": "apple_tv",
+            "properties": {
+                "am": "appletv*"
+            }
+        },
+        {
+            "domain": "apple_tv",
+            "properties": {
+                "am": "audioaccessory*"
+            }
+        },
+        {
+            "domain": "apple_tv",
+            "properties": {
+                "am": "airport*"
+            }
+        }
+    ],
+    "_sideplay._tcp.local.": [
+        {
+            "domain": "ecobee",
+            "properties": {
+                "mdl": "eb-*"
+            }
+        },
+        {
+            "domain": "ecobee",
+            "properties": {
+                "mdl": "ecobee*"
+            }
+        }
+    ],
     "_sonos._tcp.local.": [
         {
             "domain": "sonos"
@@ -288,6 +358,7 @@ HOMEKIT = {
     "BSB002": "hue",
     "C105X": "roku",
     "C135X": "roku",
+    "EB-*": "ecobee",
     "Healty Home Coach": "netatmo",
     "Iota": "abode",
     "LIFX": "lifx",
@@ -305,6 +376,7 @@ HOMEKIT = {
     "Welcome": "netatmo",
     "Wemo": "wemo",
     "YL*": "yeelight",
+    "ecobee*": "ecobee",
     "iSmartGate": "gogogate2",
     "iZone": "izone",
     "tado": "tado"
