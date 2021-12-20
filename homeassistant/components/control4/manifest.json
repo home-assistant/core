@@ -10,5 +10,5 @@
     }
   ],
   "codeowners": ["@lawtancool"],
-  "iot_class": "local_polling"
+  "iot_class": "local_push"
 }
