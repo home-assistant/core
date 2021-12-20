@@ -382,10 +382,12 @@ class KeyFrameConverter:
         image = None
         packet = self.packet
         self.packet = None
-        # decode packet (try up to 3 times)
-        for _i in range(3):
-            if frames := packet.decode():
+        # decode packet (flush afterwards)
+        frames = packet.decode()
+        for _i in range(2):
+            if frames:
                 break
+            frames = packet.stream.codec_context.decode(None)
         if frames:
             frame = frames[0]
             if width and height:
