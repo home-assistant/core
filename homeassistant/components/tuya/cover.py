@@ -67,6 +67,13 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
             set_position=DPCode.PERCENT_CONTROL_3,
             device_class=CoverDeviceClass.CURTAIN,
         ),
+        TuyaCoverEntityDescription(
+            key=DPCode.MACH_OPERATE,
+            name="Curtain",
+            current_position=DPCode.POSITION,
+            set_position=DPCode.POSITION,
+            device_class=CoverDeviceClass.CURTAIN,
+        ),
         # switch_1 is an undocumented code that behaves identically to control
         # It is used by the Kogan Smart Blinds Driver
         TuyaCoverEntityDescription(
@@ -193,11 +200,11 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
             self._attr_supported_features |= SUPPORT_OPEN | SUPPORT_CLOSE
         elif device.function[description.key].type == "Enum":
             data_type = EnumTypeData.from_json(device.function[description.key].values)
-            if "open" in data_type.range:
+            if "open" in data_type.range or "FZ" in data_type.range:
                 self._attr_supported_features |= SUPPORT_OPEN
-            if "close" in data_type.range:
+            if "close" in data_type.range or "ZZ" in data_type.range:
                 self._attr_supported_features |= SUPPORT_CLOSE
-            if "stop" in data_type.range:
+            if "stop" in data_type.range or "STOP" in data_type.range:
                 self._attr_supported_features |= SUPPORT_STOP
 
         # Determine type to use for setting the position
@@ -308,7 +315,9 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
     def open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         value: bool | str = True
-        if self.device.function[self.entity_description.key].type == "Enum":
+        if self.entity_description.key == DPCode.MACH_OPERATE:
+            value = "FZ"
+        elif self.device.function[self.entity_description.key].type == "Enum":
             value = "open"
 
         commands: list[dict[str, str | int]] = [
@@ -335,7 +344,9 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
     def close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         value: bool | str = False
-        if self.device.function[self.entity_description.key].type == "Enum":
+        if self.entity_description.key == DPCode.MACH_OPERATE:
+            value = "ZZ"
+        elif self.device.function[self.entity_description.key].type == "Enum":
             value = "close"
 
         commands: list[dict[str, str | int]] = [
@@ -381,7 +392,13 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
 
     def stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
-        self._send_command([{"code": self.entity_description.key, "value": "stop"}])
+        value: bool | str = False
+
+        if self.entity_description.key == DPCode.MACH_OPERATE:
+            value = "STOP"
+        else:
+            value = "stop"
+        self._send_command([{"code": self.entity_description.key, "value": value}])
 
     def set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""
