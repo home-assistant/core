@@ -33,7 +33,7 @@ class WemoEntity(CoordinatorEntity):
         self._available = True
 
     @property
-    def name_suffix(self):
+    def name_suffix(self) -> str | None:
         """Suffix to append to the WeMo device name."""
         return self._name_suffix
 
@@ -42,7 +42,7 @@ class WemoEntity(CoordinatorEntity):
         """Return the name of the device if any."""
         if suffix := self.name_suffix:
             return f"{self.wemo.name} {suffix}"
-        return self.wemo.name
+        return str(self.wemo.name)
 
     @property
     def available(self) -> bool:
@@ -50,10 +50,10 @@ class WemoEntity(CoordinatorEntity):
         return super().available and self._available
 
     @property
-    def unique_id_suffix(self):
+    def unique_id_suffix(self) -> str | None:
         """Suffix to append to the WeMo device's unique ID."""
         if self._unique_id_suffix is None and self.name_suffix is not None:
-            return self._name_suffix.lower()
+            return self.name_suffix.lower()
         return self._unique_id_suffix
 
     @property
@@ -61,7 +61,7 @@ class WemoEntity(CoordinatorEntity):
         """Return the id of this WeMo device."""
         if suffix := self.unique_id_suffix:
             return f"{self.wemo.serialnumber}_{suffix}"
-        return self.wemo.serialnumber
+        return str(self.wemo.serialnumber)
 
     @property
     def device_info(self) -> DeviceInfo:
