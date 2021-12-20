@@ -1,6 +1,11 @@
 """Support for GoodWe inverter via UDP."""
+from __future__ import annotations
+
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Any
+
 from goodwe import Inverter, Sensor, SensorKind
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
@@ -24,23 +29,15 @@ from homeassistant.const import (
     POWER_WATT,
     TEMP_CELSIUS,
 )
-from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
-from .const import DOMAIN, KEY_COORDINATOR, KEY_INVERTER
+from .const import DOMAIN, KEY_COORDINATOR, KEY_DEVICE_INFO, KEY_INVERTER
 
-# Service related constants
-SERVICE_SET_WORK_MODE = "set_work_mode"
-ATTR_WORK_MODE = "work_mode"
-SERVICE_SET_ONGRID_BATTERY_DOD = "set_ongrid_battery_dod"
-ATTR_ONGRID_BATTERY_DOD = "ongrid_battery_dod"
-SERVICE_SET_GRID_EXPORT_LIMIT = "set_grid_export_limit"
-ATTR_GRID_EXPORT_LIMIT = "grid_export_limit"
-
+# Sensor name of battery SoC
 BATTERY_SOC = "battery_soc"
 
 _MAIN_SENSORS = (
@@ -63,49 +60,62 @@ _ICONS = {
     SensorKind.GRID: "mdi:transmission-tower",
 }
 
+
+@dataclass
+class GoodweSensorEntityDescription(SensorEntityDescription):
+    """Class describing Goodwe sensor entities."""
+
+    value: Callable[[str, Any, Any], Any] = lambda sensor, prev, val: val
+
+
 _DESCRIPTIONS = {
-    "A": SensorEntityDescription(
+    "A": GoodweSensorEntityDescription(
         key="A",
         device_class=DEVICE_CLASS_CURRENT,
         state_class=STATE_CLASS_MEASUREMENT,
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
     ),
-    "V": SensorEntityDescription(
+    "V": GoodweSensorEntityDescription(
         key="V",
         device_class=DEVICE_CLASS_VOLTAGE,
         state_class=STATE_CLASS_MEASUREMENT,
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
     ),
-    "W": SensorEntityDescription(
+    "W": GoodweSensorEntityDescription(
         key="W",
         device_class=DEVICE_CLASS_POWER,
         state_class=STATE_CLASS_MEASUREMENT,
         native_unit_of_measurement=POWER_WATT,
     ),
-    "kWh": SensorEntityDescription(
+    "kWh": GoodweSensorEntityDescription(
         key="kWh",
         device_class=DEVICE_CLASS_ENERGY,
         state_class=STATE_CLASS_TOTAL_INCREASING,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        value=lambda sensor, prev, val: prev if "total" in sensor and not val else val,
     ),
-    "C": SensorEntityDescription(
+    "C": GoodweSensorEntityDescription(
         key="C",
         device_class=DEVICE_CLASS_TEMPERATURE,
         state_class=STATE_CLASS_MEASUREMENT,
         native_unit_of_measurement=TEMP_CELSIUS,
     ),
-    "Hz": SensorEntityDescription(
+    "Hz": GoodweSensorEntityDescription(
         key="Hz",
         device_class=DEVICE_CLASS_VOLTAGE,
         state_class=STATE_CLASS_MEASUREMENT,
         native_unit_of_measurement=FREQUENCY_HERTZ,
     ),
-    "%": SensorEntityDescription(
+    "%": GoodweSensorEntityDescription(
         key="%",
         state_class=STATE_CLASS_MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
     ),
 }
+DIAG_SENSOR = GoodweSensorEntityDescription(
+    key="_",
+    state_class=STATE_CLASS_MEASUREMENT,
+)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -113,19 +123,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     entities = []
     inverter = hass.data[DOMAIN][config_entry.entry_id][KEY_INVERTER]
     coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
-
-    device_info = DeviceInfo(
-        configuration_url="https://www.semsportal.com",
-        identifiers={(DOMAIN, config_entry.unique_id)},
-        name=config_entry.title,
-        manufacturer="GoodWe",
-        model=inverter.model_name,
-        sw_version=f"{inverter.software_version} ({inverter.arm_version})",
-    )
-
-    # Entity representing inverter itself
-    inverter_entity = InverterEntity(coordinator, device_info, inverter)
-    entities.append(inverter_entity)
+    device_info = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE_INFO]
 
     # Individual inverter sensors entities
     entities.extend(
@@ -136,69 +134,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     async_add_entities(entities)
 
-    # Add services
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_SET_WORK_MODE,
-        {vol.Required(ATTR_WORK_MODE): vol.Coerce(int)},
-        "async_set_work_mode",
-    )
-    platform.async_register_entity_service(
-        SERVICE_SET_ONGRID_BATTERY_DOD,
-        {vol.Required(ATTR_ONGRID_BATTERY_DOD): vol.Coerce(int)},
-        "async_set_ongrid_battery_dod",
-    )
-    platform.async_register_entity_service(
-        SERVICE_SET_GRID_EXPORT_LIMIT,
-        {vol.Required(ATTR_GRID_EXPORT_LIMIT): vol.Coerce(int)},
-        "async_set_grid_export_limit",
-    )
-
     return True
-
-
-class InverterEntity(CoordinatorEntity, SensorEntity):
-    """Entity representing the inverter instance itself."""
-
-    _MAIN_ENTITY_SENSOR = "ppv"
-
-    def __init__(
-        self,
-        coordinator: DataUpdateCoordinator,
-        device_info: DeviceInfo,
-        inverter: Inverter,
-    ) -> None:
-        """Initialize the main inverter entity."""
-        super().__init__(coordinator)
-        self.entity_id = f".{DOMAIN}_inverter"
-        self._attr_unique_id = f"{DOMAIN}-{inverter.serial_number}"
-        self._attr_device_info = device_info
-        self._attr_icon = "mdi:solar-power"
-        self._attr_name = "PV Inverter"
-        self._attr_native_unit_of_measurement = POWER_WATT
-        self._inverter: Inverter = inverter
-        self._previous_value = None
-
-    async def async_set_work_mode(self, work_mode: int) -> None:
-        """Set the inverter work mode."""
-        await self._inverter.set_work_mode(work_mode)
-
-    async def async_set_ongrid_battery_dod(self, ongrid_battery_dod: int) -> None:
-        """Set the on-grid battery dod."""
-        await self._inverter.set_ongrid_battery_dod(ongrid_battery_dod)
-
-    async def async_set_grid_export_limit(self, grid_export_limit: int) -> None:
-        """Set the grid export limit."""
-        await self._inverter.set_grid_export_limit(grid_export_limit)
-
-    @property
-    def native_value(self):
-        """Return the value reported by the sensor."""
-        new_value = self.coordinator.data.get(
-            self._MAIN_ENTITY_SENSOR, self._previous_value
-        )
-        self._previous_value = new_value
-        return new_value
 
 
 class InverterSensor(CoordinatorEntity, SensorEntity):
@@ -220,9 +156,8 @@ class InverterSensor(CoordinatorEntity, SensorEntity):
         self._attr_entity_category = (
             ENTITY_CATEGORY_DIAGNOSTIC if sensor.id_ not in _MAIN_SENSORS else None
         )
-        if sensor.unit in _DESCRIPTIONS:
-            self.entity_description = _DESCRIPTIONS[sensor.unit]
-        else:
+        self.entity_description = _DESCRIPTIONS.get(sensor.unit, DIAG_SENSOR)
+        if not self.entity_description.native_unit_of_measurement:
             self._attr_native_unit_of_measurement = sensor.unit
         self._attr_icon = _ICONS.get(sensor.kind)
         # Set the inverter SoC as main device battery sensor
@@ -234,13 +169,10 @@ class InverterSensor(CoordinatorEntity, SensorEntity):
     @property
     def native_value(self):
         """Return the value reported by the sensor."""
-        new_value = self.coordinator.data.get(self._sensor.id_, self._previous_value)
-        # Total increasing sensor should never be set to 0
-        if (
-            self.state_class == STATE_CLASS_TOTAL_INCREASING
-            and "total" in self._sensor.id_
-            and not new_value
-        ):
-            new_value = self._previous_value
-        self._previous_value = new_value
-        return new_value
+        value = self.entity_description.value(
+            self._sensor.id_,
+            self._previous_value,
+            self.coordinator.data.get(self._sensor.id_, self._previous_value),
+        )
+        self._previous_value = value
+        return value

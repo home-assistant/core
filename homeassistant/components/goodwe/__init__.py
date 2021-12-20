@@ -8,6 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -19,6 +20,7 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     KEY_COORDINATOR,
+    KEY_DEVICE_INFO,
     KEY_INVERTER,
     PLATFORMS,
 )
@@ -47,6 +49,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     except InverterError as err:
         raise ConfigEntryNotReady from err
+
+    device_info = DeviceInfo(
+        configuration_url="https://www.semsportal.com",
+        identifiers={(DOMAIN, inverter.serial_number)},
+        name=entry.title,
+        manufacturer="GoodWe",
+        model=inverter.model_name,
+        sw_version=f"{inverter.software_version} ({inverter.arm_version})",
+    )
 
     async def async_update_data():
         """Fetch data from the inverter."""
@@ -88,6 +99,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][entry.entry_id] = {
         KEY_INVERTER: inverter,
         KEY_COORDINATOR: coordinator,
+        KEY_DEVICE_INFO: device_info,
     }
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
