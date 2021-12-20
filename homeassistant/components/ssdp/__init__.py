@@ -472,17 +472,17 @@ class Scanner:
         )
 
         location = ssdp_device.location
-        info_desc = await self._async_get_description_dict(location) or {}
+        info_desc = None
         combined_headers = ssdp_device.combined_headers(dst)
-        info_with_desc = CaseInsensitiveDict()
-        info_with_desc.merge(combined_headers)
-        info_with_desc.merge(info_desc)
-
         callbacks = self._async_get_matching_callbacks(combined_headers)
         matching_domains: set[str] = set()
 
         # If there are no changes from a search, do not trigger a config flow
         if source != SsdpSource.SEARCH_ALIVE:
+            info_desc = await self._async_get_description_dict(location) or {}
+            info_with_desc = CaseInsensitiveDict()
+            info_with_desc.merge(combined_headers)
+            info_with_desc.merge(info_desc)
             matching_domains = self.integration_matchers.async_matching_domains(
                 info_with_desc
             )
@@ -490,6 +490,8 @@ class Scanner:
         if not callbacks and not matching_domains:
             return
 
+        if info_desc is None:
+            info_desc = await self._async_get_description_dict(location) or {}
         discovery_info = discovery_info_from_headers_and_description(
             combined_headers, info_desc
         )
