@@ -8,21 +8,11 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
+    SensorDeviceClass,
     SensorEntity,
+    SensorStateClass,
 )
-from homeassistant.const import (
-    CONF_IP_ADDRESS,
-    CONF_PORT,
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_CURRENT,
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_VOLTAGE,
-    TEMP_CELSIUS,
-)
+from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, TEMP_CELSIUS
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
@@ -51,24 +41,24 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     for sensor, (idx, unit) in api.inverter.sensor_map().items():
         device_class = state_class = None
         if unit == "C":
-            device_class = DEVICE_CLASS_TEMPERATURE
-            state_class = STATE_CLASS_MEASUREMENT
+            device_class = SensorDeviceClass.TEMPERATURE
+            state_class = SensorStateClass.MEASUREMENT
             unit = TEMP_CELSIUS
         elif unit == "kWh":
-            device_class = DEVICE_CLASS_ENERGY
-            state_class = STATE_CLASS_TOTAL_INCREASING
+            device_class = SensorDeviceClass.ENERGY
+            state_class = SensorStateClass.TOTAL_INCREASING
         elif unit == "V":
-            device_class = DEVICE_CLASS_VOLTAGE
-            state_class = STATE_CLASS_MEASUREMENT
+            device_class = SensorDeviceClass.VOLTAGE
+            state_class = SensorStateClass.MEASUREMENT
         elif unit == "A":
-            device_class = DEVICE_CLASS_CURRENT
-            state_class = STATE_CLASS_MEASUREMENT
+            device_class = SensorDeviceClass.CURRENT
+            state_class = SensorStateClass.MEASUREMENT
         elif unit == "W":
-            device_class = DEVICE_CLASS_POWER
-            state_class = STATE_CLASS_MEASUREMENT
+            device_class = SensorDeviceClass.POWER
+            state_class = SensorStateClass.MEASUREMENT
         elif unit == "%":
-            device_class = DEVICE_CLASS_BATTERY
-            state_class = STATE_CLASS_MEASUREMENT
+            device_class = SensorDeviceClass.BATTERY
+            state_class = SensorStateClass.MEASUREMENT
         uid = f"{serial}-{idx}"
         devices.append(Inverter(uid, serial, sensor, unit, state_class, device_class))
     endpoint.sensors = devices
