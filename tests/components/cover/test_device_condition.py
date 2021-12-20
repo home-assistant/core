@@ -9,6 +9,7 @@ from homeassistant.components.cover import (
     SUPPORT_SET_POSITION,
     SUPPORT_SET_TILT_POSITION,
 )
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.const import (
     CONF_PLATFORM,
     STATE_CLOSED,
@@ -105,7 +106,9 @@ async def test_get_conditions(
         }
         for condition in expected_condition_types
     ]
-    conditions = await async_get_device_automations(hass, "condition", device_entry.id)
+    conditions = await async_get_device_automations(
+        hass, DeviceAutomationType.CONDITION, device_entry.id
+    )
     assert_lists_same(conditions, expected_conditions)
 
 
@@ -129,7 +132,9 @@ async def test_get_condition_capabilities(
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
 
-    conditions = await async_get_device_automations(hass, "condition", device_entry.id)
+    conditions = await async_get_device_automations(
+        hass, DeviceAutomationType.CONDITION, device_entry.id
+    )
     assert len(conditions) == 4
     for condition in conditions:
         capabilities = await async_get_device_automation_capabilities(
@@ -178,7 +183,9 @@ async def test_get_condition_capabilities_set_pos(
             },
         ]
     }
-    conditions = await async_get_device_automations(hass, "condition", device_entry.id)
+    conditions = await async_get_device_automations(
+        hass, DeviceAutomationType.CONDITION, device_entry.id
+    )
     assert len(conditions) == 5
     for condition in conditions:
         capabilities = await async_get_device_automation_capabilities(
@@ -230,7 +237,9 @@ async def test_get_condition_capabilities_set_tilt_pos(
             },
         ]
     }
-    conditions = await async_get_device_automations(hass, "condition", device_entry.id)
+    conditions = await async_get_device_automations(
+        hass, DeviceAutomationType.CONDITION, device_entry.id
+    )
     assert len(conditions) == 5
     for condition in conditions:
         capabilities = await async_get_device_automation_capabilities(
