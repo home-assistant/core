@@ -482,6 +482,8 @@ class PlexMediaPlayer(MediaPlayerEntity):
         if isinstance(src, int):
             src = {"plex_key": src}
 
+        offset = 0
+
         if playqueue_id := src.pop("playqueue_id", None):
             try:
                 playqueue = self.plex_server.get_playqueue(playqueue_id)
@@ -491,16 +493,21 @@ class PlexMediaPlayer(MediaPlayerEntity):
                 ) from err
         else:
             shuffle = src.pop("shuffle", 0)
+            offset = src.pop("offset", 0) * 1000
+            resume = src.pop("resume", False)
             media = self.plex_server.lookup_media(media_type, **src)
 
             if media is None:
                 raise HomeAssistantError(f"Media could not be found: {media_id}")
 
+            if resume and not offset:
+                offset = media.viewOffset
+
             _LOGGER.debug("Attempting to play %s on %s", media, self.name)
             playqueue = self.plex_server.create_playqueue(media, shuffle=shuffle)
 
         try:
-            self.device.playMedia(playqueue)
+            self.device.playMedia(playqueue, offset=offset)
         except requests.exceptions.ConnectTimeout as exc:
             raise HomeAssistantError(
                 f"Request failed when playing on {self.name}"
