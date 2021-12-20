@@ -3,14 +3,7 @@ from typing import cast
 from unittest.mock import Mock, call
 
 from homeassistant.components import notify
-from homeassistant.components.notify.const import (
-    ATTR_DATA,
-    ATTR_MESSAGE,
-    ATTR_TARGET,
-    ATTR_TITLE,
-    DOMAIN,
-    SERVICE_NOTIFY,
-)
+from homeassistant.components.notify.const import ATTR_MESSAGE, DOMAIN, SERVICE_NOTIFY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_platform import async_get_platforms
 from homeassistant.setup import async_setup_component
@@ -132,12 +125,7 @@ async def test_notify_service(
     assert notify_platform.services
     notify_service = cast(notify.NotifyService, notify_platform.services[service_name])
     notify_service.send_message = Mock()  # type: ignore[assignment]
-    service_data = {
-        ATTR_MESSAGE: "World",
-        ATTR_TITLE: "Hello",
-        ATTR_TARGET: ["target_one", "target_two"],
-        ATTR_DATA: {"data_one": 1},
-    }
+    service_data = {ATTR_MESSAGE: "World"}
 
     await hass.services.async_call(
         DOMAIN,
@@ -147,12 +135,7 @@ async def test_notify_service(
     )
 
     assert notify_service.send_message.call_count == 1
-    assert notify_service.send_message.call_args == call(
-        "World",
-        title="Hello",
-        target=["target_one", "target_two"],
-        data={"data_one": 1},
-    )
+    assert notify_service.send_message.call_args == call("World")
 
 
 async def test_setup_unload_notify(

@@ -477,10 +477,9 @@ class ServicePlatform:
     async def _set_service_description(self, service: PlatformService) -> None:
         """Set service description for a service and domain."""
         service_description = service.service_description
-        # TODO: Allow platform integrations to load service dicts from their domain.
-        integration = await async_get_integration(self.hass, self.domain)
+        integration = await async_get_integration(self.hass, service_description.domain)
         services_dict = cast(
-            dict,
+            dict[str, dict[str, Any]],
             await self.hass.async_add_executor_job(
                 load_services_file, self.hass, integration
             ),
@@ -490,14 +489,14 @@ class ServicePlatform:
 
         # Register the service description
         service_desc = {
-            CONF_NAME: service_description.name,
-            CONF_DESCRIPTION: service_description.description,
-            CONF_FIELDS: services_dict[service_description.service_base_name][
-                CONF_FIELDS
+            CONF_NAME: services_dict[service_description.service_id][CONF_NAME],
+            CONF_DESCRIPTION: services_dict[service_description.service_id][
+                CONF_DESCRIPTION
             ],
+            CONF_FIELDS: services_dict[service_description.service_id][CONF_FIELDS],
         }
         async_set_service_schema(
-            self.hass, self.domain, service_description.service_name, service_desc
+            self.hass, self.domain, service.service_name, service_desc
         )
 
 
@@ -505,10 +504,8 @@ class ServicePlatform:
 class ServiceDescription:
     """Represent a service description."""
 
-    service_base_name: str
-    service_name: str
-    name: str
-    description: str
+    domain: str
+    service_id: str
 
 
 @callback

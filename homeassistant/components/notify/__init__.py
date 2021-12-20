@@ -15,11 +15,12 @@ from homeassistant.helpers.service_integration import ServiceIntegration
 from homeassistant.helpers.service_platform import PlatformService, ServiceDescription
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
+from .const import (  # noqa: F401
     ATTR_DATA,
     ATTR_MESSAGE,
     ATTR_TARGET,
     ATTR_TITLE,
+    BASE_NOTIFY_SERVICE_SCHEMA,
     DOMAIN,
     LOGGER,
     NOTIFY_SERVICE_SCHEMA,
@@ -100,18 +101,12 @@ class NotifyService(PlatformService):
     @property
     def service_description(self) -> ServiceDescription:
         """Return the service description."""
-        service_name = self.service_name
-        return ServiceDescription(
-            SERVICE_NOTIFY,
-            service_name,
-            f"Send a notification with {service_name}",
-            f"Sends a notification message using the {service_name} service.",
-        )
+        return ServiceDescription(domain=DOMAIN, service_id="new_notify")
 
     @property
     def service_schema(self) -> vol.Schema:
         """Return the service schema."""
-        return NOTIFY_SERVICE_SCHEMA
+        return BASE_NOTIFY_SERVICE_SCHEMA
 
     def send_message(self, message: str, **kwargs: Any) -> None:
         """Send a message.
@@ -136,16 +131,5 @@ class NotifyService(PlatformService):
         check_templates_warn(self.hass, message)
         message.hass = self.hass
         kwargs[ATTR_MESSAGE] = message.async_render(parse_result=False)
-
-        if title := service_call.data.get(ATTR_TITLE):
-            check_templates_warn(self.hass, title)
-            title.hass = self.hass
-            kwargs[ATTR_TITLE] = title.async_render(parse_result=False)
-
-        if (target := service_call.data.get(ATTR_TARGET)) is not None:
-            kwargs[ATTR_TARGET] = target
-
-        if data := service_call.data.get(ATTR_DATA):
-            kwargs[ATTR_DATA] = data
 
         await self.async_send_message(**kwargs)

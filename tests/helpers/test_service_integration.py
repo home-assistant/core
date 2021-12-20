@@ -168,10 +168,8 @@ async def test_unload_entry_resets_platform(hass):
                 MockPlatformService(
                     service_name="test_service_mock",
                     service_description=ServiceDescription(
-                        "mock",
-                        "test_service_mock",
-                        "Test a service",
-                        "Description for testing a service",
+                        domain="test_domain",
+                        service_id="mock",
                     ),
                     service_schema=vol.Schema({}),
                 )

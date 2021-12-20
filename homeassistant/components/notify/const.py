@@ -23,18 +23,18 @@ LOGGER = logging.getLogger(__package__)
 SERVICE_NOTIFY = "notify"
 SERVICE_PERSISTENT_NOTIFICATION = "persistent_notification"
 
-NOTIFY_SERVICE_SCHEMA = vol.Schema(
+BASE_NOTIFY_SERVICE_SCHEMA = vol.Schema({vol.Required(ATTR_MESSAGE): cv.template})
+
+NOTIFY_SERVICE_SCHEMA = BASE_NOTIFY_SERVICE_SCHEMA.extend(
     {
-        vol.Required(ATTR_MESSAGE): cv.template,
         vol.Optional(ATTR_TITLE): cv.template,
         vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(ATTR_DATA): dict,
     }
 )
 
-PERSISTENT_NOTIFICATION_SERVICE_SCHEMA = vol.Schema(
+PERSISTENT_NOTIFICATION_SERVICE_SCHEMA = BASE_NOTIFY_SERVICE_SCHEMA.extend(
     {
-        vol.Required(ATTR_MESSAGE): cv.template,
         vol.Optional(ATTR_TITLE): cv.template,
     }
 )

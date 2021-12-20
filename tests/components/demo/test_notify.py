@@ -8,13 +8,7 @@ import voluptuous as vol
 
 import homeassistant.components.demo.notify as demo
 import homeassistant.components.notify as notify
-from homeassistant.components.notify.const import (
-    ATTR_DATA,
-    ATTR_MESSAGE,
-    ATTR_TARGET,
-    ATTR_TITLE,
-    SERVICE_NOTIFY,
-)
+from homeassistant.components.notify.const import ATTR_MESSAGE, SERVICE_NOTIFY
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import discovery
 from homeassistant.setup import async_setup_component
@@ -222,12 +216,7 @@ async def test_notify_config_entry(hass: HomeAssistant, events) -> None:
     service_name = f"demo_{SERVICE_NOTIFY}"
     assert hass.services.has_service("notify", service_name)
 
-    service_data = {
-        ATTR_MESSAGE: "World",
-        ATTR_TITLE: "Hello",
-        ATTR_TARGET: ["target_one", "target_two"],
-        ATTR_DATA: {"data_one": 1},
-    }
+    service_data = {ATTR_MESSAGE: "World"}
 
     await hass.services.async_call("notify", service_name, service_data, blocking=True)
     await hass.async_block_till_done()

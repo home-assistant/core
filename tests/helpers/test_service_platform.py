@@ -5,7 +5,7 @@ import asyncio
 from datetime import timedelta
 import logging
 from pathlib import Path
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, call, patch
 
 import pytest
 import voluptuous as vol
@@ -23,6 +23,7 @@ from homeassistant.helpers.service_platform import (
     ServicePlatform,
     async_get_platforms,
 )
+from homeassistant.loader import Integration
 from homeassistant.util.dt import utcnow
 
 from tests.common import (
@@ -71,7 +72,7 @@ async def mock_service_integration_fixture(
 ) -> ServiceIntegration:
     """Mock a service integration."""
     test_domain_integration = mock_integration(hass, MockModule(DOMAIN))
-    test_domain_integration.file_path = Path("mock_path")
+    test_domain_integration.file_path = Path("test_domain_path")
     service_integration = ServiceIntegration(hass, _LOGGER, DOMAIN, {DOMAIN: None})
     return service_integration
 
@@ -94,12 +95,19 @@ async def mock_service_platform_fixture(
     return service_platform
 
 
+@pytest.fixture(name="mock_entry_integration")
+def mock_entry_integration(hass) -> Integration:
+    """Mock the entry domain integration."""
+    entry_domain_integration = mock_integration(hass, MockModule(ENTRY_DOMAIN))
+    entry_domain_integration.file_path = Path("entry_domain_path")
+    return entry_domain_integration
+
+
 @pytest.fixture(name="mock_platform")
 async def mock_platform_fixture(
-    hass: HomeAssistant,
+    hass: HomeAssistant, mock_entry_integration: Integration
 ) -> tuple[MockPlatform, AsyncMock, ConfigEntry]:
     """Mock a service platform module."""
-    mock_integration(hass, MockModule(ENTRY_DOMAIN))
     mock_setup_entry = AsyncMock()
     platform = mock_platform_helper(
         hass,
@@ -116,10 +124,8 @@ def mock_platform_service_fixture() -> PlatformService:
     return MockPlatformService(
         service_name="test_service_mock",
         service_description=ServiceDescription(
-            "mock",
-            "test_service_mock",
-            "Test a service",
-            "Description for testing a service",
+            domain=DOMAIN,
+            service_id="mock",
         ),
         service_schema=vol.Schema({}),
     )
@@ -566,10 +572,8 @@ async def test_platforms_sharing_services(
     service_1 = MockPlatformService(
         service_name="test_hello",
         service_description=ServiceDescription(
-            "hello",
-            "test_hello",
-            "Test saying hello",
-            "Description for hello",
+            domain=DOMAIN,
+            service_id="hello",
         ),
         service_schema=vol.Schema({}),
     )
@@ -584,10 +588,8 @@ async def test_platforms_sharing_services(
     service_2 = MockPlatformService(
         service_name="test_hello",
         service_description=ServiceDescription(
-            "hello",
-            "test_hello",
-            "Test saying hello",
-            "Description for hello",
+            domain=DOMAIN,
+            service_id="hello",
         ),
         service_schema=vol.Schema({}),
     )
@@ -602,10 +604,8 @@ async def test_platforms_sharing_services(
     service_3 = MockPlatformService(
         service_name="test_goodbye",
         service_description=ServiceDescription(
-            "goodbye",
-            "test_goodbye",
-            "Test saying goodbye",
-            "Description for goodbye",
+            domain=DOMAIN,
+            service_id="goodbye",
         ),
         service_schema=vol.Schema({}),
     )
@@ -664,6 +664,58 @@ async def test_platforms_sharing_services(
     # since service 2 is now also removed.
     assert not hass.services.has_service(DOMAIN, "test_hello")
     assert hass.services.has_service(different_domain, "test_goodbye")
+
+
+async def test_add_service_custom_description_domain(
+    hass: HomeAssistant,
+    mock_entry_integration: Integration,
+    mock_platform: tuple[MockPlatform, AsyncMock, ConfigEntry],
+    mock_service_integration: ServiceIntegration,
+) -> None:
+    """Test adding service with service description from a custom domain."""
+    platform, _, entry = mock_platform
+    service_platform_1 = ServicePlatform(
+        hass=hass,
+        logger=_LOGGER,
+        domain=DOMAIN,
+        platform_name=entry.domain,
+        platform=platform,
+    )
+    service_1 = MockPlatformService(
+        service_name="test_hello",
+        service_description=ServiceDescription(
+            domain=entry.domain,
+            service_id="hello",
+        ),
+        service_schema=vol.Schema({}),
+    )
+    service_1.async_handle_service = AsyncMock()  # type: ignore[assignment]
+
+    await mock_service_integration.async_setup()
+    assert await mock_service_integration.async_setup_entry(entry)
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.helpers.service_platform.load_services_file",
+        return_value=HELLO_SERVICE_YAML,
+    ) as load_services_file, patch(
+        "homeassistant.helpers.service_platform.async_set_service_schema"
+    ) as set_service_schema:
+        await service_platform_1.async_add_services([service_1])
+
+    assert load_services_file.call_count == 1
+    assert load_services_file.call_args == call(hass, mock_entry_integration)
+    assert set_service_schema.call_count == 1
+    assert set_service_schema.call_args == call(
+        hass,
+        DOMAIN,
+        "test_hello",
+        {
+            "name": HELLO_SERVICE_YAML["hello"]["name"],
+            "description": HELLO_SERVICE_YAML["hello"]["description"],
+            "fields": HELLO_SERVICE_YAML["hello"]["fields"],
+        },
+    )
 
 
 async def test_get_platforms(
