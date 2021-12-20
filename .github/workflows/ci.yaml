@@ -155,7 +155,7 @@ jobs:
           key: >-
             ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
             steps.generate-python-key.outputs.key }}
-          # Temporary disabling the restare of environments when bumping
+          # Temporary disabling the restore of environments when bumping
           # a dependency. It seems that we are experiencing issues with
           # restoring environments in GitHub Actions, although unclear why.
           # First attempt: https://github.com/home-assistant/core/pull/62383
