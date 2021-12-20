@@ -9,6 +9,10 @@ from homeassistant.components.androidtv.config_flow import (
     CONF_APP_DELETE,
     CONF_APP_ID,
     CONF_APP_NAME,
+    CONF_RULE_DELETE,
+    CONF_RULE_ID,
+    CONF_RULE_VALUES,
+    RULES_NEW_ID,
 )
 from homeassistant.components.androidtv.const import (
     CONF_ADB_SERVER_IP,
@@ -37,7 +41,7 @@ from tests.components.androidtv.patchers import isfile
 ADBKEY = "adbkey"
 ETH_MAC = "a1:b1:c1:d1:e1:f1"
 HOST = "127.0.0.1"
-VALID_DETECT_RULE = {"com.plexapp.android": {"paused": {"media_session_state": 3}}}
+VALID_DETECT_RULE = [{"paused": {"media_session_state": 3}}]
 
 # Android TV device with Python ADB implementation
 CONFIG_PYTHON_ADB = {
@@ -393,7 +397,10 @@ async def test_options_flow(hass):
         domain=DOMAIN,
         data=CONFIG_ADB_SERVER,
         unique_id=ETH_MAC,
-        options={CONF_APPS: {"app1": "App1"}},
+        options={
+            CONF_APPS: {"app1": "App1"},
+            CONF_STATE_DETECTION_RULES: {"com.plexapp.android": VALID_DETECT_RULE},
+        },
     )
     config_entry.add_to_hass(hass)
 
@@ -404,17 +411,6 @@ async def test_options_flow(hass):
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "init"
-
-        # test invalid detection rules
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            user_input={
-                CONF_STATE_DETECTION_RULES: json.dumps({"a": "b"}),
-            },
-        )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["step_id"] == "init"
-        assert result["errors"] == {"base": "invalid_det_rules"}
 
         # test app form with existing app
         result = await hass.config_entries.options.async_configure(
@@ -478,6 +474,89 @@ async def test_options_flow(hass):
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "init"
 
+        # test rules form with existing rule
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_STATE_DETECTION_RULES: "com.plexapp.android",
+            },
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "rules"
+
+        # test change value in rule form with invalid json rule
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_RULE_VALUES: "a",
+            },
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "rules"
+        assert result["errors"] == {"base": "invalid_det_rules"}
+
+        # test change value in rule form with invalid rule
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_RULE_VALUES: json.dumps({"a": "b"}),
+            },
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "rules"
+        assert result["errors"] == {"base": "invalid_det_rules"}
+
+        # test change value in rule form with valid rule
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_RULE_VALUES: json.dumps(["standby"]),
+            },
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "init"
+
+        # test rule form with new rule
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_STATE_DETECTION_RULES: RULES_NEW_ID,
+            },
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "rules"
+
+        # test save value for new rule
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_RULE_ID: "rule2",
+                CONF_RULE_VALUES: json.dumps(VALID_DETECT_RULE),
+            },
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "init"
+
+        # test rules form with delete existing rule
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_STATE_DETECTION_RULES: "com.plexapp.android",
+            },
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "rules"
+
+        # test delete rule
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_RULE_DELETE: True,
+            },
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "init"
+
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={
@@ -486,7 +565,6 @@ async def test_options_flow(hass):
                 CONF_SCREENCAP: True,
                 CONF_TURN_OFF_COMMAND: "off",
                 CONF_TURN_ON_COMMAND: "on",
-                CONF_STATE_DETECTION_RULES: json.dumps(VALID_DETECT_RULE),
             },
         )
 

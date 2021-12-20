@@ -4,6 +4,7 @@ import logging
 import os
 import socket
 
+from androidtv import state_detection_rules_validator
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -12,7 +13,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 
-from . import async_connect_androidtv, validate_state_det_rules
+from . import async_connect_androidtv
 from .const import (
     CONF_ADB_SERVER_IP,
     CONF_ADB_SERVER_PORT,
@@ -41,6 +42,11 @@ APPS_NEW_ID = "NewApp"
 CONF_APP_DELETE = "app_delete"
 CONF_APP_ID = "app_id"
 CONF_APP_NAME = "app_name"
+
+RULES_NEW_ID = "NewRule"
+CONF_RULE_DELETE = "rule_delete"
+CONF_RULE_ID = "rule_id"
+CONF_RULE_VALUES = "rule_values"
 
 RESULT_CONN_ERROR = "cannot_connect"
 RESULT_UNKNOWN = "unknown"
@@ -192,39 +198,44 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Initialize options flow."""
         self.config_entry = config_entry
         self._apps = config_entry.options.get(CONF_APPS, {})
+        self._state_det_rules = config_entry.options.get(CONF_STATE_DETECTION_RULES, {})
         self._conf_app_id = None
+        self._conf_rule_id = None
 
+    @callback
     def _save_config(self, data):
         """Save the updated options."""
-        str_state_det_rules = data.pop(CONF_STATE_DETECTION_RULES, None)
-        if str_state_det_rules:
-            json_rules = validate_state_det_rules(str_state_det_rules)
-            if json_rules is None:
-                return self._async_init_form(errors={"base": "invalid_det_rules"})
-            data[CONF_STATE_DETECTION_RULES] = json_rules
+        new_data = {
+            k: v
+            for k, v in data.items()
+            if k not in [CONF_APPS, CONF_STATE_DETECTION_RULES]
+        }
+        if self._apps:
+            new_data[CONF_APPS] = self._apps
+        if self._state_det_rules:
+            new_data[CONF_STATE_DETECTION_RULES] = self._state_det_rules
 
-        data[CONF_APPS] = self._apps
-        return self.async_create_entry(title="", data=data)
+        return self.async_create_entry(title="", data=new_data)
 
     async def async_step_init(self, user_input=None):
         """Handle options flow."""
         if user_input is not None:
-            sel_app = user_input.get(CONF_APPS)
-            if sel_app:
+            if sel_app := user_input.get(CONF_APPS):
                 return await self.async_step_apps(None, sel_app)
+            if sel_rule := user_input.get(CONF_STATE_DETECTION_RULES):
+                return await self.async_step_rules(None, sel_rule)
             return self._save_config(user_input)
 
         return self._async_init_form()
 
     @callback
-    def _async_init_form(self, errors=None):
+    def _async_init_form(self):
         """Return initial configuration form."""
 
         apps_list = {k: f"{v} ({k})" if v else k for k, v in self._apps.items()}
         apps = {APPS_NEW_ID: "Add new", **apps_list}
+        rules = [RULES_NEW_ID] + list(self._state_det_rules)
         options = self.config_entry.options
-        state_det_rules = options.get(CONF_STATE_DETECTION_RULES)
-        str_state_det_rules = json.dumps(state_det_rules) if state_det_rules else ""
 
         data_schema = vol.Schema(
             {
@@ -255,22 +266,18 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         "suggested_value": options.get(CONF_TURN_ON_COMMAND, "")
                     },
                 ): str,
-                vol.Optional(
-                    CONF_STATE_DETECTION_RULES,
-                    description={"suggested_value": str_state_det_rules},
-                ): str,
+                vol.Optional(CONF_STATE_DETECTION_RULES): vol.In(rules),
             }
         )
 
-        return self.async_show_form(
-            step_id="init", data_schema=data_schema, errors=errors
-        )
+        return self.async_show_form(step_id="init", data_schema=data_schema)
 
     async def async_step_apps(self, user_input=None, app_id=None):
         """Handle options flow for apps list."""
         if app_id is not None:
             self._conf_app_id = app_id if app_id != APPS_NEW_ID else None
             return self._async_apps_form(app_id)
+
         if user_input is not None:
             app_id = user_input.get(CONF_APP_ID, self._conf_app_id)
             if app_id:
@@ -302,3 +309,67 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 "app_id": f"`{app_id}`" if app_id != APPS_NEW_ID else "",
             },
         )
+
+    async def async_step_rules(self, user_input=None, rule_id=None):
+        """Handle options flow for detection rules."""
+        if rule_id is not None:
+            self._conf_rule_id = rule_id if rule_id != RULES_NEW_ID else None
+            return self._async_rules_form(rule_id)
+
+        if user_input is not None:
+            rule_id = user_input.get(CONF_RULE_ID, self._conf_rule_id)
+            if rule_id:
+                if user_input.get(CONF_RULE_DELETE, False):
+                    self._state_det_rules.pop(rule_id)
+                elif str_det_rule := user_input.get(CONF_RULE_VALUES):
+                    state_det_rule = _validate_state_det_rules(str_det_rule)
+                    if state_det_rule is None:
+                        return self._async_rules_form(
+                            rule_id=self._conf_rule_id or RULES_NEW_ID,
+                            default_id=rule_id,
+                            errors={"base": "invalid_det_rules"},
+                        )
+                    self._state_det_rules[rule_id] = state_det_rule
+
+        return await self.async_step_init()
+
+    @callback
+    def _async_rules_form(self, rule_id, default_id="", errors=None):
+        """Return configuration form for detection rules."""
+        state_det_rule = self._state_det_rules.get(rule_id)
+        str_det_rule = json.dumps(state_det_rule) if state_det_rule else ""
+
+        data_schema = {}
+        if rule_id == RULES_NEW_ID:
+            data_schema[vol.Optional(CONF_RULE_ID, default=default_id)] = str
+        data_schema[vol.Optional(CONF_RULE_VALUES, default=str_det_rule)] = str
+        if rule_id != RULES_NEW_ID:
+            data_schema[vol.Optional(CONF_RULE_DELETE, default=False)] = bool
+
+        return self.async_show_form(
+            step_id="rules",
+            data_schema=vol.Schema(data_schema),
+            description_placeholders={
+                "rule_id": f"`{rule_id}`" if rule_id != RULES_NEW_ID else "",
+            },
+            errors=errors,
+        )
+
+
+def _validate_state_det_rules(state_det_rules):
+    """Validate a string that contain state detection rules and return a dict."""
+    try:
+        json_rules = json.loads(state_det_rules)
+    except ValueError:
+        _LOGGER.warning("Error loading state detection rules")
+        return None
+
+    if not isinstance(json_rules, list):
+        json_rules = [json_rules]
+
+    try:
+        state_detection_rules_validator(json_rules, ValueError)
+    except ValueError as exc:
+        _LOGGER.warning("Invalid state detection rules: %s", exc)
+        return None
+    return json_rules

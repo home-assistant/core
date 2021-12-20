@@ -46,11 +46,20 @@
                     "exclude_unnamed_apps": "Exclude app with unknown name",
                     "get_sources": "Whether or not to retrieve the running apps as the list of sources",
                     "screencap": "Determines if album art should be pulled from what is shown on screen",
-                    "state_detection_rules": "Dictionary of state detection rules (see documentation)",
+                    "state_detection_rules": "Configure state detection rules",
                     "turn_off_command": "ADB shell command to override default turn_off command",
                     "turn_on_command": "ADB shell command to override default turn_on command"
                 },
                 "title": "Android TV Options"
+            },
+            "rules": {
+                "data": {
+                    "rule_delete": "Check to delete this rule",
+                    "rule_id": "Application ID",
+                    "rule_values": "List of state detection rules (see documentation)"
+                },
+                "description": "Configure detection rule for application id {rule_id}",
+                "title": "Configure Android TV state detection rules"
             }
         }
     }

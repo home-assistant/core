@@ -1,10 +1,8 @@
 """Support for functionality to interact with Android TV/Fire TV devices."""
-import json
 import logging
 import os
 
 from adb_shell.auth.keygen import keygen
-from androidtv import state_detection_rules_validator
 from androidtv.adb_manager.adb_manager_sync import ADBPythonSync
 from androidtv.setup_async import setup
 
@@ -63,28 +61,6 @@ def _setup_androidtv(hass, config):
         adb_log = f"using ADB server at {config[CONF_ADB_SERVER_IP]}:{config[CONF_ADB_SERVER_PORT]}"
 
     return adbkey, signer, adb_log
-
-
-def validate_state_det_rules(state_det_rules):
-    """Validate a string that contain state detection rules and return a dict."""
-    if not state_det_rules:
-        return None
-
-    json_rules = state_det_rules
-    if isinstance(state_det_rules, str):
-        try:
-            json_rules = json.loads(state_det_rules)
-        except ValueError:
-            _LOGGER.warning("Error loading state detection rules")
-            return None
-
-    for app_rules in json_rules.values():
-        try:
-            state_detection_rules_validator(app_rules, ValueError)
-        except ValueError as exc:
-            _LOGGER.warning("Invalid state detection rules: %s", exc)
-            return None
-    return json_rules
 
 
 async def async_connect_androidtv(
@@ -158,10 +134,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Android TV platform."""
 
     state_det_rules = entry.options.get(CONF_STATE_DETECTION_RULES)
-    json_rules = validate_state_det_rules(state_det_rules)
-
     aftv, error_message = await async_connect_androidtv(
-        hass, entry.data, state_detection_rules=json_rules
+        hass, entry.data, state_detection_rules=state_det_rules
     )
     if not aftv:
         raise ConfigEntryNotReady(error_message)
