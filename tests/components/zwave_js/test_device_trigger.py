@@ -8,6 +8,7 @@ from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
 
 from homeassistant.components import automation
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
@@ -50,7 +51,9 @@ async def test_get_notification_notification_triggers(
         "device_id": device.id,
         "command_class": CommandClass.NOTIFICATION,
     }
-    triggers = await async_get_device_automations(hass, "trigger", device.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device.id
+    )
     assert expected_trigger in triggers
 
 
@@ -314,7 +317,9 @@ async def test_get_node_status_triggers(hass, client, lock_schlage_be469, integr
         "device_id": device.id,
         "entity_id": entity_id,
     }
-    triggers = await async_get_device_automations(hass, "trigger", device.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device.id
+    )
     assert expected_trigger in triggers
 
 
@@ -466,7 +471,9 @@ async def test_get_basic_value_notification_triggers(
         "endpoint": 0,
         "subtype": "Endpoint 0",
     }
-    triggers = await async_get_device_automations(hass, "trigger", device.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device.id
+    )
     assert expected_trigger in triggers
 
 
@@ -631,7 +638,9 @@ async def test_get_central_scene_value_notification_triggers(
         "endpoint": 0,
         "subtype": "Endpoint 0 Scene 001",
     }
-    triggers = await async_get_device_automations(hass, "trigger", device.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device.id
+    )
     assert expected_trigger in triggers
 
 
@@ -802,7 +811,9 @@ async def test_get_scene_activation_value_notification_triggers(
         "endpoint": 0,
         "subtype": "Endpoint 0",
     }
-    triggers = await async_get_device_automations(hass, "trigger", device.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device.id
+    )
     assert expected_trigger in triggers
 
 
@@ -962,7 +973,9 @@ async def test_get_value_updated_value_triggers(
         "type": "zwave_js.value_updated.value",
         "device_id": device.id,
     }
-    triggers = await async_get_device_automations(hass, "trigger", device.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device.id
+    )
     assert expected_trigger in triggers
 
 
@@ -1121,7 +1134,9 @@ async def test_get_value_updated_config_parameter_triggers(
         "command_class": CommandClass.CONFIGURATION.value,
         "subtype": f"{node.node_id}-112-0-3 (Beeper)",
     }
-    triggers = await async_get_device_automations(hass, "trigger", device.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device.id
+    )
     assert expected_trigger in triggers
 
 
