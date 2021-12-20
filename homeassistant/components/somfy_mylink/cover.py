@@ -68,7 +68,8 @@ class SomfyShade(RestoreEntity, CoverEntity):
     ):
         """Initialize the cover."""
         self.somfy_mylink = somfy_mylink
-        self._attr_unique_id = self._target_id = target_id
+        self._target_id = target_id
+        self._attr_unique_id = target_id
         self._attr_name = name
         self._reverse = reverse
         self._attr_device_class = device_class
