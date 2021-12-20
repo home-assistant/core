@@ -11,9 +11,9 @@ async def test_get_actions(hass, push_registration):
     webhook_id = push_registration["webhook_id"]
     device_id = hass.data[DOMAIN][DATA_DEVICES][webhook_id].id
 
-    assert await async_get_device_automations(hass, "action", device_id) == [
-        {"domain": DOMAIN, "device_id": device_id, "type": "notify"}
-    ]
+    assert await async_get_device_automations(
+        hass, device_automation.DeviceAutomationType.ACTION, device_id
+    ) == [{"domain": DOMAIN, "device_id": device_id, "type": "notify"}]
 
     capabilitites = await device_automation._async_get_device_automation_capabilities(
         hass,
