@@ -173,6 +173,7 @@ class RefreshTokensObject:
 
     async def refresh_tokens(self, datetime):
         """Calls refresh_tokens() to store updated authentication and director tokens in hass.data."""
+        # unused datetime parameter is required, since Home Assistant will pass a datetime.datetime object as parameter when calling this function via async_call_later()
         return await refresh_tokens(self.hass, self.entry)
 
 
@@ -208,7 +209,7 @@ class Control4Entity(Entity):
         self._extra_state_attributes = device_attributes
 
     async def async_added_to_hass(self):
-        """Sync with HASS."""
+        """Add entity to hass, adding Websockets callbacks to receive entity state updates from Control4."""
         await super().async_added_to_hass()
         await self.hass.async_add_executor_job(
             self.entry_data[CONF_WEBSOCKET].add_device_callback,
@@ -229,6 +230,8 @@ class Control4Entity(Entity):
         return True
 
     async def _update_callback(self, device, message):
+        """Callback called when a Websocket update is received for our item id or parent device id.
+        Updates state attributes in hass."""
         _LOGGER.debug(message)
 
         if message["evtName"] == "OnDataToUI":
