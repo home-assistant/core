@@ -98,6 +98,12 @@ class FakeAvInputStream:
 
         self.codec = FakeCodec()
 
+        class FakeCodecContext:
+            name = "h264"
+            extradata = None
+
+        self.codec_context = FakeCodecContext()
+
     def __str__(self) -> str:
         """Return a stream name for debugging."""
         return f"FakePyAvStream<{self.name}, {self.time_base}>"
