@@ -1148,7 +1148,7 @@ python-ecobee-api==0.2.14
 python-forecastio==1.4.0
 
 # homeassistant.components.izone
-python-izone==1.1.8
+python-izone==1.2.3
 
 # homeassistant.components.juicenet
 python-juicenet==1.0.2
