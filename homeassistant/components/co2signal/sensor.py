@@ -5,39 +5,18 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import cast
 
-import voluptuous as vol
-
 from homeassistant import config_entries
-from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
-    SensorEntity,
-    SensorStateClass,
-)
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-    CONF_TOKEN,
-    PERCENTAGE,
-)
-from homeassistant.helpers import config_validation as cv, update_coordinator
+from homeassistant.components.sensor import SensorEntity, SensorStateClass
+from homeassistant.const import ATTR_ATTRIBUTION, PERCENTAGE
+from homeassistant.helpers import update_coordinator
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import StateType
 
 from . import CO2SignalCoordinator, CO2SignalResponse
-from .const import ATTRIBUTION, CONF_COUNTRY_CODE, DOMAIN, MSG_LOCATION
+from .const import ATTRIBUTION, DOMAIN
 
 SCAN_INTERVAL = timedelta(minutes=3)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_TOKEN): cv.string,
-        vol.Inclusive(CONF_LATITUDE, "coords", msg=MSG_LOCATION): cv.latitude,
-        vol.Inclusive(CONF_LONGITUDE, "coords", msg=MSG_LOCATION): cv.longitude,
-        vol.Optional(CONF_COUNTRY_CODE): cv.string,
-    }
-)
 
 
 @dataclass
