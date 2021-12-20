@@ -106,8 +106,8 @@ set_music_mode:
           step: 1
           max: 100
           unit_of_measurement: "%"
-    light_bar:
-      description: Light bar mode (Addressable models only)
+    light_screen:
+      description: Light screen mode for 2 dimensional pixels (Addressable models only)
       default: false
       required: false
       selector:

@@ -77,7 +77,7 @@ MODE_ATTRS = {
 ATTR_FOREGROUND_COLOR: Final = "foreground_color"
 ATTR_BACKGROUND_COLOR: Final = "background_color"
 ATTR_SENSITIVITY: Final = "sensitivity"
-ATTR_LIGHT_BAR: Final = "light_bar"
+ATTR_LIGHT_SCREEN: Final = "light_screen"
 
 # Constant color temp values for 2 flux_led special modes
 # Warm-white and Cool-white modes
@@ -113,7 +113,7 @@ SET_MUSIC_MODE_DICT: Final = {
     vol.Optional(ATTR_EFFECT, default=1): vol.All(
         vol.Range(min=1, max=16), vol.Coerce(int)
     ),
-    vol.Optional(ATTR_LIGHT_BAR, default=False): bool,
+    vol.Optional(ATTR_LIGHT_SCREEN, default=False): bool,
     vol.Optional(ATTR_FOREGROUND_COLOR): vol.All(
         vol.Coerce(tuple), vol.ExactSequence((cv.byte,) * 3)
     ),
@@ -367,7 +367,7 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
         sensitivity: int,
         brightness: int,
         effect: int,
-        light_bar: bool,
+        light_screen: bool,
         foreground_color: tuple[int, int, int] | None = None,
         background_color: tuple[int, int, int] | None = None,
     ) -> None:
@@ -375,7 +375,7 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
         await self._device.async_set_music_mode(
             sensitivity=sensitivity,
             brightness=brightness,
-            mode=MusicMode.LIGHT_BAR.value if light_bar else None,
+            mode=MusicMode.LIGHT_SCREEN.value if light_screen else None,
             effect=effect,
             foreground_color=foreground_color,
             background_color=background_color,
