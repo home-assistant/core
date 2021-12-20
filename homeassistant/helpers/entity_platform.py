@@ -474,6 +474,7 @@ class EntityPlatform:
                     "name",
                     "suggested_area",
                     "sw_version",
+                    "hw_version",
                     "via_device",
                 ):
                     if key in device_info:

@@ -4,7 +4,7 @@ import statistics
 from unittest.mock import patch
 
 from homeassistant import config as hass_config
-from homeassistant.components.sensor import ATTR_STATE_CLASS, STATE_CLASS_MEASUREMENT
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
 from homeassistant.components.statistics import DOMAIN as STATISTICS_DOMAIN
 from homeassistant.components.statistics.sensor import StatisticsSensor
 from homeassistant.const import (
@@ -84,7 +84,7 @@ async def test_sensor_defaults_numeric(hass: HomeAssistant):
     assert state is not None
     assert state.state == str(round(sum(VALUES_NUMERIC) / len(VALUES_NUMERIC), 2))
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert state.attributes.get("buffer_usage_ratio") == round(9 / 20, 2)
     assert state.attributes.get("source_value_valid") is True
     assert "age_coverage_ratio" not in state.attributes
@@ -175,7 +175,7 @@ async def test_sensor_defaults_binary(hass: HomeAssistant):
     assert state is not None
     assert state.state == str(len(VALUES_BINARY))
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert state.attributes.get("buffer_usage_ratio") == round(9 / 20, 2)
     assert state.attributes.get("source_value_valid") is True
     assert "age_coverage_ratio" not in state.attributes
@@ -462,7 +462,7 @@ async def test_state_class(hass: HomeAssistant):
 
     state = hass.states.get("sensor.test_normal")
     assert state is not None
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     state = hass.states.get("sensor.test_nan")
     assert state is not None
     assert state.attributes.get(ATTR_STATE_CLASS) is None

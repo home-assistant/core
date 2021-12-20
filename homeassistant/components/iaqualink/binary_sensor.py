@@ -1,7 +1,7 @@
 """Support for Aqualink temperature sensors."""
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_COLD,
     DOMAIN,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -40,5 +40,5 @@ class HassAqualinkBinarySensor(AqualinkEntity, BinarySensorEntity):
     def device_class(self) -> str:
         """Return the class of the binary sensor."""
         if self.name == "Freeze Protection":
-            return DEVICE_CLASS_COLD
+            return BinarySensorDeviceClass.COLD
         return None

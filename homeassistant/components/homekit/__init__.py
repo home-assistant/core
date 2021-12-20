@@ -12,16 +12,14 @@ import voluptuous as vol
 
 from homeassistant.components import device_automation, network, zeroconf
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_BATTERY_CHARGING,
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_OCCUPANCY,
     DOMAIN as BINARY_SENSOR_DOMAIN,
+    BinarySensorDeviceClass,
 )
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.humidifier import DOMAIN as HUMIDIFIER_DOMAIN
 from homeassistant.components.network.const import MDNS_TARGET_IP
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
@@ -35,8 +33,6 @@ from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_NAME,
     CONF_PORT,
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_HUMIDITY,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     SERVICE_RELOAD,
@@ -669,11 +665,11 @@ class HomeKit:
         ent_reg = entity_registry.async_get(self.hass)
         device_lookup = ent_reg.async_get_device_class_lookup(
             {
-                (BINARY_SENSOR_DOMAIN, DEVICE_CLASS_BATTERY_CHARGING),
-                (BINARY_SENSOR_DOMAIN, DEVICE_CLASS_MOTION),
-                (BINARY_SENSOR_DOMAIN, DEVICE_CLASS_OCCUPANCY),
-                (SENSOR_DOMAIN, DEVICE_CLASS_BATTERY),
-                (SENSOR_DOMAIN, DEVICE_CLASS_HUMIDITY),
+                (BINARY_SENSOR_DOMAIN, BinarySensorDeviceClass.BATTERY_CHARGING),
+                (BINARY_SENSOR_DOMAIN, BinarySensorDeviceClass.MOTION),
+                (BINARY_SENSOR_DOMAIN, BinarySensorDeviceClass.OCCUPANCY),
+                (SENSOR_DOMAIN, SensorDeviceClass.BATTERY),
+                (SENSOR_DOMAIN, SensorDeviceClass.HUMIDITY),
             }
         )
 
@@ -860,14 +856,14 @@ class HomeKit:
             or ent_reg_ent.device_id is None
             or ent_reg_ent.device_id not in device_lookup
             or (ent_reg_ent.device_class or ent_reg_ent.original_device_class)
-            in (DEVICE_CLASS_BATTERY_CHARGING, DEVICE_CLASS_BATTERY)
+            in (BinarySensorDeviceClass.BATTERY_CHARGING, SensorDeviceClass.BATTERY)
         ):
             return
 
         if ATTR_BATTERY_CHARGING not in state.attributes:
             battery_charging_binary_sensor_entity_id = device_lookup[
                 ent_reg_ent.device_id
-            ].get((BINARY_SENSOR_DOMAIN, DEVICE_CLASS_BATTERY_CHARGING))
+            ].get((BINARY_SENSOR_DOMAIN, BinarySensorDeviceClass.BATTERY_CHARGING))
             if battery_charging_binary_sensor_entity_id:
                 self._config.setdefault(state.entity_id, {}).setdefault(
                     CONF_LINKED_BATTERY_CHARGING_SENSOR,
@@ -876,7 +872,7 @@ class HomeKit:
 
         if ATTR_BATTERY_LEVEL not in state.attributes:
             battery_sensor_entity_id = device_lookup[ent_reg_ent.device_id].get(
-                (SENSOR_DOMAIN, DEVICE_CLASS_BATTERY)
+                (SENSOR_DOMAIN, SensorDeviceClass.BATTERY)
             )
             if battery_sensor_entity_id:
                 self._config.setdefault(state.entity_id, {}).setdefault(
@@ -885,7 +881,7 @@ class HomeKit:
 
         if state.entity_id.startswith(f"{CAMERA_DOMAIN}."):
             motion_binary_sensor_entity_id = device_lookup[ent_reg_ent.device_id].get(
-                (BINARY_SENSOR_DOMAIN, DEVICE_CLASS_MOTION)
+                (BINARY_SENSOR_DOMAIN, BinarySensorDeviceClass.MOTION)
             )
             if motion_binary_sensor_entity_id:
                 self._config.setdefault(state.entity_id, {}).setdefault(
@@ -893,7 +889,7 @@ class HomeKit:
                     motion_binary_sensor_entity_id,
                 )
             doorbell_binary_sensor_entity_id = device_lookup[ent_reg_ent.device_id].get(
-                (BINARY_SENSOR_DOMAIN, DEVICE_CLASS_OCCUPANCY)
+                (BINARY_SENSOR_DOMAIN, BinarySensorDeviceClass.OCCUPANCY)
             )
             if doorbell_binary_sensor_entity_id:
                 self._config.setdefault(state.entity_id, {}).setdefault(
@@ -904,7 +900,7 @@ class HomeKit:
         if state.entity_id.startswith(f"{HUMIDIFIER_DOMAIN}."):
             current_humidity_sensor_entity_id = device_lookup[
                 ent_reg_ent.device_id
-            ].get((SENSOR_DOMAIN, DEVICE_CLASS_HUMIDITY))
+            ].get((SENSOR_DOMAIN, SensorDeviceClass.HUMIDITY))
             if current_humidity_sensor_entity_id:
                 self._config.setdefault(state.entity_id, {}).setdefault(
                     CONF_LINKED_HUMIDITY_SENSOR,

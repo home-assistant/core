@@ -5,8 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_OCCUPANCY,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -35,13 +34,13 @@ BINARY_SENSOR_TYPES: tuple[RingBinarySensorEntityDescription, ...] = (
         key="ding",
         name="Ding",
         category=["doorbots", "authorized_doorbots"],
-        device_class=DEVICE_CLASS_OCCUPANCY,
+        device_class=BinarySensorDeviceClass.OCCUPANCY,
     ),
     RingBinarySensorEntityDescription(
         key="motion",
         name="Motion",
         category=["doorbots", "authorized_doorbots", "stickup_cams"],
-        device_class=DEVICE_CLASS_MOTION,
+        device_class=BinarySensorDeviceClass.MOTION,
     ),
 )
 

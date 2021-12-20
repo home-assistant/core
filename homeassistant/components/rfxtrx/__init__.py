@@ -1,9 +1,12 @@
 """Support for RFXtrx devices."""
+from __future__ import annotations
+
 import asyncio
 import binascii
 import copy
 import functools
 import logging
+from typing import NamedTuple
 
 import RFXtrx as rfxtrxmod
 import async_timeout
@@ -47,6 +50,14 @@ DEFAULT_SIGNAL_REPETITIONS = 1
 SIGNAL_EVENT = f"{DOMAIN}_event"
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class DeviceTuple(NamedTuple):
+    """Representation of a device in rfxtrx."""
+
+    packettype: str
+    subtype: str
+    id_string: str
 
 
 def _bytearray_string(data):
@@ -225,7 +236,7 @@ async def async_setup_internal(hass, entry: config_entries.ConfigEntry):
     hass.services.async_register(DOMAIN, SERVICE_SEND, send, schema=SERVICE_SEND_SCHEMA)
 
 
-def get_rfx_object(packetid):
+def get_rfx_object(packetid: str) -> rfxtrxmod.RFXtrxEvent | None:
     """Return the RFXObject with the packetid."""
     try:
         binarypacket = bytearray.fromhex(packetid)
@@ -246,10 +257,10 @@ def get_rfx_object(packetid):
     return obj
 
 
-def get_pt2262_deviceid(device_id, nb_data_bits):
+def get_pt2262_deviceid(device_id: str, nb_data_bits: int | None) -> bytes | None:
     """Extract and return the address bits from a Lighting4/PT2262 packet."""
     if nb_data_bits is None:
-        return
+        return None
 
     try:
         data = bytearray.fromhex(device_id)
@@ -262,7 +273,7 @@ def get_pt2262_deviceid(device_id, nb_data_bits):
     return binascii.hexlify(data)
 
 
-def get_pt2262_cmd(device_id, data_bits):
+def get_pt2262_cmd(device_id: str, data_bits: int) -> str | None:
     """Extract and return the data bits from a Lighting4/PT2262 packet."""
     try:
         data = bytearray.fromhex(device_id)
@@ -274,7 +285,9 @@ def get_pt2262_cmd(device_id, data_bits):
     return hex(data[-1] & mask)
 
 
-def get_device_data_bits(device, devices):
+def get_device_data_bits(
+    device: rfxtrxmod.RFXtrxDevice, devices: dict[DeviceTuple, dict]
+) -> int | None:
     """Deduce data bits for device based on a cache of device bits."""
     data_bits = None
     if device.packettype == DEVICE_PACKET_TYPE_LIGHTING4:
@@ -286,7 +299,7 @@ def get_device_data_bits(device, devices):
     return data_bits
 
 
-def find_possible_pt2262_device(device_ids, device_id):
+def find_possible_pt2262_device(device_ids: list[str], device_id: str) -> str | None:
     """Look for the device which id matches the given device_id parameter."""
     for dev_id in device_ids:
         if len(dev_id) == len(device_id):
@@ -313,9 +326,11 @@ def find_possible_pt2262_device(device_ids, device_id):
     return None
 
 
-def get_device_id(device, data_bits=None):
+def get_device_id(
+    device: rfxtrxmod.RFXtrxDevice, data_bits: int | None = None
+) -> DeviceTuple:
     """Calculate a device id for device."""
-    id_string = device.id_string
+    id_string: str = device.id_string
     if (
         data_bits
         and device.packettype == DEVICE_PACKET_TYPE_LIGHTING4
@@ -323,7 +338,7 @@ def get_device_id(device, data_bits=None):
     ):
         id_string = masked_id.decode("ASCII")
 
-    return (f"{device.packettype:x}", f"{device.subtype:x}", id_string)
+    return DeviceTuple(f"{device.packettype:x}", f"{device.subtype:x}", id_string)
 
 
 def connect_auto_add(hass, entry_data, callback_fun):
@@ -340,7 +355,15 @@ class RfxtrxEntity(RestoreEntity):
     Contains the common logic for Rfxtrx lights and switches.
     """
 
-    def __init__(self, device, device_id, event=None):
+    _device: rfxtrxmod.RFXtrxDevice
+    _event: rfxtrxmod.RFXtrxEvent | None
+
+    def __init__(
+        self,
+        device: rfxtrxmod.RFXtrxDevice,
+        device_id: DeviceTuple,
+        event: rfxtrxmod.RFXtrxEvent | None = None,
+    ) -> None:
         """Initialize the device."""
         self._name = f"{device.type_string} {device.id_string}"
         self._device = device
@@ -405,21 +428,28 @@ class RfxtrxEntity(RestoreEntity):
             name=f"{self._device.type_string} {self._device.id_string}",
         )
 
-    def _event_applies(self, event, device_id):
+    def _event_applies(self, event: rfxtrxmod.RFXtrxEvent, device_id: DeviceTuple):
         """Check if event applies to me."""
-        if "Command" in event.values and event.values["Command"] in COMMAND_GROUP_LIST:
-            (group_id, _, _) = event.device.id_string.partition(":")
-            return group_id == self._group_id
+        if isinstance(event, rfxtrxmod.ControlEvent):
+            if (
+                "Command" in event.values
+                and event.values["Command"] in COMMAND_GROUP_LIST
+            ):
+                device: rfxtrxmod.RFXtrxDevice = event.device
+                (group_id, _, _) = device.id_string.partition(":")
+                return group_id == self._group_id
 
         # Otherwise, the event only applies to the matching device.
         return device_id == self._device_id
 
-    def _apply_event(self, event):
+    def _apply_event(self, event: rfxtrxmod.RFXtrxEvent) -> None:
         """Apply a received event."""
         self._event = event
 
     @callback
-    def _handle_event(self, event, device_id):
+    def _handle_event(
+        self, event: rfxtrxmod.RFXtrxEvent, device_id: DeviceTuple
+    ) -> None:
         """Handle a reception of data, overridden by other classes."""
 
 
@@ -429,11 +459,17 @@ class RfxtrxCommandEntity(RfxtrxEntity):
     Contains the common logic for Rfxtrx lights and switches.
     """
 
-    def __init__(self, device, device_id, signal_repetitions=1, event=None):
+    def __init__(
+        self,
+        device: rfxtrxmod.RFXtrxDevice,
+        device_id: DeviceTuple,
+        signal_repetitions: int = 1,
+        event: rfxtrxmod.RFXtrxEvent | None = None,
+    ) -> None:
         """Initialzie a switch or light device."""
         super().__init__(device, device_id, event=event)
         self.signal_repetitions = signal_repetitions
-        self._state = None
+        self._state: bool | None = None
 
     async def _async_send(self, fun, *args):
         rfx_object = self.hass.data[DOMAIN][DATA_RFXOBJECT]

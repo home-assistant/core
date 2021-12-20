@@ -902,7 +902,7 @@ def test_config_defaults():
     assert config.time_zone == "UTC"
     assert config.internal_url is None
     assert config.external_url is None
-    assert config.config_source == "default"
+    assert config.config_source is ha.ConfigSource.DEFAULT
     assert config.skip_pip is False
     assert config.components == set()
     assert config.api is None
@@ -948,7 +948,7 @@ def test_config_as_dict():
         "allowlist_external_dirs": set(),
         "allowlist_external_urls": set(),
         "version": __version__,
-        "config_source": "default",
+        "config_source": ha.ConfigSource.DEFAULT,
         "safe_mode": False,
         "state": "RUNNING",
         "external_url": None,

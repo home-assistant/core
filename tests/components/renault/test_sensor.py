@@ -7,7 +7,7 @@ import pytest
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_registry import EntityRegistry
+from homeassistant.helpers.entity_registry import EntityRegistry, RegistryEntryDisabler
 
 from . import (
     check_device_registry,
@@ -38,7 +38,7 @@ def _check_and_enable_disabled_entities(
             entity_id = expected_entity[ATTR_ENTITY_ID]
             registry_entry = entity_registry.entities.get(entity_id)
             assert registry_entry.disabled
-            assert registry_entry.disabled_by == "integration"
+            assert registry_entry.disabled_by is RegistryEntryDisabler.INTEGRATION
             entity_registry.async_update_entity(entity_id, **{"disabled_by": None})
 
 

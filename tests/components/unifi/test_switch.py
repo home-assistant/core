@@ -16,9 +16,10 @@ from homeassistant.components.unifi.const import (
     DOMAIN as UNIFI_DOMAIN,
 )
 from homeassistant.components.unifi.switch import POE_SWITCH
-from homeassistant.const import ENTITY_CATEGORY_CONFIG, STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity import EntityCategory
 
 from .test_controller import (
     CONTROLLER_HOST,
@@ -408,7 +409,7 @@ async def test_switches(hass, aioclient_mock):
         "switch.block_client_1",
         "switch.block_media_streaming",
     ):
-        assert ent_reg.async_get(entry_id).entity_category == ENTITY_CATEGORY_CONFIG
+        assert ent_reg.async_get(entry_id).entity_category is EntityCategory.CONFIG
 
     # Block and unblock client
 

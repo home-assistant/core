@@ -16,15 +16,12 @@ import pytest
 from homeassistant.components import flux_led
 from homeassistant.components.flux_led.const import (
     CONF_COLORS,
-    CONF_CUSTOM_EFFECT,
     CONF_CUSTOM_EFFECT_COLORS,
     CONF_CUSTOM_EFFECT_SPEED_PCT,
     CONF_CUSTOM_EFFECT_TRANSITION,
-    CONF_DEVICES,
     CONF_SPEED_PCT,
     CONF_TRANSITION,
     DOMAIN,
-    MODE_AUTO,
     TRANSITION_JUMP,
 )
 from homeassistant.components.light import (
@@ -46,8 +43,6 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_MODE,
     CONF_NAME,
-    CONF_PLATFORM,
-    CONF_PROTOCOL,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -80,7 +75,7 @@ async def test_light_unique_id(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
-    with _patch_discovery(device=bulb), _patch_wifibulb(device=bulb):
+    with _patch_discovery(), _patch_wifibulb(device=bulb):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -100,7 +95,7 @@ async def test_light_goes_unavailable_and_recovers(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
-    with _patch_discovery(device=bulb), _patch_wifibulb(device=bulb):
+    with _patch_discovery(), _patch_wifibulb(device=bulb):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -190,7 +185,7 @@ async def test_rgb_light(hass: HomeAssistant) -> None:
     bulb.raw_state = bulb.raw_state._replace(model_num=0x33)  # RGB only model
     bulb.color_modes = {FLUX_COLOR_MODE_RGB}
     bulb.color_mode = FLUX_COLOR_MODE_RGB
-    with _patch_discovery(device=bulb), _patch_wifibulb(device=bulb):
+    with _patch_discovery(no_device=True), _patch_wifibulb(device=bulb):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -294,7 +289,7 @@ async def test_rgb_light_auto_on(hass: HomeAssistant) -> None:
     bulb.raw_state = bulb.raw_state._replace(model_num=0x33)  # RGB only model
     bulb.color_modes = {FLUX_COLOR_MODE_RGB}
     bulb.color_mode = FLUX_COLOR_MODE_RGB
-    with _patch_discovery(device=bulb), _patch_wifibulb(device=bulb):
+    with _patch_discovery(), _patch_wifibulb(device=bulb):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -407,7 +402,7 @@ async def test_rgb_cct_light(hass: HomeAssistant) -> None:
     bulb.raw_state = bulb.raw_state._replace(model_num=0x35)  # RGB & CCT model
     bulb.color_modes = {FLUX_COLOR_MODE_RGB, FLUX_COLOR_MODE_CCT}
     bulb.color_mode = FLUX_COLOR_MODE_RGB
-    with _patch_discovery(device=bulb), _patch_wifibulb(device=bulb):
+    with _patch_discovery(), _patch_wifibulb(device=bulb):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -526,7 +521,7 @@ async def test_rgbw_light(hass: HomeAssistant) -> None:
     bulb = _mocked_bulb()
     bulb.color_modes = {FLUX_COLOR_MODE_RGBW}
     bulb.color_mode = FLUX_COLOR_MODE_RGBW
-    with _patch_discovery(device=bulb), _patch_wifibulb(device=bulb):
+    with _patch_discovery(), _patch_wifibulb(device=bulb):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -628,7 +623,7 @@ async def test_rgb_or_w_light(hass: HomeAssistant) -> None:
     bulb = _mocked_bulb()
     bulb.color_modes = FLUX_COLOR_MODES_RGB_W
     bulb.color_mode = FLUX_COLOR_MODE_RGB
-    with _patch_discovery(device=bulb), _patch_wifibulb(device=bulb):
+    with _patch_discovery(), _patch_wifibulb(device=bulb):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -739,7 +734,7 @@ async def test_rgbcw_light(hass: HomeAssistant) -> None:
     bulb.raw_state = bulb.raw_state._replace(warm_white=1, cool_white=2)
     bulb.color_modes = {FLUX_COLOR_MODE_RGBWW, FLUX_COLOR_MODE_CCT}
     bulb.color_mode = FLUX_COLOR_MODE_RGBWW
-    with _patch_discovery(device=bulb), _patch_wifibulb(device=bulb):
+    with _patch_discovery(), _patch_wifibulb(device=bulb):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -879,7 +874,7 @@ async def test_white_light(hass: HomeAssistant) -> None:
     bulb.protocol = None
     bulb.color_modes = {FLUX_COLOR_MODE_DIM}
     bulb.color_mode = FLUX_COLOR_MODE_DIM
-    with _patch_discovery(device=bulb), _patch_wifibulb(device=bulb):
+    with _patch_discovery(), _patch_wifibulb(device=bulb):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -930,7 +925,7 @@ async def test_no_color_modes(hass: HomeAssistant) -> None:
     bulb.protocol = None
     bulb.color_modes = set()
     bulb.color_mode = None
-    with _patch_discovery(device=bulb), _patch_wifibulb(device=bulb):
+    with _patch_discovery(), _patch_wifibulb(device=bulb):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -964,7 +959,7 @@ async def test_rgb_light_custom_effects(hass: HomeAssistant) -> None:
         data={CONF_HOST: IP_ADDRESS, CONF_NAME: DEFAULT_ENTRY_TITLE},
         unique_id=MAC_ADDRESS,
         options={
-            CONF_MODE: MODE_AUTO,
+            CONF_MODE: "auto",
             CONF_CUSTOM_EFFECT_COLORS: "[0,0,255], [255,0,0]",
             CONF_CUSTOM_EFFECT_SPEED_PCT: 88,
             CONF_CUSTOM_EFFECT_TRANSITION: TRANSITION_JUMP,
@@ -974,7 +969,7 @@ async def test_rgb_light_custom_effects(hass: HomeAssistant) -> None:
     bulb = _mocked_bulb()
     bulb.color_modes = {FLUX_COLOR_MODE_RGB}
     bulb.color_mode = FLUX_COLOR_MODE_RGB
-    with _patch_discovery(device=bulb), _patch_wifibulb(device=bulb):
+    with _patch_discovery(), _patch_wifibulb(device=bulb):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -1040,7 +1035,7 @@ async def test_rgb_light_custom_effects_invalid_colors(
 ) -> None:
     """Test an rgb light with a invalid effect."""
     options = {
-        CONF_MODE: MODE_AUTO,
+        CONF_MODE: "auto",
         CONF_CUSTOM_EFFECT_SPEED_PCT: 88,
         CONF_CUSTOM_EFFECT_TRANSITION: TRANSITION_JUMP,
     }
@@ -1056,7 +1051,7 @@ async def test_rgb_light_custom_effects_invalid_colors(
     bulb = _mocked_bulb()
     bulb.color_modes = {FLUX_COLOR_MODE_RGB}
     bulb.color_mode = FLUX_COLOR_MODE_RGB
-    with _patch_discovery(device=bulb), _patch_wifibulb(device=bulb):
+    with _patch_discovery(), _patch_wifibulb(device=bulb):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -1085,7 +1080,7 @@ async def test_rgb_light_custom_effect_via_service(
     bulb = _mocked_bulb()
     bulb.color_modes = {FLUX_COLOR_MODE_RGB}
     bulb.color_mode = FLUX_COLOR_MODE_RGB
-    with _patch_discovery(device=bulb), _patch_wifibulb(device=bulb):
+    with _patch_discovery(), _patch_wifibulb(device=bulb):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -1125,99 +1120,6 @@ async def test_rgb_light_custom_effect_via_service(
     bulb.async_set_custom_pattern.reset_mock()
 
 
-async def test_migrate_from_yaml_with_custom_effect(hass: HomeAssistant) -> None:
-    """Test migrate from yaml."""
-    config = {
-        LIGHT_DOMAIN: [
-            {
-                CONF_PLATFORM: DOMAIN,
-                CONF_DEVICES: {
-                    IP_ADDRESS: {
-                        CONF_NAME: "flux_lamppost",
-                        CONF_PROTOCOL: "ledenet",
-                        CONF_CUSTOM_EFFECT: {
-                            CONF_SPEED_PCT: 30,
-                            CONF_TRANSITION: "strobe",
-                            CONF_COLORS: [[255, 0, 0], [255, 255, 0], [0, 255, 0]],
-                        },
-                    }
-                },
-            }
-        ],
-    }
-    with _patch_discovery(), _patch_wifibulb():
-        await async_setup_component(hass, LIGHT_DOMAIN, config)
-        await hass.async_block_till_done()
-        await hass.async_block_till_done()
-        await hass.async_block_till_done()
-
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert entries
-
-    migrated_entry = None
-    for entry in entries:
-        if entry.unique_id == MAC_ADDRESS:
-            migrated_entry = entry
-            break
-
-    assert migrated_entry is not None
-    assert migrated_entry.data == {
-        CONF_HOST: IP_ADDRESS,
-        CONF_NAME: "flux_lamppost",
-        CONF_PROTOCOL: "ledenet",
-    }
-    assert migrated_entry.options == {
-        CONF_MODE: "auto",
-        CONF_CUSTOM_EFFECT_COLORS: "[(255, 0, 0), (255, 255, 0), (0, 255, 0)]",
-        CONF_CUSTOM_EFFECT_SPEED_PCT: 30,
-        CONF_CUSTOM_EFFECT_TRANSITION: "strobe",
-    }
-
-
-async def test_migrate_from_yaml_no_custom_effect(hass: HomeAssistant) -> None:
-    """Test migrate from yaml."""
-    config = {
-        LIGHT_DOMAIN: [
-            {
-                CONF_PLATFORM: DOMAIN,
-                CONF_DEVICES: {
-                    IP_ADDRESS: {
-                        CONF_NAME: "flux_lamppost",
-                        CONF_PROTOCOL: "ledenet",
-                    }
-                },
-            }
-        ],
-    }
-    with _patch_discovery(), _patch_wifibulb():
-        await async_setup_component(hass, LIGHT_DOMAIN, config)
-        await hass.async_block_till_done()
-        await hass.async_block_till_done()
-        await hass.async_block_till_done()
-
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert entries
-
-    migrated_entry = None
-    for entry in entries:
-        if entry.unique_id == MAC_ADDRESS:
-            migrated_entry = entry
-            break
-
-    assert migrated_entry is not None
-    assert migrated_entry.data == {
-        CONF_HOST: IP_ADDRESS,
-        CONF_NAME: "flux_lamppost",
-        CONF_PROTOCOL: "ledenet",
-    }
-    assert migrated_entry.options == {
-        CONF_MODE: "auto",
-        CONF_CUSTOM_EFFECT_COLORS: None,
-        CONF_CUSTOM_EFFECT_SPEED_PCT: 50,
-        CONF_CUSTOM_EFFECT_TRANSITION: "gradual",
-    }
-
-
 async def test_addressable_light(hass: HomeAssistant) -> None:
     """Test an addressable light."""
     config_entry = MockConfigEntry(
@@ -1230,7 +1132,7 @@ async def test_addressable_light(hass: HomeAssistant) -> None:
     bulb.raw_state = bulb.raw_state._replace(model_num=0x33)  # RGB only model
     bulb.color_modes = {FLUX_COLOR_MODE_ADDRESSABLE}
     bulb.color_mode = FLUX_COLOR_MODE_ADDRESSABLE
-    with _patch_discovery(device=bulb), _patch_wifibulb(device=bulb):
+    with _patch_discovery(), _patch_wifibulb(device=bulb):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
 

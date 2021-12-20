@@ -94,7 +94,6 @@ omit =
     homeassistant/components/azure_service_bus/*
     homeassistant/components/baidu/tts.py
     homeassistant/components/balboa/__init__.py
-    homeassistant/components/balboa/entity.py
     homeassistant/components/beewi_smartclim/sensor.py
     homeassistant/components/bbb_gpio/*
     homeassistant/components/bbox/device_tracker.py
@@ -372,6 +371,7 @@ omit =
     homeassistant/components/freebox/switch.py
     homeassistant/components/fritz/__init__.py
     homeassistant/components/fritz/binary_sensor.py
+    homeassistant/components/fritz/button.py
     homeassistant/components/fritz/common.py
     homeassistant/components/fritz/const.py
     homeassistant/components/fritz/device_tracker.py
@@ -604,6 +604,7 @@ omit =
     homeassistant/components/lookin/models.py
     homeassistant/components/lookin/sensor.py
     homeassistant/components/lookin/climate.py
+    homeassistant/components/lookin/media_player.py
     homeassistant/components/luci/device_tracker.py
     homeassistant/components/luftdaten/__init__.py
     homeassistant/components/luftdaten/sensor.py
@@ -770,6 +771,7 @@ omit =
     homeassistant/components/onvif/event.py
     homeassistant/components/onvif/parsers.py
     homeassistant/components/onvif/sensor.py
+    homeassistant/components/open_meteo/weather.py
     homeassistant/components/opencv/*
     homeassistant/components/openevse/sensor.py
     homeassistant/components/openexchangerates/sensor.py
@@ -844,7 +846,6 @@ omit =
     homeassistant/components/progettihwsw/__init__.py
     homeassistant/components/progettihwsw/binary_sensor.py
     homeassistant/components/progettihwsw/switch.py
-    homeassistant/components/prometheus/*
     homeassistant/components/prowl/notify.py
     homeassistant/components/proxmoxve/*
     homeassistant/components/proxy/camera.py
@@ -886,6 +887,7 @@ omit =
     homeassistant/components/rest/switch.py
     homeassistant/components/ridwell/__init__.py
     homeassistant/components/ridwell/sensor.py
+    homeassistant/components/ridwell/switch.py
     homeassistant/components/ring/camera.py
     homeassistant/components/ripple/sensor.py
     homeassistant/components/rocketchat/notify.py
@@ -1003,7 +1005,16 @@ omit =
     homeassistant/components/somfy/switch.py
     homeassistant/components/somfy_mylink/__init__.py
     homeassistant/components/somfy_mylink/cover.py
-    homeassistant/components/sonos/*
+    homeassistant/components/sonos/__init__.py
+    homeassistant/components/sonos/alarms.py
+    homeassistant/components/sonos/entity.py
+    homeassistant/components/sonos/favorites.py
+    homeassistant/components/sonos/helpers.py
+    homeassistant/components/sonos/household_coordinator.py
+    homeassistant/components/sonos/media_browser.py
+    homeassistant/components/sonos/media_player.py
+    homeassistant/components/sonos/speaker.py
+    homeassistant/components/sonos/switch.py
     homeassistant/components/sony_projector/switch.py
     homeassistant/components/spc/*
     homeassistant/components/spider/*

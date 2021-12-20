@@ -2,8 +2,7 @@
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_MOTION,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -14,7 +13,7 @@ BINARY_SENSORS_TYPES: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
         key=TYPE_BATTERY,
         name="Battery",
-        device_class=DEVICE_CLASS_BATTERY,
+        device_class=BinarySensorDeviceClass.BATTERY,
     ),
     BinarySensorEntityDescription(
         key=TYPE_CAMERA_ARMED,
@@ -23,7 +22,7 @@ BINARY_SENSORS_TYPES: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
         key=TYPE_MOTION_DETECTED,
         name="Motion Detected",
-        device_class=DEVICE_CLASS_MOTION,
+        device_class=BinarySensorDeviceClass.MOTION,
     ),
 )
 

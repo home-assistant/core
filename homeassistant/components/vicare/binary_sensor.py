@@ -13,7 +13,7 @@ from PyViCare.PyViCareUtils import (
 import requests
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_POWER,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -40,7 +40,7 @@ CIRCUIT_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
     ViCareBinarySensorEntityDescription(
         key=SENSOR_CIRCULATION_PUMP_ACTIVE,
         name="Circulation pump active",
-        device_class=DEVICE_CLASS_POWER,
+        device_class=BinarySensorDeviceClass.POWER,
         value_getter=lambda api: api.getCirculationPumpActive(),
     ),
 )
@@ -49,7 +49,7 @@ BURNER_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
     ViCareBinarySensorEntityDescription(
         key=SENSOR_BURNER_ACTIVE,
         name="Burner active",
-        device_class=DEVICE_CLASS_POWER,
+        device_class=BinarySensorDeviceClass.POWER,
         value_getter=lambda api: api.getActive(),
     ),
 )
@@ -58,7 +58,7 @@ COMPRESSOR_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
     ViCareBinarySensorEntityDescription(
         key=SENSOR_COMPRESSOR_ACTIVE,
         name="Compressor active",
-        device_class=DEVICE_CLASS_POWER,
+        device_class=BinarySensorDeviceClass.POWER,
         value_getter=lambda api: api.getActive(),
     ),
 )

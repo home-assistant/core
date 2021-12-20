@@ -9,8 +9,8 @@ from homeassistant.components.button import (
     ButtonEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENTITY_CATEGORY_CONFIG
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -25,7 +25,7 @@ RESTART_BUTTON: ButtonEntityDescription = ButtonEntityDescription(
     key="restart",
     name=f"{DEFAULT_NAME} Restart",
     device_class=ButtonDeviceClass.RESTART,
-    entity_category=ENTITY_CATEGORY_CONFIG,
+    entity_category=EntityCategory.CONFIG,
 )
 
 
