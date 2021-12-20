@@ -83,7 +83,7 @@ async def mock_service_platform_fixture(
     mock_service_integration: ServiceIntegration,
 ) -> ServicePlatform:
     """Mock a service platform."""
-    platform, mock_setup_entry, entry = mock_platform
+    platform, _, entry = mock_platform
     service_platform = ServicePlatform(
         hass=hass,
         logger=_LOGGER,
@@ -221,6 +221,7 @@ async def test_parallel_updates(
     assert platform_services
 
     platform_service = platform_services[0]
+    # pylint: disable=unidiomatic-typecheck
     assert type(platform_service.parallel_updates) == type(parallel_updates)
     assert getattr(platform_service.parallel_updates, "_value", None) == getattr(
         parallel_updates, "_value", None
@@ -362,6 +363,7 @@ async def test_platform_cancels_retry_setup(
     platform_call: str,
 ) -> None:
     """Test resetting or shutting down a platform will cancel setup retry."""
+    # pylint: disable=protected-access
     hass.state = core_state
     initial_listeners = hass.bus.async_listeners()[EVENT_HOMEASSISTANT_STARTED]
     platform, _, entry = mock_platform
