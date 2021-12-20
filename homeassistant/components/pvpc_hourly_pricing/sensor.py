@@ -36,11 +36,11 @@ async def async_setup_entry(
     """Set up the electricity price sensor from config_entry."""
     name = config_entry.data[CONF_NAME]
     pvpc_data_handler = PVPCData(
+        session=async_get_clientsession(hass),
         tariff=config_entry.data[ATTR_TARIFF],
         power=config_entry.data[ATTR_POWER],
         power_valley=config_entry.data[ATTR_POWER_P3],
         local_timezone=hass.config.time_zone,
-        websession=async_get_clientsession(hass),
         timeout=_DEFAULT_TIMEOUT,
     )
     async_add_entities(
