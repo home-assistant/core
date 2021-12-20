@@ -1,7 +1,6 @@
 """Helpers for integrations that manage services."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Iterable
 from itertools import chain
 import logging
@@ -9,7 +8,7 @@ from typing import cast
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.setup import async_prepare_setup_platform
 
 from .service_platform import PlatformService, ServicePlatform, ServicePlatformModule
@@ -86,11 +85,11 @@ class ServiceIntegration:
         if platform is None:
             raise ValueError("Config entry was never loaded!")
 
-        await platform.async_destroy()
+        platform.async_destroy()
         return True
 
-    async def _async_shutdown(self, event: Event) -> None:
+    @callback
+    def _async_shutdown(self, event: Event) -> None:
         """Call when Home Assistant is stopping."""
-        await asyncio.gather(
-            *(platform.async_shutdown() for platform in chain(self._platforms.values()))
-        )
+        for platform in self._platforms.values():
+            platform.async_shutdown()

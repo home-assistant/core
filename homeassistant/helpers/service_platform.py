@@ -117,7 +117,8 @@ class PlatformService(ABC):
         self.parallel_updates = None
         self._added = False
 
-    async def async_remove(self) -> None:
+    @callback
+    def async_remove(self) -> None:
         """Remove service from Home Assistant."""
         if self.platform and not self._added:
             raise HomeAssistantError(
@@ -222,7 +223,8 @@ class ServicePlatform:
 
         return self.parallel_updates
 
-    async def async_shutdown(self) -> None:
+    @callback
+    def async_shutdown(self) -> None:
         """Call when Home Assistant is stopping."""
         self.async_cancel_retry_setup()
 
@@ -416,18 +418,18 @@ class ServicePlatform:
 
         service.async_on_remove(remove_service_cb)
 
-    async def async_destroy(self) -> None:
+    @callback
+    def async_destroy(self) -> None:
         """Remove all services and data."""
-        self.async_cancel_retry_setup()
-
-        tasks = [service.async_remove() for service in self.services.values()]
-
-        if tasks:
-            await asyncio.gather(*tasks)
-
-        self._setup_complete = False
         if self not in self.hass.data[DATA_SERVICE_PLATFORM][self.platform_name]:
             raise ValueError(f"{self} was already destroyed")
+
+        self.async_cancel_retry_setup()
+
+        for service in list(self.services.values()):
+            service.async_remove()
+
+        self._setup_complete = False
         self.hass.data[DATA_SERVICE_PLATFORM][self.platform_name].remove(self)
 
     async def _async_register_service(

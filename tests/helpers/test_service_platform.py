@@ -260,7 +260,7 @@ async def test_setup_entry_and_reset(
     )
     assert mock_service_platform.config_entry is entry
 
-    await mock_service_platform.async_destroy()
+    mock_service_platform.async_destroy()
 
     assert len(hass.services.async_services()) == 0
 
@@ -382,7 +382,7 @@ async def test_platform_cancels_retry_setup(
     )
     assert mock_service_platform._async_cancel_retry_setup is not None
 
-    await getattr(mock_service_platform, platform_call)()
+    getattr(mock_service_platform, platform_call)()
     await hass.async_block_till_done()
 
     assert len(mock_call_later.return_value.mock_calls) == call_later_calls
@@ -412,7 +412,7 @@ async def test_remove_service(
         await hass.async_block_till_done()
 
     assert len(hass.services.async_services()) == 1
-    await mock_platform_service.async_remove()
+    mock_platform_service.async_remove()
     assert len(hass.services.async_services()) == 0
 
 
@@ -458,9 +458,8 @@ async def test_adding_removing_same_service_twice(
     await hass.async_block_till_done()
     assert len(hass.services.async_services()) == 1
 
-    await asyncio.gather(
-        *[service.async_remove() for service in mock_service_platform.services.values()]
-    )
+    for service in list(mock_service_platform.services.values()):
+        service.async_remove()
 
     assert len(hass.services.async_services()) == 0
 
@@ -481,15 +480,14 @@ async def test_adding_removing_same_service_twice(
     assert len(hass.services.async_services()) == 1
     assert hass.services.has_service(DOMAIN, mock_platform_service.service_name)
 
-    await asyncio.gather(
-        *[service.async_remove() for service in mock_service_platform.services.values()]
-    )
+    for service in list(mock_service_platform.services.values()):
+        service.async_remove()
 
     assert len(hass.services.async_services()) == 0
 
     # Test removing the same service again.
     with pytest.raises(HomeAssistantError):
-        await mock_platform_service.async_remove()
+        mock_platform_service.async_remove()
 
 
 async def test_timeout_when_adding_service(
@@ -651,14 +649,14 @@ async def test_platforms_sharing_services(
     assert service_2.async_handle_service.call_count == 1
     assert service_3.async_handle_service.call_count == 1
 
-    await service_1.async_remove()
+    service_1.async_remove()
 
     # The test_hello service is still registered with the core
     # since service 2 is not removed.
     assert hass.services.has_service(DOMAIN, "test_hello")
     assert hass.services.has_service(different_domain, "test_goodbye")
 
-    await service_2.async_remove()
+    service_2.async_remove()
 
     # The test_hello service is not registered with the core anymore
     # since service 2 is now also removed.
@@ -691,10 +689,10 @@ async def test_get_platforms(
     assert len(platforms) == 1
     assert platforms[0] is service_platform
 
-    await service_platform.async_destroy()
+    service_platform.async_destroy()
     platforms = async_get_platforms(hass, ENTRY_DOMAIN)
 
     assert not platforms
 
     with pytest.raises(ValueError):
-        await service_platform.async_destroy()
+        service_platform.async_destroy()
