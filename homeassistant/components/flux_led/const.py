@@ -62,6 +62,7 @@ TRANSITION_STROBE: Final = "strobe"
 CONF_COLORS: Final = "colors"
 CONF_SPEED_PCT: Final = "speed_pct"
 CONF_TRANSITION: Final = "transition"
+CONF_EFFECT: Final = "effect"
 
 
 EFFECT_SPEED_SUPPORT_MODES: Final = {COLOR_MODE_RGB, COLOR_MODE_RGBW, COLOR_MODE_RGBWW}
