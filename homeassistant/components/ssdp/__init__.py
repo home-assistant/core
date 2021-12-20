@@ -474,7 +474,9 @@ class Scanner:
         location = ssdp_device.location
         info_desc = await self._async_get_description_dict(location) or {}
         combined_headers = ssdp_device.combined_headers(dst)
-        info_with_desc = CaseInsensitiveDict(combined_headers, **info_desc)
+        info_with_desc = CaseInsensitiveDict()
+        info_with_desc.merge(combined_headers)
+        info_with_desc.merge(info_desc)
 
         callbacks = self._async_get_matching_callbacks(combined_headers)
         matching_domains: set[str] = set()
