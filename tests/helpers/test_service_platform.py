@@ -694,6 +694,7 @@ async def test_get_platforms(
     await service_platform.async_destroy()
     platforms = async_get_platforms(hass, ENTRY_DOMAIN)
 
-    # Resetting the platform doesn't remove the platform.
-    assert len(platforms) == 1
-    assert platforms[0] is service_platform
+    assert not platforms
+
+    with pytest.raises(ValueError):
+        await service_platform.async_destroy()

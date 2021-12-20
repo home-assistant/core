@@ -420,14 +420,14 @@ class ServicePlatform:
         """Remove all services and data."""
         self.async_cancel_retry_setup()
 
-        if not self.services:
-            return
-
         tasks = [service.async_remove() for service in self.services.values()]
 
-        await asyncio.gather(*tasks)
+        if tasks:
+            await asyncio.gather(*tasks)
 
         self._setup_complete = False
+        if self not in self.hass.data[DATA_SERVICE_PLATFORM][self.platform_name]:
+            raise ValueError(f"{self} was already destroyed")
         self.hass.data[DATA_SERVICE_PLATFORM][self.platform_name].remove(self)
 
     async def _async_register_service(
