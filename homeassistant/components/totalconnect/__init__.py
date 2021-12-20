@@ -31,6 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     conf = entry.data
     username = conf[CONF_USERNAME]
     password = conf[CONF_PASSWORD]
+    bypass = entry.options.get(AUTO_BYPASS)
 
     if CONF_USERCODES not in conf:
         # should only happen for those who used UI before we added usercodes
@@ -41,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         client = await hass.async_add_executor_job(
-            TotalConnectClient, username, password, usercodes
+            TotalConnectClient, username, password, usercodes, bypass
         )
     except AuthenticationError as exception:
         raise ConfigEntryAuthFailed(
