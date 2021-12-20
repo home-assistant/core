@@ -526,7 +526,7 @@ class CastDevice(MediaPlayerEntity):
             controller.play_media(media)
         else:
             app_data = {"media_id": media_id, "media_type": media_type, **extra}
-            quick_play(self._chromecast, "homeassistant_media", app_data)
+            quick_play(self._chromecast, "default_media_receiver", app_data)
 
     def _media_status(self):
         """
