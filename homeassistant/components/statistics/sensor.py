@@ -362,7 +362,7 @@ class StatisticsSensor(SensorEntity):
         return unit
 
     @property
-    def state_class(self) -> Literal["measurement"] | None:
+    def state_class(self) -> Literal[SensorStateClass.MEASUREMENT] | None:
         """Return the state class of this entity."""
         if self._state_characteristic in STATS_NOT_A_NUMBER:
             return None
