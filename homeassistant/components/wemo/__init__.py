@@ -233,21 +233,18 @@ class WemoDiscovery:
 
     async def discover_statics(self) -> None:
         """Initialize or Re-Initialize connections to statically configured devices."""
-        if self._static_config:
-            _LOGGER.debug("Adding statically configured WeMo devices")
-            for device in await gather_with_concurrency(
-                MAX_CONCURRENCY,
-                *(
-                    self._hass.async_add_executor_job(
-                        validate_static_config, host, port
-                    )
-                    for host, port in self._static_config
-                ),
-            ):
-                if device:
-                    await self._wemo_dispatcher.async_add_unique_device(
-                        self._hass, device
-                    )
+        if not self._static_config:
+            return
+        _LOGGER.debug("Adding statically configured WeMo devices")
+        for device in await gather_with_concurrency(
+            MAX_CONCURRENCY,
+            *(
+                self._hass.async_add_executor_job(validate_static_config, host, port)
+                for host, port in self._static_config
+            ),
+        ):
+            if device:
+                await self._wemo_dispatcher.async_add_unique_device(self._hass, device)
 
 
 def validate_static_config(host: str, port: int | None) -> pywemo.WeMoDevice | None:
