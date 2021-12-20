@@ -122,12 +122,12 @@ async def async_handle_message(hass, message):
             return
         action = req.get("action", "")
         parameters = req.get("parameters").copy()
-        
+
     elif _api_version is V3:
         req = message
-        action = req.get("handler", "").get("name","")
-        parameters = req.get("intent","").get("params").copy()
-        parameters["session_id"] = req.get("session", "").get("id","")
+        action = req.get("handler", "").get("name", "")
+        parameters = req.get("intent", "").get("params").copy()
+        parameters["session_id"] = req.get("session", "").get("id", "")
 
     parameters["dialogflow_query"] = message
     dialogflow_response = DialogflowResponse(parameters, _api_version)
@@ -145,9 +145,9 @@ async def async_handle_message(hass, message):
     )
 
     if "plain" in intent_response.speech:
-        _LOGGER.error( "intent_response.speech : %s" %(intent_response.speech["plain"]["speech"]))
-        dialogflow_response.add_speech(intent_response.speech["plain"]["speech"])
-        dialogflow_response.add_next_scene("actions.scene.END_CONVERSATION")
+        _LOGGER.error( "intent_response.speech : %s" %( intent_response.speech["plain"]["speech"] ))
+        dialogflow_response.add_speech( intent_response.speech["plain"]["speech"] )
+        dialogflow_response.add_next_scene( "actions.scene.END_CONVERSATION" )
 
     return dialogflow_response.as_dict()
 
@@ -169,11 +169,10 @@ class DialogflowResponse:
     def add_speech(self, text):
         """Add speech to the response."""
         assert self.speech is None
-
         if isinstance(text, template.Template):
             text = text.async_render(self.parameters, parse_result=False)
-
         self.speech = text
+        
     def add_next_scene(self, next_scene):
         """Add next_scene to the response."""
         self.next_scene = next_scene
@@ -189,24 +188,24 @@ class DialogflowResponse:
 
         if self.api_version is V3:
             valRetour = {
-  "session": {
-    "id": self.parameters["session_id"],
-    "params": {}
-  },
-  "prompt": {
-    "override": False,
-    "firstSimple": {
-      "speech": self.speech,
-      "text": ""
-    }
-  },
-  "scene": {
-    "name": "SceneName",
-    "slots": {},
-    "next": {
-      "name": self.next_scene
-    }
-  }
-}
-        _LOGGER.warning( "valRetour : %s" %(valRetour))
+                "session": {
+                "id": self.parameters["session_id"],
+                "params": {}
+                },
+                "prompt": {
+                "override": False,
+                "firstSimple": {
+                  "speech": self.speech,
+                  "text": ""
+                }
+                },
+                "scene": {
+                "name": "SceneName",
+                "slots": {},
+                "next": {
+                  "name": self.next_scene
+                }
+                }
+            }
+        _LOGGER.warning( "valRetour : %s" %( valRetour ))
         return valRetour
