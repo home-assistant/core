@@ -10,6 +10,7 @@ from flux_led.const import (
     COLOR_MODE_RGBW as FLUX_COLOR_MODE_RGBW,
     COLOR_MODE_RGBWW as FLUX_COLOR_MODE_RGBWW,
     COLOR_MODES_RGB_W as FLUX_COLOR_MODES_RGB_W,
+    MultiColorEffects,
 )
 import pytest
 
@@ -19,6 +20,7 @@ from homeassistant.components.flux_led.const import (
     CONF_CUSTOM_EFFECT_COLORS,
     CONF_CUSTOM_EFFECT_SPEED_PCT,
     CONF_CUSTOM_EFFECT_TRANSITION,
+    CONF_EFFECT,
     CONF_SPEED_PCT,
     CONF_TRANSITION,
     DOMAIN,
@@ -1118,6 +1120,36 @@ async def test_rgb_light_custom_effect_via_service(
         [(0, 0, 255), (255, 0, 0)], 30, "jump"
     )
     bulb.async_set_custom_pattern.reset_mock()
+
+    await hass.services.async_call(
+        DOMAIN,
+        "set_zones",
+        {
+            ATTR_ENTITY_ID: entity_id,
+            CONF_COLORS: [[0, 0, 255], [255, 0, 0]],
+            CONF_EFFECT: "running_water",
+        },
+        blocking=True,
+    )
+    bulb.async_set_zones.assert_called_with(
+        [(0, 0, 255), (255, 0, 0)], 50, MultiColorEffects.RUNNING_WATER
+    )
+    bulb.async_set_zones.reset_mock()
+
+    await hass.services.async_call(
+        DOMAIN,
+        "set_zones",
+        {
+            ATTR_ENTITY_ID: entity_id,
+            CONF_COLORS: [[0, 0, 255], [255, 0, 0]],
+            CONF_SPEED_PCT: 30,
+        },
+        blocking=True,
+    )
+    bulb.async_set_zones.assert_called_with(
+        [(0, 0, 255), (255, 0, 0)], 30, MultiColorEffects.STATIC
+    )
+    bulb.async_set_zones.reset_mock()
 
 
 async def test_addressable_light(hass: HomeAssistant) -> None:
