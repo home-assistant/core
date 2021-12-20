@@ -512,11 +512,6 @@ class ZoneDevice(ClimateEntity):
         return self._controller.available
 
     @property
-    def assumed_state(self) -> bool:
-        """Return True if unable to access real state of the entity."""
-        return self._controller.assumed_state
-
-    @property
     def unique_id(self):
         """Return the ID of the controller device."""
         return f"{self._controller.unique_id}_z{self._zone.index + 1}"
