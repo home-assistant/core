@@ -14,13 +14,13 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
 from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_NAME,
-    DEVICE_CLASS_TEMPERATURE,
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_WATT_HOUR,
@@ -129,7 +129,7 @@ SENSOR_TYPES: tuple[SolarEdgeLocalSensorEntityDescription, ...] = (
         name="Average Optimizer Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         icon="mdi:solar-panel",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
     SolarEdgeLocalSensorEntityDescription(
         key="optimizervoltage",
@@ -144,7 +144,7 @@ SENSOR_TYPE_INVERTER_TEMPERATURE = SolarEdgeLocalSensorEntityDescription(
     name="Inverter Temperature",
     native_unit_of_measurement=TEMP_CELSIUS,
     extra_attribute="operating_mode",
-    device_class=DEVICE_CLASS_TEMPERATURE,
+    device_class=SensorDeviceClass.TEMPERATURE,
 )
 
 SENSOR_TYPES_ENERGY_IMPORT: tuple[SolarEdgeLocalSensorEntityDescription, ...] = (
