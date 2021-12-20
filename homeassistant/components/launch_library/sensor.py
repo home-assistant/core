@@ -1,69 +1,174 @@
-"""A sensor platform that give you information about the next space launch."""
+"""Support for Launch Library sensors."""
 from __future__ import annotations
 
-from datetime import timedelta
-import logging
-
-from pylaunches import PyLaunches, PyLaunchesException
-import voluptuous as vol
-
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_ATTRIBUTION, PERCENTAGE
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util.dt import parse_datetime
 
 from .const import (
-    ATTR_AGENCY,
-    ATTR_AGENCY_COUNTRY_CODE,
-    ATTR_LAUNCH_TIME,
-    ATTR_STREAM,
+    ATTR_DESCRIPTION,
+    ATTR_LAUNCH_FACILITY,
+    ATTR_LAUNCH_PAD,
+    ATTR_LAUNCH_PAD_COUNTRY_CODE,
+    ATTR_LAUNCH_PROVIDER,
+    ATTR_ORBIT,
+    ATTR_REASON,
+    ATTR_STREAM_LIVE,
+    ATTR_TYPE,
+    ATTR_WINDOW_END,
+    ATTR_WINDOW_START,
     ATTRIBUTION,
-    DEFAULT_NAME,
-)
-
-_LOGGER = logging.getLogger(__name__)
-
-SCAN_INTERVAL = timedelta(hours=1)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string}
+    DOMAIN,
+    ICON_CLOCK,
+    ICON_LUCK,
+    ICON_ROCKET,
+    UPDATECOORDINATOR,
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Create the launch sensor."""
-    name = config[CONF_NAME]
-    session = async_get_clientsession(hass)
-    launches = PyLaunches(session)
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+):
+    """Set up the sensor platform."""
 
-    async_add_entities([LaunchLibrarySensor(launches, name)], True)
+    coordinator = hass.data[DOMAIN][config_entry.entry_id][UPDATECOORDINATOR]
+
+    sensors = [
+        NextLaunchSensor(coordinator, "Next launch"),
+        LaunchTimeSensor(coordinator, "Launch time"),
+        LaunchProbabilitySensor(coordinator, "Launch probability"),
+        LaunchStatusSensor(coordinator, "Launch status"),
+        LaunchMissionSensor(coordinator, "Launch mission"),
+    ]
+
+    async_add_entities(sensors, True)
 
 
-class LaunchLibrarySensor(SensorEntity):
-    """Representation of a launch_library Sensor."""
+class LLBaseEntity(CoordinatorEntity, SensorEntity):
+    """Sensor base entity."""
 
-    _attr_icon = "mdi:rocket"
-
-    def __init__(self, api: PyLaunches, name: str) -> None:
-        """Initialize the sensor."""
-        self.api = api
+    def __init__(self, coordinator, name):
+        """Initialize a Launch Library entity."""
+        super().__init__(coordinator)
         self._attr_name = name
+        self._attr_unique_id = f"{DOMAIN}/{name}"
 
-    async def async_update(self) -> None:
-        """Get the latest data."""
-        try:
-            launches = await self.api.upcoming_launches()
-        except PyLaunchesException as exception:
-            _LOGGER.error("Error getting data, %s", exception)
-            self._attr_available = False
-        else:
-            if next_launch := next((launch for launch in launches), None):
-                self._attr_available = True
-                self._attr_native_value = next_launch.name
-                self._attr_extra_state_attributes = {
-                    ATTR_LAUNCH_TIME: next_launch.net,
-                    ATTR_AGENCY: next_launch.launch_service_provider.name,
-                    ATTR_AGENCY_COUNTRY_CODE: next_launch.pad.location.country_code,
-                    ATTR_STREAM: next_launch.webcast_live,
-                    ATTR_ATTRIBUTION: ATTRIBUTION,
-                }
+    def get_next_launch(self):
+        """Return next launch."""
+        return next((launch for launch in self.coordinator.data), None)
+
+
+class NextLaunchSensor(LLBaseEntity):
+    """Representation of the next launch sensor."""
+
+    _attr_icon = ICON_ROCKET
+
+    @property
+    def native_value(self):
+        """Return the state of the sensor."""
+        next_launch = self.get_next_launch()
+        return next_launch.name
+
+    @property
+    def extra_state_attributes(self):
+        """Return the attributes of the sensor."""
+        next_launch = self.get_next_launch()
+        return {
+            ATTR_LAUNCH_PROVIDER: next_launch.launch_service_provider.name,
+            ATTR_LAUNCH_PAD: next_launch.pad.name,
+            ATTR_LAUNCH_FACILITY: next_launch.pad.location.name,
+            ATTR_LAUNCH_PAD_COUNTRY_CODE: next_launch.pad.location.country_code,
+            ATTR_ATTRIBUTION: ATTRIBUTION,
+        }
+
+
+class LaunchTimeSensor(LLBaseEntity):
+    """Representation of the launch time sensor."""
+
+    _attr_icon = ICON_CLOCK
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+
+    @property
+    def native_value(self):
+        """Return the state of the sensor."""
+        next_launch = self.get_next_launch()
+        return parse_datetime(next_launch.net)
+
+    @property
+    def extra_state_attributes(self):
+        """Return the attributes of the sensor."""
+        next_launch = self.get_next_launch()
+        return {
+            ATTR_WINDOW_START: next_launch.window_start,
+            ATTR_WINDOW_END: next_launch.window_end,
+            ATTR_STREAM_LIVE: next_launch.webcast_live,
+            ATTR_ATTRIBUTION: ATTRIBUTION,
+        }
+
+
+class LaunchProbabilitySensor(LLBaseEntity):
+    """Representation of the launch probability sensor."""
+
+    _attr_icon = ICON_LUCK
+    _attr_native_unit_of_measurement = PERCENTAGE
+
+    @property
+    def native_value(self):
+        """Return the state of the sensor."""
+        next_launch = self.get_next_launch()
+        return next_launch.probability
+
+    @property
+    def extra_state_attributes(self):
+        """Return the attributes of the sensor."""
+        return {
+            ATTR_ATTRIBUTION: ATTRIBUTION,
+        }
+
+
+class LaunchStatusSensor(LLBaseEntity):
+    """Representation of launch status sensor."""
+
+    _attr_icon = ICON_ROCKET
+
+    @property
+    def native_value(self):
+        """Return the state of the sensor."""
+        next_launch = self.get_next_launch()
+        return next_launch.status.name
+
+    @property
+    def extra_state_attributes(self):
+        """Return the attributes of the sensor."""
+        next_launch = self.get_next_launch()
+        if next_launch.inhold:
+            return {
+                ATTR_REASON: next_launch.holdreason,
+                ATTR_ATTRIBUTION: ATTRIBUTION,
+            }
+
+
+class LaunchMissionSensor(LLBaseEntity):
+    """Representation of the launch mission sensor."""
+
+    _attr_icon = ICON_ROCKET
+
+    @property
+    def native_value(self):
+        """Return the state of the sensor."""
+        next_launch = self.get_next_launch()
+        return next_launch.mission.name
+
+    @property
+    def extra_state_attributes(self):
+        """Return the attributes of the sensor."""
+        next_launch = self.get_next_launch()
+        return {
+            ATTR_DESCRIPTION: next_launch.mission.description,
+            ATTR_TYPE: next_launch.mission.type,
+            ATTR_ORBIT: next_launch.mission.orbit.name,
+            ATTR_ATTRIBUTION: ATTRIBUTION,
+        }

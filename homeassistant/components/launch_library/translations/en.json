@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Launch Library is already configured"
+        },
+        "step": {
+            "user": {
+                "description": "Do you want to configure Launch Library?",
+                "title": "Launch Library"
+            }
+        }
+    },
+    "title": "Launch Library"
+}

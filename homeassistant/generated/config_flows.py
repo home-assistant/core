@@ -163,6 +163,7 @@ FLOWS = [
     "kostal_plenticore",
     "kraken",
     "kulersky",
+    "launch_library",
     "life360",
     "lifx",
     "litejet",
