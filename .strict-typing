@@ -121,6 +121,7 @@ homeassistant.components.slack.*
 homeassistant.components.sonos.media_player
 homeassistant.components.ssdp.*
 homeassistant.components.stookalert.*
+homeassistant.components.statistics.*
 homeassistant.components.stream.*
 homeassistant.components.sun.*
 homeassistant.components.surepetcare.*
