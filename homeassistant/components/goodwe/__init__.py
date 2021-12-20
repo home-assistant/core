@@ -1,11 +1,10 @@
 """The Goodwe inverter component."""
-from datetime import timedelta
 import logging
 
 from goodwe import InverterError, RequestFailedException, connect
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity import DeviceInfo
@@ -13,16 +12,12 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import (
     CONF_MODEL_FAMILY,
-    CONF_NETWORK_RETRIES,
-    CONF_NETWORK_TIMEOUT,
-    DEFAULT_NETWORK_RETRIES,
-    DEFAULT_NETWORK_TIMEOUT,
-    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     KEY_COORDINATOR,
     KEY_DEVICE_INFO,
     KEY_INVERTER,
     PLATFORMS,
+    SCAN_INTERVAL,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,18 +29,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     name = entry.title
     host = entry.data[CONF_HOST]
     model_family = entry.data[CONF_MODEL_FAMILY]
-    scan_interval = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-    network_retries = entry.options.get(CONF_NETWORK_RETRIES, DEFAULT_NETWORK_RETRIES)
-    network_timeout = entry.options.get(CONF_NETWORK_TIMEOUT, DEFAULT_NETWORK_TIMEOUT)
 
     # Connect to Goodwe inverter
     try:
         inverter = await connect(
             host=host,
             family=model_family,
-            comm_addr=0,
-            timeout=network_timeout,
-            retries=network_retries,
+            retries=10,
         )
     except InverterError as err:
         raise ConfigEntryNotReady from err
@@ -90,7 +80,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         name=name,
         update_method=async_update_data,
         # Polling interval. Will only be polled if there are subscribers.
-        update_interval=timedelta(seconds=scan_interval),
+        update_interval=SCAN_INTERVAL,
     )
 
     # Fetch initial data so we have data when entities subscribe

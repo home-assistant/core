@@ -17,18 +17,5 @@
                 "title": "GoodWe inverter"
             }
         }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "scan_interval": "Scan interval (s)",
-                    "network_retries": "Network retry attempts",
-                    "network_timeout": "Network request timeout (s)"
-                },
-                "description": "Specify optional (network) settings",
-                "title": "GoodWe optional settings"
-            }
-        }
     }
 }

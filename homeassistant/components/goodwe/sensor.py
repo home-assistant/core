@@ -41,6 +41,7 @@ from .const import DOMAIN, KEY_COORDINATOR, KEY_DEVICE_INFO, KEY_INVERTER
 BATTERY_SOC = "battery_soc"
 
 _MAIN_SENSORS = (
+    "ppv",
     "house_consumption",
     "active_power",
     "battery_soc",
