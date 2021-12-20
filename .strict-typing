@@ -65,6 +65,7 @@ homeassistant.components.http.*
 homeassistant.components.huawei_lte.*
 homeassistant.components.hyperion.*
 homeassistant.components.image_processing.*
+homeassistant.components.input_button.*
 homeassistant.components.input_select.*
 homeassistant.components.integration.*
 homeassistant.components.iqvia.*
