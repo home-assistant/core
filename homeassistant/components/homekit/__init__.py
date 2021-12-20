@@ -819,7 +819,9 @@ class HomeKit:
                     valid_device_ids.append(device_id)
             for device_id, device_triggers in (
                 await device_automation.async_get_device_automations(
-                    self.hass, "trigger", valid_device_ids
+                    self.hass,
+                    device_automation.DeviceAutomationType.TRIGGER,
+                    valid_device_ids,
                 )
             ).items():
                 self.add_bridge_triggers_accessory(
