@@ -27,7 +27,7 @@ def validate_apps(config: ConfigType) -> ConfigType:
     """Validate CONF_APPS is only used when CONF_DEVICE_CLASS is MediaPlayerDeviceClass.TV."""
     if (
         config.get(CONF_APPS) is not None
-        and config[CONF_DEVICE_CLASS] is not MediaPlayerDeviceClass.TV
+        and config[CONF_DEVICE_CLASS] != MediaPlayerDeviceClass.TV
     ):
         raise vol.Invalid(
             f"'{CONF_APPS}' can only be used if {CONF_DEVICE_CLASS}' is '{MediaPlayerDeviceClass.TV}'"
