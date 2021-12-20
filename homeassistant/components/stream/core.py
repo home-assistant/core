@@ -19,7 +19,7 @@ from homeassistant.util.decorator import Registry
 from .const import ATTR_STREAMS, DOMAIN
 
 if TYPE_CHECKING:
-    from av import Packet
+    from av import CodecContext, Packet
 
     from . import Stream
 
@@ -374,20 +374,33 @@ class KeyFrameConverter:
         self.image: bytes | None = None
         self._turbojpeg = TurboJPEGSingleton.instance()
         self.lock = asyncio.Lock()
+        self._codec_context: CodecContext | None = None
+
+    def create_codec_context(self, codec_context: CodecContext) -> None:
+        """Create a codec context to be used for decoding the keyframes."""
+
+        # Keep import here so that we can import stream integration without installing reqs
+        # pylint: disable=import-outside-toplevel
+        from av import CodecContext
+
+        self._codec_context = CodecContext.create(codec_context.name, "r")
+        self._codec_context.extradata = codec_context.extradata
+        self._codec_context.skip_frame = "NONKEY"
+        self._codec_context.thread_type = "NONE"
 
     def generate_image(self, width: int | None, height: int | None) -> bytes | None:
         """Generate the keyframe image. This is called in an executor thread."""
-        if not (self._turbojpeg and self.packet):
+        if not (self._turbojpeg and self.packet and self._codec_context):
             return self.image
         image = None
         packet = self.packet
         self.packet = None
         # decode packet (flush afterwards)
-        frames = packet.decode()
+        frames = self._codec_context.decode(packet)
         for _i in range(2):
             if frames:
                 break
-            frames = packet.stream.codec_context.decode(None)
+            frames = self._codec_context.decode(None)
         if frames:
             frame = frames[0]
             if width and height:

@@ -98,11 +98,6 @@ class FakeAvInputStream:
 
         self.codec = FakeCodec()
 
-        class FakeCodecContext:
-            thread_type = "SLICE"
-
-        self.codec_context = FakeCodecContext()
-
     def __str__(self) -> str:
         """Return a stream name for debugging."""
         return f"FakePyAvStream<{self.name}, {self.time_base}>"
