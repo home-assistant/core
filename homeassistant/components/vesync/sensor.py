@@ -3,19 +3,14 @@ from datetime import datetime
 import logging
 
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
+    SensorDeviceClass,
     SensorEntity,
+    SensorStateClass,
 )
-from homeassistant.const import (
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_POWER,
-    ENERGY_KILO_WATT_HOUR,
-    ENTITY_CATEGORY_DIAGNOSTIC,
-    POWER_WATT,
-)
+from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_WATT
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import EntityCategory
 
 from .common import VeSyncBaseEntity
 from .const import DOMAIN, VS_DISCOVERY, VS_DISPATCHERS, VS_SENSORS
@@ -66,7 +61,7 @@ class VeSyncSensorEntity(VeSyncBaseEntity, SensorEntity):
     @property
     def entity_category(self):
         """Return the diagnostic entity category."""
-        return ENTITY_CATEGORY_DIAGNOSTIC
+        return EntityCategory.DIAGNOSTIC
 
 
 class VeSyncPowerSensor(VeSyncSensorEntity):
@@ -85,7 +80,7 @@ class VeSyncPowerSensor(VeSyncSensorEntity):
     @property
     def device_class(self):
         """Return the power device class."""
-        return DEVICE_CLASS_POWER
+        return SensorDeviceClass.POWER
 
     @property
     def native_value(self):
@@ -100,7 +95,7 @@ class VeSyncPowerSensor(VeSyncSensorEntity):
     @property
     def state_class(self):
         """Return the measurement state class."""
-        return STATE_CLASS_MEASUREMENT
+        return SensorStateClass.MEASUREMENT
 
     def update(self):
         """Update outlet details and energy usage."""
@@ -129,7 +124,7 @@ class VeSyncEnergySensor(VeSyncSensorEntity):
     @property
     def device_class(self):
         """Return the energy device class."""
-        return DEVICE_CLASS_ENERGY
+        return SensorDeviceClass.ENERGY
 
     @property
     def last_reset(self):
@@ -149,7 +144,7 @@ class VeSyncEnergySensor(VeSyncSensorEntity):
     @property
     def state_class(self):
         """Return the total_increasing state class."""
-        return STATE_CLASS_TOTAL_INCREASING
+        return SensorStateClass.TOTAL_INCREASING
 
     def update(self):
         """Update outlet details and energy usage."""
