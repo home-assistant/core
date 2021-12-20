@@ -193,6 +193,33 @@ RT_SENSORS: tuple[SensorEntityDescription, ...] = (
     ),
 )
 
+SENSORS: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="month_cost",
+        name="Monthly cost",
+        device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="peak_hour",
+        name="Month peak hour consumption",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+    ),
+    SensorEntityDescription(
+        key="peak_hour_time",
+        name="Time of max hour consumption",
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+    SensorEntityDescription(
+        key="month_cons",
+        name="Monthly net consumption",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+)
+
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Tibber sensor."""
@@ -202,6 +229,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     entity_registry = async_get_entity_reg(hass)
     device_registry = async_get_dev_reg(hass)
 
+    coordinator = None
     entities = []
     for home in tibber_connection.get_homes(only_active=False):
         try:
@@ -221,6 +249,17 @@ async def async_setup_entry(hass, entry, async_add_entities):
                     async_add_entities, home, hass
                 ).async_set_updated_data
             )
+        if home.has_active_subscription and not home.has_real_time_consumption:
+            if coordinator is None:
+                coordinator = update_coordinator.DataUpdateCoordinator(
+                    hass,
+                    _LOGGER,
+                    name=f"Tibber {tibber_connection.name}",
+                    update_method=tibber_connection.fetch_consumption_data_active_homes,
+                    update_interval=timedelta(hours=1),
+                )
+            for entity_description in SENSORS:
+                entities.append(TibberDataSensor(home, coordinator, entity_description))
 
         # migrate
         old_id = home.info["viewer"]["home"]["meteringPointData"]["consumptionEan"]
@@ -301,7 +340,7 @@ class TibberSensorElPrice(TibberSensor):
         self._attr_unique_id = self._tibber_home.home_id
         self._model = "Price Sensor"
 
-        self._device_name = self._attr_name
+        self._device_name = self._home_name
 
     async def async_update(self):
         """Get the latest data and updates the states."""
@@ -347,6 +386,34 @@ class TibberSensorElPrice(TibberSensor):
         self._attr_extra_state_attributes["estimated_annual_consumption"] = data[
             "meteringPointData"
         ]["estimatedAnnualConsumption"]
+
+
+class TibberDataSensor(TibberSensor, update_coordinator.CoordinatorEntity):
+    """Representation of a Tibber sensor."""
+
+    def __init__(
+        self,
+        tibber_home,
+        coordinator: update_coordinator.DataUpdateCoordinator,
+        entity_description: SensorEntityDescription,
+    ):
+        """Initialize the sensor."""
+        super().__init__(coordinator=coordinator, tibber_home=tibber_home)
+        self.entity_description = entity_description
+
+        self._attr_unique_id = (
+            f"{self._tibber_home.home_id}_{self.entity_description.key}"
+        )
+        self._attr_name = f"{entity_description.name} {self._home_name}"
+        if entity_description.key == "month_cost":
+            self._attr_native_unit_of_measurement = self._tibber_home.currency
+
+        self._device_name = self._home_name
+
+    @property
+    def native_value(self):
+        """Return the value of the sensor."""
+        return getattr(self._tibber_home, self.entity_description.key)
 
 
 class TibberSensorRT(TibberSensor, update_coordinator.CoordinatorEntity):
