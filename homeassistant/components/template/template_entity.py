@@ -58,6 +58,14 @@ TEMPLATE_ENTITY_COMMON_SCHEMA = vol.Schema(
     }
 )
 
+TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA_LEGACY = vol.Schema(
+    {
+        vol.Optional(CONF_ATTRIBUTE_TEMPLATES, default={}): vol.Schema(
+            {cv.string: cv.template}
+        ),
+    }
+)
+
 TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY = vol.Schema(
     {
         vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,

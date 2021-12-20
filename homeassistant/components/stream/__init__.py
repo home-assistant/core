@@ -16,7 +16,7 @@ to always keep workers active.
 """
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 import logging
 import re
 import secrets
@@ -69,12 +69,17 @@ def redact_credentials(data: str) -> str:
 
 
 def create_stream(
-    hass: HomeAssistant, stream_source: str, options: dict[str, str]
+    hass: HomeAssistant,
+    stream_source: str,
+    options: dict[str, str],
+    stream_label: str | None = None,
 ) -> Stream:
     """Create a stream with the specified identfier based on the source url.
 
-    The stream_source is typically an rtsp url and options are passed into
-    pyav / ffmpeg as options.
+    The stream_source is typically an rtsp url (though any url accepted by ffmpeg is fine) and
+    options are passed into pyav / ffmpeg as options.
+
+    The stream_label is a string used as an additional message in logging.
     """
     if DOMAIN not in hass.config.components:
         raise HomeAssistantError("Stream integration is not set up.")
@@ -87,7 +92,7 @@ def create_stream(
             **options,
         }
 
-    stream = Stream(hass, stream_source, options=options)
+    stream = Stream(hass, stream_source, options=options, stream_label=stream_label)
     hass.data[DOMAIN][ATTR_STREAMS].append(stream)
     return stream
 
@@ -192,19 +197,30 @@ class Stream:
     """Represents a single stream."""
 
     def __init__(
-        self, hass: HomeAssistant, source: str, options: dict[str, str]
+        self,
+        hass: HomeAssistant,
+        source: str,
+        options: dict[str, str],
+        stream_label: str | None = None,
     ) -> None:
         """Initialize a stream."""
         self.hass = hass
         self.source = source
         self.options = options
+        self._stream_label = stream_label
         self.keepalive = False
         self.access_token: str | None = None
         self._thread: threading.Thread | None = None
         self._thread_quit = threading.Event()
         self._outputs: dict[str, StreamOutput] = {}
         self._fast_restart_once = False
-        self._available = True
+        self._available: bool = True
+        self._update_callback: Callable[[], None] | None = None
+        self._logger = (
+            logging.getLogger(f"{__package__}.stream.{stream_label}")
+            if stream_label
+            else _LOGGER
+        )
 
     def endpoint_url(self, fmt: str) -> str:
         """Start the stream and returns a url for the output format."""
@@ -260,6 +276,17 @@ class Stream:
         """Return False if the stream is started and known to be unavailable."""
         return self._available
 
+    def set_update_callback(self, update_callback: Callable[[], None]) -> None:
+        """Set callback to run when state changes."""
+        self._update_callback = update_callback
+
+    @callback
+    def _async_update_state(self, available: bool) -> None:
+        """Set state and Run callback to notify state has been updated."""
+        self._available = available
+        if self._update_callback:
+            self._update_callback()
+
     def start(self) -> None:
         """Start a stream."""
         if self._thread is None or not self._thread.is_alive():
@@ -273,11 +300,13 @@ class Stream:
                 target=self._run_worker,
             )
             self._thread.start()
-            _LOGGER.info("Started stream: %s", redact_credentials(str(self.source)))
+            self._logger.info(
+                "Started stream: %s", redact_credentials(str(self.source))
+            )
 
     def update_source(self, new_source: str) -> None:
         """Restart the stream with a new stream source."""
-        _LOGGER.debug("Updating stream source %s", new_source)
+        self._logger.debug("Updating stream source %s", new_source)
         self.source = new_source
         self._fast_restart_once = True
         self._thread_quit.set()
@@ -292,8 +321,7 @@ class Stream:
         wait_timeout = 0
         while not self._thread_quit.wait(timeout=wait_timeout):
             start_time = time.time()
-
-            self._available = True
+            self.hass.add_job(self._async_update_state, True)
             try:
                 stream_worker(
                     self.source,
@@ -302,7 +330,7 @@ class Stream:
                     self._thread_quit,
                 )
             except StreamWorkerError as err:
-                _LOGGER.error("Error from stream worker: %s", str(err))
+                self._logger.error("Error from stream worker: %s", str(err))
                 self._available = False
 
             stream_state.discontinuity()
@@ -314,6 +342,7 @@ class Stream:
                     continue
                 break
 
+            self.hass.add_job(self._async_update_state, False)
             # To avoid excessive restarts, wait before restarting
             # As the required recovery time may be different for different setups, start
             # with trying a short wait_timeout and increase it on each reconnection attempt.
@@ -321,7 +350,7 @@ class Stream:
             if time.time() - start_time > STREAM_RESTART_RESET_TIME:
                 wait_timeout = 0
             wait_timeout += STREAM_RESTART_INCREMENT
-            _LOGGER.debug(
+            self._logger.debug(
                 "Restarting stream worker in %d seconds: %s",
                 wait_timeout,
                 self.source,
@@ -352,7 +381,9 @@ class Stream:
             self._thread_quit.set()
             self._thread.join()
             self._thread = None
-            _LOGGER.info("Stopped stream: %s", redact_credentials(str(self.source)))
+            self._logger.info(
+                "Stopped stream: %s", redact_credentials(str(self.source))
+            )
 
     async def async_record(
         self, video_path: str, duration: int = 30, lookback: int = 5
@@ -379,7 +410,7 @@ class Stream:
         recorder.video_path = video_path
 
         self.start()
-        _LOGGER.debug("Started a stream recording of %s seconds", duration)
+        self._logger.debug("Started a stream recording of %s seconds", duration)
 
         # Take advantage of lookback
         hls: HlsStreamOutput = cast(HlsStreamOutput, self.outputs().get(HLS_PROVIDER))

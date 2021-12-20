@@ -1,4 +1,5 @@
 """Test different accessory types: Sensors."""
+
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.homekit import get_accessory
 from homeassistant.components.homekit.const import (

@@ -34,7 +34,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+async def async_setup(hass, config):
     """Set up the LiteJet component."""
     if DOMAIN in config and not hass.config_entries.async_entries(DOMAIN):
         # No config entry exists and configuration.yaml config exists, trigger the import flow.
