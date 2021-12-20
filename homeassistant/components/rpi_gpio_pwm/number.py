@@ -27,21 +27,24 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
-    ATTR_FREQUENCY,
-    ATTR_INVERT,
     CONF_DRIVER,
     CONF_DRIVER_GPIO,
     CONF_DRIVER_PCA9685,
     CONF_DRIVER_TYPES,
     CONF_FREQUENCY,
-    CONF_INVERT,
-    CONF_NUMBERS,
-    CONF_PIN,
-    CONF_STEP,
-    MODE_AUTO,
-    MODE_BOX,
-    MODE_SLIDER,
 )
+
+CONF_NUMBERS = "numbers"
+CONF_PIN = "pin"
+CONF_INVERT = "invert"
+CONF_STEP = "step"
+
+MODE_SLIDER = "slider"
+MODE_BOX = "box"
+MODE_AUTO = "auto"
+
+ATTR_FREQUENCY = "frequency"
+ATTR_INVERT = "invert"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -120,7 +123,14 @@ class PwmNumber(NumberEntity, RestoreEntity):
         """Handle entity about to be added to hass event."""
         await super().async_added_to_hass()
         if last_state := await self.async_get_last_state():
-            await self.async_set_value(float(last_state.state))
+            try:
+                await self.async_set_value(float(last_state.state))
+            except ValueError:
+                _LOGGER.warning(
+                    "Could not read value {} from last state for {}!",
+                    last_state.state,
+                    self.name,
+                )
 
     @property
     def should_poll(self):
@@ -171,4 +181,4 @@ class PwmNumber(NumberEntity, RestoreEntity):
         # Set value to driver
         self._driver._set_pwm([scaled_value])  # pylint: disable=W0212
         self._attr_value = value
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()

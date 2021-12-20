@@ -14,6 +14,9 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
     PLATFORM_SCHEMA,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
+    SUPPORT_TRANSITION,
     LightEntity,
 )
 from homeassistant.const import CONF_ADDRESS, CONF_HOST, CONF_NAME, CONF_TYPE, STATE_ON
@@ -27,17 +30,22 @@ from .const import (
     CONF_DRIVER_PCA9685,
     CONF_DRIVER_TYPES,
     CONF_FREQUENCY,
-    CONF_LED_TYPE_RGB,
-    CONF_LED_TYPE_RGBW,
-    CONF_LED_TYPE_SIMPLE,
-    CONF_LED_TYPES,
-    CONF_LEDS,
-    CONF_PINS,
-    DEFAULT_BRIGHTNESS,
-    DEFAULT_COLOR,
-    SUPPORT_RGB_LED,
-    SUPPORT_SIMPLE_LED,
 )
+
+CONF_LEDS = "leds"
+CONF_PINS = "pins"
+
+CONF_LED_TYPE_SIMPLE = "simple"
+CONF_LED_TYPE_RGB = "rgb"
+CONF_LED_TYPE_RGBW = "rgbw"
+CONF_LED_TYPES = [CONF_LED_TYPE_SIMPLE, CONF_LED_TYPE_RGB, CONF_LED_TYPE_RGBW]
+
+DEFAULT_BRIGHTNESS = 255
+DEFAULT_COLOR = [0, 0]
+
+SUPPORT_SIMPLE_LED = SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
+SUPPORT_RGB_LED = SUPPORT_BRIGHTNESS | SUPPORT_COLOR | SUPPORT_TRANSITION
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -161,7 +169,7 @@ class PwmSimpleLed(LightEntity, RestoreEntity):
             )
 
         self._is_on = True
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn off a LED."""
@@ -173,7 +181,7 @@ class PwmSimpleLed(LightEntity, RestoreEntity):
                 self._led.off()
 
         self._is_on = False
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
 
 class PwmRgbLed(PwmSimpleLed):
@@ -223,7 +231,7 @@ class PwmRgbLed(PwmSimpleLed):
             )
 
         self._is_on = True
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
 
 def _from_hass_brightness(brightness):
