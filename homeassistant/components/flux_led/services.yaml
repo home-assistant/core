@@ -129,7 +129,7 @@ set_music_mode:
       selector:
         object:
     background_color:
-      description: The background RGB color
+      description: The background RGB color (Addressable models only)
       example: "[255, 100, 100]"
       required: false
       selector:
