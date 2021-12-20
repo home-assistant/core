@@ -3,7 +3,6 @@ import functools
 import logging
 
 from pyinsteon import devices
-from pyinsteon.extended_property import ON_LEVEL, RAMP_RATE
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
