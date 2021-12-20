@@ -22,6 +22,7 @@ from sqlalchemy.pool import StaticPool
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_EXCLUDE,
@@ -55,7 +56,13 @@ import homeassistant.util.dt as dt_util
 
 from . import history, migration, purge, statistics, websocket_api
 from .const import (
+    CONF_AUTO_PURGE,
+    CONF_COMMIT_INTERVAL,
     CONF_DB_INTEGRITY_CHECK,
+    CONF_DB_MAX_RETRIES,
+    CONF_DB_RETRY_WAIT,
+    CONF_DB_URL,
+    CONF_PURGE_KEEP_DAYS,
     DATA_INSTANCE,
     DOMAIN,
     MAX_QUEUE_BACKLOG,
@@ -129,14 +136,8 @@ EXPIRE_AFTER_COMMITS = 120
 DB_LOCK_TIMEOUT = 30
 DB_LOCK_QUEUE_CHECK_TIMEOUT = 1
 
-CONF_AUTO_PURGE = "auto_purge"
-CONF_DB_URL = "db_url"
-CONF_DB_MAX_RETRIES = "db_max_retries"
-CONF_DB_RETRY_WAIT = "db_retry_wait"
-CONF_PURGE_KEEP_DAYS = "purge_keep_days"
 CONF_PURGE_INTERVAL = "purge_interval"
 CONF_EVENT_TYPES = "event_types"
-CONF_COMMIT_INTERVAL = "commit_interval"
 
 INVALIDATED_ERR = "Database connection invalidated"
 CONNECTIVITY_ERR = "Error in database connectivity during commit"
@@ -236,17 +237,21 @@ def run_information_with_session(session, point_in_time: datetime | None = None)
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the recorder."""
     hass.data[DOMAIN] = {}
-    conf = config[DOMAIN]
-    entity_filter = convert_include_exclude_filter(conf)
-    auto_purge = conf[CONF_AUTO_PURGE]
-    keep_days = conf[CONF_PURGE_KEEP_DAYS]
-    commit_interval = conf[CONF_COMMIT_INTERVAL]
-    db_max_retries = conf[CONF_DB_MAX_RETRIES]
-    db_retry_wait = conf[CONF_DB_RETRY_WAIT]
-    db_url = conf.get(CONF_DB_URL) or DEFAULT_URL.format(
-        hass_config_path=hass.config.path(DEFAULT_DB_FILE)
-    )
-    exclude = conf[CONF_EXCLUDE]
+    if not hass.config_entries.async_entries(DOMAIN):
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_IMPORT}, data=(config[DOMAIN])
+            )
+        )
+    return True
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+) -> bool:
+    """Set up the recorder."""
+    exclude = config_entry.data[CONF_EXCLUDE]
     exclude_t = exclude.get(CONF_EVENT_TYPES, [])
     if EVENT_STATE_CHANGED in exclude_t:
         _LOGGER.warning(
@@ -254,15 +259,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             "This will become an error in Home Assistant Core 2022.2"
         )
     instance = hass.data[DATA_INSTANCE] = Recorder(
-        hass=hass,
-        auto_purge=auto_purge,
-        keep_days=keep_days,
-        commit_interval=commit_interval,
-        uri=db_url,
-        db_max_retries=db_max_retries,
-        db_retry_wait=db_retry_wait,
-        entity_filter=entity_filter,
-        exclude_t=exclude_t,
+        hass=hass, config_entry=config_entry, exclude_t=exclude_t
     )
     instance.async_initialize()
     instance.start()
@@ -484,36 +481,32 @@ class Recorder(threading.Thread):
     stop_requested: bool
 
     def __init__(
-        self,
-        hass: HomeAssistant,
-        auto_purge: bool,
-        keep_days: int,
-        commit_interval: int,
-        uri: str,
-        db_max_retries: int,
-        db_retry_wait: int,
-        entity_filter: Callable[[str], bool],
-        exclude_t: list[str],
+        self, hass: HomeAssistant, config_entry: ConfigEntry, exclude_t: list[str]
     ) -> None:
         """Initialize the recorder."""
         threading.Thread.__init__(self, name="Recorder")
 
         self.hass = hass
-        self.auto_purge = auto_purge
-        self.keep_days = keep_days
-        self.commit_interval = commit_interval
+        self.config_entry = config_entry
+
+        conf = dict(config_entry.data)
+        self.auto_purge = conf[CONF_AUTO_PURGE]
+        self.keep_days = conf[CONF_PURGE_KEEP_DAYS]
+        self.commit_interval = conf[CONF_COMMIT_INTERVAL]
         self.queue: queue.SimpleQueue[RecorderTask] = queue.SimpleQueue()
         self.recording_start = dt_util.utcnow()
-        self.db_url = uri
-        self.db_max_retries = db_max_retries
-        self.db_retry_wait = db_retry_wait
+        self.db_url = conf.get(CONF_DB_URL) or DEFAULT_URL.format(
+            hass_config_path=hass.config.path(DEFAULT_DB_FILE)
+        )
+        self.db_max_retries = conf[CONF_DB_MAX_RETRIES]
+        self.db_retry_wait = conf[CONF_DB_RETRY_WAIT]
         self.async_db_ready: asyncio.Future = asyncio.Future()
         self.async_recorder_ready = asyncio.Event()
         self._queue_watch = threading.Event()
         self.engine: Any = None
         self.run_info: Any = None
 
-        self.entity_filter = entity_filter
+        self.entity_filter = convert_include_exclude_filter(conf)
         self.exclude_t = exclude_t
 
         self._timechanges_seen = 0
@@ -532,6 +525,14 @@ class Recorder(threading.Thread):
         self._database_lock_task: DatabaseLockTask | None = None
 
         self.enabled = True
+
+    def update_config(self, config_entry: ConfigEntry):
+        """Update config in runtime."""
+        conf = dict(config_entry.data)
+        self.auto_purge = conf[CONF_AUTO_PURGE]
+        self.commit_interval = conf[CONF_COMMIT_INTERVAL]
+        self.entity_filter = convert_include_exclude_filter(conf)
+        self.keep_days = conf[CONF_PURGE_KEEP_DAYS]
 
     def set_enable(self, enable):
         """Enable or disable recording events and states."""

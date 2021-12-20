@@ -1,4 +1,4 @@
-"""The Energy websocket API."""
+"""The Recorder websocket API."""
 from __future__ import annotations
 
 import logging
@@ -7,9 +7,21 @@ from typing import TYPE_CHECKING
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
+from homeassistant.const import CONF_EXCLUDE, CONF_INCLUDE
 from homeassistant.core import HomeAssistant, callback
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entityfilter import INCLUDE_EXCLUDE_FILTER_SCHEMA_INNER
 
-from .const import DATA_INSTANCE, MAX_QUEUE_BACKLOG
+from .const import (
+    CONF_AUTO_PURGE,
+    CONF_COMMIT_INTERVAL,
+    CONF_DB_MAX_RETRIES,
+    CONF_DB_RETRY_WAIT,
+    CONF_DB_URL,
+    CONF_PURGE_KEEP_DAYS,
+    DATA_INSTANCE,
+    MAX_QUEUE_BACKLOG,
+)
 from .statistics import validate_statistics
 from .util import async_migration_in_progress
 
@@ -26,8 +38,62 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_clear_statistics)
     websocket_api.async_register_command(hass, ws_update_statistics_metadata)
     websocket_api.async_register_command(hass, ws_info)
+    websocket_api.async_register_command(hass, ws_config)
+    websocket_api.async_register_command(hass, ws_update_config)
     websocket_api.async_register_command(hass, ws_backup_start)
     websocket_api.async_register_command(hass, ws_backup_end)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "recorder/config",
+    }
+)
+@callback
+def ws_config(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+) -> None:
+    """Return config of the recorder."""
+    instance: Recorder = hass.data[DATA_INSTANCE]
+    connection.send_result(msg["id"], dict(instance.config_entry.data))
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "recorder/update_config",
+        vol.Required("config"): vol.Schema(
+            {
+                vol.Optional(CONF_AUTO_PURGE): cv.boolean,
+                vol.Optional(CONF_COMMIT_INTERVAL): cv.positive_int,
+                vol.Optional(CONF_DB_URL): cv.string,
+                vol.Optional(CONF_DB_MAX_RETRIES): cv.positive_int,
+                vol.Optional(CONF_DB_RETRY_WAIT): cv.positive_int,
+                vol.Optional(CONF_EXCLUDE): INCLUDE_EXCLUDE_FILTER_SCHEMA_INNER,
+                vol.Optional(CONF_INCLUDE): INCLUDE_EXCLUDE_FILTER_SCHEMA_INNER,
+                vol.Optional(CONF_PURGE_KEEP_DAYS): vol.All(
+                    vol.Coerce(int), vol.Range(min=1)
+                ),
+            }
+        ),
+    }
+)
+@callback
+def ws_update_config(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+) -> None:
+    """Update the recoder config."""
+    instance: Recorder = hass.data[DATA_INSTANCE]
+    config_entry = instance.config_entry
+    data_to_save = {**config_entry.data, **msg["config"]}
+    _LOGGER.warning(
+        "Updating Recorder configuration from %s to %s",
+        config_entry.data,
+        data_to_save,
+    )
+
+    hass.config_entries.async_update_entry(config_entry, data=data_to_save)
+    instance.update_config(config_entry)
+    connection.send_result(msg["id"])
 
 
 @websocket_api.websocket_command(

@@ -1,6 +1,7 @@
 {
   "domain": "recorder",
   "name": "Recorder",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/recorder",
   "requirements": ["sqlalchemy==1.4.27"],
   "codeowners": ["@home-assistant/core"],

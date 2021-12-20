@@ -4,7 +4,13 @@ DATA_INSTANCE = "recorder_instance"
 SQLITE_URL_PREFIX = "sqlite://"
 DOMAIN = "recorder"
 
+CONF_AUTO_PURGE = "auto_purge"
+CONF_COMMIT_INTERVAL = "commit_interval"
+CONF_DB_URL = "db_url"
+CONF_DB_MAX_RETRIES = "db_max_retries"
+CONF_DB_RETRY_WAIT = "db_retry_wait"
 CONF_DB_INTEGRITY_CHECK = "db_integrity_check"
+CONF_PURGE_KEEP_DAYS = "purge_keep_days"
 
 MAX_QUEUE_BACKLOG = 30000
 

@@ -249,6 +249,7 @@ FLOWS = [
     "rainmachine",
     "rdw",
     "recollect_waste",
+    "recorder",
     "renault",
     "rfxtrx",
     "ridwell",
