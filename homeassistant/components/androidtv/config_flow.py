@@ -197,8 +197,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
-        self._apps = config_entry.options.get(CONF_APPS, {})
-        self._state_det_rules = config_entry.options.get(CONF_STATE_DETECTION_RULES, {})
+
+        apps = config_entry.options.get(CONF_APPS, {})
+        det_rules = config_entry.options.get(CONF_STATE_DETECTION_RULES, {})
+        self._apps = apps.copy()
+        self._state_det_rules = det_rules.copy()
         self._conf_app_id = None
         self._conf_rule_id = None
 
