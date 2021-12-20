@@ -567,7 +567,10 @@ def discovery_info_from_headers_and_description(
     """Convert headers and description to discovery_info."""
     ssdp_usn = combined_headers["usn"]
     ssdp_st = combined_headers.get("st")
-    upnp_info = {**info_desc}
+    if isinstance(info_desc, CaseInsensitiveDict):
+        upnp_info = {**info_desc.as_dict()}
+    else:
+        upnp_info = {**info_desc}
 
     # Increase compatibility: depending on the message type,
     # either the ST (Search Target, from M-SEARCH messages)
