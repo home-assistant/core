@@ -76,13 +76,9 @@ class InsteonEntity(Entity):
     @property
     def extra_state_attributes(self):
         """Provide attributes for display on device card."""
-        ramprate = self.get_device_property(RAMP_RATE)
-        onamount = self.get_device_property(ON_LEVEL)
         return {
             "insteon_address": self.address,
             "insteon_group": self.group,
-            "insteon_ramprate": ramprate,
-            "insteon_onlevel": onamount,
         }
 
     @property
