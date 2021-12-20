@@ -8,8 +8,8 @@ from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
-from homeassistant.components.light import ATTR_COLOR_TEMP, DOMAIN as LIGHT_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.components.light import ATTR_COLOR_TEMP
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
 from homeassistant.setup import async_setup_component
 
 from . import entity_test_helpers
@@ -76,7 +76,7 @@ async def test_available_after_update(
     pywemo_bridge_light.turn_on.side_effect = pywemo.exceptions.ActionException
     pywemo_bridge_light.state["onoff"] = 1
     await entity_test_helpers.test_avaliable_after_update(
-        hass, pywemo_registry, pywemo_device, wemo_entity, LIGHT_DOMAIN
+        hass, pywemo_registry, pywemo_device, wemo_entity, Platform.LIGHT
     )
 
 
