@@ -1,7 +1,7 @@
 """Config flow to configure the Tile integration."""
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from pytile import async_login
 from pytile.errors import InvalidAuthError, TileError
@@ -41,9 +41,8 @@ class TileFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_verify(self, step_id: str, schema: vol.Schema) -> FlowResult:
         """Attempt to authenticate the provided credentials."""
-        if TYPE_CHECKING:
-            assert self._username
-            assert self._password
+        assert self._username
+        assert self._password
 
         errors = {}
         session = aiohttp_client.async_get_clientsession(self.hass)
