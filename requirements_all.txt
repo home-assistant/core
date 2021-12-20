@@ -440,7 +440,7 @@ brother==1.1.0
 brottsplatskartan==0.0.1
 
 # homeassistant.components.brunt
-brunt==1.0.2
+brunt==1.1.0
 
 # homeassistant.components.bsblan
 bsblan==0.4.0
