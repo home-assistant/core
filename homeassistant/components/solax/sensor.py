@@ -98,6 +98,8 @@ class RealTimeDataEndpoint:
 class Inverter(SensorEntity):
     """Class for a sensor."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         uid,
@@ -108,35 +110,15 @@ class Inverter(SensorEntity):
         device_class=None,
     ):
         """Initialize an inverter sensor."""
-        self.uid = uid
-        self.serial = serial
-        self.key = key
-        self.value = None
-        self.unit = unit
+        self._attr_unique_id = uid
+        self._attr_name = f"Solax {serial} {key}"
+        self._attr_native_unit_of_measurement = unit
         self._attr_state_class = state_class
         self._attr_device_class = device_class
+        self.key = key
+        self.value = None
 
     @property
     def native_value(self):
         """State of this inverter attribute."""
         return self.value
-
-    @property
-    def unique_id(self):
-        """Return unique id."""
-        return self.uid
-
-    @property
-    def name(self):
-        """Name of this inverter attribute."""
-        return f"Solax {self.serial} {self.key}"
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return self.unit
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
