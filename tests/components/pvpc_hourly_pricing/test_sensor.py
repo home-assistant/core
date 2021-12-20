@@ -21,7 +21,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def _process_time_step(
-    hass, mock_data, key_state=None, value=None, tariff="discrimination", delta_min=60
+    hass, mock_data, key_state=None, value=None, tariff=TARIFFS[0], delta_min=60
 ):
     state = hass.states.get("sensor.test_dst")
     check_valid_state(state, tariff=tariff, value=value, key_attr=key_state)
@@ -42,7 +42,7 @@ async def test_sensor_availability(
     )
     config_entry.add_to_hass(hass)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    mock_data = {"return_time": datetime(2019, 10, 27, 20, 0, 0, tzinfo=date_util.UTC)}
+    mock_data = {"return_time": datetime(2021, 10, 31, 20, 0, 0, tzinfo=date_util.UTC)}
 
     def mock_now():
         return mock_data["return_time"]
@@ -62,11 +62,11 @@ async def test_sensor_availability(
         caplog.clear()
         assert pvpc_aioclient_mock.call_count == 2
 
-        await _process_time_step(hass, mock_data, "price_21h", 0.13896)
-        await _process_time_step(hass, mock_data, "price_22h", 0.06893)
+        await _process_time_step(hass, mock_data, "price_21h", 0.16554)
+        await _process_time_step(hass, mock_data, "price_22h", 0.15239)
+        assert pvpc_aioclient_mock.call_count == 3
+        await _process_time_step(hass, mock_data, "price_23h", 0.14612)
         assert pvpc_aioclient_mock.call_count == 4
-        await _process_time_step(hass, mock_data, "price_23h", 0.06935)
-        assert pvpc_aioclient_mock.call_count == 5
 
         # sensor has no more prices, state is "unavailable" from now on
         await _process_time_step(hass, mock_data, value="unavailable")
@@ -79,7 +79,7 @@ async def test_sensor_availability(
         num_warnings = sum(1 for x in caplog.records if x.levelno == logging.WARNING)
         assert num_warnings == 1
         assert num_errors == 0
-        assert pvpc_aioclient_mock.call_count == 9
+        assert pvpc_aioclient_mock.call_count == 8
 
         # check that it is silent until it becomes available again
         caplog.clear()
@@ -87,20 +87,20 @@ async def test_sensor_availability(
             # silent mode
             for _ in range(21):
                 await _process_time_step(hass, mock_data, value="unavailable")
-            assert pvpc_aioclient_mock.call_count == 30
+            assert pvpc_aioclient_mock.call_count == 29
             assert len(caplog.messages) == 0
 
             # warning about data access recovered
             await _process_time_step(hass, mock_data, value="unavailable")
-            assert pvpc_aioclient_mock.call_count == 31
+            assert pvpc_aioclient_mock.call_count == 30
             assert len(caplog.messages) == 1
             assert caplog.records[0].levelno == logging.WARNING
 
             # working ok again
-            await _process_time_step(hass, mock_data, "price_00h", value=0.06821)
-            assert pvpc_aioclient_mock.call_count == 32
-            await _process_time_step(hass, mock_data, "price_01h", value=0.06627)
-            assert pvpc_aioclient_mock.call_count == 33
+            await _process_time_step(hass, mock_data, "price_00h", value=0.13104)
+            assert pvpc_aioclient_mock.call_count == 30
+            await _process_time_step(hass, mock_data, "price_01h", value=0.12055)
+            assert pvpc_aioclient_mock.call_count == 30
             assert len(caplog.messages) == 1
             assert caplog.records[0].levelno == logging.WARNING
 
@@ -139,7 +139,7 @@ async def test_multi_sensor_migration(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 2
     assert len(entity_reg.entities) == 2
 
-    mock_data = {"return_time": datetime(2019, 10, 27, 20, tzinfo=date_util.UTC)}
+    mock_data = {"return_time": datetime(2021, 10, 30, 20, tzinfo=date_util.UTC)}
 
     def mock_now():
         return mock_data["return_time"]
