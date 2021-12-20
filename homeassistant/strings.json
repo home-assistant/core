@@ -56,7 +56,8 @@
         "invalid_api_key": "Invalid API key",
         "invalid_auth": "Invalid authentication",
         "invalid_host": "Invalid hostname or IP address",
-        "unknown": "Unexpected error"
+        "unknown": "Unexpected error",
+        "timeout_connect": "Timeout establishing connection"
       },
       "abort": {
         "single_instance_allowed": "Already configured. Only a single configuration possible.",

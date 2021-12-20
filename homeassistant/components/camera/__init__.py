@@ -462,7 +462,12 @@ class Camera(Entity):
                 source = await self.stream_source()
             if not source:
                 return None
-            self.stream = create_stream(self.hass, source, options=self.stream_options)
+            self.stream = create_stream(
+                self.hass,
+                source,
+                options=self.stream_options,
+                stream_label=self.entity_id,
+            )
             self.stream.set_update_callback(self.async_write_ha_state)
         return self.stream
 
