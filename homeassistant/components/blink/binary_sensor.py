@@ -6,7 +6,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 
 from .const import (
     DEFAULT_BRAND,
@@ -56,19 +56,13 @@ class BlinkBinarySensor(BinarySensorEntity):
         self.entity_description = description
         self._attr_name = f"{DOMAIN} {camera} {description.name}"
         self._camera = data.cameras[camera]
-        self._camera_name = camera
         self._attr_unique_id = f"{self._camera.serial}-{description.key}"
-
-    @property
-    def device_info(self):
-        """Return device information for main camera."""
-
-        return {
-            "identifiers": {(DOMAIN, self._camera.serial)},
-            "name": self._camera_name,
-            "manufacturer": DEFAULT_BRAND,
-            "model": self._camera.camera_type,
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._camera.serial)},
+            name=camera,
+            manufacturer=DEFAULT_BRAND,
+            model=self._camera.camera_type,
+        )
 
     def update(self):
         """Update sensor state."""

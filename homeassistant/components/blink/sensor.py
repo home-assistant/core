@@ -9,7 +9,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT, TEMP_FAHRENHEIT
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 
 from .const import DEFAULT_BRAND, DOMAIN, TYPE_TEMPERATURE, TYPE_WIFI_STRENGTH
 
@@ -54,24 +54,18 @@ class BlinkSensor(SensorEntity):
         self._attr_name = f"{DOMAIN} {camera} {description.name}"
         self.data = data
         self._camera = data.cameras[camera]
-        self._camera_name = camera
         self._attr_unique_id = f"{self._camera.serial}-{description.key}"
         self._sensor_key = (
             "temperature_calibrated"
             if description.key == "temperature"
             else description.key
         )
-
-    @property
-    def device_info(self):
-        """Return device information for main camera."""
-
-        return {
-            "identifiers": {(DOMAIN, self._camera.serial)},
-            "name": self._camera_name,
-            "manufacturer": DEFAULT_BRAND,
-            "model": self._camera.camera_type,
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._camera.serial)},
+            name=camera,
+            manufacturer=DEFAULT_BRAND,
+            model=self._camera.camera_type,
+        )
 
     def update(self):
         """Retrieve sensor data from the camera."""
