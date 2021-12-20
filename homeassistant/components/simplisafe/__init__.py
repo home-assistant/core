@@ -55,7 +55,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import CoreState, Event, HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from homeassistant.helpers import (
     aiohttp_client,
     config_validation as cv,
@@ -368,7 +372,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             try:
                 await func(call, system)
             except SimplipyError as err:
-                LOGGER.error("Error while executing %s: %s", func.__name__, err)
+                raise HomeAssistantError(
+                    f'Error while executing "{call.service}": {err}'
+                ) from err
 
         return wrapper
 
@@ -397,8 +403,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ) -> None:
         """Set one or more system parameters."""
         if not isinstance(system, SystemV3):
-            LOGGER.error("Can only set system properties on V3 systems")
-            return
+            raise HomeAssistantError("Can only set system properties on V3 systems")
 
         await system.async_set_properties(
             {prop: value for prop, value in call.data.items() if prop != ATTR_DEVICE_ID}
