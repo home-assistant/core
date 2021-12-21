@@ -37,7 +37,7 @@ async def test_binary_sensor_entity_category(hass: HomeAssistant, knx: KNXTestKi
 
     registry = await async_get_entity_registry(hass)
     entity = registry.async_get("binary_sensor.test_normal")
-    assert entity.entity_category == EntityCategory.DIAGNOSTIC
+    assert entity.entity_category is EntityCategory.DIAGNOSTIC
 
 
 async def test_binary_sensor(hass: HomeAssistant, knx: KNXTestKit):

@@ -30,7 +30,7 @@ async def test_activate_knx_scene(hass: HomeAssistant, knx: KNXTestKit):
 
     registry = await async_get_entity_registry(hass)
     entity = registry.async_get("scene.test")
-    assert entity.entity_category == EntityCategory.DIAGNOSTIC
+    assert entity.entity_category is EntityCategory.DIAGNOSTIC
     assert entity.unique_id == "1/1/1_24"
 
     await hass.services.async_call(
