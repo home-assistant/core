@@ -1184,7 +1184,7 @@ python-twitch-client==0.6.0
 python_awair==0.2.1
 
 # homeassistant.components.tile
-pytile==5.2.4
+pytile==2021.12.0
 
 # homeassistant.components.traccar
 pytraccar==0.10.0
