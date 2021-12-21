@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, cast
 
 from pywemo import CoffeeMaker, Insight, Maker
 
@@ -16,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import convert
 
 from .const import DOMAIN as WEMO_DOMAIN
-from .entity import WemoEntity
+from .entity import WemoBinaryStateEntity
 from .wemo_device import DeviceCoordinator
 
 SCAN_INTERVAL = timedelta(seconds=10)
@@ -57,7 +57,7 @@ async def async_setup_entry(
     )
 
 
-class WemoSwitch(WemoEntity, SwitchEntity):
+class WemoSwitch(WemoBinaryStateEntity, SwitchEntity):
     """Representation of a WeMo switch."""
 
     @property
@@ -133,7 +133,7 @@ class WemoSwitch(WemoEntity, SwitchEntity):
     def detail_state(self) -> str:
         """Return the state of the device."""
         if isinstance(self.wemo, CoffeeMaker):
-            return str(self.wemo.mode_string)
+            return cast(str, self.wemo.mode_string)
         if isinstance(self.wemo, Insight):
             standby_state = int(self.wemo.insight_params.get("state", 0))
             if standby_state == WEMO_ON:
@@ -151,11 +151,6 @@ class WemoSwitch(WemoEntity, SwitchEntity):
         if isinstance(self.wemo, CoffeeMaker):
             return "mdi:coffee"
         return None
-
-    @property
-    def is_on(self) -> bool:
-        """Return true if the state is on. Standby is on."""
-        return bool(self.wemo.get_state())
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
