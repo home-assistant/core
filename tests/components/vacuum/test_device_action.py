@@ -3,7 +3,7 @@ import pytest
 
 import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.vacuum import DOMAIN
+from homeassistant.const import Platform
 from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
 
@@ -38,16 +38,18 @@ async def test_get_actions(hass, device_reg, entity_reg):
         config_entry_id=config_entry.entry_id,
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
+    entity_reg.async_get_or_create(
+        Platform.VACUUM, "test", "5678", device_id=device_entry.id
+    )
     expected_actions = [
         {
-            "domain": DOMAIN,
+            "domain": Platform.VACUUM,
             "type": "clean",
             "device_id": device_entry.id,
             "entity_id": "vacuum.test_5678",
         },
         {
-            "domain": DOMAIN,
+            "domain": Platform.VACUUM,
             "type": "dock",
             "device_id": device_entry.id,
             "entity_id": "vacuum.test_5678",
@@ -69,7 +71,7 @@ async def test_action(hass):
                 {
                     "trigger": {"platform": "event", "event_type": "test_event_dock"},
                     "action": {
-                        "domain": DOMAIN,
+                        "domain": Platform.VACUUM,
                         "device_id": "abcdefgh",
                         "entity_id": "vacuum.entity",
                         "type": "dock",
@@ -78,7 +80,7 @@ async def test_action(hass):
                 {
                     "trigger": {"platform": "event", "event_type": "test_event_clean"},
                     "action": {
-                        "domain": DOMAIN,
+                        "domain": Platform.VACUUM,
                         "device_id": "abcdefgh",
                         "entity_id": "vacuum.entity",
                         "type": "clean",
