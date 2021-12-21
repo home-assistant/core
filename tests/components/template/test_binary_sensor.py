@@ -500,8 +500,10 @@ async def test_event(hass, start_ha):
 )
 async def test_template_delay_on_off(hass, start_ha):
     """Test binary sensor template delay on."""
-    assert hass.states.get("binary_sensor.test_on").state == OFF
-    assert hass.states.get("binary_sensor.test_off").state == OFF
+    # Ensure the initial state is not on
+    assert hass.states.get("binary_sensor.test_on").state != ON
+    assert hass.states.get("binary_sensor.test_off").state != ON
+
     hass.states.async_set("input_number.delay", 5)
     hass.states.async_set("sensor.test_state", ON)
     await hass.async_block_till_done()
