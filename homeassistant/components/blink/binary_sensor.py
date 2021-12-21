@@ -6,14 +6,22 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 
-from .const import DOMAIN, TYPE_BATTERY, TYPE_CAMERA_ARMED, TYPE_MOTION_DETECTED
+from .const import (
+    DEFAULT_BRAND,
+    DOMAIN,
+    TYPE_BATTERY,
+    TYPE_CAMERA_ARMED,
+    TYPE_MOTION_DETECTED,
+)
 
 BINARY_SENSORS_TYPES: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
         key=TYPE_BATTERY,
         name="Battery",
         device_class=BinarySensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     BinarySensorEntityDescription(
         key=TYPE_CAMERA_ARMED,
@@ -49,6 +57,12 @@ class BlinkBinarySensor(BinarySensorEntity):
         self._attr_name = f"{DOMAIN} {camera} {description.name}"
         self._camera = data.cameras[camera]
         self._attr_unique_id = f"{self._camera.serial}-{description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._camera.serial)},
+            name=camera,
+            manufacturer=DEFAULT_BRAND,
+            model=self._camera.camera_type,
+        )
 
     def update(self):
         """Update sensor state."""
