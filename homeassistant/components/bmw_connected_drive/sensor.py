@@ -48,6 +48,11 @@ class BMWSensorEntityDescription(SensorEntityDescription):
 
 SENSOR_TYPES: dict[str, BMWSensorEntityDescription] = {
     # --- Generic ---
+    "charging_start_time": BMWSensorEntityDescription(
+        key="charging_start_time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_registry_enabled_default=False,
+    ),
     "charging_end_time": BMWSensorEntityDescription(
         key="charging_end_time",
         device_class=SensorDeviceClass.TIMESTAMP,
