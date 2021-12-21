@@ -3,12 +3,8 @@ from zwave_js_server.const.command_class.lock import ATTR_CODE_SLOT, ATTR_USERCO
 from zwave_js_server.event import Event
 from zwave_js_server.model.node import NodeStatus
 
-from homeassistant.components.lock import (
-    DOMAIN as LOCK_DOMAIN,
-    SERVICE_LOCK,
-    SERVICE_UNLOCK,
-)
-from homeassistant.components.zwave_js.const import DOMAIN as ZWAVE_JS_DOMAIN
+from homeassistant.components.lock import SERVICE_LOCK, SERVICE_UNLOCK
+from homeassistant.components.zwave_js.const import DOMAIN
 from homeassistant.components.zwave_js.lock import (
     SERVICE_CLEAR_LOCK_USERCODE,
     SERVICE_SET_LOCK_USERCODE,
@@ -18,6 +14,7 @@ from homeassistant.const import (
     STATE_LOCKED,
     STATE_UNAVAILABLE,
     STATE_UNLOCKED,
+    Platform,
 )
 
 from .common import SCHLAGE_BE469_LOCK_ENTITY
@@ -33,7 +30,7 @@ async def test_door_lock(hass, client, lock_schlage_be469, integration):
 
     # Test locking
     await hass.services.async_call(
-        LOCK_DOMAIN,
+        Platform.LOCK,
         SERVICE_LOCK,
         {ATTR_ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY},
         blocking=True,
@@ -98,7 +95,7 @@ async def test_door_lock(hass, client, lock_schlage_be469, integration):
 
     # Test unlocking
     await hass.services.async_call(
-        LOCK_DOMAIN,
+        Platform.LOCK,
         SERVICE_UNLOCK,
         {ATTR_ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY},
         blocking=True,
@@ -139,7 +136,7 @@ async def test_door_lock(hass, client, lock_schlage_be469, integration):
 
     # Test set usercode service
     await hass.services.async_call(
-        ZWAVE_JS_DOMAIN,
+        DOMAIN,
         SERVICE_SET_LOCK_USERCODE,
         {
             ATTR_ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
@@ -177,7 +174,7 @@ async def test_door_lock(hass, client, lock_schlage_be469, integration):
 
     # Test clear usercode
     await hass.services.async_call(
-        ZWAVE_JS_DOMAIN,
+        DOMAIN,
         SERVICE_CLEAR_LOCK_USERCODE,
         {ATTR_ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY, ATTR_CODE_SLOT: 1},
         blocking=True,
