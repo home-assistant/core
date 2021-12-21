@@ -5,6 +5,7 @@ import pytest
 
 from homeassistant.components import automation
 from homeassistant.components.NEW_DOMAIN import DOMAIN
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry, entity_registry
@@ -67,7 +68,9 @@ async def test_get_conditions(
             "entity_id": f"{DOMAIN}.test_5678",
         },
     ]
-    conditions = await async_get_device_automations(hass, "condition", device_entry.id)
+    conditions = await async_get_device_automations(
+        hass, DeviceAutomationType.CONDITION, device_entry.id
+    )
     assert_lists_same(conditions, expected_conditions)
 
 

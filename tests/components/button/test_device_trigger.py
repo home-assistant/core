@@ -5,6 +5,7 @@ import pytest
 
 from homeassistant.components import automation
 from homeassistant.components.button import DOMAIN
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry
 from homeassistant.helpers.entity_registry import EntityRegistry
@@ -60,7 +61,9 @@ async def test_get_triggers(
             "entity_id": f"{DOMAIN}.test_5678",
         }
     ]
-    triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device_entry.id
+    )
     assert_lists_same(triggers, expected_triggers)
 
 

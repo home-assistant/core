@@ -65,6 +65,7 @@ homeassistant.components.http.*
 homeassistant.components.huawei_lte.*
 homeassistant.components.hyperion.*
 homeassistant.components.image_processing.*
+homeassistant.components.input_button.*
 homeassistant.components.input_select.*
 homeassistant.components.integration.*
 homeassistant.components.iqvia.*
@@ -95,6 +96,7 @@ homeassistant.components.notify.*
 homeassistant.components.notion.*
 homeassistant.components.number.*
 homeassistant.components.onewire.*
+homeassistant.components.open_meteo.*
 homeassistant.components.openuv.*
 homeassistant.components.persistent_notification.*
 homeassistant.components.pi_hole.*
@@ -120,6 +122,7 @@ homeassistant.components.slack.*
 homeassistant.components.sonos.media_player
 homeassistant.components.ssdp.*
 homeassistant.components.stookalert.*
+homeassistant.components.statistics.*
 homeassistant.components.stream.*
 homeassistant.components.sun.*
 homeassistant.components.surepetcare.*
@@ -150,6 +153,7 @@ homeassistant.components.water_heater.*
 homeassistant.components.watttime.*
 homeassistant.components.weather.*
 homeassistant.components.websocket_api.*
+homeassistant.components.wemo.*
 homeassistant.components.zodiac.*
 homeassistant.components.zeroconf.*
 homeassistant.components.zone.*

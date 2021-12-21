@@ -21,7 +21,7 @@ from .const import DATA_HASS_CONFIG, DOMAIN
 
 PLATFORMS = [Platform.SENSOR]
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -724,7 +724,7 @@ async def test_durations(hass, record_worker_sync):
     )
 
     source = generate_h264_video(duration=SEGMENT_DURATION + 1)
-    stream = create_stream(hass, source, {})
+    stream = create_stream(hass, source, {}, stream_label="camera")
 
     # use record_worker_sync to grab output segments
     with patch.object(hass.config, "is_allowed_path", return_value=True):
@@ -781,7 +781,7 @@ async def test_durations(hass, record_worker_sync):
     stream.stop()
 
 
-async def test_has_keyframe(hass, record_worker_sync):
+async def test_has_keyframe(hass, record_worker_sync, h264_video):
     """Test that the has_keyframe metadata matches the media."""
     await async_setup_component(
         hass,
@@ -797,8 +797,7 @@ async def test_has_keyframe(hass, record_worker_sync):
         },
     )
 
-    source = generate_h264_video()
-    stream = create_stream(hass, source, {})
+    stream = create_stream(hass, h264_video, {}, stream_label="camera")
 
     # use record_worker_sync to grab output segments
     with patch.object(hass.config, "is_allowed_path", return_value=True):
@@ -837,7 +836,7 @@ async def test_h265_video_is_hvc1(hass, record_worker_sync):
     )
 
     source = generate_h265_video()
-    stream = create_stream(hass, source, {})
+    stream = create_stream(hass, source, {}, stream_label="camera")
 
     # use record_worker_sync to grab output segments
     with patch.object(hass.config, "is_allowed_path", return_value=True):

@@ -7,6 +7,9 @@
             "cannot_connect": "Tilkobling mislyktes"
         },
         "step": {
+            "discovery_confirm": {
+                "description": "Vil du konfigurere {name} - {model} ( {host} )?"
+            },
             "user": {
                 "data": {
                     "host": "Vert (eller IP-adresse) for din twinkly-enhet"

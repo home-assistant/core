@@ -13,6 +13,7 @@ from homeassistant.components.cover import (
     SUPPORT_STOP,
     SUPPORT_STOP_TILT,
 )
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
@@ -101,7 +102,9 @@ async def test_get_actions(
         }
         for action in expected_action_types
     ]
-    actions = await async_get_device_automations(hass, "action", device_entry.id)
+    actions = await async_get_device_automations(
+        hass, DeviceAutomationType.ACTION, device_entry.id
+    )
     assert_lists_same(actions, expected_actions)
 
 
@@ -140,13 +143,15 @@ async def test_get_action_capabilities(
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
     await hass.async_block_till_done()
 
-    actions = await async_get_device_automations(hass, "action", device_entry.id)
+    actions = await async_get_device_automations(
+        hass, DeviceAutomationType.ACTION, device_entry.id
+    )
     assert len(actions) == 5  # open, close, open_tilt, close_tilt
     action_types = {action["type"] for action in actions}
     assert action_types == {"open", "close", "stop", "open_tilt", "close_tilt"}
     for action in actions:
         capabilities = await async_get_device_automation_capabilities(
-            hass, "action", action
+            hass, DeviceAutomationType.ACTION, action
         )
         assert capabilities == {"extra_fields": []}
 
@@ -184,13 +189,15 @@ async def test_get_action_capabilities_set_pos(
             }
         ]
     }
-    actions = await async_get_device_automations(hass, "action", device_entry.id)
+    actions = await async_get_device_automations(
+        hass, DeviceAutomationType.ACTION, device_entry.id
+    )
     assert len(actions) == 1  # set_position
     action_types = {action["type"] for action in actions}
     assert action_types == {"set_position"}
     for action in actions:
         capabilities = await async_get_device_automation_capabilities(
-            hass, "action", action
+            hass, DeviceAutomationType.ACTION, action
         )
         if action["type"] == "set_position":
             assert capabilities == expected_capabilities
@@ -231,13 +238,15 @@ async def test_get_action_capabilities_set_tilt_pos(
             }
         ]
     }
-    actions = await async_get_device_automations(hass, "action", device_entry.id)
+    actions = await async_get_device_automations(
+        hass, DeviceAutomationType.ACTION, device_entry.id
+    )
     assert len(actions) == 3
     action_types = {action["type"] for action in actions}
     assert action_types == {"open", "close", "set_tilt_position"}
     for action in actions:
         capabilities = await async_get_device_automation_capabilities(
-            hass, "action", action
+            hass, DeviceAutomationType.ACTION, action
         )
         if action["type"] == "set_tilt_position":
             assert capabilities == expected_capabilities

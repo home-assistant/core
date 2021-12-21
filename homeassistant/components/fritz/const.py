@@ -7,6 +7,7 @@ from homeassistant.const import Platform
 DOMAIN = "fritz"
 
 PLATFORMS = [
+    Platform.BUTTON,
     Platform.BINARY_SENSOR,
     Platform.DEVICE_TRACKER,
     Platform.SENSOR,
@@ -34,7 +35,5 @@ SERVICE_CLEANUP = "cleanup"
 SWITCH_TYPE_DEFLECTION = "CallDeflection"
 SWITCH_TYPE_PORTFORWARD = "PortForward"
 SWITCH_TYPE_WIFINETWORK = "WiFiNetwork"
-
-TRACKER_SCAN_INTERVAL = 30
 
 UPTIME_DEVIATION = 5

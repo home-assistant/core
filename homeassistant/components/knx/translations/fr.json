@@ -21,6 +21,7 @@
             "routing": {
                 "data": {
                     "individual_address": "Adresse individuelle pour la connexion de routage",
+                    "local_ip": "IP locale (laisser vide en cas de doute)",
                     "multicast_group": "Le groupe multicast utilis\u00e9 pour le routage",
                     "multicast_port": "Le port multicast utilis\u00e9 pour le routage"
                 },
@@ -46,6 +47,7 @@
                 "data": {
                     "connection_type": "Type de connexion KNX",
                     "individual_address": "Adresse individuelle par d\u00e9faut",
+                    "local_ip": "IP locale (laisser vide en cas de doute)",
                     "multicast_group": "Groupe de multidiffusion utilis\u00e9 pour le routage et la d\u00e9couverte",
                     "multicast_port": "Port de multidiffusion utilis\u00e9 pour le routage et la d\u00e9couverte",
                     "rate_limit": "Nombre maximal de t\u00e9l\u00e9grammes sortants par seconde",

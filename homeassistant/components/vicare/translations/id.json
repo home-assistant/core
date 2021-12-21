@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan.",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "error": {
+            "invalid_auth": "Autentikasi tidak valid"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "client_id": "Kunci API",
+                    "name": "Nama",
+                    "password": "Kata Sandi",
+                    "username": "Email"
+                },
+                "title": "{name}"
+            }
+        }
+    }
+}
