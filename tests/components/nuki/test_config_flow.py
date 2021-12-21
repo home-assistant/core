@@ -25,8 +25,6 @@ async def test_form(hass):
         "homeassistant.components.nuki.config_flow.NukiBridge.info",
         return_value=MOCK_INFO,
     ), patch(
-        "homeassistant.components.nuki.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.nuki.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -47,7 +45,6 @@ async def test_form(hass):
         "port": 8080,
         "token": "test-token",
     }
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -159,8 +156,6 @@ async def test_dhcp_flow(hass):
         "homeassistant.components.nuki.config_flow.NukiBridge.info",
         return_value=MOCK_INFO,
     ), patch(
-        "homeassistant.components.nuki.async_setup", return_value=True
-    ) as mock_setup, patch(
         "homeassistant.components.nuki.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -182,7 +177,6 @@ async def test_dhcp_flow(hass):
         }
 
         await hass.async_block_till_done()
-        assert len(mock_setup.mock_calls) == 1
         assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -212,7 +206,7 @@ async def test_reauth_success(hass):
     with patch(
         "homeassistant.components.nuki.config_flow.NukiBridge.info",
         return_value=MOCK_INFO,
-    ), patch("homeassistant.components.nuki.async_setup", return_value=True), patch(
+    ), patch(
         "homeassistant.components.nuki.async_setup_entry",
         return_value=True,
     ):
