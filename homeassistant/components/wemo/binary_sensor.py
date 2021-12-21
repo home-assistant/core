@@ -1,5 +1,6 @@
 """Support for WeMo binary sensors."""
 import asyncio
+from typing import cast
 
 from pywemo import Insight, Maker
 
@@ -46,7 +47,7 @@ class WemoBinarySensor(WemoEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return true if the state is on. Standby is on."""
-        return bool(self.wemo.get_state())
+        return cast(int, self.wemo.get_state()) != 0
 
 
 class MakerBinarySensor(WemoEntity, BinarySensorEntity):
@@ -57,7 +58,7 @@ class MakerBinarySensor(WemoEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return true if the Maker's sensor is pulled low."""
-        return bool(self.wemo.has_sensor) and self.wemo.sensor_state == 0
+        return cast(int, self.wemo.has_sensor) != 0 and self.wemo.sensor_state == 0
 
 
 class InsightBinarySensor(WemoBinarySensor):

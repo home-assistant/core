@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, cast
 
 from pywemo import CoffeeMaker, Insight, Maker
 
@@ -133,8 +133,9 @@ class WemoSwitch(WemoEntity, SwitchEntity):
     def detail_state(self) -> str:
         """Return the state of the device."""
         if isinstance(self.wemo, CoffeeMaker):
-            return str(self.wemo.mode_string)
+            return cast(str, self.wemo.mode_string)
         if isinstance(self.wemo, Insight):
+            # TODO(@esev): Remove this conversion.
             standby_state = int(self.wemo.insight_params.get("state", 0))
             if standby_state == WEMO_ON:
                 return STATE_ON
@@ -155,7 +156,7 @@ class WemoSwitch(WemoEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return true if the state is on. Standby is on."""
-        return bool(self.wemo.get_state())
+        return cast(int, self.wemo.get_state()) != WEMO_OFF
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""

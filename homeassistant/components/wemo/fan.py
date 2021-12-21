@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 import math
-from typing import Any
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -155,7 +155,7 @@ class WemoHumidifier(WemoEntity, FanEntity):
     @property
     def is_on(self) -> bool:
         """Return true if the state is on."""
-        return bool(self.wemo.get_state())
+        return cast(int, self.wemo.get_state()) != WEMO_OFF
 
     def turn_on(
         self,
