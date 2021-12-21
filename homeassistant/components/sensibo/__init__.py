@@ -9,18 +9,12 @@ import async_timeout
 import pysensibo
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_ID
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import (
-    _INITIAL_FETCH_FIELDS,
-    ALL,
-    DOMAIN as SENSIBO_DOMAIN,
-    PLATFORMS,
-    TIMEOUT,
-)
+from .const import _INITIAL_FETCH_FIELDS, DOMAIN as SENSIBO_DOMAIN, PLATFORMS, TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,31 +23,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Sensibo from a config entry."""
     title = entry.title
 
-    client = pysensibo.SensiboClient(
-        entry.data[CONF_API_KEY], session=async_get_clientsession(hass), timeout=TIMEOUT
-    )
     hass.data.setdefault(SENSIBO_DOMAIN, {})
     hass.data[SENSIBO_DOMAIN][entry.entry_id] = {"devices": []}
+    hass.data[SENSIBO_DOMAIN][entry.entry_id][
+        "client"
+    ] = client = pysensibo.SensiboClient(
+        entry.data[CONF_API_KEY], session=async_get_clientsession(hass), timeout=TIMEOUT
+    )
 
     try:
         async with async_timeout.timeout(TIMEOUT):
             for dev in await client.async_get_devices(_INITIAL_FETCH_FIELDS):
-                if entry.data[CONF_ID] == ALL or dev["id"] in entry.data[CONF_ID]:
-                    hass.data[SENSIBO_DOMAIN][entry.entry_id]["devices"].append(dev)
+                hass.data[SENSIBO_DOMAIN][entry.entry_id]["devices"].append(dev)
     except (
         aiohttp.client_exceptions.ClientConnectorError,
         asyncio.TimeoutError,
         pysensibo.SensiboError,
     ) as err:
-        _LOGGER.error("Failed to get devices from Sensibo servers")
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady("Failed to get devices from Sensibo servers") from err
 
-    if hass.data[SENSIBO_DOMAIN][entry.entry_id]["devices"]:
-        hass.config_entries.async_setup_platforms(entry, PLATFORMS)
-        _LOGGER.debug("Loaded entry for %s", title)
-        return True
-
-    return False
+    if not hass.data[SENSIBO_DOMAIN][entry.entry_id]["devices"]:
+        return False
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    _LOGGER.debug("Loaded entry for %s", title)
+    return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

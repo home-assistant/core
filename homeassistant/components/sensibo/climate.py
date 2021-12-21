@@ -36,7 +36,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
     ConfigType,
@@ -102,9 +101,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Sensibo climate entry."""
 
-    client = pysensibo.SensiboClient(
-        entry.data[CONF_API_KEY], session=async_get_clientsession(hass), timeout=TIMEOUT
-    )
+    client = hass.data[SENSIBO_DOMAIN][entry.entry_id]["client"]
 
     devicelist = hass.data[SENSIBO_DOMAIN][entry.entry_id]["devices"]
     if not devicelist:
