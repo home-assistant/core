@@ -6,9 +6,11 @@ from collections.abc import Callable, Iterable
 import contextlib
 import dataclasses
 from datetime import datetime, timedelta
+import errno
 from itertools import chain, groupby
 import json
 import logging
+import os
 import re
 from statistics import mean
 from typing import TYPE_CHECKING, Any, Literal
@@ -365,8 +367,16 @@ def delete_duplicates(instance: Recorder, session: scoped_session) -> None:
 
     if non_identical_duplicates:
         isotime = dt_util.utcnow().isoformat()
-        backup_file_name = f"deleted_statistics.{isotime}.json"
+        backup_file_name = f".deleted_statistics/deleted_statistics.{isotime}.json"
         backup_path = instance.hass.config.path(backup_file_name)
+
+        if not os.path.exists(os.path.dirname(backup_path)):
+            try:
+                os.makedirs(os.path.dirname(backup_path))
+            except OSError as exc:  # Guard against race condition
+                if exc.errno != errno.EEXIST:
+                    raise
+
         with open(backup_path, "w", encoding="utf8") as backup_file:
             json.dump(
                 non_identical_duplicates,
