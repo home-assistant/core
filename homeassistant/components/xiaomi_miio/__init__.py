@@ -395,8 +395,6 @@ async def async_setup_gateway_entry(
         raise ConfigEntryNotReady() from error
     gateway_info = gateway.gateway_info
 
-    gateway_model = f"{gateway_info.model}-{gateway_info.hardware_version}"
-
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -404,8 +402,9 @@ async def async_setup_gateway_entry(
         identifiers={(DOMAIN, gateway_id)},
         manufacturer="Xiaomi",
         name=name,
-        model=gateway_model,
+        model=gateway_info.model,
         sw_version=gateway_info.firmware_version,
+        hw_version=gateway_info.hardware_version,
     )
 
     def update_data():

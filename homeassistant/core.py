@@ -26,6 +26,7 @@ import voluptuous as vol
 import yarl
 
 from homeassistant import async_timeout_backcompat, block_async_io, loader, util
+from homeassistant.backports.enum import StrEnum
 from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_FRIENDLY_NAME,
@@ -103,10 +104,20 @@ BLOCK_LOG_TIMEOUT = 60
 # How long we wait for the result of a service call
 SERVICE_CALL_LIMIT = 10  # seconds
 
-# Source of core configuration
-SOURCE_DISCOVERED = "discovered"
-SOURCE_STORAGE = "storage"
-SOURCE_YAML = "yaml"
+
+class ConfigSource(StrEnum):
+    """Source of core configuration."""
+
+    DEFAULT = "default"
+    DISCOVERED = "discovered"
+    STORAGE = "storage"
+    YAML = "yaml"
+
+
+# SOURCE_* are deprecated as of Home Assistant 2022.2, use ConfigSource instead
+SOURCE_DISCOVERED = ConfigSource.DISCOVERED.value
+SOURCE_STORAGE = ConfigSource.STORAGE.value
+SOURCE_YAML = ConfigSource.YAML.value
 
 # How long to wait until things that run on startup have to finish.
 TIMEOUT_EVENT_START = 15
@@ -323,7 +334,10 @@ class HomeAssistant:
         _async_create_timer(self)
 
     def add_job(self, target: Callable[..., Any], *args: Any) -> None:
-        """Add job to the executor pool.
+        """Add a job to be executed by the event loop or by an executor.
+
+        If the job is either a coroutine or decorated with @callback, it will be
+        run by the event loop, if not it will be run by an executor.
 
         target: target to call.
         args: parameters for method to call.
@@ -336,7 +350,10 @@ class HomeAssistant:
     def async_add_job(
         self, target: Callable[..., Any], *args: Any
     ) -> asyncio.Future | None:
-        """Add a job from within the event loop.
+        """Add a job to be executed by the event loop or by an executor.
+
+        If the job is either a coroutine or decorated with @callback, it will be
+        run by the event loop, if not it will be run by an executor.
 
         This method must be run in the event loop.
 
@@ -1551,7 +1568,7 @@ class Config:
         self.external_url: str | None = None
         self.currency: str = "EUR"
 
-        self.config_source: str = "default"
+        self.config_source: ConfigSource = ConfigSource.DEFAULT
 
         # If True, pip install is skipped for requirements on startup
         self.skip_pip: bool = False
@@ -1670,7 +1687,7 @@ class Config:
     def _update(
         self,
         *,
-        source: str,
+        source: ConfigSource,
         latitude: float | None = None,
         longitude: float | None = None,
         elevation: int | None = None,
@@ -1708,7 +1725,7 @@ class Config:
 
     async def async_update(self, **kwargs: Any) -> None:
         """Update the configuration from a dictionary."""
-        self._update(source=SOURCE_STORAGE, **kwargs)
+        self._update(source=ConfigSource.STORAGE, **kwargs)
         await self.async_store()
         self.hass.bus.async_fire(EVENT_CORE_CONFIG_UPDATE, kwargs)
 
@@ -1736,7 +1753,7 @@ class Config:
             _LOGGER.warning("Invalid internal_url set. It's not allowed to have a path")
 
         self._update(
-            source=SOURCE_STORAGE,
+            source=ConfigSource.STORAGE,
             latitude=data.get("latitude"),
             longitude=data.get("longitude"),
             elevation=data.get("elevation"),

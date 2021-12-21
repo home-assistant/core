@@ -14,7 +14,7 @@
                     "token": "Token di accesso"
                 },
                 "description": "L'integrazione Nuki deve essere nuovamente autenticata con il tuo bridge.",
-                "title": "Autenticare nuovamente l'integrazione"
+                "title": "Autentica nuovamente l'integrazione"
             },
             "user": {
                 "data": {

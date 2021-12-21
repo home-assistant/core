@@ -28,7 +28,15 @@ from tests.common import MockConfigEntry
 
 def _gateway_descriptor(ip: str, port: int) -> GatewayDescriptor:
     """Get mock gw descriptor."""
-    return GatewayDescriptor("Test", ip, port, "eth0", "127.0.0.1", True)
+    return GatewayDescriptor(
+        "Test",
+        ip,
+        port,
+        "eth0",
+        "127.0.0.1",
+        supports_routing=True,
+        supports_tunnelling=True,
+    )
 
 
 async def test_user_single_instance(hass):

@@ -395,11 +395,14 @@ class CastDevice(MediaPlayerEntity):
             return
 
         if self._chromecast.app_id is not None:
-            # Quit the previous app before starting splash screen
+            # Quit the previous app before starting splash screen or media player
             self._chromecast.quit_app()
 
         # The only way we can turn the Chromecast is on is by launching an app
-        self._chromecast.play_media(CAST_SPLASH, pychromecast.STREAM_TYPE_BUFFERED)
+        if self._chromecast.cast_type == pychromecast.const.CAST_TYPE_CHROMECAST:
+            self._chromecast.play_media(CAST_SPLASH, pychromecast.STREAM_TYPE_BUFFERED)
+        else:
+            self._chromecast.start_app(pychromecast.config.APP_MEDIA_RECEIVER)
 
     def turn_off(self):
         """Turn off the cast device."""
@@ -526,7 +529,7 @@ class CastDevice(MediaPlayerEntity):
             controller.play_media(media)
         else:
             app_data = {"media_id": media_id, "media_type": media_type, **extra}
-            quick_play(self._chromecast, "homeassistant_media", app_data)
+            quick_play(self._chromecast, "default_media_receiver", app_data)
 
     def _media_status(self):
         """
@@ -674,9 +677,9 @@ class CastDevice(MediaPlayerEntity):
         support = SUPPORT_CAST
         media_status = self._media_status()[0]
 
-        if (
-            self._chromecast
-            and self._chromecast.cast_type == pychromecast.const.CAST_TYPE_CHROMECAST
+        if self._chromecast and self._chromecast.cast_type in (
+            pychromecast.const.CAST_TYPE_CHROMECAST,
+            pychromecast.const.CAST_TYPE_AUDIO,
         ):
             support |= SUPPORT_TURN_ON
 

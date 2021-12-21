@@ -683,10 +683,12 @@ async def test_entity_cast_status(hass: HomeAssistant):
             | SUPPORT_PLAY_MEDIA
             | SUPPORT_STOP
             | SUPPORT_TURN_OFF
+            | SUPPORT_TURN_ON
             | SUPPORT_VOLUME_MUTE
             | SUPPORT_VOLUME_SET,
             SUPPORT_PLAY_MEDIA
             | SUPPORT_TURN_OFF
+            | SUPPORT_TURN_ON
             | SUPPORT_VOLUME_MUTE
             | SUPPORT_VOLUME_SET,
         ),
@@ -791,7 +793,7 @@ async def test_entity_play_media(hass: HomeAssistant, quick_play_mock):
     chromecast.media_controller.play_media.assert_not_called()
     quick_play_mock.assert_called_once_with(
         chromecast,
-        "homeassistant_media",
+        "default_media_receiver",
         {
             "media_id": "best.mp3",
             "media_type": "audio",
@@ -907,7 +909,7 @@ async def test_entity_play_media_sign_URL(hass: HomeAssistant, quick_play_mock):
     # Play_media
     await common.async_play_media(hass, "audio", "/best.mp3", entity_id)
     quick_play_mock.assert_called_once_with(
-        chromecast, "homeassistant_media", {"media_id": ANY, "media_type": "audio"}
+        chromecast, "default_media_receiver", {"media_id": ANY, "media_type": "audio"}
     )
     assert quick_play_mock.call_args[0][2]["media_id"].startswith(
         "http://example.com:8123/best.mp3?authSig="
@@ -1311,7 +1313,7 @@ async def test_group_media_control(hass, mz_mock, quick_play_mock):
     assert not chromecast.media_controller.play_media.called
     quick_play_mock.assert_called_once_with(
         chromecast,
-        "homeassistant_media",
+        "default_media_receiver",
         {"media_id": "best.mp3", "media_type": "music"},
     )
 

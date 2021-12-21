@@ -2,6 +2,7 @@
 import pytest
 
 import homeassistant.components.automation as automation
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.kodi import DOMAIN
 from homeassistant.components.media_player.const import DOMAIN as MP_DOMAIN
 from homeassistant.setup import async_setup_component
@@ -70,7 +71,9 @@ async def test_get_triggers(hass, device_reg, entity_reg):
     ]
 
     # Test triggers are either kodi specific triggers or media_player entity triggers
-    triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device_entry.id
+    )
     for expected_trigger in expected_triggers:
         assert expected_trigger in triggers
     for trigger in triggers:

@@ -19,8 +19,8 @@
             },
             "local": {
                 "data": {
-                    "wifi_pswd": "Wifi-passord",
-                    "wifi_ssid": "Wifi ssid"
+                    "wifi_pswd": "Wi-Fi-passord",
+                    "wifi_ssid": "Wi-Fi SSID"
                 },
                 "description": "Tilbakestill varmeren ved \u00e5 trykke p\u00e5 + og OK til displayet viser 'Tilbakestill'. Trykk deretter p\u00e5 og hold inne OK-knappen p\u00e5 varmeren til den bl\u00e5 lampen begynner \u00e5 blinke f\u00f8r du trykker p\u00e5 Send. Det kan ta noen minutter \u00e5 konfigurere varmeapparatet."
             },

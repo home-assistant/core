@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from homeassistant.components.sensor import (
-    DEVICE_CLASS_TEMPERATURE,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
@@ -50,13 +50,13 @@ SENSOR_TYPES: tuple[StarlineSensorEntityDescription, ...] = (
     StarlineSensorEntityDescription(
         key="ctemp",
         name_="Interior Temperature",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
     ),
     StarlineSensorEntityDescription(
         key="etemp",
         name_="Engine Temperature",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
     ),
     StarlineSensorEntityDescription(

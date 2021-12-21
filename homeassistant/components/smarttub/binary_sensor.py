@@ -5,8 +5,7 @@ from smarttub import SpaError, SpaReminder
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
-    DEVICE_CLASS_PROBLEM,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.helpers import entity_platform
@@ -71,7 +70,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class SmartTubOnline(SmartTubSensorBase, BinarySensorEntity):
     """A binary sensor indicating whether the spa is currently online (connected to the cloud)."""
 
-    _attr_device_class = DEVICE_CLASS_CONNECTIVITY
+    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
 
     def __init__(self, coordinator, spa):
         """Initialize the entity."""
@@ -94,7 +93,7 @@ class SmartTubOnline(SmartTubSensorBase, BinarySensorEntity):
 class SmartTubReminder(SmartTubEntity, BinarySensorEntity):
     """Reminders for maintenance actions."""
 
-    _attr_device_class = DEVICE_CLASS_PROBLEM
+    _attr_device_class = BinarySensorDeviceClass.PROBLEM
 
     def __init__(self, coordinator, spa, reminder):
         """Initialize the entity."""
@@ -145,7 +144,7 @@ class SmartTubError(SmartTubEntity, BinarySensorEntity):
     There may be 0 or more errors. If there are >0, we show the first one.
     """
 
-    _attr_device_class = DEVICE_CLASS_PROBLEM
+    _attr_device_class = BinarySensorDeviceClass.PROBLEM
 
     def __init__(self, coordinator, spa):
         """Initialize the entity."""
