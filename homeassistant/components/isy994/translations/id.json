@@ -36,5 +36,13 @@
                 "title": "Opsi ISY994"
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "device_connected": "Terhubung ke ISY",
+            "host_reachable": "Host dapat dijangkau",
+            "last_heartbeat": "Waktu Detak Terakhir",
+            "websocket_status": "Status Soket Peristiwa"
+        }
     }
 }

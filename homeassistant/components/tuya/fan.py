@@ -65,9 +65,9 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
         super().__init__(device, device_manager)
 
         self.ha_preset_modes = []
-        if DPCode.MODE in self.tuya_device.function:
+        if DPCode.MODE in self.device.function:
             self.ha_preset_modes = json.loads(
-                self.tuya_device.function[DPCode.MODE].values
+                self.device.function[DPCode.MODE].values
             ).get("range", [])
 
         # Air purifier fan can be controlled either via the ranged values or via the enum.
@@ -76,18 +76,18 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
         #   Range is used for e.g. Concept CA3000
         self.air_purifier_speed_range_len = 0
         self.air_purifier_speed_range_enum = []
-        if self.tuya_device.category == "kj" and (
-            DPCode.FAN_SPEED_ENUM in self.tuya_device.function
-            or DPCode.SPEED in self.tuya_device.function
+        if self.device.category == "kj" and (
+            DPCode.FAN_SPEED_ENUM in self.device.function
+            or DPCode.SPEED in self.device.function
         ):
-            if DPCode.FAN_SPEED_ENUM in self.tuya_device.function:
+            if DPCode.FAN_SPEED_ENUM in self.device.function:
                 self.dp_code_speed_enum = DPCode.FAN_SPEED_ENUM
             else:
                 self.dp_code_speed_enum = DPCode.SPEED
 
-            data = json.loads(
-                self.tuya_device.function[self.dp_code_speed_enum].values
-            ).get("range")
+            data = json.loads(self.device.function[self.dp_code_speed_enum].values).get(
+                "range"
+            )
             if data:
                 self.air_purifier_speed_range_len = len(data)
                 self.air_purifier_speed_range_enum = data
@@ -102,7 +102,7 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
 
     def set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
-        if self.tuya_device.category == "kj":
+        if self.device.category == "kj":
             value_in_range = percentage_to_ordered_list_item(
                 self.air_purifier_speed_range_enum, percentage
             )
@@ -140,19 +140,19 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
     @property
     def is_on(self) -> bool:
         """Return true if fan is on."""
-        return self.tuya_device.status.get(DPCode.SWITCH, False)
+        return self.device.status.get(DPCode.SWITCH, False)
 
     @property
     def current_direction(self) -> str:
         """Return the current direction of the fan."""
-        if self.tuya_device.status[DPCode.FAN_DIRECTION]:
+        if self.device.status[DPCode.FAN_DIRECTION]:
             return DIRECTION_FORWARD
         return DIRECTION_REVERSE
 
     @property
     def oscillating(self) -> bool:
         """Return true if the fan is oscillating."""
-        return self.tuya_device.status.get(DPCode.SWITCH_HORIZONTAL, False)
+        return self.device.status.get(DPCode.SWITCH_HORIZONTAL, False)
 
     @property
     def preset_modes(self) -> list[str]:
@@ -162,7 +162,7 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
     @property
     def preset_mode(self) -> str:
         """Return the current preset_mode."""
-        return self.tuya_device.status[DPCode.MODE]
+        return self.device.status[DPCode.MODE]
 
     @property
     def percentage(self) -> int | None:
@@ -171,24 +171,24 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
             return 0
 
         if (
-            self.tuya_device.category == "kj"
+            self.device.category == "kj"
             and self.air_purifier_speed_range_len > 1
             and not self.air_purifier_speed_range_enum
-            and DPCode.FAN_SPEED_ENUM in self.tuya_device.status
+            and DPCode.FAN_SPEED_ENUM in self.device.status
         ):
             # if air-purifier speed enumeration is supported we will prefer it.
             return ordered_list_item_to_percentage(
                 self.air_purifier_speed_range_enum,
-                self.tuya_device.status[DPCode.FAN_SPEED_ENUM],
+                self.device.status[DPCode.FAN_SPEED_ENUM],
             )
 
         # some type may not have the fan_speed_percent key
-        return self.tuya_device.status.get(DPCode.FAN_SPEED_PERCENT)
+        return self.device.status.get(DPCode.FAN_SPEED_PERCENT)
 
     @property
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
-        if self.tuya_device.category == "kj":
+        if self.device.category == "kj":
             return self.air_purifier_speed_range_len
         return super().speed_count
 
@@ -196,19 +196,19 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
     def supported_features(self):
         """Flag supported features."""
         supports = 0
-        if DPCode.MODE in self.tuya_device.status:
+        if DPCode.MODE in self.device.status:
             supports |= SUPPORT_PRESET_MODE
-        if DPCode.FAN_SPEED_PERCENT in self.tuya_device.status:
+        if DPCode.FAN_SPEED_PERCENT in self.device.status:
             supports |= SUPPORT_SET_SPEED
-        if DPCode.SWITCH_HORIZONTAL in self.tuya_device.status:
+        if DPCode.SWITCH_HORIZONTAL in self.device.status:
             supports |= SUPPORT_OSCILLATE
-        if DPCode.FAN_DIRECTION in self.tuya_device.status:
+        if DPCode.FAN_DIRECTION in self.device.status:
             supports |= SUPPORT_DIRECTION
 
         # Air Purifier specific
         if (
-            DPCode.SPEED in self.tuya_device.status
-            or DPCode.FAN_SPEED_ENUM in self.tuya_device.status
+            DPCode.SPEED in self.device.status
+            or DPCode.FAN_SPEED_ENUM in self.device.status
         ):
             supports |= SUPPORT_SET_SPEED
         return supports

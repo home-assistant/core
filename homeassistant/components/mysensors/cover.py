@@ -2,21 +2,18 @@
 from __future__ import annotations
 
 from enum import Enum, unique
-import logging
 from typing import Any
 
 from homeassistant.components import mysensors
 from homeassistant.components.cover import ATTR_POSITION, DOMAIN, CoverEntity
-from homeassistant.components.mysensors.const import MYSENSORS_DISCOVERY, DiscoveryInfo
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .const import MYSENSORS_DISCOVERY, DiscoveryInfo
 from .helpers import on_unload
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @unique

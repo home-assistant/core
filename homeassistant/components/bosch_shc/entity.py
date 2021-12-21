@@ -2,7 +2,7 @@
 from boschshcpy.device import SHCDevice
 
 from homeassistant.helpers.device_registry import async_get as get_dev_reg
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import DOMAIN
 
@@ -28,18 +28,18 @@ class SHCEntity(Entity):
         self._entry_id = entry_id
         self._attr_name = device.name
         self._attr_unique_id = device.serial
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, device.id)},
-            "name": device.name,
-            "manufacturer": device.manufacturer,
-            "model": device.device_model,
-            "via_device": (
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, device.id)},
+            manufacturer=device.manufacturer,
+            model=device.device_model,
+            name=device.name,
+            via_device=(
                 DOMAIN,
                 device.parent_device_id
                 if device.parent_device_id is not None
                 else parent_id,
             ),
-        }
+        )
 
     async def async_added_to_hass(self):
         """Subscribe to SHC events."""

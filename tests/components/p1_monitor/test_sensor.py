@@ -1,7 +1,7 @@
 """Tests for the sensors provided by the P1 Monitor integration."""
 import pytest
 
-from homeassistant.components.p1_monitor.const import DOMAIN, ENTRY_TYPE_SERVICE
+from homeassistant.components.p1_monitor.const import DOMAIN
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     STATE_CLASS_MEASUREMENT,
@@ -15,7 +15,6 @@ from homeassistant.const import (
     CURRENCY_EURO,
     DEVICE_CLASS_CURRENT,
     DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_MONETARY,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_VOLTAGE,
     ELECTRIC_CURRENT_AMPERE,
@@ -81,7 +80,7 @@ async def test_smartmeter(
     assert device_entry.identifiers == {(DOMAIN, f"{entry_id}_smartmeter")}
     assert device_entry.manufacturer == "P1 Monitor"
     assert device_entry.name == "SmartMeter"
-    assert device_entry.entry_type == ENTRY_TYPE_SERVICE
+    assert device_entry.entry_type is dr.DeviceEntryType.SERVICE
     assert not device_entry.model
     assert not device_entry.sw_version
 
@@ -137,7 +136,7 @@ async def test_phases(
     assert device_entry.identifiers == {(DOMAIN, f"{entry_id}_phases")}
     assert device_entry.manufacturer == "P1 Monitor"
     assert device_entry.name == "Phases"
-    assert device_entry.entry_type == ENTRY_TYPE_SERVICE
+    assert device_entry.entry_type is dr.DeviceEntryType.SERVICE
     assert not device_entry.model
     assert not device_entry.sw_version
 
@@ -158,8 +157,11 @@ async def test_settings(
     assert entry.unique_id == f"{entry_id}_settings_energy_consumption_price_low"
     assert state.state == "0.20522"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Energy Consumption Price - Low"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_MONETARY
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == CURRENCY_EURO
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}"
+    )
 
     state = hass.states.get("sensor.monitor_energy_production_price_low")
     entry = entity_registry.async_get("sensor.monitor_energy_production_price_low")
@@ -168,8 +170,11 @@ async def test_settings(
     assert entry.unique_id == f"{entry_id}_settings_energy_production_price_low"
     assert state.state == "0.20522"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Energy Production Price - Low"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_MONETARY
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == CURRENCY_EURO
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        == f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}"
+    )
 
     assert entry.device_id
     device_entry = device_registry.async_get(entry.device_id)
@@ -177,7 +182,7 @@ async def test_settings(
     assert device_entry.identifiers == {(DOMAIN, f"{entry_id}_settings")}
     assert device_entry.manufacturer == "P1 Monitor"
     assert device_entry.name == "Settings"
-    assert device_entry.entry_type == ENTRY_TYPE_SERVICE
+    assert device_entry.entry_type is dr.DeviceEntryType.SERVICE
     assert not device_entry.model
     assert not device_entry.sw_version
 
@@ -198,4 +203,4 @@ async def test_smartmeter_disabled_by_default(
     entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.disabled
-    assert entry.disabled_by == er.DISABLED_INTEGRATION
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION

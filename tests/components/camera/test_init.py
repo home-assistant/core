@@ -1,6 +1,7 @@
 """The tests for the camera component."""
 import asyncio
 import base64
+from http import HTTPStatus
 import io
 from unittest.mock import Mock, PropertyMock, mock_open, patch
 
@@ -18,8 +19,7 @@ from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     EVENT_HOMEASSISTANT_START,
-    HTTP_BAD_GATEWAY,
-    HTTP_OK,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
@@ -53,7 +53,7 @@ async def mock_camera_web_rtc_fixture(hass):
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.camera.Camera.stream_type",
+        "homeassistant.components.camera.Camera.frontend_stream_type",
         new_callable=PropertyMock(return_value=STREAM_TYPE_WEB_RTC),
     ), patch(
         "homeassistant.components.camera.Camera.async_handle_web_rtc_offer",
@@ -481,14 +481,14 @@ async def test_camera_proxy_stream(hass, mock_camera, hass_client):
     client = await hass_client()
 
     response = await client.get("/api/camera_proxy_stream/camera.demo_camera")
-    assert response.status == HTTP_OK
+    assert response.status == HTTPStatus.OK
 
     with patch(
         "homeassistant.components.demo.camera.DemoCamera.handle_async_mjpeg_stream",
         return_value=None,
     ):
         response = await client.get("/api/camera_proxy_stream/camera.demo_camera")
-        assert response.status == HTTP_BAD_GATEWAY
+        assert response.status == HTTPStatus.BAD_GATEWAY
 
 
 async def test_websocket_web_rtc_offer(
@@ -637,3 +637,56 @@ async def test_websocket_web_rtc_offer_invalid_stream_type(
     assert response["type"] == TYPE_RESULT
     assert not response["success"]
     assert response["error"]["code"] == "web_rtc_offer_failed"
+
+
+async def test_state_streaming(hass, hass_ws_client, mock_camera):
+    """Camera state."""
+    demo_camera = hass.states.get("camera.demo_camera")
+    assert demo_camera is not None
+    assert demo_camera.state == camera.STATE_STREAMING
+
+
+async def test_stream_unavailable(hass, hass_ws_client, mock_camera, mock_stream):
+    """Camera state."""
+    await async_setup_component(hass, "camera", {})
+
+    with patch(
+        "homeassistant.components.camera.Stream.endpoint_url",
+        return_value="http://home.assistant/playlist.m3u8",
+    ), patch(
+        "homeassistant.components.demo.camera.DemoCamera.stream_source",
+        return_value="http://example.com",
+    ), patch(
+        "homeassistant.components.camera.Stream.set_update_callback",
+    ) as mock_update_callback:
+        # Request playlist through WebSocket. We just want to create the stream
+        # but don't care about the result.
+        client = await hass_ws_client(hass)
+        await client.send_json(
+            {"id": 10, "type": "camera/stream", "entity_id": "camera.demo_camera"}
+        )
+        await client.receive_json()
+        assert mock_update_callback.called
+
+    # Simluate the stream going unavailable
+    callback = mock_update_callback.call_args.args[0]
+    with patch(
+        "homeassistant.components.camera.Stream.available", new_callable=lambda: False
+    ):
+        callback()
+        await hass.async_block_till_done()
+
+    demo_camera = hass.states.get("camera.demo_camera")
+    assert demo_camera is not None
+    assert demo_camera.state == STATE_UNAVAILABLE
+
+    # Simulate stream becomes available
+    with patch(
+        "homeassistant.components.camera.Stream.available", new_callable=lambda: True
+    ):
+        callback()
+        await hass.async_block_till_done()
+
+    demo_camera = hass.states.get("camera.demo_camera")
+    assert demo_camera is not None
+    assert demo_camera.state == camera.STATE_STREAMING

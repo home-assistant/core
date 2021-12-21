@@ -33,7 +33,7 @@ homeassistant/components/demo/weather @fabaff
 """
 
 
-def generate_and_validate(integrations: dict[str, Integration]):
+def generate_and_validate(integrations: dict[str, Integration], config: Config):
     """Generate CODEOWNERS."""
     parts = [BASE]
 
@@ -56,6 +56,9 @@ def generate_and_validate(integrations: dict[str, Integration]):
 
         parts.append(f"homeassistant/components/{domain}/* {' '.join(codeowners)}")
 
+        if (config.root / "tests/components" / domain).exists():
+            parts.append(f"tests/components/{domain}/* {' '.join(codeowners)}")
+
     parts.append(f"\n{INDIVIDUAL_FILES.strip()}")
 
     return "\n".join(parts)
@@ -64,7 +67,7 @@ def generate_and_validate(integrations: dict[str, Integration]):
 def validate(integrations: dict[str, Integration], config: Config):
     """Validate CODEOWNERS."""
     codeowners_path = config.root / "CODEOWNERS"
-    config.cache["codeowners"] = content = generate_and_validate(integrations)
+    config.cache["codeowners"] = content = generate_and_validate(integrations, config)
 
     if config.specific_integrations:
         return

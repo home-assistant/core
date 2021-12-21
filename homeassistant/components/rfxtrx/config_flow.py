@@ -1,6 +1,9 @@
 """Config flow for RFXCOM RFXtrx integration."""
+from __future__ import annotations
+
 import copy
 import os
+from typing import TypedDict, cast
 
 import RFXtrx as rfxtrxmod
 import serial
@@ -22,6 +25,8 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import (
+    DeviceEntry,
+    DeviceRegistry,
     async_entries_for_config_entry,
     async_get_registry as async_get_device_registry,
 )
@@ -30,12 +35,11 @@ from homeassistant.helpers.entity_registry import (
     async_get_registry as async_get_entity_registry,
 )
 
-from . import DOMAIN, get_device_id, get_rfx_object
+from . import DOMAIN, DeviceTuple, get_device_id, get_rfx_object
 from .binary_sensor import supported as binary_supported
 from .const import (
     CONF_AUTOMATIC_ADD,
     CONF_DATA_BITS,
-    CONF_FIRE_EVENT,
     CONF_OFF_DELAY,
     CONF_REMOVE_DEVICE,
     CONF_REPLACE_DEVICE,
@@ -54,6 +58,13 @@ CONF_EVENT_CODE = "event_code"
 CONF_MANUAL_PATH = "Enter Manually"
 
 
+class DeviceData(TypedDict):
+    """Dict data representing a device entry."""
+
+    event_code: str
+    device_id: DeviceTuple
+
+
 def none_or_int(value, base):
     """Check if strin is one otherwise convert to int."""
     if value is None:
@@ -64,16 +75,17 @@ def none_or_int(value, base):
 class OptionsFlow(config_entries.OptionsFlow):
     """Handle Rfxtrx options."""
 
+    _device_registry: DeviceRegistry
+    _device_entries: list[DeviceEntry]
+
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize rfxtrx options flow."""
         self._config_entry = config_entry
         self._global_options = None
         self._selected_device = None
-        self._selected_device_entry_id = None
-        self._selected_device_event_code = None
-        self._selected_device_object = None
-        self._device_entries = None
-        self._device_registry = None
+        self._selected_device_entry_id: str | None = None
+        self._selected_device_event_code: str | None = None
+        self._selected_device_object: rfxtrxmod.RFXtrxEvent | None = None
 
     async def async_step_init(self, user_input=None):
         """Manage the options."""
@@ -174,6 +186,8 @@ class OptionsFlow(config_entries.OptionsFlow):
         errors = {}
 
         if user_input is not None:
+            assert self._selected_device_object
+            assert self._selected_device_event_code
             device_id = get_device_id(
                 self._selected_device_object.device,
                 data_bits=user_input.get(CONF_DATA_BITS),
@@ -208,7 +222,6 @@ class OptionsFlow(config_entries.OptionsFlow):
                 devices = {}
                 device = {
                     CONF_DEVICE_ID: device_id,
-                    CONF_FIRE_EVENT: user_input.get(CONF_FIRE_EVENT, False),
                     CONF_SIGNAL_REPETITIONS: user_input.get(CONF_SIGNAL_REPETITIONS, 1),
                 }
 
@@ -235,11 +248,7 @@ class OptionsFlow(config_entries.OptionsFlow):
 
         device_data = self._selected_device
 
-        data_schema = {
-            vol.Optional(
-                CONF_FIRE_EVENT, default=device_data.get(CONF_FIRE_EVENT, False)
-            ): bool,
-        }
+        data_schema = {}
 
         if binary_supported(self._selected_device_object):
             if device_data.get(CONF_OFF_DELAY):
@@ -386,9 +395,8 @@ class OptionsFlow(config_entries.OptionsFlow):
     def _can_replace_device(self, entry_id):
         """Check if device can be replaced with selected device."""
         device_data = self._get_device_data(entry_id)
-        event_code = device_data[CONF_EVENT_CODE]
 
-        if event_code is not None:
+        if (event_code := device_data[CONF_EVENT_CODE]) is not None:
             rfx_obj = get_rfx_object(event_code)
             if (
                 rfx_obj.device.packettype
@@ -406,20 +414,18 @@ class OptionsFlow(config_entries.OptionsFlow):
 
         return data[CONF_EVENT_CODE]
 
-    def _get_device_data(self, entry_id):
+    def _get_device_data(self, entry_id) -> DeviceData:
         """Get event code based on device identifier."""
-        event_code = None
-        device_id = None
+        event_code: str
         entry = self._device_registry.async_get(entry_id)
-        device_id = next(iter(entry.identifiers))[1:]
+        assert entry
+        device_id = cast(DeviceTuple, next(iter(entry.identifiers))[1:])
         for packet_id, entity_info in self._config_entry.data[CONF_DEVICES].items():
             if tuple(entity_info.get(CONF_DEVICE_ID)) == device_id:
-                event_code = packet_id
+                event_code = cast(str, packet_id)
                 break
-
-        data = {CONF_EVENT_CODE: event_code, CONF_DEVICE_ID: device_id}
-
-        return data
+        assert event_code
+        return DeviceData(event_code=event_code, device_id=device_id)
 
     @callback
     def update_config_data(self, global_options=None, devices=None):
@@ -452,8 +458,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors = {}
         if user_input is not None:
-            user_selection = user_input[CONF_TYPE]
-            if user_selection == "Serial":
+            if user_input[CONF_TYPE] == "Serial":
                 return await self.async_step_setup_serial()
 
             return await self.async_step_setup_network()

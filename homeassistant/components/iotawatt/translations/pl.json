@@ -11,7 +11,7 @@
                     "password": "Has\u0142o",
                     "username": "Nazwa u\u017cytkownika"
                 },
-                "description": "Urz\u0105dzenie IoTawatt wymaga uwierzytelnienia. Wprowad\u017a nazw\u0119 u\u017cytkownika i has\u0142o, a nast\u0119pnie kliknij przycisk Prze\u015blij."
+                "description": "Urz\u0105dzenie IoTawatt wymaga uwierzytelnienia. Wprowad\u017a nazw\u0119 u\u017cytkownika i has\u0142o, a nast\u0119pnie kliknij przycisk \"Zatwierd\u017a\"."
             },
             "user": {
                 "data": {

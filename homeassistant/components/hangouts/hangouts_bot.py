@@ -1,6 +1,7 @@
 """The Hangouts Bot."""
 import asyncio
 from contextlib import suppress
+from http import HTTPStatus
 import io
 import logging
 
@@ -8,7 +9,6 @@ import aiohttp
 import hangups
 from hangups import ChatMessageEvent, ChatMessageSegment, Client, get_auth, hangouts_pb2
 
-from homeassistant.const import HTTP_OK
 from homeassistant.core import callback
 from homeassistant.helpers import dispatcher, intent
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -182,9 +182,7 @@ class HangoutsBot:
         """Detect a matching intent."""
         for intent_type, data in intents.items():
             for matcher in data.get(CONF_MATCHERS, []):
-                match = matcher.match(text)
-
-                if not match:
+                if not (match := matcher.match(text)):
                     continue
                 if intent_type == INTENT_HELP:
                     return await self.hass.helpers.intent.async_handle(
@@ -273,7 +271,7 @@ class HangoutsBot:
                 try:
                     websession = async_get_clientsession(self.hass)
                     async with websession.get(uri, timeout=5) as response:
-                        if response.status != HTTP_OK:
+                        if response.status != HTTPStatus.OK:
                             _LOGGER.error(
                                 "Fetch image failed, %s, %s", response.status, response
                             )

@@ -13,7 +13,9 @@
                 "data": {
                     "access_token": "Eri\u015fim Belirteci",
                     "host": "Ana Bilgisayar"
-                }
+                },
+                "description": "Vilfo Router entegrasyonunu ayarlay\u0131n. Vilfo Router ana bilgisayar ad\u0131n\u0131za/IP'nize ve bir API eri\u015fim anahtar\u0131na ihtiyac\u0131n\u0131z var. Bu entegrasyon ve bu ayr\u0131nt\u0131lar\u0131n nas\u0131l al\u0131naca\u011f\u0131 hakk\u0131nda ek bilgi i\u00e7in \u015fu adresi ziyaret edin: https://www.home-assistant.io/integrations/vilfo",
+                "title": "Vilfo Router'a ba\u011flan\u0131n"
             }
         }
     }

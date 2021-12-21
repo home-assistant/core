@@ -7,8 +7,9 @@ from requests.exceptions import RequestException
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
-from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS
+from homeassistant.components import dhcp
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import DEFAULT_PORT, DEFAULT_TIMEOUT, DOMAIN
 
@@ -41,7 +42,7 @@ async def validate_input(hass, data):
             DEFAULT_TIMEOUT,
         )
 
-        info = bridge.info()
+        info = await hass.async_add_executor_job(bridge.info)
     except InvalidCredentialsException as err:
         raise InvalidAuth from err
     except RequestException as err:
@@ -58,23 +59,19 @@ class NukiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.discovery_schema = {}
         self._data = {}
 
-    async def async_step_import(self, user_input=None):
-        """Handle a flow initiated by import."""
-        return await self.async_step_validate(user_input)
-
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
         return await self.async_step_validate(user_input)
 
-    async def async_step_dhcp(self, discovery_info: dict):
+    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Prepare configuration for a DHCP discovered Nuki bridge."""
-        await self.async_set_unique_id(int(discovery_info.get(HOSTNAME)[12:], 16))
+        await self.async_set_unique_id(int(discovery_info.hostname[12:], 16))
 
         self._abort_if_unique_id_configured()
 
         self.discovery_schema = vol.Schema(
             {
-                vol.Required(CONF_HOST, default=discovery_info[IP_ADDRESS]): str,
+                vol.Required(CONF_HOST, default=discovery_info.ip): str,
                 vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
                 vol.Required(CONF_TOKEN): str,
             }

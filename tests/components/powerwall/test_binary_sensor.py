@@ -26,6 +26,16 @@ async def test_sensors(hass):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
+    state = hass.states.get("binary_sensor.grid_services_active")
+    assert state.state == STATE_ON
+    expected_attributes = {
+        "friendly_name": "Grid Services Active",
+        "device_class": "power",
+    }
+    # Only test for a subset of attributes in case
+    # HA changes the implementation and a new one appears
+    assert all(item in state.attributes.items() for item in expected_attributes.items())
+
     state = hass.states.get("binary_sensor.grid_status")
     assert state.state == STATE_ON
     expected_attributes = {"friendly_name": "Grid Status", "device_class": "power"}

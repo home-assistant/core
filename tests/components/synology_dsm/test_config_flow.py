@@ -387,11 +387,15 @@ async def test_form_ssdp(hass: HomeAssistant, service: MagicMock):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_SSDP},
-        data={
-            ssdp.ATTR_SSDP_LOCATION: "http://192.168.1.5:5000",
-            ssdp.ATTR_UPNP_FRIENDLY_NAME: "mydsm",
-            ssdp.ATTR_UPNP_SERIAL: "001132XXXX99",  # MAC address, but SSDP does not have `-`
-        },
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="http://192.168.1.5:5000",
+            upnp={
+                ssdp.ATTR_UPNP_FRIENDLY_NAME: "mydsm",
+                ssdp.ATTR_UPNP_SERIAL: "001132XXXX99",  # MAC address, but SSDP does not have `-`
+            },
+        ),
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "link"
@@ -423,6 +427,7 @@ async def test_reconfig_ssdp(hass: HomeAssistant, service: MagicMock):
         domain=DOMAIN,
         data={
             CONF_HOST: "wrong_host",
+            CONF_VERIFY_SSL: VERIFY_SSL,
             CONF_USERNAME: USERNAME,
             CONF_PASSWORD: PASSWORD,
             CONF_MAC: MACS,
@@ -433,14 +438,50 @@ async def test_reconfig_ssdp(hass: HomeAssistant, service: MagicMock):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_SSDP},
-        data={
-            ssdp.ATTR_SSDP_LOCATION: "http://192.168.1.5:5000",
-            ssdp.ATTR_UPNP_FRIENDLY_NAME: "mydsm",
-            ssdp.ATTR_UPNP_SERIAL: "001132XXXX59",  # Existing in MACS[0], but SSDP does not have `-`
-        },
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="http://192.168.1.5:5000",
+            upnp={
+                ssdp.ATTR_UPNP_FRIENDLY_NAME: "mydsm",
+                ssdp.ATTR_UPNP_SERIAL: "001132XXXX59",  # Existing in MACS[0], but SSDP does not have `-`
+            },
+        ),
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "reconfigure_successful"
+
+
+async def test_skip_reconfig_ssdp(hass: HomeAssistant, service: MagicMock):
+    """Test re-configuration of already existing entry by ssdp."""
+
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "wrong_host",
+            CONF_VERIFY_SSL: True,
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
+            CONF_MAC: MACS,
+        },
+        unique_id=SERIAL,
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_SSDP},
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="http://192.168.1.5:5000",
+            upnp={
+                ssdp.ATTR_UPNP_FRIENDLY_NAME: "mydsm",
+                ssdp.ATTR_UPNP_SERIAL: "001132XXXX59",  # Existing in MACS[0], but SSDP does not have `-`
+            },
+        ),
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_existing_ssdp(hass: HomeAssistant, service: MagicMock):
@@ -450,6 +491,7 @@ async def test_existing_ssdp(hass: HomeAssistant, service: MagicMock):
         domain=DOMAIN,
         data={
             CONF_HOST: "192.168.1.5",
+            CONF_VERIFY_SSL: VERIFY_SSL,
             CONF_USERNAME: USERNAME,
             CONF_PASSWORD: PASSWORD,
             CONF_MAC: MACS,
@@ -460,11 +502,15 @@ async def test_existing_ssdp(hass: HomeAssistant, service: MagicMock):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_SSDP},
-        data={
-            ssdp.ATTR_SSDP_LOCATION: "http://192.168.1.5:5000",
-            ssdp.ATTR_UPNP_FRIENDLY_NAME: "mydsm",
-            ssdp.ATTR_UPNP_SERIAL: "001132XXXX59",  # Existing in MACS[0], but SSDP does not have `-`
-        },
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="http://192.168.1.5:5000",
+            upnp={
+                ssdp.ATTR_UPNP_FRIENDLY_NAME: "mydsm",
+                ssdp.ATTR_UPNP_SERIAL: "001132XXXX59",  # Existing in MACS[0], but SSDP does not have `-`
+            },
+        ),
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"

@@ -48,8 +48,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         debugpy.listen((conf[CONF_HOST], conf[CONF_PORT]))
 
-        wait = conf[CONF_WAIT]
-        if wait:
+        if conf[CONF_WAIT]:
             _LOGGER.warning(
                 "Waiting for remote debug connection on %s:%s",
                 conf[CONF_HOST],

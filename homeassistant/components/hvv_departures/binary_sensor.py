@@ -7,10 +7,11 @@ import async_timeout
 from pygti.exceptions import InvalidAuth
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_PROBLEM,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -145,8 +146,8 @@ class HvvDepartureBinarySensor(CoordinatorEntity, BinarySensorEntity):
     @property
     def device_info(self):
         """Return the device info for this sensor."""
-        return {
-            "identifiers": {
+        return DeviceInfo(
+            identifiers={
                 (
                     DOMAIN,
                     self.config_entry.entry_id,
@@ -154,9 +155,9 @@ class HvvDepartureBinarySensor(CoordinatorEntity, BinarySensorEntity):
                     self.config_entry.data[CONF_STATION]["type"],
                 )
             },
-            "name": f"Departures at {self.config_entry.data[CONF_STATION]['name']}",
-            "manufacturer": MANUFACTURER,
-        }
+            manufacturer=MANUFACTURER,
+            name=f"Departures at {self.config_entry.data[CONF_STATION]['name']}",
+        )
 
     @property
     def name(self):
@@ -171,7 +172,7 @@ class HvvDepartureBinarySensor(CoordinatorEntity, BinarySensorEntity):
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_PROBLEM
+        return BinarySensorDeviceClass.PROBLEM
 
     @property
     def extra_state_attributes(self):

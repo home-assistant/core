@@ -56,6 +56,7 @@ async def test_controlling_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
+    await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.tasmota_binary_sensor_1")
     assert state.state == STATE_OFF
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
@@ -121,6 +122,7 @@ async def test_controlling_state_via_mqtt_switchname(hass, mqtt_mock, setup_tasm
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
+    await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.custom_name")
     assert state.state == STATE_OFF
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
@@ -179,6 +181,7 @@ async def test_pushon_controlling_state_via_mqtt(hass, mqtt_mock, setup_tasmota)
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
+    await hass.async_block_till_done()
     state = hass.states.get("binary_sensor.tasmota_binary_sensor_1")
     assert state.state == STATE_OFF
     assert not state.attributes.get(ATTR_ASSUMED_STATE)

@@ -1,8 +1,9 @@
 """Support for MyQ gateways."""
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.helpers.entity import EntityCategory
 
 from . import MyQEntity
 from .const import DOMAIN, MYQ_COORDINATOR, MYQ_GATEWAY
@@ -25,7 +26,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class MyQBinarySensorEntity(MyQEntity, BinarySensorEntity):
     """Representation of a MyQ gateway."""
 
-    _attr_device_class = DEVICE_CLASS_CONNECTIVITY
+    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
     def name(self):

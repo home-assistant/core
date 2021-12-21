@@ -82,15 +82,13 @@ async def async_setup_entry(hass, config_entry):
     async def add_item_service(call):
         """Add an item with `name`."""
         data = hass.data[DOMAIN]
-        name = call.data.get(ATTR_NAME)
-        if name is not None:
+        if (name := call.data.get(ATTR_NAME)) is not None:
             await data.async_add(name)
 
     async def complete_item_service(call):
         """Mark the item provided via `name` as completed."""
         data = hass.data[DOMAIN]
-        name = call.data.get(ATTR_NAME)
-        if name is None:
+        if (name := call.data.get(ATTR_NAME)) is None:
             return
         try:
             item = [item for item in data.items if item["name"] == name][0]
@@ -102,8 +100,7 @@ async def async_setup_entry(hass, config_entry):
     async def incomplete_item_service(call):
         """Mark the item provided via `name` as incomplete."""
         data = hass.data[DOMAIN]
-        name = call.data.get(ATTR_NAME)
-        if name is None:
+        if (name := call.data.get(ATTR_NAME)) is None:
             return
         try:
             item = [item for item in data.items if item["name"] == name][0]

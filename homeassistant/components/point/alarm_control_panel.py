@@ -10,6 +10,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 
 from .const import DOMAIN as POINT_DOMAIN, POINT_DISCOVERY_NEW, SIGNAL_WEBHOOK
 
@@ -117,10 +118,10 @@ class MinutPointAlarmControl(AlarmControlPanelEntity):
         return f"point.{self._home_id}"
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
-        return {
-            "identifiers": {(POINT_DOMAIN, self._home_id)},
-            "name": self.name,
-            "manufacturer": "Minut",
-        }
+        return DeviceInfo(
+            identifiers={(POINT_DOMAIN, self._home_id)},
+            manufacturer="Minut",
+            name=self.name,
+        )

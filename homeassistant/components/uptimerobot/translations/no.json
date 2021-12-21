@@ -17,14 +17,14 @@
                 "data": {
                     "api_key": "API-n\u00f8kkel"
                 },
-                "description": "Du m\u00e5 angi en ny skrivebeskyttet API-n\u00f8kkel fra Uptime Robot",
+                "description": "Du m\u00e5 levere en ny skrivebeskyttet API-n\u00f8kkel fra UptimeRobot",
                 "title": "Godkjenne integrering p\u00e5 nytt"
             },
             "user": {
                 "data": {
                     "api_key": "API-n\u00f8kkel"
                 },
-                "description": "Du m\u00e5 angi en skrivebeskyttet API-n\u00f8kkel fra Uptime Robot"
+                "description": "Du m\u00e5 levere en skrivebeskyttet API-n\u00f8kkel fra UptimeRobot"
             }
         }
     }

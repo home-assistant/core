@@ -5,16 +5,15 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ID,
     CONF_NAME,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     POWER_WATT,
     STATE_CLOSED,
@@ -43,7 +42,8 @@ SENSOR_DESC_TEMPERATURE = SensorEntityDescription(
     name="Temperature",
     native_unit_of_measurement=TEMP_CELSIUS,
     icon="mdi:thermometer",
-    device_class=DEVICE_CLASS_TEMPERATURE,
+    device_class=SensorDeviceClass.TEMPERATURE,
+    state_class=SensorStateClass.MEASUREMENT,
 )
 
 SENSOR_DESC_HUMIDITY = SensorEntityDescription(
@@ -51,7 +51,8 @@ SENSOR_DESC_HUMIDITY = SensorEntityDescription(
     name="Humidity",
     native_unit_of_measurement=PERCENTAGE,
     icon="mdi:water-percent",
-    device_class=DEVICE_CLASS_HUMIDITY,
+    device_class=SensorDeviceClass.HUMIDITY,
+    state_class=SensorStateClass.MEASUREMENT,
 )
 
 SENSOR_DESC_POWER = SensorEntityDescription(
@@ -59,7 +60,8 @@ SENSOR_DESC_POWER = SensorEntityDescription(
     name="Power",
     native_unit_of_measurement=POWER_WATT,
     icon="mdi:power-plug",
-    device_class=DEVICE_CLASS_POWER,
+    device_class=SensorDeviceClass.POWER,
+    state_class=SensorStateClass.MEASUREMENT,
 )
 
 SENSOR_DESC_WINDOWHANDLE = SensorEntityDescription(
@@ -135,8 +137,7 @@ class EnOceanSensor(EnOceanEntity, RestoreEntity, SensorEntity):
         if self._attr_native_value is not None:
             return
 
-        state = await self.async_get_last_state()
-        if state is not None:
+        if (state := await self.async_get_last_state()) is not None:
             self._attr_native_value = state.state
 
     def value_changed(self, packet):

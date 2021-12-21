@@ -2,16 +2,11 @@
 
 from nexia.const import UNIT_CELSIUS
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import (
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_TEMPERATURE,
-    PERCENTAGE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-)
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.const import PERCENTAGE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 
-from .const import DOMAIN, NEXIA_DEVICE, UPDATE_COORDINATOR
+from .const import DOMAIN
+from .coordinator import NexiaDataUpdateCoordinator
 from .entity import NexiaThermostatEntity, NexiaThermostatZoneEntity
 from .util import percent_conv
 
@@ -19,9 +14,8 @@ from .util import percent_conv
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up sensors for a Nexia device."""
 
-    nexia_data = hass.data[DOMAIN][config_entry.entry_id]
-    nexia_home = nexia_data[NEXIA_DEVICE]
-    coordinator = nexia_data[UPDATE_COORDINATOR]
+    coordinator: NexiaDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    nexia_home = coordinator.nexia_home
     entities = []
 
     # Thermostat / System Sensors
@@ -86,7 +80,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     thermostat,
                     "get_outdoor_temperature",
                     "Outdoor Temperature",
-                    DEVICE_CLASS_TEMPERATURE,
+                    SensorDeviceClass.TEMPERATURE,
                     unit,
                 )
             )
@@ -98,7 +92,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     thermostat,
                     "get_relative_humidity",
                     "Relative Humidity",
-                    DEVICE_CLASS_HUMIDITY,
+                    SensorDeviceClass.HUMIDITY,
                     PERCENTAGE,
                     percent_conv,
                 )
@@ -119,7 +113,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     zone,
                     "get_temperature",
                     "Temperature",
-                    DEVICE_CLASS_TEMPERATURE,
+                    SensorDeviceClass.TEMPERATURE,
                     unit,
                     None,
                 )

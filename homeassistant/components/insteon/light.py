@@ -1,5 +1,7 @@
 """Support for Insteon lights via PowerLinc Modem."""
 
+from pyinsteon.extended_property import ON_LEVEL
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     DOMAIN as LIGHT_DOMAIN,
@@ -53,6 +55,9 @@ class InsteonDimmerEntity(InsteonEntity, LightEntity):
         """Turn light on."""
         if ATTR_BRIGHTNESS in kwargs:
             brightness = int(kwargs[ATTR_BRIGHTNESS])
+        else:
+            brightness = self.get_device_property(ON_LEVEL)
+        if brightness is not None:
             await self._insteon_device.async_on(
                 on_level=brightness, group=self._insteon_device_group.group
             )

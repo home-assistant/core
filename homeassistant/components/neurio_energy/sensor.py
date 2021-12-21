@@ -1,4 +1,6 @@
 """Support for monitoring a Neurio energy sensor."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -8,8 +10,9 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
-    STATE_CLASS_MEASUREMENT,
+    SensorDeviceClass,
     SensorEntity,
+    SensorStateClass,
 )
 from homeassistant.const import CONF_API_KEY, ENERGY_KILO_WATT_HOUR, POWER_WATT
 import homeassistant.helpers.config_validation as cv
@@ -139,9 +142,12 @@ class NeurioEnergy(SensorEntity):
 
         if sensor_type == ACTIVE_TYPE:
             self._unit_of_measurement = POWER_WATT
-            self._attr_state_class = STATE_CLASS_MEASUREMENT
+            self._attr_device_class = SensorDeviceClass.POWER
+            self._attr_state_class = SensorStateClass.MEASUREMENT
         elif sensor_type == DAILY_TYPE:
             self._unit_of_measurement = ENERGY_KILO_WATT_HOUR
+            self._attr_device_class = SensorDeviceClass.ENERGY
+            self._attr_state_class = SensorStateClass.TOTAL_INCREASING
 
     @property
     def name(self):

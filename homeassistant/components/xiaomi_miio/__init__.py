@@ -26,15 +26,16 @@ from miio import (
     FanP10,
     FanP11,
     FanZA5,
+    RoborockVacuum,
     Timer,
-    Vacuum,
     VacuumStatus,
 )
 from miio.gateway.gateway import GatewayException
 
 from homeassistant import config_entries, core
-from homeassistant.const import CONF_HOST, CONF_TOKEN
+from homeassistant.const import CONF_HOST, CONF_TOKEN, Platform
 from homeassistant.core import callback
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -65,25 +66,44 @@ from .const import (
     MODELS_PURIFIER_MIOT,
     MODELS_SWITCH,
     MODELS_VACUUM,
+    ROBOROCK_GENERIC,
+    ROCKROBO_GENERIC,
+    AuthException,
+    SetupException,
 )
 from .gateway import ConnectXiaomiGateway
 
 _LOGGER = logging.getLogger(__name__)
 
-GATEWAY_PLATFORMS = ["alarm_control_panel", "light", "sensor", "switch"]
-SWITCH_PLATFORMS = ["switch"]
-FAN_PLATFORMS = ["binary_sensor", "fan", "number", "select", "sensor", "switch"]
-HUMIDIFIER_PLATFORMS = [
-    "binary_sensor",
-    "humidifier",
-    "number",
-    "select",
-    "sensor",
-    "switch",
+POLLING_TIMEOUT_SEC = 10
+UPDATE_INTERVAL = timedelta(seconds=15)
+
+GATEWAY_PLATFORMS = [
+    Platform.ALARM_CONTROL_PANEL,
+    Platform.LIGHT,
+    Platform.SENSOR,
+    Platform.SWITCH,
 ]
-LIGHT_PLATFORMS = ["light"]
-VACUUM_PLATFORMS = ["binary_sensor", "sensor", "vacuum"]
-AIR_MONITOR_PLATFORMS = ["air_quality", "sensor"]
+SWITCH_PLATFORMS = [Platform.SWITCH]
+FAN_PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.FAN,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
+HUMIDIFIER_PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.HUMIDIFIER,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
+LIGHT_PLATFORMS = [Platform.LIGHT]
+VACUUM_PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.VACUUM]
+AIR_MONITOR_PLATFORMS = [Platform.AIR_QUALITY, Platform.SENSOR]
 
 MODEL_TO_CLASS_MAP = {
     MODEL_FAN_1C: Fan1C,
@@ -100,10 +120,9 @@ async def async_setup_entry(
 ):
     """Set up the Xiaomi Miio components from a config entry."""
     hass.data.setdefault(DOMAIN, {})
-    if entry.data[
-        CONF_FLOW_TYPE
-    ] == CONF_GATEWAY and not await async_setup_gateway_entry(hass, entry):
-        return False
+    if entry.data[CONF_FLOW_TYPE] == CONF_GATEWAY:
+        await async_setup_gateway_entry(hass, entry)
+        return True
 
     return bool(
         entry.data[CONF_FLOW_TYPE] != CONF_DEVICE
@@ -149,7 +168,7 @@ def _async_update_data_default(hass, device):
 
         async def _async_fetch_data():
             """Fetch data from the device."""
-            async with async_timeout.timeout(10):
+            async with async_timeout.timeout(POLLING_TIMEOUT_SEC):
                 state = await hass.async_add_executor_job(device.status)
                 _LOGGER.debug("Got new state: %s", state)
                 return state
@@ -205,7 +224,7 @@ class VacuumCoordinatorDataAttributes:
     fan_speeds_reverse: str = "fan_speeds_reverse"
 
 
-def _async_update_data_vacuum(hass, device: Vacuum):
+def _async_update_data_vacuum(hass, device: RoborockVacuum):
     def update() -> VacuumCoordinatorData:
         timer = []
 
@@ -237,7 +256,7 @@ def _async_update_data_vacuum(hass, device: Vacuum):
         """Fetch data from the device using async_add_executor_job."""
 
         async def execute_update():
-            async with async_timeout.timeout(10):
+            async with async_timeout.timeout(POLLING_TIMEOUT_SEC):
                 state = await hass.async_add_executor_job(update)
                 _LOGGER.debug("Got new vacuum state: %s", state)
                 return state
@@ -262,7 +281,7 @@ async def async_create_miio_device_and_coordinator(
     hass: core.HomeAssistant, entry: config_entries.ConfigEntry
 ):
     """Set up a data coordinator and one miio device to service multiple entities."""
-    model = entry.data[CONF_MODEL]
+    model: str = entry.data[CONF_MODEL]
     host = entry.data[CONF_HOST]
     token = entry.data[CONF_TOKEN]
     name = entry.title
@@ -275,6 +294,8 @@ async def async_create_miio_device_and_coordinator(
         model not in MODELS_HUMIDIFIER
         and model not in MODELS_FAN
         and model not in MODELS_VACUUM
+        and not model.startswith(ROBOROCK_GENERIC)
+        and not model.startswith(ROCKROBO_GENERIC)
     ):
         return
 
@@ -299,8 +320,12 @@ async def async_create_miio_device_and_coordinator(
         device = AirPurifier(host, token)
     elif model.startswith("zhimi.airfresh."):
         device = AirFresh(host, token)
-    elif model in MODELS_VACUUM:
-        device = Vacuum(host, token)
+    elif (
+        model in MODELS_VACUUM
+        or model.startswith(ROBOROCK_GENERIC)
+        or model.startswith(ROCKROBO_GENERIC)
+    ):
+        device = RoborockVacuum(host, token)
         update_method = _async_update_data_vacuum
         coordinator_class = DataUpdateCoordinator[VacuumCoordinatorData]
     # Pedestal fans
@@ -334,7 +359,7 @@ async def async_create_miio_device_and_coordinator(
         name=name,
         update_method=update_method(hass, device),
         # Polling interval. Will only be polled if there are subscribers.
-        update_interval=timedelta(seconds=60),
+        update_interval=UPDATE_INTERVAL,
     )
     hass.data[DOMAIN][entry.entry_id] = {
         KEY_DEVICE: device,
@@ -362,21 +387,24 @@ async def async_setup_gateway_entry(
 
     # Connect to gateway
     gateway = ConnectXiaomiGateway(hass, entry)
-    if not await gateway.async_connect_gateway(host, token):
-        return False
+    try:
+        await gateway.async_connect_gateway(host, token)
+    except AuthException as error:
+        raise ConfigEntryAuthFailed() from error
+    except SetupException as error:
+        raise ConfigEntryNotReady() from error
     gateway_info = gateway.gateway_info
 
-    gateway_model = f"{gateway_info.model}-{gateway_info.hardware_version}"
-
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, gateway_info.mac_address)},
         identifiers={(DOMAIN, gateway_id)},
         manufacturer="Xiaomi",
         name=name,
-        model=gateway_model,
+        model=gateway_info.model,
         sw_version=gateway_info.firmware_version,
+        hw_version=gateway_info.hardware_version,
     )
 
     def update_data():
@@ -403,7 +431,7 @@ async def async_setup_gateway_entry(
         name=name,
         update_method=async_update_data,
         # Polling interval. Will only be polled if there are subscribers.
-        update_interval=timedelta(seconds=10),
+        update_interval=UPDATE_INTERVAL,
     )
 
     hass.data[DOMAIN][entry.entry_id] = {
@@ -415,8 +443,6 @@ async def async_setup_gateway_entry(
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, platform)
         )
-
-    return True
 
 
 async def async_setup_device_entry(

@@ -1,7 +1,7 @@
 """Support for interface with a Gree climate systems."""
 from __future__ import annotations
 
-from homeassistant.components.switch import DEVICE_CLASS_SWITCH, SwitchEntity
+from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -47,7 +47,7 @@ class GreePanelLightSwitchEntity(GreeEntity, SwitchEntity):
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_SWITCH
+        return SwitchDeviceClass.SWITCH
 
     @property
     def is_on(self) -> bool:
@@ -77,7 +77,7 @@ class GreeQuietModeSwitchEntity(GreeEntity, SwitchEntity):
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_SWITCH
+        return SwitchDeviceClass.SWITCH
 
     @property
     def is_on(self) -> bool:
@@ -107,7 +107,7 @@ class GreeFreshAirSwitchEntity(GreeEntity, SwitchEntity):
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_SWITCH
+        return SwitchDeviceClass.SWITCH
 
     @property
     def is_on(self) -> bool:
@@ -137,7 +137,7 @@ class GreeXFanSwitchEntity(GreeEntity, SwitchEntity):
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_SWITCH
+        return SwitchDeviceClass.SWITCH
 
     @property
     def is_on(self) -> bool:

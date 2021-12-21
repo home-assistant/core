@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
     CONF_DEVICE,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
@@ -59,7 +60,6 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-
 SERVICE_SETTING_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_DEVICE_ID): str,
@@ -93,8 +93,7 @@ SERVICE_PROGRAM_SCHEMA = vol.Any(
 
 SERVICE_COMMAND_SCHEMA = vol.Schema({vol.Required(ATTR_DEVICE_ID): str})
 
-
-PLATFORMS = ["binary_sensor", "light", "sensor", "switch"]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.LIGHT, Platform.SENSOR, Platform.SWITCH]
 
 
 def _get_appliance_by_device_id(

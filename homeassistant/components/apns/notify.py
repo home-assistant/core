@@ -220,9 +220,7 @@ class ApnsNotificationService(BaseNotificationService):
         )
 
         device_state = kwargs.get(ATTR_TARGET)
-        message_data = kwargs.get(ATTR_DATA)
-
-        if message_data is None:
+        if (message_data := kwargs.get(ATTR_DATA)) is None:
             message_data = {}
 
         if isinstance(message, str):

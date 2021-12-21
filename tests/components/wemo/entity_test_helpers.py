@@ -53,7 +53,7 @@ async def _async_multiple_call_helper(hass, pywemo_device, call1, call2):
             return
         nonlocal call_count
         call_count += 1
-        hass.add_job(waiting.set)
+        hass.loop.call_soon_threadsafe(waiting.set)
         event.wait()
 
     # Danger! Do not use a Mock side_effect here. The test will deadlock. When

@@ -1,29 +1,22 @@
 """Support for Sure PetCare Flaps/Pets sensors."""
 from __future__ import annotations
 
-import logging
 from typing import cast
 
 from surepy.entities import SurepyEntity
 from surepy.entities.devices import Felaqua as SurepyFelaqua
 from surepy.enums import EntityType
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_VOLTAGE,
-    DEVICE_CLASS_BATTERY,
-    PERCENTAGE,
-    VOLUME_MILLILITERS,
-)
+from homeassistant.const import ATTR_VOLTAGE, PERCENTAGE, VOLUME_MILLILITERS
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SurePetcareDataCoordinator
 from .const import DOMAIN, SURE_BATT_VOLTAGE_DIFF, SURE_BATT_VOLTAGE_LOW
 from .entity import SurePetcareEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -52,9 +45,10 @@ async def async_setup_entry(
 
 
 class SureBattery(SurePetcareEntity, SensorEntity):
-    """A sensor implementation for Sure Petcare Entities."""
+    """A sensor implementation for Sure Petcare batteries."""
 
-    _attr_device_class = DEVICE_CLASS_BATTERY
+    _attr_device_class = SensorDeviceClass.BATTERY
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_native_unit_of_measurement = PERCENTAGE
 
     def __init__(

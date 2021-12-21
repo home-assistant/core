@@ -7,6 +7,7 @@ import math
 
 import aiolifx as aiolifx_module
 import aiolifx_effects as aiolifx_effects_module
+from awesomeversion import AwesomeVersion
 import voluptuous as vol
 
 from homeassistant import util
@@ -34,11 +35,18 @@ from homeassistant.components.light import (
     LightEntity,
     preprocess_turn_on_alternatives,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_MODE,
+    ATTR_MODEL,
+    ATTR_SW_VERSION,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import callback
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.event import async_track_point_in_utc_time
 import homeassistant.util.color as color_util
 
@@ -58,6 +66,8 @@ DISCOVERY_INTERVAL = 60
 MESSAGE_TIMEOUT = 1.0
 MESSAGE_RETRIES = 8
 UNAVAILABLE_GRACE = 90
+
+FIX_MAC_FW = AwesomeVersion("3.70")
 
 SERVICE_LIFX_SET_STATE = "set_state"
 
@@ -109,19 +119,19 @@ LIFX_EFFECT_PULSE_SCHEMA = cv.make_entity_service_schema(
         ATTR_BRIGHTNESS_PCT: VALID_BRIGHTNESS_PCT,
         vol.Exclusive(ATTR_COLOR_NAME, COLOR_GROUP): cv.string,
         vol.Exclusive(ATTR_RGB_COLOR, COLOR_GROUP): vol.All(
-            vol.ExactSequence((cv.byte, cv.byte, cv.byte)), vol.Coerce(tuple)
+            vol.Coerce(tuple), vol.ExactSequence((cv.byte, cv.byte, cv.byte))
         ),
         vol.Exclusive(ATTR_XY_COLOR, COLOR_GROUP): vol.All(
-            vol.ExactSequence((cv.small_float, cv.small_float)), vol.Coerce(tuple)
+            vol.Coerce(tuple), vol.ExactSequence((cv.small_float, cv.small_float))
         ),
         vol.Exclusive(ATTR_HS_COLOR, COLOR_GROUP): vol.All(
+            vol.Coerce(tuple),
             vol.ExactSequence(
                 (
                     vol.All(vol.Coerce(float), vol.Range(min=0, max=360)),
                     vol.All(vol.Coerce(float), vol.Range(min=0, max=100)),
                 )
             ),
-            vol.Coerce(tuple),
         ),
         vol.Exclusive(ATTR_COLOR_TEMP, COLOR_GROUP): vol.All(
             vol.Coerce(int), vol.Range(min=1)
@@ -166,8 +176,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up LIFX from a config entry."""
     # Priority 1: manual config
-    interfaces = hass.data[LIFX_DOMAIN].get(DOMAIN)
-    if not interfaces:
+    if not (interfaces := hass.data[LIFX_DOMAIN].get(DOMAIN)):
         # Priority 2: scanned interfaces
         lifx_ip_addresses = await aiolifx().LifxScan(hass.loop).scan()
         interfaces = [{CONF_SERVER: ip} for ip in lifx_ip_addresses]
@@ -251,17 +260,14 @@ class LIFXManager:
     def start_discovery(self, interface):
         """Start discovery on a network interface."""
         kwargs = {"discovery_interval": DISCOVERY_INTERVAL}
-        broadcast_ip = interface.get(CONF_BROADCAST)
-        if broadcast_ip:
+        if broadcast_ip := interface.get(CONF_BROADCAST):
             kwargs["broadcast_ip"] = broadcast_ip
         lifx_discovery = aiolifx().LifxDiscovery(self.hass.loop, self, **kwargs)
 
         kwargs = {}
-        listen_ip = interface.get(CONF_SERVER)
-        if listen_ip:
+        if listen_ip := interface.get(CONF_SERVER):
             kwargs["listen_ip"] = listen_ip
-        listen_port = interface.get(CONF_PORT)
-        if listen_port:
+        if listen_port := interface.get(CONF_PORT):
             kwargs["listen_port"] = listen_port
         lifx_discovery.start(**kwargs)
 
@@ -452,25 +458,33 @@ class LIFXLight(LightEntity):
         self.postponed_update = None
         self.lock = asyncio.Lock()
 
+    def get_mac_addr(self):
+        """Increment the last byte of the mac address by one for FW>3.70."""
+        if (
+            self.bulb.host_firmware_version
+            and AwesomeVersion(self.bulb.host_firmware_version) >= FIX_MAC_FW
+        ):
+            octets = [int(octet, 16) for octet in self.bulb.mac_addr.split(":")]
+            octets[5] = (octets[5] + 1) % 256
+            return ":".join(f"{octet:02x}" for octet in octets)
+        return self.bulb.mac_addr
+
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return information about the device."""
-        info = {
-            "identifiers": {(LIFX_DOMAIN, self.unique_id)},
-            "name": self.name,
-            "connections": {(dr.CONNECTION_NETWORK_MAC, self.bulb.mac_addr)},
-            "manufacturer": "LIFX",
-        }
+        _map = aiolifx().products.product_map
 
-        version = self.bulb.host_firmware_version
-        if version is not None:
-            info["sw_version"] = version
+        info = DeviceInfo(
+            identifiers={(LIFX_DOMAIN, self.unique_id)},
+            connections={(dr.CONNECTION_NETWORK_MAC, self.get_mac_addr())},
+            manufacturer="LIFX",
+            name=self.name,
+        )
 
-        product_map = aiolifx().products.product_map
-
-        model = product_map.get(self.bulb.product) or self.bulb.product
-        if model is not None:
-            info["model"] = str(model)
+        if (model := (_map.get(self.bulb.product) or self.bulb.product)) is not None:
+            info[ATTR_MODEL] = str(model)
+        if (version := self.bulb.host_firmware_version) is not None:
+            info[ATTR_SW_VERSION] = version
 
         return info
 
@@ -693,8 +707,7 @@ class LIFXStrip(LIFXColor):
         bulb = self.bulb
         num_zones = len(bulb.color_zones)
 
-        zones = kwargs.get(ATTR_ZONES)
-        if zones is None:
+        if (zones := kwargs.get(ATTR_ZONES)) is None:
             # Fast track: setting all zones to the same brightness and color
             # can be treated as a single-zone bulb.
             if hsbk[2] is not None and hsbk[3] is not None:

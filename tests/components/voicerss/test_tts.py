@@ -1,5 +1,6 @@
 """The tests for the VoiceRSS speech platform."""
 import asyncio
+from http import HTTPStatus
 import os
 import shutil
 
@@ -65,7 +66,9 @@ class TestTTSVoiceRSSPlatform:
         """Test service call say."""
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
-        aioclient_mock.post(self.url, data=self.form_data, status=200, content=b"test")
+        aioclient_mock.post(
+            self.url, data=self.form_data, status=HTTPStatus.OK, content=b"test"
+        )
 
         config = {tts.DOMAIN: {"platform": "voicerss", "api_key": "1234567xx"}}
 
@@ -92,7 +95,9 @@ class TestTTSVoiceRSSPlatform:
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
         self.form_data["hl"] = "de-de"
-        aioclient_mock.post(self.url, data=self.form_data, status=200, content=b"test")
+        aioclient_mock.post(
+            self.url, data=self.form_data, status=HTTPStatus.OK, content=b"test"
+        )
 
         config = {
             tts.DOMAIN: {
@@ -124,7 +129,9 @@ class TestTTSVoiceRSSPlatform:
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
         self.form_data["hl"] = "de-de"
-        aioclient_mock.post(self.url, data=self.form_data, status=200, content=b"test")
+        aioclient_mock.post(
+            self.url, data=self.form_data, status=HTTPStatus.OK, content=b"test"
+        )
 
         config = {tts.DOMAIN: {"platform": "voicerss", "api_key": "1234567xx"}}
 
@@ -203,7 +210,7 @@ class TestTTSVoiceRSSPlatform:
         aioclient_mock.post(
             self.url,
             data=self.form_data,
-            status=200,
+            status=HTTPStatus.OK,
             content=b"The subscription does not support SSML!",
         )
 

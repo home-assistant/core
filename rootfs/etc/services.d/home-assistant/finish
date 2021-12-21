@@ -13,8 +13,12 @@ ifelse { s6-test ${1} -eq ${SIGNAL_EXIT_CODE} } {
   # Process terminated by a signal
   define signal ${2}
   foreground { s6-echo "[finish] process received signal ${signal}" }
+  backtick -n new_exit_code { s6-expr 128 + ${signal} }
+  importas -ui new_exit_code new_exit_code
+  foreground { redirfd -w 1 /var/run/s6/env-stage3/S6_STAGE2_EXITED s6-echo -n -- ${new_exit_code} }
   if { s6-test ${signal} -ne ${SIGTERM} }
   s6-svscanctl -t /var/run/s6/services
 }
 
+foreground { redirfd -w 1 /var/run/s6/env-stage3/S6_STAGE2_EXITED s6-echo -n -- ${1} }
 s6-svscanctl -t /var/run/s6/services
