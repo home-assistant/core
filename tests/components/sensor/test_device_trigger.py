@@ -5,7 +5,7 @@ import pytest
 
 import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.sensor import DEVICE_CLASSES, DOMAIN, SensorDeviceClass
+from homeassistant.components.sensor import DOMAIN, SensorDeviceClass
 from homeassistant.components.sensor.device_trigger import ENTITY_TRIGGERS
 from homeassistant.const import CONF_PLATFORM, PERCENTAGE, STATE_UNKNOWN
 from homeassistant.helpers import device_registry
@@ -54,7 +54,7 @@ async def test_get_triggers(hass, device_reg, entity_reg, enable_custom_integrat
         config_entry_id=config_entry.entry_id,
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    for device_class in DEVICE_CLASSES:
+    for device_class in SensorDeviceClass:
         entity_reg.async_get_or_create(
             DOMAIN,
             "test",
@@ -73,7 +73,7 @@ async def test_get_triggers(hass, device_reg, entity_reg, enable_custom_integrat
             "device_id": device_entry.id,
             "entity_id": platform.ENTITIES[device_class].entity_id,
         }
-        for device_class in DEVICE_CLASSES
+        for device_class in SensorDeviceClass
         if device_class in UNITS_OF_MEASUREMENT
         for trigger in ENTITY_TRIGGERS[device_class]
         if device_class != "none"
