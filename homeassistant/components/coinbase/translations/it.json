@@ -12,7 +12,7 @@
             "user": {
                 "data": {
                     "api_key": "Chiave API",
-                    "api_token": " API Segreta",
+                    "api_token": "API segreta",
                     "currencies": "Valute del saldo del conto",
                     "exchange_rates": "Tassi di cambio"
                 },
