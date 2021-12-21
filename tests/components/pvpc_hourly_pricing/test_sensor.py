@@ -11,23 +11,28 @@ from homeassistant.components.pvpc_hourly_pricing import (
     TARIFFS,
 )
 from homeassistant.const import CONF_NAME
-from homeassistant.core import ATTR_NOW, EVENT_TIME_CHANGED
 from homeassistant.util import dt as dt_util
 
 from .conftest import check_valid_state
 
-from tests.common import MockConfigEntry, date_util, mock_registry
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    date_util,
+    mock_registry,
+)
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def _process_time_step(
     hass, mock_data, key_state=None, value=None, tariff=TARIFFS[0], delta_min=60
 ):
+    await list(hass.data[DOMAIN].values())[0].async_refresh()
     state = hass.states.get("sensor.test_dst")
     check_valid_state(state, tariff=tariff, value=value, key_attr=key_state)
 
     mock_data["return_time"] += timedelta(minutes=delta_min)
-    hass.bus.async_fire(EVENT_TIME_CHANGED, {ATTR_NOW: mock_data["return_time"]})
+    async_fire_time_changed(hass, mock_data["return_time"])
     await hass.async_block_till_done()
     return state
 
@@ -64,45 +69,34 @@ async def test_sensor_availability(
 
         await _process_time_step(hass, mock_data, "price_21h", 0.16554)
         await _process_time_step(hass, mock_data, "price_22h", 0.15239)
-        assert pvpc_aioclient_mock.call_count == 3
-        await _process_time_step(hass, mock_data, "price_23h", 0.14612)
         assert pvpc_aioclient_mock.call_count == 4
+        await _process_time_step(hass, mock_data, "price_23h", 0.14612)
+        assert pvpc_aioclient_mock.call_count == 5
 
         # sensor has no more prices, state is "unavailable" from now on
-        await _process_time_step(hass, mock_data, value="unavailable")
         await _process_time_step(hass, mock_data, value="unavailable")
         num_errors = sum(
             1
             for x in caplog.records
             if x.levelno == logging.ERROR and "unknown job listener" not in x.msg
         )
-        num_warnings = sum(1 for x in caplog.records if x.levelno == logging.WARNING)
-        assert num_warnings == 1
-        assert num_errors == 0
-        assert pvpc_aioclient_mock.call_count == 8
-
+        assert num_errors == 1
         # check that it is silent until it becomes available again
         caplog.clear()
-        with caplog.at_level(logging.WARNING):
+        with caplog.at_level(logging.INFO):
             # silent mode
-            for _ in range(21):
+            for _ in range(23):
                 await _process_time_step(hass, mock_data, value="unavailable")
             assert pvpc_aioclient_mock.call_count == 29
             assert len(caplog.messages) == 0
 
-            # warning about data access recovered
-            await _process_time_step(hass, mock_data, value="unavailable")
-            assert pvpc_aioclient_mock.call_count == 30
-            assert len(caplog.messages) == 1
-            assert caplog.records[0].levelno == logging.WARNING
-
             # working ok again
             await _process_time_step(hass, mock_data, "price_00h", value=0.13104)
             assert pvpc_aioclient_mock.call_count == 30
+            assert len(caplog.messages) == 1
+            assert caplog.records[0].levelno == logging.INFO
             await _process_time_step(hass, mock_data, "price_01h", value=0.12055)
             assert pvpc_aioclient_mock.call_count == 30
-            assert len(caplog.messages) == 1
-            assert caplog.records[0].levelno == logging.WARNING
 
 
 async def test_multi_sensor_migration(
