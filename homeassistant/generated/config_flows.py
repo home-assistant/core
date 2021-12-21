@@ -293,6 +293,7 @@ FLOWS = [
     "squeezebox",
     "srp_energy",
     "starline",
+    "starlink",
     "stookalert",
     "subaru",
     "surepetcare",

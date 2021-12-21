@@ -1,0 +1,22 @@
+{
+    "config": {
+      "step": {
+        "user": {
+          "title": "Starlink Setup",
+          "data": {
+            "address": "[%key:common::config_flow::data::host%]",
+            "scan_interval": "Scan interval (seconds)",
+            "name": "[%key:common::config_flow::data::name%]"
+          }
+        }
+      },
+      "error": {
+        "cannot_connect": "Could not connect to Starlink. Please make sure you are using the Starlink router, or have a static route to 192.168.100.1.",
+        "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+        "unknown": "[%key:common::config_flow::error::unknown%]"
+      },
+      "abort": {
+        "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      }
+    }
+  }

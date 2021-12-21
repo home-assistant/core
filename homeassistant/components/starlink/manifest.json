@@ -1,0 +1,17 @@
+{
+  "domain": "starlink",
+  "name": "Starlink",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/starlink",
+  "requirements": [
+    "starlink-python==0.1.1"
+  ],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@pacorain"
+  ],
+  "iot_class": "local_polling"
+}

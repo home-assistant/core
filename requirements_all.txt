@@ -2249,6 +2249,9 @@ starline==0.1.5
 # homeassistant.components.starlingbank
 starlingbank==3.2
 
+# homeassistant.components.starlink
+starlink-python==0.1.1
+
 # homeassistant.components.statsd
 statsd==3.2.1
 

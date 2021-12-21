@@ -1346,6 +1346,9 @@ srpenergy==1.3.2
 # homeassistant.components.starline
 starline==0.1.5
 
+# homeassistant.components.starlink
+starlink-python==0.1.1
+
 # homeassistant.components.statsd
 statsd==3.2.1
 
