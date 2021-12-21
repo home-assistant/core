@@ -14,6 +14,7 @@ from typing import Any, Callable, cast
 
 from homeassistant.components import zone as zone_cmp
 from homeassistant.components.device_automation import (
+    DeviceAutomationType,
     async_get_device_automation_platform,
 )
 from homeassistant.components.sensor import DEVICE_CLASS_TIMESTAMP
@@ -881,7 +882,7 @@ async def async_device_from_config(
 ) -> ConditionCheckerType:
     """Test a device condition."""
     platform = await async_get_device_automation_platform(
-        hass, config[CONF_DOMAIN], "condition"
+        hass, config[CONF_DOMAIN], DeviceAutomationType.CONDITION
     )
     return trace_condition_function(
         cast(
@@ -952,7 +953,7 @@ async def async_validate_condition_config(
         config = cv.DEVICE_CONDITION_SCHEMA(config)
         assert not isinstance(config, Template)
         platform = await async_get_device_automation_platform(
-            hass, config[CONF_DOMAIN], "condition"
+            hass, config[CONF_DOMAIN], DeviceAutomationType.CONDITION
         )
         if hasattr(platform, "async_validate_condition_config"):
             return await platform.async_validate_condition_config(hass, config)  # type: ignore

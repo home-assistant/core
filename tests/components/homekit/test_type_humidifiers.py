@@ -27,11 +27,11 @@ from homeassistant.components.humidifier.const import (
     DOMAIN,
     SERVICE_SET_HUMIDITY,
 )
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
-    DEVICE_CLASS_HUMIDITY,
     PERCENTAGE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
@@ -313,7 +313,7 @@ async def test_humidifier_with_linked_humidity_sensor(hass, hk_driver):
         humidity_sensor_entity_id,
         "42.0",
         {
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.HUMIDITY,
             ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
         },
     )
@@ -341,7 +341,7 @@ async def test_humidifier_with_linked_humidity_sensor(hass, hk_driver):
         humidity_sensor_entity_id,
         "43.0",
         {
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.HUMIDITY,
             ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
         },
     )
@@ -353,7 +353,7 @@ async def test_humidifier_with_linked_humidity_sensor(hass, hk_driver):
         humidity_sensor_entity_id,
         STATE_UNAVAILABLE,
         {
-            ATTR_DEVICE_CLASS: DEVICE_CLASS_HUMIDITY,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.HUMIDITY,
             ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
         },
     )

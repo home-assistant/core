@@ -399,6 +399,13 @@ async def test_async_get_device_automations_single_device_trigger(
     )
     entity_reg.async_get_or_create("light", "test", "5678", device_id=device_entry.id)
     result = await device_automation.async_get_device_automations(
+        hass, device_automation.DeviceAutomationType.TRIGGER, [device_entry.id]
+    )
+    assert device_entry.id in result
+    assert len(result[device_entry.id]) == 2
+
+    # Test deprecated str automation_type works, to be removed in 2022.4
+    result = await device_automation.async_get_device_automations(
         hass, "trigger", [device_entry.id]
     )
     assert device_entry.id in result
@@ -417,7 +424,9 @@ async def test_async_get_device_automations_all_devices_trigger(
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     entity_reg.async_get_or_create("light", "test", "5678", device_id=device_entry.id)
-    result = await device_automation.async_get_device_automations(hass, "trigger")
+    result = await device_automation.async_get_device_automations(
+        hass, device_automation.DeviceAutomationType.TRIGGER
+    )
     assert device_entry.id in result
     assert len(result[device_entry.id]) == 3  # toggled, turned_on, turned_off
 
@@ -434,7 +443,9 @@ async def test_async_get_device_automations_all_devices_condition(
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     entity_reg.async_get_or_create("light", "test", "5678", device_id=device_entry.id)
-    result = await device_automation.async_get_device_automations(hass, "condition")
+    result = await device_automation.async_get_device_automations(
+        hass, device_automation.DeviceAutomationType.CONDITION
+    )
     assert device_entry.id in result
     assert len(result[device_entry.id]) == 2
 
@@ -451,7 +462,9 @@ async def test_async_get_device_automations_all_devices_action(
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     entity_reg.async_get_or_create("light", "test", "5678", device_id=device_entry.id)
-    result = await device_automation.async_get_device_automations(hass, "action")
+    result = await device_automation.async_get_device_automations(
+        hass, device_automation.DeviceAutomationType.ACTION
+    )
     assert device_entry.id in result
     assert len(result[device_entry.id]) == 3
 
@@ -472,7 +485,9 @@ async def test_async_get_device_automations_all_devices_action_exception_throw(
         "homeassistant.components.light.device_trigger.async_get_triggers",
         side_effect=KeyError,
     ):
-        result = await device_automation.async_get_device_automations(hass, "trigger")
+        result = await device_automation.async_get_device_automations(
+            hass, device_automation.DeviceAutomationType.TRIGGER
+        )
     assert device_entry.id in result
     assert len(result[device_entry.id]) == 0
     assert "KeyError" in caplog.text

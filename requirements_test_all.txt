@@ -137,7 +137,7 @@ aiohomekit==0.6.4
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==3.0.6
+aiohue==3.0.7
 
 # homeassistant.components.apache_kafka
 aiokafka==0.6.0
@@ -260,7 +260,7 @@ base36==0.1.1
 bellows==0.29.0
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.8.5
+bimmer_connected==0.8.7
 
 # homeassistant.components.blebox
 blebox_uniapi==1.3.3
@@ -1465,7 +1465,7 @@ wolf_smartset==0.1.11
 xbox-webapi==2.0.11
 
 # homeassistant.components.knx
-xknx==0.18.13
+xknx==0.18.14
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz

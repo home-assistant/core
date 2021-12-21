@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock
 
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.homekit.const import CHAR_PROGRAMMABLE_SWITCH_EVENT
 from homeassistant.components.homekit.type_triggers import DeviceTriggerAccessory
 from homeassistant.const import STATE_OFF, STATE_ON
@@ -27,7 +28,9 @@ async def test_programmable_switch_button_fires_on_trigger(
     assert entry is not None
     device_id = entry.device_id
 
-    device_triggers = await async_get_device_automations(hass, "trigger", device_id)
+    device_triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device_id
+    )
     acc = DeviceTriggerAccessory(
         hass,
         hk_driver,
