@@ -24,6 +24,11 @@ NUMBER_ENTITIES: dict[str, NumberEntityDescription] = {
         name="Elevation",
         icon="mdi:elevation-rise",
     ),
+    CharacteristicsTypes.Vendor.AQARA_GATEWAY_VOLUME: NumberEntityDescription(
+        key=CharacteristicsTypes.Vendor.AQARA_GATEWAY_VOLUME,
+        name="Volume",
+        icon="mdi:volume-high",
+    ),
 }
 
 
@@ -56,6 +61,14 @@ class HomeKitNumber(CharacteristicEntity, NumberEntity):
         """Initialise a HomeKit number control."""
         self.entity_description = description
         super().__init__(conn, info, char)
+
+    @property
+    def name(self) -> str:
+        """Return the name of the device if any."""
+        prefix = ""
+        if name := super().name:
+            prefix = f"{name} -"
+        return f"{prefix} {self.entity_description.name}"
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity is tracking."""

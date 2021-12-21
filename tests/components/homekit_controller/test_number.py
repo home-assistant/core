@@ -33,7 +33,7 @@ async def test_read_number(hass, utcnow):
     # Helper will be for the primary entity, which is the outlet. Make a helper for the sensor.
     energy_helper = Helper(
         hass,
-        "number.testdevice",
+        "number.testdevice_spray_quantity",
         helper.pairing,
         helper.accessory,
         helper.config_entry,
@@ -61,7 +61,7 @@ async def test_write_number(hass, utcnow):
     # Helper will be for the primary entity, which is the outlet. Make a helper for the sensor.
     energy_helper = Helper(
         hass,
-        "number.testdevice",
+        "number.testdevice_spray_quantity",
         helper.pairing,
         helper.accessory,
         helper.config_entry,
@@ -73,7 +73,7 @@ async def test_write_number(hass, utcnow):
     await hass.services.async_call(
         "number",
         "set_value",
-        {"entity_id": "number.testdevice", "value": 5},
+        {"entity_id": "number.testdevice_spray_quantity", "value": 5},
         blocking=True,
     )
     assert spray_level.value == 5
@@ -81,7 +81,7 @@ async def test_write_number(hass, utcnow):
     await hass.services.async_call(
         "number",
         "set_value",
-        {"entity_id": "number.testdevice", "value": 3},
+        {"entity_id": "number.testdevice_spray_quantity", "value": 3},
         blocking=True,
     )
     assert spray_level.value == 3
