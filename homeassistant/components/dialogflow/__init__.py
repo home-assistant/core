@@ -179,15 +179,15 @@ class DialogflowResponse:
 
     def as_dict(self):
         """Return response in a Dialogflow valid dictionary."""
-        valRetour = None
+        returnValue = None
         if self.api_version is V1:
-            valRetour = {"speech": self.speech, "displayText": self.speech, "source": SOURCE}
+            returnValue = {"speech": self.speech, "displayText": self.speech, "source": SOURCE}
 
         if self.api_version is V2:
-            valRetour = {"fulfillmentText": self.speech, "source": SOURCE}
+            returnValue = {"fulfillmentText": self.speech, "source": SOURCE}
 
         if self.api_version is V3:
-            valRetour = {
+            returnValue = {
                 "session": {
                 "id": self.parameters["session_id"],
                 "params": {}
@@ -207,5 +207,5 @@ class DialogflowResponse:
                 }
                 }
             }
-        _LOGGER.warning( "valRetour : %s" %( valRetour ))
-        return valRetour
+        _LOGGER.warning( "valRetour : %s" %( returnValue ))
+        return returnValue
