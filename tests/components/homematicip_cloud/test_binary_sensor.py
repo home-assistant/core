@@ -572,4 +572,4 @@ async def test_hmip_multi_contact_interface(hass, default_mock_hap_factory):
         "HmIP-FCI6",
     )
 
-    assert ha_state.state == STATE_OFF
+    assert ha_state.state == STATE_UNKNOWN
