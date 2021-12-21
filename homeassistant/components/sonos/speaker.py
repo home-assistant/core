@@ -264,7 +264,7 @@ class SonosSpeaker:
         dispatcher_send(self.hass, SONOS_CREATE_MEDIA_PLAYER, self)
         dispatcher_send(self.hass, SONOS_SPEAKER_ADDED, self.soco.uid)
 
-        self.hass.add_job(self.async_subscribe())
+        self.hass.create_task(self.async_subscribe())
 
     #
     # Entity management
