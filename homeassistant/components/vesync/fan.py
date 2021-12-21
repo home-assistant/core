@@ -184,7 +184,7 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
         if not self.smartfan.is_on:
             return
         
-        self.smartfan.set_night_light(night_light)
+        self.smartfan.set_night_light(night_light_mode)
         
         self.schedule_update_ha_state()
         
