@@ -865,6 +865,26 @@ def test_base64_decode(hass):
     )
 
 
+def test_slugify(hass):
+    """Test the slugify filter."""
+    assert (
+        template.Template('{{ slugify("Home Assistant") }}', hass).async_render()
+        == "home_assistant"
+    )
+    assert (
+        template.Template('{{ "Home Assistant" | slugify }}', hass).async_render()
+        == "home_assistant"
+    )
+    assert (
+        template.Template('{{ slugify("Home Assistant", "-") }}', hass).async_render()
+        == "home-assistant"
+    )
+    assert (
+        template.Template('{{ "Home Assistant" | slugify("-") }}', hass).async_render()
+        == "home-assistant"
+    )
+
+
 def test_ordinal(hass):
     """Test the ordinal filter."""
     tests = [
