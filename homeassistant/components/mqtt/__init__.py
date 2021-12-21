@@ -260,21 +260,21 @@ class MqttCommandTemplate:
     def __init__(
         self,
         command_template: template.Template | None,
-        entity: Entity | HomeAssistant,
+        *,
+        hass: HomeAssistant | None = None,
+        entity: Entity | None = None,
     ) -> None:
         """Instantiate a command template."""
         self._attr_command_template = command_template
         if command_template is None:
             return
 
-        if isinstance(entity, HomeAssistant):
-            command_template.hass = entity
-            return
-
         self._entity = entity
-        self._variables = [ATTR_ENTITY_ID, ATTR_NAME]
 
-        command_template.hass = entity.hass
+        command_template.hass = hass
+
+        if entity:
+            command_template.hass = entity.hass
 
     @callback
     def async_render(
@@ -303,9 +303,9 @@ class MqttCommandTemplate:
             return value
 
         values = {"value": value}
-        if hasattr(self, "_variables"):
-            for key in self._variables:
-                values[key] = getattr(self._entity, key)
+        if self._entity:
+            values[ATTR_ENTITY_ID] = self._entity.entity_id
+            values[ATTR_NAME] = self._entity.name
         if variables is not None:
             values.update(variables)
         return _convert_outgoing_payload(
@@ -589,7 +589,7 @@ async def async_setup_entry(hass, entry):
         if payload_template is not None:
             try:
                 payload = MqttCommandTemplate(
-                    template.Template(payload_template), hass
+                    template.Template(payload_template), hass=hass
                 ).async_render()
             except (template.jinja2.TemplateError, TemplateError) as exc:
                 _LOGGER.error(

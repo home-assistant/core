@@ -160,7 +160,7 @@ async def test_publish(hass, mqtt_mock):
 
 async def test_convert_outgoing_payload(hass):
     """Test the converting of outgoing MQTT payloads without template."""
-    command_template = mqtt.MqttCommandTemplate(None, hass)
+    command_template = mqtt.MqttCommandTemplate(None, hass=hass)
     assert command_template.async_render(b"\xde\xad\xbe\xef") == b"\xde\xad\xbe\xef"
 
     assert (
@@ -181,13 +181,13 @@ async def test_command_template_value(hass):
     variables = {"id": 1234, "some_var": "beer"}
 
     # test rendering value
-    tpl = template.Template("{{ value + 1 }}", hass)
-    cmd_tpl = mqtt.MqttCommandTemplate(tpl, hass)
+    tpl = template.Template("{{ value + 1 }}", hass=hass)
+    cmd_tpl = mqtt.MqttCommandTemplate(tpl, hass=hass)
     assert cmd_tpl.async_render(4321) == "4322"
 
     # test variables at rendering
-    tpl = template.Template("{{ some_var }}", hass)
-    cmd_tpl = mqtt.MqttCommandTemplate(tpl, hass)
+    tpl = template.Template("{{ some_var }}", hass=hass)
+    cmd_tpl = mqtt.MqttCommandTemplate(tpl, hass=hass)
     assert cmd_tpl.async_render(None, variables=variables) == "beer"
 
 

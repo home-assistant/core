@@ -330,7 +330,9 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         for key in COMMAND_TEMPLATE_KEYS:
             command_templates[key] = None
         for key in COMMAND_TEMPLATE_KEYS & config.keys():
-            command_templates[key] = MqttCommandTemplate(config[key], self).async_render
+            command_templates[key] = MqttCommandTemplate(
+                config[key], entity=self
+            ).async_render
         self._command_templates = command_templates
 
         optimistic = config[CONF_OPTIMISTIC]
