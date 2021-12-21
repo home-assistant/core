@@ -396,7 +396,7 @@ async def test_setting_sensor_value_via_mqtt_message_and_template_and_raw_state_
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
 
     async_fire_mqtt_message(hass, "test-topic", b"\x01")
     state = hass.states.get("binary_sensor.test")
