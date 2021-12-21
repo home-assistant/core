@@ -3,9 +3,14 @@ Regression tests for Aqara Gateway V3.
 
 https://github.com/home-assistant/core/issues/20957
 """
-
+from homeassistant.components.alarm_control_panel import (
+    SUPPORT_ALARM_ARM_AWAY,
+    SUPPORT_ALARM_ARM_HOME,
+    SUPPORT_ALARM_ARM_NIGHT,
+)
 from homeassistant.components.light import SUPPORT_BRIGHTNESS, SUPPORT_COLOR
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.entity import EntityCategory
 
 from tests.components.homekit_controller.common import (
     Helper,
@@ -27,27 +32,31 @@ async def test_aqara_gateway_setup(hass):
             "alarm_control_panel.aqara_hub_1563",
             "homekit-0000000123456789-66304",
             "Aqara Hub-1563",
-            7,
+            SUPPORT_ALARM_ARM_NIGHT | SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY,
+            None,
         ),
         (
             "light.aqara_hub_1563",
             "homekit-0000000123456789-65792",
             "Aqara Hub-1563",
             SUPPORT_BRIGHTNESS | SUPPORT_COLOR,
+            None,
         ),
         (
             "number.aqara_hub_1563_volume",
             "homekit-0000000123456789-aid:1-sid:65536-cid:65541",
             "Aqara Hub-1563 - Volume",
             None,
+            EntityCategory.CONFIG,
         ),
     ]
 
     device_ids = set()
 
-    for (entity_id, unique_id, friendly_name, supported_features) in sensors:
+    for (entity_id, unique_id, friendly_name, supported_features, category) in sensors:
         entry = entity_registry.async_get(entity_id)
         assert entry.unique_id == unique_id
+        assert entry.entity_category == category
 
         helper = Helper(
             hass,
