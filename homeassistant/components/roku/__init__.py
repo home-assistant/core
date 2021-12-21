@@ -13,7 +13,7 @@ from homeassistant.helpers import config_validation as cv
 from .const import DOMAIN
 from .coordinator import RokuDataUpdateCoordinator
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE]
 _LOGGER = logging.getLogger(__name__)
