@@ -127,7 +127,7 @@ async def test_get_action_capabilities(hass, device_reg, entity_reg):
     assert action_types == {"turn_on", "toggle", "turn_off"}
     for action in actions:
         capabilities = await async_get_device_automation_capabilities(
-            hass, "action", action
+            hass, DeviceAutomationType.ACTION, action
         )
         assert capabilities == {"extra_fields": []}
 
@@ -135,7 +135,7 @@ async def test_get_action_capabilities(hass, device_reg, entity_reg):
     entity_reg.async_remove(entity_id)
     for action in actions:
         capabilities = await async_get_device_automation_capabilities(
-            hass, "action", action
+            hass, DeviceAutomationType.ACTION, action
         )
         assert capabilities == {"extra_fields": []}
 
@@ -273,7 +273,7 @@ async def test_get_action_capabilities_features(
     assert action_types == expected_actions
     for action in actions:
         capabilities = await async_get_device_automation_capabilities(
-            hass, "action", action
+            hass, DeviceAutomationType.ACTION, action
         )
         expected = {"extra_fields": expected_capabilities.get(action["type"], [])}
         assert capabilities == expected
