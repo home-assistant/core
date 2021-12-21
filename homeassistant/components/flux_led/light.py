@@ -96,8 +96,7 @@ CUSTOM_EFFECT_DICT: Final = {
         [vol.All(vol.Coerce(tuple), vol.ExactSequence((cv.byte, cv.byte, cv.byte)))],
     ),
     vol.Optional(CONF_SPEED_PCT, default=50): vol.All(
-        vol.Coerce(int),
-        vol.Range(min=0, max=100),
+        vol.Coerce(int), vol.Range(min=0, max=100)
     ),
     vol.Optional(CONF_TRANSITION, default=TRANSITION_GRADUAL): vol.All(
         cv.string, vol.In([TRANSITION_GRADUAL, TRANSITION_JUMP, TRANSITION_STROBE])
