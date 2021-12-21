@@ -17,9 +17,7 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_OFF,
     PRESET_ACTIVITY,
     PRESET_AWAY,
-    PRESET_BOOST,
     PRESET_COMFORT,
-    PRESET_ECO,
     PRESET_HOME,
     PRESET_NONE,
     PRESET_SLEEP,
@@ -76,9 +74,7 @@ SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE
 CONF_PRESETS = {
     p: f"{p}_temp"
     for p in (
-        PRESET_ECO,
         PRESET_AWAY,
-        PRESET_BOOST,
         PRESET_COMFORT,
         PRESET_HOME,
         PRESET_SLEEP,
