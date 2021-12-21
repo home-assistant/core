@@ -138,11 +138,11 @@
             "on": "\u63a5\u7d9a\u6e08"
         },
         "door": {
-            "off": "\u30af\u30ed\u30fc\u30ba\u30c9",
+            "off": "\u9589\u9396",
             "on": "\u30aa\u30fc\u30d7\u30f3"
         },
         "garage_door": {
-            "off": "\u30af\u30ed\u30fc\u30ba\u30c9",
+            "off": "\u9589\u9396",
             "on": "\u30aa\u30fc\u30d7\u30f3"
         },
         "gas": {
@@ -178,7 +178,7 @@
             "on": "\u691c\u51fa"
         },
         "opening": {
-            "off": "\u30af\u30ed\u30fc\u30ba\u30c9",
+            "off": "\u9589\u9396",
             "on": "\u30aa\u30fc\u30d7\u30f3"
         },
         "plug": {
@@ -218,7 +218,7 @@
             "on": "\u691c\u51fa"
         },
         "window": {
-            "off": "\u30af\u30ed\u30fc\u30ba\u30c9",
+            "off": "\u9589\u9396",
             "on": "\u30aa\u30fc\u30d7\u30f3"
         }
     },

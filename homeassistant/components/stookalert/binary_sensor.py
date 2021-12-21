@@ -17,7 +17,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CONF_PROVINCE, DOMAIN
 
-ATTRIBUTION = "Data provided by rivm.nl"
 SCAN_INTERVAL = timedelta(minutes=60)
 
 
@@ -34,7 +33,7 @@ async def async_setup_entry(
 class StookalertBinarySensor(BinarySensorEntity):
     """Defines a Stookalert binary sensor."""
 
-    _attr_attribution = ATTRIBUTION
+    _attr_attribution = "Data provided by rivm.nl"
     _attr_device_class = BinarySensorDeviceClass.SAFETY
 
     def __init__(self, client: stookalert.stookalert, entry: ConfigEntry) -> None:

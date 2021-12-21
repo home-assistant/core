@@ -185,6 +185,7 @@ async def test_loading_from_storage(hass, hass_storage):
                     "name_by_user": "Test Friendly Name",
                     "name": "name",
                     "sw_version": "version",
+                    "hw_version": "hw_version",
                     "via_device_id": None,
                 }
             ],
@@ -215,6 +216,7 @@ async def test_loading_from_storage(hass, hass_storage):
     assert entry.id == "abcdefghijklm"
     assert entry.area_id == "12345A"
     assert entry.name_by_user == "Test Friendly Name"
+    assert entry.hw_version == "hw_version"
     assert entry.entry_type is device_registry.DeviceEntryType.SERVICE
     assert entry.disabled_by is device_registry.DeviceEntryDisabler.USER
     assert isinstance(entry.config_entries, set)
@@ -235,8 +237,8 @@ async def test_loading_from_storage(hass, hass_storage):
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_migration_1_1_to_1_2(hass, hass_storage):
-    """Test migration from version 1.1 to 1.2."""
+async def test_migration_1_1_to_1_3(hass, hass_storage):
+    """Test migration from version 1.1 to 1.3."""
     hass_storage[device_registry.STORAGE_KEY] = {
         "version": 1,
         "minor_version": 1,
@@ -265,6 +267,19 @@ async def test_migration_1_1_to_1_2(hass, hass_storage):
                     "name": None,
                     "sw_version": None,
                 },
+            ],
+            "deleted_devices": [
+                {
+                    "config_entries": ["123456"],
+                    "connections": [],
+                    "entry_type": "service",
+                    "id": "deletedid",
+                    "identifiers": [["serial", "12:34:56:AB:CD:FF"]],
+                    "manufacturer": "manufacturer",
+                    "model": "model",
+                    "name": "name",
+                    "sw_version": "version",
+                }
             ],
         },
     }
@@ -311,6 +326,7 @@ async def test_migration_1_1_to_1_2(hass, hass_storage):
                     "name": "name",
                     "name_by_user": None,
                     "sw_version": "new_version",
+                    "hw_version": None,
                     "via_device_id": None,
                 },
                 {
@@ -327,6 +343,132 @@ async def test_migration_1_1_to_1_2(hass, hass_storage):
                     "name_by_user": None,
                     "name": None,
                     "sw_version": None,
+                    "hw_version": None,
+                    "via_device_id": None,
+                },
+            ],
+            "deleted_devices": [
+                {
+                    "config_entries": ["123456"],
+                    "connections": [],
+                    "id": "deletedid",
+                    "identifiers": [["serial", "12:34:56:AB:CD:FF"]],
+                    "orphaned_timestamp": None,
+                }
+            ],
+        },
+    }
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_migration_1_2_to_1_3(hass, hass_storage):
+    """Test migration from version 1.2 to 1.3."""
+    hass_storage[device_registry.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 2,
+        "key": device_registry.STORAGE_KEY,
+        "data": {
+            "devices": [
+                {
+                    "area_id": None,
+                    "config_entries": ["1234"],
+                    "configuration_url": None,
+                    "connections": [["Zigbee", "01.23.45.67.89"]],
+                    "disabled_by": None,
+                    "entry_type": "service",
+                    "id": "abcdefghijklm",
+                    "identifiers": [["serial", "12:34:56:AB:CD:EF"]],
+                    "manufacturer": "manufacturer",
+                    "model": "model",
+                    "name": "name",
+                    "name_by_user": None,
+                    "sw_version": "new_version",
+                    "hw_version": None,
+                    "via_device_id": None,
+                },
+                {
+                    "area_id": None,
+                    "config_entries": [None],
+                    "configuration_url": None,
+                    "connections": [],
+                    "disabled_by": None,
+                    "entry_type": None,
+                    "id": "invalid-entry-type",
+                    "identifiers": [["serial", "mock-id-invalid-entry"]],
+                    "manufacturer": None,
+                    "model": None,
+                    "name_by_user": None,
+                    "name": None,
+                    "sw_version": None,
+                    "hw_version": None,
+                    "via_device_id": None,
+                },
+            ],
+            "deleted_devices": [],
+        },
+    }
+
+    await device_registry.async_load(hass)
+    registry = device_registry.async_get(hass)
+
+    # Test data was loaded
+    entry = registry.async_get_or_create(
+        config_entry_id="1234",
+        connections={("Zigbee", "01.23.45.67.89")},
+        identifiers={("serial", "12:34:56:AB:CD:EF")},
+    )
+    assert entry.id == "abcdefghijklm"
+
+    # Update to trigger a store
+    entry = registry.async_get_or_create(
+        config_entry_id="1234",
+        connections={("Zigbee", "01.23.45.67.89")},
+        identifiers={("serial", "12:34:56:AB:CD:EF")},
+        hw_version="new_version",
+    )
+    assert entry.id == "abcdefghijklm"
+
+    # Check we store migrated data
+    await flush_store(registry._store)
+
+    assert hass_storage[device_registry.STORAGE_KEY] == {
+        "version": device_registry.STORAGE_VERSION_MAJOR,
+        "minor_version": device_registry.STORAGE_VERSION_MINOR,
+        "key": device_registry.STORAGE_KEY,
+        "data": {
+            "devices": [
+                {
+                    "area_id": None,
+                    "config_entries": ["1234"],
+                    "configuration_url": None,
+                    "connections": [["Zigbee", "01.23.45.67.89"]],
+                    "disabled_by": None,
+                    "entry_type": "service",
+                    "id": "abcdefghijklm",
+                    "identifiers": [["serial", "12:34:56:AB:CD:EF"]],
+                    "manufacturer": "manufacturer",
+                    "model": "model",
+                    "name": "name",
+                    "name_by_user": None,
+                    "sw_version": "new_version",
+                    "hw_version": "new_version",
+                    "via_device_id": None,
+                },
+                {
+                    "area_id": None,
+                    "config_entries": [None],
+                    "configuration_url": None,
+                    "connections": [],
+                    "disabled_by": None,
+                    "entry_type": None,
+                    "id": "invalid-entry-type",
+                    "identifiers": [["serial", "mock-id-invalid-entry"]],
+                    "manufacturer": None,
+                    "model": None,
+                    "name_by_user": None,
+                    "name": None,
+                    "sw_version": None,
+                    "hw_version": None,
                     "via_device_id": None,
                 },
             ],
@@ -863,6 +1005,24 @@ async def test_update_sw_version(registry):
     assert mock_save.call_count == 1
     assert updated_entry != entry
     assert updated_entry.sw_version == sw_version
+
+
+async def test_update_hw_version(registry):
+    """Verify that we can update hardware version of a device."""
+    entry = registry.async_get_or_create(
+        config_entry_id="1234",
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bla", "123")},
+    )
+    assert not entry.hw_version
+    hw_version = "0x20020263"
+
+    with patch.object(registry, "async_schedule_save") as mock_save:
+        updated_entry = registry.async_update_device(entry.id, hw_version=hw_version)
+
+    assert mock_save.call_count == 1
+    assert updated_entry != entry
+    assert updated_entry.hw_version == hw_version
 
 
 async def test_update_suggested_area(registry, area_registry):

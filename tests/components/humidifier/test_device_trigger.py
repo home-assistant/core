@@ -5,6 +5,7 @@ import pytest
 import voluptuous_serialize
 
 import homeassistant.components.automation as automation
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.humidifier import DOMAIN, const, device_trigger
 from homeassistant.const import ATTR_MODE, ATTR_SUPPORTED_FEATURES, STATE_OFF, STATE_ON
 from homeassistant.helpers import config_validation as cv, device_registry
@@ -84,7 +85,9 @@ async def test_get_triggers(hass, device_reg, entity_reg):
             "entity_id": f"{DOMAIN}.test_5678",
         },
     ]
-    triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device_entry.id
+    )
     assert_lists_same(triggers, expected_triggers)
 
 

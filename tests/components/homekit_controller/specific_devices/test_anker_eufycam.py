@@ -40,6 +40,7 @@ async def test_eufycam_setup(hass):
     assert device.name == "eufyCam2-0000"
     assert device.model == "T8113"
     assert device.sw_version == "1.6.7"
+    assert device.hw_version == "1.0.0"
 
     # These cameras are via a bridge, so via should be set
     assert device.via_device_id is not None

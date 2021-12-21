@@ -66,7 +66,7 @@
                     "debug": "Attivare il debug",
                     "device": "Selezionare il dispositivo da configurare",
                     "event_code": "Inserire il codice dell'evento da aggiungere",
-                    "remove_device": "Selezionare il dispositivo da cancellare"
+                    "remove_device": "Seleziona il dispositivo da eliminare"
                 },
                 "title": "Opzioni Rfxtrx"
             },

@@ -2,14 +2,8 @@
 from datetime import timedelta
 from unittest.mock import patch
 
-from homeassistant.components.sensor import STATE_CLASS_TOTAL
-from homeassistant.const import (
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_POWER,
-    ENERGY_KILO_WATT_HOUR,
-    POWER_WATT,
-    TIME_SECONDS,
-)
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
+from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_WATT, TIME_SECONDS
 from homeassistant.core import HomeAssistant, State
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -39,13 +33,13 @@ async def test_state(hass) -> None:
 
     state = hass.states.get("sensor.integration")
     assert state is not None
-    assert state.attributes.get("state_class") == STATE_CLASS_TOTAL
+    assert state.attributes.get("state_class") is SensorStateClass.TOTAL
     assert "device_class" not in state.attributes
 
     future_now = dt_util.utcnow() + timedelta(seconds=3600)
     with patch("homeassistant.util.dt.utcnow", return_value=future_now):
         hass.states.async_set(
-            entity_id, 1, {"device_class": DEVICE_CLASS_POWER}, force_update=True
+            entity_id, 1, {"device_class": SensorDeviceClass.POWER}, force_update=True
         )
         await hass.async_block_till_done()
 
@@ -56,8 +50,8 @@ async def test_state(hass) -> None:
     assert round(float(state.state), config["sensor"]["round"]) == 1.0
 
     assert state.attributes.get("unit_of_measurement") == ENERGY_KILO_WATT_HOUR
-    assert state.attributes.get("device_class") == DEVICE_CLASS_ENERGY
-    assert state.attributes.get("state_class") == STATE_CLASS_TOTAL
+    assert state.attributes.get("device_class") == SensorDeviceClass.ENERGY
+    assert state.attributes.get("state_class") is SensorStateClass.TOTAL
 
 
 async def test_restore_state(hass: HomeAssistant) -> None:
@@ -69,7 +63,7 @@ async def test_restore_state(hass: HomeAssistant) -> None:
                 "sensor.integration",
                 "100.0",
                 {
-                    "device_class": DEVICE_CLASS_ENERGY,
+                    "device_class": SensorDeviceClass.ENERGY,
                     "unit_of_measurement": ENERGY_KILO_WATT_HOUR,
                 },
             ),
@@ -92,7 +86,7 @@ async def test_restore_state(hass: HomeAssistant) -> None:
     assert state
     assert state.state == "100.00"
     assert state.attributes.get("unit_of_measurement") == ENERGY_KILO_WATT_HOUR
-    assert state.attributes.get("device_class") == DEVICE_CLASS_ENERGY
+    assert state.attributes.get("device_class") == SensorDeviceClass.ENERGY
 
 
 async def test_restore_state_failed(hass: HomeAssistant) -> None:
@@ -125,7 +119,7 @@ async def test_restore_state_failed(hass: HomeAssistant) -> None:
     assert state
     assert state.state == "unknown"
     assert state.attributes.get("unit_of_measurement") is None
-    assert state.attributes.get("state_class") == STATE_CLASS_TOTAL
+    assert state.attributes.get("state_class") is SensorStateClass.TOTAL
 
     assert "device_class" not in state.attributes
 
