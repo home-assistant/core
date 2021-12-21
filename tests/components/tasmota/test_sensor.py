@@ -14,9 +14,9 @@ from hatasmota.utils import (
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.sensor import ATTR_STATE_CLASS, DOMAIN, SensorStateClass
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX
-from homeassistant.const import ATTR_ASSUMED_STATE, STATE_UNKNOWN
+from homeassistant.const import ATTR_ASSUMED_STATE, STATE_UNKNOWN, Platform
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt
 
@@ -486,7 +486,7 @@ async def test_status_sensor_state_via_mqtt(hass, mqtt_mock, setup_tasmota):
 
     # Pre-enable the status sensor
     entity_reg.async_get_or_create(
-        DOMAIN,
+        Platform.SENSOR,
         "tasmota",
         "00000049A3BC_status_sensor_status_sensor_status_signal",
         suggested_object_id="tasmota_status",
@@ -546,7 +546,7 @@ async def test_single_shot_status_sensor_state_via_mqtt(hass, mqtt_mock, setup_t
 
     # Pre-enable the status sensor
     entity_reg.async_get_or_create(
-        DOMAIN,
+        Platform.SENSOR,
         "tasmota",
         "00000049A3BC_status_sensor_status_sensor_status_restart_reason",
         suggested_object_id="tasmota_status",
@@ -631,7 +631,7 @@ async def test_restart_time_status_sensor_state_via_mqtt(
 
     # Pre-enable the status sensor
     entity_reg.async_get_or_create(
-        DOMAIN,
+        Platform.SENSOR,
         "tasmota",
         "00000049A3BC_status_sensor_status_sensor_last_restart_time",
         suggested_object_id="tasmota_status",
@@ -884,7 +884,7 @@ async def test_availability_when_connection_lost(
         hass,
         mqtt_client_mock,
         mqtt_mock,
-        DOMAIN,
+        Platform.SENSOR,
         config,
         sensor_config,
         "tasmota_dht11_temperature",
@@ -898,7 +898,7 @@ async def test_availability(hass, mqtt_mock, setup_tasmota):
     await help_test_availability(
         hass,
         mqtt_mock,
-        DOMAIN,
+        Platform.SENSOR,
         config,
         sensor_config,
         "tasmota_dht11_temperature",
@@ -912,7 +912,7 @@ async def test_availability_discovery_update(hass, mqtt_mock, setup_tasmota):
     await help_test_availability_discovery_update(
         hass,
         mqtt_mock,
-        DOMAIN,
+        Platform.SENSOR,
         config,
         sensor_config,
         "tasmota_dht11_temperature",
@@ -930,7 +930,7 @@ async def test_availability_poll_state(
         hass,
         mqtt_client_mock,
         mqtt_mock,
-        DOMAIN,
+        Platform.SENSOR,
         config,
         poll_topic,
         "10",
@@ -947,7 +947,7 @@ async def test_discovery_removal_sensor(hass, mqtt_mock, caplog, setup_tasmota):
         hass,
         mqtt_mock,
         caplog,
-        DOMAIN,
+        Platform.SENSOR,
         config,
         config,
         sensor_config1,
@@ -970,7 +970,7 @@ async def test_discovery_update_unchanged_sensor(
             hass,
             mqtt_mock,
             caplog,
-            DOMAIN,
+            Platform.SENSOR,
             config,
             discovery_update,
             sensor_config,
@@ -985,7 +985,7 @@ async def test_discovery_device_remove(hass, mqtt_mock, setup_tasmota):
     sensor_config = copy.deepcopy(DEFAULT_SENSOR_CONFIG)
     unique_id = f"{DEFAULT_CONFIG['mac']}_sensor_sensor_DHT11_Temperature"
     await help_test_discovery_device_remove(
-        hass, mqtt_mock, DOMAIN, unique_id, config, sensor_config
+        hass, mqtt_mock, Platform.SENSOR, unique_id, config, sensor_config
     )
 
 
@@ -1001,7 +1001,7 @@ async def test_entity_id_update_subscriptions(hass, mqtt_mock, setup_tasmota):
     await help_test_entity_id_update_subscriptions(
         hass,
         mqtt_mock,
-        DOMAIN,
+        Platform.SENSOR,
         config,
         topics,
         sensor_config,
@@ -1016,7 +1016,7 @@ async def test_entity_id_update_discovery_update(hass, mqtt_mock, setup_tasmota)
     await help_test_entity_id_update_discovery_update(
         hass,
         mqtt_mock,
-        DOMAIN,
+        Platform.SENSOR,
         config,
         sensor_config,
         "tasmota_dht11_temperature",
