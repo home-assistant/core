@@ -15,7 +15,7 @@
                     "latitude": "Latitudine",
                     "longitude": "Logitudine"
                 },
-                "description": "Immettere la latitudine e la longitudine da monitorare:"
+                "description": "Immetti la latitudine e la longitudine da monitorare:"
             },
             "location": {
                 "data": {
@@ -27,8 +27,8 @@
                 "data": {
                     "password": "Password"
                 },
-                "description": "Si prega di reinserire la password per {username}:",
-                "title": "Autenticare nuovamente l'integrazione"
+                "description": "Digita nuovamente la password per {username}:",
+                "title": "Autentica nuovamente l'integrazione"
             },
             "user": {
                 "data": {
