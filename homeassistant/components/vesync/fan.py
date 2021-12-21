@@ -200,7 +200,7 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
         if preset_mode:
             self.set_preset_mode(preset_mode)
             if night_light_mode:
-                set_night_light(night_light_mode)
+                self.set_night_light(night_light_mode)
             return
         elif percentage is None:
             percentage = 50
@@ -208,4 +208,4 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
         self.set_percentage(percentage)
         
         if night_light_mode:
-            set_night_light(night_light_mode)
+            self.set_night_light(night_light_mode)
