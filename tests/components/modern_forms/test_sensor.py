@@ -1,7 +1,8 @@
 """Tests for the Modern Forms sensor platform."""
 from datetime import datetime
 
-from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_ICON, DEVICE_CLASS_TIMESTAMP
+from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_ICON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -22,14 +23,14 @@ async def test_sensors(
     state = hass.states.get("sensor.modernformsfan_light_sleep_time")
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:timer-outline"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_TIMESTAMP
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TIMESTAMP
     assert state.state == "unknown"
 
     # Fan timer remaining time
     state = hass.states.get("sensor.modernformsfan_fan_sleep_time")
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:timer-outline"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_TIMESTAMP
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TIMESTAMP
     assert state.state == "unknown"
 
 
@@ -46,12 +47,12 @@ async def test_active_sensors(
     state = hass.states.get("sensor.modernformsfan_light_sleep_time")
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:timer-outline"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_TIMESTAMP
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TIMESTAMP
     datetime.fromisoformat(state.state)
 
     # Fan timer remaining time
     state = hass.states.get("sensor.modernformsfan_fan_sleep_time")
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:timer-outline"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_TIMESTAMP
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TIMESTAMP
     datetime.fromisoformat(state.state)
