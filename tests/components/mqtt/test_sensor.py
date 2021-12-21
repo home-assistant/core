@@ -83,27 +83,27 @@ async def test_setting_sensor_value_via_mqtt_message(hass, mqtt_mock):
 @pytest.mark.parametrize(
     "device_class,native_value,state_value,log",
     [
-        (sensor.DEVICE_CLASS_DATE, "2021-11-18", "2021-11-18", False),
-        (sensor.DEVICE_CLASS_DATE, "invalid", STATE_UNKNOWN, True),
+        (sensor.SensorDeviceClass.DATE, "2021-11-18", "2021-11-18", False),
+        (sensor.SensorDeviceClass.DATE, "invalid", STATE_UNKNOWN, True),
         (
-            sensor.DEVICE_CLASS_TIMESTAMP,
+            sensor.SensorDeviceClass.TIMESTAMP,
             "2021-11-18T20:25:00+00:00",
             "2021-11-18T20:25:00+00:00",
             False,
         ),
         (
-            sensor.DEVICE_CLASS_TIMESTAMP,
+            sensor.SensorDeviceClass.TIMESTAMP,
             "2021-11-18 20:25:00+00:00",
             "2021-11-18T20:25:00+00:00",
             False,
         ),
         (
-            sensor.DEVICE_CLASS_TIMESTAMP,
+            sensor.SensorDeviceClass.TIMESTAMP,
             "2021-11-18 20:25:00+01:00",
             "2021-11-18T19:25:00+00:00",
             False,
         ),
-        (sensor.DEVICE_CLASS_TIMESTAMP, "invalid", STATE_UNKNOWN, True),
+        (sensor.SensorDeviceClass.TIMESTAMP, "invalid", STATE_UNKNOWN, True),
     ],
 )
 async def test_setting_sensor_native_value_handling_via_mqtt_message(
