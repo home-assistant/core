@@ -76,6 +76,11 @@ class FluxEntity(CoordinatorEntity):
                 unique_id, self._device, coordinator.entry
             )
 
+    async def _async_ensure_device_on(self) -> None:
+        """Turn the device on if it needs to be turned on before a command."""
+        if self._device.requires_turn_on and not self._device.is_on:
+            await self._device.async_turn_on()
+
     @property
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the attributes."""
