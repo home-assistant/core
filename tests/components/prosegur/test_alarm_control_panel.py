@@ -5,7 +5,6 @@ from unittest.mock import AsyncMock, patch
 from pyprosegur.installation import Status
 from pytest import fixture, mark
 
-from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
@@ -17,6 +16,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_DISARMED,
     STATE_UNAVAILABLE,
+    Platform,
 )
 from homeassistant.helpers import entity_component
 
@@ -109,7 +109,7 @@ async def test_arm(hass, mock_auth, code, alarm_service, alarm_state):
         await setup_platform(hass)
 
         await hass.services.async_call(
-            ALARM_DOMAIN,
+            Platform.ALARM_CONTROL_PANEL,
             alarm_service,
             {ATTR_ENTITY_ID: PROSEGUR_ALARM_ENTITY},
             blocking=True,
