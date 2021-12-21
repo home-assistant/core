@@ -9,9 +9,9 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
+    SensorDeviceClass,
     SensorEntity,
+    SensorStateClass,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -21,8 +21,6 @@ from homeassistant.const import (
     CONF_SENSORS,
     CONF_SSL,
     CONF_VERIFY_SSL,
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_POWER,
     ENERGY_KILO_WATT_HOUR,
     POWER_WATT,
 )
@@ -167,11 +165,11 @@ class SMAsensor(CoordinatorEntity, SensorEntity):
         self._attr_device_info = device_info
 
         if self.native_unit_of_measurement == ENERGY_KILO_WATT_HOUR:
-            self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
-            self._attr_device_class = DEVICE_CLASS_ENERGY
+            self._attr_state_class = SensorStateClass.TOTAL_INCREASING
+            self._attr_device_class = SensorDeviceClass.ENERGY
         if self.native_unit_of_measurement == POWER_WATT:
-            self._attr_state_class = STATE_CLASS_MEASUREMENT
-            self._attr_device_class = DEVICE_CLASS_POWER
+            self._attr_state_class = SensorStateClass.MEASUREMENT
+            self._attr_device_class = SensorDeviceClass.POWER
 
         # Set sensor enabled to False.
         # Will be enabled by async_added_to_hass if actually used.

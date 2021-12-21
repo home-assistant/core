@@ -1,5 +1,5 @@
 """Definition and setup of the Omnilogic Sensors for Home Assistant."""
-from homeassistant.components.sensor import DEVICE_CLASS_TEMPERATURE, SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     ELECTRIC_POTENTIAL_MILLIVOLT,
@@ -249,7 +249,7 @@ SENSOR_TYPES = {
             "entity_classes": {"airTemp": OmniLogicTemperatureSensor},
             "name": "Air Temperature",
             "kind": "air_temperature",
-            "device_class": DEVICE_CLASS_TEMPERATURE,
+            "device_class": SensorDeviceClass.TEMPERATURE,
             "icon": None,
             "unit": TEMP_FAHRENHEIT,
             "guard_condition": [{}],
@@ -260,7 +260,7 @@ SENSOR_TYPES = {
             "entity_classes": {"waterTemp": OmniLogicTemperatureSensor},
             "name": "Water Temperature",
             "kind": "water_temperature",
-            "device_class": DEVICE_CLASS_TEMPERATURE,
+            "device_class": SensorDeviceClass.TEMPERATURE,
             "icon": None,
             "unit": TEMP_FAHRENHEIT,
             "guard_condition": [{}],

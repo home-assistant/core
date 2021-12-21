@@ -531,7 +531,7 @@ def test_saving_state_and_removing_entity(hass, hass_recorder):
     entity_id = "lock.mine"
     hass.states.set(entity_id, STATE_LOCKED)
     hass.states.set(entity_id, STATE_UNLOCKED)
-    hass.states.async_remove(entity_id)
+    hass.states.remove(entity_id)
 
     wait_recording_done(hass)
 

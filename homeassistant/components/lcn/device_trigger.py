@@ -58,8 +58,11 @@ async def async_get_triggers(
     """List device triggers for LCN devices."""
     device_registry = dr.async_get(hass)
     device = device_registry.async_get(device_id)
+    if device is None:
+        return []
 
-    if device.model.startswith(("LCN host", "LCN group", "LCN resource")):  # type: ignore[union-attr]
+    identifier = next(iter(device.identifiers))
+    if (identifier[1].count("-") != 1) or device.model.startswith("LCN group"):  # type: ignore[union-attr]
         return []
 
     base_trigger = {

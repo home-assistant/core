@@ -447,6 +447,13 @@ class Camera(Entity):
             return None
         return STREAM_TYPE_HLS
 
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        if self.stream and not self.stream.available:
+            return self.stream.available
+        return super().available
+
     async def create_stream(self) -> Stream | None:
         """Create a Stream for stream_source."""
         # There is at most one stream (a decode worker) per camera
@@ -455,7 +462,13 @@ class Camera(Entity):
                 source = await self.stream_source()
             if not source:
                 return None
-            self.stream = create_stream(self.hass, source, options=self.stream_options)
+            self.stream = create_stream(
+                self.hass,
+                source,
+                options=self.stream_options,
+                stream_label=self.entity_id,
+            )
+            self.stream.set_update_callback(self.async_write_ha_state)
         return self.stream
 
     async def stream_source(self) -> str | None:

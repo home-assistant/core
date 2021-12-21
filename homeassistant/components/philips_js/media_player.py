@@ -7,8 +7,8 @@ from haphilipsjs import ConnectionFailure
 
 from homeassistant import config_entries
 from homeassistant.components.media_player import (
-    DEVICE_CLASS_TV,
     BrowseMedia,
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
 )
 from homeassistant.components.media_player.const import (
@@ -85,7 +85,7 @@ async def async_setup_entry(
 class PhilipsTVMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     """Representation of a Philips TV exposing the JointSpace API."""
 
-    _attr_device_class = DEVICE_CLASS_TV
+    _attr_device_class = MediaPlayerDeviceClass.TV
 
     def __init__(
         self,
