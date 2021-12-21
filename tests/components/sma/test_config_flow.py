@@ -15,7 +15,7 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_FORM,
 )
 
-from . import MOCK_DEVICE, MOCK_SETUP_DATA, MOCK_USER_INPUT, _patch_async_setup_entry
+from . import MOCK_DEVICE, MOCK_USER_INPUT, _patch_async_setup_entry
 
 
 async def test_form(hass):
@@ -38,7 +38,7 @@ async def test_form(hass):
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == MOCK_USER_INPUT["host"]
-    assert result["data"] == MOCK_SETUP_DATA
+    assert result["data"] == MOCK_USER_INPUT
 
     assert len(mock_setup_entry.mock_calls) == 1
 
