@@ -1,6 +1,4 @@
 """Integrate HALO Home into home assistant."""
-import logging
-
 from halohome import Connection
 
 from homeassistant.config_entries import ConfigEntry
@@ -8,16 +6,11 @@ from homeassistant.core import HomeAssistant
 
 from .const import CONF_LOCATIONS, DOMAIN, PLATFORMS
 
-LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up HALO Home from a config entry."""
-    config = entry.data
-    location_devices = config[CONF_LOCATIONS]
-
-    data = hass.data.setdefault(DOMAIN, {})
-    data[entry.entry_id] = Connection(location_devices)
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = Connection(entry.data[CONF_LOCATIONS])
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True

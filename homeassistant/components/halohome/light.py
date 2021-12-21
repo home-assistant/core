@@ -24,6 +24,7 @@ async def async_setup_entry(
 class HaloLight(LightEntity):
     """HALO Home Light Entity."""
 
+    _attr_assumed_state = True
     _attr_max_mireds = 1000000 // 2700
     _attr_min_mireds = 1000000 // 5000
     _attr_supported_color_modes = {COLOR_MODE_COLOR_TEMP}
