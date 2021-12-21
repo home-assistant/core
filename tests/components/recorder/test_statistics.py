@@ -1000,16 +1000,30 @@ def test_delete_duplicates_non_identical(caplog, tmpdir):
 
     assert backup == [
         {
-            "created": "2021-08-01T00:00:00",
-            "id": 4,
-            "last_reset": None,
-            "max": None,
-            "mean": None,
-            "metadata_id": 1,
-            "min": None,
-            "start": "2021-10-31T23:00:00",
-            "state": 3.0,
-            "sum": 5.0,
+            "duplicate": {
+                "created": "2021-08-01T00:00:00",
+                "id": 4,
+                "last_reset": None,
+                "max": None,
+                "mean": None,
+                "metadata_id": 1,
+                "min": None,
+                "start": "2021-10-31T23:00:00",
+                "state": 3.0,
+                "sum": 5.0,
+            },
+            "original": {
+                "created": "2021-08-01T00:00:00",
+                "id": 5,
+                "last_reset": None,
+                "max": None,
+                "mean": None,
+                "metadata_id": 1,
+                "min": None,
+                "start": "2021-10-31T23:00:00",
+                "state": 3.0,
+                "sum": 6.0,
+            },
         }
     ]
 
