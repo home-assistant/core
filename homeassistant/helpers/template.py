@@ -1763,6 +1763,25 @@ def slugify(value, separator="_"):
     return slugify_util(value, separator=separator)
 
 
+def iif(
+    value: Any, if_true: Any = True, if_false: Any = False, if_none: Any = _SENTINEL
+) -> Any:
+    """Immediate if function/filter that allow for common if/else constructs.
+
+    https://en.wikipedia.org/wiki/IIf
+
+    Examples:
+        {{ is_state("device_tracker.frenck", "home") | iif("yes", "no") }}
+        {{ iif(1==2, "yes", "no") }}
+        {{ (1 == 1) | iif("yes", "no") }}
+    """
+    if value is None and if_none is not _SENTINEL:
+        return if_none
+    if bool(value):
+        return if_true
+    return if_false
+
+
 @contextmanager
 def set_template(template_str: str, action: str) -> Generator:
     """Store template being parsed or rendered in a Contextvar to aid error handling."""
@@ -1877,6 +1896,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["int"] = forgiving_int_filter
         self.filters["relative_time"] = relative_time
         self.filters["slugify"] = slugify
+        self.filters["iif"] = iif
         self.globals["log"] = logarithm
         self.globals["sin"] = sine
         self.globals["cos"] = cosine
@@ -1906,6 +1926,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["pack"] = struct_pack
         self.globals["unpack"] = struct_unpack
         self.globals["slugify"] = slugify
+        self.globals["iif"] = iif
         self.tests["match"] = regex_match
         self.tests["search"] = regex_search
 
