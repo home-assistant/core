@@ -1229,6 +1229,16 @@ def test_script(caplog):
         ({"delay": "{{ invalid"}, "should be format 'HH:MM'"),
         ({"wait_template": "{{ invalid"}, "invalid template"),
         ({"condition": "invalid"}, "Unexpected value for condition: 'invalid'"),
+        (
+            {"condition": "not", "conditions": {"condition": "invalid"}},
+            "Unexpected value for condition: 'invalid'",
+        ),
+        # The validation error message could be improved to explain that this is not
+        # a valid shorthand template
+        (
+            {"condition": "not", "conditions": "not a dynamic template"},
+            "Expected a dictionary",
+        ),
         ({"event": None}, "string value is None for dictionary value @ data['event']"),
         (
             {"device_id": None},
