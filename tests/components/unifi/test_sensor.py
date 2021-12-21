@@ -7,7 +7,6 @@ from aiounifi.controller import MESSAGE_CLIENT, MESSAGE_CLIENT_REMOVED
 import pytest
 
 from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.unifi.const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_ALLOW_UPTIME_SENSORS,
@@ -15,6 +14,7 @@ from homeassistant.components.unifi.const import (
     CONF_TRACK_DEVICES,
     DOMAIN as UNIFI_DOMAIN,
 )
+from homeassistant.const import Platform
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import EntityCategory
@@ -34,7 +34,7 @@ async def test_no_clients(hass, aioclient_mock):
         },
     )
 
-    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 0
+    assert len(hass.states.async_entity_ids(Platform.SENSOR)) == 0
 
 
 async def test_bandwidth_sensors(hass, aioclient_mock, mock_unifi_websocket):
@@ -70,7 +70,7 @@ async def test_bandwidth_sensors(hass, aioclient_mock, mock_unifi_websocket):
     )
 
     assert len(hass.states.async_all()) == 5
-    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 4
+    assert len(hass.states.async_entity_ids(Platform.SENSOR)) == 4
     assert hass.states.get("sensor.wired_client_rx").state == "1234.0"
     assert hass.states.get("sensor.wired_client_tx").state == "5678.0"
     assert hass.states.get("sensor.wireless_client_rx").state == "2345.0"
@@ -105,7 +105,7 @@ async def test_bandwidth_sensors(hass, aioclient_mock, mock_unifi_websocket):
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 1
-    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 0
+    assert len(hass.states.async_entity_ids(Platform.SENSOR)) == 0
     assert hass.states.get("sensor.wireless_client_rx") is None
     assert hass.states.get("sensor.wireless_client_tx") is None
     assert hass.states.get("sensor.wired_client_rx") is None
@@ -118,7 +118,7 @@ async def test_bandwidth_sensors(hass, aioclient_mock, mock_unifi_websocket):
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 5
-    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 4
+    assert len(hass.states.async_entity_ids(Platform.SENSOR)) == 4
     assert hass.states.get("sensor.wireless_client_rx")
     assert hass.states.get("sensor.wireless_client_tx")
     assert hass.states.get("sensor.wired_client_rx")
@@ -140,7 +140,7 @@ async def test_bandwidth_sensors(hass, aioclient_mock, mock_unifi_websocket):
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 5
-    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 4
+    assert len(hass.states.async_entity_ids(Platform.SENSOR)) == 4
 
 
 @pytest.mark.parametrize(
@@ -184,7 +184,7 @@ async def test_uptime_sensors(
         )
 
     assert len(hass.states.async_all()) == 2
-    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 1
+    assert len(hass.states.async_entity_ids(Platform.SENSOR)) == 1
     assert hass.states.get("sensor.client1_uptime").state == "2021-01-01T01:00:00+00:00"
 
     ent_reg = er.async_get(hass)
@@ -232,7 +232,7 @@ async def test_uptime_sensors(
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 1
-    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 0
+    assert len(hass.states.async_entity_ids(Platform.SENSOR)) == 0
     assert hass.states.get("sensor.client1_uptime") is None
 
     # Enable option
@@ -243,7 +243,7 @@ async def test_uptime_sensors(
         await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 2
-    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 1
+    assert len(hass.states.async_entity_ids(Platform.SENSOR)) == 1
     assert hass.states.get("sensor.client1_uptime")
 
     # Try to add the sensors again, using a signal
@@ -262,7 +262,7 @@ async def test_uptime_sensors(
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 2
-    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 1
+    assert len(hass.states.async_entity_ids(Platform.SENSOR)) == 1
 
 
 async def test_remove_sensors(hass, aioclient_mock, mock_unifi_websocket):
@@ -297,7 +297,7 @@ async def test_remove_sensors(hass, aioclient_mock, mock_unifi_websocket):
     )
 
     assert len(hass.states.async_all()) == 9
-    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 6
+    assert len(hass.states.async_entity_ids(Platform.SENSOR)) == 6
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 2
     assert hass.states.get("sensor.wired_client_rx")
     assert hass.states.get("sensor.wired_client_tx")
@@ -317,7 +317,7 @@ async def test_remove_sensors(hass, aioclient_mock, mock_unifi_websocket):
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 5
-    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 3
+    assert len(hass.states.async_entity_ids(Platform.SENSOR)) == 3
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 1
     assert hass.states.get("sensor.wired_client_rx") is None
     assert hass.states.get("sensor.wired_client_tx") is None
