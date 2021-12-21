@@ -9,7 +9,7 @@ from homeassistant.components.homeassistant import (
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.setup import async_setup_component
 
-from . import entity_test_helpers
+from .entity_test_helpers import EntityTestHelpers
 
 
 @pytest.fixture
@@ -33,7 +33,7 @@ def pywemo_device_fixture(pywemo_device):
     yield pywemo_device
 
 
-class InsightTestTemplate:
+class InsightTestTemplate(EntityTestHelpers):
     """Base class for testing WeMo Insight Sensors."""
 
     ENTITY_ID_SUFFIX: str
@@ -45,39 +45,6 @@ class InsightTestTemplate:
     def wemo_entity_suffix_fixture(cls):
         """Select the appropriate entity for the test."""
         return cls.ENTITY_ID_SUFFIX
-
-    # Tests that are in common among wemo platforms. These test methods will be run
-    # in the scope of this test module. They will run using the pywemo_model from
-    # this test module (Insight).
-    async def test_async_update_locked_multiple_updates(
-        self, hass, pywemo_device, wemo_entity
-    ):
-        """Test that two hass async_update state updates do not proceed at the same time."""
-        await entity_test_helpers.test_async_update_locked_multiple_updates(
-            hass,
-            pywemo_device,
-            wemo_entity,
-        )
-
-    async def test_async_update_locked_multiple_callbacks(
-        self, hass, pywemo_device, wemo_entity
-    ):
-        """Test that two device callback state updates do not proceed at the same time."""
-        await entity_test_helpers.test_async_update_locked_multiple_callbacks(
-            hass,
-            pywemo_device,
-            wemo_entity,
-        )
-
-    async def test_async_update_locked_callback_and_update(
-        self, hass, pywemo_device, wemo_entity
-    ):
-        """Test that a callback and a state update request can't both happen at the same time."""
-        await entity_test_helpers.test_async_update_locked_callback_and_update(
-            hass,
-            pywemo_device,
-            wemo_entity,
-        )
 
     async def test_state_unavailable(self, hass, wemo_entity, pywemo_device):
         """Test that there is no failure if the insight_params is not populated."""
