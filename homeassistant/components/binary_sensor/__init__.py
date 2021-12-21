@@ -40,9 +40,6 @@ class BinarySensorDeviceClass(StrEnum):
     # On means carbon monoxide detected, Off means no carbon monoxide (clear)
     CO = "carbon_monoxide"
 
-    # On means carbon dioxide detected, Off means no carbon dioxide (clear)
-    CO2 = "carbon_dioxide"
-
     # On means cold, Off means normal
     COLD = "cold"
 
