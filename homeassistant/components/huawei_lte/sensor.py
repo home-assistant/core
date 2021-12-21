@@ -51,12 +51,12 @@ class SensorMeta(NamedTuple):
     """Metadata for defining sensors."""
 
     name: str | None = None
-    device_class: str | None = None
+    device_class: SensorDeviceClass | None = None
     icon: str | Callable[[StateType], str] | None = None
     unit: str | None = None
-    state_class: str | None = None
+    state_class: SensorStateClass | None = None
     enabled_default: bool = False
-    entity_category: str | None = None
+    entity_category: EntityCategory | None = None
     include: re.Pattern[str] | None = None
     exclude: re.Pattern[str] | None = None
     formatter: Callable[[str], tuple[StateType, str | None]] | None = None
@@ -556,7 +556,7 @@ class HuaweiLteSensor(HuaweiLteBaseEntity, SensorEntity):
         return self._state
 
     @property
-    def device_class(self) -> str | None:
+    def device_class(self) -> SensorDeviceClass | None:
         """Return sensor device class."""
         return self.meta.device_class
 
@@ -574,7 +574,7 @@ class HuaweiLteSensor(HuaweiLteBaseEntity, SensorEntity):
         return icon
 
     @property
-    def state_class(self) -> str | None:
+    def state_class(self) -> SensorStateClass | None:
         """Return sensor state class."""
         return self.meta.state_class
 
@@ -599,6 +599,6 @@ class HuaweiLteSensor(HuaweiLteBaseEntity, SensorEntity):
         self._available = value is not None
 
     @property
-    def entity_category(self) -> str | None:
+    def entity_category(self) -> EntityCategory | None:
         """Return category of entity, if any."""
         return self.meta.entity_category
