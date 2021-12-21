@@ -96,7 +96,7 @@ CUSTOM_EFFECT_DICT: Final = {
         [vol.All(vol.Coerce(tuple), vol.ExactSequence((cv.byte, cv.byte, cv.byte)))],
     ),
     vol.Optional(CONF_SPEED_PCT, default=50): vol.All(
-        vol.Range(min=0, max=100), vol.Coerce(int)
+        vol.Coerce(int), vol.Range(min=0, max=100)
     ),
     vol.Optional(CONF_TRANSITION, default=TRANSITION_GRADUAL): vol.All(
         cv.string, vol.In([TRANSITION_GRADUAL, TRANSITION_JUMP, TRANSITION_STROBE])
@@ -105,13 +105,13 @@ CUSTOM_EFFECT_DICT: Final = {
 
 SET_MUSIC_MODE_DICT: Final = {
     vol.Optional(ATTR_SENSITIVITY, default=100): vol.All(
-        vol.Range(min=0, max=100), vol.Coerce(int)
+        vol.Coerce(int), vol.Range(min=0, max=100)
     ),
     vol.Optional(ATTR_BRIGHTNESS, default=100): vol.All(
-        vol.Range(min=0, max=100), vol.Coerce(int)
+        vol.Coerce(int), vol.Range(min=0, max=100)
     ),
     vol.Optional(ATTR_EFFECT, default=1): vol.All(
-        vol.Range(min=1, max=16), vol.Coerce(int)
+        vol.Coerce(int), vol.Range(min=1, max=16)
     ),
     vol.Optional(ATTR_LIGHT_SCREEN, default=False): bool,
     vol.Optional(ATTR_FOREGROUND_COLOR): vol.All(
@@ -129,7 +129,7 @@ SET_ZONES_DICT: Final = {
         [vol.All(vol.Coerce(tuple), vol.ExactSequence((cv.byte, cv.byte, cv.byte)))],
     ),
     vol.Optional(CONF_SPEED_PCT, default=50): vol.All(
-        vol.Range(min=0, max=100), vol.Coerce(int)
+        vol.Coerce(int), vol.Range(min=0, max=100)
     ),
     vol.Optional(CONF_EFFECT, default=MultiColorEffects.STATIC.name.lower()): vol.All(
         cv.string, vol.In([effect.name.lower() for effect in MultiColorEffects])
