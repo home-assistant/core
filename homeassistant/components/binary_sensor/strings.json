@@ -6,8 +6,6 @@
       "is_not_bat_low": "{entity_name} battery is normal",
       "is_co": "{entity_name} is detecting carbon monoxide",
       "is_no_co": "{entity_name} is not detecting carbon monoxide",
-      "is_co2": "{entity_name} is detecting carbon dioxide",
-      "is_no_co2": "{entity_name} is not detecting carbon dioxide",
       "is_cold": "{entity_name} is cold",
       "is_not_cold": "{entity_name} is not cold",
       "is_connected": "{entity_name} is connected",
@@ -60,8 +58,6 @@
       "not_bat_low": "{entity_name} battery normal",
       "co": "{entity_name} started detecting carbon monoxide",
       "no_co": "{entity_name} stopped detecting carbon monoxide",
-      "co2": "{entity_name} started detecting carbon dioxide",
-      "no_co2": "{entity_name} stopped detecting carbon dioxide",
       "cold": "{entity_name} became cold",
       "not_cold": "{entity_name} became not cold",
       "connected": "{entity_name} connected",
@@ -120,10 +116,6 @@
       "on": "Charging"
     },
     "co": {
-      "off": "Clear",
-      "on": "Detected"
-    },
-    "co2": {
       "off": "Clear",
       "on": "Detected"
     },
@@ -226,7 +218,6 @@
   },
   "device_class": {
     "co": "carbon_monoxide",
-    "co2": "carbon_dioxide",
     "cold": "cold",
     "gas": "gas",
     "heat": "heat",
