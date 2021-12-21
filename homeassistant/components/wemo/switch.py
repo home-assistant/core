@@ -135,7 +135,7 @@ class WemoSwitch(WemoBinaryStateEntity, SwitchEntity):
         if isinstance(self.wemo, CoffeeMaker):
             return cast(str, self.wemo.mode_string)
         if isinstance(self.wemo, Insight):
-            # TODO(@esev): Remove this conversion.
+            # T-O-D-O(@esev): Remove this conversion.
             standby_state = int(self.wemo.insight_params.get("state", 0))
             if standby_state == WEMO_ON:
                 return STATE_ON
