@@ -7,9 +7,17 @@ from homeassistant.components.select import SelectEntity, SelectEntityDescriptio
 from homeassistant.const import ENTITY_CATEGORY_CONFIG
 from homeassistant.helpers.entity import DeviceInfo
 
-from .const import DOMAIN, INVERTER_OPERATION_MODES, KEY_DEVICE_INFO, KEY_INVERTER
+from .const import DOMAIN, KEY_DEVICE_INFO, KEY_INVERTER
 
 _LOGGER = logging.getLogger(__name__)
+
+
+INVERTER_OPERATION_MODES = [
+    "General mode",
+    "Off grid mode",
+    "Backup mode",
+    "Eco mode",
+]
 
 OPERATION_MODE = SelectEntityDescription(
     key="operation_mode",
@@ -41,8 +49,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     except InverterError:
         # Inverter model does not support this setting
         _LOGGER.debug("Could not read inverter operation mode")
-
-    return True
 
 
 class InverterOperationModeEntity(SelectEntity):

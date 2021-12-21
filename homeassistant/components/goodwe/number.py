@@ -17,11 +17,18 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
-class GoodweNumberEntityDescription(NumberEntityDescription):
-    """Class describing Goodwe sensor entities."""
+class GoodweNumberEntityDescriptionBase:
+    """Required values when describing Goodwe number entities."""
 
-    getter: Callable[[Inverter], Awaitable[int]] | None = None
-    setter: Callable[[Inverter, int], Awaitable[None]] | None = None
+    getter: Callable[[Inverter], Awaitable[int]]
+    setter: Callable[[Inverter, int], Awaitable[None]]
+
+
+@dataclass
+class GoodweNumberEntityDescription(
+    NumberEntityDescription, GoodweNumberEntityDescriptionBase
+):
+    """Class describing Goodwe number entities."""
 
 
 NUMBERS = (
@@ -71,8 +78,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     async_add_entities(entities)
 
-    return True
-
 
 class InverterNumberEntity(NumberEntity):
     """Inverter numeric setting entity."""
@@ -98,5 +103,5 @@ class InverterNumberEntity(NumberEntity):
         """Set new value."""
         if self.entity_description.setter:
             await self.entity_description.setter(self._inverter, int(value))
-        self._attr_value = float(value)
+        self._attr_value = value
         self.async_write_ha_state()
