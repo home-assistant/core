@@ -311,7 +311,8 @@ class MqttCover(MqttEntity, CoverEntity):
         }
 
         self._value_template = MqttValueTemplate(
-            self._config.get(CONF_VALUE_TEMPLATE), self
+            self._config.get(CONF_VALUE_TEMPLATE),
+            entity=self,
         ).async_render_with_possible_json_value
 
         self._set_position_template = MqttCommandTemplate(
@@ -320,7 +321,7 @@ class MqttCover(MqttEntity, CoverEntity):
 
         self._get_position_template = MqttValueTemplate(
             self._config.get(CONF_GET_POSITION_TEMPLATE),
-            self,
+            entity=self,
             config_attributes=template_config_attributes,
         ).async_render_with_possible_json_value
 
@@ -330,7 +331,7 @@ class MqttCover(MqttEntity, CoverEntity):
 
         self._tilt_status_template = MqttValueTemplate(
             self._config.get(CONF_TILT_STATUS_TEMPLATE),
-            self,
+            entity=self,
             config_attributes=template_config_attributes,
         ).async_render_with_possible_json_value
 

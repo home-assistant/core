@@ -333,7 +333,9 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         for key in VALUE_TEMPLATE_KEYS & config.keys():
             value_templates[key] = config[key]
         self._value_templates = {
-            key: MqttValueTemplate(template, self).async_render_with_possible_json_value
+            key: MqttValueTemplate(
+                template, entity=self
+            ).async_render_with_possible_json_value
             for key, template in value_templates.items()
         }
 

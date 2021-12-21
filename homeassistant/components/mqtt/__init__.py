@@ -325,7 +325,9 @@ class MqttValueTemplate:
     def __init__(
         self,
         value_template: template.Template | None,
-        entity: Entity | HomeAssistant,
+        *,
+        hass: HomeAssistant | None = None,
+        entity: Entity | None = None,
         config_attributes: template.TemplateVarsType = None,
     ) -> None:
         """Instantiate a value template."""
@@ -334,14 +336,11 @@ class MqttValueTemplate:
         if value_template is None:
             return
 
-        if isinstance(entity, HomeAssistant):
-            value_template.hass = entity
-            return
-
+        value_template.hass = hass
         self._entity = entity
-        self._variables = [ATTR_ENTITY_ID, ATTR_NAME]
 
-        value_template.hass = entity.hass
+        if entity:
+            value_template.hass = entity.hass
 
     @callback
     def async_render_with_possible_json_value(
@@ -362,9 +361,9 @@ class MqttValueTemplate:
         if self._config_attributes is not None:
             values.update(self._config_attributes)
 
-        if hasattr(self, "_variables"):
-            for key in self._variables:
-                values[key] = getattr(self._entity, key, None)
+        if self._entity:
+            values[ATTR_ENTITY_ID] = self._entity.entity_id
+            values[ATTR_NAME] = self._entity.name
 
         if default == _SENTINEL:
             return self._attr_value_template.async_render_with_possible_json_value(

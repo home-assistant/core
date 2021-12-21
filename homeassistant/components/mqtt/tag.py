@@ -144,7 +144,8 @@ class MQTTTagScanner:
 
     def _setup_from_config(self, config):
         self._value_template = MqttValueTemplate(
-            config.get(CONF_VALUE_TEMPLATE), self.hass
+            config.get(CONF_VALUE_TEMPLATE),
+            hass=self.hass,
         ).async_render_with_possible_json_value
 
     async def setup(self):

@@ -74,7 +74,7 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
         self._value_template = MqttValueTemplate(
-            self._config.get(CONF_VALUE_TEMPLATE), self
+            self._config.get(CONF_VALUE_TEMPLATE), entity=self
         ).async_render_with_possible_json_value
 
     async def _subscribe_topics(self):

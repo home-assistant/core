@@ -244,7 +244,7 @@ class MqttVacuum(MqttEntity, VacuumEntity):
         """(Re)Subscribe to topics."""
         for tpl in self._templates.values():
             if tpl is not None:
-                tpl = MqttValueTemplate(tpl, self)
+                tpl = MqttValueTemplate(tpl, entity=self)
 
         @callback
         @log_messages(self.hass, self.entity_id)

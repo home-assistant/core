@@ -168,10 +168,10 @@ class MqttSensor(MqttEntity, SensorEntity):
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
         self._template = MqttValueTemplate(
-            self._config.get(CONF_VALUE_TEMPLATE), self
+            self._config.get(CONF_VALUE_TEMPLATE), entity=self
         ).async_render_with_possible_json_value
         self._last_reset_template = MqttValueTemplate(
-            self._config.get(CONF_LAST_RESET_VALUE_TEMPLATE), self
+            self._config.get(CONF_LAST_RESET_VALUE_TEMPLATE), entity=self
         ).async_render_with_possible_json_value
 
     async def _subscribe_topics(self):

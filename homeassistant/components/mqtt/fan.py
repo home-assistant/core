@@ -357,7 +357,8 @@ class MqttFan(MqttEntity, FanEntity):
 
         for key, tpl in self._value_templates.items():
             self._value_templates[key] = MqttValueTemplate(
-                tpl, self
+                tpl,
+                entity=self,
             ).async_render_with_possible_json_value
 
     async def _subscribe_topics(self):

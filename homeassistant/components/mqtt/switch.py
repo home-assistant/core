@@ -129,7 +129,7 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
         self._optimistic = config[CONF_OPTIMISTIC]
 
         self._value_template = MqttValueTemplate(
-            self._config.get(CONF_VALUE_TEMPLATE), self
+            self._config.get(CONF_VALUE_TEMPLATE), entity=self
         ).async_render_with_possible_json_value
 
     async def _subscribe_topics(self):

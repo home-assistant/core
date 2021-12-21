@@ -124,7 +124,8 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
                 config.get(CONF_COMMAND_TEMPLATE), entity=self
             ).async_render,
             CONF_VALUE_TEMPLATE: MqttValueTemplate(
-                config.get(CONF_VALUE_TEMPLATE), self
+                config.get(CONF_VALUE_TEMPLATE),
+                entity=self,
             ).async_render_with_possible_json_value,
         }
 

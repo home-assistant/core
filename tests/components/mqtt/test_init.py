@@ -245,12 +245,12 @@ async def test_value_template_value(hass):
 
     # test rendering value
     tpl = template.Template("{{ value_json.id }}", hass)
-    val_tpl = mqtt.MqttValueTemplate(tpl, hass)
+    val_tpl = mqtt.MqttValueTemplate(tpl, hass=hass)
     assert val_tpl.async_render_with_possible_json_value('{"id": 4321}') == "4321"
 
     # test variables at rendering
     tpl = template.Template("{{ value_json.id }} {{ some_var }}", hass)
-    val_tpl = mqtt.MqttValueTemplate(tpl, hass)
+    val_tpl = mqtt.MqttValueTemplate(tpl, hass=hass)
     assert (
         val_tpl.async_render_with_possible_json_value(
             '{"id": 4321}', variables=variables
@@ -260,7 +260,7 @@ async def test_value_template_value(hass):
 
     # test with default value if an error occurs due to an invalid template
     tpl = template.Template("{{ value_json.id | as_datetime }}")
-    val_tpl = mqtt.MqttValueTemplate(tpl, hass)
+    val_tpl = mqtt.MqttValueTemplate(tpl, hass=hass)
     assert (
         val_tpl.async_render_with_possible_json_value('{"otherid": 4321}', "my default")
         == "my default"

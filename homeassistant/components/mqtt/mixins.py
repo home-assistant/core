@@ -255,7 +255,7 @@ class MqttAttributes(Entity):
     async def _attributes_subscribe_topics(self):
         """(Re)Subscribe to topics."""
         attr_tpl = MqttValueTemplate(
-            self._attributes_config.get(CONF_JSON_ATTRS_TEMPLATE), self
+            self._attributes_config.get(CONF_JSON_ATTRS_TEMPLATE), entity=self
         ).async_render_with_possible_json_value
 
         @callback
@@ -355,7 +355,8 @@ class MqttAvailability(Entity):
             avail_topic_conf,
         ) in self._avail_topics.items():
             avail_topic_conf[CONF_AVAILABILITY_TEMPLATE] = MqttValueTemplate(
-                avail_topic_conf[CONF_AVAILABILITY_TEMPLATE], self
+                avail_topic_conf[CONF_AVAILABILITY_TEMPLATE],
+                entity=self,
             ).async_render_with_possible_json_value
 
         self._avail_config = config

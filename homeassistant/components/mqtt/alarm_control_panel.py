@@ -166,7 +166,8 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
 
     def _setup_from_config(self, config):
         self._value_template = MqttValueTemplate(
-            self._config.get(CONF_VALUE_TEMPLATE), self
+            self._config.get(CONF_VALUE_TEMPLATE),
+            entity=self,
         ).async_render_with_possible_json_value
         self._command_template = MqttCommandTemplate(
             self._config[CONF_COMMAND_TEMPLATE], entity=self
