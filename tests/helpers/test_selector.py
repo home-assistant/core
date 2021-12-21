@@ -99,6 +99,17 @@ def _test_selector(
             ("abc123",),
             (None,),
         ),
+        (
+            {"multiple": True},
+            (
+                "abc123",
+                ["abc123", "def456"],
+            ),
+            (
+                None,
+                ["abc123", None],
+            ),
+        ),
     ),
 )
 def test_device_selector_schema(schema, valid_selections, invalid_selections):
@@ -122,6 +133,16 @@ def test_device_selector_schema(schema, valid_selections, invalid_selections):
             {"integration": "zha", "domain": "binary_sensor", "device_class": "motion"},
             ("binary_sensor.abc123", FAKE_UUID),
             (None, "sensor.abc123"),
+        ),
+        (
+            {"multiple": True, "domain": "sensor"},
+            (
+                "sensor.abc123",
+                ["sensor.abc123", "sensor.def456"],
+                FAKE_UUID,
+                ["sensor.abc123", FAKE_UUID],
+            ),
+            (None, "abc123", ["sensor.abc123", "light.def456"]),
         ),
     ),
 )
@@ -164,6 +185,17 @@ def test_entity_selector_schema(schema, valid_selections, invalid_selections):
             },
             ("abc123",),
             (None,),
+        ),
+        (
+            {"multiple": True},
+            (
+                "abc123",
+                ["abc123", "def456"],
+            ),
+            (
+                None,
+                ["abc123", None],
+            ),
         ),
     ),
 )

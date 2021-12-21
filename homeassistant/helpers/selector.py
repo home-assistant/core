@@ -8,7 +8,7 @@ from typing import Any, cast
 import voluptuous as vol
 
 from homeassistant.const import CONF_MODE, CONF_UNIT_OF_MEASUREMENT
-from homeassistant.core import split_entity_id
+from homeassistant.core import split_entity_id, valid_entity_id
 from homeassistant.util import decorator
 
 from . import config_validation as cv
@@ -76,7 +76,7 @@ class Selector:
 
 @SELECTORS.register("entity")
 class EntitySelector(Selector):
-    """Selector of a single entity."""
+    """Selector of a single or list of entities."""
 
     selector_type = "entity"
 
@@ -88,30 +88,37 @@ class EntitySelector(Selector):
             vol.Optional("domain"): str,
             # Device class of the entity
             vol.Optional("device_class"): str,
+            vol.Optional("multiple"): cv.boolean,
         }
     )
 
-    def __call__(self, data: Any) -> str:
+    def __call__(self, data: Any) -> str | list[str]:
         """Validate the passed selection."""
-        try:
-            entity_id = cv.entity_id(data)
-            domain = split_entity_id(entity_id)[0]
-        except vol.Invalid:
-            # Not a valid entity_id, maybe it's an entity entry id
-            return cv.entity_id_or_uuid(cv.string(data))
-        else:
-            if "domain" in self.config and domain != self.config["domain"]:
-                raise vol.Invalid(
-                    f"Entity {entity_id} belongs to domain {domain}, "
-                    f"expected {self.config['domain']}"
-                )
+        result: str | list[str]
 
-            return entity_id
+        def validate(e_or_u: str) -> None:
+            if "domain" in self.config:
+                if valid_entity_id(e_or_u):
+                    domain = split_entity_id(e_or_u)[0]
+                    if domain != self.config["domain"]:
+                        raise vol.Invalid(
+                            f"Entity {e_or_u} belongs to domain {domain}, "
+                            f"expected {self.config['domain']}"
+                        )
+
+        try:
+            result = cv.entity_id_or_uuid(cv.string(data))
+            validate(result)
+        except vol.Invalid:
+            result = cv.entity_ids_or_uuids(data)
+            for e_or_u in result:
+                validate(e_or_u)
+        return result
 
 
 @SELECTORS.register("device")
 class DeviceSelector(Selector):
-    """Selector of a single device."""
+    """Selector of a single or list of devices."""
 
     selector_type = "device"
 
@@ -125,17 +132,22 @@ class DeviceSelector(Selector):
             vol.Optional("model"): str,
             # Device has to contain entities matching this selector
             vol.Optional("entity"): EntitySelector.CONFIG_SCHEMA,
+            vol.Optional("multiple"): cv.boolean,
         }
     )
 
-    def __call__(self, data: Any) -> str:
+    def __call__(self, data: Any) -> str | list[str]:
         """Validate the passed selection."""
+        if isinstance(data, list):
+            for val in data:
+                cv.string(val)
+            return data
         return cv.string(data)
 
 
 @SELECTORS.register("area")
 class AreaSelector(Selector):
-    """Selector of a single area."""
+    """Selector of a single or list of areas."""
 
     selector_type = "area"
 
@@ -143,11 +155,16 @@ class AreaSelector(Selector):
         {
             vol.Optional("entity"): EntitySelector.CONFIG_SCHEMA,
             vol.Optional("device"): DeviceSelector.CONFIG_SCHEMA,
+            vol.Optional("multiple"): cv.boolean,
         }
     )
 
-    def __call__(self, data: Any) -> str:
+    def __call__(self, data: Any) -> str | list[str]:
         """Validate the passed selection."""
+        if isinstance(data, list):
+            for val in data:
+                cv.string(val)
+            return data
         return cv.string(data)
 
 
