@@ -35,7 +35,6 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import (
@@ -45,13 +44,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.util.temperature import convert as convert_temperature
 
-from .const import (
-    _FETCH_FIELDS,
-    _INITIAL_FETCH_FIELDS,
-    ALL,
-    DOMAIN as SENSIBO_DOMAIN,
-    TIMEOUT,
-)
+from .const import _FETCH_FIELDS, ALL, DOMAIN as SENSIBO_DOMAIN, TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -108,27 +101,18 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Sensibo climate entry."""
+
     client = pysensibo.SensiboClient(
         entry.data[CONF_API_KEY], session=async_get_clientsession(hass), timeout=TIMEOUT
     )
-    devices = []
-    try:
-        async with async_timeout.timeout(TIMEOUT):
-            for dev in await client.async_get_devices(_INITIAL_FETCH_FIELDS):
-                if entry.data[CONF_ID] == ALL or dev["id"] in entry.data[CONF_ID]:
-                    devices.append(
-                        SensiboClimate(client, dev, hass.config.units.temperature_unit)
-                    )
-    except (
-        aiohttp.client_exceptions.ClientConnectorError,
-        asyncio.TimeoutError,
-        pysensibo.SensiboError,
-    ) as err:
-        _LOGGER.error("Failed to get devices from Sensibo servers")
-        raise ConfigEntryNotReady from err
 
-    if not devices:
+    devicelist = hass.data[SENSIBO_DOMAIN][entry.entry_id]["devices"]
+    if not devicelist:
         return
+
+    devices = []
+    for dev in devicelist:
+        devices.append(SensiboClimate(client, dev, hass.config.units.temperature_unit))
 
     async_add_entities(devices)
 
