@@ -5,14 +5,14 @@ from unittest.mock import MagicMock
 import pytest
 from wled import Device as WLEDDevice, WLEDConnectionError, WLEDError
 
-from homeassistant.components.number import ATTR_MAX, ATTR_MIN, DOMAIN as NUMBER_DOMAIN
+from homeassistant.components.number import ATTR_MAX, ATTR_MIN
 from homeassistant.components.number.const import (
     ATTR_STEP,
     ATTR_VALUE,
     SERVICE_SET_VALUE,
 )
 from homeassistant.components.wled.const import SCAN_INTERVAL
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_ICON, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_ICON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 import homeassistant.util.dt as dt_util
@@ -47,7 +47,7 @@ async def test_speed_segment_change_state(
 ) -> None:
     """Test the value change of the WLED segments."""
     await hass.services.async_call(
-        NUMBER_DOMAIN,
+        Platform.NUMBER,
         SERVICE_SET_VALUE,
         {
             ATTR_ENTITY_ID: "number.wled_rgb_light_segment_1_speed",
@@ -115,7 +115,7 @@ async def test_speed_error(
     mock_wled.segment.side_effect = WLEDError
 
     await hass.services.async_call(
-        NUMBER_DOMAIN,
+        Platform.NUMBER,
         SERVICE_SET_VALUE,
         {
             ATTR_ENTITY_ID: "number.wled_rgb_light_segment_1_speed",
@@ -143,7 +143,7 @@ async def test_speed_connection_error(
     mock_wled.segment.side_effect = WLEDConnectionError
 
     await hass.services.async_call(
-        NUMBER_DOMAIN,
+        Platform.NUMBER,
         SERVICE_SET_VALUE,
         {
             ATTR_ENTITY_ID: "number.wled_rgb_light_segment_1_speed",
@@ -188,7 +188,7 @@ async def test_intensity_segment_change_state(
 ) -> None:
     """Test the value change of the WLED segments."""
     await hass.services.async_call(
-        NUMBER_DOMAIN,
+        Platform.NUMBER,
         SERVICE_SET_VALUE,
         {
             ATTR_ENTITY_ID: "number.wled_rgb_light_segment_1_intensity",
@@ -256,7 +256,7 @@ async def test_intensity_error(
     mock_wled.segment.side_effect = WLEDError
 
     await hass.services.async_call(
-        NUMBER_DOMAIN,
+        Platform.NUMBER,
         SERVICE_SET_VALUE,
         {
             ATTR_ENTITY_ID: "number.wled_rgb_light_segment_1_intensity",
@@ -284,7 +284,7 @@ async def test_intensity_connection_error(
     mock_wled.segment.side_effect = WLEDConnectionError
 
     await hass.services.async_call(
-        NUMBER_DOMAIN,
+        Platform.NUMBER,
         SERVICE_SET_VALUE,
         {
             ATTR_ENTITY_ID: "number.wled_rgb_light_segment_1_intensity",

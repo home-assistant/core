@@ -5,7 +5,6 @@ from unittest.mock import MagicMock
 import pytest
 from wled import Device as WLEDDevice, WLEDConnectionError, WLEDError
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.wled.const import (
     ATTR_DURATION,
     ATTR_FADE,
@@ -21,6 +20,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -89,7 +89,7 @@ async def test_switch_change_state(
 
     # Nightlight
     await hass.services.async_call(
-        SWITCH_DOMAIN,
+        Platform.SWITCH,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: "switch.wled_rgb_light_nightlight"},
         blocking=True,
@@ -99,7 +99,7 @@ async def test_switch_change_state(
     mock_wled.nightlight.assert_called_with(on=True)
 
     await hass.services.async_call(
-        SWITCH_DOMAIN,
+        Platform.SWITCH,
         SERVICE_TURN_OFF,
         {ATTR_ENTITY_ID: "switch.wled_rgb_light_nightlight"},
         blocking=True,
@@ -110,7 +110,7 @@ async def test_switch_change_state(
 
     # Sync send
     await hass.services.async_call(
-        SWITCH_DOMAIN,
+        Platform.SWITCH,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: "switch.wled_rgb_light_sync_send"},
         blocking=True,
@@ -120,7 +120,7 @@ async def test_switch_change_state(
     mock_wled.sync.assert_called_with(send=True)
 
     await hass.services.async_call(
-        SWITCH_DOMAIN,
+        Platform.SWITCH,
         SERVICE_TURN_OFF,
         {ATTR_ENTITY_ID: "switch.wled_rgb_light_sync_send"},
         blocking=True,
@@ -131,7 +131,7 @@ async def test_switch_change_state(
 
     # Sync receive
     await hass.services.async_call(
-        SWITCH_DOMAIN,
+        Platform.SWITCH,
         SERVICE_TURN_OFF,
         {ATTR_ENTITY_ID: "switch.wled_rgb_light_sync_receive"},
         blocking=True,
@@ -141,7 +141,7 @@ async def test_switch_change_state(
     mock_wled.sync.assert_called_with(receive=False)
 
     await hass.services.async_call(
-        SWITCH_DOMAIN,
+        Platform.SWITCH,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: "switch.wled_rgb_light_sync_receive"},
         blocking=True,
@@ -151,7 +151,7 @@ async def test_switch_change_state(
     mock_wled.sync.assert_called_with(receive=True)
 
     await hass.services.async_call(
-        SWITCH_DOMAIN,
+        Platform.SWITCH,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: "switch.wled_rgb_light_reverse"},
         blocking=True,
@@ -161,7 +161,7 @@ async def test_switch_change_state(
     mock_wled.segment.assert_called_with(segment_id=0, reverse=True)
 
     await hass.services.async_call(
-        SWITCH_DOMAIN,
+        Platform.SWITCH,
         SERVICE_TURN_OFF,
         {ATTR_ENTITY_ID: "switch.wled_rgb_light_reverse"},
         blocking=True,
@@ -181,7 +181,7 @@ async def test_switch_error(
     mock_wled.nightlight.side_effect = WLEDError
 
     await hass.services.async_call(
-        SWITCH_DOMAIN,
+        Platform.SWITCH,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: "switch.wled_rgb_light_nightlight"},
         blocking=True,
@@ -204,7 +204,7 @@ async def test_switch_connection_error(
     mock_wled.nightlight.side_effect = WLEDConnectionError
 
     await hass.services.async_call(
-        SWITCH_DOMAIN,
+        Platform.SWITCH,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: "switch.wled_rgb_light_nightlight"},
         blocking=True,

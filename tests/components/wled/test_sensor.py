@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.wled.const import DOMAIN
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -15,6 +15,7 @@ from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     STATE_UNKNOWN,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -34,7 +35,7 @@ async def test_sensors(
 
     # Pre-create registry entries for disabled by default sensors
     registry.async_get_or_create(
-        SENSOR_DOMAIN,
+        Platform.SENSOR,
         DOMAIN,
         "aabbccddeeff_uptime",
         suggested_object_id="wled_rgb_light_uptime",
@@ -42,7 +43,7 @@ async def test_sensors(
     )
 
     registry.async_get_or_create(
-        SENSOR_DOMAIN,
+        Platform.SENSOR,
         DOMAIN,
         "aabbccddeeff_free_heap",
         suggested_object_id="wled_rgb_light_free_memory",
@@ -50,7 +51,7 @@ async def test_sensors(
     )
 
     registry.async_get_or_create(
-        SENSOR_DOMAIN,
+        Platform.SENSOR,
         DOMAIN,
         "aabbccddeeff_wifi_signal",
         suggested_object_id="wled_rgb_light_wifi_signal",
@@ -58,7 +59,7 @@ async def test_sensors(
     )
 
     registry.async_get_or_create(
-        SENSOR_DOMAIN,
+        Platform.SENSOR,
         DOMAIN,
         "aabbccddeeff_wifi_rssi",
         suggested_object_id="wled_rgb_light_wifi_rssi",
@@ -66,7 +67,7 @@ async def test_sensors(
     )
 
     registry.async_get_or_create(
-        SENSOR_DOMAIN,
+        Platform.SENSOR,
         DOMAIN,
         "aabbccddeeff_wifi_channel",
         suggested_object_id="wled_rgb_light_wifi_channel",
@@ -74,7 +75,7 @@ async def test_sensors(
     )
 
     registry.async_get_or_create(
-        SENSOR_DOMAIN,
+        Platform.SENSOR,
         DOMAIN,
         "aabbccddeeff_wifi_bssid",
         suggested_object_id="wled_rgb_light_wifi_bssid",
@@ -219,7 +220,7 @@ async def test_no_wifi_support(
 
     # Pre-create registry entries for disabled by default sensors
     registry.async_get_or_create(
-        SENSOR_DOMAIN,
+        Platform.SENSOR,
         DOMAIN,
         f"aabbccddeeff_wifi_{key}",
         suggested_object_id=f"wled_rgb_light_wifi_{key}",

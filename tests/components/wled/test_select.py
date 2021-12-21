@@ -5,7 +5,6 @@ from unittest.mock import MagicMock
 import pytest
 from wled import Device as WLEDDevice, WLEDConnectionError, WLEDError
 
-from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.select.const import ATTR_OPTION, ATTR_OPTIONS
 from homeassistant.components.wled.const import SCAN_INTERVAL
 from homeassistant.const import (
@@ -14,6 +13,7 @@ from homeassistant.const import (
     SERVICE_SELECT_OPTION,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -100,7 +100,7 @@ async def test_color_palette_segment_change_state(
 ) -> None:
     """Test the option change of state of the WLED segments."""
     await hass.services.async_call(
-        SELECT_DOMAIN,
+        Platform.SELECT,
         SERVICE_SELECT_OPTION,
         {
             ATTR_ENTITY_ID: "select.wled_rgb_light_segment_1_color_palette",
@@ -167,7 +167,7 @@ async def test_color_palette_select_error(
     mock_wled.segment.side_effect = WLEDError
 
     await hass.services.async_call(
-        SELECT_DOMAIN,
+        Platform.SELECT,
         SERVICE_SELECT_OPTION,
         {
             ATTR_ENTITY_ID: "select.wled_rgb_light_segment_1_color_palette",
@@ -195,7 +195,7 @@ async def test_color_palette_select_connection_error(
     mock_wled.segment.side_effect = WLEDConnectionError
 
     await hass.services.async_call(
-        SELECT_DOMAIN,
+        Platform.SELECT,
         SERVICE_SELECT_OPTION,
         {
             ATTR_ENTITY_ID: "select.wled_rgb_light_segment_1_color_palette",
@@ -243,7 +243,7 @@ async def test_preset_state(
     assert entry.unique_id == "aabbccddee11_preset"
 
     await hass.services.async_call(
-        SELECT_DOMAIN,
+        Platform.SELECT,
         SERVICE_SELECT_OPTION,
         {
             ATTR_ENTITY_ID: "select.wled_rgbw_light_preset",
@@ -286,7 +286,7 @@ async def test_preset_select_error(
     mock_wled.preset.side_effect = WLEDError
 
     await hass.services.async_call(
-        SELECT_DOMAIN,
+        Platform.SELECT,
         SERVICE_SELECT_OPTION,
         {
             ATTR_ENTITY_ID: "select.wled_rgbw_light_preset",
@@ -315,7 +315,7 @@ async def test_preset_select_connection_error(
     mock_wled.preset.side_effect = WLEDConnectionError
 
     await hass.services.async_call(
-        SELECT_DOMAIN,
+        Platform.SELECT,
         SERVICE_SELECT_OPTION,
         {
             ATTR_ENTITY_ID: "select.wled_rgbw_light_preset",
@@ -363,7 +363,7 @@ async def test_playlist_state(
     assert entry.unique_id == "aabbccddee11_playlist"
 
     await hass.services.async_call(
-        SELECT_DOMAIN,
+        Platform.SELECT,
         SERVICE_SELECT_OPTION,
         {
             ATTR_ENTITY_ID: "select.wled_rgbw_light_playlist",
@@ -406,7 +406,7 @@ async def test_playlist_select_error(
     mock_wled.playlist.side_effect = WLEDError
 
     await hass.services.async_call(
-        SELECT_DOMAIN,
+        Platform.SELECT,
         SERVICE_SELECT_OPTION,
         {
             ATTR_ENTITY_ID: "select.wled_rgbw_light_playlist",
@@ -435,7 +435,7 @@ async def test_playlist_select_connection_error(
     mock_wled.playlist.side_effect = WLEDConnectionError
 
     await hass.services.async_call(
-        SELECT_DOMAIN,
+        Platform.SELECT,
         SERVICE_SELECT_OPTION,
         {
             ATTR_ENTITY_ID: "select.wled_rgbw_light_playlist",
@@ -472,7 +472,7 @@ async def test_live_override(
     assert entry.unique_id == "aabbccddeeff_live_override"
 
     await hass.services.async_call(
-        SELECT_DOMAIN,
+        Platform.SELECT,
         SERVICE_SELECT_OPTION,
         {
             ATTR_ENTITY_ID: "select.wled_rgb_light_live_override",
@@ -495,7 +495,7 @@ async def test_live_select_error(
     mock_wled.live.side_effect = WLEDError
 
     await hass.services.async_call(
-        SELECT_DOMAIN,
+        Platform.SELECT,
         SERVICE_SELECT_OPTION,
         {
             ATTR_ENTITY_ID: "select.wled_rgb_light_live_override",
@@ -523,7 +523,7 @@ async def test_live_select_connection_error(
     mock_wled.live.side_effect = WLEDConnectionError
 
     await hass.services.async_call(
-        SELECT_DOMAIN,
+        Platform.SELECT,
         SERVICE_SELECT_OPTION,
         {
             ATTR_ENTITY_ID: "select.wled_rgb_light_live_override",
