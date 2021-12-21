@@ -10,12 +10,8 @@ import requests
 from homeassistant import config_entries
 from homeassistant.components.picnic import const
 from homeassistant.components.picnic.const import CONF_COUNTRY_CODE, SENSOR_TYPES
-from homeassistant.const import (
-    CONF_ACCESS_TOKEN,
-    CURRENCY_EURO,
-    DEVICE_CLASS_TIMESTAMP,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.const import CONF_ACCESS_TOKEN, CURRENCY_EURO, STATE_UNAVAILABLE
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.util import dt
 
@@ -212,44 +208,44 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         self._assert_sensor(
             "sensor.picnic_selected_slot_start",
             "2021-03-03T13:45:00+00:00",
-            cls=DEVICE_CLASS_TIMESTAMP,
+            cls=SensorDeviceClass.TIMESTAMP,
         )
         self._assert_sensor(
             "sensor.picnic_selected_slot_end",
             "2021-03-03T14:45:00+00:00",
-            cls=DEVICE_CLASS_TIMESTAMP,
+            cls=SensorDeviceClass.TIMESTAMP,
         )
         self._assert_sensor(
             "sensor.picnic_selected_slot_max_order_time",
             "2021-03-02T21:00:00+00:00",
-            cls=DEVICE_CLASS_TIMESTAMP,
+            cls=SensorDeviceClass.TIMESTAMP,
         )
         self._assert_sensor("sensor.picnic_selected_slot_min_order_value", "35.0")
         self._assert_sensor(
             "sensor.picnic_last_order_slot_start",
             "2021-02-26T19:15:00+00:00",
-            cls=DEVICE_CLASS_TIMESTAMP,
+            cls=SensorDeviceClass.TIMESTAMP,
         )
         self._assert_sensor(
             "sensor.picnic_last_order_slot_end",
             "2021-02-26T20:15:00+00:00",
-            cls=DEVICE_CLASS_TIMESTAMP,
+            cls=SensorDeviceClass.TIMESTAMP,
         )
         self._assert_sensor("sensor.picnic_last_order_status", "COMPLETED")
         self._assert_sensor(
             "sensor.picnic_last_order_eta_start",
             "2021-02-26T19:54:00+00:00",
-            cls=DEVICE_CLASS_TIMESTAMP,
+            cls=SensorDeviceClass.TIMESTAMP,
         )
         self._assert_sensor(
             "sensor.picnic_last_order_eta_end",
             "2021-02-26T20:14:00+00:00",
-            cls=DEVICE_CLASS_TIMESTAMP,
+            cls=SensorDeviceClass.TIMESTAMP,
         )
         self._assert_sensor(
             "sensor.picnic_last_order_delivery_time",
             "2021-02-26T19:54:05+00:00",
-            cls=DEVICE_CLASS_TIMESTAMP,
+            cls=SensorDeviceClass.TIMESTAMP,
         )
         self._assert_sensor(
             "sensor.picnic_last_order_total_price", "41.33", unit=CURRENCY_EURO
