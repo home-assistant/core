@@ -63,8 +63,8 @@ tests/components/ambient_station/* @bachya
 homeassistant/components/amcrest/* @flacjacket
 homeassistant/components/analytics/* @home-assistant/core @ludeeus
 tests/components/analytics/* @home-assistant/core @ludeeus
-homeassistant/components/androidtv/* @JeffLIrion
-tests/components/androidtv/* @JeffLIrion
+homeassistant/components/androidtv/* @JeffLIrion @ollo69
+tests/components/androidtv/* @JeffLIrion @ollo69
 homeassistant/components/apache_kafka/* @bachya
 tests/components/apache_kafka/* @bachya
 homeassistant/components/api/* @home-assistant/core
@@ -425,6 +425,8 @@ homeassistant/components/influxdb/* @fabaff @mdegat01
 tests/components/influxdb/* @fabaff @mdegat01
 homeassistant/components/input_boolean/* @home-assistant/core
 tests/components/input_boolean/* @home-assistant/core
+homeassistant/components/input_button/* @home-assistant/core
+tests/components/input_button/* @home-assistant/core
 homeassistant/components/input_datetime/* @home-assistant/core
 tests/components/input_datetime/* @home-assistant/core
 homeassistant/components/input_number/* @home-assistant/core
@@ -476,8 +478,8 @@ homeassistant/components/knx/* @Julius2342 @farmio @marvin-w
 tests/components/knx/* @Julius2342 @farmio @marvin-w
 homeassistant/components/kodi/* @OnFreund @cgtobi
 tests/components/kodi/* @OnFreund @cgtobi
-homeassistant/components/konnected/* @heythisisnate @kit-klein
-tests/components/konnected/* @heythisisnate @kit-klein
+homeassistant/components/konnected/* @heythisisnate
+tests/components/konnected/* @heythisisnate
 homeassistant/components/kostal_plenticore/* @stegm
 tests/components/kostal_plenticore/* @stegm
 homeassistant/components/kraken/* @eifinger

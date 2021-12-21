@@ -2,10 +2,7 @@
 import logging
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_CONNECTIVITY,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_WINDOW,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -143,9 +140,9 @@ class TadoDeviceBinarySensor(TadoDeviceEntity, BinarySensorEntity):
     def device_class(self):
         """Return the class of this sensor."""
         if self.device_variable == "battery state":
-            return DEVICE_CLASS_BATTERY
+            return BinarySensorDeviceClass.BATTERY
         if self.device_variable == "connection state":
-            return DEVICE_CLASS_CONNECTIVITY
+            return BinarySensorDeviceClass.CONNECTIVITY
         return None
 
     @callback
@@ -219,15 +216,15 @@ class TadoZoneBinarySensor(TadoZoneEntity, BinarySensorEntity):
     def device_class(self):
         """Return the class of this sensor."""
         if self.zone_variable == "early start":
-            return DEVICE_CLASS_POWER
+            return BinarySensorDeviceClass.POWER
         if self.zone_variable == "link":
-            return DEVICE_CLASS_CONNECTIVITY
+            return BinarySensorDeviceClass.CONNECTIVITY
         if self.zone_variable == "open window":
-            return DEVICE_CLASS_WINDOW
+            return BinarySensorDeviceClass.WINDOW
         if self.zone_variable == "overlay":
-            return DEVICE_CLASS_POWER
+            return BinarySensorDeviceClass.POWER
         if self.zone_variable == "power":
-            return DEVICE_CLASS_POWER
+            return BinarySensorDeviceClass.POWER
         return None
 
     @property

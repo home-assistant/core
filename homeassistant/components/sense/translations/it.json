@@ -11,7 +11,7 @@
         "step": {
             "user": {
                 "data": {
-                    "email": "E-mail",
+                    "email": "Email",
                     "password": "Password",
                     "timeout": "Tempo scaduto"
                 },

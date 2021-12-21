@@ -3,8 +3,12 @@ import logging
 
 import gammu  # pylint: disable=import-error
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.const import DEVICE_CLASS_SIGNAL_STRENGTH, SIGNAL_STRENGTH_DECIBELS
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
+from homeassistant.const import SIGNAL_STRENGTH_DECIBELS
 from homeassistant.helpers.entity import DeviceInfo
 
 from .const import DOMAIN, SMS_GATEWAY
@@ -25,7 +29,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 SensorEntityDescription(
                     key="signal",
                     name=f"gsm_signal_imei_{imei}",
-                    device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
+                    device_class=SensorDeviceClass.SIGNAL_STRENGTH,
                     native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
                     entity_registry_enabled_default=False,
                 ),

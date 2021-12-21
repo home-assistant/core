@@ -4,11 +4,14 @@ import logging
 from temperusb.temper import TemperHandler
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
+)
 from homeassistant.const import (
     CONF_NAME,
     CONF_OFFSET,
-    DEVICE_CLASS_TEMPERATURE,
     DEVICE_DEFAULT_NAME,
     TEMP_CELSIUS,
 )
@@ -60,7 +63,7 @@ def reset_devices():
 class TemperSensor(SensorEntity):
     """Representation of a Temper temperature sensor."""
 
-    _attr_device_class = DEVICE_CLASS_TEMPERATURE
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
     _attr_native_unit_of_measurement = TEMP_CELSIUS
 
     def __init__(self, temper_device, name, scaling):

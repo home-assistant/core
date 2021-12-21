@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SWITCH, Platform.BINARY_SENSOR]
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
