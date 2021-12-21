@@ -21,6 +21,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     VOLUME_LITERS,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import device_registry as dr, entity, template
 from homeassistant.helpers.entity_platform import EntityPlatform
@@ -3099,6 +3100,38 @@ def test_urlencode(hass):
         hass,
     )
     assert tpl.async_render() == "the%20quick%20brown%20fox%20%3D%20true"
+
+
+def test_iif(hass: HomeAssistant) -> None:
+    """Test the immediate if function/filter."""
+    tpl = template.Template("{{ (1 == 1) | iif }}", hass)
+    assert tpl.async_render() is True
+
+    tpl = template.Template("{{ (1 == 2) | iif }}", hass)
+    assert tpl.async_render() is False
+
+    tpl = template.Template("{{ (1 == 1) | iif('yes') }}", hass)
+    assert tpl.async_render() == "yes"
+
+    tpl = template.Template("{{ (1 == 2) | iif('yes') }}", hass)
+    assert tpl.async_render() is False
+
+    tpl = template.Template("{{ (1 == 2) | iif('yes', 'no') }}", hass)
+    assert tpl.async_render() == "no"
+
+    tpl = template.Template("{{ not_exists | default(None) | iif('yes', 'no') }}", hass)
+    assert tpl.async_render() == "no"
+
+    tpl = template.Template(
+        "{{ not_exists | default(None) | iif('yes', 'no', 'unknown') }}", hass
+    )
+    assert tpl.async_render() == "unknown"
+
+    tpl = template.Template("{{ iif(1 == 1) }}", hass)
+    assert tpl.async_render() is True
+
+    tpl = template.Template("{{ iif(1 == 2, 'yes', 'no') }}", hass)
+    assert tpl.async_render() == "no"
 
 
 async def test_cache_garbage_collection():
