@@ -228,7 +228,11 @@ async def _async_get_device_automations(
     return combined_results
 
 
-async def _async_get_device_automation_capabilities(hass, automation_type, automation):
+async def _async_get_device_automation_capabilities(
+    hass: HomeAssistant,
+    automation_type: DeviceAutomationType,
+    automation: Mapping[str, Any],
+) -> dict[str, Any]:
     """List device automations."""
     try:
         platform = await async_get_device_automation_platform(
@@ -237,8 +241,6 @@ async def _async_get_device_automation_capabilities(hass, automation_type, autom
     except InvalidDeviceAutomationConfig:
         return {}
 
-    if isinstance(automation_type, str):  # until tests pass DeviceAutomationType
-        automation_type = DeviceAutomationType[automation_type.upper()]
     function_name = automation_type.value.get_capabilities_func
 
     if not hasattr(platform, function_name):
@@ -259,7 +261,7 @@ async def _async_get_device_automation_capabilities(hass, automation_type, autom
             extra_fields, custom_serializer=cv.custom_serializer
         )
 
-    return capabilities
+    return capabilities  # type: ignore[no-any-return]
 
 
 def handle_device_errors(func):
