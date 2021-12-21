@@ -37,8 +37,6 @@ class SensiboConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize."""
         self.name: str = ""
         self.api_key: str = ""
-        self.id: list = []
-        self.errors: dict[str, str] = {}
 
     async def async_get_data(self) -> bool:
         """Get data from API."""
@@ -58,7 +56,6 @@ class SensiboConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             SensiboError,
         ) as err:
             _LOGGER.error("Failed to get devices from Sensibo servers %s", err)
-            self.errors["base"] = "cannot_connect"
         return False
 
     async def async_step_import(self, config: dict):
@@ -73,6 +70,8 @@ class SensiboConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
+
+        errors: dict[str, str] = {}
 
         if user_input is not None:
 
@@ -91,9 +90,10 @@ class SensiboConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_API_KEY: self.api_key,
                     },
                 )
+            errors["base"] = "cannot_connect"
 
         return self.async_show_form(
             step_id="user",
             data_schema=DATA_SCHEMA,
-            errors=self.errors,
+            errors=errors,
         )

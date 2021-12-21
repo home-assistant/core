@@ -43,7 +43,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.util.temperature import convert as convert_temperature
 
-from .const import _FETCH_FIELDS, ALL, DOMAIN as SENSIBO_DOMAIN, TIMEOUT
+from .const import _FETCH_FIELDS, ALL, DOMAIN, TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -89,7 +89,7 @@ async def async_setup_platform(
     )
     hass.async_create_task(
         hass.config_entries.flow.async_init(
-            SENSIBO_DOMAIN,
+            DOMAIN,
             context={"source": SOURCE_IMPORT},
             data=config,
         )
@@ -101,11 +101,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Sensibo climate entry."""
 
-    client = hass.data[SENSIBO_DOMAIN][entry.entry_id]["client"]
+    client = hass.data[DOMAIN][entry.entry_id]["client"]
 
-    devicelist = hass.data[SENSIBO_DOMAIN][entry.entry_id]["devices"]
-    if not devicelist:
-        return
+    devicelist = hass.data[DOMAIN][entry.entry_id]["devices"]
 
     devices = []
     for dev in devicelist:
@@ -131,7 +129,7 @@ async def async_setup_entry(
             await asyncio.wait(update_tasks)
 
     hass.services.async_register(
-        SENSIBO_DOMAIN,
+        DOMAIN,
         SERVICE_ASSUME_STATE,
         async_assume_state,
         schema=ASSUME_STATE_SCHEMA,

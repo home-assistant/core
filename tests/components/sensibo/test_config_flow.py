@@ -22,11 +22,13 @@ from tests.common import MockConfigEntry
 DOMAIN = "sensibo"
 
 
+def devices():
+    """Return list of test devices."""
+    return (yield from [{"id": "xyzxyz"}, {"id": "abcabc"}])
+
+
 async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
-
-    def devices():
-        return (yield from [{"id": "xyzxyz"}, {"id": "abcabc"}])
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -63,9 +65,6 @@ async def test_form(hass: HomeAssistant) -> None:
 async def test_import_flow_success(hass: HomeAssistant) -> None:
     """Test a successful import of yaml."""
 
-    def devices():
-        return (yield from [{"id": "xyzxyz"}, {"id": "abcabc"}])
-
     with patch(
         "homeassistant.components.sensibo.config_flow.SensiboClient.async_get_devices",
         return_value=devices(),
@@ -93,9 +92,6 @@ async def test_import_flow_success(hass: HomeAssistant) -> None:
 
 async def test_import_flow_already_exist(hass: HomeAssistant) -> None:
     """Test import of yaml already exist."""
-
-    def devices():
-        return (yield from [{"id": "xyzxyz"}, {"id": "abcabc"}])
 
     MockConfigEntry(
         domain=DOMAIN,

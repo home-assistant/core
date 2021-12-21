@@ -10,8 +10,7 @@
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
-          "name": "[%key:common::config_flow::data::name%]",
-          "id": "Id"
+          "name": "[%key:common::config_flow::data::name%]"
         }
       }
     }
