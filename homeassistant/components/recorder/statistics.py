@@ -326,7 +326,9 @@ def _find_duplicates(
         duplicate_as_dict = columns_to_dict(duplicate)
         duplicate_ids.append(duplicate.id)
         if not compare_statistic_rows(original_as_dict, duplicate_as_dict):
-            non_identical_duplicates_as_dict.append(duplicate_as_dict)
+            non_identical_duplicates_as_dict.append(
+                {"duplicate": duplicate_as_dict, "original": original_as_dict}
+            )
 
     return (duplicate_ids, non_identical_duplicates_as_dict)
 
