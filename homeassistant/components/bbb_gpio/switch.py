@@ -1,6 +1,4 @@
 """Allows to configure a switch using BeagleBone Black GPIO."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant.components import bbb_gpio
@@ -25,18 +23,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_PINS, default={}): vol.Schema({cv.string: PIN_SCHEMA})}
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the BeagleBone Black GPIO devices."""
-    _LOGGER.warning(
-        "The BeagleBone Black GPIO integration is deprecated and will be removed "
-        "in Home Assistant Core 2022.4; this integration is removed under "
-        "Architectural Decision Record 0019, more information can be found here: "
-        "https://github.com/home-assistant/architecture/blob/master/adr/0019-GPIO.md"
-    )
-
     pins = config[CONF_PINS]
 
     switches = []
