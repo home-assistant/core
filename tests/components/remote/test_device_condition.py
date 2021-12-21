@@ -6,8 +6,7 @@ import pytest
 
 import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.remote import DOMAIN
-from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON
+from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON, Platform
 from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -49,21 +48,23 @@ async def test_get_conditions(hass, device_reg, entity_reg):
         config_entry_id=config_entry.entry_id,
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
+    entity_reg.async_get_or_create(
+        Platform.REMOTE, "test", "5678", device_id=device_entry.id
+    )
     expected_conditions = [
         {
             "condition": "device",
-            "domain": DOMAIN,
+            "domain": Platform.REMOTE,
             "type": "is_off",
             "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
+            "entity_id": f"{Platform.REMOTE}.test_5678",
         },
         {
             "condition": "device",
-            "domain": DOMAIN,
+            "domain": Platform.REMOTE,
             "type": "is_on",
             "device_id": device_entry.id,
-            "entity_id": f"{DOMAIN}.test_5678",
+            "entity_id": f"{Platform.REMOTE}.test_5678",
         },
     ]
     conditions = await async_get_device_automations(
@@ -80,7 +81,9 @@ async def test_get_condition_capabilities(hass, device_reg, entity_reg):
         config_entry_id=config_entry.entry_id,
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
+    entity_reg.async_get_or_create(
+        Platform.REMOTE, "test", "5678", device_id=device_entry.id
+    )
     expected_capabilities = {
         "extra_fields": [
             {"name": "for", "optional": True, "type": "positive_time_period_dict"}
@@ -98,10 +101,12 @@ async def test_get_condition_capabilities(hass, device_reg, entity_reg):
 
 async def test_if_state(hass, calls, enable_custom_integrations):
     """Test for turn_on and turn_off conditions."""
-    platform = getattr(hass.components, f"test.{DOMAIN}")
+    platform = getattr(hass.components, f"test.{Platform.REMOTE}")
 
     platform.init()
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    assert await async_setup_component(
+        hass, Platform.REMOTE, {Platform.REMOTE: {CONF_PLATFORM: "test"}}
+    )
     await hass.async_block_till_done()
 
     ent1, ent2, ent3 = platform.ENTITIES
@@ -116,7 +121,7 @@ async def test_if_state(hass, calls, enable_custom_integrations):
                     "condition": [
                         {
                             "condition": "device",
-                            "domain": DOMAIN,
+                            "domain": Platform.REMOTE,
                             "device_id": "",
                             "entity_id": ent1.entity_id,
                             "type": "is_on",
@@ -135,7 +140,7 @@ async def test_if_state(hass, calls, enable_custom_integrations):
                     "condition": [
                         {
                             "condition": "device",
-                            "domain": DOMAIN,
+                            "domain": Platform.REMOTE,
                             "device_id": "",
                             "entity_id": ent1.entity_id,
                             "type": "is_off",
@@ -176,10 +181,12 @@ async def test_if_fires_on_for_condition(hass, calls, enable_custom_integrations
     point2 = point1 + timedelta(seconds=10)
     point3 = point2 + timedelta(seconds=10)
 
-    platform = getattr(hass.components, f"test.{DOMAIN}")
+    platform = getattr(hass.components, f"test.{Platform.REMOTE}")
 
     platform.init()
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    assert await async_setup_component(
+        hass, Platform.REMOTE, {Platform.REMOTE: {CONF_PLATFORM: "test"}}
+    )
     await hass.async_block_till_done()
 
     ent1, ent2, ent3 = platform.ENTITIES
@@ -195,7 +202,7 @@ async def test_if_fires_on_for_condition(hass, calls, enable_custom_integrations
                         "trigger": {"platform": "event", "event_type": "test_event1"},
                         "condition": {
                             "condition": "device",
-                            "domain": DOMAIN,
+                            "domain": Platform.REMOTE,
                             "device_id": "",
                             "entity_id": ent1.entity_id,
                             "type": "is_off",
