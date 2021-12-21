@@ -11,13 +11,13 @@ from hatasmota.utils import (
     get_topic_tele_will,
 )
 
-from homeassistant.components import binary_sensor
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     EVENT_STATE_CHANGED,
     STATE_OFF,
     STATE_ON,
+    Platform,
 )
 import homeassistant.core as ha
 import homeassistant.util.dt as dt_util
@@ -292,7 +292,7 @@ async def test_availability_when_connection_lost(
     config["swc"][0] = 1
     config["swn"][0] = "Test"
     await help_test_availability_when_connection_lost(
-        hass, mqtt_client_mock, mqtt_mock, binary_sensor.DOMAIN, config
+        hass, mqtt_client_mock, mqtt_mock, Platform.BINARY_SENSOR, config
     )
 
 
@@ -301,7 +301,7 @@ async def test_availability(hass, mqtt_mock, setup_tasmota):
     config = copy.deepcopy(DEFAULT_CONFIG)
     config["swc"][0] = 1
     config["swn"][0] = "Test"
-    await help_test_availability(hass, mqtt_mock, binary_sensor.DOMAIN, config)
+    await help_test_availability(hass, mqtt_mock, Platform.BINARY_SENSOR, config)
 
 
 async def test_availability_discovery_update(hass, mqtt_mock, setup_tasmota):
@@ -310,7 +310,7 @@ async def test_availability_discovery_update(hass, mqtt_mock, setup_tasmota):
     config["swc"][0] = 1
     config["swn"][0] = "Test"
     await help_test_availability_discovery_update(
-        hass, mqtt_mock, binary_sensor.DOMAIN, config
+        hass, mqtt_mock, Platform.BINARY_SENSOR, config
     )
 
 
@@ -326,7 +326,7 @@ async def test_availability_poll_state(
         hass,
         mqtt_client_mock,
         mqtt_mock,
-        binary_sensor.DOMAIN,
+        Platform.BINARY_SENSOR,
         config,
         poll_topic,
         "10",
@@ -343,7 +343,7 @@ async def test_discovery_removal_binary_sensor(hass, mqtt_mock, caplog, setup_ta
     config2["swn"][0] = "Test"
 
     await help_test_discovery_removal(
-        hass, mqtt_mock, caplog, binary_sensor.DOMAIN, config1, config2
+        hass, mqtt_mock, caplog, Platform.BINARY_SENSOR, config1, config2
     )
 
 
@@ -358,7 +358,7 @@ async def test_discovery_update_unchanged_binary_sensor(
         "homeassistant.components.tasmota.binary_sensor.TasmotaBinarySensor.discovery_update"
     ) as discovery_update:
         await help_test_discovery_update_unchanged(
-            hass, mqtt_mock, caplog, binary_sensor.DOMAIN, config, discovery_update
+            hass, mqtt_mock, caplog, Platform.BINARY_SENSOR, config, discovery_update
         )
 
 
@@ -368,7 +368,7 @@ async def test_discovery_device_remove(hass, mqtt_mock, setup_tasmota):
     config["swc"][0] = 1
     unique_id = f"{DEFAULT_CONFIG['mac']}_binary_sensor_switch_0"
     await help_test_discovery_device_remove(
-        hass, mqtt_mock, binary_sensor.DOMAIN, unique_id, config
+        hass, mqtt_mock, Platform.BINARY_SENSOR, unique_id, config
     )
 
 
@@ -384,7 +384,7 @@ async def test_entity_id_update_subscriptions(hass, mqtt_mock, setup_tasmota):
         get_topic_tele_will(config),
     ]
     await help_test_entity_id_update_subscriptions(
-        hass, mqtt_mock, binary_sensor.DOMAIN, config, topics
+        hass, mqtt_mock, Platform.BINARY_SENSOR, config, topics
     )
 
 
@@ -394,5 +394,5 @@ async def test_entity_id_update_discovery_update(hass, mqtt_mock, setup_tasmota)
     config["swc"][0] = 1
     config["swn"][0] = "Test"
     await help_test_entity_id_update_discovery_update(
-        hass, mqtt_mock, binary_sensor.DOMAIN, config
+        hass, mqtt_mock, Platform.BINARY_SENSOR, config
     )
