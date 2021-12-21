@@ -49,7 +49,7 @@ async def test_setup_login_exception(hass, config_entry):
     config_entry.add_to_hass(hass)
 
     with patch(
-        "iaqualink.client.AqualinkClient.login",
+        "homeassistant.components.iaqualink.AqualinkClient.login",
         side_effect=AqualinkServiceException,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -63,7 +63,7 @@ async def test_setup_login_timeout(hass, config_entry):
     config_entry.add_to_hass(hass)
 
     with patch(
-        "iaqualink.client.AqualinkClient.login",
+        "homeassistant.components.iaqualink.AqualinkClient.login",
         side_effect=asyncio.TimeoutError,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -76,8 +76,10 @@ async def test_setup_systems_exception(hass, config_entry):
     """Test setup encountering an exception while retrieving systems."""
     config_entry.add_to_hass(hass)
 
-    with patch("iaqualink.client.AqualinkClient.login", return_value=None), patch(
-        "iaqualink.client.AqualinkClient.get_systems",
+    with patch(
+        "homeassistant.components.iaqualink.AqualinkClient.login", return_value=None
+    ), patch(
+        "homeassistant.components.iaqualink.AqualinkClient.get_systems",
         side_effect=AqualinkServiceException,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -90,8 +92,10 @@ async def test_setup_no_systems_recognized(hass, config_entry):
     """Test setup ending in no systems recognized."""
     config_entry.add_to_hass(hass)
 
-    with patch("iaqualink.client.AqualinkClient.login", return_value=None), patch(
-        "iaqualink.client.AqualinkClient.get_systems",
+    with patch(
+        "homeassistant.components.iaqualink.AqualinkClient.login", return_value=None
+    ), patch(
+        "homeassistant.components.iaqualink.AqualinkClient.get_systems",
         return_value={},
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -108,8 +112,11 @@ async def test_setup_devices_exception(hass, config_entry):
     system = get_aqualink_system(client)
     systems = {system.serial: system}
 
-    with patch("iaqualink.client.AqualinkClient.login", return_value=None), patch(
-        "iaqualink.client.AqualinkClient.get_systems", return_value=systems
+    with patch(
+        "homeassistant.components.iaqualink.AqualinkClient.login", return_value=None
+    ), patch(
+        "homeassistant.components.iaqualink.AqualinkClient.get_systems",
+        return_value=systems,
     ), patch(
         "iaqualink.system.AqualinkSystem.get_devices",
         side_effect=AqualinkServiceException,
@@ -130,9 +137,14 @@ async def test_setup_all_good_no_recognized_devices(hass, config_entry):
     device = get_aqualink_device(system, AqualinkDevice)
     devices = {device.name: device}
 
-    with patch("iaqualink.client.AqualinkClient.login", return_value=None), patch(
-        "iaqualink.client.AqualinkClient.get_systems", return_value=systems
-    ), patch("iaqualink.system.AqualinkSystem.get_devices", return_value=devices):
+    with patch(
+        "homeassistant.components.iaqualink.AqualinkClient.login", return_value=None
+    ), patch(
+        "homeassistant.components.iaqualink.AqualinkClient.get_systems",
+        return_value=systems,
+    ), patch(
+        "iaqualink.system.AqualinkSystem.get_devices", return_value=devices
+    ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -168,9 +180,14 @@ async def test_setup_all_good_all_device_types(hass, config_entry):
     ]
     devices = {d.name: d for d in devices}
 
-    with patch("iaqualink.client.AqualinkClient.login", return_value=None), patch(
-        "iaqualink.client.AqualinkClient.get_systems", return_value=systems
-    ), patch("iaqualink.system.AqualinkSystem.get_devices", return_value=devices):
+    with patch(
+        "homeassistant.components.iaqualink.AqualinkClient.login", return_value=None
+    ), patch(
+        "homeassistant.components.iaqualink.AqualinkClient.get_systems",
+        return_value=systems,
+    ), patch(
+        "iaqualink.system.AqualinkSystem.get_devices", return_value=devices
+    ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -197,9 +214,14 @@ async def test_multiple_updates(hass, config_entry):
     system = get_aqualink_system(client)
     systems = {system.serial: system}
 
-    with patch("iaqualink.client.AqualinkClient.login", return_value=None), patch(
-        "iaqualink.client.AqualinkClient.get_systems", return_value=systems
-    ), patch("iaqualink.system.AqualinkSystem.get_devices", return_value={}):
+    with patch(
+        "homeassistant.components.iaqualink.AqualinkClient.login", return_value=None
+    ), patch(
+        "homeassistant.components.iaqualink.AqualinkClient.get_systems",
+        return_value=systems,
+    ), patch(
+        "iaqualink.system.AqualinkSystem.get_devices", return_value={}
+    ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 

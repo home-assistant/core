@@ -51,7 +51,7 @@ async def test_with_invalid_credentials(hass, config_data, step):
     fname = f"async_step_{step}"
     func = getattr(flow, fname)
     with patch(
-        "iaqualink.client.AqualinkClient.login",
+        "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
         side_effect=AqualinkServiceUnauthorizedException,
     ):
         result = await func(config_data)
@@ -70,7 +70,7 @@ async def test_service_exception(hass, config_data, step):
     fname = f"async_step_{step}"
     func = getattr(flow, fname)
     with patch(
-        "iaqualink.client.AqualinkClient.login",
+        "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
         side_effect=AqualinkServiceException,
     ):
         result = await func(config_data)
@@ -89,7 +89,10 @@ async def test_with_existing_config(hass, config_data, step):
 
     fname = f"async_step_{step}"
     func = getattr(flow, fname)
-    with patch("iaqualink.client.AqualinkClient.login", return_value=None):
+    with patch(
+        "homeassistant.components.iaqualink.config_flow.AqualinkClient.login",
+        return_value=None,
+    ):
         result = await func(config_data)
 
     assert result["type"] == "create_entry"
