@@ -1,4 +1,5 @@
 """The tests for the signal_messenger platform."""
+import base64
 import json
 import logging
 import os
@@ -8,6 +9,7 @@ from unittest.mock import patch
 from homeassistant.setup import async_setup_component
 
 from tests.components.signal_messenger.conftest import (
+    CONTENT,
     MESSAGE,
     NUMBER_FROM,
     NUMBERS_TO,
@@ -123,3 +125,7 @@ def assert_sending_requests(signal_requests_mock, attachments_num=0):
     assert body_request["number"] == NUMBER_FROM
     assert body_request["recipients"] == NUMBERS_TO
     assert len(body_request["base64_attachments"]) == attachments_num
+
+    for attachment in body_request["base64_attachments"]:
+        if len(attachment) > 0:
+            assert base64.b64decode(attachment) == CONTENT

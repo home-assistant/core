@@ -18,6 +18,7 @@ def signal_notification_service():
 
 SIGNAL_SEND_PATH_SUFIX = "/v2/send"
 MESSAGE = "Testing Signal Messenger platform :)"
+CONTENT = b"TestContent"
 NUMBER_FROM = "+43443434343"
 NUMBERS_TO = ["+435565656565"]
 URL_ATTACHMENT = "http://127.0.0.1:8080/image.jpg"
@@ -39,8 +40,8 @@ def signal_requests_mock(requests_mock):
     )
     requests_mock.register_uri(
         "GET",
-        "http://127.0.0.1:8080/image.jpg",
+        URL_ATTACHMENT,
         status_code=HTTPStatus.OK,
-        content=None,
+        content=CONTENT,
     )
     return requests_mock
