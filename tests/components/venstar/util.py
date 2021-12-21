@@ -2,8 +2,7 @@
 
 import requests_mock
 
-from homeassistant.components.climate.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PLATFORM
+from homeassistant.const import CONF_HOST, CONF_PLATFORM, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -55,7 +54,7 @@ async def async_init_integration(
                 CONF_HOST: f"venstar-{model}.localdomain",
             }
         )
-    config = {DOMAIN: platform_config}
+    config = {Platform.CLIMATE: platform_config}
 
-    await async_setup_component(hass, DOMAIN, config)
+    await async_setup_component(hass, Platform.CLIMATE, config)
     await hass.async_block_till_done()
