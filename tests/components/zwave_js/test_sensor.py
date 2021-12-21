@@ -35,7 +35,6 @@ from homeassistant.const import (
     POWER_WATT,
     STATE_UNAVAILABLE,
     TEMP_CELSIUS,
-    Platform,
 )
 from homeassistant.helpers import entity_registry as er
 
@@ -246,7 +245,7 @@ async def test_reset_meter(
 
     # Test successful meter reset call
     await hass.services.async_call(
-        Platform.SENSOR,
+        DOMAIN,
         SERVICE_RESET_METER,
         {
             ATTR_ENTITY_ID: METER_ENERGY_SENSOR,
