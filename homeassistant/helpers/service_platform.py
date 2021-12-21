@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Iterable
 from dataclasses import dataclass
 from logging import Logger
-from typing import Any, Protocol, cast
+from typing import Any, Dict, Protocol, cast
 
 import voluptuous as vol
 
@@ -479,7 +479,7 @@ class ServicePlatform:
         service_description = service.service_description
         integration = await async_get_integration(self.hass, service_description.domain)
         services_dict = cast(
-            dict[str, dict[str, Any]],
+            Dict[str, Dict[str, Any]],
             await self.hass.async_add_executor_job(
                 load_services_file, self.hass, integration
             ),
