@@ -404,6 +404,10 @@ class ZeroconfDiscovery:
         self, zeroconf: HaZeroconf, service_type: str, name: str
     ) -> None:
         """Process a zeroconf update."""
+        if not name.endswith('.'+service_type):
+            # Prevent Zeroconf from raising BadTypeInNameException when service_type is a substring of the actual type
+            _LOGGER.warning("Service %s has wrong type %s", name, service_type)
+            return
         async_service_info = AsyncServiceInfo(service_type, name)
         await async_service_info.async_request(zeroconf, 3000)
 
