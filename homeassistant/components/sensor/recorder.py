@@ -298,7 +298,9 @@ def _suggest_report_issue(hass: HomeAssistant, entity_id: str) -> str:
     return report_issue
 
 
-def warn_dip(hass: HomeAssistant, entity_id: str, state: State) -> None:
+def warn_dip(
+    hass: HomeAssistant, entity_id: str, state: State, previous_fstate: float
+) -> None:
     """Log a warning once if a sensor with state_class_total has a decreasing value.
 
     The log will be suppressed until two dips have been seen to prevent warning due to
@@ -319,11 +321,12 @@ def warn_dip(hass: HomeAssistant, entity_id: str, state: State) -> None:
             return
         _LOGGER.warning(
             "Entity %s %shas state class total_increasing, but its state is "
-            "not strictly increasing. Triggered by state %s with last_updated set to %s. "
+            "not strictly increasing. Triggered by state %s (%s) with last_updated set to %s. "
             "Please %s",
             entity_id,
             f"from integration {domain} " if domain else "",
             state.state,
+            previous_fstate,
             state.last_updated.isoformat(),
             _suggest_report_issue(hass, entity_id),
         )
@@ -359,7 +362,7 @@ def reset_detected(
         return False
 
     if 0.9 * previous_fstate <= fstate < previous_fstate:
-        warn_dip(hass, entity_id, state)
+        warn_dip(hass, entity_id, state, previous_fstate)
 
     if fstate < 0:
         warn_negative(hass, entity_id, state)
