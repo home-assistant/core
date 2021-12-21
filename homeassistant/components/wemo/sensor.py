@@ -1,6 +1,5 @@
 """Support for power sensors in WeMo Insight devices."""
 import asyncio
-from typing import cast
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -50,7 +49,8 @@ class InsightSensor(WemoEntity, SensorEntity):
     @property
     def name_suffix(self) -> str:
         """Return the name of the entity if any."""
-        return cast(str, self.entity_description.name)
+        assert self.entity_description.name
+        return self.entity_description.name
 
     @property
     def unique_id_suffix(self) -> str:
