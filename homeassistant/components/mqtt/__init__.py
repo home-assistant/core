@@ -263,9 +263,11 @@ class MqttCommandTemplate:
         *,
         hass: HomeAssistant | None = None,
         entity: Entity | None = None,
+        encoding: str | None = DEFAULT_ENCODING,
     ) -> None:
         """Instantiate a command template."""
         self._attr_command_template = command_template
+        self._encoding = encoding
         if command_template is None:
             return
 
@@ -299,8 +301,34 @@ class MqttCommandTemplate:
 
             return payload
 
+        def _encode_outgoing_payload(
+            payload: PublishPayloadType, encoding: str | None = DEFAULT_ENCODING
+        ) -> PublishPayloadType:
+            """Ensure the correct encoding for the MQTT payload when publishing."""
+            if isinstance(payload, str):
+                if encoding is None:
+                    _LOGGER.warning(
+                        "Can't encode payload '%s' with no encoding set, encoding defaults to 'utf-8'",
+                        payload,
+                    )
+                    return payload
+                if encoding == DEFAULT_ENCODING:
+                    # No need to encode since UTF-8 is the default encoding for MQTT
+                    return payload
+                try:
+                    payload = payload.encode(encoding)
+
+                except (LookupError, UnicodeEncodeError):
+                    _LOGGER.warning(
+                        "Can't encode payload '%s' with encoding '%s', encoding defaults to 'utf-8'",
+                        payload,
+                        encoding,
+                    )
+
+            return payload
+
         if self._attr_command_template is None:
-            return value
+            return _encode_outgoing_payload(value, self._encoding)
 
         values = {"value": value}
         if self._entity:
@@ -308,8 +336,11 @@ class MqttCommandTemplate:
             values[ATTR_NAME] = self._entity.name
         if variables is not None:
             values.update(variables)
-        return _convert_outgoing_payload(
-            self._attr_command_template.async_render(values, parse_result=False)
+        return _encode_outgoing_payload(
+            _convert_outgoing_payload(
+                self._attr_command_template.async_render(values, parse_result=False),
+            ),
+            self._encoding,
         )
 
 
