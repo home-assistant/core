@@ -45,7 +45,7 @@ PLATFORMS_BY_TYPE: Final = {
         Platform.NUMBER,
         Platform.SWITCH,
     ],
-    DeviceType.Switch: [Platform.BUTTON, Platform.SWITCH],
+    DeviceType.Switch: [Platform.BUTTON, Platform.SELECT, Platform.SWITCH],
 }
 DISCOVERY_INTERVAL: Final = timedelta(minutes=15)
 REQUEST_REFRESH_DELAY: Final = 1.5

@@ -390,7 +390,7 @@ beautifulsoup4==4.10.0
 bellows==0.29.0
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.8.5
+bimmer_connected==0.8.7
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
@@ -664,7 +664,7 @@ fjaraskupan==1.0.2
 flipr-api==1.4.1
 
 # homeassistant.components.flux_led
-flux_led==0.27.8
+flux_led==0.27.10
 
 # homeassistant.components.homekit
 fnvhash==0.1.0
@@ -2208,7 +2208,7 @@ solaredge-local==0.2.0
 solaredge==0.0.2
 
 # homeassistant.components.solax
-solax==0.2.8
+solax==0.2.9
 
 # homeassistant.components.honeywell
 somecomfort==0.8.0

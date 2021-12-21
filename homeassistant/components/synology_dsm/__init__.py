@@ -75,7 +75,7 @@ from .const import (
     SynologyDSMEntityDescription,
 )
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 ATTRIBUTION = "Data provided by Synology"

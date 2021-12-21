@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "invalid_auth": "Ugyldig godkjenning"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passord",
+                    "username": "E-post"
+                },
+                "title": ""
+            }
+        }
+    }
+}

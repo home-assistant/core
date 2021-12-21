@@ -860,7 +860,10 @@ def removed(
 
 
 def key_value_schemas(
-    key: str, value_schemas: dict[Hashable, vol.Schema]
+    key: str,
+    value_schemas: dict[Hashable, vol.Schema],
+    default_schema: vol.Schema | None = None,
+    default_description: str | None = None,
 ) -> Callable[[Any], dict[Hashable, Any]]:
     """Create a validator that validates based on a value for specific key.
 
@@ -876,8 +879,15 @@ def key_value_schemas(
         if isinstance(key_value, Hashable) and key_value in value_schemas:
             return cast(Dict[Hashable, Any], value_schemas[key_value](value))
 
+        if default_schema:
+            with contextlib.suppress(vol.Invalid):
+                return cast(Dict[Hashable, Any], default_schema(value))
+
+        alternatives = ", ".join(str(key) for key in value_schemas)
+        if default_description:
+            alternatives += ", " + default_description
         raise vol.Invalid(
-            f"Unexpected value for {key}: '{key_value}'. Expected {', '.join(str(key) for key in value_schemas)}"
+            f"Unexpected value for {key}: '{key_value}'. Expected {alternatives}"
         )
 
     return key_value_validator
@@ -1207,6 +1217,40 @@ CONDITION_SCHEMA: vol.Schema = vol.Schema(
     )
 )
 
+
+dynamic_template_condition_action = vol.All(
+    vol.Schema(
+        {**CONDITION_BASE_SCHEMA, vol.Required(CONF_CONDITION): dynamic_template}
+    ),
+    lambda config: {
+        **config,
+        CONF_VALUE_TEMPLATE: config[CONF_CONDITION],
+        CONF_CONDITION: "template",
+    },
+)
+
+
+CONDITION_ACTION_SCHEMA: vol.Schema = vol.Schema(
+    key_value_schemas(
+        CONF_CONDITION,
+        {
+            "and": AND_CONDITION_SCHEMA,
+            "device": DEVICE_CONDITION_SCHEMA,
+            "not": NOT_CONDITION_SCHEMA,
+            "numeric_state": NUMERIC_STATE_CONDITION_SCHEMA,
+            "or": OR_CONDITION_SCHEMA,
+            "state": STATE_CONDITION_SCHEMA,
+            "sun": SUN_CONDITION_SCHEMA,
+            "template": TEMPLATE_CONDITION_SCHEMA,
+            "time": TIME_CONDITION_SCHEMA,
+            "trigger": TRIGGER_CONDITION_SCHEMA,
+            "zone": ZONE_CONDITION_SCHEMA,
+        },
+        dynamic_template_condition_action,
+        "a valid template",
+    )
+)
+
 TRIGGER_BASE_SCHEMA = vol.Schema(
     {vol.Required(CONF_PLATFORM): str, vol.Optional(CONF_ID): str}
 )
@@ -1352,7 +1396,7 @@ ACTION_TYPE_SCHEMAS: dict[str, Callable[[Any], dict]] = {
     SCRIPT_ACTION_DELAY: _SCRIPT_DELAY_SCHEMA,
     SCRIPT_ACTION_WAIT_TEMPLATE: _SCRIPT_WAIT_TEMPLATE_SCHEMA,
     SCRIPT_ACTION_FIRE_EVENT: EVENT_SCHEMA,
-    SCRIPT_ACTION_CHECK_CONDITION: CONDITION_SCHEMA,
+    SCRIPT_ACTION_CHECK_CONDITION: CONDITION_ACTION_SCHEMA,
     SCRIPT_ACTION_DEVICE_AUTOMATION: DEVICE_ACTION_SCHEMA,
     SCRIPT_ACTION_ACTIVATE_SCENE: _SCRIPT_SCENE_SCHEMA,
     SCRIPT_ACTION_REPEAT: _SCRIPT_REPEAT_SCHEMA,
