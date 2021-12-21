@@ -14,7 +14,7 @@
                 "data": {
                     "password": "Jelsz\u00f3"
                 },
-                "description": "A(z) {username} jelszava m\u00e1r nem \u00e9rv\u00e9nyes.",
+                "description": "{username} jelszava m\u00e1r nem \u00e9rv\u00e9nyes.",
                 "title": "Hiteles\u00edtse \u00fajra Flume-fi\u00f3kj\u00e1t"
             },
             "user": {

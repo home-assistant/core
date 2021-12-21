@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
@@ -24,7 +25,6 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     DATA_GIBIBYTES,
     DATA_RATE_MEBIBYTES_PER_SECOND,
-    DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     TEMP_CELSIUS,
 )
@@ -72,7 +72,7 @@ _SYSTEM_MON_COND: tuple[SensorEntityDescription, ...] = (
         key="system_temp",
         name="System Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
 )
 _CPU_MON_COND: tuple[SensorEntityDescription, ...] = (
@@ -80,7 +80,7 @@ _CPU_MON_COND: tuple[SensorEntityDescription, ...] = (
         key="cpu_temp",
         name="CPU Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
     SensorEntityDescription(
         key="cpu_usage",
@@ -138,7 +138,7 @@ _DRIVE_MON_COND: tuple[SensorEntityDescription, ...] = (
         key="drive_temp",
         name="Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
 )
 _VOLUME_MON_COND: tuple[SensorEntityDescription, ...] = (

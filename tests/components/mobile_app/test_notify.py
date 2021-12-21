@@ -118,6 +118,7 @@ async def test_notify_works(hass, aioclient_mock, setup_push_receiver):
     assert call_json["message"] == "Hello world"
     assert call_json["registration_info"]["app_id"] == "io.homeassistant.mobile_app"
     assert call_json["registration_info"]["app_version"] == "1.0"
+    assert call_json["registration_info"]["webhook_id"] == "mock-webhook_id"
 
 
 async def test_notify_ws_works(

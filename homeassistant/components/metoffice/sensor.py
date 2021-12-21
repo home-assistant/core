@@ -1,11 +1,13 @@
 """Support for UK Met Office weather service."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_TEMPERATURE,
     LENGTH_KILOMETERS,
     PERCENTAGE,
     SPEED_MILES_PER_HOUR,
@@ -16,6 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import get_device_info
 from .const import (
     ATTRIBUTION,
     CONDITION_CLASSES,
@@ -57,7 +60,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="temperature",
         name="Temperature",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
         icon=None,
         entity_registry_enabled_default=True,
@@ -65,7 +68,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="feels_like_temperature",
         name="Feels Like Temperature",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
         icon=None,
         entity_registry_enabled_default=False,
@@ -129,7 +132,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="humidity",
         name="Humidity",
-        device_class=DEVICE_CLASS_HUMIDITY,
+        device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
         icon=None,
         entity_registry_enabled_default=False,
@@ -181,6 +184,9 @@ class MetOfficeCurrentSensor(CoordinatorEntity, SensorEntity):
 
         self.entity_description = description
         mode_label = MODE_3HOURLY_LABEL if use_3hourly else MODE_DAILY_LABEL
+        self._attr_device_info = get_device_info(
+            coordinates=hass_data[METOFFICE_COORDINATES], name=hass_data[METOFFICE_NAME]
+        )
         self._attr_name = f"{hass_data[METOFFICE_NAME]} {description.name} {mode_label}"
         self._attr_unique_id = f"{description.name}_{hass_data[METOFFICE_COORDINATES]}"
         if not use_3hourly:

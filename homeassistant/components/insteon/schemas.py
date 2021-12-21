@@ -57,8 +57,7 @@ def set_default_port(schema: dict) -> dict:
     """Set the default port based on the Hub version."""
     # If the ip_port is found do nothing
     # If it is not found the set the default
-    ip_port = schema.get(CONF_IP_PORT)
-    if not ip_port:
+    if not schema.get(CONF_IP_PORT):
         hub_version = schema.get(CONF_HUB_VERSION)
         # Found hub_version but not ip_port
         schema[CONF_IP_PORT] = PORT_HUB_V1 if hub_version == 1 else PORT_HUB_V2

@@ -61,10 +61,16 @@ CONSTRAINT_PATH = os.path.join(
     os.path.dirname(__file__), "../homeassistant/package_constraints.txt"
 )
 CONSTRAINT_BASE = """
+# Constrain pillow to 8.2.0 because later versions are causing issues in nightly builds.
+# https://github.com/home-assistant/core/issues/61756
+pillow==8.2.0
+
+# Constrain pycryptodome to avoid vulnerability
+# see https://github.com/home-assistant/core/pull/16238
 pycryptodome>=3.6.6
 
-# Constrain urllib3 to ensure we deal with CVE-2019-11236 & CVE-2019-11324
-urllib3>=1.24.3
+# Constrain urllib3 to ensure we deal with CVE-2020-26137 and CVE-2021-33503
+urllib3>=1.26.5
 
 # Constrain H11 to ensure we get a new enough version to support non-rfc line endings
 h11>=0.12.0
@@ -106,6 +112,13 @@ regex==2021.8.28
 # anyio has a bug that was fixed in 3.3.1
 # can remove after httpx/httpcore updates its anyio version pin
 anyio>=3.3.1
+
+# websockets 10.0 is broken with AWS
+# https://github.com/aaugustin/websockets/issues/1065
+websockets==9.1
+
+# pytest_asyncio breaks our test suite. We rely on pytest-aiohttp instead
+pytest_asyncio==1000000000.0.0
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (
@@ -175,7 +188,7 @@ def gather_recursive_requirements(domain, seen=None):
     seen.add(domain)
     integration = Integration(Path(f"homeassistant/components/{domain}"))
     integration.load_manifest()
-    reqs = set(integration.requirements)
+    reqs = {x for x in integration.requirements if x not in CONSTRAINT_BASE}
     for dep_domain in integration.dependencies:
         reqs.update(gather_recursive_requirements(dep_domain, seen))
     return reqs

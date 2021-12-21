@@ -1,4 +1,5 @@
 """Test the flo config flow."""
+from http import HTTPStatus
 import json
 import time
 from unittest.mock import patch
@@ -51,7 +52,7 @@ async def test_form_cannot_connect(hass, aioclient_mock):
             }
         ),
         headers={"Content-Type": CONTENT_TYPE_JSON},
-        status=400,
+        status=HTTPStatus.BAD_REQUEST,
     )
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

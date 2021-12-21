@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Generator
 import contextlib
 import logging
+from typing import cast
 
 from pywemo.exceptions import ActionException
 
@@ -33,17 +34,17 @@ class WemoEntity(CoordinatorEntity):
         self._available = True
 
     @property
-    def name_suffix(self):
+    def name_suffix(self) -> str | None:
         """Suffix to append to the WeMo device name."""
         return self._name_suffix
 
     @property
     def name(self) -> str:
         """Return the name of the device if any."""
-        suffix = self.name_suffix
-        if suffix:
-            return f"{self.wemo.name} {suffix}"
-        return self.wemo.name
+        wemo_name: str = self.wemo.name
+        if suffix := self.name_suffix:
+            return f"{wemo_name} {suffix}"
+        return wemo_name
 
     @property
     def available(self) -> bool:
@@ -51,19 +52,19 @@ class WemoEntity(CoordinatorEntity):
         return super().available and self._available
 
     @property
-    def unique_id_suffix(self):
+    def unique_id_suffix(self) -> str | None:
         """Suffix to append to the WeMo device's unique ID."""
         if self._unique_id_suffix is None and self.name_suffix is not None:
-            return self._name_suffix.lower()
+            return self.name_suffix.lower()
         return self._unique_id_suffix
 
     @property
     def unique_id(self) -> str:
         """Return the id of this WeMo device."""
-        suffix = self.unique_id_suffix
-        if suffix:
-            return f"{self.wemo.serialnumber}_{suffix}"
-        return self.wemo.serialnumber
+        serial_number: str = self.wemo.serialnumber
+        if suffix := self.unique_id_suffix:
+            return f"{serial_number}_{suffix}"
+        return serial_number
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -84,3 +85,12 @@ class WemoEntity(CoordinatorEntity):
         except ActionException as err:
             _LOGGER.warning("Could not %s for %s (%s)", message, self.name, err)
             self._available = False
+
+
+class WemoBinaryStateEntity(WemoEntity):
+    """Base for devices that return on/off state via device.get_state()."""
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if the state is on."""
+        return cast(int, self.wemo.get_state()) != 0

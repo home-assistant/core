@@ -11,7 +11,9 @@ from homeassistant.components import sensor
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     DEVICE_CLASSES_SCHEMA,
+    ENTITY_ID_FORMAT,
     STATE_CLASSES_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
 )
 from homeassistant.const import (
@@ -28,8 +30,9 @@ from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
-from . import CONF_QOS, CONF_STATE_TOPIC, DOMAIN, PLATFORMS, subscription
+from . import PLATFORMS, subscription
 from .. import mqtt
+from .const import CONF_ENCODING, CONF_QOS, CONF_STATE_TOPIC, DOMAIN
 from .debug_info import log_messages
 from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
@@ -79,20 +82,28 @@ def validate_options(conf):
     return conf
 
 
+_PLATFORM_SCHEMA_BASE = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
+        vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
+        vol.Optional(CONF_LAST_RESET_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_LAST_RESET_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+    }
+).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
+
 PLATFORM_SCHEMA = vol.All(
     cv.deprecated(CONF_LAST_RESET_TOPIC),
-    mqtt.MQTT_RO_PLATFORM_SCHEMA.extend(
-        {
-            vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-            vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
-            vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
-            vol.Optional(CONF_LAST_RESET_TOPIC): mqtt.valid_subscribe_topic,
-            vol.Optional(CONF_LAST_RESET_VALUE_TEMPLATE): cv.template,
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
-            vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-        }
-    ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema),
+    _PLATFORM_SCHEMA_BASE,
+    validate_options,
+)
+
+DISCOVERY_SCHEMA = vol.All(
+    cv.deprecated(CONF_LAST_RESET_TOPIC),
+    _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
     validate_options,
 )
 
@@ -110,7 +121,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
-    await async_setup_entry_helper(hass, sensor.DOMAIN, setup, PLATFORM_SCHEMA)
+    await async_setup_entry_helper(hass, sensor.DOMAIN, setup, DISCOVERY_SCHEMA)
 
 
 async def _async_setup_entity(
@@ -123,6 +134,7 @@ async def _async_setup_entity(
 class MqttSensor(MqttEntity, SensorEntity):
     """Representation of a sensor that can be updated using MQTT."""
 
+    _entity_id_format = ENTITY_ID_FORMAT
     _attr_last_reset = None
     _attributes_extra_blocked = MQTT_SENSOR_ATTRIBUTES_BLOCKED
 
@@ -142,7 +154,7 @@ class MqttSensor(MqttEntity, SensorEntity):
     @staticmethod
     def config_schema():
         """Return the config schema."""
-        return PLATFORM_SCHEMA
+        return DISCOVERY_SCHEMA
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
@@ -185,6 +197,18 @@ class MqttSensor(MqttEntity, SensorEntity):
                     self._state,
                     variables=variables,
                 )
+
+            if payload is not None and self.device_class in (
+                SensorDeviceClass.DATE,
+                SensorDeviceClass.TIMESTAMP,
+            ):
+                if (payload := dt_util.parse_datetime(payload)) is None:
+                    _LOGGER.warning(
+                        "Invalid state message '%s' from '%s'", msg.payload, msg.topic
+                    )
+                elif self.device_class == SensorDeviceClass.DATE:
+                    payload = payload.date()
+
             self._state = payload
 
         def _update_last_reset(msg):
@@ -227,6 +251,7 @@ class MqttSensor(MqttEntity, SensorEntity):
             "topic": self._config[CONF_STATE_TOPIC],
             "msg_callback": message_received,
             "qos": self._config[CONF_QOS],
+            "encoding": self._config[CONF_ENCODING] or None,
         }
 
         @callback

@@ -21,6 +21,12 @@ from homeassistant.const import (
     ATTR_DEVICE_ID,
     ATTR_DOMAIN,
     ATTR_ENTITY_ID,
+    ATTR_IDENTIFIERS,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+    ATTR_SUGGESTED_AREA,
+    ATTR_SW_VERSION,
     CONF_URL,
     EVENT_HOMEASSISTANT_STOP,
 )
@@ -120,16 +126,17 @@ def register_node_in_dev_reg(
     ):
         remove_device_func(device)
     params = {
-        "config_entry_id": entry.entry_id,
-        "identifiers": {device_id},
-        "sw_version": node.firmware_version,
-        "name": node.name or node.device_config.description or f"Node {node.node_id}",
-        "model": node.device_config.label,
-        "manufacturer": node.device_config.manufacturer,
+        ATTR_IDENTIFIERS: {device_id},
+        ATTR_SW_VERSION: node.firmware_version,
+        ATTR_NAME: node.name
+        or node.device_config.description
+        or f"Node {node.node_id}",
+        ATTR_MODEL: node.device_config.label,
+        ATTR_MANUFACTURER: node.device_config.manufacturer,
     }
     if node.location:
-        params["suggested_area"] = node.location
-    device = dev_reg.async_get_or_create(**params)
+        params[ATTR_SUGGESTED_AREA] = node.location
+    device = dev_reg.async_get_or_create(config_entry_id=entry.entry_id, **params)
 
     async_dispatcher_send(hass, EVENT_DEVICE_ADDED_TO_REGISTRY, device)
 
@@ -140,8 +147,7 @@ async def async_setup_entry(  # noqa: C901
     hass: HomeAssistant, entry: ConfigEntry
 ) -> bool:
     """Set up Z-Wave JS from a config entry."""
-    use_addon = entry.data.get(CONF_USE_ADDON)
-    if use_addon:
+    if use_addon := entry.data.get(CONF_USE_ADDON):
         await async_ensure_addon_running(hass, entry)
 
     client = ZwaveClient(entry.data[CONF_URL], async_get_clientsession(hass))

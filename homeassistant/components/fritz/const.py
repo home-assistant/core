@@ -2,9 +2,17 @@
 
 from typing import Literal
 
+from homeassistant.const import Platform
+
 DOMAIN = "fritz"
 
-PLATFORMS = ["binary_sensor", "device_tracker", "sensor", "switch"]
+PLATFORMS = [
+    Platform.BUTTON,
+    Platform.BINARY_SENSOR,
+    Platform.DEVICE_TRACKER,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 DATA_FRITZ = "fritz_data"
 
@@ -22,11 +30,10 @@ ERROR_UNKNOWN = "unknown_error"
 FRITZ_SERVICES = "fritz_services"
 SERVICE_REBOOT = "reboot"
 SERVICE_RECONNECT = "reconnect"
+SERVICE_CLEANUP = "cleanup"
 
 SWITCH_TYPE_DEFLECTION = "CallDeflection"
 SWITCH_TYPE_PORTFORWARD = "PortForward"
 SWITCH_TYPE_WIFINETWORK = "WiFiNetwork"
-
-TRACKER_SCAN_INTERVAL = 30
 
 UPTIME_DEVIATION = 5

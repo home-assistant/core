@@ -5,7 +5,11 @@ import logging
 import async_timeout
 from requests.exceptions import ConnectionError as ConnectError, HTTPError, Timeout
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.const import ATTR_ATTRIBUTION, ENERGY_KILO_WATT_HOUR
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -40,7 +44,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
             # Fetch srp_energy data
             start_date = datetime.now() + timedelta(days=-1)
             end_date = datetime.now()
-            with async_timeout.timeout(10):
+            async with async_timeout.timeout(10):
                 hourly_usage = await hass.async_add_executor_job(
                     api.usage,
                     start_date,
@@ -136,6 +140,16 @@ class SrpEntity(SensorEntity):
     def available(self):
         """Return if entity is available."""
         return self.coordinator.last_update_success
+
+    @property
+    def device_class(self):
+        """Return the device class."""
+        return SensorDeviceClass.ENERGY
+
+    @property
+    def state_class(self):
+        """Return the state class."""
+        return SensorStateClass.TOTAL_INCREASING
 
     async def async_added_to_hass(self):
         """When entity is added to hass."""

@@ -11,6 +11,7 @@
         "step": {
             "user": {
                 "data": {
+                    "brand": "Marka",
                     "password": "Parola",
                     "username": "Kullan\u0131c\u0131 Ad\u0131"
                 },

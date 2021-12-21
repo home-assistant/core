@@ -30,10 +30,23 @@
     },
     "device_automation": {
         "trigger_subtype": {
+            "both_buttons": "\u05e9\u05e0\u05d9 \u05d4\u05dc\u05d7\u05e6\u05e0\u05d9\u05dd",
+            "button_1": "\u05dc\u05d7\u05e6\u05df \u05e8\u05d0\u05e9\u05d5\u05df",
+            "button_2": "\u05dc\u05d7\u05e6\u05df \u05e9\u05e0\u05d9",
+            "button_3": "\u05dc\u05d7\u05e6\u05df \u05e9\u05dc\u05d9\u05e9\u05d9",
+            "button_4": "\u05dc\u05d7\u05e6\u05df \u05e8\u05d1\u05d9\u05e2\u05d9",
             "button_5": "\u05db\u05e4\u05ea\u05d5\u05e8 \u05d7\u05de\u05d9\u05e9\u05d9",
             "button_6": "\u05db\u05e4\u05ea\u05d5\u05e8 \u05e9\u05d9\u05e9\u05d9",
             "button_7": "\u05db\u05e4\u05ea\u05d5\u05e8 \u05e9\u05d1\u05d9\u05e2\u05d9",
-            "button_8": "\u05db\u05e4\u05ea\u05d5\u05e8 \u05e9\u05de\u05d9\u05e0\u05d9"
+            "button_8": "\u05db\u05e4\u05ea\u05d5\u05e8 \u05e9\u05de\u05d9\u05e0\u05d9",
+            "close": "\u05e1\u05d2\u05d5\u05e8",
+            "dim_down": "\u05e2\u05de\u05e2\u05d5\u05dd \u05dc\u05de\u05d8\u05d4",
+            "dim_up": "\u05e2\u05de\u05e2\u05d5\u05dd \u05dc\u05de\u05e2\u05dc\u05d4",
+            "left": "\u05e9\u05de\u05d0\u05dc",
+            "open": "\u05e4\u05ea\u05d5\u05d7",
+            "right": "\u05d9\u05de\u05d9\u05df",
+            "turn_off": "\u05db\u05d9\u05d1\u05d5\u05d9",
+            "turn_on": "\u05d4\u05e4\u05e2\u05dc\u05d4"
         }
     }
 }

@@ -3,15 +3,12 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from homeassistant.components.ambee.const import (
-    DEVICE_CLASS_AMBEE_RISK,
-    DOMAIN,
-    ENTRY_TYPE_SERVICE,
-)
+from homeassistant.components.ambee.const import DEVICE_CLASS_AMBEE_RISK, DOMAIN
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     DOMAIN as SENSOR_DOMAIN,
-    STATE_CLASS_MEASUREMENT,
+    SensorDeviceClass,
+    SensorStateClass,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -22,7 +19,6 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
-    DEVICE_CLASS_CO,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -46,7 +42,7 @@ async def test_air_quality(
     assert entry.unique_id == f"{entry_id}_air_quality_particulate_matter_2_5"
     assert state.state == "3.14"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Particulate Matter < 2.5 μm"
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
@@ -61,7 +57,7 @@ async def test_air_quality(
     assert entry.unique_id == f"{entry_id}_air_quality_particulate_matter_10"
     assert state.state == "5.24"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Particulate Matter < 10 μm"
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
@@ -76,7 +72,7 @@ async def test_air_quality(
     assert entry.unique_id == f"{entry_id}_air_quality_sulphur_dioxide"
     assert state.state == "0.031"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Sulphur Dioxide (SO2)"
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_PARTS_PER_BILLION
@@ -91,7 +87,7 @@ async def test_air_quality(
     assert entry.unique_id == f"{entry_id}_air_quality_nitrogen_dioxide"
     assert state.state == "0.66"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Nitrogen Dioxide (NO2)"
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_PARTS_PER_BILLION
@@ -106,7 +102,7 @@ async def test_air_quality(
     assert entry.unique_id == f"{entry_id}_air_quality_ozone"
     assert state.state == "17.067"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Ozone"
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_PARTS_PER_BILLION
@@ -120,9 +116,9 @@ async def test_air_quality(
     assert state
     assert entry.unique_id == f"{entry_id}_air_quality_carbon_monoxide"
     assert state.state == "0.105"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_CO
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.CO
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Carbon Monoxide (CO)"
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_PARTS_PER_MILLION
@@ -136,7 +132,7 @@ async def test_air_quality(
     assert entry.unique_id == f"{entry_id}_air_quality_air_quality_index"
     assert state.state == "13"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Air Quality Index (AQI)"
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert ATTR_DEVICE_CLASS not in state.attributes
     assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
     assert ATTR_ICON not in state.attributes
@@ -147,7 +143,7 @@ async def test_air_quality(
     assert device_entry.identifiers == {(DOMAIN, f"{entry_id}_air_quality")}
     assert device_entry.manufacturer == "Ambee"
     assert device_entry.name == "Air Quality"
-    assert device_entry.entry_type == ENTRY_TYPE_SERVICE
+    assert device_entry.entry_type is dr.DeviceEntryType.SERVICE
     assert not device_entry.model
     assert not device_entry.sw_version
 
@@ -169,7 +165,7 @@ async def test_pollen(
     assert state.state == "190"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Grass Pollen"
     assert state.attributes.get(ATTR_ICON) == "mdi:grass"
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_PARTS_PER_CUBIC_METER
@@ -184,7 +180,7 @@ async def test_pollen(
     assert state.state == "127"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Tree Pollen"
     assert state.attributes.get(ATTR_ICON) == "mdi:tree"
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_PARTS_PER_CUBIC_METER
@@ -199,7 +195,7 @@ async def test_pollen(
     assert state.state == "95"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Weed Pollen"
     assert state.attributes.get(ATTR_ICON) == "mdi:sprout"
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_PARTS_PER_CUBIC_METER
@@ -248,7 +244,7 @@ async def test_pollen(
     assert device_entry.identifiers == {(DOMAIN, f"{entry_id}_pollen")}
     assert device_entry.manufacturer == "Ambee"
     assert device_entry.name == "Pollen"
-    assert device_entry.entry_type == ENTRY_TYPE_SERVICE
+    assert device_entry.entry_type is dr.DeviceEntryType.SERVICE
     assert not device_entry.model
     assert not device_entry.sw_version
 
@@ -284,7 +280,7 @@ async def test_pollen_disabled_by_default(
     entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.disabled
-    assert entry.disabled_by == er.DISABLED_INTEGRATION
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
 @pytest.mark.parametrize(
@@ -341,7 +337,7 @@ async def test_pollen_enable_disable_by_defaults(
     assert state.state == value
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == name
     assert state.attributes.get(ATTR_ICON) == icon
-    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert (
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == CONCENTRATION_PARTS_PER_CUBIC_METER

@@ -117,9 +117,7 @@ class RflinkCover(RflinkCommand, CoverEntity, RestoreEntity):
     async def async_added_to_hass(self):
         """Restore RFLink cover state (OPEN/CLOSE)."""
         await super().async_added_to_hass()
-
-        old_state = await self.async_get_last_state()
-        if old_state is not None:
+        if (old_state := await self.async_get_last_state()) is not None:
             self._state = old_state.state == STATE_OPEN
 
     def _handle_event(self, event):

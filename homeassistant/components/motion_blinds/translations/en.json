@@ -6,13 +6,15 @@
             "connection_error": "Failed to connect"
         },
         "error": {
-            "discovery_error": "Failed to discover a Motion Gateway"
+            "discovery_error": "Failed to discover a Motion Gateway",
+            "invalid_interface": "Invalid network interface"
         },
         "flow_title": "Motion Blinds",
         "step": {
             "connect": {
                 "data": {
-                    "api_key": "API Key"
+                    "api_key": "API Key",
+                    "interface": "The network interface to use"
                 },
                 "description": "You will need the 16 character API Key, see https://www.home-assistant.io/integrations/motion_blinds/#retrieving-the-key for instructions",
                 "title": "Motion Blinds"
@@ -30,6 +32,17 @@
                     "host": "IP Address"
                 },
                 "description": "Connect to your Motion Gateway, if the IP address is not set, auto-discovery is used",
+                "title": "Motion Blinds"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "wait_for_push": "Wait for multicast push on update"
+                },
+                "description": "Specify optional settings",
                 "title": "Motion Blinds"
             }
         }

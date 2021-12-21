@@ -8,8 +8,10 @@
             "user": {
                 "data": {
                     "latitude": "Enlem",
-                    "longitude": "Boylam"
-                }
+                    "longitude": "Boylam",
+                    "name": "Ad"
+                },
+                "title": "\u0130sve\u00e7'teki konum"
             }
         }
     }

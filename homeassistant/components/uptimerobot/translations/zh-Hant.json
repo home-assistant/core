@@ -17,14 +17,14 @@
                 "data": {
                     "api_key": "API \u5bc6\u9470"
                 },
-                "description": "\u9700\u8981\u63d0\u4f9b\u7531 Uptime Robot \u53d6\u5f97\u4e00\u7d44\u65b0\u7684\u552f\u8b80 API \u5bc6\u9470",
+                "description": "\u9700\u8981\u63d0\u4f9b\u7531 UptimeRobot \u53d6\u5f97\u4e00\u7d44\u65b0\u7684\u552f\u8b80 API \u5bc6\u9470",
                 "title": "\u91cd\u65b0\u8a8d\u8b49\u6574\u5408"
             },
             "user": {
                 "data": {
                     "api_key": "API \u5bc6\u9470"
                 },
-                "description": "\u9700\u8981\u63d0\u4f9b\u7531 Uptime Robot \u53d6\u5f97\u552f\u8b80 API \u5bc6\u9470"
+                "description": "\u9700\u8981\u63d0\u4f9b\u7531 UptimeRobot \u53d6\u5f97\u552f\u8b80 API \u5bc6\u9470"
             }
         }
     }

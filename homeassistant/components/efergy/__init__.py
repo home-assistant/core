@@ -3,17 +3,8 @@ from __future__ import annotations
 
 from pyefergy import Efergy, exceptions
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_NAME,
-    ATTR_SW_VERSION,
-    CONF_API_KEY,
-)
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -22,7 +13,7 @@ from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import ATTRIBUTION, DATA_KEY_API, DEFAULT_NAME, DOMAIN
 
-PLATFORMS = [SENSOR_DOMAIN]
+PLATFORMS = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -69,15 +60,12 @@ class EfergyEntity(Entity):
         self.api = api
         self._server_unique_id = server_unique_id
         self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device information of the entity."""
-        return {
-            "connections": {(dr.CONNECTION_NETWORK_MAC, self.api.info["mac"])},
-            ATTR_IDENTIFIERS: {(DOMAIN, self._server_unique_id)},
-            ATTR_MANUFACTURER: DEFAULT_NAME,
-            ATTR_NAME: DEFAULT_NAME,
-            ATTR_MODEL: self.api.info["type"],
-            ATTR_SW_VERSION: self.api.info["version"],
-        }
+        self._attr_device_info = DeviceInfo(
+            configuration_url="https://engage.efergy.com/user/login",
+            connections={(dr.CONNECTION_NETWORK_MAC, self.api.info["mac"])},
+            identifiers={(DOMAIN, self._server_unique_id)},
+            manufacturer=DEFAULT_NAME,
+            name=DEFAULT_NAME,
+            model=self.api.info["type"],
+            sw_version=self.api.info["version"],
+        )

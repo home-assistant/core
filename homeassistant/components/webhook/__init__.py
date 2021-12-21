@@ -81,10 +81,9 @@ def async_generate_path(webhook_id: str) -> str:
 async def async_handle_webhook(hass, webhook_id, request):
     """Handle a webhook."""
     handlers = hass.data.setdefault(DOMAIN, {})
-    webhook = handlers.get(webhook_id)
 
     # Always respond successfully to not give away if a hook exists or not.
-    if webhook is None:
+    if (webhook := handlers.get(webhook_id)) is None:
         if isinstance(request, MockRequest):
             received_from = request.mock_source
         else:

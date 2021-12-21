@@ -17,14 +17,14 @@
                 "data": {
                     "api_key": "Clau API"
                 },
-                "description": "Has de proporcionar una nova clau API de nom\u00e9s lectura d'Uptime Robot",
+                "description": "Has de proporcionar una nova clau API de nom\u00e9s lectura d'UptimeRobot",
                 "title": "Reautenticaci\u00f3 de la integraci\u00f3"
             },
             "user": {
                 "data": {
                     "api_key": "Clau API"
                 },
-                "description": "Has de proporcionar una clau API de nom\u00e9s lectura d'Uptime Robot"
+                "description": "Has de proporcionar una clau API de nom\u00e9s lectura d'UptimeRobot"
             }
         }
     }

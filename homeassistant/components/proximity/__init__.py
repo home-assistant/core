@@ -164,9 +164,7 @@ class Proximity(Entity):
 
         # Check for devices in the monitored zone.
         for device in self.proximity_devices:
-            device_state = self.hass.states.get(device)
-
-            if device_state is None:
+            if (device_state := self.hass.states.get(device)) is None:
                 devices_to_calculate = True
                 continue
 

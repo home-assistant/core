@@ -41,8 +41,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     @callback
     def async_add_service(service):
-        entity_class = ENTITY_TYPES.get(service.short_type)
-        if not entity_class:
+        if not (entity_class := ENTITY_TYPES.get(service.short_type)):
             return False
         info = {"aid": service.accessory.aid, "iid": service.iid}
         async_add_entities([entity_class(conn, info)], True)
