@@ -54,7 +54,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import MQTT_BASE_PLATFORM_SCHEMA, PLATFORMS, MqttCommandTemplate, subscription
 from .. import mqtt
-from .const import CONF_ENCODING, CONF_QOS, CONF_RETAIN, DOMAIN
+from .const import CONF_QOS, CONF_RETAIN, DOMAIN
 from .debug_info import log_messages
 from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
 
@@ -378,9 +378,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
         command_templates = {}
         for key in COMMAND_TEMPLATE_KEYS:
             command_templates[key] = MqttCommandTemplate(
-                config.get(key),
-                entity=self,
-                encoding=self._config.get(CONF_ENCODING) or None,
+                config.get(key), entity=self
             ).async_render
 
         self._command_templates = command_templates

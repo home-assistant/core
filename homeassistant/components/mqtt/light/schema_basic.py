@@ -53,13 +53,7 @@ import homeassistant.util.color as color_util
 
 from .. import MqttCommandTemplate, subscription
 from ... import mqtt
-from ..const import (
-    CONF_COMMAND_TOPIC,
-    CONF_ENCODING,
-    CONF_QOS,
-    CONF_RETAIN,
-    CONF_STATE_TOPIC,
-)
+from ..const import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC
 from ..debug_info import log_messages
 from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity
 from .schema import MQTT_LIGHT_SCHEMA_SCHEMA
@@ -337,9 +331,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             command_templates[key] = None
         for key in COMMAND_TEMPLATE_KEYS & config.keys():
             command_templates[key] = MqttCommandTemplate(
-                config[key],
-                entity=self,
-                encoding=self._config.get(CONF_ENCODING) or None,
+                config[key], entity=self
             ).async_render
         self._command_templates = command_templates
 

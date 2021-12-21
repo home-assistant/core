@@ -29,14 +29,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import PLATFORMS, MqttCommandTemplate, subscription
 from .. import mqtt
-from .const import (
-    CONF_COMMAND_TOPIC,
-    CONF_ENCODING,
-    CONF_QOS,
-    CONF_RETAIN,
-    CONF_STATE_TOPIC,
-    DOMAIN,
-)
+from .const import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC, DOMAIN
 from .debug_info import log_messages
 from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
 
@@ -246,9 +239,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
 
         for key, tpl in self._command_templates.items():
             self._command_templates[key] = MqttCommandTemplate(
-                tpl,
-                entity=self,
-                encoding=self._config.get(CONF_ENCODING) or None,
+                tpl, entity=self
             ).async_render
 
         for key, tpl in self._value_templates.items():

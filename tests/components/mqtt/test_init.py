@@ -158,7 +158,7 @@ async def test_publish(hass, mqtt_mock):
     mqtt_mock.reset_mock()
 
 
-async def test_convert_outgoing_payload(hass, caplog):
+async def test_convert_outgoing_payload(hass):
     """Test the converting of outgoing MQTT payloads without template."""
     command_template = mqtt.MqttCommandTemplate(None, hass=hass)
     assert command_template.async_render(b"\xde\xad\xbe\xef") == b"\xde\xad\xbe\xef"
@@ -173,42 +173,6 @@ async def test_convert_outgoing_payload(hass, caplog):
     assert command_template.async_render(1234.56) == 1234.56
 
     assert command_template.async_render(None) is None
-
-    # Test with different encoding
-    command_template = mqtt.MqttCommandTemplate(None, hass=hass, encoding="ascii")
-
-    assert (
-        command_template.async_render("I love Home Assistant")
-        == b"I love Home Assistant"
-    )
-
-    # Test with different encoding and non string payload
-    assert command_template.async_render(1234) == 1234
-
-    assert command_template.async_render(1234.56) == 1234.56
-
-    assert command_template.async_render(None) is None
-
-    # Tests with None encoding
-    command_template = mqtt.MqttCommandTemplate(None, hass=hass, encoding=None)
-
-    assert (
-        command_template.async_render("I love Home Assistant")
-        == "I love Home Assistant"
-    )
-    assert (
-        "Can't encode payload 'I love Home Assistant' with no encoding set, encoding defaults to 'utf-8'"
-        in caplog.text
-    )
-
-    # Test with invalid encoding
-    command_template = mqtt.MqttCommandTemplate(None, hass=hass, encoding="invalid")
-
-    assert (
-        command_template.async_render("I love Home Assistant")
-        == "I love Home Assistant"
-    )
-    assert "Can't encode payload '%s' with encoding 'invalid', encoding defaults to 'utf-8'"
 
 
 async def test_command_template_value(hass):

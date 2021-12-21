@@ -15,14 +15,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import PLATFORMS, MqttCommandTemplate, subscription
 from .. import mqtt
-from .const import (
-    CONF_COMMAND_TOPIC,
-    CONF_ENCODING,
-    CONF_QOS,
-    CONF_RETAIN,
-    CONF_STATE_TOPIC,
-    DOMAIN,
-)
+from .const import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC, DOMAIN
 from .debug_info import log_messages
 from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
 
@@ -110,9 +103,7 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
 
         self._templates = {
             CONF_COMMAND_TEMPLATE: MqttCommandTemplate(
-                config.get(CONF_COMMAND_TEMPLATE),
-                entity=self,
-                encoding=self._config.get(CONF_ENCODING) or None,
+                config.get(CONF_COMMAND_TEMPLATE), entity=self
             ).async_render,
             CONF_VALUE_TEMPLATE: config.get(CONF_VALUE_TEMPLATE),
         }

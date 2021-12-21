@@ -36,14 +36,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import PLATFORMS, MqttCommandTemplate, subscription
 from .. import mqtt
-from .const import (
-    CONF_COMMAND_TOPIC,
-    CONF_ENCODING,
-    CONF_QOS,
-    CONF_RETAIN,
-    CONF_STATE_TOPIC,
-    DOMAIN,
-)
+from .const import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC, DOMAIN
 from .debug_info import log_messages
 from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
 
@@ -158,9 +151,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         if value_template is not None:
             value_template.hass = self.hass
         self._command_template = MqttCommandTemplate(
-            self._config[CONF_COMMAND_TEMPLATE],
-            entity=self,
-            encoding=self._config.get(CONF_ENCODING) or None,
+            self._config[CONF_COMMAND_TEMPLATE], entity=self
         ).async_render
 
     async def _subscribe_topics(self):
