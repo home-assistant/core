@@ -14,7 +14,7 @@ from vallox_websocket_api.vallox import get_uuid as calculate_uuid
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_NAME, EVENT_HOMEASSISTANT_STARTED
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import CoreState, HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType, StateType
@@ -175,10 +175,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def _async_load_platform_delayed(*_: Any) -> None:
         # We need a successful update before loading the platforms, because platform init code
         # derives the UUIDs from the data the coordinator fetches.
-        while True:
+        warned_once = False
+        while hass.state == CoreState.running:
             await coordinator.async_refresh()
             if coordinator.last_update_success:
                 break
+
+            if not warned_once:
+                _LOGGER.warning(
+                    "Vallox integration not ready yet; Retrying in background"
+                )
+                warned_once = True
 
             await asyncio.sleep(INITIAL_COORDINATOR_UPDATE_RETRY_INTERVAL_SECONDS)
 
