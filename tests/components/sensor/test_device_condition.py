@@ -2,6 +2,7 @@
 import pytest
 
 import homeassistant.components.automation as automation
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.sensor import DEVICE_CLASSES, DOMAIN, SensorDeviceClass
 from homeassistant.components.sensor.device_condition import ENTITY_CONDITIONS
 from homeassistant.const import CONF_PLATFORM, PERCENTAGE, STATE_UNKNOWN
@@ -73,7 +74,9 @@ async def test_get_conditions(hass, device_reg, entity_reg, enable_custom_integr
         for condition in ENTITY_CONDITIONS[device_class]
         if device_class != "none"
     ]
-    conditions = await async_get_device_automations(hass, "condition", device_entry.id)
+    conditions = await async_get_device_automations(
+        hass, DeviceAutomationType.CONDITION, device_entry.id
+    )
     assert conditions == expected_conditions
 
 
@@ -111,7 +114,9 @@ async def test_get_conditions_no_state(hass, device_reg, entity_reg):
         for condition in ENTITY_CONDITIONS[device_class]
         if device_class != "none"
     ]
-    conditions = await async_get_device_automations(hass, "condition", device_entry.id)
+    conditions = await async_get_device_automations(
+        hass, DeviceAutomationType.CONDITION, device_entry.id
+    )
     assert conditions == expected_conditions
 
 
@@ -173,11 +178,13 @@ async def test_get_condition_capabilities(
             },
         ]
     }
-    conditions = await async_get_device_automations(hass, "condition", device_entry.id)
+    conditions = await async_get_device_automations(
+        hass, DeviceAutomationType.CONDITION, device_entry.id
+    )
     assert len(conditions) == 1
     for condition in conditions:
         capabilities = await async_get_device_automation_capabilities(
-            hass, "condition", condition
+            hass, DeviceAutomationType.CONDITION, condition
         )
         assert capabilities == expected_capabilities
 
@@ -215,7 +222,7 @@ async def test_get_condition_capabilities_none(
     expected_capabilities = {}
     for condition in conditions:
         capabilities = await async_get_device_automation_capabilities(
-            hass, "condition", condition
+            hass, DeviceAutomationType.CONDITION, condition
         )
         assert capabilities == expected_capabilities
 
