@@ -11,7 +11,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN as WEMO_DOMAIN
-from .entity import WemoEntity
+from .entity import WemoBinaryStateEntity, WemoEntity
 from .wemo_device import DeviceCoordinator
 
 
@@ -41,13 +41,8 @@ async def async_setup_entry(
     )
 
 
-class WemoBinarySensor(WemoEntity, BinarySensorEntity):
+class WemoBinarySensor(WemoBinaryStateEntity, BinarySensorEntity):
     """Representation a WeMo binary sensor."""
-
-    @property
-    def is_on(self) -> bool:
-        """Return true if the state is on. Standby is on."""
-        return cast(int, self.wemo.get_state()) != 0
 
 
 class MakerBinarySensor(WemoEntity, BinarySensorEntity):

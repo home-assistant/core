@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Generator
 import contextlib
 import logging
+from typing import cast
 
 from pywemo.exceptions import ActionException
 
@@ -84,3 +85,12 @@ class WemoEntity(CoordinatorEntity):
         except ActionException as err:
             _LOGGER.warning("Could not %s for %s (%s)", message, self.name, err)
             self._available = False
+
+
+class WemoBinaryStateEntity(WemoEntity):
+    """Base for devices that return on/off state via device.get_state()."""
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if the state is on."""
+        return cast(int, self.wemo.get_state()) != 0

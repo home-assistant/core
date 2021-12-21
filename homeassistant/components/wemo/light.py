@@ -26,7 +26,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.color as color_util
 
 from .const import DOMAIN as WEMO_DOMAIN
-from .entity import WemoEntity
+from .entity import WemoBinaryStateEntity, WemoEntity
 from .wemo_device import DeviceCoordinator
 
 SUPPORT_WEMO = (
@@ -192,7 +192,7 @@ class WemoLight(WemoEntity, LightEntity):
         self.schedule_update_ha_state()
 
 
-class WemoDimmer(WemoEntity, LightEntity):
+class WemoDimmer(WemoBinaryStateEntity, LightEntity):
     """Representation of a WeMo dimmer."""
 
     @property
@@ -205,11 +205,6 @@ class WemoDimmer(WemoEntity, LightEntity):
         """Return the brightness of this light between 1 and 100."""
         wemo_brightness: int = self.wemo.get_brightness()
         return int((wemo_brightness * 255) / 100)
-
-    @property
-    def is_on(self) -> bool:
-        """Return true if the state is on."""
-        return cast(int, self.wemo.get_state()) != WEMO_OFF
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the dimmer on."""
