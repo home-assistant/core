@@ -33,7 +33,7 @@ async def test_wait_time_select(hass: HomeAssistant, mock_account):
     ent_reg = entity_registry.async_get(hass)
     entity_entry = ent_reg.async_get(SELECT_ENTITY_ID)
     assert entity_entry
-    assert entity_entry.entity_category == EntityCategory.CONFIG
+    assert entity_entry.entity_category is EntityCategory.CONFIG
 
     data = {ATTR_ENTITY_ID: SELECT_ENTITY_ID}
 

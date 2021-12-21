@@ -30,7 +30,7 @@ async def test_sleep_time_sensor_with_none_state(hass):
 
     assert sensor
     assert sensor.state is None
-    assert sensor.device_class == SensorDeviceClass.TIMESTAMP
+    assert sensor.device_class is SensorDeviceClass.TIMESTAMP
 
 
 async def test_gauge_icon():

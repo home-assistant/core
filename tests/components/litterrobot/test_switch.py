@@ -35,7 +35,7 @@ async def test_switch(hass: HomeAssistant, mock_account: MagicMock):
     ent_reg = entity_registry.async_get(hass)
     entity_entry = ent_reg.async_get(NIGHT_LIGHT_MODE_ENTITY_ID)
     assert entity_entry
-    assert entity_entry.entity_category == EntityCategory.CONFIG
+    assert entity_entry.entity_category is EntityCategory.CONFIG
 
 
 @pytest.mark.parametrize(

@@ -27,7 +27,7 @@ async def test_button(hass: HomeAssistant, mock_account: MagicMock) -> None:
 
     entry = entity_registry.async_get(BUTTON_ENTITY)
     assert entry
-    assert entry.entity_category == EntityCategory.CONFIG
+    assert entry.entity_category is EntityCategory.CONFIG
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
