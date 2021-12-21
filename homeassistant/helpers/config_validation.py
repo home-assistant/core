@@ -1195,6 +1195,16 @@ DEVICE_CONDITION_BASE_SCHEMA = vol.Schema(
 
 DEVICE_CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
 
+dynamic_template_condition_action = vol.All(
+    # Wrap a shorthand template condition in a template condition
+    dynamic_template,
+    lambda config: {
+        CONF_VALUE_TEMPLATE: config,
+        CONF_CONDITION: "template",
+    },
+)
+
+
 CONDITION_SCHEMA: vol.Schema = vol.Schema(
     vol.Any(
         key_value_schemas(
@@ -1213,12 +1223,13 @@ CONDITION_SCHEMA: vol.Schema = vol.Schema(
                 "zone": ZONE_CONDITION_SCHEMA,
             },
         ),
-        dynamic_template,
+        dynamic_template_condition_action,
     )
 )
 
 
 dynamic_template_condition_action = vol.All(
+    # Wrap a shorthand template condition action in a template condition
     vol.Schema(
         {**CONDITION_BASE_SCHEMA, vol.Required(CONF_CONDITION): dynamic_template}
     ),
