@@ -51,36 +51,6 @@ async def test_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_import(hass):
-    """Test that the import works."""
-
-    with patch(
-        "homeassistant.components.nuki.config_flow.NukiBridge.info",
-        return_value=MOCK_INFO,
-    ), patch(
-        "homeassistant.components.nuki.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.nuki.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={"host": "1.1.1.1", "port": 8080, "token": "test-token"},
-        )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == 123456789
-        assert result["data"] == {
-            "host": "1.1.1.1",
-            "port": 8080,
-            "token": "test-token",
-        }
-
-        await hass.async_block_till_done()
-        assert len(mock_setup.mock_calls) == 1
-        assert len(mock_setup_entry.mock_calls) == 1
-
-
 async def test_form_invalid_auth(hass):
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
