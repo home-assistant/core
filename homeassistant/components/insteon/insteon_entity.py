@@ -154,10 +154,8 @@ class InsteonEntity(Entity):
     def get_device_property(self, name: str):
         """Get a single Insteon device property value (raw)."""
         value = None
-        if name in self._insteon_device.properties:
-            prop = self._insteon_device.properties[name]
-            if prop is not None:
-                value = prop.value if prop.new_value is None else prop.new_value
+        if (prop := self._insteon_device.properties.get(name)) is not None:
+            value = prop.value if prop.new_value is None else prop.new_value
         return value
 
     def _get_label(self):
