@@ -119,6 +119,22 @@ async def async_setup(hass, config):
         )
     )
 
+    # Set up input button
+    tasks.append(
+        bootstrap.async_setup_component(
+            hass,
+            "input_button",
+            {
+                "input_button": {
+                    "bell": {
+                        "icon": "mdi:bell-ring-outline",
+                        "name": "Ring bell",
+                    }
+                }
+            },
+        )
+    )
+
     # Set up input number
     tasks.append(
         bootstrap.async_setup_component(

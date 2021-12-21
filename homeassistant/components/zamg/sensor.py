@@ -14,7 +14,11 @@ from aiohttp.hdrs import USER_AGENT
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import (
     AREA_SQUARE_METERS,
     ATTR_ATTRIBUTION,
@@ -23,7 +27,6 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     DEGREE,
-    DEVICE_CLASS_TEMPERATURE,
     LENGTH_METERS,
     PERCENTAGE,
     PRESSURE_HPA,
@@ -124,7 +127,7 @@ SENSOR_TYPES: tuple[ZamgSensorEntityDescription, ...] = (
         key="temperature",
         name="Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         col_heading=f"T {TEMP_CELSIUS}",
         dtype=float,
     ),
@@ -139,7 +142,7 @@ SENSOR_TYPES: tuple[ZamgSensorEntityDescription, ...] = (
         key="dewpoint",
         name="Dew Point",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         col_heading=f"TP {TEMP_CELSIUS}",
         dtype=float,
     ),

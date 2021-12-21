@@ -208,6 +208,11 @@ class BondHub:
         return self._version.get("fw_ver")
 
     @property
+    def mcu_ver(self) -> str | None:
+        """Return this hub hardware version."""
+        return self._version.get("mcu_ver")
+
+    @property
     def devices(self) -> list[BondDevice]:
         """Return a list of all devices controlled by this hub."""
         return self._devices

@@ -254,7 +254,7 @@ async def async_validate_action_config(
 
     elif action_type == cv.SCRIPT_ACTION_DEVICE_AUTOMATION:
         platform = await device_automation.async_get_device_automation_platform(
-            hass, config[CONF_DOMAIN], "action"
+            hass, config[CONF_DOMAIN], device_automation.DeviceAutomationType.ACTION
         )
         if hasattr(platform, "async_validate_action_config"):
             config = await platform.async_validate_action_config(hass, config)  # type: ignore
@@ -262,7 +262,7 @@ async def async_validate_action_config(
             config = platform.ACTION_SCHEMA(config)  # type: ignore
 
     elif action_type == cv.SCRIPT_ACTION_CHECK_CONDITION:
-        config = await condition.async_validate_condition_config(hass, config)  # type: ignore
+        config = await condition.async_validate_condition_config(hass, config)
 
     elif action_type == cv.SCRIPT_ACTION_WAIT_FOR_TRIGGER:
         config[CONF_WAIT_FOR_TRIGGER] = await async_validate_trigger_config(
@@ -590,7 +590,9 @@ class _ScriptRun:
         """Perform the device automation specified in the action."""
         self._step_log("device automation")
         platform = await device_automation.async_get_device_automation_platform(
-            self._hass, self._action[CONF_DOMAIN], "action"
+            self._hass,
+            self._action[CONF_DOMAIN],
+            device_automation.DeviceAutomationType.ACTION,
         )
         await platform.async_call_action_from_config(
             self._hass, self._action, self._variables, self._context
@@ -1052,6 +1054,7 @@ class Script:
         if self._change_listener_job:
             self._hass.async_run_hass_job(self._change_listener_job)
 
+    @callback
     def _chain_change_listener(self, sub_script: Script) -> None:
         if sub_script.is_running:
             self.last_action = sub_script.last_action

@@ -59,10 +59,6 @@ class NukiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.discovery_schema = {}
         self._data = {}
 
-    async def async_step_import(self, user_input=None):
-        """Handle a flow initiated by import."""
-        return await self.async_step_validate(user_input)
-
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
         return await self.async_step_validate(user_input)
