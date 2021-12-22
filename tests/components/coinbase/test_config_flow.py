@@ -70,19 +70,19 @@ async def test_form_invalid_auth(hass, caplog):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    caplog.set_level(logging.ERROR)
+    caplog.set_level(logging.DEBUG)
 
     response = Response()
     response.status_code = 401
-    api_auth_error = AuthenticationError(
+    api_auth_error_unknown = AuthenticationError(
         response,
         "authentication_error",
-        "invalid signature",
-        [{"id": "authentication_error", "message": "invalid signature"}],
+        "unknown error",
+        [{"id": "authentication_error", "message": "unknown error"}],
     )
     with patch(
         "coinbase.wallet.client.Client.get_current_user",
-        side_effect=api_auth_error,
+        side_effect=api_auth_error_unknown,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -94,6 +94,50 @@ async def test_form_invalid_auth(hass, caplog):
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "invalid_auth"}
+    assert "Coinbase rejected API credentials due to an unknown error" in caplog.text
+
+    api_auth_error_key = AuthenticationError(
+        response,
+        "authentication_error",
+        "invalid api key",
+        [{"id": "authentication_error", "message": "invalid api key"}],
+    )
+    with patch(
+        "coinbase.wallet.client.Client.get_current_user",
+        side_effect=api_auth_error_key,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_API_KEY: "123456",
+                CONF_API_TOKEN: "AbCDeF",
+            },
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "invalid_auth_key"}
+    assert "Coinbase rejected API credentials due to an invalid API key" in caplog.text
+
+    api_auth_error_secret = AuthenticationError(
+        response,
+        "authentication_error",
+        "invalid signature",
+        [{"id": "authentication_error", "message": "invalid signature"}],
+    )
+    with patch(
+        "coinbase.wallet.client.Client.get_current_user",
+        side_effect=api_auth_error_secret,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_API_KEY: "123456",
+                CONF_API_TOKEN: "AbCDeF",
+            },
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "invalid_auth_secret"}
     assert (
         "Coinbase rejected API credentials due to an invalid API secret" in caplog.text
     )
