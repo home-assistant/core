@@ -1299,8 +1299,7 @@ async def test_homekit_uses_system_zeroconf(hass, hk_driver, mock_async_zeroconf
 
 def _write_data(path: str, data: dict) -> None:
     """Write the data."""
-    if not os.path.isdir(os.path.dirname(path)):
-        os.makedirs(os.path.dirname(path))
+    os.makedirs(os.path.dirname(path), exist_ok=True)
     json_util.save_json(path, data)
 
 

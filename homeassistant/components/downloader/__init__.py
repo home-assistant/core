@@ -110,8 +110,7 @@ def setup(hass, config):
                         subdir_path = os.path.join(download_path, subdir)
 
                         # Ensure subdir exist
-                        if not os.path.isdir(subdir_path):
-                            os.makedirs(subdir_path)
+                        os.makedirs(subdir_path, exist_ok=True)
 
                         final_path = os.path.join(subdir_path, filename)
 
