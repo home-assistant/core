@@ -331,7 +331,7 @@ class MqttValueTemplate:
         config_attributes: template.TemplateVarsType = None,
     ) -> None:
         """Instantiate a value template."""
-        self._attr_value_template = value_template
+        self._value_template = value_template
         self._config_attributes = config_attributes
         if value_template is None:
             return
@@ -350,7 +350,7 @@ class MqttValueTemplate:
         variables: template.TemplateVarsType = None,
     ) -> ReceivePayloadType:
         """Render with possible json value or pass-though a received MQTT value."""
-        if self._attr_value_template is None:
+        if self._value_template is None:
             return payload
 
         values: dict[str, Any] = {}
@@ -366,11 +366,11 @@ class MqttValueTemplate:
             values[ATTR_NAME] = self._entity.name
 
         if default == _SENTINEL:
-            return self._attr_value_template.async_render_with_possible_json_value(
+            return self._value_template.async_render_with_possible_json_value(
                 payload, variables=values
             )
 
-        return self._attr_value_template.async_render_with_possible_json_value(
+        return self._value_template.async_render_with_possible_json_value(
             payload, default, variables=values
         )
 
