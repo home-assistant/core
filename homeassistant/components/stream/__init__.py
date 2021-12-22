@@ -216,7 +216,7 @@ class Stream:
         self._thread_quit = threading.Event()
         self._outputs: dict[str, StreamOutput] = {}
         self._fast_restart_once = False
-        self._keyframe_converter = KeyFrameConverter()
+        self._keyframe_converter = KeyFrameConverter(hass)
         self._available: bool = True
         self._update_callback: Callable[[], None] | None = None
         self._logger = (
@@ -429,14 +429,6 @@ class Stream:
         width: int | None = None,
         height: int | None = None,
     ) -> bytes | None:
-        """
-        Fetch an image from the Stream and return it as a jpeg in bytes.
+        """Wrap get_image from KeyFrameConverter."""
 
-        This should only be called from the main thread.
-        """
-        # Use a lock to ensure only one thread is working on the keyframe at a time
-        async with self._keyframe_converter.lock:
-            self._keyframe_converter.image = await self.hass.async_add_executor_job(
-                self._keyframe_converter.generate_image, width, height
-            )
-        return self._keyframe_converter.image
+        return await self._keyframe_converter.get_image(width=width, height=height)

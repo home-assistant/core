@@ -361,9 +361,25 @@ class StreamView(HomeAssistantView):
 
 
 class KeyFrameConverter:
-    """Generate and hold the keyframe as a jpeg."""
+    """
+    Generate and hold the keyframe as a jpeg.
 
-    def __init__(self) -> None:
+    Each of the functions here is only run once at any time per instance.
+        create_codec_context is run in the worker thread
+        get_image is called from the main thread and obtains the instance lock
+        _generate_image is called by get_image and run in an executor thread
+
+    An overview of the thread and state interaction:
+        the worker thread sets a packet
+        at any time, main loop can run a get_image call
+        _generate_image will try to create an image from the packet
+            Running _generate_image will clear the packet, so there will only
+                be one attempt per packet
+            If successful, _image will be updated and returned by get_image
+            If unsuccessful, get_image will return the previous image
+    """
+
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize."""
 
         # Keep import here so that we can import stream integration without installing reqs
@@ -371,7 +387,8 @@ class KeyFrameConverter:
         from homeassistant.components.camera.img_util import TurboJPEGSingleton
 
         self.packet: Packet = None
-        self.image: bytes | None = None
+        self._hass = hass
+        self._image: bytes | None = None
         self._turbojpeg = TurboJPEGSingleton.instance()
         self.lock = asyncio.Lock()
         self._codec_context: CodecContext | None = None
@@ -388,11 +405,10 @@ class KeyFrameConverter:
         self._codec_context.skip_frame = "NONKEY"
         self._codec_context.thread_type = "NONE"
 
-    def generate_image(self, width: int | None, height: int | None) -> bytes | None:
-        """Generate the keyframe image. This is called in an executor thread."""
+    def _generate_image(self, width: int | None, height: int | None) -> None:
+        """Generate the keyframe image."""
         if not (self._turbojpeg and self.packet and self._codec_context):
-            return self.image
-        image = None
+            return
         packet = self.packet
         self.packet = None
         # decode packet (flush afterwards)
@@ -406,5 +422,15 @@ class KeyFrameConverter:
             if width and height:
                 frame = frame.reformat(width=width, height=height)
             bgr_array = frame.to_ndarray(format="bgr24")
-            image = bytes(self._turbojpeg.encode(bgr_array))
-        return image
+            self._image = bytes(self._turbojpeg.encode(bgr_array))
+
+    async def get_image(
+        self,
+        width: int | None = None,
+        height: int | None = None,
+    ) -> bytes | None:
+        """Fetch an image from the Stream and return it as a jpeg in bytes."""
+        # Use a lock to ensure only one thread is working on the keyframe at a time
+        async with self.lock:
+            await self._hass.async_add_executor_job(self._generate_image, width, height)
+        return self._image

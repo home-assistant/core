@@ -272,7 +272,7 @@ def run_worker(hass, stream, stream_source):
     """Run the stream worker under test."""
     stream_state = StreamState(hass, stream.outputs)
     stream_worker(
-        stream_source, {}, stream_state, KeyFrameConverter(), threading.Event()
+        stream_source, {}, stream_state, KeyFrameConverter(hass), threading.Event()
     )
 
 
@@ -888,7 +888,7 @@ async def test_get_image(hass, record_worker_sync):
     with patch.object(hass.config, "is_allowed_path", return_value=True):
         await stream.async_record("/example/path")
 
-    assert stream._keyframe_converter.image is None
+    assert stream._keyframe_converter._image is None
 
     await record_worker_sync.join()
 
