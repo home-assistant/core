@@ -317,6 +317,9 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     "Checking existing flows: %s - %s", progress, progress["context"]
                 )
                 if progress["context"].get("hkid") == hkid:
+                    _LOGGER.warning(
+                        "dismiss flows: %s - %s", progress, progress["flow_id"]
+                    )
                     self.hass.config_entries.flow.async_abort(progress["flow_id"])
             return self.async_abort(reason="already_paired")
 
