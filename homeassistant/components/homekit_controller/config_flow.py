@@ -248,10 +248,19 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             "AccessoryIP": discovery_info.host,
             "AccessoryPort": discovery_info.port,
         }
+        _LOGGER.warning(
+            "past set unique id -- Discovered device %s (%s - %s)", name, model, hkid
+        )
 
         # If the device is already paired and known to us we should monitor c#
         # (config_num) for changes. If it changes, we check for new entities
         if paired and hkid in self.hass.data.get(KNOWN_DEVICES, {}):
+            _LOGGER.warning(
+                "past set unique id -- in known -- Discovered device %s (%s - %s)",
+                name,
+                model,
+                hkid,
+            )
             if existing_entry:
                 self.hass.config_entries.async_update_entry(
                     existing_entry, data={**existing_entry.data, **updated_ip_port}
