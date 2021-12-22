@@ -6,7 +6,7 @@ from luftdaten.exceptions import LuftdatenConnectionError
 from homeassistant.components.luftdaten import DOMAIN
 from homeassistant.components.luftdaten.const import CONF_SENSOR_ID
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_SCAN_INTERVAL, CONF_SHOW_ON_MAP
+from homeassistant.const import CONF_SHOW_ON_MAP
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
@@ -60,6 +60,21 @@ async def test_communication_error(hass: HomeAssistant) -> None:
     assert result2.get("step_id") == SOURCE_USER
     assert result2.get("errors") == {CONF_SENSOR_ID: "cannot_connect"}
 
+    with patch("luftdaten.Luftdaten.get_data"), patch(
+        "luftdaten.Luftdaten.validate_sensor", return_value=True
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            user_input={CONF_SENSOR_ID: 12345},
+        )
+
+    assert result3.get("type") == RESULT_TYPE_CREATE_ENTRY
+    assert result3.get("title") == "12345"
+    assert result3.get("data") == {
+        CONF_SENSOR_ID: 12345,
+        CONF_SHOW_ON_MAP: False,
+    }
+
 
 async def test_invalid_sensor(hass: HomeAssistant) -> None:
     """Test that an invalid sensor throws an error."""
@@ -82,6 +97,22 @@ async def test_invalid_sensor(hass: HomeAssistant) -> None:
     assert result2.get("type") == RESULT_TYPE_FORM
     assert result2.get("step_id") == SOURCE_USER
     assert result2.get("errors") == {CONF_SENSOR_ID: "invalid_sensor"}
+    assert "flow_id" in result2
+
+    with patch("luftdaten.Luftdaten.get_data"), patch(
+        "luftdaten.Luftdaten.validate_sensor", return_value=True
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            user_input={CONF_SENSOR_ID: 12345},
+        )
+
+    assert result3.get("type") == RESULT_TYPE_CREATE_ENTRY
+    assert result3.get("title") == "12345"
+    assert result3.get("data") == {
+        CONF_SENSOR_ID: 12345,
+        CONF_SHOW_ON_MAP: False,
+    }
 
 
 async def test_step_user(hass: HomeAssistant, mock_setup_entry: MagicMock) -> None:
@@ -101,7 +132,7 @@ async def test_step_user(hass: HomeAssistant, mock_setup_entry: MagicMock) -> No
             result["flow_id"],
             user_input={
                 CONF_SENSOR_ID: 12345,
-                CONF_SHOW_ON_MAP: False,
+                CONF_SHOW_ON_MAP: True,
             },
         )
 
@@ -109,6 +140,5 @@ async def test_step_user(hass: HomeAssistant, mock_setup_entry: MagicMock) -> No
     assert result2.get("title") == "12345"
     assert result2.get("data") == {
         CONF_SENSOR_ID: 12345,
-        CONF_SHOW_ON_MAP: False,
-        CONF_SCAN_INTERVAL: 600.0,
+        CONF_SHOW_ON_MAP: True,
     }
