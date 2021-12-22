@@ -33,6 +33,12 @@ NUMBER_ENTITIES: dict[str, NumberEntityDescription] = {
         icon="mdi:volume-high",
         entity_category=EntityCategory.CONFIG,
     ),
+    CharacteristicsTypes.Vendor.AQARA_E1_GATEWAY_VOLUME: NumberEntityDescription(
+        key=CharacteristicsTypes.Vendor.AQARA_E1_GATEWAY_VOLUME,
+        name="Volume",
+        icon="mdi:volume-high",
+        entity_category=EntityCategory.CONFIG,
+    ),
 }
 
 
