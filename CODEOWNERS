@@ -793,7 +793,8 @@ homeassistant/components/select/* @home-assistant/core
 tests/components/select/* @home-assistant/core
 homeassistant/components/sense/* @kbickar
 tests/components/sense/* @kbickar
-homeassistant/components/sensibo/* @andrey-git
+homeassistant/components/sensibo/* @andrey-git @gjohansson-ST
+tests/components/sensibo/* @andrey-git @gjohansson-ST
 homeassistant/components/sentry/* @dcramer @frenck
 tests/components/sentry/* @dcramer @frenck
 homeassistant/components/serial/* @fabaff

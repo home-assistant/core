@@ -369,6 +369,7 @@ HOMEKIT = {
     "Presence": "netatmo",
     "Rachio": "rachio",
     "SPK5": "rainmachine",
+    "Sensibo": "sensibo",
     "Smart Bridge": "lutron_caseta",
     "Socket": "wemo",
     "TRADFRI": "tradfri",
