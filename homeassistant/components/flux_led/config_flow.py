@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Any, Final, cast
 
+from flux_led.aio import AIOWifiLedBulb
 from flux_led.const import ATTR_ID, ATTR_IPADDR, ATTR_MODEL, ATTR_MODEL_DESCRIPTION
 from flux_led.scanner import FluxLEDDiscovery
 import voluptuous as vol
@@ -15,7 +16,6 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import DiscoveryInfoType
 
-from . import async_wifi_bulb_for_host
 from .const import (
     CONF_CUSTOM_EFFECT_COLORS,
     CONF_CUSTOM_EFFECT_SPEED_PCT,
@@ -225,7 +225,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # identifying the device as the chip model number
             # AKA `HF-LPB100-ZJ200`
             return device
-        bulb = async_wifi_bulb_for_host(host)
+        bulb = AIOWifiLedBulb(host, discovery=device)
         try:
             await bulb.async_setup(lambda: None)
         finally:

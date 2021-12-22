@@ -51,12 +51,6 @@ DISCOVERY_INTERVAL: Final = timedelta(minutes=15)
 REQUEST_REFRESH_DELAY: Final = 1.5
 
 
-@callback
-def async_wifi_bulb_for_host(host: str) -> AIOWifiLedBulb:
-    """Create a AIOWifiLedBulb from a host."""
-    return AIOWifiLedBulb(host)
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the flux_led component."""
     domain_data = hass.data.setdefault(DOMAIN, {})
@@ -78,7 +72,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Flux LED/MagicLight from a config entry."""
     host = entry.data[CONF_HOST]
-    device: AIOWifiLedBulb = async_wifi_bulb_for_host(host)
+    directed_discovery = None
+    if discovery := async_get_discovery(hass, host):
+        directed_discovery = False
+    device: AIOWifiLedBulb = AIOWifiLedBulb(host, discovery=discovery)
     signal = SIGNAL_STATE_UPDATED.format(device.ipaddr)
 
     @callback
@@ -94,10 +91,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ) from ex
 
     # UDP probe after successful connect only
-    directed_discovery = None
-    if discovery := async_get_discovery(hass, host):
-        directed_discovery = False
-    elif discovery := await async_discover_device(hass, host):
+    if not discovery and (discovery := await async_discover_device(hass, host)):
         directed_discovery = True
 
     if discovery:
