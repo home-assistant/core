@@ -15,6 +15,7 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
@@ -30,7 +31,6 @@ from .const import (
     DEFAULT_NAME,
     DEFAULT_SOURCE,
     DOMAIN,
-    ENTRY_TYPE_SERVICE,
     HOME_ASSISTANT,
     VALID_IMAGES,
     VALID_SOURCES,
@@ -92,7 +92,7 @@ class VersionSensorEntity(CoordinatorEntity, SensorEntity):
         name=f"{HOME_ASSISTANT} {DOMAIN.title()}",
         identifiers={(HOME_ASSISTANT, DOMAIN)},
         manufacturer=HOME_ASSISTANT,
-        entry_type=ENTRY_TYPE_SERVICE,
+        entry_type=DeviceEntryType.SERVICE,
     )
 
     coordinator: VersionDataUpdateCoordinator
