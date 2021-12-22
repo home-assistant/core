@@ -62,12 +62,8 @@ STAT_CHANGE = "change"
 STAT_CHANGE_SAMPLE = "change_sample"
 STAT_CHANGE_SECOND = "change_second"
 STAT_COUNT = "count"
-STAT_COUNT_BINARY_ON = "count_on"
-STAT_COUNT_BINARY_OFF = "count_off"
 STAT_DATETIME_NEWEST = "datetime_newest"
 STAT_DATETIME_OLDEST = "datetime_oldest"
-STAT_DATETIME_VALUE_MAX = "datetime_value_max"
-STAT_DATETIME_VALUE_MIN = "datetime_value_min"
 STAT_DISTANCE_95P = "distance_95_percent_of_values"
 STAT_DISTANCE_99P = "distance_99_percent_of_values"
 STAT_DISTANCE_ABSOLUTE = "distance_absolute"
@@ -108,8 +104,6 @@ STATS_NUMERIC_SUPPORT = (
     STAT_COUNT,
     STAT_DATETIME_NEWEST,
     STAT_DATETIME_OLDEST,
-    STAT_DATETIME_VALUE_MAX,
-    STAT_DATETIME_VALUE_MIN,
     STAT_DISTANCE_95P,
     STAT_DISTANCE_99P,
     STAT_DISTANCE_ABSOLUTE,
@@ -128,26 +122,18 @@ STATS_BINARY_SUPPORT = (
     STAT_AVERAGE_STEP,
     STAT_AVERAGE_TIMELESS,
     STAT_COUNT,
-    STAT_COUNT_BINARY_ON,
-    STAT_COUNT_BINARY_OFF,
-    STAT_DATETIME_NEWEST,
-    STAT_DATETIME_OLDEST,
     STAT_MEAN,
 )
 
 STATS_NOT_A_NUMBER = (
     STAT_DATETIME_NEWEST,
     STAT_DATETIME_OLDEST,
-    STAT_DATETIME_VALUE_MAX,
-    STAT_DATETIME_VALUE_MIN,
     STAT_QUANTILES,
 )
 
 STATS_DATETIME = (
     STAT_DATETIME_NEWEST,
     STAT_DATETIME_OLDEST,
-    STAT_DATETIME_VALUE_MAX,
-    STAT_DATETIME_VALUE_MIN,
 )
 
 CONF_STATE_CHARACTERISTIC = "state_characteristic"
@@ -395,11 +381,7 @@ class StatisticsSensor(SensorEntity):
             unit = base_unit
         elif self._state_characteristic in STATS_NOT_A_NUMBER:
             unit = None
-        elif self._state_characteristic in (
-            STAT_COUNT,
-            STAT_COUNT_BINARY_ON,
-            STAT_COUNT_BINARY_OFF,
-        ):
+        elif self._state_characteristic == STAT_COUNT:
             unit = None
         elif self._state_characteristic == STAT_VARIANCE:
             unit = base_unit + "²"
@@ -637,16 +619,6 @@ class StatisticsSensor(SensorEntity):
             return self.ages[0]
         return None
 
-    def _stat_datetime_value_max(self) -> datetime | None:
-        if len(self.states) > 0:
-            return self.ages[self.states.index(max(self.states))]
-        return None
-
-    def _stat_datetime_value_min(self) -> datetime | None:
-        if len(self.states) > 0:
-            return self.ages[self.states.index(min(self.states))]
-        return None
-
     def _stat_distance_95_percent_of_values(self) -> StateType:
         if len(self.states) >= 2:
             return 2 * 1.96 * cast(float, self._stat_standard_deviation())
@@ -736,18 +708,6 @@ class StatisticsSensor(SensorEntity):
 
     def _stat_binary_count(self) -> StateType:
         return len(self.states)
-
-    def _stat_binary_count_on(self) -> StateType:
-        return self.states.count(True)
-
-    def _stat_binary_count_off(self) -> StateType:
-        return self.states.count(False)
-
-    def _stat_binary_datetime_newest(self) -> datetime | None:
-        return self._stat_datetime_newest()
-
-    def _stat_binary_datetime_oldest(self) -> datetime | None:
-        return self._stat_datetime_oldest()
 
     def _stat_binary_mean(self) -> StateType:
         if len(self.states) > 0:
