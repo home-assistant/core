@@ -1,5 +1,4 @@
 """Test the Control4 config flow."""
-import datetime
 from unittest.mock import AsyncMock, patch
 
 from pyControl4.account import C4Account
