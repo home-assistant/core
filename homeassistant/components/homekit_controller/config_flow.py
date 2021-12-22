@@ -204,6 +204,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         This flow is triggered by the discovery component.
         """
+        _LOGGER.warning("HKC ZC discovery: %s", discovery_info)
         # Normalize properties from discovery
         # homekit_python has code to do this, but not in a form we can
         # easily use, so do the bare minimum ourselves here instead.
