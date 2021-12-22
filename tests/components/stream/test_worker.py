@@ -104,6 +104,11 @@ class FakeAvInputStream:
 
         self.codec_context = FakeCodecContext()
 
+    @property
+    def type(self):
+        """Return packet type."""
+        return "video" if self.name == VIDEO_STREAM_FORMAT else "audio"
+
     def __str__(self) -> str:
         """Return a stream name for debugging."""
         return f"FakePyAvStream<{self.name}, {self.time_base}>"

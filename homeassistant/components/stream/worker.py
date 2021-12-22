@@ -476,7 +476,7 @@ def stream_worker(
 
     def is_video(packet: av.Packet) -> Any:
         """Return true if the packet is for the video stream."""
-        return packet.stream == video_stream
+        return packet.stream.type == "video"
 
     # Have to work around two problems with RTSP feeds in ffmpeg
     # 1 - first frame has bad pts/dts https://trac.ffmpeg.org/ticket/5018
@@ -538,5 +538,5 @@ def stream_worker(
 
             muxer.mux_packet(packet)
 
-            if packet.is_keyframe and packet.stream.type == "video":
+            if packet.is_keyframe and is_video(packet):
                 keyframe_converter.packet = packet
