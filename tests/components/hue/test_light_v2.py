@@ -325,7 +325,7 @@ async def test_grouped_lights(hass, mock_bridge_v2, v2_resources_test_data):
         assert mock_bridge_v2.mock_requests[index]["json"]["color"]["xy"]["x"] == 0.123
         assert mock_bridge_v2.mock_requests[index]["json"]["color"]["xy"]["y"] == 0.123
         assert (
-            mock_bridge_v2.mock_requests[index]["json"]["dynamics"]["duration"] == 200
+            mock_bridge_v2.mock_requests[index]["json"]["dynamics"]["duration"] == 250
         )
 
     # Now generate update events by emitting the json we've sent as incoming events
@@ -384,5 +384,5 @@ async def test_grouped_lights(hass, mock_bridge_v2, v2_resources_test_data):
     for index in range(0, 3):
         assert mock_bridge_v2.mock_requests[index]["json"]["on"]["on"] is False
         assert (
-            mock_bridge_v2.mock_requests[index]["json"]["dynamics"]["duration"] == 200
+            mock_bridge_v2.mock_requests[index]["json"]["dynamics"]["duration"] == 250
         )
