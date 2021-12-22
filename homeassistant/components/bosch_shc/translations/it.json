@@ -14,7 +14,7 @@
         "flow_title": "Bosch SHC: {name}",
         "step": {
             "confirm_discovery": {
-                "description": "Premere il pulsante sul lato anteriore del controller Bosch Smart Home finch\u00e9 il LED non inizia a lampeggiare.\nPronto per continuare a configurare {model} @ {host} con Home Assistant?"
+                "description": "Premi il pulsante sul lato anteriore del controller Bosch Smart Home finch\u00e9 il LED non inizia a lampeggiare.\nSei pronto per continuare a configurare {model} @ {host} con Home Assistant?"
             },
             "credentials": {
                 "data": {
