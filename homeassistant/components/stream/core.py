@@ -392,7 +392,7 @@ class KeyFrameConverter:
         """
         Create a codec context to be used for decoding the keyframes.
 
-        This is run by the worker thread and will only be called once.
+        This is run by the worker thread and will only be called once per worker.
         """
 
         # Keep import here so that we can import stream integration without installing reqs
