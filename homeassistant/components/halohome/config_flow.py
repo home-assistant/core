@@ -3,7 +3,7 @@ import halohome
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
@@ -13,7 +13,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_HOST, default="https://api.avi-on.com"): cv.string,
     }
 )
 
@@ -30,7 +29,6 @@ class HaloHomeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 locations = await halohome.list_devices(
                     user_input[CONF_USERNAME],
                     user_input[CONF_PASSWORD],
-                    user_input[CONF_HOST],
                 )
                 username = user_input[CONF_USERNAME]
                 await self.async_set_unique_id(username)

@@ -5,13 +5,12 @@ import halohome
 
 from homeassistant import config_entries
 from homeassistant.components.halohome.const import CONF_LOCATIONS, DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_CREATE_ENTRY
 
 from tests.common import MockConfigEntry
 
-HOST = "http://127.0.0.1"
 MODULE = "homeassistant.components.halohome"
 USERNAME = "example@example.com"
 TITLE = f"HALO Home ({USERNAME})"
@@ -36,7 +35,6 @@ LOCATIONS = [
 USER_INPUT = {
     CONF_USERNAME: USERNAME,
     CONF_PASSWORD: PASSWORD,
-    CONF_HOST: HOST,
 }
 CONFIG_ENTRY = {
     **USER_INPUT,
@@ -45,7 +43,7 @@ CONFIG_ENTRY = {
 
 
 def _patch_list(raise_error: bool = False):
-    async def _list(email: str, password: str, host: str):
+    async def _list(email: str, password: str):
         if raise_error:
             raise halohome.HaloHomeError("Test login error")
 
