@@ -367,17 +367,12 @@ class MqttValueTemplate:
 
         if default == _SENTINEL:
             return self._attr_value_template.async_render_with_possible_json_value(
-                payload, variables=values or None
+                payload, variables=values
             )
 
         return self._attr_value_template.async_render_with_possible_json_value(
             payload, default, variables=values
         )
-
-    @property
-    def value_template(self) -> template.Template | None:
-        """Return the active value template or None."""
-        return self._attr_value_template
 
 
 @dataclass
