@@ -19,7 +19,7 @@ def _get_mock_c4_account(
     },
     getDirectorBearerToken={
         "token": "token",
-        "token_expiration": datetime.datetime(2020, 7, 15, 13, 50, 15, 26940),
+        "validSeconds": 86400,
     },
 ):
     c4_account_mock = AsyncMock(C4Account)
