@@ -43,6 +43,7 @@ from .test_common import (
     help_test_discovery_update,
     help_test_discovery_update_attr,
     help_test_discovery_update_unchanged,
+    help_test_encoding_subscribable_topics,
     help_test_entity_debug_info_message,
     help_test_entity_device_info_remove,
     help_test_entity_device_info_update,
@@ -702,6 +703,30 @@ async def test_discovery_broken(hass, mqtt_mock, caplog):
     )
     await help_test_discovery_broken(
         hass, mqtt_mock, caplog, alarm_control_panel.DOMAIN, data1, data2
+    )
+
+
+@pytest.mark.parametrize(
+    "topic,value,attribute",
+    [
+        ("state_topic", "armed_home", None),
+        ("state_topic", "disarmed", None),
+    ],
+)
+async def test_encoding_subscribable_topics(
+    hass, mqtt_mock, caplog, topic, value, attribute
+):
+    """Test handling of incoming encoded payload."""
+    config = copy.deepcopy(DEFAULT_CONFIG[alarm_control_panel.DOMAIN])
+    await help_test_encoding_subscribable_topics(
+        hass,
+        mqtt_mock,
+        caplog,
+        alarm_control_panel.DOMAIN,
+        config,
+        topic,
+        value,
+        attribute,
     )
 
 

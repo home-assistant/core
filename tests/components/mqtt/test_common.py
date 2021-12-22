@@ -765,6 +765,85 @@ async def help_test_discovery_broken(hass, mqtt_mock, caplog, domain, data1, dat
     assert state is None
 
 
+async def help_test_encoding_subscribable_topics(
+    hass, mqtt_mock, caplog, domain, config, topic, value, attribute=None
+):
+    """Test handling of incoming encoded payload."""
+
+    async def _test_encoding(hass, domain, entity_id, topic, attribute, encoded_value):
+        state = hass.states.get(entity_id)
+
+        async_fire_mqtt_message(hass, topic, encoded_value)
+        await hass.async_block_till_done()
+
+        state = hass.states.get(entity_id)
+
+        if attribute:
+            return state.attributes.get(attribute)
+
+        return state.state if state else None
+
+    # setup test1 default encoding
+    config1 = copy.deepcopy(config)
+    config1["name"] = "test1"
+    config1[topic] = "topic/test1"
+    # setup test2 alternate encoding
+    config2 = copy.deepcopy(config)
+    config2["name"] = "test2"
+    config2["encoding"] = "utf-16"
+    config2[topic] = "topic/test2"
+    # setup test3 raw encoding
+    config3 = copy.deepcopy(config)
+    config3["name"] = "test3"
+    config3["encoding"] = ""
+    config3[topic] = "topic/test3"
+
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass, domain, {domain: [config1, config2, config3]}
+    )
+    await hass.async_block_till_done()
+
+    # test1 default encoding
+    assert (
+        await _test_encoding(
+            hass,
+            domain,
+            f"{domain}.test1",
+            "topic/test1",
+            attribute,
+            value.encode("utf-8"),
+        )
+        == value
+    )
+
+    # test2 alternate encoding
+    assert (
+        await _test_encoding(
+            hass,
+            domain,
+            f"{domain}.test2",
+            "topic/test2",
+            attribute,
+            value.encode("utf-16"),
+        )
+        == value
+    )
+
+    # test3 raw encoding
+
+    await _test_encoding(
+        hass,
+        domain,
+        f"{domain}.test3",
+        "topic/test3",
+        attribute,
+        value.encode("utf-16"),
+    )
+    assert f"Received unexpected payload: {value.encode('utf-16')}" in caplog.text
+
+
 async def help_test_entity_device_info_with_identifier(hass, mqtt_mock, domain, config):
     """Test device registry integration.
 
