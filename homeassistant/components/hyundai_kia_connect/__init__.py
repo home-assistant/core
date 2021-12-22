@@ -1,28 +1,25 @@
 """The Hyundai / Kia Connect integration."""
 from __future__ import annotations
 
-import logging
-
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 from .coordinator import HyundaiKiaConnectDataUpdateCoordinator
 
-PLATFORMS: list[str] = ["sensor"]
-
-_LOGGER = logging.getLogger(__name__)
+PLATFORMS: list[str] = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up Hyundai / Kia Connect from a config entry."""
     """Set up this integration using UI."""
-    if hass.data.get(DOMAIN) is None:
-        hass.data.setdefault(DOMAIN, {})
 
     coordinator = HyundaiKiaConnectDataUpdateCoordinator(hass, config_entry)
     await coordinator.async_refresh()
+    await coordinator.async_config_entry_first_refresh()
     hass.data[DOMAIN][config_entry.entry_id] = coordinator
+    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = coordinator
     hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
     return True
 

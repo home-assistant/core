@@ -18,7 +18,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONF_BRAND, DOMAIN
 
@@ -37,7 +37,7 @@ class HyundaiKiaConnectDataUpdateCoordinator(DataUpdateCoordinator):
         pin = config_entry.data.get(CONF_PIN)
 
         self.platforms: Set[str] = set()
-        token = Token(config_entry.data.get(CONF_TOKEN))
+        token = Token(config_entry.data[CONF_TOKEN])
         api = get_implementation_by_region_brand(region, brand, username, password, pin)
 
         self.vehicle_manager = VehicleManager()
@@ -50,10 +50,6 @@ class HyundaiKiaConnectDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Update data via library."""
         return await self.async_update()
-        try:
-            return await self.async_update()
-        except Exception as exception:
-            raise UpdateFailed() from exception
 
     async def async_update(self):
         """Update vehicle data via library."""

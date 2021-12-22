@@ -27,7 +27,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
-        vol.Optional(CONF_PIN): str,
+        vol.Optional(CONF_PIN, default=DEFAULT_PIN): str,
         vol.Required(CONF_REGION): vol.In(REGIONS),
         vol.Required(CONF_BRAND): vol.In(BRANDS),
     }
@@ -40,7 +40,7 @@ async def validate_input(hass: HomeAssistant, user_input: dict[str, Any]) -> Tok
     username = user_input[CONF_USERNAME]
     password = user_input[CONF_PASSWORD]
     region = user_input[CONF_REGION]
-    pin = user_input.get(CONF_PIN, DEFAULT_PIN)
+    pin = user_input[CONF_PIN]
     brand = user_input[CONF_BRAND]
 
     api = get_implementation_by_region_brand(region, brand, username, password, pin)
