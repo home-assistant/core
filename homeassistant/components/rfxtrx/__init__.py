@@ -167,7 +167,6 @@ async def async_setup_internal(hass, entry: ConfigEntry):
 
     # Setup some per device config
     devices = _get_device_lookup(config[CONF_DEVICES])
-    pt2262_devices: list[str] = []
 
     device_registry = dr.async_get(hass)
 
@@ -198,10 +197,6 @@ async def async_setup_internal(hass, entry: ConfigEntry):
                 _add_device(event, device_id)
             else:
                 return
-
-        if event.device.packettype == DEVICE_PACKET_TYPE_LIGHTING4:
-            find_possible_pt2262_device(pt2262_devices, event.device.id_string)
-            pt2262_devices.append(event.device.id_string)
 
         device_entry = device_registry.async_get_device(
             identifiers={(DOMAIN, *device_id)},
@@ -384,33 +379,6 @@ def get_device_data_bits(
                 data_bits = bits
                 break
     return data_bits
-
-
-def find_possible_pt2262_device(device_ids: list[str], device_id: str) -> str | None:
-    """Look for the device which id matches the given device_id parameter."""
-    for dev_id in device_ids:
-        if len(dev_id) == len(device_id):
-            size = None
-            for i, (char1, char2) in enumerate(zip(dev_id, device_id)):
-                if char1 != char2:
-                    break
-                size = i
-            if size is not None:
-                size = len(dev_id) - size - 1
-                _LOGGER.info(
-                    "Found possible device %s for %s "
-                    "with the following configuration:\n"
-                    "data_bits=%d\n"
-                    "command_on=0x%s\n"
-                    "command_off=0x%s\n",
-                    device_id,
-                    dev_id,
-                    size * 4,
-                    dev_id[-size:],
-                    device_id[-size:],
-                )
-                return dev_id
-    return None
 
 
 def get_device_id(
