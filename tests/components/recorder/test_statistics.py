@@ -993,7 +993,7 @@ def test_delete_duplicates_non_identical(caplog, tmpdir):
     assert "Found duplicated" not in caplog.text
 
     isotime = dt_util.utcnow().isoformat()
-    backup_file_name = f".deleted_statistics/deleted_statistics.{isotime}.json"
+    backup_file_name = f".storage/deleted_statistics.{isotime}.json"
 
     with open(hass.config.path(backup_file_name)) as backup_file:
         backup = json.load(backup_file)
