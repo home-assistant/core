@@ -20,10 +20,7 @@ from soco.music_library import MusicLibrary
 from soco.plugins.sharelink import ShareLinkPlugin
 from soco.snapshot import Snapshot
 
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -42,7 +39,6 @@ from .const import (
     BATTERY_SCAN_INTERVAL,
     DATA_SONOS,
     DOMAIN,
-    PLATFORMS,
     SCAN_INTERVAL,
     SONOS_CHECK_ACTIVITY,
     SONOS_CREATE_ALARM,
@@ -51,7 +47,6 @@ from .const import (
     SONOS_CREATE_LEVELS,
     SONOS_CREATE_MEDIA_PLAYER,
     SONOS_CREATE_SWITCHES,
-    SONOS_ENTITY_CREATED,
     SONOS_POLL_UPDATE,
     SONOS_REBOOTED,
     SONOS_SPEAKER_ACTIVITY,
@@ -161,9 +156,6 @@ class SonosSpeaker:
         self._share_link_plugin: ShareLinkPlugin | None = None
         self.available = True
 
-        # Synchronization helpers
-        self._platforms_ready: set[str] = set()
-
         # Subscriptions and events
         self.subscriptions_failed: bool = False
         self._subscriptions: list[SubscriptionBase] = []
@@ -217,7 +209,6 @@ class SonosSpeaker:
         dispatch_pairs = (
             (SONOS_CHECK_ACTIVITY, self.async_check_activity),
             (SONOS_SPEAKER_ADDED, self.update_group_for_uid),
-            (f"{SONOS_ENTITY_CREATED}-{self.soco.uid}", self.async_handle_new_entity),
             (f"{SONOS_REBOOTED}-{self.soco.uid}", self.async_rebooted),
             (f"{SONOS_SPEAKER_ACTIVITY}-{self.soco.uid}", self.speaker_activity),
         )
@@ -253,15 +244,11 @@ class SonosSpeaker:
                 self.hass, self.async_poll_battery, BATTERY_SCAN_INTERVAL
             )
             dispatcher_send(self.hass, SONOS_CREATE_BATTERY, self)
-        else:
-            self._platforms_ready.update({BINARY_SENSOR_DOMAIN, SENSOR_DOMAIN})
 
         if new_alarms := [
             alarm.alarm_id for alarm in self.alarms if alarm.zone.uid == self.soco.uid
         ]:
             dispatcher_send(self.hass, SONOS_CREATE_ALARM, self, new_alarms)
-        else:
-            self._platforms_ready.add(SWITCH_DOMAIN)
 
         dispatcher_send(self.hass, SONOS_CREATE_SWITCHES, self)
 
@@ -277,19 +264,11 @@ class SonosSpeaker:
         dispatcher_send(self.hass, SONOS_CREATE_MEDIA_PLAYER, self)
         dispatcher_send(self.hass, SONOS_SPEAKER_ADDED, self.soco.uid)
 
+        self.hass.create_task(self.async_subscribe())
+
     #
     # Entity management
     #
-    async def async_handle_new_entity(self, entity_type: str) -> None:
-        """Listen to new entities to trigger first subscription."""
-        if self._platforms_ready == PLATFORMS:
-            return
-
-        self._platforms_ready.add(entity_type)
-        if self._platforms_ready == PLATFORMS:
-            self._resubscription_lock = asyncio.Lock()
-            await self.async_subscribe()
-
     def write_entity_states(self) -> None:
         """Write states for associated SonosEntity instances."""
         dispatcher_send(self.hass, f"{SONOS_STATE_UPDATED}-{self.soco.uid}")
@@ -405,6 +384,9 @@ class SonosSpeaker:
 
     async def async_resubscribe(self, exception: Exception) -> None:
         """Attempt to resubscribe when a renewal failure is detected."""
+        if not self._resubscription_lock:
+            self._resubscription_lock = asyncio.Lock()
+
         async with self._resubscription_lock:
             if not self.available:
                 return

@@ -10,15 +10,11 @@ from soco.core import SoCo
 from soco.exceptions import SoCoException
 
 import homeassistant.helpers.device_registry as dr
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import (
     DOMAIN,
-    SONOS_ENTITY_CREATED,
     SONOS_FAVORITES_UPDATED,
     SONOS_POLL_UPDATE,
     SONOS_STATE_UPDATED,
@@ -59,9 +55,6 @@ class SonosEntity(Entity):
                 f"{SONOS_FAVORITES_UPDATED}-{self.soco.household_id}",
                 self.async_write_ha_state,
             )
-        )
-        async_dispatcher_send(
-            self.hass, f"{SONOS_ENTITY_CREATED}-{self.soco.uid}", self.platform.domain
         )
 
     async def async_poll(self, now: datetime.datetime) -> None:
