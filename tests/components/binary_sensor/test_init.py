@@ -8,7 +8,7 @@ from homeassistant.const import STATE_OFF, STATE_ON
 def test_state():
     """Test binary sensor state."""
     sensor = binary_sensor.BinarySensorEntity()
-    assert sensor.state == STATE_OFF
+    assert sensor.state is None
     with mock.patch(
         "homeassistant.components.binary_sensor.BinarySensorEntity.is_on",
         new=False,

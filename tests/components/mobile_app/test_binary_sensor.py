@@ -1,7 +1,7 @@
 """Entity tests for mobile_app."""
 from http import HTTPStatus
 
-from homeassistant.const import STATE_OFF
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.helpers import device_registry as dr
 
 
@@ -198,7 +198,7 @@ async def test_register_sensor_no_state(hass, create_registrations, webhook_clie
 
     assert entity.domain == "binary_sensor"
     assert entity.name == "Test 1 Is Charging"
-    assert entity.state == STATE_OFF  # Binary sensor defaults to off
+    assert entity.state == STATE_UNKNOWN
 
     reg_resp = await webhook_client.post(
         webhook_url,
@@ -223,7 +223,7 @@ async def test_register_sensor_no_state(hass, create_registrations, webhook_clie
 
     assert entity.domain == "binary_sensor"
     assert entity.name == "Test 1 Backup Is Charging"
-    assert entity.state == STATE_OFF  # Binary sensor defaults to off
+    assert entity.state == STATE_UNKNOWN
 
 
 async def test_update_sensor_no_state(hass, create_registrations, webhook_client):
@@ -270,4 +270,4 @@ async def test_update_sensor_no_state(hass, create_registrations, webhook_client
     assert json == {"is_charging": {"success": True}}
 
     updated_entity = hass.states.get("binary_sensor.test_1_is_charging")
-    assert updated_entity.state == STATE_OFF  # Binary sensor defaults to off
+    assert updated_entity.state == STATE_UNKNOWN
