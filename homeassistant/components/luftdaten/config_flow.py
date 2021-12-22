@@ -8,17 +8,12 @@ from luftdaten.exceptions import LuftdatenConnectionError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS,
-    CONF_SCAN_INTERVAL,
-    CONF_SENSORS,
-    CONF_SHOW_ON_MAP,
-)
+from homeassistant.const import CONF_SHOW_ON_MAP
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
-from .const import CONF_SENSOR_ID, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import CONF_SENSOR_ID, DOMAIN
 
 
 class LuftDatenFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -44,8 +39,7 @@ class LuftDatenFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the start of the config flow."""
-
-        if not user_input:
+        if user_input is None:
             return self._show_form()
 
         await self.async_set_unique_id(str(user_input[CONF_SENSOR_ID]))
@@ -60,18 +54,6 @@ class LuftDatenFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if not valid:
             return self._show_form({CONF_SENSOR_ID: "invalid_sensor"})
-
-        available_sensors = [
-            x for x, x_values in luftdaten.values.items() if x_values is not None
-        ]
-
-        if available_sensors:
-            user_input.update(
-                {CONF_SENSORS: {CONF_MONITORED_CONDITIONS: available_sensors}}
-            )
-
-        scan_interval = user_input.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-        user_input.update({CONF_SCAN_INTERVAL: scan_interval.total_seconds()})
 
         return self.async_create_entry(
             title=str(user_input[CONF_SENSOR_ID]), data=user_input
