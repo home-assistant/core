@@ -22,7 +22,7 @@
         "step": {
             "init": {
                 "data": {
-                    "reverse": "Invertire la logica dell'interruttore (usare NC)"
+                    "reverse": "Inverti la logica dell'interruttore (usa NC)"
                 }
             }
         }

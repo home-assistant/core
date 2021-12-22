@@ -71,7 +71,7 @@
             "init": {
                 "data": {
                     "discovery_interval": "Intervallo di scansione di rilevamento dispositivo in secondi",
-                    "list_devices": "Selezionare i dispositivi da configurare o lasciare vuoto per salvare la configurazione",
+                    "list_devices": "Seleziona i dispositivi da configurare o lascia vuoto per salvare la configurazione",
                     "query_device": "Selezionare il dispositivo che utilizzer\u00e0 il metodo di interrogazione per un pi\u00f9 rapido aggiornamento dello stato",
                     "query_interval": "Intervallo di scansione di interrogazione dispositivo in secondi"
                 },
