@@ -1,6 +1,5 @@
 """Basic checks for HomeKitSwitch."""
 
-from aiohomekit.controller import pairing
 from aiohomekit.model.characteristics import (
     CharacteristicsTypes,
     InUseValues,
@@ -147,7 +146,7 @@ async def test_char_switch_change_state(hass, utcnow):
         {"entity_id": "switch.testdevice_pairing_mode"},
         blocking=True,
     )
-    assert pairing_mode.value == True
+    assert pairing_mode.value is True
 
     await hass.services.async_call(
         "switch",
@@ -155,7 +154,7 @@ async def test_char_switch_change_state(hass, utcnow):
         {"entity_id": "switch.testdevice_pairing_mode"},
         blocking=True,
     )
-    assert pairing_mode.value == False
+    assert pairing_mode.value is False
 
 
 async def test_char_switch_read_state(hass, utcnow):
