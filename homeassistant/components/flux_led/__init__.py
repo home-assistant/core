@@ -8,6 +8,7 @@ from typing import Any, Final, cast
 from flux_led import DeviceType
 from flux_led.aio import AIOWifiLedBulb
 from flux_led.const import ATTR_ID
+from flux_led.scanner import FluxLEDDiscovery
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STARTED, Platform
@@ -51,6 +52,14 @@ DISCOVERY_INTERVAL: Final = timedelta(minutes=15)
 REQUEST_REFRESH_DELAY: Final = 1.5
 
 
+@callback
+def async_wifi_bulb_for_host(
+    host: str, discovery: FluxLEDDiscovery | None
+) -> AIOWifiLedBulb:
+    """Create a AIOWifiLedBulb from a host."""
+    return AIOWifiLedBulb(host, discovery=discovery)
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the flux_led component."""
     domain_data = hass.data.setdefault(DOMAIN, {})
@@ -75,7 +84,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     directed_discovery = None
     if discovery := async_get_discovery(hass, host):
         directed_discovery = False
-    device: AIOWifiLedBulb = AIOWifiLedBulb(host, discovery=discovery)
+    device: AIOWifiLedBulb = async_wifi_bulb_for_host(host, discovery=discovery)
     signal = SIGNAL_STATE_UPDATED.format(device.ipaddr)
 
     @callback
