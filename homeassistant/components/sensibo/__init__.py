@@ -21,8 +21,6 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Sensibo from a config entry."""
-    title = entry.title
-
     client = pysensibo.SensiboClient(
         entry.data[CONF_API_KEY], session=async_get_clientsession(hass), timeout=TIMEOUT
     )
@@ -36,33 +34,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         asyncio.TimeoutError,
         pysensibo.SensiboError,
     ) as err:
-        raise ConfigEntryNotReady("Failed to get devices from Sensibo servers") from err
+        raise ConfigEntryNotReady(
+            f"Failed to get devices from Sensibo servers: {err}"
+        ) from err
 
     if not devicelist:
         return False
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {"devices": devicelist}
-    hass.data[DOMAIN][entry.entry_id]["client"] = client
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
+        "devices": devicelist,
+        "client": client,
+    }
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
-    _LOGGER.debug("Loaded entry for %s", title)
+    _LOGGER.debug("Loaded entry for %s", entry.title)
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Sensibo config entry."""
-
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    title = entry.title
-
-    del hass.data[DOMAIN][entry.entry_id]
-    if not hass.data[DOMAIN]:
-        del hass.data[DOMAIN]
-
-    if unload_ok:
-        _LOGGER.debug("Unloaded entry for %s", title)
-        return unload_ok
-
+    if await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        del hass.data[DOMAIN][entry.entry_id]
+        if not hass.data[DOMAIN]:
+            del hass.data[DOMAIN]
+        _LOGGER.debug("Unloaded entry for %s", entry.title)
+        return True
     return False

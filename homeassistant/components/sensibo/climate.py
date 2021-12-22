@@ -101,13 +101,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Sensibo climate entry."""
 
-    client = hass.data[DOMAIN][entry.entry_id]["client"]
+    data = hass.data[DOMAIN][entry.entry_id]
+    client = data["client"]
+    devicelist = data["devices"]
 
-    devicelist = hass.data[DOMAIN][entry.entry_id]["devices"]
-
-    devices = []
-    for dev in devicelist:
-        devices.append(SensiboClimate(client, dev, hass.config.units.temperature_unit))
+    devices = [
+        SensiboClimate(client, dev, hass.config.units.temperature_unit)
+        for dev in devicelist
+    ]
 
     async_add_entities(devices)
 
