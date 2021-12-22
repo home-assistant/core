@@ -1,9 +1,10 @@
 """Sensor to collect the reference daily prices of electricity ('PVPC') in Spain."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import datetime
 import logging
-from typing import Any, Mapping
+from typing import Any
 
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
