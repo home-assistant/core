@@ -50,7 +50,10 @@ async def async_setup_platform(
 ) -> None:
     """Import yaml config and initiates config flow for Switchbot devices."""
     _LOGGER.warning(
-        "Yaml config for Switchbot switch platform has been deprecated and will be removed in 2022.4. Please remove it from your config"
+        "Configuration of the Switchbot switch platform in YAML is deprecated and "
+        "will be removed in Home Assistant 2022.4; Your existing configuration "
+        "has been imported into the UI automatically and can be safely removed "
+        "from your configuration.yaml file"
     )
 
     # Check if entry config exists and skips import if it does.
