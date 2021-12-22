@@ -164,8 +164,8 @@ class HueLight(HueBaseEntity, LightEntity):
             # Hue uses a range of [0, 100] to control brightness.
             brightness = float((brightness / 255) * 100)
         if transition is not None:
-            # hue transition duration is in milliseconds
-            transition = int(transition * 1000)
+            # hue transition duration is in milliseconds and round them to 100ms
+            transition = int(round(transition, 1) * 1000)
 
         await self.bridge.async_request_call(
             self.controller.set_state,
@@ -184,8 +184,8 @@ class HueLight(HueBaseEntity, LightEntity):
         transition = kwargs.get(ATTR_TRANSITION)
         flash = kwargs.get(ATTR_FLASH)
         if transition is not None:
-            # hue transition duration is in milliseconds
-            transition = int(transition * 1000)
+            # hue transition duration is in milliseconds and round them to 100ms
+            transition = int(round(transition, 1) * 1000)
         await self.bridge.async_request_call(
             self.controller.set_state,
             id=self.resource.id,
