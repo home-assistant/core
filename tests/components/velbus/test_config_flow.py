@@ -15,6 +15,8 @@ from homeassistant.core import HomeAssistant
 
 from .const import PORT_SERIAL, PORT_TCP
 
+from tests.common import MockConfigEntry
+
 DISCOVERY_INFO = usb.UsbServiceInfo(
     device=PORT_SERIAL,
     pid="10CF",
@@ -127,3 +129,30 @@ async def test_flow_usb(hass: HomeAssistant):
         user_input={},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+    # test an already configured discovery
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_PORT: PORT_SERIAL},
+    )
+    entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_USB},
+        data=DISCOVERY_INFO,
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("controller_connection_failed")
+@patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
+async def test_flow_usb_failed(hass: HomeAssistant):
+    """Test usb discovery flow with a failed velbus test."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_USB},
+        data=DISCOVERY_INFO,
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "cannot_connect"
