@@ -23,6 +23,31 @@ send:
       example: "temperature"
       selector:
         text:
+respond:
+  name: "Respond to KNX bus"
+  description: "Respond arbitrary data directly to the KNX bus."
+  fields:
+    address:
+      name: "Group address"
+      description: "Group address(es) to respond to. Lists will send to multiple group addresses successively."
+      required: true
+      example: "1/1/0"
+      selector:
+        object:
+    payload:
+      name: "Payload"
+      description: "Payload to send to the bus. Integers are treated as DPT 1/2/3 payloads. For DPTs > 6 bits send a list. Each value represents 1 octet (0-255). Pad with 0 to DPT byte length."
+      required: true
+      example: "[0, 4]"
+      selector:
+        object:
+    type:
+      name: "Value type"
+      description: "If set, the payload will not be sent as raw bytes, but encoded as given DPT. Knx sensor types are valid values (see https://www.home-assistant.io/integrations/sensor.knx)."
+      required: false
+      example: "temperature"
+      selector:
+        text:
 read:
   name: "Read from KNX bus"
   description: "Send GroupValueRead requests to the KNX bus. Response can be used from `knx_event` and will be processed in KNX entities."

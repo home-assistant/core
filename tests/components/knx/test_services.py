@@ -54,6 +54,53 @@ async def test_send(hass: HomeAssistant, knx: KNXTestKit):
     await knx.assert_write("3/3/3", (0xFC,))
 
 
+async def test_respond(hass: HomeAssistant, knx: KNXTestKit):
+    """Test `knx.respond` service."""
+    test_address = "1/2/3"
+    await knx.setup_integration({})
+
+    # respond DPT 1 telegram
+    await hass.services.async_call(
+        "knx", "respond", {"address": test_address, "payload": True}, blocking=True
+    )
+    await knx.assert_response(test_address, True)
+
+    # respond raw DPT 5 telegram
+    await hass.services.async_call(
+        "knx", "respond", {"address": test_address, "payload": [99]}, blocking=True
+    )
+    await knx.assert_response(test_address, (99,))
+
+    # respond "percent" DPT 5 telegram
+    await hass.services.async_call(
+        "knx",
+        "respond",
+        {"address": test_address, "payload": 99, "type": "percent"},
+        blocking=True,
+    )
+    await knx.assert_response(test_address, (0xFC,))
+
+    # respond "temperature" DPT 9 telegram
+    await hass.services.async_call(
+        "knx",
+        "respond",
+        {"address": test_address, "payload": 21.0, "type": "temperature"},
+        blocking=True,
+    )
+    await knx.assert_response(test_address, (0x0C, 0x1A))
+
+    # respond multiple telegrams
+    await hass.services.async_call(
+        "knx",
+        "respond",
+        {"address": [test_address, "2/2/2", "3/3/3"], "payload": 99, "type": "percent"},
+        blocking=True,
+    )
+    await knx.assert_response(test_address, (0xFC,))
+    await knx.assert_response("2/2/2", (0xFC,))
+    await knx.assert_response("3/3/3", (0xFC,))
+
+
 async def test_read(hass: HomeAssistant, knx: KNXTestKit):
     """Test `knx.read` service."""
     await knx.setup_integration({})
