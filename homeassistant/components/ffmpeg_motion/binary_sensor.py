@@ -12,7 +12,7 @@ from homeassistant.components.ffmpeg import (
     CONF_INITIAL_STATE,
     CONF_INPUT,
     FFmpegBase,
-    async_get_ffmpeg_manager,
+    get_ffmpeg_manager,
 )
 from homeassistant.const import CONF_NAME, CONF_REPEAT
 from homeassistant.core import callback
@@ -49,7 +49,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the FFmpeg binary motion sensor."""
-    manager = async_get_ffmpeg_manager(hass)
+    manager = get_ffmpeg_manager(hass)
     entity = FFmpegMotion(hass, manager, config)
     async_add_entities([entity])
 

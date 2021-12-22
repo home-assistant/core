@@ -8,10 +8,7 @@ from yarl import URL
 
 from homeassistant.components import ffmpeg
 from homeassistant.components.camera import SUPPORT_STREAM, Camera
-from homeassistant.components.ffmpeg import (
-    CONF_EXTRA_ARGUMENTS,
-    async_get_ffmpeg_manager,
-)
+from homeassistant.components.ffmpeg import CONF_EXTRA_ARGUMENTS, get_ffmpeg_manager
 from homeassistant.const import HTTP_BASIC_AUTHENTICATION
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
@@ -156,7 +153,7 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
         """Generate an HTTP MJPEG stream from the camera."""
         LOGGER.debug("Handling mjpeg stream from camera '%s'", self.device.name)
 
-        ffmpeg_manager = async_get_ffmpeg_manager(self.hass)
+        ffmpeg_manager = get_ffmpeg_manager(self.hass)
         stream = CameraMjpeg(ffmpeg_manager.binary)
 
         await stream.open_camera(
