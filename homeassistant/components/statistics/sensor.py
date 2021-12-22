@@ -101,6 +101,7 @@ STATS_BINARY_SUPPORT = (
 )
 
 CONF_STATE_CHARACTERISTIC = "state_characteristic"
+CONF_SOURCE_ATTRIBUTE = "attribute"
 CONF_SAMPLES_MAX_BUFFER_SIZE = "sampling_size"
 CONF_MAX_AGE = "max_age"
 CONF_PRECISION = "precision"
@@ -132,6 +133,7 @@ _PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
+        vol.Optional(CONF_SOURCE_ATTRIBUTE): cv.string,
         vol.Optional(CONF_STATE_CHARACTERISTIC, default=STAT_DEFAULT): vol.In(
             [
                 STAT_AVERAGE_LINEAR,
@@ -193,6 +195,7 @@ async def async_setup_platform(
                 source_entity_id=config[CONF_ENTITY_ID],
                 name=config[CONF_NAME],
                 unique_id=config.get(CONF_UNIQUE_ID),
+                source_attribute=config.get(CONF_SOURCE_ATTRIBUTE),
                 state_characteristic=config[CONF_STATE_CHARACTERISTIC],
                 samples_max_buffer_size=config[CONF_SAMPLES_MAX_BUFFER_SIZE],
                 samples_max_age=config.get(CONF_MAX_AGE),
@@ -213,6 +216,7 @@ class StatisticsSensor(SensorEntity):
         source_entity_id: str,
         name: str,
         unique_id: str | None,
+        source_attribute: str | None,
         state_characteristic: str,
         samples_max_buffer_size: int,
         samples_max_age: timedelta | None,
@@ -229,6 +233,7 @@ class StatisticsSensor(SensorEntity):
         self.is_binary: bool = (
             split_entity_id(self._source_entity_id)[0] == BINARY_SENSOR_DOMAIN
         )
+        self._source_attribute: str | None = source_attribute
         self._state_characteristic: str = state_characteristic
         if self._state_characteristic == STAT_DEFAULT:
             self._state_characteristic = STAT_COUNT if self.is_binary else STAT_MEAN
@@ -292,31 +297,47 @@ class StatisticsSensor(SensorEntity):
     def _add_state_to_queue(self, new_state: State) -> None:
         """Add the state to the queue."""
         self._available = new_state.state != STATE_UNAVAILABLE
-        if new_state.state == STATE_UNAVAILABLE:
+
+        if self._source_attribute:
+            new_state_value = new_state.attributes.get(self._source_attribute)
+            # TODO for review
+            # if self.states and new_state_value == self.states[-1]:
+            #     _LOGGER.debug(
+            #         "%s: Skipping state update for unchanged attribute value",
+            #         self.entity_id
+            #     )
+            #     return
+        else:
+            new_state_value = new_state.state
+
+        if new_state_value == STATE_UNAVAILABLE:
             self.attributes[STAT_SOURCE_VALUE_VALID] = None
             return
-        if new_state.state in (STATE_UNKNOWN, None):
+        if new_state_value in (STATE_UNKNOWN, None):
             self.attributes[STAT_SOURCE_VALUE_VALID] = False
             return
 
         try:
             if self.is_binary:
-                assert new_state.state in ("on", "off")
-                self.states.append(new_state.state == "on")
+                assert new_state_value in ("on", "off")
+                self.states.append(new_state_value == "on")
             else:
-                self.states.append(float(new_state.state))
+                self.states.append(float(new_state_value))  # type: ignore[arg-type]
             self.ages.append(new_state.last_updated)
             self.attributes[STAT_SOURCE_VALUE_VALID] = True
         except ValueError:
             self.attributes[STAT_SOURCE_VALUE_VALID] = False
             _LOGGER.error(
-                "%s: parsing error, expected number and received %s",
+                "%s: parsing error. Expected number or binary state, but received '%s'",
                 self.entity_id,
-                new_state.state,
+                new_state_value,
             )
             return
 
-        self._unit_of_measurement = self._derive_unit_of_measurement(new_state)
+        if self._source_attribute:
+            self._unit_of_measurement = None
+        else:
+            self._unit_of_measurement = self._derive_unit_of_measurement(new_state)
 
     def _derive_unit_of_measurement(self, new_state: State) -> str | None:
         base_unit: str | None = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)

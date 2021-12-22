@@ -229,6 +229,75 @@ async def test_sensor_source_with_force_update(hass: HomeAssistant):
     assert state_force.attributes.get("buffer_usage_ratio") == round(9 / 20, 2)
 
 
+async def test_state_from_attribute(hass: HomeAssistant):
+    """Test the optional access of a source sensor attribute for state."""
+    assert await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": [
+                {
+                    "platform": "statistics",
+                    "name": "test",
+                    "entity_id": "sensor.test_monitored",
+                    "attribute": "rssi_peer",
+                    "state_characteristic": "mean",
+                },
+                {
+                    "platform": "statistics",
+                    "name": "test_unchanged",
+                    "entity_id": "sensor.test_monitored_unchanged",
+                    "attribute": "rssi_peer",
+                    "state_characteristic": "mean",
+                },
+                {
+                    "platform": "statistics",
+                    "name": "test_invalid",
+                    "entity_id": "sensor.test_monitored",
+                    "attribute": "invalid",
+                    "state_characteristic": "mean",
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    for value in VALUES_NUMERIC:
+        hass.states.async_set(
+            "sensor.test_monitored",
+            str(value),
+            {
+                ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+                "rssi_peer": 2 * value,
+            },
+        )
+        hass.states.async_set(
+            "sensor.test_monitored_unchanged",
+            str(value),
+            {
+                ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+                "rssi_peer": 1,
+            },
+        )
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test")
+    assert state is not None
+    mean = sum(VALUES_NUMERIC) / len(VALUES_NUMERIC)
+    assert state.state == str(round(2 * mean, 2))
+    assert state and state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
+
+    state = hass.states.get("sensor.test_unchanged")
+    assert state is not None
+    assert state.state == str(1.0)
+    assert state.attributes.get("buffer_usage_ratio") == round(9 / 20, 2)
+
+    state = hass.states.get("sensor.test_invalid")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+
 async def test_sampling_size_non_default(hass: HomeAssistant):
     """Test rotation."""
     assert await async_setup_component(
