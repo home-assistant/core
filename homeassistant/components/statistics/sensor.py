@@ -421,18 +421,11 @@ class StatisticsSensor(SensorEntity):
     ) -> None:
         """Remove states which are older than or equal to given age. Keep at least min_samples."""
         now = dt_util.utcnow()
-
         while (
             self.ages
             and len(self.ages) > min_samples
             and (now - self.ages[0]) > max_age
         ):
-            _LOGGER.debug(
-                "%s: purging record with datetime %s(%s)",
-                self.entity_id,
-                dt_util.as_local(self.ages[0]),
-                (now - self.ages[0]),
-            )
             self.ages.popleft()
             self.states.popleft()
 
