@@ -110,16 +110,16 @@ async def test_light_turn_on_service(hass, mock_bridge_v2, v2_resources_test_dat
     assert test_light.attributes["color_mode"] == COLOR_MODE_COLOR_TEMP
     assert test_light.attributes["brightness"] == 255
 
-    # test again with sending transition
+    # test again with sending transition with 250ms which should round up to 300ms
     await hass.services.async_call(
         "light",
         "turn_on",
-        {"entity_id": test_light_id, "brightness_pct": 50, "transition": 6},
+        {"entity_id": test_light_id, "brightness_pct": 50, "transition": 0.25},
         blocking=True,
     )
     assert len(mock_bridge_v2.mock_requests) == 2
     assert mock_bridge_v2.mock_requests[1]["json"]["on"]["on"] is True
-    assert mock_bridge_v2.mock_requests[1]["json"]["dynamics"]["duration"] == 6000
+    assert mock_bridge_v2.mock_requests[1]["json"]["dynamics"]["duration"] == 300
 
     # test again with sending flash/alert
     await hass.services.async_call(
