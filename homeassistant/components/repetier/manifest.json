@@ -3,6 +3,6 @@
   "name": "Repetier-Server",
   "documentation": "https://www.home-assistant.io/integrations/repetier",
   "requirements": ["pyrepetierng==0.1.0"],
-  "codeowners": ["@MTrab"],
+  "codeowners": ["@MTrab", "@ShadowBr0ther"],
   "iot_class": "local_polling"
 }
