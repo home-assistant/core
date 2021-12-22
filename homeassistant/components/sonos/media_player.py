@@ -132,6 +132,7 @@ async def async_setup_entry(
     @callback
     def async_create_entities(speaker: SonosSpeaker) -> None:
         """Handle device discovery and create entities."""
+        _LOGGER.debug("Creating media_player on %s", speaker.zone_name)
         async_add_entities([SonosMediaPlayerEntity(speaker)])
 
     @service.verify_domain_control(hass, SONOS_DOMAIN)
