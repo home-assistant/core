@@ -69,12 +69,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for description in NUMBERS:
         try:
             current_value = await description.getter(inverter)
-            entities.append(
-                InverterNumberEntity(device_info, description, inverter, current_value),
-            )
         except InverterError:
             # Inverter model does not support this setting
             _LOGGER.debug("Could not read inverter setting %s", description.key)
+            continue
+
+        entities.append(
+            InverterNumberEntity(device_info, description, inverter, current_value),
+        )
 
     async_add_entities(entities)
 
