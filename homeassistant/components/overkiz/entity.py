@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Callable
 
-from pyoverkiz.enums import OverkizAttribute, OverkizCommandParam, OverkizState
+from pyoverkiz.enums import OverkizAttribute, OverkizState
 from pyoverkiz.models import Device
 
 from homeassistant.components.sensor import SensorEntityDescription
@@ -15,16 +15,9 @@ from .const import DOMAIN
 from .coordinator import OverkizDataUpdateCoordinator
 from .executor import OverkizExecutor
 
-BATTERY_MAP = {
-    OverkizCommandParam.FULL: 100,
-    OverkizCommandParam.NORMAL: 75,
-    OverkizCommandParam.LOW: 25,
-    OverkizCommandParam.VERY_LOW: 10,
-}
-
 
 class OverkizEntity(CoordinatorEntity):
-    """Representation of a Overkiz device entity."""
+    """Representation of an Overkiz device entity."""
 
     coordinator: OverkizDataUpdateCoordinator
 
@@ -80,6 +73,7 @@ class OverkizEntity(CoordinatorEntity):
             sw_version=self.executor.select_attribute(
                 OverkizAttribute.CORE_FIRMWARE_REVISION
             ),
+            hw_version=self.device.controllable_name,
             suggested_area=self.coordinator.areas[self.device.place_oid],
             via_device=self.executor.get_gateway_id(),
             configuration_url=self.coordinator.client.server.configuration_url,
