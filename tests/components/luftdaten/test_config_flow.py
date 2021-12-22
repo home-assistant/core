@@ -60,7 +60,7 @@ async def test_communication_error(hass: HomeAssistant) -> None:
     assert result2.get("step_id") == SOURCE_USER
     assert result2.get("errors") == {CONF_SENSOR_ID: "cannot_connect"}
 
-    with patch("luftdaten.Luftdaten.get_data", return_value=True), patch(
+    with patch("luftdaten.Luftdaten.get_data"), patch(
         "luftdaten.Luftdaten.validate_sensor", return_value=True
     ):
         result3 = await hass.config_entries.flow.async_configure(
@@ -99,7 +99,7 @@ async def test_invalid_sensor(hass: HomeAssistant) -> None:
     assert result2.get("errors") == {CONF_SENSOR_ID: "invalid_sensor"}
     assert "flow_id" in result2
 
-    with patch("luftdaten.Luftdaten.get_data", return_value=True), patch(
+    with patch("luftdaten.Luftdaten.get_data"), patch(
         "luftdaten.Luftdaten.validate_sensor", return_value=True
     ):
         result3 = await hass.config_entries.flow.async_configure(
