@@ -10,6 +10,7 @@ from aiohomekit.model.characteristics import Characteristic, CharacteristicsType
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.core import callback
+from homeassistant.helpers.entity import EntityCategory
 
 from . import KNOWN_DEVICES, CharacteristicEntity
 
@@ -18,11 +19,25 @@ NUMBER_ENTITIES: dict[str, NumberEntityDescription] = {
         key=CharacteristicsTypes.Vendor.VOCOLINC_HUMIDIFIER_SPRAY_LEVEL,
         name="Spray Quantity",
         icon="mdi:water",
+        entity_category=EntityCategory.CONFIG,
     ),
     CharacteristicsTypes.Vendor.EVE_DEGREE_ELEVATION: NumberEntityDescription(
         key=CharacteristicsTypes.Vendor.EVE_DEGREE_ELEVATION,
         name="Elevation",
         icon="mdi:elevation-rise",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    CharacteristicsTypes.Vendor.AQARA_GATEWAY_VOLUME: NumberEntityDescription(
+        key=CharacteristicsTypes.Vendor.AQARA_GATEWAY_VOLUME,
+        name="Volume",
+        icon="mdi:volume-high",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    CharacteristicsTypes.Vendor.AQARA_E1_GATEWAY_VOLUME: NumberEntityDescription(
+        key=CharacteristicsTypes.Vendor.AQARA_E1_GATEWAY_VOLUME,
+        name="Volume",
+        icon="mdi:volume-high",
+        entity_category=EntityCategory.CONFIG,
     ),
 }
 
@@ -56,6 +71,14 @@ class HomeKitNumber(CharacteristicEntity, NumberEntity):
         """Initialise a HomeKit number control."""
         self.entity_description = description
         super().__init__(conn, info, char)
+
+    @property
+    def name(self) -> str:
+        """Return the name of the device if any."""
+        prefix = ""
+        if name := super().name:
+            prefix = f"{name} -"
+        return f"{prefix} {self.entity_description.name}"
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity is tracking."""

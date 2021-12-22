@@ -14,7 +14,7 @@ import av
 
 from homeassistant.core import HomeAssistant
 
-from . import redact_credentials
+from . import KeyFrameConverter, redact_credentials
 from .const import (
     ATTR_SETTINGS,
     AUDIO_CODECS,
@@ -439,6 +439,7 @@ def stream_worker(
     source: str,
     options: dict[str, str],
     stream_state: StreamState,
+    keyframe_converter: KeyFrameConverter,
     quit_event: Event,
 ) -> None:
     """Handle consuming streams."""
@@ -453,6 +454,7 @@ def stream_worker(
         video_stream = container.streams.video[0]
     except (KeyError, IndexError) as ex:
         raise StreamWorkerError("Stream has no video") from ex
+    keyframe_converter.create_codec_context(codec_context=video_stream.codec_context)
     try:
         audio_stream = container.streams.audio[0]
     except (KeyError, IndexError):
@@ -474,7 +476,7 @@ def stream_worker(
 
     def is_video(packet: av.Packet) -> Any:
         """Return true if the packet is for the video stream."""
-        return packet.stream == video_stream
+        return packet.stream.type == "video"
 
     # Have to work around two problems with RTSP feeds in ffmpeg
     # 1 - first frame has bad pts/dts https://trac.ffmpeg.org/ticket/5018
@@ -535,3 +537,6 @@ def stream_worker(
                 raise StreamWorkerError("Error demuxing stream: %s" % str(ex)) from ex
 
             muxer.mux_packet(packet)
+
+            if packet.is_keyframe and is_video(packet):
+                keyframe_converter.packet = packet

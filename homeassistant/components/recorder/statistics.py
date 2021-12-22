@@ -30,6 +30,7 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.json import JSONEncoder
+from homeassistant.helpers.storage import STORAGE_DIR
 import homeassistant.util.dt as dt_util
 import homeassistant.util.pressure as pressure_util
 import homeassistant.util.temperature as temperature_util
@@ -368,8 +369,8 @@ def delete_duplicates(instance: Recorder, session: scoped_session) -> None:
 
     if non_identical_duplicates:
         isotime = dt_util.utcnow().isoformat()
-        backup_file_name = f".deleted_statistics/deleted_statistics.{isotime}.json"
-        backup_path = instance.hass.config.path(backup_file_name)
+        backup_file_name = f"deleted_statistics.{isotime}.json"
+        backup_path = instance.hass.config.path(STORAGE_DIR, backup_file_name)
 
         os.makedirs(os.path.dirname(backup_path), exist_ok=True)
         with open(backup_path, "w", encoding="utf8") as backup_file:

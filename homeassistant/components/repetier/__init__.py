@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
-import pyrepetier
+import pyrepetierng as pyrepetier
 import voluptuous as vol
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription

@@ -55,6 +55,7 @@ PySocks==1.7.1
 PyTransportNSW==0.1.1
 
 # homeassistant.components.camera
+# homeassistant.components.stream
 PyTurboJPEG==1.6.3
 
 # homeassistant.components.vicare
@@ -186,7 +187,7 @@ aioguardian==2021.11.0
 aioharmony==0.2.8
 
 # homeassistant.components.homekit_controller
-aiohomekit==0.6.4
+aiohomekit==0.6.10
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -1766,7 +1767,7 @@ pyrainbird==0.4.3
 pyrecswitch==1.0.2
 
 # homeassistant.components.repetier
-pyrepetier==3.0.5
+pyrepetierng==0.1.0
 
 # homeassistant.components.risco
 pyrisco==0.3.1
