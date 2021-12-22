@@ -1766,7 +1766,7 @@ pyrainbird==0.4.3
 pyrecswitch==1.0.2
 
 # homeassistant.components.repetier
-pyrepetier==3.0.5
+pyrepetierng==0.1.0
 
 # homeassistant.components.risco
 pyrisco==0.3.1
