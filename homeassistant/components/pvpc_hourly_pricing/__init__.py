@@ -162,10 +162,11 @@ class ElecPricesDataUpdateCoordinator(DataUpdateCoordinator[Mapping[datetime, fl
         now = dt_util.utcnow()
         try:
             prices = await self.api.async_update_prices(now)
-            if not prices:
-                raise UpdateFailed
-
-            self.api.process_state_and_attributes(now)
-            return prices
         except ClientError as err:
             raise UpdateFailed from err
+
+        if not prices:
+            raise UpdateFailed
+
+        self.api.process_state_and_attributes(now)
+        return prices
