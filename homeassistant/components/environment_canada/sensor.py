@@ -8,12 +8,7 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import ATTR_LOCATION
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    ALERT_TYPES,
-    ATTR_STATION,
-    DOMAIN,
-    SENSOR_TYPES,
-)
+from .const import ALERT_TYPES, ATTR_STATION, DOMAIN, SENSOR_TYPES
 
 ATTR_TIME = "alert time"
 
