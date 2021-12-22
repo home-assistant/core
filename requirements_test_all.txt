@@ -1450,7 +1450,7 @@ wolf_smartset==0.1.11
 xbox-webapi==2.0.11
 
 # homeassistant.components.knx
-xknx==0.18.14
+xknx==0.18.15
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz
