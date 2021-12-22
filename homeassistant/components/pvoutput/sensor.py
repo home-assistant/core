@@ -23,7 +23,6 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
-_ENDPOINT = "https://pvoutput.org/service/r2/getstatus.jsp"
 
 ATTR_ENERGY_GENERATION = "energy_generation"
 ATTR_POWER_GENERATION = "power_generation"
