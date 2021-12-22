@@ -4,12 +4,12 @@ from __future__ import annotations
 from collections import defaultdict
 from collections.abc import Callable
 from contextlib import suppress
+from dataclasses import dataclass, field
 from datetime import timedelta
 import logging
 import time
 from typing import Any, NamedTuple, cast
 
-import attr
 from huawei_lte_api.AuthorizedConnection import AuthorizedConnection
 from huawei_lte_api.Client import Client
 from huawei_lte_api.Connection import Connection
@@ -126,26 +126,28 @@ PLATFORMS = [
 ]
 
 
-@attr.s
+@dataclass
 class Router:
     """Class for router state."""
 
-    hass: HomeAssistant = attr.ib()
-    config_entry: ConfigEntry = attr.ib()
-    connection: Connection = attr.ib()
-    url: str = attr.ib()
+    hass: HomeAssistant
+    config_entry: ConfigEntry
+    connection: Connection
+    url: str
 
-    data: dict[str, Any] = attr.ib(init=False, factory=dict)
-    subscriptions: dict[str, set[str]] = attr.ib(
+    data: dict[str, Any] = field(default_factory=dict, init=False)
+    subscriptions: dict[str, set[str]] = field(
+        default_factory=lambda: defaultdict(
+            set, ((x, {"initial_scan"}) for x in ALL_KEYS)
+        ),
         init=False,
-        factory=lambda: defaultdict(set, ((x, {"initial_scan"}) for x in ALL_KEYS)),
     )
-    inflight_gets: set[str] = attr.ib(init=False, factory=set)
-    client: Client
-    suspended = attr.ib(init=False, default=False)
-    notify_last_attempt: float = attr.ib(init=False, default=-1)
+    inflight_gets: set[str] = field(default_factory=set, init=False)
+    client: Client = field(init=False)
+    suspended: bool = field(default=False, init=False)
+    notify_last_attempt: float = field(default=-1, init=False)
 
-    def __attrs_post_init__(self) -> None:
+    def __post_init__(self) -> None:
         """Set up internal state on init."""
         self.client = Client(self.connection)
 
@@ -608,14 +610,14 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     return True
 
 
-@attr.s
+@dataclass
 class HuaweiLteBaseEntity(Entity):
     """Huawei LTE entity base class."""
 
-    router: Router = attr.ib()
+    router: Router
 
-    _available: bool = attr.ib(init=False, default=True)
-    _unsub_handlers: list[Callable] = attr.ib(init=False, factory=list)
+    _available: bool = field(default=True, init=False)
+    _unsub_handlers: list[Callable] = field(default_factory=list, init=False)
 
     @property
     def _entity_name(self) -> str:

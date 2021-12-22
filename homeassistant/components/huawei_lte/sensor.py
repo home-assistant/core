@@ -3,11 +3,10 @@ from __future__ import annotations
 
 from bisect import bisect
 from collections.abc import Callable
+from dataclasses import dataclass, field
 import logging
 import re
 from typing import NamedTuple
-
-import attr
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
@@ -523,16 +522,16 @@ def format_default(value: StateType) -> tuple[StateType, str | None]:
     return value, unit
 
 
-@attr.s
+@dataclass
 class HuaweiLteSensor(HuaweiLteBaseEntity, SensorEntity):
     """Huawei LTE sensor entity."""
 
-    key: str = attr.ib()
-    item: str = attr.ib()
-    meta: SensorMeta = attr.ib()
+    key: str
+    item: str
+    meta: SensorMeta
 
-    _state: StateType = attr.ib(init=False, default=STATE_UNKNOWN)
-    _unit: str | None = attr.ib(init=False)
+    _state: StateType = field(default=STATE_UNKNOWN, init=False)
+    _unit: str | None = field(default=None, init=False)
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to needed data on add."""
