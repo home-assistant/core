@@ -313,6 +313,9 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             # an existing discovery since we can no longer
             # pair with it
             for progress in self._async_in_progress(include_uninitialized=True):
+                _LOGGER.warning(
+                    "Checking existing flows: %s - %s", progress, progress["context"]
+                )
                 if progress["context"].get("hkid") == hkid:
                     self.hass.config_entries.flow.async_abort(progress["flow_id"])
             return self.async_abort(reason="already_paired")
