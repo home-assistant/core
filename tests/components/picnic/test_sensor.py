@@ -2,7 +2,6 @@
 import copy
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Dict
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -331,26 +330,6 @@ async def test_sensors_last_order_in_future(picnic: PicnicTestData):
     )
 
 
-async def test_sensors_eta_date_malformed(picnic: PicnicTestData):
-    """Test sensor states when last order eta dates are malformed."""
-    # Set-up platform with default mock responses
-    await _setup_platform(picnic, use_default_responses=True)
-
-    # Set non-datetime strings as eta
-    eta_dates: Dict[str, str] = {
-        "start": "wrong-time",
-        "end": "other-malformed-datetime",
-    }
-    delivery_response = copy.deepcopy(DEFAULT_DELIVERY_RESPONSE)
-    delivery_response["eta2"] = eta_dates
-    picnic.api_client.get_deliveries.return_value = [delivery_response]
-    await _get_coordinator(picnic).async_refresh()
-
-    # Assert eta times are not available due to malformed date strings
-    _assert_sensor(picnic.hass, "sensor.picnic_last_order_eta_start", STATE_UNAVAILABLE)
-    _assert_sensor(picnic.hass, "sensor.picnic_last_order_eta_end", STATE_UNAVAILABLE)
-
-
 async def test_sensors_use_detailed_eta_if_available(picnic: PicnicTestData):
     """Test sensor states when last order is not yet delivered."""
     # Set-up platform with default mock responses
@@ -403,6 +382,24 @@ async def test_sensors_no_data(picnic: PicnicTestData):
     _assert_sensor(
         picnic.hass, "sensor.picnic_selected_slot_min_order_value", STATE_UNAVAILABLE
     )
+    _assert_sensor(picnic.hass, "sensor.picnic_last_order_eta_start", STATE_UNAVAILABLE)
+    _assert_sensor(picnic.hass, "sensor.picnic_last_order_eta_end", STATE_UNAVAILABLE)
+    _assert_sensor(
+        picnic.hass, "sensor.picnic_last_order_delivery_time", STATE_UNAVAILABLE
+    )
+
+
+async def test_sensors_malformed_delivery_data(picnic: PicnicTestData):
+    """Test sensor states when the delivery api returns not a list."""
+    # Setup platform with default responses
+    await _setup_platform(picnic, use_default_responses=True)
+
+    # Change mock responses to empty data and refresh the coordinator
+    picnic.api_client.get_deliveries.return_value = {"error": "message"}
+    await _get_coordinator(picnic).async_refresh()
+
+    # Assert all last-order sensors have STATE_UNAVAILABLE because the delivery info fetch failed
+    assert _get_coordinator(picnic).last_update_success is True
     _assert_sensor(picnic.hass, "sensor.picnic_last_order_eta_start", STATE_UNAVAILABLE)
     _assert_sensor(picnic.hass, "sensor.picnic_last_order_eta_end", STATE_UNAVAILABLE)
     _assert_sensor(
