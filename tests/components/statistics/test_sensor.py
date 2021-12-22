@@ -942,7 +942,7 @@ async def test_initialize_from_database_with_maxage(hass: HomeAssistant):
 
     # Testing correct retrieval from recorder, thus we do not
     # want purging to occur within the class itself.
-    def mock_purge(self, *args):
+    def mock_purge(self, *args, **kwargs):
         return
 
     # enable and pre-fill the recorder

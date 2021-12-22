@@ -35,7 +35,7 @@ from homeassistant.core import (
     callback,
     split_entity_id,
 )
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
     async_track_point_in_utc_time,
@@ -106,6 +106,10 @@ CONF_MAX_AGE = "max_age"
 CONF_PRECISION = "precision"
 CONF_QUANTILE_INTERVALS = "quantile_intervals"
 CONF_QUANTILE_METHOD = "quantile_method"
+
+SERVICE_RESET_BUFFER = "reset_buffer"
+SERVICE_RESET_ATTR_KEEP_COUNT = "keep_count"
+SERVICE_RESET_ATTR_KEEP_AGE = "keep_age"
 
 DEFAULT_NAME = "Stats"
 DEFAULT_BUFFER_SIZE = 20
@@ -202,6 +206,19 @@ async def async_setup_platform(
             )
         ],
         update_before_add=True,
+    )
+
+    platform = entity_platform.async_get_current_platform()
+
+    platform.async_register_entity_service(
+        SERVICE_RESET_BUFFER,
+        {
+            vol.Optional(SERVICE_RESET_ATTR_KEEP_COUNT): vol.All(
+                vol.Coerce(int), vol.Range(min=0)
+            ),
+            vol.Optional(SERVICE_RESET_ATTR_KEEP_AGE): cv.time_period,
+        },
+        StatisticsSensor.reset_buffer.__name__,
     )
 
 
@@ -390,8 +407,21 @@ class StatisticsSensor(SensorEntity):
             key: value for key, value in self.attributes.items() if value is not None
         }
 
-    def _purge_old_states(self, max_age: timedelta) -> None:
-        """Remove states which are older than a given age."""
+    def reset_buffer(
+        self, keep_count: int = 0, keep_age: timedelta | int = timedelta(0)
+    ) -> None:
+        """Remove states, optionally keep latest according to count and/or age."""
+        if isinstance(keep_age, int):
+            keep_age = timedelta(seconds=keep_age)
+        self._purge_old_states(min_samples=keep_count, max_age=keep_age)
+        self._update_attributes()
+        self._update_value()
+        self.async_schedule_update_ha_state(True)
+
+    def _purge_old_states(
+        self, *, min_samples: int = 0, max_age: timedelta = timedelta(0)
+    ) -> None:
+        """Remove states which are older than a given age. Keep at least min_samples."""
         now = dt_util.utcnow()
 
         _LOGGER.debug(
@@ -401,7 +431,11 @@ class StatisticsSensor(SensorEntity):
             self._samples_max_age,
         )
 
-        while self.ages and (now - self.ages[0]) > max_age:
+        while (
+            self.ages
+            and len(self.ages) > min_samples
+            and (now - self.ages[0]) > max_age
+        ):
             _LOGGER.debug(
                 "%s: purging record with datetime %s(%s)",
                 self.entity_id,
@@ -424,7 +458,7 @@ class StatisticsSensor(SensorEntity):
         """Get the latest data and updates the states."""
         _LOGGER.debug("%s: updating statistics", self.entity_id)
         if self._samples_max_age is not None:
-            self._purge_old_states(self._samples_max_age)
+            self._purge_old_states(max_age=self._samples_max_age)
 
         self._update_attributes()
         self._update_value()

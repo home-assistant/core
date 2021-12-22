@@ -1,3 +1,38 @@
 reload:
   name: Reload
   description: Reload all statistics entities.
+
+reset_buffer:
+  name: Reset buffer
+  description: >-
+    Remove stored state values from a statistics sensor.
+    By default, all values will be forgotten, which leads to a temporarily unknown state for most statistical characteristics.
+    In case both "keep count" and "keep age" are provided, values are kept which meet one of the two conditions.
+  target:
+    entity:
+      # integration: statistics
+      domain: sensor
+  fields:
+    keep_count:
+      name: Keep count
+      description: Number of most recent state values to be kept in memory. Defaults to 0.
+      required: false
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 9999
+          mode: box
+    keep_age:
+      name: Keep age
+      description: >-
+        Maximum age of most recent state values to be kept in memory.
+        Defaults to 0 and can be given in number of seconds in UI mode or alternatively in YAML mode as a time period (e.g. 'seconds: 60').
+      required: false
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 86400
+          mode: box
+          unit_of_measurement: "s"
