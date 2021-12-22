@@ -4,7 +4,6 @@ from datetime import date, datetime, timedelta
 import logging
 
 from pytrafikverket import TrafikverketTrain
-from pytz import timezone
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -15,6 +14,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_WEEKDAY, WEEKDAYS
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.dt import get_time_zone
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -130,7 +130,7 @@ class TrainSensor(SensorEntity):
         self._state = None
         self._departure_state = None
         self._delay_in_minutes = None
-        self._timezone = timezone("Europe/Stockholm")
+        self._timezone = get_time_zone("Europe/Stockholm")
 
     async def async_update(self):
         """Retrieve latest state."""
@@ -167,16 +167,26 @@ class TrainSensor(SensorEntity):
             deviations = ", ".join(state.deviations)
         if self._delay_in_minutes is not None:
             self._delay_in_minutes = self._delay_in_minutes.total_seconds() / 60
-        return {
+        attributelist = {
             ATTR_DEPARTURE_STATE: self._departure_state,
             ATTR_CANCELED: state.canceled,
             ATTR_DELAY_TIME: self._delay_in_minutes,
-            ATTR_PLANNED_TIME: state.advertised_time_at_location,
-            ATTR_ESTIMATED_TIME: state.estimated_time_at_location,
-            ATTR_ACTUAL_TIME: state.time_at_location,
             ATTR_OTHER_INFORMATION: other_information,
             ATTR_DEVIATIONS: deviations,
         }
+        if state.advertised_time_at_location:
+            attributelist[
+                ATTR_PLANNED_TIME
+            ] = state.advertised_time_at_location.astimezone(self._timezone)
+        if state.estimated_time_at_location:
+            attributelist[
+                ATTR_ESTIMATED_TIME
+            ] = state.estimated_time_at_location.astimezone(self._timezone)
+        if state.time_at_location:
+            attributelist[ATTR_ACTUAL_TIME] = (
+                state.time_at_location.astimezone(self._timezone),
+            )
+        return attributelist
 
     @property
     def name(self):
@@ -193,8 +203,8 @@ class TrainSensor(SensorEntity):
         """Return the departure state."""
         if (state := self._state) is not None:
             if state.time_at_location is not None:
-                return self._timezone.localize(state.time_at_location)
+                return state.time_at_location.astimezone(self._timezone)
             if state.estimated_time_at_location is not None:
-                return self._timezone.localize(state.estimated_time_at_location)
-            return self._timezone.localize(state.advertised_time_at_location)
+                return state.estimated_time_at_location.astimezone(self._timezone)
+            return state.advertised_time_at_location.astimezone(self._timezone)
         return None
