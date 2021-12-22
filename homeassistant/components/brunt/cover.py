@@ -101,7 +101,7 @@ class BruntDevice(CoordinatorEntity, CoverEntity):
         self._remove_update_listener = None
 
         self._attr_name = self._thing.name
-        self._attr_device_class = CoverDeviceClass.SHADE
+        self._attr_device_class = CoverDeviceClass.BLIND
         self._attr_supported_features = COVER_FEATURES
         self._attr_attribution = ATTRIBUTION
         self._attr_device_info = DeviceInfo(
