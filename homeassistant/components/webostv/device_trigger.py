@@ -82,10 +82,10 @@ async def async_attach_trigger(
             }
         }
 
-        device = device_reg.async_get(config[CONF_DEVICE_ID])
-        wrapper: WebOsClientWrapper | None
-        for config_entry_id in device.config_entries:
-            if wrapper := hass.data[DOMAIN][DATA_CONFIG_ENTRY].get(config_entry_id):
-                return wrapper.turn_on.async_attach(action, variables)
+        if device := device_reg.async_get(config[CONF_DEVICE_ID]):
+            wrapper: WebOsClientWrapper | None
+            for config_entry_id in device.config_entries:
+                if wrapper := hass.data[DOMAIN][DATA_CONFIG_ENTRY].get(config_entry_id):
+                    return wrapper.turn_on.async_attach(action, variables)
 
     return None
