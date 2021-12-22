@@ -75,10 +75,9 @@ class HomeKitNumber(CharacteristicEntity, NumberEntity):
     @property
     def name(self) -> str:
         """Return the name of the device if any."""
-        prefix = ""
-        if name := super().name:
-            prefix = f"{name} -"
-        return f"{prefix} {self.entity_description.name}"
+        if prefix := super().name:
+            return f"{prefix} {self.entity_description.name}"
+        return self.entity_description.name
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity is tracking."""
