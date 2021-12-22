@@ -73,7 +73,7 @@ SENSOR_TYPES: dict[str, BMWSensorEntityDescription] = {
         unit_metric=LENGTH_KILOMETERS,
         unit_imperial=LENGTH_MILES,
         value=lambda x, hass: round(
-            hass.config.units.length(x[0], UNIT_MAP.get(x[1], x[1]))
+            hass.config.units.length(x[0], UNIT_MAP.get(x[1], x[1])), 2
         ),
     ),
     "remaining_range_total": BMWSensorEntityDescription(
@@ -82,7 +82,7 @@ SENSOR_TYPES: dict[str, BMWSensorEntityDescription] = {
         unit_metric=LENGTH_KILOMETERS,
         unit_imperial=LENGTH_MILES,
         value=lambda x, hass: round(
-            hass.config.units.length(x[0], UNIT_MAP.get(x[1], x[1]))
+            hass.config.units.length(x[0], UNIT_MAP.get(x[1], x[1])), 2
         ),
     ),
     "remaining_range_electric": BMWSensorEntityDescription(
@@ -91,7 +91,7 @@ SENSOR_TYPES: dict[str, BMWSensorEntityDescription] = {
         unit_metric=LENGTH_KILOMETERS,
         unit_imperial=LENGTH_MILES,
         value=lambda x, hass: round(
-            hass.config.units.length(x[0], UNIT_MAP.get(x[1], x[1]))
+            hass.config.units.length(x[0], UNIT_MAP.get(x[1], x[1])), 2
         ),
     ),
     "remaining_range_fuel": BMWSensorEntityDescription(
@@ -100,7 +100,7 @@ SENSOR_TYPES: dict[str, BMWSensorEntityDescription] = {
         unit_metric=LENGTH_KILOMETERS,
         unit_imperial=LENGTH_MILES,
         value=lambda x, hass: round(
-            hass.config.units.length(x[0], UNIT_MAP.get(x[1], x[1]))
+            hass.config.units.length(x[0], UNIT_MAP.get(x[1], x[1])), 2
         ),
     ),
     "remaining_fuel": BMWSensorEntityDescription(
@@ -109,7 +109,7 @@ SENSOR_TYPES: dict[str, BMWSensorEntityDescription] = {
         unit_metric=VOLUME_LITERS,
         unit_imperial=VOLUME_GALLONS,
         value=lambda x, hass: round(
-            hass.config.units.volume(x[0], UNIT_MAP.get(x[1], x[1]))
+            hass.config.units.volume(x[0], UNIT_MAP.get(x[1], x[1])), 2
         ),
     ),
     "fuel_percent": BMWSensorEntityDescription(
