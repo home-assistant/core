@@ -136,7 +136,9 @@ class TrainSensor(SensorEntity):
         """Retrieve latest state."""
         if self._time is not None:
             departure_day = next_departuredate(self._weekday)
-            when = self._timezone.localize(datetime.combine(departure_day, self._time))
+            when = datetime.combine(departure_day, self._time).astimezone(
+                self._timezone
+            )
             try:
                 self._state = await self._train_api.async_get_train_stop(
                     self._from_station, self._to_station, when
