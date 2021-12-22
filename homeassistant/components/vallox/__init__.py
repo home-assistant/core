@@ -188,8 +188,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 warned_once = True
 
             await asyncio.sleep(INITIAL_COORDINATOR_UPDATE_RETRY_INTERVAL_SECONDS)
-
-        if hass.state != CoreState.running:
+        else:
             return
 
         hass.async_create_task(async_load_platform(hass, "sensor", DOMAIN, {}, config))
