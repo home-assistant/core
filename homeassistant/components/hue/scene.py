@@ -96,8 +96,8 @@ class HueSceneEntity(HueBaseEntity, SceneEntity):
         """Activate Hue scene."""
         transition = kwargs.get("transition")
         if transition is not None:
-            # hue transition duration is in milliseconds
-            transition = int(transition * 1000)
+            # hue transition duration is in milliseconds and round to 100ms steps
+            transition = int(round(transition, 1) * 1000)
         dynamic = kwargs.get("dynamic", self.is_dynamic)
         await self.bridge.async_request_call(
             self.controller.recall,
