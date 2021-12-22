@@ -70,6 +70,8 @@ class ElecPriceSensor(CoordinatorEntity, SensorEntity):
             manufacturer="REE",
             name="PVPC (REData API)",
         )
+        self._state: StateType = None
+        self._attrs: Mapping[str, Any] = {}
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
@@ -97,9 +99,11 @@ class ElecPriceSensor(CoordinatorEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self.coordinator.api.state
+        self._state = self.coordinator.api.state
+        return self._state
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes."""
-        return self.coordinator.api.attributes
+        self._attrs = {**self.coordinator.api.attributes}
+        return self._attrs
