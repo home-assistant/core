@@ -8,9 +8,10 @@
   "codeowners": ["@allenporter"],
   "quality_scale": "platinum",
   "dhcp": [
-    {
-      "macaddress": "18B430*"
-    }
+    { "macaddress": "18B430*" },
+    { "macaddress": "641666*" },
+    { "macaddress": "D8EB46*" },
+    { "macaddress": "1C53F9*" }
   ],
   "iot_class": "cloud_push"
 }
