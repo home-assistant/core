@@ -1,9 +1,9 @@
 """Support for AVM Fritz!Box functions."""
 import logging
-from requests import exceptions
 
 from fritzconnection.core.exceptions import FritzConnectionException, FritzSecurityError
 from fritzconnection.core.logger import fritzlogger
+from requests import exceptions
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
