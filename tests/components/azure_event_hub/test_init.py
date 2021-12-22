@@ -107,7 +107,7 @@ async def test_send_batch_error(hass, entry_with_one_event, mock_send_batch):
 async def test_late_event(hass, entry_with_one_event, mock_create_batch):
     """Test the check on late events."""
     with patch(
-        f"{AZURE_EVENT_HUB_PATH}.hub.utcnow",
+        f"{AZURE_EVENT_HUB_PATH}.utcnow",
         return_value=utcnow() + timedelta(hours=1),
     ):
         async_fire_time_changed(
