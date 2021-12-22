@@ -221,6 +221,8 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
             return self.async_abort(reason="invalid_properties")
 
+        _LOGGER.warning("HKC ZC discovery 2: %s", discovery_info)
+
         # The hkid is a unique random number that looks like a pairing code.
         # It changes if a device is factory reset.
         hkid = properties[zeroconf.ATTR_PROPERTIES_ID]
@@ -230,6 +232,8 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         name = discovery_info.name.replace("._hap._tcp.local.", "")
         status_flags = int(properties["sf"])
         paired = not status_flags & 0x01
+
+        _LOGGER.warning("HKC ZC discovery 3: %s", discovery_info)
 
         # The configuration number increases every time the characteristic map
         # needs updating. Some devices use a slightly off-spec name so handle
@@ -241,6 +245,8 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 "HomeKit device %s: c# not exposed, in violation of spec", hkid
             )
             config_num = None
+
+        _LOGGER.warning("HKC ZC discovery 4: %s", discovery_info)
 
         # Set unique-id and error out if it's already configured
         existing_entry = await self.async_set_unique_id(normalize_hkid(hkid))
