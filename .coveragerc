@@ -607,7 +607,6 @@ omit =
     homeassistant/components/lookin/climate.py
     homeassistant/components/lookin/media_player.py
     homeassistant/components/luci/device_tracker.py
-    homeassistant/components/luftdaten/__init__.py
     homeassistant/components/luftdaten/sensor.py
     homeassistant/components/lupusec/*
     homeassistant/components/lutron/*
