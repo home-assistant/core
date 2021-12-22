@@ -42,7 +42,12 @@ async def test_form(hass: HomeAssistant) -> None:
         "password": "test-password",
         "region": 1,
         "brand": 1,
-        "token": {"vehicle_name": "kia niro", "key": "value"},
+        "pin": "",
+        "token": {
+            "key": "value",
+            "valid_until": "1-01-01 00:00:00.000000",
+            "vehicle_name": "kia niro",
+        },
     }
     assert len(mock_setup_entry.mock_calls) == 1
 

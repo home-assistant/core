@@ -410,6 +410,7 @@ homeassistant/components/hydrawise/* @ptcryan
 homeassistant/components/hyperion/* @dermotduffy
 tests/components/hyperion/* @dermotduffy
 homeassistant/components/hyundai_kia_connect/* @fuatakgun @cdnninja
+tests/components/hyundai_kia_connect/* @fuatakgun @cdnninja
 homeassistant/components/ialarm/* @RyuzakiKK
 tests/components/ialarm/* @RyuzakiKK
 homeassistant/components/iammeter/* @lewei50
