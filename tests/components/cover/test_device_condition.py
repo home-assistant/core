@@ -138,7 +138,7 @@ async def test_get_condition_capabilities(
     assert len(conditions) == 4
     for condition in conditions:
         capabilities = await async_get_device_automation_capabilities(
-            hass, "condition", condition
+            hass, DeviceAutomationType.CONDITION, condition
         )
         assert capabilities == {"extra_fields": []}
 
@@ -189,7 +189,7 @@ async def test_get_condition_capabilities_set_pos(
     assert len(conditions) == 5
     for condition in conditions:
         capabilities = await async_get_device_automation_capabilities(
-            hass, "condition", condition
+            hass, DeviceAutomationType.CONDITION, condition
         )
         if condition["type"] == "is_position":
             assert capabilities == expected_capabilities
@@ -243,7 +243,7 @@ async def test_get_condition_capabilities_set_tilt_pos(
     assert len(conditions) == 5
     for condition in conditions:
         capabilities = await async_get_device_automation_capabilities(
-            hass, "condition", condition
+            hass, DeviceAutomationType.CONDITION, condition
         )
         if condition["type"] == "is_tilt_position":
             assert capabilities == expected_capabilities

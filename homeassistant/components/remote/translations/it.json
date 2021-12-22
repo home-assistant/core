@@ -3,7 +3,7 @@
         "action_type": {
             "toggle": "Commuta {entity_name}",
             "turn_off": "Disattivare {entity_name}",
-            "turn_on": "Attivare {entity_name}"
+            "turn_on": "Attiva {entity_name}"
         },
         "condition_type": {
             "is_off": "{entity_name} \u00e8 spento",

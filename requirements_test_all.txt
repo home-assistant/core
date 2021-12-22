@@ -152,7 +152,7 @@ aiolyric==1.0.8
 aiomodernforms==0.1.8
 
 # homeassistant.components.yamaha_musiccast
-aiomusiccast==0.14.2
+aiomusiccast==0.14.3
 
 # homeassistant.components.nanoleaf
 aionanoleaf==0.1.1
@@ -1184,7 +1184,7 @@ python-twitch-client==0.6.0
 python_awair==0.2.1
 
 # homeassistant.components.tile
-pytile==5.2.4
+pytile==2021.12.0
 
 # homeassistant.components.traccar
 pytraccar==0.10.0
@@ -1306,7 +1306,7 @@ smarthab==0.21
 smhi-pkg==1.0.15
 
 # homeassistant.components.sonos
-soco==0.25.0
+soco==0.25.1
 
 # homeassistant.components.solaredge
 solaredge==0.0.2
@@ -1465,7 +1465,7 @@ wolf_smartset==0.1.11
 xbox-webapi==2.0.11
 
 # homeassistant.components.knx
-xknx==0.18.14
+xknx==0.18.15
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz

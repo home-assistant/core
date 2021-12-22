@@ -34,7 +34,7 @@
                     "exchange_base": "Valuta di base per i sensori di tasso di cambio.",
                     "exchange_rate_currencies": "Tassi di cambio da segnalare."
                 },
-                "description": "Regolare le opzioni di Coinbase"
+                "description": "Regola le opzioni di Coinbase"
             }
         }
     }

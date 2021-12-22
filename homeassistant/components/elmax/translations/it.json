@@ -17,7 +17,7 @@
                     "panel_name": "Nome del pannello",
                     "panel_pin": "Codice PIN"
                 },
-                "description": "Seleziona quale pannello vuoi controllare con questa integrazione. Si prega di notare che il pannello deve essere acceso per essere configurato.",
+                "description": "Seleziona quale pannello vuoi controllare con questa integrazione. Nota che il pannello deve essere acceso per essere configurato.",
                 "title": "Selezione del pannello"
             },
             "user": {
