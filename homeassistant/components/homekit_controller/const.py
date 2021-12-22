@@ -47,6 +47,7 @@ HOMEKIT_ACCESSORY_DISPATCH = {
 }
 
 CHARACTERISTIC_PLATFORMS = {
+    CharacteristicsTypes.Vendor.AQARA_GATEWAY_VOLUME: "number",
     CharacteristicsTypes.Vendor.EVE_ENERGY_WATT: "sensor",
     CharacteristicsTypes.Vendor.EVE_DEGREE_AIR_PRESSURE: "sensor",
     CharacteristicsTypes.Vendor.EVE_DEGREE_ELEVATION: "number",
