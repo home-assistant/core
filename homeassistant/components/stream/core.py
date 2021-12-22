@@ -364,11 +364,6 @@ class KeyFrameConverter:
     """
     Generate and hold the keyframe as a jpeg.
 
-    Each of the functions here is only run once at any time per instance.
-        create_codec_context is run in the worker thread
-        get_image is called from the main thread and obtains the instance lock
-        _generate_image is called by get_image and run in an executor thread
-
     An overview of the thread and state interaction:
         the worker thread sets a packet
         at any time, main loop can run a get_image call
@@ -394,7 +389,11 @@ class KeyFrameConverter:
         self._codec_context: CodecContext | None = None
 
     def create_codec_context(self, codec_context: CodecContext) -> None:
-        """Create a codec context to be used for decoding the keyframes."""
+        """
+        Create a codec context to be used for decoding the keyframes.
+
+        This is run by the worker thread and will only be called once.
+        """
 
         # Keep import here so that we can import stream integration without installing reqs
         # pylint: disable=import-outside-toplevel
@@ -406,7 +405,14 @@ class KeyFrameConverter:
         self._codec_context.thread_type = "NONE"
 
     def _generate_image(self, width: int | None, height: int | None) -> None:
-        """Generate the keyframe image."""
+        """
+        Generate the keyframe image.
+
+        This is run in an executor thread, but since it is called within an
+        the asyncio lock from the main thread, there will only be one entry
+        at a time per instance.
+        """
+
         if not (self._turbojpeg and self.packet and self._codec_context):
             return
         packet = self.packet
@@ -430,6 +436,7 @@ class KeyFrameConverter:
         height: int | None = None,
     ) -> bytes | None:
         """Fetch an image from the Stream and return it as a jpeg in bytes."""
+
         # Use a lock to ensure only one thread is working on the keyframe at a time
         async with self._lock:
             await self._hass.async_add_executor_job(self._generate_image, width, height)
