@@ -17,7 +17,7 @@ DEFAULT_HUB: Final = "somfy_europe"
 UPDATE_INTERVAL: Final = timedelta(seconds=30)
 UPDATE_INTERVAL_ALL_ASSUMED_STATE: Final = timedelta(minutes=60)
 
-SUPPORTED_PLATFORMS: list[Platform] = [
+PLATFORMS: list[Platform] = [
     Platform.SENSOR,
 ]
 

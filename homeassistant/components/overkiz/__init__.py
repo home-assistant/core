@@ -20,7 +20,7 @@ from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from .const import (
     CONF_HUB,
     DOMAIN,
-    SUPPORTED_PLATFORMS,
+    PLATFORMS,
     UPDATE_INTERVAL,
     UPDATE_INTERVAL_ALL_ASSUMED_STATE,
 )
@@ -87,7 +87,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             device,
         )
 
-    hass.config_entries.async_setup_platforms(entry, SUPPORTED_PLATFORMS)
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     device_registry = await dr.async_get_registry(hass)
 
@@ -110,11 +110,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
 
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        entry, SUPPORTED_PLATFORMS
-    )
-
-    if unload_ok:
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
