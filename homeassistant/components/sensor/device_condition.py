@@ -6,7 +6,6 @@ import voluptuous as vol
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
-from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import CONF_ABOVE, CONF_BELOW, CONF_ENTITY_ID, CONF_TYPE
 from homeassistant.core import HomeAssistant, HomeAssistantError, callback
 from homeassistant.helpers import condition, config_validation as cv
@@ -17,7 +16,7 @@ from homeassistant.helpers.entity_registry import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from . import DOMAIN
+from . import DOMAIN, SensorDeviceClass
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
