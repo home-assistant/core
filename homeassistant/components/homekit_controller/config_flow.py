@@ -223,6 +223,8 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # The hkid is a unique random number that looks like a pairing code.
         # It changes if a device is factory reset.
         hkid = properties[zeroconf.ATTR_PROPERTIES_ID]
+        self.context["hkid"] = hkid
+
         model = properties["md"]
         name = discovery_info.name.replace("._hap._tcp.local.", "")
         status_flags = int(properties["sf"])
@@ -303,11 +305,15 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # Set unique-id and error out if it's already configured
         self._abort_if_unique_id_configured(updates=updated_ip_port)
 
-        self.context["hkid"] = hkid
-
         if paired:
             # Device is paired but not to us - ignore it
             _LOGGER.debug("HomeKit device %s ignored as already paired", hkid)
+            # If the device gets paired, we want to dismiss
+            # an existing discovery since we can no longer
+            # pair with it
+            for progress in self._async_in_progress(include_uninitialized=True):
+                if progress["context"].get("hkid") == hkid:
+                    self.hass.config_entries.flow.async_abort(progress["flow_id"])
             return self.async_abort(reason="already_paired")
 
         # Devices in HOMEKIT_IGNORE have native local integrations - users
