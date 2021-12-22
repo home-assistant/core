@@ -45,15 +45,6 @@ from .const import (
     WEBOSTV_EXCEPTIONS,
 )
 
-from .const import (
-    ATTR_PAYLOAD,
-    ATTR_SOUND_OUTPUT,
-    CONF_ON_ACTION,
-    CONF_SOURCES,
-    DOMAIN,
-    LIVE_TV_APP_ID,
-)
-
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_WEBOSTV = (

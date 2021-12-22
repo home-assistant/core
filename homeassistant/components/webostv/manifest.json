@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/webostv",
   "requirements": ["aiopylgtv==0.4.0"],
-  "codeowners": ["@bendavid", "@thecode"],
+  "codeowners": ["@bendavid"],
   "ssdp": [{
     "manufacturer": "LG Electronics.",
     "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1"

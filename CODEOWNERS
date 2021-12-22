@@ -1019,8 +1019,8 @@ homeassistant/components/watttime/* @bachya
 tests/components/watttime/* @bachya
 homeassistant/components/weather/* @fabaff
 tests/components/weather/* @fabaff
-homeassistant/components/webostv/* @bendavid @thecode
-tests/components/webostv/* @bendavid @thecode
+homeassistant/components/webostv/* @bendavid
+tests/components/webostv/* @bendavid
 homeassistant/components/websocket_api/* @home-assistant/core
 tests/components/websocket_api/* @home-assistant/core
 homeassistant/components/wemo/* @esev
