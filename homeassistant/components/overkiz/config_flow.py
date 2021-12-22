@@ -49,6 +49,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 gateway_id = gateways[0].id
                 await self.async_set_unique_id(gateway_id)
 
+            self._abort_if_unique_id_configured()
+
             return self.async_create_entry(title=username, data=user_input)
 
     async def async_step_user(
