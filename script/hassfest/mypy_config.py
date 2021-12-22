@@ -67,7 +67,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.litejet.*",
     "homeassistant.components.litterrobot.*",
     "homeassistant.components.lovelace.*",
-    "homeassistant.components.luftdaten.*",
     "homeassistant.components.lutron_caseta.*",
     "homeassistant.components.lyric.*",
     "homeassistant.components.melcloud.*",

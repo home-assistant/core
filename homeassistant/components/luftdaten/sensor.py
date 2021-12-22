@@ -1,6 +1,8 @@
 """Support for Luftdaten sensors."""
 from __future__ import annotations
 
+from typing import cast
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -131,4 +133,4 @@ class LuftdatenSensor(CoordinatorEntity, SensorEntity):
             or (value := self.coordinator.data.get(self.entity_description.key)) is None
         ):
             return None
-        return value
+        return cast(float, value)
