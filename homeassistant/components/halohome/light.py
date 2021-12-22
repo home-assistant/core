@@ -30,7 +30,7 @@ class HaloLight(LightEntity):
     _attr_supported_color_modes = {COLOR_MODE_COLOR_TEMP}
     _attr_color_mode = COLOR_MODE_COLOR_TEMP
 
-    def __init__(self, device: halohome.Device):
+    def __init__(self, device: halohome.Device) -> None:
         """Create a new HaloLight object."""
         self._device = device
         self._attr_is_on = False
