@@ -1,6 +1,9 @@
 """The test for the statistics sensor platform."""
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 import statistics
+from typing import Any, Sequence
 from unittest.mock import patch
 
 from homeassistant import config as hass_config
@@ -385,6 +388,153 @@ async def test_age_limit_expiry(hass: HomeAssistant):
         assert state.attributes.get("age_coverage_ratio") is None
 
 
+async def test_reset_service(hass: HomeAssistant):
+    """Test correct function of the reset service 'statistics.reset_buffer'."""
+    now = dt_util.utcnow()
+    mock_data = {
+        "return_time": datetime(now.year + 1, 8, 2, 12, 23, tzinfo=dt_util.UTC)
+    }
+
+    def mock_now():
+        return mock_data["return_time"]
+
+    with patch(
+        "homeassistant.components.statistics.sensor.dt_util.utcnow", new=mock_now
+    ):
+        assert await async_setup_component(
+            hass,
+            "sensor",
+            {
+                "sensor": [
+                    {
+                        "platform": "statistics",
+                        "name": "test",
+                        "entity_id": "sensor.test_monitored",
+                        "state_characteristic": "mean",
+                    },
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+
+        for value in VALUES_NUMERIC:
+            mock_data["return_time"] += timedelta(minutes=1)
+            async_fire_time_changed(hass, mock_data["return_time"])
+            hass.states.async_set(
+                "sensor.test_monitored",
+                str(value),
+                {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+            )
+        await hass.async_block_till_done()
+
+        # High keep_count prevents any purging
+        await hass.services.async_call(
+            domain=STATISTICS_DOMAIN,
+            service="reset_buffer",
+            service_data={
+                "entity_id": "sensor.test",
+                "keep_count": 999,
+                "keep_age": 1,
+            },
+            blocking=True,
+        )
+
+        state = hass.states.get("sensor.test")
+        assert state is not None
+        assert state.attributes.get("buffer_usage_ratio") == round(9 / 20, 2)
+
+        # High keep_age prevents any purging
+        await hass.services.async_call(
+            domain=STATISTICS_DOMAIN,
+            service="reset_buffer",
+            service_data={
+                "entity_id": "sensor.test",
+                "keep_count": 1,
+                "keep_age": 999,
+            },
+            blocking=True,
+        )
+
+        state = hass.states.get("sensor.test")
+        assert state is not None
+        assert state.attributes.get("buffer_usage_ratio") == round(9 / 20, 2)
+
+        # Exclusive keep_count deletes oldest sample
+        await hass.services.async_call(
+            domain=STATISTICS_DOMAIN,
+            service="reset_buffer",
+            service_data={
+                "entity_id": "sensor.test",
+                "keep_count": 8,
+            },
+            blocking=True,
+        )
+
+        state = hass.states.get("sensor.test")
+        assert state is not None
+        assert state.attributes.get("buffer_usage_ratio") == round(8 / 20, 2)
+
+        # Exclusive keep_age (as integer) deletes oldest sample
+        await hass.services.async_call(
+            domain=STATISTICS_DOMAIN,
+            service="reset_buffer",
+            service_data={
+                "entity_id": "sensor.test",
+                "keep_age": (7 - 1) * 60,
+            },
+            blocking=True,
+        )
+
+        state = hass.states.get("sensor.test")
+        assert state is not None
+        assert state.attributes.get("buffer_usage_ratio") == round(7 / 20, 2)
+
+        # Exclusive keep_age (as time period) deletes oldest sample
+        await hass.services.async_call(
+            domain=STATISTICS_DOMAIN,
+            service="reset_buffer",
+            service_data={
+                "entity_id": "sensor.test",
+                "keep_age": {"minutes": (6 - 1)},
+            },
+            blocking=True,
+        )
+
+        state = hass.states.get("sensor.test")
+        assert state is not None
+        assert state.attributes.get("buffer_usage_ratio") == round(6 / 20, 2)
+
+        # Edge case: Call with keep_age=0 deletes all but current sample.
+        # This only happens as we unrealistically mock exact moments in time
+        await hass.services.async_call(
+            domain=STATISTICS_DOMAIN,
+            service="reset_buffer",
+            service_data={
+                "entity_id": "sensor.test",
+                "keep_age": 0,
+            },
+            blocking=True,
+        )
+
+        state = hass.states.get("sensor.test")
+        assert state is not None
+        assert state.attributes.get("buffer_usage_ratio") == round(1 / 20, 2)
+
+        # Non-parameterized service call deletes all sample
+        await hass.services.async_call(
+            domain=STATISTICS_DOMAIN,
+            service="reset_buffer",
+            service_data={
+                "entity_id": "sensor.test",
+            },
+            blocking=True,
+        )
+
+        state = hass.states.get("sensor.test")
+        assert state is not None
+        assert state.attributes.get("buffer_usage_ratio") == round(0 / 20, 2)
+
+
 async def test_precision(hass: HomeAssistant):
     """Test correct result with precision set."""
     assert await async_setup_component(
@@ -542,7 +692,7 @@ async def test_state_characteristics(hass: HomeAssistant):
     def mock_now():
         return mock_data["return_time"]
 
-    characteristics = (
+    characteristics: Sequence[dict[str, Any]] = (
         {
             "source_sensor_domain": "sensor",
             "name": "average_linear",

@@ -6,8 +6,9 @@ reset_buffer:
   name: Reset buffer
   description: >-
     Remove stored state values from a statistics sensor.
+    A number of most recent state values can be kept in memory.
     By default, all values will be forgotten, which leads to a temporarily unknown state for most statistical characteristics.
-    In case both "keep count" and "keep age" are provided, values are kept which meet one of the two conditions.
+    In case both "keep count" and "keep age" are provided, values which meet one of the two conditions are kept.
   target:
     entity:
       # integration: statistics
@@ -15,7 +16,7 @@ reset_buffer:
   fields:
     keep_count:
       name: Keep count
-      description: Number of most recent state values to be kept in memory. Defaults to 0.
+      description: Number of most recent state values to be kept in memory.
       required: false
       default: 0
       selector:
@@ -27,7 +28,7 @@ reset_buffer:
       name: Keep age
       description: >-
         Maximum age of most recent state values to be kept in memory.
-        Defaults to 0 and can be given in number of seconds in UI mode or alternatively in YAML mode as a time period (e.g. 'seconds: 60').
+        Set to a number of seconds in UI mode or define as a time period in YAML mode (e.g. 'minutes: 5').
       required: false
       default: 0
       selector:

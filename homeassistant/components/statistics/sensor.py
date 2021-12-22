@@ -408,28 +408,19 @@ class StatisticsSensor(SensorEntity):
         }
 
     def reset_buffer(
-        self, keep_count: int = 0, keep_age: timedelta | int = timedelta(0)
+        self, keep_count: int = 0, keep_age: timedelta = timedelta(-1)
     ) -> None:
         """Remove states, optionally keep latest according to count and/or age."""
-        if isinstance(keep_age, int):
-            keep_age = timedelta(seconds=keep_age)
         self._purge_old_states(min_samples=keep_count, max_age=keep_age)
         self._update_attributes()
         self._update_value()
         self.async_schedule_update_ha_state(True)
 
     def _purge_old_states(
-        self, *, min_samples: int = 0, max_age: timedelta = timedelta(0)
+        self, *, min_samples: int = 0, max_age: timedelta = timedelta(-1)
     ) -> None:
-        """Remove states which are older than a given age. Keep at least min_samples."""
+        """Remove states which are older than or equal to given age. Keep at least min_samples."""
         now = dt_util.utcnow()
-
-        _LOGGER.debug(
-            "%s: purging records older then %s(%s)",
-            self.entity_id,
-            dt_util.as_local(now - max_age),
-            self._samples_max_age,
-        )
 
         while (
             self.ages
