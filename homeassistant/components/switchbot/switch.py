@@ -49,6 +49,9 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Import yaml config and initiates config flow for Switchbot devices."""
+    _LOGGER.warning(
+        "Yaml config for Switchbot switch platform has been deprecated and will be removed in 2022.4. Please remove it from your config"
+    )
 
     # Check if entry config exists and skips import if it does.
     if hass.config_entries.async_entries(DOMAIN):

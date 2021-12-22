@@ -134,9 +134,6 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
         """Handle config import from yaml."""
         _LOGGER.debug("import config: %s", import_config)
-        _LOGGER.warning(
-            "Yaml config for Switchbot has been deprecated and will be removed in 2022.4. Please remove it from your config"
-        )
 
         import_config[CONF_MAC] = import_config[CONF_MAC].replace("-", ":").lower()
 
