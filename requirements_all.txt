@@ -1291,6 +1291,9 @@ pushbullet.py==0.11.0
 # homeassistant.components.pushover
 pushover_complete==1.1.1
 
+# homeassistant.components.pvoutput
+pvo==0.1.0
+
 # homeassistant.components.rpi_gpio_pwm
 pwmled==1.6.7
 
