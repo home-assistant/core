@@ -1,0 +1,17 @@
+{
+  "domain": "overkiz",
+  "name": "Overkiz (by Somfy)",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/overkiz",
+  "requirements": [
+    "pyoverkiz==1.0.0"
+  ],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@imicknl"
+  ],
+  "iot_class": "cloud_polling"
+}

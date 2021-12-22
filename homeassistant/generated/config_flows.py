@@ -224,6 +224,7 @@ FLOWS = [
     "opentherm_gw",
     "openuv",
     "openweathermap",
+    "overkiz",
     "ovo_energy",
     "owntracks",
     "ozw",
