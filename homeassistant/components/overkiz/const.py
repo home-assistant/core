@@ -6,7 +6,7 @@ from pyoverkiz.enums import UIClass
 
 from homeassistant.const import Platform
 
-DOMAIN: Final = "tahoma"
+DOMAIN: Final = "overkiz"
 
 CONF_HUB: Final = "hub"
 DEFAULT_HUB: Final = "somfy_europe"
