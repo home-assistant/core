@@ -205,6 +205,7 @@ class Configurator:
         # it shortly after so that it is deleted when the client updates.
         self.hass.states.async_set(entity_id, STATE_CONFIGURED)
 
+        @async_callback
         def deferred_remove(event: Event):
             """Remove the request state."""
             self.hass.states.async_remove(entity_id, context=event.context)
