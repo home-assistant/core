@@ -52,7 +52,12 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     __version__,
 )
-from homeassistant.core import DOMAIN as CONF_CORE, SOURCE_YAML, HomeAssistant, callback
+from homeassistant.core import (
+    DOMAIN as CONF_CORE,
+    ConfigSource,
+    HomeAssistant,
+    callback,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, extract_domain_configs
 import homeassistant.helpers.config_validation as cv
@@ -542,7 +547,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
             CONF_CURRENCY,
         )
     ):
-        hac.config_source = SOURCE_YAML
+        hac.config_source = ConfigSource.YAML
 
     for key, attr in (
         (CONF_LATITUDE, "latitude"),

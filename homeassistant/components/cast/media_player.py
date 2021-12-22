@@ -47,7 +47,6 @@ from homeassistant.components.plex.const import PLEX_URI_SCHEME
 from homeassistant.components.plex.services import lookup_plex_media
 from homeassistant.const import (
     CAST_APP_ID_HOMEASSISTANT_LOVELACE,
-    CAST_APP_ID_HOMEASSISTANT_MEDIA,
     EVENT_HOMEASSISTANT_STOP,
     STATE_IDLE,
     STATE_OFF,
@@ -230,7 +229,6 @@ class CastDevice(MediaPlayerEntity):
             self._cast_info.cast_info,
             ChromeCastZeroconf.get_zeroconf(),
         )
-        chromecast.media_controller.app_id = CAST_APP_ID_HOMEASSISTANT_MEDIA
         self._chromecast = chromecast
 
         if CAST_MULTIZONE_MANAGER_KEY not in self.hass.data:
@@ -397,11 +395,14 @@ class CastDevice(MediaPlayerEntity):
             return
 
         if self._chromecast.app_id is not None:
-            # Quit the previous app before starting splash screen
+            # Quit the previous app before starting splash screen or media player
             self._chromecast.quit_app()
 
         # The only way we can turn the Chromecast is on is by launching an app
-        self._chromecast.play_media(CAST_SPLASH, pychromecast.STREAM_TYPE_BUFFERED)
+        if self._chromecast.cast_type == pychromecast.const.CAST_TYPE_CHROMECAST:
+            self._chromecast.play_media(CAST_SPLASH, pychromecast.STREAM_TYPE_BUFFERED)
+        else:
+            self._chromecast.start_app(pychromecast.config.APP_MEDIA_RECEIVER)
 
     def turn_off(self):
         """Turn off the cast device."""
@@ -527,9 +528,8 @@ class CastDevice(MediaPlayerEntity):
             self._chromecast.register_handler(controller)
             controller.play_media(media)
         else:
-            self._chromecast.media_controller.play_media(
-                media_id, media_type, **kwargs.get(ATTR_MEDIA_EXTRA, {})
-            )
+            app_data = {"media_id": media_id, "media_type": media_type, **extra}
+            quick_play(self._chromecast, "default_media_receiver", app_data)
 
     def _media_status(self):
         """
@@ -677,9 +677,9 @@ class CastDevice(MediaPlayerEntity):
         support = SUPPORT_CAST
         media_status = self._media_status()[0]
 
-        if (
-            self._chromecast
-            and self._chromecast.cast_type == pychromecast.const.CAST_TYPE_CHROMECAST
+        if self._chromecast and self._chromecast.cast_type in (
+            pychromecast.const.CAST_TYPE_CHROMECAST,
+            pychromecast.const.CAST_TYPE_AUDIO,
         ):
             support |= SUPPORT_TURN_ON
 
@@ -820,7 +820,6 @@ class DynamicCastGroup:
             self._cast_info.cast_info,
             ChromeCastZeroconf.get_zeroconf(),
         )
-        chromecast.media_controller.app_id = CAST_APP_ID_HOMEASSISTANT_MEDIA
         self._chromecast = chromecast
 
         if CAST_MULTIZONE_MANAGER_KEY not in self.hass.data:

@@ -6,6 +6,7 @@ import pytest
 import homeassistant.components.automation as automation
 from homeassistant.components.binary_sensor import DEVICE_CLASSES, DOMAIN
 from homeassistant.components.binary_sensor.device_trigger import ENTITY_TRIGGERS
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON
 from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
@@ -74,7 +75,9 @@ async def test_get_triggers(hass, device_reg, entity_reg, enable_custom_integrat
         for device_class in DEVICE_CLASSES
         for trigger in ENTITY_TRIGGERS[device_class]
     ]
-    triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device_entry.id
+    )
     assert triggers == expected_triggers
 
 
@@ -112,7 +115,9 @@ async def test_get_triggers_no_state(hass, device_reg, entity_reg):
         for device_class in DEVICE_CLASSES
         for trigger in ENTITY_TRIGGERS[device_class]
     ]
-    triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device_entry.id
+    )
     assert triggers == expected_triggers
 
 
@@ -130,7 +135,9 @@ async def test_get_trigger_capabilities(hass, device_reg, entity_reg):
             {"name": "for", "optional": True, "type": "positive_time_period_dict"}
         ]
     }
-    triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device_entry.id
+    )
     for trigger in triggers:
         capabilities = await async_get_device_automation_capabilities(
             hass, "trigger", trigger

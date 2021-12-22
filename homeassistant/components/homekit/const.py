@@ -234,18 +234,6 @@ PROP_MIN_STEP = "minStep"
 PROP_CELSIUS = {"minValue": -273, "maxValue": 999}
 PROP_VALID_VALUES = "ValidValues"
 
-# #### Device Classes ####
-DEVICE_CLASS_DOOR = "door"
-DEVICE_CLASS_GARAGE_DOOR = "garage_door"
-DEVICE_CLASS_GAS = "gas"
-DEVICE_CLASS_MOISTURE = "moisture"
-DEVICE_CLASS_MOTION = "motion"
-DEVICE_CLASS_OCCUPANCY = "occupancy"
-DEVICE_CLASS_OPENING = "opening"
-DEVICE_CLASS_PM25 = "pm25"
-DEVICE_CLASS_SMOKE = "smoke"
-DEVICE_CLASS_WINDOW = "window"
-
 # #### Thresholds ####
 THRESHOLD_CO = 25
 THRESHOLD_CO2 = 1000

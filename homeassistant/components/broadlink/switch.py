@@ -13,7 +13,6 @@ from homeassistant.components.switch import (
 from homeassistant.const import (
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
-    CONF_FRIENDLY_NAME,
     CONF_HOST,
     CONF_MAC,
     CONF_NAME,
@@ -42,14 +41,6 @@ SWITCH_SCHEMA = vol.Schema(
     }
 )
 
-OLD_SWITCH_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_COMMAND_OFF): data_packet,
-        vol.Optional(CONF_COMMAND_ON): data_packet,
-        vol.Optional(CONF_FRIENDLY_NAME): cv.string,
-    }
-)
-
 PLATFORM_SCHEMA = vol.All(
     cv.deprecated(CONF_HOST),
     cv.deprecated(CONF_SLOTS),
@@ -59,9 +50,9 @@ PLATFORM_SCHEMA = vol.All(
         {
             vol.Required(CONF_MAC): mac_address,
             vol.Optional(CONF_HOST): cv.string,
-            vol.Optional(CONF_SWITCHES, default=[]): vol.Any(
-                cv.schema_with_slug_keys(OLD_SWITCH_SCHEMA),
-                vol.All(cv.ensure_list, [SWITCH_SCHEMA]),
+            vol.Optional(CONF_SWITCHES, default=[]): vol.All(
+                cv.ensure_list,
+                [SWITCH_SCHEMA],
             ),
         }
     ),
@@ -77,17 +68,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     mac_addr = config[CONF_MAC]
     host = config.get(CONF_HOST)
     switches = config.get(CONF_SWITCHES)
-
-    if not isinstance(switches, list):
-        switches = [
-            {CONF_NAME: switch.pop(CONF_FRIENDLY_NAME, name), **switch}
-            for name, switch in switches.items()
-        ]
-
-        _LOGGER.warning(
-            "Your configuration for the switch platform is deprecated. "
-            "Please refer to the Broadlink documentation to catch up"
-        )
 
     if switches:
         platform_data = hass.data[DOMAIN].platforms.setdefault(Platform.SWITCH, {})

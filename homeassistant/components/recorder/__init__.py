@@ -824,8 +824,7 @@ class Recorder(threading.Thread):
                 return migration.get_schema_version(self)
             except Exception as err:  # pylint: disable=broad-except
                 _LOGGER.exception(
-                    "Error during connection setup to %s: %s (retrying in %s seconds)",
-                    self.db_url,
+                    "Error during connection setup: %s (retrying in %s seconds)",
                     err,
                     self.db_retry_wait,
                 )

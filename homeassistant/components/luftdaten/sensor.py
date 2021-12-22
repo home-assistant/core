@@ -1,22 +1,10 @@
 """Support for Luftdaten sensors."""
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    CONF_SHOW_ON_MAP,
-)
+from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_SHOW_ON_MAP
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import (
-    DATA_LUFTDATEN,
-    DATA_LUFTDATEN_CLIENT,
-    DEFAULT_ATTRIBUTION,
-    DOMAIN,
-    SENSOR_TYPES,
-    TOPIC_UPDATE,
-)
+from . import DATA_LUFTDATEN, DATA_LUFTDATEN_CLIENT, DOMAIN, SENSOR_TYPES, TOPIC_UPDATE
 from .const import ATTR_SENSOR_ID
 
 
@@ -36,6 +24,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class LuftdatenSensor(SensorEntity):
     """Implementation of a Luftdaten sensor."""
 
+    _attr_attribution = "Data provided by luftdaten.info"
     _attr_should_poll = False
 
     def __init__(self, luftdaten, description: SensorEntityDescription, show):
@@ -68,8 +57,6 @@ class LuftdatenSensor(SensorEntity):
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
-        self._attrs[ATTR_ATTRIBUTION] = DEFAULT_ATTRIBUTION
-
         if self._data is not None:
             try:
                 self._attrs[ATTR_SENSOR_ID] = self._data["sensor_id"]

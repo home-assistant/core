@@ -42,7 +42,7 @@
                 "data": {
                     "api_key": "Chiave API"
                 },
-                "title": "Riautenticare AirVisual"
+                "title": "Autentica nuovamente AirVisual"
             },
             "user": {
                 "description": "Scegliere il tipo di dati AirVisual che si desidera monitorare.",

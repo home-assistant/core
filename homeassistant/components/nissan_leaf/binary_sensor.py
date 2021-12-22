@@ -2,8 +2,7 @@
 import logging
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_BATTERY_CHARGING,
-    DEVICE_CLASS_PLUG,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 
@@ -29,7 +28,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class LeafPluggedInSensor(LeafEntity, BinarySensorEntity):
     """Plugged In Sensor class."""
 
-    _attr_device_class = DEVICE_CLASS_PLUG
+    _attr_device_class = BinarySensorDeviceClass.PLUG
 
     @property
     def name(self):
@@ -50,7 +49,7 @@ class LeafPluggedInSensor(LeafEntity, BinarySensorEntity):
 class LeafChargingSensor(LeafEntity, BinarySensorEntity):
     """Charging Sensor class."""
 
-    _attr_device_class = DEVICE_CLASS_BATTERY_CHARGING
+    _attr_device_class = BinarySensorDeviceClass.BATTERY_CHARGING
 
     @property
     def name(self):

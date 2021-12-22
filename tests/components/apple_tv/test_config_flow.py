@@ -10,7 +10,11 @@ import pytest
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import zeroconf
 from homeassistant.components.apple_tv import CONF_ADDRESS, config_flow
-from homeassistant.components.apple_tv.const import CONF_START_OFF, DOMAIN
+from homeassistant.components.apple_tv.const import (
+    CONF_IDENTIFIERS,
+    CONF_START_OFF,
+    DOMAIN,
+)
 
 from .common import airplay_service, create_conf, mrp_service, raop_service
 
@@ -623,6 +627,45 @@ async def test_zeroconf_ip_change(hass, mock_scan):
     """Test that the config entry gets updated when the ip changes and reloads."""
     entry = MockConfigEntry(
         domain="apple_tv", unique_id="mrpid", data={CONF_ADDRESS: "127.0.0.2"}
+    )
+    unrelated_entry = MockConfigEntry(
+        domain="apple_tv", unique_id="unrelated", data={CONF_ADDRESS: "127.0.0.2"}
+    )
+    unrelated_entry.add_to_hass(hass)
+    entry.add_to_hass(hass)
+    mock_scan.result = [
+        create_conf(
+            IPv4Address("127.0.0.1"), "Device", mrp_service(), airplay_service()
+        )
+    ]
+
+    with patch(
+        "homeassistant.components.apple_tv.async_setup_entry", return_value=True
+    ) as mock_async_setup:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=DMAP_SERVICE,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+    assert len(mock_async_setup.mock_calls) == 2
+    assert entry.data[CONF_ADDRESS] == "127.0.0.1"
+    assert unrelated_entry.data[CONF_ADDRESS] == "127.0.0.2"
+
+
+async def test_zeroconf_ip_change_via_secondary_identifier(hass, mock_scan):
+    """Test that the config entry gets updated when the ip changes and reloads.
+
+    Instead of checking only the unique id, all the identifiers
+    in the config entry are checked
+    """
+    entry = MockConfigEntry(
+        domain="apple_tv",
+        unique_id="aa:bb:cc:dd:ee:ff",
+        data={CONF_IDENTIFIERS: ["mrpid"], CONF_ADDRESS: "127.0.0.2"},
     )
     unrelated_entry = MockConfigEntry(
         domain="apple_tv", unique_id="unrelated", data={CONF_ADDRESS: "127.0.0.2"}

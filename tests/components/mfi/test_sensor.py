@@ -1,4 +1,5 @@
 """The tests for the mFi sensor platform."""
+from copy import deepcopy
 import unittest.mock as mock
 
 from mficlient.client import FailedToLogin
@@ -38,20 +39,20 @@ async def test_setup_failed_login(hass):
     """Test setup with login failure."""
     with mock.patch("homeassistant.components.mfi.sensor.MFiClient") as mock_client:
         mock_client.side_effect = FailedToLogin
-        assert not PLATFORM.setup_platform(hass, dict(GOOD_CONFIG), None)
+        assert not PLATFORM.setup_platform(hass, GOOD_CONFIG, None)
 
 
 async def test_setup_failed_connect(hass):
     """Test setup with connection failure."""
     with mock.patch("homeassistant.components.mfi.sensor.MFiClient") as mock_client:
         mock_client.side_effect = requests.exceptions.ConnectionError
-        assert not PLATFORM.setup_platform(hass, dict(GOOD_CONFIG), None)
+        assert not PLATFORM.setup_platform(hass, GOOD_CONFIG, None)
 
 
 async def test_setup_minimum(hass):
     """Test setup with minimum configuration."""
     with mock.patch("homeassistant.components.mfi.sensor.MFiClient") as mock_client:
-        config = dict(GOOD_CONFIG)
+        config = deepcopy(GOOD_CONFIG)
         del config[THING]["port"]
         assert await async_setup_component(hass, COMPONENT.DOMAIN, config)
         await hass.async_block_till_done()
@@ -64,9 +65,7 @@ async def test_setup_minimum(hass):
 async def test_setup_with_port(hass):
     """Test setup with port."""
     with mock.patch("homeassistant.components.mfi.sensor.MFiClient") as mock_client:
-        config = dict(GOOD_CONFIG)
-        config[THING]["port"] = 6123
-        assert await async_setup_component(hass, COMPONENT.DOMAIN, config)
+        assert await async_setup_component(hass, COMPONENT.DOMAIN, GOOD_CONFIG)
         await hass.async_block_till_done()
         assert mock_client.call_count == 1
         assert mock_client.call_args == mock.call(
@@ -77,7 +76,7 @@ async def test_setup_with_port(hass):
 async def test_setup_with_tls_disabled(hass):
     """Test setup without TLS."""
     with mock.patch("homeassistant.components.mfi.sensor.MFiClient") as mock_client:
-        config = dict(GOOD_CONFIG)
+        config = deepcopy(GOOD_CONFIG)
         del config[THING]["port"]
         config[THING]["ssl"] = False
         config[THING]["verify_ssl"] = False

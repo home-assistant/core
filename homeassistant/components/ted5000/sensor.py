@@ -9,8 +9,8 @@ import xmltodict
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
-    STATE_CLASS_MEASUREMENT,
     SensorEntity,
+    SensorStateClass,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -62,7 +62,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class Ted5000Sensor(SensorEntity):
     """Implementation of a Ted5000 sensor."""
 
-    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, gateway, name, mtu, unit):
         """Initialize the sensor."""

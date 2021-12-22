@@ -52,7 +52,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType
 
-from . import MQTT_BASE_PLATFORM_SCHEMA, PLATFORMS, subscription
+from . import MQTT_BASE_PLATFORM_SCHEMA, PLATFORMS, MqttCommandTemplate, subscription
 from .. import mqtt
 from .const import CONF_QOS, CONF_RETAIN, DOMAIN
 from .debug_info import log_messages
@@ -377,11 +377,10 @@ class MqttClimate(MqttEntity, ClimateEntity):
 
         command_templates = {}
         for key in COMMAND_TEMPLATE_KEYS:
-            command_templates[key] = lambda value: value
-        for key in COMMAND_TEMPLATE_KEYS & config.keys():
-            tpl = config[key]
-            command_templates[key] = tpl.async_render_with_possible_json_value
-            tpl.hass = self.hass
+            command_templates[key] = MqttCommandTemplate(
+                config.get(key), self.hass
+            ).async_render
+
         self._command_templates = command_templates
 
     async def _subscribe_topics(self):  # noqa: C901

@@ -3,10 +3,10 @@ from openzwavemqtt.const import CommandClass
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    DEVICE_CLASS_GARAGE,
     DOMAIN as COVER_DOMAIN,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
+    CoverDeviceClass,
     CoverEntity,
 )
 from homeassistant.core import callback
@@ -94,8 +94,8 @@ class ZwaveGarageDoorBarrier(ZWaveDeviceEntity, CoverEntity):
 
     @property
     def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_GARAGE
+        """Return the class of this device, from CoverDeviceClass."""
+        return CoverDeviceClass.GARAGE
 
     @property
     def is_opening(self):

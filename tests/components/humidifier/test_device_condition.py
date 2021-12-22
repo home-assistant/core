@@ -3,6 +3,7 @@ import pytest
 import voluptuous_serialize
 
 import homeassistant.components.automation as automation
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.humidifier import DOMAIN, const, device_condition
 from homeassistant.const import ATTR_MODE, STATE_OFF, STATE_ON
 from homeassistant.helpers import config_validation as cv, device_registry
@@ -95,7 +96,9 @@ async def test_get_conditions(
         }
         for condition in expected_condition_types
     ]
-    conditions = await async_get_device_automations(hass, "condition", device_entry.id)
+    conditions = await async_get_device_automations(
+        hass, DeviceAutomationType.CONDITION, device_entry.id
+    )
     assert_lists_same(conditions, expected_conditions)
 
 

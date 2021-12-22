@@ -7,10 +7,11 @@ import logging
 from soco.exceptions import SoCoException, SoCoSlaveException, SoCoUPnPException
 
 from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchEntity
-from homeassistant.const import ATTR_TIME, ENTITY_CATEGORY_CONFIG
+from homeassistant.const import ATTR_TIME
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import EntityCategory
 
 from .const import (
     DATA_SONOS,
@@ -140,7 +141,7 @@ class SonosSwitchEntity(SonosEntity, SwitchEntity):
             f"sonos_{speaker.zone_name}_{FRIENDLY_NAMES[feature_type]}"
         )
         self.needs_coordinator = feature_type in COORDINATOR_FEATURES
-        self._attr_entity_category = ENTITY_CATEGORY_CONFIG
+        self._attr_entity_category = EntityCategory.CONFIG
         self._attr_name = f"{speaker.zone_name} {FRIENDLY_NAMES[feature_type]}"
         self._attr_unique_id = f"{speaker.soco.uid}-{feature_type}"
         self._attr_icon = FEATURE_ICONS.get(feature_type)
@@ -194,7 +195,7 @@ class SonosSwitchEntity(SonosEntity, SwitchEntity):
 class SonosAlarmEntity(SonosEntity, SwitchEntity):
     """Representation of a Sonos Alarm entity."""
 
-    _attr_entity_category = ENTITY_CATEGORY_CONFIG
+    _attr_entity_category = EntityCategory.CONFIG
     _attr_icon = "mdi:alarm"
 
     def __init__(self, alarm_id: str, speaker: SonosSpeaker) -> None:

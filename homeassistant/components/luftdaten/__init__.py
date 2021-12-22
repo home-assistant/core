@@ -7,7 +7,6 @@ from luftdaten import Luftdaten
 from luftdaten.exceptions import LuftdatenError
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
-from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONF_MONITORED_CONDITIONS,
@@ -18,13 +17,11 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     Platform,
 )
-from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
-from .config_flow import duplicate_stations
 from .const import CONF_SENSOR_ID, DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,55 +29,47 @@ _LOGGER = logging.getLogger(__name__)
 DATA_LUFTDATEN = "luftdaten"
 DATA_LUFTDATEN_CLIENT = "data_luftdaten_client"
 DATA_LUFTDATEN_LISTENER = "data_luftdaten_listener"
-DEFAULT_ATTRIBUTION = "Data provided by luftdaten.info"
 
 PLATFORMS = [Platform.SENSOR]
-
-SENSOR_HUMIDITY = "humidity"
-SENSOR_PM10 = "P1"
-SENSOR_PM2_5 = "P2"
-SENSOR_PRESSURE = "pressure"
-SENSOR_PRESSURE_AT_SEALEVEL = "pressure_at_sealevel"
-SENSOR_TEMPERATURE = "temperature"
 
 TOPIC_UPDATE = f"{DOMAIN}_data_update"
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
-        key=SENSOR_TEMPERATURE,
+        key="temperature",
         name="Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     SensorEntityDescription(
-        key=SENSOR_HUMIDITY,
+        key="humidity",
         name="Humidity",
         icon="mdi:water-percent",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
     ),
     SensorEntityDescription(
-        key=SENSOR_PRESSURE,
+        key="pressure",
         name="Pressure",
         icon="mdi:arrow-down-bold",
         native_unit_of_measurement=PRESSURE_PA,
         device_class=SensorDeviceClass.PRESSURE,
     ),
     SensorEntityDescription(
-        key=SENSOR_PRESSURE_AT_SEALEVEL,
+        key="pressure_at_sealevel",
         name="Pressure at sealevel",
         icon="mdi:download",
         native_unit_of_measurement=PRESSURE_PA,
         device_class=SensorDeviceClass.PRESSURE,
     ),
     SensorEntityDescription(
-        key=SENSOR_PM10,
+        key="P1",
         name="PM10",
         icon="mdi:thought-bubble",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     ),
     SensorEntityDescription(
-        key=SENSOR_PM2_5,
+        key="P2",
         name="PM2.5",
         icon="mdi:thought-bubble-outline",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -89,13 +78,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
-
-
-@callback
-def _async_fixup_sensor_id(hass, config_entry, sensor_id):
-    hass.config_entries.async_update_entry(
-        config_entry, data={**config_entry.data, CONF_SENSOR_ID: int(sensor_id)}
-    )
 
 
 async def async_setup_entry(hass, config_entry):
@@ -108,19 +90,11 @@ async def async_setup_entry(hass, config_entry):
         },
     )
 
-    if not isinstance(config_entry.data[CONF_SENSOR_ID], int):
-        _async_fixup_sensor_id(hass, config_entry, config_entry.data[CONF_SENSOR_ID])
-
-    if (
-        config_entry.data[CONF_SENSOR_ID] in duplicate_stations(hass)
-        and config_entry.source == SOURCE_IMPORT
-    ):
-        _LOGGER.warning(
-            "Removing duplicate sensors for station %s",
-            config_entry.data[CONF_SENSOR_ID],
+    # For backwards compat, set unique ID
+    if config_entry.unique_id is None:
+        hass.config_entries.async_update_entry(
+            config_entry, unique_id=config_entry.data[CONF_SENSOR_ID]
         )
-        hass.async_create_task(hass.config_entries.async_remove(config_entry.entry_id))
-        return False
 
     try:
         luftdaten = LuftDatenData(

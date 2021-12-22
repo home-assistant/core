@@ -22,7 +22,7 @@ async def test_binary_sensor(hass, generic_data, binary_sensor_msg):
     entry = registry.async_get(entity_id)
     assert entry
     assert entry.disabled
-    assert entry.disabled_by == er.DISABLED_INTEGRATION
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
     # Test enabling legacy entity
     updated_entry = registry.async_update_entity(

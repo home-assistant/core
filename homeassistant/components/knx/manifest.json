@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/knx",
   "requirements": [
-    "xknx==0.18.13"
+    "xknx==0.18.14"
   ],
   "codeowners": [
     "@Julius2342",

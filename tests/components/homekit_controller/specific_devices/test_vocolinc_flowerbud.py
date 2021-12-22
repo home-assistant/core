@@ -34,6 +34,7 @@ async def test_vocolinc_flowerbud_setup(hass):
     assert device.model == "Flowerbud"
     assert device.sw_version == "3.121.2"
     assert device.via_device_id is None
+    assert device.hw_version == "0.1"
 
     # Assert the humidifier is detected
     entry = entity_registry.async_get("humidifier.vocolinc_flowerbud_0d324b")

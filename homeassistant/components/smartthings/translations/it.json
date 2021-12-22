@@ -26,7 +26,7 @@
                 "data": {
                     "location_id": "Posizione"
                 },
-                "description": "Selezionare la posizione SmartThings che si desidera aggiungere a Home Assistant.  Apriremo quindi una nuova finestra e vi chiederemo di effettuare il login e di autorizzare l'installazione dell'integrazione dell'Home Assistant nella posizione selezionata.",
+                "description": "Seleziona la posizione SmartThings che desideri aggiungere a Home Assistant. Apriremo quindi una nuova finestra e ti chiederemo di eseguire l'accesso e di autorizzare l'installazione dell'integrazione dell'Home Assistant nella posizione selezionata.",
                 "title": "Seleziona posizione"
             },
             "user": {

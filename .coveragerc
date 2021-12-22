@@ -55,6 +55,7 @@ omit =
     homeassistant/components/amcrest/*
     homeassistant/components/ampio/*
     homeassistant/components/android_ip_webcam/*
+    homeassistant/components/androidtv/__init__.py
     homeassistant/components/anel_pwrctrl/switch.py
     homeassistant/components/anthemav/media_player.py
     homeassistant/components/apcupsd/*
@@ -371,6 +372,7 @@ omit =
     homeassistant/components/freebox/switch.py
     homeassistant/components/fritz/__init__.py
     homeassistant/components/fritz/binary_sensor.py
+    homeassistant/components/fritz/button.py
     homeassistant/components/fritz/common.py
     homeassistant/components/fritz/const.py
     homeassistant/components/fritz/device_tracker.py
@@ -770,6 +772,7 @@ omit =
     homeassistant/components/onvif/event.py
     homeassistant/components/onvif/parsers.py
     homeassistant/components/onvif/sensor.py
+    homeassistant/components/open_meteo/weather.py
     homeassistant/components/opencv/*
     homeassistant/components/openevse/sensor.py
     homeassistant/components/openexchangerates/sensor.py
@@ -885,6 +888,7 @@ omit =
     homeassistant/components/rest/switch.py
     homeassistant/components/ridwell/__init__.py
     homeassistant/components/ridwell/sensor.py
+    homeassistant/components/ridwell/switch.py
     homeassistant/components/ring/camera.py
     homeassistant/components/ripple/sensor.py
     homeassistant/components/rocketchat/notify.py

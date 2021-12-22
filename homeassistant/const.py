@@ -6,7 +6,7 @@ from typing import Final
 from homeassistant.backports.enum import StrEnum
 
 MAJOR_VERSION: Final = 2022
-MINOR_VERSION: Final = 1
+MINOR_VERSION: Final = 2
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -400,6 +400,7 @@ ATTR_MANUFACTURER: Final = "manufacturer"
 ATTR_MODEL: Final = "model"
 ATTR_SUGGESTED_AREA: Final = "suggested_area"
 ATTR_SW_VERSION: Final = "sw_version"
+ATTR_HW_VERSION: Final = "hw_version"
 ATTR_VIA_DEVICE: Final = "via_device"
 
 ATTR_BATTERY_CHARGING: Final = "battery_charging"

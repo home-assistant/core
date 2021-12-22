@@ -6,10 +6,11 @@ Support for uptime sensors of network clients.
 
 from datetime import datetime, timedelta
 
-from homeassistant.components.sensor import DEVICE_CLASS_TIMESTAMP, DOMAIN, SensorEntity
-from homeassistant.const import DATA_MEGABYTES, ENTITY_CATEGORY_DIAGNOSTIC
+from homeassistant.components.sensor import DOMAIN, SensorDeviceClass, SensorEntity
+from homeassistant.const import DATA_MEGABYTES
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import EntityCategory
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN as UNIFI_DOMAIN
@@ -86,7 +87,7 @@ class UniFiBandwidthSensor(UniFiClient, SensorEntity):
 
     DOMAIN = DOMAIN
 
-    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_native_unit_of_measurement = DATA_MEGABYTES
 
     @property
@@ -132,8 +133,8 @@ class UniFiUpTimeSensor(UniFiClient, SensorEntity):
     DOMAIN = DOMAIN
     TYPE = UPTIME_SENSOR
 
-    _attr_device_class = DEVICE_CLASS_TIMESTAMP
-    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(self, client, controller):
         """Set up tracked client."""

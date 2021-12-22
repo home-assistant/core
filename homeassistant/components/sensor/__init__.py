@@ -90,7 +90,7 @@ class SensorDeviceClass(StrEnum):
     # date (ISO8601)
     DATE = "date"
 
-    # energy (kWh, Wh)
+    # energy (Wh, kWh, MWh)
     ENERGY = "energy"
 
     # frequency (Hz, kHz, MHz, GHz)

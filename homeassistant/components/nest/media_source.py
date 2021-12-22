@@ -21,10 +21,13 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 import logging
+import os
 
 from google_nest_sdm.camera_traits import CameraClipPreviewTrait, CameraEventImageTrait
 from google_nest_sdm.device import Device
 from google_nest_sdm.event import EventImageType, ImageEventBase
+from google_nest_sdm.event_media import EventMediaStore
+from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_DIRECTORY,
@@ -42,12 +45,14 @@ from homeassistant.components.media_source.models import (
     PlayMedia,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.template import DATE_STR_FORMAT
-from homeassistant.util import dt as dt_util
+from homeassistant.util import dt as dt_util, raise_if_invalid_filename
 
 from .const import DATA_SUBSCRIBER, DOMAIN
 from .device_info import NestDeviceInfo
-from .events import MEDIA_SOURCE_EVENT_TITLE_MAP
+from .events import EVENT_NAME_MAP, MEDIA_SOURCE_EVENT_TITLE_MAP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,6 +60,175 @@ MEDIA_SOURCE_TITLE = "Nest"
 DEVICE_TITLE_FORMAT = "{device_name}: Recent Events"
 CLIP_TITLE_FORMAT = "{event_name} @ {event_time}"
 EVENT_MEDIA_API_URL_FORMAT = "/api/nest/event_media/{device_id}/{event_id}"
+
+STORAGE_KEY = "nest.event_media"
+STORAGE_VERSION = 1
+# Buffer writes every few minutes (plus guaranteed to be written at shutdown)
+STORAGE_SAVE_DELAY_SECONDS = 120
+# Path under config directory
+MEDIA_PATH = f"{DOMAIN}/event_media"
+
+# Size of small in-memory disk cache to avoid excessive disk reads
+DISK_READ_LRU_MAX_SIZE = 32
+
+
+async def async_get_media_event_store(
+    hass: HomeAssistant, subscriber: GoogleNestSubscriber
+) -> EventMediaStore:
+    """Create the disk backed EventMediaStore."""
+    media_path = hass.config.path(MEDIA_PATH)
+
+    def mkdir() -> None:
+        os.makedirs(media_path, exist_ok=True)
+
+    await hass.async_add_executor_job(mkdir)
+    store = Store(hass, STORAGE_VERSION, STORAGE_KEY, private=True)
+    return NestEventMediaStore(hass, subscriber, store, media_path)
+
+
+class NestEventMediaStore(EventMediaStore):
+    """Storage hook to locally persist nest media for events.
+
+    This interface is meant to provide two storage features:
+    - media storage of events (jpgs, mp4s)
+    - metadata about events (e.g. motion, person), filename of the media, etc.
+
+    The default implementation in nest is in memory, and this allows the data
+    to be backed by disk.
+
+    The nest event media manager internal to the subscriber manages the lifetime
+    of individual objects stored here (e.g. purging when going over storage
+    limits). This store manages the addition/deletion once instructed.
+    """
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        subscriber: GoogleNestSubscriber,
+        store: Store,
+        media_path: str,
+    ) -> None:
+        """Initialize NestEventMediaStore."""
+        self._hass = hass
+        self._subscriber = subscriber
+        self._store = store
+        self._media_path = media_path
+        self._data: dict | None = None
+        self._devices: Mapping[str, str] | None = {}
+
+    async def async_load(self) -> dict | None:
+        """Load data."""
+        if self._data is None:
+            self._devices = await self._get_devices()
+            data = await self._store.async_load()
+            if data is None:
+                _LOGGER.debug("Loaded empty event store")
+                self._data = {}
+            elif isinstance(data, dict):
+                _LOGGER.debug("Loaded event store with %d records", len(data))
+                self._data = data
+            else:
+                raise ValueError(
+                    "Unexpected data in storage version={}, key={}".format(
+                        STORAGE_VERSION, STORAGE_KEY
+                    )
+                )
+        return self._data
+
+    async def async_save(self, data: dict) -> None:  # type: ignore[override]
+        """Save data."""
+        self._data = data
+
+        def provide_data() -> dict:
+            return data
+
+        self._store.async_delay_save(provide_data, STORAGE_SAVE_DELAY_SECONDS)
+
+    def get_media_key(self, device_id: str, event: ImageEventBase) -> str:
+        """Return the filename to use for a new event."""
+        # Convert a nest device id to a home assistant device id
+        device_id_str = (
+            self._devices.get(device_id, f"{device_id}-unknown_device")
+            if self._devices
+            else "unknown_device"
+        )
+        event_id_str = event.event_session_id
+        try:
+            raise_if_invalid_filename(event_id_str)
+        except ValueError:
+            event_id_str = ""
+        time_str = str(int(event.timestamp.timestamp()))
+        event_type_str = EVENT_NAME_MAP.get(event.event_type, "event")
+        suffix = "jpg" if event.event_image_type == EventImageType.IMAGE else "mp4"
+        return f"{device_id_str}/{time_str}-{event_id_str}-{event_type_str}.{suffix}"
+
+    def get_media_filename(self, media_key: str) -> str:
+        """Return the filename in storage for a media key."""
+        return f"{self._media_path}/{media_key}"
+
+    async def async_load_media(self, media_key: str) -> bytes | None:
+        """Load media content."""
+        filename = self.get_media_filename(media_key)
+
+        def load_media(filename: str) -> bytes | None:
+            if not os.path.exists(filename):
+                return None
+            _LOGGER.debug("Reading event media from disk store: %s", filename)
+            with open(filename, "rb") as media:
+                return media.read()
+
+        try:
+            return await self._hass.async_add_executor_job(load_media, filename)
+        except OSError as err:
+            _LOGGER.error("Unable to read media file: %s %s", filename, err)
+            return None
+
+    async def async_save_media(self, media_key: str, content: bytes) -> None:
+        """Write media content."""
+        filename = self.get_media_filename(media_key)
+
+        def save_media(filename: str, content: bytes) -> None:
+            os.makedirs(os.path.dirname(filename), exist_ok=True)
+            if os.path.exists(filename):
+                _LOGGER.debug(
+                    "Event media already exists, not overwriting: %s", filename
+                )
+                return
+            _LOGGER.debug("Saving event media to disk store: %s", filename)
+            with open(filename, "wb") as media:
+                media.write(content)
+
+        try:
+            await self._hass.async_add_executor_job(save_media, filename, content)
+        except OSError as err:
+            _LOGGER.error("Unable to write media file: %s %s", filename, err)
+
+    async def async_remove_media(self, media_key: str) -> None:
+        """Remove media content."""
+        filename = self.get_media_filename(media_key)
+
+        def remove_media(filename: str) -> None:
+            if not os.path.exists(filename):
+                return None
+            _LOGGER.debug("Removing event media from disk store: %s", filename)
+            os.remove(filename)
+
+        try:
+            await self._hass.async_add_executor_job(remove_media, filename)
+        except OSError as err:
+            _LOGGER.error("Unable to remove media file: %s %s", filename, err)
+
+    async def _get_devices(self) -> Mapping[str, str]:
+        """Return a mapping of nest device id to home assistant device id."""
+        device_registry = dr.async_get(self._hass)
+        device_manager = await self._subscriber.async_get_device_manager()
+        devices = {}
+        for device in device_manager.devices.values():
+            if device_entry := device_registry.async_get_device(
+                {(DOMAIN, device.name)}
+            ):
+                devices[device.name] = device_entry.id
+        return devices
 
 
 async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
@@ -69,7 +243,7 @@ async def get_media_source_devices(hass: HomeAssistant) -> Mapping[str, Device]:
         return {}
     subscriber = hass.data[DOMAIN][DATA_SUBSCRIBER]
     device_manager = await subscriber.async_get_device_manager()
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     devices = {}
     for device in device_manager.devices.values():
         if not (

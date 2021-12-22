@@ -8,7 +8,7 @@ import httpx
 import respx
 
 from homeassistant import config as hass_config
-import homeassistant.components.binary_sensor as binary_sensor
+from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
@@ -26,7 +26,7 @@ from tests.common import get_fixture_path
 async def test_setup_missing_basic_config(hass):
     """Test setup with configuration missing required entries."""
     assert await async_setup_component(
-        hass, binary_sensor.DOMAIN, {"binary_sensor": {"platform": "rest"}}
+        hass, DOMAIN, {"binary_sensor": {"platform": "rest"}}
     )
     await hass.async_block_till_done()
     assert len(hass.states.async_all("binary_sensor")) == 0
@@ -36,7 +36,7 @@ async def test_setup_missing_config(hass):
     """Test setup with configuration missing required entries."""
     assert await async_setup_component(
         hass,
-        binary_sensor.DOMAIN,
+        DOMAIN,
         {
             "binary_sensor": {
                 "platform": "rest",
@@ -58,7 +58,7 @@ async def test_setup_failed_connect(hass, caplog):
     )
     assert await async_setup_component(
         hass,
-        binary_sensor.DOMAIN,
+        DOMAIN,
         {
             "binary_sensor": {
                 "platform": "rest",
@@ -78,7 +78,7 @@ async def test_setup_timeout(hass):
     respx.get("http://localhost").mock(side_effect=asyncio.TimeoutError())
     assert await async_setup_component(
         hass,
-        binary_sensor.DOMAIN,
+        DOMAIN,
         {
             "binary_sensor": {
                 "platform": "rest",
@@ -97,7 +97,7 @@ async def test_setup_minimum(hass):
     respx.get("http://localhost") % HTTPStatus.OK
     assert await async_setup_component(
         hass,
-        binary_sensor.DOMAIN,
+        DOMAIN,
         {
             "binary_sensor": {
                 "platform": "rest",
@@ -116,7 +116,7 @@ async def test_setup_minimum_resource_template(hass):
     respx.get("http://localhost") % HTTPStatus.OK
     assert await async_setup_component(
         hass,
-        binary_sensor.DOMAIN,
+        DOMAIN,
         {
             "binary_sensor": {
                 "platform": "rest",
@@ -134,7 +134,7 @@ async def test_setup_duplicate_resource_template(hass):
     respx.get("http://localhost") % HTTPStatus.OK
     assert await async_setup_component(
         hass,
-        binary_sensor.DOMAIN,
+        DOMAIN,
         {
             "binary_sensor": {
                 "platform": "rest",
@@ -167,7 +167,7 @@ async def test_setup_get(hass):
                 "username": "my username",
                 "password": "my password",
                 "headers": {"Accept": CONTENT_TYPE_JSON},
-                "device_class": binary_sensor.DEVICE_CLASS_PLUG,
+                "device_class": BinarySensorDeviceClass.PLUG,
             }
         },
     )
@@ -177,7 +177,7 @@ async def test_setup_get(hass):
 
     state = hass.states.get("binary_sensor.foo")
     assert state.state == STATE_OFF
-    assert state.attributes[ATTR_DEVICE_CLASS] == binary_sensor.DEVICE_CLASS_PLUG
+    assert state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.PLUG
 
 
 @respx.mock
@@ -418,7 +418,7 @@ async def test_setup_query_params(hass):
     respx.get("http://localhost", params={"search": "something"}) % HTTPStatus.OK
     assert await async_setup_component(
         hass,
-        binary_sensor.DOMAIN,
+        DOMAIN,
         {
             "binary_sensor": {
                 "platform": "rest",

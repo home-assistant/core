@@ -13,10 +13,10 @@
         "step": {
             "reauth": {
                 "data": {
-                    "personal_access_token": "Token di Accesso Personale (PAT)"
+                    "personal_access_token": "Token di accesso personale (PAT)"
                 },
                 "description": "Autenticazione non riuscita per {project_url}. Si prega di inserire le proprie credenziali attuali.",
-                "title": "Riautenticazione"
+                "title": "Nuova autenticazione"
             },
             "user": {
                 "data": {

@@ -23,7 +23,7 @@
             },
             "reauth_confirm": {
                 "description": "L'integrazione bosch_shc deve autenticare nuovamente il tuo account",
-                "title": "Autenticare nuovamente l'integrazione"
+                "title": "Autentica nuovamente l'integrazione"
             },
             "user": {
                 "data": {

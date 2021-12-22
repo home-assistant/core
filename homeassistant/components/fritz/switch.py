@@ -595,23 +595,10 @@ class FritzBoxProfileSwitch(FritzDeviceBase, SwitchEntity):
         self._attr_unique_id = f"{self._mac}_internet_access"
         self._attr_entity_category = EntityCategory.CONFIG
 
-    async def async_process_update(self) -> None:
-        """Update device."""
-        if not self._mac or not self.ip_address:
-            return
-
-        wan_disable_info = await async_service_call_action(
-            self._router,
-            "X_AVM-DE_HostFilter",
-            "1",
-            "GetWANAccessByIP",
-            NewIPv4Address=self.ip_address,
-        )
-
-        if wan_disable_info is None:
-            return
-
-        self._attr_is_on = not wan_disable_info["NewDisallow"]
+    @property
+    def is_on(self) -> bool:
+        """Switch status."""
+        return self._router.devices[self._mac].wan_access
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
@@ -624,7 +611,6 @@ class FritzBoxProfileSwitch(FritzDeviceBase, SwitchEntity):
     async def _async_handle_turn_on_off(self, turn_on: bool) -> bool:
         """Handle switch state change request."""
         await self._async_switch_on_off(turn_on)
-        self._attr_is_on = turn_on
         self.async_write_ha_state()
         return True
 

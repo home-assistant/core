@@ -5,7 +5,11 @@ from mficlient.client import FailedToLogin, MFiClient
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -13,7 +17,6 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
-    DEVICE_CLASS_TEMPERATURE,
     STATE_OFF,
     STATE_ON,
     TEMP_CELSIUS,
@@ -110,7 +113,7 @@ class MfiSensor(SensorEntity):
             return None
 
         if tag == "temperature":
-            return DEVICE_CLASS_TEMPERATURE
+            return SensorDeviceClass.TEMPERATURE
 
         return None
 
