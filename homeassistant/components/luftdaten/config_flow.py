@@ -1,5 +1,7 @@
 """Config flow to configure the Luftdaten component."""
-from collections import OrderedDict
+from __future__ import annotations
+
+from typing import Any
 
 from luftdaten import Luftdaten
 from luftdaten.exceptions import LuftdatenConnectionError
@@ -13,6 +15,7 @@ from homeassistant.const import (
     CONF_SHOW_ON_MAP,
 )
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
 from .const import CONF_SENSOR_ID, DEFAULT_SCAN_INTERVAL, DOMAIN
@@ -24,17 +27,22 @@ class LuftDatenFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     @callback
-    def _show_form(self, errors=None):
+    def _show_form(self, errors: dict[str, str] | None = None) -> FlowResult:
         """Show the form to the user."""
-        data_schema = OrderedDict()
-        data_schema[vol.Required(CONF_SENSOR_ID)] = cv.positive_int
-        data_schema[vol.Optional(CONF_SHOW_ON_MAP, default=False)] = bool
-
         return self.async_show_form(
-            step_id="user", data_schema=vol.Schema(data_schema), errors=errors or {}
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_SENSOR_ID): cv.positive_int,
+                    vol.Optional(CONF_SHOW_ON_MAP, default=False): bool,
+                }
+            ),
+            errors=errors or {},
         )
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the start of the config flow."""
 
         if not user_input:
