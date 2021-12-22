@@ -5,6 +5,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -32,6 +33,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         name="Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="humidity",
@@ -39,6 +41,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         icon="mdi:water-percent",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="pressure",
@@ -46,6 +49,7 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         icon="mdi:arrow-down-bold",
         native_unit_of_measurement=PRESSURE_PA,
         device_class=SensorDeviceClass.PRESSURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="pressure_at_sealevel",
@@ -53,18 +57,21 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         icon="mdi:download",
         native_unit_of_measurement=PRESSURE_PA,
         device_class=SensorDeviceClass.PRESSURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="P1",
         name="PM10",
         icon="mdi:thought-bubble",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="P2",
         name="PM2.5",
         icon="mdi:thought-bubble-outline",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 
