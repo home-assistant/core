@@ -5,7 +5,6 @@ from unittest.mock import patch
 from aiounifi.controller import MESSAGE_CLIENT_REMOVED, MESSAGE_EVENT
 
 from homeassistant import config_entries, core
-from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
 from homeassistant.components.unifi.const import (
     CONF_BLOCK_CLIENT,
     CONF_DPI_RESTRICTIONS,
@@ -795,7 +794,7 @@ async def test_ignore_multiple_poe_clients_on_same_port(hass, aioclient_mock):
         devices_response=[DEVICE_1],
     )
 
-    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 3
+    assert len(hass.states.async_entity_ids(Platform.DEVICE_TRACKER)) == 3
 
     switch_1 = hass.states.get("switch.poe_client_1")
     switch_2 = hass.states.get("switch.poe_client_2")

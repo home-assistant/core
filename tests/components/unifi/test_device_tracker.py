@@ -12,7 +12,6 @@ from aiounifi.controller import (
 from aiounifi.websocket import STATE_DISCONNECTED, STATE_RUNNING
 
 from homeassistant import config_entries
-from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
 from homeassistant.components.unifi.const import (
     CONF_BLOCK_CLIENT,
     CONF_IGNORE_WIRED_BUG,
@@ -22,7 +21,7 @@ from homeassistant.components.unifi.const import (
     CONF_TRACK_WIRED_CLIENTS,
     DOMAIN as UNIFI_DOMAIN,
 )
-from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE
+from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE, Platform
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 import homeassistant.util.dt as dt_util
 
@@ -35,7 +34,7 @@ async def test_no_entities(hass, aioclient_mock):
     """Test the update_clients function when no clients are found."""
     await setup_unifi_integration(hass, aioclient_mock)
 
-    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 0
+    assert len(hass.states.async_entity_ids(Platform.DEVICE_TRACKER)) == 0
 
 
 async def test_tracked_wireless_clients(hass, aioclient_mock, mock_unifi_websocket):
@@ -54,7 +53,7 @@ async def test_tracked_wireless_clients(hass, aioclient_mock, mock_unifi_websock
     )
     controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
-    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 1
+    assert len(hass.states.async_entity_ids(Platform.DEVICE_TRACKER)) == 1
     assert hass.states.get("device_tracker.client").state == STATE_NOT_HOME
 
     # State change signalling works without events
@@ -208,7 +207,7 @@ async def test_tracked_clients(hass, aioclient_mock, mock_unifi_websocket):
         known_wireless_clients=(client_4["mac"],),
     )
 
-    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 4
+    assert len(hass.states.async_entity_ids(Platform.DEVICE_TRACKER)) == 4
     assert hass.states.get("device_tracker.client_1").state == STATE_NOT_HOME
     assert hass.states.get("device_tracker.client_2").state == STATE_NOT_HOME
 
@@ -272,7 +271,7 @@ async def test_tracked_devices(hass, aioclient_mock, mock_unifi_websocket):
         devices_response=[device_1, device_2],
     )
 
-    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 2
+    assert len(hass.states.async_entity_ids(Platform.DEVICE_TRACKER)) == 2
     assert hass.states.get("device_tracker.device_1").state == STATE_HOME
     assert hass.states.get("device_tracker.device_2").state == STATE_NOT_HOME
 
@@ -378,7 +377,7 @@ async def test_remove_clients(hass, aioclient_mock, mock_unifi_websocket):
         hass, aioclient_mock, clients_response=[client_1, client_2]
     )
 
-    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 2
+    assert len(hass.states.async_entity_ids(Platform.DEVICE_TRACKER)) == 2
     assert hass.states.get("device_tracker.client_1")
     assert hass.states.get("device_tracker.client_2")
 
@@ -393,7 +392,7 @@ async def test_remove_clients(hass, aioclient_mock, mock_unifi_websocket):
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 1
+    assert len(hass.states.async_entity_ids(Platform.DEVICE_TRACKER)) == 1
     assert not hass.states.get("device_tracker.client_1")
     assert hass.states.get("device_tracker.client_2")
 
@@ -419,7 +418,7 @@ async def test_remove_client_but_keep_device_entry(
 
     entity_registry = er.async_get(hass)
     other_entity = entity_registry.async_get_or_create(
-        TRACKER_DOMAIN,
+        Platform.DEVICE_TRACKER,
         "other",
         "unique_id",
         device_id=device_entry.id,
@@ -435,7 +434,7 @@ async def test_remove_client_but_keep_device_entry(
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 0
+    assert len(hass.states.async_entity_ids(Platform.DEVICE_TRACKER)) == 0
 
     device_entry = device_registry.async_get(other_entity.device_id)
     assert len(device_entry.config_entries) == 1
@@ -475,7 +474,7 @@ async def test_controller_state_change(hass, aioclient_mock, mock_unifi_websocke
         devices_response=[device],
     )
 
-    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 2
+    assert len(hass.states.async_entity_ids(Platform.DEVICE_TRACKER)) == 2
     assert hass.states.get("device_tracker.client").state == STATE_NOT_HOME
     assert hass.states.get("device_tracker.device").state == STATE_HOME
 
@@ -512,7 +511,7 @@ async def test_controller_state_change_client_to_listen_on_all_state_changes(
     )
     controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
-    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 1
+    assert len(hass.states.async_entity_ids(Platform.DEVICE_TRACKER)) == 1
     assert hass.states.get("device_tracker.client").state == STATE_HOME
 
     # Disconnected event
@@ -619,7 +618,7 @@ async def test_option_track_clients(hass, aioclient_mock):
         devices_response=[device],
     )
 
-    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 3
+    assert len(hass.states.async_entity_ids(Platform.DEVICE_TRACKER)) == 3
     assert hass.states.get("device_tracker.wireless_client")
     assert hass.states.get("device_tracker.wired_client")
     assert hass.states.get("device_tracker.device")
@@ -685,7 +684,7 @@ async def test_option_track_wired_clients(hass, aioclient_mock):
         devices_response=[device],
     )
 
-    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 3
+    assert len(hass.states.async_entity_ids(Platform.DEVICE_TRACKER)) == 3
     assert hass.states.get("device_tracker.wireless_client")
     assert hass.states.get("device_tracker.wired_client")
     assert hass.states.get("device_tracker.device")
@@ -741,7 +740,7 @@ async def test_option_track_devices(hass, aioclient_mock):
         devices_response=[device],
     )
 
-    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 2
+    assert len(hass.states.async_entity_ids(Platform.DEVICE_TRACKER)) == 2
     assert hass.states.get("device_tracker.client")
     assert hass.states.get("device_tracker.device")
 
@@ -790,7 +789,7 @@ async def test_option_ssid_filter(hass, aioclient_mock, mock_unifi_websocket):
     )
     controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
-    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 2
+    assert len(hass.states.async_entity_ids(Platform.DEVICE_TRACKER)) == 2
 
     assert hass.states.get("device_tracker.client").state == STATE_HOME
     assert hass.states.get("device_tracker.client_on_ssid2").state == STATE_NOT_HOME
@@ -916,7 +915,7 @@ async def test_wireless_client_go_wired_issue(
     )
     controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
-    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 1
+    assert len(hass.states.async_entity_ids(Platform.DEVICE_TRACKER)) == 1
 
     # Client is wireless
     client_state = hass.states.get("device_tracker.client")
@@ -998,7 +997,7 @@ async def test_option_ignore_wired_bug(hass, aioclient_mock, mock_unifi_websocke
         clients_response=[client],
     )
     controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
-    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 1
+    assert len(hass.states.async_entity_ids(Platform.DEVICE_TRACKER)) == 1
 
     # Client is wireless
     client_state = hass.states.get("device_tracker.client")
@@ -1094,7 +1093,7 @@ async def test_restoring_client(hass, aioclient_mock):
 
     registry = er.async_get(hass)
     registry.async_get_or_create(
-        TRACKER_DOMAIN,
+        Platform.DEVICE_TRACKER,
         UNIFI_DOMAIN,
         f'{restored["mac"]}-site_id',
         suggested_object_id=restored["hostname"],
@@ -1109,7 +1108,7 @@ async def test_restoring_client(hass, aioclient_mock):
         clients_all_response=[restored, not_restored],
     )
 
-    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 2
+    assert len(hass.states.async_entity_ids(Platform.DEVICE_TRACKER)) == 2
     assert hass.states.get("device_tracker.client")
     assert hass.states.get("device_tracker.restored")
     assert not hass.states.get("device_tracker.not_restored")
@@ -1158,7 +1157,7 @@ async def test_dont_track_clients(hass, aioclient_mock):
         devices_response=[device],
     )
 
-    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 1
+    assert len(hass.states.async_entity_ids(Platform.DEVICE_TRACKER)) == 1
     assert not hass.states.get("device_tracker.wireless_client")
     assert not hass.states.get("device_tracker.wired_client")
     assert hass.states.get("device_tracker.device")
@@ -1169,7 +1168,7 @@ async def test_dont_track_clients(hass, aioclient_mock):
     )
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 3
+    assert len(hass.states.async_entity_ids(Platform.DEVICE_TRACKER)) == 3
     assert hass.states.get("device_tracker.wireless_client")
     assert hass.states.get("device_tracker.wired_client")
     assert hass.states.get("device_tracker.device")
@@ -1209,7 +1208,7 @@ async def test_dont_track_devices(hass, aioclient_mock):
         devices_response=[device],
     )
 
-    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 1
+    assert len(hass.states.async_entity_ids(Platform.DEVICE_TRACKER)) == 1
     assert hass.states.get("device_tracker.client")
     assert not hass.states.get("device_tracker.device")
 
@@ -1219,7 +1218,7 @@ async def test_dont_track_devices(hass, aioclient_mock):
     )
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 2
+    assert len(hass.states.async_entity_ids(Platform.DEVICE_TRACKER)) == 2
     assert hass.states.get("device_tracker.client")
     assert hass.states.get("device_tracker.device")
 
@@ -1247,7 +1246,7 @@ async def test_dont_track_wired_clients(hass, aioclient_mock):
         clients_response=[wireless_client, wired_client],
     )
 
-    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 1
+    assert len(hass.states.async_entity_ids(Platform.DEVICE_TRACKER)) == 1
     assert hass.states.get("device_tracker.wireless_client")
     assert not hass.states.get("device_tracker.wired_client")
 
@@ -1257,6 +1256,6 @@ async def test_dont_track_wired_clients(hass, aioclient_mock):
     )
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 2
+    assert len(hass.states.async_entity_ids(Platform.DEVICE_TRACKER)) == 2
     assert hass.states.get("device_tracker.wireless_client")
     assert hass.states.get("device_tracker.wired_client")

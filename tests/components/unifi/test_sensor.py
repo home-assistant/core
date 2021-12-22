@@ -6,7 +6,6 @@ from unittest.mock import patch
 from aiounifi.controller import MESSAGE_CLIENT, MESSAGE_CLIENT_REMOVED
 import pytest
 
-from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
 from homeassistant.components.unifi.const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_ALLOW_UPTIME_SENSORS,
@@ -298,7 +297,7 @@ async def test_remove_sensors(hass, aioclient_mock, mock_unifi_websocket):
 
     assert len(hass.states.async_all()) == 9
     assert len(hass.states.async_entity_ids(Platform.SENSOR)) == 6
-    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 2
+    assert len(hass.states.async_entity_ids(Platform.DEVICE_TRACKER)) == 2
     assert hass.states.get("sensor.wired_client_rx")
     assert hass.states.get("sensor.wired_client_tx")
     assert hass.states.get("sensor.wired_client_uptime")
@@ -318,7 +317,7 @@ async def test_remove_sensors(hass, aioclient_mock, mock_unifi_websocket):
 
     assert len(hass.states.async_all()) == 5
     assert len(hass.states.async_entity_ids(Platform.SENSOR)) == 3
-    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 1
+    assert len(hass.states.async_entity_ids(Platform.DEVICE_TRACKER)) == 1
     assert hass.states.get("sensor.wired_client_rx") is None
     assert hass.states.get("sensor.wired_client_tx") is None
     assert hass.states.get("sensor.wired_client_uptime") is None

@@ -10,7 +10,6 @@ import aiounifi
 from aiounifi.websocket import STATE_DISCONNECTED, STATE_RUNNING
 import pytest
 
-from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
 from homeassistant.components.unifi.const import (
     CONF_CONTROLLER,
     CONF_SITE_ID,
@@ -223,7 +222,7 @@ async def test_controller_setup(hass, aioclient_mock):
 
     entry = controller.config_entry
     assert len(forward_entry_setup.mock_calls) == len(PLATFORMS)
-    assert forward_entry_setup.mock_calls[0][1] == (entry, TRACKER_DOMAIN)
+    assert forward_entry_setup.mock_calls[0][1] == (entry, Platform.DEVICE_TRACKER)
     assert forward_entry_setup.mock_calls[1][1] == (entry, Platform.SENSOR)
     assert forward_entry_setup.mock_calls[2][1] == (entry, Platform.SWITCH)
 
