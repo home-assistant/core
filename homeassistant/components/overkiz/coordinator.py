@@ -1,8 +1,10 @@
 """Helpers to help coordinate updates."""
+from __future__ import annotations
+
 from datetime import timedelta
 import json
 import logging
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable
 
 from aiohttp import ServerDisconnectedError
 from pyoverkiz.client import OverkizClient
@@ -21,7 +23,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, UPDATE_INTERVAL
 
-DATA_TYPE_TO_PYTHON: Dict[DataType, Callable[[Any], Any]] = {
+DATA_TYPE_TO_PYTHON: dict[DataType, Callable[[DataType], Any]] = {
     DataType.INTEGER: int,
     DataType.DATE: int,
     DataType.STRING: str,
@@ -44,9 +46,9 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator):
         *,
         name: str,
         client: OverkizClient,
-        devices: List[Device],
+        devices: list[Device],
         places: Place,
-        update_interval: Optional[timedelta] = None,
+        update_interval: timedelta | None = None,
         config_entry_id: str,
     ):
         """Initialize global data updater."""
@@ -59,17 +61,17 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator):
 
         self.data = {}
         self.client = client
-        self.devices: Dict[str, Device] = {d.device_url: d for d in devices}
+        self.devices: dict[str, Device] = {d.device_url: d for d in devices}
         self.is_stateless = all(
             device.device_url.startswith("rts://")
             or device.device_url.startswith("internal://")
             for device in devices
         )
-        self.executions: Dict[str, Dict[str, str]] = {}
+        self.executions: dict[str, dict[str, str]] = {}
         self.areas = self.places_to_area(places)
         self._config_entry_id = config_entry_id
 
-    async def _async_update_data(self) -> Dict[str, Device]:
+    async def _async_update_data(self) -> dict[str, Device]:
         """Fetch Overkiz data via event listener."""
         try:
             events = await self.client.fetch_events()
@@ -155,7 +157,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator):
 
         return self.devices
 
-    async def _get_devices(self) -> Dict[str, Device]:
+    async def _get_devices(self) -> dict[str, Device]:
         """Fetch devices."""
         _LOGGER.debug("Fetching all devices and state via /setup/devices")
         return {d.device_url: d for d in await self.client.get_devices(refresh=True)}
@@ -163,7 +165,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator):
     @staticmethod
     def _get_state(
         state: State,
-    ) -> Union[Dict[Any, Any], List[Any], float, int, bool, str, None]:
+    ) -> dict[Any, Any] | list[Any] | float | int | bool | str | None:
         """Cast string value to the right type."""
         data_type = DataType(state.type)
 
