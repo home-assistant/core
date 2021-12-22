@@ -1,9 +1,10 @@
 """Support for LG webOS Smart TV."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from contextlib import suppress
 import logging
-from typing import Any, Callable
+from typing import Any
 
 from aiopylgtv import PyLGTVPairException, WebOsClient
 import voluptuous as vol
@@ -223,7 +224,7 @@ class PluggableAction:
 
     def __init__(self) -> None:
         """Initialize."""
-        self._actions: dict[Callable[[], None], AutomationActionType] = {}
+        self._actions: dict[Callable[[], None], tuple[HassJob, dict[str, Any]]] = {}
 
     def __bool__(self):
         """Return if we have something attached."""
@@ -265,7 +266,7 @@ class WebOsClientWrapper:
     async def connect(self) -> None:
         """Attempt a connection, but fail gracefully if tv is off for example."""
         self.client = await WebOsClient.create(self.host, client_key=self.client_key)
-        with suppress(WEBOSTV_EXCEPTIONS, PyLGTVPairException):
+        with suppress(*WEBOSTV_EXCEPTIONS, PyLGTVPairException):
             await self.client.connect()
 
     async def shutdown(self) -> None:
