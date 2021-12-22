@@ -5,7 +5,7 @@ from datetime import timedelta
 import logging
 
 from homeassistant.components.camera import ATTR_ENTITY_ID, SUPPORT_ON_OFF, Camera
-from homeassistant.components.ffmpeg import DATA_FFMPEG
+from homeassistant.components.ffmpeg import get_ffmpeg_manager
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_BATTERY_CHARGING,
@@ -40,7 +40,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up a Logi Circle Camera based on a config entry."""
     devices = await hass.data[LOGI_CIRCLE_DOMAIN].cameras
-    ffmpeg = hass.data[DATA_FFMPEG]
+    ffmpeg = get_ffmpeg_manager(hass)
 
     cameras = [LogiCam(device, entry, ffmpeg) for device in devices]
 
