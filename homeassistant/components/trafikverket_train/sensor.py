@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_WEEKDAY, WEEKDAYS
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.dt import get_time_zone
+from homeassistant.util.dt import as_utc, get_time_zone
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -167,7 +167,7 @@ class TrainSensor(SensorEntity):
             deviations = ", ".join(state.deviations)
         if self._delay_in_minutes is not None:
             self._delay_in_minutes = self._delay_in_minutes.total_seconds() / 60
-        attributelist = {
+        attributes = {
             ATTR_DEPARTURE_STATE: self._departure_state,
             ATTR_CANCELED: state.canceled,
             ATTR_DELAY_TIME: self._delay_in_minutes,
@@ -175,18 +175,18 @@ class TrainSensor(SensorEntity):
             ATTR_DEVIATIONS: deviations,
         }
         if state.advertised_time_at_location:
-            attributelist[
-                ATTR_PLANNED_TIME
-            ] = state.advertised_time_at_location.astimezone(self._timezone)
+            attributes[ATTR_PLANNED_TIME] = as_utc(
+                state.advertised_time_at_location.astimezone(self._timezone)
+            ).isoformat()
         if state.estimated_time_at_location:
-            attributelist[
-                ATTR_ESTIMATED_TIME
-            ] = state.estimated_time_at_location.astimezone(self._timezone)
+            attributes[ATTR_ESTIMATED_TIME] = as_utc(
+                state.estimated_time_at_location.astimezone(self._timezone)
+            ).isoformat()
         if state.time_at_location:
-            attributelist[ATTR_ACTUAL_TIME] = (
-                state.time_at_location.astimezone(self._timezone),
-            )
-        return attributelist
+            attributes[ATTR_ACTUAL_TIME] = as_utc(
+                state.time_at_location.astimezone(self._timezone)
+            ).isoformat()
+        return attributes
 
     @property
     def name(self):
