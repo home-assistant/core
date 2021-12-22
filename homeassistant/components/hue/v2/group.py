@@ -156,8 +156,8 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
             # Hue uses a range of [0, 100] to control brightness.
             brightness = float((brightness / 255) * 100)
         if transition is not None:
-            # hue transition duration is in milliseconds
-            transition = int(transition * 1000)
+            # hue transition duration is in milliseconds and round them to 100ms
+            transition = int(round(transition, 1) * 1000)
 
         # NOTE: a grouped_light can only handle turn on/off
         # To set other features, you'll have to control the attached lights
@@ -195,8 +195,8 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
         """Turn the light off."""
         transition = kwargs.get(ATTR_TRANSITION)
         if transition is not None:
-            # hue transition duration is in milliseconds
-            transition = int(transition * 1000)
+            # hue transition duration is in milliseconds and round them to 100ms
+            transition = int(round(transition, 1) * 1000)
 
         # NOTE: a grouped_light can only handle turn on/off
         # To set other features, you'll have to control the attached lights
