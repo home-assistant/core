@@ -1,4 +1,6 @@
 """Tests for the pvpc_hourly_pricing integration."""
+from http import HTTPStatus
+
 import pytest
 
 from homeassistant.components.pvpc_hourly_pricing import ATTR_TARIFF, DOMAIN
@@ -11,8 +13,6 @@ from homeassistant.const import (
 from tests.common import load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-FIXTURE_JSON_DATA_2021_10_31 = "PVPC_DATA_2021_10_31.json"
-FIXTURE_JSON_DATA_2021_10_30 = "PVPC_DATA_2021_10_30.json"
 FIXTURE_JSON_DATA_2021_06_01 = "PVPC_DATA_2021_06_01.json"
 
 
@@ -45,35 +45,18 @@ def pvpc_aioclient_mock(aioclient_mock: AiohttpClientMocker):
     mask_url = "https://apidatos.ree.es/es/datos/mercados/precios-mercados-tiempo-real"
     mask_url += "?time_trunc=hour&geo_ids={0}&start_date={1}T00:00&end_date={1}T23:59"
     # new format for prices >= 2021-06-01
-    aioclient_mock.get(
-        mask_url.format(8741, "2021-06-01"),
-        text=load_fixture(f"{DOMAIN}/{FIXTURE_JSON_DATA_2021_06_01}"),
-    )
+    sample_data = load_fixture(f"{DOMAIN}/{FIXTURE_JSON_DATA_2021_06_01}")
+
     # tariff variant with different geo_ids=8744
-    aioclient_mock.get(
-        mask_url.format(8744, "2021-06-01"),
-        text=load_fixture(f"{DOMAIN}/{FIXTURE_JSON_DATA_2021_06_01}"),
-    )
-    # dst change
-    aioclient_mock.get(
-        mask_url.format(8741, "2021-10-30"),
-        text=load_fixture(f"{DOMAIN}/{FIXTURE_JSON_DATA_2021_10_30}"),
-    )
-    aioclient_mock.get(
-        mask_url.format(8741, "2021-10-31"),
-        text=load_fixture(f"{DOMAIN}/{FIXTURE_JSON_DATA_2021_10_31}"),
-    )
+    aioclient_mock.get(mask_url.format(8741, "2021-06-01"), text=sample_data)
+    aioclient_mock.get(mask_url.format(8744, "2021-06-01"), text=sample_data)
     # simulate missing day
     aioclient_mock.get(
-        mask_url.format(8741, "2021-11-01"),
-        text='{"message":"No values for specified archive"}',
-    )
-    aioclient_mock.get(
-        mask_url.format(8741, "2021-11-02"),
+        mask_url.format(8741, "2021-06-02"),
+        status=HTTPStatus.BAD_GATEWAY,
         text=(
-            load_fixture(f"{DOMAIN}/{FIXTURE_JSON_DATA_2021_10_30}")
-            .replace("10-30", "11-02")
-            .replace("+02:00", "+01:00")
+            '{"errors":[{"code":502,"status":"502","title":"Bad response from ESIOS",'
+            '"detail":"There are no data for the selected filters."}]}'
         ),
     )
 
