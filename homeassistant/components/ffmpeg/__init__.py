@@ -91,7 +91,7 @@ async def async_setup(hass, config):
 
 
 @bind_hass
-def async_get_ffmpeg_manager(hass: HomeAssistant) -> FFmpegManager:
+def get_ffmpeg_manager(hass: HomeAssistant) -> FFmpegManager:
     """Return the FFmpegManager."""
     if DATA_FFMPEG not in hass.data:
         raise ValueError("ffmpeg component not initialized")
