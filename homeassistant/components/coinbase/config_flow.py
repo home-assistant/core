@@ -51,6 +51,8 @@ async def validate_api(hass: core.HomeAssistant, data):
             get_user_from_client, data[CONF_API_KEY], data[CONF_API_TOKEN]
         )
     except AuthenticationError as error:
+        message = "invalid API key" if "api key" in str(error) else "invalid API secret"
+        _LOGGER.error("Coinbase rejected API credentials due to an %s", message)
         raise InvalidAuth from error
     except ConnectionError as error:
         raise CannotConnect from error

@@ -1,4 +1,5 @@
 """Test the Coinbase config flow."""
+import logging
 from unittest.mock import patch
 
 from coinbase.wallet.error import AuthenticationError
@@ -63,11 +64,13 @@ async def test_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_auth(hass):
+async def test_form_invalid_auth(hass, caplog):
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+
+    caplog.set_level(logging.ERROR)
 
     response = Response()
     response.status_code = 401
@@ -91,6 +94,9 @@ async def test_form_invalid_auth(hass):
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "invalid_auth"}
+    assert (
+        "Coinbase rejected API credentials due to an invalid API secret" in caplog.text
+    )
 
 
 async def test_form_cannot_connect(hass):
