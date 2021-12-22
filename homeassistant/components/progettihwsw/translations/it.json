@@ -27,14 +27,14 @@
                     "relay_8": "Rel\u00e8 8",
                     "relay_9": "Rel\u00e8 9"
                 },
-                "title": "Configurare i rel\u00e8"
+                "title": "Configura i rel\u00e8"
             },
             "user": {
                 "data": {
                     "host": "Host",
                     "port": "Porta"
                 },
-                "title": "Impostare la scheda"
+                "title": "Configura la scheda"
             }
         }
     }

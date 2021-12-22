@@ -14,7 +14,7 @@
                 "data": {
                     "address": "L'indirizzo IP o il dominio o la porta seriale se ci si connette tramite seriale.",
                     "password": "Password",
-                    "prefix": "Un prefisso univoco (lasciare vuoto se si dispone di un solo ElkM1).",
+                    "prefix": "Un prefisso univoco (lascia vuoto se disponi di un solo ElkM1).",
                     "protocol": "Protocollo",
                     "temperature_unit": "L'unit\u00e0 di temperatura utilizzata da ElkM1.",
                     "username": "Nome utente"

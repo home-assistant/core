@@ -22,7 +22,7 @@
                     "host": "Host",
                     "port": "Porta",
                     "ssl": "Utilizza un certificato SSL",
-                    "verify_ssl": "Verificare il certificato SSL"
+                    "verify_ssl": "Verifica il certificato SSL"
                 }
             }
         }

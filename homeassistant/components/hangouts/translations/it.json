@@ -5,7 +5,7 @@
             "unknown": "Errore imprevisto"
         },
         "error": {
-            "invalid_2fa": "Autenticazione a 2 fattori non valida, riprovare.",
+            "invalid_2fa": "Autenticazione a 2 fattori non valida, riprova.",
             "invalid_2fa_method": "Metodo 2FA non valido (verifica sul telefono).",
             "invalid_login": "Accesso non valido, riprova."
         },
