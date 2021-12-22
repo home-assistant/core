@@ -4,6 +4,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     SOURCE_TYPE_ROUTER,
 )
@@ -18,10 +19,9 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DEVICE_ICONS, DOMAIN
 from .router import NetgearDeviceEntity, NetgearRouter, async_setup_netgear_entry
@@ -50,7 +50,7 @@ async def async_get_scanner(hass, config):
         hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
-            data=config,
+            data=config[DEVICE_TRACKER_DOMAIN],
         )
     )
 
@@ -64,7 +64,7 @@ async def async_get_scanner(hass, config):
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up device tracker for Netgear component."""
 
@@ -85,8 +85,7 @@ class NetgearScannerEntity(NetgearDeviceEntity, ScannerEntity):
 
     def get_hostname(self):
         """Return the hostname of the given device or None if we don't know."""
-        hostname = self._device["name"]
-        if hostname == "--":
+        if (hostname := self._device["name"]) == "--":
             return None
 
         return hostname

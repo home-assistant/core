@@ -13,7 +13,7 @@
                 "data": {
                     "agreement": "Accordo"
                 },
-                "description": "Selezionare l'indirizzo del contratto che si desidera aggiungere.",
+                "description": "Seleziona l'indirizzo del contratto che si desidera aggiungere.",
                 "title": "Seleziona il tuo contratto"
             },
             "pick_implementation": {

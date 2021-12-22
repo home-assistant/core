@@ -20,7 +20,13 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
-from .common import FritzBoxTools, FritzData, FritzDevice, FritzDeviceBase
+from .common import (
+    FritzBoxTools,
+    FritzData,
+    FritzDevice,
+    FritzDeviceBase,
+    device_filter_out_from_trackers,
+)
 from .const import DATA_FRITZ, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -91,19 +97,12 @@ def _async_add_entities(
 ) -> None:
     """Add new tracker entities from the router."""
 
-    def _is_tracked(mac: str) -> bool:
-        for tracked in data_fritz.tracked.values():
-            if mac in tracked:
-                return True
-
-        return False
-
     new_tracked = []
     if router.unique_id not in data_fritz.tracked:
         data_fritz.tracked[router.unique_id] = set()
 
     for mac, device in router.devices.items():
-        if device.ip_address == "" or _is_tracked(mac):
+        if device_filter_out_from_trackers(mac, device, data_fritz.tracked.values()):
             continue
 
         new_tracked.append(FritzBoxTracker(router, device))
@@ -120,12 +119,11 @@ class FritzBoxTracker(FritzDeviceBase, ScannerEntity):
         """Initialize a FRITZ!Box device."""
         super().__init__(router, device)
         self._last_activity: datetime.datetime | None = device.last_activity
-        self._active = False
 
     @property
     def is_connected(self) -> bool:
         """Return device status."""
-        return self._active
+        return self._router.devices[self._mac].is_connected
 
     @property
     def unique_id(self) -> str:
@@ -143,6 +141,7 @@ class FritzBoxTracker(FritzDeviceBase, ScannerEntity):
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the attributes."""
         attrs: dict[str, str] = {}
+        self._last_activity = self._router.devices[self._mac].last_activity
         if self._last_activity is not None:
             attrs["last_time_reachable"] = self._last_activity.isoformat(
                 timespec="seconds"
@@ -153,12 +152,3 @@ class FritzBoxTracker(FritzDeviceBase, ScannerEntity):
     def source_type(self) -> str:
         """Return tracker source type."""
         return SOURCE_TYPE_ROUTER
-
-    async def async_process_update(self) -> None:
-        """Update device."""
-        if not self._mac:
-            return
-
-        device = self._router.devices[self._mac]
-        self._active = device.is_connected
-        self._last_activity = device.last_activity

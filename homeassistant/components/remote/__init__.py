@@ -210,15 +210,3 @@ class RemoteEntity(ToggleEntity):
         await self.hass.async_add_executor_job(
             ft.partial(self.delete_command, **kwargs)
         )
-
-
-class RemoteDevice(RemoteEntity):
-    """Representation of a remote (for backwards compatibility)."""
-
-    def __init_subclass__(cls, **kwargs):
-        """Print deprecation warning."""
-        super().__init_subclass__(**kwargs)
-        _LOGGER.warning(
-            "RemoteDevice is deprecated, modify %s to extend RemoteEntity",
-            cls.__name__,
-        )

@@ -18,7 +18,7 @@ from . import (
     SetupFlow,
 )
 
-REQUIREMENTS = ["pyotp==2.3.0", "PyQRCode==1.2.1"]
+REQUIREMENTS = ["pyotp==2.6.0", "PyQRCode==1.2.1"]
 
 CONFIG_SCHEMA = MULTI_FACTOR_AUTH_MODULE_SCHEMA.extend({}, extra=vol.PREVENT_EXTRA)
 
@@ -77,14 +77,14 @@ class TotpAuthModule(MultiFactorAuthModule):
         super().__init__(hass, config)
         self._users: dict[str, str] | None = None
         self._user_store = hass.helpers.storage.Store(
-            STORAGE_VERSION, STORAGE_KEY, private=True
+            STORAGE_VERSION, STORAGE_KEY, private=True, atomic_writes=True
         )
         self._init_lock = asyncio.Lock()
 
     @property
     def input_schema(self) -> vol.Schema:
         """Validate login flow input data."""
-        return vol.Schema({INPUT_FIELD_CODE: str})
+        return vol.Schema({vol.Required(INPUT_FIELD_CODE): str})
 
     async def _async_load(self) -> None:
         """Load stored data."""
@@ -181,7 +181,7 @@ class TotpSetupFlow(SetupFlow):
         # to fix typing complaint
         self._auth_module: TotpAuthModule = auth_module
         self._user = user
-        self._ota_secret: str | None = None
+        self._ota_secret: str = ""
         self._url = None  # type Optional[str]
         self._image = None  # type Optional[str]
 

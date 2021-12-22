@@ -142,7 +142,7 @@ async def async_get_api(hass):
 
 async def async_get_location(hass, api, latitude, longitude):
     """Retrieve pyipma location, location name to be used as the entity name."""
-    with async_timeout.timeout(30):
+    async with async_timeout.timeout(30):
         location = await Location.get(api, float(latitude), float(longitude))
 
     _LOGGER.debug(
@@ -172,7 +172,7 @@ class IPMAWeather(WeatherEntity):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
         """Update Condition and Forecast."""
-        with async_timeout.timeout(10):
+        async with async_timeout.timeout(10):
             new_observation = await self._location.observation(self._api)
             new_forecast = await self._location.forecast(self._api)
 

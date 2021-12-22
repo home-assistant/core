@@ -7,9 +7,8 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_OCCUPANCY,
     PLATFORM_SCHEMA,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -25,12 +24,12 @@ BINARY_SENSOR_TYPES: dict[str, BinarySensorEntityDescription] = {
     "button": BinarySensorEntityDescription(
         key="device:sensor:button",
         name="Button",
-        device_class=DEVICE_CLASS_OCCUPANCY,
+        device_class=BinarySensorDeviceClass.OCCUPANCY,
     ),
     "motion": BinarySensorEntityDescription(
         key="device:sensor:motion",
         name="Motion",
-        device_class=DEVICE_CLASS_MOTION,
+        device_class=BinarySensorDeviceClass.MOTION,
     ),
 }
 

@@ -27,7 +27,7 @@
                     "device_name": "Geef uw apparaat een naam",
                     "device_type": "Type Plaato-apparaat"
                 },
-                "description": "Wil je beginnen met instellen?",
+                "description": "Wilt u beginnen met instellen?",
                 "title": "Stel de Plaato-apparaten in"
             },
             "webhook": {

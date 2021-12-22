@@ -153,8 +153,6 @@ light:
   payload_off: "off"
 
 """
-import json
-from os import path
 from unittest.mock import call, patch
 
 import pytest
@@ -199,7 +197,11 @@ from .test_common import (
     help_test_update_with_json_attrs_not_dict,
 )
 
-from tests.common import assert_setup_component, async_fire_mqtt_message
+from tests.common import (
+    assert_setup_component,
+    async_fire_mqtt_message,
+    get_fixture_path,
+)
 from tests.components.light import common
 
 DEFAULT_CONFIG = {
@@ -2798,65 +2800,61 @@ async def test_discovery_deprecated(hass, mqtt_mock, caplog):
 
 async def test_discovery_update_light_topic_and_template(hass, mqtt_mock, caplog):
     """Test update of discovered light."""
-    data1 = json.dumps(
-        {
-            "name": "Beer",
-            "state_topic": "test_light_rgb/state1",
-            "command_topic": "test_light_rgb/set",
-            "brightness_command_topic": "test_light_rgb/state1",
-            "rgb_command_topic": "test_light_rgb/rgb/set",
-            "color_temp_command_topic": "test_light_rgb/state1",
-            "effect_command_topic": "test_light_rgb/effect/set",
-            "hs_command_topic": "test_light_rgb/hs/set",
-            "white_value_command_topic": "test_light_rgb/white_value/set",
-            "xy_command_topic": "test_light_rgb/xy/set",
-            "brightness_state_topic": "test_light_rgb/state1",
-            "color_temp_state_topic": "test_light_rgb/state1",
-            "effect_state_topic": "test_light_rgb/state1",
-            "hs_state_topic": "test_light_rgb/state1",
-            "rgb_state_topic": "test_light_rgb/state1",
-            "white_value_state_topic": "test_light_rgb/state1",
-            "xy_state_topic": "test_light_rgb/state1",
-            "state_value_template": "{{ value_json.state1.state }}",
-            "brightness_value_template": "{{ value_json.state1.brightness }}",
-            "color_temp_value_template": "{{ value_json.state1.ct }}",
-            "effect_value_template": "{{ value_json.state1.fx }}",
-            "hs_value_template": "{{ value_json.state1.hs }}",
-            "rgb_value_template": "{{ value_json.state1.rgb }}",
-            "white_value_template": "{{ value_json.state1.white }}",
-            "xy_value_template": "{{ value_json.state1.xy }}",
-        }
-    )
+    config1 = {
+        "name": "Beer",
+        "state_topic": "test_light_rgb/state1",
+        "command_topic": "test_light_rgb/set",
+        "brightness_command_topic": "test_light_rgb/state1",
+        "rgb_command_topic": "test_light_rgb/rgb/set",
+        "color_temp_command_topic": "test_light_rgb/state1",
+        "effect_command_topic": "test_light_rgb/effect/set",
+        "hs_command_topic": "test_light_rgb/hs/set",
+        "white_value_command_topic": "test_light_rgb/white_value/set",
+        "xy_command_topic": "test_light_rgb/xy/set",
+        "brightness_state_topic": "test_light_rgb/state1",
+        "color_temp_state_topic": "test_light_rgb/state1",
+        "effect_state_topic": "test_light_rgb/state1",
+        "hs_state_topic": "test_light_rgb/state1",
+        "rgb_state_topic": "test_light_rgb/state1",
+        "white_value_state_topic": "test_light_rgb/state1",
+        "xy_state_topic": "test_light_rgb/state1",
+        "state_value_template": "{{ value_json.state1.state }}",
+        "brightness_value_template": "{{ value_json.state1.brightness }}",
+        "color_temp_value_template": "{{ value_json.state1.ct }}",
+        "effect_value_template": "{{ value_json.state1.fx }}",
+        "hs_value_template": "{{ value_json.state1.hs }}",
+        "rgb_value_template": "{{ value_json.state1.rgb }}",
+        "white_value_template": "{{ value_json.state1.white }}",
+        "xy_value_template": "{{ value_json.state1.xy }}",
+    }
 
-    data2 = json.dumps(
-        {
-            "name": "Milk",
-            "state_topic": "test_light_rgb/state2",
-            "command_topic": "test_light_rgb/set",
-            "brightness_command_topic": "test_light_rgb/state2",
-            "rgb_command_topic": "test_light_rgb/rgb/set",
-            "color_temp_command_topic": "test_light_rgb/state2",
-            "effect_command_topic": "test_light_rgb/effect/set",
-            "hs_command_topic": "test_light_rgb/hs/set",
-            "white_value_command_topic": "test_light_rgb/white_value/set",
-            "xy_command_topic": "test_light_rgb/xy/set",
-            "brightness_state_topic": "test_light_rgb/state2",
-            "color_temp_state_topic": "test_light_rgb/state2",
-            "effect_state_topic": "test_light_rgb/state2",
-            "hs_state_topic": "test_light_rgb/state2",
-            "rgb_state_topic": "test_light_rgb/state2",
-            "white_value_state_topic": "test_light_rgb/state2",
-            "xy_state_topic": "test_light_rgb/state2",
-            "state_value_template": "{{ value_json.state2.state }}",
-            "brightness_value_template": "{{ value_json.state2.brightness }}",
-            "color_temp_value_template": "{{ value_json.state2.ct }}",
-            "effect_value_template": "{{ value_json.state2.fx }}",
-            "hs_value_template": "{{ value_json.state2.hs }}",
-            "rgb_value_template": "{{ value_json.state2.rgb }}",
-            "white_value_template": "{{ value_json.state2.white }}",
-            "xy_value_template": "{{ value_json.state2.xy }}",
-        }
-    )
+    config2 = {
+        "name": "Milk",
+        "state_topic": "test_light_rgb/state2",
+        "command_topic": "test_light_rgb/set",
+        "brightness_command_topic": "test_light_rgb/state2",
+        "rgb_command_topic": "test_light_rgb/rgb/set",
+        "color_temp_command_topic": "test_light_rgb/state2",
+        "effect_command_topic": "test_light_rgb/effect/set",
+        "hs_command_topic": "test_light_rgb/hs/set",
+        "white_value_command_topic": "test_light_rgb/white_value/set",
+        "xy_command_topic": "test_light_rgb/xy/set",
+        "brightness_state_topic": "test_light_rgb/state2",
+        "color_temp_state_topic": "test_light_rgb/state2",
+        "effect_state_topic": "test_light_rgb/state2",
+        "hs_state_topic": "test_light_rgb/state2",
+        "rgb_state_topic": "test_light_rgb/state2",
+        "white_value_state_topic": "test_light_rgb/state2",
+        "xy_state_topic": "test_light_rgb/state2",
+        "state_value_template": "{{ value_json.state2.state }}",
+        "brightness_value_template": "{{ value_json.state2.brightness }}",
+        "color_temp_value_template": "{{ value_json.state2.ct }}",
+        "effect_value_template": "{{ value_json.state2.fx }}",
+        "hs_value_template": "{{ value_json.state2.hs }}",
+        "rgb_value_template": "{{ value_json.state2.rgb }}",
+        "white_value_template": "{{ value_json.state2.white }}",
+        "xy_value_template": "{{ value_json.state2.xy }}",
+    }
     state_data1 = [
         (
             [
@@ -3054,8 +3052,8 @@ async def test_discovery_update_light_topic_and_template(hass, mqtt_mock, caplog
         mqtt_mock,
         caplog,
         light.DOMAIN,
-        data1,
-        data2,
+        config1,
+        config2,
         state_data1=state_data1,
         state_data2=state_data2,
     )
@@ -3063,65 +3061,61 @@ async def test_discovery_update_light_topic_and_template(hass, mqtt_mock, caplog
 
 async def test_discovery_update_light_template(hass, mqtt_mock, caplog):
     """Test update of discovered light."""
-    data1 = json.dumps(
-        {
-            "name": "Beer",
-            "state_topic": "test_light_rgb/state1",
-            "command_topic": "test_light_rgb/set",
-            "brightness_command_topic": "test_light_rgb/state1",
-            "rgb_command_topic": "test_light_rgb/rgb/set",
-            "color_temp_command_topic": "test_light_rgb/state1",
-            "effect_command_topic": "test_light_rgb/effect/set",
-            "hs_command_topic": "test_light_rgb/hs/set",
-            "white_value_command_topic": "test_light_rgb/white_value/set",
-            "xy_command_topic": "test_light_rgb/xy/set",
-            "brightness_state_topic": "test_light_rgb/state1",
-            "color_temp_state_topic": "test_light_rgb/state1",
-            "effect_state_topic": "test_light_rgb/state1",
-            "hs_state_topic": "test_light_rgb/state1",
-            "rgb_state_topic": "test_light_rgb/state1",
-            "white_value_state_topic": "test_light_rgb/state1",
-            "xy_state_topic": "test_light_rgb/state1",
-            "state_value_template": "{{ value_json.state1.state }}",
-            "brightness_value_template": "{{ value_json.state1.brightness }}",
-            "color_temp_value_template": "{{ value_json.state1.ct }}",
-            "effect_value_template": "{{ value_json.state1.fx }}",
-            "hs_value_template": "{{ value_json.state1.hs }}",
-            "rgb_value_template": "{{ value_json.state1.rgb }}",
-            "white_value_template": "{{ value_json.state1.white }}",
-            "xy_value_template": "{{ value_json.state1.xy }}",
-        }
-    )
+    config1 = {
+        "name": "Beer",
+        "state_topic": "test_light_rgb/state1",
+        "command_topic": "test_light_rgb/set",
+        "brightness_command_topic": "test_light_rgb/state1",
+        "rgb_command_topic": "test_light_rgb/rgb/set",
+        "color_temp_command_topic": "test_light_rgb/state1",
+        "effect_command_topic": "test_light_rgb/effect/set",
+        "hs_command_topic": "test_light_rgb/hs/set",
+        "white_value_command_topic": "test_light_rgb/white_value/set",
+        "xy_command_topic": "test_light_rgb/xy/set",
+        "brightness_state_topic": "test_light_rgb/state1",
+        "color_temp_state_topic": "test_light_rgb/state1",
+        "effect_state_topic": "test_light_rgb/state1",
+        "hs_state_topic": "test_light_rgb/state1",
+        "rgb_state_topic": "test_light_rgb/state1",
+        "white_value_state_topic": "test_light_rgb/state1",
+        "xy_state_topic": "test_light_rgb/state1",
+        "state_value_template": "{{ value_json.state1.state }}",
+        "brightness_value_template": "{{ value_json.state1.brightness }}",
+        "color_temp_value_template": "{{ value_json.state1.ct }}",
+        "effect_value_template": "{{ value_json.state1.fx }}",
+        "hs_value_template": "{{ value_json.state1.hs }}",
+        "rgb_value_template": "{{ value_json.state1.rgb }}",
+        "white_value_template": "{{ value_json.state1.white }}",
+        "xy_value_template": "{{ value_json.state1.xy }}",
+    }
 
-    data2 = json.dumps(
-        {
-            "name": "Milk",
-            "state_topic": "test_light_rgb/state1",
-            "command_topic": "test_light_rgb/set",
-            "brightness_command_topic": "test_light_rgb/state1",
-            "rgb_command_topic": "test_light_rgb/rgb/set",
-            "color_temp_command_topic": "test_light_rgb/state1",
-            "effect_command_topic": "test_light_rgb/effect/set",
-            "hs_command_topic": "test_light_rgb/hs/set",
-            "white_value_command_topic": "test_light_rgb/white_value/set",
-            "xy_command_topic": "test_light_rgb/xy/set",
-            "brightness_state_topic": "test_light_rgb/state1",
-            "color_temp_state_topic": "test_light_rgb/state1",
-            "effect_state_topic": "test_light_rgb/state1",
-            "hs_state_topic": "test_light_rgb/state1",
-            "rgb_state_topic": "test_light_rgb/state1",
-            "white_value_state_topic": "test_light_rgb/state1",
-            "xy_state_topic": "test_light_rgb/state1",
-            "state_value_template": "{{ value_json.state2.state }}",
-            "brightness_value_template": "{{ value_json.state2.brightness }}",
-            "color_temp_value_template": "{{ value_json.state2.ct }}",
-            "effect_value_template": "{{ value_json.state2.fx }}",
-            "hs_value_template": "{{ value_json.state2.hs }}",
-            "rgb_value_template": "{{ value_json.state2.rgb }}",
-            "white_value_template": "{{ value_json.state2.white }}",
-            "xy_value_template": "{{ value_json.state2.xy }}",
-        }
-    )
+    config2 = {
+        "name": "Milk",
+        "state_topic": "test_light_rgb/state1",
+        "command_topic": "test_light_rgb/set",
+        "brightness_command_topic": "test_light_rgb/state1",
+        "rgb_command_topic": "test_light_rgb/rgb/set",
+        "color_temp_command_topic": "test_light_rgb/state1",
+        "effect_command_topic": "test_light_rgb/effect/set",
+        "hs_command_topic": "test_light_rgb/hs/set",
+        "white_value_command_topic": "test_light_rgb/white_value/set",
+        "xy_command_topic": "test_light_rgb/xy/set",
+        "brightness_state_topic": "test_light_rgb/state1",
+        "color_temp_state_topic": "test_light_rgb/state1",
+        "effect_state_topic": "test_light_rgb/state1",
+        "hs_state_topic": "test_light_rgb/state1",
+        "rgb_state_topic": "test_light_rgb/state1",
+        "white_value_state_topic": "test_light_rgb/state1",
+        "xy_state_topic": "test_light_rgb/state1",
+        "state_value_template": "{{ value_json.state2.state }}",
+        "brightness_value_template": "{{ value_json.state2.brightness }}",
+        "color_temp_value_template": "{{ value_json.state2.ct }}",
+        "effect_value_template": "{{ value_json.state2.fx }}",
+        "hs_value_template": "{{ value_json.state2.hs }}",
+        "rgb_value_template": "{{ value_json.state2.rgb }}",
+        "white_value_template": "{{ value_json.state2.white }}",
+        "xy_value_template": "{{ value_json.state2.xy }}",
+    }
     state_data1 = [
         (
             [
@@ -3277,8 +3271,8 @@ async def test_discovery_update_light_template(hass, mqtt_mock, caplog):
         mqtt_mock,
         caplog,
         light.DOMAIN,
-        data1,
-        data2,
+        config1,
+        config2,
         state_data1=state_data1,
         state_data2=state_data2,
     )
@@ -3396,13 +3390,10 @@ async def test_reloadable(hass, mqtt_mock):
     await hass.async_block_till_done()
 
     assert hass.states.get("light.test")
-    assert len(hass.states.async_all()) == 1
+    assert len(hass.states.async_all("light")) == 1
 
-    yaml_path = path.join(
-        _get_fixtures_base_path(),
-        "fixtures",
-        "mqtt/configuration.yaml",
-    )
+    yaml_path = get_fixture_path("configuration.yaml", "mqtt")
+
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             "mqtt",
@@ -3412,11 +3403,7 @@ async def test_reloadable(hass, mqtt_mock):
         )
         await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 1
+    assert len(hass.states.async_all("light")) == 1
 
     assert hass.states.get("light.test") is None
     assert hass.states.get("light.reload")
-
-
-def _get_fixtures_base_path():
-    return path.dirname(path.dirname(path.dirname(__file__)))

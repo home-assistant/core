@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock, PropertyMock, patch
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
 from homeassistant.components.upb.const import DOMAIN
 
 
@@ -24,7 +24,7 @@ def mocked_upb(sync_complete=True, config_ok=True):
 
 async def valid_tcp_flow(hass, sync_complete=True, config_ok=True):
     """Get result dict that are standard for most tests."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     with mocked_upb(sync_complete, config_ok), patch(
         "homeassistant.components.upb.async_setup_entry", return_value=True
     ):
@@ -40,7 +40,6 @@ async def valid_tcp_flow(hass, sync_complete=True, config_ok=True):
 
 async def test_full_upb_flow_with_serial_port(hass):
     """Test a full UPB config flow with serial port."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     with mocked_upb(), patch(
         "homeassistant.components.upb.async_setup_entry", return_value=True
@@ -110,7 +109,6 @@ async def test_form_user_with_already_configured(hass):
 
 async def test_form_import(hass):
     """Test we get the form with import source."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     with mocked_upb(), patch(
         "homeassistant.components.upb.async_setup_entry", return_value=True
@@ -131,7 +129,6 @@ async def test_form_import(hass):
 
 async def test_form_junk_input(hass):
     """Test we get the form with import source."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     with mocked_upb():
         result = await hass.config_entries.flow.async_init(

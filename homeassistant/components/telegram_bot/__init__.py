@@ -329,8 +329,7 @@ async def async_setup(hass, config):
         """Handle sending Telegram Bot message service calls."""
 
         def _render_template_attr(data, attribute):
-            attribute_templ = data.get(attribute)
-            if attribute_templ:
+            if attribute_templ := data.get(attribute):
                 if any(
                     isinstance(attribute_templ, vtype) for vtype in (float, int, str)
                 ):
@@ -576,7 +575,7 @@ class TelegramNotificationService:
                 }
                 if message_tag is not None:
                     event_data[ATTR_MESSAGE_TAG] = message_tag
-                self.hass.bus.async_fire(EVENT_TELEGRAM_SENT, event_data)
+                self.hass.bus.fire(EVENT_TELEGRAM_SENT, event_data)
             elif not isinstance(out, bool):
                 _LOGGER.warning(
                     "Update last message: out_type:%s, out=%s", type(out), out

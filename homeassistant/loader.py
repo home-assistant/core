@@ -58,6 +58,8 @@ _UNDEF = object()  # Internal; not helpers.typing.UNDEFINED due to circular depe
 
 MAX_LOAD_CONCURRENTLY = 4
 
+MOVED_ZEROCONF_PROPS = ("macaddress", "model", "manufacturer")
+
 
 class Manifest(TypedDict, total=False):
     """
@@ -146,9 +148,7 @@ async def async_get_custom_components(
     hass: HomeAssistant,
 ) -> dict[str, Integration]:
     """Return cached list of custom integrations."""
-    reg_or_evt = hass.data.get(DATA_CUSTOM_COMPONENTS)
-
-    if reg_or_evt is None:
+    if (reg_or_evt := hass.data.get(DATA_CUSTOM_COMPONENTS)) is None:
         evt = hass.data[DATA_CUSTOM_COMPONENTS] = asyncio.Event()
 
         reg = await _async_get_custom_components(hass)
@@ -184,21 +184,42 @@ async def async_get_config_flows(hass: HomeAssistant) -> set[str]:
     return flows
 
 
-async def async_get_zeroconf(hass: HomeAssistant) -> dict[str, list[dict[str, str]]]:
+def async_process_zeroconf_match_dict(entry: dict[str, Any]) -> dict[str, Any]:
+    """Handle backwards compat with zeroconf matchers."""
+    entry_without_type: dict[str, Any] = entry.copy()
+    del entry_without_type["type"]
+    # These properties keys used to be at the top level, we relocate
+    # them for backwards compat
+    for moved_prop in MOVED_ZEROCONF_PROPS:
+        if value := entry_without_type.pop(moved_prop, None):
+            _LOGGER.warning(
+                'Matching the zeroconf property "%s" at top-level is deprecated and should be moved into a properties dict; Check the developer documentation',
+                moved_prop,
+            )
+            if "properties" not in entry_without_type:
+                prop_dict: dict[str, str] = {}
+                entry_without_type["properties"] = prop_dict
+            else:
+                prop_dict = entry_without_type["properties"]
+            prop_dict[moved_prop] = value.lower()
+    return entry_without_type
+
+
+async def async_get_zeroconf(
+    hass: HomeAssistant,
+) -> dict[str, list[dict[str, str | dict[str, str]]]]:
     """Return cached list of zeroconf types."""
-    zeroconf: dict[str, list[dict[str, str]]] = ZEROCONF.copy()
+    zeroconf: dict[str, list[dict[str, str | dict[str, str]]]] = ZEROCONF.copy()  # type: ignore[assignment]
 
     integrations = await async_get_custom_components(hass)
     for integration in integrations.values():
         if not integration.zeroconf:
             continue
         for entry in integration.zeroconf:
-            data = {"domain": integration.domain}
+            data: dict[str, str | dict[str, str]] = {"domain": integration.domain}
             if isinstance(entry, dict):
                 typ = entry["type"]
-                entry_without_type = entry.copy()
-                del entry_without_type["type"]
-                data.update(entry_without_type)
+                data.update(async_process_zeroconf_match_dict(entry))
             else:
                 typ = entry
 
@@ -543,8 +564,7 @@ class Integration:
 
 async def async_get_integration(hass: HomeAssistant, domain: str) -> Integration:
     """Get an integration."""
-    cache = hass.data.get(DATA_INTEGRATIONS)
-    if cache is None:
+    if (cache := hass.data.get(DATA_INTEGRATIONS)) is None:
         if not _async_mount_config_dir(hass):
             raise IntegrationNotFound(domain)
         cache = hass.data[DATA_INTEGRATIONS] = {}
@@ -553,12 +573,11 @@ async def async_get_integration(hass: HomeAssistant, domain: str) -> Integration
 
     if isinstance(int_or_evt, asyncio.Event):
         await int_or_evt.wait()
-        int_or_evt = cache.get(domain, _UNDEF)
 
         # When we have waited and it's _UNDEF, it doesn't exist
         # We don't cache that it doesn't exist, or else people can't fix it
         # and then restart, because their config will never be valid.
-        if int_or_evt is _UNDEF:
+        if (int_or_evt := cache.get(domain, _UNDEF)) is _UNDEF:
             raise IntegrationNotFound(domain)
 
     if int_or_evt is not _UNDEF:
@@ -580,6 +599,9 @@ async def async_get_integration(hass: HomeAssistant, domain: str) -> Integration
 
 
 async def _async_get_integration(hass: HomeAssistant, domain: str) -> Integration:
+    if "." in domain:
+        raise ValueError(f"Invalid domain {domain}")
+
     # Instead of using resolve_from_root we use the cache of custom
     # components to find the integration.
     if integration := (await async_get_custom_components(hass)).get(domain):
@@ -630,8 +652,7 @@ def _load_file(
     with suppress(KeyError):
         return hass.data[DATA_COMPONENTS][comp_or_platform]  # type: ignore
 
-    cache = hass.data.get(DATA_COMPONENTS)
-    if cache is None:
+    if (cache := hass.data.get(DATA_COMPONENTS)) is None:
         if not _async_mount_config_dir(hass):
             return None
         cache = hass.data[DATA_COMPONENTS] = {}

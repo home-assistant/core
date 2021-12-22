@@ -17,6 +17,7 @@ from homeassistant.const import (
     ATTR_LOCKED,
     CONF_REGION,
     CONF_TOKEN,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
@@ -45,7 +46,7 @@ PS4_COMMAND_SCHEMA = vol.Schema(
     }
 )
 
-PLATFORMS = ["media_player"]
+PLATFORMS = [Platform.MEDIA_PLAYER]
 
 
 class PS4Data:

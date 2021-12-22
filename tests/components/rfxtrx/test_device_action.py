@@ -7,6 +7,7 @@ import RFXtrx
 import pytest
 
 import homeassistant.components.automation as automation
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.rfxtrx import DOMAIN
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.setup import async_setup_component
@@ -15,7 +16,6 @@ from tests.common import (
     MockConfigEntry,
     assert_lists_same,
     async_get_device_automations,
-    async_mock_service,
     mock_device_registry,
     mock_registry,
 )
@@ -99,7 +99,9 @@ async def test_get_actions(hass, device_reg: DeviceRegistry, device, expected):
     device_entry = device_reg.async_get_device(device.device_identifiers, set())
     assert device_entry
 
-    actions = await async_get_device_automations(hass, "action", device_entry.id)
+    actions = await async_get_device_automations(
+        hass, DeviceAutomationType.ACTION, device_entry.id
+    )
     actions = [action for action in actions if action["domain"] == DOMAIN]
 
     expected_actions = [
@@ -169,7 +171,6 @@ async def test_action(
 async def test_invalid_action(hass, device_reg: DeviceRegistry):
     """Test for invalid actions."""
     device = DEVICE_LIGHTING_1
-    notification_calls = async_mock_service(hass, "persistent_notification", "create")
 
     await setup_entry(hass, {device.code: {"signal_repetitions": 1}})
 
@@ -199,8 +200,8 @@ async def test_invalid_action(hass, device_reg: DeviceRegistry):
     )
     await hass.async_block_till_done()
 
-    assert len(notification_calls) == 1
+    assert len(notifications := hass.states.async_all("persistent_notification")) == 1
     assert (
         "The following integrations and platforms could not be set up"
-        in notification_calls[0].data["message"]
+        in notifications[0].attributes["message"]
     )

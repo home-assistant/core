@@ -1,19 +1,11 @@
 """Test Wallbox Switch component."""
+from homeassistant.const import CONF_ICON, CONF_UNIT_OF_MEASUREMENT, POWER_KILO_WATT
 
-from homeassistant.components.wallbox.const import CONF_STATION, DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-
-from tests.common import MockConfigEntry
-from tests.components.wallbox import setup_integration
-
-entry = MockConfigEntry(
-    domain=DOMAIN,
-    data={
-        CONF_USERNAME: "test_username",
-        CONF_PASSWORD: "test_password",
-        CONF_STATION: "12345",
-    },
-    entry_id="testEntry",
+from tests.components.wallbox import entry, setup_integration
+from tests.components.wallbox.const import (
+    CONF_MOCK_SENSOR_CHARGING_POWER_ID,
+    CONF_MOCK_SENSOR_CHARGING_SPEED_ID,
+    CONF_MOCK_SENSOR_MAX_AVAILABLE_POWER,
 )
 
 
@@ -22,11 +14,16 @@ async def test_wallbox_sensor_class(hass):
 
     await setup_integration(hass)
 
-    state = hass.states.get("sensor.mock_title_charging_power")
-    assert state.attributes["unit_of_measurement"] == "kW"
-    assert state.attributes["icon"] == "mdi:ev-station"
+    state = hass.states.get(CONF_MOCK_SENSOR_CHARGING_POWER_ID)
+    assert state.attributes[CONF_UNIT_OF_MEASUREMENT] == POWER_KILO_WATT
     assert state.name == "Mock Title Charging Power"
 
-    state = hass.states.get("sensor.mock_title_charging_speed")
-    assert state.attributes["icon"] == "mdi:speedometer"
+    state = hass.states.get(CONF_MOCK_SENSOR_CHARGING_SPEED_ID)
+    assert state.attributes[CONF_ICON] == "mdi:speedometer"
     assert state.name == "Mock Title Charging Speed"
+
+    # Test round with precision '0' works
+    state = hass.states.get(CONF_MOCK_SENSOR_MAX_AVAILABLE_POWER)
+    assert state.state == "25.0"
+
+    await hass.config_entries.async_unload(entry.entry_id)

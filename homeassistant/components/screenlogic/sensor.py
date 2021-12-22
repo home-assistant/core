@@ -1,6 +1,4 @@
 """Support for a ScreenLogic Sensor."""
-import logging
-
 from screenlogicpy.const import (
     CHEM_DOSING_STATE,
     DATA as SL_DATA,
@@ -8,16 +6,10 @@ from screenlogicpy.const import (
     EQUIPMENT,
 )
 
-from homeassistant.components.sensor import (
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_TEMPERATURE,
-    SensorEntity,
-)
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 
 from . import ScreenlogicEntity
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 SUPPORTED_CHEM_SENSORS = (
     "calcium_harness",
@@ -38,8 +30,6 @@ SUPPORTED_CHEM_SENSORS = (
 )
 
 SUPPORTED_SCG_SENSORS = (
-    "scg_level1",
-    "scg_level2",
     "scg_salt_ppm",
     "scg_super_chlor_timer",
 )
@@ -47,15 +37,15 @@ SUPPORTED_SCG_SENSORS = (
 SUPPORTED_PUMP_SENSORS = ("currentWatts", "currentRPM", "currentGPM")
 
 SL_DEVICE_TYPE_TO_HA_DEVICE_CLASS = {
-    DEVICE_TYPE.TEMPERATURE: DEVICE_CLASS_TEMPERATURE,
-    DEVICE_TYPE.ENERGY: DEVICE_CLASS_POWER,
+    DEVICE_TYPE.TEMPERATURE: SensorDeviceClass.TEMPERATURE,
+    DEVICE_TYPE.ENERGY: SensorDeviceClass.POWER,
 }
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up entry."""
     entities = []
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
     equipment_flags = coordinator.data[SL_DATA.KEY_CONFIG]["equipment_flags"]
 
     # Generic sensors
@@ -69,15 +59,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for pump_num, pump_data in coordinator.data[SL_DATA.KEY_PUMPS].items():
         if pump_data["data"] != 0 and "currentWatts" in pump_data:
             for pump_key in pump_data:
-                # Considerations for Intelliflow VF
+                enabled = True
+                # Assumptions for Intelliflow VF
                 if pump_data["pumpType"] == 1 and pump_key == "currentRPM":
-                    continue
-                # Considerations for Intelliflow VS
+                    enabled = False
+                # Assumptions for Intelliflow VS
                 if pump_data["pumpType"] == 2 and pump_key == "currentGPM":
-                    continue
+                    enabled = False
                 if pump_key in SUPPORTED_PUMP_SENSORS:
                     entities.append(
-                        ScreenLogicPumpSensor(coordinator, pump_num, pump_key)
+                        ScreenLogicPumpSensor(coordinator, pump_num, pump_key, enabled)
                     )
 
     # IntelliChem sensors

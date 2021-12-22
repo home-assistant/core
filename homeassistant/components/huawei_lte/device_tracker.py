@@ -133,8 +133,7 @@ def async_add_new_entities(
     tracked: set[str],
 ) -> None:
     """Add new entities that are not already being tracked."""
-    hosts = _get_hosts(router)
-    if not hosts:
+    if not (hosts := _get_hosts(router)):
         return
 
     track_wired_clients = router.config_entry.options.get(
@@ -225,8 +224,7 @@ class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
 
     async def async_update(self) -> None:
         """Update state."""
-        hosts = _get_hosts(self.router)
-        if hosts is None:
+        if (hosts := _get_hosts(self.router)) is None:
             self._available = False
             return
         self._available = True

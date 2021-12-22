@@ -1,7 +1,10 @@
 """Helper to handle a set of topics to subscribe to."""
+from __future__ import annotations
+
 from collections import deque
+from collections.abc import Callable
 from functools import wraps
-from typing import Any, Callable
+from typing import Any
 
 from homeassistant.core import HomeAssistant
 
@@ -41,8 +44,7 @@ def log_messages(
 
 def add_subscription(hass, message_callback, subscription):
     """Prepare debug data for subscription."""
-    entity_id = getattr(message_callback, "__entity_id", None)
-    if entity_id:
+    if entity_id := getattr(message_callback, "__entity_id", None):
         debug_info = hass.data.setdefault(
             DATA_MQTT_DEBUG_INFO, {"entities": {}, "triggers": {}}
         )

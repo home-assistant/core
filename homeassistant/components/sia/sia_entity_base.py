@@ -29,13 +29,13 @@ class SIABaseEntity(RestoreEntity):
         entry: ConfigEntry,
         account_data: dict[str, Any],
         zone: int,
-        device_class: str,
+        device_class: str | None = None,
     ) -> None:
         """Create SIABaseEntity object."""
         self._entry: ConfigEntry = entry
         self._account_data: dict[str, Any] = account_data
         self._zone: int = zone
-        self._attr_device_class: str = device_class
+        self._attr_device_class = device_class
 
         self._port: int = self._entry.data[CONF_PORT]
         self._account: str = self._account_data[CONF_ACCOUNT]
@@ -125,8 +125,8 @@ class SIABaseEntity(RestoreEntity):
         """Return the device_info."""
         assert self._attr_name is not None
         assert self.unique_id is not None
-        return {
-            "name": self._attr_name,
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "via_device": (DOMAIN, f"{self._port}_{self._account}"),
-        }
+        return DeviceInfo(
+            name=self._attr_name,
+            identifiers={(DOMAIN, self.unique_id)},
+            via_device=(DOMAIN, f"{self._port}_{self._account}"),
+        )

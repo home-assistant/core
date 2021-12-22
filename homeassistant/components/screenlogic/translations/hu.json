@@ -13,7 +13,7 @@
                     "ip_address": "IP c\u00edm",
                     "port": "Port"
                 },
-                "description": "Add meg a ScreenLogic Gateway adatait.",
+                "description": "Adja meg a ScreenLogic Gateway adatait.",
                 "title": "ScreenLogic"
             },
             "gateway_select": {

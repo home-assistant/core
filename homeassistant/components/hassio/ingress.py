@@ -197,8 +197,7 @@ def _init_header(request: web.Request, token: str) -> CIMultiDict | dict[str, st
     headers[hdrs.X_FORWARDED_FOR] = forward_for
 
     # Set X-Forwarded-Host
-    forward_host = request.headers.get(hdrs.X_FORWARDED_HOST)
-    if not forward_host:
+    if not (forward_host := request.headers.get(hdrs.X_FORWARDED_HOST)):
         forward_host = request.host
     headers[hdrs.X_FORWARDED_HOST] = forward_host
 
@@ -256,3 +255,5 @@ async def _websocket_forward(ws_from, ws_to):
                 await ws_to.close(code=ws_to.close_code, message=msg.extra)
     except RuntimeError:
         _LOGGER.debug("Ingress Websocket runtime error")
+    except ConnectionResetError:
+        _LOGGER.debug("Ingress Websocket Connection Reset")

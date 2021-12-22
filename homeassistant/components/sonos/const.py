@@ -19,6 +19,7 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_PLAYLIST,
     MEDIA_TYPE_TRACK,
 )
+from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 
@@ -27,7 +28,13 @@ UPNP_ST = "urn:schemas-upnp-org:device:ZonePlayer:1"
 DOMAIN = "sonos"
 DATA_SONOS = "sonos_media_player"
 DATA_SONOS_DISCOVERY_MANAGER = "sonos_discovery_manager"
-PLATFORMS = {BINARY_SENSOR_DOMAIN, MP_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN}
+PLATFORMS = {
+    BINARY_SENSOR_DOMAIN,
+    MP_DOMAIN,
+    NUMBER_DOMAIN,
+    SENSOR_DOMAIN,
+    SWITCH_DOMAIN,
+}
 
 SONOS_ARTIST = "artists"
 SONOS_ALBUM = "albums"
@@ -135,25 +142,27 @@ PLAYABLE_MEDIA_TYPES = [
     MEDIA_TYPE_TRACK,
 ]
 
+SONOS_CHECK_ACTIVITY = "sonos_check_activity"
 SONOS_CREATE_ALARM = "sonos_create_alarm"
+SONOS_CREATE_AUDIO_FORMAT_SENSOR = "sonos_create_audio_format_sensor"
 SONOS_CREATE_BATTERY = "sonos_create_battery"
+SONOS_CREATE_SWITCHES = "sonos_create_switches"
+SONOS_CREATE_LEVELS = "sonos_create_levels"
 SONOS_CREATE_MEDIA_PLAYER = "sonos_create_media_player"
-SONOS_ENTITY_CREATED = "sonos_entity_created"
 SONOS_POLL_UPDATE = "sonos_poll_update"
 SONOS_ALARMS_UPDATED = "sonos_alarms_updated"
 SONOS_FAVORITES_UPDATED = "sonos_favorites_updated"
+SONOS_SPEAKER_ACTIVITY = "sonos_speaker_activity"
 SONOS_SPEAKER_ADDED = "sonos_speaker_added"
 SONOS_STATE_UPDATED = "sonos_state_updated"
 SONOS_REBOOTED = "sonos_rebooted"
-SONOS_SEEN = "sonos_seen"
 
 SOURCE_LINEIN = "Line-in"
 SOURCE_TV = "TV"
 
+AVAILABILITY_CHECK_INTERVAL = datetime.timedelta(minutes=1)
+AVAILABILITY_TIMEOUT = AVAILABILITY_CHECK_INTERVAL.total_seconds() * 4.5
 BATTERY_SCAN_INTERVAL = datetime.timedelta(minutes=15)
 SCAN_INTERVAL = datetime.timedelta(seconds=10)
 DISCOVERY_INTERVAL = datetime.timedelta(seconds=60)
-SEEN_EXPIRE_TIME = 3.5 * DISCOVERY_INTERVAL
 SUBSCRIPTION_TIMEOUT = 1200
-
-MDNS_SERVICE = "_sonos._tcp.local."

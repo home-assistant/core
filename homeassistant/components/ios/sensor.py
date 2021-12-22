@@ -6,6 +6,7 @@ from homeassistant.components.sensor import SensorEntity, SensorEntityDescriptio
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.icon import icon_for_battery_level
 
 from .const import DOMAIN
@@ -59,20 +60,20 @@ class IOSSensor(SensorEntity):
         self._attr_unique_id = f"{description.key}_{device_id}"
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return information about the device."""
-        return {
-            "identifiers": {
+        return DeviceInfo(
+            identifiers={
                 (
                     ios.DOMAIN,
                     self._device[ios.ATTR_DEVICE][ios.ATTR_DEVICE_PERMANENT_ID],
                 )
             },
-            "name": self._device[ios.ATTR_DEVICE][ios.ATTR_DEVICE_NAME],
-            "manufacturer": "Apple",
-            "model": self._device[ios.ATTR_DEVICE][ios.ATTR_DEVICE_TYPE],
-            "sw_version": self._device[ios.ATTR_DEVICE][ios.ATTR_DEVICE_SYSTEM_VERSION],
-        }
+            manufacturer="Apple",
+            model=self._device[ios.ATTR_DEVICE][ios.ATTR_DEVICE_TYPE],
+            name=self._device[ios.ATTR_DEVICE][ios.ATTR_DEVICE_NAME],
+            sw_version=self._device[ios.ATTR_DEVICE][ios.ATTR_DEVICE_SYSTEM_VERSION],
+        )
 
     @property
     def extra_state_attributes(self):

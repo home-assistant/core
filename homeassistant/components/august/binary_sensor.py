@@ -1,10 +1,11 @@
 """Support for August binary sensors."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
-from typing import Callable, cast
+from typing import cast
 
 from yalexs.activity import (
     ACTION_DOORBELL_CALL_MISSED,
@@ -16,18 +17,16 @@ from yalexs.doorbell import DoorbellDetail
 from yalexs.lock import LockDoorStatus
 from yalexs.util import update_lock_detail_from_activity
 
-from homeassistant.components.august import AugustData
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
-    DEVICE_CLASS_DOOR,
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_OCCUPANCY,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
 from homeassistant.core import callback
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.event import async_call_later
 
+from . import AugustData
 from .const import ACTIVITY_UPDATE_INTERVAL, DATA_AUGUST, DOMAIN
 from .entity import AugustEntityMixin
 
@@ -51,6 +50,17 @@ def _retrieve_online_state(data: AugustData, detail: DoorbellDetail) -> bool:
 def _retrieve_motion_state(data: AugustData, detail: DoorbellDetail) -> bool:
     latest = data.activity_stream.get_latest_device_activity(
         detail.device_id, {ActivityType.DOORBELL_MOTION}
+    )
+
+    if latest is None:
+        return False
+
+    return _activity_time_based_state(latest)
+
+
+def _retrieve_image_capture_state(data: AugustData, detail: DoorbellDetail) -> bool:
+    latest = data.activity_stream.get_latest_device_activity(
+        detail.device_id, {ActivityType.DOORBELL_IMAGE_CAPTURE}
     )
 
     if latest is None:
@@ -92,7 +102,7 @@ def _native_datetime() -> datetime:
 class AugustRequiredKeysMixin:
     """Mixin for required keys."""
 
-    state_provider: Callable[[AugustData, DoorbellDetail], bool]
+    value_fn: Callable[[AugustData, DoorbellDetail], bool]
     is_time_based: bool
 
 
@@ -113,22 +123,30 @@ SENSOR_TYPES_DOORBELL: tuple[AugustBinarySensorEntityDescription, ...] = (
     AugustBinarySensorEntityDescription(
         key="doorbell_ding",
         name="Ding",
-        device_class=DEVICE_CLASS_OCCUPANCY,
-        state_provider=_retrieve_ding_state,
+        device_class=BinarySensorDeviceClass.OCCUPANCY,
+        value_fn=_retrieve_ding_state,
         is_time_based=True,
     ),
     AugustBinarySensorEntityDescription(
         key="doorbell_motion",
         name="Motion",
-        device_class=DEVICE_CLASS_MOTION,
-        state_provider=_retrieve_motion_state,
+        device_class=BinarySensorDeviceClass.MOTION,
+        value_fn=_retrieve_motion_state,
+        is_time_based=True,
+    ),
+    AugustBinarySensorEntityDescription(
+        key="doorbell_image_capture",
+        name="Image Capture",
+        icon="mdi:file-image",
+        value_fn=_retrieve_image_capture_state,
         is_time_based=True,
     ),
     AugustBinarySensorEntityDescription(
         key="doorbell_online",
         name="Online",
-        device_class=DEVICE_CLASS_CONNECTIVITY,
-        state_provider=_retrieve_online_state,
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=_retrieve_online_state,
         is_time_based=False,
     ),
 )
@@ -166,7 +184,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class AugustDoorBinarySensor(AugustEntityMixin, BinarySensorEntity):
     """Representation of an August Door binary sensor."""
 
-    _attr_device_class = DEVICE_CLASS_DOOR
+    _attr_device_class = BinarySensorDeviceClass.DOOR
 
     def __init__(self, data, device, description: BinarySensorEntityDescription):
         """Initialize the sensor."""
@@ -224,9 +242,7 @@ class AugustDoorbellBinarySensor(AugustEntityMixin, BinarySensorEntity):
     def _update_from_data(self):
         """Get the latest state of the sensor."""
         self._cancel_any_pending_updates()
-        self._attr_is_on = self.entity_description.state_provider(
-            self._data, self._detail
-        )
+        self._attr_is_on = self.entity_description.value_fn(self._data, self._detail)
 
         if self.entity_description.is_time_based:
             self._attr_available = _retrieve_online_state(self._data, self._detail)

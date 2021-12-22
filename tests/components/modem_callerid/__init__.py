@@ -11,15 +11,16 @@ CONF_DATA = {CONF_DEVICE: DEFAULT_PORT}
 IMPORT_DATA = {"sensor": {"platform": "modem_callerid"}}
 
 
-def _patch_init_modem(mocked_modem):
+def _patch_init_modem():
     return patch(
         "homeassistant.components.modem_callerid.PhoneModem",
-        return_value=mocked_modem,
+        autospec=True,
     )
 
 
 def _patch_config_flow_modem(mocked_modem):
     return patch(
         "homeassistant.components.modem_callerid.config_flow.PhoneModem",
+        autospec=True,
         return_value=mocked_modem,
     )

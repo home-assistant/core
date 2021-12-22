@@ -7,12 +7,12 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
-    DEVICE_CLASS_TEMPERATURE,
     PERCENTAGE,
     POWER_WATT,
     TEMP_CELSIUS,
@@ -39,7 +39,7 @@ SENSOR_TYPES: tuple[AquaLogicSensorEntityDescription, ...] = (
         name="Air Temperature",
         unit_metric=TEMP_CELSIUS,
         unit_imperial=TEMP_FAHRENHEIT,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
     AquaLogicSensorEntityDescription(
         key="pool_temp",
@@ -47,7 +47,7 @@ SENSOR_TYPES: tuple[AquaLogicSensorEntityDescription, ...] = (
         unit_metric=TEMP_CELSIUS,
         unit_imperial=TEMP_FAHRENHEIT,
         icon="mdi:oil-temperature",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
     AquaLogicSensorEntityDescription(
         key="spa_temp",
@@ -55,7 +55,7 @@ SENSOR_TYPES: tuple[AquaLogicSensorEntityDescription, ...] = (
         unit_metric=TEMP_CELSIUS,
         unit_imperial=TEMP_FAHRENHEIT,
         icon="mdi:oil-temperature",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
     AquaLogicSensorEntityDescription(
         key="pool_chlorinator",
@@ -147,8 +147,7 @@ class AquaLogicSensor(SensorEntity):
     @callback
     def async_update_callback(self):
         """Update callback."""
-        panel = self._processor.panel
-        if panel is not None:
+        if (panel := self._processor.panel) is not None:
             if panel.is_metric:
                 self._attr_native_unit_of_measurement = (
                     self.entity_description.unit_metric

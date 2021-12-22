@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 import base64
 from collections.abc import Awaitable
-import logging
 from typing import Callable
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -39,7 +38,6 @@ from . import (
     setup_test_config_entry,
 )
 
-_LOGGER = logging.getLogger(__name__)
 TEST_CAMERA_ENTITY_ID = "camera.test_instance_1"
 TEST_IMAGE_DATA = "TEST DATA"
 TEST_IMAGE_UPDATE = {
@@ -123,7 +121,7 @@ async def test_camera_image_failed_start_stream_call(hass: HomeAssistant) -> Non
     await setup_test_config_entry(hass, hyperion_client=client)
 
     with pytest.raises(HomeAssistantError):
-        await async_get_image(hass, TEST_CAMERA_ENTITY_ID, timeout=0)
+        await async_get_image(hass, TEST_CAMERA_ENTITY_ID, timeout=0.01)
 
     assert client.async_send_image_stream_start.called
     assert not client.async_send_image_stream_stop.called

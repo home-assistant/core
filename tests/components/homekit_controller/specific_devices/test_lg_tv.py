@@ -1,5 +1,6 @@
 """Make sure that handling real world LG HomeKit characteristics isn't broken."""
 
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.media_player.const import (
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -63,8 +64,11 @@ async def test_lg_tv(hass):
     assert device.model == "OLED55B9PUA"
     assert device.sw_version == "04.71.04"
     assert device.via_device_id is None
+    assert device.hw_version == "1"
 
     # A TV has media player device triggers
-    triggers = await async_get_device_automations(hass, "trigger", device.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device.id
+    )
     for trigger in triggers:
         assert trigger["domain"] == "media_player"

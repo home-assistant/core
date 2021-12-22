@@ -8,6 +8,7 @@ from aioesphomeapi import CoverInfo, CoverOperation, CoverState
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
+    DEVICE_CLASSES,
     SUPPORT_CLOSE,
     SUPPORT_CLOSE_TILT,
     SUPPORT_OPEN,
@@ -57,8 +58,10 @@ class EsphomeCover(EsphomeEntity[CoverInfo, CoverState], CoverEntity):
         return flags
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> str | None:
         """Return the class of this device, from component DEVICE_CLASSES."""
+        if self._static_info.device_class not in DEVICE_CLASSES:
+            return None
         return self._static_info.device_class
 
     @property

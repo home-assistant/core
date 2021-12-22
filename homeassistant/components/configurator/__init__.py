@@ -65,9 +65,7 @@ def async_request_config(
     if description_image is not None:
         description += f"\n\n![Description image]({description_image})"
 
-    instance = hass.data.get(_KEY_INSTANCE)
-
-    if instance is None:
+    if (instance := hass.data.get(_KEY_INSTANCE)) is None:
         instance = hass.data[_KEY_INSTANCE] = Configurator(hass)
 
     request_id = instance.async_request_config(
@@ -207,6 +205,7 @@ class Configurator:
         # it shortly after so that it is deleted when the client updates.
         self.hass.states.async_set(entity_id, STATE_CONFIGURED)
 
+        @async_callback
         def deferred_remove(event: Event):
             """Remove the request state."""
             self.hass.states.async_remove(entity_id, context=event.context)

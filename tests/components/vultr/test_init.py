@@ -32,7 +32,7 @@ class TestVultr(unittest.TestCase):
         """Test successful setup."""
         with patch(
             "vultr.Vultr.server_list",
-            return_value=json.loads(load_fixture("vultr_server_list.json")),
+            return_value=json.loads(load_fixture("server_list.json", "vultr")),
         ):
             response = vultr.setup(self.hass, self.config)
         assert response

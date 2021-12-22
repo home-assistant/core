@@ -1,15 +1,19 @@
 """Support for WeMo humidifier."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
-import logging
 import math
+from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.components.fan import SUPPORT_SET_SPEED, FanEntity
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
     int_states_in_range,
     percentage_to_ranged_value,
@@ -21,12 +25,11 @@ from .const import (
     SERVICE_RESET_FILTER_LIFE,
     SERVICE_SET_HUMIDITY,
 )
-from .entity import WemoEntity
+from .entity import WemoBinaryStateEntity
+from .wemo_device import DeviceCoordinator
 
 SCAN_INTERVAL = timedelta(seconds=10)
 PARALLEL_UPDATES = 0
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_CURRENT_HUMIDITY = "current_humidity"
 ATTR_TARGET_HUMIDITY = "target_humidity"
@@ -34,10 +37,6 @@ ATTR_FAN_MODE = "fan_mode"
 ATTR_FILTER_LIFE = "filter_life"
 ATTR_FILTER_EXPIRED = "filter_expired"
 ATTR_WATER_LEVEL = "water_level"
-
-# The WEMO_ constants below come from pywemo itself
-WEMO_ON = 1
-WEMO_OFF = 0
 
 WEMO_HUMIDITY_45 = 0
 WEMO_HUMIDITY_50 = 1
@@ -66,10 +65,14 @@ SET_HUMIDITY_SCHEMA = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up WeMo binary sensors."""
 
-    async def _discovered_wemo(coordinator):
+    async def _discovered_wemo(coordinator: DeviceCoordinator) -> None:
         """Handle a discovered Wemo device."""
         async_add_entities([WemoHumidifier(coordinator)])
 
@@ -95,10 +98,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-class WemoHumidifier(WemoEntity, FanEntity):
+class WemoHumidifier(WemoBinaryStateEntity, FanEntity):
     """Representation of a WeMo humidifier."""
 
-    def __init__(self, coordinator):
+    def __init__(self, coordinator: DeviceCoordinator) -> None:
         """Initialize the WeMo switch."""
         super().__init__(coordinator)
         if self.wemo.fan_mode != WEMO_FAN_OFF:
@@ -107,12 +110,12 @@ class WemoHumidifier(WemoEntity, FanEntity):
             self._last_fan_on_mode = WEMO_FAN_MEDIUM
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return the icon of device based on its type."""
         return "mdi:water-percent"
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific state attributes."""
         return {
             ATTR_CURRENT_HUMIDITY: self.wemo.current_humidity_percent,
@@ -145,29 +148,24 @@ class WemoHumidifier(WemoEntity, FanEntity):
             self._last_fan_on_mode = self.wemo.fan_mode
         super()._handle_coordinator_update()
 
-    @property
-    def is_on(self) -> bool:
-        """Return true if the state is on."""
-        return self.wemo.get_state()
-
     def turn_on(
         self,
-        speed: str = None,
-        percentage: int = None,
-        preset_mode: str = None,
-        **kwargs,
+        speed: str | None = None,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
+        **kwargs: Any,
     ) -> None:
         """Turn the fan on."""
         self.set_percentage(percentage)
 
-    def turn_off(self, **kwargs) -> None:
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         with self._wemo_exception_handler("turn off"):
             self.wemo.set_state(WEMO_FAN_OFF)
 
         self.schedule_update_ha_state()
 
-    def set_percentage(self, percentage: int) -> None:
+    def set_percentage(self, percentage: int | None) -> None:
         """Set the fan_mode of the Humidifier."""
         if percentage is None:
             named_speed = self._last_fan_on_mode

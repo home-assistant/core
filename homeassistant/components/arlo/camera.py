@@ -7,7 +7,7 @@ from haffmpeg.camera import CameraMjpeg
 import voluptuous as vol
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
-from homeassistant.components.ffmpeg import DATA_FFMPEG
+from homeassistant.components.ffmpeg import get_ffmpeg_manager
 from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 import homeassistant.helpers.config_validation as cv
@@ -59,7 +59,7 @@ class ArloCam(Camera):
         self._camera = camera
         self._attr_name = camera.name
         self._motion_status = False
-        self._ffmpeg = hass.data[DATA_FFMPEG]
+        self._ffmpeg = get_ffmpeg_manager(hass)
         self._ffmpeg_arguments = device_info.get(CONF_FFMPEG_ARGUMENTS)
         self._last_refresh = None
         self.attrs = {}
@@ -145,13 +145,12 @@ class ArloCam(Camera):
     def set_base_station_mode(self, mode):
         """Set the mode in the base station."""
         # Get the list of base stations identified by library
-        base_stations = self.hass.data[DATA_ARLO].base_stations
 
         # Some Arlo cameras does not have base station
         # So check if there is base station detected first
         # if yes, then choose the primary base station
         # Set the mode on the chosen base station
-        if base_stations:
+        if base_stations := self.hass.data[DATA_ARLO].base_stations:
             primary_base_station = base_stations[0]
             primary_base_station.mode = mode
 

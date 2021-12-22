@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from abc import ABC
 from dataclasses import dataclass
+from typing import Any, cast
 
 from homeassistant.components.media_player import BrowseMedia
 from homeassistant.components.media_player.const import (
@@ -27,9 +28,11 @@ class PlayMedia:
 class BrowseMediaSource(BrowseMedia):
     """Represent a browsable media file."""
 
-    children: list[BrowseMediaSource] | None
+    children: list[BrowseMediaSource | BrowseMedia] | None
 
-    def __init__(self, *, domain: str | None, identifier: str | None, **kwargs) -> None:
+    def __init__(
+        self, *, domain: str | None, identifier: str | None, **kwargs: Any
+    ) -> None:
         """Initialize media source browse media."""
         media_content_id = f"{URI_SCHEME}{domain or ''}"
         if identifier:
@@ -85,14 +88,12 @@ class MediaSourceItem:
     @callback
     def async_media_source(self) -> MediaSource:
         """Return media source that owns this item."""
-        return self.hass.data[DOMAIN][self.domain]
+        return cast(MediaSource, self.hass.data[DOMAIN][self.domain])
 
     @classmethod
     def from_uri(cls, hass: HomeAssistant, uri: str) -> MediaSourceItem:
         """Create an item from a uri."""
-        match = URI_SCHEME_REGEX.match(uri)
-
-        if not match:
+        if not (match := URI_SCHEME_REGEX.match(uri)):
             raise ValueError("Invalid media source URI")
 
         domain = match.group("domain")
@@ -104,7 +105,7 @@ class MediaSourceItem:
 class MediaSource(ABC):
     """Represents a source of media files."""
 
-    name: str = None
+    name: str | None = None
 
     def __init__(self, domain: str) -> None:
         """Initialize a media source."""
@@ -116,8 +117,6 @@ class MediaSource(ABC):
         """Resolve a media item to a playable item."""
         raise NotImplementedError
 
-    async def async_browse_media(
-        self, item: MediaSourceItem, media_types: tuple[str]
-    ) -> BrowseMediaSource:
+    async def async_browse_media(self, item: MediaSourceItem) -> BrowseMediaSource:
         """Browse media."""
         raise NotImplementedError

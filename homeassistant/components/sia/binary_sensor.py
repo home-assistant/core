@@ -8,9 +8,7 @@ from typing import Any
 from pysiaalarm import SIAEvent
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_MOISTURE,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_SMOKE,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -81,11 +79,11 @@ class SIABinarySensorBase(SIABaseEntity, BinarySensorEntity):
         entry: ConfigEntry,
         account_data: dict[str, Any],
         zone: int,
-        device_class: str,
+        device_class: BinarySensorDeviceClass,
     ) -> None:
         """Initialize a base binary sensor."""
-        super().__init__(entry, account_data, zone, device_class)
-
+        super().__init__(entry, account_data, zone)
+        self._attr_device_class = device_class
         self._attr_unique_id = SIA_UNIQUE_ID_FORMAT_BINARY.format(
             self._entry.entry_id, self._account, self._zone, self._attr_device_class
         )
@@ -111,7 +109,7 @@ class SIABinarySensorMoisture(SIABinarySensorBase):
         zone: int,
     ) -> None:
         """Initialize a Moisture binary sensor."""
-        super().__init__(entry, account_data, zone, DEVICE_CLASS_MOISTURE)
+        super().__init__(entry, account_data, zone, BinarySensorDeviceClass.MOISTURE)
         self._attr_entity_registry_enabled_default = False
 
     def update_state(self, sia_event: SIAEvent) -> None:
@@ -132,7 +130,7 @@ class SIABinarySensorSmoke(SIABinarySensorBase):
         zone: int,
     ) -> None:
         """Initialize a Smoke binary sensor."""
-        super().__init__(entry, account_data, zone, DEVICE_CLASS_SMOKE)
+        super().__init__(entry, account_data, zone, BinarySensorDeviceClass.SMOKE)
         self._attr_entity_registry_enabled_default = False
 
     def update_state(self, sia_event: SIAEvent) -> None:
@@ -152,7 +150,9 @@ class SIABinarySensorPower(SIABinarySensorBase):
         account_data: dict[str, Any],
     ) -> None:
         """Initialize a Power binary sensor."""
-        super().__init__(entry, account_data, SIA_HUB_ZONE, DEVICE_CLASS_POWER)
+        super().__init__(
+            entry, account_data, SIA_HUB_ZONE, BinarySensorDeviceClass.POWER
+        )
         self._attr_entity_registry_enabled_default = True
 
     def update_state(self, sia_event: SIAEvent) -> None:

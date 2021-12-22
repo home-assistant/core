@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from http import HTTPStatus
 import logging
 import re
 from typing import cast, final
@@ -10,7 +11,7 @@ from aiohttp import web
 
 from homeassistant.components import http
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import HTTP_BAD_REQUEST, STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -144,8 +145,7 @@ class CalendarEventDevice(Entity):
     @property
     def state_attributes(self):
         """Return the entity state attributes."""
-        event = self.event
-        if event is None:
+        if (event := self.event) is None:
             return None
 
         event = normalize_event(event)
@@ -161,8 +161,7 @@ class CalendarEventDevice(Entity):
     @property
     def state(self):
         """Return the state of the calendar event."""
-        event = self.event
-        if event is None:
+        if (event := self.event) is None:
             return STATE_OFF
 
         event = normalize_event(event)
@@ -200,12 +199,12 @@ class CalendarEventView(http.HomeAssistantView):
         start = request.query.get("start")
         end = request.query.get("end")
         if None in (start, end, entity):
-            return web.Response(status=HTTP_BAD_REQUEST)
+            return web.Response(status=HTTPStatus.BAD_REQUEST)
         try:
             start_date = dt.parse_datetime(start)
             end_date = dt.parse_datetime(end)
         except (ValueError, AttributeError):
-            return web.Response(status=HTTP_BAD_REQUEST)
+            return web.Response(status=HTTPStatus.BAD_REQUEST)
         event_list = await entity.async_get_events(
             request.app["hass"], start_date, end_date
         )

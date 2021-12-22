@@ -6,6 +6,8 @@ DOMAIN = "recorder"
 
 CONF_DB_INTEGRITY_CHECK = "db_integrity_check"
 
+MAX_QUEUE_BACKLOG = 30000
+
 # The maximum number of rows (events) we purge in one delete statement
 
 # sqlite3 has a limit of 999 until version 3.32.0

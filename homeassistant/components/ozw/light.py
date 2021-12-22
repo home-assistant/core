@@ -177,8 +177,7 @@ class ZwaveLight(ZWaveDeviceEntity, LightEntity):
             # transition specified by user
             new_value = int(max(0, min(7620, kwargs[ATTR_TRANSITION])))
             if ozw_version < (1, 6, 1205):
-                transition = kwargs[ATTR_TRANSITION]
-                if transition <= 127:
+                if (transition := kwargs[ATTR_TRANSITION]) <= 127:
                     new_value = int(transition)
                 else:
                     minutes = int(transition / 60)

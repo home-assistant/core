@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "no_plants": "\u3053\u306e\u30a2\u30ab\u30a6\u30f3\u30c8\u3067\u690d\u7269(plants)\u306f\u898b\u3064\u304b\u308a\u307e\u305b\u3093\u3067\u3057\u305f"
+        },
+        "error": {
+            "invalid_auth": "\u7121\u52b9\u306a\u8a8d\u8a3c"
+        },
+        "step": {
+            "plant": {
+                "data": {
+                    "plant_id": "\u30d7\u30e9\u30f3\u30c8"
+                },
+                "title": "\u30d7\u30e9\u30f3\u30c8\u3092\u9078\u629e"
+            },
+            "user": {
+                "data": {
+                    "name": "\u540d\u524d",
+                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
+                    "url": "URL",
+                    "username": "\u30e6\u30fc\u30b6\u30fc\u540d"
+                },
+                "title": "Growatt\u60c5\u5831\u3092\u5165\u529b\u3057\u3066\u304f\u3060\u3055\u3044"
+            }
+        }
+    },
+    "title": "Growatt\u30b5\u30fc\u30d0\u30fc"
+}

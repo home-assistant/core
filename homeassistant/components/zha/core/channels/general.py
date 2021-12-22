@@ -23,7 +23,6 @@ from ..const import (
     SIGNAL_SET_LEVEL,
     SIGNAL_UPDATE_DEVICE,
 )
-from ..helpers import retryable_req
 from .base import ClientChannel, ZigbeeChannel, parse_and_log_command
 
 
@@ -44,7 +43,16 @@ class AnalogInput(ZigbeeChannel):
 class AnalogOutput(ZigbeeChannel):
     """Analog Output channel."""
 
-    REPORT_CONFIG = [{"attr": "present_value", "config": REPORT_CONFIG_DEFAULT}]
+    REPORT_CONFIG = ({"attr": "present_value", "config": REPORT_CONFIG_DEFAULT},)
+    ZCL_INIT_ATTRS = {
+        "min_present_value": True,
+        "max_present_value": True,
+        "resolution": True,
+        "relinquish_default": True,
+        "description": True,
+        "engineering_units": True,
+        "application_type": True,
+    }
 
     @property
     def present_value(self) -> float | None:
@@ -98,25 +106,6 @@ class AnalogOutput(ZigbeeChannel):
         ):
             return True
         return False
-
-    @retryable_req(delays=(1, 1, 3))
-    def async_initialize_channel_specific(self, from_cache: bool) -> Coroutine:
-        """Initialize channel."""
-        return self.fetch_config(from_cache)
-
-    async def fetch_config(self, from_cache: bool) -> None:
-        """Get the channel configuration."""
-        attributes = [
-            "min_present_value",
-            "max_present_value",
-            "resolution",
-            "relinquish_default",
-            "description",
-            "engineering_units",
-            "application_type",
-        ]
-        # just populates the cache, if not already done
-        await self.get_attributes(attributes, from_cache=from_cache)
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.AnalogValue.cluster_id)

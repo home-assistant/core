@@ -1,8 +1,9 @@
 """Support for Renault sensors."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, cast
+from typing import cast
 
 from renault_api.kamereon.models import KamereonVehicleBatteryStatusData
 
@@ -13,7 +14,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import DEVICE_CLASS_CHARGE_MODE, DOMAIN
-from .renault_entities import RenaultDataEntity, RenaultEntityDescription
+from .renault_entities import RenaultDataEntity, RenaultDataEntityDescription
 from .renault_hub import RenaultHub
 
 
@@ -28,7 +29,9 @@ class RenaultSelectRequiredKeysMixin:
 
 @dataclass
 class RenaultSelectEntityDescription(
-    SelectEntityDescription, RenaultEntityDescription, RenaultSelectRequiredKeysMixin
+    SelectEntityDescription,
+    RenaultDataEntityDescription,
+    RenaultSelectRequiredKeysMixin,
 ):
     """Class describing Renault select entities."""
 

@@ -2,13 +2,14 @@
 from __future__ import annotations
 
 from statistics import mean
+from typing import NamedTuple
 
 import numpy as np
 
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_STATE
@@ -17,7 +18,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import IQVIAEntity
 from .const import (
-    DATA_COORDINATOR,
     DOMAIN,
     TYPE_ALLERGY_FORECAST,
     TYPE_ALLERGY_INDEX,
@@ -53,12 +53,21 @@ API_CATEGORY_MAPPING = {
     TYPE_DISEASE_TODAY: TYPE_DISEASE_INDEX,
 }
 
-RATING_MAPPING = [
-    {"label": "Low", "minimum": 0.0, "maximum": 2.4},
-    {"label": "Low/Medium", "minimum": 2.5, "maximum": 4.8},
-    {"label": "Medium", "minimum": 4.9, "maximum": 7.2},
-    {"label": "Medium/High", "minimum": 7.3, "maximum": 9.6},
-    {"label": "High", "minimum": 9.7, "maximum": 12},
+
+class Rating(NamedTuple):
+    """Assign label to value range."""
+
+    label: str
+    minimum: float
+    maximum: float
+
+
+RATING_MAPPING: list[Rating] = [
+    Rating(label="Low", minimum=0.0, maximum=2.4),
+    Rating(label="Low/Medium", minimum=2.5, maximum=4.8),
+    Rating(label="Medium", minimum=4.9, maximum=7.2),
+    Rating(label="Medium/High", minimum=7.3, maximum=9.6),
+    Rating(label="High", minimum=9.7, maximum=12),
 ]
 
 
@@ -90,7 +99,7 @@ INDEX_SENSOR_DESCRIPTIONS = (
         key=TYPE_ALLERGY_TODAY,
         name="Allergy Index: Today",
         icon="mdi:flower",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_ALLERGY_TOMORROW,
@@ -101,19 +110,18 @@ INDEX_SENSOR_DESCRIPTIONS = (
         key=TYPE_ASTHMA_TODAY,
         name="Asthma Index: Today",
         icon="mdi:flower",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_ASTHMA_TOMORROW,
         name="Asthma Index: Tomorrow",
         icon="mdi:flower",
-        state_class=STATE_CLASS_MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_DISEASE_TODAY,
         name="Cold & Flu Index: Today",
         icon="mdi:pill",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 
@@ -124,7 +132,7 @@ async def async_setup_entry(
     """Set up IQVIA sensors based on a config entry."""
     sensors: list[ForecastSensor | IndexSensor] = [
         ForecastSensor(
-            hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
+            hass.data[DOMAIN][entry.entry_id][
                 API_CATEGORY_MAPPING.get(description.key, description.key)
             ],
             entry,
@@ -135,7 +143,7 @@ async def async_setup_entry(
     sensors.extend(
         [
             IndexSensor(
-                hass.data[DOMAIN][DATA_COORDINATOR][entry.entry_id][
+                hass.data[DOMAIN][entry.entry_id][
                     API_CATEGORY_MAPPING.get(description.key, description.key)
                 ],
                 entry,
@@ -182,9 +190,7 @@ class ForecastSensor(IQVIAEntity, SensorEntity):
         indices = [p["Index"] for p in data["periods"]]
         average = round(mean(indices), 1)
         [rating] = [
-            i["label"]
-            for i in RATING_MAPPING
-            if i["minimum"] <= average <= i["maximum"]
+            i.label for i in RATING_MAPPING if i.minimum <= average <= i.maximum
         ]
 
         self._attr_native_value = average
@@ -199,9 +205,9 @@ class ForecastSensor(IQVIAEntity, SensorEntity):
         )
 
         if self.entity_description.key == TYPE_ALLERGY_FORECAST:
-            outlook_coordinator = self.hass.data[DOMAIN][DATA_COORDINATOR][
-                self._entry.entry_id
-            ][TYPE_ALLERGY_OUTLOOK]
+            outlook_coordinator = self.hass.data[DOMAIN][self._entry.entry_id][
+                TYPE_ALLERGY_OUTLOOK
+            ]
 
             if not outlook_coordinator.last_update_success:
                 return
@@ -247,9 +253,7 @@ class IndexSensor(IQVIAEntity, SensorEntity):
             return
 
         [rating] = [
-            i["label"]
-            for i in RATING_MAPPING
-            if i["minimum"] <= period["Index"] <= i["maximum"]
+            i.label for i in RATING_MAPPING if i.minimum <= period["Index"] <= i.maximum
         ]
 
         self._attr_extra_state_attributes.update(

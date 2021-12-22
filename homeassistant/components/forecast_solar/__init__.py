@@ -7,7 +7,7 @@ import logging
 from forecast_solar import ForecastSolar
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -20,16 +20,14 @@ from .const import (
     DOMAIN,
 )
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Forecast.Solar from a config entry."""
-    api_key = entry.options.get(CONF_API_KEY)
     # Our option flow may cause it to be an empty string,
     # this if statement is here to catch that.
-    if not api_key:
-        api_key = None
+    api_key = entry.options.get(CONF_API_KEY) or None
 
     session = async_get_clientsession(hass)
     forecast = ForecastSolar(

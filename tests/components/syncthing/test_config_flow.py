@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from aiosyncthing.exceptions import UnauthorizedError
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.syncthing.const import DOMAIN
 from homeassistant.const import CONF_NAME, CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
 
@@ -25,7 +25,7 @@ MOCK_ENTRY = {
 
 async def test_show_setup_form(hass):
     """Test that the setup form is served."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )

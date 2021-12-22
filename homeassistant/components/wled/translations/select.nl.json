@@ -1,0 +1,9 @@
+{
+    "state": {
+        "wled__live_override": {
+            "0": "Uit",
+            "1": "Aan",
+            "2": "Totdat het apparaat opnieuw opstart"
+        }
+    }
+}

@@ -1,5 +1,6 @@
 """Advantage Air parent entity class."""
 
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -14,13 +15,13 @@ class AdvantageAirEntity(CoordinatorEntity):
         self.async_change = instance["async_change"]
         self.ac_key = ac_key
         self.zone_key = zone_key
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, self.coordinator.data["system"]["rid"])},
-            "name": self.coordinator.data["system"]["name"],
-            "manufacturer": "Advantage Air",
-            "model": self.coordinator.data["system"]["sysType"],
-            "sw_version": self.coordinator.data["system"]["myAppRev"],
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.coordinator.data["system"]["rid"])},
+            manufacturer="Advantage Air",
+            model=self.coordinator.data["system"]["sysType"],
+            name=self.coordinator.data["system"]["name"],
+            sw_version=self.coordinator.data["system"]["myAppRev"],
+        )
 
     @property
     def _ac(self):

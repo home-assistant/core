@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-import logging
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import CONF_BINARY_SENSORS, CONF_NAME, STATE_ON
@@ -15,7 +14,6 @@ from . import get_hub
 from .base_platform import BasePlatform
 
 PARALLEL_UPDATES = 1
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(
@@ -43,8 +41,7 @@ class ModbusBinarySensor(BasePlatform, RestoreEntity, BinarySensorEntity):
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await self.async_base_added_to_hass()
-        state = await self.async_get_last_state()
-        if state:
+        if state := await self.async_get_last_state():
             self._attr_is_on = state.state == STATE_ON
 
     async def async_update(self, now: datetime | None = None) -> None:

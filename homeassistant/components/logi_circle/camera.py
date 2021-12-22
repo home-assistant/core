@@ -5,7 +5,7 @@ from datetime import timedelta
 import logging
 
 from homeassistant.components.camera import ATTR_ENTITY_ID, SUPPORT_ON_OFF, Camera
-from homeassistant.components.ffmpeg import DATA_FFMPEG
+from homeassistant.components.ffmpeg import get_ffmpeg_manager
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_BATTERY_CHARGING,
@@ -14,6 +14,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 
 from .const import (
     ATTRIBUTION,
@@ -39,7 +40,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up a Logi Circle Camera based on a config entry."""
     devices = await hass.data[LOGI_CIRCLE_DOMAIN].cameras
-    ffmpeg = hass.data[DATA_FFMPEG]
+    ffmpeg = get_ffmpeg_manager(hass)
 
     cameras = [LogiCam(device, entry, ffmpeg) for device in devices]
 
@@ -116,15 +117,15 @@ class LogiCam(Camera):
         return SUPPORT_ON_OFF
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return information about the device."""
-        return {
-            "name": self._camera.name,
-            "identifiers": {(LOGI_CIRCLE_DOMAIN, self._camera.id)},
-            "model": self._camera.model_name,
-            "sw_version": self._camera.firmware,
-            "manufacturer": DEVICE_BRAND,
-        }
+        return DeviceInfo(
+            identifiers={(LOGI_CIRCLE_DOMAIN, self._camera.id)},
+            manufacturer=DEVICE_BRAND,
+            model=self._camera.model_name,
+            name=self._camera.name,
+            sw_version=self._camera.firmware,
+        )
 
     @property
     def extra_state_attributes(self):

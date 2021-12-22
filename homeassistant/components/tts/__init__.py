@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import functools as ft
 import hashlib
+from http import HTTPStatus
 import io
 import logging
 import mimetypes
@@ -29,8 +30,6 @@ from homeassistant.const import (
     CONF_DESCRIPTION,
     CONF_NAME,
     CONF_PLATFORM,
-    HTTP_BAD_REQUEST,
-    HTTP_NOT_FOUND,
     PLATFORM_FORMAT,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -428,8 +427,7 @@ class SpeechManager:
 
         This method is a coroutine.
         """
-        filename = self.file_cache.get(key)
-        if not filename:
+        if not (filename := self.file_cache.get(key)):
             raise HomeAssistantError(f"Key {key} not in file cache!")
 
         voice_file = os.path.join(self.cache_dir, filename)
@@ -464,8 +462,7 @@ class SpeechManager:
 
         This method is a coroutine.
         """
-        record = _RE_VOICE_FILE.match(filename.lower())
-        if not record:
+        if not (record := _RE_VOICE_FILE.match(filename.lower())):
             raise HomeAssistantError("Wrong tts file format!")
 
         key = KEY_PATTERN.format(
@@ -573,8 +570,7 @@ def _get_cache_files(cache_dir):
 
     folder_data = os.listdir(cache_dir)
     for file_data in folder_data:
-        record = _RE_VOICE_FILE.match(file_data)
-        if record:
+        if record := _RE_VOICE_FILE.match(file_data):
             key = KEY_PATTERN.format(
                 record.group(1), record.group(2), record.group(3), record.group(4)
             )
@@ -598,10 +594,10 @@ class TextToSpeechUrlView(HomeAssistantView):
         try:
             data = await request.json()
         except ValueError:
-            return self.json_message("Invalid JSON specified", HTTP_BAD_REQUEST)
+            return self.json_message("Invalid JSON specified", HTTPStatus.BAD_REQUEST)
         if not data.get(ATTR_PLATFORM) and data.get(ATTR_MESSAGE):
             return self.json_message(
-                "Must specify platform and message", HTTP_BAD_REQUEST
+                "Must specify platform and message", HTTPStatus.BAD_REQUEST
             )
 
         p_type = data[ATTR_PLATFORM]
@@ -616,7 +612,7 @@ class TextToSpeechUrlView(HomeAssistantView):
             )
         except HomeAssistantError as err:
             _LOGGER.error("Error on init tts: %s", err)
-            return self.json({"error": err}, HTTP_BAD_REQUEST)
+            return self.json({"error": err}, HTTPStatus.BAD_REQUEST)
 
         base = self.tts.base_url or get_url(self.tts.hass)
         url = base + path
@@ -641,7 +637,7 @@ class TextToSpeechView(HomeAssistantView):
             content, data = await self.tts.async_read_tts(filename)
         except HomeAssistantError as err:
             _LOGGER.error("Error on load tts: %s", err)
-            return web.Response(status=HTTP_NOT_FOUND)
+            return web.Response(status=HTTPStatus.NOT_FOUND)
 
         return web.Response(body=data, content_type=content)
 

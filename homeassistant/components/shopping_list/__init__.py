@@ -1,4 +1,5 @@
 """Support to manage a shopping list."""
+from http import HTTPStatus
 import logging
 import uuid
 
@@ -7,7 +8,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import http, websocket_api
 from homeassistant.components.http.data_validator import RequestDataValidator
-from homeassistant.const import ATTR_NAME, HTTP_BAD_REQUEST, HTTP_NOT_FOUND
+from homeassistant.const import ATTR_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json, save_json
@@ -81,15 +82,13 @@ async def async_setup_entry(hass, config_entry):
     async def add_item_service(call):
         """Add an item with `name`."""
         data = hass.data[DOMAIN]
-        name = call.data.get(ATTR_NAME)
-        if name is not None:
+        if (name := call.data.get(ATTR_NAME)) is not None:
             await data.async_add(name)
 
     async def complete_item_service(call):
         """Mark the item provided via `name` as completed."""
         data = hass.data[DOMAIN]
-        name = call.data.get(ATTR_NAME)
-        if name is None:
+        if (name := call.data.get(ATTR_NAME)) is None:
             return
         try:
             item = [item for item in data.items if item["name"] == name][0]
@@ -101,8 +100,7 @@ async def async_setup_entry(hass, config_entry):
     async def incomplete_item_service(call):
         """Mark the item provided via `name` as incomplete."""
         data = hass.data[DOMAIN]
-        name = call.data.get(ATTR_NAME)
-        if name is None:
+        if (name := call.data.get(ATTR_NAME)) is None:
             return
         try:
             item = [item for item in data.items if item["name"] == name][0]
@@ -293,9 +291,9 @@ class UpdateShoppingListItemView(http.HomeAssistantView):
             request.app["hass"].bus.async_fire(EVENT)
             return self.json(item)
         except KeyError:
-            return self.json_message("Item not found", HTTP_NOT_FOUND)
+            return self.json_message("Item not found", HTTPStatus.NOT_FOUND)
         except vol.Invalid:
-            return self.json_message("Item not found", HTTP_BAD_REQUEST)
+            return self.json_message("Item not found", HTTPStatus.BAD_REQUEST)
 
 
 class CreateShoppingListItemView(http.HomeAssistantView):

@@ -42,12 +42,13 @@ class VerisureAlarm(CoordinatorEntity, AlarmControlPanelEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
-        return {
-            "name": "Verisure Alarm",
-            "manufacturer": "Verisure",
-            "model": "VBox",
-            "identifiers": {(DOMAIN, self.coordinator.entry.data[CONF_GIID])},
-        }
+        return DeviceInfo(
+            name="Verisure Alarm",
+            manufacturer="Verisure",
+            model="VBox",
+            identifiers={(DOMAIN, self.coordinator.entry.data[CONF_GIID])},
+            configuration_url="https://mypages.verisure.com",
+        )
 
     @property
     def unique_id(self) -> str:

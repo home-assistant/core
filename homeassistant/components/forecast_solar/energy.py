@@ -10,9 +10,7 @@ async def async_get_solar_forecast(
     hass: HomeAssistant, config_entry_id: str
 ) -> dict[str, dict[str, float | int]] | None:
     """Get solar forecast for a config entry ID."""
-    coordinator = hass.data[DOMAIN].get(config_entry_id)
-
-    if coordinator is None:
+    if (coordinator := hass.data[DOMAIN].get(config_entry_id)) is None:
         return None
 
     return {

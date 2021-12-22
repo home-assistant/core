@@ -7,13 +7,11 @@ import voluptuous as vol
 import xmltodict
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = "http://www.zillow.com/webservice/GetZestimate.htm"
-
-ATTRIBUTION = "Data provided by Zillow.com"
 
 CONF_ZPID = "zpid"
 
@@ -58,6 +56,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class ZestimateDataSensor(SensorEntity):
     """Implementation of a Zestimate sensor."""
 
+    _attr_attribution = "Data provided by Zillow.com"
+
     def __init__(self, name, params):
         """Initialize the sensor."""
         self._name = name
@@ -91,7 +91,6 @@ class ZestimateDataSensor(SensorEntity):
         if self.data is not None:
             attributes = self.data
         attributes["address"] = self.address
-        attributes[ATTR_ATTRIBUTION] = ATTRIBUTION
         return attributes
 
     @property

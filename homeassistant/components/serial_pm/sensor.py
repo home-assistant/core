@@ -58,12 +58,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class ParticulateMatterSensor(SensorEntity):
     """Representation of an Particulate matter sensor."""
 
-    def __init__(self, pmDataCollector, name, pmname):
+    def __init__(self, pm_data_collector, name, pmname):
         """Initialize a new PM sensor."""
         self._name = name
         self._pmname = pmname
         self._state = None
-        self._collector = pmDataCollector
+        self._collector = pm_data_collector
 
     @property
     def name(self):

@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-import logging
 from typing import Any
 
 from homeassistant.components.sensor import CONF_STATE_CLASS, SensorEntity
@@ -17,7 +16,6 @@ from .base_platform import BaseStructPlatform
 from .modbus import ModbusHub
 
 PARALLEL_UPDATES = 1
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(
@@ -55,8 +53,7 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreEntity, SensorEntity):
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await self.async_base_added_to_hass()
-        state = await self.async_get_last_state()
-        if state:
+        if state := await self.async_get_last_state():
             self._attr_native_value = state.state
 
     async def async_update(self, now: datetime | None = None) -> None:
@@ -76,6 +73,9 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreEntity, SensorEntity):
             return
 
         self._attr_native_value = self.unpack_structure_result(result.registers)
+        if self._attr_native_value is None:
+            self._attr_available = False
+        else:
+            self._attr_available = True
         self._lazy_errors = self._lazy_error_count
-        self._attr_available = True
         self.async_write_ha_state()

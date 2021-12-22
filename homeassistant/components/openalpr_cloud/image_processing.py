@@ -1,6 +1,7 @@
 """Component that will help set the OpenALPR cloud for ALPR processing."""
 import asyncio
 from base64 import b64encode
+from http import HTTPStatus
 import logging
 
 import aiohttp
@@ -17,7 +18,7 @@ from homeassistant.components.image_processing import (
 from homeassistant.components.openalpr_local.image_processing import (
     ImageProcessingAlprEntity,
 )
-from homeassistant.const import CONF_API_KEY, CONF_REGION, HTTP_OK
+from homeassistant.const import CONF_API_KEY, CONF_REGION
 from homeassistant.core import split_entity_id
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -112,14 +113,14 @@ class OpenAlprCloudEntity(ImageProcessingAlprEntity):
         body = {"image_bytes": str(b64encode(image), "utf-8")}
 
         try:
-            with async_timeout.timeout(self.timeout):
+            async with async_timeout.timeout(self.timeout):
                 request = await websession.post(
                     OPENALPR_API_URL, params=params, data=body
                 )
 
                 data = await request.json()
 
-                if request.status != HTTP_OK:
+                if request.status != HTTPStatus.OK:
                     _LOGGER.error("Error %d -> %s", request.status, data.get("error"))
                     return
 

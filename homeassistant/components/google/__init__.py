@@ -233,8 +233,7 @@ def setup(hass, config):
     if DATA_INDEX not in hass.data:
         hass.data[DATA_INDEX] = {}
 
-    conf = config.get(DOMAIN, {})
-    if not conf:
+    if not (conf := config.get(DOMAIN, {})):
         # component is set up by tts platform
         return True
 
