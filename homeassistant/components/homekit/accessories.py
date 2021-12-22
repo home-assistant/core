@@ -198,6 +198,7 @@ def get_accessory(hass, driver, state, aid, config):  # noqa: C901
         "automation",
         "button",
         "input_boolean",
+        "input_button",
         "remote",
         "scene",
         "script",
