@@ -115,9 +115,10 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         ssdp_location: ParseResult = urlparse(discovery_info.ssdp_location or "")
         self._host = ssdp_location.hostname
         self._port = ssdp_location.port
-        self._name = discovery_info.upnp.get(
-            ssdp.ATTR_UPNP_FRIENDLY_NAME
-        ) or discovery_info.upnp.get(ssdp.ATTR_UPNP_MODEL_NAME)
+        self._name = (
+            discovery_info.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME)
+            or discovery_info.upnp[ssdp.ATTR_UPNP_MODEL_NAME]
+        )
         self.context[CONF_HOST] = self._host
 
         if uuid := discovery_info.upnp.get(ssdp.ATTR_UPNP_UDN):
