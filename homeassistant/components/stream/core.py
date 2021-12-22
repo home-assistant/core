@@ -390,7 +390,7 @@ class KeyFrameConverter:
         self._hass = hass
         self._image: bytes | None = None
         self._turbojpeg = TurboJPEGSingleton.instance()
-        self.lock = asyncio.Lock()
+        self._lock = asyncio.Lock()
         self._codec_context: CodecContext | None = None
 
     def create_codec_context(self, codec_context: CodecContext) -> None:
@@ -431,6 +431,6 @@ class KeyFrameConverter:
     ) -> bytes | None:
         """Fetch an image from the Stream and return it as a jpeg in bytes."""
         # Use a lock to ensure only one thread is working on the keyframe at a time
-        async with self.lock:
+        async with self._lock:
             await self._hass.async_add_executor_job(self._generate_image, width, height)
         return self._image
