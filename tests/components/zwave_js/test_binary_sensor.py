@@ -32,7 +32,7 @@ async def test_low_battery_sensor(hass, multisensor_6, integration):
     entity_entry = registry.async_get(LOW_BATTERY_BINARY_SENSOR)
 
     assert entity_entry
-    assert entity_entry.entity_category == EntityCategory.DIAGNOSTIC
+    assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
 
 
 async def test_enabled_legacy_sensor(hass, ecolink_door_sensor, integration):
@@ -109,7 +109,7 @@ async def test_notification_sensor(hass, multisensor_6, integration):
     entity_entry = registry.async_get(TAMPER_SENSOR)
 
     assert entity_entry
-    assert entity_entry.entity_category == EntityCategory.DIAGNOSTIC
+    assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
 
 
 async def test_notification_off_state(

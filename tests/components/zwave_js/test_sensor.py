@@ -162,7 +162,7 @@ async def test_node_status_sensor(hass, client, lock_id_lock_as_id150, integrati
     entity_entry = ent_reg.async_get(NODE_STATUS_ENTITY)
 
     assert not entity_entry.disabled
-    assert entity_entry.entity_category == EntityCategory.DIAGNOSTIC
+    assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
     assert hass.states.get(NODE_STATUS_ENTITY).state == "alive"
 
     # Test transitions work

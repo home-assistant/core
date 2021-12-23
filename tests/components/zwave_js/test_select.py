@@ -64,7 +64,7 @@ async def test_default_tone_select(
     entity_entry = entity_registry.async_get(DEFAULT_TONE_SELECT_ENTITY)
 
     assert entity_entry
-    assert entity_entry.entity_category == EntityCategory.CONFIG
+    assert entity_entry.entity_category is EntityCategory.CONFIG
 
     # Test select option with string value
     await hass.services.async_call(
@@ -147,7 +147,7 @@ async def test_protection_select(
     entity_entry = entity_registry.async_get(PROTECTION_SELECT_ENTITY)
 
     assert entity_entry
-    assert entity_entry.entity_category == EntityCategory.CONFIG
+    assert entity_entry.entity_category is EntityCategory.CONFIG
 
     # Test select option with string value
     await hass.services.async_call(
