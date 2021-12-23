@@ -1,4 +1,7 @@
 """The tests for the google calendar platform."""
+
+from __future__ import annotations
+
 import copy
 from http import HTTPStatus
 from typing import Any, Callable
