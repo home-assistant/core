@@ -3,6 +3,7 @@ import logging
 
 from fritzconnection.core.exceptions import FritzConnectionException, FritzSecurityError
 from fritzconnection.core.logger import fritzlogger
+from requests import exceptions
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -45,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await fritz_tools.async_start(entry.options)
     except FritzSecurityError as ex:
         raise ConfigEntryAuthFailed from ex
-    except FritzConnectionException as ex:
+    except (FritzConnectionException, exceptions.ConnectionError) as ex:
         raise ConfigEntryNotReady from ex
 
     hass.data.setdefault(DOMAIN, {})
