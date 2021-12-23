@@ -61,6 +61,7 @@ PyViCare==2.13.1
 PyXiaomiGateway==0.13.4
 
 # homeassistant.components.bmp280
+# homeassistant.components.dht
 # homeassistant.components.mcp23017
 # homeassistant.components.rpi_gpio
 # homeassistant.components.rpi_rf
@@ -94,7 +95,7 @@ accuweather==0.3.0
 adafruit-circuitpython-bmp280==3.1.1
 
 # homeassistant.components.dht
-adafruit-circuitpython-dht==3.6.0
+adafruit-circuitpython-dht==3.7.0
 
 # homeassistant.components.mcp23017
 adafruit-circuitpython-mcp230xx==2.2.2
@@ -186,7 +187,7 @@ aiohomekit==0.6.4
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==3.0.7
+aiohue==3.0.10
 
 # homeassistant.components.imap
 aioimaplib==0.9.0
@@ -234,7 +235,7 @@ aiopulse==0.4.3
 aiopvapi==1.6.19
 
 # homeassistant.components.pvpc_hourly_pricing
-aiopvpc==2.2.4
+aiopvpc==3.0.0
 
 # homeassistant.components.webostv
 aiopylgtv==0.4.0
@@ -658,7 +659,7 @@ fjaraskupan==1.0.2
 flipr-api==1.4.1
 
 # homeassistant.components.flux_led
-flux_led==0.27.8
+flux_led==0.27.13
 
 # homeassistant.components.homekit
 fnvhash==0.1.0
@@ -1753,7 +1754,7 @@ pyrainbird==0.4.3
 pyrecswitch==1.0.2
 
 # homeassistant.components.repetier
-pyrepetier==3.0.5
+pyrepetierng==0.1.0
 
 # homeassistant.components.risco
 pyrisco==0.3.1
@@ -1961,7 +1962,7 @@ python_opendata_transport==0.2.1
 pythonegardia==1.0.40
 
 # homeassistant.components.tile
-pytile==5.2.4
+pytile==2021.12.0
 
 # homeassistant.components.touchline
 pytouchline==0.7
@@ -2184,7 +2185,7 @@ smhi-pkg==1.0.15
 snapcast==2.1.3
 
 # homeassistant.components.sonos
-soco==0.25.0
+soco==0.25.1
 
 # homeassistant.components.solaredge_local
 solaredge-local==0.2.0
@@ -2448,7 +2449,7 @@ xbox-webapi==2.0.11
 xboxapi==2.0.1
 
 # homeassistant.components.knx
-xknx==0.18.14
+xknx==0.18.15
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz

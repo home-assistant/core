@@ -131,7 +131,7 @@ aiohomekit==0.6.4
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==3.0.7
+aiohue==3.0.10
 
 # homeassistant.components.apache_kafka
 aiokafka==0.6.0
@@ -164,7 +164,7 @@ aiopulse==0.4.3
 aiopvapi==1.6.19
 
 # homeassistant.components.pvpc_hourly_pricing
-aiopvpc==2.2.4
+aiopvpc==3.0.0
 
 # homeassistant.components.webostv
 aiopylgtv==0.4.0
@@ -399,7 +399,7 @@ fjaraskupan==1.0.2
 flipr-api==1.4.1
 
 # homeassistant.components.flux_led
-flux_led==0.27.8
+flux_led==0.27.13
 
 # homeassistant.components.homekit
 fnvhash==0.1.0
@@ -1172,7 +1172,7 @@ python-twitch-client==0.6.0
 python_awair==0.2.1
 
 # homeassistant.components.tile
-pytile==5.2.4
+pytile==2021.12.0
 
 # homeassistant.components.traccar
 pytraccar==0.10.0
@@ -1291,7 +1291,7 @@ smarthab==0.21
 smhi-pkg==1.0.15
 
 # homeassistant.components.sonos
-soco==0.25.0
+soco==0.25.1
 
 # homeassistant.components.solaredge
 solaredge==0.0.2
@@ -1450,7 +1450,7 @@ wolf_smartset==0.1.11
 xbox-webapi==2.0.11
 
 # homeassistant.components.knx
-xknx==0.18.14
+xknx==0.18.15
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz
