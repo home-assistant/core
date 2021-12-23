@@ -8,21 +8,9 @@ import pypck.module
 from pypck.module import GroupConnection, ModuleConnection
 import pytest
 
-from homeassistant.components.lcn.const import (
-    CONF_DIM_MODE,
-    CONF_SK_NUM_TRIES,
-    CONNECTION,
-    DOMAIN,
-)
+from homeassistant.components.lcn.const import DOMAIN
 from homeassistant.components.lcn.helpers import generate_unique_id
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_IP_ADDRESS,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_HOST
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
@@ -125,29 +113,6 @@ async def init_integration(hass, entry):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         yield lcn_connection
-
-
-async def setup_platform(hass, entry, platform):
-    """Set up the LCN platform."""
-    hass.config.components.add(entry.domain)
-    entry.state = ConfigEntryState.LOADED
-    settings = {
-        "SK_NUMN_TRIES": entry.data[CONF_SK_NUM_TRIES],
-        "DIM_MODE": pypck.lcn_defs.OutputPortDimMode[entry.data[CONF_DIM_MODE]],
-    }
-    lcn_connection = MockPchkConnectionManager(
-        entry.data[CONF_IP_ADDRESS],
-        entry.data[CONF_PORT],
-        entry.data[CONF_USERNAME],
-        entry.data[CONF_PASSWORD],
-        settings=settings,
-        connection_id=entry.title,
-    )
-
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN].setdefault(entry.entry_id, {CONNECTION: lcn_connection})
-    await hass.config_entries.async_forward_entry_setup(entry, platform)
-    await hass.async_block_till_done()
 
 
 async def setup_component(hass):

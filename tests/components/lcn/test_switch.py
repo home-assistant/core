@@ -1,9 +1,9 @@
 """Test for the LCN switch platform."""
-from unittest.mock import call, patch
+from unittest.mock import patch
 
 from pypck.inputs import ModStatusOutput, ModStatusRelays
 from pypck.lcn_addr import LcnAddr
-from pypck.lcn_defs import OutputPort, RelayPort, RelayStateModifier
+from pypck.lcn_defs import RelayStateModifier
 
 from homeassistant.components.lcn.helpers import get_device_connection
 from homeassistant.components.switch import DOMAIN as DOMAIN_SWITCH
@@ -16,24 +16,11 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 
-from .conftest import MockModuleConnection, setup_platform
+from .conftest import MockModuleConnection
 
 
-@patch.object(MockModuleConnection, "activate_status_request_handler")
-async def test_setup_lcn_switch(activate_status_request_handler, hass, entry):
+async def test_setup_lcn_switch(hass, lcn_connection):
     """Test the setup of switch."""
-    await setup_platform(hass, entry, DOMAIN_SWITCH)
-    device_connection = get_device_connection(hass, (0, 7, False), entry)
-    assert device_connection
-    calls = [
-        call(OutputPort.OUTPUT1),
-        call(OutputPort.OUTPUT2),
-        call(RelayPort.RELAY1),
-        call(RelayPort.RELAY2),
-    ]
-    activate_status_request_handler.assert_has_awaits(calls, any_order=True)
-    assert activate_status_request_handler.await_count == 4
-
     for entity_id in (
         "switch.switch_output1",
         "switch.switch_output2",
@@ -45,10 +32,9 @@ async def test_setup_lcn_switch(activate_status_request_handler, hass, entry):
         assert state.state == STATE_OFF
 
 
-async def test_entity_attributes(hass, entry):
+async def test_entity_attributes(hass, entry, lcn_connection):
     """Test the attributes of an entity."""
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
-    await setup_platform(hass, entry, DOMAIN_SWITCH)
 
     entity_output = entity_registry.async_get("switch.switch_output1")
 
@@ -64,10 +50,8 @@ async def test_entity_attributes(hass, entry):
 
 
 @patch.object(MockModuleConnection, "dim_output")
-async def test_output_turn_on(dim_output, hass, entry):
+async def test_output_turn_on(dim_output, hass, lcn_connection):
     """Test the output switch turns on."""
-    await setup_platform(hass, entry, DOMAIN_SWITCH)
-
     # command failed
     dim_output.return_value = False
 
@@ -101,10 +85,8 @@ async def test_output_turn_on(dim_output, hass, entry):
 
 
 @patch.object(MockModuleConnection, "dim_output")
-async def test_output_turn_off(dim_output, hass, entry):
+async def test_output_turn_off(dim_output, hass, lcn_connection):
     """Test the output switch turns off."""
-    await setup_platform(hass, entry, DOMAIN_SWITCH)
-
     state = hass.states.get("switch.switch_output1")
     state.state = STATE_ON
 
@@ -141,10 +123,8 @@ async def test_output_turn_off(dim_output, hass, entry):
 
 
 @patch.object(MockModuleConnection, "control_relays")
-async def test_relay_turn_on(control_relays, hass, entry):
+async def test_relay_turn_on(control_relays, hass, lcn_connection):
     """Test the relay switch turns on."""
-    await setup_platform(hass, entry, DOMAIN_SWITCH)
-
     states = [RelayStateModifier.NOCHANGE] * 8
     states[0] = RelayStateModifier.ON
 
@@ -181,10 +161,8 @@ async def test_relay_turn_on(control_relays, hass, entry):
 
 
 @patch.object(MockModuleConnection, "control_relays")
-async def test_relay_turn_off(control_relays, hass, entry):
+async def test_relay_turn_off(control_relays, hass, lcn_connection):
     """Test the relay switch turns off."""
-    await setup_platform(hass, entry, DOMAIN_SWITCH)
-
     states = [RelayStateModifier.NOCHANGE] * 8
     states[0] = RelayStateModifier.OFF
 
@@ -223,9 +201,8 @@ async def test_relay_turn_off(control_relays, hass, entry):
     assert state.state == STATE_OFF
 
 
-async def test_pushed_output_status_change(hass, entry):
+async def test_pushed_output_status_change(hass, entry, lcn_connection):
     """Test the output switch changes its state on status received."""
-    await setup_platform(hass, entry, DOMAIN_SWITCH)
     device_connection = get_device_connection(hass, (0, 7, False), entry)
     address = LcnAddr(0, 7, False)
 
@@ -246,9 +223,8 @@ async def test_pushed_output_status_change(hass, entry):
     assert state.state == STATE_OFF
 
 
-async def test_pushed_relay_status_change(hass, entry):
+async def test_pushed_relay_status_change(hass, entry, lcn_connection):
     """Test the relay switch changes its state on status received."""
-    await setup_platform(hass, entry, DOMAIN_SWITCH)
     device_connection = get_device_connection(hass, (0, 7, False), entry)
     address = LcnAddr(0, 7, False)
     states = [False] * 8
@@ -272,8 +248,7 @@ async def test_pushed_relay_status_change(hass, entry):
     assert state.state == STATE_OFF
 
 
-async def test_unload_config_entry(hass, entry):
+async def test_unload_config_entry(hass, entry, lcn_connection):
     """Test the switch is removed when the config entry is unloaded."""
-    await setup_platform(hass, entry, DOMAIN_SWITCH)
     await hass.config_entries.async_forward_entry_unload(entry, DOMAIN_SWITCH)
     assert hass.states.get("switch.switch_output1").state == STATE_UNAVAILABLE
