@@ -214,7 +214,7 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
     def __init__(self, alarm_id: str, speaker: SonosSpeaker) -> None:
         """Initialize the switch."""
         super().__init__(speaker)
-        self._attr_unique_id = f"{speaker.household_id}:{alarm_id}"
+        self._attr_unique_id = f"alarm-{speaker.household_id}:{alarm_id}"
         self.alarm_id = alarm_id
         self.household_id = speaker.household_id
         self.entity_id = ENTITY_ID_FORMAT.format(f"sonos_alarm_{self.alarm_id}")
@@ -385,7 +385,7 @@ def async_migrate_alarm_unique_ids(
 
         entry_alarm_id = old_unique_id.split("-")[-1]
         if entry_alarm_id in alarm_ids:
-            new_unique_id = f"{household_id}:{entry_alarm_id}"
+            new_unique_id = f"alarm-{household_id}:{entry_alarm_id}"
             _LOGGER.debug(
                 "Migrating unique_id for %s from %s to %s",
                 alarm_entry.entity_id,
