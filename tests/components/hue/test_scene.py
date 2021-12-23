@@ -77,13 +77,13 @@ async def test_scene_turn_on_service(hass, mock_bridge_v2, v2_resources_test_dat
     await hass.services.async_call(
         "scene",
         "turn_on",
-        {"entity_id": test_entity_id, "transition": 6},
+        {"entity_id": test_entity_id, "transition": 0.25},
         blocking=True,
     )
     assert len(mock_bridge_v2.mock_requests) == 2
     assert mock_bridge_v2.mock_requests[1]["json"]["recall"] == {
         "action": "active",
-        "duration": 6000,
+        "duration": 200,
     }
 
 
