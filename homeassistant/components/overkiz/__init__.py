@@ -105,11 +105,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             device,
         )
 
-        platform = OVERKIZ_DEVICE_TO_PLATFORM.get(
+        if platform := OVERKIZ_DEVICE_TO_PLATFORM.get(
             device.widget
-        ) or OVERKIZ_DEVICE_TO_PLATFORM.get(device.ui_class)
-
-        if platform:
+        ) or OVERKIZ_DEVICE_TO_PLATFORM.get(device.ui_class):
             platforms[platform].append(device)
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
