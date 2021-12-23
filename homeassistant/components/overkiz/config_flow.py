@@ -18,7 +18,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import dhcp
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.data_entry_flow import AbortFlow, FlowResult
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import device_registry as dr
 
 from .const import CONF_HUB, DEFAULT_HUB
@@ -66,8 +66,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except MaintenanceException:
                 errors["base"] = "server_in_maintenance"
-            except AbortFlow as abort_flow:
-                raise abort_flow
             except Exception as exception:  # pylint: disable=broad-except
                 errors["base"] = "unknown"
                 _LOGGER.exception(exception)
