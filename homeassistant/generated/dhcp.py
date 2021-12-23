@@ -89,7 +89,7 @@ DHCP = [
     {
         "domain": "flux_led",
         "macaddress": "ACCF23*",
-        "hostname": "[ba][lk]*"
+        "hostname": "[hba][flk]*"
     },
     {
         "domain": "flux_led",
@@ -99,7 +99,7 @@ DHCP = [
     {
         "domain": "flux_led",
         "macaddress": "F0FE6B*",
-        "hostname": "[ba][lk]*"
+        "hostname": "[hba][flk]*"
     },
     {
         "domain": "flux_led",
