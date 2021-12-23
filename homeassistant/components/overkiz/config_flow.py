@@ -21,8 +21,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import device_registry as dr
 
-from .const import CONF_HUB, DEFAULT_HUB
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import CONF_HUB, DEFAULT_HUB, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

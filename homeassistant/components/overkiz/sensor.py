@@ -397,7 +397,9 @@ class OverkizHomeKitSetupCodeSensor(OverkizEntity, SensorEntity):
     _attr_icon = "mdi:shield-home"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
-    def __init__(self, device_url: str, coordinator: OverkizDataUpdateCoordinator):
+    def __init__(
+        self, device_url: str, coordinator: OverkizDataUpdateCoordinator
+    ) -> None:
         """Initialize the device."""
         super().__init__(device_url, coordinator)
         self._attr_name = "HomeKit Setup Code"
