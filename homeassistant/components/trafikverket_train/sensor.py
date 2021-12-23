@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from datetime import date, datetime, time, timedelta
 import logging
-from typing import Any
 
 from pytrafikverket import TrafikverketTrain
 from pytrafikverket.trafikverket_train import TrainStop
@@ -148,47 +147,11 @@ class TrainSensor(SensorEntity):
         self._weekday = weekday
         self._time = departuretime
         self._state: TrainStop | None = None
-        self._departure_state = None
         self._delay_in_minutes = None
         self._timezone = get_time_zone("Europe/Stockholm")
-
-    async def async_update(self) -> None:
-        """Retrieve latest state."""
-        if self._time:
-            departure_day = next_departuredate(self._weekday)
-            when = datetime.combine(departure_day, self._time).astimezone(
-                self._timezone
-            )
-            try:
-                self._state = await self._train_api.async_get_train_stop(
-                    self._from_station, self._to_station, when
-                )
-            except ValueError as output_error:
-                _LOGGER.error(
-                    "Departure %s encountered a problem: %s", when, output_error
-                )
-        else:
-            when = datetime.now()
-            try:
-                self._state = await self._train_api.async_get_next_train_stop(
-                    self._from_station, self._to_station, when
-                )
-            except ValueError as output_error:
-                _LOGGER.error(
-                    "Departure %s encountered a problem: %s", when, output_error
-                )
-        if self._state:
-            self._departure_state = self._state.get_state().name
-            self._delay_in_minutes = self._state.get_delay_time()
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return the state attributes."""
-        if not self._state:
-            return None
-        attributes = {
-            ATTR_DEPARTURE_STATE: self._departure_state,
-            ATTR_CANCELED: self._state.canceled,
+        self._attr_extra_state_attributes = {
+            ATTR_DEPARTURE_STATE: None,
+            ATTR_CANCELED: None,
             ATTR_DELAY_TIME: None,
             ATTR_PLANNED_TIME: None,
             ATTR_ESTIMATED_TIME: None,
@@ -196,35 +159,68 @@ class TrainSensor(SensorEntity):
             ATTR_OTHER_INFORMATION: None,
             ATTR_DEVIATIONS: None,
         }
-        if self._state.other_information:
-            attributes[ATTR_OTHER_INFORMATION] = ", ".join(
-                self._state.other_information
-            )
-        if self._state.deviations:
-            attributes[ATTR_DEVIATIONS] = ", ".join(self._state.deviations)
-        if self._delay_in_minutes:
-            attributes[ATTR_DELAY_TIME] = self._delay_in_minutes.total_seconds() / 60
-        if self._state.advertised_time_at_location:
-            attributes[ATTR_PLANNED_TIME] = as_utc(
-                self._state.advertised_time_at_location.astimezone(self._timezone)
-            ).isoformat()
-        if self._state.estimated_time_at_location:
-            attributes[ATTR_ESTIMATED_TIME] = as_utc(
-                self._state.estimated_time_at_location.astimezone(self._timezone)
-            ).isoformat()
-        if self._state.time_at_location:
-            attributes[ATTR_ACTUAL_TIME] = as_utc(
-                self._state.time_at_location.astimezone(self._timezone)
-            ).isoformat()
-        return attributes
 
-    @property
-    def native_value(self) -> datetime | None:
-        """Return the departure state."""
-        if (state := self._state) is not None:
-            if state.time_at_location is not None:
-                return state.time_at_location.astimezone(self._timezone)
-            if state.estimated_time_at_location is not None:
-                return state.estimated_time_at_location.astimezone(self._timezone)
-            return state.advertised_time_at_location.astimezone(self._timezone)
-        return None
+    async def async_update(self) -> None:
+        """Retrieve latest state."""
+        when = datetime.now()
+        if self._time:
+            departure_day = next_departuredate(self._weekday)
+            when = datetime.combine(departure_day, self._time).astimezone(
+                self._timezone
+            )
+        try:
+            if self._time:
+                self._state = await self._train_api.async_get_train_stop(
+                    self._from_station, self._to_station, when
+                )
+            else:
+                self._state = await self._train_api.async_get_next_train_stop(
+                    self._from_station, self._to_station, when
+                )
+        except ValueError as output_error:
+            _LOGGER.error("Departure %s encountered a problem: %s", when, output_error)
+
+        if self._state:
+
+            self._attr_native_value = (
+                self._state.advertised_time_at_location.astimezone(self._timezone)
+            )
+            if self._state.time_at_location:
+                self._attr_native_value = self._state.time_at_location.astimezone(
+                    self._timezone
+                )
+            if self._state.estimated_time_at_location:
+                self._attr_native_value = (
+                    self._state.estimated_time_at_location.astimezone(self._timezone)
+                )
+
+            self._attr_extra_state_attributes[
+                ATTR_DEPARTURE_STATE
+            ] = self._state.get_state().name
+            self._attr_extra_state_attributes[ATTR_CANCELED] = self._state.canceled
+
+            if self._state.other_information:
+                self._attr_extra_state_attributes[ATTR_OTHER_INFORMATION] = ", ".join(
+                    self._state.other_information
+                )
+            if self._state.deviations:
+                self._attr_extra_state_attributes[ATTR_DEVIATIONS] = ", ".join(
+                    self._state.deviations
+                )
+            self._delay_in_minutes = self._state.get_delay_time()
+            if self._delay_in_minutes:
+                self._attr_extra_state_attributes[ATTR_DELAY_TIME] = (
+                    self._delay_in_minutes.total_seconds() / 60
+                )
+            if self._state.advertised_time_at_location:
+                self._attr_extra_state_attributes[ATTR_PLANNED_TIME] = as_utc(
+                    self._state.advertised_time_at_location.astimezone(self._timezone)
+                ).isoformat()
+            if self._state.estimated_time_at_location:
+                self._attr_extra_state_attributes[ATTR_ESTIMATED_TIME] = as_utc(
+                    self._state.estimated_time_at_location.astimezone(self._timezone)
+                ).isoformat()
+            if self._state.time_at_location:
+                self._attr_extra_state_attributes[ATTR_ACTUAL_TIME] = as_utc(
+                    self._state.time_at_location.astimezone(self._timezone)
+                ).isoformat()
