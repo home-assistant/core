@@ -20,7 +20,7 @@ BUTTON_DESCRIPTIONS: list[ButtonEntityDescription] = [
     ),
     # Identify
     ButtonEntityDescription(
-        key="identify",  # startIdentify and identify are reversed... Swap this when fixed server side.
+        key="identify",  # startIdentify and identify are reversed... Swap this when fixed in API.
         name="Start Identify",
         icon="mdi:human-greeting-variant",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
@@ -34,7 +34,7 @@ BUTTON_DESCRIPTIONS: list[ButtonEntityDescription] = [
         entity_registry_enabled_default=False,
     ),
     ButtonEntityDescription(
-        key="startIdentify",  # startIdentify and identify are reversed... Swap this when fixed server side.
+        key="startIdentify",  # startIdentify and identify are reversed... Swap this when fixed in API.
         name="Identify",
         icon="mdi:human-greeting-variant",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
