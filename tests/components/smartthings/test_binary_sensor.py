@@ -122,4 +122,4 @@ async def test_entity_category(hass, device_factory):
 
     entry = entity_registry.async_get("binary_sensor.tamper_sensor_2_tamper")
     assert entry
-    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+    assert entry.entity_category is EntityCategory.DIAGNOSTIC
