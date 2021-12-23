@@ -102,6 +102,7 @@ homeassistant.components.openuv.*
 homeassistant.components.persistent_notification.*
 homeassistant.components.pi_hole.*
 homeassistant.components.proximity.*
+homeassistant.components.pvoutput.*
 homeassistant.components.rainmachine.*
 homeassistant.components.rdw.*
 homeassistant.components.recollect_waste.*
