@@ -33,6 +33,84 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
 )
+_PRICE_SENSOR_ATTRIBUTES_MAP = {
+    "tariff": "tariff",
+    "period": "period",
+    "available_power": "available_power",
+    "next_period": "next_period",
+    "hours_to_next_period": "hours_to_next_period",
+    "next_better_price": "next_better_price",
+    "hours_to_better_price": "hours_to_better_price",
+    "num_better_prices_ahead": "num_better_prices_ahead",
+    "price_position": "price_position",
+    "price_ratio": "price_ratio",
+    "max_price": "max_price",
+    "max_price_at": "max_price_at",
+    "min_price": "min_price",
+    "min_price_at": "min_price_at",
+    "next_best_at": "next_best_at",
+    "price_00h": "price_00h",
+    "price_01h": "price_01h",
+    "price_02h": "price_02h",
+    "price_02h_d": "price_02h_d",  # only on DST day change with 25h
+    "price_03h": "price_03h",
+    "price_04h": "price_04h",
+    "price_05h": "price_05h",
+    "price_06h": "price_06h",
+    "price_07h": "price_07h",
+    "price_08h": "price_08h",
+    "price_09h": "price_09h",
+    "price_10h": "price_10h",
+    "price_11h": "price_11h",
+    "price_12h": "price_12h",
+    "price_13h": "price_13h",
+    "price_14h": "price_14h",
+    "price_15h": "price_15h",
+    "price_16h": "price_16h",
+    "price_17h": "price_17h",
+    "price_18h": "price_18h",
+    "price_19h": "price_19h",
+    "price_20h": "price_20h",
+    "price_21h": "price_21h",
+    "price_22h": "price_22h",
+    "price_23h": "price_23h",
+    # only seen in the evening
+    "next_better_price (next day)": "tomorrow_next_better_price",
+    "hours_to_better_price (next day)": "tomorrow_hours_to_better_price",
+    "num_better_prices_ahead (next day)": "tomorrow_num_better_prices_ahead",
+    "price_position (next day)": "tomorrow_price_position",
+    "price_ratio (next day)": "tomorrow_price_ratio",
+    "max_price (next day)": "tomorrow_max_price",
+    "max_price_at (next day)": "tomorrow_max_price_at",
+    "min_price (next day)": "tomorrow_min_price",
+    "min_price_at (next day)": "tomorrow_min_price_at",
+    "next_best_at (next day)": "tomorrow_next_best_at",
+    "price_next_day_00h": "price_next_day_00h",
+    "price_next_day_01h": "price_next_day_01h",
+    "price_next_day_02h": "price_next_day_02h",
+    "price_next_day_02h_d": "price_next_day_02h_d",
+    "price_next_day_03h": "price_next_day_03h",
+    "price_next_day_04h": "price_next_day_04h",
+    "price_next_day_05h": "price_next_day_05h",
+    "price_next_day_06h": "price_next_day_06h",
+    "price_next_day_07h": "price_next_day_07h",
+    "price_next_day_08h": "price_next_day_08h",
+    "price_next_day_09h": "price_next_day_09h",
+    "price_next_day_10h": "price_next_day_10h",
+    "price_next_day_11h": "price_next_day_11h",
+    "price_next_day_12h": "price_next_day_12h",
+    "price_next_day_13h": "price_next_day_13h",
+    "price_next_day_14h": "price_next_day_14h",
+    "price_next_day_15h": "price_next_day_15h",
+    "price_next_day_16h": "price_next_day_16h",
+    "price_next_day_17h": "price_next_day_17h",
+    "price_next_day_18h": "price_next_day_18h",
+    "price_next_day_19h": "price_next_day_19h",
+    "price_next_day_20h": "price_next_day_20h",
+    "price_next_day_21h": "price_next_day_21h",
+    "price_next_day_22h": "price_next_day_22h",
+    "price_next_day_23h": "price_next_day_23h",
+}
 
 
 async def async_setup_entry(
@@ -61,6 +139,7 @@ class ElecPriceSensor(CoordinatorEntity, SensorEntity):
         """Initialize ESIOS sensor."""
         super().__init__(coordinator)
         self.entity_description = description
+        self._attr_attribution = coordinator.api.attribution
         self._attr_unique_id = unique_id
         self._attr_name = name
         self._attr_device_info = DeviceInfo(
@@ -105,5 +184,9 @@ class ElecPriceSensor(CoordinatorEntity, SensorEntity):
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes."""
-        self._attrs = {**self.coordinator.api.attributes}
+        self._attrs = {
+            _PRICE_SENSOR_ATTRIBUTES_MAP[key]: value
+            for key, value in self.coordinator.api.attributes.items()
+            if key in _PRICE_SENSOR_ATTRIBUTES_MAP
+        }
         return self._attrs
