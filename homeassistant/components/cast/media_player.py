@@ -76,6 +76,8 @@ from .helpers import CastStatusListener, ChromecastInfo, ChromeCastZeroconf
 
 _LOGGER = logging.getLogger(__name__)
 
+APP_IDS_UNRELIABLE_MEDIA_INFO = ("Netflix",)
+
 CAST_SPLASH = "https://www.home-assistant.io/images/cast/splash.png"
 
 SUPPORT_CAST = SUPPORT_PLAY_MEDIA | SUPPORT_TURN_OFF
@@ -564,7 +566,10 @@ class CastDevice(MediaPlayerEntity):
             if media_status.player_is_idle:
                 return STATE_IDLE
         if self.app_id is not None and self.app_id != pychromecast.IDLE_APP_ID:
-            return STATE_PLAYING
+            if self.app_id in APP_IDS_UNRELIABLE_MEDIA_INFO:
+                # Some apps don't report media status, show the player as playing
+                return STATE_PLAYING
+            return STATE_IDLE
         if self._chromecast is not None and self._chromecast.is_idle:
             return STATE_OFF
         return None

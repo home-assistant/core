@@ -117,7 +117,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         self._port = ssdp_location.port
         self._name = (
             discovery_info.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME)
-            or self.fritz_tools.model
+            or discovery_info.upnp[ssdp.ATTR_UPNP_MODEL_NAME]
         )
         self.context[CONF_HOST] = self._host
 

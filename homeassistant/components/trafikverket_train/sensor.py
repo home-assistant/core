@@ -16,6 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.dt import get_time_zone
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -131,12 +132,15 @@ class TrainSensor(SensorEntity):
         self._state = None
         self._departure_state = None
         self._delay_in_minutes = None
+        self._timezone = get_time_zone("Europe/Stockholm")
 
     async def async_update(self):
         """Retrieve latest state."""
         if self._time is not None:
             departure_day = next_departuredate(self._weekday)
-            when = datetime.combine(departure_day, self._time)
+            when = datetime.combine(departure_day, self._time).astimezone(
+                self._timezone
+            )
             try:
                 self._state = await self._train_api.async_get_train_stop(
                     self._from_station, self._to_station, when
@@ -193,8 +197,8 @@ class TrainSensor(SensorEntity):
         """Return the departure state."""
         if (state := self._state) is not None:
             if state.time_at_location is not None:
-                return state.time_at_location
+                return state.time_at_location.astimezone(self._timezone)
             if state.estimated_time_at_location is not None:
-                return state.estimated_time_at_location
-            return state.advertised_time_at_location
+                return state.estimated_time_at_location.astimezone(self._timezone)
+            return state.advertised_time_at_location.astimezone(self._timezone)
         return None
