@@ -1,10 +1,12 @@
 """Train information for departures and delays, provided by Trafikverket."""
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, time, timedelta
 import logging
+from typing import Any
 
 from pytrafikverket import TrafikverketTrain
+from pytrafikverket.trafikverket_train import TrainStop
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -102,7 +104,7 @@ async def async_setup_platform(
     async_add_entities(sensors, update_before_add=True)
 
 
-def next_weekday(fromdate, weekday):
+def next_weekday(fromdate: date, weekday: int) -> date:
     """Return the date of the next time a specific weekday happen."""
     days_ahead = weekday - fromdate.weekday()
     if days_ahead <= 0:
@@ -110,7 +112,7 @@ def next_weekday(fromdate, weekday):
     return fromdate + timedelta(days_ahead)
 
 
-def next_departuredate(departure):
+def next_departuredate(departure: list) -> date:
     """Calculate the next departuredate from an array input of short days."""
     today_date = date.today()
     today_weekday = date.weekday(today_date)
@@ -126,24 +128,32 @@ def next_departuredate(departure):
 class TrainSensor(SensorEntity):
     """Contains data about a train depature."""
 
-    _attr_device_class = SensorDeviceClass.TIMESTAMP
-
-    def __init__(self, train_api, name, from_station, to_station, weekday, time):
+    def __init__(
+        self,
+        train_api: TrafikverketTrain,
+        name: str,
+        from_station: str,
+        to_station: str,
+        weekday: list,
+        departuretime: time,
+    ) -> None:
         """Initialize the sensor."""
         self._train_api = train_api
-        self._name = name
+        self._attr_name = name
+        self._attr_icon = ICON
+        self._attr_device_class = SensorDeviceClass.TIMESTAMP
         self._from_station = from_station
         self._to_station = to_station
         self._weekday = weekday
-        self._time = time
-        self._state = None
+        self._time = departuretime
+        self._state: TrainStop = None
         self._departure_state = None
         self._delay_in_minutes = None
         self._timezone = get_time_zone("Europe/Stockholm")
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Retrieve latest state."""
-        if self._time is not None:
+        if self._time:
             departure_day = next_departuredate(self._weekday)
             when = datetime.combine(departure_day, self._time).astimezone(
                 self._timezone
@@ -158,14 +168,20 @@ class TrainSensor(SensorEntity):
                 )
         else:
             when = datetime.now()
-            self._state = await self._train_api.async_get_next_train_stop(
-                self._from_station, self._to_station, when
-            )
-        self._departure_state = self._state.get_state().name
-        self._delay_in_minutes = self._state.get_delay_time()
+            try:
+                self._state = await self._train_api.async_get_next_train_stop(
+                    self._from_station, self._to_station, when
+                )
+            except ValueError as output_error:
+                _LOGGER.error(
+                    "Departure %s encountered a problem: %s", when, output_error
+                )
+        if self._state:
+            self._departure_state = self._state.get_state().name
+            self._delay_in_minutes = self._state.get_delay_time()
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         if not self._state:
             return None
@@ -202,17 +218,7 @@ class TrainSensor(SensorEntity):
         return attributes
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def icon(self):
-        """Return the icon for the frontend."""
-        return ICON
-
-    @property
-    def native_value(self):
+    def native_value(self) -> datetime | None:
         """Return the departure state."""
         if (state := self._state) is not None:
             if state.time_at_location is not None:
