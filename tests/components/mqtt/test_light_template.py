@@ -54,6 +54,7 @@ from .test_common import (
     help_test_discovery_update,
     help_test_discovery_update_attr,
     help_test_discovery_update_unchanged,
+    help_test_encoding_subscribable_topics,
     help_test_entity_debug_info_message,
     help_test_entity_device_info_remove,
     help_test_entity_device_info_update,
@@ -1154,3 +1155,29 @@ async def test_reloadable(hass, mqtt_mock, caplog, tmp_path):
     domain = light.DOMAIN
     config = DEFAULT_CONFIG[domain]
     await help_test_reloadable(hass, mqtt_mock, caplog, tmp_path, domain, config)
+
+
+@pytest.mark.parametrize(
+    "topic,value,attribute,attribute_value,init_payload",
+    [
+        ("state_topic", "on", None, "on", None),
+    ],
+)
+async def test_encoding_subscribable_topics(
+    hass, mqtt_mock, caplog, topic, value, attribute, attribute_value, init_payload
+):
+    """Test handling of incoming encoded payload."""
+    config = copy.deepcopy(DEFAULT_CONFIG[light.DOMAIN])
+    config["state_template"] = "{{ value }}"
+    await help_test_encoding_subscribable_topics(
+        hass,
+        mqtt_mock,
+        caplog,
+        light.DOMAIN,
+        config,
+        topic,
+        value,
+        attribute,
+        attribute_value,
+        init_payload,
+    )

@@ -44,6 +44,7 @@ from .test_common import (
     help_test_discovery_update,
     help_test_discovery_update_attr,
     help_test_discovery_update_unchanged,
+    help_test_encoding_subscribable_topics,
     help_test_entity_debug_info_message,
     help_test_entity_device_info_remove,
     help_test_entity_device_info_update,
@@ -591,3 +592,38 @@ async def test_reloadable(hass, mqtt_mock, caplog, tmp_path):
     domain = vacuum.DOMAIN
     config = DEFAULT_CONFIG
     await help_test_reloadable(hass, mqtt_mock, caplog, tmp_path, domain, config)
+
+
+@pytest.mark.parametrize(
+    "topic,value,attribute,attribute_value",
+    [
+        (
+            "state_topic",
+            '{"battery_level": 61, "state": "docked", "fan_speed": "off"}',
+            None,
+            "docked",
+        ),
+        (
+            "state_topic",
+            '{"battery_level": 61, "state": "cleaning", "fan_speed": "medium"}',
+            None,
+            "cleaning",
+        ),
+    ],
+)
+async def test_encoding_subscribable_topics(
+    hass, mqtt_mock, caplog, topic, value, attribute, attribute_value
+):
+    """Test handling of incoming encoded payload."""
+    await help_test_encoding_subscribable_topics(
+        hass,
+        mqtt_mock,
+        caplog,
+        vacuum.DOMAIN,
+        DEFAULT_CONFIG,
+        topic,
+        value,
+        attribute,
+        attribute_value,
+        skip_raw_test=True,
+    )

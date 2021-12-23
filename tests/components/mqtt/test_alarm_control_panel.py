@@ -707,26 +707,22 @@ async def test_discovery_broken(hass, mqtt_mock, caplog):
 
 
 @pytest.mark.parametrize(
-    "topic,value,attribute",
+    "topic,value",
     [
-        ("state_topic", "armed_home", None),
-        ("state_topic", "disarmed", None),
+        ("state_topic", "armed_home"),
+        ("state_topic", "disarmed"),
     ],
 )
-async def test_encoding_subscribable_topics(
-    hass, mqtt_mock, caplog, topic, value, attribute
-):
+async def test_encoding_subscribable_topics(hass, mqtt_mock, caplog, topic, value):
     """Test handling of incoming encoded payload."""
-    config = copy.deepcopy(DEFAULT_CONFIG[alarm_control_panel.DOMAIN])
     await help_test_encoding_subscribable_topics(
         hass,
         mqtt_mock,
         caplog,
         alarm_control_panel.DOMAIN,
-        config,
+        DEFAULT_CONFIG[alarm_control_panel.DOMAIN],
         topic,
         value,
-        attribute,
     )
 
 

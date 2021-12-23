@@ -20,7 +20,7 @@ import homeassistant.helpers.config_validation as cv
 
 from .. import subscription
 from ... import mqtt
-from ..const import CONF_ENCODING, CONF_QOS, CONF_STATE_TOPIC
+from ..const import CONF_QOS, CONF_STATE_TOPIC
 from ..debug_info import log_messages
 from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
 
@@ -105,7 +105,6 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
                     "topic": self._config[CONF_STATE_TOPIC],
                     "msg_callback": message_received,
                     "qos": self._config[CONF_QOS],
-                    "encoding": self._config[CONF_ENCODING] or None,
                 }
             },
         )
