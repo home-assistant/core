@@ -46,6 +46,7 @@ from homeassistant.util.dt import as_local, utcnow as dt_utcnow
 _LOGGER = logging.getLogger(__name__)
 
 CONF_START_TIME = "start_time"
+CONF_SUNSET_TIME = "sunset_time"
 CONF_STOP_TIME = "stop_time"
 CONF_START_CT = "start_colortemp"
 CONF_SUNSET_CT = "sunset_colortemp"
@@ -64,6 +65,7 @@ PLATFORM_SCHEMA = vol.Schema(
         vol.Required(CONF_LIGHTS): cv.entity_ids,
         vol.Optional(CONF_NAME, default="Flux"): cv.string,
         vol.Optional(CONF_START_TIME): cv.time,
+        vol.Optional(CONF_SUNSET_TIME): cv.time,
         vol.Optional(CONF_STOP_TIME): cv.time,
         vol.Optional(CONF_START_CT, default=4000): vol.All(
             vol.Coerce(int), vol.Range(min=1000, max=40000)
@@ -133,6 +135,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     name = config.get(CONF_NAME)
     lights = config.get(CONF_LIGHTS)
     start_time = config.get(CONF_START_TIME)
+    sunset_time = config.get(CONF_SUNSET_TIME)
     stop_time = config.get(CONF_STOP_TIME)
     start_colortemp = config.get(CONF_START_CT)
     sunset_colortemp = config.get(CONF_SUNSET_CT)
@@ -147,6 +150,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         hass,
         lights,
         start_time,
+        sunset_time,
         stop_time,
         start_colortemp,
         sunset_colortemp,
@@ -176,6 +180,7 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
         hass,
         lights,
         start_time,
+        sunset_time,
         stop_time,
         start_colortemp,
         sunset_colortemp,
@@ -191,6 +196,7 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
         self.hass = hass
         self._lights = lights
         self._start_time = start_time
+        self._sunset_time = sunset_time
         self._stop_time = stop_time
         self._start_colortemp = start_colortemp
         self._sunset_colortemp = sunset_colortemp
@@ -249,7 +255,7 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
 
         now = as_local(utcnow)
 
-        sunset = get_astral_event_date(self.hass, SUN_EVENT_SUNSET, now.date())
+        sunset = self.find_sunset_time(now)
         start_time = self.find_start_time(now)
         stop_time = self.find_stop_time(now)
 
@@ -360,3 +366,13 @@ class FluxSwitch(SwitchEntity, RestoreEntity):
         else:
             dusk = get_astral_event_date(self.hass, "dusk", now.date())
         return dusk
+
+    def find_sunset_time(self, now):
+        """Return sunset or sunset_time if given."""
+        if self._sunset_time:
+            sunset = now.replace(
+                hour=self._sunset_time.hour, minute=self._sunset_time.minute, second=0
+            )
+        else:
+            sunset = get_astral_event_date(self.hass, SUN_EVENT_SUNSET, now.date())
+        return sunset

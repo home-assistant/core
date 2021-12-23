@@ -98,6 +98,7 @@ async def test_valid_config_with_info(hass):
                 "lights": ["light.desk", "light.lamp"],
                 "stop_time": "22:59",
                 "start_time": "7:22",
+                "sunset_time": "20:33",
                 "start_colortemp": "1000",
                 "sunset_colortemp": "2000",
                 "stop_colortemp": "4000",
