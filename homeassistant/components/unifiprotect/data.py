@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 import collections
+from collections.abc import Generator, Iterable
 from datetime import timedelta
 import logging
-from typing import Any, Generator, Iterable
+from typing import Any
 
 from pyunifiprotect import NotAuthorized, NvrError, ProtectApiClient
 from pyunifiprotect.data import Bootstrap, ModelType, WSSubscriptionMessage

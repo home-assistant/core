@@ -1,8 +1,9 @@
 """Support for Ubiquiti's UniFi Protect NVR."""
 from __future__ import annotations
 
+from collections.abc import Callable, Generator, Sequence
 import logging
-from typing import Any, Callable, Generator, Sequence
+from typing import Any
 
 from pyunifiprotect.api import ProtectApiClient
 from pyunifiprotect.data import Camera as UFPCamera
