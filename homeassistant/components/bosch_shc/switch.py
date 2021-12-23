@@ -1,4 +1,6 @@
 """Platform for switch integration."""
+from __future__ import annotations
+
 from boschshcpy import (
     SHCCamera360,
     SHCCameraEyes,
@@ -18,7 +20,7 @@ from homeassistant.components.switch import (
 from .const import DATA_SESSION, DOMAIN
 from .entity import SHCEntity
 
-SWITCH_TYPES = {
+SWITCH_TYPES: dict[str, SwitchEntityDescription] = {
     "smartplug": SwitchEntityDescription(
         key="smartplug",
         device_class=SwitchDeviceClass.OUTLET,
