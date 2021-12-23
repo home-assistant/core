@@ -52,13 +52,12 @@ from homeassistant.exceptions import (
     HomeAssistantError,
     TemplateError,
 )
-from homeassistant.helpers import config_validation as cv, entity_registry as er
-from homeassistant.helpers.sun import get_astral_event_date
-from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from homeassistant.util.async_ import run_callback_threadsafe
 import homeassistant.util.dt as dt_util
 
+from . import config_validation as cv, entity_registry as er
+from .sun import get_astral_event_date
+from .template import Template
 from .trace import (
     TraceElement,
     trace_append_element,
@@ -69,6 +68,7 @@ from .trace import (
     trace_stack_push,
     trace_stack_top,
 )
+from .typing import ConfigType, TemplateVarsType
 
 # mypy: disallow-any-generics
 

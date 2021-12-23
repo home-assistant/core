@@ -16,12 +16,9 @@ from awesomeversion import AwesomeVersion
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
-from homeassistant import auth
-from homeassistant.auth import (
-    mfa_modules as auth_mfa_modules,
-    providers as auth_providers,
-)
-from homeassistant.const import (
+from . import auth
+from .auth import mfa_modules as auth_mfa_modules, providers as auth_providers
+from .const import (
     ATTR_ASSUMED_STATE,
     ATTR_FRIENDLY_NAME,
     ATTR_HIDDEN,
@@ -52,25 +49,20 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     __version__,
 )
-from homeassistant.core import (
-    DOMAIN as CONF_CORE,
-    ConfigSource,
-    HomeAssistant,
-    callback,
+from .core import DOMAIN as CONF_CORE, ConfigSource, HomeAssistant, callback
+from .exceptions import HomeAssistantError
+from .helpers import (
+    config_per_platform,
+    config_validation as cv,
+    extract_domain_configs,
 )
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_per_platform, extract_domain_configs
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_values import EntityValues
-from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import Integration, IntegrationNotFound
-from homeassistant.requirements import (
-    RequirementsNotFound,
-    async_get_integration_with_requirements,
-)
-from homeassistant.util.package import is_docker_env
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
-from homeassistant.util.yaml import SECRET_YAML, Secrets, load_yaml
+from .helpers.entity_values import EntityValues
+from .helpers.typing import ConfigType
+from .loader import Integration, IntegrationNotFound
+from .requirements import RequirementsNotFound, async_get_integration_with_requirements
+from .util.package import is_docker_env
+from .util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
+from .util.yaml import SECRET_YAML, Secrets, load_yaml
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -938,7 +930,7 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> str | None:
     This method is a coroutine.
     """
     # pylint: disable=import-outside-toplevel
-    from homeassistant.helpers import check_config
+    from .helpers import check_config
 
     res = await check_config.async_check_ha_config_file(hass)
 
@@ -956,7 +948,7 @@ def async_notify_setup_error(
     This method must be run in the event loop.
     """
     # pylint: disable=import-outside-toplevel
-    from homeassistant.components import persistent_notification
+    from .components import persistent_notification
 
     if (errors := hass.data.get(DATA_PERSISTENT_ERRORS)) is None:
         errors = hass.data[DATA_PERSISTENT_ERRORS] = {}
