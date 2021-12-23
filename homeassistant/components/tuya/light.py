@@ -29,7 +29,6 @@ from .base import IntegerTypeData, TuyaEntity
 from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode, WorkMode
 from .util import remap_value
 
-
 @dataclass
 class TuyaLightEntityDescription(LightEntityDescription):
     """Describe an Tuya light entity."""
@@ -402,7 +401,10 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
             )
 
         # Update internals based on found brightness dpcode
-        if self._brightness_dpcode:
+        if (
+            self._brightness_dpcode
+            and self._brightness_dpcode in device.status_range
+        ) :
             self._attr_supported_color_modes.add(COLOR_MODE_BRIGHTNESS)
             self._brightness_type = IntegerTypeData.from_json(
                 device.status_range[self._brightness_dpcode].values
@@ -423,7 +425,10 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                 )
 
         # Update internals based on found color temperature dpcode
-        if self._color_temp_dpcode:
+        if (
+            self._color_temp_dpcode
+            and self._color_temp_dpcode in device.status_range
+        ) :
             self._attr_supported_color_modes.add(COLOR_MODE_COLOR_TEMP)
             self._color_temp_type = IntegerTypeData.from_json(
                 device.status_range[self._color_temp_dpcode].values
