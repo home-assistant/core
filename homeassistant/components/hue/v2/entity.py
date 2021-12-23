@@ -142,18 +142,21 @@ class HueBaseEntity(Entity):
         if self._ignore_availability is not None:
             # already processed
             return
-        cur_state = self.resource.on.on
-        if self._last_state is None:
-            self._last_state = cur_state
-            return
+        if self.device.product_data.certified:
+            # certified products report their state correctly
+            self._ignore_availability = False
         # some (3th party) Hue lights report their connection status incorrectly
         # causing the zigbee availability to report as disconnected while in fact
         # it can be controlled. Although this is in fact something the device manufacturer
         # should fix, we work around it here. If the light is reported unavailable
-        # by the zigbee connectivity but the state changesm its considered as a
+        # by the zigbee connectivity but the state changes its considered as a
         # malfunctioning device and we report it.
         # while the user should actually fix this issue instead of ignoring it, we
         # ignore the availability for this light from this point.
+        cur_state = self.resource.on.on
+        if self._last_state is None:
+            self._last_state = cur_state
+            return
         if zigbee := self.bridge.api.devices.get_zigbee_connectivity(self.device.id):
             if (
                 self._last_state != cur_state
@@ -163,7 +166,7 @@ class HueBaseEntity(Entity):
                 # while it was reported as not connected!
                 self.logger.warning(
                     "Light %s changed state while reported as disconnected. "
-                    "This is an indicator that routing is not working properly for this device. "
+                    "This might be an indicator that routing is not working for this device. "
                     "Home Assistant will ignore availability for this light from now on. "
                     "Device details: %s - %s (%s) fw: %s",
                     self.name,
