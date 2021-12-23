@@ -1,7 +1,7 @@
 """Helper functions for Philips Hue v2."""
 
 
-def brightness_helper(brightness):
+def normalize_hue_brightness(brightness):
     """Returns calculated brightness values"""
 
     if brightness is not None:
@@ -11,7 +11,7 @@ def brightness_helper(brightness):
     return brightness
 
 
-def transition_helper(transition):
+def normalize_hue_transition(transition):
     """Returns rounded transition values"""
 
     if transition is not None:
