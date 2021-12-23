@@ -1,6 +1,6 @@
 """The Overkiz (by Somfy) integration."""
+from dataclasses import dataclass
 import logging
-from typing import NamedTuple
 
 from aiohttp import ClientError, ServerDisconnectedError
 from pyoverkiz.client import OverkizClient
@@ -30,7 +30,8 @@ from .coordinator import OverkizDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-class HomeAssistantOverkizData(NamedTuple):
+@dataclass
+class HomeAssistantOverkizData:
     """Overkiz data stored in the Home Assistant data object."""
 
     coordinator: OverkizDataUpdateCoordinator
@@ -51,8 +52,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await client.login()
         setup = await client.get_setup()
-    except BadCredentialsException as exception:
-        raise ConfigEntryNotReady("Invalid authentication") from exception
+    except BadCredentialsException:
+        _LOGGER.error("Invalid authentication")
+        return False
     except TooManyRequestsException as exception:
         raise ConfigEntryNotReady("Too many requests, try again later") from exception
     except (TimeoutError, ClientError, ServerDisconnectedError) as exception:
