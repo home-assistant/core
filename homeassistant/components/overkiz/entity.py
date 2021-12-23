@@ -35,13 +35,14 @@ class OverkizEntity(CoordinatorEntity):
         self._attr_unique_id = self.device.device_url
         self._attr_name = self.device.label
 
+        self._attr_device_info = self.generate_device_info()
+
     @property
     def device(self) -> Device:
         """Return Overkiz device linked to this entity."""
         return self.coordinator.data[self.device_url]
 
-    @property
-    def device_info(self) -> DeviceInfo:
+    def generate_device_info(self) -> DeviceInfo:
         """Return device registry information for this entity."""
         # Some devices, such as the Smart Thermostat have several devices in one physical device,
         # with same device url, terminated by '#' and a number.

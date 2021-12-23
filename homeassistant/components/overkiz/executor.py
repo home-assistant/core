@@ -21,7 +21,7 @@ class OverkizExecutor:
         """Initialize the executor."""
         self.device_url = device_url
         self.coordinator = coordinator
-        self.base_device_url, *_ = self.device_url.split("#")
+        self.base_device_url = self.device_url.split("#")[0]
 
     @property
     def device(self) -> Device:
