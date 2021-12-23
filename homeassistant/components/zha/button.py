@@ -68,19 +68,9 @@ class ZHAButton(ZhaEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Send out a update command."""
-        if self._command_name:
-            command = getattr(self._channel, self._command_name)
-            if command is not None:
-                arguments = self.get_args()
-                if arguments:
-                    await command(*arguments)
-                else:
-                    await command()
-            else:
-                _LOGGER.warning(
-                    "Attempted to issue command: %s but the command was not found",
-                    self._command_name,
-                )
+        command = getattr(self._channel, self._command_name)
+        arguments = self.get_args()
+        await command(*arguments)
 
 
 @MULTI_MATCH(channel_names=CHANNEL_IDENTIFY)
