@@ -789,6 +789,9 @@ pure-python-adb[async]==0.3.0.dev0
 # homeassistant.components.pushbullet
 pushbullet.py==0.11.0
 
+# homeassistant.components.pvoutput
+pvo==0.1.0
+
 # homeassistant.components.canary
 py-canary==0.5.1
 

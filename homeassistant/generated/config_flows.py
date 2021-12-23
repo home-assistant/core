@@ -243,6 +243,7 @@ FLOWS = [
     "progettihwsw",
     "prosegur",
     "ps4",
+    "pvoutput",
     "pvpc_hourly_pricing",
     "rachio",
     "rainforest_eagle",
