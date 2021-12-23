@@ -3,7 +3,9 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from pyvizio.api.apps import AppConfig
-from pyvizio.const import DEVICE_CLASS_SPEAKER, MAX_VOLUME
+from pyvizio.const import MAX_VOLUME
+
+from homeassistant.components.media_player import MediaPlayerDeviceClass
 
 from .const import (
     ACCESS_TOKEN,
@@ -174,7 +176,7 @@ def vizio_update_fixture():
     ), patch(
         "homeassistant.components.vizio.media_player.VizioAsync.get_all_settings",
         return_value={
-            "volume": int(MAX_VOLUME[DEVICE_CLASS_SPEAKER] / 2),
+            "volume": int(MAX_VOLUME[MediaPlayerDeviceClass.SPEAKER] / 2),
             "eq": CURRENT_EQ,
             "mute": "Off",
         },
