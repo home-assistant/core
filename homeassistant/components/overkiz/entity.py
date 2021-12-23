@@ -1,8 +1,8 @@
 """Parent class for every Overkiz device."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable
 
 from pyoverkiz.enums import OverkizAttribute, OverkizState
 from pyoverkiz.models import Device
@@ -21,7 +21,9 @@ class OverkizEntity(CoordinatorEntity):
 
     coordinator: OverkizDataUpdateCoordinator
 
-    def __init__(self, device_url: str, coordinator: OverkizDataUpdateCoordinator):
+    def __init__(
+        self, device_url: str, coordinator: OverkizDataUpdateCoordinator
+    ) -> None:
         """Initialize the device."""
         super().__init__(coordinator)
         self.device_url = device_url
@@ -97,7 +99,7 @@ class OverkizDescriptiveEntity(OverkizEntity):
         device_url: str,
         coordinator: OverkizDataUpdateCoordinator,
         description: OverkizSensorDescription,
-    ):
+    ) -> None:
         """Initialize the device."""
         super().__init__(device_url, coordinator)
         self.entity_description = description

@@ -1,10 +1,11 @@
 """Helpers to help coordinate updates."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import timedelta
 import json
 import logging
-from typing import Any, Callable
+from typing import Any
 
 from aiohttp import ServerDisconnectedError
 from pyoverkiz.client import OverkizClient
@@ -50,7 +51,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator):
         places: Place,
         update_interval: timedelta | None = None,
         config_entry_id: str,
-    ):
+    ) -> None:
         """Initialize global data updater."""
         super().__init__(
             hass,

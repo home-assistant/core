@@ -15,7 +15,9 @@ _LOGGER = logging.getLogger(__name__)
 class OverkizExecutor:
     """Representation of an Overkiz device with execution handler."""
 
-    def __init__(self, device_url: str, coordinator: OverkizDataUpdateCoordinator):
+    def __init__(
+        self, device_url: str, coordinator: OverkizDataUpdateCoordinator
+    ) -> None:
         """Initialize the executor."""
         self.device_url = device_url
         self.coordinator = coordinator
