@@ -14,12 +14,12 @@ from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
+from homeassistant.util import dt as dt_util
 
 from .const import (
     ADDRESS,
     ATTRIBUTION,
     CONF_COORDINATOR,
-    DATE_TIME_FORMAT,
     DOMAIN,
     SENSOR_TYPES,
     PicnicSensorEntityDescription,
@@ -64,28 +64,28 @@ class PicnicSensor(SensorEntity, CoordinatorEntity):
         self._attr_unique_id = f"{config_entry.unique_id}.{description.key}"
 
     @property
-    def native_value(self) -> StateType | datetime:
-        """Return the state of the entity."""
+    def _api_value(self):
+        """Return the value reported by the API."""
         data_set = (
             self.coordinator.data.get(self.entity_description.data_type, {})
             if self.coordinator.data is not None
             else {}
         )
-        value = self.entity_description.value_fn(data_set)
+        return self.entity_description.value_fn(data_set)
 
-        if not value or self.device_class != SensorDeviceClass.TIMESTAMP:
-            return value
+    @property
+    def native_value(self) -> StateType | datetime:
+        """Return the value reported by the sensor."""
+        if not self._api_value or self.device_class != SensorDeviceClass.TIMESTAMP:
+            return self._api_value
 
         # Convert to datetime object if the device class is timestamp
-        try:
-            return datetime.strptime(str(value), DATE_TIME_FORMAT)
-        except ValueError:
-            return None
+        return dt_util.parse_datetime(self._api_value)
 
     @property
     def available(self) -> bool:
-        """Return True if entity is available."""
-        return self.coordinator.last_update_success and self.state is not None
+        """Return True if last update was successful."""
+        return self.coordinator.last_update_success and self._api_value is not None
 
     @property
     def device_info(self) -> DeviceInfo:

@@ -18,6 +18,7 @@ from homeassistant.const import (
     CURRENCY_EURO,
     DEVICE_CLASS_TIMESTAMP,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.util import dt
@@ -332,8 +333,8 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         await self._coordinator.async_refresh()
 
         # Assert eta times are not available due to malformed date strings
-        self._assert_sensor("sensor.picnic_last_order_eta_start", STATE_UNAVAILABLE)
-        self._assert_sensor("sensor.picnic_last_order_eta_end", STATE_UNAVAILABLE)
+        self._assert_sensor("sensor.picnic_last_order_eta_start", STATE_UNKNOWN)
+        self._assert_sensor("sensor.picnic_last_order_eta_end", STATE_UNKNOWN)
 
     async def test_sensors_use_detailed_eta_if_available(self):
         """Test sensor states when last order is not yet delivered."""
