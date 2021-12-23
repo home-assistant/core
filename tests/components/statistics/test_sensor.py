@@ -428,6 +428,7 @@ async def test_reset_service(hass: HomeAssistant):
         await hass.async_block_till_done()
 
         # High keep_count prevents any purging
+
         await hass.services.async_call(
             domain=STATISTICS_DOMAIN,
             service="reset_buffer",
@@ -438,12 +439,12 @@ async def test_reset_service(hass: HomeAssistant):
             },
             blocking=True,
         )
-
         state = hass.states.get("sensor.test")
         assert state is not None
         assert state.attributes.get("buffer_usage_ratio") == round(9 / 20, 2)
 
         # High keep_age prevents any purging
+
         await hass.services.async_call(
             domain=STATISTICS_DOMAIN,
             service="reset_buffer",
@@ -454,12 +455,12 @@ async def test_reset_service(hass: HomeAssistant):
             },
             blocking=True,
         )
-
         state = hass.states.get("sensor.test")
         assert state is not None
         assert state.attributes.get("buffer_usage_ratio") == round(9 / 20, 2)
 
         # Exclusive keep_count deletes oldest sample
+
         await hass.services.async_call(
             domain=STATISTICS_DOMAIN,
             service="reset_buffer",
@@ -469,12 +470,12 @@ async def test_reset_service(hass: HomeAssistant):
             },
             blocking=True,
         )
-
         state = hass.states.get("sensor.test")
         assert state is not None
         assert state.attributes.get("buffer_usage_ratio") == round(8 / 20, 2)
 
         # Exclusive keep_age (as integer) deletes oldest sample
+
         await hass.services.async_call(
             domain=STATISTICS_DOMAIN,
             service="reset_buffer",
@@ -484,12 +485,12 @@ async def test_reset_service(hass: HomeAssistant):
             },
             blocking=True,
         )
-
         state = hass.states.get("sensor.test")
         assert state is not None
         assert state.attributes.get("buffer_usage_ratio") == round(7 / 20, 2)
 
         # Exclusive keep_age (as time period) deletes oldest sample
+
         await hass.services.async_call(
             domain=STATISTICS_DOMAIN,
             service="reset_buffer",
@@ -499,13 +500,13 @@ async def test_reset_service(hass: HomeAssistant):
             },
             blocking=True,
         )
-
         state = hass.states.get("sensor.test")
         assert state is not None
         assert state.attributes.get("buffer_usage_ratio") == round(6 / 20, 2)
 
         # Edge case: Call with keep_age=0 deletes all but current sample.
         # This only happens as we unrealistically mock exact moments in time
+
         await hass.services.async_call(
             domain=STATISTICS_DOMAIN,
             service="reset_buffer",
@@ -515,12 +516,12 @@ async def test_reset_service(hass: HomeAssistant):
             },
             blocking=True,
         )
-
         state = hass.states.get("sensor.test")
         assert state is not None
         assert state.attributes.get("buffer_usage_ratio") == round(1 / 20, 2)
 
         # Non-parameterized service call deletes all sample
+
         await hass.services.async_call(
             domain=STATISTICS_DOMAIN,
             service="reset_buffer",
@@ -529,7 +530,6 @@ async def test_reset_service(hass: HomeAssistant):
             },
             blocking=True,
         )
-
         state = hass.states.get("sensor.test")
         assert state is not None
         assert state.attributes.get("buffer_usage_ratio") == round(0 / 20, 2)
