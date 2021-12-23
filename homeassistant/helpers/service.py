@@ -31,14 +31,6 @@ from homeassistant.exceptions import (
     Unauthorized,
     UnknownUser,
 )
-from homeassistant.helpers import (
-    area_registry,
-    config_validation as cv,
-    device_registry,
-    entity_registry,
-    template,
-)
-from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from homeassistant.loader import (
     MAX_LOAD_CONCURRENTLY,
     Integration,
@@ -49,9 +41,18 @@ from homeassistant.util.async_ import gather_with_concurrency
 from homeassistant.util.yaml import load_yaml
 from homeassistant.util.yaml.loader import JSON_TYPE
 
+from . import (
+    area_registry,
+    config_validation as cv,
+    device_registry,
+    entity_registry,
+    template,
+)
+from .typing import ConfigType, TemplateVarsType
+
 if TYPE_CHECKING:
-    from homeassistant.helpers.entity import Entity
-    from homeassistant.helpers.entity_platform import EntityPlatform
+    from .entity import Entity
+    from .entity_platform import EntityPlatform
 
 
 CONF_SERVICE_ENTITY_ID = "entity_id"

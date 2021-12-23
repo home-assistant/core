@@ -8,7 +8,8 @@ from homeassistant import config_entries
 from homeassistant.components import dhcp, mqtt, ssdp, zeroconf
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.typing import UNDEFINED, DiscoveryInfoType, UndefinedType
+
+from .typing import UNDEFINED, DiscoveryInfoType, UndefinedType
 
 DiscoveryFunctionType = Callable[[HomeAssistant], Union[Awaitable[bool], bool]]
 

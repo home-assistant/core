@@ -75,12 +75,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import split_entity_id, valid_entity_id
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import (
-    script_variables as script_variables_helper,
-    template as template_helper,
-)
 from homeassistant.util import raise_if_invalid_path, slugify as util_slugify
 import homeassistant.util.dt as dt_util
+
+from . import script_variables as script_variables_helper, template as template_helper
 
 # pylint: disable=invalid-name
 

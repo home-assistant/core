@@ -12,35 +12,26 @@ from types import MappingProxyType, MethodType
 from typing import TYPE_CHECKING, Any, Callable, Optional, cast
 import weakref
 
-from homeassistant import data_entry_flow, loader
-from homeassistant.backports.enum import StrEnum
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    HomeAssistantError,
-)
-from homeassistant.helpers import device_registry, entity_registry
-from homeassistant.helpers.event import Event
-from homeassistant.helpers.frame import report
-from homeassistant.helpers.typing import (
-    UNDEFINED,
-    ConfigType,
-    DiscoveryInfoType,
-    UndefinedType,
-)
-from homeassistant.setup import async_process_deps_reqs, async_setup_component
-from homeassistant.util.decorator import Registry
-import homeassistant.util.uuid as uuid_util
+from . import data_entry_flow, loader
+from .backports.enum import StrEnum
+from .const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
+from .core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
+from .exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady, HomeAssistantError
+from .helpers import device_registry, entity_registry
+from .helpers.event import Event
+from .helpers.frame import report
+from .helpers.typing import UNDEFINED, ConfigType, DiscoveryInfoType, UndefinedType
+from .setup import async_process_deps_reqs, async_setup_component
+from .util import uuid as uuid_util
+from .util.decorator import Registry
 
 if TYPE_CHECKING:
-    from homeassistant.components.dhcp import DhcpServiceInfo
-    from homeassistant.components.hassio import HassioServiceInfo
-    from homeassistant.components.mqtt import MqttServiceInfo
-    from homeassistant.components.ssdp import SsdpServiceInfo
-    from homeassistant.components.usb import UsbServiceInfo
-    from homeassistant.components.zeroconf import ZeroconfServiceInfo
+    from .components.dhcp import DhcpServiceInfo
+    from .components.hassio import HassioServiceInfo
+    from .components.mqtt import MqttServiceInfo
+    from .components.ssdp import SsdpServiceInfo
+    from .components.usb import UsbServiceInfo
+    from .components.zeroconf import ZeroconfServiceInfo
 
 _LOGGER = logging.getLogger(__name__)
 

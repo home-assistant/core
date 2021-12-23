@@ -25,9 +25,9 @@ import attr
 import voluptuous as vol
 import yarl
 
-from homeassistant import async_timeout_backcompat, block_async_io, loader, util
-from homeassistant.backports.enum import StrEnum
-from homeassistant.const import (
+from . import async_timeout_backcompat, block_async_io, loader, util
+from .backports.enum import StrEnum
+from .const import (
     ATTR_DOMAIN,
     ATTR_FRIENDLY_NAME,
     ATTR_NOW,
@@ -53,7 +53,7 @@ from homeassistant.const import (
     MAX_LENGTH_STATE_STATE,
     __version__,
 )
-from homeassistant.exceptions import (
+from .exceptions import (
     HomeAssistantError,
     InvalidEntityFormatError,
     InvalidStateError,
@@ -61,22 +61,20 @@ from homeassistant.exceptions import (
     ServiceNotFound,
     Unauthorized,
 )
-from homeassistant.util import location
-from homeassistant.util.async_ import (
+from .util import dt as dt_util, location, uuid as uuid_util
+from .util.async_ import (
     fire_coroutine_threadsafe,
     run_callback_threadsafe,
     shutdown_run_callback_threadsafe,
 )
-import homeassistant.util.dt as dt_util
-from homeassistant.util.timeout import TimeoutManager
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
-import homeassistant.util.uuid as uuid_util
+from .util.timeout import TimeoutManager
+from .util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
 
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:
-    from homeassistant.auth import AuthManager
-    from homeassistant.components.http import HomeAssistantHTTP
-    from homeassistant.config_entries import ConfigEntries
+    from .auth import AuthManager
+    from .components.http import HomeAssistantHTTP
+    from .config_entries import ConfigEntries
 
 
 STAGE_1_SHUTDOWN_TIMEOUT = 100
@@ -286,7 +284,7 @@ class HomeAssistant:
         await self.async_start()
         if attach_signals:
             # pylint: disable=import-outside-toplevel
-            from homeassistant.helpers.signal import async_register_signal_handling
+            from .helpers.signal import async_register_signal_handling
 
             async_register_signal_handling(self)
 

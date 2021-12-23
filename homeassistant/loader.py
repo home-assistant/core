@@ -23,16 +23,16 @@ from awesomeversion import (
     AwesomeVersionStrategy,
 )
 
-from homeassistant.generated.dhcp import DHCP
-from homeassistant.generated.mqtt import MQTT
-from homeassistant.generated.ssdp import SSDP
-from homeassistant.generated.usb import USB
-from homeassistant.generated.zeroconf import HOMEKIT, ZEROCONF
-from homeassistant.util.async_ import gather_with_concurrency
+from .generated.dhcp import DHCP
+from .generated.mqtt import MQTT
+from .generated.ssdp import SSDP
+from .generated.usb import USB
+from .generated.zeroconf import HOMEKIT, ZEROCONF
+from .util.async_ import gather_with_concurrency
 
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:
-    from homeassistant.core import HomeAssistant
+    from .core import HomeAssistant
 
 # mypy: disallow-any-generics
 
@@ -167,7 +167,7 @@ async def async_get_custom_components(
 async def async_get_config_flows(hass: HomeAssistant) -> set[str]:
     """Return cached list of config flows."""
     # pylint: disable=import-outside-toplevel
-    from homeassistant.generated.config_flows import FLOWS
+    from .generated.config_flows import FLOWS
 
     flows: set[str] = set()
     flows.update(FLOWS)
@@ -607,7 +607,7 @@ async def _async_get_integration(hass: HomeAssistant, domain: str) -> Integratio
     if integration := (await async_get_custom_components(hass)).get(domain):
         return integration
 
-    from homeassistant import components  # pylint: disable=import-outside-toplevel
+    from . import components  # pylint: disable=import-outside-toplevel
 
     if integration := await hass.async_add_executor_job(
         Integration.resolve_from_root, hass, components, domain
