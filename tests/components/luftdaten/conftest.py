@@ -62,7 +62,7 @@ def mock_luftdaten() -> Generator[None, MagicMock, None]:
             "humidity": 34.70,
             "P1": 8.5,
             "P2": 4.07,
-            "pressure_at_sea_level": 103102.13,
+            "pressure_at_sealevel": 103102.13,
             "pressure": 98545.00,
             "temperature": 22.30,
         }
