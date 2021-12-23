@@ -43,7 +43,7 @@
             "init": {
                 "data": {
                     "apps": "Configure applications list",
-                    "exclude_unnamed_apps": "Exclude apps with unknown name",
+                    "exclude_unnamed_apps": "Exclude apps with unknown name from the sources list",
                     "get_sources": "Retrieve the running apps as the list of sources",
                     "screencap": "Use screen capture for album art",
                     "state_detection_rules": "Configure state detection rules",
