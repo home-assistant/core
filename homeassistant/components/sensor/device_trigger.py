@@ -8,7 +8,6 @@ from homeassistant.components.device_automation.exceptions import (
 from homeassistant.components.homeassistant.triggers import (
     numeric_state as numeric_state_trigger,
 )
-from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     CONF_ABOVE,
     CONF_BELOW,
@@ -21,7 +20,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import get_device_class, get_unit_of_measurement
 from homeassistant.helpers.entity_registry import async_entries_for_device
 
-from . import DOMAIN
+from . import DOMAIN, SensorDeviceClass
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 

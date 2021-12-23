@@ -22,7 +22,7 @@
                     "wifi_pswd": "Password Wi-Fi",
                     "wifi_ssid": "SSID Wi-Fi"
                 },
-                "description": "Ripristina il riscaldatore premendo + e OK finch\u00e9 il display non mostra 'Reset'. Quindi premere e tenere premuto il pulsante OK sul riscaldatore fino a quando il led blu inizia a lampeggiare prima di premere Invia. La configurazione del riscaldatore potrebbe richiedere alcuni minuti."
+                "description": "Ripristina il riscaldatore premendo + e OK finch\u00e9 il display non mostra 'Reset'. Quindi premi e tieni premuto il pulsante OK sul riscaldatore fino a quando il led blu inizia a lampeggiare prima di premere Invia. La configurazione del riscaldatore potrebbe richiedere alcuni minuti."
             },
             "user": {
                 "data": {

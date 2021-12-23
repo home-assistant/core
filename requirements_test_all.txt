@@ -963,7 +963,7 @@ pyipp==0.11.0
 pyiqvia==2021.11.0
 
 # homeassistant.components.isy994
-pyisy==3.0.0
+pyisy==3.0.1
 
 # homeassistant.components.kira
 pykira==0.1.1

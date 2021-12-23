@@ -30,7 +30,7 @@
                 "title": "Seleziona posizione"
             },
             "user": {
-                "description": "SmartThings sar\u00e0 configurato per inviare aggiornamenti push a Home Assistant su: \n > {webhook_url} \n\nSe ci\u00f2 non fosse corretto, aggiornare la configurazione, riavviare Home Assistant e riprovare.",
+                "description": "SmartThings sar\u00e0 configurato per inviare aggiornamenti push a Home Assistant su: \n > {webhook_url} \n\nSe ci\u00f2 non fosse corretto, aggiorna la configurazione, riavvia Home Assistant e riprova.",
                 "title": "Conferma l'URL di richiamo"
             }
         }

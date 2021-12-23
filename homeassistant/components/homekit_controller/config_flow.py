@@ -324,11 +324,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured(updates=updated_ip_port)
 
         for progress in self._async_in_progress(include_uninitialized=True):
-            _LOGGER.warning(
-                "Checking existing flows: %s - %s", progress, progress["context"]
-            )
             if progress["context"].get("unique_id") == normalized_hkid:
-                _LOGGER.warning("dismiss flows: %s - %s", progress, progress["flow_id"])
                 if paired:
                     # If the device gets paired, we want to dismiss
                     # an existing discovery since we can no longer
