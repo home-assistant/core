@@ -8,6 +8,7 @@ from aiohue.v2.controllers.events import EventType
 from aiohue.v2.controllers.scenes import ScenesController
 from aiohue.v2.models.scene import Scene as HueScene
 
+from homeassistant.components.light import ATTR_TRANSITION
 from homeassistant.components.scene import Scene as SceneEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
