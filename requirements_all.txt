@@ -235,7 +235,7 @@ aiopulse==0.4.3
 aiopvapi==1.6.19
 
 # homeassistant.components.pvpc_hourly_pricing
-aiopvpc==2.2.4
+aiopvpc==3.0.0
 
 # homeassistant.components.webostv
 aiopylgtv==0.4.0
