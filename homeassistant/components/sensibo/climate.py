@@ -36,6 +36,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
     ConfigType,
@@ -153,6 +154,16 @@ class SensiboClimate(ClimateEntity):
         self._available = False
         self._do_update(data)
         self._failed_update = False
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._id)},
+            name=self._name,
+            manufacturer="Sensibo",
+            configuration_url="https://home.sensibo.com/",
+            model=data["productModel"],
+            sw_version=data["firmwareVersion"],
+            hw_version=data["firmwareType"],
+            suggested_area=self._name,
+        )
 
     @property
     def supported_features(self):
