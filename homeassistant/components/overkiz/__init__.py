@@ -1,5 +1,6 @@
 """The Overkiz (by Somfy) integration."""
 import logging
+from typing import NamedTuple
 
 from aiohttp import ClientError, ServerDisconnectedError
 from pyoverkiz.client import OverkizClient
@@ -27,6 +28,12 @@ from .const import (
 from .coordinator import OverkizDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class HomeAssistantOverkizData(NamedTuple):
+    """Overkiz data stored in the Home Assistant data object."""
+
+    coordinator: OverkizDataUpdateCoordinator
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -76,9 +83,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         coordinator.update_interval = UPDATE_INTERVAL_ALL_ASSUMED_STATE
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        "coordinator": coordinator,
-    }
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = HomeAssistantOverkizData(
+        coordinator=coordinator,
+    )
 
     # Map Overkiz device to Home Assistant platform
     for device in coordinator.data.values():
