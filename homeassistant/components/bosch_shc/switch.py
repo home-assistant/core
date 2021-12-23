@@ -191,6 +191,7 @@ class SmartPlugCompactSwitch(SHCSwitch):
         """Return the switch state is currently on or off."""
         return self._device.state == SHCSmartPlugCompact.PowerSwitchService.State.ON
 
+    @property
     def extra_state_attributes(self):
         """Return the state attributes."""
         return {
