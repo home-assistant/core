@@ -19,7 +19,7 @@
                 "data": {
                     "host": "Vert",
                     "path": "Bane til program",
-                    "port": "Portnummer",
+                    "port": "Port",
                     "ssl": "Bruk SSL",
                     "username": "Brukernavn"
                 }

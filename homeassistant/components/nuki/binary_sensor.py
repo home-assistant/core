@@ -1,7 +1,5 @@
 """Doorsensor Support for the Nuki Lock."""
 
-import logging
-
 from pynuki import STATE_DOORSENSOR_OPENED
 
 from homeassistant.components.binary_sensor import (
@@ -11,8 +9,6 @@ from homeassistant.components.binary_sensor import (
 
 from . import NukiEntity
 from .const import ATTR_NUKI_ID, DATA_COORDINATOR, DATA_LOCKS, DOMAIN as NUKI_DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):

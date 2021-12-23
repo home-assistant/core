@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 from itertools import chain, groupby
 import json
 import logging
+import os
 import re
 from statistics import mean
 from typing import TYPE_CHECKING, Any, Literal
@@ -29,6 +30,7 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.json import JSONEncoder
+from homeassistant.helpers.storage import STORAGE_DIR
 import homeassistant.util.dt as dt_util
 import homeassistant.util.pressure as pressure_util
 import homeassistant.util.temperature as temperature_util
@@ -325,7 +327,9 @@ def _find_duplicates(
         duplicate_as_dict = columns_to_dict(duplicate)
         duplicate_ids.append(duplicate.id)
         if not compare_statistic_rows(original_as_dict, duplicate_as_dict):
-            non_identical_duplicates_as_dict.append(duplicate_as_dict)
+            non_identical_duplicates_as_dict.append(
+                {"duplicate": duplicate_as_dict, "original": original_as_dict}
+            )
 
     return (duplicate_ids, non_identical_duplicates_as_dict)
 
@@ -366,7 +370,9 @@ def delete_duplicates(instance: Recorder, session: scoped_session) -> None:
     if non_identical_duplicates:
         isotime = dt_util.utcnow().isoformat()
         backup_file_name = f"deleted_statistics.{isotime}.json"
-        backup_path = instance.hass.config.path(backup_file_name)
+        backup_path = instance.hass.config.path(STORAGE_DIR, backup_file_name)
+
+        os.makedirs(os.path.dirname(backup_path), exist_ok=True)
         with open(backup_path, "w", encoding="utf8") as backup_file:
             json.dump(
                 non_identical_duplicates,

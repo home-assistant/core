@@ -1,6 +1,8 @@
 """Entity representing a Sonos battery level."""
 from __future__ import annotations
 
+import logging
+
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import callback
@@ -11,6 +13,8 @@ from .const import SONOS_CREATE_AUDIO_FORMAT_SENSOR, SONOS_CREATE_BATTERY
 from .entity import SonosEntity
 from .speaker import SonosSpeaker
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Sonos from a config entry."""
@@ -19,11 +23,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     def _async_create_audio_format_entity(
         speaker: SonosSpeaker, audio_format: str
     ) -> None:
+        _LOGGER.debug("Creating audio input format sensor on %s", speaker.zone_name)
         entity = SonosAudioInputFormatSensorEntity(speaker, audio_format)
         async_add_entities([entity])
 
     @callback
     def _async_create_battery_sensor(speaker: SonosSpeaker) -> None:
+        _LOGGER.debug("Creating battery level sensor on %s", speaker.zone_name)
         entity = SonosBatteryEntity(speaker)
         async_add_entities([entity])
 

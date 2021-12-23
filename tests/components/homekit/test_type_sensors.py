@@ -1,5 +1,6 @@
 """Test different accessory types: Sensors."""
-from homeassistant.components.binary_sensor import DEVICE_CLASS_MOTION
+
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.homekit import get_accessory
 from homeassistant.components.homekit.const import (
     PROP_CELSIUS,
@@ -269,7 +270,7 @@ async def test_motion_uses_bool(hass, hk_driver):
     entity_id = "binary_sensor.motion"
 
     hass.states.async_set(
-        entity_id, STATE_UNKNOWN, {ATTR_DEVICE_CLASS: DEVICE_CLASS_MOTION}
+        entity_id, STATE_UNKNOWN, {ATTR_DEVICE_CLASS: BinarySensorDeviceClass.MOTION}
     )
     await hass.async_block_till_done()
 
@@ -282,24 +283,26 @@ async def test_motion_uses_bool(hass, hk_driver):
 
     assert acc.char_detected.value is False
 
-    hass.states.async_set(entity_id, STATE_ON, {ATTR_DEVICE_CLASS: DEVICE_CLASS_MOTION})
+    hass.states.async_set(
+        entity_id, STATE_ON, {ATTR_DEVICE_CLASS: BinarySensorDeviceClass.MOTION}
+    )
     await hass.async_block_till_done()
     assert acc.char_detected.value is True
 
     hass.states.async_set(
-        entity_id, STATE_OFF, {ATTR_DEVICE_CLASS: DEVICE_CLASS_MOTION}
+        entity_id, STATE_OFF, {ATTR_DEVICE_CLASS: BinarySensorDeviceClass.MOTION}
     )
     await hass.async_block_till_done()
     assert acc.char_detected.value is False
 
     hass.states.async_set(
-        entity_id, STATE_HOME, {ATTR_DEVICE_CLASS: DEVICE_CLASS_MOTION}
+        entity_id, STATE_HOME, {ATTR_DEVICE_CLASS: BinarySensorDeviceClass.MOTION}
     )
     await hass.async_block_till_done()
     assert acc.char_detected.value is True
 
     hass.states.async_set(
-        entity_id, STATE_NOT_HOME, {ATTR_DEVICE_CLASS: DEVICE_CLASS_MOTION}
+        entity_id, STATE_NOT_HOME, {ATTR_DEVICE_CLASS: BinarySensorDeviceClass.MOTION}
     )
     await hass.async_block_till_done()
     assert acc.char_detected.value is False

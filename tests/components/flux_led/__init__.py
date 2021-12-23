@@ -14,7 +14,7 @@ from flux_led.const import (
     COLOR_MODE_RGB as FLUX_COLOR_MODE_RGB,
 )
 from flux_led.models_db import MODEL_MAP
-from flux_led.protocol import LEDENETRawState
+from flux_led.protocol import LEDENETRawState, PowerRestoreState, PowerRestoreStates
 from flux_led.scanner import FluxLEDDiscovery
 
 from homeassistant.components import dhcp
@@ -124,9 +124,16 @@ def _mocked_switch() -> AIOWifiLedBulb:
         switch.data_receive_callback = callback
 
     switch.device_type = DeviceType.Switch
+    switch.power_restore_states = PowerRestoreStates(
+        channel1=PowerRestoreState.LAST_STATE,
+        channel2=PowerRestoreState.LAST_STATE,
+        channel3=PowerRestoreState.LAST_STATE,
+        channel4=PowerRestoreState.LAST_STATE,
+    )
     switch.requires_turn_on = True
     switch.async_reboot = AsyncMock()
     switch.async_setup = AsyncMock(side_effect=_save_setup_callback)
+    switch.async_set_power_restore = AsyncMock()
     switch.async_stop = AsyncMock()
     switch.async_update = AsyncMock()
     switch.async_turn_off = AsyncMock()

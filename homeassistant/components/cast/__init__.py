@@ -12,8 +12,7 @@ from . import home_assistant_cast
 from .const import DOMAIN
 from .media_player import ENTITY_SCHEMA
 
-# Deprecated from 2021.4, remove in 2021.6
-CONFIG_SCHEMA = cv.deprecated(DOMAIN)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -6,7 +6,7 @@ import aiohttp
 
 from homeassistant.components.rest import DOMAIN
 import homeassistant.components.rest.switch as rest
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchDeviceClass
+from homeassistant.components.switch import SwitchDeviceClass
 from homeassistant.const import (
     CONF_HEADERS,
     CONF_NAME,
@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_RESOURCE,
     CONTENT_TYPE_JSON,
+    Platform,
 )
 from homeassistant.helpers.template import Template
 from homeassistant.setup import async_setup_component
@@ -68,12 +69,12 @@ async def test_setup_timeout(hass, aioclient_mock):
 async def test_setup_minimum(hass, aioclient_mock):
     """Test setup with minimum configuration."""
     aioclient_mock.get("http://localhost", status=HTTPStatus.OK)
-    with assert_setup_component(1, SWITCH_DOMAIN):
+    with assert_setup_component(1, Platform.SWITCH):
         assert await async_setup_component(
             hass,
-            SWITCH_DOMAIN,
+            Platform.SWITCH,
             {
-                SWITCH_DOMAIN: {
+                Platform.SWITCH: {
                     CONF_PLATFORM: DOMAIN,
                     CONF_RESOURCE: "http://localhost",
                 }
@@ -86,12 +87,12 @@ async def test_setup_minimum(hass, aioclient_mock):
 async def test_setup_query_params(hass, aioclient_mock):
     """Test setup with query params."""
     aioclient_mock.get("http://localhost/?search=something", status=HTTPStatus.OK)
-    with assert_setup_component(1, SWITCH_DOMAIN):
+    with assert_setup_component(1, Platform.SWITCH):
         assert await async_setup_component(
             hass,
-            SWITCH_DOMAIN,
+            Platform.SWITCH,
             {
-                SWITCH_DOMAIN: {
+                Platform.SWITCH: {
                     CONF_PLATFORM: DOMAIN,
                     CONF_RESOURCE: "http://localhost",
                     CONF_PARAMS: {"search": "something"},
@@ -109,9 +110,9 @@ async def test_setup(hass, aioclient_mock):
     aioclient_mock.get("http://localhost", status=HTTPStatus.OK)
     assert await async_setup_component(
         hass,
-        SWITCH_DOMAIN,
+        Platform.SWITCH,
         {
-            SWITCH_DOMAIN: {
+            Platform.SWITCH: {
                 CONF_PLATFORM: DOMAIN,
                 CONF_NAME: "foo",
                 CONF_RESOURCE: "http://localhost",
@@ -123,7 +124,7 @@ async def test_setup(hass, aioclient_mock):
     )
     await hass.async_block_till_done()
     assert aioclient_mock.call_count == 1
-    assert_setup_component(1, SWITCH_DOMAIN)
+    assert_setup_component(1, Platform.SWITCH)
 
 
 async def test_setup_with_state_resource(hass, aioclient_mock):
@@ -132,9 +133,9 @@ async def test_setup_with_state_resource(hass, aioclient_mock):
     aioclient_mock.get("http://localhost/state", status=HTTPStatus.OK)
     assert await async_setup_component(
         hass,
-        SWITCH_DOMAIN,
+        Platform.SWITCH,
         {
-            SWITCH_DOMAIN: {
+            Platform.SWITCH: {
                 CONF_PLATFORM: DOMAIN,
                 CONF_NAME: "foo",
                 CONF_RESOURCE: "http://localhost",
@@ -147,7 +148,7 @@ async def test_setup_with_state_resource(hass, aioclient_mock):
     )
     await hass.async_block_till_done()
     assert aioclient_mock.call_count == 1
-    assert_setup_component(1, SWITCH_DOMAIN)
+    assert_setup_component(1, Platform.SWITCH)
 
 
 async def test_setup_with_templated_headers_params(hass, aioclient_mock):
@@ -155,9 +156,9 @@ async def test_setup_with_templated_headers_params(hass, aioclient_mock):
     aioclient_mock.get("http://localhost", status=HTTPStatus.OK)
     assert await async_setup_component(
         hass,
-        SWITCH_DOMAIN,
+        Platform.SWITCH,
         {
-            SWITCH_DOMAIN: {
+            Platform.SWITCH: {
                 CONF_PLATFORM: DOMAIN,
                 CONF_NAME: "foo",
                 CONF_RESOURCE: "http://localhost",
@@ -178,7 +179,7 @@ async def test_setup_with_templated_headers_params(hass, aioclient_mock):
     assert aioclient_mock.mock_calls[-1][3].get("User-Agent") == "Mozilla/5.0"
     assert aioclient_mock.mock_calls[-1][1].query["start"] == "0"
     assert aioclient_mock.mock_calls[-1][1].query["end"] == "5"
-    assert_setup_component(1, SWITCH_DOMAIN)
+    assert_setup_component(1, Platform.SWITCH)
 
 
 """Tests for REST switch platform."""

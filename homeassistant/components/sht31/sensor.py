@@ -84,6 +84,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the sensor platform."""
+    _LOGGER.warning(
+        "The Sensirion SHT31 integration is deprecated and will be removed "
+        "in Home Assistant Core 2022.4; this integration is removed under "
+        "Architectural Decision Record 0019, more information can be found here: "
+        "https://github.com/home-assistant/architecture/blob/master/adr/0019-GPIO.md"
+    )
+
     name = config[CONF_NAME]
     monitored_conditions = config[CONF_MONITORED_CONDITIONS]
     i2c_address = config[CONF_I2C_ADDRESS]

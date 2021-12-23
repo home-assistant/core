@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any
+from typing import Any, Optional, cast
 
 from pywemo.ouimeaux_device import bridge
 
@@ -26,7 +26,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.color as color_util
 
 from .const import DOMAIN as WEMO_DOMAIN
-from .entity import WemoEntity
+from .entity import WemoBinaryStateEntity, WemoEntity
 from .wemo_device import DeviceCoordinator
 
 SUPPORT_WEMO = (
@@ -101,7 +101,7 @@ class WemoLight(WemoEntity, LightEntity):
     @property
     def name(self) -> str:
         """Return the name of the device if any."""
-        return str(self.light.name)
+        return cast(str, self.light.name)
 
     @property
     def available(self) -> bool:
@@ -111,7 +111,7 @@ class WemoLight(WemoEntity, LightEntity):
     @property
     def unique_id(self) -> str:
         """Return the ID of this light."""
-        return str(self.light.uniqueID)
+        return cast(str, self.light.uniqueID)
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -127,7 +127,7 @@ class WemoLight(WemoEntity, LightEntity):
     @property
     def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
-        return int(self.light.state.get("level", 255))
+        return cast(int, self.light.state.get("level", 255))
 
     @property
     def hs_color(self) -> tuple[float, float] | None:
@@ -139,14 +139,12 @@ class WemoLight(WemoEntity, LightEntity):
     @property
     def color_temp(self) -> int | None:
         """Return the color temperature of this light in mireds."""
-        if (temp := self.light.state.get("temperature_mireds")) is not None:
-            return int(temp)
-        return None
+        return cast(Optional[int], self.light.state.get("temperature_mireds"))
 
     @property
     def is_on(self) -> bool:
         """Return true if device is on."""
-        return bool(self.light.state.get("onoff") != WEMO_OFF)
+        return cast(int, self.light.state.get("onoff")) != WEMO_OFF
 
     @property
     def supported_features(self) -> int:
@@ -194,7 +192,7 @@ class WemoLight(WemoEntity, LightEntity):
         self.schedule_update_ha_state()
 
 
-class WemoDimmer(WemoEntity, LightEntity):
+class WemoDimmer(WemoBinaryStateEntity, LightEntity):
     """Representation of a WeMo dimmer."""
 
     @property
@@ -205,13 +203,8 @@ class WemoDimmer(WemoEntity, LightEntity):
     @property
     def brightness(self) -> int:
         """Return the brightness of this light between 1 and 100."""
-        wemo_brightness = int(self.wemo.get_brightness())
+        wemo_brightness: int = self.wemo.get_brightness()
         return int((wemo_brightness * 255) / 100)
-
-    @property
-    def is_on(self) -> bool:
-        """Return true if the state is on."""
-        return bool(self.wemo.get_state())
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the dimmer on."""

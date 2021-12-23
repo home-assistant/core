@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Generator
 import contextlib
 import logging
+from typing import cast
 
 from pywemo.exceptions import ActionException
 
@@ -40,9 +41,10 @@ class WemoEntity(CoordinatorEntity):
     @property
     def name(self) -> str:
         """Return the name of the device if any."""
+        wemo_name: str = self.wemo.name
         if suffix := self.name_suffix:
-            return f"{self.wemo.name} {suffix}"
-        return str(self.wemo.name)
+            return f"{wemo_name} {suffix}"
+        return wemo_name
 
     @property
     def available(self) -> bool:
@@ -59,9 +61,10 @@ class WemoEntity(CoordinatorEntity):
     @property
     def unique_id(self) -> str:
         """Return the id of this WeMo device."""
+        serial_number: str = self.wemo.serialnumber
         if suffix := self.unique_id_suffix:
-            return f"{self.wemo.serialnumber}_{suffix}"
-        return str(self.wemo.serialnumber)
+            return f"{serial_number}_{suffix}"
+        return serial_number
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -82,3 +85,12 @@ class WemoEntity(CoordinatorEntity):
         except ActionException as err:
             _LOGGER.warning("Could not %s for %s (%s)", message, self.name, err)
             self._available = False
+
+
+class WemoBinaryStateEntity(WemoEntity):
+    """Base for devices that return on/off state via device.get_state()."""
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if the state is on."""
+        return cast(int, self.wemo.get_state()) != 0

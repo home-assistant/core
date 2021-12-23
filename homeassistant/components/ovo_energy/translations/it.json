@@ -11,8 +11,8 @@
                 "data": {
                     "password": "Password"
                 },
-                "description": "Autenticazione non riuscita per OVO Energy. Immettere le credenziali correnti.",
-                "title": "Riautenticazione"
+                "description": "Autenticazione non riuscita per OVO Energy. Digita le credenziali attuali.",
+                "title": "Nuova autenticazione"
             },
             "user": {
                 "data": {
