@@ -128,6 +128,9 @@ def next_departuredate(departure: list) -> date:
 class TrainSensor(SensorEntity):
     """Contains data about a train depature."""
 
+    _attr_icon = ICON
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+
     def __init__(
         self,
         train_api: TrafikverketTrain,
@@ -140,8 +143,6 @@ class TrainSensor(SensorEntity):
         """Initialize the sensor."""
         self._train_api = train_api
         self._attr_name = name
-        self._attr_icon = ICON
-        self._attr_device_class = SensorDeviceClass.TIMESTAMP
         self._from_station = from_station
         self._to_station = to_station
         self._weekday = weekday
