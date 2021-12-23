@@ -86,6 +86,7 @@ RESOURCES = [
     "tyre_pressure_rear_right_tyre_pressure",
     "any_door_open",
     "any_window_open",
+    "externalTemp",
 ]
 
 CONFIG_SCHEMA = vol.Schema(
