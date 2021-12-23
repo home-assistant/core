@@ -357,10 +357,12 @@ async def test_http_event_api_failure(hass, hass_client, google_service):
 
 
 @pytest.fixture
-def mock_events_list(google_service: GoogleCalendarService) -> Callable[[...], None]:
+def mock_events_list(
+    google_service: GoogleCalendarService,
+) -> Callable[[dict[str, Any]], None]:
     """Fixture to construct a fake event list API response."""
 
-    def _put_result(response: dict) -> None:
+    def _put_result(response: dict[str, Any]) -> None:
         google_service.return_value.get.return_value.events.return_value.list.return_value.execute.return_value = (
             response
         )
