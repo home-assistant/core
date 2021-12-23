@@ -32,7 +32,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_validate_input(self, user_input: dict[str, Any]) -> FlowResult:
+    async def async_validate_input(self, user_input: dict[str, Any]) -> None:
         """Validate user credentials."""
         username = user_input[CONF_USERNAME]
         password = user_input[CONF_PASSWORD]
@@ -49,10 +49,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 gateway_id = gateways[0].id
                 await self.async_set_unique_id(gateway_id)
 
-            self._abort_if_unique_id_configured()
-
-            return self.async_create_entry(title=username, data=user_input)
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -61,7 +57,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input:
             try:
-                return await self.async_validate_input(user_input)
+                await self.async_validate_input(user_input)
             except TooManyRequestsException:
                 errors["base"] = "too_many_requests"
             except BadCredentialsException:
@@ -75,6 +71,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except Exception as exception:  # pylint: disable=broad-except
                 errors["base"] = "unknown"
                 _LOGGER.exception(exception)
+            else:
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(
+                    title=user_input[CONF_USERNAME], data=user_input
+                )
 
         return self.async_show_form(
             step_id="user",
