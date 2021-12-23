@@ -30,15 +30,15 @@ class HyundaiKiaConnectDataUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize."""
-        region = config_entry.data.get(CONF_REGION)
-        brand = config_entry.data.get(CONF_BRAND)
-        username = config_entry.data.get(CONF_USERNAME)
-        password = config_entry.data.get(CONF_PASSWORD)
-        pin = config_entry.data.get(CONF_PIN)
-
         self.platforms: Set[str] = set()
         token = Token(config_entry.data[CONF_TOKEN])
-        api = get_implementation_by_region_brand(region, brand, username, password, pin)
+        api = get_implementation_by_region_brand(
+            region=config_entry.data.get(CONF_REGION),
+            brand=config_entry.data.get(CONF_BRAND),
+            username=config_entry.data.get(CONF_USERNAME),
+            password=config_entry.data.get(CONF_PASSWORD),
+            pin=config_entry.data.get(CONF_PIN),
+        )
 
         self.vehicle_manager = VehicleManager()
         self.vehicle_id = self.vehicle_manager.add(token, api).id

@@ -37,13 +37,13 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 async def validate_input(hass: HomeAssistant, user_input: dict[str, Any]) -> Token:
     """Validate the user input allows us to connect."""
 
-    username = user_input[CONF_USERNAME]
-    password = user_input[CONF_PASSWORD]
-    region = user_input[CONF_REGION]
-    pin = user_input[CONF_PIN]
-    brand = user_input[CONF_BRAND]
-
-    api = get_implementation_by_region_brand(region, brand, username, password, pin)
+    api = get_implementation_by_region_brand(
+        region=user_input[CONF_REGION],
+        brand=user_input[CONF_BRAND],
+        username=user_input[CONF_USERNAME],
+        password=user_input[CONF_PASSWORD],
+        pin=user_input[CONF_PIN],
+    )
     token: Token = await hass.async_add_executor_job(api.login)
 
     if token is None:

@@ -19,7 +19,6 @@ class HyundaiKiaConnectSensor(HyundaiKiaConnectEntity):
     @property
     def name(self):
         """Return a name to use for this sensor."""
-        _LOGGER.debug(f"{DOMAIN} - sensor name - {self.coordinator.data}")
         return f"{self.coordinator.data.name}_odometer"
 
     @property

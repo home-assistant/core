@@ -5,12 +5,13 @@
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
+          "region": "[%key:component::hyundai_kia_connect::config::step::user::data::region%]",
+          "brand": "[%key:component::hyundai_kia_connect::config::step::user::data::brand%]",
           "pin": "[%key:common::config_flow::data::pin%]"
         }
       }
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },

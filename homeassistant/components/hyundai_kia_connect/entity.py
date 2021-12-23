@@ -8,15 +8,10 @@ from .const import BRANDS, DOMAIN, REGIONS
 class HyundaiKiaConnectEntity(CoordinatorEntity):
     """Class for base entity for Hyundai / Kia Connect integration."""
 
-    def __init__(self, coordinator, config_entry: ConfigEntry):
+    def __init__(self, coordinator, config_entry: ConfigEntry) -> None:
         """Initialize."""
         super().__init__(coordinator)
-        self.config_entry = config_entry
-
-    @property
-    def unique_id(self):
-        """Return a unique ID to use for this entity."""
-        return self.config_entry.entry_id
+        self._unique_id = self.coordinator.data.id
 
     @property
     def device_info(self):

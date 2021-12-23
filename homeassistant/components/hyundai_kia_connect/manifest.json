@@ -4,9 +4,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/hyundai_kia_connect",
   "requirements": ["hyundai_kia_connect_api==1.8.1"],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
   "dependencies": [],
   "codeowners": ["@fuatakgun", "@cdnninja"],
   "iot_class": "cloud_polling"
