@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_WEEKDAY, WEEKDAYS
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.dt import get_time_zone
+from homeassistant.util.dt import as_utc, get_time_zone
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -158,27 +158,39 @@ class TrainSensor(SensorEntity):
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
-        if self._state is None:
+        if not self._state:
             return None
-        state = self._state
-        other_information = None
-        if state.other_information is not None:
-            other_information = ", ".join(state.other_information)
-        deviations = None
-        if state.deviations is not None:
-            deviations = ", ".join(state.deviations)
-        if self._delay_in_minutes is not None:
-            self._delay_in_minutes = self._delay_in_minutes.total_seconds() / 60
-        return {
+        attributes = {
             ATTR_DEPARTURE_STATE: self._departure_state,
-            ATTR_CANCELED: state.canceled,
-            ATTR_DELAY_TIME: self._delay_in_minutes,
-            ATTR_PLANNED_TIME: state.advertised_time_at_location,
-            ATTR_ESTIMATED_TIME: state.estimated_time_at_location,
-            ATTR_ACTUAL_TIME: state.time_at_location,
-            ATTR_OTHER_INFORMATION: other_information,
-            ATTR_DEVIATIONS: deviations,
+            ATTR_CANCELED: self._state.canceled,
+            ATTR_DELAY_TIME: None,
+            ATTR_PLANNED_TIME: None,
+            ATTR_ESTIMATED_TIME: None,
+            ATTR_ACTUAL_TIME: None,
+            ATTR_OTHER_INFORMATION: None,
+            ATTR_DEVIATIONS: None,
         }
+        if self._state.other_information:
+            attributes[ATTR_OTHER_INFORMATION] = ", ".join(
+                self._state.other_information
+            )
+        if self._state.deviations:
+            attributes[ATTR_DEVIATIONS] = ", ".join(self._state.deviations)
+        if self._delay_in_minutes:
+            attributes[ATTR_DELAY_TIME] = self._delay_in_minutes.total_seconds() / 60
+        if self._state.advertised_time_at_location:
+            attributes[ATTR_PLANNED_TIME] = as_utc(
+                self._state.advertised_time_at_location.astimezone(self._timezone)
+            ).isoformat()
+        if self._state.estimated_time_at_location:
+            attributes[ATTR_ESTIMATED_TIME] = as_utc(
+                self._state.estimated_time_at_location.astimezone(self._timezone)
+            ).isoformat()
+        if self._state.time_at_location:
+            attributes[ATTR_ACTUAL_TIME] = as_utc(
+                self._state.time_at_location.astimezone(self._timezone)
+            ).isoformat()
+        return attributes
 
     @property
     def name(self):
