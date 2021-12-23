@@ -458,11 +458,16 @@ ATTR_TEMPERATURE: Final = "temperature"
 
 
 # #### UNITS OF MEASUREMENT ####
+# Apparent power units
+POWER_VOLT_AMPERE: Final = "VA"
+
 # Power units
 POWER_WATT: Final = "W"
 POWER_KILO_WATT: Final = "kW"
-POWER_VOLT_AMPERE: Final = "VA"
 POWER_BTU_PER_HOUR: Final = "BTU/h"
+
+# Reactive power units
+POWER_VOLT_AMPERE_REACTIVE: Final = "var"
 
 # Energy units
 ENERGY_WATT_HOUR: Final = "Wh"
