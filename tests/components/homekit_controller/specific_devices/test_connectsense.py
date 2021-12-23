@@ -80,7 +80,7 @@ async def test_connectsense_setup(hass):
         assert device.manufacturer == "ConnectSense"
         assert device.name == "InWall Outlet-0394DE"
         assert device.model == "CS-IWO"
-        assert device.sw_version == "1.0"
+        assert device.sw_version == "1.0.0"
         assert device.via_device_id is None
 
         device_ids.add(entry.device_id)
