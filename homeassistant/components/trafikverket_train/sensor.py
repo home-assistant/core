@@ -147,7 +147,7 @@ class TrainSensor(SensorEntity):
         self._to_station = to_station
         self._weekday = weekday
         self._time = departuretime
-        self._state: TrainStop = None
+        self._state: TrainStop | None = None
         self._departure_state = None
         self._delay_in_minutes = None
         self._timezone = get_time_zone("Europe/Stockholm")
