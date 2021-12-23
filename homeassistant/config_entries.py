@@ -471,6 +471,7 @@ class ConfigEntry:
 
             self._async_process_on_unload()
 
+            # https://github.com/python/mypy/issues/11839
             return result  # type: ignore[no-any-return]
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
@@ -545,6 +546,7 @@ class ConfigEntry:
             if result:
                 # pylint: disable=protected-access
                 hass.config_entries._async_schedule_save()
+            # https://github.com/python/mypy/issues/11839
             return result  # type: ignore[no-any-return]
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
