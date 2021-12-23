@@ -331,6 +331,7 @@ FLOWS = [
     "venstar",
     "vera",
     "verisure",
+    "version",
     "vesync",
     "vicare",
     "vilfo",
