@@ -1,0 +1,48 @@
+"""Support for Overkiz locks."""
+from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
+
+from homeassistant.components.lock import LockEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from . import HomeAssistantOverkizData
+from .const import DOMAIN
+from .entity import OverkizEntity
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+):
+    """Set up the Overkiz locks from a config entry."""
+    data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
+
+    entities: list[OverkizLock] = [
+        OverkizLock(device.device_url, data.coordinator)
+        for device in data.platforms[Platform.LOCK]
+    ]
+
+    async_add_entities(entities)
+
+
+class OverkizLock(OverkizEntity, LockEntity):
+    """Representation of an Overkiz Lock."""
+
+    async def async_lock(self, **_):
+        """Lock method."""
+        await self.executor.async_execute_command(OverkizCommand.LOCK)
+
+    async def async_unlock(self, **_):
+        """Unlock method."""
+        await self.executor.async_execute_command(OverkizCommand.UNLOCK)
+
+    @property
+    def is_locked(self):
+        """Return a boolean for the state of the lock."""
+        return (
+            self.executor.select_state(OverkizState.CORE_LOCKED_UNLOCKED)
+            == OverkizCommandParam.LOCKED
+        )
