@@ -47,8 +47,8 @@
                     "get_sources": "Retrieve the running apps as the list of sources",
                     "screencap": "Use screen capture for album art",
                     "state_detection_rules": "Configure state detection rules",
-                    "turn_off_command": "Turn off command (leave empty for default)",
-                    "turn_on_command": "Turn on command (leave empty for default)"
+                    "turn_off_command": "ADB shell turn off command (leave empty for default)",
+                    "turn_on_command": "ADB shell turn on command (leave empty for default)"
                 },
                 "title": "Android TV Options"
             },
