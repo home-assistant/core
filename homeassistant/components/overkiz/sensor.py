@@ -26,9 +26,10 @@ from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES
+from .coordinator import OverkizDataUpdateCoordinator
 from .entity import OverkizDescriptiveEntity, OverkizEntity, OverkizSensorDescription
 
-SENSOR_DESCRIPTIONS = [
+SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
     OverkizSensorDescription(
         key=OverkizState.CORE_BATTERY_LEVEL,
         name="Battery Level",
@@ -361,13 +362,13 @@ async def async_setup_entry(
                         )
                     )
 
-            if device.widget == UIWidget.HOMEKIT_STACK:
-                entities.append(
-                    OverkizHomeKitSetupCodeSensor(
-                        device.device_url,
-                        coordinator,
-                    )
+        if device.widget == UIWidget.HOMEKIT_STACK:
+            entities.append(
+                OverkizHomeKitSetupCodeSensor(
+                    device.device_url,
+                    coordinator,
                 )
+            )
 
     async_add_entities(entities)
 
@@ -393,9 +394,13 @@ class OverkizStateSensor(OverkizDescriptiveEntity, SensorEntity):
 class OverkizHomeKitSetupCodeSensor(OverkizEntity, SensorEntity):
     """Representation of an Overkiz HomeKit Setup Code."""
 
-    _attr_name = "HomeKit Setup Code"
     _attr_icon = "mdi:shield-home"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(self, device_url: str, coordinator: OverkizDataUpdateCoordinator):
+        """Initialize the device."""
+        super().__init__(device_url, coordinator)
+        self._attr_name = "HomeKit Setup Code"
 
     @property
     def native_value(self):

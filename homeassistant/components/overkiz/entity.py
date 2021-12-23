@@ -32,8 +32,8 @@ class OverkizEntity(CoordinatorEntity):
 
         self._attr_assumed_state = not self.device.states
         self._attr_available = self.device.available
-        self._attr_name = self.device.label
         self._attr_unique_id = self.device.device_url
+        self._attr_name = self.device.label
 
     @property
     def device(self) -> Device:
