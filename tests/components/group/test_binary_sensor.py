@@ -165,6 +165,7 @@ async def test_boolean_entities_allowed(hass):
                     "input_boolean.helper",
                 ],
                 "name": "Test Group",
+                "unique_id": "unique_identifier",
             }
         },
     )
@@ -187,6 +188,7 @@ async def test_non_boolean_entities_denied(hass):
                 "platform": DOMAIN,
                 "entities": ["light.kitchen", "switch.closet", "input_boolean.helper"],
                 "name": "Test Group",
+                "unique_id": "unique_identifier",
             }
         },
     )
