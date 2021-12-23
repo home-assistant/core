@@ -60,7 +60,7 @@ class EsphomeCamera(Camera, EsphomeEntity[CameraInfo, CameraState]):
         async with self._image_cond:
             await self._image_cond.wait()
             if not self.available:
-                return None
+                return None  # type: ignore[unreachable]
             return self._state.data[:]
 
     async def _async_camera_stream_image(self) -> bytes | None:
@@ -71,7 +71,7 @@ class EsphomeCamera(Camera, EsphomeEntity[CameraInfo, CameraState]):
         async with self._image_cond:
             await self._image_cond.wait()
             if not self.available:
-                return None
+                return None  # type: ignore[unreachable]
             return self._state.data[:]
 
     async def handle_async_mjpeg_stream(
