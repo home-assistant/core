@@ -30,7 +30,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from ..bridge import HueBridge
 from ..const import DOMAIN
 from .entity import HueBaseEntity
-from .helpers import BrightnessHelper, TransitionHelper
+from .helpers import brightness_helper, transition_helper
 
 ALLOWED_ERRORS = [
     "device (light) has communication issues, command (on) may not have effect",
@@ -156,10 +156,10 @@ class HueLight(HueBaseEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        transition = TransitionHelper(kwargs.get(ATTR_TRANSITION))
+        transition = transition_helper(kwargs.get(ATTR_TRANSITION))
         xy_color = kwargs.get(ATTR_XY_COLOR)
         color_temp = kwargs.get(ATTR_COLOR_TEMP)
-        brightness = BrightnessHelper(kwargs.get(ATTR_BRIGHTNESS))
+        brightness = brightness_helper(kwargs.get(ATTR_BRIGHTNESS))
         flash = kwargs.get(ATTR_FLASH)
 
         await self.bridge.async_request_call(
@@ -176,7 +176,7 @@ class HueLight(HueBaseEntity, LightEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
-        transition = TransitionHelper(kwargs.get(ATTR_TRANSITION))
+        transition = transition_helper(kwargs.get(ATTR_TRANSITION))
         flash = kwargs.get(ATTR_FLASH)
 
         await self.bridge.async_request_call(

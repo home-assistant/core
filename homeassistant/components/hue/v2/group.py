@@ -29,7 +29,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from ..bridge import HueBridge
 from ..const import CONF_ALLOW_HUE_GROUPS, DOMAIN
 from .entity import HueBaseEntity
-from .helpers import BrightnessHelper, TransitionHelper
+from .helpers import brightness_helper, transition_helper
 
 ALLOWED_ERRORS = [
     "device (groupedLight) has communication issues, command (on) may not have effect",
@@ -148,10 +148,10 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
-        transition = TransitionHelper(kwargs.get(ATTR_TRANSITION))
+        transition = transition_helper(kwargs.get(ATTR_TRANSITION))
         xy_color = kwargs.get(ATTR_XY_COLOR)
         color_temp = kwargs.get(ATTR_COLOR_TEMP)
-        brightness = BrightnessHelper(kwargs.get(ATTR_BRIGHTNESS))
+        brightness = brightness_helper(kwargs.get(ATTR_BRIGHTNESS))
         flash = kwargs.get(ATTR_FLASH)
         if brightness is not None:
             # Hue uses a range of [0, 100] to control brightness.
@@ -191,7 +191,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
-        transition = TransitionHelper(kwargs.get(ATTR_TRANSITION))
+        transition = transition_helper(kwargs.get(ATTR_TRANSITION))
 
         # NOTE: a grouped_light can only handle turn on/off
         # To set other features, you'll have to control the attached lights
