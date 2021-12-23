@@ -966,6 +966,8 @@ homeassistant/components/ubus/* @noltari
 homeassistant/components/unifi/* @Kane610
 tests/components/unifi/* @Kane610
 homeassistant/components/unifiled/* @florisvdk
+homeassistant/components/unifiprotect/* @briis @AngellusMortis @bdraco
+tests/components/unifiprotect/* @briis @AngellusMortis @bdraco
 homeassistant/components/upb/* @gwww
 tests/components/upb/* @gwww
 homeassistant/components/upc_connect/* @pvizeli @fabaff
