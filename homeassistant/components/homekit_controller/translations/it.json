@@ -21,7 +21,7 @@
         "flow_title": "{name}",
         "step": {
             "busy_error": {
-                "description": "Interrompere l'associazione su tutti i controller o provare a riavviare il dispositivo, quindi continuare a riprendere l'associazione.",
+                "description": "Interrompi l'associazione su tutti i controller o provare a riavviare il dispositivo, quindi continua a riprendere l'associazione.",
                 "title": "Il dispositivo \u00e8 gi\u00e0 associato a un altro controller"
             },
             "max_tries_error": {
