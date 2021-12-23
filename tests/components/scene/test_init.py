@@ -1,14 +1,22 @@
 """The tests for the Scene component."""
 import io
+from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components import light, scene
-from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, SERVICE_TURN_ON
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ENTITY_MATCH_ALL,
+    SERVICE_TURN_ON,
+    STATE_UNKNOWN,
+)
+from homeassistant.core import State
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 from homeassistant.util.yaml import loader as yaml_loader
 
-from tests.common import async_mock_service
+from tests.common import async_mock_service, mock_restore_cache
 
 
 @pytest.fixture(autouse=True)
@@ -111,7 +119,14 @@ async def test_activate_scene(hass, entities, enable_custom_integrations):
         },
     )
     await hass.async_block_till_done()
-    await activate(hass, "scene.test")
+
+    assert hass.states.get("scene.test").state == STATE_UNKNOWN
+
+    now = dt_util.utcnow()
+    with patch("homeassistant.core.dt_util.utcnow", return_value=now):
+        await activate(hass, "scene.test")
+
+    assert hass.states.get("scene.test").state == now.isoformat()
 
     assert light.is_on(hass, light_1.entity_id)
     assert light.is_on(hass, light_2.entity_id)
@@ -121,15 +136,45 @@ async def test_activate_scene(hass, entities, enable_custom_integrations):
 
     calls = async_mock_service(hass, "light", "turn_on")
 
-    await hass.services.async_call(
-        scene.DOMAIN, "turn_on", {"transition": 42, "entity_id": "scene.test"}
-    )
-    await hass.async_block_till_done()
+    now = dt_util.utcnow()
+    with patch("homeassistant.core.dt_util.utcnow", return_value=now):
+        await hass.services.async_call(
+            scene.DOMAIN, "turn_on", {"transition": 42, "entity_id": "scene.test"}
+        )
+        await hass.async_block_till_done()
+
+    assert hass.states.get("scene.test").state == now.isoformat()
 
     assert len(calls) == 1
     assert calls[0].domain == "light"
     assert calls[0].service == "turn_on"
     assert calls[0].data.get("transition") == 42
+
+
+async def test_restore_state(hass, entities, enable_custom_integrations):
+    """Test we restore state integration."""
+    mock_restore_cache(hass, (State("scene.test", "2021-01-01T23:59:59+00:00"),))
+
+    light_1, light_2 = await setup_lights(hass, entities)
+
+    assert await async_setup_component(
+        hass,
+        scene.DOMAIN,
+        {
+            "scene": [
+                {
+                    "name": "test",
+                    "entities": {
+                        light_1.entity_id: "on",
+                        light_2.entity_id: "on",
+                    },
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("scene.test").state == "2021-01-01T23:59:59+00:00"
 
 
 async def activate(hass, entity_id=ENTITY_MATCH_ALL):
