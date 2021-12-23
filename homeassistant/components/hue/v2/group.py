@@ -153,9 +153,6 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
         color_temp = kwargs.get(ATTR_COLOR_TEMP)
         brightness = brightness_helper(kwargs.get(ATTR_BRIGHTNESS))
         flash = kwargs.get(ATTR_FLASH)
-        if brightness is not None:
-            # Hue uses a range of [0, 100] to control brightness.
-            brightness = float((brightness / 255) * 100)
 
         # NOTE: a grouped_light can only handle turn on/off
         # To set other features, you'll have to control the attached lights
