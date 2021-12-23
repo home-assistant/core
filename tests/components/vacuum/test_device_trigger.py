@@ -7,6 +7,7 @@ import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.vacuum import STATE_CLEANING, STATE_DOCKED
 from homeassistant.const import Platform
+from homeassistant.core import DOMAIN
 from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -56,14 +57,14 @@ async def test_get_triggers(hass, device_reg, entity_reg):
     expected_triggers = [
         {
             "platform": "device",
-            "domain": Platform.VACUUM,
+            "domain": DOMAIN,
             "type": "cleaning",
             "device_id": device_entry.id,
             "entity_id": f"{Platform.VACUUM}.test_5678",
         },
         {
             "platform": "device",
-            "domain": Platform.VACUUM,
+            "domain": DOMAIN,
             "type": "docked",
             "device_id": device_entry.id,
             "entity_id": f"{Platform.VACUUM}.test_5678",
@@ -114,7 +115,7 @@ async def test_if_fires_on_state_change(hass, calls):
                 {
                     "trigger": {
                         "platform": "device",
-                        "domain": Platform.VACUUM,
+                        "domain": DOMAIN,
                         "device_id": "",
                         "entity_id": "vacuum.entity",
                         "type": "cleaning",
@@ -133,7 +134,7 @@ async def test_if_fires_on_state_change(hass, calls):
                 {
                     "trigger": {
                         "platform": "device",
-                        "domain": Platform.VACUUM,
+                        "domain": DOMAIN,
                         "device_id": "",
                         "entity_id": "vacuum.entity",
                         "type": "docked",
@@ -183,7 +184,7 @@ async def test_if_fires_on_state_change_with_for(hass, calls):
                 {
                     "trigger": {
                         "platform": "device",
-                        "domain": Platform.VACUUM,
+                        "domain": DOMAIN,
                         "device_id": "",
                         "entity_id": entity_id,
                         "type": "cleaning",

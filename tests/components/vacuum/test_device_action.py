@@ -3,6 +3,7 @@ import pytest
 
 import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
+from homeassistant.components.vacuum import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
@@ -43,13 +44,13 @@ async def test_get_actions(hass, device_reg, entity_reg):
     )
     expected_actions = [
         {
-            "domain": Platform.VACUUM,
+            "domain": DOMAIN,
             "type": "clean",
             "device_id": device_entry.id,
             "entity_id": "vacuum.test_5678",
         },
         {
-            "domain": Platform.VACUUM,
+            "domain": DOMAIN,
             "type": "dock",
             "device_id": device_entry.id,
             "entity_id": "vacuum.test_5678",
@@ -71,7 +72,7 @@ async def test_action(hass):
                 {
                     "trigger": {"platform": "event", "event_type": "test_event_dock"},
                     "action": {
-                        "domain": Platform.VACUUM,
+                        "domain": DOMAIN,
                         "device_id": "abcdefgh",
                         "entity_id": "vacuum.entity",
                         "type": "dock",
@@ -80,7 +81,7 @@ async def test_action(hass):
                 {
                     "trigger": {"platform": "event", "event_type": "test_event_clean"},
                     "action": {
-                        "domain": Platform.VACUUM,
+                        "domain": DOMAIN,
                         "device_id": "abcdefgh",
                         "entity_id": "vacuum.entity",
                         "type": "clean",
