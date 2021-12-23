@@ -18,7 +18,7 @@ from homeassistant.components.switch import (
 from .const import DATA_SESSION, DOMAIN
 from .entity import SHCEntity
 
-SWITCH_TYPES: dict[str, SwitchEntityDescription] = {
+SWITCH_TYPES = {
     "smartplug": SwitchEntityDescription(
         key="smartplug",
         device_class=SwitchDeviceClass.OUTLET,
@@ -159,16 +159,6 @@ class SHCCameraSwitch(SHCEntity, SwitchEntity):
 class SmartPlugSwitch(SHCSwitch):
     """Representation of a SHC smart plug switch."""
 
-    def __init__(
-        self,
-        device: SHCDevice,
-        parent_id: str,
-        entry_id: str,
-        description: SwitchEntityDescription,
-    ) -> None:
-        """Initialize a smart plug switch."""
-        super().__init__(device, parent_id, entry_id, description)
-
     @property
     def is_on(self):
         """Return the switch state is currently on or off."""
@@ -185,16 +175,6 @@ class SmartPlugSwitch(SHCSwitch):
 class LightSwitch(SHCSwitch):
     """Representation of a SHC light switch."""
 
-    def __init__(
-        self,
-        device: SHCDevice,
-        parent_id: str,
-        entry_id: str,
-        description: SwitchEntityDescription,
-    ) -> None:
-        """Initialize a light switch."""
-        super().__init__(device, parent_id, entry_id, description)
-
     @property
     def is_on(self):
         """Return the switch state is currently on or off."""
@@ -203,16 +183,6 @@ class LightSwitch(SHCSwitch):
 
 class SmartPlugCompactSwitch(SHCSwitch):
     """Representation of a smart plug compact switch."""
-
-    def __init__(
-        self,
-        device: SHCDevice,
-        parent_id: str,
-        entry_id: str,
-        description: SwitchEntityDescription,
-    ) -> None:
-        """Initialize a smart plug compact switch."""
-        super().__init__(device, parent_id, entry_id, description)
 
     @property
     def is_on(self):
@@ -228,15 +198,6 @@ class SmartPlugCompactSwitch(SHCSwitch):
 
 class CameraEyesSwitch(SHCCameraSwitch):
     """Representation of camera eyes as switch."""
-
-    def __init__(
-        self,
-        device: SHCDevice,
-        parent_id: str,
-        entry_id: str,
-    ) -> None:
-        """Initialize a camera eyes switch."""
-        super().__init__(device, parent_id, entry_id)
 
     @property
     def is_on(self):
@@ -258,15 +219,6 @@ class CameraEyesSwitch(SHCCameraSwitch):
 
 class Camera360Switch(SHCCameraSwitch):
     """Representation of camera 360 as switch."""
-
-    def __init__(
-        self,
-        device: SHCDevice,
-        parent_id: str,
-        entry_id: str,
-    ) -> None:
-        """Initialize a camera 360 switch."""
-        super().__init__(device, parent_id, entry_id)
 
     @property
     def is_on(self):
