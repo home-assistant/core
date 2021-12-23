@@ -910,7 +910,6 @@ homeassistant/components/tado/* @michaelarnauts @noltari
 tests/components/tado/* @michaelarnauts @noltari
 homeassistant/components/tag/* @balloob @dmulcahey
 tests/components/tag/* @balloob @dmulcahey
-homeassistant/components/tahoma/* @philklei
 homeassistant/components/tailscale/* @frenck
 tests/components/tailscale/* @frenck
 homeassistant/components/tankerkoenig/* @guillempages
