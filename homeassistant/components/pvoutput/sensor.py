@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from pvo import PVOutput, PVOutputError
+from pvo import PVOutput, PVOutputError, Status
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -20,7 +20,10 @@ from homeassistant.const import (
     CONF_NAME,
     ENERGY_WATT_HOUR,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,10 +48,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the PVOutput sensor."""
-    name = config.get(CONF_NAME)
-
     pvoutput = PVOutput(
         api_key=config[CONF_API_KEY],
         system_id=config[CONF_SYSTEM_ID],
@@ -58,9 +64,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         status = await pvoutput.status()
     except PVOutputError:
         _LOGGER.error("Unable to fetch data from PVOutput")
-        return False
+        return
 
-    async_add_entities([PvoutputSensor(pvoutput, status, name)])
+    async_add_entities([PvoutputSensor(pvoutput, status, config[CONF_NAME])])
 
 
 class PvoutputSensor(SensorEntity):
@@ -70,19 +76,19 @@ class PvoutputSensor(SensorEntity):
     _attr_device_class = SensorDeviceClass.ENERGY
     _attr_native_unit_of_measurement = ENERGY_WATT_HOUR
 
-    def __init__(self, pvoutput, status, name):
+    def __init__(self, pvoutput: PVOutput, status: Status, name: str) -> None:
         """Initialize a PVOutput sensor."""
         self._attr_name = name
         self.pvoutput = pvoutput
         self.status = status
 
     @property
-    def native_value(self):
+    def native_value(self) -> int | None:
         """Return the state of the device."""
         return self.status.energy_generation
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, int | float | None]:
         """Return the state attributes of the monitored installation."""
         return {
             ATTR_ENERGY_GENERATION: self.status.energy_generation,
@@ -94,6 +100,6 @@ class PvoutputSensor(SensorEntity):
             ATTR_VOLTAGE: self.status.voltage,
         }
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest data from the PVOutput API and updates the state."""
         self.status = await self.pvoutput.status()
