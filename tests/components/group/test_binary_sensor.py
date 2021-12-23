@@ -149,3 +149,51 @@ async def test_state_reporting_any(hass):
     entry = entity_registry.async_get("binary_sensor.binary_sensor_group")
     assert entry
     assert entry.unique_id == "unique_identifier"
+
+
+async def test_boolean_entities_allowed(hass):
+    """Test boolean entities are allowed in config."""
+    await async_setup_component(
+        hass,
+        BINARY_SENSOR_DOMAIN,
+        {
+            BINARY_SENSOR_DOMAIN: {
+                "platform": DOMAIN,
+                "entities": [
+                    "binary_sensor.kitchen",
+                    "switch.closet",
+                    "input_boolean.helper",
+                ],
+                "name": "Test Group",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    entity_registry = er.async_get(hass)
+    entry = entity_registry.async_get("binary_sensor.test_group")
+    assert entry
+
+
+async def test_non_boolean_entities_denied(hass):
+    """Test non-boolean entities are invalid in config."""
+    await async_setup_component(
+        hass,
+        BINARY_SENSOR_DOMAIN,
+        {
+            BINARY_SENSOR_DOMAIN: {
+                "platform": DOMAIN,
+                "entities": ["light.kitchen", "switch.closet", "input_boolean.helper"],
+                "name": "Test Group",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    entity_registry = er.async_get(hass)
+    entry = entity_registry.async_get("binary_sensor.test_group")
+    assert not entry

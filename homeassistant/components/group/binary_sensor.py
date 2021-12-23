@@ -11,6 +11,8 @@ from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA,
     BinarySensorEntity,
 )
+from homeassistant.components.input_boolean import DOMAIN as INPUT_BOOLEAN_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE_CLASS,
@@ -35,7 +37,9 @@ REG_KEY = f"{BINARY_SENSOR_DOMAIN}_registry"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITIES): cv.entities_domain(BINARY_SENSOR_DOMAIN),
+        vol.Required(CONF_ENTITIES): cv.entities_domain(
+            [BINARY_SENSOR_DOMAIN, INPUT_BOOLEAN_DOMAIN, SWITCH_DOMAIN]
+        ),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
