@@ -239,7 +239,7 @@ aiopulse==0.4.3
 aiopvapi==1.6.19
 
 # homeassistant.components.pvpc_hourly_pricing
-aiopvpc==2.2.4
+aiopvpc==3.0.0
 
 # homeassistant.components.webostv
 aiopylgtv==0.4.0
@@ -2288,9 +2288,6 @@ synology-srm==0.2.0
 # homeassistant.components.system_bridge
 systembridge==2.2.3
 
-# homeassistant.components.tahoma
-tahoma-api==0.0.16
-
 # homeassistant.components.tailscale
 tailscale==0.1.6
 
@@ -2485,7 +2482,7 @@ xs1-api-client==3.0.0
 yalesmartalarmclient==0.3.4
 
 # homeassistant.components.august
-yalexs==1.1.15
+yalexs==1.1.16
 
 # homeassistant.components.yeelight
 yeelight==0.7.8

@@ -40,7 +40,6 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="humidity",
         name="Humidity",
-        icon="mdi:water-percent",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
@@ -48,7 +47,6 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="pressure",
         name="Pressure",
-        icon="mdi:arrow-down-bold",
         native_unit_of_measurement=PRESSURE_PA,
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -56,7 +54,6 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="pressure_at_sealevel",
         name="Pressure at sealevel",
-        icon="mdi:download",
         native_unit_of_measurement=PRESSURE_PA,
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -64,15 +61,15 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="P1",
         name="PM10",
-        icon="mdi:thought-bubble",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        device_class=SensorDeviceClass.PM10,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="P2",
         name="PM2.5",
-        icon="mdi:thought-bubble-outline",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        device_class=SensorDeviceClass.PM25,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 )
