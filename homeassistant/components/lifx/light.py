@@ -568,8 +568,9 @@ class LIFXLight(LightEntity):
     async def update_hass(self, now=None):
         """Request new status and push it to hass."""
         self.postponed_update = None
-        await self.async_update()
-        self.async_write_ha_state()
+        if self.entity_id is not None:
+            await self.async_update()
+            self.async_write_ha_state()
 
     async def update_during_transition(self, when):
         """Update state at the start and end of a transition."""
