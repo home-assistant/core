@@ -37,7 +37,7 @@ ATTR_INCLUDE_LINKED_ZONES = "include_linked_zones"
 
 ATTR_CROSSFADE = "cross_fade"
 ATTR_NIGHT_SOUND = "night_mode"
-ATTR_SPEECH_ENHANCEMENT = "dialog_mode"
+ATTR_SPEECH_ENHANCEMENT = "dialog_level"
 ATTR_STATUS_LIGHT = "status_light"
 ATTR_SUB_ENABLED = "sub_enabled"
 ATTR_SURROUND_ENABLED = "surround_enabled"
