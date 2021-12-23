@@ -62,7 +62,7 @@ async def test_sensors(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker)
     assert state.state == "1330"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == ENERGY_WATT_HOUR
-    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
+    assert state.attributes.get(ATTR_STATE_CLASS) is None
     state = hass.states.get(f"sensor.{DEFAULT_NAME}_volts")
     assert state.state == "12.0"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.VOLTAGE
