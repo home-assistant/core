@@ -238,22 +238,22 @@ class DeviceTrackerPlatform:
                 scanner = None
                 setup = None
                 if hasattr(self.platform, "async_get_scanner"):
-                    scanner = await self.platform.async_get_scanner(  # type: ignore[attr-defined]
+                    scanner = await self.platform.async_get_scanner(
                         hass, {DOMAIN: self.config}
                     )
                 elif hasattr(self.platform, "get_scanner"):
                     scanner = await hass.async_add_executor_job(
-                        self.platform.get_scanner,  # type: ignore[attr-defined]
+                        self.platform.get_scanner,
                         hass,
                         {DOMAIN: self.config},
                     )
                 elif hasattr(self.platform, "async_setup_scanner"):
-                    setup = await self.platform.async_setup_scanner(  # type: ignore[attr-defined]
+                    setup = await self.platform.async_setup_scanner(
                         hass, self.config, tracker.async_see, discovery_info
                     )
                 elif hasattr(self.platform, "setup_scanner"):
                     setup = await hass.async_add_executor_job(
-                        self.platform.setup_scanner,  # type: ignore[attr-defined]
+                        self.platform.setup_scanner,
                         hass,
                         self.config,
                         tracker.see,
