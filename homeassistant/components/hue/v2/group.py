@@ -29,6 +29,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from ..bridge import HueBridge
 from ..const import CONF_ALLOW_HUE_GROUPS, DOMAIN
 from .entity import HueBaseEntity
+from .helpers import normalize_hue_brightness, normalize_hue_transition
 
 ALLOWED_ERRORS = [
     "device (groupedLight) has communication issues, command (on) may not have effect",
@@ -147,17 +148,11 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
-        transition = kwargs.get(ATTR_TRANSITION)
+        transition = normalize_hue_transition(kwargs.get(ATTR_TRANSITION))
         xy_color = kwargs.get(ATTR_XY_COLOR)
         color_temp = kwargs.get(ATTR_COLOR_TEMP)
-        brightness = kwargs.get(ATTR_BRIGHTNESS)
+        brightness = normalize_hue_brightness(kwargs.get(ATTR_BRIGHTNESS))
         flash = kwargs.get(ATTR_FLASH)
-        if brightness is not None:
-            # Hue uses a range of [0, 100] to control brightness.
-            brightness = float((brightness / 255) * 100)
-        if transition is not None:
-            # hue transition duration is in milliseconds
-            transition = int(transition * 1000)
 
         # NOTE: a grouped_light can only handle turn on/off
         # To set other features, you'll have to control the attached lights
@@ -193,10 +188,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
-        transition = kwargs.get(ATTR_TRANSITION)
-        if transition is not None:
-            # hue transition duration is in milliseconds
-            transition = int(transition * 1000)
+        transition = normalize_hue_transition(kwargs.get(ATTR_TRANSITION))
 
         # NOTE: a grouped_light can only handle turn on/off
         # To set other features, you'll have to control the attached lights
