@@ -27,7 +27,6 @@ from .const import (
     DEFAULT_NAME_LATEST,
     DEFAULT_SOURCE,
     DOMAIN,
-    LOGGER,
     POSTFIX_CONTAINER_NAME,
     SOURCE_DOKCER,
     SOURCE_HASSIO,
@@ -144,9 +143,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         for entry in self._async_current_entries():
             if _fingerprint(entry.data) == _fingerprint(self._entry_data):
-                LOGGER.warning(
-                    "This YAML configuration has already been imported. Please remove it"
-                )
                 return self.async_abort(reason="already_configured")
 
         return self.async_create_entry(

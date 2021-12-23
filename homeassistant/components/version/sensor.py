@@ -32,6 +32,7 @@ from .const import (
     DEFAULT_SOURCE,
     DOMAIN,
     HOME_ASSISTANT,
+    LOGGER,
     VALID_IMAGES,
     VALID_SOURCES,
 )
@@ -54,6 +55,12 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the legacy version sensor platform."""
+    LOGGER.warning(
+        "Configuration of the Version platform in YAML is deprecated and will be "
+        "removed in Home Assistant 2022.4; Your existing configuration "
+        "has been imported into the UI automatically and can be safely removed "
+        "from your configuration.yaml file"
+    )
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN, context={ATTR_SOURCE: SOURCE_IMPORT}, data=config
