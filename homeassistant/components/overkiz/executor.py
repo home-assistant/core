@@ -1,4 +1,4 @@
-"""Class for helpers and community with the OverKiz API."""
+"""Class for helpers and communication with the OverKiz API."""
 from __future__ import annotations
 
 import logging
