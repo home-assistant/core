@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
-from typing import Any, TypedDict
+from typing import Any
 
 from tuya_iot import TuyaDevice, TuyaDeviceManager
 
@@ -30,25 +30,6 @@ from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode
 _LOGGER = logging.getLogger(__name__)
 
 
-class _ControlValues(TypedDict):
-    open: str
-    close: str
-    stop: str
-
-
-CONTROL_VALUES_OPEN_CLOSE_STOP: _ControlValues = {
-    "open": "open",
-    "close": "close",
-    "stop": "stop",
-}
-
-CONTROL_VALUES_FZ_ZZ_STOP: _ControlValues = {
-    "open": "FZ",
-    "close": "ZZ",
-    "stop": "STOP",
-}
-
-
 @dataclass
 class TuyaCoverEntityDescription(CoverEntityDescription):
     """Describe an Tuya cover entity."""
@@ -57,7 +38,9 @@ class TuyaCoverEntityDescription(CoverEntityDescription):
     current_state_inverse: bool = False
     current_position: DPCode | tuple[DPCode, ...] | None = None
     set_position: DPCode | None = None
-    control_values: _ControlValues | None = None
+    open_instruction_value: str | None = None
+    close_instruction_value: str | None = None
+    stop_instruction_value: str | None = None
 
 
 COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
@@ -72,7 +55,9 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
             current_position=(DPCode.PERCENT_CONTROL, DPCode.PERCENT_STATE),
             set_position=DPCode.PERCENT_CONTROL,
             device_class=CoverDeviceClass.CURTAIN,
-            control_values=CONTROL_VALUES_OPEN_CLOSE_STOP,
+            open_instruction_value="open",
+            close_instruction_value="close",
+            stop_instruction_value="stop",
         ),
         TuyaCoverEntityDescription(
             key=DPCode.CONTROL_2,
@@ -80,7 +65,9 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
             current_position=DPCode.PERCENT_STATE_2,
             set_position=DPCode.PERCENT_CONTROL_2,
             device_class=CoverDeviceClass.CURTAIN,
-            control_values=CONTROL_VALUES_OPEN_CLOSE_STOP,
+            open_instruction_value="open",
+            close_instruction_value="close",
+            stop_instruction_value="stop",
         ),
         TuyaCoverEntityDescription(
             key=DPCode.CONTROL_3,
@@ -88,7 +75,9 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
             current_position=DPCode.PERCENT_STATE_3,
             set_position=DPCode.PERCENT_CONTROL_3,
             device_class=CoverDeviceClass.CURTAIN,
-            control_values=CONTROL_VALUES_OPEN_CLOSE_STOP,
+            open_instruction_value="open",
+            close_instruction_value="close",
+            stop_instruction_value="stop",
         ),
         TuyaCoverEntityDescription(
             key=DPCode.MACH_OPERATE,
@@ -96,7 +85,9 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
             current_position=DPCode.POSITION,
             set_position=DPCode.POSITION,
             device_class=CoverDeviceClass.CURTAIN,
-            control_values=CONTROL_VALUES_FZ_ZZ_STOP,
+            open_instruction_value="FZ",
+            close_instruction_value="ZZ",
+            stop_instruction_value="STOP",
         ),
         # switch_1 is an undocumented code that behaves identically to control
         # It is used by the Kogan Smart Blinds Driver
@@ -106,7 +97,9 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
             current_position=DPCode.PERCENT_CONTROL,
             set_position=DPCode.PERCENT_CONTROL,
             device_class=CoverDeviceClass.BLIND,
-            control_values=CONTROL_VALUES_OPEN_CLOSE_STOP,
+            open_instruction_value="open",
+            close_instruction_value="close",
+            stop_instruction_value="stop",
         ),
     ),
     # Garage Door Opener
@@ -118,7 +111,9 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
             current_state=DPCode.DOORCONTACT_STATE,
             current_state_inverse=True,
             device_class=CoverDeviceClass.GARAGE,
-            control_values=CONTROL_VALUES_OPEN_CLOSE_STOP,
+            open_instruction_value="open",
+            close_instruction_value="close",
+            stop_instruction_value="stop",
         ),
         TuyaCoverEntityDescription(
             key=DPCode.SWITCH_2,
@@ -126,7 +121,9 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
             current_state=DPCode.DOORCONTACT_STATE_2,
             current_state_inverse=True,
             device_class=CoverDeviceClass.GARAGE,
-            control_values=CONTROL_VALUES_OPEN_CLOSE_STOP,
+            open_instruction_value="open",
+            close_instruction_value="close",
+            stop_instruction_value="stop",
         ),
         TuyaCoverEntityDescription(
             key=DPCode.SWITCH_3,
@@ -134,7 +131,9 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
             current_state=DPCode.DOORCONTACT_STATE_3,
             current_state_inverse=True,
             device_class=CoverDeviceClass.GARAGE,
-            control_values=CONTROL_VALUES_OPEN_CLOSE_STOP,
+            open_instruction_value="open",
+            close_instruction_value="close",
+            stop_instruction_value="stop",
         ),
     ),
     # Curtain Switch
@@ -146,7 +145,9 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
             current_position=DPCode.PERCENT_CONTROL,
             set_position=DPCode.PERCENT_CONTROL,
             device_class=CoverDeviceClass.CURTAIN,
-            control_values=CONTROL_VALUES_OPEN_CLOSE_STOP,
+            open_instruction_value="open",
+            close_instruction_value="close",
+            stop_instruction_value="stop",
         ),
         TuyaCoverEntityDescription(
             key=DPCode.CONTROL_2,
@@ -154,7 +155,9 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
             current_position=DPCode.PERCENT_CONTROL_2,
             set_position=DPCode.PERCENT_CONTROL_2,
             device_class=CoverDeviceClass.CURTAIN,
-            control_values=CONTROL_VALUES_OPEN_CLOSE_STOP,
+            open_instruction_value="open",
+            close_instruction_value="close",
+            stop_instruction_value="stop",
         ),
     ),
     # Curtain Robot
@@ -165,7 +168,9 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
             current_position=DPCode.PERCENT_STATE,
             set_position=DPCode.PERCENT_CONTROL,
             device_class=CoverDeviceClass.CURTAIN,
-            control_values=CONTROL_VALUES_OPEN_CLOSE_STOP,
+            open_instruction_value="open",
+            close_instruction_value="close",
+            stop_instruction_value="stop",
         ),
     ),
 }
@@ -229,16 +234,13 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         # Check if this cover is based on a switch or has controls
         if device.function[description.key].type == "Boolean":
             self._attr_supported_features |= SUPPORT_OPEN | SUPPORT_CLOSE
-        elif (
-            device.function[description.key].type == "Enum"
-            and description.control_values is not None
-        ):
+        elif device.function[description.key].type == "Enum":
             data_type = EnumTypeData.from_json(device.function[description.key].values)
-            if description.control_values["open"] in data_type.range:
+            if description.open_instruction_value in data_type.range:
                 self._attr_supported_features |= SUPPORT_OPEN
-            if description.control_values["close"] in data_type.range:
+            if description.close_instruction_value in data_type.range:
                 self._attr_supported_features |= SUPPORT_CLOSE
-            if description.control_values["stop"] in data_type.range:
+            if description.stop_instruction_value in data_type.range:
                 self._attr_supported_features |= SUPPORT_STOP
 
         # Determine type to use for setting the position
@@ -351,9 +353,9 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         value: bool | str = True
         if (
             self.device.function[self.entity_description.key].type == "Enum"
-            and self.entity_description.control_values is not None
+            and self.entity_description.open_instruction_value is not None
         ):
-            value = self.entity_description.control_values["open"]
+            value = self.entity_description.open_instruction_value
 
         commands: list[dict[str, str | int]] = [
             {"code": self.entity_description.key, "value": value}
@@ -381,9 +383,9 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         value: bool | str = False
         if (
             self.device.function[self.entity_description.key].type == "Enum"
-            and self.entity_description.control_values is not None
+            and self.entity_description.close_instruction_value is not None
         ):
-            value = self.entity_description.control_values["close"]
+            value = self.entity_description.close_instruction_value
 
         commands: list[dict[str, str | int]] = [
             {"code": self.entity_description.key, "value": value}
@@ -428,12 +430,12 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
 
     def stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
-        if self.entity_description.control_values is not None:
+        if self.entity_description.stop_instruction_value is not None:
             self._send_command(
                 [
                     {
                         "code": self.entity_description.key,
-                        "value": self.entity_description.control_values["stop"],
+                        "value": self.entity_description.stop_instruction_value,
                     }
                 ]
             )
