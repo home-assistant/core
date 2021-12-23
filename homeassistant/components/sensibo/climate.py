@@ -157,6 +157,16 @@ class SensiboClimate(ClimateEntity):
         self._available = False
         self._do_update(data)
         self._failed_update = False
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._id)},
+            name=self._name,
+            manufacturer="Sensibo",
+            configuration_url="https://home.sensibo.com/",
+            model=self._productmodel,
+            sw_version=self._firmware,
+            hw_version=self._firmwaretype,
+            suggested_area=self._name,
+        )
 
     @property
     def supported_features(self):
@@ -191,20 +201,6 @@ class SensiboClimate(ClimateEntity):
         for key in self._ac_states:
             if key in FIELD_TO_FLAG:
                 self._supported_features |= FIELD_TO_FLAG[key]
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information about this entity."""
-        return {
-            "identifiers": {(DOMAIN, self._id)},
-            "name": self._name,
-            "manufacturer": "Sensibo",
-            "configuration_url": "https://home.sensibo.com/",
-            "model": self._productmodel,
-            "sw_version": self._firmware,
-            "hw_version": self._firmwaretype,
-            "suggested_area": self._name,
-        }
 
     @property
     def state(self):
