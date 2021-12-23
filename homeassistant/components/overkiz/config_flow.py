@@ -87,7 +87,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo):
+    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle DHCP discovery."""
         hostname = discovery_info.hostname
         gateway_id = hostname[8:22]
@@ -100,7 +100,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user()
 
-    def _gateway_already_configured(self, gateway_id: str):
+    def _gateway_already_configured(self, gateway_id: str) -> bool:
         """See if we already have a gateway matching the id."""
         device_registry = dr.async_get(self.hass)
         return bool(
