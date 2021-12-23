@@ -3,7 +3,7 @@
   "name": "LG webOS Smart TV",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/webostv",
-  "requirements": ["bscpylgtv==0.2.7"],
+  "requirements": ["bscpylgtv==0.2.8"],
   "codeowners": ["@bendavid"],
   "ssdp": [{
     "manufacturer": "LG Electronics.",

@@ -448,7 +448,7 @@ brunt==1.1.0
 bsblan==0.4.0
 
 # homeassistant.components.webostv
-bscpylgtv==0.2.7
+bscpylgtv==0.2.8
 
 # homeassistant.components.bluetooth_tracker
 bt_proximity==0.2.1
