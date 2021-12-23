@@ -15,4 +15,4 @@ _FETCH_FIELDS = ",".join(
         "temperatureUnit",
     ]
 )
-_INITIAL_FETCH_FIELDS = f"id,{_FETCH_FIELDS}"
+_INITIAL_FETCH_FIELDS = f"id,firmwareVersion,firmwareType,productModel,{_FETCH_FIELDS}"
