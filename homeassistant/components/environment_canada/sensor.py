@@ -216,21 +216,25 @@ class ECBaseSensor(CoordinatorEntity, SensorEntity):
     """Environment Canada sensor base."""
 
     def __init__(self, coordinator, description):
-        """Initialize the sensor."""
+        """Initialize the base sensor."""
         super().__init__(coordinator)
         self.entity_description = description
         self._ec_data = coordinator.ec_data
         self._attr_attribution = self._ec_data.metadata["attribution"]
         self._attr_name = f"{coordinator.config_entry.title} {description.name}"
         self._attr_unique_id = f"{self._ec_data.metadata['location']}-{description.key}"
-        self._attr_extra_state_attributes = {
-            ATTR_LOCATION: self._ec_data.metadata.get("location"),
-            ATTR_STATION: self._ec_data.metadata.get("station"),
-        }
 
 
 class ECSensor(ECBaseSensor):
     """Environment Canada sensor for conditions."""
+
+    def __init__(self, coordinator, description):
+        """Initialize the sensor."""
+        super().__init__(coordinator, description)
+        self._attr_extra_state_attributes = {
+            ATTR_LOCATION: self._ec_data.metadata.get("location"),
+            ATTR_STATION: self._ec_data.metadata.get("station"),
+        }
 
     @property
     def native_value(self):
@@ -257,18 +261,21 @@ class ECAlertSensor(ECBaseSensor):
     def native_value(self):
         """Return the state."""
         alert_name = self.entity_description.key
-        value = self._ec_data.alerts.get(alert_name, {}).get("value")
+        value = self._ec_data.alerts.get(alert_name, {}).get("value", [])
+        return len(value)
 
-        self._attr_extra_state_attributes = {
+    @property
+    def extra_state_attributes(self):
+        """Return the extra state attributes."""
+        alert_name = self.entity_description.key
+        value = self._ec_data.alerts.get(alert_name, {}).get("value", [])
+
+        extra_state_attrs = {
             ATTR_LOCATION: self._ec_data.metadata.get("location"),
             ATTR_STATION: self._ec_data.metadata.get("station"),
         }
-
-        if not value:
-            return 0
-
         for index, alert in enumerate(value, start=1):
-            self._attr_extra_state_attributes[f"alert_{index}"] = alert.get("title")
-            self._attr_extra_state_attributes[f"alert_time_{index}"] = alert.get("date")
+            extra_state_attrs[f"alert_{index}"] = alert.get("title")
+            extra_state_attrs[f"alert_time_{index}"] = alert.get("date")
 
-        return len(value)
+        return extra_state_attrs
