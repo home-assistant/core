@@ -28,7 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # For backwards compat, set unique ID
     if entry.unique_id is None:
         hass.config_entries.async_update_entry(
-            entry, unique_id=entry.data[CONF_SENSOR_ID]
+            entry, unique_id=str(entry.data[CONF_SENSOR_ID])
         )
 
     luftdaten = Luftdaten(entry.data[CONF_SENSOR_ID])
