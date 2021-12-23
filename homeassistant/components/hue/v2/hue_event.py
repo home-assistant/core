@@ -1,4 +1,5 @@
 """Handle forward of events transmitted by Hue devices to HASS."""
+import asyncio
 import logging
 from typing import TYPE_CHECKING
 
@@ -19,6 +20,11 @@ if TYPE_CHECKING:
     from ..bridge import HueBridge
 
 LOGGER = logging.getLogger(__name__)
+
+BTN_WORKAROUND_NEEDED = [
+    # List of Switch/Button device Model ID's that need the longpress workaround
+    "FOHSWITCH"
+]
 
 
 async def async_setup_hue_events(bridge: "HueBridge"):
@@ -46,9 +52,10 @@ async def async_setup_hue_events(bridge: "HueBridge"):
             return
 
         cur_event = hue_resource.button.last_event
+        last_event = last_state.get(hue_resource.id)
         # ignore the event if the last_event value is exactly the same
         # this may happen if some other metadata of the button resource is adjusted
-        if cur_event == last_state.get(hue_resource.id):
+        if cur_event == last_event:
             return
         if cur_event != ButtonEvent.REPEAT:
             # do not store repeat event
@@ -67,6 +74,32 @@ async def async_setup_hue_events(bridge: "HueBridge"):
             CONF_SUBTYPE: hue_resource.metadata.control_id,
         }
         hass.bus.async_fire(ATTR_HUE_EVENT, data)
+
+        # Handle longpress workaround if needed
+        if (
+            hue_device.product_data.model_id in BTN_WORKAROUND_NEEDED
+            and cur_event == ButtonEvent.INITIAL_PRESS
+        ):
+            asyncio.create_task(handle_longpress_workaround(hue_resource))
+
+    async def handle_longpress_workaround(hue_resource: Button):
+        # Fake `held down` and `long press release` events
+        # This might need to be removed in a future release once Signify
+        # adds this back in their API.
+        await asyncio.sleep(1.5)
+        count = 0
+        while count <= 20:  # = max 10 seconds
+            if hue_resource.button.last_event == ButtonEvent.SHORT_RELEASE:
+                break
+            # send REPEAT until short release is received
+            hue_resource.button.last_event = ButtonEvent.REPEAT
+            handle_button_event(EventType.RESOURCE_UPDATED, hue_resource)
+            await asyncio.sleep(0.5)
+            count += 1
+
+        if count > 1:
+            hue_resource.button.last_event = ButtonEvent.LONG_RELEASE
+            handle_button_event(EventType.RESOURCE_UPDATED, hue_resource)
 
     # add listener for updates from `button` resource
     conf_entry.async_on_unload(
