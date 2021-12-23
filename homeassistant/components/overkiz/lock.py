@@ -1,4 +1,8 @@
 """Support for Overkiz locks."""
+from __future__ import annotations
+
+from typing import Any
+
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
 from homeassistant.components.lock import LockEntity
@@ -31,16 +35,16 @@ async def async_setup_entry(
 class OverkizLock(OverkizEntity, LockEntity):
     """Representation of an Overkiz Lock."""
 
-    async def async_lock(self, **_):
+    async def async_lock(self, **_: Any) -> None:
         """Lock method."""
         await self.executor.async_execute_command(OverkizCommand.LOCK)
 
-    async def async_unlock(self, **_):
+    async def async_unlock(self, **_: Any) -> None:
         """Unlock method."""
         await self.executor.async_execute_command(OverkizCommand.UNLOCK)
 
     @property
-    def is_locked(self):
+    def is_locked(self) -> bool | None:
         """Return a boolean for the state of the lock."""
         return (
             self.executor.select_state(OverkizState.CORE_LOCKED_UNLOCKED)
