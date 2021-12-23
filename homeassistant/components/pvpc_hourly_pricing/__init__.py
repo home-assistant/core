@@ -3,7 +3,6 @@ from datetime import datetime, timedelta
 import logging
 from typing import Mapping
 
-from aiohttp.client_exceptions import ClientError
 from aiopvpc import DEFAULT_POWER_KW, TARIFFS, PVPCData
 import voluptuous as vol
 
@@ -159,14 +158,9 @@ class ElecPricesDataUpdateCoordinator(DataUpdateCoordinator[Mapping[datetime, fl
 
     async def _async_update_data(self) -> Mapping[datetime, float]:
         """Update electricity prices from the ESIOS API."""
-        now = dt_util.utcnow()
-        try:
-            prices = await self.api.async_update_prices(now)
-        except ClientError as err:
-            raise UpdateFailed from err
-
+        prices = await self.api.async_update_prices(dt_util.utcnow())
+        self.api.process_state_and_attributes(dt_util.utcnow())
         if not prices:
             raise UpdateFailed
 
-        self.api.process_state_and_attributes(now)
         return prices
