@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import final
+from typing import Literal, final
 
 import voluptuous as vol
 
@@ -18,7 +18,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.typing import ConfigType, StateType
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -200,6 +200,8 @@ class BinarySensorEntity(Entity):
 
     @final
     @property
-    def state(self) -> StateType:
+    def state(self) -> Literal["on", "off"] | None:
         """Return the state of the binary sensor."""
-        return STATE_ON if self.is_on else STATE_OFF
+        if (is_on := self.is_on) is None:
+            return None
+        return STATE_ON if is_on else STATE_OFF

@@ -26,8 +26,8 @@ asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(True))
 
 @pytest.fixture
 def pywemo_model():
-    """Pywemo Dimmer models use the light platform (WemoDimmer class)."""
-    return "Dimmer"
+    """Pywemo LightSwitch models use the switch platform."""
+    return "LightSwitchLongPress"
 
 
 async def test_async_register_device_longpress_fails(hass, pywemo_device):

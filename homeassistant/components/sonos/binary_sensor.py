@@ -1,14 +1,15 @@
 """Entity representing a Sonos power sensor."""
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_BATTERY_CHARGING,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import EntityCategory
 
 from .const import SONOS_CREATE_BATTERY
 from .entity import SonosEntity
@@ -16,11 +17,14 @@ from .speaker import SonosSpeaker
 
 ATTR_BATTERY_POWER_SOURCE = "power_source"
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Sonos from a config entry."""
 
     async def _async_create_entity(speaker: SonosSpeaker) -> None:
+        _LOGGER.debug("Creating battery binary_sensor on %s", speaker.zone_name)
         entity = SonosPowerEntity(speaker)
         async_add_entities([entity])
 
@@ -32,8 +36,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class SonosPowerEntity(SonosEntity, BinarySensorEntity):
     """Representation of a Sonos power entity."""
 
-    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
-    _attr_device_class = DEVICE_CLASS_BATTERY_CHARGING
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_device_class = BinarySensorDeviceClass.BATTERY_CHARGING
 
     def __init__(self, speaker: SonosSpeaker) -> None:
         """Initialize the power entity binary sensor."""

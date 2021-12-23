@@ -84,5 +84,6 @@ def _entry_dict(entry):
         "name_by_user": entry.name_by_user,
         "name": entry.name,
         "sw_version": entry.sw_version,
+        "hw_version": entry.hw_version,
         "via_device_id": entry.via_device_id,
     }

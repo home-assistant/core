@@ -33,7 +33,7 @@ DATA_REGISTRY = "device_registry"
 EVENT_DEVICE_REGISTRY_UPDATED = "device_registry_updated"
 STORAGE_KEY = "core.device_registry"
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 2
+STORAGE_VERSION_MINOR = 3
 SAVE_DELAY = 10
 CLEANUP_DELAY = 10
 
@@ -87,6 +87,7 @@ class DeviceEntry:
     name: str | None = attr.ib(default=None)
     suggested_area: str | None = attr.ib(default=None)
     sw_version: str | None = attr.ib(default=None)
+    hw_version: str | None = attr.ib(default=None)
     via_device_id: str | None = attr.ib(default=None)
     # This value is not stored, just used to keep track of events to fire.
     is_new: bool = attr.ib(default=False)
@@ -168,32 +169,37 @@ class DeviceRegistryStore(storage.Store):
         self, old_major_version: int, old_minor_version: int, old_data: dict[str, Any]
     ) -> dict[str, Any]:
         """Migrate to the new version."""
-        if old_major_version < 2 and old_minor_version < 2:
-            # From version 1.1
-            for device in old_data["devices"]:
-                # Introduced in 0.110
-                try:
-                    device["entry_type"] = DeviceEntryType(device.get("entry_type"))
-                except ValueError:
-                    device["entry_type"] = None
+        if old_major_version < 2:
+            if old_minor_version < 2:
+                # From version 1.1
+                for device in old_data["devices"]:
+                    # Introduced in 0.110
+                    try:
+                        device["entry_type"] = DeviceEntryType(device.get("entry_type"))
+                    except ValueError:
+                        device["entry_type"] = None
 
-                # Introduced in 0.79
-                # renamed in 0.95
-                device["via_device_id"] = device.get("via_device_id") or device.get(
-                    "hub_device_id"
-                )
-                # Introduced in 0.87
-                device["area_id"] = device.get("area_id")
-                device["name_by_user"] = device.get("name_by_user")
-                # Introduced in 0.119
-                device["disabled_by"] = device.get("disabled_by")
-                # Introduced in 2021.11
-                device["configuration_url"] = device.get("configuration_url")
-            # Introduced in 0.111
-            old_data["deleted_devices"] = old_data.get("deleted_devices", [])
-            for device in old_data["deleted_devices"]:
-                # Introduced in 2021.2
-                device["orphaned_timestamp"] = device.get("orphaned_timestamp")
+                    # Introduced in 0.79
+                    # renamed in 0.95
+                    device["via_device_id"] = device.get("via_device_id") or device.get(
+                        "hub_device_id"
+                    )
+                    # Introduced in 0.87
+                    device["area_id"] = device.get("area_id")
+                    device["name_by_user"] = device.get("name_by_user")
+                    # Introduced in 0.119
+                    device["disabled_by"] = device.get("disabled_by")
+                    # Introduced in 2021.11
+                    device["configuration_url"] = device.get("configuration_url")
+                # Introduced in 0.111
+                old_data["deleted_devices"] = old_data.get("deleted_devices", [])
+                for device in old_data["deleted_devices"]:
+                    # Introduced in 2021.2
+                    device["orphaned_timestamp"] = device.get("orphaned_timestamp")
+            if old_minor_version < 3:
+                # Introduced in 2022.2
+                for device in old_data["devices"]:
+                    device["hw_version"] = device.get("hw_version")
 
         if old_major_version > 1:
             raise NotImplementedError
@@ -314,6 +320,7 @@ class DeviceRegistry:
         name: str | None | UndefinedType = UNDEFINED,
         suggested_area: str | None | UndefinedType = UNDEFINED,
         sw_version: str | None | UndefinedType = UNDEFINED,
+        hw_version: str | None | UndefinedType = UNDEFINED,
         via_device: tuple[str, str] | None = None,
     ) -> DeviceEntry:
         """Get device. Create if it doesn't exist."""
@@ -378,6 +385,7 @@ class DeviceRegistry:
             name=name,
             suggested_area=suggested_area,
             sw_version=sw_version,
+            hw_version=hw_version,
             via_device_id=via_device_id,
         )
 
@@ -403,6 +411,7 @@ class DeviceRegistry:
         remove_config_entry_id: str | UndefinedType = UNDEFINED,
         suggested_area: str | None | UndefinedType = UNDEFINED,
         sw_version: str | None | UndefinedType = UNDEFINED,
+        hw_version: str | None | UndefinedType = UNDEFINED,
         via_device_id: str | None | UndefinedType = UNDEFINED,
     ) -> DeviceEntry | None:
         """Update properties of a device."""
@@ -420,6 +429,7 @@ class DeviceRegistry:
             remove_config_entry_id=remove_config_entry_id,
             suggested_area=suggested_area,
             sw_version=sw_version,
+            hw_version=hw_version,
             via_device_id=via_device_id,
         )
 
@@ -443,6 +453,7 @@ class DeviceRegistry:
         remove_config_entry_id: str | UndefinedType = UNDEFINED,
         suggested_area: str | None | UndefinedType = UNDEFINED,
         sw_version: str | None | UndefinedType = UNDEFINED,
+        hw_version: str | None | UndefinedType = UNDEFINED,
         via_device_id: str | None | UndefinedType = UNDEFINED,
     ) -> DeviceEntry | None:
         """Update device attributes."""
@@ -513,6 +524,7 @@ class DeviceRegistry:
             ("name", name),
             ("suggested_area", suggested_area),
             ("sw_version", sw_version),
+            ("hw_version", hw_version),
             ("via_device_id", via_device_id),
         ):
             if value is not UNDEFINED and value != getattr(old, attr_name):
@@ -595,6 +607,7 @@ class DeviceRegistry:
                     name_by_user=device["name_by_user"],
                     name=device["name"],
                     sw_version=device["sw_version"],
+                    hw_version=device["hw_version"],
                     via_device_id=device["via_device_id"],
                 )
             # Introduced in 0.111
@@ -631,6 +644,7 @@ class DeviceRegistry:
                 "model": entry.model,
                 "name": entry.name,
                 "sw_version": entry.sw_version,
+                "hw_version": entry.hw_version,
                 "entry_type": entry.entry_type,
                 "id": entry.id,
                 "via_device_id": entry.via_device_id,

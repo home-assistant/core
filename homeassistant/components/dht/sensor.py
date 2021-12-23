@@ -87,6 +87,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the DHT sensor."""
+    _LOGGER.warning(
+        "The DHT Sensor integration is deprecated and will be removed "
+        "in Home Assistant Core 2022.4; this integration is removed under "
+        "Architectural Decision Record 0019, more information can be found here: "
+        "https://github.com/home-assistant/architecture/blob/master/adr/0019-GPIO.md"
+    )
+
     available_sensors = {
         "AM2302": adafruit_dht.DHT22,
         "DHT11": adafruit_dht.DHT11,

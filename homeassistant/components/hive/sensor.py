@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 
-from homeassistant.components.sensor import DEVICE_CLASS_BATTERY, SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.helpers.entity import DeviceInfo
 
 from . import HiveEntity
@@ -11,7 +11,7 @@ from .const import DOMAIN
 PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=15)
 DEVICETYPE = {
-    "Battery": {"unit": " % ", "type": DEVICE_CLASS_BATTERY},
+    "Battery": {"unit": " % ", "type": SensorDeviceClass.BATTERY},
 }
 
 

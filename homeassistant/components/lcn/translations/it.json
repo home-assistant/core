@@ -4,7 +4,7 @@
             "fingerprint": "codice impronta digitale ricevuto",
             "send_keys": "invia chiavi ricevute",
             "transmitter": "codice trasmettitore ricevuto",
-            "transponder": "codice transpoder ricevuto"
+            "transponder": "codice transponder ricevuto"
         }
     }
 }

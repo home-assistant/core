@@ -13,7 +13,7 @@ from voluptuous import MultipleInvalid
 
 from homeassistant.components import fan
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX
-from homeassistant.const import ATTR_ASSUMED_STATE, STATE_OFF, STATE_ON
+from homeassistant.const import ATTR_ASSUMED_STATE, STATE_OFF, STATE_ON, Platform
 
 from .test_common import (
     DEFAULT_CONFIG,
@@ -191,7 +191,7 @@ async def test_availability_when_connection_lost(
     config["dn"] = "Test"
     config["if"] = 1
     await help_test_availability_when_connection_lost(
-        hass, mqtt_client_mock, mqtt_mock, fan.DOMAIN, config
+        hass, mqtt_client_mock, mqtt_mock, Platform.FAN, config
     )
 
 
@@ -200,7 +200,7 @@ async def test_availability(hass, mqtt_mock, setup_tasmota):
     config = copy.deepcopy(DEFAULT_CONFIG)
     config["dn"] = "Test"
     config["if"] = 1
-    await help_test_availability(hass, mqtt_mock, fan.DOMAIN, config)
+    await help_test_availability(hass, mqtt_mock, Platform.FAN, config)
 
 
 async def test_availability_discovery_update(hass, mqtt_mock, setup_tasmota):
@@ -208,7 +208,7 @@ async def test_availability_discovery_update(hass, mqtt_mock, setup_tasmota):
     config = copy.deepcopy(DEFAULT_CONFIG)
     config["dn"] = "Test"
     config["if"] = 1
-    await help_test_availability_discovery_update(hass, mqtt_mock, fan.DOMAIN, config)
+    await help_test_availability_discovery_update(hass, mqtt_mock, Platform.FAN, config)
 
 
 async def test_availability_poll_state(
@@ -219,7 +219,7 @@ async def test_availability_poll_state(
     config["if"] = 1
     poll_topic = "tasmota_49A3BC/cmnd/STATE"
     await help_test_availability_poll_state(
-        hass, mqtt_client_mock, mqtt_mock, fan.DOMAIN, config, poll_topic, ""
+        hass, mqtt_client_mock, mqtt_mock, Platform.FAN, config, poll_topic, ""
     )
 
 
@@ -233,7 +233,7 @@ async def test_discovery_removal_fan(hass, mqtt_mock, caplog, setup_tasmota):
     config2["if"] = 0
 
     await help_test_discovery_removal(
-        hass, mqtt_mock, caplog, fan.DOMAIN, config1, config2
+        hass, mqtt_mock, caplog, Platform.FAN, config1, config2
     )
 
 
@@ -246,7 +246,7 @@ async def test_discovery_update_unchanged_fan(hass, mqtt_mock, caplog, setup_tas
         "homeassistant.components.tasmota.fan.TasmotaFan.discovery_update"
     ) as discovery_update:
         await help_test_discovery_update_unchanged(
-            hass, mqtt_mock, caplog, fan.DOMAIN, config, discovery_update
+            hass, mqtt_mock, caplog, Platform.FAN, config, discovery_update
         )
 
 
@@ -257,7 +257,7 @@ async def test_discovery_device_remove(hass, mqtt_mock, setup_tasmota):
     config["if"] = 1
     unique_id = f"{DEFAULT_CONFIG['mac']}_fan_fan_ifan"
     await help_test_discovery_device_remove(
-        hass, mqtt_mock, fan.DOMAIN, unique_id, config
+        hass, mqtt_mock, Platform.FAN, unique_id, config
     )
 
 
@@ -272,7 +272,7 @@ async def test_entity_id_update_subscriptions(hass, mqtt_mock, setup_tasmota):
         get_topic_tele_will(config),
     ]
     await help_test_entity_id_update_subscriptions(
-        hass, mqtt_mock, fan.DOMAIN, config, topics
+        hass, mqtt_mock, Platform.FAN, config, topics
     )
 
 
@@ -282,5 +282,5 @@ async def test_entity_id_update_discovery_update(hass, mqtt_mock, setup_tasmota)
     config["dn"] = "Test"
     config["if"] = 1
     await help_test_entity_id_update_discovery_update(
-        hass, mqtt_mock, fan.DOMAIN, config
+        hass, mqtt_mock, Platform.FAN, config
     )

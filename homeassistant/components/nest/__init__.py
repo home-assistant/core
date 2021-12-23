@@ -51,7 +51,7 @@ from .const import (
 )
 from .events import EVENT_NAME_MAP, NEST_EVENT
 from .legacy import async_setup_legacy, async_setup_legacy_entry
-from .media_source import get_media_source_devices
+from .media_source import async_get_media_event_store, get_media_source_devices
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -87,10 +87,11 @@ PLATFORMS = [Platform.SENSOR, Platform.CAMERA, Platform.CLIMATE]
 WEB_AUTH_DOMAIN = DOMAIN
 INSTALLED_AUTH_DOMAIN = f"{DOMAIN}.installed"
 
-# Fetch media for events with an in memory cache. The largest media items
-# are mp4 clips at ~90kb each, so this totals a few MB per camera.
-# Note: Media for events can only be published within 30 seconds of the event
-EVENT_MEDIA_CACHE_SIZE = 64
+# Fetch media events with a disk backed cache, with a limit for each camera
+# device. The largest media items are mp4 clips at ~120kb each, and we target
+# ~125MB of storage per camera to try to balance a reasonable user experience
+# for event history not not filling the disk.
+EVENT_MEDIA_CACHE_SIZE = 1024  # number of events
 
 
 class WebAuth(config_entry_oauth2_flow.LocalOAuth2Implementation):
@@ -169,6 +170,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         ),
     )
 
+    hass.http.register_view(NestEventMediaView(hass))
+
     return True
 
 
@@ -215,6 +218,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Keep media for last N events in memory
     subscriber.cache_policy.event_cache_size = EVENT_MEDIA_CACHE_SIZE
     subscriber.cache_policy.fetch = True
+    # Use disk backed event media store
+    subscriber.cache_policy.store = await async_get_media_event_store(hass, subscriber)
 
     callback = SignalUpdateCallback(hass)
     subscriber.set_update_callback(callback.async_handle_event)
@@ -247,8 +252,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][DATA_SUBSCRIBER] = subscriber
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
-
-    hass.http.register_view(NestEventMediaView(hass))
 
     return True
 
