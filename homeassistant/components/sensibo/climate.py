@@ -36,6 +36,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
     ConfigType,
@@ -148,6 +149,9 @@ class SensiboClimate(ClimateEntity):
         """
         self._client = client
         self._id = data["id"]
+        self._productmodel = data["productModel"]
+        self._firmware = data["firmwareVersion"]
+        self._firmwaretype = data["firmwareType"]
         self._external_state = None
         self._units = units
         self._available = False
@@ -187,6 +191,20 @@ class SensiboClimate(ClimateEntity):
         for key in self._ac_states:
             if key in FIELD_TO_FLAG:
                 self._supported_features |= FIELD_TO_FLAG[key]
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device information about this entity."""
+        return {
+            "identifiers": {(DOMAIN, self._id)},
+            "name": self._name,
+            "manufacturer": "Sensibo",
+            "configuration_url": "https://home.sensibo.com/",
+            "model": self._productmodel,
+            "sw_version": self._firmware,
+            "hw_version": self._firmwaretype,
+            "suggested_area": self._name,
+        }
 
     @property
     def state(self):
