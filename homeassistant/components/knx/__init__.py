@@ -80,9 +80,9 @@ CONF_KNX_FIRE_EVENT: Final = "fire_event"
 CONF_KNX_EVENT_FILTER: Final = "event_filter"
 
 SERVICE_KNX_SEND: Final = "send"
-SERVICE_KNX_RESPOND: Final = "respond"
 SERVICE_KNX_ATTR_PAYLOAD: Final = "payload"
 SERVICE_KNX_ATTR_TYPE: Final = "type"
+SERVICE_KNX_RESPONSE: Final = "response"
 SERVICE_KNX_ATTR_REMOVE: Final = "remove"
 SERVICE_KNX_EVENT_REGISTER: Final = "event_register"
 SERVICE_KNX_EXPOSURE_REGISTER: Final = "exposure_register"
@@ -143,6 +143,7 @@ SERVICE_KNX_SEND_SCHEMA = vol.Any(
             ),
             vol.Required(SERVICE_KNX_ATTR_PAYLOAD): cv.match_all,
             vol.Required(SERVICE_KNX_ATTR_TYPE): sensor_type_validator,
+            vol.Optional(SERVICE_KNX_RESPONSE, default=False): cv.boolean,
         }
     ),
     vol.Schema(
@@ -155,31 +156,7 @@ SERVICE_KNX_SEND_SCHEMA = vol.Any(
             vol.Required(SERVICE_KNX_ATTR_PAYLOAD): vol.Any(
                 cv.positive_int, [cv.positive_int]
             ),
-        }
-    ),
-)
-
-SERVICE_KNX_RESPOND_SCHEMA = vol.Any(
-    vol.Schema(
-        {
-            vol.Required(KNX_ADDRESS): vol.All(
-                cv.ensure_list,
-                [ga_validator],
-            ),
-            vol.Required(SERVICE_KNX_ATTR_PAYLOAD): cv.match_all,
-            vol.Required(SERVICE_KNX_ATTR_TYPE): sensor_type_validator,
-        }
-    ),
-    vol.Schema(
-        # without type given payload is treated as raw bytes
-        {
-            vol.Required(KNX_ADDRESS): vol.All(
-                cv.ensure_list,
-                [ga_validator],
-            ),
-            vol.Required(SERVICE_KNX_ATTR_PAYLOAD): vol.Any(
-                cv.positive_int, [cv.positive_int]
-            ),
+            vol.Optional(SERVICE_KNX_RESPONSE, default=False): cv.boolean,
         }
     ),
 )
@@ -301,13 +278,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         SERVICE_KNX_SEND,
         knx_module.service_send_to_knx_bus,
         schema=SERVICE_KNX_SEND_SCHEMA,
-    )
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_KNX_RESPOND,
-        knx_module.service_respond_to_knx_bus,
-        schema=SERVICE_KNX_RESPOND_SCHEMA,
     )
 
     hass.services.async_register(
@@ -584,6 +554,7 @@ class KNXModule:
         attr_address = call.data[KNX_ADDRESS]
         attr_payload = call.data[SERVICE_KNX_ATTR_PAYLOAD]
         attr_type = call.data.get(SERVICE_KNX_ATTR_TYPE)
+        attr_response = call.data[SERVICE_KNX_RESPONSE]
 
         payload: DPTBinary | DPTArray
         if attr_type is not None:
@@ -599,31 +570,9 @@ class KNXModule:
         for address in attr_address:
             telegram = Telegram(
                 destination_address=parse_device_group_address(address),
-                payload=GroupValueWrite(payload),
-            )
-            await self.xknx.telegrams.put(telegram)
-
-    async def service_respond_to_knx_bus(self, call: ServiceCall) -> None:
-        """Service for responding an arbitrary KNX message to the KNX bus."""
-        attr_address = call.data[KNX_ADDRESS]
-        attr_payload = call.data[SERVICE_KNX_ATTR_PAYLOAD]
-        attr_type = call.data.get(SERVICE_KNX_ATTR_TYPE)
-
-        payload: DPTBinary | DPTArray
-        if attr_type is not None:
-            transcoder = DPTBase.parse_transcoder(attr_type)
-            if transcoder is None:
-                raise ValueError(f"Invalid type for knx.respond service: {attr_type}")
-            payload = DPTArray(transcoder.to_knx(attr_payload))
-        elif isinstance(attr_payload, int):
-            payload = DPTBinary(attr_payload)
-        else:
-            payload = DPTArray(attr_payload)
-
-        for address in attr_address:
-            telegram = Telegram(
-                destination_address=parse_device_group_address(address),
-                payload=GroupValueResponse(payload),
+                payload=GroupValueResponse(payload)
+                if attr_response
+                else GroupValueWrite(payload),
             )
             await self.xknx.telegrams.put(telegram)
 
