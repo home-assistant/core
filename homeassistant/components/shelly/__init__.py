@@ -424,6 +424,7 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         """Set up the wrapper."""
         dev_reg = device_registry.async_get(self.hass)
         sw_version = self.device.firmware_version if self.device.initialized else ""
+        hw_version = self.device.status.get("hwinfo")
         entry = dev_reg.async_get_or_create(
             config_entry_id=self.entry.entry_id,
             name=self.name,
@@ -431,6 +432,7 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
             manufacturer="Shelly",
             model=aioshelly.const.MODEL_NAMES.get(self.model, self.model),
             sw_version=sw_version,
+            hw_version=hw_version["hw_revision"] if hw_version is not None else "",
             configuration_url=f"http://{self.entry.data[CONF_HOST]}",
         )
         self.device_id = entry.id
@@ -696,6 +698,7 @@ class RpcDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         """Set up the wrapper."""
         dev_reg = device_registry.async_get(self.hass)
         sw_version = self.device.firmware_version if self.device.initialized else ""
+        hw_version = self.device.device_info.get("batch") or ""
         entry = dev_reg.async_get_or_create(
             config_entry_id=self.entry.entry_id,
             name=self.name,
@@ -703,6 +706,7 @@ class RpcDeviceWrapper(update_coordinator.DataUpdateCoordinator):
             manufacturer="Shelly",
             model=aioshelly.const.MODEL_NAMES.get(self.model, self.model),
             sw_version=sw_version,
+            hw_version=hw_version,
             configuration_url=f"http://{self.entry.data[CONF_HOST]}",
         )
         self.device_id = entry.id
