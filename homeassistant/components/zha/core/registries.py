@@ -9,6 +9,7 @@ import attr
 from zigpy import zcl
 import zigpy.profiles.zha
 import zigpy.profiles.zll
+from zigpy.types.named import EUI64
 
 from homeassistant.const import Platform
 
@@ -228,6 +229,9 @@ class ZHAEntityRegistry:
             lambda: collections.defaultdict(lambda: collections.defaultdict(list))
         )
         self._group_registry: dict[str, CALLABLE_T] = {}
+        self.single_device_matches: dict[
+            Platform, dict[EUI64, list[str]]
+        ] = collections.defaultdict(lambda: collections.defaultdict(list))
 
     def get_entity(
         self,
@@ -341,6 +345,12 @@ class ZHAEntityRegistry:
             return zha_ent
 
         return decorator
+
+    def clean_up(self) -> None:
+        """Clean up post discovery."""
+        self.single_device_matches: dict[
+            Platform, dict[EUI64, list[str]]
+        ] = collections.defaultdict(lambda: collections.defaultdict(list))
 
 
 ZHA_ENTITIES = ZHAEntityRegistry()
