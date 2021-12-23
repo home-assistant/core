@@ -121,8 +121,8 @@ class GoogleCalendarData:
     def _prepare_query(self):
         try:
             service = self.calendar_service.get()
-        except ServerNotFoundError:
-            _LOGGER.error("Unable to connect to Google")
+        except ServerNotFoundError as err:
+            _LOGGER.error("Unable to connect to Google: %s", err)
             return None, None
         params = dict(DEFAULT_GOOGLE_SEARCH_PARAMS)
         params["calendarId"] = self.calendar_id

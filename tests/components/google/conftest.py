@@ -29,8 +29,7 @@ def test_calendar():
 @pytest.fixture
 def mock_next_event():
     """Mock the google calendar data."""
-    patch_google_cal = patch(
+    with patch(
         "homeassistant.components.google.calendar.GoogleCalendarData"
-    )
-    with patch_google_cal as google_cal_data:
+    ) as google_cal_data:
         yield google_cal_data
