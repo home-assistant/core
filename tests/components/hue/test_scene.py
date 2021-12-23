@@ -1,6 +1,7 @@
 """Philips Hue scene platform tests for V2 bridge/api."""
 
 
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import setup_platform
@@ -21,7 +22,7 @@ async def test_scene(hass, mock_bridge_v2, v2_resources_test_data):
     test_entity = hass.states.get("scene.test_zone_dynamic_test_scene")
     assert test_entity is not None
     assert test_entity.name == "Test Zone - Dynamic Test Scene"
-    assert test_entity.state == "scening"
+    assert test_entity.state == STATE_UNKNOWN
     assert test_entity.attributes["group_name"] == "Test Zone"
     assert test_entity.attributes["group_type"] == "zone"
     assert test_entity.attributes["name"] == "Dynamic Test Scene"
@@ -33,7 +34,7 @@ async def test_scene(hass, mock_bridge_v2, v2_resources_test_data):
     test_entity = hass.states.get("scene.test_room_regular_test_scene")
     assert test_entity is not None
     assert test_entity.name == "Test Room - Regular Test Scene"
-    assert test_entity.state == "scening"
+    assert test_entity.state == STATE_UNKNOWN
     assert test_entity.attributes["group_name"] == "Test Room"
     assert test_entity.attributes["group_type"] == "room"
     assert test_entity.attributes["name"] == "Regular Test Scene"
@@ -142,7 +143,7 @@ async def test_scene_updates(hass, mock_bridge_v2, v2_resources_test_data):
     # the entity should now be available
     test_entity = hass.states.get(test_entity_id)
     assert test_entity is not None
-    assert test_entity.state == "scening"
+    assert test_entity.state == STATE_UNKNOWN
     assert test_entity.name == "Test Room - Mocked Scene"
     assert test_entity.attributes["brightness"] == 65.0
 
