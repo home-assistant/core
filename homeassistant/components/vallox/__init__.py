@@ -1,6 +1,7 @@
 """Support for Vallox ventilation units."""
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass, field
 import ipaddress
 import logging
@@ -13,7 +14,7 @@ from vallox_websocket_api.vallox import get_uuid as calculate_uuid
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_NAME, EVENT_HOMEASSISTANT_STARTED
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import CoreState, HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType, StateType
@@ -25,6 +26,7 @@ from .const import (
     DEFAULT_FAN_SPEED_HOME,
     DEFAULT_NAME,
     DOMAIN,
+    INITIAL_COORDINATOR_UPDATE_RETRY_INTERVAL_SECONDS,
     METRIC_KEY_PROFILE_FAN_SPEED_AWAY,
     METRIC_KEY_PROFILE_FAN_SPEED_BOOST,
     METRIC_KEY_PROFILE_FAN_SPEED_HOME,
@@ -171,7 +173,24 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DOMAIN] = {"client": client, "coordinator": coordinator, "name": name}
 
     async def _async_load_platform_delayed(*_: Any) -> None:
-        await coordinator.async_refresh()
+        # We need a successful update before loading the platforms, because platform init code
+        # derives the UUIDs from the data the coordinator fetches.
+        warned_once = False
+        while hass.state == CoreState.running:
+            await coordinator.async_refresh()
+            if coordinator.last_update_success:
+                break
+
+            if not warned_once:
+                _LOGGER.warning(
+                    "Vallox integration not ready yet; Retrying in background"
+                )
+                warned_once = True
+
+            await asyncio.sleep(INITIAL_COORDINATOR_UPDATE_RETRY_INTERVAL_SECONDS)
+        else:
+            return
+
         hass.async_create_task(async_load_platform(hass, "sensor", DOMAIN, {}, config))
         hass.async_create_task(async_load_platform(hass, "fan", DOMAIN, {}, config))
 
