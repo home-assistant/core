@@ -428,7 +428,7 @@ async def _register_service(
         }
 
     async def execute_service(call: ServiceCall) -> None:
-        await entry_data.client.execute_service(service, call.data)
+        await entry_data.client.execute_service(service, call.data)  # type: ignore[arg-type]
 
     hass.services.async_register(
         DOMAIN, service_name, execute_service, vol.Schema(schema)
