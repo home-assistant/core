@@ -90,11 +90,8 @@ def socket_disabled(pytestconfig):
     This incorporates changes from https://github.com/miketheman/pytest-socket/pull/76
     and hardcodes allow_unix_socket to True because it's not passed on the command line.
     """
-    socket_was_enabled = socket.socket == pytest_socket._true_socket
     disable_socket(allow_unix_socket=True)
     yield
-    if socket_was_enabled:
-        pytest_socket.enable_socket()
 
 
 @pytest.fixture
@@ -104,11 +101,8 @@ def socket_enabled(pytestconfig):
     This incorporates changes from https://github.com/miketheman/pytest-socket/pull/76
     and hardcodes allow_unix_socket to True because it's not passed on the command line.
     """
-    socket_was_disabled = socket.socket != pytest_socket._true_socket
     pytest_socket.enable_socket()
     yield
-    if socket_was_disabled:
-        disable_socket(allow_unix_socket=True)
 
 
 def disable_socket(allow_unix_socket=False):
