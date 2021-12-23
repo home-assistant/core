@@ -49,19 +49,19 @@ async def test_get_actions(hass, device_reg, entity_reg):
     )
     expected_actions = [
         {
-            "domain": Platform.REMOTE,
+            "domain": DOMAIN,
             "type": "turn_off",
             "device_id": device_entry.id,
             "entity_id": f"{Platform.REMOTE}.test_5678",
         },
         {
-            "domain": Platform.REMOTE,
+            "domain": DOMAIN,
             "type": "turn_on",
             "device_id": device_entry.id,
             "entity_id": f"{Platform.REMOTE}.test_5678",
         },
         {
-            "domain": Platform.REMOTE,
+            "domain": DOMAIN,
             "type": "toggle",
             "device_id": device_entry.id,
             "entity_id": f"{Platform.REMOTE}.test_5678",
@@ -91,7 +91,7 @@ async def test_action(hass, calls, enable_custom_integrations):
                 {
                     "trigger": {"platform": "event", "event_type": "test_event1"},
                     "action": {
-                        "domain": Platform.REMOTE,
+                        "domain": DOMAIN,
                         "device_id": "",
                         "entity_id": ent1.entity_id,
                         "type": "turn_off",
@@ -100,7 +100,7 @@ async def test_action(hass, calls, enable_custom_integrations):
                 {
                     "trigger": {"platform": "event", "event_type": "test_event2"},
                     "action": {
-                        "domain": Platform.REMOTE,
+                        "domain": DOMAIN,
                         "device_id": "",
                         "entity_id": ent1.entity_id,
                         "type": "turn_on",
@@ -109,7 +109,7 @@ async def test_action(hass, calls, enable_custom_integrations):
                 {
                     "trigger": {"platform": "event", "event_type": "test_event3"},
                     "action": {
-                        "domain": Platform.REMOTE,
+                        "domain": DOMAIN,
                         "device_id": "",
                         "entity_id": ent1.entity_id,
                         "type": "toggle",
