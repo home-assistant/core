@@ -339,7 +339,7 @@ def async_extract_referenced_entity_ids(
     if expand_group:
         entity_ids = hass.components.group.expand_entity_ids(entity_ids)
 
-    selected.referenced.update(entity_ids)
+    selected.referenced.update(entity_ids)  # type: ignore[arg-type]
 
     if not selector.device_ids and not selector.area_ids:
         return selected
@@ -350,14 +350,14 @@ def async_extract_referenced_entity_ids(
 
     for device_id in selector.device_ids:
         if device_id not in dev_reg.devices:
-            selected.missing_devices.add(device_id)
+            selected.missing_devices.add(device_id)  # type: ignore[arg-type]
 
     for area_id in selector.area_ids:
         if area_id not in area_reg.areas:
-            selected.missing_areas.add(area_id)
+            selected.missing_areas.add(area_id)  # type: ignore[arg-type]
 
     # Find devices for this area
-    selected.referenced_devices.update(selector.device_ids)
+    selected.referenced_devices.update(selector.device_ids)  # type: ignore[arg-type]
     for device_entry in dev_reg.devices.values():
         if device_entry.area_id in selector.area_ids:
             selected.referenced_devices.add(device_entry.id)
@@ -706,7 +706,7 @@ async def _handle_entity_call(
             func,
             entity.entity_id,
         )
-        await result  # type: ignore
+        await result
 
 
 @bind_hass

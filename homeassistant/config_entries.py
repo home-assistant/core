@@ -92,8 +92,8 @@ class ConfigEntryState(Enum):
     def __new__(cls: type[object], value: str, recoverable: bool) -> ConfigEntryState:
         """Create new ConfigEntryState."""
         obj = object.__new__(cls)
-        obj._value_ = value
-        obj._recoverable = recoverable
+        obj._value_ = value  # type: ignore[attr-defined]
+        obj._recoverable = recoverable  # type: ignore[attr-defined]
         return cast("ConfigEntryState", obj)
 
     @property
@@ -321,7 +321,7 @@ class ConfigEntry:
         error_reason = None
 
         try:
-            result = await component.async_setup_entry(hass, self)  # type: ignore
+            result = await component.async_setup_entry(hass, self)
 
             if not isinstance(result, bool):
                 _LOGGER.error(
@@ -460,7 +460,7 @@ class ConfigEntry:
             return False
 
         try:
-            result = await component.async_unload_entry(hass, self)  # type: ignore
+            result = await component.async_unload_entry(hass, self)
 
             assert isinstance(result, bool)
 
@@ -471,7 +471,7 @@ class ConfigEntry:
 
             self._async_process_on_unload()
 
-            return result
+            return result  # type: ignore[no-any-return]
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
                 "Error unloading entry %s for %s", self.title, integration.domain
@@ -499,7 +499,7 @@ class ConfigEntry:
         if not hasattr(component, "async_remove_entry"):
             return
         try:
-            await component.async_remove_entry(hass, self)  # type: ignore
+            await component.async_remove_entry(hass, self)
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
                 "Error calling entry remove callback %s for %s",
@@ -536,7 +536,7 @@ class ConfigEntry:
             return False
 
         try:
-            result = await component.async_migrate_entry(hass, self)  # type: ignore
+            result = await component.async_migrate_entry(hass, self)
             if not isinstance(result, bool):
                 _LOGGER.error(
                     "%s.async_migrate_entry did not return boolean", self.domain
@@ -545,7 +545,7 @@ class ConfigEntry:
             if result:
                 # pylint: disable=protected-access
                 hass.config_entries._async_schedule_save()
-            return result
+            return result  # type: ignore[no-any-return]
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
                 "Error migrating entry %s for %s", self.title, self.domain
@@ -1169,7 +1169,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
 
     def __init_subclass__(cls, domain: str | None = None, **kwargs: Any) -> None:
         """Initialize a subclass, register if possible."""
-        super().__init_subclass__(**kwargs)  # type: ignore
+        super().__init_subclass__(**kwargs)
         if domain is not None:
             HANDLERS.register(domain)(cls)
 
