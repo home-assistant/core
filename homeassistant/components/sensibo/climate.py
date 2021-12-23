@@ -149,9 +149,6 @@ class SensiboClimate(ClimateEntity):
         """
         self._client = client
         self._id = data["id"]
-        self._productmodel = data["productModel"]
-        self._firmware = data["firmwareVersion"]
-        self._firmwaretype = data["firmwareType"]
         self._external_state = None
         self._units = units
         self._available = False
@@ -162,9 +159,9 @@ class SensiboClimate(ClimateEntity):
             name=self._name,
             manufacturer="Sensibo",
             configuration_url="https://home.sensibo.com/",
-            model=self._productmodel,
-            sw_version=self._firmware,
-            hw_version=self._firmwaretype,
+            model=data["productModel"],
+            sw_version=data["firmwareVersion"],
+            hw_version=data["firmwareType"],
             suggested_area=self._name,
         )
 
