@@ -277,8 +277,7 @@ class Store:
 
     def _write_data(self, path: str, data: dict) -> None:
         """Write the data."""
-        if not os.path.isdir(os.path.dirname(path)):
-            os.makedirs(os.path.dirname(path))
+        os.makedirs(os.path.dirname(path), exist_ok=True)
 
         _LOGGER.debug("Writing data for %s to %s", self.key, path)
         json_util.save_json(
