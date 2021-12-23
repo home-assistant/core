@@ -1,4 +1,7 @@
 """The Overkiz (by Somfy) integration."""
+from __future__ import annotations
+
+from collections import defaultdict
 from dataclasses import dataclass
 import logging
 
@@ -10,6 +13,7 @@ from pyoverkiz.exceptions import (
     MaintenanceException,
     TooManyRequestsException,
 )
+from pyoverkiz.models import Device
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -21,6 +25,7 @@ from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from .const import (
     CONF_HUB,
     DOMAIN,
+    OVERKIZ_DEVICE_TO_PLATFORM,
     PLATFORMS,
     UPDATE_INTERVAL,
     UPDATE_INTERVAL_ALL_ASSUMED_STATE,
@@ -35,6 +40,7 @@ class HomeAssistantOverkizData:
     """Overkiz data stored in the Home Assistant data object."""
 
     coordinator: OverkizDataUpdateCoordinator
+    platforms: dict[str, Device]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -85,8 +91,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         coordinator.update_interval = UPDATE_INTERVAL_ALL_ASSUMED_STATE
 
+    platforms: dict[str, Device] = defaultdict(list)
+
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = HomeAssistantOverkizData(
         coordinator=coordinator,
+        platforms=platforms,
     )
 
     # Map Overkiz device to Home Assistant platform
@@ -95,6 +104,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "The following device has been retrieved. Report an issue if not supported correctly (%s)",
             device,
         )
+
+        if platform := OVERKIZ_DEVICE_TO_PLATFORM.get(
+            device.widget
+        ) or OVERKIZ_DEVICE_TO_PLATFORM.get(device.ui_class):
+            platforms[platform].append(device)
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
