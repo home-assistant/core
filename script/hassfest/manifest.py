@@ -64,6 +64,7 @@ NO_IOT_CLASS = [
     "image_processing",
     "image",
     "input_boolean",
+    "input_button",
     "input_datetime",
     "input_number",
     "input_select",

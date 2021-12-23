@@ -5,9 +5,9 @@ from collections.abc import Mapping
 from typing import Any, cast
 
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, MASS_POUNDS, PERCENTAGE
@@ -38,14 +38,14 @@ REALTIME_EMISSIONS_SENSOR_DESCRIPTIONS = (
         name="Marginal Operating Emissions Rate",
         icon="mdi:blur",
         native_unit_of_measurement=f"{MASS_POUNDS} CO2/MWh",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_TYPE_REALTIME_EMISSIONS_PERCENT,
         name="Relative Marginal Emissions Intensity",
         icon="mdi:blur",
         native_unit_of_measurement=PERCENTAGE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 

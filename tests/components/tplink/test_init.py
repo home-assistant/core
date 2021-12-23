@@ -74,37 +74,6 @@ async def test_config_entry_retry(hass):
         assert already_migrated_config_entry.state == ConfigEntryState.SETUP_RETRY
 
 
-async def test_dimmer_switch_unique_id_fix_original_entity_was_deleted(
-    hass: HomeAssistant, entity_reg: EntityRegistry
-):
-    """Test that roll out unique id entity id changed to the original unique id."""
-    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=MAC_ADDRESS)
-    config_entry.add_to_hass(hass)
-    dimmer = _mocked_dimmer()
-    rollout_unique_id = MAC_ADDRESS.replace(":", "").upper()
-    original_unique_id = tplink.legacy_device_id(dimmer)
-    rollout_dimmer_entity_reg = entity_reg.async_get_or_create(
-        config_entry=config_entry,
-        platform=DOMAIN,
-        domain="light",
-        unique_id=rollout_unique_id,
-        original_name="Rollout dimmer",
-    )
-
-    with _patch_discovery(device=dimmer), _patch_single_discovery(device=dimmer):
-        await setup.async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
-
-    migrated_dimmer_entity_reg = entity_reg.async_get_or_create(
-        config_entry=config_entry,
-        platform=DOMAIN,
-        domain="light",
-        unique_id=original_unique_id,
-        original_name="Migrated dimmer",
-    )
-    assert migrated_dimmer_entity_reg.entity_id == rollout_dimmer_entity_reg.entity_id
-
-
 async def test_dimmer_switch_unique_id_fix_original_entity_still_exists(
     hass: HomeAssistant, entity_reg: EntityRegistry
 ):

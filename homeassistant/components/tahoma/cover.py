@@ -2,16 +2,7 @@
 from datetime import timedelta
 import logging
 
-from homeassistant.components.cover import (
-    ATTR_POSITION,
-    DEVICE_CLASS_AWNING,
-    DEVICE_CLASS_BLIND,
-    DEVICE_CLASS_CURTAIN,
-    DEVICE_CLASS_GARAGE,
-    DEVICE_CLASS_SHUTTER,
-    DEVICE_CLASS_WINDOW,
-    CoverEntity,
-)
+from homeassistant.components.cover import ATTR_POSITION, CoverDeviceClass, CoverEntity
 from homeassistant.util.dt import utcnow
 
 from . import DOMAIN as TAHOMA_DOMAIN, TahomaDevice
@@ -28,25 +19,25 @@ ATTR_LOCK_ORIG = "lock_originator"
 HORIZONTAL_AWNING = "io:HorizontalAwningIOComponent"
 
 TAHOMA_DEVICE_CLASSES = {
-    HORIZONTAL_AWNING: DEVICE_CLASS_AWNING,
-    "io:AwningValanceIOComponent": DEVICE_CLASS_AWNING,
-    "io:DiscreteGarageOpenerWithPartialPositionIOComponent": DEVICE_CLASS_GARAGE,
-    "io:DiscreteGarageOpenerIOComponent": DEVICE_CLASS_GARAGE,
-    "io:ExteriorVenetianBlindIOComponent": DEVICE_CLASS_BLIND,
-    "io:GarageOpenerIOComponent": DEVICE_CLASS_GARAGE,
-    "io:RollerShutterGenericIOComponent": DEVICE_CLASS_SHUTTER,
-    "io:RollerShutterUnoIOComponent": DEVICE_CLASS_SHUTTER,
-    "io:RollerShutterVeluxIOComponent": DEVICE_CLASS_SHUTTER,
-    "io:RollerShutterWithLowSpeedManagementIOComponent": DEVICE_CLASS_SHUTTER,
-    "io:VerticalExteriorAwningIOComponent": DEVICE_CLASS_AWNING,
-    "io:VerticalInteriorBlindVeluxIOComponent": DEVICE_CLASS_BLIND,
-    "io:WindowOpenerVeluxIOComponent": DEVICE_CLASS_WINDOW,
-    "rts:BlindRTSComponent": DEVICE_CLASS_BLIND,
-    "rts:CurtainRTSComponent": DEVICE_CLASS_CURTAIN,
-    "rts:DualCurtainRTSComponent": DEVICE_CLASS_CURTAIN,
-    "rts:ExteriorVenetianBlindRTSComponent": DEVICE_CLASS_BLIND,
-    "rts:RollerShutterRTSComponent": DEVICE_CLASS_SHUTTER,
-    "rts:VenetianBlindRTSComponent": DEVICE_CLASS_BLIND,
+    HORIZONTAL_AWNING: CoverDeviceClass.AWNING,
+    "io:AwningValanceIOComponent": CoverDeviceClass.AWNING,
+    "io:DiscreteGarageOpenerWithPartialPositionIOComponent": CoverDeviceClass.GARAGE,
+    "io:DiscreteGarageOpenerIOComponent": CoverDeviceClass.GARAGE,
+    "io:ExteriorVenetianBlindIOComponent": CoverDeviceClass.BLIND,
+    "io:GarageOpenerIOComponent": CoverDeviceClass.GARAGE,
+    "io:RollerShutterGenericIOComponent": CoverDeviceClass.SHUTTER,
+    "io:RollerShutterUnoIOComponent": CoverDeviceClass.SHUTTER,
+    "io:RollerShutterVeluxIOComponent": CoverDeviceClass.SHUTTER,
+    "io:RollerShutterWithLowSpeedManagementIOComponent": CoverDeviceClass.SHUTTER,
+    "io:VerticalExteriorAwningIOComponent": CoverDeviceClass.AWNING,
+    "io:VerticalInteriorBlindVeluxIOComponent": CoverDeviceClass.BLIND,
+    "io:WindowOpenerVeluxIOComponent": CoverDeviceClass.WINDOW,
+    "rts:BlindRTSComponent": CoverDeviceClass.BLIND,
+    "rts:CurtainRTSComponent": CoverDeviceClass.CURTAIN,
+    "rts:DualCurtainRTSComponent": CoverDeviceClass.CURTAIN,
+    "rts:ExteriorVenetianBlindRTSComponent": CoverDeviceClass.BLIND,
+    "rts:RollerShutterRTSComponent": CoverDeviceClass.SHUTTER,
+    "rts:VenetianBlindRTSComponent": CoverDeviceClass.BLIND,
 }
 
 

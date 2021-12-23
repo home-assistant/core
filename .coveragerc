@@ -55,6 +55,7 @@ omit =
     homeassistant/components/amcrest/*
     homeassistant/components/ampio/*
     homeassistant/components/android_ip_webcam/*
+    homeassistant/components/androidtv/__init__.py
     homeassistant/components/anel_pwrctrl/switch.py
     homeassistant/components/anthemav/media_player.py
     homeassistant/components/apcupsd/*
@@ -401,7 +402,7 @@ omit =
     homeassistant/components/goodwe/__init__.py
     homeassistant/components/goodwe/const.py
     homeassistant/components/goodwe/sensor.py
-    homeassistant/components/google/*
+    homeassistant/components/google/__init__.py
     homeassistant/components/google_cloud/tts.py
     homeassistant/components/google_maps/device_tracker.py
     homeassistant/components/google_pubsub/__init__.py
@@ -609,7 +610,6 @@ omit =
     homeassistant/components/lookin/climate.py
     homeassistant/components/lookin/media_player.py
     homeassistant/components/luci/device_tracker.py
-    homeassistant/components/luftdaten/__init__.py
     homeassistant/components/luftdaten/sensor.py
     homeassistant/components/lupusec/*
     homeassistant/components/lutron/*
@@ -937,6 +937,7 @@ omit =
     homeassistant/components/sense/sensor.py
     homeassistant/components/sensehat/light.py
     homeassistant/components/sensehat/sensor.py
+    homeassistant/components/sensibo/__init__.py
     homeassistant/components/sensibo/climate.py
     homeassistant/components/serial/sensor.py
     homeassistant/components/serial_pm/sensor.py

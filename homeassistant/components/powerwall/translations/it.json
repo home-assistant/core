@@ -8,7 +8,7 @@
             "cannot_connect": "Impossibile connettersi",
             "invalid_auth": "Autenticazione non valida",
             "unknown": "Errore imprevisto",
-            "wrong_version": "Il tuo powerwall utilizza una versione del software non supportata. Si prega di considerare l'aggiornamento o la segnalazione di questo problema in modo che possa essere risolto."
+            "wrong_version": "Il tuo powerwall utilizza una versione del software non supportata. Considera l'aggiornamento o la segnalazione di questo problema in modo che possa essere risolto."
         },
         "flow_title": "{ip_address}",
         "step": {

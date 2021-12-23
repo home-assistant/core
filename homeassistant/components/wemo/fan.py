@@ -25,7 +25,7 @@ from .const import (
     SERVICE_RESET_FILTER_LIFE,
     SERVICE_SET_HUMIDITY,
 )
-from .entity import WemoEntity
+from .entity import WemoBinaryStateEntity
 from .wemo_device import DeviceCoordinator
 
 SCAN_INTERVAL = timedelta(seconds=10)
@@ -37,10 +37,6 @@ ATTR_FAN_MODE = "fan_mode"
 ATTR_FILTER_LIFE = "filter_life"
 ATTR_FILTER_EXPIRED = "filter_expired"
 ATTR_WATER_LEVEL = "water_level"
-
-# The WEMO_ constants below come from pywemo itself
-WEMO_ON = 1
-WEMO_OFF = 0
 
 WEMO_HUMIDITY_45 = 0
 WEMO_HUMIDITY_50 = 1
@@ -102,7 +98,7 @@ async def async_setup_entry(
     )
 
 
-class WemoHumidifier(WemoEntity, FanEntity):
+class WemoHumidifier(WemoBinaryStateEntity, FanEntity):
     """Representation of a WeMo humidifier."""
 
     def __init__(self, coordinator: DeviceCoordinator) -> None:
@@ -151,11 +147,6 @@ class WemoHumidifier(WemoEntity, FanEntity):
         if self.wemo.fan_mode != WEMO_FAN_OFF:
             self._last_fan_on_mode = self.wemo.fan_mode
         super()._handle_coordinator_update()
-
-    @property
-    def is_on(self) -> bool:
-        """Return true if the state is on."""
-        return bool(self.wemo.get_state())
 
     def turn_on(
         self,

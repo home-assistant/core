@@ -17,7 +17,7 @@
                     "_m_to_q": "Citt\u00e0/provincia (M-Q)",
                     "_r_to_u": "Citt\u00e0/provincia (R-U)",
                     "_v_to_z": "Citt\u00e0/provincia (V-Z)",
-                    "corona_filter": "Rimuovere gli avvisi Corona",
+                    "corona_filter": "Rimuovi gli avvisi Corona",
                     "slots": "Numero massimo di avvisi per citt\u00e0/provincia"
                 },
                 "title": "Seleziona citt\u00e0/provincia"

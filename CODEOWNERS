@@ -63,8 +63,8 @@ tests/components/ambient_station/* @bachya
 homeassistant/components/amcrest/* @flacjacket
 homeassistant/components/analytics/* @home-assistant/core @ludeeus
 tests/components/analytics/* @home-assistant/core @ludeeus
-homeassistant/components/androidtv/* @JeffLIrion
-tests/components/androidtv/* @JeffLIrion
+homeassistant/components/androidtv/* @JeffLIrion @ollo69
+tests/components/androidtv/* @JeffLIrion @ollo69
 homeassistant/components/apache_kafka/* @bachya
 tests/components/apache_kafka/* @bachya
 homeassistant/components/api/* @home-assistant/core
@@ -427,6 +427,8 @@ homeassistant/components/influxdb/* @fabaff @mdegat01
 tests/components/influxdb/* @fabaff @mdegat01
 homeassistant/components/input_boolean/* @home-assistant/core
 tests/components/input_boolean/* @home-assistant/core
+homeassistant/components/input_button/* @home-assistant/core
+tests/components/input_button/* @home-assistant/core
 homeassistant/components/input_datetime/* @home-assistant/core
 tests/components/input_datetime/* @home-assistant/core
 homeassistant/components/input_number/* @home-assistant/core
@@ -478,8 +480,8 @@ homeassistant/components/knx/* @Julius2342 @farmio @marvin-w
 tests/components/knx/* @Julius2342 @farmio @marvin-w
 homeassistant/components/kodi/* @OnFreund @cgtobi
 tests/components/kodi/* @OnFreund @cgtobi
-homeassistant/components/konnected/* @heythisisnate @kit-klein
-tests/components/konnected/* @heythisisnate @kit-klein
+homeassistant/components/konnected/* @heythisisnate
+tests/components/konnected/* @heythisisnate
 homeassistant/components/kostal_plenticore/* @stegm
 tests/components/kostal_plenticore/* @stegm
 homeassistant/components/kraken/* @eifinger
@@ -717,7 +719,7 @@ homeassistant/components/ps4/* @ktnrg45
 tests/components/ps4/* @ktnrg45
 homeassistant/components/push/* @dgomes
 tests/components/push/* @dgomes
-homeassistant/components/pvoutput/* @fabaff
+homeassistant/components/pvoutput/* @fabaff @frenck
 homeassistant/components/pvpc_hourly_pricing/* @azogue
 tests/components/pvpc_hourly_pricing/* @azogue
 homeassistant/components/qbittorrent/* @geoffreylagaisse
@@ -748,7 +750,7 @@ tests/components/recorder/* @home-assistant/core
 homeassistant/components/rejseplanen/* @DarkFox
 homeassistant/components/renault/* @epenet
 tests/components/renault/* @epenet
-homeassistant/components/repetier/* @MTrab
+homeassistant/components/repetier/* @MTrab @ShadowBr0ther
 homeassistant/components/rflink/* @javicalle
 tests/components/rflink/* @javicalle
 homeassistant/components/rfxtrx/* @danielhiversen @elupus @RobBie1221
@@ -793,7 +795,8 @@ homeassistant/components/select/* @home-assistant/core
 tests/components/select/* @home-assistant/core
 homeassistant/components/sense/* @kbickar
 tests/components/sense/* @kbickar
-homeassistant/components/sensibo/* @andrey-git
+homeassistant/components/sensibo/* @andrey-git @gjohansson-ST
+tests/components/sensibo/* @andrey-git @gjohansson-ST
 homeassistant/components/sentry/* @dcramer @frenck
 tests/components/sentry/* @dcramer @frenck
 homeassistant/components/serial/* @fabaff
@@ -871,8 +874,8 @@ homeassistant/components/srp_energy/* @briglx
 tests/components/srp_energy/* @briglx
 homeassistant/components/starline/* @anonym-tsk
 tests/components/starline/* @anonym-tsk
-homeassistant/components/statistics/* @fabaff
-tests/components/statistics/* @fabaff
+homeassistant/components/statistics/* @fabaff @ThomDietrich
+tests/components/statistics/* @fabaff @ThomDietrich
 homeassistant/components/stiebel_eltron/* @fucm
 homeassistant/components/stookalert/* @fwestenberg @frenck
 tests/components/stookalert/* @fwestenberg @frenck

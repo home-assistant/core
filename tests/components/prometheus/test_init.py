@@ -13,12 +13,11 @@ from homeassistant.components.demo.light import DemoLight
 from homeassistant.components.demo.number import DemoNumber
 from homeassistant.components.demo.sensor import DemoSensor
 import homeassistant.components.prometheus as prometheus
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONTENT_TYPE_TEXT_PLAIN,
     DEGREE,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_TEMPERATURE,
     ENERGY_KILO_WATT_HOUR,
     EVENT_STATE_CHANGED,
     TEMP_FAHRENHEIT,
@@ -75,7 +74,13 @@ async def test_view_empty_namespace(hass, hass_client):
     client = await setup_prometheus_client(hass, hass_client, "")
 
     sensor2 = DemoSensor(
-        None, "Radio Energy", 14, DEVICE_CLASS_POWER, None, ENERGY_KILO_WATT_HOUR, None
+        None,
+        "Radio Energy",
+        14,
+        SensorDeviceClass.POWER,
+        None,
+        ENERGY_KILO_WATT_HOUR,
+        None,
     )
     sensor2.hass = hass
     sensor2.entity_id = "sensor.radio_energy"
@@ -149,7 +154,13 @@ async def test_sensor_unit(hass, hass_client):
     await sensor1.async_update_ha_state()
 
     sensor2 = DemoSensor(
-        None, "Radio Energy", 14, DEVICE_CLASS_POWER, None, ENERGY_KILO_WATT_HOUR, None
+        None,
+        "Radio Energy",
+        14,
+        SensorDeviceClass.POWER,
+        None,
+        ENERGY_KILO_WATT_HOUR,
+        None,
     )
     sensor2.hass = hass
     sensor2.entity_id = "sensor.radio_energy"
@@ -272,14 +283,26 @@ async def test_sensor_device_class(hass, hass_client):
     await hass.async_block_till_done()
 
     sensor1 = DemoSensor(
-        None, "Fahrenheit", 50, DEVICE_CLASS_TEMPERATURE, None, TEMP_FAHRENHEIT, None
+        None,
+        "Fahrenheit",
+        50,
+        SensorDeviceClass.TEMPERATURE,
+        None,
+        TEMP_FAHRENHEIT,
+        None,
     )
     sensor1.hass = hass
     sensor1.entity_id = "sensor.fahrenheit"
     await sensor1.async_update_ha_state()
 
     sensor2 = DemoSensor(
-        None, "Radio Energy", 14, DEVICE_CLASS_POWER, None, ENERGY_KILO_WATT_HOUR, None
+        None,
+        "Radio Energy",
+        14,
+        SensorDeviceClass.POWER,
+        None,
+        ENERGY_KILO_WATT_HOUR,
+        None,
     )
     sensor2.hass = hass
     sensor2.entity_id = "sensor.radio_energy"

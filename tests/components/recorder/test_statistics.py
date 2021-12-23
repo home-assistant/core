@@ -993,23 +993,37 @@ def test_delete_duplicates_non_identical(caplog, tmpdir):
     assert "Found duplicated" not in caplog.text
 
     isotime = dt_util.utcnow().isoformat()
-    backup_file_name = f"deleted_statistics.{isotime}.json"
+    backup_file_name = f".storage/deleted_statistics.{isotime}.json"
 
     with open(hass.config.path(backup_file_name)) as backup_file:
         backup = json.load(backup_file)
 
     assert backup == [
         {
-            "created": "2021-08-01T00:00:00",
-            "id": 4,
-            "last_reset": None,
-            "max": None,
-            "mean": None,
-            "metadata_id": 1,
-            "min": None,
-            "start": "2021-10-31T23:00:00",
-            "state": 3.0,
-            "sum": 5.0,
+            "duplicate": {
+                "created": "2021-08-01T00:00:00",
+                "id": 4,
+                "last_reset": None,
+                "max": None,
+                "mean": None,
+                "metadata_id": 1,
+                "min": None,
+                "start": "2021-10-31T23:00:00",
+                "state": 3.0,
+                "sum": 5.0,
+            },
+            "original": {
+                "created": "2021-08-01T00:00:00",
+                "id": 5,
+                "last_reset": None,
+                "max": None,
+                "mean": None,
+                "metadata_id": 1,
+                "min": None,
+                "start": "2021-10-31T23:00:00",
+                "state": 3.0,
+                "sum": 6.0,
+            },
         }
     ]
 
