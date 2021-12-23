@@ -43,8 +43,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await client.login()
 
             # Set first gateway as unique id
-            gateways = await client.get_gateways()
-            if gateways:
+            if gateways := await client.get_gateways():
                 gateway_id = gateways[0].id
                 await self.async_set_unique_id(gateway_id)
 
