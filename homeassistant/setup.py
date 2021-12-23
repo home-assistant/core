@@ -213,12 +213,12 @@ async def _async_setup_component(
         result = True
         try:
             if hasattr(component, "async_setup"):
-                task = component.async_setup(hass, processed_config)  # type: ignore
+                task = component.async_setup(hass, processed_config)
             elif hasattr(component, "setup"):
                 # This should not be replaced with hass.async_add_executor_job because
                 # we don't want to track this task in case it blocks startup.
                 task = hass.loop.run_in_executor(
-                    None, component.setup, hass, processed_config  # type: ignore
+                    None, component.setup, hass, processed_config
                 )
             elif not hasattr(component, "async_setup_entry"):
                 log_error("No setup or config entry setup function defined.")
@@ -249,7 +249,7 @@ async def _async_setup_component(
             log_error("Integration failed to initialize.")
             return False
         if result is not True:
-            log_error(
+            log_error(  # type: ignore
                 f"Integration {domain!r} did not return boolean if setup was "
                 "successful. Disabling component."
             )
