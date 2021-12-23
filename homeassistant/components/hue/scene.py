@@ -16,6 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .bridge import HueBridge
 from .const import DOMAIN
 from .v2.entity import HueBaseEntity
+from .v2.helpers import TransitionHelper
 
 
 async def async_setup_entry(
@@ -94,11 +95,9 @@ class HueSceneEntity(HueBaseEntity, SceneEntity):
 
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate Hue scene."""
-        transition = kwargs.get("transition")
-        if transition is not None:
-            # hue transition duration is in milliseconds and round to 100ms steps
-            transition = int(round(transition, 1) * 1000)
+        transition = TransitionHelper(kwargs.get(ATTR_TRANSITION))
         dynamic = kwargs.get("dynamic", self.is_dynamic)
+
         await self.bridge.async_request_call(
             self.controller.recall,
             self.resource.id,
