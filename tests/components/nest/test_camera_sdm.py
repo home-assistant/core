@@ -7,7 +7,7 @@ pubsub subscriber.
 
 import datetime
 from http import HTTPStatus
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import aiohttp
 from google_nest_sdm.device import Device
@@ -57,6 +57,7 @@ EVENT_SESSION_ID = "CjY5Y3VKaTZwR3o4Y19YbTVfMF..."
 # Tests can assert that image bytes came from an event or was decoded
 # from the live stream.
 IMAGE_BYTES_FROM_EVENT = b"test url image bytes"
+IMAGE_BYTES_FROM_FFMPEG = b"test ffmpeg image bytes"
 IMAGE_BYTES_FROM_STREAM = b"test stream image bytes"
 
 TEST_IMAGE_URL = "https://domain/sdm_event_snapshot/dGTZwR3o4Y1..."
@@ -146,7 +147,7 @@ async def async_get_image(hass, width=None, height=None):
     with patch(
         "homeassistant.components.ffmpeg.ImageFrame.get_image",
         autopatch=True,
-        return_value=IMAGE_BYTES_FROM_STREAM,
+        return_value=IMAGE_BYTES_FROM_FFMPEG,
     ):
         return await camera.async_get_image(
             hass, "camera.my_camera", width=width, height=height
@@ -209,7 +210,7 @@ async def test_camera_stream(hass, auth):
     assert stream_source == "rtsp://some/url?auth=g.0.streamingToken"
 
     image = await async_get_image(hass)
-    assert image.content == IMAGE_BYTES_FROM_STREAM
+    assert image.content == IMAGE_BYTES_FROM_FFMPEG
 
 
 async def test_camera_ws_stream(hass, auth, hass_ws_client):
@@ -223,8 +224,12 @@ async def test_camera_ws_stream(hass, auth, hass_ws_client):
     assert cam.state == STATE_STREAMING
     assert cam.attributes["frontend_stream_type"] == STREAM_TYPE_HLS
 
-    with patch("homeassistant.components.camera.create_stream") as mock_stream:
-        mock_stream().endpoint_url.return_value = "http://home.assistant/playlist.m3u8"
+    with patch(
+        "homeassistant.components.camera.create_stream", autospec=True
+    ) as mock_stream:
+        mock_stream.return_value.endpoint_url.return_value = (
+            "http://home.assistant/playlist.m3u8"
+        )
         client = await hass_ws_client(hass)
         await client.send_json(
             {
@@ -235,10 +240,17 @@ async def test_camera_ws_stream(hass, auth, hass_ws_client):
         )
         msg = await client.receive_json()
 
-    assert msg["id"] == 2
-    assert msg["type"] == TYPE_RESULT
-    assert msg["success"]
-    assert msg["result"]["url"] == "http://home.assistant/playlist.m3u8"
+        assert msg["id"] == 2
+        assert msg["type"] == TYPE_RESULT
+        assert msg["success"]
+        assert msg["result"]["url"] == "http://home.assistant/playlist.m3u8"
+
+        # Getting an image now pulls from the active stream instead of ffmpeg
+        mock_stream.return_value.get_image = AsyncMock()
+        mock_stream.return_value.get_image.return_value = IMAGE_BYTES_FROM_STREAM
+
+        image = await async_get_image(hass)
+        assert image.content == IMAGE_BYTES_FROM_STREAM
 
 
 async def test_camera_ws_stream_failure(hass, auth, hass_ws_client):
@@ -567,7 +579,7 @@ async def test_camera_image_from_event_not_supported(hass, auth):
     auth.responses = [make_stream_url_response()]
 
     image = await async_get_image(hass)
-    assert image.content == IMAGE_BYTES_FROM_STREAM
+    assert image.content == IMAGE_BYTES_FROM_FFMPEG
 
 
 async def test_generate_event_image_url_failure(hass, auth):
@@ -587,7 +599,7 @@ async def test_generate_event_image_url_failure(hass, auth):
     ]
 
     image = await async_get_image(hass)
-    assert image.content == IMAGE_BYTES_FROM_STREAM
+    assert image.content == IMAGE_BYTES_FROM_FFMPEG
 
 
 async def test_fetch_event_image_failure(hass, auth):
@@ -609,7 +621,7 @@ async def test_fetch_event_image_failure(hass, auth):
     ]
 
     image = await async_get_image(hass)
-    assert image.content == IMAGE_BYTES_FROM_STREAM
+    assert image.content == IMAGE_BYTES_FROM_FFMPEG
 
 
 async def test_event_image_expired(hass, auth):
@@ -627,7 +639,7 @@ async def test_event_image_expired(hass, auth):
     auth.responses = [make_stream_url_response()]
 
     image = await async_get_image(hass)
-    assert image.content == IMAGE_BYTES_FROM_STREAM
+    assert image.content == IMAGE_BYTES_FROM_FFMPEG
 
 
 async def test_multiple_event_images(hass, auth):
@@ -847,7 +859,7 @@ async def test_camera_multiple_streams(hass, auth, hass_ws_client):
     assert stream_source == "rtsp://some/url?auth=g.0.streamingToken"
 
     image = await async_get_image(hass)
-    assert image.content == IMAGE_BYTES_FROM_STREAM
+    assert image.content == IMAGE_BYTES_FROM_FFMPEG
 
     # WebRTC stream
     client = await hass_ws_client(hass)

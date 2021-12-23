@@ -230,6 +230,12 @@ class NestCamera(Camera):
                     PLACEHOLDER.read_bytes
                 )
             return self._placeholder_image
+        # Use the thumbnail in the active rtsp stream if present
+        if self.stream:
+            content = await self.stream.get_image(width, height)
+            if content:
+                return content
+        # Fetch a single frame initiating a new stream session
         return await async_get_image(self.hass, stream_url, output_format=IMAGE_JPEG)
 
     async def async_handle_web_rtc_offer(self, offer_sdp: str) -> str | None:
