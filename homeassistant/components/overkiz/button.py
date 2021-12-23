@@ -1,11 +1,13 @@
 """Support for Overkiz (virtual) buttons."""
+from __future__ import annotations
+
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.components.overkiz import HomeAssistantOverkizData
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import HomeAssistantOverkizData
 from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES
 from .entity import OverkizDescriptiveEntity
 
