@@ -172,16 +172,6 @@ _PLATFORM_SCHEMA_BASE = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
 PLATFORM_SCHEMA = vol.All(
-    # CONF_SPEED_COMMAND_TOPIC, CONF_SPEED_LIST, CONF_SPEED_STATE_TOPIC, CONF_SPEED_VALUE_TEMPLATE and
-    # Speeds SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH SPEED_OFF,
-    # are deprecated, support will be removed with release 2021.9
-    cv.removed(CONF_PAYLOAD_HIGH_SPEED),
-    cv.removed(CONF_PAYLOAD_LOW_SPEED),
-    cv.removed(CONF_PAYLOAD_MEDIUM_SPEED),
-    cv.removed(CONF_SPEED_COMMAND_TOPIC),
-    cv.removed(CONF_SPEED_LIST),
-    cv.removed(CONF_SPEED_STATE_TOPIC),
-    cv.removed(CONF_SPEED_VALUE_TEMPLATE),
     _PLATFORM_SCHEMA_BASE,
     valid_speed_range_configuration,
     valid_preset_mode_configuration,
@@ -190,7 +180,7 @@ PLATFORM_SCHEMA = vol.All(
 DISCOVERY_SCHEMA = vol.All(
     # CONF_SPEED_COMMAND_TOPIC, CONF_SPEED_LIST, CONF_SPEED_STATE_TOPIC, CONF_SPEED_VALUE_TEMPLATE and
     # Speeds SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH SPEED_OFF,
-    # are deprecated, support will be removed with release 2021.9
+    # are no longer supported, support was removed in release 2021.9
     cv.removed(CONF_PAYLOAD_HIGH_SPEED),
     cv.removed(CONF_PAYLOAD_LOW_SPEED),
     cv.removed(CONF_PAYLOAD_MEDIUM_SPEED),
