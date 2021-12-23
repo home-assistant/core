@@ -7,8 +7,6 @@ import logging
 from typing import Any
 
 from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
-from homeassistant.components.zha.core.registries import ZHA_ENTITIES
-from homeassistant.components.zha.core.typing import ChannelType, ZhaDeviceType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ENTITY_CATEGORY_DIAGNOSTIC, Platform
 from homeassistant.core import HomeAssistant
@@ -17,6 +15,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .core import discovery
 from .core.const import CHANNEL_IDENTIFY, DATA_ZHA, SIGNAL_ADD_ENTITIES
+from .core.registries import ZHA_ENTITIES
+from .core.typing import ChannelType, ZhaDeviceType
 from .entity import ZhaEntity
 
 MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, Platform.BUTTON)
