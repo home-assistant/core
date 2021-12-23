@@ -5,6 +5,7 @@ from unittest.mock import patch
 from aiounifi.controller import MESSAGE_CLIENT_REMOVED, MESSAGE_EVENT
 
 from homeassistant import config_entries, core
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.unifi.const import (
     CONF_BLOCK_CLIENT,
     CONF_DPI_RESTRICTIONS,
@@ -416,7 +417,7 @@ async def test_switches(hass, aioclient_mock):
     )
 
     await hass.services.async_call(
-        Platform.SWITCH,
+        SWITCH_DOMAIN,
         "turn_off",
         {"entity_id": "switch.block_client_1"},
         blocking=True,
@@ -428,7 +429,7 @@ async def test_switches(hass, aioclient_mock):
     }
 
     await hass.services.async_call(
-        Platform.SWITCH,
+        SWITCH_DOMAIN,
         "turn_on",
         {"entity_id": "switch.block_client_1"},
         blocking=True,
@@ -446,7 +447,7 @@ async def test_switches(hass, aioclient_mock):
     )
 
     await hass.services.async_call(
-        Platform.SWITCH,
+        SWITCH_DOMAIN,
         "turn_off",
         {"entity_id": "switch.block_media_streaming"},
         blocking=True,
@@ -455,7 +456,7 @@ async def test_switches(hass, aioclient_mock):
     assert aioclient_mock.mock_calls[12][2] == {"enabled": False}
 
     await hass.services.async_call(
-        Platform.SWITCH,
+        SWITCH_DOMAIN,
         "turn_on",
         {"entity_id": "switch.block_media_streaming"},
         blocking=True,
@@ -565,7 +566,7 @@ async def test_block_switches(hass, aioclient_mock, mock_unifi_websocket):
     )
 
     await hass.services.async_call(
-        Platform.SWITCH,
+        SWITCH_DOMAIN,
         "turn_off",
         {"entity_id": "switch.block_client_1"},
         blocking=True,
@@ -577,7 +578,7 @@ async def test_block_switches(hass, aioclient_mock, mock_unifi_websocket):
     }
 
     await hass.services.async_call(
-        Platform.SWITCH,
+        SWITCH_DOMAIN,
         "turn_on",
         {"entity_id": "switch.block_client_1"},
         blocking=True,
@@ -764,7 +765,7 @@ async def test_new_client_discovered_on_poe_control(
     )
 
     await hass.services.async_call(
-        Platform.SWITCH, "turn_off", {"entity_id": "switch.poe_client_1"}, blocking=True
+        SWITCH_DOMAIN, "turn_off", {"entity_id": "switch.poe_client_1"}, blocking=True
     )
     assert len(hass.states.async_entity_ids(Platform.SWITCH)) == 2
     assert aioclient_mock.call_count == 11
@@ -773,7 +774,7 @@ async def test_new_client_discovered_on_poe_control(
     }
 
     await hass.services.async_call(
-        Platform.SWITCH, "turn_on", {"entity_id": "switch.poe_client_1"}, blocking=True
+        SWITCH_DOMAIN, "turn_on", {"entity_id": "switch.poe_client_1"}, blocking=True
     )
     assert aioclient_mock.call_count == 12
     assert aioclient_mock.mock_calls[11][2] == {
