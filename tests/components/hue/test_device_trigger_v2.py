@@ -26,7 +26,7 @@ async def test_hue_event(hass, mock_bridge_v2, v2_resources_test_data):
 
     # Emit button update event
     btn_event = {
-        "button": {"last_event": "short_release"},
+        "button": {"last_event": "initial_press"},
         "id": "c658d3d8-a013-4b81-8ac6-78b248537e70",
         "metadata": {"control_id": 1},
         "type": "button",
