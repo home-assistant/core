@@ -320,9 +320,7 @@ async def test_update_error(hass, google_service):
     assert state.state == "off"
 
 
-async def test_calendars_api(
-    hass, hass_client, google_service
-):  # mock_next_event, hass_client):
+async def test_calendars_api(hass, hass_client, google_service):
     """Test the Rest API returns the calendar."""
     assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
     await hass.async_block_till_done()
