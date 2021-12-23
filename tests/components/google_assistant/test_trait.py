@@ -800,7 +800,7 @@ async def test_scene_scene(hass):
     assert helpers.get_google_type(scene.DOMAIN, None) is not None
     assert trait.SceneTrait.supported(scene.DOMAIN, 0, None, None)
 
-    trt = trait.SceneTrait(hass, State("scene.bla", scene.STATE), BASIC_CONFIG)
+    trt = trait.SceneTrait(hass, State("scene.bla", STATE_UNKNOWN), BASIC_CONFIG)
     assert trt.sync_attributes() == {}
     assert trt.query_attributes() == {}
     assert trt.can_execute(trait.COMMAND_ACTIVATE_SCENE, {})
