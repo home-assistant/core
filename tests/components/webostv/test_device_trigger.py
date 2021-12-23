@@ -1,5 +1,5 @@
 """The tests for WebOS TV device triggers."""
-import homeassistant.components.automation as automation
+from homeassistant.components import automation
 from homeassistant.components.webostv.const import DOMAIN
 from homeassistant.helpers.device_registry import async_get as get_dev_reg
 from homeassistant.setup import async_setup_component

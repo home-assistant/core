@@ -241,9 +241,6 @@ aiopvapi==1.6.19
 # homeassistant.components.pvpc_hourly_pricing
 aiopvpc==2.2.4
 
-# homeassistant.components.webostv
-aiopylgtv==0.4.0
-
 # homeassistant.components.recollect_waste
 aiorecollect==1.0.8
 
@@ -449,6 +446,9 @@ brunt==1.1.0
 
 # homeassistant.components.bsblan
 bsblan==0.4.0
+
+# homeassistant.components.webostv
+bscpylgtv==0.2.8
 
 # homeassistant.components.bluetooth_tracker
 bt_proximity==0.2.1

@@ -4,7 +4,7 @@ from datetime import timedelta
 from functools import wraps
 import logging
 
-from aiopylgtv import PyLGTVPairException
+from bscpylgtv import PyLGTVPairException, WebOsClient
 
 from homeassistant import util
 from homeassistant.components.media_player import (
@@ -145,7 +145,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
             }
             await getattr(self, data["method"])(**params)
 
-    async def async_handle_state_update(self):
+    async def async_handle_state_update(self, _client: WebOsClient):
         """Update state from WebOsClient."""
         self.update_sources()
         self.async_write_ha_state()

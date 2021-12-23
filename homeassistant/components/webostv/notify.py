@@ -1,7 +1,7 @@
 """Support for LG WebOS TV notification service."""
 import logging
 
-from aiopylgtv import PyLGTVPairException
+from bscpylgtv import PyLGTVPairException
 
 from homeassistant.components.notify import ATTR_DATA, BaseNotificationService
 from homeassistant.const import CONF_ICON, CONF_NAME

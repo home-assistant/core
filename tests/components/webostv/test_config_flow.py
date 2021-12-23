@@ -1,7 +1,7 @@
 """Test the WebOS Tv config flow."""
 from unittest.mock import Mock, patch
 
-from aiopylgtv import PyLGTVPairException
+from bscpylgtv import PyLGTVPairException
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp

@@ -6,7 +6,7 @@ from contextlib import suppress
 import logging
 from typing import Any
 
-from aiopylgtv import PyLGTVPairException, WebOsClient
+from bscpylgtv import PyLGTVPairException, WebOsClient
 import voluptuous as vol
 
 from homeassistant.components import notify as hass_notify

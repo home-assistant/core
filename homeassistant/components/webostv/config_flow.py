@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from urllib.parse import urlparse
 
-from aiopylgtv import PyLGTVPairException
+from bscpylgtv import PyLGTVPairException
 import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
