@@ -8,6 +8,7 @@ from aiohue.v2.controllers.events import EventType
 from aiohue.v2.controllers.scenes import ScenesController
 from aiohue.v2.models.scene import Scene as HueScene
 
+from homeassistant.components.light import ATTR_TRANSITION
 from homeassistant.components.scene import Scene as SceneEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -16,6 +17,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .bridge import HueBridge
 from .const import DOMAIN
 from .v2.entity import HueBaseEntity
+from .v2.helpers import normalize_hue_transition
 
 
 async def async_setup_entry(
@@ -94,11 +96,9 @@ class HueSceneEntity(HueBaseEntity, SceneEntity):
 
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate Hue scene."""
-        transition = kwargs.get("transition")
-        if transition is not None:
-            # hue transition duration is in milliseconds
-            transition = int(transition * 1000)
+        transition = normalize_hue_transition(kwargs.get(ATTR_TRANSITION))
         dynamic = kwargs.get("dynamic", self.is_dynamic)
+
         await self.bridge.async_request_call(
             self.controller.recall,
             self.resource.id,
