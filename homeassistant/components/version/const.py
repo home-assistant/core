@@ -7,12 +7,11 @@ from typing import Any, Final
 
 from pyhaversion.consts import HaVersionChannel, HaVersionSource
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, Platform
 
 DOMAIN: Final = "version"
 LOGGER: Final[Logger] = getLogger(__package__)
-PLATFORMS: Final[list[str]] = [SENSOR_DOMAIN]
+PLATFORMS: Final[list[Platform]] = [Platform.SENSOR]
 UPDATE_COORDINATOR_UPDATE_INTERVAL: Final[timedelta] = timedelta(minutes=5)
 
 ENTRY_TYPE_SERVICE: Final = "service"
@@ -102,6 +101,7 @@ VALID_SOURCES: Final[list[str]] = HA_VERSION_SOURCES + [
 
 VALID_IMAGES: Final = [
     "default",
+    "generic-x86-64",
     "intel-nuc",
     "odroid-c2",
     "odroid-n2",

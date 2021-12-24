@@ -1,0 +1,46 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd",
+            "invalid_unique_id": "Onmogelijk om een geldige unieke id voor het apparaat te bepalen"
+        },
+        "error": {
+            "adbkey_not_file": "ADB key file niet gevonden",
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_host": "Ongeldige hostnaam of IP-adres",
+            "key_and_server": "Geef alleen ADB-sleutel of ADB-server op"
+        }
+    },
+    "options": {
+        "step": {
+            "apps": {
+                "data": {
+                    "app_id": "Applicatie ID",
+                    "app_name": "Applicatienaam"
+                },
+                "description": "Configureer applicatie id {app_id}",
+                "title": "Configureer Android TV Apps"
+            },
+            "init": {
+                "data": {
+                    "apps": "Configureer applicaties lijst",
+                    "exclude_unnamed_apps": "App met onbekende naam uitsluiten",
+                    "get_sources": "Of de actieve apps wel of niet moeten worden opgehaald als de lijst met bronnen",
+                    "screencap": "Bepaalt of albumhoezen moeten worden opgehaald van wat op het scherm wordt weergegeven",
+                    "state_detection_rules": "Regels voor statusdetectie van Android TV configureren",
+                    "turn_off_command": "ADB shell commando om standaard turn_off commando te overschrijven",
+                    "turn_on_command": "ADB shell commando om standaard turn_on commando te overschrijven"
+                },
+                "title": "Android TV-opties"
+            },
+            "rules": {
+                "data": {
+                    "rule_delete": "Vink aan om deze regel te verwijderen",
+                    "rule_id": "Application ID"
+                },
+                "description": "Detectieregel configureren voor applicatie-ID {rule_id}",
+                "title": "Regels voor statusdetectie van Android TV configureren"
+            }
+        }
+    }
+}

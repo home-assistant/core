@@ -16,6 +16,8 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
+    ELECTRIC_CURRENT_AMPERE,
+    ENERGY_KILO_WATT_HOUR,
     LIGHT_LUX,
     PERCENTAGE,
     POWER_WATT,
@@ -37,6 +39,34 @@ class HomeKitSensorEntityDescription(SensorEntityDescription):
 
 
 SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
+    CharacteristicsTypes.Vendor.CONNECTSENSE_ENERGY_WATT: HomeKitSensorEntityDescription(
+        key=CharacteristicsTypes.Vendor.CONNECTSENSE_ENERGY_WATT,
+        name="Real Time Energy",
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=POWER_WATT,
+    ),
+    CharacteristicsTypes.Vendor.CONNECTSENSE_ENERGY_AMPS: HomeKitSensorEntityDescription(
+        key=CharacteristicsTypes.Vendor.CONNECTSENSE_ENERGY_AMPS,
+        name="Real Time Current",
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+    ),
+    CharacteristicsTypes.Vendor.CONNECTSENSE_ENERGY_AMPS_20: HomeKitSensorEntityDescription(
+        key=CharacteristicsTypes.Vendor.CONNECTSENSE_ENERGY_AMPS_20,
+        name="Real Time Current",
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+    ),
+    CharacteristicsTypes.Vendor.CONNECTSENSE_ENERGY_KW_HOUR: HomeKitSensorEntityDescription(
+        key=CharacteristicsTypes.Vendor.CONNECTSENSE_ENERGY_KW_HOUR,
+        name="Energy kWh",
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+    ),
     CharacteristicsTypes.Vendor.EVE_ENERGY_WATT: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.Vendor.EVE_ENERGY_WATT,
         name="Real Time Energy",

@@ -1066,6 +1066,9 @@ pyotgw==1.1b1
 # homeassistant.components.otp
 pyotp==2.6.0
 
+# homeassistant.components.overkiz
+pyoverkiz==1.0.0
+
 # homeassistant.components.openweathermap
 pyowm==3.2.0
 
@@ -1310,7 +1313,7 @@ smarthab==0.21
 smhi-pkg==1.0.15
 
 # homeassistant.components.sonos
-soco==0.25.1
+soco==0.25.2
 
 # homeassistant.components.solaredge
 solaredge==0.0.2

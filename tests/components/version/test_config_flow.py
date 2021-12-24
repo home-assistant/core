@@ -2,7 +2,6 @@
 from unittest.mock import patch
 
 from pyhaversion.consts import HaVersionChannel, HaVersionSource
-from pytest import LogCaptureFixture
 
 from homeassistant import config_entries, setup
 from homeassistant.components.version.const import (
@@ -210,7 +209,7 @@ async def test_advanced_form_supervisor(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_import_exsisting(hass: HomeAssistant, caplog: LogCaptureFixture) -> None:
+async def test_import_existing(hass: HomeAssistant) -> None:
     """Test importing existing configuration."""
     with patch(
         "homeassistant.components.version.async_setup_entry",
@@ -234,8 +233,4 @@ async def test_import_exsisting(hass: HomeAssistant, caplog: LogCaptureFixture) 
 
         assert result["type"] == RESULT_TYPE_ABORT
 
-        assert (
-            "This YAML configuration has already been imported. Please remove it"
-            in caplog.text
-        )
         assert len(mock_setup_entry.mock_calls) == 1

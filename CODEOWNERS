@@ -668,6 +668,8 @@ homeassistant/components/opnsense/* @mtreinish
 tests/components/opnsense/* @mtreinish
 homeassistant/components/orangepi_gpio/* @pascallj
 homeassistant/components/oru/* @bvlaicu
+homeassistant/components/overkiz/* @imicknl @vlebourl @tetienne
+tests/components/overkiz/* @imicknl @vlebourl @tetienne
 homeassistant/components/ovo_energy/* @timmo001
 tests/components/ovo_energy/* @timmo001
 homeassistant/components/ozw/* @cgarwood @marcelveldt @MartinHjelmare

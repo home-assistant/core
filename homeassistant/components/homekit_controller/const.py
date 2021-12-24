@@ -47,6 +47,10 @@ HOMEKIT_ACCESSORY_DISPATCH = {
 }
 
 CHARACTERISTIC_PLATFORMS = {
+    CharacteristicsTypes.Vendor.CONNECTSENSE_ENERGY_WATT: "sensor",
+    CharacteristicsTypes.Vendor.CONNECTSENSE_ENERGY_AMPS: "sensor",
+    CharacteristicsTypes.Vendor.CONNECTSENSE_ENERGY_AMPS_20: "sensor",
+    CharacteristicsTypes.Vendor.CONNECTSENSE_ENERGY_KW_HOUR: "sensor",
     CharacteristicsTypes.Vendor.AQARA_GATEWAY_VOLUME: "number",
     CharacteristicsTypes.Vendor.AQARA_E1_GATEWAY_VOLUME: "number",
     CharacteristicsTypes.Vendor.AQARA_PAIRING_MODE: "switch",
