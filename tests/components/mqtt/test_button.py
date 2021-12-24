@@ -321,3 +321,35 @@ async def test_valid_device_class(hass, mqtt_mock):
     assert state.attributes["device_class"] == button.ButtonDeviceClass.RESTART
     state = hass.states.get("button.test_3")
     assert "device_class" not in state.attributes
+
+
+async def test_sending_mqtt_commands_with_different_encoding(hass, mqtt_mock):
+    """Test the sending MQTT commands with different encoding."""
+    config = copy.deepcopy(DEFAULT_CONFIG[button.DOMAIN])
+    domain = button.DOMAIN
+    service = button.SERVICE_PRESS
+    data = {ATTR_ENTITY_ID: "button.test1"}
+    topic = "command_topic"
+    payload = "PRESS"
+
+    config[topic] = "cmd/test1"
+    config["name"] = "test1"
+    config["encoding"] = "utf-16"
+    assert await async_setup_component(
+        hass,
+        domain,
+        {button.DOMAIN: config},
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        domain,
+        service,
+        data,
+        blocking=True,
+    )
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        "cmd/test1", payload.encode("utf-16"), 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()

@@ -15,7 +15,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import PLATFORMS
 from .. import mqtt
-from .const import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, DOMAIN
+from .const import CONF_COMMAND_TOPIC, CONF_ENCODING, CONF_QOS, CONF_RETAIN, DOMAIN
 from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
 
 CONF_PAYLOAD_PRESS = "payload_press"
@@ -91,4 +91,5 @@ class MqttButton(MqttEntity, ButtonEntity):
             self._config[CONF_PAYLOAD_PRESS],
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )

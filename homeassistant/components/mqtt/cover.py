@@ -38,7 +38,14 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import PLATFORMS, MqttCommandTemplate, subscription
 from .. import mqtt
-from .const import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC, DOMAIN
+from .const import (
+    CONF_COMMAND_TOPIC,
+    CONF_ENCODING,
+    CONF_QOS,
+    CONF_RETAIN,
+    CONF_STATE_TOPIC,
+    DOMAIN,
+)
 from .debug_info import log_messages
 from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
 
@@ -536,6 +543,7 @@ class MqttCover(MqttEntity, CoverEntity):
             self._config[CONF_PAYLOAD_OPEN],
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
         if self._optimistic:
             # Optimistically assume that cover has changed state.
@@ -557,6 +565,7 @@ class MqttCover(MqttEntity, CoverEntity):
             self._config[CONF_PAYLOAD_CLOSE],
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
         if self._optimistic:
             # Optimistically assume that cover has changed state.
@@ -578,6 +587,7 @@ class MqttCover(MqttEntity, CoverEntity):
             self._config[CONF_PAYLOAD_STOP],
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
 
     async def async_open_cover_tilt(self, **kwargs):
@@ -588,6 +598,7 @@ class MqttCover(MqttEntity, CoverEntity):
             self._config[CONF_TILT_OPEN_POSITION],
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
         if self._tilt_optimistic:
             self._tilt_value = self.find_percentage_in_range(
@@ -603,6 +614,7 @@ class MqttCover(MqttEntity, CoverEntity):
             self._config[CONF_TILT_CLOSED_POSITION],
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
         if self._tilt_optimistic:
             self._tilt_value = self.find_percentage_in_range(
@@ -632,6 +644,7 @@ class MqttCover(MqttEntity, CoverEntity):
             tilt,
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
         if self._tilt_optimistic:
             _LOGGER.debug("Set tilt value optimistic")
@@ -659,6 +672,7 @@ class MqttCover(MqttEntity, CoverEntity):
             position,
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
+            self._config[CONF_ENCODING],
         )
         if self._optimistic:
             self._state = (
