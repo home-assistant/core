@@ -31,7 +31,7 @@ async def async_setup_entry(
     """Set up the Acmeda Rollers from a config entry."""
     hub = hass.data[DOMAIN][config_entry.entry_id]
 
-    current: set[str] = set()
+    current: set[int] = set()
 
     @callback
     def async_add_acmeda_covers():

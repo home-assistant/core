@@ -14,7 +14,7 @@ def async_add_acmeda_entities(
     hass: HomeAssistant,
     entity_class: type,
     config_entry: ConfigEntry,
-    current: set[str],
+    current: set[int],
     async_add_entities: AddEntitiesCallback,
 ):
     """Add any new entities."""
