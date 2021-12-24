@@ -1,7 +1,6 @@
 """Support for IP Cameras."""
 from __future__ import annotations
 
-import asyncio
 import logging
 
 import httpx
@@ -120,14 +119,6 @@ class GenericCamera(Camera):
     def frame_interval(self):
         """Return the interval between frames of the mjpeg stream."""
         return self._frame_interval
-
-    def camera_image(
-        self, width: int | None = None, height: int | None = None
-    ) -> bytes | None:
-        """Return bytes of camera image."""
-        return asyncio.run_coroutine_threadsafe(
-            self.async_camera_image(), self.hass.loop
-        ).result()
 
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
