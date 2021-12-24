@@ -237,7 +237,7 @@ async def test_light(hass, hk_driver):
 
     hass.states.async_set(entity_id, "0")
     await hass.async_block_till_done()
-    assert acc.char_light.value == 0
+    assert acc.char_light.value == 0.0001
 
 
 async def test_binary(hass, hk_driver):
