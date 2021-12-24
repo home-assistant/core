@@ -13,9 +13,10 @@ from homeassistant.components.fan import (
     FanEntity,
     NotValidPresetModeError,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import ValloxDataUpdateCoordinator
@@ -61,16 +62,10 @@ def _convert_fan_speed_value(value: StateType) -> int | None:
     return None
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the fan device."""
-    if discovery_info is None:
-        return
-
     client = hass.data[DOMAIN]["client"]
     client.set_settable_address(METRIC_KEY_MODE, int)
 

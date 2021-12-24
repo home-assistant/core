@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "Device is already configured",
+            "cannot_connect": "Failed to connect to Vallox",
+            "invalid_host": "Invalid host",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Name"
+                }
+            }
+        }
+    }
+}

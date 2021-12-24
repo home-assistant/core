@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+import logging
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -10,6 +11,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
@@ -17,7 +19,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
@@ -29,6 +31,8 @@ from .const import (
     VALLOX_CELL_STATE_TO_STR,
     VALLOX_PROFILE_TO_STR_REPORTABLE,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class ValloxSensor(CoordinatorEntity, SensorEntity):
@@ -219,16 +223,10 @@ SENSORS: tuple[ValloxSensorEntityDescription, ...] = (
 )
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the sensors."""
-    if discovery_info is None:
-        return
-
     name = hass.data[DOMAIN]["name"]
     coordinator = hass.data[DOMAIN]["coordinator"]
 

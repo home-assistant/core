@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/vallox",
   "requirements": ["vallox-websocket-api==2.8.1"],
   "codeowners": ["@andre-richter"],
+  "config_flow": true,
   "iot_class": "local_polling"
 }
