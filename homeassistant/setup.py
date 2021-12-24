@@ -7,6 +7,7 @@ import contextlib
 import logging.handlers
 from timeit import default_timer as timer
 from types import ModuleType
+from typing import Any
 
 from . import config as conf_util, core, loader, requirements
 from .config import async_notify_setup_error
@@ -210,7 +211,7 @@ async def _async_setup_component(
             )
 
         task = None
-        result = True
+        result: Any | bool = True
         try:
             if hasattr(component, "async_setup"):
                 task = component.async_setup(hass, processed_config)
@@ -249,7 +250,7 @@ async def _async_setup_component(
             log_error("Integration failed to initialize.")
             return False
         if result is not True:
-            log_error(  # type: ignore
+            log_error(
                 f"Integration {domain!r} did not return boolean if setup was "
                 "successful. Disabling component."
             )
