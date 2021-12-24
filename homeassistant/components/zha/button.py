@@ -89,11 +89,10 @@ class ZHAIdentifyButton(ZHAButton):
 
         Return entity if it is a supported configuration, otherwise return None
         """
-        platform_restrictions = ZHA_ENTITIES.single_device_matches[Platform.BUTTON]
-        device_restrictions = platform_restrictions[zha_device.ieee]
-        if CHANNEL_IDENTIFY in device_restrictions:
+        if ZHA_ENTITIES.prevent_entity_creation(
+            Platform.BUTTON, zha_device.ieee, CHANNEL_IDENTIFY
+        ):
             return None
-        device_restrictions.append(CHANNEL_IDENTIFY)
         return cls(unique_id, zha_device, channels, **kwargs)
 
     _attr_device_class: ButtonDeviceClass = ButtonDeviceClass.UPDATE
