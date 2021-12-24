@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_ICON,
     STATE_UNKNOWN,
 )
+from homeassistant.helpers.entity_registry import async_get
 
 from tests.common import assert_setup_component, async_mock_service
 
@@ -122,6 +123,9 @@ async def test_all_optional_config(hass, calls):
         },
         _TEST_OPTIONS_BUTTON,
     )
+
+    er = async_get(hass)
+    assert er.async_get_entity_id("button", "template", "test-test")
 
 
 async def test_unique_id(hass, calls):
