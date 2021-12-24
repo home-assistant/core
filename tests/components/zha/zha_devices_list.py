@@ -39,12 +39,24 @@ DEVICES = [
         DEV_SIG_EVT_CHANNELS: ["1:0x0006", "1:0x0008"],
         DEV_SIG_ENTITIES: [
             "button.adurolight_adurolight_ncc_77665544_identify",
+            "sensor.adurolight_adurolight_ncc_77665544_basic_rssi",
+            "sensor.adurolight_adurolight_ncc_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
                 DEV_SIG_ENT_MAP_ID: "button.adurolight_adurolight_ncc_77665544_identify",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.adurolight_adurolight_ncc_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.adurolight_adurolight_ncc_77665544_basic_lqi",
             },
         },
     },
@@ -68,6 +80,8 @@ DEVICES = [
             "sensor.bosch_isw_zpr1_wp13_77665544_power",
             "sensor.bosch_isw_zpr1_wp13_77665544_temperature",
             "binary_sensor.bosch_isw_zpr1_wp13_77665544_ias_zone",
+            "sensor.bosch_isw_zpr1_wp13_77665544_basic_rssi",
+            "sensor.bosch_isw_zpr1_wp13_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("binary_sensor", "00:11:22:33:44:55:66:77-5-1280"): {
@@ -90,6 +104,16 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "Temperature",
                 DEV_SIG_ENT_MAP_ID: "sensor.bosch_isw_zpr1_wp13_77665544_temperature",
             },
+            ("sensor", "00:11:22:33:44:55:66:77-5-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.bosch_isw_zpr1_wp13_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-5-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.bosch_isw_zpr1_wp13_77665544_basic_lqi",
+            },
         },
     },
     {
@@ -110,6 +134,8 @@ DEVICES = [
         DEV_SIG_ENTITIES: [
             "button.centralite_3130_77665544_identify",
             "sensor.centralite_3130_77665544_power",
+            "sensor.centralite_3130_77665544_basic_rssi",
+            "sensor.centralite_3130_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
@@ -121,6 +147,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["power"],
                 DEV_SIG_ENT_MAP_CLASS: "Battery",
                 DEV_SIG_ENT_MAP_ID: "sensor.centralite_3130_77665544_power",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.centralite_3130_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.centralite_3130_77665544_basic_lqi",
             },
         },
     },
@@ -148,6 +184,8 @@ DEVICES = [
             "sensor.centralite_3210_l_77665544_smartenergy_metering",
             "sensor.centralite_3210_l_77665544_smartenergy_metering_summation_delivered",
             "switch.centralite_3210_l_77665544_on_off",
+            "sensor.centralite_3210_l_77665544_basic_rssi",
+            "sensor.centralite_3210_l_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("switch", "00:11:22:33:44:55:66:77-1"): {
@@ -190,6 +228,16 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
                 DEV_SIG_ENT_MAP_ID: "sensor.centralite_3210_l_77665544_smartenergy_metering_summation_delivered",
             },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.centralite_3210_l_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.centralite_3210_l_77665544_basic_lqi",
+            },
         },
     },
     {
@@ -212,6 +260,8 @@ DEVICES = [
             "sensor.centralite_3310_s_77665544_power",
             "sensor.centralite_3310_s_77665544_temperature",
             "sensor.centralite_3310_s_77665544_manufacturer_specific",
+            "sensor.centralite_3310_s_77665544_basic_rssi",
+            "sensor.centralite_3310_s_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
@@ -228,6 +278,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["temperature"],
                 DEV_SIG_ENT_MAP_CLASS: "Temperature",
                 DEV_SIG_ENT_MAP_ID: "sensor.centralite_3310_s_77665544_temperature",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.centralite_3310_s_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.centralite_3310_s_77665544_basic_lqi",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-64581"): {
                 DEV_SIG_CHANNELS: ["manufacturer_specific"],
@@ -263,6 +323,8 @@ DEVICES = [
             "sensor.centralite_3315_s_77665544_power",
             "sensor.centralite_3315_s_77665544_temperature",
             "binary_sensor.centralite_3315_s_77665544_ias_zone",
+            "sensor.centralite_3315_s_77665544_basic_rssi",
+            "sensor.centralite_3315_s_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
@@ -284,6 +346,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["temperature"],
                 DEV_SIG_ENT_MAP_CLASS: "Temperature",
                 DEV_SIG_ENT_MAP_ID: "sensor.centralite_3315_s_77665544_temperature",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.centralite_3315_s_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.centralite_3315_s_77665544_basic_lqi",
             },
         },
     },
@@ -314,6 +386,8 @@ DEVICES = [
             "sensor.centralite_3320_l_77665544_power",
             "sensor.centralite_3320_l_77665544_temperature",
             "binary_sensor.centralite_3320_l_77665544_ias_zone",
+            "sensor.centralite_3320_l_77665544_basic_rssi",
+            "sensor.centralite_3320_l_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
@@ -335,6 +409,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["temperature"],
                 DEV_SIG_ENT_MAP_CLASS: "Temperature",
                 DEV_SIG_ENT_MAP_ID: "sensor.centralite_3320_l_77665544_temperature",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.centralite_3320_l_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.centralite_3320_l_77665544_basic_lqi",
             },
         },
     },
@@ -365,6 +449,8 @@ DEVICES = [
             "sensor.centralite_3326_l_77665544_power",
             "sensor.centralite_3326_l_77665544_temperature",
             "binary_sensor.centralite_3326_l_77665544_ias_zone",
+            "sensor.centralite_3326_l_77665544_basic_rssi",
+            "sensor.centralite_3326_l_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
@@ -386,6 +472,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["temperature"],
                 DEV_SIG_ENT_MAP_CLASS: "Temperature",
                 DEV_SIG_ENT_MAP_ID: "sensor.centralite_3326_l_77665544_temperature",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.centralite_3326_l_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.centralite_3326_l_77665544_basic_lqi",
             },
         },
     },
@@ -412,11 +508,13 @@ DEVICES = [
         },
         DEV_SIG_EVT_CHANNELS: ["1:0x0019"],
         DEV_SIG_ENTITIES: [
+            "button.centralite_motion_sensor_a_77665544_identify",
             "sensor.centralite_motion_sensor_a_77665544_power",
             "sensor.centralite_motion_sensor_a_77665544_temperature",
-            "button.centralite_motion_sensor_a_77665544_identify",
             "binary_sensor.centralite_motion_sensor_a_77665544_ias_zone",
             "binary_sensor.centralite_motion_sensor_a_77665544_occupancy",
+            "sensor.centralite_motion_sensor_a_77665544_basic_rssi",
+            "sensor.centralite_motion_sensor_a_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
@@ -438,6 +536,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["temperature"],
                 DEV_SIG_ENT_MAP_CLASS: "Temperature",
                 DEV_SIG_ENT_MAP_ID: "sensor.centralite_motion_sensor_a_77665544_temperature",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.centralite_motion_sensor_a_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.centralite_motion_sensor_a_77665544_basic_lqi",
             },
             ("binary_sensor", "00:11:22:33:44:55:66:77-2-1030"): {
                 DEV_SIG_CHANNELS: ["occupancy"],
@@ -473,6 +581,8 @@ DEVICES = [
             "sensor.climaxtechnology_psmp5_00_00_02_02tc_77665544_smartenergy_metering",
             "sensor.climaxtechnology_psmp5_00_00_02_02tc_77665544_smartenergy_metering_summation_delivered",
             "switch.climaxtechnology_psmp5_00_00_02_02tc_77665544_on_off",
+            "sensor.climaxtechnology_psmp5_00_00_02_02tc_77665544_basic_rssi",
+            "sensor.climaxtechnology_psmp5_00_00_02_02tc_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("switch", "00:11:22:33:44:55:66:77-1"): {
@@ -495,6 +605,16 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
                 DEV_SIG_ENT_MAP_ID: "sensor.climaxtechnology_psmp5_00_00_02_02tc_77665544_smartenergy_metering_summation_delivered",
             },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.climaxtechnology_psmp5_00_00_02_02tc_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.climaxtechnology_psmp5_00_00_02_02tc_77665544_basic_lqi",
+            },
         },
     },
     {
@@ -515,6 +635,8 @@ DEVICES = [
         DEV_SIG_ENTITIES: [
             "button.climaxtechnology_sd8sc_00_00_03_12tc_77665544_identify",
             "binary_sensor.climaxtechnology_sd8sc_00_00_03_12tc_77665544_ias_zone",
+            "sensor.climaxtechnology_sd8sc_00_00_03_12tc_77665544_basic_rssi",
+            "sensor.climaxtechnology_sd8sc_00_00_03_12tc_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
@@ -526,6 +648,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
                 DEV_SIG_ENT_MAP_ID: "button.climaxtechnology_sd8sc_00_00_03_12tc_77665544_identify",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.climaxtechnology_sd8sc_00_00_03_12tc_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.climaxtechnology_sd8sc_00_00_03_12tc_77665544_basic_lqi",
             },
         },
     },
@@ -547,6 +679,8 @@ DEVICES = [
         DEV_SIG_ENTITIES: [
             "button.climaxtechnology_ws15_00_00_03_03tc_77665544_identify",
             "binary_sensor.climaxtechnology_ws15_00_00_03_03tc_77665544_ias_zone",
+            "sensor.climaxtechnology_ws15_00_00_03_03tc_77665544_basic_rssi",
+            "sensor.climaxtechnology_ws15_00_00_03_03tc_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
@@ -558,6 +692,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
                 DEV_SIG_ENT_MAP_ID: "button.climaxtechnology_ws15_00_00_03_03tc_77665544_identify",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.climaxtechnology_ws15_00_00_03_03tc_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.climaxtechnology_ws15_00_00_03_03tc_77665544_basic_lqi",
             },
         },
     },
@@ -586,10 +730,12 @@ DEVICES = [
         DEV_SIG_ENTITIES: [
             "button.feibit_inc_co_fb56_zcw08ku1_1_77665544_identify",
             "light.feibit_inc_co_fb56_zcw08ku1_1_77665544_level_light_color_on_off",
+            "sensor.feibit_inc_co_fb56_zcw08ku1_1_77665544_basic_rssi",
+            "sensor.feibit_inc_co_fb56_zcw08ku1_1_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("light", "00:11:22:33:44:55:66:77-11"): {
-                DEV_SIG_CHANNELS: ["on_off", "level", "light_color"],
+                DEV_SIG_CHANNELS: ["on_off", "light_color", "level"],
                 DEV_SIG_ENT_MAP_CLASS: "Light",
                 DEV_SIG_ENT_MAP_ID: "light.feibit_inc_co_fb56_zcw08ku1_1_77665544_level_light_color_on_off",
             },
@@ -597,6 +743,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
                 DEV_SIG_ENT_MAP_ID: "button.feibit_inc_co_fb56_zcw08ku1_1_77665544_identify",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-11-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.feibit_inc_co_fb56_zcw08ku1_1_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-11-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.feibit_inc_co_fb56_zcw08ku1_1_77665544_basic_lqi",
             },
         },
     },
@@ -619,6 +775,8 @@ DEVICES = [
             "button.heiman_smokesensor_em_77665544_identify",
             "sensor.heiman_smokesensor_em_77665544_power",
             "binary_sensor.heiman_smokesensor_em_77665544_ias_zone",
+            "sensor.heiman_smokesensor_em_77665544_basic_rssi",
+            "sensor.heiman_smokesensor_em_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
@@ -635,6 +793,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["power"],
                 DEV_SIG_ENT_MAP_CLASS: "Battery",
                 DEV_SIG_ENT_MAP_ID: "sensor.heiman_smokesensor_em_77665544_power",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.heiman_smokesensor_em_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.heiman_smokesensor_em_77665544_basic_lqi",
             },
         },
     },
@@ -656,6 +824,8 @@ DEVICES = [
         DEV_SIG_ENTITIES: [
             "button.heiman_co_v16_77665544_identify",
             "binary_sensor.heiman_co_v16_77665544_ias_zone",
+            "sensor.heiman_co_v16_77665544_basic_rssi",
+            "sensor.heiman_co_v16_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
@@ -667,6 +837,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
                 DEV_SIG_ENT_MAP_ID: "button.heiman_co_v16_77665544_identify",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.heiman_co_v16_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.heiman_co_v16_77665544_basic_lqi",
             },
         },
     },
@@ -689,6 +869,8 @@ DEVICES = [
             "button.heiman_warningdevice_77665544_identify",
             "siren.heiman_warningdevice_77665544_ias_wd",
             "binary_sensor.heiman_warningdevice_77665544_ias_zone",
+            "sensor.heiman_warningdevice_77665544_basic_rssi",
+            "sensor.heiman_warningdevice_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("siren", "00:11:22:33:44:55:66:77-1"): {
@@ -705,6 +887,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
                 DEV_SIG_ENT_MAP_ID: "button.heiman_warningdevice_77665544_identify",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.heiman_warningdevice_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.heiman_warningdevice_77665544_basic_lqi",
             },
         },
     },
@@ -729,6 +921,8 @@ DEVICES = [
             "sensor.hivehome_com_mot003_77665544_illuminance",
             "sensor.hivehome_com_mot003_77665544_temperature",
             "binary_sensor.hivehome_com_mot003_77665544_ias_zone",
+            "sensor.hivehome_com_mot003_77665544_basic_rssi",
+            "sensor.hivehome_com_mot003_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("binary_sensor", "00:11:22:33:44:55:66:77-6-1280"): {
@@ -755,6 +949,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["temperature"],
                 DEV_SIG_ENT_MAP_CLASS: "Temperature",
                 DEV_SIG_ENT_MAP_ID: "sensor.hivehome_com_mot003_77665544_temperature",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-6-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.hivehome_com_mot003_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-6-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.hivehome_com_mot003_77665544_basic_lqi",
             },
         },
     },
@@ -783,10 +987,12 @@ DEVICES = [
         DEV_SIG_ENTITIES: [
             "button.ikea_of_sweden_tradfri_bulb_e12_ws_opal_600lm_77665544_identify",
             "light.ikea_of_sweden_tradfri_bulb_e12_ws_opal_600lm_77665544_level_light_color_on_off",
+            "sensor.ikea_of_sweden_tradfri_bulb_e12_ws_opal_600lm_77665544_basic_rssi",
+            "sensor.ikea_of_sweden_tradfri_bulb_e12_ws_opal_600lm_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("light", "00:11:22:33:44:55:66:77-1"): {
-                DEV_SIG_CHANNELS: ["on_off", "light_color", "level"],
+                DEV_SIG_CHANNELS: ["on_off", "level", "light_color"],
                 DEV_SIG_ENT_MAP_CLASS: "Light",
                 DEV_SIG_ENT_MAP_ID: "light.ikea_of_sweden_tradfri_bulb_e12_ws_opal_600lm_77665544_level_light_color_on_off",
             },
@@ -794,6 +1000,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
                 DEV_SIG_ENT_MAP_ID: "button.ikea_of_sweden_tradfri_bulb_e12_ws_opal_600lm_77665544_identify",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.ikea_of_sweden_tradfri_bulb_e12_ws_opal_600lm_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.ikea_of_sweden_tradfri_bulb_e12_ws_opal_600lm_77665544_basic_lqi",
             },
         },
     },
@@ -815,10 +1031,12 @@ DEVICES = [
         DEV_SIG_ENTITIES: [
             "button.ikea_of_sweden_tradfri_bulb_e26_cws_opal_600lm_77665544_identify",
             "light.ikea_of_sweden_tradfri_bulb_e26_cws_opal_600lm_77665544_level_light_color_on_off",
+            "sensor.ikea_of_sweden_tradfri_bulb_e26_cws_opal_600lm_77665544_basic_rssi",
+            "sensor.ikea_of_sweden_tradfri_bulb_e26_cws_opal_600lm_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("light", "00:11:22:33:44:55:66:77-1"): {
-                DEV_SIG_CHANNELS: ["on_off", "light_color", "level"],
+                DEV_SIG_CHANNELS: ["on_off", "level", "light_color"],
                 DEV_SIG_ENT_MAP_CLASS: "Light",
                 DEV_SIG_ENT_MAP_ID: "light.ikea_of_sweden_tradfri_bulb_e26_cws_opal_600lm_77665544_level_light_color_on_off",
             },
@@ -826,6 +1044,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
                 DEV_SIG_ENT_MAP_ID: "button.ikea_of_sweden_tradfri_bulb_e26_cws_opal_600lm_77665544_identify",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.ikea_of_sweden_tradfri_bulb_e26_cws_opal_600lm_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.ikea_of_sweden_tradfri_bulb_e26_cws_opal_600lm_77665544_basic_lqi",
             },
         },
     },
@@ -847,6 +1075,8 @@ DEVICES = [
         DEV_SIG_ENTITIES: [
             "button.ikea_of_sweden_tradfri_bulb_e26_w_opal_1000lm_77665544_identify",
             "light.ikea_of_sweden_tradfri_bulb_e26_w_opal_1000lm_77665544_level_on_off",
+            "sensor.ikea_of_sweden_tradfri_bulb_e26_w_opal_1000lm_77665544_basic_rssi",
+            "sensor.ikea_of_sweden_tradfri_bulb_e26_w_opal_1000lm_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("light", "00:11:22:33:44:55:66:77-1"): {
@@ -858,6 +1088,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
                 DEV_SIG_ENT_MAP_ID: "button.ikea_of_sweden_tradfri_bulb_e26_w_opal_1000lm_77665544_identify",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.ikea_of_sweden_tradfri_bulb_e26_w_opal_1000lm_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.ikea_of_sweden_tradfri_bulb_e26_w_opal_1000lm_77665544_basic_lqi",
             },
         },
     },
@@ -879,10 +1119,12 @@ DEVICES = [
         DEV_SIG_ENTITIES: [
             "button.ikea_of_sweden_tradfri_bulb_e26_ws_opal_980lm_77665544_identify",
             "light.ikea_of_sweden_tradfri_bulb_e26_ws_opal_980lm_77665544_level_light_color_on_off",
+            "sensor.ikea_of_sweden_tradfri_bulb_e26_ws_opal_980lm_77665544_basic_rssi",
+            "sensor.ikea_of_sweden_tradfri_bulb_e26_ws_opal_980lm_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("light", "00:11:22:33:44:55:66:77-1"): {
-                DEV_SIG_CHANNELS: ["on_off", "light_color", "level"],
+                DEV_SIG_CHANNELS: ["on_off", "level", "light_color"],
                 DEV_SIG_ENT_MAP_CLASS: "Light",
                 DEV_SIG_ENT_MAP_ID: "light.ikea_of_sweden_tradfri_bulb_e26_ws_opal_980lm_77665544_level_light_color_on_off",
             },
@@ -890,6 +1132,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
                 DEV_SIG_ENT_MAP_ID: "button.ikea_of_sweden_tradfri_bulb_e26_ws_opal_980lm_77665544_identify",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.ikea_of_sweden_tradfri_bulb_e26_ws_opal_980lm_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.ikea_of_sweden_tradfri_bulb_e26_ws_opal_980lm_77665544_basic_lqi",
             },
         },
     },
@@ -911,6 +1163,8 @@ DEVICES = [
         DEV_SIG_ENTITIES: [
             "button.ikea_of_sweden_tradfri_bulb_e26_opal_1000lm_77665544_identify",
             "light.ikea_of_sweden_tradfri_bulb_e26_opal_1000lm_77665544_level_on_off",
+            "sensor.ikea_of_sweden_tradfri_bulb_e26_opal_1000lm_77665544_basic_rssi",
+            "sensor.ikea_of_sweden_tradfri_bulb_e26_opal_1000lm_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("light", "00:11:22:33:44:55:66:77-1"): {
@@ -922,6 +1176,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
                 DEV_SIG_ENT_MAP_ID: "button.ikea_of_sweden_tradfri_bulb_e26_opal_1000lm_77665544_identify",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.ikea_of_sweden_tradfri_bulb_e26_opal_1000lm_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.ikea_of_sweden_tradfri_bulb_e26_opal_1000lm_77665544_basic_lqi",
             },
         },
     },
@@ -943,6 +1207,8 @@ DEVICES = [
         DEV_SIG_ENTITIES: [
             "button.ikea_of_sweden_tradfri_control_outlet_77665544_identify",
             "switch.ikea_of_sweden_tradfri_control_outlet_77665544_on_off",
+            "sensor.ikea_of_sweden_tradfri_control_outlet_77665544_basic_rssi",
+            "sensor.ikea_of_sweden_tradfri_control_outlet_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("switch", "00:11:22:33:44:55:66:77-1"): {
@@ -954,6 +1220,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
                 DEV_SIG_ENT_MAP_ID: "button.ikea_of_sweden_tradfri_control_outlet_77665544_identify",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.ikea_of_sweden_tradfri_control_outlet_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.ikea_of_sweden_tradfri_control_outlet_77665544_basic_lqi",
             },
         },
     },
@@ -976,6 +1252,8 @@ DEVICES = [
             "button.ikea_of_sweden_tradfri_motion_sensor_77665544_identify",
             "sensor.ikea_of_sweden_tradfri_motion_sensor_77665544_power",
             "binary_sensor.ikea_of_sweden_tradfri_motion_sensor_77665544_on_off",
+            "sensor.ikea_of_sweden_tradfri_motion_sensor_77665544_basic_rssi",
+            "sensor.ikea_of_sweden_tradfri_motion_sensor_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
@@ -987,6 +1265,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["power"],
                 DEV_SIG_ENT_MAP_CLASS: "Battery",
                 DEV_SIG_ENT_MAP_ID: "sensor.ikea_of_sweden_tradfri_motion_sensor_77665544_power",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.ikea_of_sweden_tradfri_motion_sensor_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.ikea_of_sweden_tradfri_motion_sensor_77665544_basic_lqi",
             },
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-6"): {
                 DEV_SIG_CHANNELS: ["on_off"],
@@ -1013,6 +1301,8 @@ DEVICES = [
         DEV_SIG_ENTITIES: [
             "button.ikea_of_sweden_tradfri_on_off_switch_77665544_identify",
             "sensor.ikea_of_sweden_tradfri_on_off_switch_77665544_power",
+            "sensor.ikea_of_sweden_tradfri_on_off_switch_77665544_basic_rssi",
+            "sensor.ikea_of_sweden_tradfri_on_off_switch_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
@@ -1024,6 +1314,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["power"],
                 DEV_SIG_ENT_MAP_CLASS: "Battery",
                 DEV_SIG_ENT_MAP_ID: "sensor.ikea_of_sweden_tradfri_on_off_switch_77665544_power",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.ikea_of_sweden_tradfri_on_off_switch_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.ikea_of_sweden_tradfri_on_off_switch_77665544_basic_lqi",
             },
         },
     },
@@ -1045,6 +1345,8 @@ DEVICES = [
         DEV_SIG_ENTITIES: [
             "button.ikea_of_sweden_tradfri_remote_control_77665544_identify",
             "sensor.ikea_of_sweden_tradfri_remote_control_77665544_power",
+            "sensor.ikea_of_sweden_tradfri_remote_control_77665544_basic_rssi",
+            "sensor.ikea_of_sweden_tradfri_remote_control_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
@@ -1056,6 +1358,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["power"],
                 DEV_SIG_ENT_MAP_CLASS: "Battery",
                 DEV_SIG_ENT_MAP_ID: "sensor.ikea_of_sweden_tradfri_remote_control_77665544_power",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.ikea_of_sweden_tradfri_remote_control_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.ikea_of_sweden_tradfri_remote_control_77665544_basic_lqi",
             },
         },
     },
@@ -1083,12 +1395,24 @@ DEVICES = [
         DEV_SIG_EVT_CHANNELS: ["1:0x0019"],
         DEV_SIG_ENTITIES: [
             "button.ikea_of_sweden_tradfri_signal_repeater_77665544_identify",
+            "sensor.ikea_of_sweden_tradfri_signal_repeater_77665544_basic_rssi",
+            "sensor.ikea_of_sweden_tradfri_signal_repeater_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
                 DEV_SIG_ENT_MAP_ID: "button.ikea_of_sweden_tradfri_signal_repeater_77665544_identify",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.ikea_of_sweden_tradfri_signal_repeater_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.ikea_of_sweden_tradfri_signal_repeater_77665544_basic_lqi",
             },
         },
     },
@@ -1110,6 +1434,8 @@ DEVICES = [
         DEV_SIG_ENTITIES: [
             "button.ikea_of_sweden_tradfri_wireless_dimmer_77665544_identify",
             "sensor.ikea_of_sweden_tradfri_wireless_dimmer_77665544_power",
+            "sensor.ikea_of_sweden_tradfri_wireless_dimmer_77665544_basic_rssi",
+            "sensor.ikea_of_sweden_tradfri_wireless_dimmer_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
@@ -1121,6 +1447,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["power"],
                 DEV_SIG_ENT_MAP_CLASS: "Battery",
                 DEV_SIG_ENT_MAP_ID: "sensor.ikea_of_sweden_tradfri_wireless_dimmer_77665544_power",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.ikea_of_sweden_tradfri_wireless_dimmer_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.ikea_of_sweden_tradfri_wireless_dimmer_77665544_basic_lqi",
             },
         },
     },
@@ -1148,9 +1484,11 @@ DEVICES = [
         DEV_SIG_EVT_CHANNELS: ["1:0x0019", "2:0x0006", "2:0x0008"],
         DEV_SIG_ENTITIES: [
             "button.jasco_products_45852_77665544_identify",
-            "light.jasco_products_45852_77665544_level_on_off",
             "sensor.jasco_products_45852_77665544_smartenergy_metering",
             "sensor.jasco_products_45852_77665544_smartenergy_metering_summation_delivered",
+            "light.jasco_products_45852_77665544_level_on_off",
+            "sensor.jasco_products_45852_77665544_basic_rssi",
+            "sensor.jasco_products_45852_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("light", "00:11:22:33:44:55:66:77-1"): {
@@ -1172,6 +1510,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["smartenergy_metering"],
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
                 DEV_SIG_ENT_MAP_ID: "sensor.jasco_products_45852_77665544_smartenergy_metering_summation_delivered",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.jasco_products_45852_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.jasco_products_45852_77665544_basic_lqi",
             },
         },
     },
@@ -1202,6 +1550,8 @@ DEVICES = [
             "light.jasco_products_45856_77665544_on_off",
             "sensor.jasco_products_45856_77665544_smartenergy_metering",
             "sensor.jasco_products_45856_77665544_smartenergy_metering_summation_delivered",
+            "sensor.jasco_products_45856_77665544_basic_rssi",
+            "sensor.jasco_products_45856_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("light", "00:11:22:33:44:55:66:77-1"): {
@@ -1223,6 +1573,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["smartenergy_metering"],
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
                 DEV_SIG_ENT_MAP_ID: "sensor.jasco_products_45856_77665544_smartenergy_metering_summation_delivered",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.jasco_products_45856_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.jasco_products_45856_77665544_basic_lqi",
             },
         },
     },
@@ -1253,6 +1613,8 @@ DEVICES = [
             "light.jasco_products_45857_77665544_level_on_off",
             "sensor.jasco_products_45857_77665544_smartenergy_metering",
             "sensor.jasco_products_45857_77665544_smartenergy_metering_summation_delivered",
+            "sensor.jasco_products_45857_77665544_basic_rssi",
+            "sensor.jasco_products_45857_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("light", "00:11:22:33:44:55:66:77-1"): {
@@ -1274,6 +1636,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["smartenergy_metering"],
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
                 DEV_SIG_ENT_MAP_ID: "sensor.jasco_products_45857_77665544_smartenergy_metering_summation_delivered",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.jasco_products_45857_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.jasco_products_45857_77665544_basic_lqi",
             },
         },
     },
@@ -1298,6 +1670,8 @@ DEVICES = [
             "sensor.keen_home_inc_sv02_610_mp_1_3_77665544_pressure",
             "sensor.keen_home_inc_sv02_610_mp_1_3_77665544_temperature",
             "cover.keen_home_inc_sv02_610_mp_1_3_77665544_level_on_off",
+            "sensor.keen_home_inc_sv02_610_mp_1_3_77665544_basic_rssi",
+            "sensor.keen_home_inc_sv02_610_mp_1_3_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
@@ -1325,6 +1699,16 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "Temperature",
                 DEV_SIG_ENT_MAP_ID: "sensor.keen_home_inc_sv02_610_mp_1_3_77665544_temperature",
             },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.keen_home_inc_sv02_610_mp_1_3_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.keen_home_inc_sv02_610_mp_1_3_77665544_basic_lqi",
+            },
         },
     },
     {
@@ -1348,6 +1732,8 @@ DEVICES = [
             "sensor.keen_home_inc_sv02_612_mp_1_2_77665544_pressure",
             "sensor.keen_home_inc_sv02_612_mp_1_2_77665544_temperature",
             "cover.keen_home_inc_sv02_612_mp_1_2_77665544_level_on_off",
+            "sensor.keen_home_inc_sv02_612_mp_1_2_77665544_basic_rssi",
+            "sensor.keen_home_inc_sv02_612_mp_1_2_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
@@ -1375,6 +1761,16 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "Temperature",
                 DEV_SIG_ENT_MAP_ID: "sensor.keen_home_inc_sv02_612_mp_1_2_77665544_temperature",
             },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.keen_home_inc_sv02_612_mp_1_2_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.keen_home_inc_sv02_612_mp_1_2_77665544_basic_lqi",
+            },
         },
     },
     {
@@ -1398,6 +1794,8 @@ DEVICES = [
             "sensor.keen_home_inc_sv02_612_mp_1_3_77665544_pressure",
             "sensor.keen_home_inc_sv02_612_mp_1_3_77665544_temperature",
             "cover.keen_home_inc_sv02_612_mp_1_3_77665544_level_on_off",
+            "sensor.keen_home_inc_sv02_612_mp_1_3_77665544_basic_rssi",
+            "sensor.keen_home_inc_sv02_612_mp_1_3_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
@@ -1425,6 +1823,16 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "Temperature",
                 DEV_SIG_ENT_MAP_ID: "sensor.keen_home_inc_sv02_612_mp_1_3_77665544_temperature",
             },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.keen_home_inc_sv02_612_mp_1_3_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.keen_home_inc_sv02_612_mp_1_3_77665544_basic_lqi",
+            },
         },
     },
     {
@@ -1446,6 +1854,8 @@ DEVICES = [
             "button.king_of_fans_inc_hbuniversalcfremote_77665544_identify",
             "light.king_of_fans_inc_hbuniversalcfremote_77665544_level_on_off",
             "fan.king_of_fans_inc_hbuniversalcfremote_77665544_fan",
+            "sensor.king_of_fans_inc_hbuniversalcfremote_77665544_basic_rssi",
+            "sensor.king_of_fans_inc_hbuniversalcfremote_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("light", "00:11:22:33:44:55:66:77-1"): {
@@ -1457,6 +1867,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
                 DEV_SIG_ENT_MAP_ID: "button.king_of_fans_inc_hbuniversalcfremote_77665544_identify",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.king_of_fans_inc_hbuniversalcfremote_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.king_of_fans_inc_hbuniversalcfremote_77665544_basic_lqi",
             },
             ("fan", "00:11:22:33:44:55:66:77-1-514"): {
                 DEV_SIG_CHANNELS: ["fan"],
@@ -1483,6 +1903,8 @@ DEVICES = [
         DEV_SIG_ENTITIES: [
             "button.lds_zbt_cctswitch_d0001_77665544_identify",
             "sensor.lds_zbt_cctswitch_d0001_77665544_power",
+            "sensor.lds_zbt_cctswitch_d0001_77665544_basic_rssi",
+            "sensor.lds_zbt_cctswitch_d0001_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
@@ -1494,6 +1916,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["power"],
                 DEV_SIG_ENT_MAP_CLASS: "Battery",
                 DEV_SIG_ENT_MAP_ID: "sensor.lds_zbt_cctswitch_d0001_77665544_power",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lds_zbt_cctswitch_d0001_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lds_zbt_cctswitch_d0001_77665544_basic_lqi",
             },
         },
     },
@@ -1515,10 +1947,12 @@ DEVICES = [
         DEV_SIG_ENTITIES: [
             "button.ledvance_a19_rgbw_77665544_identify",
             "light.ledvance_a19_rgbw_77665544_level_light_color_on_off",
+            "sensor.ledvance_a19_rgbw_77665544_basic_rssi",
+            "sensor.ledvance_a19_rgbw_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("light", "00:11:22:33:44:55:66:77-1"): {
-                DEV_SIG_CHANNELS: ["on_off", "light_color", "level"],
+                DEV_SIG_CHANNELS: ["on_off", "level", "light_color"],
                 DEV_SIG_ENT_MAP_CLASS: "Light",
                 DEV_SIG_ENT_MAP_ID: "light.ledvance_a19_rgbw_77665544_level_light_color_on_off",
             },
@@ -1526,6 +1960,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
                 DEV_SIG_ENT_MAP_ID: "button.ledvance_a19_rgbw_77665544_identify",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.ledvance_a19_rgbw_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.ledvance_a19_rgbw_77665544_basic_lqi",
             },
         },
     },
@@ -1547,10 +1991,12 @@ DEVICES = [
         DEV_SIG_ENTITIES: [
             "button.ledvance_flex_rgbw_77665544_identify",
             "light.ledvance_flex_rgbw_77665544_level_light_color_on_off",
+            "sensor.ledvance_flex_rgbw_77665544_basic_rssi",
+            "sensor.ledvance_flex_rgbw_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("light", "00:11:22:33:44:55:66:77-1"): {
-                DEV_SIG_CHANNELS: ["on_off", "light_color", "level"],
+                DEV_SIG_CHANNELS: ["on_off", "level", "light_color"],
                 DEV_SIG_ENT_MAP_CLASS: "Light",
                 DEV_SIG_ENT_MAP_ID: "light.ledvance_flex_rgbw_77665544_level_light_color_on_off",
             },
@@ -1558,6 +2004,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
                 DEV_SIG_ENT_MAP_ID: "button.ledvance_flex_rgbw_77665544_identify",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.ledvance_flex_rgbw_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.ledvance_flex_rgbw_77665544_basic_lqi",
             },
         },
     },
@@ -1579,6 +2035,8 @@ DEVICES = [
         DEV_SIG_ENTITIES: [
             "button.ledvance_plug_77665544_identify",
             "switch.ledvance_plug_77665544_on_off",
+            "sensor.ledvance_plug_77665544_basic_rssi",
+            "sensor.ledvance_plug_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("switch", "00:11:22:33:44:55:66:77-1"): {
@@ -1590,6 +2048,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
                 DEV_SIG_ENT_MAP_ID: "button.ledvance_plug_77665544_identify",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.ledvance_plug_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.ledvance_plug_77665544_basic_lqi",
             },
         },
     },
@@ -1611,10 +2079,12 @@ DEVICES = [
         DEV_SIG_ENTITIES: [
             "button.ledvance_rt_rgbw_77665544_identify",
             "light.ledvance_rt_rgbw_77665544_level_light_color_on_off",
+            "sensor.ledvance_rt_rgbw_77665544_basic_rssi",
+            "sensor.ledvance_rt_rgbw_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("light", "00:11:22:33:44:55:66:77-1"): {
-                DEV_SIG_CHANNELS: ["on_off", "light_color", "level"],
+                DEV_SIG_CHANNELS: ["on_off", "level", "light_color"],
                 DEV_SIG_ENT_MAP_CLASS: "Light",
                 DEV_SIG_ENT_MAP_ID: "light.ledvance_rt_rgbw_77665544_level_light_color_on_off",
             },
@@ -1622,6 +2092,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
                 DEV_SIG_ENT_MAP_ID: "button.ledvance_rt_rgbw_77665544_identify",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.ledvance_rt_rgbw_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.ledvance_rt_rgbw_77665544_basic_lqi",
             },
         },
     },
@@ -1671,6 +2151,8 @@ DEVICES = [
             "sensor.lumi_lumi_plug_maus01_77665544_analog_input_2",
             "binary_sensor.lumi_lumi_plug_maus01_77665544_binary_input",
             "switch.lumi_lumi_plug_maus01_77665544_on_off",
+            "sensor.lumi_lumi_plug_maus01_77665544_basic_rssi",
+            "sensor.lumi_lumi_plug_maus01_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("switch", "00:11:22:33:44:55:66:77-1"): {
@@ -1702,6 +2184,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
                 DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_plug_maus01_77665544_electrical_measurement_rms_voltage",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_plug_maus01_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_plug_maus01_77665544_basic_lqi",
             },
             ("sensor", "00:11:22:33:44:55:66:77-2-12"): {
                 DEV_SIG_CHANNELS: ["analog_input"],
@@ -1750,6 +2242,8 @@ DEVICES = [
             "sensor.lumi_lumi_relay_c2acn01_77665544_electrical_measurement_apparent_power",
             "sensor.lumi_lumi_relay_c2acn01_77665544_electrical_measurement_rms_current",
             "sensor.lumi_lumi_relay_c2acn01_77665544_electrical_measurement_rms_voltage",
+            "sensor.lumi_lumi_relay_c2acn01_77665544_basic_rssi",
+            "sensor.lumi_lumi_relay_c2acn01_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("light", "00:11:22:33:44:55:66:77-1"): {
@@ -1781,6 +2275,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
                 DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_relay_c2acn01_77665544_electrical_measurement_rms_voltage",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_relay_c2acn01_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_relay_c2acn01_77665544_basic_lqi",
             },
             ("light", "00:11:22:33:44:55:66:77-2"): {
                 DEV_SIG_CHANNELS: ["on_off"],
@@ -1821,6 +2325,8 @@ DEVICES = [
         DEV_SIG_ENTITIES: [
             "button.lumi_lumi_remote_b186acn01_77665544_identify",
             "sensor.lumi_lumi_remote_b186acn01_77665544_power",
+            "sensor.lumi_lumi_remote_b186acn01_77665544_basic_rssi",
+            "sensor.lumi_lumi_remote_b186acn01_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
@@ -1832,6 +2338,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["power"],
                 DEV_SIG_ENT_MAP_CLASS: "Battery",
                 DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_remote_b186acn01_77665544_power",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_remote_b186acn01_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_remote_b186acn01_77665544_basic_lqi",
             },
         },
     },
@@ -1867,6 +2383,8 @@ DEVICES = [
         DEV_SIG_ENTITIES: [
             "button.lumi_lumi_remote_b286acn01_77665544_identify",
             "sensor.lumi_lumi_remote_b286acn01_77665544_power",
+            "sensor.lumi_lumi_remote_b286acn01_77665544_basic_rssi",
+            "sensor.lumi_lumi_remote_b286acn01_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
@@ -1878,6 +2396,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["power"],
                 DEV_SIG_ENT_MAP_CLASS: "Battery",
                 DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_remote_b286acn01_77665544_power",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_remote_b286acn01_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_remote_b286acn01_77665544_basic_lqi",
             },
         },
     },
@@ -1933,12 +2461,24 @@ DEVICES = [
         DEV_SIG_EVT_CHANNELS: ["1:0x0006", "1:0x0008", "1:0x0300"],
         DEV_SIG_ENTITIES: [
             "button.lumi_lumi_remote_b286opcn01_77665544_identify",
+            "sensor.lumi_lumi_remote_b286opcn01_77665544_basic_rssi",
+            "sensor.lumi_lumi_remote_b286opcn01_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
                 DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_remote_b286opcn01_77665544_identify",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_remote_b286opcn01_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_remote_b286opcn01_77665544_basic_lqi",
             },
         },
     },
@@ -1994,12 +2534,24 @@ DEVICES = [
         DEV_SIG_EVT_CHANNELS: ["1:0x0006", "1:0x0008", "1:0x0300", "2:0x0006"],
         DEV_SIG_ENTITIES: [
             "button.lumi_lumi_remote_b486opcn01_77665544_identify",
+            "sensor.lumi_lumi_remote_b486opcn01_77665544_basic_rssi",
+            "sensor.lumi_lumi_remote_b486opcn01_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
                 DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_remote_b486opcn01_77665544_identify",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_remote_b486opcn01_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_remote_b486opcn01_77665544_basic_lqi",
             },
         },
     },
@@ -2020,12 +2572,24 @@ DEVICES = [
         DEV_SIG_EVT_CHANNELS: ["1:0x0006", "1:0x0008", "1:0x0300"],
         DEV_SIG_ENTITIES: [
             "button.lumi_lumi_remote_b686opcn01_77665544_identify",
+            "sensor.lumi_lumi_remote_b686opcn01_77665544_basic_rssi",
+            "sensor.lumi_lumi_remote_b686opcn01_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
                 DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_remote_b686opcn01_77665544_identify",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_remote_b686opcn01_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_remote_b686opcn01_77665544_basic_lqi",
             },
         },
     },
@@ -2081,12 +2645,24 @@ DEVICES = [
         DEV_SIG_EVT_CHANNELS: ["1:0x0006", "1:0x0008", "1:0x0300", "2:0x0006"],
         DEV_SIG_ENTITIES: [
             "button.lumi_lumi_remote_b686opcn01_77665544_identify",
+            "sensor.lumi_lumi_remote_b686opcn01_77665544_basic_rssi",
+            "sensor.lumi_lumi_remote_b686opcn01_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
                 DEV_SIG_ENT_MAP_ID: "button.lumi_lumi_remote_b686opcn01_77665544_identify",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_remote_b686opcn01_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_remote_b686opcn01_77665544_basic_lqi",
             },
         },
     },
@@ -2108,12 +2684,24 @@ DEVICES = [
         DEV_SIG_ENTITIES: [
             "light.lumi_lumi_router_77665544_on_off",
             "binary_sensor.lumi_lumi_router_77665544_on_off",
+            "sensor.lumi_lumi_router_77665544_basic_rssi",
+            "sensor.lumi_lumi_router_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("light", "00:11:22:33:44:55:66:77-8"): {
                 DEV_SIG_CHANNELS: ["on_off"],
                 DEV_SIG_ENT_MAP_CLASS: "Light",
                 DEV_SIG_ENT_MAP_ID: "light.lumi_lumi_router_77665544_on_off",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-8-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_router_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-8-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_router_77665544_basic_lqi",
             },
             ("binary_sensor", "00:11:22:33:44:55:66:77-8-6"): {
                 DEV_SIG_CHANNELS: ["on_off"],
@@ -2140,12 +2728,24 @@ DEVICES = [
         DEV_SIG_ENTITIES: [
             "light.lumi_lumi_router_77665544_on_off",
             "binary_sensor.lumi_lumi_router_77665544_on_off",
+            "sensor.lumi_lumi_router_77665544_basic_rssi",
+            "sensor.lumi_lumi_router_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("light", "00:11:22:33:44:55:66:77-8"): {
                 DEV_SIG_CHANNELS: ["on_off"],
                 DEV_SIG_ENT_MAP_CLASS: "Light",
                 DEV_SIG_ENT_MAP_ID: "light.lumi_lumi_router_77665544_on_off",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-8-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_router_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-8-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_router_77665544_basic_lqi",
             },
             ("binary_sensor", "00:11:22:33:44:55:66:77-8-6"): {
                 DEV_SIG_CHANNELS: ["on_off"],
@@ -2172,12 +2772,24 @@ DEVICES = [
         DEV_SIG_ENTITIES: [
             "light.lumi_lumi_router_77665544_on_off",
             "binary_sensor.lumi_lumi_router_77665544_on_off",
+            "sensor.lumi_lumi_router_77665544_basic_rssi",
+            "sensor.lumi_lumi_router_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("light", "00:11:22:33:44:55:66:77-8"): {
                 DEV_SIG_CHANNELS: ["on_off"],
                 DEV_SIG_ENT_MAP_CLASS: "Light",
                 DEV_SIG_ENT_MAP_ID: "light.lumi_lumi_router_77665544_on_off",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-8-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_router_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-8-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_router_77665544_basic_lqi",
             },
             ("binary_sensor", "00:11:22:33:44:55:66:77-8-6"): {
                 DEV_SIG_CHANNELS: ["on_off"],
@@ -2204,6 +2816,8 @@ DEVICES = [
         DEV_SIG_ENTITIES: [
             "button.lumi_lumi_sen_ill_mgl01_77665544_identify",
             "sensor.lumi_lumi_sen_ill_mgl01_77665544_illuminance",
+            "sensor.lumi_lumi_sen_ill_mgl01_77665544_basic_rssi",
+            "sensor.lumi_lumi_sen_ill_mgl01_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
@@ -2215,6 +2829,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["illuminance"],
                 DEV_SIG_ENT_MAP_CLASS: "Illuminance",
                 DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sen_ill_mgl01_77665544_illuminance",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sen_ill_mgl01_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sen_ill_mgl01_77665544_basic_lqi",
             },
         },
     },
@@ -2250,6 +2874,8 @@ DEVICES = [
         DEV_SIG_ENTITIES: [
             "button.lumi_lumi_sensor_86sw1_77665544_identify",
             "sensor.lumi_lumi_sensor_86sw1_77665544_power",
+            "sensor.lumi_lumi_sensor_86sw1_77665544_basic_rssi",
+            "sensor.lumi_lumi_sensor_86sw1_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
@@ -2261,6 +2887,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["power"],
                 DEV_SIG_ENT_MAP_CLASS: "Battery",
                 DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_86sw1_77665544_power",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_86sw1_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_86sw1_77665544_basic_lqi",
             },
         },
     },
@@ -2296,6 +2932,8 @@ DEVICES = [
         DEV_SIG_ENTITIES: [
             "button.lumi_lumi_sensor_cube_aqgl01_77665544_identify",
             "sensor.lumi_lumi_sensor_cube_aqgl01_77665544_power",
+            "sensor.lumi_lumi_sensor_cube_aqgl01_77665544_basic_rssi",
+            "sensor.lumi_lumi_sensor_cube_aqgl01_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
@@ -2307,6 +2945,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["power"],
                 DEV_SIG_ENT_MAP_CLASS: "Battery",
                 DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_cube_aqgl01_77665544_power",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_cube_aqgl01_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_cube_aqgl01_77665544_basic_lqi",
             },
         },
     },
@@ -2344,6 +2992,8 @@ DEVICES = [
             "sensor.lumi_lumi_sensor_ht_77665544_power",
             "sensor.lumi_lumi_sensor_ht_77665544_temperature",
             "sensor.lumi_lumi_sensor_ht_77665544_humidity",
+            "sensor.lumi_lumi_sensor_ht_77665544_basic_rssi",
+            "sensor.lumi_lumi_sensor_ht_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
@@ -2360,6 +3010,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["temperature"],
                 DEV_SIG_ENT_MAP_CLASS: "Temperature",
                 DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_ht_77665544_temperature",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_ht_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_ht_77665544_basic_lqi",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1029"): {
                 DEV_SIG_CHANNELS: ["humidity"],
@@ -2387,6 +3047,8 @@ DEVICES = [
             "button.lumi_lumi_sensor_magnet_77665544_identify",
             "sensor.lumi_lumi_sensor_magnet_77665544_power",
             "binary_sensor.lumi_lumi_sensor_magnet_77665544_on_off",
+            "sensor.lumi_lumi_sensor_magnet_77665544_basic_rssi",
+            "sensor.lumi_lumi_sensor_magnet_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
@@ -2398,6 +3060,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["power"],
                 DEV_SIG_ENT_MAP_CLASS: "Battery",
                 DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_magnet_77665544_power",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_magnet_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_magnet_77665544_basic_lqi",
             },
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-6"): {
                 DEV_SIG_CHANNELS: ["on_off"],
@@ -2425,6 +3097,8 @@ DEVICES = [
             "button.lumi_lumi_sensor_magnet_aq2_77665544_identify",
             "sensor.lumi_lumi_sensor_magnet_aq2_77665544_power",
             "binary_sensor.lumi_lumi_sensor_magnet_aq2_77665544_on_off",
+            "sensor.lumi_lumi_sensor_magnet_aq2_77665544_basic_rssi",
+            "sensor.lumi_lumi_sensor_magnet_aq2_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
@@ -2436,6 +3110,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["power"],
                 DEV_SIG_ENT_MAP_CLASS: "Battery",
                 DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_magnet_aq2_77665544_power",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_magnet_aq2_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_magnet_aq2_77665544_basic_lqi",
             },
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-6"): {
                 DEV_SIG_CHANNELS: ["on_off"],
@@ -2465,6 +3149,8 @@ DEVICES = [
             "sensor.lumi_lumi_sensor_motion_aq2_77665544_illuminance",
             "binary_sensor.lumi_lumi_sensor_motion_aq2_77665544_occupancy",
             "binary_sensor.lumi_lumi_sensor_motion_aq2_77665544_ias_zone",
+            "sensor.lumi_lumi_sensor_motion_aq2_77665544_basic_rssi",
+            "sensor.lumi_lumi_sensor_motion_aq2_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1030"): {
@@ -2492,6 +3178,16 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "Illuminance",
                 DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_motion_aq2_77665544_illuminance",
             },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_motion_aq2_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_motion_aq2_77665544_basic_lqi",
+            },
         },
     },
     {
@@ -2513,6 +3209,8 @@ DEVICES = [
             "button.lumi_lumi_sensor_smoke_77665544_identify",
             "sensor.lumi_lumi_sensor_smoke_77665544_power",
             "binary_sensor.lumi_lumi_sensor_smoke_77665544_ias_zone",
+            "sensor.lumi_lumi_sensor_smoke_77665544_basic_rssi",
+            "sensor.lumi_lumi_sensor_smoke_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
@@ -2529,6 +3227,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["power"],
                 DEV_SIG_ENT_MAP_CLASS: "Battery",
                 DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_smoke_77665544_power",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_smoke_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_smoke_77665544_basic_lqi",
             },
         },
     },
@@ -2550,6 +3258,8 @@ DEVICES = [
         DEV_SIG_ENTITIES: [
             "button.lumi_lumi_sensor_switch_77665544_identify",
             "sensor.lumi_lumi_sensor_switch_77665544_power",
+            "sensor.lumi_lumi_sensor_switch_77665544_basic_rssi",
+            "sensor.lumi_lumi_sensor_switch_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
@@ -2561,6 +3271,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["power"],
                 DEV_SIG_ENT_MAP_CLASS: "Battery",
                 DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_switch_77665544_power",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_switch_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_switch_77665544_basic_lqi",
             },
         },
     },
@@ -2581,12 +3301,24 @@ DEVICES = [
         DEV_SIG_EVT_CHANNELS: ["1:0x0006"],
         DEV_SIG_ENTITIES: [
             "sensor.lumi_lumi_sensor_switch_aq2_77665544_power",
+            "sensor.lumi_lumi_sensor_switch_aq2_77665544_basic_rssi",
+            "sensor.lumi_lumi_sensor_switch_aq2_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 DEV_SIG_CHANNELS: ["power"],
                 DEV_SIG_ENT_MAP_CLASS: "Battery",
                 DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_switch_aq2_77665544_power",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_switch_aq2_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_switch_aq2_77665544_basic_lqi",
             },
         },
     },
@@ -2607,12 +3339,24 @@ DEVICES = [
         DEV_SIG_EVT_CHANNELS: ["1:0x0006"],
         DEV_SIG_ENTITIES: [
             "sensor.lumi_lumi_sensor_switch_aq3_77665544_power",
+            "sensor.lumi_lumi_sensor_switch_aq3_77665544_basic_rssi",
+            "sensor.lumi_lumi_sensor_switch_aq3_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 DEV_SIG_CHANNELS: ["power"],
                 DEV_SIG_ENT_MAP_CLASS: "Battery",
                 DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_switch_aq3_77665544_power",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_switch_aq3_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_switch_aq3_77665544_basic_lqi",
             },
         },
     },
@@ -2635,6 +3379,8 @@ DEVICES = [
             "button.lumi_lumi_sensor_wleak_aq1_77665544_identify",
             "sensor.lumi_lumi_sensor_wleak_aq1_77665544_power",
             "binary_sensor.lumi_lumi_sensor_wleak_aq1_77665544_ias_zone",
+            "sensor.lumi_lumi_sensor_wleak_aq1_77665544_basic_rssi",
+            "sensor.lumi_lumi_sensor_wleak_aq1_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
@@ -2651,6 +3397,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["power"],
                 DEV_SIG_ENT_MAP_CLASS: "Battery",
                 DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_wleak_aq1_77665544_power",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_wleak_aq1_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_sensor_wleak_aq1_77665544_basic_lqi",
             },
         },
     },
@@ -2681,6 +3437,8 @@ DEVICES = [
             "sensor.lumi_lumi_vibration_aq1_77665544_power",
             "binary_sensor.lumi_lumi_vibration_aq1_77665544_ias_zone",
             "lock.lumi_lumi_vibration_aq1_77665544_door_lock",
+            "sensor.lumi_lumi_vibration_aq1_77665544_basic_rssi",
+            "sensor.lumi_lumi_vibration_aq1_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
@@ -2697,6 +3455,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["power"],
                 DEV_SIG_ENT_MAP_CLASS: "Battery",
                 DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_vibration_aq1_77665544_power",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_vibration_aq1_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_vibration_aq1_77665544_basic_lqi",
             },
             ("lock", "00:11:22:33:44:55:66:77-1-257"): {
                 DEV_SIG_CHANNELS: ["door_lock"],
@@ -2726,6 +3494,8 @@ DEVICES = [
             "sensor.lumi_lumi_weather_77665544_pressure",
             "sensor.lumi_lumi_weather_77665544_temperature",
             "sensor.lumi_lumi_weather_77665544_humidity",
+            "sensor.lumi_lumi_weather_77665544_basic_rssi",
+            "sensor.lumi_lumi_weather_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
@@ -2747,6 +3517,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["temperature"],
                 DEV_SIG_ENT_MAP_CLASS: "Temperature",
                 DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_weather_77665544_temperature",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_weather_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.lumi_lumi_weather_77665544_basic_lqi",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1029"): {
                 DEV_SIG_CHANNELS: ["humidity"],
@@ -2774,6 +3554,8 @@ DEVICES = [
             "button.nyce_3010_77665544_identify",
             "sensor.nyce_3010_77665544_power",
             "binary_sensor.nyce_3010_77665544_ias_zone",
+            "sensor.nyce_3010_77665544_basic_rssi",
+            "sensor.nyce_3010_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
@@ -2790,6 +3572,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["power"],
                 DEV_SIG_ENT_MAP_CLASS: "Battery",
                 DEV_SIG_ENT_MAP_ID: "sensor.nyce_3010_77665544_power",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.nyce_3010_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.nyce_3010_77665544_basic_lqi",
             },
         },
     },
@@ -2812,6 +3604,8 @@ DEVICES = [
             "button.nyce_3014_77665544_identify",
             "sensor.nyce_3014_77665544_power",
             "binary_sensor.nyce_3014_77665544_ias_zone",
+            "sensor.nyce_3014_77665544_basic_rssi",
+            "sensor.nyce_3014_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
@@ -2828,6 +3622,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["power"],
                 DEV_SIG_ENT_MAP_CLASS: "Battery",
                 DEV_SIG_ENT_MAP_ID: "sensor.nyce_3014_77665544_power",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.nyce_3014_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.nyce_3014_77665544_basic_lqi",
             },
         },
     },
@@ -2892,10 +3696,12 @@ DEVICES = [
         DEV_SIG_ENTITIES: [
             "button.osram_lightify_a19_rgbw_77665544_identify",
             "light.osram_lightify_a19_rgbw_77665544_level_light_color_on_off",
+            "sensor.osram_lightify_a19_rgbw_77665544_basic_rssi",
+            "sensor.osram_lightify_a19_rgbw_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("light", "00:11:22:33:44:55:66:77-3"): {
-                DEV_SIG_CHANNELS: ["on_off", "level", "light_color"],
+                DEV_SIG_CHANNELS: ["on_off", "light_color", "level"],
                 DEV_SIG_ENT_MAP_CLASS: "Light",
                 DEV_SIG_ENT_MAP_ID: "light.osram_lightify_a19_rgbw_77665544_level_light_color_on_off",
             },
@@ -2903,6 +3709,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
                 DEV_SIG_ENT_MAP_ID: "button.osram_lightify_a19_rgbw_77665544_identify",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-3-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.osram_lightify_a19_rgbw_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-3-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.osram_lightify_a19_rgbw_77665544_basic_lqi",
             },
         },
     },
@@ -2924,6 +3740,8 @@ DEVICES = [
         DEV_SIG_ENTITIES: [
             "button.osram_lightify_dimming_switch_77665544_identify",
             "sensor.osram_lightify_dimming_switch_77665544_power",
+            "sensor.osram_lightify_dimming_switch_77665544_basic_rssi",
+            "sensor.osram_lightify_dimming_switch_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
@@ -2935,6 +3753,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["power"],
                 DEV_SIG_ENT_MAP_CLASS: "Battery",
                 DEV_SIG_ENT_MAP_ID: "sensor.osram_lightify_dimming_switch_77665544_power",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.osram_lightify_dimming_switch_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.osram_lightify_dimming_switch_77665544_basic_lqi",
             },
         },
     },
@@ -2956,10 +3784,12 @@ DEVICES = [
         DEV_SIG_ENTITIES: [
             "button.osram_lightify_flex_rgbw_77665544_identify",
             "light.osram_lightify_flex_rgbw_77665544_level_light_color_on_off",
+            "sensor.osram_lightify_flex_rgbw_77665544_basic_rssi",
+            "sensor.osram_lightify_flex_rgbw_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("light", "00:11:22:33:44:55:66:77-3"): {
-                DEV_SIG_CHANNELS: ["on_off", "level", "light_color"],
+                DEV_SIG_CHANNELS: ["on_off", "light_color", "level"],
                 DEV_SIG_ENT_MAP_CLASS: "Light",
                 DEV_SIG_ENT_MAP_ID: "light.osram_lightify_flex_rgbw_77665544_level_light_color_on_off",
             },
@@ -2967,6 +3797,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
                 DEV_SIG_ENT_MAP_ID: "button.osram_lightify_flex_rgbw_77665544_identify",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-3-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.osram_lightify_flex_rgbw_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-3-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.osram_lightify_flex_rgbw_77665544_basic_lqi",
             },
         },
     },
@@ -2992,10 +3832,12 @@ DEVICES = [
             "sensor.osram_lightify_rt_tunable_white_77665544_electrical_measurement_apparent_power",
             "sensor.osram_lightify_rt_tunable_white_77665544_electrical_measurement_rms_current",
             "sensor.osram_lightify_rt_tunable_white_77665544_electrical_measurement_rms_voltage",
+            "sensor.osram_lightify_rt_tunable_white_77665544_basic_rssi",
+            "sensor.osram_lightify_rt_tunable_white_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("light", "00:11:22:33:44:55:66:77-3"): {
-                DEV_SIG_CHANNELS: ["on_off", "level", "light_color"],
+                DEV_SIG_CHANNELS: ["on_off", "light_color", "level"],
                 DEV_SIG_ENT_MAP_CLASS: "Light",
                 DEV_SIG_ENT_MAP_ID: "light.osram_lightify_rt_tunable_white_77665544_level_light_color_on_off",
             },
@@ -3024,6 +3866,16 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
                 DEV_SIG_ENT_MAP_ID: "sensor.osram_lightify_rt_tunable_white_77665544_electrical_measurement_rms_voltage",
             },
+            ("sensor", "00:11:22:33:44:55:66:77-3-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.osram_lightify_rt_tunable_white_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-3-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.osram_lightify_rt_tunable_white_77665544_basic_lqi",
+            },
         },
     },
     {
@@ -3048,6 +3900,8 @@ DEVICES = [
             "sensor.osram_plug_01_77665544_electrical_measurement_rms_current",
             "sensor.osram_plug_01_77665544_electrical_measurement_rms_voltage",
             "switch.osram_plug_01_77665544_on_off",
+            "sensor.osram_plug_01_77665544_basic_rssi",
+            "sensor.osram_plug_01_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("switch", "00:11:22:33:44:55:66:77-3"): {
@@ -3079,6 +3933,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
                 DEV_SIG_ENT_MAP_ID: "sensor.osram_plug_01_77665544_electrical_measurement_rms_voltage",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-3-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.osram_plug_01_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-3-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.osram_plug_01_77665544_basic_lqi",
             },
         },
     },
@@ -3160,12 +4024,24 @@ DEVICES = [
         ],
         DEV_SIG_ENTITIES: [
             "sensor.osram_switch_4x_lightify_77665544_power",
+            "sensor.osram_switch_4x_lightify_77665544_basic_rssi",
+            "sensor.osram_switch_4x_lightify_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
                 DEV_SIG_CHANNELS: ["power"],
                 DEV_SIG_ENT_MAP_CLASS: "Battery",
                 DEV_SIG_ENT_MAP_ID: "sensor.osram_switch_4x_lightify_77665544_power",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.osram_switch_4x_lightify_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.osram_switch_4x_lightify_77665544_basic_lqi",
             },
         },
     },
@@ -3195,8 +4071,20 @@ DEVICES = [
             "button.philips_rwl020_77665544_identify",
             "sensor.philips_rwl020_77665544_power",
             "binary_sensor.philips_rwl020_77665544_binary_input",
+            "sensor.philips_rwl020_77665544_basic_rssi",
+            "sensor.philips_rwl020_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.philips_rwl020_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.philips_rwl020_77665544_basic_lqi",
+            },
             ("binary_sensor", "00:11:22:33:44:55:66:77-2-15"): {
                 DEV_SIG_CHANNELS: ["binary_input"],
                 DEV_SIG_ENT_MAP_CLASS: "BinaryInput",
@@ -3234,6 +4122,8 @@ DEVICES = [
             "sensor.samjin_button_77665544_power",
             "sensor.samjin_button_77665544_temperature",
             "binary_sensor.samjin_button_77665544_ias_zone",
+            "sensor.samjin_button_77665544_basic_rssi",
+            "sensor.samjin_button_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
@@ -3255,6 +4145,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["temperature"],
                 DEV_SIG_ENT_MAP_CLASS: "Temperature",
                 DEV_SIG_ENT_MAP_ID: "sensor.samjin_button_77665544_temperature",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.samjin_button_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.samjin_button_77665544_basic_lqi",
             },
         },
     },
@@ -3278,6 +4178,8 @@ DEVICES = [
             "sensor.samjin_multi_77665544_power",
             "sensor.samjin_multi_77665544_temperature",
             "binary_sensor.samjin_multi_77665544_ias_zone",
+            "sensor.samjin_multi_77665544_basic_rssi",
+            "sensor.samjin_multi_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
@@ -3299,6 +4201,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["temperature"],
                 DEV_SIG_ENT_MAP_CLASS: "Temperature",
                 DEV_SIG_ENT_MAP_ID: "sensor.samjin_multi_77665544_temperature",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.samjin_multi_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.samjin_multi_77665544_basic_lqi",
             },
         },
     },
@@ -3322,6 +4234,8 @@ DEVICES = [
             "sensor.samjin_water_77665544_power",
             "sensor.samjin_water_77665544_temperature",
             "binary_sensor.samjin_water_77665544_ias_zone",
+            "sensor.samjin_water_77665544_basic_rssi",
+            "sensor.samjin_water_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
@@ -3343,6 +4257,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["temperature"],
                 DEV_SIG_ENT_MAP_CLASS: "Temperature",
                 DEV_SIG_ENT_MAP_ID: "sensor.samjin_water_77665544_temperature",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.samjin_water_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.samjin_water_77665544_basic_lqi",
             },
         },
     },
@@ -3368,6 +4292,8 @@ DEVICES = [
             "sensor.securifi_ltd_unk_model_77665544_electrical_measurement_rms_current",
             "sensor.securifi_ltd_unk_model_77665544_electrical_measurement_rms_voltage",
             "switch.securifi_ltd_unk_model_77665544_on_off",
+            "sensor.securifi_ltd_unk_model_77665544_basic_rssi",
+            "sensor.securifi_ltd_unk_model_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
@@ -3394,6 +4320,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
                 DEV_SIG_ENT_MAP_ID: "sensor.securifi_ltd_unk_model_77665544_electrical_measurement_rms_voltage",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.securifi_ltd_unk_model_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.securifi_ltd_unk_model_77665544_basic_lqi",
             },
             ("switch", "00:11:22:33:44:55:66:77-1-6"): {
                 DEV_SIG_CHANNELS: ["on_off"],
@@ -3422,6 +4358,8 @@ DEVICES = [
             "sensor.sercomm_corp_sz_dws04n_sf_77665544_power",
             "sensor.sercomm_corp_sz_dws04n_sf_77665544_temperature",
             "binary_sensor.sercomm_corp_sz_dws04n_sf_77665544_ias_zone",
+            "sensor.sercomm_corp_sz_dws04n_sf_77665544_basic_rssi",
+            "sensor.sercomm_corp_sz_dws04n_sf_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
@@ -3443,6 +4381,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["temperature"],
                 DEV_SIG_ENT_MAP_CLASS: "Temperature",
                 DEV_SIG_ENT_MAP_ID: "sensor.sercomm_corp_sz_dws04n_sf_77665544_temperature",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.sercomm_corp_sz_dws04n_sf_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.sercomm_corp_sz_dws04n_sf_77665544_basic_lqi",
             },
         },
     },
@@ -3470,13 +4418,15 @@ DEVICES = [
         DEV_SIG_EVT_CHANNELS: ["1:0x0019", "2:0x0006"],
         DEV_SIG_ENTITIES: [
             "button.sercomm_corp_sz_esw01_77665544_identify",
-            "light.sercomm_corp_sz_esw01_77665544_on_off",
             "sensor.sercomm_corp_sz_esw01_77665544_electrical_measurement",
             "sensor.sercomm_corp_sz_esw01_77665544_electrical_measurement_apparent_power",
             "sensor.sercomm_corp_sz_esw01_77665544_electrical_measurement_rms_current",
             "sensor.sercomm_corp_sz_esw01_77665544_electrical_measurement_rms_voltage",
             "sensor.sercomm_corp_sz_esw01_77665544_smartenergy_metering",
             "sensor.sercomm_corp_sz_esw01_77665544_smartenergy_metering_summation_delivered",
+            "light.sercomm_corp_sz_esw01_77665544_on_off",
+            "sensor.sercomm_corp_sz_esw01_77665544_basic_rssi",
+            "sensor.sercomm_corp_sz_esw01_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("light", "00:11:22:33:44:55:66:77-1"): {
@@ -3519,6 +4469,16 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
                 DEV_SIG_ENT_MAP_ID: "sensor.sercomm_corp_sz_esw01_77665544_smartenergy_metering_summation_delivered",
             },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.sercomm_corp_sz_esw01_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.sercomm_corp_sz_esw01_77665544_basic_lqi",
+            },
         },
     },
     {
@@ -3542,6 +4502,8 @@ DEVICES = [
             "sensor.sercomm_corp_sz_pir04_77665544_illuminance",
             "sensor.sercomm_corp_sz_pir04_77665544_temperature",
             "binary_sensor.sercomm_corp_sz_pir04_77665544_ias_zone",
+            "sensor.sercomm_corp_sz_pir04_77665544_basic_rssi",
+            "sensor.sercomm_corp_sz_pir04_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
@@ -3569,6 +4531,16 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "Temperature",
                 DEV_SIG_ENT_MAP_ID: "sensor.sercomm_corp_sz_pir04_77665544_temperature",
             },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.sercomm_corp_sz_pir04_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.sercomm_corp_sz_pir04_77665544_basic_lqi",
+            },
         },
     },
     {
@@ -3593,6 +4565,8 @@ DEVICES = [
             "sensor.sinope_technologies_rm3250zb_77665544_electrical_measurement_rms_current",
             "sensor.sinope_technologies_rm3250zb_77665544_electrical_measurement_rms_voltage",
             "switch.sinope_technologies_rm3250zb_77665544_on_off",
+            "sensor.sinope_technologies_rm3250zb_77665544_basic_rssi",
+            "sensor.sinope_technologies_rm3250zb_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
@@ -3619,6 +4593,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
                 DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_rm3250zb_77665544_electrical_measurement_rms_voltage",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_rm3250zb_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_rm3250zb_77665544_basic_lqi",
             },
             ("switch", "00:11:22:33:44:55:66:77-1-6"): {
                 DEV_SIG_CHANNELS: ["on_off"],
@@ -3658,6 +4642,8 @@ DEVICES = [
             "sensor.sinope_technologies_th1123zb_77665544_temperature",
             "sensor.sinope_technologies_th1123zb_77665544_thermostat_hvac_action",
             "climate.sinope_technologies_th1123zb_77665544_thermostat",
+            "sensor.sinope_technologies_th1123zb_77665544_basic_rssi",
+            "sensor.sinope_technologies_th1123zb_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
@@ -3694,6 +4680,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["temperature"],
                 DEV_SIG_ENT_MAP_CLASS: "Temperature",
                 DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1123zb_77665544_temperature",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1123zb_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1123zb_77665544_basic_lqi",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-513-hvac_action"): {
                 DEV_SIG_CHANNELS: ["thermostat"],
@@ -3733,6 +4729,8 @@ DEVICES = [
             "sensor.sinope_technologies_th1124zb_77665544_temperature",
             "sensor.sinope_technologies_th1124zb_77665544_thermostat_hvac_action",
             "climate.sinope_technologies_th1124zb_77665544_thermostat",
+            "sensor.sinope_technologies_th1124zb_77665544_basic_rssi",
+            "sensor.sinope_technologies_th1124zb_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
@@ -3744,16 +4742,6 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["thermostat"],
                 DEV_SIG_ENT_MAP_CLASS: "Thermostat",
                 DEV_SIG_ENT_MAP_ID: "climate.sinope_technologies_th1124zb_77665544_thermostat",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-1-513-hvac_action"): {
-                DEV_SIG_CHANNELS: ["thermostat"],
-                DEV_SIG_ENT_MAP_CLASS: "SinopeHVACAction",
-                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1124zb_77665544_thermostat_hvac_action",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-1-1026"): {
-                DEV_SIG_CHANNELS: ["temperature"],
-                DEV_SIG_ENT_MAP_CLASS: "Temperature",
-                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1124zb_77665544_temperature",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820"): {
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
@@ -3774,6 +4762,26 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["electrical_measurement"],
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
                 DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1124zb_77665544_electrical_measurement_rms_voltage",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-1026"): {
+                DEV_SIG_CHANNELS: ["temperature"],
+                DEV_SIG_ENT_MAP_CLASS: "Temperature",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1124zb_77665544_temperature",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1124zb_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1124zb_77665544_basic_lqi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-513-hvac_action"): {
+                DEV_SIG_CHANNELS: ["thermostat"],
+                DEV_SIG_ENT_MAP_CLASS: "SinopeHVACAction",
+                DEV_SIG_ENT_MAP_ID: "sensor.sinope_technologies_th1124zb_77665544_thermostat_hvac_action",
             },
         },
     },
@@ -3800,6 +4808,8 @@ DEVICES = [
             "sensor.smartthings_outletv4_77665544_electrical_measurement_rms_voltage",
             "binary_sensor.smartthings_outletv4_77665544_binary_input",
             "switch.smartthings_outletv4_77665544_on_off",
+            "sensor.smartthings_outletv4_77665544_basic_rssi",
+            "sensor.smartthings_outletv4_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-15"): {
@@ -3832,6 +4842,16 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_CLASS: "ElectricalMeasurementRMSVoltage",
                 DEV_SIG_ENT_MAP_ID: "sensor.smartthings_outletv4_77665544_electrical_measurement_rms_voltage",
             },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.smartthings_outletv4_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.smartthings_outletv4_77665544_basic_lqi",
+            },
             ("switch", "00:11:22:33:44:55:66:77-1-6"): {
                 DEV_SIG_CHANNELS: ["on_off"],
                 DEV_SIG_ENT_MAP_CLASS: "Switch",
@@ -3858,6 +4878,8 @@ DEVICES = [
             "button.smartthings_tagv4_77665544_identify",
             "device_tracker.smartthings_tagv4_77665544_power",
             "binary_sensor.smartthings_tagv4_77665544_binary_input",
+            "sensor.smartthings_tagv4_77665544_basic_rssi",
+            "sensor.smartthings_tagv4_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("device_tracker", "00:11:22:33:44:55:66:77-1"): {
@@ -3874,6 +4896,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
                 DEV_SIG_ENT_MAP_ID: "button.smartthings_tagv4_77665544_identify",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.smartthings_tagv4_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.smartthings_tagv4_77665544_basic_lqi",
             },
         },
     },
@@ -3895,12 +4927,24 @@ DEVICES = [
         DEV_SIG_ENTITIES: [
             "button.third_reality_inc_3rss007z_77665544_identify",
             "switch.third_reality_inc_3rss007z_77665544_on_off",
+            "sensor.third_reality_inc_3rss007z_77665544_basic_rssi",
+            "sensor.third_reality_inc_3rss007z_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
                 DEV_SIG_CHANNELS: ["identify"],
                 DEV_SIG_ENT_MAP_CLASS: "ZHAIdentifyButton",
                 DEV_SIG_ENT_MAP_ID: "button.third_reality_inc_3rss007z_77665544_identify",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.third_reality_inc_3rss007z_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.third_reality_inc_3rss007z_77665544_basic_lqi",
             },
             ("switch", "00:11:22:33:44:55:66:77-1-6"): {
                 DEV_SIG_CHANNELS: ["on_off"],
@@ -3928,6 +4972,8 @@ DEVICES = [
             "button.third_reality_inc_3rss008z_77665544_identify",
             "sensor.third_reality_inc_3rss008z_77665544_power",
             "switch.third_reality_inc_3rss008z_77665544_on_off",
+            "sensor.third_reality_inc_3rss008z_77665544_basic_rssi",
+            "sensor.third_reality_inc_3rss008z_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
@@ -3939,6 +4985,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["power"],
                 DEV_SIG_ENT_MAP_CLASS: "Battery",
                 DEV_SIG_ENT_MAP_ID: "sensor.third_reality_inc_3rss008z_77665544_power",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.third_reality_inc_3rss008z_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.third_reality_inc_3rss008z_77665544_basic_lqi",
             },
             ("switch", "00:11:22:33:44:55:66:77-1-6"): {
                 DEV_SIG_CHANNELS: ["on_off"],
@@ -3967,6 +5023,8 @@ DEVICES = [
             "sensor.visonic_mct_340_e_77665544_power",
             "sensor.visonic_mct_340_e_77665544_temperature",
             "binary_sensor.visonic_mct_340_e_77665544_ias_zone",
+            "sensor.visonic_mct_340_e_77665544_basic_rssi",
+            "sensor.visonic_mct_340_e_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
@@ -3988,6 +5046,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["temperature"],
                 DEV_SIG_ENT_MAP_CLASS: "Temperature",
                 DEV_SIG_ENT_MAP_ID: "sensor.visonic_mct_340_e_77665544_temperature",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.visonic_mct_340_e_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.visonic_mct_340_e_77665544_basic_lqi",
             },
         },
     },
@@ -4011,6 +5079,8 @@ DEVICES = [
             "sensor.zen_within_zen_01_77665544_power",
             "sensor.zen_within_zen_01_77665544_thermostat_hvac_action",
             "climate.zen_within_zen_01_77665544_fan_thermostat",
+            "sensor.zen_within_zen_01_77665544_basic_rssi",
+            "sensor.zen_within_zen_01_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
@@ -4027,6 +5097,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["power"],
                 DEV_SIG_ENT_MAP_CLASS: "Battery",
                 DEV_SIG_ENT_MAP_ID: "sensor.zen_within_zen_01_77665544_power",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.zen_within_zen_01_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.zen_within_zen_01_77665544_basic_lqi",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-513-hvac_action"): {
                 DEV_SIG_CHANNELS: ["thermostat"],
@@ -4076,12 +5156,24 @@ DEVICES = [
             "light.tyzb01_ns1ndbww_ts0004_77665544_on_off_2",
             "light.tyzb01_ns1ndbww_ts0004_77665544_on_off_3",
             "light.tyzb01_ns1ndbww_ts0004_77665544_on_off_4",
+            "sensor.tyzb01_ns1ndbww_ts0004_77665544_basic_rssi",
+            "sensor.tyzb01_ns1ndbww_ts0004_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("light", "00:11:22:33:44:55:66:77-1"): {
                 DEV_SIG_CHANNELS: ["on_off"],
                 DEV_SIG_ENT_MAP_CLASS: "Light",
                 DEV_SIG_ENT_MAP_ID: "light.tyzb01_ns1ndbww_ts0004_77665544_on_off",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.tyzb01_ns1ndbww_ts0004_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.tyzb01_ns1ndbww_ts0004_77665544_basic_lqi",
             },
             ("light", "00:11:22:33:44:55:66:77-2"): {
                 DEV_SIG_CHANNELS: ["on_off"],
@@ -4119,6 +5211,8 @@ DEVICES = [
             "button.netvox_z308e3ed_77665544_identify",
             "sensor.netvox_z308e3ed_77665544_power",
             "binary_sensor.netvox_z308e3ed_77665544_ias_zone",
+            "sensor.netvox_z308e3ed_77665544_basic_rssi",
+            "sensor.netvox_z308e3ed_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
@@ -4135,6 +5229,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["power"],
                 DEV_SIG_ENT_MAP_CLASS: "Battery",
                 DEV_SIG_ENT_MAP_ID: "sensor.netvox_z308e3ed_77665544_power",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.netvox_z308e3ed_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.netvox_z308e3ed_77665544_basic_lqi",
             },
         },
     },
@@ -4158,6 +5262,8 @@ DEVICES = [
             "light.sengled_e11_g13_77665544_level_on_off",
             "sensor.sengled_e11_g13_77665544_smartenergy_metering",
             "sensor.sengled_e11_g13_77665544_smartenergy_metering_summation_delivered",
+            "sensor.sengled_e11_g13_77665544_basic_rssi",
+            "sensor.sengled_e11_g13_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("light", "00:11:22:33:44:55:66:77-1"): {
@@ -4179,6 +5285,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["smartenergy_metering"],
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
                 DEV_SIG_ENT_MAP_ID: "sensor.sengled_e11_g13_77665544_smartenergy_metering_summation_delivered",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.sengled_e11_g13_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.sengled_e11_g13_77665544_basic_lqi",
             },
         },
     },
@@ -4202,6 +5318,8 @@ DEVICES = [
             "light.sengled_e12_n14_77665544_level_on_off",
             "sensor.sengled_e12_n14_77665544_smartenergy_metering",
             "sensor.sengled_e12_n14_77665544_smartenergy_metering_summation_delivered",
+            "sensor.sengled_e12_n14_77665544_basic_rssi",
+            "sensor.sengled_e12_n14_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("light", "00:11:22:33:44:55:66:77-1"): {
@@ -4223,6 +5341,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["smartenergy_metering"],
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
                 DEV_SIG_ENT_MAP_ID: "sensor.sengled_e12_n14_77665544_smartenergy_metering_summation_delivered",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.sengled_e12_n14_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.sengled_e12_n14_77665544_basic_lqi",
             },
         },
     },
@@ -4246,10 +5374,12 @@ DEVICES = [
             "light.sengled_z01_a19nae26_77665544_level_light_color_on_off",
             "sensor.sengled_z01_a19nae26_77665544_smartenergy_metering",
             "sensor.sengled_z01_a19nae26_77665544_smartenergy_metering_summation_delivered",
+            "sensor.sengled_z01_a19nae26_77665544_basic_rssi",
+            "sensor.sengled_z01_a19nae26_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("light", "00:11:22:33:44:55:66:77-1"): {
-                DEV_SIG_CHANNELS: ["on_off", "light_color", "level"],
+                DEV_SIG_CHANNELS: ["on_off", "level", "light_color"],
                 DEV_SIG_ENT_MAP_CLASS: "Light",
                 DEV_SIG_ENT_MAP_ID: "light.sengled_z01_a19nae26_77665544_level_light_color_on_off",
             },
@@ -4267,6 +5397,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["smartenergy_metering"],
                 DEV_SIG_ENT_MAP_CLASS: "SmartEnergySummation",
                 DEV_SIG_ENT_MAP_ID: "sensor.sengled_z01_a19nae26_77665544_smartenergy_metering_summation_delivered",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.sengled_z01_a19nae26_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.sengled_z01_a19nae26_77665544_basic_lqi",
             },
         },
     },
@@ -4288,6 +5428,8 @@ DEVICES = [
         DEV_SIG_ENTITIES: [
             "button.unk_manufacturer_unk_model_77665544_identify",
             "cover.unk_manufacturer_unk_model_77665544_level_on_off_shade",
+            "sensor.unk_manufacturer_unk_model_77665544_basic_rssi",
+            "sensor.unk_manufacturer_unk_model_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("button", "00:11:22:33:44:55:66:77-1-3"): {
@@ -4296,9 +5438,19 @@ DEVICES = [
                 DEV_SIG_ENT_MAP_ID: "button.unk_manufacturer_unk_model_77665544_identify",
             },
             ("cover", "00:11:22:33:44:55:66:77-1"): {
-                DEV_SIG_CHANNELS: ["shade", "level", "on_off"],
+                DEV_SIG_CHANNELS: ["level", "on_off", "shade"],
                 DEV_SIG_ENT_MAP_CLASS: "Shade",
                 DEV_SIG_ENT_MAP_ID: "cover.unk_manufacturer_unk_model_77665544_level_on_off_shade",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.unk_manufacturer_unk_model_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.unk_manufacturer_unk_model_77665544_basic_lqi",
             },
         },
     },
@@ -4578,6 +5730,8 @@ DEVICES = [
             "sensor.efektalab_ru_efekta_pws_77665544_power",
             "sensor.efektalab_ru_efekta_pws_77665544_soil_moisture",
             "sensor.efektalab_ru_efekta_pws_77665544_temperature",
+            "sensor.efektalab_ru_efekta_pws_77665544_basic_rssi",
+            "sensor.efektalab_ru_efekta_pws_77665544_basic_lqi",
         ],
         DEV_SIG_ENT_MAP: {
             ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
@@ -4594,6 +5748,16 @@ DEVICES = [
                 DEV_SIG_CHANNELS: ["temperature"],
                 DEV_SIG_ENT_MAP_CLASS: "Temperature",
                 DEV_SIG_ENT_MAP_ID: "sensor.efektalab_ru_efekta_pws_77665544_temperature",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-rssi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "RSSISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.efektalab_ru_efekta_pws_77665544_basic_rssi",
+            },
+            ("sensor", "00:11:22:33:44:55:66:77-1-0-lqi"): {
+                DEV_SIG_CHANNELS: ["basic"],
+                DEV_SIG_ENT_MAP_CLASS: "LQISensor",
+                DEV_SIG_ENT_MAP_ID: "sensor.efektalab_ru_efekta_pws_77665544_basic_lqi",
             },
         },
     },
