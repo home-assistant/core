@@ -6,7 +6,7 @@ from datetime import timedelta
 import logging
 
 import async_timeout
-from spacex.starlink.dish import StarlinkDish
+from spacex.starlink import CommunicationError, StarlinkDish
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -16,6 +16,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
+    UpdateFailed,
 )
 
 from .const import (
@@ -44,11 +45,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def async_update_data():
         async with async_timeout.timeout(10):
             try:
+                if not dish.connected:
+                    dish.connect(refresh=False)  # Avoid refreshing twice
                 dish.refresh()
-            except Exception:  # TODO: what exceptions should I catch?
-                _LOGGER.warning("Lost connection to Dishy, trying to reconnect")
-                dish.connect()  # TODO: better disconnection handling
-                dish.refresh()
+            except CommunicationError as err:
+                _LOGGER.warning("Lost connection to Dishy")
+                dish.close()
+                raise UpdateFailed(f"Error communicating with API: {err}")
 
     coordinator = DataUpdateCoordinator(
         hass,
@@ -122,6 +125,11 @@ class BaseStarlinkEntity(CoordinatorEntity, ABC):
         By default, combines the base_name attribute of the class with the name of the device.
         """
         return self.device_info["name"] + " " + self.base_name
+
+    @property
+    def available(self):
+        """Return whether or not a connection to the dish could be made."""
+        return self.dish.connected
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

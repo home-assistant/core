@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/starlink",
   "requirements": [
-    "starlink-python==0.1.1"
+    "starlink-python==0.1.2"
   ],
   "ssdp": [],
   "zeroconf": [],
