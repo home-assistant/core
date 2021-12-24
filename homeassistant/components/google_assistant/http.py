@@ -3,6 +3,7 @@ import asyncio
 from datetime import timedelta
 from http import HTTPStatus
 import logging
+from typing import Any
 from uuid import uuid4
 
 from aiohttp import ClientError, ClientResponseError
@@ -12,6 +13,7 @@ import jwt
 # Typing imports
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES, ENTITY_CATEGORIES
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import dt as dt_util
@@ -52,7 +54,7 @@ def _get_homegraph_jwt(time, iss, key):
     return jwt.encode(jwt_raw, key, algorithm="RS256")
 
 
-async def _get_homegraph_token(hass, jwt_signed):
+async def _get_homegraph_token(hass: HomeAssistant, jwt_signed: str) -> dict[str, Any]:
     headers = {
         "Authorization": f"Bearer {jwt_signed}",
         "Content-Type": "application/x-www-form-urlencoded",
