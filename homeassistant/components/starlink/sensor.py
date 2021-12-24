@@ -33,7 +33,10 @@ async def async_setup_entry(
 class StarlinkSensorEntity(BaseStarlinkEntity, SensorEntity):
     """Parent class of all Sensor entities."""
 
-    pass
+    @property
+    def state_class(self):
+        """Return the state class for this entity."""
+        return "measurement"
 
 
 class PingDropRate(StarlinkSensorEntity):
@@ -183,6 +186,11 @@ class Azimuth(StarlinkSensorEntity):
         """Return the angle of the dish horizontally."""
         return round(self.dish.status.azimuth_deg, 2)
 
+    @property
+    def state_class(self):
+        """Return the state class, which is None for device positioning metrics."""
+        return None
+
 
 class Elevation(StarlinkSensorEntity):
     """The angle of the satellite, pointing horizontally."""
@@ -213,6 +221,11 @@ class Elevation(StarlinkSensorEntity):
     def state(self):
         """Return the angle of the dish horizontally."""
         return round(self.dish.status.elevation_deg, 2)
+
+    @property
+    def state_class(self):
+        """Return the state class, which is None for device positioning metrics."""
+        return None
 
 
 class NumberOfAlerts(StarlinkSensorEntity):
