@@ -1,9 +1,11 @@
 """Support for Overkiz (virtual) numbers."""
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from pyoverkiz.enums import OverkizCommand, OverkizState
 
-from homeassistant.components.number import NumberEntity
+from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
@@ -11,7 +13,20 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantOverkizData
 from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES
-from .entity import OverkizDescriptiveEntity, OverkizNumberDescription
+from .entity import OverkizDescriptiveEntity
+
+
+@dataclass
+class OverkizNumberDescriptionMixin:
+    """Define an entity description mixin for number entities."""
+
+    command: str
+
+
+@dataclass
+class OverkizNumberDescription(NumberEntityDescription, OverkizNumberDescriptionMixin):
+    """Class to describe an Overkiz number."""
+
 
 NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
     # Cover: My Position (0 - 100)
