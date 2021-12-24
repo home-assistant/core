@@ -111,7 +111,7 @@ class BaseStarlinkEntity(CoordinatorEntity, ABC):
         return {
             "identifiers": {(DOMAIN, self.dish.id)},
             "name": self.coordinator.name,
-            "model": "Dishy McFlatface",  # TODO: Get the actual model from the satellite
+            "model": "Dishy McFlatface",
             "manufacturer": "SpaceX",
             "sw_version": self.dish.software_version,
             "hw_version": self.dish.hardware_version,
