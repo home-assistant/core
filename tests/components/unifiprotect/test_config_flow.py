@@ -18,12 +18,9 @@ from homeassistant.data_entry_flow import (
 )
 from homeassistant.helpers import device_registry as dr
 
+from .conftest import MAC_ADDR, MOCK_NVR_DATA, MOCK_OLD_NVR_DATA
+
 from tests.common import MockConfigEntry
-from tests.components.unifiprotect.conftest import (
-    MAC_ADDR,
-    MOCK_NVR_DATA,
-    MOCK_OLD_NVR_DATA,
-)
 
 
 async def test_form(hass: HomeAssistant) -> None:
