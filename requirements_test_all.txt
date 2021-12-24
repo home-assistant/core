@@ -1492,7 +1492,7 @@ yeelight==0.7.8
 youless-api==0.15
 
 # homeassistant.components.zeroconf
-zeroconf==0.37.0
+zeroconf==0.38.1
 
 # homeassistant.components.zha
 zha-quirks==0.0.65
