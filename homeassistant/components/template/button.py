@@ -9,13 +9,12 @@ import voluptuous as vol
 
 from homeassistant.components.button import (
     DEVICE_CLASSES_SCHEMA,
-    DOMAIN as BUTTON_DOMAIN,
     ButtonDeviceClass,
     ButtonEntity,
 )
-from homeassistant.components.template import TriggerUpdateCoordinator
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_ICON, CONF_NAME, CONF_UNIQUE_ID
 from homeassistant.core import Config, HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
@@ -23,7 +22,6 @@ from homeassistant.helpers.template import Template, TemplateError
 
 from .const import CONF_AVAILABILITY, DOMAIN
 from .template_entity import TemplateEntity
-from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -74,18 +72,10 @@ async def async_setup_platform(
     discovery_info: dict[str, Any] | None = None,
 ) -> None:
     """Set up the template button."""
-    if discovery_info is None:
-        _LOGGER.warning(
-            "Template button entities can only be configured under template:"
-        )
-        return
-
     if "coordinator" in discovery_info:
-        async_add_entities(
-            TriggerButtonEntity(hass, discovery_info["coordinator"], config)
-            for config in discovery_info["entities"]
+        raise PlatformNotReady(
+            "The template button platform doesn't support trigger entities"
         )
-        return
 
     async_add_entities(
         await _async_create_entities(
@@ -126,31 +116,6 @@ class TemplateButtonEntity(TemplateEntity, ButtonEntity):
         if self._name_template and not self._name_template.is_static:
             self.add_template_attribute("_attr_name", self._name_template, cv.string)
         await super().async_added_to_hass()
-
-    async def async_press(self) -> None:
-        """Press the button."""
-        await self._command_press.async_run(context=self._context)
-
-
-class TriggerButtonEntity(TriggerEntity, ButtonEntity):
-    """Button entity based on trigger data."""
-
-    domain = BUTTON_DOMAIN
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        coordinator: TriggerUpdateCoordinator,
-        config: dict,
-    ) -> None:
-        """Initialize the entity."""
-        super().__init__(hass, coordinator, config)
-        self._command_press = Script(
-            hass,
-            config[CONF_PRESS],
-            self._rendered.get(CONF_NAME, DEFAULT_NAME),
-            DOMAIN,
-        )
 
     async def async_press(self) -> None:
         """Press the button."""
