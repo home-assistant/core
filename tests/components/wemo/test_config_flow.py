@@ -4,10 +4,7 @@ from dataclasses import asdict
 
 from homeassistant import data_entry_flow
 from homeassistant.components.wemo.const import DOMAIN
-from homeassistant.components.wemo.wemo_device import (
-    LongPressRequiresSubscriptionError,
-    Options,
-)
+from homeassistant.components.wemo.wemo_device import Options
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 
@@ -57,10 +54,16 @@ async def test_invalid_options(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "init"
 
+    # enable_subscription must be True if enable_long_press is True (default).
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={"enable_subscription": False}
     )
-
     assert result["errors"] == {
-        LongPressRequiresSubscriptionError.field: LongPressRequiresSubscriptionError.error_string
+        "enable_subscription": "long_press_requires_subscription"
     }
+
+    # polling_interval_seconds must be larger than 10.
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={"polling_interval_seconds": 1}
+    )
+    assert result["errors"] == {"polling_interval_seconds": "polling_interval_to_small"}

@@ -22,6 +22,7 @@
     },
     "error": {
       "long_press_requires_subscription": "Local push update subscriptions must be enabled to use long-press events",
+      "polling_interval_to_small": "Polling more frequently than 10 seconds is not supported",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },

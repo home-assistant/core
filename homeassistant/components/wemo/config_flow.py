@@ -52,7 +52,7 @@ class WemoOptionsFlow(OptionsFlow):
             try:
                 Options(**user_input)
             except OptionsValidationError as err:
-                errors = {err.field: err.error_string}
+                errors = {err.field_key: err.error_key}
             else:
                 return self.async_create_entry(title="", data=user_input)
 

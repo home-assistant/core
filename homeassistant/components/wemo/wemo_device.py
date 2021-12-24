@@ -5,6 +5,7 @@ import asyncio
 from dataclasses import dataclass, fields
 from datetime import timedelta
 import logging
+from typing import Literal
 
 from pywemo import Insight, LongPressMixin, WeMoDevice
 from pywemo.exceptions import ActionException
@@ -32,24 +33,43 @@ from .const import DOMAIN, WEMO_SUBSCRIPTION_EVENT
 
 _LOGGER = logging.getLogger(__name__)
 
+# Literal values must match options.error keys from strings.json.
+ErrorStringKey = Literal[
+    "long_press_requires_subscription", "polling_interval_to_small"
+]
+# Literal values must match options.step.init.data keys from strings.json.
+OptionsFieldKey = Literal[
+    "enable_subscription", "enable_long_press", "polling_interval_seconds"
+]
+
 
 class OptionsValidationError(Exception):
     """Error validating options."""
 
-    field: str = "base"
-    error_string: str = "unknown"
+    def __init__(
+        self, field_key: OptionsFieldKey, error_key: ErrorStringKey, message: str
+    ) -> None:
+        """Store field and error_key so the exception handler can used them.
 
+        The field_key and error_key strings must be the same as in strings.json.
 
-class LongPressRequiresSubscriptionError(OptionsValidationError):
-    """subscriptions must be enabled to use long-press events."""
-
-    field = "enable_subscription"
-    error_string = "long_press_requires_subscription"
+        Args:
+          field_key: Name of the options.step.init.data key that corresponds to this error.
+            field_key must also match one of the field names inside the Options class.
+          error_key: Name of the options.error key that corresponds to this error.
+        """
+        super().__init__(message)
+        self.field_key = field_key
+        self.error_key = error_key
 
 
 @dataclass(frozen=True)
 class Options:
-    """Configuration options for the DeviceCoordinator class."""
+    """Configuration options for the DeviceCoordinator class.
+
+    Note: The field names must match the keys (OptionsFieldKey)
+    from options.step.init.data in strings.json.
+    """
 
     # Subscribe to device local push updates.
     enable_subscription: bool = True
@@ -57,14 +77,22 @@ class Options:
     # Register for device long-press events.
     enable_long_press: bool = True
 
-    # Polling interval for when subscriptions are not enabled.
+    # Polling interval for when subscriptions are not enabled or broken.
     polling_interval_seconds: int = 30
 
     def __post_init__(self) -> None:
         """Validate parameters."""
         if not self.enable_subscription and self.enable_long_press:
-            raise LongPressRequiresSubscriptionError(
+            raise OptionsValidationError(
+                "enable_subscription",
+                "long_press_requires_subscription",
                 "Local push update subscriptions must be enabled to use long-press events",
+            )
+        if self.polling_interval_seconds < 10:
+            raise OptionsValidationError(
+                "polling_interval_seconds",
+                "polling_interval_to_small",
+                "Polling more frequently than 10 seconds is not supported",
             )
 
 
