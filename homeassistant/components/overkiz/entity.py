@@ -8,6 +8,7 @@ from pyoverkiz.enums import OverkizAttribute, OverkizState
 from pyoverkiz.models import Device
 
 from homeassistant.components.button import ButtonEntityDescription
+from homeassistant.components.number import NumberEntityDescription
 from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -93,6 +94,18 @@ class OverkizSensorDescription(SensorEntityDescription):
     ] | None = lambda val: val
 
 
+@dataclass
+class OverkizNumberDescriptionMixin:
+    """Define an entity description mixin for number entities."""
+
+    command: str
+
+
+@dataclass
+class OverkizNumberDescription(NumberEntityDescription, OverkizNumberDescriptionMixin):
+    """Class to describe an Overkiz number."""
+
+
 class OverkizDescriptiveEntity(OverkizEntity):
     """Representation of a Overkiz device entity based on a description."""
 
@@ -100,7 +113,9 @@ class OverkizDescriptiveEntity(OverkizEntity):
         self,
         device_url: str,
         coordinator: OverkizDataUpdateCoordinator,
-        description: OverkizSensorDescription | ButtonEntityDescription,
+        description: OverkizSensorDescription
+        | ButtonEntityDescription
+        | OverkizNumberDescription,
     ) -> None:
         """Initialize the device."""
         super().__init__(device_url, coordinator)
