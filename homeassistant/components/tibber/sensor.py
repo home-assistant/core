@@ -390,7 +390,7 @@ class TibberSensorRT(TibberSensor, update_coordinator.CoordinatorEntity):
                     state < 0.5 * self.native_value
                     and (
                         ts_local.hour == 0
-                        or (ts_local - self.last_reset) > timedelta(24)
+                        or (ts_local - self.last_reset) > timedelta(hours=24)
                     )
                 ):
                     self._attr_last_reset = dt_util.as_utc(
