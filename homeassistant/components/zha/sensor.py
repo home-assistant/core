@@ -708,11 +708,7 @@ class RSSISensor(Sensor, id_suffix="rssi"):
     @property
     def native_value(self) -> StateType:
         """Return the state of the entity."""
-        if (
-            raw_state := getattr(self._zha_device.device, self.unique_id_suffix)
-        ) is None:
-            return None
-        return raw_state
+        return getattr(self._zha_device.device, self.unique_id_suffix)
 
     @property
     def should_poll(self) -> bool:
