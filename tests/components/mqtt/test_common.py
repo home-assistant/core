@@ -8,7 +8,7 @@ from homeassistant.components import mqtt
 from homeassistant.components.mqtt import debug_info
 from homeassistant.components.mqtt.const import MQTT_DISCONNECTED
 from homeassistant.components.mqtt.mixins import MQTT_ATTRIBUTES_BLOCKED
-from homeassistant.const import ATTR_ASSUMED_STATE, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
@@ -1266,3 +1266,98 @@ async def help_test_entity_category(hass, mqtt_mock, domain, config):
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/{unique_id}/config", data)
     await hass.async_block_till_done()
     assert not ent_registry.async_get_entity_id(domain, mqtt.DOMAIN, unique_id)
+
+
+async def help_test_publishing_with_custom_encoding(
+    hass, mqtt_mock, caplog, domain, config, service, topic, parameters, payload
+):
+    """Test a service with publishing MQTT payload with different encoding."""
+    data1 = {ATTR_ENTITY_ID: f"{domain}.test1"}
+    if parameters:
+        data1.update(parameters)
+
+    config1 = copy.deepcopy(config)
+    config1[topic] = "cmd/test1"
+    config1["name"] = "test1"
+
+    data2 = {ATTR_ENTITY_ID: f"{domain}.test2"}
+    if parameters:
+        data2.update(parameters)
+
+    config2 = copy.deepcopy(config)
+    config2[topic] = "cmd/test2"
+    config2["name"] = "test2"
+    config2["encoding"] = "utf-16"
+
+    data3 = {ATTR_ENTITY_ID: f"{domain}.test3"}
+    if parameters:
+        data3.update(parameters)
+
+    config3 = copy.deepcopy(config)
+    config3[topic] = "cmd/test3"
+    config3["name"] = "test3"
+    config3["encoding"] = ""
+
+    data4 = {ATTR_ENTITY_ID: f"{domain}.test4"}
+    if parameters:
+        data3.update(parameters)
+
+    config4 = copy.deepcopy(config)
+    config4[topic] = "cmd/test4"
+    config4["name"] = "test4"
+    config4["encoding"] = "invalid"
+
+    assert await async_setup_component(
+        hass,
+        domain,
+        {domain: [config1, config2, config3, config4]},
+    )
+    await hass.async_block_till_done()
+
+    # test with default encoding
+    await hass.services.async_call(
+        domain,
+        service,
+        data1,
+        blocking=True,
+    )
+
+    mqtt_mock.async_publish.assert_called_once_with("cmd/test1", payload, 0, False)
+    mqtt_mock.async_publish.reset_mock()
+
+    # test with utf-16 encoding
+    await hass.services.async_call(
+        domain,
+        service,
+        data2,
+        blocking=True,
+    )
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        "cmd/test2", payload.encode("utf-16"), 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+
+    # test with no encoding set should fail if payload is a string
+    await hass.services.async_call(
+        domain,
+        service,
+        data3,
+        blocking=True,
+    )
+    assert (
+        f"Can't pass-through payload for publishing {payload} on cmd/test3 with no encoding set, need 'bytes' got <class 'str'>"
+        in caplog.text
+    )
+
+    # test with invalid encoding set should fail
+    await hass.services.async_call(
+        domain,
+        service,
+        data4,
+        blocking=True,
+    )
+    assert (
+        f"Can't encode payload for publishing {payload} on cmd/test4 with encoding invalid"
+        in caplog.text
+    )

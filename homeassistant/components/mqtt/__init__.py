@@ -373,7 +373,7 @@ async def async_publish(
             # a string is encoded as utf-8 by default, other encoding requires bytes as payload
             try:
                 outgoing_payload = outgoing_payload.encode(encoding)
-            except (AttributeError, UnicodeEncodeError):
+            except (AttributeError, LookupError, UnicodeEncodeError):
                 _LOGGER.error(
                     "Can't encode payload for publishing %s on %s with encoding %s",
                     payload,

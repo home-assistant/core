@@ -23,6 +23,7 @@ from .test_common import (
     help_test_entity_device_info_with_connection,
     help_test_entity_device_info_with_identifier,
     help_test_entity_id_update_discovery_update,
+    help_test_publishing_with_custom_encoding,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
@@ -323,33 +324,19 @@ async def test_valid_device_class(hass, mqtt_mock):
     assert "device_class" not in state.attributes
 
 
-async def test_sending_mqtt_commands_with_different_encoding(hass, mqtt_mock):
-    """Test the sending MQTT commands with different encoding."""
-    config = copy.deepcopy(DEFAULT_CONFIG[button.DOMAIN])
+@pytest.mark.parametrize(
+    "service,topic,parameters,payload",
+    [
+        (button.SERVICE_PRESS, "command_topic", None, "PRESS"),
+    ],
+)
+async def test_publishing_with_custom_encoding(
+    hass, mqtt_mock, caplog, service, topic, parameters, payload
+):
+    """Test publishing MQTT payload with different encoding."""
     domain = button.DOMAIN
-    service = button.SERVICE_PRESS
-    data = {ATTR_ENTITY_ID: "button.test1"}
-    topic = "command_topic"
-    payload = "PRESS"
+    config = DEFAULT_CONFIG[domain]
 
-    config[topic] = "cmd/test1"
-    config["name"] = "test1"
-    config["encoding"] = "utf-16"
-    assert await async_setup_component(
-        hass,
-        domain,
-        {button.DOMAIN: config},
+    await help_test_publishing_with_custom_encoding(
+        hass, mqtt_mock, caplog, domain, config, service, topic, parameters, payload
     )
-    await hass.async_block_till_done()
-
-    await hass.services.async_call(
-        domain,
-        service,
-        data,
-        blocking=True,
-    )
-
-    mqtt_mock.async_publish.assert_called_once_with(
-        "cmd/test1", payload.encode("utf-16"), 0, False
-    )
-    mqtt_mock.async_publish.reset_mock()
