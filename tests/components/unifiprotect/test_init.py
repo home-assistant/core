@@ -3,13 +3,11 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, Mock, patch
 
-import pytest
 from pyunifiprotect import NotAuthorized, NvrError
 
-from homeassistant.components.unifiprotect import async_setup_entry, async_unload_entry
 from homeassistant.components.unifiprotect.const import CONF_DISABLE_RTSP, DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import MAC_ADDR, MOCK_OLD_NVR_DATA
@@ -38,6 +36,7 @@ async def test_setup(mock_api, hass: HomeAssistant, mock_client):
     await mock_config.async_setup(hass)
     await hass.async_block_till_done()
 
+    assert mock_config.state == ConfigEntryState.LOADED
     assert mock_client.update.called
     assert mock_config.unique_id == mock_client.bootstrap.nvr.mac
     assert mock_config.entry_id in hass.data[DOMAIN]
@@ -61,7 +60,8 @@ async def test_reload(mock_api, hass: HomeAssistant, mock_client):
 
     mock_api.return_value = mock_client
     await mock_config.async_setup(hass)
-    assert mock_config.entry_id in hass.data[DOMAIN]
+    await hass.async_block_till_done()
+    assert mock_config.state == ConfigEntryState.LOADED
 
     mock_config.add_to_hass(hass)
     options = dict(mock_config.options)
@@ -69,6 +69,7 @@ async def test_reload(mock_api, hass: HomeAssistant, mock_client):
     hass.config_entries.async_update_entry(mock_config, options=options)
     await hass.async_block_till_done()
 
+    assert mock_config.state == ConfigEntryState.LOADED
     assert mock_config.entry_id in hass.data[DOMAIN]
     assert mock_client.async_disconnect_ws.called
 
@@ -91,9 +92,11 @@ async def test_unload(mock_api, hass: HomeAssistant, mock_client):
 
     mock_api.return_value = mock_client
     await mock_config.async_setup(hass)
+    await hass.async_block_till_done()
+    assert mock_config.state == ConfigEntryState.LOADED
 
-    assert await async_unload_entry(hass, mock_config) is True
-    assert mock_config.entry_id not in hass.data[DOMAIN]
+    mock_config.async_unload(hass)
+    assert mock_config.state == ConfigEntryState.NOT_LOADED
     assert mock_client.async_disconnect_ws.called
 
 
@@ -118,6 +121,8 @@ async def test_setup_too_old(mock_api, hass: HomeAssistant, mock_client):
     mock_api.return_value = mock_client
 
     await mock_config.async_setup(hass)
+    await hass.async_block_till_done()
+    assert mock_config.state == ConfigEntryState.SETUP_ERROR
     assert not mock_client.update.called
 
 
@@ -142,8 +147,9 @@ async def test_setup_failed_update(mock_api, hass: HomeAssistant, mock_client):
     mock_client.update = AsyncMock(side_effect=NvrError)
     mock_api.return_value = mock_client
 
-    with pytest.raises(ConfigEntryNotReady):
-        await async_setup_entry(hass, mock_config)
+    await mock_config.async_setup(hass)
+    await hass.async_block_till_done()
+    assert mock_config.state == ConfigEntryState.SETUP_RETRY
     assert not mock_config.async_start_reauth.called
     assert mock_client.update.called
 
@@ -169,8 +175,9 @@ async def test_setup_failed_update_reauth(mock_api, hass: HomeAssistant, mock_cl
     mock_client.update = AsyncMock(side_effect=NotAuthorized)
     mock_api.return_value = mock_client
 
-    with pytest.raises(ConfigEntryNotReady):
-        await async_setup_entry(hass, mock_config)
+    await mock_config.async_setup(hass)
+    await hass.async_block_till_done()
+    assert mock_config.state == ConfigEntryState.SETUP_RETRY
     assert mock_config.async_start_reauth.called
     assert mock_client.update.called
 
@@ -195,8 +202,9 @@ async def test_setup_failed_error(mock_api, hass: HomeAssistant, mock_client):
     mock_client.get_nvr = AsyncMock(side_effect=NvrError)
     mock_api.return_value = mock_client
 
-    with pytest.raises(ConfigEntryNotReady):
-        await async_setup_entry(hass, mock_config)
+    await mock_config.async_setup(hass)
+    await hass.async_block_till_done()
+    assert mock_config.state == ConfigEntryState.SETUP_RETRY
     assert not mock_client.update.called
 
 
@@ -220,6 +228,6 @@ async def test_setup_failed_auth(mock_api, hass: HomeAssistant, mock_client):
     mock_client.get_nvr = AsyncMock(side_effect=NotAuthorized)
     mock_api.return_value = mock_client
 
-    with pytest.raises(ConfigEntryAuthFailed):
-        await async_setup_entry(hass, mock_config)
+    await mock_config.async_setup(hass)
+    assert mock_config.state == ConfigEntryState.SETUP_ERROR
     assert not mock_client.update.called

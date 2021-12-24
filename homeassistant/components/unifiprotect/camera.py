@@ -59,9 +59,9 @@ async def async_setup_entry(
     data: ProtectData = hass.data[DOMAIN][entry.entry_id]
     disable_stream = data.disable_stream
 
-    items = []
+    entities = []
     for camera, channel, is_default in get_camera_channels(data.api):
-        items.append(
+        entities.append(
             ProtectCamera(
                 data,
                 camera,
@@ -73,7 +73,7 @@ async def async_setup_entry(
         )
 
         if channel.is_rtsp_enabled:
-            items.append(
+            entities.append(
                 ProtectCamera(
                     data,
                     camera,
@@ -83,7 +83,7 @@ async def async_setup_entry(
                     disable_stream,
                 )
             )
-    async_add_entities(items)
+    async_add_entities(entities)
 
 
 class ProtectCamera(ProtectDeviceEntity, Camera):
