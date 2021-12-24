@@ -1,0 +1,54 @@
+set_watering_time:
+  description: Set watering time
+  fields:
+    entity_id:
+      description: Name of a irrigation valve to set watering time
+      example: "switch.sprinkler_1"
+    watering_time:
+      description: Duration for this irrigation to be turned on
+      example: 30
+set_pause_time:
+  description: Set pause time
+  fields:
+    entity_id:
+      description: Name of a pause irrigation switch to set pause time
+      example: "switch.sprinkler_1_pause"
+    pause_time:
+      description: Duration for this irrigation to be paused
+      example: 24
+set_trigger_1:
+  description: Set trigger 1
+  fields:
+    entity_id:
+      description: Name of a irrigation valve to set trigger 1
+      example: "switch.sprinkler_1"
+    trigger_1:
+      description: Configuration of trigger 1
+      example: "00007001"
+set_trigger_2:
+  description: Set trigger 2
+  fields:
+    entity_id:
+      description: Name of a irrigation valve to set trigger 2
+      example: "switch.sprinkler_1"
+    trigger_2:
+      description: Configuration of trigger 2
+      example: "00007001"
+set_trigger_3:
+  description: Set trigger 3
+  fields:
+    entity_id:
+      description: Name of a irrigation valve to set trigger 3
+      example: "switch.sprinkler_1"
+    trigger_3:
+      description: Configuration of trigger 3
+      example: "00007001"
+set_trigger_4:
+  description: Set trigger 4
+  fields:
+    entity_id:
+      description: Name of a irrigation valve to set trigger 4
+      example: "switch.sprinkler_1"
+    trigger_4:
+      description: Configuration of trigger 4
+      example: "00007001"

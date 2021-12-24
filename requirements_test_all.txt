@@ -1228,7 +1228,7 @@ pywebpush==1.9.2
 pywemo==0.7.0
 
 # homeassistant.components.wilight
-pywilight==0.0.70
+pywilight==0.0.73
 
 # homeassistant.components.zerproc
 pyzerproc==0.4.8

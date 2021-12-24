@@ -11,7 +11,7 @@ from .parent_device import WiLightParent
 DOMAIN = "wilight"
 
 # List the platforms that you want to support.
-PLATFORMS = [Platform.COVER, Platform.FAN, Platform.LIGHT]
+PLATFORMS = [Platform.COVER, Platform.FAN, Platform.LIGHT, Platform.SWITCH]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
