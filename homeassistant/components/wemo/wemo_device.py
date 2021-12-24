@@ -16,7 +16,10 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import async_get as async_get_device_registry
+from homeassistant.helpers.device_registry import (
+    CONNECTION_UPNP,
+    async_get as async_get_device_registry,
+)
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -123,10 +126,12 @@ class DeviceCoordinator(DataUpdateCoordinator):
 
 def _device_info(wemo: WeMoDevice) -> DeviceInfo:
     return DeviceInfo(
+        connections={(CONNECTION_UPNP, wemo.udn)},
         identifiers={(DOMAIN, wemo.serialnumber)},
         manufacturer="Belkin",
         model=wemo.model_name,
         name=wemo.name,
+        sw_version=wemo.firmware_version,
     )
 
 
