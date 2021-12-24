@@ -1,7 +1,6 @@
 """Allow users to set and activate scenes."""
 from __future__ import annotations
 
-from datetime import datetime
 import functools as ft
 import importlib
 import logging
@@ -94,7 +93,7 @@ class Scene(RestoreEntity):
     """A scene is a group of entities and the states we want them to be."""
 
     _attr_should_poll = False
-    __last_activated: datetime | None = None
+    __last_activated: str | None = None
 
     @property
     @final
@@ -102,7 +101,7 @@ class Scene(RestoreEntity):
         """Return the state of the scene."""
         if self.__last_activated is None:
             return None
-        return self.__last_activated.isoformat()
+        return self.__last_activated
 
     @final
     async def _async_activate(self, **kwargs: Any) -> None:
@@ -110,7 +109,7 @@ class Scene(RestoreEntity):
 
         Should not be overridden, handle setting last press timestamp.
         """
-        self.__last_activated = dt_util.utcnow()
+        self.__last_activated = dt_util.utcnow().isoformat()
         self.async_write_ha_state()
         await self.async_activate(**kwargs)
 
@@ -118,7 +117,7 @@ class Scene(RestoreEntity):
         """Call when the button is added to hass."""
         state = await self.async_get_last_state()
         if state is not None and state.state is not None:
-            self.__last_activated = dt_util.parse_datetime(state.state)
+            self.__last_activated = state.state
 
     def activate(self, **kwargs: Any) -> None:
         """Activate scene. Try to get entities into requested state."""
