@@ -1,7 +1,6 @@
 """Support for Canary camera."""
 from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
 from typing import Final
 
@@ -9,18 +8,19 @@ from aiohttp.web import Request, StreamResponse
 from canary.api import Device, Location
 from canary.live_stream_api import LiveStreamSession
 from haffmpeg.camera import CameraMjpeg
-from haffmpeg.tools import IMAGE_JPEG, ImageFrame
 import voluptuous as vol
 
+from homeassistant.components import ffmpeg
 from homeassistant.components.camera import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     Camera,
 )
-from homeassistant.components.ffmpeg import DATA_FFMPEG, FFmpegManager
+from homeassistant.components.ffmpeg import FFmpegManager, get_ffmpeg_manager
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import Throttle
@@ -94,19 +94,19 @@ class CanaryCamera(CoordinatorEntity, Camera):
         """Initialize a Canary security camera."""
         super().__init__(coordinator)
         Camera.__init__(self)
-        self._ffmpeg: FFmpegManager = hass.data[DATA_FFMPEG]
+        self._ffmpeg: FFmpegManager = get_ffmpeg_manager(hass)
         self._ffmpeg_arguments = ffmpeg_args
         self._location_id = location_id
         self._device = device
         self._live_stream_session: LiveStreamSession | None = None
         self._attr_name = device.name
         self._attr_unique_id = str(device.device_id)
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, str(device.device_id))},
-            "name": device.name,
-            "model": device.device_type["name"],
-            "manufacturer": MANUFACTURER,
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, str(device.device_id))},
+            manufacturer=MANUFACTURER,
+            model=device.device_type["name"],
+            name=device.name,
+        )
 
     @property
     def location(self) -> Location:
@@ -123,22 +123,21 @@ class CanaryCamera(CoordinatorEntity, Camera):
         """Return the camera motion detection status."""
         return not self.location.is_recording
 
-    async def async_camera_image(self) -> bytes | None:
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return a still image response from the camera."""
         await self.hass.async_add_executor_job(self.renew_live_stream_session)
         live_stream_url = await self.hass.async_add_executor_job(
             getattr, self._live_stream_session, "live_stream_url"
         )
-
-        ffmpeg = ImageFrame(self._ffmpeg.binary)
-        image: bytes | None = await asyncio.shield(
-            ffmpeg.get_image(
-                live_stream_url,
-                output_format=IMAGE_JPEG,
-                extra_cmd=self._ffmpeg_arguments,
-            )
+        return await ffmpeg.async_get_image(
+            self.hass,
+            live_stream_url,
+            extra_cmd=self._ffmpeg_arguments,
+            width=width,
+            height=height,
         )
-        return image
 
     async def handle_async_mjpeg_stream(
         self, request: Request

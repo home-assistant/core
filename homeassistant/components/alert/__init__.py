@@ -211,7 +211,7 @@ class Alert(ToggleEntity):
         )
 
     @property
-    def state(self):
+    def state(self):  # pylint: disable=overridden-final-method
         """Return the alert status."""
         if self._firing:
             if self._ack:
@@ -221,8 +221,7 @@ class Alert(ToggleEntity):
 
     async def watched_entity_change(self, ev):
         """Determine if the alert should start or stop."""
-        to_state = ev.data.get("new_state")
-        if to_state is None:
+        if (to_state := ev.data.get("new_state")) is None:
             return
         _LOGGER.debug("Watched entity (%s) has changed", ev.data.get("entity_id"))
         if to_state.state == self._alert_state and not self._firing:

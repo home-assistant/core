@@ -12,7 +12,7 @@
                 "data": {
                     "api_key": "Clave API"
                 },
-                "description": "Ingrese la clave API obtenida de https://home.freedompro.eu",
+                "description": "Ingresa la clave API obtenida de https://home.freedompro.eu",
                 "title": "Clave API de Freedompro"
             }
         }

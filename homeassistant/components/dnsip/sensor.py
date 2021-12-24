@@ -79,6 +79,6 @@ class WanIpSensor(SensorEntity):
             response = None
 
         if response:
-            self._attr_state = response[0].host
+            self._attr_native_value = response[0].host
         else:
-            self._attr_state = None
+            self._attr_native_value = None

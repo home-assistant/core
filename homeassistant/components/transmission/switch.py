@@ -48,11 +48,6 @@ class TransmissionSwitch(ToggleEntity):
         return f"{self._tm_client.api.host}-{self.name}"
 
     @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
-
-    @property
     def should_poll(self):
         """Poll for status regularly."""
         return False

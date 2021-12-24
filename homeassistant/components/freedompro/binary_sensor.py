@@ -1,21 +1,19 @@
 """Support for Freedompro binary_sensor."""
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_OCCUPANCY,
-    DEVICE_CLASS_OPENING,
-    DEVICE_CLASS_SMOKE,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.core import callback
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 
 DEVICE_CLASS_MAP = {
-    "smokeSensor": DEVICE_CLASS_SMOKE,
-    "occupancySensor": DEVICE_CLASS_OCCUPANCY,
-    "motionSensor": DEVICE_CLASS_MOTION,
-    "contactSensor": DEVICE_CLASS_OPENING,
+    "smokeSensor": BinarySensorDeviceClass.SMOKE,
+    "occupancySensor": BinarySensorDeviceClass.OCCUPANCY,
+    "motionSensor": BinarySensorDeviceClass.MOTION,
+    "contactSensor": BinarySensorDeviceClass.OPENING,
 }
 
 DEVICE_KEY_MAP = {
@@ -47,14 +45,14 @@ class Device(CoordinatorEntity, BinarySensorEntity):
         self._attr_name = device["name"]
         self._attr_unique_id = device["uid"]
         self._type = device["type"]
-        self._attr_device_info = {
-            "name": self.name,
-            "identifiers": {
+        self._attr_device_info = DeviceInfo(
+            identifiers={
                 (DOMAIN, self.unique_id),
             },
-            "model": device["type"],
-            "manufacturer": "Freedompro",
-        }
+            manufacturer="Freedompro",
+            model=device["type"],
+            name=self.name,
+        )
         self._attr_device_class = DEVICE_CLASS_MAP[device["type"]]
 
     @callback

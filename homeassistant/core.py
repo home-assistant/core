@@ -19,13 +19,15 @@ import threading
 from time import monotonic
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, Callable, Optional, TypeVar, cast
+from urllib.parse import urlparse
 
 import attr
 import voluptuous as vol
 import yarl
 
-from homeassistant import block_async_io, loader, util
-from homeassistant.const import (
+from . import async_timeout_backcompat, block_async_io, loader, util
+from .backports.enum import StrEnum
+from .const import (
     ATTR_DOMAIN,
     ATTR_FRIENDLY_NAME,
     ATTR_NOW,
@@ -51,7 +53,7 @@ from homeassistant.const import (
     MAX_LENGTH_STATE_STATE,
     __version__,
 )
-from homeassistant.exceptions import (
+from .exceptions import (
     HomeAssistantError,
     InvalidEntityFormatError,
     InvalidStateError,
@@ -59,29 +61,27 @@ from homeassistant.exceptions import (
     ServiceNotFound,
     Unauthorized,
 )
-from homeassistant.util import location
-from homeassistant.util.async_ import (
+from .util import dt as dt_util, location, uuid as uuid_util
+from .util.async_ import (
     fire_coroutine_threadsafe,
     run_callback_threadsafe,
     shutdown_run_callback_threadsafe,
 )
-import homeassistant.util.dt as dt_util
-from homeassistant.util.timeout import TimeoutManager
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
-import homeassistant.util.uuid as uuid_util
+from .util.timeout import TimeoutManager
+from .util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
 
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:
-    from homeassistant.auth import AuthManager
-    from homeassistant.components.http import HomeAssistantHTTP
-    from homeassistant.config_entries import ConfigEntries
+    from .auth import AuthManager
+    from .components.http import HomeAssistantHTTP
+    from .config_entries import ConfigEntries
 
 
 STAGE_1_SHUTDOWN_TIMEOUT = 100
 STAGE_2_SHUTDOWN_TIMEOUT = 60
 STAGE_3_SHUTDOWN_TIMEOUT = 30
 
-
+async_timeout_backcompat.enable()
 block_async_io.enable()
 
 T = TypeVar("T")
@@ -102,10 +102,20 @@ BLOCK_LOG_TIMEOUT = 60
 # How long we wait for the result of a service call
 SERVICE_CALL_LIMIT = 10  # seconds
 
-# Source of core configuration
-SOURCE_DISCOVERED = "discovered"
-SOURCE_STORAGE = "storage"
-SOURCE_YAML = "yaml"
+
+class ConfigSource(StrEnum):
+    """Source of core configuration."""
+
+    DEFAULT = "default"
+    DISCOVERED = "discovered"
+    STORAGE = "storage"
+    YAML = "yaml"
+
+
+# SOURCE_* are deprecated as of Home Assistant 2022.2, use ConfigSource instead
+SOURCE_DISCOVERED = ConfigSource.DISCOVERED.value
+SOURCE_STORAGE = ConfigSource.STORAGE.value
+SOURCE_YAML = ConfigSource.YAML.value
 
 # How long to wait until things that run on startup have to finish.
 TIMEOUT_EVENT_START = 15
@@ -274,7 +284,7 @@ class HomeAssistant:
         await self.async_start()
         if attach_signals:
             # pylint: disable=import-outside-toplevel
-            from homeassistant.helpers.signal import async_register_signal_handling
+            from .helpers.signal import async_register_signal_handling
 
             async_register_signal_handling(self)
 
@@ -322,7 +332,10 @@ class HomeAssistant:
         _async_create_timer(self)
 
     def add_job(self, target: Callable[..., Any], *args: Any) -> None:
-        """Add job to the executor pool.
+        """Add a job to be executed by the event loop or by an executor.
+
+        If the job is either a coroutine or decorated with @callback, it will be
+        run by the event loop, if not it will be run by an executor.
 
         target: target to call.
         args: parameters for method to call.
@@ -335,7 +348,10 @@ class HomeAssistant:
     def async_add_job(
         self, target: Callable[..., Any], *args: Any
     ) -> asyncio.Future | None:
-        """Add a job from within the event loop.
+        """Add a job to be executed by the event loop or by an executor.
+
+        If the job is either a coroutine or decorated with @callback, it will be
+        run by the event loop, if not it will be run by an executor.
 
         This method must be run in the event loop.
 
@@ -487,6 +503,7 @@ class HomeAssistant:
 
     async def _await_and_log_pending(self, pending: Iterable[Awaitable[Any]]) -> None:
         """Await and log tasks that take a long time."""
+        # pylint: disable=no-self-use
         wait_time = 0
         while pending:
             _, pending = await asyncio.wait(pending, timeout=BLOCK_LOG_TIMEOUT)
@@ -506,7 +523,7 @@ class HomeAssistant:
         """Stop Home Assistant and shuts down all threads.
 
         The "force" flag commands async_stop to proceed regardless of
-        Home Assistan't current state. You should not set this flag
+        Home Assistant's current state. You should not set this flag
         unless you're testing.
 
         This method is a coroutine.
@@ -832,6 +849,10 @@ class EventBus:
             self._async_remove_listener(event_type, filterable_job)
             self._hass.async_run_job(listener, event)
 
+        functools.update_wrapper(
+            _onetime_listener, listener, ("__name__", "__qualname__", "__module__"), []
+        )
+
         filterable_job = (HassJob(_onetime_listener), None)
 
         return self._async_listen_filterable_job(event_type, filterable_job)
@@ -969,8 +990,7 @@ class State:
         if isinstance(last_updated, str):
             last_updated = dt_util.parse_datetime(last_updated)
 
-        context = json_dict.get("context")
-        if context:
+        if context := json_dict.get("context"):
             context = Context(id=context.get("id"), user_id=context.get("user_id"))
 
         return cls(
@@ -1197,8 +1217,7 @@ class StateMachine:
         entity_id = entity_id.lower()
         new_state = str(new_state)
         attributes = attributes or {}
-        old_state = self._states.get(entity_id)
-        if old_state is None:
+        if (old_state := self._states.get(entity_id)) is None:
             same_state = False
             same_attr = False
             last_changed = None
@@ -1547,7 +1566,7 @@ class Config:
         self.external_url: str | None = None
         self.currency: str = "EUR"
 
-        self.config_source: str = "default"
+        self.config_source: ConfigSource = ConfigSource.DEFAULT
 
         # If True, pip install is skipped for requirements on startup
         self.skip_pip: bool = False
@@ -1656,9 +1675,7 @@ class Config:
 
     def set_time_zone(self, time_zone_str: str) -> None:
         """Help to set the time zone."""
-        time_zone = dt_util.get_time_zone(time_zone_str)
-
-        if time_zone:
+        if time_zone := dt_util.get_time_zone(time_zone_str):
             self.time_zone = time_zone_str
             dt_util.set_default_time_zone(time_zone)
         else:
@@ -1668,7 +1685,7 @@ class Config:
     def _update(
         self,
         *,
-        source: str,
+        source: ConfigSource,
         latitude: float | None = None,
         longitude: float | None = None,
         elevation: int | None = None,
@@ -1706,30 +1723,45 @@ class Config:
 
     async def async_update(self, **kwargs: Any) -> None:
         """Update the configuration from a dictionary."""
-        self._update(source=SOURCE_STORAGE, **kwargs)
+        self._update(source=ConfigSource.STORAGE, **kwargs)
         await self.async_store()
         self.hass.bus.async_fire(EVENT_CORE_CONFIG_UPDATE, kwargs)
 
     async def async_load(self) -> None:
         """Load [homeassistant] core config."""
         store = self.hass.helpers.storage.Store(
-            CORE_STORAGE_VERSION, CORE_STORAGE_KEY, private=True
+            CORE_STORAGE_VERSION, CORE_STORAGE_KEY, private=True, atomic_writes=True
         )
-        data = await store.async_load()
 
-        if data:
-            self._update(
-                source=SOURCE_STORAGE,
-                latitude=data.get("latitude"),
-                longitude=data.get("longitude"),
-                elevation=data.get("elevation"),
-                unit_system=data.get("unit_system"),
-                location_name=data.get("location_name"),
-                time_zone=data.get("time_zone"),
-                external_url=data.get("external_url", _UNDEF),
-                internal_url=data.get("internal_url", _UNDEF),
-                currency=data.get("currency"),
-            )
+        if not (data := await store.async_load()):
+            return
+
+        # In 2021.9 we fixed validation to disallow a path (because that's never correct)
+        # but this data still lives in storage, so we print a warning.
+        if data.get("external_url") and urlparse(data["external_url"]).path not in (
+            "",
+            "/",
+        ):
+            _LOGGER.warning("Invalid external_url set. It's not allowed to have a path")
+
+        if data.get("internal_url") and urlparse(data["internal_url"]).path not in (
+            "",
+            "/",
+        ):
+            _LOGGER.warning("Invalid internal_url set. It's not allowed to have a path")
+
+        self._update(
+            source=ConfigSource.STORAGE,
+            latitude=data.get("latitude"),
+            longitude=data.get("longitude"),
+            elevation=data.get("elevation"),
+            unit_system=data.get("unit_system"),
+            location_name=data.get("location_name"),
+            time_zone=data.get("time_zone"),
+            external_url=data.get("external_url", _UNDEF),
+            internal_url=data.get("internal_url", _UNDEF),
+            currency=data.get("currency"),
+        )
 
     async def async_store(self) -> None:
         """Store [homeassistant] core config."""
@@ -1746,7 +1778,7 @@ class Config:
         }
 
         store = self.hass.helpers.storage.Store(
-            CORE_STORAGE_VERSION, CORE_STORAGE_KEY, private=True
+            CORE_STORAGE_VERSION, CORE_STORAGE_KEY, private=True, atomic_writes=True
         )
         await store.async_save(data)
 
@@ -1774,8 +1806,7 @@ def _async_create_timer(hass: HomeAssistant) -> None:
         )
 
         # If we are more than a second late, a tick was missed
-        late = monotonic() - target
-        if late > 1:
+        if (late := monotonic() - target) > 1:
             hass.bus.async_fire(
                 EVENT_TIMER_OUT_OF_SYNC,
                 {ATTR_SECONDS: late},

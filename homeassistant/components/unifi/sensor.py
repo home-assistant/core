@@ -1,4 +1,4 @@
-"""Sensor platform for UniFi integration.
+"""Sensor platform for UniFi Network integration.
 
 Support for bandwidth sensors of network clients.
 Support for uptime sensors of network clients.
@@ -6,10 +6,11 @@ Support for uptime sensors of network clients.
 
 from datetime import datetime, timedelta
 
-from homeassistant.components.sensor import DEVICE_CLASS_TIMESTAMP, DOMAIN, SensorEntity
+from homeassistant.components.sensor import DOMAIN, SensorDeviceClass, SensorEntity
 from homeassistant.const import DATA_MEGABYTES
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import EntityCategory
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN as UNIFI_DOMAIN
@@ -21,7 +22,7 @@ UPTIME_SENSOR = "uptime"
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up sensors for UniFi integration."""
+    """Set up sensors for UniFi Network integration."""
     controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
     controller.entities[DOMAIN] = {
         RX_SENSOR: set(),
@@ -82,11 +83,12 @@ def add_uptime_entities(controller, async_add_entities, clients):
 
 
 class UniFiBandwidthSensor(UniFiClient, SensorEntity):
-    """UniFi bandwidth sensor base class."""
+    """UniFi Network bandwidth sensor base class."""
 
     DOMAIN = DOMAIN
 
-    _attr_unit_of_measurement = DATA_MEGABYTES
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_native_unit_of_measurement = DATA_MEGABYTES
 
     @property
     def name(self) -> str:
@@ -105,7 +107,7 @@ class UniFiRxBandwidthSensor(UniFiBandwidthSensor):
     TYPE = RX_SENSOR
 
     @property
-    def state(self) -> int:
+    def native_value(self) -> int:
         """Return the state of the sensor."""
         if self._is_wired:
             return self.client.wired_rx_bytes / 1000000
@@ -118,7 +120,7 @@ class UniFiTxBandwidthSensor(UniFiBandwidthSensor):
     TYPE = TX_SENSOR
 
     @property
-    def state(self) -> int:
+    def native_value(self) -> int:
         """Return the state of the sensor."""
         if self._is_wired:
             return self.client.wired_tx_bytes / 1000000
@@ -126,12 +128,13 @@ class UniFiTxBandwidthSensor(UniFiBandwidthSensor):
 
 
 class UniFiUpTimeSensor(UniFiClient, SensorEntity):
-    """UniFi uptime sensor."""
+    """UniFi Network client uptime sensor."""
 
     DOMAIN = DOMAIN
     TYPE = UPTIME_SENSOR
 
-    _attr_device_class = DEVICE_CLASS_TIMESTAMP
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(self, client, controller):
         """Set up tracked client."""
@@ -157,7 +160,7 @@ class UniFiUpTimeSensor(UniFiClient, SensorEntity):
         self.last_updated_time = self.client.uptime
 
         if not update_state:
-            return None
+            return
 
         super().async_update_callback()
 
@@ -167,11 +170,11 @@ class UniFiUpTimeSensor(UniFiClient, SensorEntity):
         return f"{super().name} {self.TYPE.capitalize()}"
 
     @property
-    def state(self) -> datetime:
+    def native_value(self) -> datetime:
         """Return the uptime of the client."""
         if self.client.uptime < 1000000000:
-            return (dt_util.now() - timedelta(seconds=self.client.uptime)).isoformat()
-        return dt_util.utc_from_timestamp(float(self.client.uptime)).isoformat()
+            return dt_util.now() - timedelta(seconds=self.client.uptime)
+        return dt_util.utc_from_timestamp(float(self.client.uptime))
 
     async def options_updated(self) -> None:
         """Config entry options are updated, remove entity if option is disabled."""

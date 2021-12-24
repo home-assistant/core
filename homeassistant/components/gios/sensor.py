@@ -8,6 +8,8 @@ from homeassistant.components.sensor import DOMAIN as PLATFORM, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_NAME, CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.typing import StateType
@@ -24,6 +26,7 @@ from .const import (
     DOMAIN,
     MANUFACTURER,
     SENSOR_TYPES,
+    URL,
 )
 from .model import GiosSensorEntityDescription
 
@@ -80,13 +83,13 @@ class GiosSensor(CoordinatorEntity, SensorEntity):
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, str(coordinator.gios.station_id))},
-            "name": DEFAULT_NAME,
-            "manufacturer": MANUFACTURER,
-            "entry_type": "service",
-        }
-        self._attr_icon = "mdi:blur"
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, str(coordinator.gios.station_id))},
+            manufacturer=MANUFACTURER,
+            name=DEFAULT_NAME,
+            configuration_url=URL.format(station_id=coordinator.gios.station_id),
+        )
         self._attr_name = f"{name} {description.name}"
         self._attr_unique_id = f"{coordinator.gios.station_id}-{description.key}"
         self._attrs: dict[str, Any] = {
@@ -107,7 +110,7 @@ class GiosSensor(CoordinatorEntity, SensorEntity):
         return self._attrs
 
     @property
-    def state(self) -> StateType:
+    def native_value(self) -> StateType:
         """Return the state."""
         state = getattr(self.coordinator.data, self.entity_description.key).value
         assert self.entity_description.value is not None
@@ -118,7 +121,7 @@ class GiosAqiSensor(GiosSensor):
     """Define an GIOS AQI sensor."""
 
     @property
-    def state(self) -> StateType:
+    def native_value(self) -> StateType:
         """Return the state."""
         return cast(
             StateType, getattr(self.coordinator.data, self.entity_description.key).value

@@ -1,0 +1,52 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "reauth_successful": "Taastuvastamine \u00f5nnestus"
+        },
+        "error": {
+            "invalid_auth": "Tuvastamine nurjus",
+            "unknown": "Ootamatu t\u00f5rge",
+            "unknown_coordinates": "Laius- ja/v\u00f5i pikkuskraadi andmed puuduvad"
+        },
+        "step": {
+            "coordinates": {
+                "data": {
+                    "latitude": "Laiuskraad",
+                    "longitude": "Pikkuskraad"
+                },
+                "description": "Sisesta j\u00e4lgitav laius- ja pikkuskraad:"
+            },
+            "location": {
+                "data": {
+                    "location_type": "Asukoht"
+                },
+                "description": "Vali j\u00e4lgiv asukoht:"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Salas\u00f5na"
+                },
+                "description": "Sisesta uuesti {username} salas\u00f5na:",
+                "title": "Taastuvasta sidumine"
+            },
+            "user": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
+                },
+                "description": "Sisesta oma kasutajanimi ja salas\u00f5na:"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_on_map": "Kuva j\u00e4lgitav asukoht kaardil"
+                },
+                "title": "WattTime seadistamine"
+            }
+        }
+    }
+}

@@ -24,7 +24,7 @@
             },
             "user": {
                 "data": {
-                    "api_key": "Token d'acc\u00e8s",
+                    "api_key": "Jeton d'acc\u00e8s",
                     "location": "Obtenir des donn\u00e9es pour"
                 },
                 "description": "Visitez https://co2signal.com/ pour demander un jeton."

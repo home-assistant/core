@@ -108,15 +108,14 @@ class MVGLiveSensor(SensorEntity):
         return self._station
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the next departure time."""
         return self._state
 
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
-        dep = self.data.departures
-        if not dep:
+        if not (dep := self.data.departures):
             return None
         attr = dep[0]  # next depature attributes
         attr["departures"] = deepcopy(dep)  # all departures dictionary
@@ -128,7 +127,7 @@ class MVGLiveSensor(SensorEntity):
         return self._icon
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         return TIME_MINUTES
 

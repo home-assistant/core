@@ -112,7 +112,7 @@ class DwdWeatherWarningsSensor(SensorEntity):
         self._attr_name = f"{name} {description.name}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         if self.entity_description.key == CURRENT_WARNING_SENSOR:
             return self._api.api.current_warning_level

@@ -54,10 +54,8 @@ class DiffuserPerfumeAmount(DiffuserEntity, NumberEntity):
 
     async def async_set_value(self, value: float) -> None:
         """Set the perfume amount."""
-        if value.is_integer() and MIN_PERFUME_AMOUNT <= value <= MAX_PERFUME_AMOUNT:
-            await self._diffuser.set_perfume_amount(int(value))
-        else:
+        if not value.is_integer():
             raise ValueError(
-                f"Can't set the perfume amount to {value}. "
-                f"Perfume amount must be an integer between {self.min_value} and {self.max_value}, inclusive"
+                f"Can't set the perfume amount to {value}. Perfume amount must be an integer."
             )
+        await self._diffuser.set_perfume_amount(int(value))

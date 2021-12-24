@@ -1,6 +1,5 @@
 """Platform for sensor integration."""
 from enum import Enum
-import logging
 
 import smarttub
 import voluptuous as vol
@@ -10,8 +9,6 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 
 from .const import DOMAIN, SMARTTUB_CONTROLLER
 from .entity import SmartTubSensorBase
-
-_LOGGER = logging.getLogger(__name__)
 
 # the desired duration, in hours, of the cycle
 ATTR_DURATION = "duration"
@@ -87,7 +84,7 @@ class SmartTubSensor(SmartTubSensorBase, SensorEntity):
     """Generic class for SmartTub status sensors."""
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return the current state of the sensor."""
         if isinstance(self._state, Enum):
             return self._state.name.lower()
@@ -109,7 +106,7 @@ class SmartTubPrimaryFiltrationCycle(SmartTubSensor):
         return self._state
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return the current state of the sensor."""
         return self.cycle.status.name.lower()
 
@@ -147,7 +144,7 @@ class SmartTubSecondaryFiltrationCycle(SmartTubSensor):
         return self._state
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return the current state of the sensor."""
         return self.cycle.status.name.lower()
 

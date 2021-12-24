@@ -11,14 +11,31 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "Kunci API"
-                }
+                    "api_key": "Kunci API",
+                    "api_token": "Kode Rahasia API",
+                    "currencies": "Mata Uang Saldo Akun",
+                    "exchange_rates": "Nilai Tukar"
+                },
+                "description": "Silakan masukkan detail kunci API Anda sesuai yang disediakan oleh Coinbase.",
+                "title": "Detail Kunci API Coinbase"
             }
         }
     },
     "options": {
         "error": {
+            "currency_unavaliable": "Satu atau beberapa saldo mata uang yang diminta tidak disediakan oleh API Coinbase Anda.",
+            "exchange_rate_unavaliable": "Satu atau beberapa nilai tukar yang diminta tidak disediakan oleh Coinbase.",
             "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "account_balance_currencies": "Saldo dompet untuk dilaporkan.",
+                    "exchange_base": "Mata uang dasar untuk sensor nilai tukar.",
+                    "exchange_rate_currencies": "Nilai tukar untuk dilaporkan."
+                },
+                "description": "Sesuaikan Opsi Coinbase"
+            }
         }
     }
 }

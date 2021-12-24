@@ -6,8 +6,12 @@ from i2csense.bh1750 import BH1750  # pylint: disable=import-error
 import smbus
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import CONF_NAME, DEVICE_CLASS_ILLUMINANCE, LIGHT_LUX
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
+)
+from homeassistant.const import CONF_NAME, LIGHT_LUX
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -60,6 +64,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the BH1750 sensor."""
+    _LOGGER.warning(
+        "The BH1750 integration is deprecated and will be removed "
+        "in Home Assistant Core 2022.4; this integration is removed under "
+        "Architectural Decision Record 0019, more information can be found here: "
+        "https://github.com/home-assistant/architecture/blob/master/adr/0019-GPIO.md"
+    )
 
     name = config[CONF_NAME]
     bus_number = config[CONF_I2C_BUS]
@@ -96,12 +106,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class BH1750Sensor(SensorEntity):
     """Implementation of the BH1750 sensor."""
 
-    _attr_device_class = DEVICE_CLASS_ILLUMINANCE
+    _attr_device_class = SensorDeviceClass.ILLUMINANCE
 
     def __init__(self, bh1750_sensor, name, unit, multiplier=1.0):
         """Initialize the sensor."""
         self._attr_name = name
-        self._attr_unit_of_measurement = unit
+        self._attr_native_unit_of_measurement = unit
         self._multiplier = multiplier
         self.bh1750_sensor = bh1750_sensor
 
@@ -109,7 +119,7 @@ class BH1750Sensor(SensorEntity):
         """Get the latest data from the BH1750 and update the states."""
         await self.hass.async_add_executor_job(self.bh1750_sensor.update)
         if self.bh1750_sensor.sample_ok and self.bh1750_sensor.light_level >= 0:
-            self._attr_state = int(
+            self._attr_native_value = int(
                 round(self.bh1750_sensor.light_level * self._multiplier)
             )
         else:

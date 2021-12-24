@@ -1,7 +1,10 @@
 """Support for MQTT message handling."""
 from __future__ import annotations
 
+from ast import literal_eval
 import asyncio
+from dataclasses import dataclass
+import datetime as dt
 from functools import lru_cache, partial, wraps
 import inspect
 from itertools import groupby
@@ -38,9 +41,11 @@ from homeassistant.core import (
     ServiceCall,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError, Unauthorized
+from homeassistant.data_entry_flow import BaseServiceInfo
+from homeassistant.exceptions import HomeAssistantError, TemplateError, Unauthorized
 from homeassistant.helpers import config_validation as cv, event, template
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
+from homeassistant.helpers.frame import report
 from homeassistant.helpers.typing import ConfigType, ServiceDataType
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
@@ -56,13 +61,17 @@ from .const import (
     ATTR_TOPIC,
     CONF_BIRTH_MESSAGE,
     CONF_BROKER,
+    CONF_COMMAND_TOPIC,
+    CONF_ENCODING,
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
+    CONF_TOPIC,
     CONF_WILL_MESSAGE,
     DATA_MQTT_CONFIG,
     DEFAULT_BIRTH,
     DEFAULT_DISCOVERY,
+    DEFAULT_ENCODING,
     DEFAULT_PREFIX,
     DEFAULT_QOS,
     DEFAULT_RETAIN,
@@ -98,9 +107,6 @@ CONF_CLIENT_CERT = "client_cert"
 CONF_TLS_INSECURE = "tls_insecure"
 CONF_TLS_VERSION = "tls_version"
 
-CONF_COMMAND_TOPIC = "command_topic"
-CONF_TOPIC = "topic"
-
 PROTOCOL_31 = "3.1"
 
 DEFAULT_PORT = 1883
@@ -108,6 +114,7 @@ DEFAULT_KEEPALIVE = 60
 DEFAULT_PROTOCOL = PROTOCOL_311
 DEFAULT_TLS_PROTOCOL = "auto"
 
+ATTR_TOPIC_TEMPLATE = "topic_template"
 ATTR_PAYLOAD_TEMPLATE = "payload_template"
 
 MAX_RECONNECT_WAIT = 300  # seconds
@@ -151,16 +158,6 @@ MQTT_WILL_BIRTH_SCHEMA = vol.Schema(
     },
     required=True,
 )
-
-
-def embedded_broker_deprecated(value):
-    """Warn user that embedded MQTT broker is deprecated."""
-    _LOGGER.warning(
-        "The embedded MQTT broker has been deprecated and will stop working"
-        "after June 5th, 2019. Use an external broker instead. For"
-        "instructions, see https://www.home-assistant.io/docs/mqtt/broker"
-    )
-    return value
 
 
 CONFIG_SCHEMA = vol.Schema(
@@ -210,7 +207,10 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-SCHEMA_BASE = {vol.Optional(CONF_QOS, default=DEFAULT_QOS): _VALID_QOS_SCHEMA}
+SCHEMA_BASE = {
+    vol.Optional(CONF_QOS, default=DEFAULT_QOS): _VALID_QOS_SCHEMA,
+    vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
+}
 
 MQTT_BASE_PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(SCHEMA_BASE)
 
@@ -232,19 +232,98 @@ MQTT_RW_PLATFORM_SCHEMA = MQTT_BASE_PLATFORM_SCHEMA.extend(
 )
 
 # Service call validation schema
-MQTT_PUBLISH_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_TOPIC): valid_publish_topic,
-        vol.Exclusive(ATTR_PAYLOAD, CONF_PAYLOAD): cv.string,
-        vol.Exclusive(ATTR_PAYLOAD_TEMPLATE, CONF_PAYLOAD): cv.string,
-        vol.Optional(ATTR_QOS, default=DEFAULT_QOS): _VALID_QOS_SCHEMA,
-        vol.Optional(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
-    },
-    required=True,
+MQTT_PUBLISH_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            vol.Exclusive(ATTR_TOPIC, CONF_TOPIC): valid_publish_topic,
+            vol.Exclusive(ATTR_TOPIC_TEMPLATE, CONF_TOPIC): cv.string,
+            vol.Exclusive(ATTR_PAYLOAD, CONF_PAYLOAD): cv.string,
+            vol.Exclusive(ATTR_PAYLOAD_TEMPLATE, CONF_PAYLOAD): cv.string,
+            vol.Optional(ATTR_QOS, default=DEFAULT_QOS): _VALID_QOS_SCHEMA,
+            vol.Optional(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
+        },
+        required=True,
+    ),
+    cv.has_at_least_one_key(ATTR_TOPIC, ATTR_TOPIC_TEMPLATE),
 )
 
 
 SubscribePayloadType = Union[str, bytes]  # Only bytes if encoding is None
+
+
+class MqttCommandTemplate:
+    """Class for rendering MQTT payload with command templates."""
+
+    def __init__(
+        self,
+        command_template: template.Template | None,
+        hass: HomeAssistant,
+    ) -> None:
+        """Instantiate a command template."""
+        self._attr_command_template = command_template
+        if command_template is None:
+            return
+
+        command_template.hass = hass
+
+    @callback
+    def async_render(
+        self,
+        value: PublishPayloadType = None,
+        variables: template.TemplateVarsType = None,
+    ) -> PublishPayloadType:
+        """Render or convert the command template with given value or variables."""
+
+        def _convert_outgoing_payload(
+            payload: PublishPayloadType,
+        ) -> PublishPayloadType:
+            """Ensure correct raw MQTT payload is passed as bytes for publishing."""
+            if isinstance(payload, str):
+                try:
+                    native_object = literal_eval(payload)
+                    if isinstance(native_object, bytes):
+                        return native_object
+
+                except (ValueError, TypeError, SyntaxError, MemoryError):
+                    pass
+
+            return payload
+
+        if self._attr_command_template is None:
+            return value
+
+        values = {"value": value}
+        if variables is not None:
+            values.update(variables)
+        return _convert_outgoing_payload(
+            self._attr_command_template.async_render(values, parse_result=False)
+        )
+
+
+@dataclass
+class MqttServiceInfo(BaseServiceInfo):
+    """Prepared info from mqtt entries."""
+
+    topic: str
+    payload: ReceivePayloadType
+    qos: int
+    retain: bool
+    subscribed_topic: str
+    timestamp: dt.datetime
+
+    def __getitem__(self, name: str) -> Any:
+        """
+        Allow property access by name for compatibility reason.
+
+        Deprecated, and will be removed in version 2022.6.
+        """
+        report(
+            f"accessed discovery_info['{name}'] instead of discovery_info.{name}; "
+            "this will fail in version 2022.6",
+            exclude_integrations={DOMAIN},
+            error_if_core=False,
+        )
+        return getattr(self, name)
 
 
 def _build_publish_data(topic: Any, qos: int, retain: bool) -> ServiceDataType:
@@ -257,39 +336,18 @@ def _build_publish_data(topic: Any, qos: int, retain: bool) -> ServiceDataType:
     return data
 
 
-@bind_hass
-def publish(hass: HomeAssistant, topic, payload, qos=None, retain=None) -> None:
+def publish(hass: HomeAssistant, topic, payload, qos=0, retain=False) -> None:
     """Publish message to an MQTT topic."""
     hass.add_job(async_publish, hass, topic, payload, qos, retain)
 
 
-@callback
-@bind_hass
-def async_publish(
-    hass: HomeAssistant, topic: Any, payload, qos=None, retain=None
+async def async_publish(
+    hass: HomeAssistant, topic: Any, payload, qos=0, retain=False
 ) -> None:
     """Publish message to an MQTT topic."""
-    data = _build_publish_data(topic, qos, retain)
-    data[ATTR_PAYLOAD] = payload
-    hass.async_create_task(hass.services.async_call(DOMAIN, SERVICE_PUBLISH, data))
-
-
-@bind_hass
-def publish_template(
-    hass: HomeAssistant, topic, payload_template, qos=None, retain=None
-) -> None:
-    """Publish message to an MQTT topic."""
-    hass.add_job(async_publish_template, hass, topic, payload_template, qos, retain)
-
-
-@bind_hass
-def async_publish_template(
-    hass: HomeAssistant, topic, payload_template, qos=None, retain=None
-) -> None:
-    """Publish message to an MQTT topic using a template payload."""
-    data = _build_publish_data(topic, qos, retain)
-    data[ATTR_PAYLOAD_TEMPLATE] = payload_template
-    hass.async_create_task(hass.services.async_call(DOMAIN, SERVICE_PUBLISH, data))
+    await hass.data[DATA_MQTT].async_publish(
+        topic, str(payload) if not isinstance(payload, bytes) else payload, qos, retain
+    )
 
 
 AsyncDeprecatedMessageCallbackType = Callable[
@@ -485,17 +543,42 @@ async def async_setup_entry(hass, entry):
 
     async def async_publish_service(call: ServiceCall):
         """Handle MQTT publish service calls."""
-        msg_topic: str = call.data[ATTR_TOPIC]
+        msg_topic = call.data.get(ATTR_TOPIC)
+        msg_topic_template = call.data.get(ATTR_TOPIC_TEMPLATE)
         payload = call.data.get(ATTR_PAYLOAD)
         payload_template = call.data.get(ATTR_PAYLOAD_TEMPLATE)
         qos: int = call.data[ATTR_QOS]
         retain: bool = call.data[ATTR_RETAIN]
+        if msg_topic_template is not None:
+            try:
+                rendered_topic = template.Template(
+                    msg_topic_template, hass
+                ).async_render(parse_result=False)
+                msg_topic = valid_publish_topic(rendered_topic)
+            except (template.jinja2.TemplateError, TemplateError) as exc:
+                _LOGGER.error(
+                    "Unable to publish: rendering topic template of %s "
+                    "failed because %s",
+                    msg_topic_template,
+                    exc,
+                )
+                return
+            except vol.Invalid as err:
+                _LOGGER.error(
+                    "Unable to publish: topic template '%s' produced an "
+                    "invalid topic '%s' after rendering (%s)",
+                    msg_topic_template,
+                    rendered_topic,
+                    err,
+                )
+                return
+
         if payload_template is not None:
             try:
-                payload = template.Template(payload_template, hass).async_render(
-                    parse_result=False
-                )
-            except template.jinja2.TemplateError as exc:
+                payload = MqttCommandTemplate(
+                    template.Template(payload_template), hass
+                ).async_render()
+            except (template.jinja2.TemplateError, TemplateError) as exc:
                 _LOGGER.error(
                     "Unable to publish to %s: rendering payload template of "
                     "%s failed because %s",
@@ -610,8 +693,7 @@ class MQTT:
         """
         self = hass.data[DATA_MQTT]
 
-        conf = hass.data.get(DATA_MQTT_CONFIG)
-        if conf is None:
+        if (conf := hass.data.get(DATA_MQTT_CONFIG)) is None:
             conf = CONFIG_SCHEMA({DOMAIN: dict(entry.data)})[DOMAIN]
 
         self.conf = _merge_config(entry, conf)
@@ -634,8 +716,7 @@ class MQTT:
         else:
             proto = mqtt.MQTTv311
 
-        client_id = self.conf.get(CONF_CLIENT_ID)
-        if client_id is None:
+        if (client_id := self.conf.get(CONF_CLIENT_ID)) is None:
             # PAHO MQTT relies on the MQTT server to generate random client IDs.
             # However, that feature is not mandatory so we generate our own.
             client_id = mqtt.base62(uuid.uuid4().int, padding=22)
@@ -649,9 +730,7 @@ class MQTT:
         if username is not None:
             self._mqttc.username_pw_set(username, password)
 
-        certificate = self.conf.get(CONF_CERTIFICATE)
-
-        if certificate == "auto":
+        if (certificate := self.conf.get(CONF_CERTIFICATE)) == "auto":
             certificate = certifi.where()
 
         client_key = self.conf.get(CONF_CLIENT_KEY)
@@ -1014,8 +1093,7 @@ async def websocket_remove_device(hass, connection, msg):
     device_id = msg["device_id"]
     dev_registry = await hass.helpers.device_registry.async_get_registry()
 
-    device = dev_registry.async_get(device_id)
-    if not device:
+    if not (device := dev_registry.async_get(device_id)):
         connection.send_error(
             msg["id"], websocket_api.const.ERR_NOT_FOUND, "Device not found"
         )

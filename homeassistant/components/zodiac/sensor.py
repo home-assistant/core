@@ -196,7 +196,7 @@ class ZodiacSensor(SensorEntity):
         return "zodiac__sign"
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return the state of the device."""
         return self._state
 

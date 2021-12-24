@@ -2,25 +2,23 @@
 from __future__ import annotations
 
 from collections import OrderedDict
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 import logging
 import os
 from pathlib import Path
 import re
 import shutil
 from types import ModuleType
-from typing import Any, Callable
+from typing import Any
+from urllib.parse import urlparse
 
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
-from homeassistant import auth
-from homeassistant.auth import (
-    mfa_modules as auth_mfa_modules,
-    providers as auth_providers,
-)
-from homeassistant.const import (
+from . import auth
+from .auth import mfa_modules as auth_mfa_modules, providers as auth_providers
+from .const import (
     ATTR_ASSUMED_STATE,
     ATTR_FRIENDLY_NAME,
     ATTR_HIDDEN,
@@ -51,20 +49,20 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     __version__,
 )
-from homeassistant.core import DOMAIN as CONF_CORE, SOURCE_YAML, HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_per_platform, extract_domain_configs
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_values import EntityValues
-from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import Integration, IntegrationNotFound
-from homeassistant.requirements import (
-    RequirementsNotFound,
-    async_get_integration_with_requirements,
+from .core import DOMAIN as CONF_CORE, ConfigSource, HomeAssistant, callback
+from .exceptions import HomeAssistantError
+from .helpers import (
+    config_per_platform,
+    config_validation as cv,
+    extract_domain_configs,
 )
-from homeassistant.util.package import is_docker_env
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
-from homeassistant.util.yaml import SECRET_YAML, Secrets, load_yaml
+from .helpers.entity_values import EntityValues
+from .helpers.typing import ConfigType
+from .loader import Integration, IntegrationNotFound
+from .requirements import RequirementsNotFound, async_get_integration_with_requirements
+from .util.package import is_docker_env
+from .util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
+from .util.yaml import SECRET_YAML, Secrets, load_yaml
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -161,6 +159,19 @@ def _no_duplicate_auth_mfa_module(
     return configs
 
 
+def _filter_bad_internal_external_urls(conf: dict) -> dict:
+    """Filter internal/external URL with a path."""
+    for key in CONF_INTERNAL_URL, CONF_EXTERNAL_URL:
+        if key in conf and urlparse(conf[key]).path not in ("", "/"):
+            # We warn but do not fix, because if this was incorrectly configured,
+            # adjusting this value might impact security.
+            _LOGGER.warning(
+                "Invalid %s set. It's not allowed to have a path (/bla)", key
+            )
+
+    return conf
+
+
 PACKAGES_CONFIG_SCHEMA = cv.schema_with_slug_keys(  # Package names are slugs
     vol.Schema({cv.string: vol.Any(dict, list, None)})  # Component config
 )
@@ -188,59 +199,64 @@ CUSTOMIZE_CONFIG_SCHEMA = vol.Schema(
     }
 )
 
-CORE_CONFIG_SCHEMA = CUSTOMIZE_CONFIG_SCHEMA.extend(
-    {
-        CONF_NAME: vol.Coerce(str),
-        CONF_LATITUDE: cv.latitude,
-        CONF_LONGITUDE: cv.longitude,
-        CONF_ELEVATION: vol.Coerce(int),
-        vol.Optional(CONF_TEMPERATURE_UNIT): cv.temperature_unit,
-        CONF_UNIT_SYSTEM: cv.unit_system,
-        CONF_TIME_ZONE: cv.time_zone,
-        vol.Optional(CONF_INTERNAL_URL): cv.url,
-        vol.Optional(CONF_EXTERNAL_URL): cv.url,
-        vol.Optional(CONF_ALLOWLIST_EXTERNAL_DIRS): vol.All(
-            cv.ensure_list, [vol.IsDir()]  # pylint: disable=no-value-for-parameter
-        ),
-        vol.Optional(LEGACY_CONF_WHITELIST_EXTERNAL_DIRS): vol.All(
-            cv.ensure_list, [vol.IsDir()]  # pylint: disable=no-value-for-parameter
-        ),
-        vol.Optional(CONF_ALLOWLIST_EXTERNAL_URLS): vol.All(cv.ensure_list, [cv.url]),
-        vol.Optional(CONF_PACKAGES, default={}): PACKAGES_CONFIG_SCHEMA,
-        vol.Optional(CONF_AUTH_PROVIDERS): vol.All(
-            cv.ensure_list,
-            [
-                auth_providers.AUTH_PROVIDER_SCHEMA.extend(
-                    {
-                        CONF_TYPE: vol.NotIn(
-                            ["insecure_example"],
-                            "The insecure_example auth provider"
-                            " is for testing only.",
-                        )
-                    }
-                )
-            ],
-            _no_duplicate_auth_provider,
-        ),
-        vol.Optional(CONF_AUTH_MFA_MODULES): vol.All(
-            cv.ensure_list,
-            [
-                auth_mfa_modules.MULTI_FACTOR_AUTH_MODULE_SCHEMA.extend(
-                    {
-                        CONF_TYPE: vol.NotIn(
-                            ["insecure_example"],
-                            "The insecure_example mfa module is for testing only.",
-                        )
-                    }
-                )
-            ],
-            _no_duplicate_auth_mfa_module,
-        ),
-        # pylint: disable=no-value-for-parameter
-        vol.Optional(CONF_MEDIA_DIRS): cv.schema_with_slug_keys(vol.IsDir()),
-        vol.Optional(CONF_LEGACY_TEMPLATES): cv.boolean,
-        vol.Optional(CONF_CURRENCY): cv.currency,
-    }
+CORE_CONFIG_SCHEMA = vol.All(
+    CUSTOMIZE_CONFIG_SCHEMA.extend(
+        {
+            CONF_NAME: vol.Coerce(str),
+            CONF_LATITUDE: cv.latitude,
+            CONF_LONGITUDE: cv.longitude,
+            CONF_ELEVATION: vol.Coerce(int),
+            vol.Optional(CONF_TEMPERATURE_UNIT): cv.temperature_unit,
+            CONF_UNIT_SYSTEM: cv.unit_system,
+            CONF_TIME_ZONE: cv.time_zone,
+            vol.Optional(CONF_INTERNAL_URL): cv.url,
+            vol.Optional(CONF_EXTERNAL_URL): cv.url,
+            vol.Optional(CONF_ALLOWLIST_EXTERNAL_DIRS): vol.All(
+                cv.ensure_list, [vol.IsDir()]  # pylint: disable=no-value-for-parameter
+            ),
+            vol.Optional(LEGACY_CONF_WHITELIST_EXTERNAL_DIRS): vol.All(
+                cv.ensure_list, [vol.IsDir()]  # pylint: disable=no-value-for-parameter
+            ),
+            vol.Optional(CONF_ALLOWLIST_EXTERNAL_URLS): vol.All(
+                cv.ensure_list, [cv.url]
+            ),
+            vol.Optional(CONF_PACKAGES, default={}): PACKAGES_CONFIG_SCHEMA,
+            vol.Optional(CONF_AUTH_PROVIDERS): vol.All(
+                cv.ensure_list,
+                [
+                    auth_providers.AUTH_PROVIDER_SCHEMA.extend(
+                        {
+                            CONF_TYPE: vol.NotIn(
+                                ["insecure_example"],
+                                "The insecure_example auth provider"
+                                " is for testing only.",
+                            )
+                        }
+                    )
+                ],
+                _no_duplicate_auth_provider,
+            ),
+            vol.Optional(CONF_AUTH_MFA_MODULES): vol.All(
+                cv.ensure_list,
+                [
+                    auth_mfa_modules.MULTI_FACTOR_AUTH_MODULE_SCHEMA.extend(
+                        {
+                            CONF_TYPE: vol.NotIn(
+                                ["insecure_example"],
+                                "The insecure_example mfa module is for testing only.",
+                            )
+                        }
+                    )
+                ],
+                _no_duplicate_auth_mfa_module,
+            ),
+            # pylint: disable=no-value-for-parameter
+            vol.Optional(CONF_MEDIA_DIRS): cv.schema_with_slug_keys(vol.IsDir()),
+            vol.Optional(CONF_LEGACY_TEMPLATES): cv.boolean,
+            vol.Optional(CONF_CURRENCY): cv.currency,
+        }
+    ),
+    _filter_bad_internal_external_urls,
 )
 
 
@@ -493,9 +509,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
 
     # Only load auth during startup.
     if not hasattr(hass, "auth"):
-        auth_conf = config.get(CONF_AUTH_PROVIDERS)
-
-        if auth_conf is None:
+        if (auth_conf := config.get(CONF_AUTH_PROVIDERS)) is None:
             auth_conf = [{"type": "homeassistant"}]
 
         mfa_conf = config.get(
@@ -525,7 +539,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
             CONF_CURRENCY,
         )
     ):
-        hac.config_source = SOURCE_YAML
+        hac.config_source = ConfigSource.YAML
 
     for key, attr in (
         (CONF_LATITUDE, "latitude"),
@@ -579,9 +593,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
     cust_glob = OrderedDict(config[CONF_CUSTOMIZE_GLOB])
 
     for name, pkg in config[CONF_PACKAGES].items():
-        pkg_cust = pkg.get(CONF_CORE)
-
-        if pkg_cust is None:
+        if (pkg_cust := pkg.get(CONF_CORE)) is None:
             continue
 
         try:
@@ -906,7 +918,7 @@ async def async_process_component_config(  # noqa: C901
 
 
 @callback
-def config_without_domain(config: dict, domain: str) -> dict:
+def config_without_domain(config: ConfigType, domain: str) -> ConfigType:
     """Return a config with all configuration for a domain removed."""
     filter_keys = extract_domain_configs(config, domain)
     return {key: value for key, value in config.items() if key not in filter_keys}
@@ -918,7 +930,7 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> str | None:
     This method is a coroutine.
     """
     # pylint: disable=import-outside-toplevel
-    from homeassistant.helpers import check_config
+    from .helpers import check_config
 
     res = await check_config.async_check_ha_config_file(hass)
 
@@ -936,11 +948,9 @@ def async_notify_setup_error(
     This method must be run in the event loop.
     """
     # pylint: disable=import-outside-toplevel
-    from homeassistant.components import persistent_notification
+    from .components import persistent_notification
 
-    errors = hass.data.get(DATA_PERSISTENT_ERRORS)
-
-    if errors is None:
+    if (errors := hass.data.get(DATA_PERSISTENT_ERRORS)) is None:
         errors = hass.data[DATA_PERSISTENT_ERRORS] = {}
 
     errors[component] = errors.get(component) or display_link

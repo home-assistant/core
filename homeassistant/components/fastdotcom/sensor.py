@@ -30,10 +30,10 @@ class SpeedtestSensor(RestoreEntity, SensorEntity):
     """Implementation of a FAst.com sensor."""
 
     _attr_name = "Fast.com Download"
-    _attr_unit_of_measurement = DATA_RATE_MEGABITS_PER_SECOND
+    _attr_native_unit_of_measurement = DATA_RATE_MEGABITS_PER_SECOND
     _attr_icon = ICON
     _attr_should_poll = False
-    _attr_state = None
+    _attr_native_value = None
 
     def __init__(self, speedtest_data: dict[str, Any]) -> None:
         """Initialize the sensor."""
@@ -49,17 +49,15 @@ class SpeedtestSensor(RestoreEntity, SensorEntity):
             )
         )
 
-        state = await self.async_get_last_state()
-        if not state:
+        if not (state := await self.async_get_last_state()):
             return
-        self._attr_state = state.state
+        self._attr_native_value = state.state
 
     def update(self) -> None:
         """Get the latest data and update the states."""
-        data = self._speedtest_data.data  # type: ignore[attr-defined]
-        if data is None:
+        if (data := self._speedtest_data.data) is None:  # type: ignore[attr-defined]
             return
-        self._attr_state = data["download"]
+        self._attr_native_value = data["download"]
 
     @callback
     def _schedule_immediate_update(self) -> None:

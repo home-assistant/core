@@ -39,8 +39,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     except KiwiException as exc:
         _LOGGER.error(exc)
         return
-    available_locks = kiwi.get_locks()
-    if not available_locks:
+    if not (available_locks := kiwi.get_locks()):
         # No locks found; abort setup routine.
         _LOGGER.info("No KIWI locks found in your account")
         return

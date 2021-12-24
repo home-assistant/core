@@ -33,7 +33,7 @@
                 "data": {
                     "host": "IP-Adresse (optional)",
                     "interface": "Die zu verwendende Netzwerkschnittstelle",
-                    "mac": "MAC-Adresse"
+                    "mac": "MAC-Adresse (optional)"
                 },
                 "description": "Stelle eine Verbindung zu deinem Xiaomi Aqara Gateway her. Wenn die IP- und MAC-Adressen leer bleiben, wird die automatische Erkennung verwendet",
                 "title": "Xiaomi Aqara Gateway"

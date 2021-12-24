@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "unknown": "Beklenmeyen hata"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "garage_name": "Garaj ad\u0131"
+                },
+                "title": "\u0130zlemek i\u00e7in bir garaj se\u00e7in"
+            }
+        }
+    },
+    "title": "Garages Amsterdam"
+}

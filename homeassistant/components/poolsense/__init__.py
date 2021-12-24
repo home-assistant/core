@@ -7,18 +7,19 @@ from poolsense import PoolSense
 from poolsense.exceptions import PoolSenseError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
     UpdateFailed,
 )
 
-from .const import DOMAIN
+from .const import ATTRIBUTION, DOMAIN
 
-PLATFORMS = ["sensor", "binary_sensor"]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,7 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
@@ -61,16 +62,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 class PoolSenseEntity(CoordinatorEntity):
     """Implements a common class elements representing the PoolSense component."""
 
-    def __init__(self, coordinator, email, info_type):
+    _attr_attribution = ATTRIBUTION
+
+    def __init__(self, coordinator, email, description: EntityDescription):
         """Initialize poolsense sensor."""
         super().__init__(coordinator)
-        self._unique_id = f"{email}-{info_type}"
-        self.info_type = info_type
-
-    @property
-    def unique_id(self):
-        """Return a unique id."""
-        return self._unique_id
+        self.entity_description = description
+        self._attr_name = f"PoolSense {description.name}"
+        self._attr_unique_id = f"{email}-{description.key}"
 
 
 class PoolSenseDataUpdateCoordinator(DataUpdateCoordinator):
@@ -91,7 +90,7 @@ class PoolSenseDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         """Update data via library."""
         data = {}
-        with async_timeout.timeout(10):
+        async with async_timeout.timeout(10):
             try:
                 data = await self.poolsense.get_poolsense_data()
             except (PoolSenseError) as error:

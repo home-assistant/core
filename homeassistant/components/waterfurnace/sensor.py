@@ -1,12 +1,11 @@
 """Support for Waterfurnace."""
 
-from homeassistant.components.sensor import ENTITY_ID_FORMAT, SensorEntity
-from homeassistant.const import (
-    DEVICE_CLASS_TEMPERATURE,
-    PERCENTAGE,
-    POWER_WATT,
-    TEMP_FAHRENHEIT,
+from homeassistant.components.sensor import (
+    ENTITY_ID_FORMAT,
+    SensorDeviceClass,
+    SensorEntity,
 )
+from homeassistant.const import PERCENTAGE, POWER_WATT, TEMP_FAHRENHEIT
 from homeassistant.core import callback
 from homeassistant.util import slugify
 
@@ -40,13 +39,21 @@ SENSORS = [
         "tstatactivesetpoint",
         None,
         TEMP_FAHRENHEIT,
-        DEVICE_CLASS_TEMPERATURE,
+        SensorDeviceClass.TEMPERATURE,
     ),
     WFSensorConfig(
-        "Leaving Air", "leavingairtemp", None, TEMP_FAHRENHEIT, DEVICE_CLASS_TEMPERATURE
+        "Leaving Air",
+        "leavingairtemp",
+        None,
+        TEMP_FAHRENHEIT,
+        SensorDeviceClass.TEMPERATURE,
     ),
     WFSensorConfig(
-        "Room Temp", "tstatroomtemp", None, TEMP_FAHRENHEIT, DEVICE_CLASS_TEMPERATURE
+        "Room Temp",
+        "tstatroomtemp",
+        None,
+        TEMP_FAHRENHEIT,
+        SensorDeviceClass.TEMPERATURE,
     ),
     WFSensorConfig("Loop Temp", "enteringwatertemp", None, TEMP_FAHRENHEIT),
     WFSensorConfig(
@@ -101,7 +108,7 @@ class WaterFurnaceSensor(SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
@@ -111,7 +118,7 @@ class WaterFurnaceSensor(SensorEntity):
         return self._icon
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the units of measurement."""
         return self._unit_of_measurement
 

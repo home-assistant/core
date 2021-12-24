@@ -9,8 +9,7 @@ from pynuki.bridge import InvalidCredentialsException
 from requests.exceptions import RequestException
 
 from homeassistant import exceptions
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_HOST, CONF_PLATFORM, CONF_PORT, CONF_TOKEN
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN, Platform
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -22,7 +21,6 @@ from .const import (
     DATA_COORDINATOR,
     DATA_LOCKS,
     DATA_OPENERS,
-    DEFAULT_PORT,
     DEFAULT_TIMEOUT,
     DOMAIN,
     ERROR_STATES,
@@ -30,7 +28,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["binary_sensor", "lock"]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.LOCK]
 UPDATE_INTERVAL = timedelta(seconds=30)
 
 
@@ -48,32 +46,6 @@ def _update_devices(devices):
 
             if device.state not in ERROR_STATES:
                 break
-
-
-async def async_setup(hass, config):
-    """Set up the Nuki component."""
-    hass.data.setdefault(DOMAIN, {})
-
-    for platform in PLATFORMS:
-        confs = config.get(platform)
-        if confs is None:
-            continue
-
-        for conf in confs:
-            if CONF_PLATFORM in conf and conf[CONF_PLATFORM] == DOMAIN:
-                hass.async_create_task(
-                    hass.config_entries.flow.async_init(
-                        DOMAIN,
-                        context={"source": SOURCE_IMPORT},
-                        data={
-                            CONF_HOST: conf[CONF_HOST],
-                            CONF_PORT: conf.get(CONF_PORT, DEFAULT_PORT),
-                            CONF_TOKEN: conf[CONF_TOKEN],
-                        },
-                    )
-                )
-
-    return True
 
 
 async def async_setup_entry(hass, entry):

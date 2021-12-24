@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositivo ya est\u00e1 configurado"
+        },
+        "error": {
+            "cannot_connect": "No se pudo conectar",
+            "unknown": "Error inesperado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Nombre"
+                },
+                "description": "Esta integraci\u00f3n requiere la aplicaci\u00f3n de Notificaciones para Android TV.\n\nPara Android TV: https://play.google.com/store/apps/details?id=de.cyberdream.androidtv.notifications.google\nPara Fire TV: https://www.amazon.com/Christian-Fees-Notifications-for-Fire/dp/B00OESCXEK\n\nDebes configurar una reserva DHCP en su router (consulta el manual de usuario de tu router) o una direcci\u00f3n IP est\u00e1tica en el dispositivo. Si no, el dispositivo acabar\u00e1 por no estar disponible.",
+                "title": "Notificaciones para Android TV / Fire TV"
+            }
+        }
+    }
+}

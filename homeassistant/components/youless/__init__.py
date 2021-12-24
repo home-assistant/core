@@ -6,14 +6,14 @@ from urllib.error import URLError
 from youless_api import YoulessAPI
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER,
         name="youless_gateway",
         update_method=async_update_data,
-        update_interval=timedelta(seconds=2),
+        update_interval=timedelta(seconds=10),
     )
 
     await coordinator.async_config_entry_first_refresh()

@@ -1,0 +1,38 @@
+{
+    "state": {
+        "yamaha_musiccast__dimmer": {
+            "auto": "\u0410\u0432\u0442\u043e\u043c\u0430\u0442\u0438\u0447\u043d\u043e"
+        },
+        "yamaha_musiccast__zone_equalizer_mode": {
+            "auto": "\u0410\u0432\u0442\u043e\u043c\u0430\u0442\u0438\u0447\u043d\u043e",
+            "bypass": "\u0411\u0430\u0439\u043f\u0430\u0441",
+            "manual": "\u0420\u044a\u0447\u043d\u043e"
+        },
+        "yamaha_musiccast__zone_link_control": {
+            "speed": "\u0421\u043a\u043e\u0440\u043e\u0441\u0442"
+        },
+        "yamaha_musiccast__zone_sleep": {
+            "120 min": "120 \u043c\u0438\u043d\u0443\u0442\u0438",
+            "30 min": "30 \u043c\u0438\u043d\u0443\u0442\u0438",
+            "60 min": "60 \u043c\u0438\u043d\u0443\u0442\u0438",
+            "90 min": "90 \u043c\u0438\u043d\u0443\u0442\u0438",
+            "off": "\u0418\u0437\u043a\u043b\u044e\u0447\u0435\u043d\u043e"
+        },
+        "yamaha_musiccast__zone_surr_decoder_type": {
+            "auto": "\u0410\u0432\u0442\u043e\u043c\u0430\u0442\u0438\u0447\u043d\u043e",
+            "dolby_pl": "Dolby ProLogic",
+            "dolby_pl2x_game": "Dolby ProLogic 2x Game",
+            "dolby_pl2x_movie": "Dolby ProLogic 2x Movie",
+            "dolby_pl2x_music": "Dolby ProLogic 2x Music",
+            "dolby_surround": "Dolby Surround",
+            "dts_neo6_cinema": "DTS Neo:6 Cinema",
+            "dts_neo6_music": "DTS Neo:6 Music",
+            "dts_neural_x": "DTS Neural:X"
+        },
+        "yamaha_musiccast__zone_tone_control_mode": {
+            "auto": "\u0410\u0432\u0442\u043e\u043c\u0430\u0442\u0438\u0447\u043d\u043e",
+            "bypass": "\u0411\u0430\u0439\u043f\u0430\u0441",
+            "manual": "\u0420\u044a\u0447\u043d\u043e"
+        }
+    }
+}

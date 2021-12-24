@@ -8,9 +8,8 @@ from busio import I2C
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    DEVICE_CLASS_PRESSURE,
-    DEVICE_CLASS_TEMPERATURE,
     PLATFORM_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
 )
 from homeassistant.const import CONF_NAME, PRESSURE_HPA, TEMP_CELSIUS
@@ -78,7 +77,7 @@ class Bmp280Sensor(SensorEntity):
         """Initialize the sensor."""
         self._bmp280 = bmp280
         self._attr_name = name
-        self._attr_unit_of_measurement = unit_of_measurement
+        self._attr_native_unit_of_measurement = unit_of_measurement
 
 
 class Bmp280TemperatureSensor(Bmp280Sensor):
@@ -87,14 +86,14 @@ class Bmp280TemperatureSensor(Bmp280Sensor):
     def __init__(self, bmp280: Adafruit_BMP280_I2C, name: str) -> None:
         """Initialize the entity."""
         super().__init__(
-            bmp280, f"{name} Temperature", TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE
+            bmp280, f"{name} Temperature", TEMP_CELSIUS, SensorDeviceClass.TEMPERATURE
         )
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Fetch new state data for the sensor."""
         try:
-            self._attr_state = round(self._bmp280.temperature, 1)
+            self._attr_native_value = round(self._bmp280.temperature, 1)
             if not self.available:
                 _LOGGER.warning("Communication restored with temperature sensor")
                 self._attr_available = True
@@ -112,14 +111,14 @@ class Bmp280PressureSensor(Bmp280Sensor):
     def __init__(self, bmp280: Adafruit_BMP280_I2C, name: str) -> None:
         """Initialize the entity."""
         super().__init__(
-            bmp280, f"{name} Pressure", PRESSURE_HPA, DEVICE_CLASS_PRESSURE
+            bmp280, f"{name} Pressure", PRESSURE_HPA, SensorDeviceClass.PRESSURE
         )
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Fetch new state data for the sensor."""
         try:
-            self._attr_state = round(self._bmp280.pressure)
+            self._attr_native_value = round(self._bmp280.pressure)
             if not self.available:
                 _LOGGER.warning("Communication restored with pressure sensor")
                 self._attr_available = True

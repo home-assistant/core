@@ -9,6 +9,7 @@
         },
         "step": {
             "reauth_confirm": {
+                "description": "Integrasi SmartTub perlu mengautentikasi ulang akun Anda",
                 "title": "Autentikasi Ulang Integrasi"
             },
             "user": {

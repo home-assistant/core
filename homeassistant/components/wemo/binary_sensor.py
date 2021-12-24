@@ -1,37 +1,67 @@
 """Support for WeMo binary sensors."""
 import asyncio
-import logging
+from typing import cast
+
+from pywemo import Insight, Maker
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN as WEMO_DOMAIN
-from .entity import WemoSubscriptionEntity
+from .entity import WemoBinaryStateEntity, WemoEntity
+from .wemo_device import DeviceCoordinator
 
-_LOGGER = logging.getLogger(__name__)
 
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up WeMo binary sensors."""
 
-    async def _discovered_wemo(device):
+    async def _discovered_wemo(coordinator: DeviceCoordinator) -> None:
         """Handle a discovered Wemo device."""
-        async_add_entities([WemoBinarySensor(device)])
+        if isinstance(coordinator.wemo, Insight):
+            async_add_entities([InsightBinarySensor(coordinator)])
+        elif isinstance(coordinator.wemo, Maker):
+            async_add_entities([MakerBinarySensor(coordinator)])
+        else:
+            async_add_entities([WemoBinarySensor(coordinator)])
 
     async_dispatcher_connect(hass, f"{WEMO_DOMAIN}.binary_sensor", _discovered_wemo)
 
     await asyncio.gather(
         *(
-            _discovered_wemo(device)
-            for device in hass.data[WEMO_DOMAIN]["pending"].pop("binary_sensor")
+            _discovered_wemo(coordinator)
+            for coordinator in hass.data[WEMO_DOMAIN]["pending"].pop("binary_sensor")
         )
     )
 
 
-class WemoBinarySensor(WemoSubscriptionEntity, BinarySensorEntity):
+class WemoBinarySensor(WemoBinaryStateEntity, BinarySensorEntity):
     """Representation a WeMo binary sensor."""
 
-    def _update(self, force_update=True):
-        """Update the sensor state."""
-        with self._wemo_exception_handler("update status"):
-            self._state = self.wemo.get_state(force_update)
+
+class MakerBinarySensor(WemoEntity, BinarySensorEntity):
+    """Maker device's sensor port."""
+
+    _name_suffix = "Sensor"
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if the Maker's sensor is pulled low."""
+        return cast(int, self.wemo.has_sensor) != 0 and self.wemo.sensor_state == 0
+
+
+class InsightBinarySensor(WemoBinarySensor):
+    """Sensor representing the device connected to the Insight Switch."""
+
+    _name_suffix = "Device"
+
+    @property
+    def is_on(self) -> bool:
+        """Return true device connected to the Insight Switch is on."""
+        return super().is_on and self.wemo.insight_params["state"] == "1"

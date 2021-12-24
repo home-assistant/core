@@ -1,4 +1,5 @@
 """Support for August doorbell camera."""
+from __future__ import annotations
 
 from yalexs.activity import ActivityType
 from yalexs.util import update_doorbell_image_from_activity
@@ -62,13 +63,16 @@ class AugustCamera(AugustEntityMixin, Camera):
     def _update_from_data(self):
         """Get the latest state of the sensor."""
         doorbell_activity = self._data.activity_stream.get_latest_device_activity(
-            self._device_id, {ActivityType.DOORBELL_MOTION}
+            self._device_id,
+            {ActivityType.DOORBELL_MOTION, ActivityType.DOORBELL_IMAGE_CAPTURE},
         )
 
         if doorbell_activity is not None:
             update_doorbell_image_from_activity(self._detail, doorbell_activity)
 
-    async def async_camera_image(self):
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return bytes of camera image."""
         self._update_from_data()
 

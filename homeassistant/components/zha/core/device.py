@@ -341,6 +341,9 @@ class ZHADevice(LogMixin):
         )
 
     async def _check_available(self, *_):
+        # don't flip the availability state of the coordinator
+        if self.is_coordinator:
+            return
         if self.last_seen is None:
             self.update_available(False)
             return
@@ -503,7 +506,7 @@ class ZHADevice(LogMixin):
                 names.append(
                     {
                         ATTR_NAME: f"unknown {endpoint.device_type} device_type "
-                        f"of 0x{endpoint.profile_id:04x} profile id"
+                        f"of 0x{(endpoint.profile_id or 0xFFFF):04x} profile id"
                     }
                 )
         device_info[ATTR_ENDPOINT_NAMES] = names

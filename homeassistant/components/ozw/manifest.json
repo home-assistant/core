@@ -1,6 +1,6 @@
 {
   "domain": "ozw",
-  "name": "OpenZWave (beta)",
+  "name": "OpenZWave (deprecated)",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ozw",
   "requirements": ["python-openzwave-mqtt[mqtt-client]==1.4.0"],

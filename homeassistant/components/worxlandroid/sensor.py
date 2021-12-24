@@ -68,12 +68,12 @@ class WorxLandroidSensor(SensorEntity):
         return f"worxlandroid-{self.sensor}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of the sensor."""
         if self.sensor == "battery":
             return PERCENTAGE
@@ -85,7 +85,7 @@ class WorxLandroidSensor(SensorEntity):
 
         try:
             session = async_get_clientsession(self.hass)
-            with async_timeout.timeout(self.timeout):
+            async with async_timeout.timeout(self.timeout):
                 auth = aiohttp.helpers.BasicAuth("admin", self.pin)
                 mower_response = await session.get(self.url, auth=auth)
         except (asyncio.TimeoutError, aiohttp.ClientError):
@@ -134,9 +134,7 @@ class WorxLandroidSensor(SensorEntity):
 
     def get_state(self, obj):
         """Get the state of the mower."""
-        state = self.get_error(obj)
-
-        if state is None:
+        if (state := self.get_error(obj)) is None:
             if obj["batteryChargerState"] == "charging":
                 return obj["batteryChargerState"]
 

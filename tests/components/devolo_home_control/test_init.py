@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from tests.components.devolo_home_control import configure_integration
 
 
-async def test_setup_entry(hass: HomeAssistant):
+async def test_setup_entry(hass: HomeAssistant, mock_zeroconf):
     """Test setup entry."""
     entry = configure_integration(hass)
     with patch("homeassistant.components.devolo_home_control.HomeControl"):
@@ -34,7 +34,7 @@ async def test_setup_entry_maintenance(hass: HomeAssistant):
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_gateway_offline(hass: HomeAssistant):
+async def test_setup_gateway_offline(hass: HomeAssistant, mock_zeroconf):
     """Test setup entry fails on gateway offline."""
     entry = configure_integration(hass)
     with patch(

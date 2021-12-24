@@ -902,7 +902,7 @@ def test_config_defaults():
     assert config.time_zone == "UTC"
     assert config.internal_url is None
     assert config.external_url is None
-    assert config.config_source == "default"
+    assert config.config_source is ha.ConfigSource.DEFAULT
     assert config.skip_pip is False
     assert config.components == set()
     assert config.api is None
@@ -948,7 +948,7 @@ def test_config_as_dict():
         "allowlist_external_dirs": set(),
         "allowlist_external_urls": set(),
         "version": __version__,
-        "config_source": "default",
+        "config_source": ha.ConfigSource.DEFAULT,
         "safe_mode": False,
         "state": "RUNNING",
         "external_url": None,
@@ -1372,6 +1372,33 @@ async def test_additional_data_in_core_config(hass, hass_storage):
     }
     await config.async_load()
     assert config.location_name == "Test Name"
+
+
+async def test_incorrect_internal_external_url(hass, hass_storage, caplog):
+    """Test that we warn when detecting invalid internal/extenral url."""
+    config = ha.Config(hass)
+
+    hass_storage[ha.CORE_STORAGE_KEY] = {
+        "version": 1,
+        "data": {
+            "internal_url": None,
+            "external_url": None,
+        },
+    }
+    await config.async_load()
+    assert "Invalid external_url set" not in caplog.text
+    assert "Invalid internal_url set" not in caplog.text
+
+    hass_storage[ha.CORE_STORAGE_KEY] = {
+        "version": 1,
+        "data": {
+            "internal_url": "https://community.home-assistant.io/profile",
+            "external_url": "https://www.home-assistant.io/blue",
+        },
+    }
+    await config.async_load()
+    assert "Invalid external_url set" in caplog.text
+    assert "Invalid internal_url set" in caplog.text
 
 
 async def test_start_events(hass):

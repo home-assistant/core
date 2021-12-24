@@ -9,14 +9,6 @@
         },
         "flow_title": "{name}",
         "step": {
-            "ssdp_confirm": {
-                "data": {
-                    "many": "\u05e8\u05d9\u05e7\u05d9\u05dd",
-                    "one": "\u05e8\u05d9\u05e7",
-                    "other": "",
-                    "two": "\u05e8\u05d9\u05e7\u05d9\u05dd"
-                }
-            },
             "user": {
                 "data": {
                     "host": "\u05de\u05d0\u05e8\u05d7"

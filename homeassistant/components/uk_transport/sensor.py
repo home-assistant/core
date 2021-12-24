@@ -1,5 +1,6 @@
 """Support for UK public transport data provided by transportapi.com."""
 from datetime import datetime, timedelta
+from http import HTTPStatus
 import logging
 import re
 
@@ -7,7 +8,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import CONF_MODE, HTTP_OK, TIME_MINUTES
+from homeassistant.const import CONF_MODE, TIME_MINUTES
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
@@ -93,7 +94,7 @@ class UkTransportSensor(SensorEntity):
 
     TRANSPORT_API_URL_BASE = "https://transportapi.com/v3/uk/"
     _attr_icon = "mdi:train"
-    _attr_unit_of_measurement = TIME_MINUTES
+    _attr_native_unit_of_measurement = TIME_MINUTES
 
     def __init__(self, name, api_app_id, api_app_key, url):
         """Initialize the sensor."""
@@ -110,7 +111,7 @@ class UkTransportSensor(SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
@@ -121,7 +122,7 @@ class UkTransportSensor(SensorEntity):
         )
 
         response = requests.get(self._url, params=request_params)
-        if response.status_code != HTTP_OK:
+        if response.status_code != HTTPStatus.OK:
             _LOGGER.warning("Invalid response from API")
         elif "error" in response.json():
             if "exceeded" in response.json()["error"]:

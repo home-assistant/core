@@ -48,7 +48,7 @@ class BlockchainSensor(SensorEntity):
 
     _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
     _attr_icon = ICON
-    _attr_unit_of_measurement = "BTC"
+    _attr_native_unit_of_measurement = "BTC"
 
     def __init__(self, name, addresses):
         """Initialize the sensor."""
@@ -57,4 +57,4 @@ class BlockchainSensor(SensorEntity):
 
     def update(self):
         """Get the latest state of the sensor."""
-        self._attr_state = get_balance(self.addresses)
+        self._attr_native_value = get_balance(self.addresses)

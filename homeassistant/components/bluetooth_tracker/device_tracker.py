@@ -2,10 +2,10 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Callable
 from datetime import datetime, timedelta
 import logging
-from typing import Any, Callable, Final
+from typing import Any, Final
 
 import bluetooth  # pylint: disable=import-error
 from bt_proximity import BluetoothRSSI

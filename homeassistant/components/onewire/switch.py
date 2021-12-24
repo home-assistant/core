@@ -1,165 +1,150 @@
 """Support for 1-Wire environment switches."""
 from __future__ import annotations
 
-import logging
+from dataclasses import dataclass
 import os
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_NAME,
-    CONF_TYPE,
-)
+from homeassistant.const import CONF_TYPE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import CONF_TYPE_OWSERVER, DOMAIN, SWITCH_TYPE_LATCH, SWITCH_TYPE_PIO
-from .model import DeviceComponentDescription
-from .onewire_entities import OneWireBaseEntity, OneWireProxyEntity
+from .const import (
+    CONF_TYPE_OWSERVER,
+    DEVICE_KEYS_0_3,
+    DEVICE_KEYS_0_7,
+    DEVICE_KEYS_A_B,
+    DOMAIN,
+    READ_MODE_BOOL,
+)
+from .model import OWServerDeviceDescription
+from .onewire_entities import OneWireEntityDescription, OneWireProxyEntity
 from .onewirehub import OneWireHub
 
-DEVICE_SWITCHES: dict[str, list[DeviceComponentDescription]] = {
-    # Family : { owfs path }
-    "05": [
-        {
-            "path": "PIO",
-            "name": "PIO",
-            "type": SWITCH_TYPE_PIO,
-            "default_disabled": True,
-        },
-    ],
-    "12": [
-        {
-            "path": "PIO.A",
-            "name": "PIO A",
-            "type": SWITCH_TYPE_PIO,
-            "default_disabled": True,
-        },
-        {
-            "path": "PIO.B",
-            "name": "PIO B",
-            "type": SWITCH_TYPE_PIO,
-            "default_disabled": True,
-        },
-        {
-            "path": "latch.A",
-            "name": "Latch A",
-            "type": SWITCH_TYPE_LATCH,
-            "default_disabled": True,
-        },
-        {
-            "path": "latch.B",
-            "name": "Latch B",
-            "type": SWITCH_TYPE_LATCH,
-            "default_disabled": True,
-        },
-    ],
-    "29": [
-        {
-            "path": "PIO.0",
-            "name": "PIO 0",
-            "type": SWITCH_TYPE_PIO,
-            "default_disabled": True,
-        },
-        {
-            "path": "PIO.1",
-            "name": "PIO 1",
-            "type": SWITCH_TYPE_PIO,
-            "default_disabled": True,
-        },
-        {
-            "path": "PIO.2",
-            "name": "PIO 2",
-            "type": SWITCH_TYPE_PIO,
-            "default_disabled": True,
-        },
-        {
-            "path": "PIO.3",
-            "name": "PIO 3",
-            "type": SWITCH_TYPE_PIO,
-            "default_disabled": True,
-        },
-        {
-            "path": "PIO.4",
-            "name": "PIO 4",
-            "type": SWITCH_TYPE_PIO,
-            "default_disabled": True,
-        },
-        {
-            "path": "PIO.5",
-            "name": "PIO 5",
-            "type": SWITCH_TYPE_PIO,
-            "default_disabled": True,
-        },
-        {
-            "path": "PIO.6",
-            "name": "PIO 6",
-            "type": SWITCH_TYPE_PIO,
-            "default_disabled": True,
-        },
-        {
-            "path": "PIO.7",
-            "name": "PIO 7",
-            "type": SWITCH_TYPE_PIO,
-            "default_disabled": True,
-        },
-        {
-            "path": "latch.0",
-            "name": "Latch 0",
-            "type": SWITCH_TYPE_LATCH,
-            "default_disabled": True,
-        },
-        {
-            "path": "latch.1",
-            "name": "Latch 1",
-            "type": SWITCH_TYPE_LATCH,
-            "default_disabled": True,
-        },
-        {
-            "path": "latch.2",
-            "name": "Latch 2",
-            "type": SWITCH_TYPE_LATCH,
-            "default_disabled": True,
-        },
-        {
-            "path": "latch.3",
-            "name": "Latch 3",
-            "type": SWITCH_TYPE_LATCH,
-            "default_disabled": True,
-        },
-        {
-            "path": "latch.4",
-            "name": "Latch 4",
-            "type": SWITCH_TYPE_LATCH,
-            "default_disabled": True,
-        },
-        {
-            "path": "latch.5",
-            "name": "Latch 5",
-            "type": SWITCH_TYPE_LATCH,
-            "default_disabled": True,
-        },
-        {
-            "path": "latch.6",
-            "name": "Latch 6",
-            "type": SWITCH_TYPE_LATCH,
-            "default_disabled": True,
-        },
-        {
-            "path": "latch.7",
-            "name": "Latch 7",
-            "type": SWITCH_TYPE_LATCH,
-            "default_disabled": True,
-        },
-    ],
+
+@dataclass
+class OneWireSwitchEntityDescription(OneWireEntityDescription, SwitchEntityDescription):
+    """Class describing OneWire switch entities."""
+
+
+DEVICE_SWITCHES: dict[str, tuple[OneWireEntityDescription, ...]] = {
+    "05": (
+        OneWireSwitchEntityDescription(
+            key="PIO",
+            entity_registry_enabled_default=False,
+            name="PIO",
+            read_mode=READ_MODE_BOOL,
+        ),
+    ),
+    "12": tuple(
+        [
+            OneWireSwitchEntityDescription(
+                key=f"PIO.{id}",
+                entity_registry_enabled_default=False,
+                name=f"PIO {id}",
+                read_mode=READ_MODE_BOOL,
+            )
+            for id in DEVICE_KEYS_A_B
+        ]
+        + [
+            OneWireSwitchEntityDescription(
+                key=f"latch.{id}",
+                entity_registry_enabled_default=False,
+                name=f"Latch {id}",
+                read_mode=READ_MODE_BOOL,
+            )
+            for id in DEVICE_KEYS_A_B
+        ]
+    ),
+    "26": (
+        OneWireSwitchEntityDescription(
+            key="IAD",
+            entity_registry_enabled_default=False,
+            entity_category=EntityCategory.CONFIG,
+            name="IAD",
+            read_mode=READ_MODE_BOOL,
+        ),
+    ),
+    "29": tuple(
+        [
+            OneWireSwitchEntityDescription(
+                key=f"PIO.{id}",
+                entity_registry_enabled_default=False,
+                name=f"PIO {id}",
+                read_mode=READ_MODE_BOOL,
+            )
+            for id in DEVICE_KEYS_0_7
+        ]
+        + [
+            OneWireSwitchEntityDescription(
+                key=f"latch.{id}",
+                entity_registry_enabled_default=False,
+                name=f"Latch {id}",
+                read_mode=READ_MODE_BOOL,
+            )
+            for id in DEVICE_KEYS_0_7
+        ]
+    ),
+    "3A": tuple(
+        OneWireSwitchEntityDescription(
+            key=f"PIO.{id}",
+            entity_registry_enabled_default=False,
+            name=f"PIO {id}",
+            read_mode=READ_MODE_BOOL,
+        )
+        for id in DEVICE_KEYS_A_B
+    ),
+    "EF": (),  # "HobbyBoard": special
 }
 
-LOGGER = logging.getLogger(__name__)
+# EF sensors are usually hobbyboards specialized sensors.
+
+HOBBYBOARD_EF: dict[str, tuple[OneWireEntityDescription, ...]] = {
+    "HB_HUB": tuple(
+        OneWireSwitchEntityDescription(
+            key=f"hub/branch.{id}",
+            entity_registry_enabled_default=False,
+            name=f"Hub Branch {id} Enable",
+            read_mode=READ_MODE_BOOL,
+            entity_category=EntityCategory.CONFIG,
+        )
+        for id in DEVICE_KEYS_0_3
+    ),
+    "HB_MOISTURE_METER": tuple(
+        [
+            OneWireSwitchEntityDescription(
+                key=f"moisture/is_leaf.{id}",
+                entity_registry_enabled_default=False,
+                name=f"Leaf Sensor {id} Enable",
+                read_mode=READ_MODE_BOOL,
+                entity_category=EntityCategory.CONFIG,
+            )
+            for id in DEVICE_KEYS_0_3
+        ]
+        + [
+            OneWireSwitchEntityDescription(
+                key=f"moisture/is_moisture.{id}",
+                entity_registry_enabled_default=False,
+                name=f"Moisture Sensor {id} Enable",
+                read_mode=READ_MODE_BOOL,
+                entity_category=EntityCategory.CONFIG,
+            )
+            for id in DEVICE_KEYS_0_3
+        ]
+    ),
+}
+
+
+def get_sensor_types(
+    device_sub_type: str,
+) -> dict[str, tuple[OneWireEntityDescription, ...]]:
+    """Return the proper info array for the device type."""
+    if "HobbyBoard" in device_sub_type:
+        return HOBBYBOARD_EF
+    return DEVICE_SWITCHES
 
 
 async def async_setup_entry(
@@ -176,38 +161,37 @@ async def async_setup_entry(
         async_add_entities(entities, True)
 
 
-def get_entities(onewirehub: OneWireHub) -> list[OneWireBaseEntity]:
+def get_entities(onewirehub: OneWireHub) -> list[SwitchEntity]:
     """Get a list of entities."""
     if not onewirehub.devices:
         return []
 
-    entities: list[OneWireBaseEntity] = []
+    entities: list[SwitchEntity] = []
 
     for device in onewirehub.devices:
-        family = device["family"]
-        device_type = device["type"]
-        device_id = os.path.split(os.path.split(device["path"])[0])[1]
+        if TYPE_CHECKING:
+            assert isinstance(device, OWServerDeviceDescription)
+        family = device.family
+        device_type = device.type
+        device_id = device.id
+        device_info = device.device_info
+        device_sub_type = "std"
+        if "EF" in family:
+            device_sub_type = "HobbyBoard"
+            family = device_type
 
-        if family not in DEVICE_SWITCHES:
+        if family not in get_sensor_types(device_sub_type):
             continue
-
-        device_info: DeviceInfo = {
-            ATTR_IDENTIFIERS: {(DOMAIN, device_id)},
-            ATTR_MANUFACTURER: "Maxim Integrated",
-            ATTR_MODEL: device_type,
-            ATTR_NAME: device_id,
-        }
-        for entity_specs in DEVICE_SWITCHES[family]:
-            entity_path = os.path.join(
-                os.path.split(device["path"])[0], entity_specs["path"]
-            )
+        for description in get_sensor_types(device_sub_type)[family]:
+            device_file = os.path.join(os.path.split(device.path)[0], description.key)
+            name = f"{device_id} {description.name}"
             entities.append(
                 OneWireProxySwitch(
+                    description=description,
                     device_id=device_id,
-                    device_name=device_id,
+                    device_file=device_file,
                     device_info=device_info,
-                    entity_path=entity_path,
-                    entity_specs=entity_specs,
+                    name=name,
                     owproxy=onewirehub.owproxy,
                 )
             )
@@ -217,6 +201,8 @@ def get_entities(onewirehub: OneWireHub) -> list[OneWireBaseEntity]:
 
 class OneWireProxySwitch(OneWireProxyEntity, SwitchEntity):
     """Implementation of a 1-Wire switch."""
+
+    entity_description: OneWireSwitchEntityDescription
 
     @property
     def is_on(self) -> bool:

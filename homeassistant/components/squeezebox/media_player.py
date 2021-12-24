@@ -6,8 +6,7 @@ import logging
 from pysqueezebox import Server, async_discover
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
+from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_ENQUEUE,
     MEDIA_TYPE_MUSIC,
@@ -51,13 +50,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.util.dt import utcnow
 
 from .browse_media import build_item_response, generate_playlist, library_payload
-from .const import (
-    DEFAULT_PORT,
-    DISCOVERY_TASK,
-    DOMAIN,
-    KNOWN_PLAYERS,
-    PLAYER_DISCOVERY_UNSUB,
-)
+from .const import DISCOVERY_TASK, DOMAIN, KNOWN_PLAYERS, PLAYER_DISCOVERY_UNSUB
 
 SERVICE_CALL_METHOD = "call_method"
 SERVICE_CALL_QUERY = "call_query"
@@ -88,21 +81,6 @@ SUPPORT_SQUEEZEBOX = (
     | SUPPORT_SHUFFLE_SET
     | SUPPORT_CLEAR_PLAYLIST
     | SUPPORT_STOP
-)
-
-PLATFORM_SCHEMA = vol.All(
-    cv.deprecated(CONF_HOST),
-    cv.deprecated(CONF_PORT),
-    cv.deprecated(CONF_PASSWORD),
-    cv.deprecated(CONF_USERNAME),
-    PLATFORM_SCHEMA.extend(
-        {
-            vol.Required(CONF_HOST): cv.string,
-            vol.Optional(CONF_PASSWORD): cv.string,
-            vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-            vol.Optional(CONF_USERNAME): cv.string,
-        }
-    ),
 )
 
 KNOWN_SERVERS = "known_servers"
@@ -142,14 +120,6 @@ async def start_server_discovery(hass):
         _LOGGER.debug("Adding server discovery task for squeezebox")
         hass.data[DOMAIN][DISCOVERY_TASK] = hass.async_create_task(
             async_discover(_discovered_server)
-        )
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up squeezebox platform from platform entry in configuration.yaml (deprecated)."""
-    if config:
-        await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config
         )
 
 
@@ -197,8 +167,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 known_players.append(entity)
                 async_add_entities([entity])
 
-        players = await lms.async_get_players()
-        if players:
+        if players := await lms.async_get_players():
             for player in players:
                 hass.async_create_task(_discovered_player(player))
 
@@ -561,8 +530,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         player_ids = {
             p.entity_id: p.unique_id for p in self.hass.data[DOMAIN][KNOWN_PLAYERS]
         }
-        other_player_id = player_ids.get(other_player)
-        if other_player_id:
+        if other_player_id := player_ids.get(other_player):
             await self._player.async_sync(other_player_id)
         else:
             _LOGGER.info("Could not find player_id for %s. Not syncing", other_player)

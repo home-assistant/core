@@ -14,11 +14,11 @@ import async_timeout
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    DEVICE_CLASS_SHADE,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
     SUPPORT_STOP,
+    CoverDeviceClass,
     CoverEntity,
 )
 from homeassistant.core import callback
@@ -145,7 +145,7 @@ class PowerViewShade(ShadeEntity, CoverEntity):
     @property
     def device_class(self):
         """Return device class."""
-        return DEVICE_CLASS_SHADE
+        return CoverDeviceClass.SHADE
 
     @property
     def name(self):
@@ -177,8 +177,6 @@ class PowerViewShade(ShadeEntity, CoverEntity):
         """Move the shade to a position."""
         current_hass_position = hd_position_to_hass(self._current_cover_position)
         steps_to_move = abs(current_hass_position - target_hass_position)
-        if not steps_to_move:
-            return
         self._async_schedule_update_for_transition(steps_to_move)
         self._async_update_from_command(
             await self._shade.move(

@@ -1,12 +1,10 @@
 """Nuki.io lock platform."""
 from abc import ABC, abstractmethod
-import logging
 
 from pynuki import MODE_OPENER_CONTINUOUS
 import voluptuous as vol
 
-from homeassistant.components.lock import PLATFORM_SCHEMA, SUPPORT_OPEN, LockEntity
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
+from homeassistant.components.lock import SUPPORT_OPEN, LockEntity
 from homeassistant.helpers import config_validation as cv, entity_platform
 
 from . import NukiEntity
@@ -18,27 +16,9 @@ from .const import (
     DATA_COORDINATOR,
     DATA_LOCKS,
     DATA_OPENERS,
-    DEFAULT_PORT,
     DOMAIN as NUKI_DOMAIN,
     ERROR_STATES,
 )
-
-_LOGGER = logging.getLogger(__name__)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Required(CONF_TOKEN): cv.string,
-    }
-)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Nuki lock platform."""
-    _LOGGER.warning(
-        "Loading Nuki by lock platform configuration is deprecated and will be removed in the future"
-    )
 
 
 async def async_setup_entry(hass, entry, async_add_entities):

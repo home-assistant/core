@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Nem siker\u00fclt csatlakozni",
+            "unknown": "V\u00e1ratlan hiba"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "C\u00edm",
+                    "name": "N\u00e9v"
+                },
+                "description": "\u00c1ll\u00edtsa be a P1 monitort az Otthoni asszisztenssel val\u00f3 integr\u00e1ci\u00f3hoz."
+            }
+        }
+    }
+}

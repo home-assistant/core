@@ -1,6 +1,7 @@
 """The tests the History component."""
 # pylint: disable=protected-access,invalid-name
 from datetime import timedelta
+from http import HTTPStatus
 import json
 from unittest.mock import patch, sentinel
 
@@ -586,7 +587,7 @@ async def test_fetch_period_api(hass, hass_client):
     await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
     client = await hass_client()
     response = await client.get(f"/api/history/period/{dt_util.utcnow().isoformat()}")
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
 
 
 async def test_fetch_period_api_with_use_include_order(hass, hass_client):
@@ -598,7 +599,7 @@ async def test_fetch_period_api_with_use_include_order(hass, hass_client):
     await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
     client = await hass_client()
     response = await client.get(f"/api/history/period/{dt_util.utcnow().isoformat()}")
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
 
 
 async def test_fetch_period_api_with_minimal_response(hass, hass_client):
@@ -610,7 +611,7 @@ async def test_fetch_period_api_with_minimal_response(hass, hass_client):
     response = await client.get(
         f"/api/history/period/{dt_util.utcnow().isoformat()}?minimal_response"
     )
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
 
 
 async def test_fetch_period_api_with_no_timestamp(hass, hass_client):
@@ -620,7 +621,7 @@ async def test_fetch_period_api_with_no_timestamp(hass, hass_client):
     await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
     client = await hass_client()
     response = await client.get("/api/history/period")
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
 
 
 async def test_fetch_period_api_with_include_order(hass, hass_client):
@@ -642,7 +643,7 @@ async def test_fetch_period_api_with_include_order(hass, hass_client):
         f"/api/history/period/{dt_util.utcnow().isoformat()}",
         params={"filter_entity_id": "non.existing,something.else"},
     )
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
 
 
 async def test_fetch_period_api_with_entity_glob_include(hass, hass_client):
@@ -672,7 +673,7 @@ async def test_fetch_period_api_with_entity_glob_include(hass, hass_client):
     response = await client.get(
         f"/api/history/period/{dt_util.utcnow().isoformat()}",
     )
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     response_json = await response.json()
     assert response_json[0][0]["entity_id"] == "light.kitchen"
 
@@ -710,7 +711,7 @@ async def test_fetch_period_api_with_entity_glob_exclude(hass, hass_client):
     response = await client.get(
         f"/api/history/period/{dt_util.utcnow().isoformat()}",
     )
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     response_json = await response.json()
     assert len(response_json) == 2
     assert response_json[0][0]["entity_id"] == "light.cow"
@@ -754,7 +755,7 @@ async def test_fetch_period_api_with_entity_glob_include_and_exclude(hass, hass_
     response = await client.get(
         f"/api/history/period/{dt_util.utcnow().isoformat()}",
     )
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     response_json = await response.json()
     assert len(response_json) == 3
     assert response_json[0][0]["entity_id"] == "light.match"
@@ -785,7 +786,7 @@ async def test_entity_ids_limit_via_api(hass, hass_client):
     response = await client.get(
         f"/api/history/period/{dt_util.utcnow().isoformat()}?filter_entity_id=light.kitchen,light.cow",
     )
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     response_json = await response.json()
     assert len(response_json) == 2
     assert response_json[0][0]["entity_id"] == "light.kitchen"
@@ -815,7 +816,7 @@ async def test_entity_ids_limit_via_api_with_skip_initial_state(hass, hass_clien
     response = await client.get(
         f"/api/history/period/{dt_util.utcnow().isoformat()}?filter_entity_id=light.kitchen,light.cow&skip_initial_state",
     )
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     response_json = await response.json()
     assert len(response_json) == 0
 
@@ -823,7 +824,7 @@ async def test_entity_ids_limit_via_api_with_skip_initial_state(hass, hass_clien
     response = await client.get(
         f"/api/history/period/{when.isoformat()}?filter_entity_id=light.kitchen,light.cow&skip_initial_state",
     )
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     response_json = await response.json()
     assert len(response_json) == 2
     assert response_json[0][0]["entity_id"] == "light.kitchen"
@@ -875,7 +876,7 @@ async def test_statistics_during_period(
     await hass.async_add_executor_job(trigger_db_commit, hass)
     await hass.async_block_till_done()
 
-    hass.data[recorder.DATA_INSTANCE].do_adhoc_statistics(period="hourly", start=now)
+    hass.data[recorder.DATA_INSTANCE].do_adhoc_statistics(start=now)
     await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
 
     client = await hass_ws_client()
@@ -886,19 +887,20 @@ async def test_statistics_during_period(
             "start_time": now.isoformat(),
             "end_time": now.isoformat(),
             "statistic_ids": ["sensor.test"],
+            "period": "hour",
         }
     )
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {}
 
-    client = await hass_ws_client()
     await client.send_json(
         {
-            "id": 1,
+            "id": 2,
             "type": "history/statistics_during_period",
             "start_time": now.isoformat(),
             "statistic_ids": ["sensor.test"],
+            "period": "5minute",
         }
     )
     response = await client.receive_json()
@@ -908,6 +910,7 @@ async def test_statistics_during_period(
             {
                 "statistic_id": "sensor.test",
                 "start": now.isoformat(),
+                "end": (now + timedelta(minutes=5)).isoformat(),
                 "mean": approx(value),
                 "min": approx(value),
                 "max": approx(value),
@@ -935,6 +938,7 @@ async def test_statistics_during_period_bad_start_time(hass, hass_ws_client):
             "id": 1,
             "type": "history/statistics_during_period",
             "start_time": "cats",
+            "period": "5minute",
         }
     )
     response = await client.receive_json()
@@ -961,6 +965,7 @@ async def test_statistics_during_period_bad_end_time(hass, hass_ws_client):
             "type": "history/statistics_during_period",
             "start_time": now.isoformat(),
             "end_time": "dogs",
+            "period": "5minute",
         }
     )
     response = await client.receive_json()
@@ -1005,10 +1010,15 @@ async def test_list_statistic_ids(hass, hass_ws_client, units, attributes, unit)
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == [
-        {"statistic_id": "sensor.test", "unit_of_measurement": unit}
+        {
+            "statistic_id": "sensor.test",
+            "name": None,
+            "source": "recorder",
+            "unit_of_measurement": unit,
+        }
     ]
 
-    hass.data[recorder.DATA_INSTANCE].do_adhoc_statistics(period="hourly", start=now)
+    hass.data[recorder.DATA_INSTANCE].do_adhoc_statistics(start=now)
     await hass.async_add_executor_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
     # Remove the state, statistics will now be fetched from the database
     hass.states.async_remove("sensor.test")
@@ -1018,7 +1028,12 @@ async def test_list_statistic_ids(hass, hass_ws_client, units, attributes, unit)
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == [
-        {"statistic_id": "sensor.test", "unit_of_measurement": unit}
+        {
+            "statistic_id": "sensor.test",
+            "name": None,
+            "source": "recorder",
+            "unit_of_measurement": unit,
+        }
     ]
 
     await client.send_json(
@@ -1033,7 +1048,12 @@ async def test_list_statistic_ids(hass, hass_ws_client, units, attributes, unit)
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == [
-        {"statistic_id": "sensor.test", "unit_of_measurement": unit}
+        {
+            "statistic_id": "sensor.test",
+            "name": None,
+            "source": "recorder",
+            "unit_of_measurement": unit,
+        }
     ]
 
     await client.send_json(

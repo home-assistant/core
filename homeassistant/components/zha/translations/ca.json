@@ -1,13 +1,18 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
+            "not_zha_device": "Aquest no \u00e9s un dispositiu zha",
+            "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3.",
+            "usb_probe_failed": "No s'ha pogut provar el dispositiu USB"
         },
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3"
         },
         "flow_title": "{name}",
         "step": {
+            "confirm": {
+                "description": "Vols configurar {name}?"
+            },
             "pick_radio": {
                 "data": {
                     "radio_type": "Tipus de r\u00e0dio"

@@ -7,7 +7,8 @@ There are two different types of discoveries that can be fired/listened for.
 """
 from __future__ import annotations
 
-from typing import Any, Callable, TypedDict
+from collections.abc import Callable
+from typing import Any, TypedDict
 
 from homeassistant import core, setup
 from homeassistant.core import CALLBACK_TYPE
@@ -110,9 +111,7 @@ def async_listen_platform(
 
     async def discovery_platform_listener(discovered: DiscoveryDict) -> None:
         """Listen for platform discovery events."""
-        platform = discovered["platform"]
-
-        if not platform:
+        if not (platform := discovered["platform"]):
             return
 
         task = hass.async_run_hass_job(job, platform, discovered.get("discovered"))

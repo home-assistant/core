@@ -3,10 +3,9 @@ import json
 import logging
 
 from homeassistant.components import mqtt
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import (
     DEGREE,
-    DEVICE_CLASS_TEMPERATURE,
     PRECIPITATION_INCHES,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
@@ -37,7 +36,7 @@ def discover_sensors(topic, payload):
         else:
             unit = TEMP_CELSIUS
         return ArwnSensor(
-            topic, name, "temp", unit, device_class=DEVICE_CLASS_TEMPERATURE
+            topic, name, "temp", unit, device_class=SensorDeviceClass.TEMPERATURE
         )
     if domain == "moisture":
         name = f"{parts[2]} Moisture"
@@ -95,8 +94,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         if not sensors:
             return
 
-        store = hass.data.get(DATA_ARWN)
-        if store is None:
+        if (store := hass.data.get(DATA_ARWN)) is None:
             store = hass.data[DATA_ARWN] = {}
 
         if isinstance(sensors, ArwnSensor):
@@ -138,7 +136,7 @@ class ArwnSensor(SensorEntity):
         # This mqtt topic for the sensor which is its uid
         self._attr_unique_id = topic
         self._state_key = state_key
-        self._attr_unit_of_measurement = units
+        self._attr_native_unit_of_measurement = units
         self._attr_icon = icon
         self._attr_device_class = device_class
 
@@ -147,5 +145,5 @@ class ArwnSensor(SensorEntity):
         ev = {}
         ev.update(event)
         self._attr_extra_state_attributes = ev
-        self._attr_state = ev.get(self._state_key, None)
+        self._attr_native_value = ev.get(self._state_key, None)
         self.async_write_ha_state()

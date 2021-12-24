@@ -1,7 +1,7 @@
 {
     "device_automation": {
         "action_type": {
-            "arm_away": "Armer {entity_name} en mode \"sortie\"",
+            "arm_away": "Armer {entity_name} mode sortie",
             "arm_home": "Armer {entity_name} en mode \"maison\"",
             "arm_night": "Armer {entity_name} en mode \"nuit\"",
             "arm_vacation": "Armer {entity_name} vacances",
@@ -12,6 +12,7 @@
             "is_armed_away": "{entity_name} est arm\u00e9",
             "is_armed_home": "{entity_name} est arm\u00e9 \u00e0 la maison",
             "is_armed_night": "{entity_name} est arm\u00e9 la nuit",
+            "is_armed_vacation": "{entity_name} est arm\u00e9 en mode vacances",
             "is_disarmed": "{entity_name} est d\u00e9sarm\u00e9",
             "is_triggered": "{entity_name} est d\u00e9clench\u00e9"
         },
@@ -19,6 +20,7 @@
             "armed_away": "Armer {entity_name} en mode \"sortie\"",
             "armed_home": "Armer {entity_name} en mode \"maison\"",
             "armed_night": "Armer {entity_name} en mode \"nuit\"",
+            "armed_vacation": "{entity_name} vacances arm\u00e9es",
             "disarmed": "{entity_name} d\u00e9sarm\u00e9",
             "triggered": "{entity_name} d\u00e9clench\u00e9"
         }

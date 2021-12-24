@@ -3,7 +3,7 @@
   "name": "ASUSWRT",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/asuswrt",
-  "requirements": ["aioasuswrt==1.3.4"],
+  "requirements": ["aioasuswrt==1.4.0"],
   "codeowners": ["@kennedyshead", "@ollo69"],
   "iot_class": "local_polling"
 }

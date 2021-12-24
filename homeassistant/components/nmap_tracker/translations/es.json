@@ -25,6 +25,7 @@
         "step": {
             "init": {
                 "data": {
+                    "consider_home": "Segundos de espera hasta que se marca un dispositivo de seguimiento como no en casa despu\u00e9s de no ser visto.",
                     "exclude": "Direcciones de red (separadas por comas) para excluir del escaneo",
                     "home_interval": "N\u00famero m\u00ednimo de minutos entre los escaneos de los dispositivos activos (preservar la bater\u00eda)",
                     "hosts": "Direcciones de red (separadas por comas) para escanear",

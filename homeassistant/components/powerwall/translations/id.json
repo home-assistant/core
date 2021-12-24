@@ -10,7 +10,7 @@
             "unknown": "Kesalahan yang tidak diharapkan",
             "wrong_version": "Powerwall Anda menggunakan versi perangkat lunak yang tidak didukung. Pertimbangkan untuk memutakhirkan atau melaporkan masalah ini agar dapat diatasi."
         },
-        "flow_title": "Tesla Powerwall ({ip_address})",
+        "flow_title": "{ip_address}",
         "step": {
             "user": {
                 "data": {

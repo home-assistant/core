@@ -106,14 +106,10 @@ class Lock(HomeAccessory):
         # LockTargetState only supports locked and unlocked
         # Must set lock target state before current state
         # or there will be no notification
-        if (
-            target_lock_state is not None
-            and self.char_target_state.value != target_lock_state
-        ):
+        if target_lock_state is not None:
             self.char_target_state.set_value(target_lock_state)
 
         # Set lock current state ONLY after ensuring that
         # target state is correct or there will be no
         # notification
-        if self.char_current_state.value != current_lock_state:
-            self.char_current_state.set_value(current_lock_state)
+        self.char_current_state.set_value(current_lock_state)

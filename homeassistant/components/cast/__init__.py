@@ -4,23 +4,24 @@ import logging
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 
 from . import home_assistant_cast
 from .const import DOMAIN
 from .media_player import ENTITY_SCHEMA
 
-# Deprecated from 2021.4, remove in 2021.6
-CONFIG_SCHEMA = cv.deprecated(DOMAIN)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 _LOGGER = logging.getLogger(__name__)
+
+PLATFORMS = [Platform.MEDIA_PLAYER]
 
 
 async def async_setup(hass, config):
     """Set up the Cast component."""
-    conf = config.get(DOMAIN)
-
-    if conf is not None:
+    if (conf := config.get(DOMAIN)) is not None:
         media_player_config_validated = []
         media_player_config = conf.get("media_player", {})
         if not isinstance(media_player_config, list):
@@ -43,13 +44,12 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, entry: config_entries.ConfigEntry):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: config_entries.ConfigEntry
+) -> bool:
     """Set up Cast from a config entry."""
     await home_assistant_cast.async_setup_ha_cast(hass, entry)
-
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "media_player")
-    )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
 

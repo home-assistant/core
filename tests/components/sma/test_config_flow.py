@@ -7,7 +7,6 @@ from pysma.exceptions import (
     SmaReadException,
 )
 
-from homeassistant import setup
 from homeassistant.components.sma.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.data_entry_flow import (
@@ -28,7 +27,7 @@ from . import (
 
 async def test_form(hass):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -153,7 +152,6 @@ async def test_form_already_configured(hass, mock_config_entry):
 
 async def test_import(hass):
     """Test we can import."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch("pysma.SMA.new_session", return_value=True), patch(
         "pysma.SMA.device_info", return_value=MOCK_DEVICE
@@ -174,7 +172,6 @@ async def test_import(hass):
 
 async def test_import_sensor_dict(hass):
     """Test we can import."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     with patch("pysma.SMA.new_session", return_value=True), patch(
         "pysma.SMA.device_info", return_value=MOCK_DEVICE

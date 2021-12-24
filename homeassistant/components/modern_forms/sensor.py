@@ -3,9 +3,8 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DEVICE_CLASS_TIMESTAMP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -70,10 +69,10 @@ class ModernFormsLightTimerRemainingTimeSensor(ModernFormsSensor):
             key="light_timer_remaining_time",
             name=f"{coordinator.data.info.device_name} Light Sleep Time",
         )
-        self._attr_device_class = DEVICE_CLASS_TIMESTAMP
+        self._attr_device_class = SensorDeviceClass.TIMESTAMP
 
     @property
-    def state(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         sleep_time: datetime = dt_util.utc_from_timestamp(
             self.coordinator.data.state.light_sleep_timer
@@ -83,7 +82,7 @@ class ModernFormsLightTimerRemainingTimeSensor(ModernFormsSensor):
             or (sleep_time - dt_util.utcnow()).total_seconds() < 0
         ):
             return None
-        return sleep_time.isoformat()
+        return sleep_time
 
 
 class ModernFormsFanTimerRemainingTimeSensor(ModernFormsSensor):
@@ -100,10 +99,10 @@ class ModernFormsFanTimerRemainingTimeSensor(ModernFormsSensor):
             key="fan_timer_remaining_time",
             name=f"{coordinator.data.info.device_name} Fan Sleep Time",
         )
-        self._attr_device_class = DEVICE_CLASS_TIMESTAMP
+        self._attr_device_class = SensorDeviceClass.TIMESTAMP
 
     @property
-    def state(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         sleep_time: datetime = dt_util.utc_from_timestamp(
             self.coordinator.data.state.fan_sleep_timer
@@ -115,4 +114,4 @@ class ModernFormsFanTimerRemainingTimeSensor(ModernFormsSensor):
         ):
             return None
 
-        return sleep_time.isoformat()
+        return sleep_time

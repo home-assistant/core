@@ -123,25 +123,20 @@ class SharkVacuumEntity(CoordinatorEntity, StateVacuumEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Device info dictionary."""
-        return {
-            "identifiers": {(DOMAIN, self.serial_number)},
-            "name": self.name,
-            "manufacturer": SHARK,
-            "model": self.model,
-            "sw_version": self.sharkiq.get_property_value(
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.serial_number)},
+            manufacturer=SHARK,
+            model=self.model,
+            name=self.name,
+            sw_version=self.sharkiq.get_property_value(
                 Properties.ROBOT_FIRMWARE_VERSION
             ),
-        }
+        )
 
     @property
     def supported_features(self) -> int:
         """Flag vacuum cleaner robot features that are supported."""
         return SUPPORT_SHARKIQ
-
-    @property
-    def is_docked(self) -> bool | None:
-        """Is vacuum docked."""
-        return self.sharkiq.get_property_value(Properties.DOCKED_STATUS)
 
     @property
     def error_code(self) -> int | None:
@@ -175,7 +170,7 @@ class SharkVacuumEntity(CoordinatorEntity, StateVacuumEntity):
         In the app, these are (usually) handled by showing the robot as stopped and sending the
         user a notification.
         """
-        if self.is_docked:
+        if self.sharkiq.get_property_value(Properties.CHARGING_STATUS):
             return STATE_DOCKED
         return self.operating_mode
 

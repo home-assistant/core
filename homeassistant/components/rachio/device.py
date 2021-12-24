@@ -1,11 +1,12 @@
 """Adapter to wrap the rachiopy api for home assistant."""
 from __future__ import annotations
 
+from http import HTTPStatus
 import logging
 
 import voluptuous as vol
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, HTTP_OK
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
@@ -70,9 +71,6 @@ class RachioPerson:
                 can_pause = True
                 break
 
-        if not can_pause:
-            return
-
         all_devices = [rachio_iro.name for rachio_iro in self._controllers]
 
         def pause_water(service):
@@ -99,6 +97,16 @@ class RachioPerson:
 
         hass.services.async_register(
             DOMAIN,
+            SERVICE_STOP_WATERING,
+            stop_water,
+            schema=STOP_SERVICE_SCHEMA,
+        )
+
+        if not can_pause:
+            return
+
+        hass.services.async_register(
+            DOMAIN,
             SERVICE_PAUSE_WATERING,
             pause_water,
             schema=PAUSE_SERVICE_SCHEMA,
@@ -111,30 +119,23 @@ class RachioPerson:
             schema=RESUME_SERVICE_SCHEMA,
         )
 
-        hass.services.async_register(
-            DOMAIN,
-            SERVICE_STOP_WATERING,
-            stop_water,
-            schema=STOP_SERVICE_SCHEMA,
-        )
-
     def _setup(self, hass):
         """Rachio device setup."""
         rachio = self.rachio
 
         response = rachio.person.info()
-        assert int(response[0][KEY_STATUS]) == HTTP_OK, "API key error"
+        assert int(response[0][KEY_STATUS]) == HTTPStatus.OK, "API key error"
         self._id = response[1][KEY_ID]
 
         # Use user ID to get user data
         data = rachio.person.get(self._id)
-        assert int(data[0][KEY_STATUS]) == HTTP_OK, "User ID error"
+        assert int(data[0][KEY_STATUS]) == HTTPStatus.OK, "User ID error"
         self.username = data[1][KEY_USERNAME]
         devices = data[1][KEY_DEVICES]
         for controller in devices:
             webhooks = rachio.notification.get_device_webhook(controller[KEY_ID])[1]
             # The API does not provide a way to tell if a controller is shared
-            # or if they are the owner. To work around this problem we fetch the webooks
+            # or if they are the owner. To work around this problem we fetch the webhooks
             # before we setup the device so we can skip it instead of failing.
             # webhooks are normally a list, however if there is an error
             # rachio hands us back a dict

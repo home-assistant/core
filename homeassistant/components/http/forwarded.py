@@ -4,6 +4,8 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 from ipaddress import ip_address
 import logging
+from types import ModuleType
+from typing import Literal
 
 from aiohttp.hdrs import X_FORWARDED_FOR, X_FORWARDED_HOST, X_FORWARDED_PROTO
 from aiohttp.web import Application, HTTPBadRequest, Request, StreamResponse, middleware
@@ -63,12 +65,31 @@ def async_setup_forwarded(
         an HTTP 400 status code is thrown.
     """
 
+    remote: Literal[False] | None | ModuleType = None
+
     @middleware
     async def forwarded_middleware(
         request: Request, handler: Callable[[Request], Awaitable[StreamResponse]]
     ) -> StreamResponse:
         """Process forwarded data by a reverse proxy."""
-        overrides: dict[str, str] = {}
+        nonlocal remote
+
+        if remote is None:
+            # Initialize remote method
+            try:
+                from hass_nabucasa import (  # pylint: disable=import-outside-toplevel
+                    remote,
+                )
+
+                # venv users might have an old version installed if they don't have cloud around anymore
+                if not hasattr(remote, "is_cloud_request"):
+                    remote = False
+            except ImportError:
+                remote = False
+
+        # Skip requests from Remote UI
+        if remote and remote.is_cloud_request.get():  # type: ignore
+            return await handler(request)
 
         # Handle X-Forwarded-For
         forwarded_for_headers: list[str] = request.headers.getall(X_FORWARDED_FOR, [])
@@ -119,6 +140,8 @@ def async_setup_forwarded(
                 "Invalid IP address in X-Forwarded-For: %s", forwarded_for_headers[0]
             )
             raise HTTPBadRequest from err
+
+        overrides: dict[str, str] = {}
 
         # Find the last trusted index in the X-Forwarded-For list
         forwarded_for_index = 0

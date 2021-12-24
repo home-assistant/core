@@ -21,4 +21,4 @@ send_message:
       description: Extended information of notification. Supports list of images. Optional.
       example: "{'images': ['/tmp/test.jpg']}"
       selector:
-        text:
+        object:

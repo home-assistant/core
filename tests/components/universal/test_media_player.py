@@ -1,7 +1,6 @@
 """The tests for the Universal Media player platform."""
 import asyncio
 from copy import copy
-from os import path
 import unittest
 from unittest.mock import patch
 
@@ -24,7 +23,7 @@ from homeassistant.const import (
 from homeassistant.core import Context, callback
 from homeassistant.setup import async_setup_component, setup_component
 
-from tests.common import get_test_home_assistant, mock_service
+from tests.common import get_fixture_path, get_test_home_assistant, mock_service
 
 
 def validate_config(config):
@@ -1177,11 +1176,7 @@ async def test_reload(hass):
         {"activity_list": ["act1", "act2"], "current_activity": "act2"},
     )
 
-    yaml_path = path.join(
-        _get_fixtures_base_path(),
-        "fixtures",
-        "universal/configuration.yaml",
-    )
+    yaml_path = get_fixture_path("configuration.yaml", "universal")
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             "universal",
@@ -1199,7 +1194,3 @@ async def test_reload(hass):
     assert (
         "device_class" not in hass.states.get("media_player.master_bed_tv").attributes
     )
-
-
-def _get_fixtures_base_path():
-    return path.dirname(path.dirname(path.dirname(__file__)))
