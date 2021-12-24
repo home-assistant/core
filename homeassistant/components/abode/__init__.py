@@ -131,7 +131,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     return unload_ok
 
 
-def setup_hass_services(hass: HomeAssistant):
+def setup_hass_services(hass: HomeAssistant) -> None:
     """Home Assistant services."""
 
     def change_setting(call):
@@ -185,7 +185,7 @@ def setup_hass_services(hass: HomeAssistant):
     )
 
 
-async def setup_hass_events(hass: HomeAssistant):
+async def setup_hass_events(hass: HomeAssistant) -> None:
     """Home Assistant start and stop callbacks."""
 
     def logout(event):
@@ -204,7 +204,7 @@ async def setup_hass_events(hass: HomeAssistant):
     )
 
 
-def setup_abode_events(hass: HomeAssistant):
+def setup_abode_events(hass: HomeAssistant) -> None:
     """Event callbacks."""
 
     def event_callback(event, event_json):
