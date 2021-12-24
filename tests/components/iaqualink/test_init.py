@@ -12,27 +12,18 @@ from iaqualink.device import (
     AqualinkThermostat,
 )
 from iaqualink.exception import AqualinkServiceException
-import pytest
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
-from homeassistant.components.iaqualink import (
-    DOMAIN,
-    UPDATE_INTERVAL,
-    AqualinkEntity,
-    try_await,
-)
+from homeassistant.components.iaqualink import UPDATE_INTERVAL, AqualinkEntity
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed
 from tests.components.iaqualink.conftest import (
-    async_raises,
-    async_returns,
     get_aqualink_client,
     get_aqualink_device,
     get_aqualink_system,
@@ -150,17 +141,16 @@ async def test_setup_all_good_no_recognized_devices(hass, config_entry):
 
     assert config_entry.state == ConfigEntryState.LOADED
 
-    assert hass.data[DOMAIN][BINARY_SENSOR_DOMAIN] == []
-    assert hass.data[DOMAIN][CLIMATE_DOMAIN] == []
-    assert hass.data[DOMAIN][LIGHT_DOMAIN] == []
-    assert hass.data[DOMAIN][SENSOR_DOMAIN] == []
-    assert hass.data[DOMAIN][SWITCH_DOMAIN] == []
+    assert len(hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)) == 0
+    assert len(hass.states.async_entity_ids(CLIMATE_DOMAIN)) == 0
+    assert len(hass.states.async_entity_ids(LIGHT_DOMAIN)) == 0
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 0
+    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert config_entry.state == ConfigEntryState.NOT_LOADED
-    assert DOMAIN not in hass.data
 
 
 async def test_setup_all_good_all_device_types(hass, config_entry):
@@ -193,17 +183,16 @@ async def test_setup_all_good_all_device_types(hass, config_entry):
 
     assert config_entry.state == ConfigEntryState.LOADED
 
-    assert len(hass.data[DOMAIN][BINARY_SENSOR_DOMAIN]) == 1
-    assert len(hass.data[DOMAIN][CLIMATE_DOMAIN]) == 1
-    assert len(hass.data[DOMAIN][LIGHT_DOMAIN]) == 1
-    assert len(hass.data[DOMAIN][SENSOR_DOMAIN]) == 1
-    assert len(hass.data[DOMAIN][SWITCH_DOMAIN]) == 1
+    assert len(hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)) == 1
+    assert len(hass.states.async_entity_ids(CLIMATE_DOMAIN)) == 1
+    assert len(hass.states.async_entity_ids(LIGHT_DOMAIN)) == 1
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 1
+    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert config_entry.state == ConfigEntryState.NOT_LOADED
-    assert DOMAIN not in hass.data
 
 
 async def test_multiple_updates(hass, config_entry):
@@ -322,7 +311,6 @@ async def test_multiple_updates(hass, config_entry):
     await hass.async_block_till_done()
 
     assert config_entry.state == ConfigEntryState.NOT_LOADED
-    assert DOMAIN not in hass.data
 
 
 async def test_entity_assumed_and_available(hass):
@@ -344,17 +332,3 @@ async def test_entity_assumed_and_available(hass):
     light.system.online = True
     assert ha_light.assumed_state is False
     assert ha_light.available is True
-
-
-async def test_try_await(hass):
-    """Test try_await for all values of awaitable."""
-    async_noop = async_returns(None)
-    await try_await(async_noop())
-
-    with pytest.raises(Exception):
-        async_ex = async_raises(Exception)
-        await try_await(async_ex())
-
-    with pytest.raises(HomeAssistantError):
-        async_ex = async_raises(AqualinkServiceException)
-        await try_await(async_ex())

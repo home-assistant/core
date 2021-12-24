@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable
 from functools import wraps
 import logging
 
@@ -28,7 +27,7 @@ from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
@@ -205,14 +204,6 @@ def refresh_system(func):
         async_dispatcher_send(self.hass, DOMAIN)
 
     return wrapper
-
-
-async def try_await(awaitable: Awaitable) -> None:
-    """Execute API call while catching service exceptions."""
-    try:
-        await awaitable
-    except AqualinkServiceException as svc_exception:
-        raise HomeAssistantError(f"Aqualink error: {svc_exception}") from svc_exception
 
 
 class AqualinkEntity(Entity):
