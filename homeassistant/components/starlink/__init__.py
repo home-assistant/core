@@ -44,9 +44,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def async_update_data():
         async with async_timeout.timeout(10):
-            try:
-                if not dish.connected:
+            if not dish.connected:
+                try:
                     dish.connect(refresh=False)  # Avoid refreshing twice
+                    _LOGGER.info("Connected to the satellite")
+                except CommunicationError as err:
+                    raise UpdateFailed(f"Could not connect to satellite: {err}")
+            try:
                 dish.refresh()
             except CommunicationError as err:
                 _LOGGER.warning("Lost connection to Dishy")
