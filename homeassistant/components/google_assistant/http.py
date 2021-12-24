@@ -1,4 +1,6 @@
 """Support for Google Actions Smart Home Control."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 from http import HTTPStatus
