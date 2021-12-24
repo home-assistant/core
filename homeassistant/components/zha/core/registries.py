@@ -348,7 +348,7 @@ class ZHAEntityRegistry:
 
     def prevent_entity_creation(self, platform: Platform, ieee: EUI64, key: str):
         """Return True if the entity should not be created."""
-        platform_restrictions = ZHA_ENTITIES.single_device_matches[platform]
+        platform_restrictions = self.single_device_matches[platform]
         device_restrictions = platform_restrictions[ieee]
         if key in device_restrictions:
             return True
