@@ -347,6 +347,20 @@ async def async_setup_entry(
     }
 
     for device in data.coordinator.data.values():
+        if (
+            device.widget not in IGNORED_OVERKIZ_DEVICES
+            and device.ui_class not in IGNORED_OVERKIZ_DEVICES
+        ):
+            for state in device.definition.states:
+                if description := key_supported_states.get(state.qualified_name):
+                    entities.append(
+                        OverkizStateSensor(
+                            device.device_url,
+                            data.coordinator,
+                            description,
+                        )
+                    )
+
         if device.widget == UIWidget.HOMEKIT_STACK:
             entities.append(
                 OverkizHomeKitSetupCodeSensor(
@@ -354,22 +368,6 @@ async def async_setup_entry(
                     data.coordinator,
                 )
             )
-
-        if (
-            device.widget in IGNORED_OVERKIZ_DEVICES
-            or device.ui_class in IGNORED_OVERKIZ_DEVICES
-        ):
-            continue
-
-        for state in device.definition.states:
-            if description := key_supported_states.get(state.qualified_name):
-                entities.append(
-                    OverkizStateSensor(
-                        device.device_url,
-                        data.coordinator,
-                        description,
-                    )
-                )
 
     async_add_entities(entities)
 
