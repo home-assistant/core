@@ -424,11 +424,19 @@ class Stream:
             await hls.recv()
             recorder.prepend(list(hls.get_segments())[-num_segments:])
 
-    async def get_image(
+    async def async_get_image(
         self,
         width: int | None = None,
         height: int | None = None,
     ) -> bytes | None:
-        """Wrap get_image from KeyFrameConverter."""
+        """
+        Fetch an image from the Stream and return it as a jpeg in bytes.
 
-        return await self._keyframe_converter.get_image(width=width, height=height)
+        Calls async_get_image from KeyFrameConverter. async_get_image should only be
+        called directly from the main loop and not from an executor thread as it uses
+        hass.add_executor_job underneath the hood.
+        """
+
+        return await self._keyframe_converter.async_get_image(
+            width=width, height=height
+        )
