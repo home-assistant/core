@@ -87,7 +87,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             value_template.hass = hass
 
         # MSSQL uses TOP and not LIMIT
-        if not ("LIMIT" in query_str or "SELECT TOP" in query_str):
+        if not ("LIMIT" in query_str.upper() or "SELECT TOP" in query_str.upper()):
             query_str = (
                 query_str.replace("SELECT", "SELECT TOP 1")
                 if "mssql" in db_url
