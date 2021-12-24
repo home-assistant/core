@@ -354,6 +354,7 @@ FLOWS = {
         "prosegur",
         "prusalink",
         "ps4",
+        "publibike",
         "pure_energie",
         "purpleair",
         "pushbullet",

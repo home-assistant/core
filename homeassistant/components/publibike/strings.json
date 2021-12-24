@@ -1,0 +1,18 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "PubliBike",
+        "data": {
+          "battery_limit": "Min. battery level [%]",
+          "latitude": "Latitude (optional)",
+          "longitude": "Longitude (optional)",
+          "station_id": "Station ID (optional)"
+        }
+      }
+    },
+    "error": {
+      "invalid_id": "Provided station ID is invalid."
+    }
+  }
+}

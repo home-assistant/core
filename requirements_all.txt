@@ -1942,6 +1942,9 @@ pyprusalink==1.1.0
 # homeassistant.components.ps4
 pyps4-2ndscreen==1.3.1
 
+# homeassistant.components.publibike
+pypublibike==3.0.1
+
 # homeassistant.components.qvr_pro
 pyqvrpro==0.52
 
