@@ -1,9 +1,7 @@
 """Test the UniFi Protect config flow."""
-from dataclasses import dataclass
 from unittest.mock import patch
 
 from pyunifiprotect import NotAuthorized, NvrError
-from pyunifiprotect.data.types import Version
 
 from homeassistant import config_entries
 from homeassistant.components.unifiprotect.const import (
@@ -11,7 +9,6 @@ from homeassistant.components.unifiprotect.const import (
     CONF_DISABLE_RTSP,
     CONF_OVERRIDE_CHOST,
     DOMAIN,
-    MIN_REQUIRED_PROTECT_V,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import (
@@ -22,24 +19,10 @@ from homeassistant.data_entry_flow import (
 from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry
-
-MAC_ADDR = "aa:bb:cc:dd:ee:ff"
-
-
-@dataclass
-class MockNvrData:
-    """Mock for NvrData."""
-
-    version: Version
-    mac: str
-    name: str
-
-
-MOCK_NVR_DATA = MockNvrData(
-    version=MIN_REQUIRED_PROTECT_V, mac=MAC_ADDR, name="UnifiProtect"
-)
-MOCK_OLD_NVR_DATA = MockNvrData(
-    version=Version("1.19.0"), mac=MAC_ADDR, name="UnifiProtect"
+from tests.components.unifiprotect.conftest import (
+    MAC_ADDR,
+    MOCK_NVR_DATA,
+    MOCK_OLD_NVR_DATA,
 )
 
 
