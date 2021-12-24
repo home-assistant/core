@@ -1,5 +1,5 @@
 """Helper functions for Acmeda Pulse."""
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import async_get_registry as get_dev_reg
 
 from .const import DOMAIN, LOGGER
@@ -7,7 +7,7 @@ from .const import DOMAIN, LOGGER
 
 @callback
 def async_add_acmeda_entities(
-    hass, entity_class, config_entry, current, async_add_entities
+    hass: HomeAssistant, entity_class, config_entry, current, async_add_entities
 ):
     """Add any new entities."""
     hub = hass.data[DOMAIN][config_entry.entry_id]
@@ -26,7 +26,7 @@ def async_add_acmeda_entities(
     async_add_entities(new_items)
 
 
-async def update_devices(hass, config_entry, api):
+async def update_devices(hass: HomeAssistant, config_entry, api):
     """Tell hass that device info has been updated."""
     dev_registry = await get_dev_reg(hass)
 
