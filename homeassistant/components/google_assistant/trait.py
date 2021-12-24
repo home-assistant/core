@@ -652,7 +652,7 @@ class EnergyStorageTrait(_Trait):
         battery_level = self.state.attributes.get(ATTR_BATTERY_LEVEL)
         if battery_level is None:
             return {}
-        elif battery_level == 100:
+        if battery_level == 100:
             descriptive_capacity_remaining = "FULL"
         elif 75 <= battery_level < 100:
             descriptive_capacity_remaining = "HIGH"
