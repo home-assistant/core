@@ -60,7 +60,7 @@ class EsphomeCamera(Camera, EsphomeEntity[CameraInfo, CameraState]):
         async with self._image_cond:
             await self._image_cond.wait()
             if not self.available:
-                # Availability can change while waiting for '_image.cond'
+                # Availability can change while waiting for 'self._image.cond'
                 return None  # type: ignore[unreachable]
             return self._state.data[:]
 
