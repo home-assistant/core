@@ -71,6 +71,8 @@ async def async_setup_entry(
 class OverkizNumber(OverkizDescriptiveEntity, NumberEntity):
     """Representation of an Overkiz Number."""
 
+    entity_description: OverkizNumberDescription
+
     @property
     def value(self) -> float:
         """Return the entity value to represent the entity state."""
