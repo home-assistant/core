@@ -9,7 +9,7 @@ from enum import Enum
 import functools
 import logging
 from types import MappingProxyType, MethodType
-from typing import TYPE_CHECKING, Any, Callable, Optional, cast
+from typing import TYPE_CHECKING, Any, Callable, Optional, TypeVar, cast
 import weakref
 
 from . import data_entry_flow, loader
@@ -70,6 +70,8 @@ PATH_CONFIG = ".config_entries.json"
 
 SAVE_DELAY = 1
 
+T = TypeVar("T", bound="ConfigEntryState")
+
 
 class ConfigEntryState(Enum):
     """Config entry state."""
@@ -89,12 +91,12 @@ class ConfigEntryState(Enum):
 
     _recoverable: bool
 
-    def __new__(cls: type[object], value: str, recoverable: bool) -> ConfigEntryState:
+    def __new__(cls: type[T], value: str, recoverable: bool) -> T:
         """Create new ConfigEntryState."""
         obj = object.__new__(cls)
-        obj._value_ = value  # type: ignore[attr-defined]
-        obj._recoverable = recoverable  # type: ignore[attr-defined]
-        return cast("ConfigEntryState", obj)
+        obj._value_ = value
+        obj._recoverable = recoverable
+        return obj
 
     @property
     def recoverable(self) -> bool:
