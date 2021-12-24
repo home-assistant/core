@@ -1,4 +1,6 @@
 """Climate platform for Advantage Air integration."""
+from __future__ import annotations
+
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     FAN_AUTO,
