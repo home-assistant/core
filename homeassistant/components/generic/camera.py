@@ -45,8 +45,8 @@ GET_IMAGE_TIMEOUT = 10
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_STILL_IMAGE_URL): cv.template,
-        vol.Optional(CONF_STREAM_SOURCE): cv.template,
+        vol.Required(vol.Any(CONF_STILL_IMAGE_URL, CONF_STREAM_SOURCE)): cv.template,
+        vol.Optional(vol.Any(CONF_STILL_IMAGE_URL, CONF_STREAM_SOURCE)): cv.template,
         vol.Optional(CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION): vol.In(
             [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
         ),
@@ -81,9 +81,10 @@ class GenericCamera(Camera):
         self.hass = hass
         self._authentication = device_info.get(CONF_AUTHENTICATION)
         self._name = device_info.get(CONF_NAME)
-        self._still_image_url = device_info[CONF_STILL_IMAGE_URL]
+        self._still_image_url = device_info.get(CONF_STILL_IMAGE_URL)
+        if self._still_image_url:
+            self._still_image_url.hass = hass
         self._stream_source = device_info.get(CONF_STREAM_SOURCE)
-        self._still_image_url.hass = hass
         if self._stream_source is not None:
             self._stream_source.hass = hass
         self._limit_refetch = device_info[CONF_LIMIT_REFETCH_TO_URL_CHANGE]
