@@ -111,17 +111,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         asyncio.TimeoutError,
         aiohttp.client_exceptions.ClientConnectorError,
     ) as aio_exception:
-        _LOGGER.warning("Exception raised while attempting to login: %s", aio_exception)
-        raise ConfigEntryNotReady from aio_exception
+        raise ConfigEntryNotReady(
+            f"Errr while attempting login: {aio_exception}"
+        ) from aio_exception
 
     try:
         systems = await aqualink.get_systems()
     except AqualinkServiceException as svc_exception:
-        _LOGGER.warning(
-            "Exception raised while attempting to retrieve systems list: %s",
-            svc_exception,
-        )
-        raise ConfigEntryNotReady from svc_exception
+        raise ConfigEntryNotReady(
+            f"Error while attempting to retrieve systems list: {svc_exception}"
+        ) from svc_exception
 
     systems = list(systems.values())
     if not systems:
@@ -132,11 +131,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         devices = await systems[0].get_devices()
     except AqualinkServiceException as svc_exception:
-        _LOGGER.warning(
-            "Exception raised while attempting to retrieve devices list: %s",
-            svc_exception,
-        )
-        raise ConfigEntryNotReady from svc_exception
+        raise ConfigEntryNotReady(
+            f"Error while attempting to retrieve devices list: {svc_exception}"
+        ) from svc_exception
 
     for dev in devices.values():
         if isinstance(dev, AqualinkThermostat):
@@ -215,7 +212,7 @@ async def try_await(awaitable: Awaitable) -> None:
     try:
         await awaitable
     except AqualinkServiceException as svc_exception:
-        raise HomeAssistantError("Aqualink Exception raised") from svc_exception
+        raise HomeAssistantError(f"Aqualink error: {svc_exception}") from svc_exception
 
 
 class AqualinkEntity(Entity):

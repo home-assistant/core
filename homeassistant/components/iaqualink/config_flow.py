@@ -37,11 +37,13 @@ class AqualinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 async with AqualinkClient(username, password):
-                    return self.async_create_entry(title=username, data=user_input)
+                    pass
             except AqualinkServiceUnauthorizedException:
                 errors["base"] = "invalid_auth"
             except AqualinkServiceException:
                 errors["base"] = "cannot_connect"
+            else:
+                return self.async_create_entry(title=username, data=user_input)
 
         return self.async_show_form(
             step_id="user",
