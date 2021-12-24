@@ -7,14 +7,14 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
+    DEVICE_CLASSES_SCHEMA,
     PLATFORM_SCHEMA,
     SensorEntity,
-    DEVICE_CLASSES_SCHEMA,
 )
 from homeassistant.const import (
     CONF_COMMAND,
-    CONF_NAME,
     CONF_DEVICE_CLASS,
+    CONF_NAME,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
     STATE_UNKNOWN,
