@@ -170,7 +170,7 @@ jobs:
         run: |
           python -m venv venv
           . venv/bin/activate
-          pip install -U "pip<20.3" setuptools
+          pip install -U "pip<20.3" setuptools wheel
           pip install -r requirements.txt -r requirements_test.txt
       - name: Generate partial pre-commit restore key
         id: generate-pre-commit-key

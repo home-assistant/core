@@ -1,1 +1,1 @@
-"""Tests for the Overkiz integration."""
+"""Tests for the overkiz component."""
