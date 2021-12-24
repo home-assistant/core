@@ -128,6 +128,11 @@ def _get_charge_state_icon(entity: RenaultSensor[T]) -> str:
         return "mdi:flash"
     return "mdi:flash-off"
 
+def _get_hvac_status_icon(entity: RenaultSensor[T]) -> str:
+    """Return the icon of this entity."""
+    if entity.data == "on":
+        return "mdi:fan"
+    return "mdi:fan-off"
 
 def _get_plug_state_formatted(entity: RenaultSensor[T]) -> str | None:
     """Return the plug_status of this entity."""
@@ -304,6 +309,15 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription, ...] = (
         name="Outside Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    RenaultSensorEntityDescription(
+        key="hvac_status",
+        coordinator="hvac_status",
+        device_class=SensorDeviceClass.RUNNING,
+        icon_lambda=_get_hvac_status_icon,
+        data_key="hvacStatus",
+        entity_class=RenaultSensor[KamereonVehicleHvacStatusData],
+        name="HVAC Status",
     ),
     RenaultSensorEntityDescription(
         key="location_last_activity",
