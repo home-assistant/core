@@ -14,10 +14,9 @@ PLATFORMS: list[str] = [Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up Hyundai / Kia Connect from a config entry."""
     coordinator = HyundaiKiaConnectDataUpdateCoordinator(hass, config_entry)
-    await coordinator.async_refresh()
     await coordinator.async_config_entry_first_refresh()
-    hass.data[DOMAIN][config_entry.entry_id] = coordinator
-    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = coordinator
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][config_entry.unique_id] = coordinator
     hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
     return True
 
@@ -28,6 +27,6 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
         config_entry, PLATFORMS
     )
     if unload_ok:
-        hass.data[DOMAIN] = None
+        hass.data[DOMAIN][config_entry.unique_id] = None
 
     return unload_ok

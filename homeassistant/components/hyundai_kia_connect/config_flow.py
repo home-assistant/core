@@ -61,8 +61,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
-        await self.async_set_unique_id(DOMAIN)
-        self._abort_if_unique_id_configured()
 
         if user_input is None:
             return self.async_show_form(
@@ -79,6 +77,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
+            await self.async_set_unique_id(token.vehicle_id)
+            self._abort_if_unique_id_configured()
             user_input[CONF_TOKEN] = vars(token)
             return self.async_create_entry(title=token.vehicle_name, data=user_input)
 
