@@ -17,19 +17,13 @@ from homeassistant.helpers.network import get_url
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util import network
-from homeassistant.util.aiohttp import MockRequest
+from homeassistant.util.aiohttp import MockRequest, serialize_response
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "webhook"
 
 URL_WEBHOOK_PATH = "/api/webhook/{webhook_id}"
-
-WS_TYPE_LIST = "webhook/list"
-
-SCHEMA_WS_LIST = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {vol.Required("type"): WS_TYPE_LIST}
-)
 
 
 @callback
@@ -134,9 +128,8 @@ async def async_handle_webhook(hass, webhook_id, request):
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize the webhook component."""
     hass.http.register_view(WebhookView)
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_LIST, websocket_list, SCHEMA_WS_LIST
-    )
+    hass.components.websocket_api.async_register_command(websocket_list)
+    hass.components.websocket_api.async_register_command(websocket_handle)
     return True
 
 
@@ -160,6 +153,11 @@ class WebhookView(HomeAssistantView):
     put = _handle
 
 
+@websocket_api.websocket_command(
+    {
+        "type": "webhook/list",
+    }
+)
 @callback
 def websocket_list(hass, connection, msg):
     """Return a list of webhooks."""
@@ -175,3 +173,39 @@ def websocket_list(hass, connection, msg):
     ]
 
     connection.send_message(websocket_api.result_message(msg["id"], result))
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "webhook/handle",
+        vol.Required("webhook_id"): str,
+        vol.Required("method"): vol.In(["GET", "POST", "PUT"]),
+        vol.Optional("body", default=""): str,
+        vol.Optional("headers", default={}): {str: str},
+        vol.Optional("query", default=""): str,
+    }
+)
+@websocket_api.async_response
+async def websocket_handle(hass, connection, msg):
+    """Handle an incoming webhook via the WS API."""
+    request = MockRequest(
+        content=msg["body"].encode("utf-8"),
+        headers=msg["headers"],
+        method=msg["method"],
+        query_string=msg["query"],
+        mock_source=f"{DOMAIN}/ws",
+    )
+
+    response = await async_handle_webhook(hass, msg["webhook_id"], request)
+
+    response_dict = serialize_response(response)
+    body = response_dict.get("body")
+
+    connection.send_result(
+        msg["id"],
+        {
+            "body": body,
+            "status": response_dict["status"],
+            "headers": {"Content-Type": response.content_type},
+        },
+    )
