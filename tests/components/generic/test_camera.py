@@ -14,7 +14,7 @@ from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.setup import async_setup_component
 
-from tests.common import get_fixture_path
+from tests.common import AsyncMock, Mock, get_fixture_path
 
 
 @respx.mock
@@ -459,3 +459,40 @@ async def test_timeout_cancelled(hass, hass_client):
         assert respx.calls.call_count == total_calls
         assert resp.status == HTTPStatus.OK
         assert await resp.text() == "hello world"
+
+
+async def test_no_still_image_url(hass, hass_client):
+    """Test that the stream source is setup with different config options."""
+    assert await async_setup_component(
+        hass,
+        "camera",
+        {
+            "camera": {
+                "name": "config_test",
+                "platform": "generic",
+                "stream_source": "rtsp://example.com:554/rtsp/",
+            },
+        },
+    )
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+
+    with patch("homeassistant.components.camera.create_stream") as mock_create_stream:
+
+        mock_stream = Mock()
+        mock_create_stream.return_value = mock_stream
+        mock_stream.async_get_image = AsyncMock()
+        mock_stream.async_get_image.return_value = b"stream_keyframe_image"
+
+        # first request should fail but start the stream
+        resp = await client.get("/api/camera_proxy/camera.config_test")
+        assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+        await hass.async_block_till_done()
+        mock_create_stream.assert_called_once()
+
+        # second request should succeed
+        resp = await client.get("/api/camera_proxy/camera.config_test")
+        mock_stream.async_get_image.assert_called_once()
+        assert resp.status == HTTPStatus.OK
+        assert await resp.read() == b"stream_keyframe_image"
