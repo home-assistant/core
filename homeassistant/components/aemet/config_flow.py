@@ -4,7 +4,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 
 from .const import CONF_STATION_UPDATES, DEFAULT_NAME, DOMAIN
@@ -78,7 +78,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         return self.async_show_form(step_id="init", data_schema=data_schema)
 
 
-async def _is_aemet_api_online(hass, api_key):
+async def _is_aemet_api_online(hass: HomeAssistant, api_key):
     aemet = AEMET(api_key)
     return await hass.async_add_executor_job(
         aemet.get_conventional_observation_stations, False
