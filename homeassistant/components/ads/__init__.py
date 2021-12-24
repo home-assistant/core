@@ -16,8 +16,10 @@ from homeassistant.const import (
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,7 +79,7 @@ SCHEMA_SERVICE_WRITE_DATA_BY_NAME = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the ADS component."""
 
     conf = config[DOMAIN]
@@ -87,23 +89,6 @@ def setup(hass, config):
     port = conf[CONF_PORT]
 
     client = pyads.Connection(net_id, port, ip_address)
-
-    AdsHub.ADS_TYPEMAP = {
-        ADSTYPE_BOOL: pyads.PLCTYPE_BOOL,
-        ADSTYPE_BYTE: pyads.PLCTYPE_BYTE,
-        ADSTYPE_DINT: pyads.PLCTYPE_DINT,
-        ADSTYPE_INT: pyads.PLCTYPE_INT,
-        ADSTYPE_UDINT: pyads.PLCTYPE_UDINT,
-        ADSTYPE_UINT: pyads.PLCTYPE_UINT,
-    }
-
-    AdsHub.ADSError = pyads.ADSError
-    AdsHub.PLCTYPE_BOOL = pyads.PLCTYPE_BOOL
-    AdsHub.PLCTYPE_BYTE = pyads.PLCTYPE_BYTE
-    AdsHub.PLCTYPE_DINT = pyads.PLCTYPE_DINT
-    AdsHub.PLCTYPE_INT = pyads.PLCTYPE_INT
-    AdsHub.PLCTYPE_UDINT = pyads.PLCTYPE_UDINT
-    AdsHub.PLCTYPE_UINT = pyads.PLCTYPE_UINT
 
     try:
         ads = AdsHub(client)
@@ -148,6 +133,23 @@ NotificationItem = namedtuple(
 
 class AdsHub:
     """Representation of an ADS connection."""
+
+    ADS_TYPEMAP = {
+        ADSTYPE_BOOL: pyads.PLCTYPE_BOOL,
+        ADSTYPE_BYTE: pyads.PLCTYPE_BYTE,
+        ADSTYPE_DINT: pyads.PLCTYPE_DINT,
+        ADSTYPE_INT: pyads.PLCTYPE_INT,
+        ADSTYPE_UDINT: pyads.PLCTYPE_UDINT,
+        ADSTYPE_UINT: pyads.PLCTYPE_UINT,
+    }
+
+    ADSError = pyads.ADSError
+    PLCTYPE_BOOL = pyads.PLCTYPE_BOOL
+    PLCTYPE_BYTE = pyads.PLCTYPE_BYTE
+    PLCTYPE_DINT = pyads.PLCTYPE_DINT
+    PLCTYPE_INT = pyads.PLCTYPE_INT
+    PLCTYPE_UDINT = pyads.PLCTYPE_UDINT
+    PLCTYPE_UINT = pyads.PLCTYPE_UINT
 
     def __init__(self, ads_client):
         """Initialize the ADS hub."""

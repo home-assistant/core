@@ -12,6 +12,7 @@ from homeassistant.components.cover import (
     CoverEntity,
 )
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 
 from . import (
@@ -44,7 +45,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(hass: HomeAssistant, config, add_entities, discovery_info=None):
     """Set up the cover platform for ADS."""
     ads_hub = hass.data[DATA_ADS]
 
