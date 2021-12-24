@@ -1,4 +1,6 @@
 """Test the UniFi Protect setup flow."""
+from __future__ import annotations
+
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -28,11 +30,14 @@ async def test_setup(mock_api, hass: HomeAssistant, mock_client):
             "port": 443,
             "verify_ssl": False,
         },
+        version=2,
     )
 
     mock_api.return_value = mock_client
 
-    assert await async_setup_entry(hass, mock_config) is True
+    await mock_config.async_setup(hass)
+    await hass.async_block_till_done()
+
     assert mock_client.update.called
     assert mock_config.unique_id == mock_client.bootstrap.nvr.mac
     assert mock_config.entry_id in hass.data[DOMAIN]
@@ -51,15 +56,21 @@ async def test_reload(mock_api, hass: HomeAssistant, mock_client):
             "port": 443,
             "verify_ssl": False,
         },
+        version=2,
     )
 
     mock_api.return_value = mock_client
-    await async_setup_entry(hass, mock_config)
+    await mock_config.async_setup(hass)
+    assert mock_config.entry_id in hass.data[DOMAIN]
 
+    mock_config.add_to_hass(hass)
     options = dict(mock_config.options)
     options[CONF_DISABLE_RTSP] = True
-
     hass.config_entries.async_update_entry(mock_config, options=options)
+    await hass.async_block_till_done()
+
+    assert mock_config.entry_id in hass.data[DOMAIN]
+    assert mock_client.async_disconnect_ws.called
 
 
 @patch("homeassistant.components.unifiprotect.ProtectApiClient")
@@ -75,13 +86,15 @@ async def test_unload(mock_api, hass: HomeAssistant, mock_client):
             "port": 443,
             "verify_ssl": False,
         },
+        version=2,
     )
 
     mock_api.return_value = mock_client
-    await async_setup_entry(hass, mock_config)
+    await mock_config.async_setup(hass)
 
-    await async_unload_entry(hass, mock_config)
+    assert await async_unload_entry(hass, mock_config) is True
     assert mock_config.entry_id not in hass.data[DOMAIN]
+    assert mock_client.async_disconnect_ws.called
 
 
 @patch("homeassistant.components.unifiprotect.ProtectApiClient")
@@ -97,13 +110,14 @@ async def test_setup_too_old(mock_api, hass: HomeAssistant, mock_client):
             "port": 443,
             "verify_ssl": False,
         },
+        version=2,
         unique_id=dr.format_mac(MAC_ADDR),
     )
 
     mock_client.get_nvr.return_value = MOCK_OLD_NVR_DATA
     mock_api.return_value = mock_client
 
-    assert await async_setup_entry(hass, mock_config) is False
+    await mock_config.async_setup(hass)
     assert not mock_client.update.called
 
 
@@ -120,6 +134,7 @@ async def test_setup_failed_update(mock_api, hass: HomeAssistant, mock_client):
             "port": 443,
             "verify_ssl": False,
         },
+        version=2,
         unique_id=dr.format_mac(MAC_ADDR),
     )
     mock_config.async_start_reauth = Mock()
@@ -146,6 +161,7 @@ async def test_setup_failed_update_reauth(mock_api, hass: HomeAssistant, mock_cl
             "port": 443,
             "verify_ssl": False,
         },
+        version=2,
         unique_id=dr.format_mac(MAC_ADDR),
     )
     mock_config.async_start_reauth = Mock()
@@ -172,6 +188,7 @@ async def test_setup_failed_error(mock_api, hass: HomeAssistant, mock_client):
             "port": 443,
             "verify_ssl": False,
         },
+        version=2,
         unique_id=dr.format_mac(MAC_ADDR),
     )
 
@@ -196,6 +213,7 @@ async def test_setup_failed_auth(mock_api, hass: HomeAssistant, mock_client):
             "port": 443,
             "verify_ssl": False,
         },
+        version=2,
         unique_id=dr.format_mac(MAC_ADDR),
     )
 

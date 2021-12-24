@@ -94,11 +94,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def _async_options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Update options."""
+    print("stuff")
     await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload UniFi Protect config entry."""
+    print("things")
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         data: ProtectData = hass.data[DOMAIN][entry.entry_id]
         await data.async_stop()

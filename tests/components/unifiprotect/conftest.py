@@ -1,4 +1,5 @@
 """Fixtures and test data for UniFi Protect methods."""
+from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any
