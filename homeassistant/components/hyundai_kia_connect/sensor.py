@@ -1,8 +1,11 @@
 """Sensor for Hyundai / Kia Connect integration."""
+from __future__ import annotations
+
 import logging
 from typing import Final
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.const import DEVICE_CLASS_TIMESTAMP, LENGTH_KILOMETERS
 
 from .const import DOMAIN
 from .entity import HyundaiKiaConnectEntity
@@ -14,11 +17,13 @@ SENSOR_DESCRIPTIONS: Final[tuple[SensorEntityDescription, ...]] = (
         key="odometer",
         name="Odometer",
         icon="mdi:speedometer",
+        native_unit_of_measurement=LENGTH_KILOMETERS,
     ),
     SensorEntityDescription(
         key="last_updated",
         name="Last Updated",
         icon="mdi:update",
+        device_class=DEVICE_CLASS_TIMESTAMP,
     ),
 )
 
