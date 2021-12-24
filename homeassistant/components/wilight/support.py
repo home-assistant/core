@@ -66,5 +66,3 @@ def wilight_to_hass_trigger(value):
         desc = desc + "Off"
 
     return desc
-
-    return int(value / 3600)
