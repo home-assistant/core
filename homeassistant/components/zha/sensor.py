@@ -700,7 +700,7 @@ class RSSISensor(Sensor, id_suffix="rssi"):
 
         Return entity if it is a supported configuration, otherwise return None
         """
-        key = CHANNEL_BASIC + "_rssi"
+        key = f"{CHANNEL_BASIC}_{cls.unique_id_suffix}"
         if ZHA_ENTITIES.prevent_entity_creation(Platform.SENSOR, zha_device.ieee, key):
             return None
         return cls(unique_id, zha_device, channels, **kwargs)
@@ -708,7 +708,7 @@ class RSSISensor(Sensor, id_suffix="rssi"):
     @property
     def native_value(self) -> StateType:
         """Return the state of the entity."""
-        raw_state = self._zha_device.device.rssi
+        raw_state = getattr(self._zha_device.device, self.unique_id_suffix)
         if raw_state is None:
             return None
         return raw_state
@@ -720,40 +720,5 @@ class RSSISensor(Sensor, id_suffix="rssi"):
 
 
 @MULTI_MATCH(channel_names=CHANNEL_BASIC)
-class LQISensor(Sensor, id_suffix="lqi"):
+class LQISensor(RSSISensor, id_suffix="lqi"):
     """LQI sensor for a device."""
-
-    _state_class: SensorStateClass = SensorStateClass.MEASUREMENT
-    _device_class: SensorDeviceClass = SensorDeviceClass.SIGNAL_STRENGTH
-    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
-    _attr_entity_registry_enabled_default = False
-
-    @classmethod
-    def create_entity(
-        cls,
-        unique_id: str,
-        zha_device: ZhaDeviceType,
-        channels: list[ChannelType],
-        **kwargs,
-    ) -> ZhaEntity | None:
-        """Entity Factory.
-
-        Return entity if it is a supported configuration, otherwise return None
-        """
-        key = CHANNEL_BASIC + "_lqi"
-        if ZHA_ENTITIES.prevent_entity_creation(Platform.SENSOR, zha_device.ieee, key):
-            return None
-        return cls(unique_id, zha_device, channels, **kwargs)
-
-    @property
-    def native_value(self) -> StateType:
-        """Return the state of the entity."""
-        raw_state = self._zha_device.device.lqi
-        if raw_state is None:
-            return None
-        return raw_state
-
-    @property
-    def should_poll(self) -> bool:
-        """Poll the entity for current state."""
-        return True
