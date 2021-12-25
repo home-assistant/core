@@ -20,6 +20,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -114,6 +115,13 @@ class LuftdatenSensor(CoordinatorEntity, SensorEntity):
         self._attr_extra_state_attributes = {
             ATTR_SENSOR_ID: sensor_id,
         }
+        self._attr_device_info = DeviceInfo(
+            configuration_url=f"https://devices.sensor.community/sensors/{sensor_id}/settings",
+            identifiers={(DOMAIN, str(sensor_id))},
+            name=f"Sensor {sensor_id}",
+            manufacturer="Luftdaten.info",
+        )
+
         if show_on_map:
             self._attr_extra_state_attributes[ATTR_LONGITUDE] = coordinator.data[
                 "longitude"
