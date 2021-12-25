@@ -8,6 +8,7 @@ from functools import partial, wraps
 import logging
 from typing import TYPE_CHECKING, Any, TypedDict
 
+from typing_extensions import TypeGuard
 import voluptuous as vol
 
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
@@ -319,7 +320,7 @@ async def async_extract_entity_ids(
     return referenced.referenced | referenced.indirectly_referenced
 
 
-def _has_match(ids: str | list | None) -> bool:
+def _has_match(ids: str | list[str] | None) -> TypeGuard[str | list[str]]:
     """Check if ids can match anything."""
     return ids not in (None, ENTITY_MATCH_NONE)
 
@@ -339,7 +340,7 @@ def async_extract_referenced_entity_ids(
     if expand_group:
         entity_ids = hass.components.group.expand_entity_ids(entity_ids)
 
-    selected.referenced.update(entity_ids)  # type: ignore[arg-type]
+    selected.referenced.update(entity_ids)
 
     if not selector.device_ids and not selector.area_ids:
         return selected
@@ -350,14 +351,14 @@ def async_extract_referenced_entity_ids(
 
     for device_id in selector.device_ids:
         if device_id not in dev_reg.devices:
-            selected.missing_devices.add(device_id)  # type: ignore[arg-type]
+            selected.missing_devices.add(device_id)
 
     for area_id in selector.area_ids:
         if area_id not in area_reg.areas:
-            selected.missing_areas.add(area_id)  # type: ignore[arg-type]
+            selected.missing_areas.add(area_id)
 
     # Find devices for this area
-    selected.referenced_devices.update(selector.device_ids)  # type: ignore[arg-type]
+    selected.referenced_devices.update(selector.device_ids)
     for device_entry in dev_reg.devices.values():
         if device_entry.area_id in selector.area_ids:
             selected.referenced_devices.add(device_entry.id)
