@@ -13,6 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA_BASE
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -29,13 +30,15 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[str] = ["binary_sensor", "sensor"]
-PLATFORM_SCHEMA = {
-    vol.Optional(CONF_NAME, default=CONF_DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_ADDRESS, default=CONF_DEFAULT_ADDRESS): cv.string,
-    vol.Optional(
-        CONF_SCAN_INTERVAL, default=CONF_DEFAULT_SCAN_INTERVAL
-    ): cv.positive_float,
-}
+PLATFORM_SCHEMA_BASE.extend(
+    {
+        vol.Optional(CONF_NAME, default=CONF_DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_ADDRESS, default=CONF_DEFAULT_ADDRESS): cv.string,
+        vol.Optional(
+            CONF_SCAN_INTERVAL, default=CONF_DEFAULT_SCAN_INTERVAL
+        ): cv.positive_float,
+    }
+)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -82,6 +85,7 @@ class BaseStarlinkEntity(CoordinatorEntity, ABC):
     """
 
     base_name: str = NotImplemented
+    all_entities: list[BaseStarlinkEntity] = []
 
     def __init__(self, coordinator: DataUpdateCoordinator, dish: StarlinkDish):
         """Initialize.
@@ -104,10 +108,16 @@ class BaseStarlinkEntity(CoordinatorEntity, ABC):
         This ensure a connection is not made unless there are active entities that will need to be updated.
         """
         await super().async_added_to_hass()
+        self.all_entities.append(self)
         if not self.dish.connected:
             self.dish.connect()
 
-        # TODO: Disconnect if the last entity is removed
+    async def async_will_remove_from_hass(self):
+        """Disconnect the dish if the last entity is being removed."""
+        await super().async_will_remove_from_hass()
+        self.all_entities.remove(self)
+        if len(self.all_entities) == 0:
+            self.dish.close()
 
     @property
     def device_info(self):
