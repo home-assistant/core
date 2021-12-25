@@ -225,10 +225,11 @@ async def test_setup_failed_auth(mock_api, hass: HomeAssistant, mock_client):
         version=2,
         unique_id=dr.format_mac(MAC_ADDR),
     )
+    mock_config.add_to_hass(hass)
 
     mock_client.get_nvr = AsyncMock(side_effect=NotAuthorized)
     mock_api.return_value = mock_client
 
-    await mock_config.async_setup(hass)
+    await hass.config_entries.async_setup(mock_config.entry_id)
     assert mock_config.state == ConfigEntryState.SETUP_ERROR
     assert not mock_client.update.called
