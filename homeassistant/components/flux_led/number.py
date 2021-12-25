@@ -15,6 +15,7 @@ from flux_led.protocol import (
 )
 
 from homeassistant import config_entries
+from homeassistant.components.light import EFFECT_RANDOM
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
@@ -24,10 +25,10 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, EFFECT_SPEED_SUPPORT_MODES
+from .const import DOMAIN
 from .coordinator import FluxLedUpdateCoordinator
 from .entity import FluxEntity
-from .util import _effect_brightness, _hass_color_modes
+from .util import _effect_brightness
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,7 +61,7 @@ async def async_setup_entry(
         entities.append(FluxMusicPixelsPerSegmentNumber(coordinator, unique_id, name))
     if device.music_segments is not None:
         entities.append(FluxMusicSegmentsNumber(coordinator, unique_id, name))
-    if _hass_color_modes(coordinator.device).intersection(EFFECT_SPEED_SUPPORT_MODES):
+    if device.effect_list and device.effect_list != [EFFECT_RANDOM]:
         entities.append(FluxSpeedNumber(coordinator, unique_id, name))
 
     if entities:
