@@ -9,7 +9,7 @@
             "one": "Bo\u015f",
             "other": "Bo\u015f"
         },
-        "flow_title": "UPnP / IGD: {name}",
+        "flow_title": "{name}",
         "step": {
             "init": {
                 "one": "Bo\u015f",

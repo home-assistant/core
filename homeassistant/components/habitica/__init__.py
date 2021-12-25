@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SENSORS,
     CONF_URL,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
@@ -73,7 +74,7 @@ INSTANCE_LIST_SCHEMA = vol.All(
 )
 CONFIG_SCHEMA = vol.Schema({DOMAIN: INSTANCE_LIST_SCHEMA}, extra=vol.ALLOW_EXTRA)
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 
 SERVICE_API_CALL_SCHEMA = vol.Schema(
     {

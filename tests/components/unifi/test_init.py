@@ -1,4 +1,4 @@
-"""Test UniFi setup process."""
+"""Test UniFi Network integration setup process."""
 from unittest.mock import AsyncMock, patch
 
 from homeassistant.components import unifi
@@ -14,7 +14,7 @@ from .test_controller import (
     setup_unifi_integration,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, flush_store
 
 
 async def test_setup_with_no_config(hass):
@@ -59,8 +59,8 @@ async def test_controller_mac(hass):
     )
     assert device.configuration_url == "https://123:443"
     assert device.manufacturer == "Ubiquiti Networks"
-    assert device.model == "UniFi Controller"
-    assert device.name == "UniFi Controller"
+    assert device.model == "UniFi Network"
+    assert device.name == "UniFi Network"
     assert device.sw_version is None
 
 
@@ -110,6 +110,7 @@ async def test_wireless_clients(hass, hass_storage, aioclient_mock):
     config_entry = await setup_unifi_integration(
         hass, aioclient_mock, clients_response=[client_1, client_2]
     )
+    await flush_store(hass.data[unifi.UNIFI_WIRELESS_CLIENTS]._store)
 
     for mac in [
         "00:00:00:00:00:00",

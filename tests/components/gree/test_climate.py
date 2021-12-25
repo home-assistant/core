@@ -43,11 +43,7 @@ from homeassistant.components.gree.climate import (
     HVAC_MODES_REVERSE,
     SUPPORTED_FEATURES,
 )
-from homeassistant.components.gree.const import (
-    DOMAIN as GREE_DOMAIN,
-    FAN_MEDIUM_HIGH,
-    FAN_MEDIUM_LOW,
-)
+from homeassistant.components.gree.const import FAN_MEDIUM_HIGH, FAN_MEDIUM_LOW
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
@@ -59,12 +55,11 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from .common import build_device_mock
+from .common import async_setup_gree, build_device_mock
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import async_fire_time_changed
 
 ENTITY_ID = f"{DOMAIN}.fake_device_1"
 
@@ -73,13 +68,6 @@ ENTITY_ID = f"{DOMAIN}.fake_device_1"
 def mock_now():
     """Fixture for dtutil.now."""
     return dt_util.utcnow()
-
-
-async def async_setup_gree(hass):
-    """Set up the gree platform."""
-    MockConfigEntry(domain=GREE_DOMAIN).add_to_hass(hass)
-    await async_setup_component(hass, GREE_DOMAIN, {GREE_DOMAIN: {"climate": {}}})
-    await hass.async_block_till_done()
 
 
 async def test_discovery_called_once(hass, discovery, device):

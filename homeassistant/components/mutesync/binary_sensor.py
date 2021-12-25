@@ -1,6 +1,7 @@
 """mütesync binary sensor entities."""
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.helpers import update_coordinator
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 
 from .const import DOMAIN
@@ -46,7 +47,7 @@ class MuteStatus(update_coordinator.CoordinatorEntity, BinarySensorEntity):
     def device_info(self) -> DeviceInfo:
         """Return the device info of the sensor."""
         return DeviceInfo(
-            entry_type="service",
+            entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, self.coordinator.data["user-id"])},
             manufacturer="mütesync",
             model="mutesync app",

@@ -6,6 +6,7 @@ from numbers import Number
 from homeassistant.const import (
     PRESSURE,
     PRESSURE_BAR,
+    PRESSURE_CBAR,
     PRESSURE_HPA,
     PRESSURE_INHG,
     PRESSURE_KPA,
@@ -20,6 +21,7 @@ VALID_UNITS: tuple[str, ...] = (
     PRESSURE_HPA,
     PRESSURE_KPA,
     PRESSURE_BAR,
+    PRESSURE_CBAR,
     PRESSURE_MBAR,
     PRESSURE_INHG,
     PRESSURE_PSI,
@@ -30,6 +32,7 @@ UNIT_CONVERSION: dict[str, float] = {
     PRESSURE_HPA: 1 / 100,
     PRESSURE_KPA: 1 / 1000,
     PRESSURE_BAR: 1 / 100000,
+    PRESSURE_CBAR: 1 / 1000,
     PRESSURE_MBAR: 1 / 100,
     PRESSURE_INHG: 1 / 3386.389,
     PRESSURE_PSI: 1 / 6894.757,

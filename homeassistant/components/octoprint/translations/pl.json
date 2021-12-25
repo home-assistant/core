@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "auth_failed": "Nie uda\u0142o si\u0119 pobra\u0107 klucza API aplikacji",
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
             "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
@@ -9,11 +10,17 @@
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
             "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
+        "flow_title": "Drukarka OctoPrint: {host}",
+        "progress": {
+            "get_api_key": "Otw\u00f3rz interfejs OctoPrint i kliknij \u201eZezw\u00f3l\u201d przy \u017c\u0105daniu dost\u0119pu do Home Assistanta."
+        },
         "step": {
             "user": {
                 "data": {
                     "host": "Nazwa hosta lub adres IP",
+                    "path": "\u015acie\u017cka aplikacji",
                     "port": "Port",
+                    "ssl": "U\u017cyj SSL",
                     "username": "Nazwa u\u017cytkownika"
                 }
             }

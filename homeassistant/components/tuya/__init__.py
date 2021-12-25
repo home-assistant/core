@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 from typing import NamedTuple
 
+import requests
 from tuya_iot import (
     AuthType,
     TuyaDevice,
@@ -18,6 +19,7 @@ from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import dispatcher_send
 
@@ -60,18 +62,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         data.pop(CONF_PROJECT_TYPE)
         hass.config_entries.async_update_entry(entry, data=data)
 
-    success = await _init_tuya_sdk(hass, entry)
-
-    if not success:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-        if not hass.data[DOMAIN]:
-            hass.data.pop(DOMAIN)
-
-    return bool(success)
-
-
-async def _init_tuya_sdk(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     auth_type = AuthType(entry.data[CONF_AUTH_TYPE])
     api = TuyaOpenAPI(
         endpoint=entry.data[CONF_ENDPOINT],
@@ -82,22 +72,24 @@ async def _init_tuya_sdk(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     api.set_dev_channel("hass")
 
-    if auth_type == AuthType.CUSTOM:
-        response = await hass.async_add_executor_job(
-            api.connect, entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
-        )
-    else:
-        response = await hass.async_add_executor_job(
-            api.connect,
-            entry.data[CONF_USERNAME],
-            entry.data[CONF_PASSWORD],
-            entry.data[CONF_COUNTRY_CODE],
-            entry.data[CONF_APP_TYPE],
-        )
+    try:
+        if auth_type == AuthType.CUSTOM:
+            response = await hass.async_add_executor_job(
+                api.connect, entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD]
+            )
+        else:
+            response = await hass.async_add_executor_job(
+                api.connect,
+                entry.data[CONF_USERNAME],
+                entry.data[CONF_PASSWORD],
+                entry.data[CONF_COUNTRY_CODE],
+                entry.data[CONF_APP_TYPE],
+            )
+    except requests.exceptions.RequestException as err:
+        raise ConfigEntryNotReady(err) from err
 
     if response.get("success", False) is False:
-        _LOGGER.error("Tuya login error response: %s", response)
-        return False
+        raise ConfigEntryNotReady(response)
 
     tuya_mq = TuyaOpenMQ(api)
     tuya_mq.start()

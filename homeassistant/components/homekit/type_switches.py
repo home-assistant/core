@@ -12,6 +12,7 @@ from pyhap.const import (
     CATEGORY_SWITCH,
 )
 
+from homeassistant.components import button, input_button
 from homeassistant.components.input_select import ATTR_OPTIONS, SERVICE_SELECT_OPTION
 from homeassistant.components.switch import DOMAIN
 from homeassistant.components.vacuum import (
@@ -69,7 +70,7 @@ VALVE_TYPE: dict[str, ValveInfo] = {
 }
 
 
-ACTIVATE_ONLY_SWITCH_DOMAINS = {"scene", "script"}
+ACTIVATE_ONLY_SWITCH_DOMAINS = {"button", "input_button", "scene", "script"}
 
 ACTIVATE_ONLY_RESET_SECONDS = 10
 
@@ -149,6 +150,10 @@ class Switch(HomeAccessory):
         if self._domain == "script":
             service = self._object_id
             params = {}
+        elif self._domain == button.DOMAIN:
+            service = button.SERVICE_PRESS
+        elif self._domain == input_button.DOMAIN:
+            service = input_button.SERVICE_PRESS
         else:
             service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
 

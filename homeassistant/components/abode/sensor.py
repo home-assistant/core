@@ -3,16 +3,14 @@ from __future__ import annotations
 
 from typing import cast
 
-from abodepy.devices.sensor import AbodeSensor as AbodeSense
-import abodepy.helpers.constants as CONST
+from abodepy.devices.sensor import CONST, AbodeSensor as AbodeSense
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_TEMPERATURE,
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -23,17 +21,17 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=CONST.TEMP_STATUS_KEY,
         name="Temperature",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
     SensorEntityDescription(
         key=CONST.HUMI_STATUS_KEY,
         name="Humidity",
-        device_class=DEVICE_CLASS_HUMIDITY,
+        device_class=SensorDeviceClass.HUMIDITY,
     ),
     SensorEntityDescription(
         key=CONST.LUX_STATUS_KEY,
         name="Lux",
-        device_class=DEVICE_CLASS_ILLUMINANCE,
+        device_class=SensorDeviceClass.ILLUMINANCE,
     ),
 )
 

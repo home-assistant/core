@@ -99,6 +99,8 @@ class ValloxFan(CoordinatorEntity, FanEntity):
 
         self._attr_name = name
 
+        self._attr_unique_id = str(self.coordinator.data.get_uuid())
+
     @property
     def supported_features(self) -> int:
         """Flag supported features."""

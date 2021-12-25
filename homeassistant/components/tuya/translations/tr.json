@@ -28,15 +28,15 @@
                 "data": {
                     "access_id": "Tuya IoT Eri\u015fim Kimli\u011fi",
                     "access_secret": "Tuya IoT Eri\u015fim Anahtar\u0131",
-                    "country_code": "Hesap \u00fclke kodunuz (\u00f6r. ABD i\u00e7in 1 veya \u00c7in i\u00e7in 86)",
+                    "country_code": "\u00dclke",
                     "password": "Parola",
                     "platform": "Hesab\u0131n\u0131z\u0131n kay\u0131tl\u0131 oldu\u011fu uygulama",
                     "region": "B\u00f6lge",
                     "tuya_project_type": "Tuya bulut proje t\u00fcr\u00fc",
-                    "username": "Kullan\u0131c\u0131 Ad\u0131"
+                    "username": "Hesap"
                 },
                 "description": "Tuya kimlik bilgilerinizi girin.",
-                "title": "Tuya"
+                "title": "Tuya Entegrasyonu"
             }
         }
     },
@@ -65,7 +65,7 @@
                     "tuya_max_coltemp": "Cihaz taraf\u0131ndan bildirilen maksimum renk s\u0131cakl\u0131\u011f\u0131",
                     "unit_of_measurement": "Cihaz\u0131n kulland\u0131\u011f\u0131 s\u0131cakl\u0131k birimi"
                 },
-                "description": "{device_type} ayg\u0131t\u0131 '{device_name}' i\u00e7in g\u00f6r\u00fcnt\u00fclenen bilgileri ayarlamak i\u00e7in se\u00e7enekleri yap\u0131land\u0131r\u0131n",
+                "description": "{device_type} cihaz\u0131 ` {device_name} device_name} ` i\u00e7in g\u00f6r\u00fcnt\u00fclenen bilgileri ayarlamak \u00fczere se\u00e7enekleri yap\u0131land\u0131r\u0131n",
                 "title": "Tuya Cihaz\u0131n\u0131 Yap\u0131land\u0131r\u0131n"
             },
             "init": {

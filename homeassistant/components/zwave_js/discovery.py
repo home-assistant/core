@@ -44,8 +44,10 @@ from homeassistant.helpers.device_registry import DeviceEntry
 from .const import LOGGER
 from .discovery_data_template import (
     BaseDiscoverySchemaDataTemplate,
+    ConfigurableFanSpeedDataTemplate,
     CoverTiltDataTemplate,
     DynamicCurrentTempClimateDataTemplate,
+    FixedFanSpeedDataTemplate,
     NumericSensorDataTemplate,
     ZwaveValueID,
 )
@@ -229,11 +231,35 @@ DISCOVERY_SCHEMAS = [
         product_type={0x4944},
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
-    # GE/Jasco fan controllers using switch multilevel CC
+    # GE/Jasco - In-Wall Smart Fan Control - 12730 / ZW4002
+    ZWaveDiscoverySchema(
+        platform="fan",
+        hint="configured_fan_speed",
+        manufacturer_id={0x0063},
+        product_id={0x3034},
+        product_type={0x4944},
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+        data_template=FixedFanSpeedDataTemplate(
+            speeds=[33, 67, 99],
+        ),
+    ),
+    # GE/Jasco - In-Wall Smart Fan Control - 14287 / ZW4002
+    ZWaveDiscoverySchema(
+        platform="fan",
+        hint="configured_fan_speed",
+        manufacturer_id={0x0063},
+        product_id={0x3131},
+        product_type={0x4944},
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+        data_template=FixedFanSpeedDataTemplate(
+            speeds=[32, 66, 99],
+        ),
+    ),
+    # GE/Jasco - In-Wall Smart Fan Control - 14314 / ZW4002
     ZWaveDiscoverySchema(
         platform="fan",
         manufacturer_id={0x0063},
-        product_id={0x3034, 0x3131, 0x3138},
+        product_id={0x3138},
         product_type={0x4944},
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
@@ -257,6 +283,21 @@ DISCOVERY_SCHEMAS = [
             endpoint={2},
             property={CURRENT_VALUE_PROPERTY},
             type={"number"},
+        ),
+    ),
+    # HomeSeer HS-FC200+
+    ZWaveDiscoverySchema(
+        platform="fan",
+        hint="configured_fan_speed",
+        manufacturer_id={0x000C},
+        product_id={0x0001},
+        product_type={0x0203},
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+        data_template=ConfigurableFanSpeedDataTemplate(
+            configuration_option=ZwaveValueID(
+                5, CommandClass.CONFIGURATION, endpoint=0
+            ),
+            configuration_value_to_speeds={0: [33, 66, 99], 1: [24, 49, 74, 99]},
         ),
     ),
     # Fibaro Shutter Fibaro FGR222
@@ -401,13 +442,13 @@ DISCOVERY_SCHEMAS = [
             dependent_value=ZwaveValueID(2, CommandClass.CONFIGURATION, endpoint=0),
         ),
     ),
-    # FortrezZ SSA1/SSA2
+    # FortrezZ SSA1/SSA2/SSA3
     ZWaveDiscoverySchema(
         platform="select",
         hint="multilevel_switch",
         manufacturer_id={0x0084},
         product_id={0x0107, 0x0108, 0x010B, 0x0205},
-        product_type={0x0311, 0x0313, 0x0341, 0x0343},
+        product_type={0x0311, 0x0313, 0x0331, 0x0341, 0x0343},
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
         data_template=BaseDiscoverySchemaDataTemplate(
             {

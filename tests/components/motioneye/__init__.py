@@ -179,7 +179,10 @@ async def setup_mock_motioneye_config_entry(
 
     await async_process_ha_core_config(
         hass,
-        {"external_url": "https://example.com"},
+        {
+            "internal_url": "https://internal.url",
+            "external_url": "https://external.url",
+        },
     )
 
     config_entry = config_entry or create_mock_motioneye_config_entry(hass)

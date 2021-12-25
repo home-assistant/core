@@ -108,7 +108,7 @@ async def test_sensor_actions_can_be_enabled(hass: HomeAssistant) -> None:
     entry = entity_registry.async_get(TEST_SENSOR_ACTION_ENTITY_ID)
     assert entry
     assert entry.disabled
-    assert entry.disabled_by == er.DISABLED_INTEGRATION
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
     entity_state = hass.states.get(TEST_SENSOR_ACTION_ENTITY_ID)
     assert not entity_state
 

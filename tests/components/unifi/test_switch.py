@@ -1,4 +1,4 @@
-"""UniFi switch platform tests."""
+"""UniFi Network switch platform tests."""
 from copy import deepcopy
 from unittest.mock import patch
 
@@ -16,12 +16,14 @@ from homeassistant.components.unifi.const import (
     DOMAIN as UNIFI_DOMAIN,
 )
 from homeassistant.components.unifi.switch import POE_SWITCH
-from homeassistant.const import ENTITY_CATEGORY_CONFIG, STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity import EntityCategory
 
 from .test_controller import (
     CONTROLLER_HOST,
+    DEFAULT_CONFIG_ENTRY_ID,
     DESCRIPTION,
     ENTRY_CONFIG,
     setup_unifi_integration,
@@ -407,7 +409,7 @@ async def test_switches(hass, aioclient_mock):
         "switch.block_client_1",
         "switch.block_media_streaming",
     ):
-        assert ent_reg.async_get(entry_id).entity_category == ENTITY_CATEGORY_CONFIG
+        assert ent_reg.async_get(entry_id).entity_category is EntityCategory.CONFIG
 
     # Block and unblock client
 
@@ -857,7 +859,7 @@ async def test_restore_client_succeed(hass, aioclient_mock):
         data=ENTRY_CONFIG,
         source="test",
         options={},
-        entry_id=1,
+        entry_id=DEFAULT_CONFIG_ENTRY_ID,
     )
 
     registry = er.async_get(hass)
@@ -947,7 +949,7 @@ async def test_restore_client_no_old_state(hass, aioclient_mock):
         data=ENTRY_CONFIG,
         source="test",
         options={},
-        entry_id=1,
+        entry_id=DEFAULT_CONFIG_ENTRY_ID,
     )
 
     registry = er.async_get(hass)

@@ -15,9 +15,9 @@ from amberelectric.model.current_interval import CurrentInterval
 from amberelectric.model.forecast_interval import ForecastInterval
 
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CURRENCY_DOLLAR, ENERGY_KILO_WATT_HOUR
@@ -86,7 +86,7 @@ class AmberPriceSensor(AmberSensor):
         return format_cents_to_dollars(interval.per_kwh)
 
     @property
-    def device_state_attributes(self) -> Mapping[str, Any] | None:
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return additional pieces of information about the price."""
         interval = self.coordinator.data[self.entity_description.key][self.channel_type]
 
@@ -133,7 +133,7 @@ class AmberForecastSensor(AmberSensor):
         return format_cents_to_dollars(interval.per_kwh)
 
     @property
-    def device_state_attributes(self) -> Mapping[str, Any] | None:
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return additional pieces of information about the price."""
         intervals = self.coordinator.data[self.entity_description.key].get(
             self.channel_type
@@ -209,7 +209,7 @@ async def async_setup_entry(
             key="current",
             name=f"{entry.title} - {friendly_channel_type(channel_type)} Price",
             native_unit_of_measurement=UNIT,
-            state_class=STATE_CLASS_MEASUREMENT,
+            state_class=SensorStateClass.MEASUREMENT,
             icon=ICONS[channel_type],
         )
         entities.append(AmberPriceSensor(coordinator, description, channel_type))
@@ -219,7 +219,7 @@ async def async_setup_entry(
             key="forecasts",
             name=f"{entry.title} - {friendly_channel_type(channel_type)} Forecast",
             native_unit_of_measurement=UNIT,
-            state_class=STATE_CLASS_MEASUREMENT,
+            state_class=SensorStateClass.MEASUREMENT,
             icon=ICONS[channel_type],
         )
         entities.append(AmberForecastSensor(coordinator, description, channel_type))
@@ -228,7 +228,7 @@ async def async_setup_entry(
         key="renewables",
         name=f"{entry.title} - Renewables",
         native_unit_of_measurement="%",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:solar-power",
     )
     entities.append(AmberGridSensor(coordinator, renewables_description))

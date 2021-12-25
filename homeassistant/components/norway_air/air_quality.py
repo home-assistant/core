@@ -24,6 +24,8 @@ CONF_FORECAST = "forecast"
 DEFAULT_FORECAST = 0
 DEFAULT_NAME = "Air quality Norway"
 
+OVERRIDE_URL = "https://aa015h6buqvih86i1.api.met.no/weatherapi/airqualityforecast/0.1/"
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_FORECAST, default=DEFAULT_FORECAST): vol.Coerce(int),
@@ -72,7 +74,9 @@ class AirSensor(AirQualityEntity):
     def __init__(self, name, coordinates, forecast, session):
         """Initialize the sensor."""
         self._name = name
-        self._api = metno.AirQualityData(coordinates, forecast, session)
+        self._api = metno.AirQualityData(
+            coordinates, forecast, session, api_url=OVERRIDE_URL
+        )
 
     @property
     def attribution(self) -> str:

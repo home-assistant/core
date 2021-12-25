@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_COMMAND_ON,
     CONF_COMMAND_STATE,
     CONF_FRIENDLY_NAME,
+    CONF_ICON_TEMPLATE,
     CONF_SWITCHES,
     CONF_VALUE_TEMPLATE,
 )
@@ -31,6 +32,7 @@ SWITCH_SCHEMA = vol.Schema(
         vol.Optional(CONF_COMMAND_STATE): cv.string,
         vol.Optional(CONF_FRIENDLY_NAME): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_ICON_TEMPLATE): cv.template,
         vol.Optional(CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     }
 )
@@ -54,6 +56,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if value_template is not None:
             value_template.hass = hass
 
+        icon_template = device_config.get(CONF_ICON_TEMPLATE)
+        if icon_template is not None:
+            icon_template.hass = hass
+
         switches.append(
             CommandSwitch(
                 hass,
@@ -62,6 +68,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 device_config[CONF_COMMAND_ON],
                 device_config[CONF_COMMAND_OFF],
                 device_config.get(CONF_COMMAND_STATE),
+                icon_template,
                 value_template,
                 device_config[CONF_COMMAND_TIMEOUT],
             )
@@ -85,6 +92,7 @@ class CommandSwitch(SwitchEntity):
         command_on,
         command_off,
         command_state,
+        icon_template,
         value_template,
         timeout,
     ):
@@ -96,6 +104,7 @@ class CommandSwitch(SwitchEntity):
         self._command_on = command_on
         self._command_off = command_off
         self._command_state = command_state
+        self._icon_template = icon_template
         self._value_template = value_template
         self._timeout = timeout
 
@@ -152,6 +161,10 @@ class CommandSwitch(SwitchEntity):
         """Update device state."""
         if self._command_state:
             payload = str(self._query_state())
+            if self._icon_template:
+                self._attr_icon = self._icon_template.render_with_possible_json_value(
+                    payload
+                )
             if self._value_template:
                 payload = self._value_template.render_with_possible_json_value(payload)
             self._state = payload.lower() == "true"

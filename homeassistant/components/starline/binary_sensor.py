@@ -4,10 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_DOOR,
-    DEVICE_CLASS_LOCK,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_PROBLEM,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -35,27 +32,27 @@ BINARY_SENSOR_TYPES: tuple[StarlineBinarySensorEntityDescription, ...] = (
     StarlineBinarySensorEntityDescription(
         key="hbrake",
         name_="Hand Brake",
-        device_class=DEVICE_CLASS_POWER,
+        device_class=BinarySensorDeviceClass.POWER,
     ),
     StarlineBinarySensorEntityDescription(
         key="hood",
         name_="Hood",
-        device_class=DEVICE_CLASS_DOOR,
+        device_class=BinarySensorDeviceClass.DOOR,
     ),
     StarlineBinarySensorEntityDescription(
         key="trunk",
         name_="Trunk",
-        device_class=DEVICE_CLASS_DOOR,
+        device_class=BinarySensorDeviceClass.DOOR,
     ),
     StarlineBinarySensorEntityDescription(
         key="alarm",
         name_="Alarm",
-        device_class=DEVICE_CLASS_PROBLEM,
+        device_class=BinarySensorDeviceClass.PROBLEM,
     ),
     StarlineBinarySensorEntityDescription(
         key="door",
         name_="Doors",
-        device_class=DEVICE_CLASS_LOCK,
+        device_class=BinarySensorDeviceClass.LOCK,
     ),
 )
 

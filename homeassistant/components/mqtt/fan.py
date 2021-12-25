@@ -36,7 +36,7 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 
-from . import PLATFORMS, subscription
+from . import PLATFORMS, MqttCommandTemplate, subscription
 from .. import mqtt
 from .const import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC, DOMAIN
 from .debug_info import log_messages
@@ -230,6 +230,7 @@ async def _async_setup_entity(
 class MqttFan(MqttEntity, FanEntity):
     """A MQTT fan component."""
 
+    _entity_id_format = fan.ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_FAN_ATTRIBUTES_BLOCKED
 
     def __init__(self, hass, config, config_entry, discovery_data):
@@ -331,13 +332,17 @@ class MqttFan(MqttEntity, FanEntity):
         if self._feature_preset_mode:
             self._supported_features |= SUPPORT_PRESET_MODE
 
-        for tpl_dict in (self._command_templates, self._value_templates):
-            for key, tpl in tpl_dict.items():
-                if tpl is None:
-                    tpl_dict[key] = lambda value: value
-                else:
-                    tpl.hass = self.hass
-                    tpl_dict[key] = tpl.async_render_with_possible_json_value
+        for key, tpl in self._command_templates.items():
+            self._command_templates[key] = MqttCommandTemplate(
+                tpl, self.hass
+            ).async_render
+
+        for key, tpl in self._value_templates.items():
+            if tpl is None:
+                self._value_templates[key] = lambda value: value
+            else:
+                tpl.hass = self.hass
+                self._value_templates[key] = tpl.async_render_with_possible_json_value
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""

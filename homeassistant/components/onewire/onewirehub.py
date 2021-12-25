@@ -22,13 +22,14 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.entity import DeviceInfo
 
 from .const import (
     CONF_MOUNT_DIR,
     CONF_TYPE_OWSERVER,
     CONF_TYPE_SYSBUS,
+    DEVICE_SUPPORT_OWSERVER,
+    DEVICE_SUPPORT_SYSBUS,
     DOMAIN,
     MANUFACTURER_EDS,
     MANUFACTURER_HOBBYBOARDS,
@@ -51,6 +52,13 @@ DEVICE_MANUFACTURER = {
 }
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _is_known_owserver_device(device_family: str, device_type: str) -> bool:
+    """Check if device family/type is known to the library."""
+    if device_family in ("7E", "EF"):  # EDS or HobbyBoard
+        return device_type in DEVICE_SUPPORT_OWSERVER[device_family]
+    return device_family in DEVICE_SUPPORT_OWSERVER
 
 
 class OneWireHub:
@@ -83,10 +91,13 @@ class OneWireHub:
         """Initialize a config entry."""
         self.type = config_entry.data[CONF_TYPE]
         if self.type == CONF_TYPE_SYSBUS:
-            await self.check_mount_dir(config_entry.data[CONF_MOUNT_DIR])
+            mount_dir = config_entry.data[CONF_MOUNT_DIR]
+            _LOGGER.debug("Initializing using SysBus %s", mount_dir)
+            await self.check_mount_dir(mount_dir)
         elif self.type == CONF_TYPE_OWSERVER:
             host = config_entry.data[CONF_HOST]
             port = config_entry.data[CONF_PORT]
+            _LOGGER.debug("Initializing using OWServer %s:%s", host, port)
             await self.connect(host, port)
         await self.discover_devices()
         if TYPE_CHECKING:
@@ -120,9 +131,23 @@ class OneWireHub:
         """Discover all sysbus devices."""
         devices: list[OWDeviceDescription] = []
         assert self.pi1proxy
-        for interface in self.pi1proxy.find_all_sensors():
+        all_sensors = self.pi1proxy.find_all_sensors()
+        if not all_sensors:
+            _LOGGER.error(
+                "No onewire sensor found. Check if dtoverlay=w1-gpio "
+                "is in your /boot/config.txt. "
+                "Check the mount_dir parameter if it's defined"
+            )
+        for interface in all_sensors:
             device_family = interface.mac_address[:2]
             device_id = f"{device_family}-{interface.mac_address[2:]}"
+            if device_family not in DEVICE_SUPPORT_SYSBUS:
+                _LOGGER.warning(
+                    "Ignoring unknown device family (%s) found for device %s",
+                    device_family,
+                    device_id,
+                )
+                continue
             device_info: DeviceInfo = {
                 ATTR_IDENTIFIERS: {(DOMAIN, device_id)},
                 ATTR_MANUFACTURER: DEVICE_MANUFACTURER.get(
@@ -149,6 +174,14 @@ class OneWireHub:
             device_family = self.owproxy.read(f"{device_path}family").decode()
             _LOGGER.debug("read `%sfamily`: %s", device_path, device_family)
             device_type = self._get_device_type_owserver(device_path)
+            if not _is_known_owserver_device(device_family, device_type):
+                _LOGGER.warning(
+                    "Ignoring unknown device family/type (%s/%s) found for device %s",
+                    device_family,
+                    device_type,
+                    device_id,
+                )
+                continue
             device_info: DeviceInfo = {
                 ATTR_IDENTIFIERS: {(DOMAIN, device_id)},
                 ATTR_MANUFACTURER: DEVICE_MANUFACTURER.get(
@@ -187,16 +220,6 @@ class OneWireHub:
         if TYPE_CHECKING:
             assert isinstance(device_type, str)
         return device_type
-
-    def has_device_in_cache(self, device: DeviceEntry) -> bool:
-        """Check if device was present in the cache."""
-        if TYPE_CHECKING:
-            assert self.devices
-        for internal_device in self.devices:
-            for identifier in internal_device.device_info[ATTR_IDENTIFIERS]:
-                if identifier in device.identifiers:
-                    return True
-        return False
 
 
 class CannotConnect(HomeAssistantError):

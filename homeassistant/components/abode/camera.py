@@ -4,9 +4,8 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Any, cast
 
-from abodepy.devices import AbodeDevice as AbodeDev
+from abodepy.devices import CONST, AbodeDevice as AbodeDev
 from abodepy.devices.camera import AbodeCamera as AbodeCam
-import abodepy.helpers.constants as CONST
 import abodepy.helpers.timeline as TIMELINE
 import requests
 from requests.models import Response

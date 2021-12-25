@@ -2,31 +2,41 @@
     "config": {
         "abort": {
             "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "alternative_integration": "Urz\u0105dzenie jest lepiej obs\u0142ugiwane przez inn\u0105 integracj\u0119",
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
             "could_not_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia z urz\u0105dzeniem DLNA",
             "discovery_error": "Nie uda\u0142o si\u0119 wykry\u0107 pasuj\u0105cego urz\u0105dzenia DLNA",
             "incomplete_config": "W konfiguracji brakuje wymaganej zmiennej",
-            "non_unique_id": "Znaleziono wiele urz\u0105dze\u0144 z tym samym unikalnym identyfikatorem"
+            "non_unique_id": "Znaleziono wiele urz\u0105dze\u0144 z tym samym unikalnym identyfikatorem",
+            "not_dmr": "Urz\u0105dzenie nie jest obs\u0142ugiwanym rendererem multimedi\u00f3w cyfrowych (DMR)"
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
-            "could_not_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia z urz\u0105dzeniem DLNA"
+            "could_not_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia z urz\u0105dzeniem DLNA",
+            "not_dmr": "Urz\u0105dzenie nie jest obs\u0142ugiwanym rendererem multimedi\u00f3w cyfrowych (DMR)"
         },
         "flow_title": "{name}",
         "step": {
             "confirm": {
                 "description": "Czy chcesz rozpocz\u0105\u0107 konfiguracj\u0119?"
             },
+            "import_turn_on": {
+                "description": "W\u0142\u0105cz urz\u0105dzenie i kliknij \"Zatwierd\u017a\", aby kontynuowa\u0107 migracj\u0119"
+            },
             "manual": {
                 "data": {
                     "url": "URL"
-                }
+                },
+                "description": "URL do pliku XML z opisem urz\u0105dzenia",
+                "title": "R\u0119czne pod\u0142\u0105czanie urz\u0105dzenia DLNA DMR"
             },
             "user": {
                 "data": {
                     "host": "Nazwa hosta lub adres IP",
                     "url": "URL"
-                }
+                },
+                "description": "Wybierz urz\u0105dzenie do skonfigurowania lub pozostaw puste, aby wprowadzi\u0107 adres URL",
+                "title": "Wykryto urz\u0105dzenia DLNA DMR"
             }
         }
     },

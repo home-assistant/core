@@ -103,7 +103,7 @@ class DemoLight(LightEntity):
         state,
         available=False,
         brightness=180,
-        ct=None,
+        ct=None,  # pylint: disable=invalid-name
         effect_list=None,
         effect=None,
         hs_color=None,

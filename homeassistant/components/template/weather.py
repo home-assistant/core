@@ -78,34 +78,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Template weather."""
 
-    name = config[CONF_NAME]
-    condition_template = config[CONF_CONDITION_TEMPLATE]
-    temperature_template = config[CONF_TEMPERATURE_TEMPLATE]
-    humidity_template = config[CONF_HUMIDITY_TEMPLATE]
-    attribution_template = config.get(CONF_ATTRIBUTION_TEMPLATE)
-    pressure_template = config.get(CONF_PRESSURE_TEMPLATE)
-    wind_speed_template = config.get(CONF_WIND_SPEED_TEMPLATE)
-    wind_bearing_template = config.get(CONF_WIND_BEARING_TEMPLATE)
-    ozone_template = config.get(CONF_OZONE_TEMPLATE)
-    visibility_template = config.get(CONF_VISIBILITY_TEMPLATE)
-    forecast_template = config.get(CONF_FORECAST_TEMPLATE)
     unique_id = config.get(CONF_UNIQUE_ID)
 
     async_add_entities(
         [
             WeatherTemplate(
                 hass,
-                name,
-                condition_template,
-                temperature_template,
-                humidity_template,
-                attribution_template,
-                pressure_template,
-                wind_speed_template,
-                wind_bearing_template,
-                ozone_template,
-                visibility_template,
-                forecast_template,
+                config,
                 unique_id,
             )
         ]
@@ -118,33 +97,23 @@ class WeatherTemplate(TemplateEntity, WeatherEntity):
     def __init__(
         self,
         hass,
-        name,
-        condition_template,
-        temperature_template,
-        humidity_template,
-        attribution_template,
-        pressure_template,
-        wind_speed_template,
-        wind_bearing_template,
-        ozone_template,
-        visibility_template,
-        forecast_template,
+        config,
         unique_id,
     ):
-        """Initialize the Demo weather."""
-        super().__init__()
+        """Initialize the Template weather."""
+        super().__init__(config=config)
 
-        self._name = name
-        self._condition_template = condition_template
-        self._temperature_template = temperature_template
-        self._humidity_template = humidity_template
-        self._attribution_template = attribution_template
-        self._pressure_template = pressure_template
-        self._wind_speed_template = wind_speed_template
-        self._wind_bearing_template = wind_bearing_template
-        self._ozone_template = ozone_template
-        self._visibility_template = visibility_template
-        self._forecast_template = forecast_template
+        self._name = name = config[CONF_NAME]
+        self._condition_template = config[CONF_CONDITION_TEMPLATE]
+        self._temperature_template = config[CONF_TEMPERATURE_TEMPLATE]
+        self._humidity_template = config[CONF_HUMIDITY_TEMPLATE]
+        self._attribution_template = config.get(CONF_ATTRIBUTION_TEMPLATE)
+        self._pressure_template = config.get(CONF_PRESSURE_TEMPLATE)
+        self._wind_speed_template = config.get(CONF_WIND_SPEED_TEMPLATE)
+        self._wind_bearing_template = config.get(CONF_WIND_BEARING_TEMPLATE)
+        self._ozone_template = config.get(CONF_OZONE_TEMPLATE)
+        self._visibility_template = config.get(CONF_VISIBILITY_TEMPLATE)
+        self._forecast_template = config.get(CONF_FORECAST_TEMPLATE)
         self._unique_id = unique_id
 
         self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, name, hass=hass)

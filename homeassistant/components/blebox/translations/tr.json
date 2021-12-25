@@ -13,7 +13,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "\u0130p Adresi",
+                    "host": "IP Adresi",
                     "port": "Port"
                 },
                 "description": "BleBox'\u0131n\u0131z\u0131 Home Assistant ile entegre olacak \u015fekilde ayarlay\u0131n.",

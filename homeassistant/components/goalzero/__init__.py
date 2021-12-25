@@ -5,13 +5,11 @@ import logging
 
 from goalzero import Yeti, exceptions
 
-from homeassistant.components.binary_sensor import DOMAIN as DOMAIN_BINARY_SENSOR
-from homeassistant.components.sensor import DOMAIN as DOMAIN_SENSOR
-from homeassistant.components.switch import DOMAIN as DOMAIN_SWITCH
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION, ATTR_MODEL, CONF_HOST, CONF_NAME
+from homeassistant.const import ATTR_MODEL, CONF_HOST, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
@@ -25,13 +23,14 @@ from .const import (
     DATA_KEY_API,
     DATA_KEY_COORDINATOR,
     DOMAIN,
+    MANUFACTURER,
     MIN_TIME_BETWEEN_UPDATES,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 
-PLATFORMS = [DOMAIN_BINARY_SENSOR, DOMAIN_SENSOR, DOMAIN_SWITCH]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -82,7 +81,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class YetiEntity(CoordinatorEntity):
     """Representation of a Goal Zero Yeti entity."""
 
-    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+    _attr_attribution = ATTRIBUTION
 
     def __init__(
         self,
@@ -101,8 +100,9 @@ class YetiEntity(CoordinatorEntity):
     def device_info(self) -> DeviceInfo:
         """Return the device information of the entity."""
         return DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, self.api.sysdata["macAddress"])},
             identifiers={(DOMAIN, self._server_unique_id)},
-            manufacturer="Goal Zero",
+            manufacturer=MANUFACTURER,
             model=self.api.sysdata[ATTR_MODEL],
             name=self._name,
             sw_version=self.api.data["firmwareVersion"],

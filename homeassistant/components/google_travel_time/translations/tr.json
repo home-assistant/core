@@ -12,7 +12,7 @@
                     "api_key": "API Anahtar\u0131",
                     "destination": "Hedef",
                     "name": "Ad",
-                    "origin": "Men\u015fei"
+                    "origin": "Kalk\u0131\u015f"
                 },
                 "description": "Ba\u015flang\u0131\u00e7 ve var\u0131\u015f yerini belirtirken, bir adres, enlem/boylam koordinatlar\u0131 veya bir Google yer kimli\u011fi bi\u00e7iminde dikey \u00e7izgi karakteriyle ayr\u0131lm\u0131\u015f bir veya daha fazla konum sa\u011flayabilirsiniz. Bir Google yer kimli\u011fi kullanarak konumu belirtirken, kimli\u011fin \u00f6n\u00fcne 'place_id:' eklenmelidir."
             }

@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any
 
-from pytradfri import Gateway, RequestError
+from pytradfri import Gateway, PytradfriError, RequestError
 from pytradfri.api.aiocoap_api import APIFactory
 import voluptuous as vol
 
@@ -15,6 +15,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import Event, async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
@@ -34,6 +35,8 @@ from .const import (
     GROUPS,
     KEY_API,
     PLATFORMS,
+    SIGNAL_GW,
+    TIMEOUT_API,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -105,14 +108,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     gateway = Gateway()
 
     try:
-        gateway_info = await api(gateway.get_gateway_info())
-        devices_commands = await api(gateway.get_devices())
-        devices = await api(devices_commands)
-        groups_commands = await api(gateway.get_groups())
-        groups = await api(groups_commands)
-    except RequestError as err:
+        gateway_info = await api(gateway.get_gateway_info(), timeout=TIMEOUT_API)
+        devices_commands = await api(gateway.get_devices(), timeout=TIMEOUT_API)
+        devices = await api(devices_commands, timeout=TIMEOUT_API)
+        groups_commands = await api(gateway.get_groups(), timeout=TIMEOUT_API)
+        groups = await api(groups_commands, timeout=TIMEOUT_API)
+    except PytradfriError as exc:
         await factory.shutdown()
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady from exc
 
     tradfri_data[KEY_API] = api
     tradfri_data[FACTORY] = factory
@@ -137,10 +140,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if hass.is_stopping:
             return
 
+        gw_status = True
         try:
             await api(gateway.get_gateway_info())
         except RequestError:
             _LOGGER.error("Keep-alive failed")
+            gw_status = False
+
+        async_dispatcher_send(hass, SIGNAL_GW, gw_status)
 
     listeners.append(
         async_track_time_interval(hass, async_keep_alive, timedelta(seconds=60))

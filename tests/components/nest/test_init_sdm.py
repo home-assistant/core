@@ -9,7 +9,11 @@ import copy
 import logging
 from unittest.mock import patch
 
-from google_nest_sdm.exceptions import AuthException, GoogleNestException
+from google_nest_sdm.exceptions import (
+    AuthException,
+    ConfigurationException,
+    GoogleNestException,
+)
 
 from homeassistant.components.nest import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -31,9 +35,10 @@ async def test_setup_success(hass, caplog):
     assert entries[0].state is ConfigEntryState.LOADED
 
 
-async def async_setup_sdm(hass, config=CONFIG):
+async def async_setup_sdm(hass, config=CONFIG, with_config=True):
     """Prepare test setup."""
-    create_config_entry(hass)
+    if with_config:
+        create_config_entry(hass)
     with patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation"
     ):
@@ -60,7 +65,7 @@ async def test_setup_configuration_failure(hass, caplog):
 async def test_setup_susbcriber_failure(hass, caplog):
     """Test configuration error."""
     with patch(
-        "homeassistant.components.nest.GoogleNestSubscriber.start_async",
+        "homeassistant.components.nest.api.GoogleNestSubscriber.start_async",
         side_effect=GoogleNestException(),
     ), caplog.at_level(logging.ERROR, logger="homeassistant.components.nest"):
         result = await async_setup_sdm(hass)
@@ -74,10 +79,14 @@ async def test_setup_susbcriber_failure(hass, caplog):
 
 async def test_setup_device_manager_failure(hass, caplog):
     """Test configuration error."""
-    with patch("homeassistant.components.nest.GoogleNestSubscriber.start_async"), patch(
-        "homeassistant.components.nest.GoogleNestSubscriber.async_get_device_manager",
+    with patch(
+        "homeassistant.components.nest.api.GoogleNestSubscriber.start_async"
+    ), patch(
+        "homeassistant.components.nest.api.GoogleNestSubscriber.async_get_device_manager",
         side_effect=GoogleNestException(),
-    ), caplog.at_level(logging.ERROR, logger="homeassistant.components.nest"):
+    ), caplog.at_level(
+        logging.ERROR, logger="homeassistant.components.nest"
+    ):
         result = await async_setup_sdm(hass)
         assert result
         assert len(caplog.messages) == 1
@@ -91,7 +100,7 @@ async def test_setup_device_manager_failure(hass, caplog):
 async def test_subscriber_auth_failure(hass, caplog):
     """Test configuration error."""
     with patch(
-        "homeassistant.components.nest.GoogleNestSubscriber.start_async",
+        "homeassistant.components.nest.api.GoogleNestSubscriber.start_async",
         side_effect=AuthException(),
     ):
         result = await async_setup_sdm(hass, CONFIG)
@@ -107,17 +116,53 @@ async def test_subscriber_auth_failure(hass, caplog):
 
 
 async def test_setup_missing_subscriber_id(hass, caplog):
-    """Test successful setup."""
+    """Test missing susbcriber id from config and config entry."""
     config = copy.deepcopy(CONFIG)
     del config[DOMAIN]["subscriber_id"]
-    with caplog.at_level(logging.ERROR, logger="homeassistant.components.nest"):
+
+    with caplog.at_level(logging.WARNING, logger="homeassistant.components.nest"):
         result = await async_setup_sdm(hass, config)
-        assert not result
+        assert result
         assert "Configuration option" in caplog.text
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
-    assert entries[0].state is ConfigEntryState.NOT_LOADED
+    assert entries[0].state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_setup_subscriber_id_config_entry(hass, caplog):
+    """Test successful setup with subscriber id in ConfigEntry."""
+    config = copy.deepcopy(CONFIG)
+    subscriber_id = config[DOMAIN]["subscriber_id"]
+    del config[DOMAIN]["subscriber_id"]
+
+    config_entry = create_config_entry(hass)
+    data = {**config_entry.data}
+    data["subscriber_id"] = subscriber_id
+    hass.config_entries.async_update_entry(config_entry, data=data)
+
+    with caplog.at_level(logging.ERROR, logger="homeassistant.components.nest"):
+        await async_setup_sdm_platform(hass, PLATFORM, with_config=False)
+        assert not caplog.records
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].state is ConfigEntryState.LOADED
+
+
+async def test_subscriber_configuration_failure(hass, caplog):
+    """Test configuration error."""
+    with patch(
+        "homeassistant.components.nest.api.GoogleNestSubscriber.start_async",
+        side_effect=ConfigurationException(),
+    ), caplog.at_level(logging.ERROR, logger="homeassistant.components.nest"):
+        result = await async_setup_sdm(hass, CONFIG)
+        assert result
+        assert "Configuration error: " in caplog.text
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_empty_config(hass, caplog):
@@ -129,3 +174,87 @@ async def test_empty_config(hass, caplog):
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 0
+
+
+async def test_unload_entry(hass, caplog):
+    """Test successful unload of a ConfigEntry."""
+    await async_setup_sdm_platform(hass, PLATFORM)
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    entry = entries[0]
+    assert entry.state is ConfigEntryState.LOADED
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    assert entry.state == ConfigEntryState.NOT_LOADED
+
+
+async def test_remove_entry(hass, caplog):
+    """Test successful unload of a ConfigEntry."""
+    await async_setup_sdm_platform(hass, PLATFORM)
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    entry = entries[0]
+    assert entry.state is ConfigEntryState.LOADED
+
+    assert await hass.config_entries.async_remove(entry.entry_id)
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert not entries
+
+
+async def test_remove_entry_deletes_subscriber(hass, caplog):
+    """Test ConfigEntry unload deletes a subscription."""
+    config = copy.deepcopy(CONFIG)
+    subscriber_id = config[DOMAIN]["subscriber_id"]
+    del config[DOMAIN]["subscriber_id"]
+
+    config_entry = create_config_entry(hass)
+    data = {**config_entry.data}
+    data["subscriber_id"] = subscriber_id
+    hass.config_entries.async_update_entry(config_entry, data=data)
+
+    await async_setup_sdm_platform(hass, PLATFORM, with_config=False)
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    entry = entries[0]
+    assert entry.state is ConfigEntryState.LOADED
+
+    with patch(
+        "homeassistant.components.nest.api.GoogleNestSubscriber.delete_subscription",
+    ) as delete:
+        assert await hass.config_entries.async_remove(entry.entry_id)
+        assert delete.called
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert not entries
+
+
+async def test_remove_entry_delete_subscriber_failure(hass, caplog):
+    """Test a failure when deleting the subscription."""
+    config = copy.deepcopy(CONFIG)
+    subscriber_id = config[DOMAIN]["subscriber_id"]
+    del config[DOMAIN]["subscriber_id"]
+
+    config_entry = create_config_entry(hass)
+    data = {**config_entry.data}
+    data["subscriber_id"] = subscriber_id
+    hass.config_entries.async_update_entry(config_entry, data=data)
+
+    await async_setup_sdm_platform(hass, PLATFORM, with_config=False)
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    entry = entries[0]
+    assert entry.state is ConfigEntryState.LOADED
+
+    with patch(
+        "homeassistant.components.nest.api.GoogleNestSubscriber.delete_subscription",
+        side_effect=GoogleNestException(),
+    ):
+        assert await hass.config_entries.async_remove(entry.entry_id)
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert not entries

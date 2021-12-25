@@ -8,9 +8,9 @@ from tuya_iot.device import TuyaDeviceStatusRange
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENTITY_CATEGORY_CONFIG
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantTuyaData
@@ -28,31 +28,31 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             key=DPCode.TEMP_SET,
             name="Temperature",
             icon="mdi:thermometer",
-            entity_category=ENTITY_CATEGORY_CONFIG,
+            entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.TEMP_SET_F,
             name="Temperature",
             icon="mdi:thermometer",
-            entity_category=ENTITY_CATEGORY_CONFIG,
+            entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.TEMP_BOILING_C,
             name="Temperature After Boiling",
             icon="mdi:thermometer",
-            entity_category=ENTITY_CATEGORY_CONFIG,
+            entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.TEMP_BOILING_F,
             name="Temperature After Boiling",
             icon="mdi:thermometer",
-            entity_category=ENTITY_CATEGORY_CONFIG,
+            entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.WARM_TIME,
             name="Heat Preservation Time",
             icon="mdi:timer",
-            entity_category=ENTITY_CATEGORY_CONFIG,
+            entity_category=EntityCategory.CONFIG,
         ),
     ),
     # Human Presence Sensor
@@ -61,19 +61,19 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
         NumberEntityDescription(
             key=DPCode.SENSITIVITY,
             name="Sensitivity",
-            entity_category=ENTITY_CATEGORY_CONFIG,
+            entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.NEAR_DETECTION,
             name="Near Detection",
             icon="mdi:signal-distance-variant",
-            entity_category=ENTITY_CATEGORY_CONFIG,
+            entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.FAR_DETECTION,
             name="Far Detection",
             icon="mdi:signal-distance-variant",
-            entity_category=ENTITY_CATEGORY_CONFIG,
+            entity_category=EntityCategory.CONFIG,
         ),
     ),
     # Coffee maker
@@ -83,24 +83,34 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             key=DPCode.WATER_SET,
             name="Water Level",
             icon="mdi:cup-water",
-            entity_category=ENTITY_CATEGORY_CONFIG,
+            entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.TEMP_SET,
             name="Temperature",
             icon="mdi:thermometer",
-            entity_category=ENTITY_CATEGORY_CONFIG,
+            entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.WARM_TIME,
             name="Heat Preservation Time",
             icon="mdi:timer",
-            entity_category=ENTITY_CATEGORY_CONFIG,
+            entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.POWDER_SET,
             name="Powder",
-            entity_category=ENTITY_CATEGORY_CONFIG,
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    # Robot Vacuum
+    # https://developer.tuya.com/en/docs/iot/fsd?id=K9gf487ck1tlo
+    "sd": (
+        NumberEntityDescription(
+            key=DPCode.VOLUME_SET,
+            name="Volume",
+            icon="mdi:volume-high",
+            entity_category=EntityCategory.CONFIG,
         ),
     ),
     # Siren Alarm
@@ -109,7 +119,7 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
         NumberEntityDescription(
             key=DPCode.ALARM_TIME,
             name="Time",
-            entity_category=ENTITY_CATEGORY_CONFIG,
+            entity_category=EntityCategory.CONFIG,
         ),
     ),
     # Smart Camera
@@ -119,7 +129,7 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             key=DPCode.BASIC_DEVICE_VOLUME,
             name="Volume",
             icon="mdi:volume-high",
-            entity_category=ENTITY_CATEGORY_CONFIG,
+            entity_category=EntityCategory.CONFIG,
         ),
     ),
     # Dimmer Switch
@@ -129,37 +139,37 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             key=DPCode.BRIGHTNESS_MIN_1,
             name="Minimum Brightness",
             icon="mdi:lightbulb-outline",
-            entity_category=ENTITY_CATEGORY_CONFIG,
+            entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.BRIGHTNESS_MAX_1,
             name="Maximum Brightness",
             icon="mdi:lightbulb-on-outline",
-            entity_category=ENTITY_CATEGORY_CONFIG,
+            entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.BRIGHTNESS_MIN_2,
             name="Minimum Brightness 2",
             icon="mdi:lightbulb-outline",
-            entity_category=ENTITY_CATEGORY_CONFIG,
+            entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.BRIGHTNESS_MAX_2,
             name="Maximum Brightness 2",
             icon="mdi:lightbulb-on-outline",
-            entity_category=ENTITY_CATEGORY_CONFIG,
+            entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.BRIGHTNESS_MIN_3,
             name="Minimum Brightness 3",
             icon="mdi:lightbulb-outline",
-            entity_category=ENTITY_CATEGORY_CONFIG,
+            entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.BRIGHTNESS_MAX_3,
             name="Maximum Brightness 3",
             icon="mdi:lightbulb-on-outline",
-            entity_category=ENTITY_CATEGORY_CONFIG,
+            entity_category=EntityCategory.CONFIG,
         ),
     ),
     # Dimmer Switch
@@ -169,25 +179,25 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             key=DPCode.BRIGHTNESS_MIN_1,
             name="Minimum Brightness",
             icon="mdi:lightbulb-outline",
-            entity_category=ENTITY_CATEGORY_CONFIG,
+            entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.BRIGHTNESS_MAX_1,
             name="Maximum Brightness",
             icon="mdi:lightbulb-on-outline",
-            entity_category=ENTITY_CATEGORY_CONFIG,
+            entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.BRIGHTNESS_MIN_2,
             name="Minimum Brightness 2",
             icon="mdi:lightbulb-outline",
-            entity_category=ENTITY_CATEGORY_CONFIG,
+            entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.BRIGHTNESS_MAX_2,
             name="Maximum Brightness 2",
             icon="mdi:lightbulb-on-outline",
-            entity_category=ENTITY_CATEGORY_CONFIG,
+            entity_category=EntityCategory.CONFIG,
         ),
     ),
     # Vibration Sensor
@@ -196,7 +206,28 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
         NumberEntityDescription(
             key=DPCode.SENSITIVITY,
             name="Sensitivity",
-            entity_category=ENTITY_CATEGORY_CONFIG,
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    # Fingerbot
+    "szjqr": (
+        NumberEntityDescription(
+            key=DPCode.ARM_DOWN_PERCENT,
+            name="Move Down %",
+            icon="mdi:arrow-down-bold",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.ARM_UP_PERCENT,
+            name="Move Up %",
+            icon="mdi:arrow-up-bold",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.CLICK_SUSTAIN_TIME,
+            name="Down Delay",
+            icon="mdi:timer",
+            entity_category=EntityCategory.CONFIG,
         ),
     ),
 }
@@ -259,9 +290,9 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
             # and determine unit of measurement
             if self._status_range.type == "Integer":
                 self._type_data = IntegerTypeData.from_json(self._status_range.values)
-                self._attr_max_value = self._type_data.max
-                self._attr_min_value = self._type_data.min
-                self._attr_step = self._type_data.step
+                self._attr_max_value = self._type_data.max_scaled
+                self._attr_min_value = self._type_data.min_scaled
+                self._attr_step = self._type_data.step_scaled
                 if description.unit_of_measurement is None:
                     self._attr_unit_of_measurement = self._type_data.unit
 
@@ -276,7 +307,7 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
         value = self.device.status.get(self.entity_description.key)
 
         # Scale integer/float value
-        if value and isinstance(self._type_data, IntegerTypeData):
+        if value is not None and isinstance(self._type_data, IntegerTypeData):
             return self._type_data.scale_value(value)
 
         return None
@@ -290,7 +321,7 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
             [
                 {
                     "code": self.entity_description.key,
-                    "value": self._type_data.scale_value(value),
+                    "value": self._type_data.scale_value_back(value),
                 }
             ]
         )

@@ -49,12 +49,12 @@ async def async_setup_entry(
     api = tradfri_data[KEY_API]
     devices = tradfri_data[DEVICES]
 
-    lights = [dev for dev in devices if dev.has_light_control]
-    if lights:
-        async_add_entities(TradfriLight(light, api, gateway_id) for light in lights)
-
+    entities: list[TradfriBaseClass] = [
+        TradfriLight(dev, api, gateway_id) for dev in devices if dev.has_light_control
+    ]
     if config_entry.data[CONF_IMPORT_GROUPS] and (groups := tradfri_data[GROUPS]):
-        async_add_entities(TradfriGroup(group, api, gateway_id) for group in groups)
+        entities.extend([TradfriGroup(group, api, gateway_id) for group in groups])
+    async_add_entities(entities)
 
 
 class TradfriGroup(TradfriBaseClass, LightEntity):

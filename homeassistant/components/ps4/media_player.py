@@ -19,7 +19,6 @@ from homeassistant.components.media_player.const import (
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
 )
-from homeassistant.components.ps4 import format_unique_id, load_games, save_games
 from homeassistant.const import (
     ATTR_LOCKED,
     CONF_HOST,
@@ -34,6 +33,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.helpers.entity import DeviceInfo
 
+from . import format_unique_id, load_games, save_games
 from .const import (
     ATTR_MEDIA_IMAGE_URL,
     DEFAULT_ALIAS,

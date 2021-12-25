@@ -11,7 +11,7 @@
             },
             "user": {
                 "data": {
-                    "ip_address": "\u0130p Adresi",
+                    "ip_address": "IP Adresi",
                     "port": "Port"
                 },
                 "description": "Yerel bir Elexa Guardian cihaz\u0131 yap\u0131land\u0131r\u0131n."

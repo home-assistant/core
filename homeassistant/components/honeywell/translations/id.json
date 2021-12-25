@@ -8,7 +8,9 @@
                 "data": {
                     "password": "Kata Sandi",
                     "username": "Nama Pengguna"
-                }
+                },
+                "description": "Masukkan kredensial yang digunakan untuk masuk ke mytotalconnectcomfort.com.",
+                "title": "Honeywell Total Connect Comfort (AS)"
             }
         }
     }

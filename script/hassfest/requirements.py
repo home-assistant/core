@@ -26,6 +26,7 @@ PACKAGE_REGEX = re.compile(
     r"^(?:--.+\s)?([-_\.\w\d\[\]]+)(==|>=|<=|~=|!=|<|>|===)*(.*)$"
 )
 PIP_REGEX = re.compile(r"^(--.+\s)?([-_\.\w\d]+.*(?:==|>=|<=|~=|!=|<|>|===)?.*$)")
+PIP_VERSION_RANGE_SEPARATOR = re.compile(r"^(==|>=|<=|~=|!=|<|>|===)?(.*)$")
 SUPPORTED_PYTHON_TUPLES = [
     REQUIRED_PYTHON_VER[:2],
     tuple(map(operator.add, REQUIRED_PYTHON_VER, (0, 1, 0)))[:2],
@@ -95,15 +96,21 @@ def validate_requirements_format(integration: Integration) -> bool:
             )
             continue
 
-        if (
-            version
-            and AwesomeVersion(version).strategy == AwesomeVersionStrategy.UNKNOWN
-        ):
-            integration.add_error(
-                "requirements",
-                f"Unable to parse package version ({version}) for {pkg}.",
-            )
+        if not version:
             continue
+
+        for part in version.split(","):
+            version_part = PIP_VERSION_RANGE_SEPARATOR.match(part)
+            if (
+                version_part
+                and AwesomeVersion(version_part.group(2)).strategy
+                == AwesomeVersionStrategy.UNKNOWN
+            ):
+                integration.add_error(
+                    "requirements",
+                    f"Unable to parse package version ({version}) for {pkg}.",
+                )
+                continue
 
     return len(integration.errors) == start_errors
 

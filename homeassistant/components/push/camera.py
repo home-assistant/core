@@ -10,12 +10,7 @@ import aiohttp
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.components.camera import (
-    PLATFORM_SCHEMA,
-    STATE_IDLE,
-    STATE_RECORDING,
-    Camera,
-)
+from homeassistant.components.camera import PLATFORM_SCHEMA, STATE_IDLE, Camera
 from homeassistant.components.camera.const import DOMAIN
 from homeassistant.const import CONF_NAME, CONF_TIMEOUT, CONF_WEBHOOK_ID
 from homeassistant.core import callback
@@ -99,7 +94,6 @@ class PushCamera(Camera):
         self._last_trip = None
         self._filename = None
         self._expired_listener = None
-        self._state = STATE_IDLE
         self._timeout = timeout
         self.queue = deque([], buffer_size)
         self._current_image = None
@@ -125,15 +119,10 @@ class PushCamera(Camera):
         """HTTP field containing the image file."""
         return self._image_field
 
-    @property
-    def state(self):
-        """Return current state of the camera."""
-        return self._state
-
     async def update_image(self, image, filename):
         """Update the camera image."""
-        if self._state == STATE_IDLE:
-            self._state = STATE_RECORDING
+        if self.state == STATE_IDLE:
+            self._attr_is_recording = True
             self._last_trip = dt_util.utcnow()
             self.queue.clear()
 
@@ -143,7 +132,7 @@ class PushCamera(Camera):
         @callback
         def reset_state(now):
             """Set state to idle after no new images for a period of time."""
-            self._state = STATE_IDLE
+            self._attr_is_recording = False
             self._expired_listener = None
             _LOGGER.debug("Reset state")
             self.async_write_ha_state()
@@ -162,7 +151,7 @@ class PushCamera(Camera):
     ) -> bytes | None:
         """Return a still image response."""
         if self.queue:
-            if self._state == STATE_IDLE:
+            if self.state == STATE_IDLE:
                 self.queue.rotate(1)
             self._current_image = self.queue[0]
 

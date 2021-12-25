@@ -14,8 +14,8 @@ from homeassistant.components import binary_sensor, media_player, sensor
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.media_player import (
-    DEVICE_CLASS_TV,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
+    MediaPlayerDeviceClass,
 )
 from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN, SUPPORT_ACTIVITY
 from homeassistant.const import (
@@ -315,7 +315,7 @@ def validate_media_player_features(state, feature_list):
     return True
 
 
-def show_setup_message(hass, entry_id, bridge_name, pincode, uri):
+def async_show_setup_message(hass, entry_id, bridge_name, pincode, uri):
     """Display persistent notification with setup information."""
     pin = pincode.decode()
     _LOGGER.info("Pincode: %s", pin)
@@ -334,12 +334,14 @@ def show_setup_message(hass, entry_id, bridge_name, pincode, uri):
         f"### {pin}\n"
         f"![image](/api/homekit/pairingqr?{entry_id}-{pairing_secret})"
     )
-    hass.components.persistent_notification.create(message, "HomeKit Pairing", entry_id)
+    hass.components.persistent_notification.async_create(
+        message, "HomeKit Pairing", entry_id
+    )
 
 
-def dismiss_setup_message(hass, entry_id):
+def async_dismiss_setup_message(hass, entry_id):
     """Dismiss persistent notification and remove QR code."""
-    hass.components.persistent_notification.dismiss(entry_id)
+    hass.components.persistent_notification.async_dismiss(entry_id)
 
 
 def convert_to_float(state):
@@ -500,7 +502,7 @@ def state_needs_accessory_mode(state):
 
     return (
         state.domain == MEDIA_PLAYER_DOMAIN
-        and state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_TV
+        and state.attributes.get(ATTR_DEVICE_CLASS) == MediaPlayerDeviceClass.TV
         or state.domain == REMOTE_DOMAIN
         and state.attributes.get(ATTR_SUPPORTED_FEATURES, 0) & SUPPORT_ACTIVITY
     )

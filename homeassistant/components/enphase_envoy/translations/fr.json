@@ -9,14 +9,15 @@
             "invalid_auth": "Authentification invalide",
             "unknown": "Erreur inattendue"
         },
-        "flow_title": "Envoy\u00e9 {serial} ({host})",
+        "flow_title": "{serial} ({host})",
         "step": {
             "user": {
                 "data": {
                     "host": "H\u00f4te",
                     "password": "Mot de passe",
                     "username": "Nom d'utilisateur"
-                }
+                },
+                "description": "Pour les mod\u00e8les plus r\u00e9cents, saisissez le nom d'utilisateur \u00ab\u00a0envoy\u00a0\u00bb sans mot de passe. Pour les mod\u00e8les plus anciens, entrez le nom d'utilisateur \u00ab\u00a0installer\u00a0\u00bb sans mot de passe. Pour tous les autres mod\u00e8les, entrez un nom d'utilisateur et un mot de passe valides."
             }
         }
     }

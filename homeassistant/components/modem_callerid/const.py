@@ -5,7 +5,6 @@ from phone_modem import exceptions
 from serial import SerialException
 
 DATA_KEY_API = "api"
-DATA_KEY_COORDINATOR = "coordinator"
 DEFAULT_NAME = "Phone Modem"
 DOMAIN = "modem_callerid"
 ICON = "mdi:phone-classic"

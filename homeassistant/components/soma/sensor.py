@@ -4,8 +4,8 @@ import logging
 
 from requests import RequestException
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.const import PERCENTAGE
 from homeassistant.util import Throttle
 
 from . import DEVICES, SomaEntity
@@ -29,7 +29,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class SomaSensor(SomaEntity, SensorEntity):
     """Representation of a Soma cover device."""
 
-    _attr_device_class = DEVICE_CLASS_BATTERY
+    _attr_device_class = SensorDeviceClass.BATTERY
     _attr_native_unit_of_measurement = PERCENTAGE
 
     @property

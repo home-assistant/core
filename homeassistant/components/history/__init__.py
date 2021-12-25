@@ -119,7 +119,7 @@ class LazyState(history_models.LazyState):
         vol.Required("start_time"): str,
         vol.Optional("end_time"): str,
         vol.Optional("statistic_ids"): [str],
-        vol.Required("period"): vol.Any("hour", "5minute"),
+        vol.Required("period"): vol.Any("5minute", "hour", "day", "month"),
     }
 )
 @websocket_api.async_response

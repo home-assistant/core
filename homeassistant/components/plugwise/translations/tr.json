@@ -8,7 +8,7 @@
             "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
             "unknown": "Beklenmeyen hata"
         },
-        "flow_title": "Smile: {name}",
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {

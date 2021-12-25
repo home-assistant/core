@@ -12,7 +12,7 @@
         "step": {
             "user": {
                 "data": {
-                    "ip_address": "IP Adresleri"
+                    "ip_address": "IP Adresi"
                 },
                 "description": "Kuruluma ba\u015flamak ister misiniz?"
             },

@@ -8,10 +8,10 @@ from typing import cast
 import attr
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.loader import bind_hass
 from homeassistant.util import slugify
 
+from . import device_registry as dr, entity_registry as er
 from .typing import UNDEFINED, UndefinedType
 
 # mypy: disallow-any-generics
@@ -49,7 +49,9 @@ class AreaRegistry:
         """Initialize the area registry."""
         self.hass = hass
         self.areas: MutableMapping[str, AreaEntry] = {}
-        self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+        self._store = hass.helpers.storage.Store(
+            STORAGE_VERSION, STORAGE_KEY, atomic_writes=True
+        )
         self._normalized_name_area_idx: dict[str, str] = {}
 
     @callback

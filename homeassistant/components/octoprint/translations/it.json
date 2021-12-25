@@ -20,7 +20,7 @@
                     "host": "Host",
                     "path": "Percorso dell'applicazione",
                     "port": "Numero porta",
-                    "ssl": "Utilizzare SSL",
+                    "ssl": "Utilizza SSL",
                     "username": "Nome utente"
                 }
             }

@@ -24,6 +24,7 @@ from homeassistant.components.light import (
     COLOR_MODE_RGBW,
     COLOR_MODE_RGBWW,
     COLOR_MODE_XY,
+    ENTITY_ID_FORMAT,
     FLASH_LONG,
     FLASH_SHORT,
     SUPPORT_BRIGHTNESS,
@@ -167,6 +168,7 @@ async def async_setup_entity_json(
 class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
     """Representation of a MQTT JSON light."""
 
+    _entity_id_format = ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_LIGHT_ATTRIBUTES_BLOCKED
 
     def __init__(self, hass, config, config_entry, discovery_data):

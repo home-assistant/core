@@ -12,7 +12,7 @@
             "user": {
                 "data": {
                     "api_key": "Chiave API",
-                    "api_token": " API Segreta",
+                    "api_token": "API segreta",
                     "currencies": "Valute del saldo del conto",
                     "exchange_rates": "Tassi di cambio"
                 },
@@ -34,7 +34,7 @@
                     "exchange_base": "Valuta di base per i sensori di tasso di cambio.",
                     "exchange_rate_currencies": "Tassi di cambio da segnalare."
                 },
-                "description": "Regolare le opzioni di Coinbase"
+                "description": "Regola le opzioni di Coinbase"
             }
         }
     }

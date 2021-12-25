@@ -10,7 +10,7 @@
             "no_server_found": "Impossible de d\u00e9couvrir automatiquement le serveur.",
             "unknown": "Erreur inattendue"
         },
-        "flow_title": "Logitech Squeezebox: {host}",
+        "flow_title": "{host}",
         "step": {
             "edit": {
                 "data": {

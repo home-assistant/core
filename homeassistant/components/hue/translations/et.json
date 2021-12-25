@@ -35,6 +35,10 @@
     },
     "device_automation": {
         "trigger_subtype": {
+            "1": "Esimene nupp",
+            "2": "Teine nupp",
+            "3": "Kolmas nupp",
+            "4": "Neljas nupp",
             "button_1": "Esimene nupp",
             "button_2": "Teine nupp",
             "button_3": "Kolmas nupp",
@@ -47,11 +51,16 @@
             "turn_on": "L\u00fclita sisse"
         },
         "trigger_type": {
+            "double_short_release": "\"{subtype}\" nupp vabastatati",
+            "initial_press": "Nuppu \"{subtype}\" on vajutatud",
+            "long_release": "Nupp \"{subtype}\" vabastati p\u00e4rast pikka vajutust",
             "remote_button_long_release": "\"{subtype}\" nupp vabastatati p\u00e4rast pikka vajutust",
             "remote_button_short_press": "\"{subtype}\" nupp  on vajutatud",
             "remote_button_short_release": "\"{subtype}\" nupp  vabastati",
             "remote_double_button_long_press": "M\u00f5lemad \"{subtype}\" nupud vabastatati p\u00e4rast pikka vajutust",
-            "remote_double_button_short_press": "M\u00f5lemad \"{subtype}\" nupud vabastatati"
+            "remote_double_button_short_press": "M\u00f5lemad \"{subtype}\" nupud vabastatati",
+            "repeat": "Nuppu \" {subtype} \" hoitakse all",
+            "short_release": "Nupp \" {subtype} \" vabastati p\u00e4rast l\u00fchikest vajutust"
         }
     },
     "options": {
@@ -59,6 +68,7 @@
             "init": {
                 "data": {
                     "allow_hue_groups": "Luba Hue r\u00fchmad",
+                    "allow_hue_scenes": "Luba Hue stseenid",
                     "allow_unreachable": "Luba k\u00e4ttesaamatutel pirnidel oma olekust \u00f5igesti teatada"
                 }
             }

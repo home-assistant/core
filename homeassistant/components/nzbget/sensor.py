@@ -4,13 +4,16 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
     DATA_MEGABYTES,
     DATA_RATE_MEGABYTES_PER_SECOND,
-    DEVICE_CLASS_TIMESTAMP,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -69,7 +72,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="UpTimeSec",
         name="Uptime",
-        device_class=DEVICE_CLASS_TIMESTAMP,
+        device_class=SensorDeviceClass.TIMESTAMP,
     ),
 )
 
@@ -127,6 +130,6 @@ class NZBGetSensor(NZBGetEntity, SensorEntity):
 
         if "UpTimeSec" in sensor_type and value > 0:
             uptime = utcnow() - timedelta(seconds=value)
-            return uptime.replace(microsecond=0).isoformat()
+            return uptime.replace(microsecond=0)
 
         return value

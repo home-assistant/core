@@ -39,9 +39,9 @@ async def test_eve_degree_setup(hass):
             "Eve Degree AA11 Battery",
         ),
         (
-            "number.eve_degree_aa11",
+            "number.eve_degree_aa11_elevation",
             "homekit-AA00A0A00000-aid:1-sid:30-cid:33",
-            "Eve Degree AA11",
+            "Eve Degree AA11 Elevation",
         ),
     ]
 

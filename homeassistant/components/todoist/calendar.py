@@ -421,7 +421,7 @@ class TodoistProjectData:
                 # it shouldn't be counted.
                 return None
 
-            task[DUE_TODAY] = task[END].date() == datetime.today().date()
+            task[DUE_TODAY] = task[END].date() == dt.utcnow().date()
 
             # Special case: Task is overdue.
             if task[END] <= task[START]:

@@ -157,9 +157,11 @@ class TelnetSwitch(SwitchEntity):
         self._telnet_command(self._command_on)
         if self.assumed_state:
             self._state = True
+            self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
         self._telnet_command(self._command_off)
         if self.assumed_state:
             self._state = False
+            self.schedule_update_ha_state()

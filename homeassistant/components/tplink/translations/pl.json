@@ -25,7 +25,7 @@
                 "data": {
                     "host": "Nazwa hosta lub adres IP"
                 },
-                "description": "Je\u015bli nie podasz IP lub nazwy hosta, wykrywanie zostanie u\u017cyte do odnalezienia urz\u0105dze\u0144."
+                "description": "Je\u015bli nie podasz IP lub nazwy hosta, zostanie u\u017cyte wykrywanie do odnalezienia urz\u0105dze\u0144."
             }
         }
     }

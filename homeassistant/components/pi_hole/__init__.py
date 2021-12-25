@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SSL,
     CONF_VERIFY_SSL,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -102,13 +103,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         session = async_get_clientsession(hass, verify_tls)
         api = Hole(
             host,
-            hass.loop,
             session,
             location=location,
             tls=use_tls,
             api_token=api_key,
         )
         await api.get_data()
+        await api.get_versions()
+
     except HoleError as ex:
         _LOGGER.warning("Failed to connect: %s", ex)
         raise ConfigEntryNotReady from ex
@@ -117,6 +119,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Fetch data from API endpoint."""
         try:
             await api.get_data()
+            await api.get_versions()
         except HoleError as err:
             raise UpdateFailed(f"Failed to communicate with API: {err}") from err
 
@@ -148,13 +151,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 @callback
-def _async_platforms(entry: ConfigEntry) -> list[str]:
+def _async_platforms(entry: ConfigEntry) -> list[Platform]:
     """Return platforms to be loaded / unloaded."""
-    platforms = ["sensor"]
+    platforms = [Platform.BINARY_SENSOR, Platform.SENSOR]
     if not entry.data[CONF_STATISTICS_ONLY]:
-        platforms.append("switch")
-    else:
-        platforms.append("binary_sensor")
+        platforms.append(Platform.SWITCH)
     return platforms
 
 

@@ -304,7 +304,8 @@ async def config_entry_update(hass, connection, msg):
         "type": "config_entries/disable",
         "entry_id": str,
         # We only allow setting disabled_by user via API.
-        "disabled_by": vol.Any(config_entries.DISABLED_USER, None),
+        # No Enum support like this in voluptuous, use .value
+        "disabled_by": vol.Any(config_entries.ConfigEntryDisabler.USER.value, None),
     }
 )
 async def config_entry_disable(hass, connection, msg):
@@ -366,13 +367,11 @@ async def ignore_config_flow(hass, connection, msg):
 def entry_json(entry: config_entries.ConfigEntry) -> dict:
     """Return JSON value of a config entry."""
     handler = config_entries.HANDLERS.get(entry.domain)
-    supports_options = (
-        # Guard in case handler is no longer registered (custom component etc)
-        handler is not None
-        # pylint: disable=comparison-with-callable
-        and handler.async_get_options_flow
-        != config_entries.ConfigFlow.async_get_options_flow
+    # work out if handler has support for options flow
+    supports_options = handler is not None and handler.async_supports_options_flow(
+        entry
     )
+
     return {
         "entry_id": entry.entry_id,
         "domain": entry.domain,

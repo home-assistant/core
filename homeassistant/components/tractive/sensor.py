@@ -4,23 +4,23 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_BATTERY_LEVEL,
-    DEVICE_CLASS_BATTERY,
-    ENTITY_CATEGORY_DIAGNOSTIC,
-    PERCENTAGE,
-    TIME_MINUTES,
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_BATTERY_LEVEL, PERCENTAGE, TIME_MINUTES
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import Trackables
 from .const import (
     ATTR_DAILY_GOAL,
     ATTR_MINUTES_ACTIVE,
+    ATTR_TRACKER_STATE,
     CLIENT,
     DOMAIN,
     SERVER_UNAVAILABLE,
@@ -74,7 +74,9 @@ class TractiveHardwareSensor(TractiveSensor):
     @callback
     def handle_hardware_status_update(self, event: dict[str, Any]) -> None:
         """Handle hardware status update."""
-        self._attr_native_value = event[self.entity_description.key]
+        if (_state := event[self.entity_description.key]) is None:
+            return
+        self._attr_native_value = _state
         self._attr_available = True
         self.async_write_ha_state()
 
@@ -133,9 +135,17 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
         key=ATTR_BATTERY_LEVEL,
         name="Battery Level",
         native_unit_of_measurement=PERCENTAGE,
-        device_class=DEVICE_CLASS_BATTERY,
+        device_class=SensorDeviceClass.BATTERY,
         entity_class=TractiveHardwareSensor,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    TractiveSensorEntityDescription(
+        # Currently, only state operational and not_reporting are used
+        # More states are available by polling the data
+        key=ATTR_TRACKER_STATE,
+        name="Tracker state",
+        device_class="tractive__tracker_state",
+        entity_class=TractiveHardwareSensor,
     ),
     TractiveSensorEntityDescription(
         key=ATTR_MINUTES_ACTIVE,

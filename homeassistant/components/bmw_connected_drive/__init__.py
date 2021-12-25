@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_REGION,
     CONF_USERNAME,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -34,7 +35,6 @@ from .const import (
     CONF_ACCOUNT,
     CONF_ALLOWED_REGIONS,
     CONF_READ_ONLY,
-    CONF_USE_LOCATION,
     DATA_ENTRIES,
     DATA_HASS_CONFIG,
 )
@@ -64,10 +64,15 @@ SERVICE_SCHEMA = vol.Schema(
 
 DEFAULT_OPTIONS = {
     CONF_READ_ONLY: False,
-    CONF_USE_LOCATION: False,
 }
 
-PLATFORMS = ["binary_sensor", "device_tracker", "lock", "notify", "sensor"]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.DEVICE_TRACKER,
+    Platform.LOCK,
+    Platform.NOTIFY,
+    Platform.SENSOR,
+]
 UPDATE_INTERVAL = 5  # in minutes
 
 SERVICE_UPDATE_STATE = "update_state"
@@ -150,7 +155,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await _async_update_all()
 
     hass.config_entries.async_setup_platforms(
-        entry, [platform for platform in PLATFORMS if platform != NOTIFY_DOMAIN]
+        entry, [platform for platform in PLATFORMS if platform != Platform.NOTIFY]
     )
 
     # set up notify platform, no entry support for notify platform yet,
@@ -171,7 +176,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(
-        entry, [platform for platform in PLATFORMS if platform != NOTIFY_DOMAIN]
+        entry, [platform for platform in PLATFORMS if platform != Platform.NOTIFY]
     )
 
     # Only remove services if it is the last account and not read only
@@ -208,13 +213,10 @@ def setup_account(
     password: str = entry.data[CONF_PASSWORD]
     region: str = entry.data[CONF_REGION]
     read_only: bool = entry.options[CONF_READ_ONLY]
-    use_location: bool = entry.options[CONF_USE_LOCATION]
 
     _LOGGER.debug("Adding new account %s", name)
 
-    pos = (
-        (hass.config.latitude, hass.config.longitude) if use_location else (None, None)
-    )
+    pos = (hass.config.latitude, hass.config.longitude)
     cd_account = BMWConnectedDriveAccount(
         username, password, region, name, read_only, *pos
     )
@@ -250,6 +252,13 @@ def setup_account(
         function_name = _SERVICE_MAP[call.service]
         function_call = getattr(vehicle.remote_services, function_name)
         function_call()
+
+        if call.service in [
+            "find_vehicle",
+            "activate_air_conditioning",
+            "deactivate_air_conditioning",
+        ]:
+            cd_account.update()
 
     if not read_only:
         # register the remote services
@@ -347,9 +356,9 @@ class BMWConnectedDriveBaseEntity(Entity):
         }
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, vehicle.vin)},
-            manufacturer=vehicle.attributes.get("brand"),
+            manufacturer=vehicle.brand.name,
             model=vehicle.name,
-            name=f'{vehicle.attributes.get("brand")} {vehicle.name}',
+            name=f"{vehicle.brand.name} {vehicle.name}",
         )
 
     def update_callback(self) -> None:

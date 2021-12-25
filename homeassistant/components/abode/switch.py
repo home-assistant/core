@@ -1,8 +1,9 @@
 """Support for Abode Security System switches."""
+from __future__ import annotations
+
 from typing import Any, cast
 
-from abodepy.devices.switch import AbodeSwitch as AbodeSW
-import abodepy.helpers.constants as CONST
+from abodepy.devices.switch import CONST, AbodeSwitch as AbodeSW
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -24,14 +25,14 @@ async def async_setup_entry(
     """Set up Abode switch devices."""
     data: AbodeSystem = hass.data[DOMAIN]
 
-    entities = []
+    entities: list[SwitchEntity] = []
 
     for device_type in DEVICE_TYPES:
         for device in data.abode.get_devices(generic_type=device_type):
             entities.append(AbodeSwitch(data, device))
 
     for automation in data.abode.get_automations():
-        entities.append(AbodeAutomationSwitch(data, automation))  # type: ignore
+        entities.append(AbodeAutomationSwitch(data, automation))
 
     async_add_entities(entities)
 

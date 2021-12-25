@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Denetleyici sitesi zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "already_configured": "UniFi Network sitesi zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
             "configuration_updated": "Yap\u0131land\u0131rma g\u00fcncellendi.",
             "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu"
         },
@@ -10,15 +10,15 @@
             "service_unavailable": "Ba\u011flanma hatas\u0131",
             "unknown_client_mac": "Bu MAC adresinde kullan\u0131labilir istemci yok"
         },
-        "flow_title": "UniFi A\u011f\u0131 {site} ( {host} )",
+        "flow_title": "{site} ( {host} )",
         "step": {
             "user": {
                 "data": {
-                    "host": "Ana Bilgisayar",
+                    "host": "Sunucu",
                     "password": "Parola",
                     "port": "Port",
                     "site": "Site Kimli\u011fi",
-                    "username": "Kullan\u0131c\u0131 ad\u0131",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131",
                     "verify_ssl": "SSL sertifikas\u0131n\u0131 do\u011frulay\u0131n"
                 },
                 "title": "UniFi Controller'\u0131 kurun"

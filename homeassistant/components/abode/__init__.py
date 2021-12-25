@@ -12,7 +12,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     ATTR_DATE,
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
@@ -20,12 +19,11 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.dispatcher import dispatcher_send
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers import config_validation as cv, dispatcher, entity
 
 from .const import ATTRIBUTION, CONF_POLLING, DEFAULT_CACHEDB, DOMAIN, LOGGER
 
@@ -45,7 +43,7 @@ ATTR_APP_TYPE = "app_type"
 ATTR_EVENT_BY = "event_by"
 ATTR_VALUE = "value"
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 CHANGE_SETTING_SCHEMA = vol.Schema(
     {vol.Required(ATTR_SETTING): cv.string, vol.Required(ATTR_VALUE): cv.string}
@@ -56,14 +54,14 @@ CAPTURE_IMAGE_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids})
 AUTOMATION_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids})
 
 PLATFORMS = [
-    "alarm_control_panel",
-    "binary_sensor",
-    "lock",
-    "switch",
-    "cover",
-    "camera",
-    "light",
-    "sensor",
+    Platform.ALARM_CONTROL_PANEL,
+    Platform.BINARY_SENSOR,
+    Platform.LOCK,
+    Platform.SWITCH,
+    Platform.COVER,
+    Platform.CAMERA,
+    Platform.LIGHT,
+    Platform.SENSOR,
 ]
 
 
@@ -150,7 +148,7 @@ def setup_hass_services(hass: HomeAssistant) -> None:
         if entity_ids:
             for entity_id in entity_ids:
                 signal = f"abode_camera_capture_{entity_id}"
-                dispatcher_send(hass, signal)
+                dispatcher.dispatcher_send(hass, signal)
 
     def trigger_automation(call: ServiceCall) -> None:
         """Trigger an Abode automation."""
@@ -159,7 +157,7 @@ def setup_hass_services(hass: HomeAssistant) -> None:
         if entity_ids:
             for entity_id in entity_ids:
                 signal = f"abode_trigger_automation_{entity_id}"
-                dispatcher_send(hass, signal)
+                dispatcher.dispatcher_send(hass, signal)
 
     hass.services.register(
         DOMAIN, SERVICE_SETTINGS, change_setting, schema=CHANGE_SETTING_SCHEMA
@@ -235,19 +233,15 @@ def setup_abode_events(hass: HomeAssistant) -> None:
         )
 
 
-class AbodeEntity(Entity):
+class AbodeEntity(entity.Entity):
     """Representation of an Abode entity."""
+
+    _attr_attribution = ATTRIBUTION
 
     def __init__(self, data: AbodeSystem) -> None:
         """Initialize Abode entity."""
         self._data = data
-        self._available = True
         self._attr_should_poll = data.polling
-
-    @property
-    def available(self) -> bool:
-        """Return the available state."""
-        return self._available
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to Abode connection status updates."""
@@ -267,7 +261,7 @@ class AbodeEntity(Entity):
 
     def _update_connection_status(self) -> None:
         """Update the entity available property."""
-        self._available = self._data.abode.events.connected
+        self._attr_available = self._data.abode.events.connected
         self.schedule_update_ha_state()
 
 
@@ -305,7 +299,6 @@ class AbodeDevice(AbodeEntity):
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the state attributes."""
         return {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
             "device_id": self._device.device_id,
             "battery_low": self._device.battery_low,
             "no_response": self._device.no_response,
@@ -313,9 +306,9 @@ class AbodeDevice(AbodeEntity):
         }
 
     @property
-    def device_info(self) -> DeviceInfo:
+    def device_info(self) -> entity.DeviceInfo:
         """Return device registry information for this entity."""
-        return DeviceInfo(
+        return entity.DeviceInfo(
             identifiers={(DOMAIN, self._device.device_id)},
             manufacturer="Abode",
             model=self._device.type,
@@ -337,7 +330,6 @@ class AbodeAutomation(AbodeEntity):
         self._attr_name = automation.name
         self._attr_unique_id = automation.automation_id
         self._attr_extra_state_attributes = {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
             "type": "CUE automation",
         }
 

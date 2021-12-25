@@ -27,8 +27,13 @@
             "configure_addon": {
                 "data": {
                     "network_key": "Klucz sieci",
+                    "s0_legacy_key": "Klucz S0 (Legacy)",
+                    "s2_access_control_key": "Klucz kontroli dost\u0119pu S2",
+                    "s2_authenticated_key": "Klucz uwierzytelniony S2",
+                    "s2_unauthenticated_key": "Klucz nieuwierzytelniony S2",
                     "usb_path": "\u015acie\u017cka urz\u0105dzenia USB"
                 },
+                "description": "Dodatek wygeneruje klucze bezpiecze\u0144stwa, je\u015bli te pola pozostan\u0105 puste.",
                 "title": "Wprowad\u017a konfiguracj\u0119 dodatku Z-Wave JS"
             },
             "hassio_confirm": {
@@ -109,8 +114,13 @@
                     "emulate_hardware": "Emulacja sprz\u0119tu",
                     "log_level": "Poziom loga",
                     "network_key": "Klucz sieci",
+                    "s0_legacy_key": "Klucz S0 (Legacy)",
+                    "s2_access_control_key": "Klucz kontroli dost\u0119pu S2",
+                    "s2_authenticated_key": "Klucz uwierzytelniony S2",
+                    "s2_unauthenticated_key": "Klucz nieuwierzytelniony S2",
                     "usb_path": "\u015acie\u017cka urz\u0105dzenia USB"
                 },
+                "description": "Dodatek wygeneruje klucze bezpiecze\u0144stwa, je\u015bli te pola pozostan\u0105 puste.",
                 "title": "Wprowad\u017a konfiguracj\u0119 dodatku Z-Wave JS"
             },
             "install_addon": {

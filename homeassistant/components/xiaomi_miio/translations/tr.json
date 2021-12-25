@@ -40,9 +40,9 @@
                     "host": "IP Adresi",
                     "model": "Cihaz modeli (Opsiyonel)",
                     "name": "Cihaz\u0131n ad\u0131",
-                    "token": "API Belirteci"
+                    "token": "API Anahtar\u0131"
                 },
-                "description": "32 karaktere API Belirteci , talimatlar i\u00e7in https://www.home-assistant.io/integrations/xiaomi_miio#retriiving-the-access-token adresine bak\u0131n. L\u00fctfen bu API Belirteci \u00f6\u011fesinin Xiaomi Aqara entegrasyonu taraf\u0131ndan kullan\u0131lan anahtardan farkl\u0131 oldu\u011funu unutmay\u0131n.",
+                "description": "32 karaktere API Anahtar\u0131 , talimatlar i\u00e7in https://www.home-assistant.io/integrations/xiaomi_miio#retriiving-the-access-token adresine bak\u0131n. L\u00fctfen bu API Anahtar\u0131 \u00f6\u011fesinin Xiaomi Aqara entegrasyonu taraf\u0131ndan kullan\u0131lan anahtardan farkl\u0131 oldu\u011funu unutmay\u0131n.",
                 "title": "Bir Xiaomi Miio Cihaz\u0131na veya Xiaomi A\u011f Ge\u00e7idine Ba\u011flan"
             },
             "gateway": {
@@ -51,15 +51,15 @@
                     "name": "A\u011f Ge\u00e7idinin Ad\u0131",
                     "token": "API Belirteci"
                 },
-                "description": "32 karaktere API Belirteci , bkz. talimatlar i\u00e7in. L\u00fctfen bu API Belirteci \u00f6\u011fesinin Xiaomi Aqara entegrasyonu taraf\u0131ndan kullan\u0131lan anahtardan farkl\u0131 oldu\u011funu unutmay\u0131n.",
+                "description": "32 karaktere API Anahtar\u0131 , bkz. talimatlar i\u00e7in. L\u00fctfen bu API Anahtar\u0131 \u00f6\u011fesinin Xiaomi Aqara entegrasyonu taraf\u0131ndan kullan\u0131lan anahtardan farkl\u0131 oldu\u011funu unutmay\u0131n.",
                 "title": "Bir Xiaomi A\u011f Ge\u00e7idine ba\u011flan\u0131n"
             },
             "manual": {
                 "data": {
                     "host": "IP Adresi",
-                    "token": "API Belirteci"
+                    "token": "API Anahtar\u0131"
                 },
-                "description": "32 karaktere API Belirteci , talimatlar i\u00e7in https://www.home-assistant.io/integrations/xiaomi_miio#retriiving-the-access-token adresine bak\u0131n. L\u00fctfen bu API Belirteci \u00f6\u011fesinin Xiaomi Aqara entegrasyonu taraf\u0131ndan kullan\u0131lan anahtardan farkl\u0131 oldu\u011funu unutmay\u0131n.",
+                "description": "32 karaktere API Anahtar\u0131 , talimatlar i\u00e7in https://www.home-assistant.io/integrations/xiaomi_miio#retriiving-the-access-token adresine bak\u0131n. L\u00fctfen bu API Anahtar\u0131 \u00f6\u011fesinin Xiaomi Aqara entegrasyonu taraf\u0131ndan kullan\u0131lan anahtardan farkl\u0131 oldu\u011funu unutmay\u0131n.",
                 "title": "Bir Xiaomi Miio Cihaz\u0131na veya Xiaomi A\u011f Ge\u00e7idine Ba\u011flan"
             },
             "reauth_confirm": {

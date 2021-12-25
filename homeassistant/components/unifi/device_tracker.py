@@ -1,4 +1,4 @@
-"""Track both clients and devices using UniFi controllers."""
+"""Track both clients and devices using UniFi Network."""
 from datetime import timedelta
 
 from aiounifi.api import SOURCE_DATA, SOURCE_EVENT
@@ -72,7 +72,7 @@ WIRELESS_CONNECTION = (
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up device tracker for UniFi component."""
+    """Set up device tracker for UniFi Network integration."""
     controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
     controller.entities[DOMAIN] = {CLIENT_TRACKER: set(), DEVICE_TRACKER: set()}
 

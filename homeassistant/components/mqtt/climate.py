@@ -13,6 +13,7 @@ from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
+    CURRENT_HVAC_ACTIONS,
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_TEMP,
     FAN_AUTO,
@@ -51,7 +52,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType
 
-from . import MQTT_BASE_PLATFORM_SCHEMA, PLATFORMS, subscription
+from . import MQTT_BASE_PLATFORM_SCHEMA, PLATFORMS, MqttCommandTemplate, subscription
 from .. import mqtt
 from .const import CONF_QOS, CONF_RETAIN, DOMAIN
 from .debug_info import log_messages
@@ -297,6 +298,7 @@ async def _async_setup_entity(
 class MqttClimate(MqttEntity, ClimateEntity):
     """Representation of an MQTT climate device."""
 
+    _entity_id_format = climate.ENTITY_ID_FORMAT
     _attributes_extra_blocked = MQTT_CLIMATE_ATTRIBUTES_BLOCKED
 
     def __init__(self, hass, config, config_entry, discovery_data):
@@ -375,11 +377,10 @@ class MqttClimate(MqttEntity, ClimateEntity):
 
         command_templates = {}
         for key in COMMAND_TEMPLATE_KEYS:
-            command_templates[key] = lambda value: value
-        for key in COMMAND_TEMPLATE_KEYS & config.keys():
-            tpl = config[key]
-            command_templates[key] = tpl.async_render_with_possible_json_value
-            tpl.hass = self.hass
+            command_templates[key] = MqttCommandTemplate(
+                config.get(key), self.hass
+            ).async_render
+
         self._command_templates = command_templates
 
     async def _subscribe_topics(self):  # noqa: C901
@@ -404,9 +405,15 @@ class MqttClimate(MqttEntity, ClimateEntity):
         def handle_action_received(msg):
             """Handle receiving action via MQTT."""
             payload = render_template(msg, CONF_ACTION_TEMPLATE)
-
-            self._action = payload
-            self.async_write_ha_state()
+            if payload in CURRENT_HVAC_ACTIONS:
+                self._action = payload
+                self.async_write_ha_state()
+            else:
+                _LOGGER.warning(
+                    "Invalid %s action: %s",
+                    CURRENT_HVAC_ACTIONS,
+                    payload,
+                )
 
         add_subscription(topics, CONF_ACTION_TOPIC, handle_action_received)
 

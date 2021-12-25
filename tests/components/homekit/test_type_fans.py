@@ -170,7 +170,7 @@ async def test_fan_direction(hass, hk_driver, events):
         },
         "mock_addr",
     )
-    await hass.async_add_executor_job(acc.char_direction.client_update_value, 1)
+    acc.char_direction.client_update_value(1)
     await hass.async_block_till_done()
     assert call_set_direction[1]
     assert call_set_direction[1].data[ATTR_ENTITY_ID] == entity_id
@@ -219,7 +219,7 @@ async def test_fan_oscillate(hass, hk_driver, events):
         },
         "mock_addr",
     )
-    await hass.async_add_executor_job(acc.char_swing.client_update_value, 0)
+    acc.char_swing.client_update_value(0)
     await hass.async_block_till_done()
     assert call_oscillate[0]
     assert call_oscillate[0].data[ATTR_ENTITY_ID] == entity_id
@@ -239,7 +239,7 @@ async def test_fan_oscillate(hass, hk_driver, events):
         },
         "mock_addr",
     )
-    await hass.async_add_executor_job(acc.char_swing.client_update_value, 1)
+    acc.char_swing.client_update_value(1)
     await hass.async_block_till_done()
     assert call_oscillate[1]
     assert call_oscillate[1].data[ATTR_ENTITY_ID] == entity_id
@@ -295,7 +295,7 @@ async def test_fan_speed(hass, hk_driver, events):
         },
         "mock_addr",
     )
-    await hass.async_add_executor_job(acc.char_speed.client_update_value, 42)
+    acc.char_speed.client_update_value(42)
     await hass.async_block_till_done()
     assert acc.char_speed.value == 50
     assert acc.char_active.value == 1
@@ -546,7 +546,7 @@ async def test_fan_restore(hass, hk_driver, events):
         suggested_object_id="all_info_set",
         capabilities={"speed_list": ["off", "low", "medium", "high"]},
         supported_features=SUPPORT_SET_SPEED | SUPPORT_OSCILLATE | SUPPORT_DIRECTION,
-        device_class="mock-device-class",
+        original_device_class="mock-device-class",
     )
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START, {})

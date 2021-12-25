@@ -3,7 +3,8 @@ import logging
 
 from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
-from wirelesstagpy import WirelessTags, WirelessTagsException
+from wirelesstagpy import WirelessTags
+from wirelesstagpy.exceptions import WirelessTagsException
 
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
@@ -73,13 +74,13 @@ class WirelessTagPlatform:
 
     def arm(self, switch):
         """Arm entity sensor monitoring."""
-        func_name = f"arm_{switch.sensor_type}"
+        func_name = f"arm_{switch.entity_description.key}"
         if (arm_func := getattr(self.api, func_name)) is not None:
             arm_func(switch.tag_id, switch.tag_manager_mac)
 
     def disarm(self, switch):
         """Disarm entity sensor monitoring."""
-        func_name = f"disarm_{switch.sensor_type}"
+        func_name = f"disarm_{switch.entity_description.key}"
         if (disarm_func := getattr(self.api, func_name)) is not None:
             disarm_func(switch.tag_id, switch.tag_manager_mac)
 

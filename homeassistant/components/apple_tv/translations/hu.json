@@ -1,12 +1,17 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
             "already_configured_device": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
             "already_in_progress": "A konfigur\u00e1l\u00e1s m\u00e1r folyamatban van",
             "backoff": "Az eszk\u00f6z jelenleg nem fogadja el a p\u00e1ros\u00edt\u00e1si k\u00e9relmeket (lehet, hogy t\u00fal sokszor adott meg \u00e9rv\u00e9nytelen PIN-k\u00f3dot), pr\u00f3b\u00e1lkozzon \u00fajra k\u00e9s\u0151bb.",
             "device_did_not_pair": "A p\u00e1ros\u00edt\u00e1s folyamat\u00e1t az eszk\u00f6zr\u0151l nem pr\u00f3b\u00e1lt\u00e1k befejezni.",
+            "device_not_found": "Nem tal\u00e1lhat\u00f3 eszk\u00f6z a felder\u00edt\u00e9s sor\u00e1n, k\u00e9rj\u00fck, pr\u00f3b\u00e1lja meg \u00fajra hozz\u00e1adni.",
+            "inconsistent_device": "Az elv\u00e1rt protokollok nem tal\u00e1lhat\u00f3k a felder\u00edt\u00e9s sor\u00e1n. Ez \u00e1ltal\u00e1ban a multicast DNS (Zeroconf) probl\u00e9m\u00e1j\u00e1t jelzi. K\u00e9rj\u00fck, pr\u00f3b\u00e1lja meg \u00fajra hozz\u00e1adni az eszk\u00f6zt.",
             "invalid_config": "Az eszk\u00f6z konfigur\u00e1l\u00e1sa nem teljes. K\u00e9rj\u00fck, pr\u00f3b\u00e1lja meg \u00fajra hozz\u00e1adni.",
             "no_devices_found": "Nem tal\u00e1lhat\u00f3 eszk\u00f6z a h\u00e1l\u00f3zaton",
+            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt.",
+            "setup_failed": "Az eszk\u00f6z be\u00e1ll\u00edt\u00e1sa sikertelen.",
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
         "error": {
@@ -32,6 +37,14 @@
                 },
                 "description": "P\u00e1ros\u00edt\u00e1sra van sz\u00fcks\u00e9g a {protocol} protokollhoz. K\u00e9rj\u00fck, adja meg a k\u00e9perny\u0151n megjelen\u0151 PIN-k\u00f3dot. A vezet\u0151 null\u00e1kat el kell hagyni, pl. \u00edrja be a 123 \u00e9rt\u00e9ket, ha a megjelen\u00edtett k\u00f3d 0123.",
                 "title": "P\u00e1ros\u00edt\u00e1s"
+            },
+            "password": {
+                "description": "`{protocol}` jelsz\u00f3t ig\u00e9nyel. Ez m\u00e9g nem t\u00e1mogatott, k\u00e9rj\u00fck, a folytat\u00e1shoz tiltsa le a jelsz\u00f3t.",
+                "title": "Jelsz\u00f3 sz\u00fcks\u00e9ges"
+            },
+            "protocol_disabled": {
+                "description": "P\u00e1ros\u00edt\u00e1s sz\u00fcks\u00e9ges a `{protokoll}` miatt, de az eszk\u00f6z\u00f6n le van tiltva. K\u00e9rj\u00fck, vizsg\u00e1lja meg az eszk\u00f6z\u00f6n az esetleges hozz\u00e1f\u00e9r\u00e9si korl\u00e1toz\u00e1sokat (pl. enged\u00e9lyezze a helyi h\u00e1l\u00f3zaton l\u00e9v\u0151 \u00f6sszes eszk\u00f6z csatlakoztat\u00e1s\u00e1t).\n\nFolytathatja a protokoll p\u00e1ros\u00edt\u00e1sa n\u00e9lk\u00fcl is, de bizonyos funkci\u00f3k korl\u00e1tozottak lesznek.",
+                "title": "A p\u00e1ros\u00edt\u00e1s nem lehets\u00e9ges"
             },
             "reconfigure": {
                 "description": "Ez az Apple TV csatlakoz\u00e1si neh\u00e9zs\u00e9gekkel k\u00fczd, ez\u00e9rt \u00fajra kell konfigur\u00e1lni.",

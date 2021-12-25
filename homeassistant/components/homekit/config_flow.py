@@ -76,6 +76,7 @@ SUPPORTED_DOMAINS = [
     "alarm_control_panel",
     "automation",
     "binary_sensor",
+    "button",
     CAMERA_DOMAIN,
     "climate",
     "cover",
@@ -84,6 +85,7 @@ SUPPORTED_DOMAINS = [
     "fan",
     "humidifier",
     "input_boolean",
+    "input_button",
     "input_select",
     "light",
     "lock",
@@ -330,13 +332,19 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             return self.async_create_entry(title="", data=self.hk_options)
 
         all_supported_devices = await _async_get_supported_devices(self.hass)
+        # Strip out devices that no longer exist to prevent error in the UI
+        devices = [
+            device_id
+            for device_id in self.hk_options.get(CONF_DEVICES, [])
+            if device_id in all_supported_devices
+        ]
         return self.async_show_form(
             step_id="advanced",
             data_schema=vol.Schema(
                 {
-                    vol.Optional(
-                        CONF_DEVICES, default=self.hk_options.get(CONF_DEVICES, [])
-                    ): cv.multi_select(all_supported_devices)
+                    vol.Optional(CONF_DEVICES, default=devices): cv.multi_select(
+                        all_supported_devices
+                    )
                 }
             ),
         )
@@ -445,13 +453,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         )
 
         data_schema = {}
+        entity_schema = vol.In
         entities = entity_filter.get(CONF_INCLUDE_ENTITIES, [])
-        if self.hk_options[CONF_HOMEKIT_MODE] == HOMEKIT_MODE_ACCESSORY:
-            entity_schema = vol.In
-        else:
-            if entities:
-                include_exclude_mode = MODE_INCLUDE
-            else:
+        if self.hk_options[CONF_HOMEKIT_MODE] != HOMEKIT_MODE_ACCESSORY:
+            include_exclude_mode = MODE_INCLUDE
+            if not entities:
                 include_exclude_mode = MODE_EXCLUDE
                 entities = entity_filter.get(CONF_EXCLUDE_ENTITIES, [])
             data_schema[
@@ -459,9 +465,13 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             ] = vol.In(INCLUDE_EXCLUDE_MODES)
             entity_schema = cv.multi_select
 
-        data_schema[vol.Optional(CONF_ENTITIES, default=entities)] = entity_schema(
-            all_supported_entities
-        )
+        # Strip out entities that no longer exist to prevent error in the UI
+        valid_entities = [
+            entity_id for entity_id in entities if entity_id in all_supported_entities
+        ]
+        data_schema[
+            vol.Optional(CONF_ENTITIES, default=valid_entities)
+        ] = entity_schema(all_supported_entities)
 
         return self.async_show_form(
             step_id="include_exclude", data_schema=vol.Schema(data_schema)
@@ -503,7 +513,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
 async def _async_get_supported_devices(hass):
     """Return all supported devices."""
-    results = await device_automation.async_get_device_automations(hass, "trigger")
+    results = await device_automation.async_get_device_automations(
+        hass, device_automation.DeviceAutomationType.TRIGGER
+    )
     dev_reg = device_registry.async_get(hass)
     unsorted = {
         device_id: dev_reg.async_get(device_id).name or device_id

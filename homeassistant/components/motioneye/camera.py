@@ -159,7 +159,7 @@ class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
         self._motion_detection_enabled: bool = camera.get(KEY_MOTION_DETECTION, False)
 
         # motionEye cameras are always streaming or unavailable.
-        self.is_streaming = True
+        self._attr_is_streaming = True
 
         MotionEyeEntity.__init__(
             self,

@@ -13,7 +13,7 @@ from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 
-from . import PLATFORMS, subscription
+from . import PLATFORMS, MqttCommandTemplate, subscription
 from .. import mqtt
 from .const import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC, DOMAIN
 from .debug_info import log_messages
@@ -35,14 +35,6 @@ MQTT_SELECT_ATTRIBUTES_BLOCKED = frozenset(
 )
 
 
-def validate_config(config):
-    """Validate that the configuration is valid, throws if it isn't."""
-    if len(config[CONF_OPTIONS]) < 2:
-        raise vol.Invalid(f"'{CONF_OPTIONS}' must include at least 2 options")
-
-    return config
-
-
 _PLATFORM_SCHEMA_BASE = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
@@ -53,15 +45,9 @@ _PLATFORM_SCHEMA_BASE = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
     },
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-PLATFORM_SCHEMA = vol.All(
-    _PLATFORM_SCHEMA_BASE,
-    validate_config,
-)
+PLATFORM_SCHEMA = vol.All(_PLATFORM_SCHEMA_BASE)
 
-DISCOVERY_SCHEMA = vol.All(
-    _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
-    validate_config,
-)
+DISCOVERY_SCHEMA = vol.All(_PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA))
 
 
 async def async_setup_platform(
@@ -90,6 +76,8 @@ async def _async_setup_entity(
 class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
     """representation of an MQTT select."""
 
+    _entity_id_format = select.ENTITY_ID_FORMAT
+
     _attributes_extra_blocked = MQTT_SELECT_ATTRIBUTES_BLOCKED
 
     def __init__(self, hass, config, config_entry, discovery_data):
@@ -114,15 +102,20 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
         self._attr_options = config[CONF_OPTIONS]
 
         self._templates = {
-            CONF_COMMAND_TEMPLATE: config.get(CONF_COMMAND_TEMPLATE),
+            CONF_COMMAND_TEMPLATE: MqttCommandTemplate(
+                config.get(CONF_COMMAND_TEMPLATE), self.hass
+            ).async_render,
             CONF_VALUE_TEMPLATE: config.get(CONF_VALUE_TEMPLATE),
         }
-        for key, tpl in self._templates.items():
-            if tpl is None:
-                self._templates[key] = lambda value: value
-            else:
-                tpl.hass = self.hass
-                self._templates[key] = tpl.async_render_with_possible_json_value
+
+        value_template = self._templates[CONF_VALUE_TEMPLATE]
+        if value_template is None:
+            self._templates[CONF_VALUE_TEMPLATE] = lambda value: value
+        else:
+            value_template.hass = self.hass
+            self._templates[
+                CONF_VALUE_TEMPLATE
+            ] = value_template.async_render_with_possible_json_value
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""

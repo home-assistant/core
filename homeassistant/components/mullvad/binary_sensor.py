@@ -1,6 +1,6 @@
 """Setup Mullvad VPN Binary Sensors."""
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_ID, CONF_NAME
@@ -12,7 +12,7 @@ BINARY_SENSORS = (
     {
         CONF_ID: "mullvad_exit_ip",
         CONF_NAME: "Mullvad Exit IP",
-        CONF_DEVICE_CLASS: DEVICE_CLASS_CONNECTIVITY,
+        CONF_DEVICE_CLASS: BinarySensorDeviceClass.CONNECTIVITY,
     },
 )
 

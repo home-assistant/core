@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_TOKEN,
     CONF_USERNAME,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -41,7 +42,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["binary_sensor", "lock", "sensor"]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.LOCK, Platform.SENSOR]
 SCAN_INTERVAL = timedelta(minutes=3)
 
 CONFIG_SCHEMA = vol.Schema(
