@@ -90,7 +90,9 @@ class FluxPixelsPerSegmentNumber(FluxConfigNumber):
         """Return the max value."""
         if not self._device.segments:
             return PIXELS_MAX
-        return min(PIXELS_PER_SEGMENT_MAX, int(PIXELS_MAX / self._device.segments))
+        return min(
+            PIXELS_PER_SEGMENT_MAX, int(PIXELS_MAX / (self._device.segments or 1))
+        )
 
     @property
     def value(self) -> int:
@@ -124,7 +126,9 @@ class FluxSegmentsNumber(FluxConfigNumber):
     def max_value(self) -> int:
         """Return the max value."""
         assert self._device.pixels_per_segment is not None
-        return min(SEGMENTS_MAX, int(PIXELS_MAX / self._device.pixels_per_segment))
+        return min(
+            SEGMENTS_MAX, int(PIXELS_MAX / (self._device.pixels_per_segment or 1))
+        )
 
     @property
     def value(self) -> int:
@@ -160,7 +164,7 @@ class FluxMusicPixelsPerSegmentNumber(FluxConfigNumber):
         assert self._device.music_segments is not None
         return min(
             MUSIC_PIXELS_PER_SEGMENT_MAX,
-            int(MUSIC_PIXELS_MAX / self._device.music_segments),
+            int(MUSIC_PIXELS_MAX / (self._device.music_segments or 1)),
         )
 
     @property
@@ -196,7 +200,8 @@ class FluxMusicSegmentsNumber(FluxConfigNumber):
         """Return the max value."""
         assert self._device.pixels_per_segment is not None
         return min(
-            MUSIC_SEGMENTS_MAX, int(MUSIC_PIXELS_MAX / self._device.pixels_per_segment)
+            MUSIC_SEGMENTS_MAX,
+            int(MUSIC_PIXELS_MAX / (self._device.music_pixels_per_segment or 1)),
         )
 
     @property
