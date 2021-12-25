@@ -187,7 +187,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not device.get(ATTR_MODEL_DESCRIPTION):
                 with contextlib.suppress(*FLUX_LED_EXCEPTIONS):
                     device = await self._async_try_connect(
-                        self._discovered_devices[mac][ATTR_IPADDR], mac, None
+                        device[ATTR_IPADDR], mac.replace(":", ""), None
                     )
                 # Older devices sometimes only respond to discovery
                 # once so we will fallback to the original one as
