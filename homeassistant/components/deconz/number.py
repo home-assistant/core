@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import ValuesView
 from dataclasses import dataclass
 
-from pydeconz.sensor import PRESENCE_DELAY, Presence
+from pydeconz.sensor import PRESENCE_DELAY, PRESENCE_DURATION, Presence
 
 from homeassistant.components.number import (
     DOMAIN,
@@ -50,7 +50,16 @@ ENTITY_DESCRIPTIONS = {
             max_value=65535,
             min_value=0,
             step=1,
-        )
+        ),
+        DeconzNumberEntityDescription(
+            key="duration",
+            device_property="duration",
+            suffix="Duration",
+            update_key=PRESENCE_DURATION,
+            max_value=65535,
+            min_value=0,
+            step=1,
+        ),
     ]
 }
 
