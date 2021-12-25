@@ -217,7 +217,7 @@ class CameraEyesSwitch(SHCCameraSwitch):
 
     def toggle(self, **kwargs):
         """Toggle the switch."""
-        self._device.state = not self.is_on
+        self._device.cameralight = not self.is_on
 
 
 class Camera360Switch(SHCCameraSwitch):
