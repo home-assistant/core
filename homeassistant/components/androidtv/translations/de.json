@@ -43,12 +43,12 @@
             "init": {
                 "data": {
                     "apps": "Anwendungsliste konfigurieren",
-                    "exclude_unnamed_apps": "App mit unbekanntem Namen ausschlie\u00dfen",
-                    "get_sources": "Ob die laufenden Apps als Liste der Quellen abgerufen werden sollen oder nicht",
-                    "screencap": "Legt fest, ob Albumcover von der Bildschirmanzeige \u00fcbernommen werden sollen",
+                    "exclude_unnamed_apps": "Apps mit unbekanntem Namen aus der Quellenliste ausschlie\u00dfen",
+                    "get_sources": "Abrufen der laufenden Anwendungen als Liste der Quellen",
+                    "screencap": "Bildschirmaufnahme als Albumcover verwenden",
                     "state_detection_rules": "Regeln zur Statuserkennung konfigurieren",
-                    "turn_off_command": "ADB-Shell-Befehl zum \u00dcberschreiben des Standardbefehls turn_off",
-                    "turn_on_command": "ADB-Shell-Befehl zum \u00dcberschreiben des Standardbefehls turn_on"
+                    "turn_off_command": "ADB-Shell-Abschaltbefehl (f\u00fcr Standard leer lassen)",
+                    "turn_on_command": "ADB-Shell-Einschaltbefehl (f\u00fcr Standard leer lassen)"
                 },
                 "title": "Android TV-Optionen"
             },
