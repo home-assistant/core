@@ -17,6 +17,14 @@ from .coordinator import FluxLedUpdateCoordinator
 from .entity import FluxEntity
 from .util import _effect_brightness, _hass_color_modes
 
+SEGMENTS_MAX = 2048
+PIXELS_MAX = 2048
+PIXELS_PER_SEGMENT_MAX = 300
+
+MUSIC_SEGMENTS_MAX = 64
+MUSIC_PIXELS_MAX = 960
+MUSIC_PIXELS_PER_SEGMENT_MAX = 150
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -63,7 +71,6 @@ class FluxConfigNumber(FluxEntity, CoordinatorEntity, NumberEntity):
 class FluxPixelsPerSegmentNumber(FluxConfigNumber):
     """Defines a flux_led pixels per segment number."""
 
-    _attr_max_value = 300
     _attr_icon = "mdi:dots-grid"
 
     def __init__(
@@ -79,6 +86,12 @@ class FluxPixelsPerSegmentNumber(FluxConfigNumber):
         self._attr_name = f"{name} Pixels Per Segment"
 
     @property
+    def max_value(self) -> int:
+        """Return the max value."""
+        assert self._device.segments is not None
+        return min(PIXELS_PER_SEGMENT_MAX, int(PIXELS_MAX / self._device.segments))
+
+    @property
     def value(self) -> int:
         """Return the pixels per segment."""
         assert self._device.pixels_per_segment is not None
@@ -88,7 +101,6 @@ class FluxPixelsPerSegmentNumber(FluxConfigNumber):
 class FluxSegmentsNumber(FluxConfigNumber):
     """Defines a flux_led segments number."""
 
-    _attr_max_value = 2048
     _attr_icon = "mdi:segment"
 
     def __init__(
@@ -104,6 +116,12 @@ class FluxSegmentsNumber(FluxConfigNumber):
         self._attr_name = f"{name} Segments"
 
     @property
+    def max_value(self) -> int:
+        """Return the max value."""
+        assert self._device.pixels_per_segment is not None
+        return min(SEGMENTS_MAX, int(PIXELS_MAX / self._device.pixels_per_segment))
+
+    @property
     def value(self) -> int:
         """Return the segments."""
         assert self._device.segments is not None
@@ -113,7 +131,6 @@ class FluxSegmentsNumber(FluxConfigNumber):
 class FluxMusicPixelsPerSegmentNumber(FluxConfigNumber):
     """Defines a flux_led music pixels per segment number."""
 
-    _attr_max_value = 150
     _attr_icon = "mdi:dots-grid"
 
     def __init__(
@@ -127,6 +144,15 @@ class FluxMusicPixelsPerSegmentNumber(FluxConfigNumber):
         if unique_id:
             self._attr_unique_id = f"{unique_id}_music_pixels_per_segment"
         self._attr_name = f"{name} Music Pixels Per Segment"
+
+    @property
+    def max_value(self) -> int:
+        """Return the max value."""
+        assert self._device.music_segments is not None
+        return min(
+            MUSIC_PIXELS_PER_SEGMENT_MAX,
+            int(MUSIC_PIXELS_MAX / self._device.music_segments),
+        )
 
     @property
     def value(self) -> int:
@@ -152,6 +178,14 @@ class FluxMusicSegmentsNumber(FluxConfigNumber):
         if unique_id:
             self._attr_unique_id = f"{unique_id}_music_segments"
         self._attr_name = f"{name} Music Segments"
+
+    @property
+    def max_value(self) -> int:
+        """Return the max value."""
+        assert self._device.pixels_per_segment is not None
+        return min(
+            MUSIC_SEGMENTS_MAX, int(MUSIC_PIXELS_MAX / self._device.pixels_per_segment)
+        )
 
     @property
     def value(self) -> int:
