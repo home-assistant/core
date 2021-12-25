@@ -30,10 +30,11 @@ async def test_setup(mock_api, hass: HomeAssistant, mock_client):
         },
         version=2,
     )
+    mock_config.add_to_hass(hass)
 
     mock_api.return_value = mock_client
 
-    await mock_config.async_setup(hass)
+    await hass.config_entries.async_setup(mock_config.entry_id)
     await hass.async_block_till_done()
 
     assert mock_config.state == ConfigEntryState.LOADED
@@ -57,9 +58,10 @@ async def test_reload(mock_api, hass: HomeAssistant, mock_client):
         },
         version=2,
     )
+    mock_config.add_to_hass(hass)
 
     mock_api.return_value = mock_client
-    await mock_config.async_setup(hass)
+    await hass.config_entries.async_setup(mock_config.entry_id)
     await hass.async_block_till_done()
     assert mock_config.state == ConfigEntryState.LOADED
 
@@ -117,11 +119,12 @@ async def test_setup_too_old(mock_api, hass: HomeAssistant, mock_client):
         version=2,
         unique_id=dr.format_mac(MAC_ADDR),
     )
+    mock_config.add_to_hass(hass)
 
     mock_client.get_nvr.return_value = MOCK_OLD_NVR_DATA
     mock_api.return_value = mock_client
 
-    await mock_config.async_setup(hass)
+    await hass.config_entries.async_setup(mock_config.entry_id)
     await hass.async_block_till_done()
     assert mock_config.state == ConfigEntryState.SETUP_ERROR
     assert not mock_client.update.called
@@ -143,11 +146,12 @@ async def test_setup_failed_update(mock_api, hass: HomeAssistant, mock_client):
         version=2,
         unique_id=dr.format_mac(MAC_ADDR),
     )
+    mock_config.add_to_hass(hass)
 
     mock_client.update = AsyncMock(side_effect=NvrError)
     mock_api.return_value = mock_client
 
-    await mock_config.async_setup(hass)
+    await hass.config_entries.async_setup(mock_config.entry_id)
     await hass.async_block_till_done()
     assert mock_config.state == ConfigEntryState.SETUP_RETRY
     assert mock_client.update.called
@@ -169,11 +173,12 @@ async def test_setup_failed_update_reauth(mock_api, hass: HomeAssistant, mock_cl
         version=2,
         unique_id=dr.format_mac(MAC_ADDR),
     )
+    mock_config.add_to_hass(hass)
 
     mock_client.update = AsyncMock(side_effect=NotAuthorized)
     mock_api.return_value = mock_client
 
-    await mock_config.async_setup(hass)
+    await hass.config_entries.async_setup(mock_config.entry_id)
     await hass.async_block_till_done()
     assert mock_config.state == ConfigEntryState.SETUP_RETRY
     assert mock_client.update.called
@@ -195,11 +200,12 @@ async def test_setup_failed_error(mock_api, hass: HomeAssistant, mock_client):
         version=2,
         unique_id=dr.format_mac(MAC_ADDR),
     )
+    mock_config.add_to_hass(hass)
 
     mock_client.get_nvr = AsyncMock(side_effect=NvrError)
     mock_api.return_value = mock_client
 
-    await mock_config.async_setup(hass)
+    await hass.config_entries.async_setup(mock_config.entry_id)
     await hass.async_block_till_done()
     assert mock_config.state == ConfigEntryState.SETUP_RETRY
     assert not mock_client.update.called
