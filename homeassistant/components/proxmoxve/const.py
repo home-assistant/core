@@ -1,10 +1,14 @@
 """Constants for Proxmox integration."""
 from __future__ import annotations
 
+from datetime import timedelta
 from enum import Enum
 from typing import Final
 
-from .model import ProxmoxBinarySensorDescription
+from homeassistant.components.sensor import SensorStateClass
+from homeassistant.const import ATTR_TIME
+
+from .model import ProxmoxBinarySensorDescription, ProxmoxSensorDescription
 
 
 class Node_Type(Enum):
@@ -36,3 +40,20 @@ PROXMOX_BINARYSENSOR_TYPES: Final[tuple[ProxmoxBinarySensorDescription, ...]] = 
         icon="mdi:server",
     ),
 )
+
+PROXMOX_SENSOR_TYPES: Final[tuple[ProxmoxSensorDescription, ...]] = (
+    ProxmoxSensorDescription(
+        key="uptime",
+        icon="mdi:database-clock-outline",
+        unit_metric=ATTR_TIME,
+        unit_imperial=ATTR_TIME,
+        conversion=lambda x: timedelta(seconds=x),
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+)
+
+
+PARSE_DATA = [
+    sensor.key for sensor in PROXMOX_SENSOR_TYPES + PROXMOX_BINARYSENSOR_TYPES
+] + ["name"]
+PROXMOX_SENSOR_TYPES_ALL = PROXMOX_SENSOR_TYPES

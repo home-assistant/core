@@ -42,11 +42,12 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
+    PARSE_DATA,
     PROXMOX_CLIENTS,
     Node_Type,
 )
 
-PLATFORMS = [Platform.BINARY_SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -242,13 +243,15 @@ def create_coordinator_container_vm(
 
 
 def parse_api_container_vm(status):
-    """Get the container or vm api data and return it formatted in a dictionary.
+    """
+    Parse api data calculate additional fields and return it formatted in a dictionary.
 
     It is implemented in this way to allow for more data to be added for sensors
     in the future.
     """
+    data = {v: status[v] for v in PARSE_DATA}
 
-    return {"status": status["status"], "name": status["name"]}
+    return data
 
 
 def call_api_get_status(proxmox, node_name, vm_id, vm_type):
