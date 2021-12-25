@@ -32,7 +32,12 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONF_ALLOW_NOTIFY, CONF_SYSTEM, DOMAIN
 
-PLATFORMS = [Platform.MEDIA_PLAYER, Platform.LIGHT, Platform.REMOTE]
+PLATFORMS = [
+    Platform.MEDIA_PLAYER,
+    Platform.LIGHT,
+    Platform.REMOTE,
+    Platform.SWITCH,
+]
 
 LOGGER = logging.getLogger(__name__)
 
