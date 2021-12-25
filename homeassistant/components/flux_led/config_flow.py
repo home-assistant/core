@@ -182,7 +182,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             mac = user_input[CONF_DEVICE]
             await self.async_set_unique_id(mac, raise_on_progress=False)
-            return self._async_create_entry_from_device(self._discovered_devices[mac])
+            try:
+                device = await self._async_try_connect(
+                    self._discovered_devices[mac][ATTR_IPADDR], mac, None
+                )
+            except FLUX_LED_EXCEPTIONS:
+                # Older devices sometimes only respond to discovery
+                # once so we will fallback to the original one as
+                # it will still work with a less descriptive title
+                device = self._discovered_devices[mac]
+            return self._async_create_entry_from_device(device)
 
         current_unique_ids = self._async_current_ids()
         current_hosts = {
