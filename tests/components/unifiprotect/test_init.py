@@ -1,7 +1,7 @@
 """Test the UniFi Protect setup flow."""
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, patch
 
 from pyunifiprotect import NotAuthorized, NvrError
 
@@ -143,7 +143,6 @@ async def test_setup_failed_update(mock_api, hass: HomeAssistant, mock_client):
         version=2,
         unique_id=dr.format_mac(MAC_ADDR),
     )
-    mock_config.async_start_reauth = Mock()
 
     mock_client.update = AsyncMock(side_effect=NvrError)
     mock_api.return_value = mock_client
@@ -151,7 +150,6 @@ async def test_setup_failed_update(mock_api, hass: HomeAssistant, mock_client):
     await mock_config.async_setup(hass)
     await hass.async_block_till_done()
     assert mock_config.state == ConfigEntryState.SETUP_RETRY
-    assert not mock_config.async_start_reauth.called
     assert mock_client.update.called
 
 
@@ -171,7 +169,6 @@ async def test_setup_failed_update_reauth(mock_api, hass: HomeAssistant, mock_cl
         version=2,
         unique_id=dr.format_mac(MAC_ADDR),
     )
-    mock_config.async_start_reauth = Mock()
 
     mock_client.update = AsyncMock(side_effect=NotAuthorized)
     mock_api.return_value = mock_client
@@ -179,7 +176,6 @@ async def test_setup_failed_update_reauth(mock_api, hass: HomeAssistant, mock_cl
     await mock_config.async_setup(hass)
     await hass.async_block_till_done()
     assert mock_config.state == ConfigEntryState.SETUP_RETRY
-    assert mock_config.async_start_reauth.called
     assert mock_client.update.called
 
 
