@@ -1,6 +1,7 @@
 """Config flow for Flux LED/MagicLight."""
 from __future__ import annotations
 
+import contextlib
 from typing import Any, Final, cast
 
 from flux_led.const import ATTR_ID, ATTR_IPADDR, ATTR_MODEL, ATTR_MODEL_DESCRIPTION
@@ -182,15 +183,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             mac = user_input[CONF_DEVICE]
             await self.async_set_unique_id(mac, raise_on_progress=False)
-            try:
-                device = await self._async_try_connect(
-                    self._discovered_devices[mac][ATTR_IPADDR], mac, None
-                )
-            except FLUX_LED_EXCEPTIONS:
+            device = self._discovered_devices[mac]
+            if not device.get(ATTR_MODEL_DESCRIPTION):
+                with contextlib.suppress(*FLUX_LED_EXCEPTIONS):
+                    device = await self._async_try_connect(
+                        self._discovered_devices[mac][ATTR_IPADDR], mac, None
+                    )
                 # Older devices sometimes only respond to discovery
                 # once so we will fallback to the original one as
                 # it will still work with a less descriptive title
-                device = self._discovered_devices[mac]
             return self._async_create_entry_from_device(device)
 
         current_unique_ids = self._async_current_ids()
