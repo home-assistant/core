@@ -47,6 +47,43 @@ async def async_setup_entry(
         async_add_entities(entities)
 
 
+class FluxPowerStateSelect(FluxBaseEntity, SelectEntity):
+    """Representation of a Flux power restore state option."""
+
+    _attr_should_poll = False
+
+    def __init__(
+        self,
+        device: AIOWifiLedBulb,
+        entry: config_entries.ConfigEntry,
+    ) -> None:
+        """Initialize the power state select."""
+        super().__init__(device, entry)
+        self._attr_entity_category = EntityCategory.CONFIG
+        self._attr_name = f"{entry.data[CONF_NAME]} Power Restored"
+        if entry.unique_id:
+            self._attr_unique_id = f"{entry.unique_id}_power_restored"
+        self._name_to_state = {
+            _human_readable_option(option.name): option for option in PowerRestoreState
+        }
+        self._attr_options = list(self._name_to_state)
+        self._async_set_current_option_from_device()
+
+    @callback
+    def _async_set_current_option_from_device(self) -> None:
+        """Set the option from the current power state."""
+        restore_states = self._device.power_restore_states
+        assert restore_states is not None
+        assert restore_states.channel1 is not None
+        self._attr_current_option = _human_readable_option(restore_states.channel1.name)
+
+    async def async_select_option(self, option: str) -> None:
+        """Change the power state."""
+        await self._device.async_set_power_restore(channel1=self._name_to_state[option])
+        self._async_set_current_option_from_device()
+        self.async_write_ha_state()
+
+
 def _human_readable_option(const_option: str) -> str:
     return const_option.replace("_", " ").title()
 
@@ -143,40 +180,3 @@ class FluxOperatingModesSelect(FluxConfigSelect):
         self.hass.async_create_task(
             self.hass.config_entries.async_reload(self.coordinator.entry.entry_id)
         )
-
-
-class FluxPowerStateSelect(FluxBaseEntity, SelectEntity):
-    """Representation of a Flux power restore state option."""
-
-    _attr_should_poll = False
-
-    def __init__(
-        self,
-        device: AIOWifiLedBulb,
-        entry: config_entries.ConfigEntry,
-    ) -> None:
-        """Initialize the power state select."""
-        super().__init__(device, entry)
-        self._attr_entity_category = EntityCategory.CONFIG
-        self._attr_name = f"{entry.data[CONF_NAME]} Power Restored"
-        if entry.unique_id:
-            self._attr_unique_id = f"{entry.unique_id}_power_restored"
-        self._name_to_state = {
-            _human_readable_option(option.name): option for option in PowerRestoreState
-        }
-        self._attr_options = list(self._name_to_state)
-        self._async_set_current_option_from_device()
-
-    @callback
-    def _async_set_current_option_from_device(self) -> None:
-        """Set the option from the current power state."""
-        restore_states = self._device.power_restore_states
-        assert restore_states is not None
-        assert restore_states.channel1 is not None
-        self._attr_current_option = _human_readable_option(restore_states.channel1.name)
-
-    async def async_select_option(self, option: str) -> None:
-        """Change the power state."""
-        await self._device.async_set_power_restore(channel1=self._name_to_state[option])
-        self._async_set_current_option_from_device()
-        self.async_write_ha_state()

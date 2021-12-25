@@ -67,6 +67,46 @@ async def async_setup_entry(
         async_add_entities(entities)
 
 
+class FluxSpeedNumber(FluxEntity, CoordinatorEntity, NumberEntity):
+    """Defines a flux_led speed number."""
+
+    _attr_min_value = 1
+    _attr_max_value = 100
+    _attr_step = 1
+    _attr_mode = NumberMode.SLIDER
+    _attr_icon = "mdi:speedometer"
+
+    def __init__(
+        self,
+        coordinator: FluxLedUpdateCoordinator,
+        unique_id: str | None,
+        name: str,
+    ) -> None:
+        """Initialize the flux number."""
+        super().__init__(coordinator, unique_id, name)
+        self._attr_name = f"{name} Effect Speed"
+
+    @property
+    def value(self) -> float:
+        """Return the effect speed."""
+        return cast(float, self._device.speed)
+
+    async def async_set_value(self, value: float) -> None:
+        """Set the flux speed value."""
+        current_effect = self._device.effect
+        new_speed = int(value)
+        if not current_effect:
+            raise HomeAssistantError(
+                "Speed can only be adjusted when an effect is active"
+            )
+        if not self._device.speed_adjust_off and not self._device.is_on:
+            raise HomeAssistantError("Speed can only be adjusted when the light is on")
+        await self._device.async_set_effect(
+            current_effect, new_speed, _effect_brightness(self._device.brightness)
+        )
+        await self.coordinator.async_request_refresh()
+
+
 class FluxConfigNumber(FluxEntity, CoordinatorEntity, NumberEntity):
     """Base class for flux config numbers."""
 
@@ -286,43 +326,3 @@ class FluxMusicSegmentsNumber(FluxConfigNumber):
         """Set the music segments."""
         assert self._pending_value is not None
         await self._device.async_set_device_config(music_segments=self._pending_value)
-
-
-class FluxSpeedNumber(FluxEntity, CoordinatorEntity, NumberEntity):
-    """Defines a flux_led speed number."""
-
-    _attr_min_value = 1
-    _attr_max_value = 100
-    _attr_step = 1
-    _attr_mode = NumberMode.SLIDER
-    _attr_icon = "mdi:speedometer"
-
-    def __init__(
-        self,
-        coordinator: FluxLedUpdateCoordinator,
-        unique_id: str | None,
-        name: str,
-    ) -> None:
-        """Initialize the flux number."""
-        super().__init__(coordinator, unique_id, name)
-        self._attr_name = f"{name} Effect Speed"
-
-    @property
-    def value(self) -> float:
-        """Return the effect speed."""
-        return cast(float, self._device.speed)
-
-    async def async_set_value(self, value: float) -> None:
-        """Set the flux speed value."""
-        current_effect = self._device.effect
-        new_speed = int(value)
-        if not current_effect:
-            raise HomeAssistantError(
-                "Speed can only be adjusted when an effect is active"
-            )
-        if not self._device.speed_adjust_off and not self._device.is_on:
-            raise HomeAssistantError("Speed can only be adjusted when the light is on")
-        await self._device.async_set_effect(
-            current_effect, new_speed, _effect_brightness(self._device.brightness)
-        )
-        await self.coordinator.async_request_refresh()
