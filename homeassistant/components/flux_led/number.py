@@ -57,7 +57,7 @@ class FluxConfigNumber(FluxEntity, CoordinatorEntity, NumberEntity):
     _attr_entity_category = EntityCategory.CONFIG
     _attr_min_value = 1
     _attr_step = 1
-    _attr_mode = NumberMode.SLIDER
+    _attr_mode = NumberMode.BOX
 
 
 class FluxPixelsPerSegmentNumber(FluxConfigNumber):
