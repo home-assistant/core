@@ -79,6 +79,10 @@ class FluxICTypeSelect(FluxConfigSelect):
         """Return the current ic type."""
         return self._device.ic_type
 
+    async def async_select_option(self, option: str) -> None:
+        """Change the ic type."""
+        await self._device.async_set_device_config(ic_type=option)
+
 
 class FluxWiringsSelect(FluxConfigSelect):
     """Representation of Flux wirings."""
@@ -105,6 +109,10 @@ class FluxWiringsSelect(FluxConfigSelect):
         """Return the current wiring."""
         return self._device.wiring
 
+    async def async_select_option(self, option: str) -> None:
+        """Change the wiring."""
+        await self._device.async_set_device_config(wiring=option)
+
 
 class FluxOperatingModesSelect(FluxConfigSelect):
     """Representation of Flux operating modes."""
@@ -127,6 +135,14 @@ class FluxOperatingModesSelect(FluxConfigSelect):
     def current_option(self) -> str | None:
         """Return the current operating mode."""
         return self._device.operating_mode
+
+    async def async_select_option(self, option: str) -> None:
+        """Change the ic type."""
+        await self._device.async_set_device_config(operating_mode=option)
+        # reload since we need to reinit the device
+        self.hass.async_create_task(
+            self.hass.config_entries.async_reload(self.coordinator.entry.entry_id)
+        )
 
 
 class FluxPowerStateSelect(FluxBaseEntity, SelectEntity):

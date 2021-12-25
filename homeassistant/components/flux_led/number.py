@@ -98,6 +98,10 @@ class FluxPixelsPerSegmentNumber(FluxConfigNumber):
         assert self._device.pixels_per_segment is not None
         return self._device.pixels_per_segment
 
+    async def async_set_value(self, value: float) -> None:
+        """Set the pixels per segment."""
+        await self._device.async_set_device_config(pixels_per_segment=int(value))
+
 
 class FluxSegmentsNumber(FluxConfigNumber):
     """Defines a flux_led segments number."""
@@ -127,6 +131,10 @@ class FluxSegmentsNumber(FluxConfigNumber):
         """Return the segments."""
         assert self._device.segments is not None
         return self._device.segments
+
+    async def async_set_value(self, value: float) -> None:
+        """Set the segments."""
+        await self._device.async_set_device_config(segments=int(value))
 
 
 class FluxMusicPixelsPerSegmentNumber(FluxConfigNumber):
@@ -161,6 +169,10 @@ class FluxMusicPixelsPerSegmentNumber(FluxConfigNumber):
         assert self._device.music_pixels_per_segment is not None
         return self._device.music_pixels_per_segment
 
+    async def async_set_value(self, value: float) -> None:
+        """Set the music pixels per segment."""
+        await self._device.async_set_device_config(music_pixels_per_segment=int(value))
+
 
 class FluxMusicSegmentsNumber(FluxConfigNumber):
     """Defines a flux_led music segments number."""
@@ -192,6 +204,10 @@ class FluxMusicSegmentsNumber(FluxConfigNumber):
         """Return the music segments."""
         assert self._device.music_segments is not None
         return self._device.music_segments
+
+    async def async_set_value(self, value: float) -> None:
+        """Set the music segments."""
+        await self._device.async_set_device_config(music_segments=int(value))
 
 
 class FluxSpeedNumber(FluxEntity, CoordinatorEntity, NumberEntity):
