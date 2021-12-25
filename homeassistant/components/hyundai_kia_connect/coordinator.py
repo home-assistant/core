@@ -4,11 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from hyundai_kia_connect_api import (
-    Token,
-    VehicleManager,
-    get_implementation_by_region_brand,
-)
+from hyundai_kia_connect_api import Token, VehicleManager
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -33,7 +29,8 @@ class HyundaiKiaConnectDataUpdateCoordinator(DataUpdateCoordinator):
         """Initialize."""
         self.platforms: set[str] = set()
         token = Token(config_entry.data[CONF_TOKEN])
-        api = get_implementation_by_region_brand(
+        self.vehicle_manager = VehicleManager()
+        api = self.vehicle_manager.get_implementation_by_region_brand(
             region=config_entry.data.get(CONF_REGION),
             brand=config_entry.data.get(CONF_BRAND),
             username=config_entry.data.get(CONF_USERNAME),
@@ -41,7 +38,6 @@ class HyundaiKiaConnectDataUpdateCoordinator(DataUpdateCoordinator):
             pin=config_entry.data.get(CONF_PIN),
         )
 
-        self.vehicle_manager = VehicleManager()
         self.vehicle_manager.add(token, api)
 
         super().__init__(

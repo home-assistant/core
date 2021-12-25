@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from hyundai_kia_connect_api import Token, get_implementation_by_region_brand
+from hyundai_kia_connect_api import Token, VehicleManager
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -36,8 +36,8 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 async def validate_input(hass: HomeAssistant, user_input: dict[str, Any]) -> Token:
     """Validate the user input allows us to connect."""
-
-    api = get_implementation_by_region_brand(
+    vehicle_manager = VehicleManager()
+    api = vehicle_manager.get_implementation_by_region_brand(
         region=user_input[CONF_REGION],
         brand=user_input[CONF_BRAND],
         username=user_input[CONF_USERNAME],
