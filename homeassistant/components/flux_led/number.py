@@ -8,6 +8,7 @@ from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -50,13 +51,19 @@ async def async_setup_entry(
         async_add_entities(entities)
 
 
-class FluxPixelsPerSegmentNumber(FluxEntity, CoordinatorEntity, NumberEntity):
-    """Defines a flux_led pixels per segment number."""
+class FluxConfigNumber(FluxEntity, CoordinatorEntity, NumberEntity):
+    """Base class for flux config numbers."""
 
+    _attr_entity_category = EntityCategory.CONFIG
     _attr_min_value = 1
-    _attr_max_value = 300
     _attr_step = 1
     _attr_mode = NumberMode.SLIDER
+
+
+class FluxPixelsPerSegmentNumber(FluxConfigNumber):
+    """Defines a flux_led pixels per segment number."""
+
+    _attr_max_value = 300
     _attr_icon = "mdi:dots-grid"
 
     def __init__(
@@ -76,13 +83,10 @@ class FluxPixelsPerSegmentNumber(FluxEntity, CoordinatorEntity, NumberEntity):
         return self._device.pixels_per_segment
 
 
-class FluxSegmentsNumber(FluxEntity, CoordinatorEntity, NumberEntity):
+class FluxSegmentsNumber(FluxConfigNumber):
     """Defines a flux_led segments number."""
 
-    _attr_min_value = 1
     _attr_max_value = 2048
-    _attr_step = 1
-    _attr_mode = NumberMode.SLIDER
     _attr_icon = "mdi:segment"
 
     def __init__(
@@ -102,13 +106,10 @@ class FluxSegmentsNumber(FluxEntity, CoordinatorEntity, NumberEntity):
         return self._device.segments
 
 
-class FluxMusicPixelsPerSegmentNumber(FluxEntity, CoordinatorEntity, NumberEntity):
+class FluxMusicPixelsPerSegmentNumber(FluxConfigNumber):
     """Defines a flux_led music pixels per segment number."""
 
-    _attr_min_value = 1
     _attr_max_value = 150
-    _attr_step = 1
-    _attr_mode = NumberMode.SLIDER
     _attr_icon = "mdi:dots-grid"
 
     def __init__(
@@ -128,13 +129,10 @@ class FluxMusicPixelsPerSegmentNumber(FluxEntity, CoordinatorEntity, NumberEntit
         return self._device.music_pixels_per_segment
 
 
-class FluxMusicSegmentsNumber(FluxEntity, CoordinatorEntity, NumberEntity):
+class FluxMusicSegmentsNumber(FluxConfigNumber):
     """Defines a flux_led music segments number."""
 
-    _attr_min_value = 1
     _attr_max_value = 64
-    _attr_step = 1
-    _attr_mode = NumberMode.SLIDER
     _attr_icon = "mdi:segment"
 
     def __init__(
