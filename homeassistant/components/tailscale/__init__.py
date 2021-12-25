@@ -3,9 +3,8 @@ from __future__ import annotations
 
 from tailscale import Device as TailscaleDevice
 
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo, EntityDescription
@@ -17,7 +16,7 @@ from homeassistant.helpers.update_coordinator import (
 from .const import DOMAIN
 from .coordinator import TailscaleDataUpdateCoordinator
 
-PLATFORMS = (BINARY_SENSOR_DOMAIN, SENSOR_DOMAIN)
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

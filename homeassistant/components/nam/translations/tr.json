@@ -32,7 +32,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Ana bilgisayar"
+                    "host": "Sunucu"
                 },
                 "description": "Nettigo Air Monitor entegrasyonunu kurun."
             }

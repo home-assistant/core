@@ -579,6 +579,64 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             subkey="voltage",
         ),
     ),
+    # Robot Vacuum
+    # https://developer.tuya.com/en/docs/iot/fsd?id=K9gf487ck1tlo
+    "sd": (
+        TuyaSensorEntityDescription(
+            key=DPCode.CLEAN_AREA,
+            name="Cleaning Area",
+            icon="mdi:texture-box",
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.CLEAN_TIME,
+            name="Cleaning Time",
+            icon="mdi:progress-clock",
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.TOTAL_CLEAN_AREA,
+            name="Total Cleaning Area",
+            icon="mdi:texture-box",
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.TOTAL_CLEAN_TIME,
+            name="Total Cleaning Time",
+            icon="mdi:history",
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.TOTAL_CLEAN_COUNT,
+            name="Total Cleaning Times",
+            icon="mdi:counter",
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.DUSTER_CLOTH,
+            name="Duster Cloth Life",
+            icon="mdi:ticket-percent-outline",
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.EDGE_BRUSH,
+            name="Side Brush Life",
+            icon="mdi:ticket-percent-outline",
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.FILTER_LIFE,
+            name="Filter Life",
+            icon="mdi:ticket-percent-outline",
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.ROLL_BRUSH,
+            name="Rolling Brush Life",
+            icon="mdi:ticket-percent-outline",
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+    ),
 }
 
 # Socket (duplicate of `kg`)

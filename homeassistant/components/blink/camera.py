@@ -5,6 +5,7 @@ import logging
 
 from homeassistant.components.camera import Camera
 from homeassistant.helpers import entity_platform
+from homeassistant.helpers.entity import DeviceInfo
 
 from .const import DEFAULT_BRAND, DOMAIN, SERVICE_TRIGGER
 
@@ -37,6 +38,12 @@ class BlinkCamera(Camera):
         self._attr_name = f"{DOMAIN} {name}"
         self._camera = camera
         self._attr_unique_id = f"{camera.serial}-camera"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, camera.serial)},
+            name=name,
+            manufacturer=DEFAULT_BRAND,
+            model=camera.camera_type,
+        )
         _LOGGER.debug("Initialized blink camera %s", self.name)
 
     @property

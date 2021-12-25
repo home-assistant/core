@@ -1,6 +1,6 @@
 """Support for Risco alarm zones."""
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_MOTION,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.helpers import entity_platform
@@ -72,8 +72,8 @@ class RiscoBinarySensor(BinarySensorEntity, RiscoEntity):
 
     @property
     def device_class(self):
-        """Return the class of this sensor, from DEVICE_CLASSES."""
-        return DEVICE_CLASS_MOTION
+        """Return the class of this sensor, from BinarySensorDeviceClass."""
+        return BinarySensorDeviceClass.MOTION
 
     async def _bypass(self, bypass):
         alarm = await self._risco.bypass_zone(self._zone_id, bypass)

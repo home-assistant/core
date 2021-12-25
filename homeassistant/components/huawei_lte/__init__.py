@@ -22,13 +22,7 @@ from requests.exceptions import Timeout
 from url_normalize import url_normalize
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.device_tracker.const import (
-    DOMAIN as DEVICE_TRACKER_DOMAIN,
-)
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_MODEL,
@@ -40,6 +34,7 @@ from homeassistant.const import (
     CONF_URL,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -123,12 +118,12 @@ CONFIG_SCHEMA = vol.Schema(
 
 SERVICE_SCHEMA = vol.Schema({vol.Optional(CONF_URL): cv.url})
 
-CONFIG_ENTRY_PLATFORMS = (
-    BINARY_SENSOR_DOMAIN,
-    DEVICE_TRACKER_DOMAIN,
-    SENSOR_DOMAIN,
-    SWITCH_DOMAIN,
-)
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.DEVICE_TRACKER,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 
 @attr.s
@@ -455,7 +450,7 @@ async def async_setup_entry(  # noqa: C901
         )
 
     # Forward config entry setup to platforms
-    hass.config_entries.async_setup_platforms(entry, CONFIG_ENTRY_PLATFORMS)
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     # Notify doesn't support config entry setup yet, load with discovery for now
     await discovery.async_load_platform(
@@ -495,9 +490,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     """Unload config entry."""
 
     # Forward config entry unload to platforms
-    await hass.config_entries.async_unload_platforms(
-        config_entry, CONFIG_ENTRY_PLATFORMS
-    )
+    await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
     # Forget about the router and invoke its cleanup
     router = hass.data[DOMAIN].routers.pop(config_entry.unique_id)

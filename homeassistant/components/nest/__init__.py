@@ -1,7 +1,10 @@
 """Support for Nest devices."""
+from __future__ import annotations
 
+from http import HTTPStatus
 import logging
 
+from aiohttp import web
 from google_nest_sdm.event import EventMessage
 from google_nest_sdm.exceptions import (
     AuthException,
@@ -10,6 +13,9 @@ from google_nest_sdm.exceptions import (
 )
 import voluptuous as vol
 
+from homeassistant.auth.permissions.const import POLICY_READ
+from homeassistant.components.http.const import KEY_HASS_USER
+from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_BINARY_SENSORS,
@@ -18,10 +24,17 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_SENSORS,
     CONF_STRUCTURE,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+    Unauthorized,
+)
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
+from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.helpers.typing import ConfigType
 
 from . import api, config_flow
@@ -38,6 +51,7 @@ from .const import (
 )
 from .events import EVENT_NAME_MAP, NEST_EVENT
 from .legacy import async_setup_legacy, async_setup_legacy_entry
+from .media_source import async_get_media_event_store, get_media_source_devices
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,9 +83,15 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 # Platforms for SDM API
-PLATFORMS = ["sensor", "camera", "climate"]
+PLATFORMS = [Platform.SENSOR, Platform.CAMERA, Platform.CLIMATE]
 WEB_AUTH_DOMAIN = DOMAIN
 INSTALLED_AUTH_DOMAIN = f"{DOMAIN}.installed"
+
+# Fetch media events with a disk backed cache, with a limit for each camera
+# device. The largest media items are mp4 clips at ~120kb each, and we target
+# ~125MB of storage per camera to try to balance a reasonable user experience
+# for event history not not filling the disk.
+EVENT_MEDIA_CACHE_SIZE = 1024  # number of events
 
 
 class WebAuth(config_entry_oauth2_flow.LocalOAuth2Implementation):
@@ -150,6 +170,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         ),
     )
 
+    hass.http.register_view(NestEventMediaView(hass))
+
     return True
 
 
@@ -179,7 +201,7 @@ class SignalUpdateCallback:
                 "device_id": device_entry.id,
                 "type": event_type,
                 "timestamp": event_message.timestamp,
-                "nest_event_id": image_event.event_id,
+                "nest_event_id": image_event.event_session_id,
             }
             self._hass.bus.async_fire(NEST_EVENT, message)
 
@@ -193,6 +215,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     subscriber = await api.new_subscriber(hass, entry)
     if not subscriber:
         return False
+    # Keep media for last N events in memory
+    subscriber.cache_policy.event_cache_size = EVENT_MEDIA_CACHE_SIZE
+    subscriber.cache_policy.fetch = True
+    # Use disk backed event media store
+    subscriber.cache_policy.store = await async_get_media_event_store(hass, subscriber)
 
     callback = SignalUpdateCallback(hass)
     subscriber.set_update_callback(callback.async_handle_event)
@@ -264,3 +291,51 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         )
     finally:
         subscriber.stop_async()
+
+
+class NestEventMediaView(HomeAssistantView):
+    """Returns media for related to events for a specific device.
+
+    This is primarily used to render media for events for MediaSource. The media type
+    depends on the specific device e.g. an image, or a movie clip preview.
+    """
+
+    url = "/api/nest/event_media/{device_id}/{event_id}"
+    name = "api:nest:event_media"
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize NestEventMediaView."""
+        self.hass = hass
+
+    async def get(
+        self, request: web.Request, device_id: str, event_id: str
+    ) -> web.StreamResponse:
+        """Start a GET request."""
+        user = request[KEY_HASS_USER]
+        entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
+        for entry in async_entries_for_device(entity_registry, device_id):
+            if not user.permissions.check_entity(entry.entity_id, POLICY_READ):
+                raise Unauthorized(entity_id=entry.entity_id)
+
+        devices = await get_media_source_devices(self.hass)
+        if not (nest_device := devices.get(device_id)):
+            return self._json_error(
+                f"No Nest Device found for '{device_id}'", HTTPStatus.NOT_FOUND
+            )
+        try:
+            event_media = await nest_device.event_media_manager.get_media(event_id)
+        except GoogleNestException as err:
+            raise HomeAssistantError("Unable to fetch media for event") from err
+        if not event_media:
+            return self._json_error(
+                f"No event found for event_id '{event_id}'", HTTPStatus.NOT_FOUND
+            )
+        media = event_media.media
+        return web.Response(
+            body=media.contents, content_type=media.event_image_type.content_type
+        )
+
+    def _json_error(self, message: str, status: HTTPStatus) -> web.StreamResponse:
+        """Return a json error message with additional logging."""
+        _LOGGER.debug(message)
+        return self.json_message(message, status)

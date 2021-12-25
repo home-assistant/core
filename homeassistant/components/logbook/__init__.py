@@ -112,6 +112,7 @@ def log_entry(hass, name, message, domain=None, entity_id=None, context=None):
     hass.add_job(async_log_entry, hass, name, message, domain, entity_id, context)
 
 
+@callback
 @bind_hass
 def async_log_entry(hass, name, message, domain=None, entity_id=None, context=None):
     """Add an entry to the logbook."""

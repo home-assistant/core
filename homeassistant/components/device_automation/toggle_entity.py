@@ -9,15 +9,6 @@ from homeassistant.components.automation import (
     AutomationActionType,
     AutomationTriggerInfo,
 )
-from homeassistant.components.device_automation.const import (
-    CONF_IS_OFF,
-    CONF_IS_ON,
-    CONF_TOGGLE,
-    CONF_TURN_OFF,
-    CONF_TURN_ON,
-    CONF_TURNED_OFF,
-    CONF_TURNED_ON,
-)
 from homeassistant.components.homeassistant.triggers import state as state_trigger
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -33,6 +24,15 @@ from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from . import DEVICE_TRIGGER_BASE_SCHEMA
+from .const import (
+    CONF_IS_OFF,
+    CONF_IS_ON,
+    CONF_TOGGLE,
+    CONF_TURN_OFF,
+    CONF_TURN_ON,
+    CONF_TURNED_OFF,
+    CONF_TURNED_ON,
+)
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
@@ -127,7 +127,9 @@ async def async_call_action_from_config(
 
 
 @callback
-def async_condition_from_config(config: ConfigType) -> condition.ConditionCheckerType:
+def async_condition_from_config(
+    hass: HomeAssistant, config: ConfigType
+) -> condition.ConditionCheckerType:
     """Evaluate state based on configuration."""
     if config[CONF_TYPE] == CONF_IS_ON:
         stat = "on"
@@ -142,6 +144,7 @@ def async_condition_from_config(config: ConfigType) -> condition.ConditionChecke
         state_config[CONF_FOR] = config[CONF_FOR]
 
     state_config = cv.STATE_CONDITION_SCHEMA(state_config)
+    state_config = condition.state_validate_config(hass, state_config)
     return condition.state_from_config(state_config)
 
 

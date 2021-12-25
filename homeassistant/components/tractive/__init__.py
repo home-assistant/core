@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_EMAIL,
     CONF_PASSWORD,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -38,7 +39,12 @@ from .const import (
     TRACKER_POSITION_UPDATED,
 )
 
-PLATFORMS = ["binary_sensor", "device_tracker", "sensor", "switch"]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.DEVICE_TRACKER,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 
 _LOGGER = logging.getLogger(__name__)

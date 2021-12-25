@@ -4,10 +4,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any, final
+from typing import Literal, final
 
 import voluptuous as vol
 
+from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -17,8 +18,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.typing import ConfigType, StateType
-from homeassistant.util.enum import StrEnum
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -200,18 +200,8 @@ class BinarySensorEntity(Entity):
 
     @final
     @property
-    def state(self) -> StateType:
+    def state(self) -> Literal["on", "off"] | None:
         """Return the state of the binary sensor."""
-        return STATE_ON if self.is_on else STATE_OFF
-
-
-class BinarySensorDevice(BinarySensorEntity):
-    """Represent a binary sensor (for backwards compatibility)."""
-
-    def __init_subclass__(cls, **kwargs: Any):
-        """Print deprecation warning."""
-        super().__init_subclass__(**kwargs)  # type: ignore[call-arg]
-        _LOGGER.warning(
-            "BinarySensorDevice is deprecated, modify %s to extend BinarySensorEntity",
-            cls.__name__,
-        )
+        if (is_on := self.is_on) is None:
+            return None
+        return STATE_ON if is_on else STATE_OFF

@@ -15,11 +15,10 @@ from aiounifi.events import (
 )
 
 from homeassistant.components.switch import DOMAIN, SwitchEntity
-from homeassistant.const import ENTITY_CATEGORY_CONFIG
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -185,7 +184,7 @@ class UniFiPOEClientSwitch(UniFiClient, SwitchEntity, RestoreEntity):
     DOMAIN = DOMAIN
     TYPE = POE_SWITCH
 
-    _attr_entity_category = ENTITY_CATEGORY_CONFIG
+    _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(self, client, controller):
         """Set up POE switch."""
@@ -274,7 +273,7 @@ class UniFiBlockClientSwitch(UniFiClient, SwitchEntity):
     DOMAIN = DOMAIN
     TYPE = BLOCK_SWITCH
 
-    _attr_entity_category = ENTITY_CATEGORY_CONFIG
+    _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(self, client, controller):
         """Set up block switch."""
@@ -325,7 +324,7 @@ class UniFiDPIRestrictionSwitch(UniFiBase, SwitchEntity):
     DOMAIN = DOMAIN
     TYPE = DPI_SWITCH
 
-    _attr_entity_category = ENTITY_CATEGORY_CONFIG
+    _attr_entity_category = EntityCategory.CONFIG
 
     @property
     def key(self) -> Any:

@@ -6,14 +6,13 @@ import logging
 
 from pyoctoprintapi import OctoprintJobInfo, OctoprintPrinterInfo
 
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_TIMESTAMP,
-    PERCENTAGE,
-    TEMP_CELSIUS,
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -150,7 +149,7 @@ class OctoPrintJobPercentageSensor(OctoPrintSensorBase):
 class OctoPrintEstimatedFinishTimeSensor(OctoPrintSensorBase):
     """Representation of an OctoPrint sensor."""
 
-    _attr_device_class = DEVICE_CLASS_TIMESTAMP
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
 
     def __init__(
         self, coordinator: OctoprintDataUpdateCoordinator, device_id: str
@@ -177,7 +176,7 @@ class OctoPrintEstimatedFinishTimeSensor(OctoPrintSensorBase):
 class OctoPrintStartTimeSensor(OctoPrintSensorBase):
     """Representation of an OctoPrint sensor."""
 
-    _attr_device_class = DEVICE_CLASS_TIMESTAMP
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
 
     def __init__(
         self, coordinator: OctoprintDataUpdateCoordinator, device_id: str
@@ -206,8 +205,8 @@ class OctoPrintTemperatureSensor(OctoPrintSensorBase):
     """Representation of an OctoPrint sensor."""
 
     _attr_native_unit_of_measurement = TEMP_CELSIUS
-    _attr_device_class = DEVICE_CLASS_TEMPERATURE
-    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
         self,

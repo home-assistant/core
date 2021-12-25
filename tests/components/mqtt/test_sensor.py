@@ -83,27 +83,27 @@ async def test_setting_sensor_value_via_mqtt_message(hass, mqtt_mock):
 @pytest.mark.parametrize(
     "device_class,native_value,state_value,log",
     [
-        (sensor.DEVICE_CLASS_DATE, "2021-11-18", "2021-11-18", False),
-        (sensor.DEVICE_CLASS_DATE, "invalid", STATE_UNKNOWN, True),
+        (sensor.SensorDeviceClass.DATE, "2021-11-18", "2021-11-18", False),
+        (sensor.SensorDeviceClass.DATE, "invalid", STATE_UNKNOWN, True),
         (
-            sensor.DEVICE_CLASS_TIMESTAMP,
+            sensor.SensorDeviceClass.TIMESTAMP,
             "2021-11-18T20:25:00+00:00",
             "2021-11-18T20:25:00+00:00",
             False,
         ),
         (
-            sensor.DEVICE_CLASS_TIMESTAMP,
+            sensor.SensorDeviceClass.TIMESTAMP,
             "2021-11-18 20:25:00+00:00",
             "2021-11-18T20:25:00+00:00",
             False,
         ),
         (
-            sensor.DEVICE_CLASS_TIMESTAMP,
+            sensor.SensorDeviceClass.TIMESTAMP,
             "2021-11-18 20:25:00+01:00",
             "2021-11-18T19:25:00+00:00",
             False,
         ),
-        (sensor.DEVICE_CLASS_TIMESTAMP, "invalid", STATE_UNKNOWN, True),
+        (sensor.SensorDeviceClass.TIMESTAMP, "invalid", STATE_UNKNOWN, True),
     ],
 )
 async def test_setting_sensor_native_value_handling_via_mqtt_message(
@@ -891,35 +891,6 @@ async def test_entity_disabled_by_default(hass, mqtt_mock):
 async def test_entity_category(hass, mqtt_mock):
     """Test entity category."""
     await help_test_entity_category(hass, mqtt_mock, sensor.DOMAIN, DEFAULT_CONFIG)
-
-
-async def test_value_template_with_raw_data(hass, mqtt_mock):
-    """Test processing a raw value via MQTT."""
-    assert await async_setup_component(
-        hass,
-        sensor.DOMAIN,
-        {
-            sensor.DOMAIN: {
-                "platform": "mqtt",
-                "name": "test",
-                "encoding": "",
-                "state_topic": "test-topic",
-                "unit_of_measurement": "fav unit",
-                "value_template": "{{ value | bitwise_and(255) }}",
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-    async_fire_mqtt_message(hass, "test-topic", b"\xff")
-    state = hass.states.get("sensor.test")
-
-    assert state.state == "255"
-
-    async_fire_mqtt_message(hass, "test-topic", b"\x01\x10")
-    state = hass.states.get("sensor.test")
-
-    assert state.state == "16"
 
 
 async def test_value_template_with_entity_id(hass, mqtt_mock):

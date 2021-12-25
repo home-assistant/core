@@ -1,7 +1,10 @@
 """Support for MQTT message handling."""
 from __future__ import annotations
 
+from ast import literal_eval
 import asyncio
+from dataclasses import dataclass
+import datetime as dt
 from functools import lru_cache, partial, wraps
 import inspect
 from itertools import groupby
@@ -38,9 +41,11 @@ from homeassistant.core import (
     ServiceCall,
     callback,
 )
+from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.exceptions import HomeAssistantError, TemplateError, Unauthorized
 from homeassistant.helpers import config_validation as cv, event, template
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
+from homeassistant.helpers.frame import report
 from homeassistant.helpers.typing import ConfigType, ServiceDataType
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
@@ -246,6 +251,81 @@ MQTT_PUBLISH_SCHEMA = vol.All(
 SubscribePayloadType = Union[str, bytes]  # Only bytes if encoding is None
 
 
+class MqttCommandTemplate:
+    """Class for rendering MQTT payload with command templates."""
+
+    def __init__(
+        self,
+        command_template: template.Template | None,
+        hass: HomeAssistant,
+    ) -> None:
+        """Instantiate a command template."""
+        self._attr_command_template = command_template
+        if command_template is None:
+            return
+
+        command_template.hass = hass
+
+    @callback
+    def async_render(
+        self,
+        value: PublishPayloadType = None,
+        variables: template.TemplateVarsType = None,
+    ) -> PublishPayloadType:
+        """Render or convert the command template with given value or variables."""
+
+        def _convert_outgoing_payload(
+            payload: PublishPayloadType,
+        ) -> PublishPayloadType:
+            """Ensure correct raw MQTT payload is passed as bytes for publishing."""
+            if isinstance(payload, str):
+                try:
+                    native_object = literal_eval(payload)
+                    if isinstance(native_object, bytes):
+                        return native_object
+
+                except (ValueError, TypeError, SyntaxError, MemoryError):
+                    pass
+
+            return payload
+
+        if self._attr_command_template is None:
+            return value
+
+        values = {"value": value}
+        if variables is not None:
+            values.update(variables)
+        return _convert_outgoing_payload(
+            self._attr_command_template.async_render(values, parse_result=False)
+        )
+
+
+@dataclass
+class MqttServiceInfo(BaseServiceInfo):
+    """Prepared info from mqtt entries."""
+
+    topic: str
+    payload: ReceivePayloadType
+    qos: int
+    retain: bool
+    subscribed_topic: str
+    timestamp: dt.datetime
+
+    def __getitem__(self, name: str) -> Any:
+        """
+        Allow property access by name for compatibility reason.
+
+        Deprecated, and will be removed in version 2022.6.
+        """
+        report(
+            f"accessed discovery_info['{name}'] instead of discovery_info.{name}; "
+            "this will fail in version 2022.6",
+            exclude_integrations={DOMAIN},
+            error_if_core=False,
+        )
+        return getattr(self, name)
+
+
 def _build_publish_data(topic: Any, qos: int, retain: bool) -> ServiceDataType:
     """Build the arguments for the publish service without the payload."""
     data = {ATTR_TOPIC: topic}
@@ -265,7 +345,9 @@ async def async_publish(
     hass: HomeAssistant, topic: Any, payload, qos=0, retain=False
 ) -> None:
     """Publish message to an MQTT topic."""
-    await hass.data[DATA_MQTT].async_publish(topic, str(payload), qos, retain)
+    await hass.data[DATA_MQTT].async_publish(
+        topic, str(payload) if not isinstance(payload, bytes) else payload, qos, retain
+    )
 
 
 AsyncDeprecatedMessageCallbackType = Callable[
@@ -493,9 +575,9 @@ async def async_setup_entry(hass, entry):
 
         if payload_template is not None:
             try:
-                payload = template.Template(payload_template, hass).async_render(
-                    parse_result=False
-                )
+                payload = MqttCommandTemplate(
+                    template.Template(payload_template), hass
+                ).async_render()
             except (template.jinja2.TemplateError, TemplateError) as exc:
                 _LOGGER.error(
                     "Unable to publish to %s: rendering payload template of "

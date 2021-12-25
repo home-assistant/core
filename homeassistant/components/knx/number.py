@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_TYPE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -27,7 +28,6 @@ from .const import (
     DATA_KNX_CONFIG,
     DOMAIN,
     KNX_ADDRESS,
-    SupportedPlatforms,
 )
 from .knx_entity import KnxEntity
 from .schema import NumberSchema
@@ -40,9 +40,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up number(s) for KNX platform."""
     xknx: XKNX = hass.data[DOMAIN].xknx
-    config: list[ConfigType] = hass.data[DATA_KNX_CONFIG][
-        SupportedPlatforms.NUMBER.value
-    ]
+    config: list[ConfigType] = hass.data[DATA_KNX_CONFIG][Platform.NUMBER]
 
     async_add_entities(KNXNumber(xknx, entity_config) for entity_config in config)
 

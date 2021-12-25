@@ -3,6 +3,7 @@
 from agent import AgentError
 from agent.a import Agent
 
+from homeassistant.const import Platform
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -12,7 +13,7 @@ from .const import CONNECTION, DOMAIN as AGENT_DOMAIN, SERVER_URL
 ATTRIBUTION = "ispyconnect.com"
 DEFAULT_BRAND = "Agent DVR by ispyconnect.com"
 
-FORWARDS = ["alarm_control_panel", "camera"]
+PLATFORMS = [Platform.ALARM_CONTROL_PANEL, Platform.CAMERA]
 
 
 async def async_setup_entry(hass, config_entry):
@@ -46,14 +47,16 @@ async def async_setup_entry(hass, config_entry):
         sw_version=agent_client.version,
     )
 
-    hass.config_entries.async_setup_platforms(config_entry, FORWARDS)
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     return True
 
 
 async def async_unload_entry(hass, config_entry):
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(config_entry, FORWARDS)
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
+    )
 
     await hass.data[AGENT_DOMAIN][config_entry.entry_id][CONNECTION].close()
 

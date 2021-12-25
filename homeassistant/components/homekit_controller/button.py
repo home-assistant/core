@@ -15,8 +15,8 @@ from homeassistant.components.button import (
     ButtonEntity,
     ButtonEntityDescription,
 )
-from homeassistant.const import ENTITY_CATEGORY_CONFIG
 from homeassistant.core import callback
+from homeassistant.helpers.entity import EntityCategory
 
 from . import KNOWN_DEVICES, CharacteristicEntity
 
@@ -33,14 +33,14 @@ BUTTON_ENTITIES: dict[str, HomeKitButtonEntityDescription] = {
         key=CharacteristicsTypes.Vendor.HAA_SETUP,
         name="Setup",
         icon="mdi:cog",
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.CONFIG,
         write_value="#HAA@trcmd",
     ),
     CharacteristicsTypes.Vendor.HAA_UPDATE: HomeKitButtonEntityDescription(
         key=CharacteristicsTypes.Vendor.HAA_UPDATE,
         name="Update",
         device_class=ButtonDeviceClass.UPDATE,
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.CONFIG,
         write_value="#HAA@trcmd",
     ),
 }

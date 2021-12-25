@@ -11,7 +11,7 @@
     },
     {
       "type": "_http._tcp.local.",
-      "manufacturer": "nettigo"
+      "properties": {"manufacturer": "nettigo"}
     }
   ],
   "config_flow": true,

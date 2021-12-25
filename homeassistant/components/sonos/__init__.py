@@ -24,6 +24,7 @@ from homeassistant.const import CONF_HOSTS, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.event import async_track_time_interval, call_later
 
 from .alarms import SonosAlarms
 from .const import (
@@ -236,8 +237,8 @@ class SonosDiscoveryManager:
                 if soco and soco.is_visible:
                     self._discovered_player(soco)
 
-        self.data.hosts_heartbeat = self.hass.helpers.event.call_later(
-            DISCOVERY_INTERVAL.total_seconds(), self._manual_hosts
+        self.data.hosts_heartbeat = call_later(
+            self.hass, DISCOVERY_INTERVAL.total_seconds(), self._manual_hosts
         )
 
     def _discovered_ip(self, ip_address):
@@ -265,19 +266,27 @@ class SonosDiscoveryManager:
                     self.hass, f"{SONOS_SPEAKER_ACTIVITY}-{uid}", "discovery"
                 )
 
-    async def _async_ssdp_discovered_player(self, info, change):
+    async def _async_ssdp_discovered_player(
+        self, info: ssdp.SsdpServiceInfo, change: ssdp.SsdpChange
+    ) -> None:
         if change == ssdp.SsdpChange.BYEBYE:
             return
 
-        uid = info.get(ssdp.ATTR_UPNP_UDN)
+        uid = info.upnp[ssdp.ATTR_UPNP_UDN]
         if not uid.startswith("uuid:RINCON_"):
             return
 
         uid = uid[5:]
-        discovered_ip = urlparse(info[ssdp.ATTR_SSDP_LOCATION]).hostname
-        boot_seqnum = info.get("X-RINCON-BOOTSEQ")
+        discovered_ip = urlparse(info.ssdp_location).hostname
+        boot_seqnum = info.ssdp_headers.get("X-RINCON-BOOTSEQ")
         self.async_discovered_player(
-            "SSDP", info, discovered_ip, uid, boot_seqnum, info.get("modelName"), None
+            "SSDP",
+            info,
+            discovered_ip,
+            uid,
+            boot_seqnum,
+            info.upnp.get(ssdp.ATTR_UPNP_MODEL_NAME),
+            None,
         )
 
     @callback
@@ -331,7 +340,8 @@ class SonosDiscoveryManager:
         )
 
         self.entry.async_on_unload(
-            self.hass.helpers.event.async_track_time_interval(
+            async_track_time_interval(
+                self.hass,
                 partial(
                     async_dispatcher_send,
                     self.hass,

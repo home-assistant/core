@@ -2,7 +2,7 @@
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_EXCLUDE
+from homeassistant.const import CONF_EXCLUDE, Platform
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -10,7 +10,7 @@ from homeassistant.helpers.typing import ConfigType
 from .const import DATA_CONFIG, IZONE
 from .discovery import async_start_discovery_service, async_stop_discovery_service
 
-PLATFORMS = ["climate"]
+PLATFORMS = [Platform.CLIMATE]
 
 CONFIG_SCHEMA = vol.Schema(
     {

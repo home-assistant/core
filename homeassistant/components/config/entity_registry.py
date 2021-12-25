@@ -10,7 +10,10 @@ from homeassistant.components.websocket_api.decorators import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_registry import DISABLED_USER, async_get_registry
+from homeassistant.helpers.entity_registry import (
+    RegistryEntryDisabler,
+    async_get_registry,
+)
 
 
 async def async_setup(hass):
@@ -75,7 +78,12 @@ async def websocket_get_entity(hass, connection, msg):
         vol.Optional("name"): vol.Any(str, None),
         vol.Optional("new_entity_id"): str,
         # We only allow setting disabled_by user via API.
-        vol.Optional("disabled_by"): vol.Any(DISABLED_USER, None),
+        vol.Optional("disabled_by"): vol.Any(
+            None,
+            vol.All(
+                vol.Coerce(RegistryEntryDisabler), RegistryEntryDisabler.USER.value
+            ),
+        ),
     }
 )
 async def websocket_update_entity(hass, connection, msg):

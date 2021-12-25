@@ -11,11 +11,7 @@ from homeassistant.components.mqtt.abbreviations import (
     ABBREVIATIONS,
     DEVICE_ABBREVIATIONS,
 )
-from homeassistant.components.mqtt.discovery import (
-    ALREADY_DISCOVERED,
-    MqttServiceInfo,
-    async_start,
-)
+from homeassistant.components.mqtt.discovery import ALREADY_DISCOVERED, async_start
 from homeassistant.const import (
     EVENT_STATE_CHANGED,
     STATE_OFF,
@@ -751,7 +747,7 @@ async def test_discovery_expansion_without_encoding_and_value_template_1(
         '    "topic":"~/avail_item1",'
         '    "payload_available": "1",'
         '    "payload_not_available": "0",'
-        '    "value_template":"{{ value | bitwise_and(1) }}"'
+        '    "value_template":"{{value|unpack(\'b\')}}"'
         "  }],"
         '  "dev":{'
         '    "ids":["5706DF"],'
@@ -798,7 +794,7 @@ async def test_discovery_expansion_without_encoding_and_value_template_2(
         '  "payload_available": "1",'
         '  "payload_not_available": "0",'
         '  "encoding":"",'
-        '  "availability_template":"{{ value | bitwise_and(1) }}",'
+        '  "availability_template":"{{ value | unpack(\'b\') }}",'
         '  "dev":{'
         '    "ids":["5706DF"],'
         '    "name":"DiscoveryExpansionTest1 Device",'
@@ -1003,27 +999,3 @@ async def test_mqtt_discovery_unsubscribe_once(hass, mqtt_client_mock, mqtt_mock
         await hass.async_block_till_done()
         await hass.async_block_till_done()
         mqtt_client_mock.unsubscribe.assert_called_once_with("comp/discovery/#")
-
-
-async def test_service_info_compatibility(hass, caplog):
-    """Test compatibility with old-style dict.
-
-    To be removed in 2022.6
-    """
-    discovery_info = MqttServiceInfo(
-        topic="tasmota/discovery/DC4F220848A2/config",
-        payload="",
-        qos=0,
-        retain=False,
-        subscribed_topic="tasmota/discovery/#",
-        timestamp=None,
-    )
-
-    # Ensure first call get logged
-    assert discovery_info["topic"] == "tasmota/discovery/DC4F220848A2/config"
-    assert "Detected code that accessed discovery_info['topic']" in caplog.text
-
-    # Ensure second call doesn't get logged
-    caplog.clear()
-    assert discovery_info["topic"] == "tasmota/discovery/DC4F220848A2/config"
-    assert "Detected code that accessed discovery_info['topic']" not in caplog.text

@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -66,15 +67,25 @@ from .utils import (
 )
 
 BLOCK_PLATFORMS: Final = [
-    "binary_sensor",
-    "button",
-    "cover",
-    "light",
-    "sensor",
-    "switch",
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.COVER,
+    Platform.LIGHT,
+    Platform.SENSOR,
+    Platform.SWITCH,
 ]
-BLOCK_SLEEPING_PLATFORMS: Final = ["binary_sensor", "climate", "sensor"]
-RPC_PLATFORMS: Final = ["binary_sensor", "button", "light", "sensor", "switch"]
+BLOCK_SLEEPING_PLATFORMS: Final = [
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.SENSOR,
+]
+RPC_PLATFORMS: Final = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.LIGHT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 _LOGGER: Final = logging.getLogger(__name__)
 
 COAP_SCHEMA: Final = vol.Schema(

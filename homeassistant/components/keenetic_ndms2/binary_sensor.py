@@ -1,6 +1,6 @@
 """The Keenetic Client class."""
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -23,7 +23,7 @@ async def async_setup_entry(
 class RouterOnlineBinarySensor(BinarySensorEntity):
     """Representation router connection status."""
 
-    _attr_device_class = DEVICE_CLASS_CONNECTIVITY
+    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
     _attr_should_poll = False
 
     def __init__(self, router: KeeneticRouter) -> None:

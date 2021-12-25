@@ -106,7 +106,7 @@ async def send_attributes_report(hass, cluster: zigpy.zcl.Cluster, attributes: d
     await hass.async_block_till_done()
 
 
-async def find_entity_id(domain, zha_device, hass):
+async def find_entity_id(domain, zha_device, hass, qualifier=None):
     """Find the entity id under the testing.
 
     This is used to get the entity id in order to get the state from the state
@@ -115,7 +115,12 @@ async def find_entity_id(domain, zha_device, hass):
     entities = await find_entity_ids(domain, zha_device, hass)
     if not entities:
         return None
-    return entities[0]
+    if qualifier:
+        for entity_id in entities:
+            if qualifier in entity_id:
+                return entity_id
+    else:
+        return entities[0]
 
 
 async def find_entity_ids(domain, zha_device, hass):

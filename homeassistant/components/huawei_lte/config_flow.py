@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
 
 from huawei_lte_api.AuthorizedConnection import AuthorizedConnection
@@ -214,10 +214,12 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         ):
             return self.async_abort(reason="not_huawei_lte")
 
+        if TYPE_CHECKING:
+            assert discovery_info.ssdp_location
         url = url_normalize(
             discovery_info.upnp.get(
                 ssdp.ATTR_UPNP_PRESENTATION_URL,
-                f"http://{urlparse(discovery_info.ssdp_location or '').hostname}/",
+                f"http://{urlparse(discovery_info.ssdp_location).hostname}/",
             )
         )
 

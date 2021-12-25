@@ -94,10 +94,15 @@ def mock_valid_discovery_information():
     with patch(
         "homeassistant.components.ssdp.async_get_discovery_info_by_st",
         return_value=[
-            {
-                "ssdp_location": "http://127.0.0.1:9000/MediaRenderer/desc.xml",
-                "_host": "127.0.0.1",
-            }
+            ssdp.SsdpServiceInfo(
+                ssdp_usn="mock_usn",
+                ssdp_st="mock_st",
+                ssdp_location="http://127.0.0.1:9000/MediaRenderer/desc.xml",
+                ssdp_headers={
+                    "_host": "127.0.0.1",
+                },
+                upnp={},
+            )
         ],
     ):
         yield

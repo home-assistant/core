@@ -8,8 +8,8 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
-    STATE_CLASS_MEASUREMENT,
     SensorEntity,
+    SensorStateClass,
 )
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME, POWER_WATT
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -58,7 +58,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class EliqSensor(SensorEntity):
     """Implementation of an ELIQ Online sensor."""
 
-    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, api, channel_id, name):
         """Initialize the sensor."""

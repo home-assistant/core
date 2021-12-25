@@ -13,13 +13,15 @@
                 "data": {
                     "password": "Mot de passe"
                 },
+                "description": "Veuillez saisir \u00e0 nouveau le mot de passe pour {username}\u00a0:",
                 "title": "R\u00e9-authentifier l'int\u00e9gration"
             },
             "user": {
                 "data": {
                     "password": "Mot de passe",
                     "username": "Nom d'utilisateur"
-                }
+                },
+                "description": "Saisissez votre nom d'utilisateur et votre mot de passe\u00a0:"
             }
         }
     }

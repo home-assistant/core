@@ -55,7 +55,7 @@ DEVICE_SCHEMA = vol.Schema(
     }
 )
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

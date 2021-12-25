@@ -3,8 +3,10 @@ from __future__ import annotations
 
 from typing import Final
 
-MAJOR_VERSION: Final = 2021
-MINOR_VERSION: Final = 12
+from .backports.enum import StrEnum
+
+MAJOR_VERSION: Final = 2022
+MINOR_VERSION: Final = 2
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -15,6 +17,42 @@ REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = "2022.1"
 
 # Format for platform files
 PLATFORM_FORMAT: Final = "{platform}.{domain}"
+
+
+class Platform(StrEnum):
+    """Available entity platforms."""
+
+    AIR_QUALITY = "air_quality"
+    ALARM_CONTROL_PANEL = "alarm_control_panel"
+    BINARY_SENSOR = "binary_sensor"
+    BUTTON = "button"
+    CALENDAR = "calendar"
+    CAMERA = "camera"
+    CLIMATE = "climate"
+    COVER = "cover"
+    DEVICE_TRACKER = "device_tracker"
+    FAN = "fan"
+    GEO_LOCATION = "geo_location"
+    HUMIDIFIER = "humidifier"
+    IMAGE_PROCESSING = "image_processing"
+    LIGHT = "light"
+    LOCK = "lock"
+    MAILBOX = "mailbox"
+    MEDIA_PLAYER = "media_player"
+    NOTIFY = "notify"
+    NUMBER = "number"
+    REMOTE = "remote"
+    SCENE = "scene"
+    SELECT = "select"
+    SENSOR = "sensor"
+    SIREN = "siren"
+    STT = "stt"
+    SWITCH = "switch"
+    TTS = "tts"
+    VACUUM = "vacuum"
+    WATER_HEATER = "water_heater"
+    WEATHER = "weather"
+
 
 # Can be used to specify a catch all when registering state or event listeners.
 MATCH_ALL: Final = "*"
@@ -362,6 +400,7 @@ ATTR_MANUFACTURER: Final = "manufacturer"
 ATTR_MODEL: Final = "model"
 ATTR_SUGGESTED_AREA: Final = "suggested_area"
 ATTR_SW_VERSION: Final = "sw_version"
+ATTR_HW_VERSION: Final = "hw_version"
 ATTR_VIA_DEVICE: Final = "via_device"
 
 ATTR_BATTERY_CHARGING: Final = "battery_charging"
@@ -419,11 +458,16 @@ ATTR_TEMPERATURE: Final = "temperature"
 
 
 # #### UNITS OF MEASUREMENT ####
+# Apparent power units
+POWER_VOLT_AMPERE: Final = "VA"
+
 # Power units
 POWER_WATT: Final = "W"
 POWER_KILO_WATT: Final = "kW"
-POWER_VOLT_AMPERE: Final = "VA"
 POWER_BTU_PER_HOUR: Final = "BTU/h"
+
+# Reactive power units
+POWER_VOLT_AMPERE_REACTIVE: Final = "var"
 
 # Energy units
 ENERGY_WATT_HOUR: Final = "Wh"
@@ -718,3 +762,6 @@ ENTITY_CATEGORIES: Final[list[str]] = [
 CAST_APP_ID_HOMEASSISTANT_MEDIA: Final = "B45F4572"
 # The ID of the Home Assistant Lovelace Cast App
 CAST_APP_ID_HOMEASSISTANT_LOVELACE: Final = "A078F6B0"
+
+# User used by Supervisor
+HASSIO_USER_NAME = "Supervisor"

@@ -264,7 +264,9 @@ async def async_get_conditions(
 
 
 @callback
-def async_condition_from_config(config: ConfigType) -> condition.ConditionCheckerType:
+def async_condition_from_config(
+    hass: HomeAssistant, config: ConfigType
+) -> condition.ConditionCheckerType:
     """Evaluate state based on configuration."""
     condition_type = config[CONF_TYPE]
     if condition_type in IS_ON:
@@ -279,6 +281,7 @@ def async_condition_from_config(config: ConfigType) -> condition.ConditionChecke
     if CONF_FOR in config:
         state_config[CONF_FOR] = config[CONF_FOR]
     state_config = cv.STATE_CONDITION_SCHEMA(state_config)
+    state_config = condition.state_validate_config(hass, state_config)
 
     return condition.state_from_config(state_config)
 

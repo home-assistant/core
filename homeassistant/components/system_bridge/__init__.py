@@ -20,6 +20,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PATH,
     CONF_PORT,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
@@ -40,7 +41,7 @@ from .coordinator import SystemBridgeDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["binary_sensor", "sensor"]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 CONF_ARGUMENTS = "arguments"
 CONF_BRIDGE = "bridge"

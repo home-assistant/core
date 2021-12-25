@@ -9,6 +9,7 @@ from typing import Any, final
 
 import voluptuous as vol
 
+from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     SERVICE_CLOSE_COVER,
@@ -34,7 +35,6 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.loader import bind_hass
-from homeassistant.util.enum import StrEnum
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
@@ -403,15 +403,3 @@ class CoverEntity(Entity):
         if self._cover_is_last_toggle_direction_open:
             return fns["close"]
         return fns["open"]
-
-
-class CoverDevice(CoverEntity):
-    """Representation of a cover (for backwards compatibility)."""
-
-    def __init_subclass__(cls, **kwargs):
-        """Print deprecation warning."""
-        super().__init_subclass__(**kwargs)
-        _LOGGER.warning(
-            "CoverDevice is deprecated, modify %s to extend CoverEntity",
-            cls.__name__,
-        )

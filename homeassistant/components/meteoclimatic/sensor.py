@@ -1,7 +1,6 @@
 """Support for Meteoclimatic sensor."""
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
@@ -28,7 +27,7 @@ async def async_setup_entry(
 class MeteoclimaticSensor(CoordinatorEntity, SensorEntity):
     """Representation of a Meteoclimatic sensor."""
 
-    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+    _attr_attribution = ATTRIBUTION
 
     def __init__(
         self, coordinator: DataUpdateCoordinator, description: SensorEntityDescription

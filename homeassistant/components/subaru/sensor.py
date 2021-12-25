@@ -1,13 +1,12 @@
 """Support for Subaru sensors."""
 import subarulink.const as sc
 
-from homeassistant.components.sensor import DEVICE_CLASSES, SensorEntity
+from homeassistant.components.sensor import (
+    DEVICE_CLASSES,
+    SensorDeviceClass,
+    SensorEntity,
+)
 from homeassistant.const import (
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_PRESSURE,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_TIMESTAMP,
-    DEVICE_CLASS_VOLTAGE,
     ELECTRIC_POTENTIAL_VOLT,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
@@ -79,37 +78,37 @@ API_GEN_2_SENSORS = [
     },
     {
         SENSOR_TYPE: "Tire Pressure FL",
-        SENSOR_CLASS: DEVICE_CLASS_PRESSURE,
+        SENSOR_CLASS: SensorDeviceClass.PRESSURE,
         SENSOR_FIELD: sc.TIRE_PRESSURE_FL,
         SENSOR_UNITS: PRESSURE_HPA,
     },
     {
         SENSOR_TYPE: "Tire Pressure FR",
-        SENSOR_CLASS: DEVICE_CLASS_PRESSURE,
+        SENSOR_CLASS: SensorDeviceClass.PRESSURE,
         SENSOR_FIELD: sc.TIRE_PRESSURE_FR,
         SENSOR_UNITS: PRESSURE_HPA,
     },
     {
         SENSOR_TYPE: "Tire Pressure RL",
-        SENSOR_CLASS: DEVICE_CLASS_PRESSURE,
+        SENSOR_CLASS: SensorDeviceClass.PRESSURE,
         SENSOR_FIELD: sc.TIRE_PRESSURE_RL,
         SENSOR_UNITS: PRESSURE_HPA,
     },
     {
         SENSOR_TYPE: "Tire Pressure RR",
-        SENSOR_CLASS: DEVICE_CLASS_PRESSURE,
+        SENSOR_CLASS: SensorDeviceClass.PRESSURE,
         SENSOR_FIELD: sc.TIRE_PRESSURE_RR,
         SENSOR_UNITS: PRESSURE_HPA,
     },
     {
         SENSOR_TYPE: "External Temp",
-        SENSOR_CLASS: DEVICE_CLASS_TEMPERATURE,
+        SENSOR_CLASS: SensorDeviceClass.TEMPERATURE,
         SENSOR_FIELD: sc.EXTERNAL_TEMP,
         SENSOR_UNITS: TEMP_CELSIUS,
     },
     {
         SENSOR_TYPE: "12V Battery Voltage",
-        SENSOR_CLASS: DEVICE_CLASS_VOLTAGE,
+        SENSOR_CLASS: SensorDeviceClass.VOLTAGE,
         SENSOR_FIELD: sc.BATTERY_VOLTAGE,
         SENSOR_UNITS: ELECTRIC_POTENTIAL_VOLT,
     },
@@ -125,13 +124,13 @@ EV_SENSORS = [
     },
     {
         SENSOR_TYPE: "EV Battery Level",
-        SENSOR_CLASS: DEVICE_CLASS_BATTERY,
+        SENSOR_CLASS: SensorDeviceClass.BATTERY,
         SENSOR_FIELD: sc.EV_STATE_OF_CHARGE_PERCENT,
         SENSOR_UNITS: PERCENTAGE,
     },
     {
         SENSOR_TYPE: "EV Time to Full Charge",
-        SENSOR_CLASS: DEVICE_CLASS_TIMESTAMP,
+        SENSOR_CLASS: SensorDeviceClass.TIMESTAMP,
         SENSOR_FIELD: sc.EV_TIME_TO_FULLY_CHARGED,
         SENSOR_UNITS: TIME_MINUTES,
     },
