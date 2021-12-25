@@ -1,6 +1,8 @@
 """Support for LED numbers."""
 from __future__ import annotations
 
+from abc import abstractmethod
+import logging
 from typing import cast
 
 from flux_led.protocol import (
@@ -17,6 +19,7 @@ from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -25,6 +28,10 @@ from .const import DOMAIN, EFFECT_SPEED_SUPPORT_MODES
 from .coordinator import FluxLedUpdateCoordinator
 from .entity import FluxEntity
 from .util import _effect_brightness, _hass_color_modes
+
+_LOGGER = logging.getLogger(__name__)
+
+DEBOUNCE_TIME = 3
 
 
 async def async_setup_entry(
@@ -67,6 +74,38 @@ class FluxConfigNumber(FluxEntity, CoordinatorEntity, NumberEntity):
     _attr_min_value = 1
     _attr_step = 1
     _attr_mode = NumberMode.BOX
+
+    def __init__(
+        self,
+        coordinator: FluxLedUpdateCoordinator,
+        unique_id: str | None,
+        name: str,
+    ) -> None:
+        """Initialize the flux number."""
+        super().__init__(coordinator, unique_id, name)
+        self._debouncer: Debouncer | None = None
+        self._pending_value: int | None = None
+
+    async def async_added_to_hass(self) -> None:
+        """Set up the debouncer when adding to hass."""
+        self._debouncer = Debouncer(
+            hass=self.hass,
+            logger=_LOGGER,
+            cooldown=DEBOUNCE_TIME,
+            immediate=False,
+            function=self._async_set_value,
+        )
+        await super().async_added_to_hass()
+
+    async def async_set_value(self, value: float) -> None:
+        """Set the value."""
+        self._pending_value = int(value)
+        assert self._debouncer is not None
+        await self._debouncer.async_call()
+
+    @abstractmethod
+    async def _async_set_value(self) -> None:
+        """Call on debounce to set the value."""
 
     def _pixels_and_segments_fit_in_music_mode(self) -> bool:
         """Check if the base pixel and segment settings will fix for music mode.
@@ -116,9 +155,12 @@ class FluxPixelsPerSegmentNumber(FluxConfigNumber):
         assert self._device.pixels_per_segment is not None
         return self._device.pixels_per_segment
 
-    async def async_set_value(self, value: float) -> None:
+    async def _async_set_value(self) -> None:
         """Set the pixels per segment."""
-        await self._device.async_set_device_config(pixels_per_segment=int(value))
+        assert self._pending_value is not None
+        await self._device.async_set_device_config(
+            pixels_per_segment=self._pending_value
+        )
 
 
 class FluxSegmentsNumber(FluxConfigNumber):
@@ -152,9 +194,10 @@ class FluxSegmentsNumber(FluxConfigNumber):
         assert self._device.segments is not None
         return self._device.segments
 
-    async def async_set_value(self, value: float) -> None:
+    async def _async_set_value(self) -> None:
         """Set the segments."""
-        await self._device.async_set_device_config(segments=int(value))
+        assert self._pending_value is not None
+        await self._device.async_set_device_config(segments=self._pending_value)
 
 
 class FluxMusicPixelsPerSegmentNumber(FluxConfigNumber):
@@ -194,9 +237,12 @@ class FluxMusicPixelsPerSegmentNumber(FluxConfigNumber):
         """Return if music pixels per segment can be set."""
         return super().available and not self._pixels_and_segments_fit_in_music_mode()
 
-    async def async_set_value(self, value: float) -> None:
+    async def _async_set_value(self) -> None:
         """Set the music pixels per segment."""
-        await self._device.async_set_device_config(music_pixels_per_segment=int(value))
+        assert self._pending_value is not None
+        await self._device.async_set_device_config(
+            music_pixels_per_segment=self._pending_value
+        )
 
 
 class FluxMusicSegmentsNumber(FluxConfigNumber):
@@ -236,9 +282,10 @@ class FluxMusicSegmentsNumber(FluxConfigNumber):
         """Return if music segments can be set."""
         return super().available and not self._pixels_and_segments_fit_in_music_mode()
 
-    async def async_set_value(self, value: float) -> None:
+    async def _async_set_value(self) -> None:
         """Set the music segments."""
-        await self._device.async_set_device_config(music_segments=int(value))
+        assert self._pending_value is not None
+        await self._device.async_set_device_config(music_segments=self._pending_value)
 
 
 class FluxSpeedNumber(FluxEntity, CoordinatorEntity, NumberEntity):
