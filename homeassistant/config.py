@@ -700,7 +700,7 @@ def _recursive_merge(conf: dict[str, Any], package: dict[str, Any]) -> bool | st
 
         elif isinstance(pack_conf, list):
             conf[key] = cv.remove_falsy(
-                cv.ensure_list(conf.get(key)) + cv.ensure_list(pack_conf)  # type: ignore[operator]
+                cv.ensure_list(conf.get(key)) + cv.ensure_list(pack_conf)
             )
 
         else:
