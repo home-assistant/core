@@ -125,9 +125,10 @@ class GenericCamera(Camera):
     ) -> bytes | None:
         """Return a still image response from the camera."""
         if not self._still_image_url:
+            if not self.stream:
+                await self.async_create_stream()
             if self.stream:
                 return await self.stream.async_get_image(width, height)
-            await self.async_create_stream()
             return None
         try:
             url = self._still_image_url.async_render(parse_result=False)
