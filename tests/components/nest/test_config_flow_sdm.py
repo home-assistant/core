@@ -1,6 +1,7 @@
 """Test the Google Nest Device Access config flow."""
 
 import copy
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from google_nest_sdm.exceptions import (
@@ -27,6 +28,8 @@ PROJECT_ID = "project-id-4321"
 SUBSCRIBER_ID = "projects/cloud-id-9876/subscriptions/subscriber-id-9876"
 CLOUD_PROJECT_ID = "cloud-id-9876"
 
+BASE_CONFIG = {"http": {"base_url": "https://example.com"}}
+
 CONFIG = {
     DOMAIN: {
         "project_id": PROJECT_ID,
@@ -34,7 +37,7 @@ CONFIG = {
         CONF_CLIENT_ID: CLIENT_ID,
         CONF_CLIENT_SECRET: CLIENT_SECRET,
     },
-    "http": {"base_url": "https://example.com"},
+    **BASE_CONFIG,
 }
 
 ORIG_AUTH_DOMAIN = DOMAIN
@@ -92,7 +95,10 @@ class OAuthFixture:
     async def async_oauth_web_flow(self, result: dict) -> None:
         """Invoke the oauth flow for Web Auth with fake responses."""
         state = self.create_state(result, WEB_REDIRECT_URL)
-        assert result["url"] == self.authorize_url(state, WEB_REDIRECT_URL)
+        assert result["type"] == "external"
+        assert result["url"] == self.authorize_url(
+            state, WEB_REDIRECT_URL, CLIENT_ID, PROJECT_ID
+        )
 
         # Simulate user redirect back with auth code
         client = await self.hass_client()
@@ -102,7 +108,9 @@ class OAuthFixture:
 
         await self.async_mock_refresh(result)
 
-    async def async_oauth_app_flow(self, result: dict) -> None:
+    async def async_oauth_app_flow(
+        self, result: dict, client_id: str = CLIENT_ID, project_id: str = PROJECT_ID
+    ) -> None:
         """Invoke the oauth flow for Installed Auth with fake responses."""
         # Render form with a link to get an auth token
         assert result["type"] == "form"
@@ -111,7 +119,10 @@ class OAuthFixture:
         assert "url" in result["description_placeholders"]
         state = self.create_state(result, APP_REDIRECT_URL)
         assert result["description_placeholders"]["url"] == self.authorize_url(
-            state, APP_REDIRECT_URL
+            state,
+            APP_REDIRECT_URL,
+            client_id,
+            project_id,
         )
         # Simulate user entering auth token in form
         await self.async_mock_refresh(result, {"code": "abcd"})
@@ -144,11 +155,13 @@ class OAuthFixture:
             },
         )
 
-    def authorize_url(self, state: str, redirect_url: str) -> str:
+    def authorize_url(
+        self, state: str, redirect_url: str, client_id: str, project_id: str
+    ) -> str:
         """Generate the expected authorization url."""
-        oauth_authorize = OAUTH2_AUTHORIZE.format(project_id=PROJECT_ID)
+        oauth_authorize = OAUTH2_AUTHORIZE.format(project_id=project_id)
         return (
-            f"{oauth_authorize}?response_type=code&client_id={CLIENT_ID}"
+            f"{oauth_authorize}?response_type=code&client_id={client_id}"
             f"&redirect_uri={redirect_url}"
             f"&state={state}&scope=https://www.googleapis.com/auth/sdm.service"
             "+https://www.googleapis.com/auth/pubsub"
@@ -179,13 +192,16 @@ class OAuthFixture:
             await self.hass.async_block_till_done()
         return self.get_config_entry()
 
-    async def async_configure(self, result: dict, user_input: dict) -> dict:
+    async def async_configure(
+        self, result: dict[str, Any], user_input: dict[str, Any]
+    ) -> dict:
         """Advance to the next step in the config flow."""
         return await self.hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input
+            result["flow_id"],
+            user_input,
         )
 
-    async def async_pubsub_flow(self, result: dict, cloud_project_id="") -> ConfigEntry:
+    async def async_pubsub_flow(self, result: dict, cloud_project_id="") -> None:
         """Verify the pubsub creation step."""
         # Render form with a link to get an auth token
         assert result["type"] == "form"
@@ -210,6 +226,246 @@ async def async_setup_configflow(hass):
     config = copy.deepcopy(CONFIG)
     del config[DOMAIN]["subscriber_id"]  # Create in config flow instead
     return await setup.async_setup_component(hass, DOMAIN, config)
+
+
+async def test_config_flow(hass, oauth, subscriber):
+    """Check full flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result.get("type") == "form"
+    assert result.get("step_id") == "cloud_project"
+
+    result = await oauth.async_configure(result, {"cloud_project_id": CLOUD_PROJECT_ID})
+    assert result.get("type") == "form"
+    assert result.get("step_id") == "oauth_input"
+
+    result = await oauth.async_configure(
+        result, {"client_id": CLIENT_ID, "client_secret": CLIENT_SECRET}
+    )
+    assert result.get("type") == "form"
+    assert result.get("step_id") == "device_project"
+
+    result = await oauth.async_configure(result, {"project_id": PROJECT_ID})
+    await oauth.async_oauth_app_flow(result)
+    with patch(
+        "homeassistant.components.nest.api.GoogleNestSubscriber",
+        return_value=subscriber,
+    ):
+        entry = await oauth.async_finish_setup(result, {"code": "1234"})
+        await hass.async_block_till_done()
+
+    assert entry.title == "OAuth for Apps"
+    data = dict(entry.data)
+    assert "token" in data
+    data["token"].pop("expires_in")
+    data["token"].pop("expires_at")
+    assert "subscriber_id" in data
+    assert f"projects/{CLOUD_PROJECT_ID}/subscriptions" in data["subscriber_id"]
+    data.pop("subscriber_id")
+    assert data == {
+        "sdm": {},
+        "auth_implementation": "nest.installed",
+        "client_id": CLIENT_ID,
+        "client_secret": CLIENT_SECRET,
+        "cloud_project_id": CLOUD_PROJECT_ID,
+        "project_id": PROJECT_ID,
+        "token": {
+            "refresh_token": "mock-refresh-token",
+            "access_token": "mock-access-token",
+            "type": "Bearer",
+        },
+    }
+
+
+async def test_config_flow_restart(hass, oauth, subscriber):
+    """Check with auth implementation is re-initialized when aborting the flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result.get("type") == "form"
+    assert result.get("step_id") == "cloud_project"
+
+    result = await oauth.async_configure(result, {"cloud_project_id": CLOUD_PROJECT_ID})
+    assert result.get("type") == "form"
+    assert result.get("step_id") == "oauth_input"
+
+    result = await oauth.async_configure(
+        result, {"client_id": CLIENT_ID, "client_secret": CLIENT_SECRET}
+    )
+    assert result.get("type") == "form"
+    assert result.get("step_id") == "device_project"
+
+    result = await oauth.async_configure(result, {"project_id": PROJECT_ID})
+    assert result["type"] == "form"
+    assert result["step_id"] == "auth"
+
+    # At this point, we should have a valid auth implementation configured.
+    # Simulate aborting the flow and starting over to ensure we get prompted
+    # again to configure everything.
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result.get("type") == "form"
+    assert result.get("step_id") == "cloud_project"
+
+    # Change the values to show they are reflected below
+    result = await oauth.async_configure(
+        result, {"cloud_project_id": "new-cloud-project-id"}
+    )
+    assert result.get("type") == "form"
+    assert result.get("step_id") == "oauth_input"
+
+    result = await oauth.async_configure(
+        result, {"client_id": "new-client-id", "client_secret": "new-client-secret"}
+    )
+    assert result.get("type") == "form"
+    assert result.get("step_id") == "device_project"
+
+    result = await oauth.async_configure(result, {"project_id": "new-project-id"})
+    await oauth.async_oauth_app_flow(result, "new-client-id", "new-project-id")
+    with patch(
+        "homeassistant.components.nest.api.GoogleNestSubscriber",
+        return_value=subscriber,
+    ):
+        entry = await oauth.async_finish_setup(result, {"code": "1234"})
+        await hass.async_block_till_done()
+
+    assert entry.title == "OAuth for Apps"
+    data = dict(entry.data)
+    assert "token" in data
+    data["token"].pop("expires_in")
+    data["token"].pop("expires_at")
+    assert "subscriber_id" in data
+    assert "projects/new-cloud-project-id/subscriptions" in data["subscriber_id"]
+    data.pop("subscriber_id")
+    assert data == {
+        "sdm": {},
+        "auth_implementation": "nest.installed",
+        "client_id": "new-client-id",
+        "client_secret": "new-client-secret",
+        "cloud_project_id": "new-cloud-project-id",
+        "project_id": "new-project-id",
+        "token": {
+            "refresh_token": "mock-refresh-token",
+            "access_token": "mock-access-token",
+            "type": "Bearer",
+        },
+    }
+
+
+async def test_single_config_entry_with_config_flow(hass):
+    """Test that only a single config entry is allowed."""
+    create_config_entry(hass, {"auth_implementation": WEB_AUTH_DOMAIN, "sdm": {}})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "abort"
+    assert result["reason"] == "single_instance_allowed"
+
+
+async def test_config_flow_pubsub_configuration_error(hass, oauth, subscriber):
+    """Check full flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result.get("type") == "form"
+    assert result.get("step_id") == "cloud_project"
+
+    result = await oauth.async_configure(result, {"cloud_project_id": CLOUD_PROJECT_ID})
+    assert result.get("type") == "form"
+    assert result.get("step_id") == "oauth_input"
+
+    result = await oauth.async_configure(
+        result, {"client_id": CLIENT_ID, "client_secret": CLIENT_SECRET}
+    )
+    assert result.get("type") == "form"
+    assert result.get("step_id") == "device_project"
+
+    result = await oauth.async_configure(result, {"project_id": PROJECT_ID})
+    await oauth.async_oauth_app_flow(result)
+
+    mock_subscriber = AsyncMock()
+    mock_subscriber.create_subscription.side_effect = ConfigurationException
+
+    with patch(
+        "homeassistant.components.nest.api.GoogleNestSubscriber",
+        return_value=mock_subscriber,
+    ):
+        result = await oauth.async_configure(result, {"code": "1234"})
+        await hass.async_block_till_done()
+
+    assert result["type"] == "form"
+    assert "errors" in result
+    assert "cloud_project_id" in result["errors"]
+    assert result["errors"]["cloud_project_id"] == "bad_project_id"
+
+    # Submit the form again with an updated subscriber id
+    with patch(
+        "homeassistant.components.nest.api.GoogleNestSubscriber",
+        return_value=subscriber,
+    ):
+        entry = await oauth.async_finish_setup(
+            result, {"cloud_project_id": "new-cloud-project-id"}
+        )
+        await hass.async_block_till_done()
+
+    assert entry.title == "OAuth for Apps"
+    data = dict(entry.data)
+    assert "token" in data
+    data["token"].pop("expires_in")
+    data["token"].pop("expires_at")
+    assert "subscriber_id" in data
+    assert "projects/new-cloud-project-id/subscriptions" in data["subscriber_id"]
+    data.pop("subscriber_id")
+    assert data == {
+        "sdm": {},
+        "auth_implementation": "nest.installed",
+        "client_id": CLIENT_ID,
+        "client_secret": CLIENT_SECRET,
+        "cloud_project_id": "new-cloud-project-id",
+        "project_id": PROJECT_ID,
+        "token": {
+            "refresh_token": "mock-refresh-token",
+            "access_token": "mock-access-token",
+            "type": "Bearer",
+        },
+    }
+
+
+async def test_config_flow_pubsub_subscriber_error(hass, oauth, subscriber):
+    """Check full flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result.get("type") == "form"
+    assert result.get("step_id") == "cloud_project"
+
+    result = await oauth.async_configure(result, {"cloud_project_id": CLOUD_PROJECT_ID})
+    assert result.get("type") == "form"
+    assert result.get("step_id") == "oauth_input"
+
+    result = await oauth.async_configure(
+        result, {"client_id": CLIENT_ID, "client_secret": CLIENT_SECRET}
+    )
+    assert result.get("type") == "form"
+    assert result.get("step_id") == "device_project"
+
+    result = await oauth.async_configure(result, {"project_id": PROJECT_ID})
+    await oauth.async_oauth_app_flow(result)
+
+    with patch(
+        "homeassistant.components.nest.api.GoogleNestSubscriber.create_subscription",
+        side_effect=SubscriberException(),
+    ):
+        result = await oauth.async_configure(result, {"code": "1234"})
+        await hass.async_block_till_done()
+
+    assert result["type"] == "form"
+    assert "errors" in result
+    assert "cloud_project_id" in result["errors"]
+    assert result["errors"]["cloud_project_id"] == "subscriber_error"
 
 
 async def test_web_full_flow(hass, oauth):
@@ -277,7 +533,7 @@ async def test_web_reauth(hass, oauth):
     assert "subscriber_id" not in entry.data  # not updated
 
 
-async def test_single_config_entry(hass):
+async def test_single_config_entry_with_config(hass):
     """Test that only a single config entry is allowed."""
     create_config_entry(hass, {"auth_implementation": WEB_AUTH_DOMAIN, "sdm": {}})
 
@@ -766,7 +1022,7 @@ async def test_structure_missing_trait(hass, oauth, subscriber):
     assert entry.title == "OAuth for Apps"
 
 
-async def test_dhcp_discovery_without_config(hass, oauth):
+async def test_dhcp_discovery(hass, oauth, subscriber):
     """Exercise discovery dhcp with no config present (can't run)."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -774,11 +1030,52 @@ async def test_dhcp_discovery_without_config(hass, oauth):
         data=FAKE_DHCP_DATA,
     )
     await hass.async_block_till_done()
-    assert result["type"] == "abort"
-    assert result["reason"] == "missing_configuration"
+    assert result.get("type") == "form"
+    assert result.get("step_id") == "cloud_project"
+
+    result = await oauth.async_configure(result, {"cloud_project_id": CLOUD_PROJECT_ID})
+    assert result.get("type") == "form"
+    assert result.get("step_id") == "oauth_input"
+
+    result = await oauth.async_configure(
+        result, {"client_id": CLIENT_ID, "client_secret": CLIENT_SECRET}
+    )
+    assert result.get("type") == "form"
+    assert result.get("step_id") == "device_project"
+
+    result = await oauth.async_configure(result, {"project_id": PROJECT_ID})
+    await oauth.async_oauth_app_flow(result)
+    with patch(
+        "homeassistant.components.nest.api.GoogleNestSubscriber",
+        return_value=subscriber,
+    ):
+        entry = await oauth.async_finish_setup(result, {"code": "1234"})
+        await hass.async_block_till_done()
+
+    assert entry.title == "OAuth for Apps"
+    data = dict(entry.data)
+    assert "token" in data
+    data["token"].pop("expires_in")
+    data["token"].pop("expires_at")
+    assert "subscriber_id" in data
+    assert f"projects/{CLOUD_PROJECT_ID}/subscriptions" in data["subscriber_id"]
+    data.pop("subscriber_id")
+    assert data == {
+        "sdm": {},
+        "auth_implementation": "nest.installed",
+        "client_id": CLIENT_ID,
+        "client_secret": CLIENT_SECRET,
+        "cloud_project_id": CLOUD_PROJECT_ID,
+        "project_id": PROJECT_ID,
+        "token": {
+            "refresh_token": "mock-refresh-token",
+            "access_token": "mock-access-token",
+            "type": "Bearer",
+        },
+    }
 
 
-async def test_dhcp_discovery(hass, oauth):
+async def test_dhcp_discovery_with_config(hass, oauth):
     """Discover via dhcp when config is present."""
     assert await setup.async_setup_component(hass, DOMAIN, CONFIG)
 

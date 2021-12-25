@@ -1,12 +1,34 @@
 {
   "config": {
     "step": {
+      "cloud_project": {
+        "title": "Nest: Create and configure Cloud Project",
+        "description": "The Nest integration allows you to integrate your Nest Thermostats, Cameras, and Doorbells using the Smart Device Management API. The SDM API **requires a time US $5** one time setup fee.\n\n1. Go to the [Google Cloud Console]({cloud_console_url}).\n1. If this is your first project, click **Create Project** then **New Project**.\n1. Give your Cloud Project a Name and then click **Create**.\n1. Go to API Library for [Smart Device Management API]({sdm_api_url}) and click **Enable**.\n1. Go to API Library for [Cloud Pub/Sub API]({pubsub_api_url}) and click **Enable**.\n\nEnter the Cloud Project ID below, usually something like *example-project-12345*. ([more info]({more_info_url})).",
+        "data": {
+          "cloud_project_id": "Google Cloud Project ID"
+        }
+      },
+      "oauth_input": {
+        "title": "Nest: Configure OAuth",
+        "description": "You need to configure the OAuth Consent Screen to give Home Assistance access to your Cloud Project:\n- Go to the [OAuth consent screen]({oauth_consent_url})\n- Configure the consent screen following the [instructions]({more_info_url}).\n\nYou also need to create OAuth credentials that will be linked with your Nest Devices.\n1. Navigate to the [Credentials]({oauth_creds_url}) page and click **Create Credentials**.\n1. From the drop-down list select *OAuth client ID**.\n1. Enter **Desktop App** for the Application Type.\n1. Pick a name for your credential.\n\nEnter your OAuth credentials below.\n",
+        "data": {
+          "client_id": "OAuth Client ID",
+          "client_secret": "OAuth Client Secret"
+        }
+      },
+      "device_project": {
+        "title": "Nest: Create a Device Access Project",
+        "description": "You need to create a Nest Device Access project which **requires a US$5 fee** to set up.\n\n1.Go to the [Device Access Console]({device_access_console_url}), and through the payment flow.\n1. Click on **Create project**\n1. Give your Device Access project a name and click **Next**.\n1. Enter your OAuth Client ID created in the last step:\n> {oauth_client_id}\n1. Enable events by clicking **Enable** and **Create project**.\n\nEnter your Device Access Project ID below ([more info]({more_info_url})).\n",
+        "data": {
+          "project_id": "Device Access Project ID"
+        }
+      },
       "pick_implementation": {
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
       },
       "auth": {
-        "title": "Link Google Account",
-        "description": "To link your Google account, [authorize your account]({url}).\n\nAfter authorization, copy-paste the provided Auth Token code below.",
+        "title": "Nest: Link Google Account",
+        "description": "To link your Google account, [authorize your account]({url}).\n\nAfter authorization, copy-paste the provided Auth Token code below. ([more info])({more_info_url})",
         "data": {
           "code": "[%key:common::config_flow::data::access_token%]"
         }

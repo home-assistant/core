@@ -116,7 +116,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if config_mode == config_flow.ConfigMode.LEGACY:
         return await async_setup_legacy(hass, config)
 
-    config_flow.register_flow_implementation_from_config(hass, config)
+    if config_mode == config_flow.ConfigMode.SDM:
+        config_flow.register_flow_implementation_from_config(hass, config)
 
     hass.http.register_view(NestEventMediaView(hass))
     hass.http.register_view(NestEventMediaThumbnailView(hass))
@@ -166,6 +167,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if DATA_SDM not in entry.data:
         return await async_setup_legacy_entry(hass, entry)
+
+    config_mode = config_flow.get_config_mode(hass)
+    if config_mode == config_flow.ConfigMode.SDM_CONFIG_ENTRY:
+        config_flow.async_register_implementation_from_config_entry(hass, entry.data)
 
     subscriber = await api.new_subscriber(hass, entry)
     if not subscriber:
