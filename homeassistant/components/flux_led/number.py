@@ -44,13 +44,13 @@ async def async_setup_entry(
     name = entry.data[CONF_NAME]
     unique_id = entry.unique_id
 
-    if device.pixels_per_segment:
+    if device.pixels_per_segment is not None:
         entities.append(FluxPixelsPerSegmentNumber(coordinator, unique_id, name))
-    if device.segments:
+    if device.segments is not None:
         entities.append(FluxSegmentsNumber(coordinator, unique_id, name))
-    if device.music_pixels_per_segment:
+    if device.music_pixels_per_segment is not None:
         entities.append(FluxMusicPixelsPerSegmentNumber(coordinator, unique_id, name))
-    if device.music_segments:
+    if device.music_segments is not None:
         entities.append(FluxMusicSegmentsNumber(coordinator, unique_id, name))
     if _hass_color_modes(coordinator.device).intersection(EFFECT_SPEED_SUPPORT_MODES):
         entities.append(FluxSpeedNumber(coordinator, unique_id, name))
