@@ -40,6 +40,11 @@ from .discovery import (
 CONF_DEVICE: Final = "device"
 
 
+def format_as_flux_mac(mac: str) -> str:
+    """Convert a device registry formatted mac to flux mac."""
+    return mac.replace(":", "").upper()
+
+
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Magic Home Integration."""
 
@@ -61,7 +66,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovered_device = FluxLEDDiscovery(
             ipaddr=discovery_info.ip,
             model=None,
-            id=discovery_info.macaddress.replace(":", ""),
+            id=format_as_flux_mac(discovery_info.macaddress),
             model_num=None,
             version_num=None,
             firmware_date=None,
@@ -187,7 +192,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not device.get(ATTR_MODEL_DESCRIPTION):
                 with contextlib.suppress(*FLUX_LED_EXCEPTIONS):
                     device = await self._async_try_connect(
-                        device[ATTR_IPADDR], mac.replace(":", ""), None
+                        device[ATTR_IPADDR], format_as_flux_mac(mac), None
                     )
                 # Older devices sometimes only respond to discovery
                 # once so we will fallback to the original one as
