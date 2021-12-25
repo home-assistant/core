@@ -1154,3 +1154,133 @@ async def test_node_model_change(hass, zp3111, client, integration):
     state = hass.states.get(custom_entity)
     assert state
     assert state.name == "Custom Entity Name"
+
+
+async def test_disabled_entity_on_value_removed(hass, zp3111, client, integration):
+    """Test that when entity primary values are removed the entity is disabled."""
+    er_reg = er.async_get(hass)
+
+    # re-enable this default-disabled entity
+    sensor_cover_entity = "sensor.4_in_1_sensor_home_security_cover_status"
+    er_reg.async_update_entity(entity_id=sensor_cover_entity, disabled_by=None)
+    await hass.async_block_till_done()
+
+    # must reload the integration when enabling an entity
+    await hass.config_entries.async_unload(integration.entry_id)
+    await hass.async_block_till_done()
+    assert integration.state is ConfigEntryState.NOT_LOADED
+    integration.add_to_hass(hass)
+    await hass.config_entries.async_setup(integration.entry_id)
+    await hass.async_block_till_done()
+    assert integration.state is ConfigEntryState.LOADED
+
+    state = hass.states.get(sensor_cover_entity)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+
+    # check for expected entities
+    binary_cover_entity = (
+        "binary_sensor.4_in_1_sensor_home_security_tampering_product_cover_removed"
+    )
+    state = hass.states.get(binary_cover_entity)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+
+    battery_level_entity = "sensor.4_in_1_sensor_battery_level"
+    state = hass.states.get(battery_level_entity)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+
+    unavailable_entities = {
+        state.entity_id
+        for state in hass.states.async_all()
+        if state.state == STATE_UNAVAILABLE
+    }
+
+    # This value ID removal does not disable any entity
+    event = Event(
+        type="value removed",
+        data={
+            "source": "node",
+            "event": "value removed",
+            "nodeId": zp3111.node_id,
+            "args": {
+                "commandClassName": "Wake Up",
+                "commandClass": 132,
+                "endpoint": 0,
+                "property": "wakeUpInterval",
+                "prevValue": 3600,
+                "propertyName": "wakeUpInterval",
+            },
+        },
+    )
+    client.driver.receive_event(event)
+    await hass.async_block_till_done()
+
+    assert all(state != STATE_UNAVAILABLE for state in hass.states.async_all())
+
+    # This value ID removal only affects the battery level entity
+    event = Event(
+        type="value removed",
+        data={
+            "source": "node",
+            "event": "value removed",
+            "nodeId": zp3111.node_id,
+            "args": {
+                "commandClassName": "Battery",
+                "commandClass": 128,
+                "endpoint": 0,
+                "property": "level",
+                "prevValue": 100,
+                "propertyName": "level",
+            },
+        },
+    )
+    client.driver.receive_event(event)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(battery_level_entity)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+    # This value ID removal affects its multiple notification sensors
+    event = Event(
+        type="value removed",
+        data={
+            "source": "node",
+            "event": "value removed",
+            "nodeId": zp3111.node_id,
+            "args": {
+                "commandClassName": "Notification",
+                "commandClass": 113,
+                "endpoint": 0,
+                "property": "Home Security",
+                "propertyKey": "Cover status",
+                "prevValue": 0,
+                "propertyName": "Home Security",
+                "propertyKeyName": "Cover status",
+            },
+        },
+    )
+    client.driver.receive_event(event)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(binary_cover_entity)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+    state = hass.states.get(sensor_cover_entity)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+    # existing entities and the entities with removed values should be unavailable
+    new_unavailable_entities = {
+        state.entity_id
+        for state in hass.states.async_all()
+        if state.state == STATE_UNAVAILABLE
+    }
+    assert (
+        unavailable_entities
+        | {battery_level_entity, binary_cover_entity, sensor_cover_entity}
+        == new_unavailable_entities
+    )
