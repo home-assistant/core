@@ -49,7 +49,7 @@ from .const import (
     Node_Type,
 )
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH, Platform.BUTTON]
 
 _LOGGER = logging.getLogger(__name__)
 

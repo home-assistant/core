@@ -15,6 +15,7 @@ from homeassistant.const import (
 
 from .model import (
     ProxmoxBinarySensorDescription,
+    ProxmoxButtonDescription,
     ProxmoxSensorDescription,
     ProxmoxSwitchDescription,
 )
@@ -192,6 +193,35 @@ PROXMOX_SWITCH_TYPES: Final[tuple[ProxmoxSwitchDescription, ...]] = (
         icon="mdi:server",
         start_command=COMMAND_START,
         stop_command=COMMAND_STOP,
+    ),
+)
+
+PROXMOX_BUTTON_TYPES: Final[tuple[ProxmoxButtonDescription, ...]] = (
+    ProxmoxButtonDescription(
+        key=COMMAND_REBOOT,
+        icon="mdi:restart",
+    ),
+    ProxmoxButtonDescription(
+        key=COMMAND_START,
+        icon="mdi:server",
+    ),
+    ProxmoxButtonDescription(
+        key=COMMAND_SHUTDOWN,
+        icon="mdi:server-off",
+    ),
+    ProxmoxButtonDescription(
+        key=COMMAND_STOP,
+        icon="mdi:stop",
+    ),
+    ProxmoxButtonDescription(
+        key=COMMAND_RESUME,
+        icon="mdi:play",
+        entity_registry_enabled_default=False,
+    ),
+    ProxmoxButtonDescription(
+        key=COMMAND_SUSPEND,
+        icon="mdi:pause",
+        entity_registry_enabled_default=False,
     ),
 )
 

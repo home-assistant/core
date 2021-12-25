@@ -5,6 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from homeassistant.components.binary_sensor import BinarySensorEntityDescription
+from homeassistant.components.button import ButtonEntityDescription
 from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.components.switch import SwitchEntityDescription
 
@@ -35,3 +36,12 @@ class ProxmoxSwitchDescription(SwitchEntityDescription):
     unit_imperial: str | None = None
     start_command: str | None = None
     stop_command: str | None = None
+
+
+@dataclass
+class ProxmoxButtonDescription(ButtonEntityDescription):
+    """Class describing Proxmox switch entities."""
+
+    unit_metric: str | None = None
+    unit_imperial: str | None = None
+    button_command: str | None = None
