@@ -5,12 +5,6 @@ from pyvlx.opening_device import Awning, Blind, GarageDoor, Gate, RollerShutter,
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    DEVICE_CLASS_AWNING,
-    DEVICE_CLASS_BLIND,
-    DEVICE_CLASS_GARAGE,
-    DEVICE_CLASS_GATE,
-    DEVICE_CLASS_SHUTTER,
-    DEVICE_CLASS_WINDOW,
     SUPPORT_CLOSE,
     SUPPORT_CLOSE_TILT,
     SUPPORT_OPEN,
@@ -19,6 +13,7 @@ from homeassistant.components.cover import (
     SUPPORT_SET_TILT_POSITION,
     SUPPORT_STOP,
     SUPPORT_STOP_TILT,
+    CoverDeviceClass,
     CoverEntity,
 )
 
@@ -68,18 +63,18 @@ class VeluxCover(VeluxEntity, CoverEntity):
     def device_class(self):
         """Define this cover as either awning, blind, garage, gate, shutter or window."""
         if isinstance(self.node, Awning):
-            return DEVICE_CLASS_AWNING
+            return CoverDeviceClass.AWNING
         if isinstance(self.node, Blind):
-            return DEVICE_CLASS_BLIND
+            return CoverDeviceClass.BLIND
         if isinstance(self.node, GarageDoor):
-            return DEVICE_CLASS_GARAGE
+            return CoverDeviceClass.GARAGE
         if isinstance(self.node, Gate):
-            return DEVICE_CLASS_GATE
+            return CoverDeviceClass.GATE
         if isinstance(self.node, RollerShutter):
-            return DEVICE_CLASS_SHUTTER
+            return CoverDeviceClass.SHUTTER
         if isinstance(self.node, Window):
-            return DEVICE_CLASS_WINDOW
-        return DEVICE_CLASS_WINDOW
+            return CoverDeviceClass.WINDOW
+        return CoverDeviceClass.WINDOW
 
     @property
     def is_closed(self):

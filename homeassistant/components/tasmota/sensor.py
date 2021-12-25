@@ -22,7 +22,6 @@ from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
-    ENTITY_CATEGORY_DIAGNOSTIC,
     FREQUENCY_HERTZ,
     LENGTH_CENTIMETERS,
     LIGHT_LUX,
@@ -42,6 +41,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_REMOVE_DISCOVER_COMPONENT
@@ -277,7 +277,7 @@ class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, SensorEntity):
     def entity_category(self) -> str | None:
         """Return the category of the entity, if any."""
         if self._tasmota_entity.quantity in status_sensor.SENSORS:
-            return ENTITY_CATEGORY_DIAGNOSTIC
+            return EntityCategory.DIAGNOSTIC
         return None
 
     @property

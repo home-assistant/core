@@ -5,7 +5,6 @@ from dataclasses import dataclass
 import os
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.components.onewire.model import OWServerDeviceDescription
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TYPE
@@ -21,6 +20,7 @@ from .const import (
     DOMAIN,
     READ_MODE_BOOL,
 )
+from .model import OWServerDeviceDescription
 from .onewire_entities import OneWireEntityDescription, OneWireProxyEntity
 from .onewirehub import OneWireHub
 

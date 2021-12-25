@@ -56,29 +56,18 @@ from homeassistant.core import (
     HomeAssistant,
     callback,
 )
-from homeassistant.helpers import condition, config_validation as cv, service, template
-from homeassistant.helpers.condition import (
-    ConditionCheckerType,
-    trace_condition_function,
-)
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
-from homeassistant.helpers.event import async_call_later, async_track_template
-from homeassistant.helpers.script_variables import ScriptVariables
-from homeassistant.helpers.trace import script_execution_set
-from homeassistant.helpers.trigger import (
-    async_initialize_triggers,
-    async_validate_trigger_config,
-)
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 from homeassistant.util.dt import utcnow
 
+from . import condition, config_validation as cv, service, template
+from .condition import ConditionCheckerType, trace_condition_function
+from .dispatcher import async_dispatcher_connect, async_dispatcher_send
+from .event import async_call_later, async_track_template
+from .script_variables import ScriptVariables
 from .trace import (
     TraceElement,
     async_trace_path,
+    script_execution_set,
     trace_append_element,
     trace_id_get,
     trace_path,
@@ -90,6 +79,8 @@ from .trace import (
     trace_stack_top,
     trace_update_result,
 )
+from .trigger import async_initialize_triggers, async_validate_trigger_config
+from .typing import ConfigType
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
@@ -254,7 +245,7 @@ async def async_validate_action_config(
 
     elif action_type == cv.SCRIPT_ACTION_DEVICE_AUTOMATION:
         platform = await device_automation.async_get_device_automation_platform(
-            hass, config[CONF_DOMAIN], "action"
+            hass, config[CONF_DOMAIN], device_automation.DeviceAutomationType.ACTION
         )
         if hasattr(platform, "async_validate_action_config"):
             config = await platform.async_validate_action_config(hass, config)  # type: ignore
@@ -262,7 +253,7 @@ async def async_validate_action_config(
             config = platform.ACTION_SCHEMA(config)  # type: ignore
 
     elif action_type == cv.SCRIPT_ACTION_CHECK_CONDITION:
-        config = await condition.async_validate_condition_config(hass, config)  # type: ignore
+        config = await condition.async_validate_condition_config(hass, config)
 
     elif action_type == cv.SCRIPT_ACTION_WAIT_FOR_TRIGGER:
         config[CONF_WAIT_FOR_TRIGGER] = await async_validate_trigger_config(
@@ -590,7 +581,9 @@ class _ScriptRun:
         """Perform the device automation specified in the action."""
         self._step_log("device automation")
         platform = await device_automation.async_get_device_automation_platform(
-            self._hass, self._action[CONF_DOMAIN], "action"
+            self._hass,
+            self._action[CONF_DOMAIN],
+            device_automation.DeviceAutomationType.ACTION,
         )
         await platform.async_call_action_from_config(
             self._hass, self._action, self._variables, self._context
@@ -1052,6 +1045,7 @@ class Script:
         if self._change_listener_job:
             self._hass.async_run_hass_job(self._change_listener_job)
 
+    @callback
     def _chain_change_listener(self, sub_script: Script) -> None:
         if sub_script.is_running:
             self.last_action = sub_script.last_action

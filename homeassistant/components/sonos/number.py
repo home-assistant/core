@@ -1,10 +1,12 @@
 """Entity representing a Sonos number control."""
 from __future__ import annotations
 
+import logging
+
 from homeassistant.components.number import NumberEntity
-from homeassistant.const import ENTITY_CATEGORY_CONFIG
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import EntityCategory
 
 from .const import SONOS_CREATE_LEVELS
 from .entity import SonosEntity
@@ -12,6 +14,8 @@ from .helpers import soco_error
 from .speaker import SonosSpeaker
 
 LEVEL_TYPES = ("bass", "treble")
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -21,6 +25,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     def _async_create_entities(speaker: SonosSpeaker) -> None:
         entities = []
         for level_type in LEVEL_TYPES:
+            _LOGGER.debug(
+                "Creating %s number control on %s", level_type, speaker.zone_name
+            )
             entities.append(SonosLevelEntity(speaker, level_type))
         async_add_entities(entities)
 
@@ -32,7 +39,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class SonosLevelEntity(SonosEntity, NumberEntity):
     """Representation of a Sonos level entity."""
 
-    _attr_entity_category = ENTITY_CATEGORY_CONFIG
+    _attr_entity_category = EntityCategory.CONFIG
     _attr_min_value = -10
     _attr_max_value = 10
 

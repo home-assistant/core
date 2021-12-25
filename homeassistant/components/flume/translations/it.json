@@ -15,7 +15,7 @@
                     "password": "Password"
                 },
                 "description": "La password per {username} non \u00e8 pi\u00f9 valida.",
-                "title": "Riautentica il tuo account Flume"
+                "title": "Autentica nuovamente il tuo account Flume"
             },
             "user": {
                 "data": {

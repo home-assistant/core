@@ -39,6 +39,8 @@ async def async_get_device_config(hass, config_entry):
     # Make a copy of addresses due to edge case where the list of devices could change during status update
     # Cannot be done concurrently due to issues with the underlying protocol.
     for address in list(devices):
+        if devices[address].is_battery:
+            continue
         with suppress(AttributeError):
             await devices[address].async_status()
 

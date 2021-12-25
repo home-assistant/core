@@ -97,29 +97,14 @@ async def _async_create_entities(hass, config):
     """Create Template Alarm Control Panels."""
     alarm_control_panels = []
 
-    for device, device_config in config[CONF_ALARM_CONTROL_PANELS].items():
-        name = device_config.get(CONF_NAME, device)
-        state_template = device_config.get(CONF_VALUE_TEMPLATE)
-        disarm_action = device_config.get(CONF_DISARM_ACTION)
-        arm_away_action = device_config.get(CONF_ARM_AWAY_ACTION)
-        arm_home_action = device_config.get(CONF_ARM_HOME_ACTION)
-        arm_night_action = device_config.get(CONF_ARM_NIGHT_ACTION)
-        code_arm_required = device_config[CONF_CODE_ARM_REQUIRED]
-        code_format = device_config[CONF_CODE_FORMAT]
-        unique_id = device_config.get(CONF_UNIQUE_ID)
+    for object_id, entity_config in config[CONF_ALARM_CONTROL_PANELS].items():
+        unique_id = entity_config.get(CONF_UNIQUE_ID)
 
         alarm_control_panels.append(
             AlarmControlPanelTemplate(
                 hass,
-                device,
-                name,
-                state_template,
-                disarm_action,
-                arm_away_action,
-                arm_home_action,
-                arm_night_action,
-                code_arm_required,
-                code_format,
+                object_id,
+                entity_config,
                 unique_id,
             )
         )
@@ -138,37 +123,30 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity):
     def __init__(
         self,
         hass,
-        device_id,
-        name,
-        state_template,
-        disarm_action,
-        arm_away_action,
-        arm_home_action,
-        arm_night_action,
-        code_arm_required,
-        code_format,
+        object_id,
+        config,
         unique_id,
     ):
         """Initialize the panel."""
-        super().__init__()
+        super().__init__(config=config)
         self.entity_id = async_generate_entity_id(
-            ENTITY_ID_FORMAT, device_id, hass=hass
+            ENTITY_ID_FORMAT, object_id, hass=hass
         )
-        self._name = name
-        self._template = state_template
+        self._name = name = config.get(CONF_NAME, object_id)
+        self._template = config.get(CONF_VALUE_TEMPLATE)
         self._disarm_script = None
-        self._code_arm_required = code_arm_required
-        self._code_format = code_format
-        if disarm_action is not None:
+        self._code_arm_required = config[CONF_CODE_ARM_REQUIRED]
+        self._code_format = config[CONF_CODE_FORMAT]
+        if (disarm_action := config.get(CONF_DISARM_ACTION)) is not None:
             self._disarm_script = Script(hass, disarm_action, name, DOMAIN)
         self._arm_away_script = None
-        if arm_away_action is not None:
+        if (arm_away_action := config.get(CONF_ARM_AWAY_ACTION)) is not None:
             self._arm_away_script = Script(hass, arm_away_action, name, DOMAIN)
         self._arm_home_script = None
-        if arm_home_action is not None:
+        if (arm_home_action := config.get(CONF_ARM_HOME_ACTION)) is not None:
             self._arm_home_script = Script(hass, arm_home_action, name, DOMAIN)
         self._arm_night_script = None
-        if arm_night_action is not None:
+        if (arm_night_action := config.get(CONF_ARM_NIGHT_ACTION)) is not None:
             self._arm_night_script = Script(hass, arm_night_action, name, DOMAIN)
 
         self._state = None

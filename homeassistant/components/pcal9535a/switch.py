@@ -1,4 +1,6 @@
 """Support for switch sensor using I2C PCAL9535A chip."""
+import logging
+
 from pcal9535a import PCAL9535A
 import voluptuous as vol
 
@@ -36,9 +38,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
+_LOGGER = logging.getLogger(__name__)
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the PCAL9535A devices."""
+    _LOGGER.warning(
+        "The PCAL9535A I/O Expander integration is deprecated and will be removed "
+        "in Home Assistant Core 2022.4; this integration is removed under "
+        "Architectural Decision Record 0019, more information can be found here: "
+        "https://github.com/home-assistant/architecture/blob/master/adr/0019-GPIO.md"
+    )
+
     invert_logic = config[CONF_INVERT_LOGIC]
     i2c_address = config[CONF_I2C_ADDRESS]
     bus = config[CONF_I2C_BUS]

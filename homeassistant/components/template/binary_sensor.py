@@ -15,7 +15,6 @@ from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA,
     BinarySensorEntity,
 )
-from homeassistant.components.template import TriggerUpdateCoordinator
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
@@ -39,6 +38,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_call_later
 
+from . import TriggerUpdateCoordinator
 from .const import (
     CONF_ATTRIBUTES,
     CONF_AVAILABILITY,

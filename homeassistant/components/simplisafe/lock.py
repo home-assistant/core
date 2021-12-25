@@ -11,6 +11,7 @@ from simplipy.websocket import EVENT_LOCK_LOCKED, EVENT_LOCK_UNLOCKED, Websocket
 from homeassistant.components.lock import LockEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SimpliSafe, SimpliSafeEntity
@@ -64,8 +65,9 @@ class SimpliSafeLock(SimpliSafeEntity, LockEntity):
         try:
             await self._device.async_lock()
         except SimplipyError as err:
-            LOGGER.error('Error while locking "%s": %s', self._device.name, err)
-            return
+            raise HomeAssistantError(
+                f'Error while locking "{self._device.name}": {err}'
+            ) from err
 
         self._attr_is_locked = True
         self.async_write_ha_state()
@@ -75,8 +77,9 @@ class SimpliSafeLock(SimpliSafeEntity, LockEntity):
         try:
             await self._device.async_unlock()
         except SimplipyError as err:
-            LOGGER.error('Error while unlocking "%s": %s', self._device.name, err)
-            return
+            raise HomeAssistantError(
+                f'Error while unlocking "{self._device.name}": {err}'
+            ) from err
 
         self._attr_is_locked = False
         self.async_write_ha_state()

@@ -21,6 +21,7 @@
             "routing": {
                 "data": {
                     "individual_address": "\u8def\u7531\u9023\u7dda\u500b\u5225\u4f4d\u5740",
+                    "local_ip": "\u672c\u5730\u7aef IP\uff08\u5047\u5982\u4e0d\u78ba\u5b9a\uff0c\u4fdd\u7559\u7a7a\u767d\uff09",
                     "multicast_group": "\u4f7f\u7528\u65bc\u8def\u7531\u7684 Multicast \u7fa4\u7d44",
                     "multicast_port": "\u4f7f\u7528\u65bc\u8def\u7531\u7684 Multicast \u901a\u8a0a\u57e0"
                 },
@@ -46,6 +47,7 @@
                 "data": {
                     "connection_type": "KNX \u9023\u7dda\u985e\u578b",
                     "individual_address": "\u9810\u8a2d\u500b\u5225\u4f4d\u5740",
+                    "local_ip": "\u672c\u5730\u7aef IP\uff08\u5047\u5982\u4e0d\u78ba\u5b9a\uff0c\u4fdd\u7559\u7a7a\u767d\uff09",
                     "multicast_group": "\u4f7f\u7528\u65bc\u8def\u7531\u8207\u63a2\u7d22\u7684 Multicast \u7fa4\u7d44",
                     "multicast_port": "\u4f7f\u7528\u65bc\u8def\u7531\u8207\u63a2\u7d22\u7684 Multicast \u901a\u8a0a\u57e0",
                     "rate_limit": "\u6700\u5927\u6bcf\u79d2\u767c\u51fa Telegram",

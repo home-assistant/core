@@ -17,7 +17,6 @@ from yalexs.doorbell import DoorbellDetail
 from yalexs.lock import LockDoorStatus
 from yalexs.util import update_lock_detail_from_activity
 
-from homeassistant.components.august import AugustData
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -27,6 +26,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.event import async_call_later
 
+from . import AugustData
 from .const import ACTIVITY_UPDATE_INTERVAL, DATA_AUGUST, DOMAIN
 from .entity import AugustEntityMixin
 
@@ -50,6 +50,17 @@ def _retrieve_online_state(data: AugustData, detail: DoorbellDetail) -> bool:
 def _retrieve_motion_state(data: AugustData, detail: DoorbellDetail) -> bool:
     latest = data.activity_stream.get_latest_device_activity(
         detail.device_id, {ActivityType.DOORBELL_MOTION}
+    )
+
+    if latest is None:
+        return False
+
+    return _activity_time_based_state(latest)
+
+
+def _retrieve_image_capture_state(data: AugustData, detail: DoorbellDetail) -> bool:
+    latest = data.activity_stream.get_latest_device_activity(
+        detail.device_id, {ActivityType.DOORBELL_IMAGE_CAPTURE}
     )
 
     if latest is None:
@@ -121,6 +132,13 @@ SENSOR_TYPES_DOORBELL: tuple[AugustBinarySensorEntityDescription, ...] = (
         name="Motion",
         device_class=BinarySensorDeviceClass.MOTION,
         value_fn=_retrieve_motion_state,
+        is_time_based=True,
+    ),
+    AugustBinarySensorEntityDescription(
+        key="doorbell_image_capture",
+        name="Image Capture",
+        icon="mdi:file-image",
+        value_fn=_retrieve_image_capture_state,
         is_time_based=True,
     ),
     AugustBinarySensorEntityDescription(

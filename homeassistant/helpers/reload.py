@@ -10,11 +10,12 @@ from homeassistant import config as conf_util
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_per_platform
-from homeassistant.helpers.entity_platform import EntityPlatform, async_get_platforms
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
+
+from . import config_per_platform
+from .entity_platform import EntityPlatform, async_get_platforms
+from .typing import ConfigType
 
 # mypy: disallow-any-generics
 

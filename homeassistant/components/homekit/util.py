@@ -14,8 +14,8 @@ from homeassistant.components import binary_sensor, media_player, sensor
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.media_player import (
-    DEVICE_CLASS_TV,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
+    MediaPlayerDeviceClass,
 )
 from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN, SUPPORT_ACTIVITY
 from homeassistant.const import (
@@ -502,7 +502,7 @@ def state_needs_accessory_mode(state):
 
     return (
         state.domain == MEDIA_PLAYER_DOMAIN
-        and state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_TV
+        and state.attributes.get(ATTR_DEVICE_CLASS) == MediaPlayerDeviceClass.TV
         or state.domain == REMOTE_DOMAIN
         and state.attributes.get(ATTR_SUPPORTED_FEATURES, 0) & SUPPORT_ACTIVITY
     )

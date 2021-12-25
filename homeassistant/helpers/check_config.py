@@ -23,13 +23,14 @@ from homeassistant.config import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.requirements import (
     RequirementsNotFound,
     async_clear_install_history,
     async_get_integration_with_requirements,
 )
 import homeassistant.util.yaml.loader as yaml_loader
+
+from .typing import ConfigType
 
 
 class CheckConfigError(NamedTuple):

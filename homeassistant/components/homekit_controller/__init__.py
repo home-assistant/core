@@ -177,6 +177,7 @@ class HomeKitEntity(Entity):
             model=info.value(CharacteristicsTypes.MODEL, ""),
             name=info.value(CharacteristicsTypes.NAME),
             sw_version=info.value(CharacteristicsTypes.FIRMWARE_REVISION, ""),
+            hw_version=info.value(CharacteristicsTypes.HARDWARE_REVISION, ""),
         )
 
         # Some devices only have a single accessory - we don't add a

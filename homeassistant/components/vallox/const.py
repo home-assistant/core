@@ -7,6 +7,7 @@ from vallox_websocket_api import PROFILE as VALLOX_PROFILE
 DOMAIN = "vallox"
 DEFAULT_NAME = "Vallox"
 
+INITIAL_COORDINATOR_UPDATE_RETRY_INTERVAL_SECONDS = 5
 STATE_SCAN_INTERVAL = timedelta(seconds=60)
 
 # Common metric keys and (default) values.

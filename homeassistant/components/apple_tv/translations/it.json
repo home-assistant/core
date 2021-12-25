@@ -43,11 +43,11 @@
                 "title": "Password richiesta"
             },
             "protocol_disabled": {
-                "description": "L'associazione \u00e8 necessaria per `{protocol}` ma \u00e8 disabilitata sul dispositivo. Si prega di rivedere le potenziali restrizioni di accesso (ad esempio consentire a tutti i dispositivi sulla rete locale di connettersi) sul dispositivo. \n\n Puoi continuare senza associare questo protocollo, ma alcune funzionalit\u00e0 saranno limitate.",
+                "description": "L'associazione \u00e8 necessaria per `{protocol}`, ma \u00e8 disabilitata sul dispositivo. Rivedi le potenziali restrizioni di accesso (ad esempio consentire a tutti i dispositivi sulla rete locale di connettersi) sul dispositivo. \n\n Puoi continuare senza associare questo protocollo, ma alcune funzionalit\u00e0 saranno limitate.",
                 "title": "Associazione non possibile"
             },
             "reconfigure": {
-                "description": "Riconfigurare questo dispositivo per ripristinarne la funzionalit\u00e0.",
+                "description": "Riconfigura questo dispositivo per ripristinarne la funzionalit\u00e0.",
                 "title": "Riconfigurazione del dispositivo"
             },
             "service_problem": {
@@ -69,7 +69,7 @@
                 "data": {
                     "start_off": "Non accendere il dispositivo all'avvio di Home Assistant"
                 },
-                "description": "Configurare le impostazioni generali del dispositivo"
+                "description": "Configura le impostazioni generali del dispositivo"
             }
         }
     },

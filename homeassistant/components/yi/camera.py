@@ -9,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components import ffmpeg
 from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
-from homeassistant.components.ffmpeg import DATA_FFMPEG
+from homeassistant.components.ffmpeg import get_ffmpeg_manager
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -60,7 +60,7 @@ class YiCamera(Camera):
         self._extra_arguments = config.get(CONF_FFMPEG_ARGUMENTS)
         self._last_image = None
         self._last_url = None
-        self._manager = hass.data[DATA_FFMPEG]
+        self._manager = get_ffmpeg_manager(hass)
         self._name = config[CONF_NAME]
         self._is_on = True
         self.host = config[CONF_HOST]

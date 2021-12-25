@@ -4,8 +4,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
-from homeassistant.const import DEGREE, ENTITY_CATEGORY_CONFIG, TIME_MINUTES
+from homeassistant.const import DEGREE, TIME_MINUTES
 from homeassistant.core import callback
+from homeassistant.helpers.entity import EntityCategory
 
 from .const import (
     CONF_DEVICE,
@@ -106,7 +107,7 @@ NUMBER_TYPES = {
         step=10,
         available_with_device_off=False,
         method="async_set_motor_speed",
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.CONFIG,
     ),
     FEATURE_SET_FAVORITE_LEVEL: XiaomiMiioNumberDescription(
         key=ATTR_FAVORITE_LEVEL,
@@ -116,7 +117,7 @@ NUMBER_TYPES = {
         max_value=17,
         step=1,
         method="async_set_favorite_level",
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.CONFIG,
     ),
     FEATURE_SET_FAN_LEVEL: XiaomiMiioNumberDescription(
         key=ATTR_FAN_LEVEL,
@@ -126,7 +127,7 @@ NUMBER_TYPES = {
         max_value=3,
         step=1,
         method="async_set_fan_level",
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.CONFIG,
     ),
     FEATURE_SET_VOLUME: XiaomiMiioNumberDescription(
         key=ATTR_VOLUME,
@@ -136,7 +137,7 @@ NUMBER_TYPES = {
         max_value=100,
         step=1,
         method="async_set_volume",
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.CONFIG,
     ),
     FEATURE_SET_OSCILLATION_ANGLE: XiaomiMiioNumberDescription(
         key=ATTR_OSCILLATION_ANGLE,
@@ -147,7 +148,7 @@ NUMBER_TYPES = {
         max_value=120,
         step=1,
         method="async_set_oscillation_angle",
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.CONFIG,
     ),
     FEATURE_SET_DELAY_OFF_COUNTDOWN: XiaomiMiioNumberDescription(
         key=ATTR_DELAY_OFF_COUNTDOWN,
@@ -158,7 +159,7 @@ NUMBER_TYPES = {
         max_value=480,
         step=1,
         method="async_set_delay_off_countdown",
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.CONFIG,
     ),
     FEATURE_SET_LED_BRIGHTNESS: XiaomiMiioNumberDescription(
         key=ATTR_LED_BRIGHTNESS,
@@ -168,7 +169,7 @@ NUMBER_TYPES = {
         max_value=100,
         step=1,
         method="async_set_led_brightness",
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.CONFIG,
     ),
     FEATURE_SET_LED_BRIGHTNESS_LEVEL: XiaomiMiioNumberDescription(
         key=ATTR_LED_BRIGHTNESS_LEVEL,
@@ -178,7 +179,7 @@ NUMBER_TYPES = {
         max_value=8,
         step=1,
         method="async_set_led_brightness_level",
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.CONFIG,
     ),
     FEATURE_SET_FAVORITE_RPM: XiaomiMiioNumberDescription(
         key=ATTR_FAVORITE_RPM,
@@ -189,7 +190,7 @@ NUMBER_TYPES = {
         max_value=2200,
         step=10,
         method="async_set_favorite_rpm",
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.CONFIG,
     ),
 }
 

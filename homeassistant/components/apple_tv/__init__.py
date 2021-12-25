@@ -36,6 +36,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Apple TV"
 
+BACKOFF_TIME_LOWER_LIMIT = 15  # seconds
 BACKOFF_TIME_UPPER_LIMIT = 300  # Five minutes
 
 SIGNAL_CONNECTED = "apple_tv_connected"
@@ -241,7 +242,11 @@ class AppleTVManager:
             if self.atv is None:
                 self._connection_attempts += 1
                 backoff = min(
-                    randrange(2 ** self._connection_attempts), BACKOFF_TIME_UPPER_LIMIT
+                    max(
+                        BACKOFF_TIME_LOWER_LIMIT,
+                        randrange(2 ** self._connection_attempts),
+                    ),
+                    BACKOFF_TIME_UPPER_LIMIT,
                 )
 
                 _LOGGER.debug("Reconnecting in %d seconds", backoff)
@@ -271,17 +276,12 @@ class AppleTVManager:
             return atvs[0]
 
         _LOGGER.debug(
-            "Failed to find device %s with address %s, trying to scan",
+            "Failed to find device %s with address %s",
             self.config_entry.title,
             address,
         )
-
-        atvs = await scan(self.hass.loop, identifier=identifiers, protocol=protocols)
-        if atvs:
-            return atvs[0]
-
-        _LOGGER.debug("Failed to find device %s, trying later", self.config_entry.title)
-
+        # We no longer multicast scan for the device since as soon as async_step_zeroconf runs,
+        # it will update the address and reload the config entry when the device is found.
         return None
 
     async def _connect(self, conf):
