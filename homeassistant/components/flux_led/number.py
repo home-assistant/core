@@ -74,6 +74,8 @@ class FluxPixelsPerSegmentNumber(FluxConfigNumber):
     ) -> None:
         """Initialize the flux number."""
         super().__init__(coordinator, unique_id, name)
+        if unique_id:
+            self._attr_unique_id = f"{unique_id}_pixels_per_segment"
         self._attr_name = f"{name} Pixels Per Segment"
 
     @property
@@ -97,6 +99,8 @@ class FluxSegmentsNumber(FluxConfigNumber):
     ) -> None:
         """Initialize the flux number."""
         super().__init__(coordinator, unique_id, name)
+        if unique_id:
+            self._attr_unique_id = f"{unique_id}_segments"
         self._attr_name = f"{name} Segments"
 
     @property
@@ -120,6 +124,8 @@ class FluxMusicPixelsPerSegmentNumber(FluxConfigNumber):
     ) -> None:
         """Initialize the flux number."""
         super().__init__(coordinator, unique_id, name)
+        if unique_id:
+            self._attr_unique_id = f"{unique_id}_music_pixels_per_segment"
         self._attr_name = f"{name} Music Pixels Per Segment"
 
     @property
@@ -143,6 +149,8 @@ class FluxMusicSegmentsNumber(FluxConfigNumber):
     ) -> None:
         """Initialize the flux number."""
         super().__init__(coordinator, unique_id, name)
+        if unique_id:
+            self._attr_unique_id = f"{unique_id}_music_segments"
         self._attr_name = f"{name} Music Segments"
 
     @property
