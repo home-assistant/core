@@ -15,35 +15,38 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
+    CONF_SCAN_INTERVAL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
-PLATFORMS = ["binary_sensor"]
-DOMAIN = "proxmoxve"
-PROXMOX_CLIENTS = "proxmox_clients"
-CONF_REALM = "realm"
-CONF_NODE = "node"
-CONF_NODES = "nodes"
-CONF_VMS = "vms"
-CONF_CONTAINERS = "containers"
+from .const import (
+    CONF_CONTAINERS,
+    CONF_NODE,
+    CONF_NODES,
+    CONF_REALM,
+    CONF_VMS,
+    COORDINATORS,
+    DEFAULT_PORT,
+    DEFAULT_REALM,
+    DEFAULT_SCAN_INTERVAL,
+    DEFAULT_VERIFY_SSL,
+    DOMAIN,
+    PROXMOX_CLIENTS,
+    Node_Type,
+)
 
-COORDINATORS = "coordinators"
-API_DATA = "api_data"
-
-DEFAULT_PORT = 8006
-DEFAULT_REALM = "pam"
-DEFAULT_VERIFY_SSL = True
-TYPE_VM = 0
-TYPE_CONTAINER = 1
-UPDATE_INTERVAL = 60
+PLATFORMS = [Platform.BINARY_SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,6 +65,9 @@ CONFIG_SCHEMA = vol.Schema(
                         vol.Optional(
                             CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL
                         ): cv.boolean,
+                        vol.Optional(
+                            CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
+                        ): cv.positive_int,
                         vol.Required(CONF_NODES): vol.All(
                             cv.ensure_list,
                             [
@@ -92,7 +98,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data.setdefault(DOMAIN, {})
 
     def build_client() -> ProxmoxAPI:
-        """Build the Proxmox client connection."""
+        """
+        Build the Proxmox client connection & coordinators.
+
+        - store client for each host under hass.data[PROXMOX_CLIENTS][host].
+        - store corrdinator for each host->vm/lxc under hass.data[DOMAIN][COORDINATORS][host][node][vm/lxc_id].
+        """
         hass.data[PROXMOX_CLIENTS] = {}
 
         for entry in config[DOMAIN]:
@@ -140,7 +151,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     # Create a coordinator for each vm/container
     for host_config in config[DOMAIN]:
-        host_name = host_config["host"]
+        host_name = host_config[CONF_HOST]
+        update_interval = host_config[CONF_SCAN_INTERVAL]
         coordinators[host_name] = {}
 
         proxmox_client = hass.data[PROXMOX_CLIENTS][host_name]
@@ -151,13 +163,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         proxmox = proxmox_client.get_api_client()
 
-        for node_config in host_config["nodes"]:
-            node_name = node_config["node"]
+        for node_config in host_config[CONF_NODES]:
+            node_name = node_config[CONF_NODE]
             node_coordinators = coordinators[host_name][node_name] = {}
 
-            for vm_id in node_config["vms"]:
+            for vm_id in node_config[CONF_VMS]:
                 coordinator = create_coordinator_container_vm(
-                    hass, proxmox, host_name, node_name, vm_id, TYPE_VM
+                    hass,
+                    proxmox,
+                    host_name,
+                    node_name,
+                    vm_id,
+                    Node_Type.TYPE_VM,
+                    update_interval,
                 )
 
                 # Fetch initial data
@@ -165,9 +183,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
                 node_coordinators[vm_id] = coordinator
 
-            for container_id in node_config["containers"]:
+            for container_id in node_config[CONF_CONTAINERS]:
                 coordinator = create_coordinator_container_vm(
-                    hass, proxmox, host_name, node_name, container_id, TYPE_CONTAINER
+                    hass,
+                    proxmox,
+                    host_name,
+                    node_name,
+                    container_id,
+                    Node_Type.TYPE_CONTAINER,
+                    update_interval,
                 )
 
                 # Fetch initial data
@@ -186,7 +210,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 def create_coordinator_container_vm(
-    hass, proxmox, host_name, node_name, vm_id, vm_type
+    hass, proxmox, host_name, node_name, vm_id, vm_type, update_interval
 ):
     """Create and return a DataUpdateCoordinator for a vm/container."""
 
@@ -195,7 +219,7 @@ def create_coordinator_container_vm(
 
         def poll_api():
             """Call the api."""
-            vm_status = call_api_container_vm(proxmox, node_name, vm_id, vm_type)
+            vm_status = call_api_get_status(proxmox, node_name, vm_id, vm_type)
             return vm_status
 
         vm_status = await hass.async_add_executor_job(poll_api)
@@ -213,7 +237,7 @@ def create_coordinator_container_vm(
         _LOGGER,
         name=f"proxmox_coordinator_{host_name}_{node_name}_{vm_id}",
         update_method=async_update_data,
-        update_interval=timedelta(seconds=UPDATE_INTERVAL),
+        update_interval=timedelta(seconds=update_interval),
     )
 
 
@@ -227,19 +251,38 @@ def parse_api_container_vm(status):
     return {"status": status["status"], "name": status["name"]}
 
 
-def call_api_container_vm(proxmox, node_name, vm_id, machine_type):
+def call_api_get_status(proxmox, node_name, vm_id, vm_type):
     """Make proper api calls."""
     status = None
 
     try:
-        if machine_type == TYPE_VM:
+        if vm_type is Node_Type.TYPE_VM:
             status = proxmox.nodes(node_name).qemu(vm_id).status.current.get()
-        elif machine_type == TYPE_CONTAINER:
+        elif vm_type is Node_Type.TYPE_CONTAINER:
             status = proxmox.nodes(node_name).lxc(vm_id).status.current.get()
     except (ResourceException, requests.exceptions.ConnectionError):
         return None
 
     return status
+
+
+def compile_device_info(host_name, node_name, mid, name) -> DeviceInfo:
+    """Return Device Info of the Server."""
+
+    return DeviceInfo(  # TODO - add SW version and such from https://pve.proxmox.com/pve-docs/api-viewer/#/version
+        entry_type=DeviceEntryType.SERVICE,
+        identifiers={
+            ("Domain", DOMAIN),
+            ("Host", host_name),
+            ("Node", node_name),
+            ("ID", mid),
+            ("Name", name),
+        },
+        name=name,
+        suggested_area="Server",
+        default_manufacturer="PROXMOX",
+        via_device=(DOMAIN, host_name),
+    )
 
 
 class ProxmoxEntity(CoordinatorEntity):
@@ -248,41 +291,17 @@ class ProxmoxEntity(CoordinatorEntity):
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
-        unique_id,
-        name,
-        icon,
-        host_name,
-        node_name,
-        vm_id=None,
+        device_info: DeviceInfo,
+        name: str,
+        unique_id: str,
     ):
         """Initialize the Proxmox entity."""
         super().__init__(coordinator)
-
         self.coordinator = coordinator
-        self._unique_id = unique_id
-        self._name = name
-        self._host_name = host_name
-        self._icon = icon
         self._available = True
-        self._node_name = node_name
-        self._vm_id = vm_id
-
-        self._state = None
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this sensor."""
-        return self._unique_id
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._name
-
-    @property
-    def icon(self) -> str:
-        """Return the mdi icon of the entity."""
-        return self._icon
+        self._attr_device_info = device_info
+        self._attr_name = name
+        self._attr_unique_id = unique_id
 
     @property
     def available(self) -> bool:
