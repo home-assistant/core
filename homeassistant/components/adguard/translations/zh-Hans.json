@@ -13,7 +13,7 @@
                     "host": "\u4e3b\u673a\u5730\u5740",
                     "password": "\u5bc6\u7801",
                     "port": "\u7aef\u53e3",
-                    "ssl": "\u4f7f\u7528 SSL \u8fde\u63a5",
+                    "ssl": "\u4f7f\u7528 SSL \u8bc1\u4e66",
                     "username": "\u7528\u6237\u540d",
                     "verify_ssl": "\u9a8c\u8bc1 SSL \u8bc1\u4e66\u51ed\u8bc1"
                 },

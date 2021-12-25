@@ -1,4 +1,5 @@
 """Tests for the sensors provided by the Luftdaten integration."""
+from homeassistant.components.luftdaten.const import DOMAIN
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     SensorDeviceClass,
@@ -15,7 +16,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -26,10 +27,11 @@ async def test_luftdaten_sensors(
 ) -> None:
     """Test the Luftdaten sensors."""
     entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
 
     entry = entity_registry.async_get("sensor.temperature")
     assert entry
-    assert not entry.device_id
+    assert entry.device_id
     assert entry.unique_id == "12345_temperature"
 
     state = hass.states.get("sensor.temperature")
@@ -43,7 +45,7 @@ async def test_luftdaten_sensors(
 
     entry = entity_registry.async_get("sensor.humidity")
     assert entry
-    assert not entry.device_id
+    assert entry.device_id
     assert entry.unique_id == "12345_humidity"
 
     state = hass.states.get("sensor.humidity")
@@ -57,7 +59,7 @@ async def test_luftdaten_sensors(
 
     entry = entity_registry.async_get("sensor.pressure")
     assert entry
-    assert not entry.device_id
+    assert entry.device_id
     assert entry.unique_id == "12345_pressure"
 
     state = hass.states.get("sensor.pressure")
@@ -71,7 +73,7 @@ async def test_luftdaten_sensors(
 
     entry = entity_registry.async_get("sensor.pressure_at_sealevel")
     assert entry
-    assert not entry.device_id
+    assert entry.device_id
     assert entry.unique_id == "12345_pressure_at_sealevel"
 
     state = hass.states.get("sensor.pressure_at_sealevel")
@@ -85,7 +87,7 @@ async def test_luftdaten_sensors(
 
     entry = entity_registry.async_get("sensor.pm10")
     assert entry
-    assert not entry.device_id
+    assert entry.device_id
     assert entry.unique_id == "12345_P1"
 
     state = hass.states.get("sensor.pm10")
@@ -102,7 +104,7 @@ async def test_luftdaten_sensors(
 
     entry = entity_registry.async_get("sensor.pm2_5")
     assert entry
-    assert not entry.device_id
+    assert entry.device_id
     assert entry.unique_id == "12345_P2"
 
     state = hass.states.get("sensor.pm2_5")
@@ -116,3 +118,14 @@ async def test_luftdaten_sensors(
         == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     )
     assert ATTR_ICON not in state.attributes
+
+    assert entry.device_id
+    device_entry = device_registry.async_get(entry.device_id)
+    assert device_entry
+    assert device_entry.identifiers == {(DOMAIN, "12345")}
+    assert device_entry.manufacturer == "Luftdaten.info"
+    assert device_entry.name == "Sensor 12345"
+    assert (
+        device_entry.configuration_url
+        == "https://devices.sensor.community/sensors/12345/settings"
+    )
