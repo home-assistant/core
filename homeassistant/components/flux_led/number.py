@@ -3,6 +3,15 @@ from __future__ import annotations
 
 from typing import cast
 
+from flux_led.protocol import (
+    MUSIC_PIXELS_MAX,
+    MUSIC_PIXELS_PER_SEGMENT_MAX,
+    MUSIC_SEGMENTS_MAX,
+    PIXELS_MAX,
+    PIXELS_PER_SEGMENT_MAX,
+    SEGMENTS_MAX,
+)
+
 from homeassistant import config_entries
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.const import CONF_NAME
@@ -16,14 +25,6 @@ from .const import DOMAIN, EFFECT_SPEED_SUPPORT_MODES
 from .coordinator import FluxLedUpdateCoordinator
 from .entity import FluxEntity
 from .util import _effect_brightness, _hass_color_modes
-
-SEGMENTS_MAX = 2048
-PIXELS_MAX = 2048
-PIXELS_PER_SEGMENT_MAX = 300
-
-MUSIC_SEGMENTS_MAX = 64
-MUSIC_PIXELS_MAX = 960
-MUSIC_PIXELS_PER_SEGMENT_MAX = 150
 
 
 async def async_setup_entry(
@@ -176,7 +177,7 @@ class FluxMusicPixelsPerSegmentNumber(FluxConfigNumber):
     @property
     def available(self) -> bool:
         """Return if music pixels per segment can be set."""
-        return super().available and bool(self._device.music_pixels_per_segment)
+        return super().available  # and bool(self._device.music_pixels_per_segment)
 
     async def async_set_value(self, value: float) -> None:
         """Set the music pixels per segment."""
@@ -218,7 +219,7 @@ class FluxMusicSegmentsNumber(FluxConfigNumber):
     @property
     def available(self) -> bool:
         """Return if music segments can be set."""
-        return super().available and bool(self._device.music_segments)
+        return super().available  # and bool(self._device.music_segments)
 
     async def async_set_value(self, value: float) -> None:
         """Set the music segments."""
