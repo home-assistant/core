@@ -173,6 +173,11 @@ class FluxMusicPixelsPerSegmentNumber(FluxConfigNumber):
         assert self._device.music_pixels_per_segment is not None
         return self._device.music_pixels_per_segment
 
+    @property
+    def available(self) -> bool:
+        """Return if music pixels per segment can be set."""
+        return super().available and bool(self._device.music_pixels_per_segment)
+
     async def async_set_value(self, value: float) -> None:
         """Set the music pixels per segment."""
         await self._device.async_set_device_config(music_pixels_per_segment=int(value))
@@ -209,6 +214,11 @@ class FluxMusicSegmentsNumber(FluxConfigNumber):
         """Return the music segments."""
         assert self._device.music_segments is not None
         return self._device.music_segments
+
+    @property
+    def available(self) -> bool:
+        """Return if music segments can be set."""
+        return super().available and bool(self._device.music_segments)
 
     async def async_set_value(self, value: float) -> None:
         """Set the music segments."""
