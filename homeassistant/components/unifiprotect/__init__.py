@@ -103,5 +103,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         data: ProtectData = hass.data[DOMAIN][entry.entry_id]
         await data.async_stop()
         hass.data[DOMAIN].pop(entry.entry_id)
-
-    return bool(unload_ok)
+    return unload_ok
