@@ -164,7 +164,6 @@ class FluxMusicPixelsPerSegmentNumber(FluxConfigNumber):
 class FluxMusicSegmentsNumber(FluxConfigNumber):
     """Defines a flux_led music segments number."""
 
-    _attr_max_value = 64
     _attr_icon = "mdi:segment"
 
     def __init__(
