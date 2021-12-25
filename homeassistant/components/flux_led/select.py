@@ -29,7 +29,7 @@ async def async_setup_entry(
         FluxPowerStateSelect
         | FluxOperatingModesSelect
         | FluxWiringsSelect
-        | FluxStripProtocolsSelect
+        | FluxICTypeSelect
     ] = []
     name = entry.data[CONF_NAME]
     unique_id = entry.unique_id
@@ -40,8 +40,8 @@ async def async_setup_entry(
         entities.append(FluxOperatingModesSelect(coordinator, unique_id, name))
     if device.wirings:
         entities.append(FluxWiringsSelect(coordinator, unique_id, name))
-    if device.strip_protocols:
-        entities.append(FluxStripProtocolsSelect(coordinator, unique_id, name))
+    if device.ic_types:
+        entities.append(FluxICTypeSelect(coordinator, unique_id, name))
 
     if entities:
         async_add_entities(entities)
@@ -57,8 +57,8 @@ class FluxConfigSelect(FluxEntity, SelectEntity):
     _attr_entity_category = EntityCategory.CONFIG
 
 
-class FluxStripProtocolsSelect(FluxConfigSelect):
-    """Representation of Flux strip protocols."""
+class FluxICTypeSelect(FluxConfigSelect):
+    """Representation of Flux ic type."""
 
     def __init__(
         self,
@@ -66,18 +66,18 @@ class FluxStripProtocolsSelect(FluxConfigSelect):
         unique_id: str | None,
         name: str,
     ) -> None:
-        """Initialize the protocol select."""
+        """Initialize the ic type select."""
         super().__init__(coordinator, unique_id, name)
-        self._attr_name = f"{name} Protocol"
+        self._attr_name = f"{name} IC Type"
         if unique_id:
-            self._attr_unique_id = f"{unique_id}_protocol"
-        assert self._device.strip_protocols is not None
-        self._attr_options = self._device.strip_protocols
+            self._attr_unique_id = f"{unique_id}_ic_type"
+        assert self._device.ic_types is not None
+        self._attr_options = self._device.ic_types
 
     @property
     def current_option(self) -> str | None:
-        """Return the current strip protocol."""
-        return self._device.strip_protocol
+        """Return the current ic type."""
+        return self._device.ic_type
 
 
 class FluxWiringsSelect(FluxConfigSelect):
