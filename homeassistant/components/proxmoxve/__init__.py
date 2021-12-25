@@ -45,10 +45,11 @@ from .const import (
     PARSE_DATA,
     PROXMOX_CALCULATED_SENSOR_TYPES,
     PROXMOX_CLIENTS,
+    VM_COMMANDS,
     Node_Type,
 )
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -273,6 +274,27 @@ def call_api_get_status(proxmox, node_name, vm_id, vm_type):
         return None
 
     return status
+
+
+def call_api_post_status(proxmox, node_name, vm_id, machine_type, command):
+    """Make proper api post status calls to set state."""
+    result = None
+    if command not in VM_COMMANDS:
+        logging.warning("Invalid Command")
+        return None
+
+    try:
+        if machine_type is Node_Type.TYPE_VM:
+            result = proxmox.nodes(node_name).qemu(vm_id).status.post(command)
+        elif machine_type is Node_Type.TYPE_CONTAINER:
+            result = proxmox.nodes(node_name).lxc(vm_id).status.post(command)
+    except (ResourceException, requests.exceptions.ConnectionError) as err:
+        logging.warning(
+            f"Proxmox {command} Post Error: proxmox_{node_name}_{vm_id}: {err.args[0]}"
+        )
+        return None
+
+    return result
 
 
 def compile_device_info(host_name, node_name, mid, name) -> DeviceInfo:

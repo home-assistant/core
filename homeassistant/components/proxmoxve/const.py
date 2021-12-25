@@ -13,7 +13,11 @@ from homeassistant.const import (
     PERCENTAGE,
 )
 
-from .model import ProxmoxBinarySensorDescription, ProxmoxSensorDescription
+from .model import (
+    ProxmoxBinarySensorDescription,
+    ProxmoxSensorDescription,
+    ProxmoxSwitchDescription,
+)
 
 
 class Node_Type(Enum):
@@ -37,6 +41,23 @@ DEFAULT_PORT = 8006
 DEFAULT_REALM = "pam"
 DEFAULT_VERIFY_SSL = True
 DEFAULT_SCAN_INTERVAL = 60
+
+
+COMMAND_REBOOT = "reboot"
+COMMAND_RESUME = "resume"
+COMMAND_SHUTDOWN = "shutdown"
+COMMAND_START = "start"
+COMMAND_STOP = "stop"
+COMMAND_SUSPEND = "suspend"  # API notes 'This is experimental.'  https://pve.proxmox.com/pve-docs/api-viewer/#/nodes/{node}/lxc/{vmid}/status/suspend
+
+VM_COMMANDS = (
+    COMMAND_REBOOT,
+    COMMAND_RESUME,
+    COMMAND_SHUTDOWN,
+    COMMAND_START,
+    COMMAND_STOP,
+    COMMAND_SUSPEND,
+)
 
 
 PROXMOX_BINARYSENSOR_TYPES: Final[tuple[ProxmoxBinarySensorDescription, ...]] = (
@@ -155,6 +176,22 @@ PROXMOX_CALCULATED_SENSOR_TYPES: Final[tuple[ProxmoxSensorDescription, ...]] = (
         conversion=lambda x: round(x * 100, 1),
         calculation=lambda x: 1 - x["mem"] / x["maxmem"],
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+)
+
+
+PROXMOX_SWITCH_TYPES: Final[tuple[ProxmoxSwitchDescription, ...]] = (
+    ProxmoxSwitchDescription(
+        key="Switch",
+        icon="mdi:server",
+        start_command=COMMAND_START,
+        stop_command=COMMAND_SHUTDOWN,
+    ),
+    ProxmoxSwitchDescription(
+        key="Switch_Stop",
+        icon="mdi:server",
+        start_command=COMMAND_START,
+        stop_command=COMMAND_STOP,
     ),
 )
 

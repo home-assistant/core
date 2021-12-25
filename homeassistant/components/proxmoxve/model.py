@@ -6,6 +6,7 @@ from dataclasses import dataclass
 
 from homeassistant.components.binary_sensor import BinarySensorEntityDescription
 from homeassistant.components.sensor import SensorEntityDescription
+from homeassistant.components.switch import SwitchEntityDescription
 
 
 @dataclass
@@ -24,3 +25,13 @@ class ProxmoxSensorDescription(SensorEntityDescription):
     unit_imperial: str | None = None
     conversion: Callable | None = None  # conversion factor to be applied to units
     calculation: Callable | None = None  # calculation
+
+
+@dataclass
+class ProxmoxSwitchDescription(SwitchEntityDescription):
+    """Class describing Proxmox switch entities."""
+
+    unit_metric: str | None = None
+    unit_imperial: str | None = None
+    start_command: str | None = None
+    stop_command: str | None = None
