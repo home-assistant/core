@@ -17,6 +17,7 @@ from .coordinator import FluxLedUpdateCoordinator
 from .entity import FluxEntity
 from .util import _effect_brightness, _hass_color_modes
 
+# TODO: get these from the integration since A1 has no segment support
 SEGMENTS_MAX = 2048
 PIXELS_MAX = 2048
 PIXELS_PER_SEGMENT_MAX = 300
