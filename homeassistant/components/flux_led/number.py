@@ -17,7 +17,6 @@ from .coordinator import FluxLedUpdateCoordinator
 from .entity import FluxEntity
 from .util import _effect_brightness, _hass_color_modes
 
-# TODO: get these from the integration since A1 has no segment support
 SEGMENTS_MAX = 2048
 PIXELS_MAX = 2048
 PIXELS_PER_SEGMENT_MAX = 300
@@ -89,7 +88,8 @@ class FluxPixelsPerSegmentNumber(FluxConfigNumber):
     @property
     def max_value(self) -> int:
         """Return the max value."""
-        assert self._device.segments is not None
+        if not self._device.segments:
+            return PIXELS_MAX
         return min(PIXELS_PER_SEGMENT_MAX, int(PIXELS_MAX / self._device.segments))
 
     @property
