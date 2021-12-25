@@ -32,17 +32,19 @@ async def async_setup_entry(
         | FluxStripProtocolsSelect
     ] = []
     name = entry.data[CONF_NAME]
+    unique_id = entry.unique_id
 
     if device.device_type == DeviceType.Switch:
         entities.append(FluxPowerStateSelect(coordinator.device, entry))
     if device.operating_modes:
-        entities.append(FluxOperatingModesSelect(coordinator, entry.unique_id, name))
+        entities.append(FluxOperatingModesSelect(coordinator, unique_id, name))
     if device.wirings:
-        entities.append(FluxWiringsSelect(coordinator, entry.unique_id, name))
+        entities.append(FluxWiringsSelect(coordinator, unique_id, name))
     if device.strip_protocols:
-        entities.append(FluxStripProtocolsSelect(coordinator, entry.unique_id, name))
+        entities.append(FluxStripProtocolsSelect(coordinator, unique_id, name))
 
-    async_add_entities(entities)
+    if entities:
+        async_add_entities(entities)
 
 
 def _human_readable_option(const_option: str) -> str:

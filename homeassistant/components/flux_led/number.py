@@ -24,23 +24,137 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Flux lights."""
     coordinator: FluxLedUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    device = coordinator.device
+    entities: list[
+        FluxSpeedNumber
+        | FluxPixelsPerSegmentNumber
+        | FluxSegmentsNumber
+        | FluxMusicPixelsPerSegmentNumber
+        | FluxMusicSegmentsNumber
+    ] = []
+    name = entry.data[CONF_NAME]
+    unique_id = entry.unique_id
 
-    color_modes = _hass_color_modes(coordinator.device)
-    if not color_modes.intersection(EFFECT_SPEED_SUPPORT_MODES):
-        return
+    if device.pixels_per_segment:
+        entities.append(FluxPixelsPerSegmentNumber(coordinator, unique_id, name))
+    if device.segments:
+        entities.append(FluxSegmentsNumber(coordinator, unique_id, name))
+    if device.music_pixels_per_segment:
+        entities.append(FluxMusicPixelsPerSegmentNumber(coordinator, unique_id, name))
+    if device.music_segments:
+        entities.append(FluxMusicSegmentsNumber(coordinator, unique_id, name))
+    if _hass_color_modes(coordinator.device).intersection(EFFECT_SPEED_SUPPORT_MODES):
+        entities.append(FluxSpeedNumber(coordinator, unique_id, name))
 
-    async_add_entities(
-        [
-            FluxNumber(
-                coordinator,
-                entry.unique_id,
-                entry.data[CONF_NAME],
-            )
-        ]
-    )
+    if entities:
+        async_add_entities(entities)
 
 
-class FluxNumber(FluxEntity, CoordinatorEntity, NumberEntity):
+class FluxPixelsPerSegmentNumber(FluxEntity, CoordinatorEntity, NumberEntity):
+    """Defines a flux_led pixels per segment number."""
+
+    _attr_min_value = 1
+    _attr_max_value = 300
+    _attr_step = 1
+    _attr_mode = NumberMode.SLIDER
+    _attr_icon = "mdi:dots-grid"
+
+    def __init__(
+        self,
+        coordinator: FluxLedUpdateCoordinator,
+        unique_id: str | None,
+        name: str,
+    ) -> None:
+        """Initialize the flux number."""
+        super().__init__(coordinator, unique_id, name)
+        self._attr_name = f"{name} Pixels Per Segment"
+
+    @property
+    def value(self) -> int:
+        """Return the pixels per segment."""
+        assert self._device.pixels_per_segment is not None
+        return self._device.pixels_per_segment
+
+
+class FluxSegmentsNumber(FluxEntity, CoordinatorEntity, NumberEntity):
+    """Defines a flux_led segments number."""
+
+    _attr_min_value = 1
+    _attr_max_value = 2048
+    _attr_step = 1
+    _attr_mode = NumberMode.SLIDER
+    _attr_icon = "mdi:segment"
+
+    def __init__(
+        self,
+        coordinator: FluxLedUpdateCoordinator,
+        unique_id: str | None,
+        name: str,
+    ) -> None:
+        """Initialize the flux number."""
+        super().__init__(coordinator, unique_id, name)
+        self._attr_name = f"{name} Segments"
+
+    @property
+    def value(self) -> int:
+        """Return the segments."""
+        assert self._device.segments is not None
+        return self._device.segments
+
+
+class FluxMusicPixelsPerSegmentNumber(FluxEntity, CoordinatorEntity, NumberEntity):
+    """Defines a flux_led music pixels per segment number."""
+
+    _attr_min_value = 1
+    _attr_max_value = 150
+    _attr_step = 1
+    _attr_mode = NumberMode.SLIDER
+    _attr_icon = "mdi:dots-grid"
+
+    def __init__(
+        self,
+        coordinator: FluxLedUpdateCoordinator,
+        unique_id: str | None,
+        name: str,
+    ) -> None:
+        """Initialize the flux number."""
+        super().__init__(coordinator, unique_id, name)
+        self._attr_name = f"{name} Music Pixels Per Segment"
+
+    @property
+    def value(self) -> int:
+        """Return the music pixels per segment."""
+        assert self._device.music_pixels_per_segment is not None
+        return self._device.music_pixels_per_segment
+
+
+class FluxMusicSegmentsNumber(FluxEntity, CoordinatorEntity, NumberEntity):
+    """Defines a flux_led music segments number."""
+
+    _attr_min_value = 1
+    _attr_max_value = 64
+    _attr_step = 1
+    _attr_mode = NumberMode.SLIDER
+    _attr_icon = "mdi:segment"
+
+    def __init__(
+        self,
+        coordinator: FluxLedUpdateCoordinator,
+        unique_id: str | None,
+        name: str,
+    ) -> None:
+        """Initialize the flux number."""
+        super().__init__(coordinator, unique_id, name)
+        self._attr_name = f"{name} Music Segments"
+
+    @property
+    def value(self) -> int:
+        """Return the music segments."""
+        assert self._device.music_segments is not None
+        return self._device.music_segments
+
+
+class FluxSpeedNumber(FluxEntity, CoordinatorEntity, NumberEntity):
     """Defines a flux_led speed number."""
 
     _attr_min_value = 1
