@@ -67,7 +67,7 @@ async def async_setup_entry(
                 camera,
                 channel,
                 is_default,
-                channel.is_rtsp_enabled,
+                True,
                 disable_stream,
             )
         )
@@ -137,6 +137,11 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
     def _async_update_device_from_protect(self) -> None:
         super()._async_update_device_from_protect()
         self.channel = self.device.channels[self.channel.id]
+        self._attr_motion_detection_enabled = (
+            self.device.is_connected and self.device.feature_flags.has_motion_zones
+        )
+        self._attr_is_recording = self.device.is_connected and self.device.is_recording
+
         self._async_set_stream_source()
 
     @callback
@@ -149,16 +154,6 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
             ATTR_BITRATE: self.channel.bitrate,
             ATTR_CHANNEL_ID: self.channel.id,
         }
-
-    @property
-    def motion_detection_enabled(self) -> bool:
-        """Camera Motion Detection Status."""
-        return self.device.feature_flags.has_motion_zones and super().available
-
-    @property
-    def is_recording(self) -> bool:
-        """Return true if the device is recording."""
-        return self.device.is_connected and self.device.is_recording
 
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
