@@ -8,6 +8,7 @@ import logging
 from typing import Any
 
 from haphilipsjs import ConnectionFailure, PhilipsTV
+from haphilipsjs.typing import SystemType
 
 from homeassistant.components.automation import AutomationActionType
 from homeassistant.config_entries import ConfigEntry
@@ -29,7 +30,7 @@ from homeassistant.core import (
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import CONF_ALLOW_NOTIFY, DOMAIN
+from .const import CONF_ALLOW_NOTIFY, CONF_SYSTEM, DOMAIN
 
 PLATFORMS = [Platform.MEDIA_PLAYER, Platform.LIGHT, Platform.REMOTE]
 
@@ -131,6 +132,20 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 hass, LOGGER, cooldown=2.0, immediate=False
             ),
         )
+
+    @property
+    def system(self) -> SystemType:
+        """Return the system descriptor."""
+        if self.api.system:
+            return self.api.system
+        return self.config_entry.data[CONF_SYSTEM]
+
+    @property
+    def unique_id(self) -> str:
+        """Return the system descriptor."""
+        assert self.config_entry
+        assert self.config_entry.unique_id
+        return self.config_entry.unique_id
 
     @property
     def _notify_wanted(self):
