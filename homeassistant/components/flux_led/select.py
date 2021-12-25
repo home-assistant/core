@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from flux_led.aio import AIOWifiLedBulb
+from flux_led.base_device import DeviceType
 from flux_led.protocol import PowerRestoreState
 
 from homeassistant import config_entries
@@ -13,7 +14,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import FluxLedUpdateCoordinator
-from .entity import FluxBaseEntity
+from .entity import FluxBaseEntity, FluxEntity
 
 
 async def async_setup_entry(
@@ -23,14 +24,110 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Flux selects."""
     coordinator: FluxLedUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([FluxPowerState(coordinator.device, entry)])
+    device = coordinator.device
+    entities: list[
+        FluxPowerStateSelect
+        | FluxOperatingModesSelect
+        | FluxWiringsSelect
+        | FluxStripProtocolsSelect
+    ] = []
+    name = entry.data[CONF_NAME]
+
+    if device.device_type == DeviceType.Switch:
+        entities.append(FluxPowerStateSelect(coordinator.device, entry))
+    if device.operating_modes:
+        entities.append(FluxOperatingModesSelect(coordinator, entry.unique_id, name))
+    if device.wirings:
+        entities.append(FluxWiringsSelect(coordinator, entry.unique_id, name))
+    if device.strip_protocols:
+        entities.append(FluxStripProtocolsSelect(coordinator, entry.unique_id, name))
+
+    async_add_entities(entities)
 
 
 def _human_readable_option(const_option: str) -> str:
     return const_option.replace("_", " ").title()
 
 
-class FluxPowerState(FluxBaseEntity, SelectEntity):
+class FluxConfigSelect(FluxEntity, SelectEntity):
+    """Representation of a flux config entity that updates."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+
+
+class FluxStripProtocolsSelect(FluxConfigSelect):
+    """Representation of Flux strip protocols."""
+
+    def __init__(
+        self,
+        coordinator: FluxLedUpdateCoordinator,
+        unique_id: str | None,
+        name: str,
+    ) -> None:
+        """Initialize the protocol select."""
+        super().__init__(coordinator, unique_id, name)
+        self._attr_name = f"{name} Protocol"
+        if unique_id:
+            self._attr_unique_id = f"{unique_id}_protocol"
+        assert self._device.strip_protocols is not None
+        self._attr_options = self._device.strip_protocols
+
+    @property
+    def current_option(self) -> str | None:
+        """Return the current strip protocol."""
+        return self._device.strip_protocol
+
+
+class FluxWiringsSelect(FluxConfigSelect):
+    """Representation of Flux wirings."""
+
+    def __init__(
+        self,
+        coordinator: FluxLedUpdateCoordinator,
+        unique_id: str | None,
+        name: str,
+    ) -> None:
+        """Initialize the wiring select."""
+        super().__init__(coordinator, unique_id, name)
+        self._attr_name = f"{name} Wiring"
+        if unique_id:
+            self._attr_unique_id = f"{unique_id}_wiring"
+
+    @property
+    def options(self) -> list[str]:
+        """Return the available wiring options based on the strip protocol."""
+        return self._device.wirings or []
+
+    @property
+    def current_option(self) -> str | None:
+        """Return the current wiring."""
+        return self._device.wiring
+
+
+class FluxOperatingModesSelect(FluxConfigSelect):
+    """Representation of Flux operating modes."""
+
+    def __init__(
+        self,
+        coordinator: FluxLedUpdateCoordinator,
+        unique_id: str | None,
+        name: str,
+    ) -> None:
+        """Initialize the protocol select."""
+        super().__init__(coordinator, unique_id, name)
+        self._attr_name = f"{name} Operating Mode"
+        if unique_id:
+            self._attr_unique_id = f"{unique_id}_operating_mode"
+        assert self._device.operating_modes is not None
+        self._attr_options = self._device.operating_modes
+
+    @property
+    def current_option(self) -> str | None:
+        """Return the current operating mode."""
+        return self._device.operating_mode
+
+
+class FluxPowerStateSelect(FluxBaseEntity, SelectEntity):
     """Representation of a Flux power restore state option."""
 
     _attr_should_poll = False
