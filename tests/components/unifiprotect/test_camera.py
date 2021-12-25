@@ -41,7 +41,6 @@ async def validate_camera_entity(
         unique_id += "_insecure"
     entity_id = f"camera.{entity_name.replace(' ', '_').lower()}"
 
-    print(entity_id)
     entity_registry = er.async_get(hass)
     entity = entity_registry.async_get(entity_id)
     assert entity
@@ -51,25 +50,27 @@ async def validate_camera_entity(
     camera_platform = hass.data.get("camera")
     assert camera_platform
 
-    if enabled:
-        ha_camera = cast(Camera, camera_platform.get_entity(entity_id))
-        assert ha_camera
-        if rtsp_enabled:
-            if secure:
-                assert await ha_camera.stream_source() == channel.rtsps_url
-            else:
-                assert await ha_camera.stream_source() == channel.rtsp_url
-        else:
-            assert await ha_camera.stream_source() is None
+    if not enabled:
+        return
 
-        entity_state = hass.states.get(entity_id)
-        assert entity_state
-        assert entity_state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
-        assert entity_state.attributes[ATTR_WIDTH] == channel.width
-        assert entity_state.attributes[ATTR_HEIGHT] == channel.height
-        assert entity_state.attributes[ATTR_FPS] == channel.fps
-        assert entity_state.attributes[ATTR_BITRATE] == channel.bitrate
-        assert entity_state.attributes[ATTR_CHANNEL_ID] == channel.id
+    ha_camera = cast(Camera, camera_platform.get_entity(entity_id))
+    assert ha_camera
+    if rtsp_enabled:
+        if secure:
+            assert await ha_camera.stream_source() == channel.rtsps_url
+        else:
+            assert await ha_camera.stream_source() == channel.rtsp_url
+    else:
+        assert await ha_camera.stream_source() is None
+
+    entity_state = hass.states.get(entity_id)
+    assert entity_state
+    assert entity_state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
+    assert entity_state.attributes[ATTR_WIDTH] == channel.width
+    assert entity_state.attributes[ATTR_HEIGHT] == channel.height
+    assert entity_state.attributes[ATTR_FPS] == channel.fps
+    assert entity_state.attributes[ATTR_BITRATE] == channel.bitrate
+    assert entity_state.attributes[ATTR_CHANNEL_ID] == channel.id
 
 
 async def test_basic_setup(
