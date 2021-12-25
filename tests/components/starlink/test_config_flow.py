@@ -1,8 +1,9 @@
 """Test the Starlink config flow."""
 from unittest.mock import patch
 
+from spacex.starlink import CommunicationError
+
 from homeassistant import config_entries
-from homeassistant.components.starlink.config_flow import CannotConnect
 from homeassistant.components.starlink.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
@@ -43,8 +44,8 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.starlink.config_flow.PlaceholderHub.authenticate",
-        side_effect=CannotConnect,
+        "spacex.starlink.dish.StarlinkDish.connect",
+        side_effect=CommunicationError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
