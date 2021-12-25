@@ -32,7 +32,9 @@ from zwave_js_server.model.value import _get_value_id_from_dict, get_value_id
 from homeassistant.components.websocket_api.const import ERR_NOT_FOUND
 from homeassistant.components.zwave_js.api import (
     APPLICATION_VERSION,
+    ARGS,
     CLIENT_SIDE_AUTH,
+    COMMAND,
     COMMAND_CLASS_ID,
     CONFIG,
     DSK,
@@ -65,6 +67,7 @@ from homeassistant.components.zwave_js.api import (
     UNPROVISION,
     VALUE,
     VERSION,
+    WAIT_FOR_RESULT,
 )
 from homeassistant.components.zwave_js.const import (
     CONF_DATA_COLLECTION_OPTED_IN,
@@ -3989,3 +3992,48 @@ async def test_subscribe_node_statistics(
 
     assert not msg["success"]
     assert msg["error"]["code"] == ERR_NOT_LOADED
+
+
+async def test_send_command(hass, client, integration, hass_ws_client):
+    """Test that the send_command WS API call works."""
+    entry = integration
+    ws_client = await hass_ws_client(hass)
+
+    # Test we can send a command
+    client.async_send_command.return_value = {1: 2}
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "zwave_js/send_command",
+            ENTRY_ID: entry.entry_id,
+            COMMAND: "test_command",
+            ARGS: {"a": 5},
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {"1": 2}
+    assert client.async_send_command.call_args[0][0] == {
+        "command": "test_command",
+        "a": 5,
+    }
+
+    # Test we can send a command without waiting
+    client.async_send_command_no_wait.return_value = None
+    await ws_client.send_json(
+        {
+            ID: 2,
+            TYPE: "zwave_js/send_command",
+            ENTRY_ID: entry.entry_id,
+            COMMAND: "test_command",
+            ARGS: {"b": 6},
+            WAIT_FOR_RESULT: False,
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    assert msg["result"] is None
+    assert client.async_send_command_no_wait.call_args[0][0] == {
+        "command": "test_command",
+        "b": 6,
+    }

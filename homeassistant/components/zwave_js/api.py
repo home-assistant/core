@@ -139,6 +139,10 @@ SUPPORTED_PROTOCOLS = "supported_protocols"
 FEATURE = "feature"
 UNPROVISION = "unprovision"
 
+COMMAND = "command"
+ARGS = "args"
+WAIT_FOR_RESULT = "wait_for_result"
+
 # https://github.com/zwave-js/node-zwave-js/blob/master/packages/core/src/security/QR.ts#L41
 MINIMUM_QR_STRING_LENGTH = 52
 
@@ -350,6 +354,7 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_subscribe_node_statistics)
     websocket_api.async_register_command(hass, websocket_node_ready)
     websocket_api.async_register_command(hass, websocket_migrate_zwave)
+    websocket_api.async_register_command(hass, websocket_send_command)
     hass.http.register_view(DumpView())
     hass.http.register_view(FirmwareUploadView())
 
@@ -2218,3 +2223,32 @@ async def websocket_migrate_zwave(
             "migrated": not msg[DRY_RUN],
         },
     )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/send_command",
+        vol.Required(ENTRY_ID): str,
+        vol.Required(COMMAND): str,
+        vol.Required(ARGS): dict,
+        vol.Optional(WAIT_FOR_RESULT, default=True): bool,
+    }
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_entry
+async def websocket_send_command(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict,
+    entry: ConfigEntry,
+    client: Client,
+) -> None:
+    """Subsribe to the statistics updates for a controller."""
+    payload = {"command": msg[COMMAND], **msg[ARGS]}
+    if msg[WAIT_FOR_RESULT]:
+        result = await client.async_send_command(payload)
+    else:
+        result = await client.async_send_command_no_wait(payload)
+    connection.send_result(msg[ID], result)
