@@ -31,7 +31,7 @@ from .util import _effect_brightness, _hass_color_modes
 
 _LOGGER = logging.getLogger(__name__)
 
-DEBOUNCE_TIME = 3
+DEBOUNCE_TIME = 1
 
 
 async def async_setup_entry(
