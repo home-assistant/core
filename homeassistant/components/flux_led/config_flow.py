@@ -194,9 +194,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     device = await self._async_try_connect(
                         device[ATTR_IPADDR], format_as_flux_mac(mac), None
                     )
-                # Older devices sometimes only respond to discovery
-                # once so we will fallback to the original one as
-                # it will still work with a less descriptive title
             return self._async_create_entry_from_device(device)
 
         current_unique_ids = self._async_current_ids()
