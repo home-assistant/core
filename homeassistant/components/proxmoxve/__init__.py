@@ -43,6 +43,7 @@ from .const import (
     DEFAULT_VERIFY_SSL,
     DOMAIN,
     PARSE_DATA,
+    PROXMOX_CALCULATED_SENSOR_TYPES,
     PROXMOX_CLIENTS,
     Node_Type,
 )
@@ -250,6 +251,11 @@ def parse_api_container_vm(status):
     in the future.
     """
     data = {v: status[v] for v in PARSE_DATA}
+    data_calc = {
+        sensor.key: sensor.calculation(data)
+        for sensor in PROXMOX_CALCULATED_SENSOR_TYPES
+    }
+    data.update(data_calc)
 
     return data
 

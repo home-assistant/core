@@ -6,7 +6,12 @@ from enum import Enum
 from typing import Final
 
 from homeassistant.components.sensor import SensorStateClass
-from homeassistant.const import ATTR_TIME
+from homeassistant.const import (
+    ATTR_TIME,
+    DATA_GIGABYTES,
+    DATA_RATE_MEGABYTES_PER_SECOND,
+    PERCENTAGE,
+)
 
 from .model import ProxmoxBinarySensorDescription, ProxmoxSensorDescription
 
@@ -41,6 +46,7 @@ PROXMOX_BINARYSENSOR_TYPES: Final[tuple[ProxmoxBinarySensorDescription, ...]] = 
     ),
 )
 
+
 PROXMOX_SENSOR_TYPES: Final[tuple[ProxmoxSensorDescription, ...]] = (
     ProxmoxSensorDescription(
         key="uptime",
@@ -50,10 +56,109 @@ PROXMOX_SENSOR_TYPES: Final[tuple[ProxmoxSensorDescription, ...]] = (
         conversion=lambda x: timedelta(seconds=x),
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    ProxmoxSensorDescription(
+        key="disk",
+        icon="mdi:harddisk",
+        native_unit_of_measurement=DATA_GIGABYTES,
+        conversion=lambda x: round(x / 1073741824, 2),
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ProxmoxSensorDescription(
+        key="maxdisk",
+        icon="mdi:harddisk-plus",
+        native_unit_of_measurement=DATA_GIGABYTES,
+        conversion=lambda x: round(x / 1073741824, 2),
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    ProxmoxSensorDescription(
+        key="diskread",
+        icon="mdi:harddisk",
+        native_unit_of_measurement=DATA_RATE_MEGABYTES_PER_SECOND,
+        conversion=lambda x: round(x / 1048576, 2),
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    ProxmoxSensorDescription(
+        key="diskwrite",
+        icon="mdi:harddisk",
+        native_unit_of_measurement=DATA_RATE_MEGABYTES_PER_SECOND,
+        conversion=lambda x: round(x / 1048576, 2),
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    ProxmoxSensorDescription(
+        key="cpus",
+        icon="mdi:cpu-64-bit",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    ProxmoxSensorDescription(
+        key="cpu",
+        icon="mdi:cpu-64-bit",
+        unit_metric=PERCENTAGE,
+        unit_imperial=PERCENTAGE,
+        native_unit_of_measurement=PERCENTAGE,
+        conversion=lambda x: round(x * 100, 1),
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ProxmoxSensorDescription(
+        key="mem",
+        icon="mdi:memory",
+        native_unit_of_measurement=DATA_GIGABYTES,
+        conversion=lambda x: round(x / 1073741824, 2),
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ProxmoxSensorDescription(
+        key="maxmem",
+        icon="mdi:memory",
+        native_unit_of_measurement=DATA_GIGABYTES,
+        conversion=lambda x: round(x / 1073741824, 2),
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    ProxmoxSensorDescription(
+        key="netin",
+        icon="mdi:mdi:download-network-outline",
+        native_unit_of_measurement=DATA_RATE_MEGABYTES_PER_SECOND,
+        conversion=lambda x: round(x / 1048576, 2),
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    ProxmoxSensorDescription(
+        key="netout",
+        icon="mdi:upload-network-outline",
+        native_unit_of_measurement=DATA_RATE_MEGABYTES_PER_SECOND,
+        conversion=lambda x: round(x / 1048576, 2),
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
 )
 
+PROXMOX_CALCULATED_SENSOR_TYPES: Final[tuple[ProxmoxSensorDescription, ...]] = (
+    ProxmoxSensorDescription(
+        key="disk_pct_free",
+        icon="mdi:harddisk",
+        unit_metric=PERCENTAGE,
+        unit_imperial=PERCENTAGE,
+        native_unit_of_measurement=PERCENTAGE,
+        conversion=lambda x: round(x * 100, 1),
+        calculation=lambda x: 1 - x["disk"] / x["maxdisk"],
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ProxmoxSensorDescription(
+        key="mem_pct_free",
+        icon="mdi:memory",
+        unit_metric=PERCENTAGE,
+        unit_imperial=PERCENTAGE,
+        native_unit_of_measurement=PERCENTAGE,
+        conversion=lambda x: round(x * 100, 1),
+        calculation=lambda x: 1 - x["mem"] / x["maxmem"],
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+)
 
 PARSE_DATA = [
     sensor.key for sensor in PROXMOX_SENSOR_TYPES + PROXMOX_BINARYSENSOR_TYPES
 ] + ["name"]
-PROXMOX_SENSOR_TYPES_ALL = PROXMOX_SENSOR_TYPES
+PROXMOX_SENSOR_TYPES_ALL = PROXMOX_SENSOR_TYPES + PROXMOX_CALCULATED_SENSOR_TYPES
