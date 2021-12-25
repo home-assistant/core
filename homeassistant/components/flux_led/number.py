@@ -68,6 +68,21 @@ class FluxConfigNumber(FluxEntity, CoordinatorEntity, NumberEntity):
     _attr_step = 1
     _attr_mode = NumberMode.BOX
 
+    def _pixels_and_segments_fit_in_music_mode(self) -> bool:
+        """Check if the base pixel and segment settings will fix for music mode.
+
+        If they fit, they do not need to be configured.
+        """
+        pixels_per_segment = self._device.pixels_per_segment
+        segments = self._device.segments
+        assert pixels_per_segment is not None
+        assert segments is not None
+        return bool(
+            pixels_per_segment <= MUSIC_PIXELS_PER_SEGMENT_MAX
+            and segments <= MUSIC_SEGMENTS_MAX
+            and pixels_per_segment * segments <= MUSIC_PIXELS_MAX
+        )
+
 
 class FluxPixelsPerSegmentNumber(FluxConfigNumber):
     """Defines a flux_led pixels per segment number."""
@@ -177,7 +192,7 @@ class FluxMusicPixelsPerSegmentNumber(FluxConfigNumber):
     @property
     def available(self) -> bool:
         """Return if music pixels per segment can be set."""
-        return super().available  # and bool(self._device.music_pixels_per_segment)
+        return super().available and not self._pixels_and_segments_fit_in_music_mode()
 
     async def async_set_value(self, value: float) -> None:
         """Set the music pixels per segment."""
@@ -219,7 +234,7 @@ class FluxMusicSegmentsNumber(FluxConfigNumber):
     @property
     def available(self) -> bool:
         """Return if music segments can be set."""
-        return super().available  # and bool(self._device.music_segments)
+        return super().available and not self._pixels_and_segments_fit_in_music_mode()
 
     async def async_set_value(self, value: float) -> None:
         """Set the music segments."""
