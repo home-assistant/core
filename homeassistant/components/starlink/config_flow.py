@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from spacex.starlink import CommunicationError
 from spacex.starlink.dish import StarlinkDish
 import voluptuous as vol
 
@@ -44,7 +45,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     try:
         # TODO: Can I make this async?
         dish.connect()
-    except Exception:  # TODO: What will actually be raised here?
+    except CommunicationError:
         raise CannotConnect()
 
     # Return info that you want to store in the config entry.
