@@ -89,13 +89,14 @@ async def test_unload(mock_api, hass: HomeAssistant, mock_client):
         },
         version=2,
     )
+    mock_config.add_to_hass(hass)
 
     mock_api.return_value = mock_client
-    await mock_config.async_setup(hass)
+    await hass.config_entries.async_setup(mock_config.entry_id)
     await hass.async_block_till_done()
     assert mock_config.state == ConfigEntryState.LOADED
 
-    mock_config.async_unload(hass)
+    await hass.config_entries.async_unload(mock_config.entry_id)
     assert mock_config.state == ConfigEntryState.NOT_LOADED
     assert mock_client.async_disconnect_ws.called
 
