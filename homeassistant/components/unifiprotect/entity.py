@@ -17,6 +17,9 @@ from .data import ProtectData
 class ProtectDeviceEntity(Entity):
     """Base class for UniFi protect entities."""
 
+
+    _attr_should_poll = False
+
     def __init__(
         self,
         data: ProtectData,
@@ -25,8 +28,6 @@ class ProtectDeviceEntity(Entity):
     ) -> None:
         """Initialize the entity."""
         super().__init__()
-        self._attr_should_poll = False
-
         self.data: ProtectData = data
 
         if device and not hasattr(self, "device"):
