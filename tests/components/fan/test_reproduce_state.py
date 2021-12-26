@@ -192,8 +192,18 @@ async def test_modern_turn_on_invalid(hass, start_state):
     assert turn_on_calls[0].data == {"entity_id": MODERN_FAN_ENTITY}
 
     assert len(turn_off_calls) == 0
-    assert len(set_direction_calls) == 0
-    assert len(oscillate_calls) == 0
+    assert len(set_direction_calls) == 1
+    assert set_direction_calls[0].domain == "fan"
+    assert set_direction_calls[0].data == {
+        "entity_id": MODERN_FAN_ENTITY,
+        ATTR_DIRECTION: None,
+    }
+    assert len(oscillate_calls) == 1
+    assert oscillate_calls[0].domain == "fan"
+    assert oscillate_calls[0].data == {
+        "entity_id": MODERN_FAN_ENTITY,
+        ATTR_OSCILLATING: None,
+    }
     assert len(set_percentage_mode) == 0
     assert len(set_preset_mode) == 0
 
@@ -231,11 +241,7 @@ async def test_modern_turn_on_percentage_from_different_speed(hass, start_state)
     assert len(turn_off_calls) == 0
     assert len(set_direction_calls) == 0
     assert len(oscillate_calls) == 0
-    assert set_percentage_mode[0].domain == "fan"
-    assert set_percentage_mode[0].data == {
-        "entity_id": MODERN_FAN_ENTITY,
-        ATTR_PERCENTAGE: 15,
-    }
+    assert len(set_percentage_mode) == 0
     assert len(set_preset_mode) == 0
 
 
@@ -302,12 +308,7 @@ async def test_modern_turn_on_preset_mode_from_different_speed(hass, start_state
     assert len(set_direction_calls) == 0
     assert len(oscillate_calls) == 0
     assert len(set_percentage_mode) == 0
-    assert len(set_preset_mode) == 1
-    assert set_preset_mode[0].domain == "fan"
-    assert set_preset_mode[0].data == {
-        "entity_id": MODERN_FAN_ENTITY,
-        ATTR_PRESET_MODE: "Auto",
-    }
+    assert len(set_preset_mode) == 0
 
 
 async def test_modern_turn_on_preset_mode_from_same_speed(hass):
@@ -380,12 +381,7 @@ async def test_modern_turn_on_preset_mode_reverse(hass, start_state):
     assert len(turn_off_calls) == 0
     assert len(oscillate_calls) == 0
     assert len(set_percentage_mode) == 0
-    assert len(set_preset_mode) == 1
-    assert set_preset_mode[0].domain == "fan"
-    assert set_preset_mode[0].data == {
-        "entity_id": MODERN_FAN_ENTITY,
-        ATTR_PRESET_MODE: "Auto",
-    }
+    assert len(set_preset_mode) == 0
 
 
 @pytest.mark.parametrize(

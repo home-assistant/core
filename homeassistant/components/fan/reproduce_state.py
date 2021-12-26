@@ -37,10 +37,9 @@ SPEED_AND_MODE_ATTRIBUTES = {
     ATTR_PRESET_MODE: SERVICE_SET_PRESET_MODE,
 }
 
-ATTRIBUTES = {  # attribute: service
+SIMPLE_ATTRIBUTES = {  # attribute: service
     ATTR_DIRECTION: SERVICE_SET_DIRECTION,
     ATTR_OSCILLATING: SERVICE_OSCILLATE,
-    **SPEED_AND_MODE_ATTRIBUTES,
 }
 
 
@@ -75,16 +74,25 @@ async def _async_reproduce_state(
                 for attr in SPEED_AND_MODE_ATTRIBUTES
                 if state.attributes.get(attr) is not None
             }
+        else:
+            # If the fan is already on, we need to set speed or mode
+            # based on the state.
+            #
+            # Speed and preset mode are mutually exclusive, so one of
+            # them is always going to be stored as None. If we were to
+            # try to set it, it will raise an error. So instead we
+            # only update the one that is non-None.
+            for attr, service in SPEED_AND_MODE_ATTRIBUTES.items():
+                value = state.attributes.get(attr)
+                if value is not None and value != cur_state.attributes.get(attr):
+                    service_calls[service] = {attr: value}
 
-        # All the attributes are copied directly.
-        # Attributes that are not supported will not show up in the state.
-        # Percentage and preset mode attributes would already be set, but
-        # this simplifies the code in exchange for a no-op call.
-        for attr, service in ATTRIBUTES.items():
-            if attr not in state.attributes:
-                continue
-
-            if (value := state.attributes[attr]) != cur_state.attributes.get(attr):
+        # The simple attributes are copied directly. They can only be
+        # None if the fan does not support the feature in the first
+        # place, so the equality check ensures we don't call the
+        # services with invalid parameters.
+        for attr, service in SIMPLE_ATTRIBUTES.items():
+            if (value := state.attributes.get(attr)) != cur_state.attributes.get(attr):
                 service_calls[service] = {attr: value}
     elif state.state == STATE_OFF and cur_state.state != state.state:
         service_calls[SERVICE_TURN_OFF] = {}
