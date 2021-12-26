@@ -107,11 +107,11 @@ async def async_setup_entry(
 
     data = hass.data[DOMAIN][entry.entry_id]
     client = data["client"]
-    devicelist = data["devices"]
+    devices = data["devices"]
 
     entities = [
         SensiboClimate(client, dev, hass.config.units.temperature_unit)
-        for dev in devicelist
+        for dev in devices
     ]
 
     async_add_entities(entities)
