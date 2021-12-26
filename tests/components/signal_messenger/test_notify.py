@@ -6,6 +6,8 @@ import os
 import tempfile
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.setup import async_setup_component
 
 from tests.components.signal_messenger.conftest import (
@@ -95,18 +97,34 @@ def send_message_with_attachment(signal_notification_service, deprecated=False):
 
 
 def test_send_message_with_attachment_as_url(
-    signal_notification_service, signal_requests_mock, caplog
+    signal_notification_service, signal_attachment_requests_mock, caplog
 ):
-    """Test send message with attachment."""
+    """Test send message with attachment as URL."""
     with caplog.at_level(
         logging.DEBUG, logger="homeassistant.components.signal_messenger.notify"
     ):
         send_message_with_attachment_as_url(signal_notification_service)
 
     assert "Sending signal message" in caplog.text
-    assert signal_requests_mock.called
-    assert signal_requests_mock.call_count == 3
-    assert_sending_requests(signal_requests_mock, 1)
+    assert signal_attachment_requests_mock.called
+    assert signal_attachment_requests_mock.call_count == 3
+    assert_sending_requests(signal_attachment_requests_mock, 1)
+
+
+def test_send_message_with_large_attachment_as_url(
+    signal_notification_service, signal_large_attachment_requests_mock, caplog
+):
+    """Test send message with large attachment as URL throws error."""
+    with caplog.at_level(
+        logging.DEBUG, logger="homeassistant.components.signal_messenger.notify"
+    ):
+        with pytest.raises(ValueError) as exc:
+            send_message_with_attachment_as_url(signal_notification_service)
+
+    assert "Sending signal message" in caplog.text
+    assert signal_large_attachment_requests_mock.called
+    assert signal_large_attachment_requests_mock.call_count == 1
+    assert "Attachment too large" in str(exc.value)
 
 
 def send_message_with_attachment_as_url(signal_notification_service):

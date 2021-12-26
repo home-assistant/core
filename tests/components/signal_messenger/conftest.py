@@ -38,10 +38,32 @@ def signal_requests_mock(requests_mock):
         status_code=HTTPStatus.OK,
         json={"versions": ["v1", "v2"]},
     )
+    return requests_mock
+
+
+@pytest.fixture
+def signal_attachment_requests_mock(signal_requests_mock):
+    """Prepare attachment signal service mock."""
+    requests_mock = signal_requests_mock
     requests_mock.register_uri(
         "GET",
         URL_ATTACHMENT,
         status_code=HTTPStatus.OK,
         content=CONTENT,
+        headers={"Content-Length": "2048"},
+    )
+    return requests_mock
+
+
+@pytest.fixture
+def signal_large_attachment_requests_mock(signal_requests_mock):
+    """Prepare large attachment signal service mock."""
+    requests_mock = signal_requests_mock
+    requests_mock.register_uri(
+        "GET",
+        URL_ATTACHMENT,
+        status_code=HTTPStatus.OK,
+        content=CONTENT,
+        headers={"Content-Length": "52428801"},
     )
     return requests_mock

@@ -77,22 +77,26 @@ class SignalNotificationService(BaseNotificationService):
                 urls = data[ATTR_URLS]
                 for url in urls:
                     try:
-                        r = requests.get(url, verify=False, timeout=10,stream=True)
+                        r = requests.get(url, verify=False, timeout=10, stream=True)
                         r.raise_for_status()
 
-                        if int(r.headers.get('Content-Length')) > CONF_MAX_ALLOWED_DOWNLOAD_SIZE_BYTES:
-                            raise ValueError('Response too large')
+                        if r.headers.get("Content-Length") is not None:
+                            if (
+                                int(r.headers.get("Content-Length"))
+                                > CONF_MAX_ALLOWED_DOWNLOAD_SIZE_BYTES
+                            ):
+                                raise ValueError("Attachment too large")
 
                         size = 0
-                        data = []
+                        chunks = bytearray()
                         for chunk in r.iter_content(1024):
                             size += len(chunk)
                             if size > CONF_MAX_ALLOWED_DOWNLOAD_SIZE_BYTES:
-                                raise ValueError('Response too large')
+                                raise ValueError("Attachment too large")
 
-                            data.append(chunk)
+                            chunks.extend(chunk)
 
-                        attachments_as_bytes.append(data)
+                        attachments_as_bytes.append(chunks)
                     except Exception as ex:
                         _LOGGER.error("%s", ex)
                         raise ex
