@@ -1,7 +1,9 @@
 """Test the Vallox integration config flow."""
 from unittest.mock import patch
 
-from homeassistant.components.vallox.config_flow import CannotConnect, InvalidHost
+from vallox_websocket_api.exceptions import ValloxApiException
+
+from homeassistant.components.vallox.config_flow import host_valid
 from homeassistant.components.vallox.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_NAME
@@ -13,7 +15,7 @@ from homeassistant.data_entry_flow import (
 )
 
 
-async def test_form_no_input_fails(hass: HomeAssistant) -> None:
+async def test_form_no_input(hass: HomeAssistant) -> None:
     """Test that the form is returned with no input."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -38,8 +40,8 @@ async def test_form_create_entry(hass: HomeAssistant) -> None:
     assert result["errors"] == {"host": "unknown"}
 
     with patch(
-        "homeassistant.components.vallox.config_flow.validate_host",
-        return_value={"title": name, "model": "Vallox 110 MV"},
+        "vallox_websocket_api.Vallox.get_info",
+        return_value={"model": "Vallox 110 MV"},
     ), patch(
         "homeassistant.components.vallox.async_setup_entry",
         return_value=True,
@@ -62,29 +64,25 @@ async def test_form_invalid_host(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.vallox.config_flow.validate_host",
-        side_effect=InvalidHost,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            init["flow_id"],
-            {"host": "10.20.30.40"},
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        init["flow_id"],
+        {"host": "test.host&.com"},
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] == {"host": "invalid_host"}
 
 
-async def test_form_cannot_connect(hass: HomeAssistant) -> None:
+async def test_form_vallox_api_exception_cannot_connect(hass: HomeAssistant) -> None:
     """Test that cannot connect error is handled."""
     init = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
     with patch(
-        "homeassistant.components.vallox.config_flow.validate_host",
-        side_effect=CannotConnect,
+        "vallox_websocket_api.Vallox.get_info",
+        side_effect=ValloxApiException,
     ):
         result = await hass.config_entries.flow.async_configure(
             init["flow_id"],
@@ -96,13 +94,53 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result["errors"] == {"host": "cannot_connect"}
 
 
+async def test_form_os_error_cannot_connect(hass: HomeAssistant) -> None:
+    """Test that cannot connect error is handled."""
+    init = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    with patch(
+        "vallox_websocket_api.Vallox.get_info",
+        side_effect=OSError,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            init["flow_id"],
+            {"host": "5.6.7.8"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] == {"host": "cannot_connect"}
+
+
+async def test_form_already_configured(hass: HomeAssistant) -> None:
+    """Test that already configured error is handled."""
+    init = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.vallox.config_flow.ConfigFlow.host_already_configured",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            init["flow_id"],
+            {"host": "20.40.10.30"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] == {"host": "already_configured"}
+
+
 async def test_import(hass: HomeAssistant) -> None:
     """Test that import is handled."""
     name = "Vallox 90 MV"
 
     with patch(
-        "homeassistant.components.vallox.config_flow.validate_host",
-        return_value={"title": name, "model": "Vallox 90 MV"},
+        "vallox_websocket_api.Vallox.get_info",
+        return_value={"model": "Vallox 90 MV"},
     ), patch(
         "homeassistant.components.vallox.async_setup_entry",
         return_value=True,
@@ -124,16 +162,12 @@ async def test_import_invalid_host(hass: HomeAssistant) -> None:
     """Test that invalid host error is handled during import."""
     name = "Vallox 90 MV"
 
-    with patch(
-        "homeassistant.components.vallox.config_flow.validate_host",
-        side_effect=InvalidHost,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={"host": "1.2.3.4", "name": name},
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={"host": "vallox90mv.&host.name", "name": name},
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "invalid_host"
@@ -144,8 +178,8 @@ async def test_import_cannot_connect(hass: HomeAssistant) -> None:
     name = "Vallox 90 MV"
 
     with patch(
-        "homeassistant.components.vallox.config_flow.validate_host",
-        side_effect=CannotConnect,
+        "vallox_websocket_api.Vallox.get_info",
+        side_effect=OSError,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -156,3 +190,15 @@ async def test_import_cannot_connect(hass: HomeAssistant) -> None:
 
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "cannot_connect"
+
+
+async def test_host_valid_with_ip_address(hass: HomeAssistant) -> None:
+    """Test that host_valid can handle a valid IP address."""
+    result = host_valid("1.2.3.4")
+    assert result is True
+
+
+async def test_host_valid_with_illegal_character(hass: HomeAssistant) -> None:
+    """Test that host_valid fails with illegal character."""
+    result = host_valid("foo.bar.&")
+    assert result is False
