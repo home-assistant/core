@@ -91,7 +91,7 @@ class ConfigEntryState(Enum):
 
     _recoverable: bool
 
-    def __new__(cls: type[T], value: str, recoverable: bool) -> T:
+    def __new__(cls: type[_T], value: str, recoverable: bool) -> _T:
         """Create new ConfigEntryState."""
         obj = object.__new__(cls)
         obj._value_ = value
