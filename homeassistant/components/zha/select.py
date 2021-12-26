@@ -56,7 +56,7 @@ class ZHAEnumSelectEntity(ZhaEntity, SelectEntity):
         channels: list[ChannelType],
         **kwargs,
     ) -> None:
-        """Init this siren."""
+        """Init this select entity."""
         self._attr_name = self._enum.__name__
         self._attr_options = [entry.name.replace("_", " ") for entry in self._enum]
         super().__init__(unique_id, zha_device, channels, **kwargs)
