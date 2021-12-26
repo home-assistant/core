@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import datetime
+import json
 import logging
 from typing import Any
 import urllib.parse
@@ -43,7 +44,7 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.components.plex.const import PLEX_URI_SCHEME
-from homeassistant.components.plex.services import play_on_sonos
+from homeassistant.components.plex.services import lookup_plex_media
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TIME, STATE_IDLE, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -500,8 +501,16 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         """
         soco = self.coordinator.soco
         if media_id and media_id.startswith(PLEX_URI_SCHEME):
+            plex_plugin = self.speaker.plex_plugin
             media_id = media_id[len(PLEX_URI_SCHEME) :]
-            play_on_sonos(self.hass, media_type, media_id, self.name)  # type: ignore[no-untyped-call]
+            payload = json.loads(media_id)
+            shuffle = payload.pop("shuffle", None)
+            media = lookup_plex_media(self.hass, media_type, json.dumps(payload))
+            if not kwargs.get(ATTR_MEDIA_ENQUEUE):
+                soco.clear_queue()
+            if shuffle:
+                self.set_shuffle(True)
+            plex_plugin.play_now(media)
             return
 
         share_link = self.speaker.share_link
