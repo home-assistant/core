@@ -24,7 +24,7 @@ from qnap_qsw.const import (
     DATA_SYSTEM_SERIAL,
     DATA_TEMPERATURE_CURRENT,
     DATA_TEMPERATURE_MAXIMUM,
-    DATA_UPTIME_DATETIME_ISOFORMAT,
+    DATA_UPTIME_DATETIME,
     DATA_UPTIME_SECONDS,
 )
 
@@ -105,7 +105,7 @@ class QnapQswSensor(CoordinatorEntity, SensorEntity):
             _state_attr = {
                 "maximum": self.coordinator.data[DATA_TEMPERATURE_MAXIMUM],
             }
-        elif self.entity_description.key == DATA_UPTIME_DATETIME_ISOFORMAT:
+        elif self.entity_description.key == DATA_UPTIME_DATETIME:
             _state_attr = {
                 "seconds": self.coordinator.data[DATA_UPTIME_SECONDS],
             }

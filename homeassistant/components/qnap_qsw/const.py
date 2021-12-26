@@ -15,7 +15,7 @@ from qnap_qsw.const import (
     DATA_PORTS_OCTETS_TX,
     DATA_SYSTEM_MAC_ADDR,
     DATA_TEMPERATURE_CURRENT,
-    DATA_UPTIME_DATETIME_ISOFORMAT,
+    DATA_UPTIME_DATETIME,
 )
 
 from homeassistant.components.binary_sensor import (
@@ -132,7 +132,7 @@ SENSOR_TYPES: Final[tuple[SensorEntityDescription, ...]] = (
         device_class=DEVICE_CLASS_TIMESTAMP,
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        key=DATA_UPTIME_DATETIME_ISOFORMAT,
+        key=DATA_UPTIME_DATETIME,
         name="Uptime",
     ),
 )
