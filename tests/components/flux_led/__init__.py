@@ -79,6 +79,7 @@ def _mocked_bulb() -> AIOWifiLedBulb:
     bulb.async_set_effect = AsyncMock()
     bulb.async_set_white_temp = AsyncMock()
     bulb.async_set_brightness = AsyncMock()
+    bulb.async_set_device_config = AsyncMock()
     bulb.pixels_per_segment = 300
     bulb.segments = 2
     bulb.music_pixels_per_segment = 150
