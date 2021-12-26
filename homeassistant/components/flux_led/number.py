@@ -184,8 +184,6 @@ class FluxPixelsPerSegmentNumber(FluxConfigNumber):
     @property
     def max_value(self) -> int:
         """Return the max value."""
-        if not self._device.segments:
-            return PIXELS_MAX
         return min(
             PIXELS_PER_SEGMENT_MAX, int(PIXELS_MAX / (self._device.segments or 1))
         )
