@@ -59,47 +59,8 @@ class SignalNotificationService(BaseNotificationService):
 
         data = kwargs.get(ATTR_DATA)
 
-        filenames = None
-        attachments_as_bytes = []
-
-        if data is not None:
-            if ATTR_FILENAMES in data:
-                filenames = data[ATTR_FILENAMES]
-            if ATTR_FILENAME in data:
-                _LOGGER.warning(
-                    "The 'attachment' option is deprecated, please replace it with 'attachments'. This option will become invalid in version 0.108"
-                )
-                if filenames is None:
-                    filenames = [data[ATTR_FILENAME]]
-                else:
-                    filenames.append(data[ATTR_FILENAME])
-            if ATTR_URLS in data:
-                urls = data[ATTR_URLS]
-                for url in urls:
-                    try:
-                        r = requests.get(url, verify=False, timeout=10, stream=True)
-                        r.raise_for_status()
-
-                        if r.headers.get("Content-Length") is not None:
-                            if (
-                                int(r.headers.get("Content-Length"))
-                                > CONF_MAX_ALLOWED_DOWNLOAD_SIZE_BYTES
-                            ):
-                                raise ValueError("Attachment too large")
-
-                        size = 0
-                        chunks = bytearray()
-                        for chunk in r.iter_content(1024):
-                            size += len(chunk)
-                            if size > CONF_MAX_ALLOWED_DOWNLOAD_SIZE_BYTES:
-                                raise ValueError("Attachment too large")
-
-                            chunks.extend(chunk)
-
-                        attachments_as_bytes.append(chunks)
-                    except Exception as ex:
-                        _LOGGER.error("%s", ex)
-                        raise ex
+        filenames = self._get_filenames(data)
+        attachments_as_bytes = self._get_attachments_as_bytes(data)
 
         try:
             self._signal_cli_rest_api.send_message(
@@ -108,3 +69,59 @@ class SignalNotificationService(BaseNotificationService):
         except SignalCliRestApiError as ex:
             _LOGGER.error("%s", ex)
             raise ex
+
+    @staticmethod
+    def _get_filenames(data):
+        filenames = None
+
+        if data is None:
+            return None
+        if ATTR_FILENAMES in data:
+            filenames = data[ATTR_FILENAMES]
+        if ATTR_FILENAME in data:
+            _LOGGER.warning(
+                "The 'attachment' option is deprecated, please replace it with 'attachments'. "
+                "This option will become invalid in version 0.108"
+            )
+            if filenames is None:
+                filenames = [data[ATTR_FILENAME]]
+            else:
+                filenames.append(data[ATTR_FILENAME])
+
+        return filenames
+
+    @staticmethod
+    def _get_attachments_as_bytes(data):
+        attachments_as_bytes = []
+
+        if data is None or ATTR_URLS not in data:
+            return attachments_as_bytes
+
+        urls = data[ATTR_URLS]
+        for url in urls:
+            try:
+                resp = requests.get(url, verify=False, timeout=10, stream=True)
+                resp.raise_for_status()
+
+                if (
+                    resp.headers.get("Content-Length") is not None
+                    and int(resp.headers.get("Content-Length"))
+                    > CONF_MAX_ALLOWED_DOWNLOAD_SIZE_BYTES
+                ):
+                    raise ValueError("Attachment too large")
+
+                size = 0
+                chunks = bytearray()
+                for chunk in resp.iter_content(1024):
+                    size += len(chunk)
+                    if size > CONF_MAX_ALLOWED_DOWNLOAD_SIZE_BYTES:
+                        raise ValueError("Attachment too large")
+
+                    chunks.extend(chunk)
+
+                attachments_as_bytes.append(chunks)
+            except Exception as ex:
+                _LOGGER.error("%s", ex)
+                raise ex
+
+        return attachments_as_bytes
