@@ -1,10 +1,13 @@
 """Support for Luftdaten sensors."""
 from __future__ import annotations
 
+from typing import cast
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -17,6 +20,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -32,39 +36,42 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
         name="Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="humidity",
         name="Humidity",
-        icon="mdi:water-percent",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="pressure",
         name="Pressure",
-        icon="mdi:arrow-down-bold",
         native_unit_of_measurement=PRESSURE_PA,
         device_class=SensorDeviceClass.PRESSURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="pressure_at_sealevel",
         name="Pressure at sealevel",
-        icon="mdi:download",
         native_unit_of_measurement=PRESSURE_PA,
         device_class=SensorDeviceClass.PRESSURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="P1",
         name="PM10",
-        icon="mdi:thought-bubble",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        device_class=SensorDeviceClass.PM10,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="P2",
         name="PM2.5",
-        icon="mdi:thought-bubble-outline",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        device_class=SensorDeviceClass.PM25,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 
@@ -108,6 +115,13 @@ class LuftdatenSensor(CoordinatorEntity, SensorEntity):
         self._attr_extra_state_attributes = {
             ATTR_SENSOR_ID: sensor_id,
         }
+        self._attr_device_info = DeviceInfo(
+            configuration_url=f"https://devices.sensor.community/sensors/{sensor_id}/settings",
+            identifiers={(DOMAIN, str(sensor_id))},
+            name=f"Sensor {sensor_id}",
+            manufacturer="Luftdaten.info",
+        )
+
         if show_on_map:
             self._attr_extra_state_attributes[ATTR_LONGITUDE] = coordinator.data[
                 "longitude"
@@ -124,4 +138,4 @@ class LuftdatenSensor(CoordinatorEntity, SensorEntity):
             or (value := self.coordinator.data.get(self.entity_description.key)) is None
         ):
             return None
-        return value
+        return cast(float, value)

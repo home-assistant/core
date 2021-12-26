@@ -25,7 +25,7 @@
                     "multicast_group": "Il gruppo multicast utilizzato per il routing",
                     "multicast_port": "La porta multicast usata per il routing"
                 },
-                "description": "Configura le opzioni di routing."
+                "description": "Configura le opzioni di instradamento."
             },
             "tunnel": {
                 "data": {
@@ -37,7 +37,7 @@
                 "data": {
                     "connection_type": "Tipo di connessione KNX"
                 },
-                "description": "Inserisci il tipo di connessione che dovremmo usare per la tua connessione KNX.\n AUTOMATICO - L'integrazione si occupa della connettivit\u00e0 al tuo Bus KNX eseguendo una scansione del gateway.\n TUNNELING - L'integrazione si collegher\u00e0 al bus KNX tramite tunneling.\n ROUTING - L'integrazione si collegher\u00e0 al bus KNX tramite routing."
+                "description": "Inserisci il tipo di connessione che dovremmo usare per la tua connessione KNX.\n AUTOMATICO - L'integrazione si occupa della connettivit\u00e0 al tuo Bus KNX eseguendo una scansione del gateway.\n TUNNELING - L'integrazione si collegher\u00e0 al bus KNX tramite tunnel.\n ROUTING - L'integrazione si collegher\u00e0 al bus KNX tramite instradamento."
             }
         }
     },

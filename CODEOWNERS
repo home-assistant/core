@@ -668,6 +668,8 @@ homeassistant/components/opnsense/* @mtreinish
 tests/components/opnsense/* @mtreinish
 homeassistant/components/orangepi_gpio/* @pascallj
 homeassistant/components/oru/* @bvlaicu
+homeassistant/components/overkiz/* @imicknl @vlebourl @tetienne
+tests/components/overkiz/* @imicknl @vlebourl @tetienne
 homeassistant/components/ovo_energy/* @timmo001
 tests/components/ovo_energy/* @timmo001
 homeassistant/components/ozw/* @cgarwood @marcelveldt @MartinHjelmare
@@ -717,7 +719,7 @@ homeassistant/components/ps4/* @ktnrg45
 tests/components/ps4/* @ktnrg45
 homeassistant/components/push/* @dgomes
 tests/components/push/* @dgomes
-homeassistant/components/pvoutput/* @fabaff
+homeassistant/components/pvoutput/* @fabaff @frenck
 homeassistant/components/pvpc_hourly_pricing/* @azogue
 tests/components/pvpc_hourly_pricing/* @azogue
 homeassistant/components/qbittorrent/* @geoffreylagaisse
@@ -748,7 +750,7 @@ tests/components/recorder/* @home-assistant/core
 homeassistant/components/rejseplanen/* @DarkFox
 homeassistant/components/renault/* @epenet
 tests/components/renault/* @epenet
-homeassistant/components/repetier/* @MTrab
+homeassistant/components/repetier/* @MTrab @ShadowBr0ther
 homeassistant/components/rflink/* @javicalle
 tests/components/rflink/* @javicalle
 homeassistant/components/rfxtrx/* @danielhiversen @elupus @RobBie1221
@@ -793,7 +795,8 @@ homeassistant/components/select/* @home-assistant/core
 tests/components/select/* @home-assistant/core
 homeassistant/components/sense/* @kbickar
 tests/components/sense/* @kbickar
-homeassistant/components/sensibo/* @andrey-git
+homeassistant/components/sensibo/* @andrey-git @gjohansson-ST
+tests/components/sensibo/* @andrey-git @gjohansson-ST
 homeassistant/components/sentry/* @dcramer @frenck
 tests/components/sentry/* @dcramer @frenck
 homeassistant/components/serial/* @fabaff
@@ -871,8 +874,8 @@ homeassistant/components/srp_energy/* @briglx
 tests/components/srp_energy/* @briglx
 homeassistant/components/starline/* @anonym-tsk
 tests/components/starline/* @anonym-tsk
-homeassistant/components/statistics/* @fabaff
-tests/components/statistics/* @fabaff
+homeassistant/components/statistics/* @fabaff @ThomDietrich
+tests/components/statistics/* @fabaff @ThomDietrich
 homeassistant/components/stiebel_eltron/* @fucm
 homeassistant/components/stookalert/* @fwestenberg @frenck
 tests/components/stookalert/* @fwestenberg @frenck
@@ -909,7 +912,6 @@ homeassistant/components/tado/* @michaelarnauts @noltari
 tests/components/tado/* @michaelarnauts @noltari
 homeassistant/components/tag/* @balloob @dmulcahey
 tests/components/tag/* @balloob @dmulcahey
-homeassistant/components/tahoma/* @philklei
 homeassistant/components/tailscale/* @frenck
 tests/components/tailscale/* @frenck
 homeassistant/components/tankerkoenig/* @guillempages

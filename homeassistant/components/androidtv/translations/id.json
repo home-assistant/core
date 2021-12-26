@@ -1,9 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Perangkat sudah dikonfigurasi"
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "invalid_unique_id": "Penentuan ID unik yang valid untuk perangkat tidak dimungkinkan"
         },
         "error": {
+            "adbkey_not_file": "File kunci ADB tidak ditemukan",
             "cannot_connect": "Gagal terhubung",
             "invalid_host": "Nama host atau alamat IP tidak valid",
             "unknown": "Kesalahan yang tidak diharapkan"

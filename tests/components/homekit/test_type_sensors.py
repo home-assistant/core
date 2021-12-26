@@ -61,6 +61,10 @@ async def test_temperature(hass, hk_driver):
     await hass.async_block_till_done()
     assert acc.char_temp.value == 20
 
+    hass.states.async_set(entity_id, "0", {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
+    await hass.async_block_till_done()
+    assert acc.char_temp.value == 0
+
     hass.states.async_set(
         entity_id, "75.2", {ATTR_UNIT_OF_MEASUREMENT: TEMP_FAHRENHEIT}
     )
@@ -90,6 +94,10 @@ async def test_humidity(hass, hk_driver):
     hass.states.async_set(entity_id, "20")
     await hass.async_block_till_done()
     assert acc.char_humidity.value == 20
+
+    hass.states.async_set(entity_id, "0")
+    await hass.async_block_till_done()
+    assert acc.char_humidity.value == 0
 
 
 async def test_air_quality(hass, hk_driver):
@@ -226,6 +234,10 @@ async def test_light(hass, hk_driver):
     hass.states.async_set(entity_id, "300")
     await hass.async_block_till_done()
     assert acc.char_light.value == 300
+
+    hass.states.async_set(entity_id, "0")
+    await hass.async_block_till_done()
+    assert acc.char_light.value == 0.0001
 
 
 async def test_binary(hass, hk_driver):

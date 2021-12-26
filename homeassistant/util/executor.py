@@ -10,7 +10,7 @@ from threading import Thread
 import time
 import traceback
 
-from homeassistant.util.thread import async_raise
+from .thread import async_raise
 
 _LOGGER = logging.getLogger(__name__)
 

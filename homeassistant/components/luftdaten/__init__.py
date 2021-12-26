@@ -28,12 +28,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # For backwards compat, set unique ID
     if entry.unique_id is None:
         hass.config_entries.async_update_entry(
-            entry, unique_id=entry.data[CONF_SENSOR_ID]
+            entry, unique_id=str(entry.data[CONF_SENSOR_ID])
         )
 
     luftdaten = Luftdaten(entry.data[CONF_SENSOR_ID])
 
-    async def async_update() -> dict[Any, Any]:
+    async def async_update() -> dict[str, float | int]:
         """Update sensor/binary sensor data."""
         try:
             await luftdaten.get_data()
@@ -43,7 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if not luftdaten.values:
             raise UpdateFailed("Did not receive sensor data from luftdaten.info")
 
-        data = luftdaten.values
+        data: dict[str, float | int] = luftdaten.values
         data.update(luftdaten.meta)
         return data
 

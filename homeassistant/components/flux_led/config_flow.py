@@ -225,7 +225,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # identifying the device as the chip model number
             # AKA `HF-LPB100-ZJ200`
             return device
-        bulb = async_wifi_bulb_for_host(host)
+        bulb = async_wifi_bulb_for_host(host, discovery=device)
         try:
             await bulb.async_setup(lambda: None)
         finally:

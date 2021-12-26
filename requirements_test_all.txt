@@ -33,6 +33,7 @@ PyRMVtransport==0.3.3
 PyTransportNSW==0.1.1
 
 # homeassistant.components.camera
+# homeassistant.components.stream
 PyTurboJPEG==1.6.3
 
 # homeassistant.components.vicare
@@ -130,14 +131,14 @@ aioguardian==2021.11.0
 aioharmony==0.2.8
 
 # homeassistant.components.homekit_controller
-aiohomekit==0.6.4
+aiohomekit==0.6.10
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==3.0.7
+aiohue==3.0.10
 
 # homeassistant.components.apache_kafka
 aiokafka==0.6.0
@@ -167,7 +168,7 @@ aiopulse==0.4.3
 aiopvapi==1.6.19
 
 # homeassistant.components.pvpc_hourly_pricing
-aiopvpc==2.2.4
+aiopvpc==3.0.0
 
 # homeassistant.components.webostv
 aiopylgtv==0.4.0
@@ -239,7 +240,7 @@ arcam-fmj==0.12.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.23.1
+async-upnp-client==0.23.2
 
 # homeassistant.components.aurora
 auroranoaa==0.0.2
@@ -405,7 +406,7 @@ fjaraskupan==1.0.2
 flipr-api==1.4.1
 
 # homeassistant.components.flux_led
-flux_led==0.27.10
+flux_led==0.27.13
 
 # homeassistant.components.homekit
 fnvhash==0.1.0
@@ -950,7 +951,7 @@ pyialarm==1.9.0
 pyicloud==0.10.2
 
 # homeassistant.components.insteon
-pyinsteon==1.0.13
+pyinsteon==1.0.14
 
 # homeassistant.components.ipma
 pyipma==2.0.5
@@ -962,7 +963,7 @@ pyipp==0.11.0
 pyiqvia==2021.11.0
 
 # homeassistant.components.isy994
-pyisy==3.0.0
+pyisy==3.0.1
 
 # homeassistant.components.kira
 pykira==0.1.1
@@ -1065,6 +1066,9 @@ pyotgw==1.1b1
 # homeassistant.components.otp
 pyotp==2.6.0
 
+# homeassistant.components.overkiz
+pyoverkiz==1.0.0
+
 # homeassistant.components.openweathermap
 pyowm==3.2.0
 
@@ -1101,6 +1105,9 @@ pyrituals==0.0.6
 # homeassistant.components.ruckus_unleashed
 pyruckus==0.12
 
+# homeassistant.components.sensibo
+pysensibo==1.0.3
+
 # homeassistant.components.serial
 # homeassistant.components.zha
 pyserial-asyncio==0.5
@@ -1118,7 +1125,7 @@ pysiaalarm==3.0.2
 pysignalclirestapi==0.3.4
 
 # homeassistant.components.sma
-pysma==0.6.9
+pysma==0.6.10
 
 # homeassistant.components.smappee
 pysmappee==0.2.29
@@ -1248,7 +1255,7 @@ ring_doorbell==0.7.2
 rokuecp==0.8.5
 
 # homeassistant.components.roomba
-roombapy==1.6.4
+roombapy==1.6.5
 
 # homeassistant.components.roon
 roonapi==0.0.38
@@ -1303,7 +1310,7 @@ smarthab==0.21
 smhi-pkg==1.0.15
 
 # homeassistant.components.sonos
-soco==0.25.1
+soco==0.25.2
 
 # homeassistant.components.solaredge
 solaredge==0.0.2
@@ -1416,7 +1423,7 @@ url-normalize==1.4.1
 uvcclient==0.11.0
 
 # homeassistant.components.rdw
-vehicle==0.3.0
+vehicle==0.3.1
 
 # homeassistant.components.velbus
 velbus-aio==2021.11.7
@@ -1476,7 +1483,7 @@ xmltodict==0.12.0
 yalesmartalarmclient==0.3.4
 
 # homeassistant.components.august
-yalexs==1.1.15
+yalexs==1.1.16
 
 # homeassistant.components.yeelight
 yeelight==0.7.8
@@ -1485,7 +1492,7 @@ yeelight==0.7.8
 youless-api==0.15
 
 # homeassistant.components.zeroconf
-zeroconf==0.37.0
+zeroconf==0.38.1
 
 # homeassistant.components.zha
 zha-quirks==0.0.65

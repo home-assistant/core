@@ -74,7 +74,7 @@
                 "data": {
                     "usb_manual_path": "Percorso del dispositivo USB"
                 },
-                "description": "Immettere manualmente il percorso di una chiavetta USB Crownstone.",
+                "description": "Immetti manualmente il percorso di una chiavetta USB Crownstone.",
                 "title": "Percorso manuale della chiavetta USB Crownstone"
             },
             "usb_sphere_config": {

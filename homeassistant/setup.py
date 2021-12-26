@@ -8,18 +8,18 @@ import logging.handlers
 from timeit import default_timer as timer
 from types import ModuleType
 
-from homeassistant import config as conf_util, core, loader, requirements
-from homeassistant.config import async_notify_setup_error
-from homeassistant.const import (
+from . import config as conf_util, core, loader, requirements
+from .config import async_notify_setup_error
+from .const import (
     EVENT_COMPONENT_LOADED,
     EVENT_HOMEASSISTANT_START,
     PLATFORM_FORMAT,
     Platform,
 )
-from homeassistant.core import CALLBACK_TYPE
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import dt as dt_util, ensure_unique_string
+from .core import CALLBACK_TYPE
+from .exceptions import HomeAssistantError
+from .helpers.typing import ConfigType
+from .util import dt as dt_util, ensure_unique_string
 
 # mypy: disallow-any-generics
 
