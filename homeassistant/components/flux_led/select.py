@@ -139,7 +139,8 @@ class FluxWiringsSelect(FluxConfigSelect):
     @property
     def options(self) -> list[str]:
         """Return the available wiring options based on the strip protocol."""
-        return self._device.wirings or []
+        assert self._device.wirings is not None
+        return self._device.wirings
 
     @property
     def current_option(self) -> str | None:
