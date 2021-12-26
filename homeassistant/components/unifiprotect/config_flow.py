@@ -30,6 +30,7 @@ from .const import (
     DEFAULT_VERIFY_SSL,
     DOMAIN,
     MIN_REQUIRED_PROTECT_V,
+    OUTDATED_LOG_MESSAGE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -101,10 +102,7 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         else:
             if nvr_data.version < MIN_REQUIRED_PROTECT_V:
                 _LOGGER.error(
-                    (
-                        "You are running v%s of UniFi Protect. Minimum required version is v%s. "
-                        "Please upgrade UniFi Protect and then retry"
-                    ),
+                    OUTDATED_LOG_MESSAGE,
                     nvr_data.version,
                     MIN_REQUIRED_PROTECT_V,
                 )

@@ -29,6 +29,7 @@ from .const import (
     DEVICES_FOR_SUBSCRIBE,
     DOMAIN,
     MIN_REQUIRED_PROTECT_V,
+    OUTDATED_LOG_MESSAGE,
     PLATFORMS,
 )
 from .data import ProtectData
@@ -64,11 +65,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from err
 
     if nvr_info.version < MIN_REQUIRED_PROTECT_V:
-        _LOGGER.debug(
-            (
-                "You are running v%s of UniFi Protect. Minimum required version is v%s. "
-                "Please upgrade UniFi Protect and then retry"
-            ),
+        _LOGGER.error(
+            OUTDATED_LOG_MESSAGE,
             nvr_info.version,
             MIN_REQUIRED_PROTECT_V,
         )
