@@ -14,7 +14,13 @@ from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, STATE_ON
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_HOST,
+    CONF_NAME,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -335,3 +341,48 @@ async def test_addressable_light_pixel_config(hass: HomeAssistant) -> None:
     )
     bulb.async_set_device_config.assert_called_with(music_segments=5)
     bulb.async_set_device_config.reset_mock()
+
+
+async def test_addressable_light_pixel_config_music_disabled(
+    hass: HomeAssistant,
+) -> None:
+    """Test an addressable light pixel config with music pixels disabled."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: IP_ADDRESS, CONF_NAME: DEFAULT_ENTRY_TITLE},
+        unique_id=MAC_ADDRESS,
+    )
+    config_entry.add_to_hass(hass)
+    bulb = _mocked_bulb()
+    bulb.pixels_per_segment = 150
+    bulb.segments = 1
+    bulb.music_pixels_per_segment = 150
+    bulb.music_segments = 1
+    bulb.raw_state = bulb.raw_state._replace(
+        model_num=0xA2
+    )  # Original addressable model
+    bulb.color_modes = {FLUX_COLOR_MODE_RGB}
+    bulb.color_mode = FLUX_COLOR_MODE_RGB
+    with patch.object(
+        flux_number, "DEBOUNCE_TIME", 0
+    ), _patch_discovery(), _patch_wifibulb(device=bulb):
+        await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    pixels_per_segment_entity_id = "number.bulb_rgbcw_ddeeff_pixels_per_segment"
+    state = hass.states.get(pixels_per_segment_entity_id)
+    assert state.state == "150"
+
+    segments_entity_id = "number.bulb_rgbcw_ddeeff_segments"
+    state = hass.states.get(segments_entity_id)
+    assert state.state == "1"
+
+    music_pixels_per_segment_entity_id = (
+        "number.bulb_rgbcw_ddeeff_music_pixels_per_segment"
+    )
+    state = hass.states.get(music_pixels_per_segment_entity_id)
+    assert state.state == STATE_UNAVAILABLE
+
+    music_segments_entity_id = "number.bulb_rgbcw_ddeeff_music_segments"
+    state = hass.states.get(music_segments_entity_id)
+    assert state.state == STATE_UNAVAILABLE
