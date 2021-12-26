@@ -129,7 +129,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] == RESULT_TYPE_FORM
-    assert result2["errors"] == {"base": "unknown"}
+    assert result2["errors"] == {"base": "cannot_connect"}
 
 
 async def test_form_reauth_auth(hass: HomeAssistant) -> None:
