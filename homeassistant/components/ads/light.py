@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import voluptuous as vol
 
+from homeassistant.components import ads
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     PLATFORM_SCHEMA,
@@ -16,6 +17,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import (
+    CONF_ADS_FACTOR,
+    CONF_ADS_TYPE,
     CONF_ADS_VAR,
     CONF_ADS_VAR_BRIGHTNESS,
     DATA_ADS,
@@ -29,6 +32,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ADS_VAR): cv.string,
         vol.Optional(CONF_ADS_VAR_BRIGHTNESS): cv.string,
+        vol.Optional(CONF_ADS_TYPE, default=ads.ADSTYPE_UINT): vol.In(
+            [
+                ads.ADSTYPE_INT,
+                ads.ADSTYPE_UINT,
+                ads.ADSTYPE_BYTE,
+                ads.ADSTYPE_DINT,
+                ads.ADSTYPE_UDINT,
+            ]
+        ),
+        vol.Optional(CONF_ADS_FACTOR, default=1): cv.positive_int,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
@@ -45,19 +58,31 @@ def setup_platform(
 
     ads_var_enable = config[CONF_ADS_VAR]
     ads_var_brightness = config.get(CONF_ADS_VAR_BRIGHTNESS)
+    ads_type = config.get(CONF_ADS_TYPE)
+    ads_factor = config.get(CONF_ADS_FACTOR)
     name = config[CONF_NAME]
 
-    add_entities([AdsLight(ads_hub, ads_var_enable, ads_var_brightness, name)])
+    add_entities(
+        [
+            AdsLight(
+                ads_hub, ads_var_enable, ads_var_brightness, ads_type, ads_factor, name
+            )
+        ]
+    )
 
 
 class AdsLight(AdsEntity, LightEntity):
     """Representation of ADS light."""
 
-    def __init__(self, ads_hub, ads_var_enable, ads_var_brightness, name):
+    def __init__(
+        self, ads_hub, ads_var_enable, ads_var_brightness, ads_type, ads_factor, name
+    ):
         """Initialize AdsLight entity."""
         super().__init__(ads_hub, name, ads_var_enable)
         self._state_dict[STATE_KEY_BRIGHTNESS] = None
         self._ads_var_brightness = ads_var_brightness
+        self._ads_type = ads_type
+        self._ads_factor = ads_factor
         if ads_var_brightness is not None:
             self._attr_supported_features = SUPPORT_BRIGHTNESS
 
@@ -68,14 +93,14 @@ class AdsLight(AdsEntity, LightEntity):
         if self._ads_var_brightness is not None:
             await self.async_initialize_device(
                 self._ads_var_brightness,
-                self._ads_hub.PLCTYPE_UINT,
+                self._ads_hub.ADS_TYPEMAP[self._ads_type],
                 STATE_KEY_BRIGHTNESS,
             )
 
     @property
     def brightness(self) -> int | None:
         """Return the brightness of the light (0..255)."""
-        return self._state_dict[STATE_KEY_BRIGHTNESS]
+        return self._state_dict[STATE_KEY_BRIGHTNESS] / self._ads_factor
 
     @property
     def is_on(self) -> bool:
@@ -89,7 +114,9 @@ class AdsLight(AdsEntity, LightEntity):
 
         if self._ads_var_brightness is not None and brightness is not None:
             self._ads_hub.write_by_name(
-                self._ads_var_brightness, brightness, self._ads_hub.PLCTYPE_UINT
+                self._ads_var_brightness,
+                brightness * self._ads_factor,
+                self._ads_hub.ADS_TYPEMAP[self._ads_type],
             )
 
     def turn_off(self, **kwargs):
