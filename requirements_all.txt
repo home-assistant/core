@@ -746,7 +746,7 @@ google-cloud-pubsub==2.1.0
 google-cloud-texttospeech==0.4.0
 
 # homeassistant.components.nest
-google-nest-sdm==0.4.9
+google-nest-sdm==1.0.0
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1
@@ -1998,6 +1998,9 @@ pytrafikverket==0.1.6.2
 
 # homeassistant.components.usb
 pyudev==0.22.0
+
+# homeassistant.components.unifiprotect
+pyunifiprotect==1.4.4
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==21.11.0
