@@ -20,9 +20,10 @@ from homeassistant.components.unifiprotect.const import (
     DOMAIN,
 )
 from homeassistant.components.unifiprotect.data import ProtectData
-from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.const import ATTR_ATTRIBUTION, ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from .conftest import MockEntityFixture, time_changed
 
@@ -203,6 +204,8 @@ async def test_camera_generic_update(
 ):
     """Tests generic entity update service."""
 
+    assert await async_setup_component(hass, "homeassistant", {})
+
     data: ProtectData = hass.data[DOMAIN][mock_entry.entry.entry_id]
     assert data
     assert data.last_update_success
@@ -211,19 +214,12 @@ async def test_camera_generic_update(
     assert state and state.state == "idle"
 
     mock_entry.api.update = AsyncMock(return_value=None)
-    camera_platform = hass.data.get("camera")
-    assert camera_platform
-    ha_camera = cast(Camera, camera_platform.get_entity(simple_camera[1]))
-    assert ha_camera
-    await ha_camera.async_device_update()
-
-    # TODO:
-    # await hass.services.async_call(
-    #     "homeassistant",
-    #     "update_entity",
-    #     {ATTR_ENTITY_ID: simple_camera[1]},
-    #     blocking=True,
-    # )
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {ATTR_ENTITY_ID: simple_camera[1]},
+        blocking=True,
+    )
 
     state = hass.states.get(simple_camera[1])
     assert state and state.state == "idle"
