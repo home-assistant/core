@@ -12,12 +12,12 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "API \u5bc6\u9470",
+                    "api_key": "API \u91d1\u9470",
                     "latitude": "\u7def\u5ea6",
                     "longitude": "\u7d93\u5ea6",
                     "radius": "\u89c0\u6e2c\u7ad9\u534a\u5f91\uff08\u82f1\u91cc\uff1b\u9078\u9805\uff09"
                 },
-                "description": "\u6b32\u8a2d\u5b9a AirNow \u7a7a\u6c23\u54c1\u8cea\u6574\u5408\u3002\u8acb\u81f3 https://docs.airnowapi.org/account/request/ \u7522\u751f API \u5bc6\u9470",
+                "description": "\u6b32\u8a2d\u5b9a AirNow \u7a7a\u6c23\u54c1\u8cea\u6574\u5408\u3002\u8acb\u81f3 https://docs.airnowapi.org/account/request/ \u7522\u751f API \u91d1\u9470",
                 "title": "AirNow"
             }
         }
