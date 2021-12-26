@@ -1159,7 +1159,7 @@ async def test_node_model_change(hass, zp3111, client, integration):
 async def test_disabled_node_status_entity_on_node_replaced(
     hass, zp3111_state, zp3111, client, integration
 ):
-    """Test that when a node replacement event is received the node status sensor is disabled."""
+    """Test that when a node replacement event is received the node status sensor is removed."""
     node_status_entity = "sensor.4_in_1_sensor_node_status"
     state = hass.states.get(node_status_entity)
     assert state
@@ -1183,7 +1183,7 @@ async def test_disabled_node_status_entity_on_node_replaced(
 
 
 async def test_disabled_entity_on_value_removed(hass, zp3111, client, integration):
-    """Test that when entity primary values are removed the entity is disabled."""
+    """Test that when entity primary values are removed the entity is removed."""
     er_reg = er.async_get(hass)
 
     # re-enable this default-disabled entity
@@ -1223,7 +1223,7 @@ async def test_disabled_entity_on_value_removed(hass, zp3111, client, integratio
         if state.state == STATE_UNAVAILABLE
     }
 
-    # This value ID removal does not disable any entity
+    # This value ID removal does not remove any entity
     event = Event(
         type="value removed",
         data={
