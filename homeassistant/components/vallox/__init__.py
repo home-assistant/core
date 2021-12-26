@@ -203,6 +203,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        hass.data[DOMAIN].pop(entry.entry_id)
+
+        if len(hass.data[DOMAIN]) != 0:
+            return unload_ok
+
+        for service in SERVICE_TO_METHOD:
+            hass.services.async_remove(DOMAIN, service)
+
+    return unload_ok
+
+
 class ValloxServiceHandler:
     """Services implementation."""
 
