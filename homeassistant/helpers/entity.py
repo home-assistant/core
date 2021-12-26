@@ -11,7 +11,7 @@ import logging
 import math
 import sys
 from timeit import default_timer as timer
-from typing import Any, Final, TypedDict, final
+from typing import Any, Final, Literal, TypedDict, final
 
 import voluptuous as vol
 
@@ -226,8 +226,10 @@ class EntityDescription:
     key: str
 
     device_class: str | None = None
-    # Type str (ENTITY_CATEG*) is deprecated as of 2021.12, use EntityCategory
-    entity_category: EntityCategory | str | None = None
+    # Type Literal (ENTITY_CATEG*) is deprecated as of 2021.12, use EntityCategory
+    entity_category: EntityCategory | Literal[
+        "config", "diagnostic", "system"
+    ] | None = None
     entity_registry_enabled_default: bool = True
     force_update: bool = False
     icon: str | None = None
