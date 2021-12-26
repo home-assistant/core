@@ -4,8 +4,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from pybotvac import Robot
 from pybotvac.exceptions import NeatoRobotException
-from pybotvac.robot import Robot
 import voluptuous as vol
 
 from homeassistant.components.vacuum import (
@@ -25,11 +25,11 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.const import ATTR_MODE
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
-
 from . import VorwerkState
 from .const import (
     ATTR_CATEGORY,
@@ -101,44 +101,44 @@ class VorwerkConnectedVacuum(CoordinatorEntity, StateVacuumEntity):
         self._robot_boundaries: list[str] = []
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the device."""
         return self._name
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Flag vacuum cleaner robot features that are supported."""
         return SUPPORT_VORWERK
 
     @property
-    def battery_level(self):
+    def battery_level(self) -> int | None:
         """Return the battery level of the vacuum cleaner."""
-        return self._state.battery_level
+        return int(self._state.battery_level) if self._state.battery_level else None
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return if the robot is available."""
         return self._state.available
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return specific icon."""
         return "mdi:robot-vacuum-variant"
 
     @property
-    def state(self):
+    def state(self) -> str | None:
         """Return the status of the vacuum cleaner."""
         return self._state.state if self._state else None
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return a unique ID."""
         return self._robot_serial
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the vacuum cleaner."""
-        data = {}
+        data: dict[str, Any] = {}
 
         if self._state.status is not None:
             data[ATTR_STATUS] = self._state.status
@@ -146,11 +146,11 @@ class VorwerkConnectedVacuum(CoordinatorEntity, StateVacuumEntity):
         return data
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Device info for robot."""
         return self._state.device_info
 
-    def start(self):
+    def start(self) -> None:
         """Start cleaning or resume cleaning."""
         if not self._state:
             return
@@ -164,7 +164,7 @@ class VorwerkConnectedVacuum(CoordinatorEntity, StateVacuumEntity):
                 "Vorwerk vacuum connection error for '%s': %s", self.entity_id, ex
             )
 
-    def pause(self):
+    def pause(self) -> None:
         """Pause the vacuum."""
         try:
             self.robot.pause_cleaning()
@@ -173,7 +173,7 @@ class VorwerkConnectedVacuum(CoordinatorEntity, StateVacuumEntity):
                 "Vorwerk vacuum connection error for '%s': %s", self.entity_id, ex
             )
 
-    def return_to_base(self, **kwargs):
+    def return_to_base(self, **kwargs: Any) -> None:
         """Set the vacuum cleaner to return to the dock."""
         try:
             if self._state.state == STATE_CLEANING:
@@ -184,7 +184,7 @@ class VorwerkConnectedVacuum(CoordinatorEntity, StateVacuumEntity):
                 "Vorwerk vacuum connection error for '%s': %s", self.entity_id, ex
             )
 
-    def stop(self, **kwargs):
+    def stop(self, **kwargs: Any) -> None:
         """Stop the vacuum cleaner."""
         try:
             self.robot.stop_cleaning()
@@ -193,7 +193,7 @@ class VorwerkConnectedVacuum(CoordinatorEntity, StateVacuumEntity):
                 "Vorwerk vacuum connection error for '%s': %s", self.entity_id, ex
             )
 
-    def locate(self, **kwargs):
+    def locate(self, **kwargs: Any) -> None:
         """Locate the robot by making it emit a sound."""
         try:
             self.robot.locate()
@@ -202,7 +202,7 @@ class VorwerkConnectedVacuum(CoordinatorEntity, StateVacuumEntity):
                 "Vorwerk vacuum connection error for '%s': %s", self.entity_id, ex
             )
 
-    def clean_spot(self, **kwargs):
+    def clean_spot(self, **kwargs: Any) -> None:
         """Run a spot cleaning starting from the base."""
         try:
             self.robot.start_spot_cleaning()
@@ -211,7 +211,9 @@ class VorwerkConnectedVacuum(CoordinatorEntity, StateVacuumEntity):
                 "Vorwerk vacuum connection error for '%s': %s", self.entity_id, ex
             )
 
-    def vorwerk_custom_cleaning(self, mode, navigation, category, zone=None):
+    def vorwerk_custom_cleaning(
+        self, mode: str, navigation: str, category: str, zone: str | None = None
+    ) -> None:
         """Zone cleaning service call."""
         boundary_id = None
         if zone is not None:
@@ -223,6 +225,7 @@ class VorwerkConnectedVacuum(CoordinatorEntity, StateVacuumEntity):
                     "Zone '%s' was not found for the robot '%s'", zone, self.entity_id
                 )
                 return
+            _LOGGER.info("Start cleaning zone '%s' with robot %s", zone, self.entity_id)
 
         try:
             self.robot.start_cleaning(mode, navigation, category, boundary_id)

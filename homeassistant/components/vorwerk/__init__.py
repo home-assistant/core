@@ -21,6 +21,7 @@ from homeassistant.components.vacuum import (
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -309,17 +310,15 @@ class VorwerkState:
         return self.robot_state["details"]["charge"]
 
     @property
-    def device_info(self) -> dict[str, str]:
+    def device_info(self) -> DeviceInfo:
         """Device info for robot."""
-        info = {
-            "identifiers": {(VORWERK_DOMAIN, self.robot.serial)},
-            "name": self.robot.name,
-        }
-        if self.robot_info:
-            info["manufacturer"] = self.robot_info["battery"]["vendor"]
-            info["model"] = self.robot_info["model"]
-            info["sw_version"] = self.robot_info["firmware"]
-        return info
+        return DeviceInfo(
+            identifiers={(VORWERK_DOMAIN, self.robot.serial)},
+            manufacturer=self.robot_info["battery"]["vendor"] if self.robot_info else None,
+            model=self.robot_info["model"] if self.robot_info else None,
+            name=self.robot.name,
+            sw_version=self.robot_info["firmware"] if self.robot_info else None,
+        )
 
     @property
     def schedule_enabled(self):
