@@ -161,7 +161,7 @@ async def simple_camera(
     yield (camera, "camera.test_camera_high")
 
 
-async def time_changed(hass: HomeAssistant, seconds: int):
+async def time_changed(hass: HomeAssistant, seconds: int) -> None:
     """Trigger time changed."""
     next_update = dt_util.utcnow() + timedelta(seconds)
     async_fire_time_changed(hass, next_update)
