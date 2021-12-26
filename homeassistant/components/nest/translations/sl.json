@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "authorize_url_fail": "Neznana napaka pri generiranju potrditvenega URL-ja.",
             "authorize_url_timeout": "\u010casovna omejitev za generiranje potrditvenega URL-ja je potekla.",
             "reauth_successful": "Ponovna overitev je uspela.",
             "unknown_authorize_url_generation": "Neznana napaka pri ustvarjanju overitvenega url."
@@ -12,6 +11,12 @@
             "unknown": "Neznana napaka pri preverjanju kode"
         },
         "step": {
+            "auth": {
+                "data": {
+                    "code": "\u017deton za dostop"
+                },
+                "title": "Pove\u017eite Google Ra\u010dun"
+            },
             "init": {
                 "data": {
                     "flow_impl": "Ponudnik"

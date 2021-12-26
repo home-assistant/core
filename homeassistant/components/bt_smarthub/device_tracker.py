@@ -7,7 +7,7 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST
@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_DEFAULT_IP = "192.168.1.254"
 CONF_SMARTHUB_MODEL = "smarthub_model"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HOST, default=CONF_DEFAULT_IP): cv.string,
         vol.Optional(CONF_SMARTHUB_MODEL): vol.In([1, 2]),
@@ -59,8 +59,7 @@ class BTSmartHubScanner(DeviceScanner):
         self.success_init = False
 
         # Test the router is accessible
-        data = self.get_bt_smarthub_data()
-        if data:
+        if self.get_bt_smarthub_data():
             self.success_init = True
         else:
             _LOGGER.info("Failed to connect to %s", self.smarthub.router_ip)
@@ -85,8 +84,7 @@ class BTSmartHubScanner(DeviceScanner):
             return
 
         _LOGGER.info("Scanning")
-        data = self.get_bt_smarthub_data()
-        if not data:
+        if not (data := self.get_bt_smarthub_data()):
             _LOGGER.warning("Error scanning devices")
             return
         self.last_results = data

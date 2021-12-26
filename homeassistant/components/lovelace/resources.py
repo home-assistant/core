@@ -52,7 +52,7 @@ class ResourceStorageCollection(collection.StorageCollection):
     CREATE_SCHEMA = vol.Schema(RESOURCE_CREATE_FIELDS)
     UPDATE_SCHEMA = vol.Schema(RESOURCE_UPDATE_FIELDS)
 
-    def __init__(self, hass: HomeAssistant, ll_config: LovelaceConfig):
+    def __init__(self, hass: HomeAssistant, ll_config: LovelaceConfig) -> None:
         """Initialize the storage collection."""
         super().__init__(
             storage.Store(hass, RESOURCES_STORAGE_VERSION, RESOURCE_STORAGE_KEY),
@@ -70,9 +70,7 @@ class ResourceStorageCollection(collection.StorageCollection):
 
     async def _async_load_data(self) -> dict | None:
         """Load the data."""
-        data = await self.store.async_load()
-
-        if data is not None:
+        if (data := await self.store.async_load()) is not None:
             return cast(Optional[dict], data)
 
         # Import it from config.

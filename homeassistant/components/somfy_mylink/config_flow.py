@@ -7,9 +7,10 @@ from somfy_mylink_synergy import SomfyMyLinkSynergy
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.components.dhcp import HOSTNAME, IP_ADDRESS, MAC_ADDRESS
+from homeassistant.components import dhcp
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import (
@@ -58,19 +59,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.mac = None
         self.ip_address = None
 
-    async def async_step_dhcp(self, discovery_info):
+    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle dhcp discovery."""
-        if self._host_already_configured(discovery_info[IP_ADDRESS]):
-            return self.async_abort(reason="already_configured")
+        self._async_abort_entries_match({CONF_HOST: discovery_info.ip})
 
-        formatted_mac = format_mac(discovery_info[MAC_ADDRESS])
+        formatted_mac = format_mac(discovery_info.macaddress)
         await self.async_set_unique_id(format_mac(formatted_mac))
-        self._abort_if_unique_id_configured(
-            updates={CONF_HOST: discovery_info[IP_ADDRESS]}
-        )
-        self.host = discovery_info[HOSTNAME]
+        self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
+        self.host = discovery_info.hostname
         self.mac = formatted_mac
-        self.ip_address = discovery_info[IP_ADDRESS]
+        self.ip_address = discovery_info.ip
         self.context["title_placeholders"] = {"ip": self.ip_address, "mac": self.mac}
         return await self.async_step_user()
 
@@ -79,8 +77,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            if self._host_already_configured(user_input[CONF_HOST]):
-                return self.async_abort(reason="already_configured")
+            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
 
             try:
                 info = await validate_input(self.hass, user_input)
@@ -108,17 +105,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input):
         """Handle import."""
-        if self._host_already_configured(user_input[CONF_HOST]):
-            return self.async_abort(reason="already_configured")
-
+        self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
         return await self.async_step_user(user_input)
-
-    def _host_already_configured(self, host):
-        """See if we already have an entry matching the host."""
-        for entry in self._async_current_entries():
-            if entry.data.get(CONF_HOST) == host:
-                return True
-        return False
 
     @staticmethod
     @callback
@@ -130,7 +118,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class OptionsFlowHandler(config_entries.OptionsFlow):
     """Handle a option flow for somfy_mylink."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
         self.options = deepcopy(dict(config_entry.options))
@@ -155,13 +143,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None):
         """Handle options flow."""
 
-        if self.config_entry.state != config_entries.ENTRY_STATE_LOADED:
+        if self.config_entry.state is not config_entries.ConfigEntryState.LOADED:
             _LOGGER.error("MyLink must be connected to manage device options")
             return self.async_abort(reason="cannot_connect")
 
         if user_input is not None:
-            target_id = user_input.get(CONF_TARGET_ID)
-            if target_id:
+            if target_id := user_input.get(CONF_TARGET_ID):
                 return await self.async_step_target_config(None, target_id)
 
             return self.async_create_entry(title="", data=self.options)

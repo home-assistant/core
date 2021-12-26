@@ -1,8 +1,6 @@
 """The Keenetic Client class."""
-import logging
-
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -11,8 +9,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import KeeneticRouter
 from .const import DOMAIN, ROUTER
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -27,7 +23,10 @@ async def async_setup_entry(
 class RouterOnlineBinarySensor(BinarySensorEntity):
     """Representation router connection status."""
 
-    def __init__(self, router: KeeneticRouter):
+    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
+    _attr_should_poll = False
+
+    def __init__(self, router: KeeneticRouter) -> None:
         """Initialize the APCUPSd binary device."""
         self._router = router
 
@@ -45,16 +44,6 @@ class RouterOnlineBinarySensor(BinarySensorEntity):
     def is_on(self):
         """Return true if the UPS is online, else false."""
         return self._router.available
-
-    @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_CONNECTIVITY
-
-    @property
-    def should_poll(self) -> bool:
-        """Return False since entity pushes its state to HA."""
-        return False
 
     @property
     def device_info(self):

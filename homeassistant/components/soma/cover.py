@@ -5,7 +5,8 @@ import logging
 from requests import RequestException
 
 from homeassistant.components.cover import ATTR_POSITION, CoverEntity
-from homeassistant.components.soma import API, DEVICES, DOMAIN, SomaEntity
+
+from . import API, DEVICES, DOMAIN, SomaEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -87,5 +88,5 @@ class SomaCover(SomaEntity, CoverEntity):
             )
             self.is_available = False
             return
-        self.current_position = 100 - response["position"]
+        self.current_position = 100 - int(response["position"])
         self.is_available = True

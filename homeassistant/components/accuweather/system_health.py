@@ -1,10 +1,14 @@
 """Provide info to system health."""
+from __future__ import annotations
+
+from typing import Any
+
 from accuweather.const import ENDPOINT
 
 from homeassistant.components import system_health
 from homeassistant.core import HomeAssistant, callback
 
-from .const import COORDINATOR, DOMAIN
+from .const import DOMAIN
 
 
 @callback
@@ -15,10 +19,10 @@ def async_register(
     register.async_register_info(system_health_info)
 
 
-async def system_health_info(hass):
+async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
     """Get info for the info page."""
-    remaining_requests = list(hass.data[DOMAIN].values())[0][
-        COORDINATOR
+    remaining_requests = list(hass.data[DOMAIN].values())[
+        0
     ].accuweather.requests_remaining
 
     return {

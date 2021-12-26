@@ -1,9 +1,9 @@
 {
     "device_automation": {
         "action_type": {
-            "toggle": "Attivare / Disattivare {entity_name}",
-            "turn_off": "Disattivare {entity_name}",
-            "turn_on": "Attivare {entity_name}"
+            "toggle": "Attiva/Disattiva {entity_name}",
+            "turn_off": "Disattiva {entity_name}",
+            "turn_on": "Attiva {entity_name}"
         },
         "condition_type": {
             "is_off": "{entity_name} \u00e8 disattivato",

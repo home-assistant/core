@@ -36,5 +36,13 @@
                 "title": "ISY994 Options"
             }
         }
+    },
+    "system_health": {
+        "info": {
+            "device_connected": "ISY Connected",
+            "host_reachable": "Host Reachable",
+            "last_heartbeat": "Last Heartbeat Time",
+            "websocket_status": "Event Socket Status"
+        }
     }
 }

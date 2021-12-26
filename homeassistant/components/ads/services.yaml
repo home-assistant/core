@@ -15,7 +15,6 @@ write_data_by_name:
       name: ADS type
       description: The data type of the variable to write to.
       required: true
-      example: "int"
       selector:
         select:
           options:
@@ -29,7 +28,6 @@ write_data_by_name:
       name: Value
       description: The value to write to the variable.
       required: true
-      example: 1
       selector:
         number:
           min: 0

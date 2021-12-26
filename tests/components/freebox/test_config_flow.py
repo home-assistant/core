@@ -8,6 +8,7 @@ from freebox_api.exceptions import (
 )
 
 from homeassistant import data_entry_flow
+from homeassistant.components import zeroconf
 from homeassistant.components.freebox.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -17,13 +18,13 @@ from .const import MOCK_HOST, MOCK_PORT
 
 from tests.common import MockConfigEntry
 
-MOCK_ZEROCONF_DATA = {
-    "host": "192.168.0.254",
-    "port": 80,
-    "hostname": "Freebox-Server.local.",
-    "type": "_fbx-api._tcp.local.",
-    "name": "Freebox Server._fbx-api._tcp.local.",
-    "properties": {
+MOCK_ZEROCONF_DATA = zeroconf.ZeroconfServiceInfo(
+    host="192.168.0.254",
+    port=80,
+    hostname="Freebox-Server.local.",
+    type="_fbx-api._tcp.local.",
+    name="Freebox Server._fbx-api._tcp.local.",
+    properties={
         "api_version": "8.0",
         "device_type": "FreeboxServer1,2",
         "api_base_url": "/api/",
@@ -34,7 +35,7 @@ MOCK_ZEROCONF_DATA = {
         "box_model_name": "Freebox Server (r2)",
         "api_domain": MOCK_HOST,
     },
-}
+)
 
 
 async def test_user(hass: HomeAssistant):

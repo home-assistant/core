@@ -8,14 +8,14 @@
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
         },
-        "flow_title": "Lutron Cas\u00e9ta {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "import_failed": {
                 "description": "Nie mo\u017cna skonfigurowa\u0107 mostka (host: {host}) zaimportowanego z pliku configuration.yaml.",
                 "title": "Nie uda\u0142o si\u0119 zaimportowa\u0107 konfiguracji mostka Cas\u00e9ta."
             },
             "link": {
-                "description": "Aby sparowa\u0107 z {name} ({host}), po przes\u0142aniu tego formularza naci\u015bnij czarny przycisk z ty\u0142u mostka.",
+                "description": "Aby sparowa\u0107 z {name} ({host}), po zatwierdzeniu tego formularza naci\u015bnij czarny przycisk z ty\u0142u mostka.",
                 "title": "Sparuj z mostkiem"
             },
             "user": {

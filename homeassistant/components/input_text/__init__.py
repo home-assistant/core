@@ -190,7 +190,7 @@ class InputTextStorageCollection(collection.StorageCollection):
 class InputText(RestoreEntity):
     """Represent a text box."""
 
-    def __init__(self, config: dict):
+    def __init__(self, config: dict) -> None:
         """Initialize a text input."""
         self._config = config
         self.editable = True

@@ -10,9 +10,9 @@ from tesla_powerwall import (
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.components.dhcp import IP_ADDRESS
+from homeassistant.components import dhcp
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
-from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
 
@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 def _login_and_fetch_site_info(power_wall: Powerwall, password: str):
     """Login to the powerwall and fetch the base info."""
     if password is not None:
-        power_wall.login("", password)
+        power_wall.login(password)
     power_wall.detect_and_pin_version()
     return power_wall.get_site_info()
 
@@ -58,12 +58,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the powerwall flow."""
         self.ip_address = None
 
-    async def async_step_dhcp(self, discovery_info):
+    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle dhcp discovery."""
-        if self._async_ip_address_already_configured(discovery_info[IP_ADDRESS]):
-            return self.async_abort(reason="already_configured")
-
-        self.ip_address = discovery_info[IP_ADDRESS]
+        self.ip_address = discovery_info.ip
+        self._async_abort_entries_match({CONF_IP_ADDRESS: self.ip_address})
         self.context["title_placeholders"] = {CONF_IP_ADDRESS: self.ip_address}
         return await self.async_step_user()
 
@@ -110,14 +108,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle configuration by re-auth."""
         self.ip_address = data[CONF_IP_ADDRESS]
         return await self.async_step_user()
-
-    @callback
-    def _async_ip_address_already_configured(self, ip_address):
-        """See if we already have an entry matching the ip_address."""
-        for entry in self._async_current_entries():
-            if entry.data.get(CONF_IP_ADDRESS) == ip_address:
-                return True
-        return False
 
 
 class WrongVersion(exceptions.HomeAssistantError):

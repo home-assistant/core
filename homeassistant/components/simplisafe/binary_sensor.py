@@ -1,48 +1,52 @@
 """Support for SimpliSafe binary sensors."""
-from simplipy.entity import EntityTypes
+from __future__ import annotations
+
+from simplipy.device import DeviceTypes
+from simplipy.device.sensor.v3 import SensorV3
+from simplipy.system.v3 import SystemV3
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_DOOR,
-    DEVICE_CLASS_GAS,
-    DEVICE_CLASS_MOISTURE,
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_SAFETY,
-    DEVICE_CLASS_SMOKE,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import SimpliSafeBaseSensor
-from .const import DATA_CLIENT, DOMAIN, LOGGER
+from . import SimpliSafe, SimpliSafeEntity
+from .const import DOMAIN, LOGGER
 
 SUPPORTED_BATTERY_SENSOR_TYPES = [
-    EntityTypes.carbon_monoxide,
-    EntityTypes.entry,
-    EntityTypes.glass_break,
-    EntityTypes.leak,
-    EntityTypes.lock_keypad,
-    EntityTypes.motion,
-    EntityTypes.siren,
-    EntityTypes.smoke,
-    EntityTypes.temperature,
+    DeviceTypes.CARBON_MONOXIDE,
+    DeviceTypes.ENTRY,
+    DeviceTypes.GLASS_BREAK,
+    DeviceTypes.LEAK,
+    DeviceTypes.LOCK_KEYPAD,
+    DeviceTypes.MOTION,
+    DeviceTypes.SIREN,
+    DeviceTypes.SMOKE,
+    DeviceTypes.TEMPERATURE,
 ]
 
 TRIGGERED_SENSOR_TYPES = {
-    EntityTypes.carbon_monoxide: DEVICE_CLASS_GAS,
-    EntityTypes.entry: DEVICE_CLASS_DOOR,
-    EntityTypes.glass_break: DEVICE_CLASS_SAFETY,
-    EntityTypes.leak: DEVICE_CLASS_MOISTURE,
-    EntityTypes.motion: DEVICE_CLASS_MOTION,
-    EntityTypes.siren: DEVICE_CLASS_SAFETY,
-    EntityTypes.smoke: DEVICE_CLASS_SMOKE,
+    DeviceTypes.CARBON_MONOXIDE: BinarySensorDeviceClass.GAS,
+    DeviceTypes.ENTRY: BinarySensorDeviceClass.DOOR,
+    DeviceTypes.GLASS_BREAK: BinarySensorDeviceClass.SAFETY,
+    DeviceTypes.LEAK: BinarySensorDeviceClass.MOISTURE,
+    DeviceTypes.MOTION: BinarySensorDeviceClass.MOTION,
+    DeviceTypes.SIREN: BinarySensorDeviceClass.SAFETY,
+    DeviceTypes.SMOKE: BinarySensorDeviceClass.SMOKE,
 }
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up SimpliSafe binary sensors based on a config entry."""
-    simplisafe = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
-    sensors = []
+    simplisafe = hass.data[DOMAIN][entry.entry_id]
+
+    sensors: list[BatteryBinarySensor | TriggeredBinarySensor] = []
 
     for system in simplisafe.systems.values():
         if system.version == 2:
@@ -65,55 +69,45 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(sensors)
 
 
-class TriggeredBinarySensor(SimpliSafeBaseSensor, BinarySensorEntity):
+class TriggeredBinarySensor(SimpliSafeEntity, BinarySensorEntity):
     """Define a binary sensor related to whether an entity has been triggered."""
 
-    def __init__(self, simplisafe, system, sensor, device_class):
+    def __init__(
+        self,
+        simplisafe: SimpliSafe,
+        system: SystemV3,
+        sensor: SensorV3,
+        device_class: str,
+    ) -> None:
         """Initialize."""
-        super().__init__(simplisafe, system, sensor)
-        self._device_class = device_class
-        self._is_on = False
+        super().__init__(simplisafe, system, device=sensor)
 
-    @property
-    def device_class(self):
-        """Return type of sensor."""
-        return self._device_class
-
-    @property
-    def is_on(self):
-        """Return true if the sensor is on."""
-        return self._is_on
+        self._attr_device_class = device_class
+        self._device: SensorV3
 
     @callback
-    def async_update_from_rest_api(self):
+    def async_update_from_rest_api(self) -> None:
         """Update the entity with the provided REST API data."""
-        self._is_on = self._sensor.triggered
+        self._attr_is_on = self._device.triggered
 
 
-class BatteryBinarySensor(SimpliSafeBaseSensor, BinarySensorEntity):
+class BatteryBinarySensor(SimpliSafeEntity, BinarySensorEntity):
     """Define a SimpliSafe battery binary sensor entity."""
 
-    def __init__(self, simplisafe, system, sensor):
+    _attr_device_class = BinarySensorDeviceClass.BATTERY
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(
+        self, simplisafe: SimpliSafe, system: SystemV3, sensor: SensorV3
+    ) -> None:
         """Initialize."""
-        super().__init__(simplisafe, system, sensor)
-        self._is_low = False
+        super().__init__(simplisafe, system, device=sensor)
 
-    @property
-    def device_class(self):
-        """Return type of sensor."""
-        return DEVICE_CLASS_BATTERY
-
-    @property
-    def unique_id(self):
-        """Return unique ID of sensor."""
-        return f"{self._sensor.serial}-battery"
-
-    @property
-    def is_on(self):
-        """Return true if the battery is low."""
-        return self._is_low
+        self._attr_name = f"{super().name} Battery"
+        self._attr_unique_id = f"{super().unique_id}-battery"
+        self._device: SensorV3
 
     @callback
-    def async_update_from_rest_api(self):
+    def async_update_from_rest_api(self) -> None:
         """Update the entity with the provided REST API data."""
-        self._is_low = self._sensor.low_battery
+        self._attr_is_on = self._device.low_battery

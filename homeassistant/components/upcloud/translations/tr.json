@@ -12,5 +12,14 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Saniye cinsinden g\u00fcncelleme aral\u0131\u011f\u0131, minimum 30"
+                }
+            }
+        }
     }
 }

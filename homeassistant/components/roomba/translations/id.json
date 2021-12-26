@@ -9,7 +9,7 @@
         "error": {
             "cannot_connect": "Gagal terhubung"
         },
-        "flow_title": "iRobot {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "init": {
                 "data": {
@@ -19,7 +19,7 @@
                 "title": "Sambungkan secara otomatis ke perangkat"
             },
             "link": {
-                "description": "Tekan dan tahan tombol Home pada {name} hingga perangkat mengeluarkan suara (sekitar dua detik).",
+                "description": "Tekan dan tahan tombol Home pada {name} hingga perangkat mengeluarkan suara (sekitar dua detik), lalu kirim dalam waktu 30 detik.",
                 "title": "Ambil Kata Sandi"
             },
             "link_manual": {
@@ -34,7 +34,7 @@
                     "blid": "BLID",
                     "host": "Host"
                 },
-                "description": "Tidak ada Roomba atau Braava yang ditemukan di jaringan Anda. BLID adalah bagian dari nama host perangkat setelah `iRobot-`. Ikuti langkah-langkah yang diuraikan dalam dokumentasi di: {auth_help_url}",
+                "description": "Tidak ada Roomba atau Braava yang ditemukan di jaringan Anda.",
                 "title": "Hubungkan ke perangkat secara manual"
             },
             "user": {
@@ -45,8 +45,8 @@
                     "host": "Host",
                     "password": "Kata Sandi"
                 },
-                "description": "Saat ini proses mengambil BLID dan kata sandi merupakan proses manual. Iikuti langkah-langkah yang diuraikan dalam dokumentasi di: https://www.home-assistant.io/integrations/roomba/#retrieving-your-credentials",
-                "title": "Hubungkan ke perangkat"
+                "description": "Pilih Roomba atau Braava.",
+                "title": "Sambungkan secara otomatis ke perangkat"
             }
         }
     },

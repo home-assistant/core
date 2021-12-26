@@ -35,7 +35,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     tokenfile = hass.config.path(".greenwave")
     if config.get(CONF_VERSION) == 3:
         if os.path.exists(tokenfile):
-            with open(tokenfile) as tokenfile:
+            with open(tokenfile, encoding="utf8") as tokenfile:
                 token = tokenfile.read()
         else:
             try:
@@ -43,7 +43,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             except PermissionError:
                 _LOGGER.error("The Gateway Is Not In Sync Mode")
                 raise
-            with open(tokenfile, "w+") as tokenfile:
+            with open(tokenfile, "w+", encoding="utf8") as tokenfile:
                 tokenfile.write(token)
     else:
         token = None

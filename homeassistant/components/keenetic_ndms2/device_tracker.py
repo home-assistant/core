@@ -26,6 +26,7 @@ from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 import homeassistant.util.dt as dt_util
 
 from .const import (
@@ -155,7 +156,7 @@ def update_items(router: KeeneticRouter, async_add_entities, tracked: set[str]):
 class KeeneticTracker(ScannerEntity):
     """Representation of network device."""
 
-    def __init__(self, device: Device, router: KeeneticRouter):
+    def __init__(self, device: Device, router: KeeneticRouter) -> None:
         """Initialize the tracked device."""
         self._device = device
         self._router = router
@@ -217,17 +218,13 @@ class KeeneticTracker(ScannerEntity):
         return None
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return a client description for device registry."""
-        info = {
-            "connections": {(CONNECTION_NETWORK_MAC, self._device.mac)},
-            "identifiers": {(DOMAIN, self._device.mac)},
-        }
-
-        if self._device.name:
-            info["name"] = self._device.name
-
-        return info
+        return DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, self._device.mac)},
+            identifiers={(DOMAIN, self._device.mac)},
+            name=self._device.name if self._device.name else None,
+        )
 
     async def async_added_to_hass(self):
         """Client entity created."""

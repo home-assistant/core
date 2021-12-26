@@ -22,8 +22,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Daikin climate based on config_entry."""
     daikin_api = hass.data[DAIKIN_DOMAIN][entry.entry_id]
     switches = []
-    zones = daikin_api.device.zones
-    if zones:
+    if zones := daikin_api.device.zones:
         switches.extend(
             [
                 DaikinZoneSwitch(daikin_api, zone_id)

@@ -89,9 +89,7 @@ class MediaExtractor:
                 "Could not retrieve data for the URL: %s", self.get_media_url()
             )
         else:
-            entities = self.get_entities()
-
-            if not entities:
+            if not (entities := self.get_entities()):
                 self.call_media_player_service(stream_selector, None)
 
             for entity_id in entities:

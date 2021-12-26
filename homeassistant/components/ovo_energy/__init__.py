@@ -10,9 +10,10 @@ from ovoenergy import OVODailyUsage
 from ovoenergy.ovoenergy import OVOEnergy
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
@@ -25,7 +26,7 @@ from .const import DATA_CLIENT, DATA_COORDINATOR, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -64,7 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         name="sensor",
         update_method=async_update_data,
         # Polling interval. Will only be polled if there are subscribers.
-        update_interval=timedelta(seconds=300),
+        update_interval=timedelta(seconds=3600),
     )
 
     hass.data.setdefault(DOMAIN, {})
@@ -99,37 +100,10 @@ class OVOEnergyEntity(CoordinatorEntity):
         self,
         coordinator: DataUpdateCoordinator,
         client: OVOEnergy,
-        key: str,
-        name: str,
-        icon: str,
     ) -> None:
         """Initialize the OVO Energy entity."""
         super().__init__(coordinator)
         self._client = client
-        self._key = key
-        self._name = name
-        self._icon = icon
-        self._available = True
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this sensor."""
-        return self._key
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._name
-
-    @property
-    def icon(self) -> str:
-        """Return the mdi icon of the entity."""
-        return self._icon
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self.coordinator.last_update_success and self._available
 
 
 class OVOEnergyDeviceEntity(OVOEnergyEntity):
@@ -138,9 +112,9 @@ class OVOEnergyDeviceEntity(OVOEnergyEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information about this OVO Energy instance."""
-        return {
-            "identifiers": {(DOMAIN, self._client.account_id)},
-            "manufacturer": "OVO Energy",
-            "name": self._client.username,
-            "entry_type": "service",
-        }
+        return DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, self._client.account_id)},
+            manufacturer="OVO Energy",
+            name=self._client.username,
+        )

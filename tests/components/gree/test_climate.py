@@ -7,6 +7,7 @@ from greeclimate.exceptions import DeviceNotBoundError, DeviceTimeoutError
 import pytest
 
 from homeassistant.components.climate.const import (
+    ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
@@ -42,11 +43,7 @@ from homeassistant.components.gree.climate import (
     HVAC_MODES_REVERSE,
     SUPPORTED_FEATURES,
 )
-from homeassistant.components.gree.const import (
-    DOMAIN as GREE_DOMAIN,
-    FAN_MEDIUM_HIGH,
-    FAN_MEDIUM_LOW,
-)
+from homeassistant.components.gree.const import FAN_MEDIUM_HIGH, FAN_MEDIUM_LOW
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
@@ -55,13 +52,14 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_UNAVAILABLE,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
 )
-from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from .common import build_device_mock
+from .common import async_setup_gree, build_device_mock
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import async_fire_time_changed
 
 ENTITY_ID = f"{DOMAIN}.fake_device_1"
 
@@ -70,13 +68,6 @@ ENTITY_ID = f"{DOMAIN}.fake_device_1"
 def mock_now():
     """Fixture for dtutil.now."""
     return dt_util.utcnow()
-
-
-async def async_setup_gree(hass):
-    """Set up the gree platform."""
-    MockConfigEntry(domain=GREE_DOMAIN).add_to_hass(hass)
-    await async_setup_component(hass, GREE_DOMAIN, {GREE_DOMAIN: {"climate": {}}})
-    await hass.async_block_till_done()
 
 
 async def test_discovery_called_once(hass, discovery, device):
@@ -376,26 +367,52 @@ async def test_send_power_off_device_timeout(hass, discovery, device, mock_now):
     assert state.state == HVAC_MODE_OFF
 
 
-async def test_send_target_temperature(hass, discovery, device, mock_now):
+@pytest.mark.parametrize(
+    "units,temperature", [(TEMP_CELSIUS, 26), (TEMP_FAHRENHEIT, 74)]
+)
+async def test_send_target_temperature(hass, discovery, device, units, temperature):
     """Test for sending target temperature command to the device."""
+    hass.config.units.temperature_unit = units
+
+    fake_device = device()
+    if units == TEMP_FAHRENHEIT:
+        fake_device.temperature_units = 1
+
     await async_setup_gree(hass)
+
+    # Make sure we're trying to test something that isn't the default
+    assert fake_device.current_temperature != temperature
 
     assert await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 25.1},
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: temperature},
         blocking=True,
     )
 
     state = hass.states.get(ENTITY_ID)
     assert state is not None
-    assert state.attributes.get(ATTR_TEMPERATURE) == 25
+    assert state.attributes.get(ATTR_TEMPERATURE) == temperature
+    assert (
+        state.attributes.get(ATTR_CURRENT_TEMPERATURE)
+        == fake_device.current_temperature
+    )
+
+    # Reset config temperature_unit back to CELSIUS, required for
+    # additional tests outside this component.
+    hass.config.units.temperature_unit = TEMP_CELSIUS
 
 
+@pytest.mark.parametrize(
+    "units,temperature", [(TEMP_CELSIUS, 25), (TEMP_FAHRENHEIT, 74)]
+)
 async def test_send_target_temperature_device_timeout(
-    hass, discovery, device, mock_now
+    hass, discovery, device, units, temperature
 ):
     """Test for sending target temperature command to the device with a device timeout."""
+    hass.config.units.temperature_unit = units
+    if units == TEMP_FAHRENHEIT:
+        device().temperature_units = 1
     device().push_state_update.side_effect = DeviceTimeoutError
 
     await async_setup_gree(hass)
@@ -403,24 +420,36 @@ async def test_send_target_temperature_device_timeout(
     assert await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 25.1},
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: temperature},
         blocking=True,
     )
 
     state = hass.states.get(ENTITY_ID)
     assert state is not None
-    assert state.attributes.get(ATTR_TEMPERATURE) == 25
+    assert state.attributes.get(ATTR_TEMPERATURE) == temperature
+
+    # Reset config temperature_unit back to CELSIUS, required for additional tests outside this component.
+    hass.config.units.temperature_unit = TEMP_CELSIUS
 
 
-async def test_update_target_temperature(hass, discovery, device, mock_now):
+@pytest.mark.parametrize(
+    "units,temperature", [(TEMP_CELSIUS, 25), (TEMP_FAHRENHEIT, 74)]
+)
+async def test_update_target_temperature(hass, discovery, device, units, temperature):
     """Test for updating target temperature from the device."""
-    device().target_temperature = 32
+    hass.config.units.temperature_unit = units
+    if units == TEMP_FAHRENHEIT:
+        device().temperature_units = 1
+    device().target_temperature = temperature
 
     await async_setup_gree(hass)
 
     state = hass.states.get(ENTITY_ID)
     assert state is not None
-    assert state.attributes.get(ATTR_TEMPERATURE) == 32
+    assert state.attributes.get(ATTR_TEMPERATURE) == temperature
+
+    # Reset config temperature_unit back to CELSIUS, required for additional tests outside this component.
+    hass.config.units.temperature_unit = TEMP_CELSIUS
 
 
 @pytest.mark.parametrize(

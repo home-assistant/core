@@ -44,7 +44,7 @@ class VeraSensor(VeraDevice[veraApi.VeraSensor], SensorEntity):
 
     def __init__(
         self, vera_device: veraApi.VeraSensor, controller_data: ControllerData
-    ):
+    ) -> None:
         """Initialize the sensor."""
         self.current_value = None
         self._temperature_units = None
@@ -53,12 +53,12 @@ class VeraSensor(VeraDevice[veraApi.VeraSensor], SensorEntity):
         self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return the name of the sensor."""
         return self.current_value
 
     @property
-    def unit_of_measurement(self) -> str | None:
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of this entity, if any."""
 
         if self.vera_device.category == veraApi.CATEGORY_TEMPERATURE_SENSOR:

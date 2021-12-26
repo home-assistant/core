@@ -20,11 +20,11 @@ import async_timeout
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    DEVICE_CLASS_SHADE,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
     SUPPORT_STOP,
+    CoverDeviceClass,
     CoverEntity,
 )
 from homeassistant.core import callback
@@ -135,9 +135,9 @@ def hd_position_to_hass(hd_position):
     return round((hd_position / MAX_POSITION) * 100)
 
 
-def hass_position_to_hd(hass_positon):
+def hass_position_to_hd(hass_position):
     """Convert hass position to hunter douglas position."""
-    return int(hass_positon / 100 * MAX_POSITION)
+    return int(hass_position / 100 * MAX_POSITION)
 
 
 class PowerViewShade(ShadeEntity, CoverEntity):
@@ -207,7 +207,7 @@ class PowerViewShade(ShadeEntity, CoverEntity):
     @property
     def device_class(self):
         """Return device class."""
-        return DEVICE_CLASS_SHADE
+        return CoverDeviceClass.SHADE
 
     @property
     def name(self):

@@ -5,7 +5,7 @@ from homeassistant.components import emulated_roku
 from homeassistant.setup import async_setup_component
 
 
-async def test_config_required_fields(hass):
+async def test_config_required_fields(hass, mock_get_source_ip):
     """Test that configuration is successful with required fields."""
     with patch.object(emulated_roku, "configured_servers", return_value=[]), patch(
         "homeassistant.components.emulated_roku.binding.EmulatedRokuServer",
@@ -30,7 +30,7 @@ async def test_config_required_fields(hass):
         )
 
 
-async def test_config_already_registered_not_configured(hass):
+async def test_config_already_registered_not_configured(hass, mock_get_source_ip):
     """Test that an already registered name causes the entry to be ignored."""
     with patch(
         "homeassistant.components.emulated_roku.binding.EmulatedRokuServer",
@@ -93,7 +93,11 @@ async def test_setup_entry_successful(hass):
 async def test_unload_entry(hass):
     """Test being able to unload an entry."""
     entry = Mock()
-    entry.data = {"name": "Emulated Roku Test", "listen_port": 8060}
+    entry.data = {
+        "name": "Emulated Roku Test",
+        "listen_port": 8060,
+        emulated_roku.CONF_HOST_IP: "1.2.3.5",
+    }
 
     with patch(
         "homeassistant.components.emulated_roku.binding.EmulatedRokuServer",

@@ -59,8 +59,8 @@ def setup(hass, config):
     for device in devices:
         _LOGGER.info(
             "Discovered Ecovacs device on account: %s with nickname %s",
-            device["did"],
-            device["nick"],
+            device.get("did"),
+            device.get("nick"),
         )
         vacbot = VacBot(
             ecovacs_api.uid,
@@ -77,7 +77,8 @@ def setup(hass, config):
         """Shut down open connections to Ecovacs XMPP server."""
         for device in hass.data[ECOVACS_DEVICES]:
             _LOGGER.info(
-                "Shutting down connection to Ecovacs device %s", device.vacuum["did"]
+                "Shutting down connection to Ecovacs device %s",
+                device.vacuum.get("did"),
             )
             device.disconnect()
 

@@ -12,6 +12,7 @@ from homeassistant.components.climate.const import (
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
+    FAN_TOP,
     HVAC_MODE_COOL,
     HVAC_MODE_DRY,
     HVAC_MODE_FAN_ONLY,
@@ -34,6 +35,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.helpers.typing import ConfigType
 
@@ -54,6 +56,7 @@ _IZONE_FAN_TO_HA = {
     Controller.Fan.LOW: FAN_LOW,
     Controller.Fan.MED: FAN_MEDIUM,
     Controller.Fan.HIGH: FAN_HIGH,
+    Controller.Fan.TOP: FAN_TOP,
     Controller.Fan.AUTO: FAN_AUTO,
 }
 
@@ -158,12 +161,12 @@ class ControllerDevice(ClimateEntity):
             self._fan_to_pizone[_IZONE_FAN_TO_HA[fan]] = fan
         self._available = True
 
-        self._device_info = {
-            "identifiers": {(IZONE, self.unique_id)},
-            "name": self.name,
-            "manufacturer": "IZone",
-            "model": self._controller.sys_type,
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(IZONE, self.unique_id)},
+            manufacturer="IZone",
+            model=self._controller.sys_type,
+            name=self.name,
+        )
 
         # Create the zones
         self.zones = {}
@@ -204,9 +207,9 @@ class ControllerDevice(ClimateEntity):
             """Handle controller data updates."""
             if ctrl is not self._controller:
                 return
+            if not self.available:
+                return
             self.async_write_ha_state()
-            for zone in self.zones.values():
-                zone.async_schedule_update_ha_state()
 
         self.async_on_remove(
             async_dispatcher_connect(
@@ -241,12 +244,8 @@ class ControllerDevice(ClimateEntity):
         self._available = available
         self.async_write_ha_state()
         for zone in self.zones.values():
-            zone.async_schedule_update_ha_state()
-
-    @property
-    def device_info(self):
-        """Return the device info for the iZone system."""
-        return self._device_info
+            if zone.hass is not None:
+                zone.async_schedule_update_ha_state()
 
     @property
     def unique_id(self):
@@ -314,8 +313,7 @@ class ControllerDevice(ClimateEntity):
         """Return current operation ie. heat, cool, idle."""
         if not self._controller.is_on:
             return HVAC_MODE_OFF
-        mode = self._controller.mode
-        if mode == Controller.Mode.FREE_AIR:
+        if (mode := self._controller.mode) == Controller.Mode.FREE_AIR:
             return HVAC_MODE_FAN_ONLY
         for (key, value) in self._state_to_pizone.items():
             if value == mode:
@@ -428,8 +426,7 @@ class ControllerDevice(ClimateEntity):
         if not self.supported_features & SUPPORT_TARGET_TEMPERATURE:
             self.async_schedule_update_ha_state(True)
             return
-        temp = kwargs.get(ATTR_TEMPERATURE)
-        if temp is not None:
+        if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
             await self.wrap_and_catch(self._controller.set_temp_setpoint(temp))
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
@@ -483,21 +480,38 @@ class ZoneDevice(ClimateEntity):
             }
             self._supported_features |= SUPPORT_TARGET_TEMPERATURE
 
-        self._device_info = {
-            "identifiers": {(IZONE, controller.unique_id, zone.index)},
-            "name": self.name,
-            "manufacturer": "IZone",
-            "via_device": (IZONE, controller.unique_id),
-            "model": zone.type.name.title(),
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(IZONE, controller.unique_id, zone.index)},
+            manufacturer="IZone",
+            model=zone.type.name.title(),
+            name=self.name,
+            via_device=(IZONE, controller.unique_id),
+        )
 
     async def async_added_to_hass(self):
         """Call on adding to hass."""
 
         @callback
+        def controller_update(ctrl: Controller) -> None:
+            """Handle controller data updates."""
+            if ctrl.device_uid != self._controller.unique_id:
+                return
+            if not self.available:
+                return
+            self.async_write_ha_state()
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, DISPATCH_CONTROLLER_UPDATE, controller_update
+            )
+        )
+
+        @callback
         def zone_update(ctrl: Controller, zone: Zone) -> None:
             """Handle zone data updates."""
             if zone is not self._zone:
+                return
+            if not self.available:
                 return
             self._name = zone.name.title()
             self.async_write_ha_state()
@@ -510,16 +524,6 @@ class ZoneDevice(ClimateEntity):
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._controller.available
-
-    @property
-    def assumed_state(self) -> bool:
-        """Return True if unable to access real state of the entity."""
-        return self._controller.assumed_state
-
-    @property
-    def device_info(self):
-        """Return the device info for the iZone system."""
-        return self._device_info
 
     @property
     def unique_id(self):
@@ -626,8 +630,7 @@ class ZoneDevice(ClimateEntity):
         """Set new target temperature."""
         if self._zone.mode != Zone.Mode.AUTO:
             return
-        temp = kwargs.get(ATTR_TEMPERATURE)
-        if temp is not None:
+        if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
             await self._controller.wrap_and_catch(self._zone.set_temp_setpoint(temp))
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:

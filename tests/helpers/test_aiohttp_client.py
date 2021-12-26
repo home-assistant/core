@@ -107,6 +107,7 @@ async def test_get_clientsession_patched_close(hass):
         assert mock_close.call_count == 0
 
 
+@patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set())
 async def test_warning_close_session_integration(hass, caplog):
     """Test log warning message when closing the session from integration context."""
     with patch(
@@ -138,6 +139,7 @@ async def test_warning_close_session_integration(hass, caplog):
     ) in caplog.text
 
 
+@patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set())
 async def test_warning_close_session_custom(hass, caplog):
     """Test log warning message when closing the session from custom context."""
     with patch(
@@ -195,3 +197,14 @@ async def test_async_aiohttp_proxy_stream_client_err(aioclient_mock, camera_clie
 
     resp = await camera_client.get("/api/camera_proxy_stream/camera.config_test")
     assert resp.status == 502
+
+
+async def test_client_session_immutable_headers(hass):
+    """Test we can't mutate headers."""
+    session = client.async_get_clientsession(hass)
+
+    with pytest.raises(TypeError):
+        session.headers["user-agent"] = "bla"
+
+    with pytest.raises(AttributeError):
+        session.headers.update({"user-agent": "bla"})

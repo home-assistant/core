@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "no_plants": "Aucune plante n'a \u00e9t\u00e9 trouv\u00e9e sur ce compte"
+        },
+        "error": {
+            "invalid_auth": "Authentification invalide"
+        },
+        "step": {
+            "plant": {
+                "data": {
+                    "plant_id": "Plante"
+                },
+                "title": "S\u00e9lectionner votre plante"
+            },
+            "user": {
+                "data": {
+                    "name": "Nom",
+                    "password": "Mot de passe",
+                    "url": "URL",
+                    "username": "Nom d'utilisateur"
+                },
+                "title": "Entrer vos informations Growatt"
+            }
+        }
+    },
+    "title": "Serveur Growatt"
+}

@@ -4,7 +4,7 @@ import logging
 from pycoolmasternet_async import CoolMasterNet
 
 from homeassistant.components.climate import SCAN_INTERVAL
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -12,7 +12,7 @@ from .const import DATA_COORDINATOR, DATA_INFO, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["climate"]
+PLATFORMS = [Platform.CLIMATE]
 
 
 async def async_setup_entry(hass, entry):
@@ -24,7 +24,7 @@ async def async_setup_entry(hass, entry):
         info = await coolmaster.info()
         if not info:
             raise ConfigEntryNotReady
-    except (OSError, ConnectionRefusedError, TimeoutError) as error:
+    except OSError as error:
         raise ConfigEntryNotReady() from error
     coordinator = CoolmasterDataUpdateCoordinator(hass, coolmaster)
     hass.data.setdefault(DOMAIN, {})
@@ -64,5 +64,5 @@ class CoolmasterDataUpdateCoordinator(DataUpdateCoordinator):
         """Fetch data from Coolmaster."""
         try:
             return await self._coolmaster.status()
-        except (OSError, ConnectionRefusedError, TimeoutError) as error:
+        except OSError as error:
             raise UpdateFailed from error

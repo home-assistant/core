@@ -17,16 +17,6 @@
                 "description": "Introduzca la contrase\u00f1a de {username}.",
                 "title": "Reautorizar una cuenta de August"
             },
-            "user": {
-                "data": {
-                    "login_method": "M\u00e9todo de inicio de sesi\u00f3n",
-                    "password": "Contrase\u00f1a",
-                    "timeout": "Tiempo de espera (segundos)",
-                    "username": "Usuario"
-                },
-                "description": "Si el M\u00e9todo de Inicio de Sesi\u00f3n es 'correo electr\u00f3nico', Usuario es la direcci\u00f3n de correo electr\u00f3nico. Si el M\u00e9todo de Inicio de Sesi\u00f3n es 'tel\u00e9fono', Usuario es el n\u00famero de tel\u00e9fono en formato '+NNNNNNNNN'.",
-                "title": "Configurar una cuenta de August"
-            },
             "user_validate": {
                 "data": {
                     "login_method": "M\u00e9todo de inicio de sesi\u00f3n",

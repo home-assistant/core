@@ -138,8 +138,7 @@ class GdacsEvent(GeolocationEvent):
 
     def _update_from_feed(self, feed_entry):
         """Update the internal state from the provided feed entry."""
-        event_name = feed_entry.event_name
-        if not event_name:
+        if not (event_name := feed_entry.event_name):
             # Earthquakes usually don't have an event name.
             event_name = f"{feed_entry.country} ({feed_entry.event_id})"
         self._title = f"{feed_entry.event_type}: {event_name}"

@@ -1,16 +1,18 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Account is already configured"
+            "already_configured": "Account is already configured",
+            "no_udn": "SSDP discovery info has no UDN",
+            "not_keenetic_ndms2": "Discovered item is not a Keenetic router"
         },
         "error": {
             "cannot_connect": "Failed to connect"
         },
+        "flow_title": "{name} ({host})",
         "step": {
             "user": {
                 "data": {
                     "host": "Host",
-                    "name": "Name",
                     "password": "Password",
                     "port": "Port",
                     "username": "Username"

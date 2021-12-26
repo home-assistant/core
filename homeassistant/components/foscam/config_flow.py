@@ -47,13 +47,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         Data has the keys from DATA_SCHEMA with values provided by the user.
         """
-
-        for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if (
-                entry.data[CONF_HOST] == data[CONF_HOST]
-                and entry.data[CONF_PORT] == data[CONF_PORT]
-            ):
-                raise AbortFlow("already_configured")
+        self._async_abort_entries_match(
+            {CONF_HOST: data[CONF_HOST], CONF_PORT: data[CONF_PORT]}
+        )
 
         camera = FoscamCamera(
             data[CONF_HOST],
@@ -119,34 +115,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
-
-    async def async_step_import(self, import_config):
-        """Handle config import from yaml."""
-        try:
-            return await self._validate_and_create(import_config)
-
-        except CannotConnect:
-            LOGGER.error("Error importing foscam platform config: cannot connect")
-            return self.async_abort(reason="cannot_connect")
-
-        except InvalidAuth:
-            LOGGER.error("Error importing foscam platform config: invalid auth")
-            return self.async_abort(reason="invalid_auth")
-
-        except InvalidResponse:
-            LOGGER.exception(
-                "Error importing foscam platform config: invalid response from camera"
-            )
-            return self.async_abort(reason="invalid_response")
-
-        except AbortFlow:
-            raise
-
-        except Exception:  # pylint: disable=broad-except
-            LOGGER.exception(
-                "Error importing foscam platform config: unexpected exception"
-            )
-            return self.async_abort(reason="unknown")
 
 
 class CannotConnect(exceptions.HomeAssistantError):

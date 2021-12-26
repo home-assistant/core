@@ -8,10 +8,11 @@
         "error": {
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
             "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
+            "cannot_connect": "Impossibile connettersi",
             "connection_error": "Impossibile connettersi",
             "invalid_auth": "Autenticazione non valida"
         },
-        "flow_title": "Strumenti FRITZ! Box: {name}",
+        "flow_title": "{name}",
         "step": {
             "confirm": {
                 "data": {
@@ -38,6 +39,25 @@
                 },
                 "description": "Configura gli strumenti FRITZ!Box per controllare il tuo FRITZ!Box.\n Minimo necessario: nome utente, password.",
                 "title": "Configurazione degli strumenti FRITZ!Box - obbligatorio"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "port": "Porta",
+                    "username": "Nome utente"
+                },
+                "description": "Configura gli strumenti FRITZ!Box per controllare il tuo FRITZ! Box.\nMinimo necessario: nome utente, password.",
+                "title": "Configura gli strumenti del FRITZ!Box"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "consider_home": "Secondi per considerare un dispositivo \"a casa\""
+                }
             }
         }
     }

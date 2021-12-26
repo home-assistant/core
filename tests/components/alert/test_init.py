@@ -310,13 +310,6 @@ async def test_skipfirst(hass):
     assert len(events) == 0
 
 
-async def test_noack(hass):
-    """Test no ack feature."""
-    entity = alert.Alert(hass, *TEST_NOACK)
-    hass.async_add_job(entity.begin_alerting)
-    await hass.async_block_till_done()
-
-
 async def test_done_message_state_tracker_reset_on_cancel(hass):
     """Test that the done message is reset when canceled."""
     entity = alert.Alert(hass, *TEST_NOACK)

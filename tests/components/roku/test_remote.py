@@ -42,7 +42,7 @@ async def test_main_services(
     """Test platform services."""
     await setup_integration(hass, aioclient_mock)
 
-    with patch("homeassistant.components.roku.Roku.remote") as remote_mock:
+    with patch("homeassistant.components.roku.coordinator.Roku.remote") as remote_mock:
         await hass.services.async_call(
             REMOTE_DOMAIN,
             SERVICE_TURN_OFF,
@@ -51,7 +51,7 @@ async def test_main_services(
         )
         remote_mock.assert_called_once_with("poweroff")
 
-    with patch("homeassistant.components.roku.Roku.remote") as remote_mock:
+    with patch("homeassistant.components.roku.coordinator.Roku.remote") as remote_mock:
         await hass.services.async_call(
             REMOTE_DOMAIN,
             SERVICE_TURN_ON,
@@ -60,7 +60,7 @@ async def test_main_services(
         )
         remote_mock.assert_called_once_with("poweron")
 
-    with patch("homeassistant.components.roku.Roku.remote") as remote_mock:
+    with patch("homeassistant.components.roku.coordinator.Roku.remote") as remote_mock:
         await hass.services.async_call(
             REMOTE_DOMAIN,
             SERVICE_SEND_COMMAND,

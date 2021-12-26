@@ -2,22 +2,22 @@
     "config": {
         "abort": {
             "all_configured": "Alle Philips Hue-broer er allerede konfigureret",
-            "already_configured": "Bridgen er allerede konfigureret",
+            "already_configured": "Enhed er allerede konfigureret",
             "already_in_progress": "Bro-konfiguration er allerede i gang.",
-            "cannot_connect": "Kunne ikke oprette forbindelse til bridgen",
+            "cannot_connect": "Kunne ikke oprette forbindelse",
             "discover_timeout": "Ingen Philips Hue-bro fundet",
             "no_bridges": "Ingen Philips Hue-broer fundet",
             "not_hue_bridge": "Ikke en Hue-bro",
-            "unknown": "Ukendt fejl opstod"
+            "unknown": "Uventet fejl"
         },
         "error": {
-            "linking": "Der opstod en ukendt linkfejl.",
+            "linking": "Der opstod en uventet fejl",
             "register_failed": "Det lykkedes ikke at registrere, pr\u00f8v igen"
         },
         "step": {
             "init": {
                 "data": {
-                    "host": "V\u00e6rt"
+                    "host": "Server"
                 },
                 "title": "V\u00e6lg Hue bridge"
             },

@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_SENSORS,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -29,8 +30,8 @@ from .const import (
     DEFAULT_CACHEDB,
     DOMAIN,
     LED_MODE_KEY,
-    LOGI_SENSORS,
     RECORDING_MODE_KEY,
+    SENSOR_TYPES,
     SIGNAL_LOGI_CIRCLE_RECONFIGURE,
     SIGNAL_LOGI_CIRCLE_RECORD,
     SIGNAL_LOGI_CIRCLE_SNAPSHOT,
@@ -48,12 +49,14 @@ SERVICE_LIVESTREAM_RECORD = "livestream_record"
 ATTR_VALUE = "value"
 ATTR_DURATION = "duration"
 
-PLATFORMS = ["camera", "sensor"]
+PLATFORMS = [Platform.CAMERA, Platform.SENSOR]
+
+SENSOR_KEYS = [desc.key for desc in SENSOR_TYPES]
 
 SENSOR_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=list(LOGI_SENSORS)): vol.All(
-            cv.ensure_list, [vol.In(LOGI_SENSORS)]
+        vol.Optional(CONF_MONITORED_CONDITIONS, default=SENSOR_KEYS): vol.All(
+            cv.ensure_list, [vol.In(SENSOR_KEYS)]
         )
     }
 )
@@ -145,7 +148,7 @@ async def async_setup_entry(hass, entry):
         return False
 
     try:
-        with async_timeout.timeout(_TIMEOUT):
+        async with async_timeout.timeout(_TIMEOUT):
             # Ensure the cameras property returns the same Camera objects for
             # all devices. Performs implicit login and session validation.
             await logi_circle.synchronize_cameras()

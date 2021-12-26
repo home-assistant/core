@@ -59,7 +59,7 @@ class FirmataLight(FirmataPinEntity, LightEntity):
         config_entry: ConfigEntry,
         name: str,
         pin: FirmataPinType,
-    ):
+    ) -> None:
         """Initialize the light pin entity."""
         super().__init__(api, config_entry, name, pin)
 

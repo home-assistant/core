@@ -5,6 +5,7 @@
             "already_in_progress": "Konfiguracja jest ju\u017c w toku"
         },
         "error": {
+            "cannot_authenticate": "Nie mo\u017cna uwierzytelni\u0107, czy bramka jest sparowana z innym serwerem, np. Homekit?",
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
             "invalid_key": "Rejestracja si\u0119 nie powiod\u0142a z podanym kluczem. Je\u015bli tak si\u0119 stanie, spr\u00f3buj ponownie uruchomi\u0107 bramk\u0119.",
             "timeout": "Przekroczono limit czasu sprawdzania poprawno\u015bci kodu"

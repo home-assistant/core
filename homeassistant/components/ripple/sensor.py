@@ -46,12 +46,12 @@ class RippleSensor(SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement this sensor expresses itself in."""
         return self._unit_of_measurement
 
@@ -62,7 +62,5 @@ class RippleSensor(SensorEntity):
 
     def update(self):
         """Get the latest state of the sensor."""
-
-        balance = get_balance(self.address)
-        if balance is not None:
+        if (balance := get_balance(self.address)) is not None:
             self._state = balance

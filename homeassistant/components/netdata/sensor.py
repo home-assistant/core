@@ -16,7 +16,6 @@ from homeassistant.const import (
     PERCENTAGE,
 )
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
@@ -61,8 +60,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     port = config.get(CONF_PORT)
     resources = config.get(CONF_RESOURCES)
 
-    session = async_get_clientsession(hass)
-    netdata = NetdataData(Netdata(host, hass.loop, session, port=port))
+    netdata = NetdataData(Netdata(host, port=port))
     await netdata.async_update()
 
     if netdata.api.metrics is None:
@@ -117,7 +115,7 @@ class NetdataSensor(SensorEntity):
         return f"{self._name} {self._sensor_name}"
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
 
@@ -127,7 +125,7 @@ class NetdataSensor(SensorEntity):
         return self._icon
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the resources."""
         return self._state
 
@@ -162,7 +160,7 @@ class NetdataAlarms(SensorEntity):
         return f"{self._name} Alarms"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the resources."""
         return self._state
 

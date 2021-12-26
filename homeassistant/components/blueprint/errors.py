@@ -45,7 +45,7 @@ class InvalidBlueprint(BlueprintWithNameException):
         blueprint_name: str,
         blueprint_data: Any,
         msg_or_exc: vol.Invalid,
-    ):
+    ) -> None:
         """Initialize an invalid blueprint error."""
         if isinstance(msg_or_exc, vol.Invalid):
             msg_or_exc = humanize_error(blueprint_data, msg_or_exc)
@@ -61,7 +61,7 @@ class InvalidBlueprint(BlueprintWithNameException):
 class InvalidBlueprintInputs(BlueprintException):
     """When we encountered invalid blueprint inputs."""
 
-    def __init__(self, domain: str, msg: str):
+    def __init__(self, domain: str, msg: str) -> None:
         """Initialize an invalid blueprint inputs error."""
         super().__init__(
             domain,

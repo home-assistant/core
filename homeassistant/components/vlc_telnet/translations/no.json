@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Tjenesten er allerede konfigurert",
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_auth": "Ugyldig godkjenning",
+            "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket",
+            "unknown": "Uventet feil"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_auth": "Ugyldig godkjenning",
+            "unknown": "Uventet feil"
+        },
+        "flow_title": "{host}",
+        "step": {
+            "hassio_confirm": {
+                "description": "Vil du koble til tillegg {addon} ?"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Passord"
+                },
+                "description": "Skriv inn riktig passord for verten: {host}"
+            },
+            "user": {
+                "data": {
+                    "host": "Vert",
+                    "name": "Navn",
+                    "password": "Passord",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

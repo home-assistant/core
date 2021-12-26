@@ -1,4 +1,5 @@
 """Test cors for the HTTP component."""
+from http import HTTPStatus
 from pathlib import Path
 from unittest.mock import patch
 
@@ -44,43 +45,43 @@ async def test_cors_middleware_loaded_from_config(hass):
 
 async def mock_handler(request):
     """Return if request was authenticated."""
-    return web.Response(status=200)
+    return web.Response()
 
 
 @pytest.fixture
 def client(loop, aiohttp_client):
     """Fixture to set up a web.Application."""
     app = web.Application()
-    app.router.add_get("/", mock_handler)
     setup_cors(app, [TRUSTED_ORIGIN])
+    app["allow_configured_cors"](app.router.add_get("/", mock_handler))
     return loop.run_until_complete(aiohttp_client(app))
 
 
 async def test_cors_requests(client):
     """Test cross origin requests."""
     req = await client.get("/", headers={ORIGIN: TRUSTED_ORIGIN})
-    assert req.status == 200
+    assert req.status == HTTPStatus.OK
     assert req.headers[ACCESS_CONTROL_ALLOW_ORIGIN] == TRUSTED_ORIGIN
 
     # With password in URL
     req = await client.get(
         "/", params={"api_password": "some-pass"}, headers={ORIGIN: TRUSTED_ORIGIN}
     )
-    assert req.status == 200
+    assert req.status == HTTPStatus.OK
     assert req.headers[ACCESS_CONTROL_ALLOW_ORIGIN] == TRUSTED_ORIGIN
 
     # With password in headers
     req = await client.get(
         "/", headers={HTTP_HEADER_HA_AUTH: "some-pass", ORIGIN: TRUSTED_ORIGIN}
     )
-    assert req.status == 200
+    assert req.status == HTTPStatus.OK
     assert req.headers[ACCESS_CONTROL_ALLOW_ORIGIN] == TRUSTED_ORIGIN
 
     # With auth token in headers
     req = await client.get(
         "/", headers={AUTHORIZATION: "Bearer some-token", ORIGIN: TRUSTED_ORIGIN}
     )
-    assert req.status == 200
+    assert req.status == HTTPStatus.OK
     assert req.headers[ACCESS_CONTROL_ALLOW_ORIGIN] == TRUSTED_ORIGIN
 
 
@@ -95,7 +96,7 @@ async def test_cors_preflight_allowed(client):
         },
     )
 
-    assert req.status == 200
+    assert req.status == HTTPStatus.OK
     assert req.headers[ACCESS_CONTROL_ALLOW_ORIGIN] == TRUSTED_ORIGIN
     assert req.headers[ACCESS_CONTROL_ALLOW_HEADERS] == "X-REQUESTED-WITH"
 
@@ -139,7 +140,7 @@ async def test_cors_works_with_frontend(hass, hass_client):
     )
     client = await hass_client()
     resp = await client.get("/")
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
 
 
 async def test_cors_on_static_files(hass, hass_client):
@@ -157,5 +158,5 @@ async def test_cors_on_static_files(hass, hass_client):
             ACCESS_CONTROL_REQUEST_METHOD: "GET",
         },
     )
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert resp.headers[ACCESS_CONTROL_ALLOW_ORIGIN] == "http://www.example.com"

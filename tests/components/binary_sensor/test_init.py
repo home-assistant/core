@@ -19,13 +19,3 @@ def test_state():
         new=True,
     ):
         assert binary_sensor.BinarySensorEntity().state == STATE_ON
-
-
-def test_deprecated_base_class(caplog):
-    """Test deprecated base class."""
-
-    class CustomBinarySensor(binary_sensor.BinarySensorDevice):
-        pass
-
-    CustomBinarySensor()
-    assert "BinarySensorDevice is deprecated, modify CustomBinarySensor" in caplog.text

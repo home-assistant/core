@@ -1,22 +1,60 @@
 """Support for Epson Workforce Printer."""
+from __future__ import annotations
+
 from datetime import timedelta
 
 from epsonprinter_pkg.epsonprinterapi import EpsonPrinterAPI
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import CONF_HOST, CONF_MONITORED_CONDITIONS, PERCENTAGE
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
-MONITORED_CONDITIONS = {
-    "black": ["Ink level Black", PERCENTAGE, "mdi:water"],
-    "photoblack": ["Ink level Photoblack", PERCENTAGE, "mdi:water"],
-    "magenta": ["Ink level Magenta", PERCENTAGE, "mdi:water"],
-    "cyan": ["Ink level Cyan", PERCENTAGE, "mdi:water"],
-    "yellow": ["Ink level Yellow", PERCENTAGE, "mdi:water"],
-    "clean": ["Cleaning level", PERCENTAGE, "mdi:water"],
-}
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="black",
+        name="Ink level Black",
+        icon="mdi:water",
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+    SensorEntityDescription(
+        key="photoblack",
+        name="Ink level Photoblack",
+        icon="mdi:water",
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+    SensorEntityDescription(
+        key="magenta",
+        name="Ink level Magenta",
+        icon="mdi:water",
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+    SensorEntityDescription(
+        key="cyan",
+        name="Ink level Cyan",
+        icon="mdi:water",
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+    SensorEntityDescription(
+        key="yellow",
+        name="Ink level Yellow",
+        icon="mdi:water",
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+    SensorEntityDescription(
+        key="clean",
+        name="Cleaning level",
+        icon="mdi:water",
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+)
+MONITORED_CONDITIONS: list[str] = [desc.key for desc in SENSOR_TYPES]
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
@@ -37,8 +75,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         raise PlatformNotReady()
 
     sensors = [
-        EpsonPrinterCartridge(api, condition)
-        for condition in config[CONF_MONITORED_CONDITIONS]
+        EpsonPrinterCartridge(api, description)
+        for description in SENSOR_TYPES
+        if description.key in config[CONF_MONITORED_CONDITIONS]
     ]
 
     add_devices(sensors, True)
@@ -47,34 +86,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class EpsonPrinterCartridge(SensorEntity):
     """Representation of a cartridge sensor."""
 
-    def __init__(self, api, cartridgeidx):
+    def __init__(self, api, description: SensorEntityDescription):
         """Initialize a cartridge sensor."""
         self._api = api
-
-        self._id = cartridgeidx
-        self._name = MONITORED_CONDITIONS[self._id][0]
-        self._unit = MONITORED_CONDITIONS[self._id][1]
-        self._icon = MONITORED_CONDITIONS[self._id][2]
+        self.entity_description = description
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return self._icon
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._unit
-
-    @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
-        return self._api.getSensorValue(self._id)
+        return self._api.getSensorValue(self.entity_description.key)
 
     @property
     def available(self):

@@ -5,9 +5,9 @@ from homeassistant.components.water_heater import (
     STATE_PERFORMANCE,
     WaterHeaterEntity,
 )
-from homeassistant.const import STATE_OFF, TEMP_CELSIUS
+from homeassistant.const import STATE_OFF, TEMP_CELSIUS, Platform
 
-from . import DOMAIN, WATER_HEATER, AtagEntity
+from . import DOMAIN, AtagEntity
 
 SUPPORT_FLAGS_HEATER = 0
 OPERATION_LIST = [STATE_OFF, STATE_ECO, STATE_PERFORMANCE]
@@ -16,21 +16,15 @@ OPERATION_LIST = [STATE_OFF, STATE_ECO, STATE_PERFORMANCE]
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Initialize DHW device from config entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
-    async_add_entities([AtagWaterHeater(coordinator, WATER_HEATER)])
+    async_add_entities([AtagWaterHeater(coordinator, Platform.WATER_HEATER)])
 
 
 class AtagWaterHeater(AtagEntity, WaterHeaterEntity):
     """Representation of an ATAG water heater."""
 
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS_HEATER
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
+    _attr_operation_list = OPERATION_LIST
+    _attr_supported_features = SUPPORT_FLAGS_HEATER
+    _attr_temperature_unit = TEMP_CELSIUS
 
     @property
     def current_temperature(self):
@@ -42,11 +36,6 @@ class AtagWaterHeater(AtagEntity, WaterHeaterEntity):
         """Return current operation."""
         operation = self.coordinator.data.dhw.current_operation
         return operation if operation in self.operation_list else STATE_OFF
-
-    @property
-    def operation_list(self):
-        """List of available operation modes."""
-        return OPERATION_LIST
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""

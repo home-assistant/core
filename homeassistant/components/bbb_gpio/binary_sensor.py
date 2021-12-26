@@ -43,10 +43,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class BBBGPIOBinarySensor(BinarySensorEntity):
     """Representation of a binary sensor that uses Beaglebone Black GPIO."""
 
+    _attr_should_poll = False
+
     def __init__(self, pin, params):
         """Initialize the Beaglebone Black binary sensor."""
         self._pin = pin
-        self._name = params[CONF_NAME] or DEVICE_DEFAULT_NAME
+        self._attr_name = params[CONF_NAME] or DEVICE_DEFAULT_NAME
         self._bouncetime = params[CONF_BOUNCETIME]
         self._pull_mode = params[CONF_PULL_MODE]
         self._invert_logic = params[CONF_INVERT_LOGIC]
@@ -62,16 +64,6 @@ class BBBGPIOBinarySensor(BinarySensorEntity):
         bbb_gpio.edge_detect(self._pin, read_gpio, self._bouncetime)
 
     @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return the state of the entity."""
         return self._state != self._invert_logic

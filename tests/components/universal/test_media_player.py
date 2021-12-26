@@ -1,7 +1,6 @@
 """The tests for the Universal Media player platform."""
 import asyncio
 from copy import copy
-from os import path
 import unittest
 from unittest.mock import patch
 
@@ -22,9 +21,9 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Context, callback
-from homeassistant.setup import async_setup_component
+from homeassistant.setup import async_setup_component, setup_component
 
-from tests.common import get_test_home_assistant, mock_service
+from tests.common import get_fixture_path, get_test_home_assistant, mock_service
 
 
 def validate_config(config):
@@ -630,7 +629,7 @@ class TestMediaPlayer(unittest.TestCase):
     def test_supported_features_children_and_cmds(self):
         """Test supported media commands with children and attrs."""
         config = copy(self.config_children_and_attr)
-        excmd = {"service": "media_player.test", "data": {"entity_id": "test"}}
+        excmd = {"service": "media_player.test", "data": {}}
         config["commands"] = {
             "turn_on": excmd,
             "turn_off": excmd,
@@ -648,6 +647,7 @@ class TestMediaPlayer(unittest.TestCase):
             "media_next_track": excmd,
             "media_previous_track": excmd,
             "toggle": excmd,
+            "play_media": excmd,
             "clear_playlist": excmd,
         }
         config = validate_config(config)
@@ -676,10 +676,184 @@ class TestMediaPlayer(unittest.TestCase):
             | universal.SUPPORT_STOP
             | universal.SUPPORT_NEXT_TRACK
             | universal.SUPPORT_PREVIOUS_TRACK
+            | universal.SUPPORT_PLAY_MEDIA
             | universal.SUPPORT_CLEAR_PLAYLIST
         )
 
         assert check_flags == ump.supported_features
+
+    def test_overrides(self):
+        """Test overrides."""
+        config = copy(self.config_children_and_attr)
+        excmd = {"service": "test.override", "data": {}}
+        config["name"] = "overridden"
+        config["commands"] = {
+            "turn_on": excmd,
+            "turn_off": excmd,
+            "volume_up": excmd,
+            "volume_down": excmd,
+            "volume_mute": excmd,
+            "volume_set": excmd,
+            "select_sound_mode": excmd,
+            "select_source": excmd,
+            "repeat_set": excmd,
+            "shuffle_set": excmd,
+            "media_play": excmd,
+            "media_play_pause": excmd,
+            "media_pause": excmd,
+            "media_stop": excmd,
+            "media_next_track": excmd,
+            "media_previous_track": excmd,
+            "clear_playlist": excmd,
+            "play_media": excmd,
+            "toggle": excmd,
+        }
+        setup_component(self.hass, "media_player", {"media_player": config})
+
+        service = mock_service(self.hass, "test", "override")
+        self.hass.services.call(
+            "media_player",
+            "turn_on",
+            service_data={"entity_id": "media_player.overridden"},
+            blocking=True,
+        )
+        assert len(service) == 1
+        self.hass.services.call(
+            "media_player",
+            "turn_off",
+            service_data={"entity_id": "media_player.overridden"},
+            blocking=True,
+        )
+        assert len(service) == 2
+        self.hass.services.call(
+            "media_player",
+            "volume_up",
+            service_data={"entity_id": "media_player.overridden"},
+            blocking=True,
+        )
+        assert len(service) == 3
+        self.hass.services.call(
+            "media_player",
+            "volume_down",
+            service_data={"entity_id": "media_player.overridden"},
+            blocking=True,
+        )
+        assert len(service) == 4
+        self.hass.services.call(
+            "media_player",
+            "volume_mute",
+            service_data={
+                "entity_id": "media_player.overridden",
+                "is_volume_muted": True,
+            },
+            blocking=True,
+        )
+        assert len(service) == 5
+        self.hass.services.call(
+            "media_player",
+            "volume_set",
+            service_data={"entity_id": "media_player.overridden", "volume_level": 1},
+            blocking=True,
+        )
+        assert len(service) == 6
+        self.hass.services.call(
+            "media_player",
+            "select_sound_mode",
+            service_data={
+                "entity_id": "media_player.overridden",
+                "sound_mode": "music",
+            },
+            blocking=True,
+        )
+        assert len(service) == 7
+        self.hass.services.call(
+            "media_player",
+            "select_source",
+            service_data={"entity_id": "media_player.overridden", "source": "video1"},
+            blocking=True,
+        )
+        assert len(service) == 8
+        self.hass.services.call(
+            "media_player",
+            "repeat_set",
+            service_data={"entity_id": "media_player.overridden", "repeat": "all"},
+            blocking=True,
+        )
+        assert len(service) == 9
+        self.hass.services.call(
+            "media_player",
+            "shuffle_set",
+            service_data={"entity_id": "media_player.overridden", "shuffle": True},
+            blocking=True,
+        )
+        assert len(service) == 10
+        self.hass.services.call(
+            "media_player",
+            "media_play",
+            service_data={"entity_id": "media_player.overridden"},
+            blocking=True,
+        )
+        assert len(service) == 11
+        self.hass.services.call(
+            "media_player",
+            "media_pause",
+            service_data={"entity_id": "media_player.overridden"},
+            blocking=True,
+        )
+        assert len(service) == 12
+        self.hass.services.call(
+            "media_player",
+            "media_stop",
+            service_data={"entity_id": "media_player.overridden"},
+            blocking=True,
+        )
+        assert len(service) == 13
+        self.hass.services.call(
+            "media_player",
+            "media_next_track",
+            service_data={"entity_id": "media_player.overridden"},
+            blocking=True,
+        )
+        assert len(service) == 14
+        self.hass.services.call(
+            "media_player",
+            "media_previous_track",
+            service_data={"entity_id": "media_player.overridden"},
+            blocking=True,
+        )
+        assert len(service) == 15
+        self.hass.services.call(
+            "media_player",
+            "clear_playlist",
+            service_data={"entity_id": "media_player.overridden"},
+            blocking=True,
+        )
+        assert len(service) == 16
+        self.hass.services.call(
+            "media_player",
+            "media_play_pause",
+            service_data={"entity_id": "media_player.overridden"},
+            blocking=True,
+        )
+        assert len(service) == 17
+        self.hass.services.call(
+            "media_player",
+            "play_media",
+            service_data={
+                "entity_id": "media_player.overridden",
+                "media_content_id": 1,
+                "media_content_type": "channel",
+            },
+            blocking=True,
+        )
+        assert len(service) == 18
+        self.hass.services.call(
+            "media_player",
+            "toggle",
+            service_data={"entity_id": "media_player.overridden"},
+            blocking=True,
+        )
+        assert len(service) == 19
 
     def test_supported_features_play_pause(self):
         """Test supported media commands with play_pause function."""
@@ -823,7 +997,8 @@ class TestMediaPlayer(unittest.TestCase):
         assert len(self.mock_mp_2.service_calls["shuffle_set"]) == 1
 
         asyncio.run_coroutine_threadsafe(ump.async_toggle(), self.hass.loop).result()
-        assert len(self.mock_mp_2.service_calls["toggle"]) == 1
+        # Delegate to turn_off
+        assert len(self.mock_mp_2.service_calls["turn_off"]) == 2
 
     def test_service_call_to_command(self):
         """Test service call to command."""
@@ -1001,11 +1176,7 @@ async def test_reload(hass):
         {"activity_list": ["act1", "act2"], "current_activity": "act2"},
     )
 
-    yaml_path = path.join(
-        _get_fixtures_base_path(),
-        "fixtures",
-        "universal/configuration.yaml",
-    )
+    yaml_path = get_fixture_path("configuration.yaml", "universal")
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
             "universal",
@@ -1023,7 +1194,3 @@ async def test_reload(hass):
     assert (
         "device_class" not in hass.states.get("media_player.master_bed_tv").attributes
     )
-
-
-def _get_fixtures_base_path():
-    return path.dirname(path.dirname(path.dirname(__file__)))

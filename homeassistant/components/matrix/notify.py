@@ -33,8 +33,7 @@ class MatrixNotificationService(BaseNotificationService):
         """Send the message to the Matrix server."""
         target_rooms = kwargs.get(ATTR_TARGET) or [self._default_room]
         service_data = {ATTR_TARGET: target_rooms, ATTR_MESSAGE: message}
-        data = kwargs.get(ATTR_DATA)
-        if data is not None:
+        if (data := kwargs.get(ATTR_DATA)) is not None:
             service_data[ATTR_DATA] = data
         return self.hass.services.call(
             DOMAIN, SERVICE_SEND_MESSAGE, service_data=service_data

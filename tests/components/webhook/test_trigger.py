@@ -17,7 +17,7 @@ async def setup_http(hass):
     await hass.async_block_till_done()
 
 
-async def test_webhook_json(hass, aiohttp_client):
+async def test_webhook_json(hass, hass_client_no_auth):
     """Test triggering with a JSON webhook."""
     events = []
 
@@ -46,7 +46,7 @@ async def test_webhook_json(hass, aiohttp_client):
     )
     await hass.async_block_till_done()
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
 
     await client.post("/api/webhook/json_webhook", json={"hello": "world"})
     await hass.async_block_till_done()
@@ -56,7 +56,7 @@ async def test_webhook_json(hass, aiohttp_client):
     assert events[0].data["id"] == 0
 
 
-async def test_webhook_post(hass, aiohttp_client):
+async def test_webhook_post(hass, hass_client_no_auth):
     """Test triggering with a POST webhook."""
     events = []
 
@@ -82,7 +82,7 @@ async def test_webhook_post(hass, aiohttp_client):
     )
     await hass.async_block_till_done()
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
 
     await client.post("/api/webhook/post_webhook", data={"hello": "world"})
     await hass.async_block_till_done()
@@ -91,7 +91,7 @@ async def test_webhook_post(hass, aiohttp_client):
     assert events[0].data["hello"] == "yo world"
 
 
-async def test_webhook_query(hass, aiohttp_client):
+async def test_webhook_query(hass, hass_client_no_auth):
     """Test triggering with a query POST webhook."""
     events = []
 
@@ -117,7 +117,7 @@ async def test_webhook_query(hass, aiohttp_client):
     )
     await hass.async_block_till_done()
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
 
     await client.post("/api/webhook/query_webhook?hello=world")
     await hass.async_block_till_done()
@@ -126,7 +126,7 @@ async def test_webhook_query(hass, aiohttp_client):
     assert events[0].data["hello"] == "yo world"
 
 
-async def test_webhook_reload(hass, aiohttp_client):
+async def test_webhook_reload(hass, hass_client_no_auth):
     """Test reloading a webhook."""
     events = []
 
@@ -152,7 +152,7 @@ async def test_webhook_reload(hass, aiohttp_client):
     )
     await hass.async_block_till_done()
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
 
     await client.post("/api/webhook/post_webhook", data={"hello": "world"})
     await hass.async_block_till_done()

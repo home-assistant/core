@@ -6,12 +6,15 @@
             "cannot_connect": "Impossibile connettersi"
         },
         "step": {
+            "discovery_confirm": {
+                "description": "Vuoi configurare questo dispositivo Guardian?"
+            },
             "user": {
                 "data": {
                     "ip_address": "Indirizzo IP",
                     "port": "Porta"
                 },
-                "description": "Configurare un dispositivo Elexa Guardian locale."
+                "description": "Configura un dispositivo Elexa Guardian locale."
             },
             "zeroconf_confirm": {
                 "description": "Vuoi configurare questo dispositivo Guardian?"

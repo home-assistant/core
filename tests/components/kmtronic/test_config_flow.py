@@ -1,18 +1,19 @@
 """Test the kmtronic config flow."""
+from http import HTTPStatus
 from unittest.mock import Mock, patch
 
 from aiohttp import ClientConnectorError, ClientResponseError
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.kmtronic.const import CONF_REVERSE, DOMAIN
-from homeassistant.config_entries import ENTRY_STATE_LOADED
+from homeassistant.config_entries import ConfigEntryState
 
 from tests.common import MockConfigEntry
 
 
 async def test_form(hass):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -65,7 +66,7 @@ async def test_form_options(hass, aioclient_mock):
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state == ENTRY_STATE_LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -80,7 +81,7 @@ async def test_form_options(hass, aioclient_mock):
 
     await hass.async_block_till_done()
 
-    assert config_entry.state == "loaded"
+    assert config_entry.state == config_entries.ConfigEntryState.LOADED
 
 
 async def test_form_invalid_auth(hass):
@@ -91,7 +92,7 @@ async def test_form_invalid_auth(hass):
 
     with patch(
         "homeassistant.components.kmtronic.config_flow.KMTronicHubAPI.async_get_status",
-        side_effect=ClientResponseError(None, None, status=401),
+        side_effect=ClientResponseError(None, None, status=HTTPStatus.BAD_REQUEST),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

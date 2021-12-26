@@ -1,4 +1,5 @@
 """Tests for the Broadlink integration."""
+from dataclasses import dataclass
 from unittest.mock import MagicMock, patch
 
 from homeassistant.components.broadlink.const import DOMAIN
@@ -57,17 +58,36 @@ BROADLINK_DEVICES = {
         20025,
         5,
     ),
+    "Dining room": (
+        "192.168.0.16",
+        "34ea34b4fd1c",
+        "SCB1E",
+        "Broadlink",
+        "SP4B",
+        0x5115,
+        57,
+        5,
+    ),
     "Kitchen": (  # Not supported.
         "192.168.0.64",
         "34ea34b61d2c",
-        "LB1",
+        "SB800TD",
         "Broadlink",
-        "LB1",
+        "SB800TD",
         0x504E,
         57,
         5,
     ),
 }
+
+
+@dataclass
+class MockSetup:
+    """Representation of a mock setup."""
+
+    api: MagicMock
+    entry: MockConfigEntry
+    factory: MagicMock
 
 
 class BroadlinkDevice:
@@ -96,11 +116,11 @@ class BroadlinkDevice:
         with patch(
             "homeassistant.components.broadlink.device.blk.gendevice",
             return_value=mock_api,
-        ):
+        ) as mock_factory:
             await hass.config_entries.async_setup(mock_entry.entry_id)
             await hass.async_block_till_done()
 
-        return mock_api, mock_entry
+        return MockSetup(mock_api, mock_entry, mock_factory)
 
     def get_mock_api(self):
         """Return a mock device (API)."""

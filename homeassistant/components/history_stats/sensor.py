@@ -86,7 +86,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     sensor_type = config.get(CONF_TYPE)
     name = config.get(CONF_NAME)
 
-    for template in [start, end]:
+    for template in (start, end):
         if template is not None:
             template.hass = hass
 
@@ -153,7 +153,7 @@ class HistoryStatsSensor(SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if self.value is None or self.count is None:
             return None
@@ -168,7 +168,7 @@ class HistoryStatsSensor(SensorEntity):
             return self.count
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
 

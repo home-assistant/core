@@ -6,10 +6,10 @@
         "error": {
             "cannot_connect": "Impossibile connettersi",
             "invalid_auth": "Autenticazione non valida",
-            "old_firmware": "Firmware precedente non supportato sul dispositivo Bond - si prega di aggiornare prima di continuare",
+            "old_firmware": "Firmware precedente non supportato sul dispositivo Bond - aggiorna prima di continuare",
             "unknown": "Errore imprevisto"
         },
-        "flow_title": "Bond: {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "confirm": {
                 "data": {

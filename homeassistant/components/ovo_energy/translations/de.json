@@ -5,13 +5,13 @@
             "cannot_connect": "Verbindung fehlgeschlagen",
             "invalid_auth": "Ung\u00fcltige Authentifizierung"
         },
-        "flow_title": "OVO Energy: {username}",
+        "flow_title": "{username}",
         "step": {
             "reauth": {
                 "data": {
                     "password": "Passwort"
                 },
-                "description": "Die Authentifizierung f\u00fcr OVO Energy ist fehlgeschlagen. Bitte geben Sie Ihre aktuellen Anmeldedaten ein.",
+                "description": "Die Authentifizierung f\u00fcr OVO Energy ist fehlgeschlagen. Bitte gib deine aktuellen Anmeldedaten ein.",
                 "title": "Erneute Authentifizierung"
             },
             "user": {

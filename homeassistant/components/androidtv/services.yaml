@@ -3,15 +3,11 @@
 adb_command:
   name: ADB command
   description: Send an ADB command to an Android TV / Fire TV device.
+  target:
+    entity:
+      integration: androidtv
+      domain: media_player
   fields:
-    entity_id:
-      description: Name(s) of Android TV / Fire TV entities.
-      required: true
-      example: "media_player.android_tv_living_room"
-      selector:
-        entity:
-          integration: androidtv
-          domain: media_player
     command:
       name: Command
       description: Either a key command or an ADB shell command.
@@ -22,15 +18,11 @@ adb_command:
 download:
   name: Download
   description: Download a file from your Android TV / Fire TV device to your Home Assistant instance.
+  target:
+    entity:
+      integration: androidtv
+      domain: media_player
   fields:
-    entity_id:
-      description: Name of Android TV / Fire TV entity.
-      required: true
-      example: "media_player.android_tv_living_room"
-      selector:
-        entity:
-          integration: androidtv
-          domain: media_player
     device_path:
       name: Device path
       description: The filepath on the Android TV / Fire TV device.
@@ -48,15 +40,11 @@ download:
 upload:
   name: Upload
   description: Upload a file from your Home Assistant instance to an Android TV / Fire TV device.
+  target:
+    entity:
+      integration: androidtv
+      domain: media_player
   fields:
-    entity_id:
-      description: Name(s) of Android TV / Fire TV entities.
-      required: true
-      example: "media_player.android_tv_living_room"
-      selector:
-        entity:
-          integration: androidtv
-          domain: media_player
     device_path:
       name: Device path
       description: The filepath on the Android TV / Fire TV device.

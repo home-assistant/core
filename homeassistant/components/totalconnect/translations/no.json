@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Kontoen er allerede konfigurert",
+            "no_locations": "Ingen plasseringer er tilgjengelige for denne brukeren, sjekk TotalConnect-innstillingene",
             "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
         },
         "error": {
@@ -11,9 +12,10 @@
         "step": {
             "locations": {
                 "data": {
-                    "location": "Plassering"
+                    "location": "Plassering",
+                    "usercode": "Brukerkode"
                 },
-                "description": "Angi brukerkoden for denne brukeren p\u00e5 denne plasseringen",
+                "description": "Angi brukerkoden for denne brukeren p\u00e5 plasseringen {location_id}",
                 "title": "Brukerkoder for plassering"
             },
             "reauth_confirm": {

@@ -8,7 +8,7 @@
         "error": {
             "cannot_connect": "Impossibile connettersi"
         },
-        "flow_title": "Lutron Cas\u00e9ta {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "import_failed": {
                 "description": "Impossibile impostare il bridge (host: {host}) importato da configuration.yaml.",
@@ -66,7 +66,7 @@
             "stop_2": "Ferma 2",
             "stop_3": "Ferma 3",
             "stop_4": "Ferma 4",
-            "stop_all": "Fermare tutti"
+            "stop_all": "Ferma tutti"
         },
         "trigger_type": {
             "press": "\"{subtype}\" premuto",

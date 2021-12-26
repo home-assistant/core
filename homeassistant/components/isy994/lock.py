@@ -1,4 +1,5 @@
 """Support for ISY994 locks."""
+
 from pyisy.constants import ISY_VALUE_UNKNOWN
 
 from homeassistant.components.lock import DOMAIN as LOCK, LockEntity
@@ -41,14 +42,14 @@ class ISYLockEntity(ISYNodeEntity, LockEntity):
             return None
         return VALUE_TO_STATE.get(self._node.status)
 
-    def lock(self, **kwargs) -> None:
+    async def async_lock(self, **kwargs) -> None:
         """Send the lock command to the ISY994 device."""
-        if not self._node.secure_lock():
+        if not await self._node.secure_lock():
             _LOGGER.error("Unable to lock device")
 
-    def unlock(self, **kwargs) -> None:
+    async def async_unlock(self, **kwargs) -> None:
         """Send the unlock command to the ISY994 device."""
-        if not self._node.secure_unlock():
+        if not await self._node.secure_unlock():
             _LOGGER.error("Unable to lock device")
 
 
@@ -60,12 +61,12 @@ class ISYLockProgramEntity(ISYProgramEntity, LockEntity):
         """Return true if the device is locked."""
         return bool(self._node.status)
 
-    def lock(self, **kwargs) -> None:
+    async def async_lock(self, **kwargs) -> None:
         """Lock the device."""
-        if not self._actions.run_then():
+        if not await self._actions.run_then():
             _LOGGER.error("Unable to lock device")
 
-    def unlock(self, **kwargs) -> None:
+    async def async_unlock(self, **kwargs) -> None:
         """Unlock the device."""
-        if not self._actions.run_else():
+        if not await self._actions.run_else():
             _LOGGER.error("Unable to unlock device")

@@ -198,6 +198,7 @@ class SnapcastGroupDevice(MediaPlayerEntity):
     async def async_restore(self):
         """Restore the group state."""
         await self._group.restore()
+        self.async_write_ha_state()
 
 
 class SnapcastClientDevice(MediaPlayerEntity):
@@ -326,6 +327,7 @@ class SnapcastClientDevice(MediaPlayerEntity):
     async def async_restore(self):
         """Restore the client state."""
         await self._client.restore()
+        self.async_write_ha_state()
 
     async def async_set_latency(self, latency):
         """Set the latency of the client."""

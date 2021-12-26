@@ -15,10 +15,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class BleBoxAirQualityEntity(BleBoxEntity, AirQualityEntity):
     """Representation of a BleBox air quality feature."""
 
-    @property
-    def icon(self):
-        """Return the icon."""
-        return "mdi:blur"
+    _attr_icon = "mdi:blur"
 
     @property
     def particulate_matter_0_1(self):

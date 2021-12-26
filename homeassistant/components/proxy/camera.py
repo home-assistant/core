@@ -1,4 +1,6 @@
 """Proxy camera platform that enables image processing of camera data."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import io
@@ -219,13 +221,17 @@ class ProxyCamera(Camera):
         self._last_image = None
         self._mode = config.get(CONF_MODE)
 
-    def camera_image(self):
+    def camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return camera image."""
         return asyncio.run_coroutine_threadsafe(
             self.async_camera_image(), self.hass.loop
         ).result()
 
-    async def async_camera_image(self):
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return a still image response from the camera."""
         now = dt_util.utcnow()
 
@@ -244,13 +250,13 @@ class ProxyCamera(Camera):
             job = _resize_image
         else:
             job = _crop_image
-        image = await self.hass.async_add_executor_job(
+        image_bytes: bytes = await self.hass.async_add_executor_job(
             job, image.content, self._image_opts
         )
 
         if self._cache_images:
-            self._last_image = image
-        return image
+            self._last_image = image_bytes
+        return image_bytes
 
     async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from camera images."""

@@ -3,8 +3,8 @@ import haffmpeg.sensor as ffmpeg_sensor
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_MOTION,
     PLATFORM_SCHEMA,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.components.ffmpeg import (
@@ -115,4 +115,4 @@ class FFmpegMotion(FFmpegBinarySensor):
     @property
     def device_class(self):
         """Return the class of this sensor, from DEVICE_CLASSES."""
-        return DEVICE_CLASS_MOTION
+        return BinarySensorDeviceClass.MOTION

@@ -199,7 +199,7 @@ async def test_switches_can_be_enabled(hass: HomeAssistant) -> None:
         entry = entity_registry.async_get(entity_id)
         assert entry
         assert entry.disabled
-        assert entry.disabled_by == er.DISABLED_INTEGRATION
+        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
         entity_state = hass.states.get(entity_id)
         assert not entity_state
 
@@ -213,7 +213,7 @@ async def test_switches_can_be_enabled(hass: HomeAssistant) -> None:
             assert not updated_entry.disabled
             await hass.async_block_till_done()
 
-            async_fire_time_changed(  # type: ignore[no-untyped-call]
+            async_fire_time_changed(
                 hass,
                 dt.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
             )

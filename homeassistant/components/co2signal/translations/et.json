@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "api_ratelimit": "API p\u00e4rigute limiit on \u00fcletatud",
+            "unknown": "Ootamatu t\u00f5rge"
+        },
+        "error": {
+            "api_ratelimit": "API p\u00e4rigute limiit on \u00fcletatud",
+            "invalid_auth": "Tuvastamine nurjus",
+            "unknown": "Ootamatu t\u00f5rge"
+        },
+        "step": {
+            "coordinates": {
+                "data": {
+                    "latitude": "Laiuskraad",
+                    "longitude": "Pikkuskraad"
+                }
+            },
+            "country": {
+                "data": {
+                    "country_code": "Riigi kood"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "Juurdep\u00e4\u00e4sut\u00f5end",
+                    "location": "Hangi andmed"
+                },
+                "description": "Loa taotlemiseks k\u00fclasta https://co2signal.com/."
+            }
+        }
+    }
+}

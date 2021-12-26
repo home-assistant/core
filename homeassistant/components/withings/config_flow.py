@@ -6,10 +6,11 @@ import logging
 import voluptuous as vol
 from withings_api.common import AuthScope
 
-from homeassistant.components.withings import const
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.util import slugify
+
+from . import const
 
 
 class WithingsFlowHandler(
@@ -59,7 +60,7 @@ class WithingsFlowHandler(
         if profile:
             existing_entries = [
                 config_entry
-                for config_entry in self.hass.config_entries.async_entries(const.DOMAIN)
+                for config_entry in self._async_current_entries()
                 if slugify(config_entry.data.get(const.PROFILE)) == slugify(profile)
             ]
 

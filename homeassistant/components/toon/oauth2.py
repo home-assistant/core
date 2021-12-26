@@ -58,7 +58,7 @@ class ToonLocalOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implemen
         name: str,
         tenant_id: str,
         issuer: str | None = None,
-    ):
+    ) -> None:
         """Local Toon Oauth Implementation."""
         self._name = name
         self.tenant_id = tenant_id

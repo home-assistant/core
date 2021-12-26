@@ -1,10 +1,15 @@
 """Provides device automations for Kodi."""
 from __future__ import annotations
 
+from typing import Any
+
 import voluptuous as vol
 
-from homeassistant.components.automation import AutomationActionType
-from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
+from homeassistant.components.automation import (
+    AutomationActionType,
+    AutomationTriggerInfo,
+)
+from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE_ID,
@@ -21,7 +26,7 @@ from .const import DOMAIN, EVENT_TURN_OFF, EVENT_TURN_ON
 
 TRIGGER_TYPES = {"turn_on", "turn_off"}
 
-TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
+TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
@@ -29,7 +34,9 @@ TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
 )
 
 
-async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
+async def async_get_triggers(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, Any]]:
     """List device triggers for Kodi devices."""
     registry = await entity_registry.async_get_registry(hass)
     triggers = []
@@ -65,9 +72,9 @@ def _attach_trigger(
     config: ConfigType,
     action: AutomationActionType,
     event_type,
-    automation_info: dict,
+    automation_info: AutomationTriggerInfo,
 ):
-    trigger_id = automation_info.get("trigger_id") if automation_info else None
+    trigger_data = automation_info["trigger_data"]
     job = HassJob(action)
 
     @callback
@@ -75,7 +82,7 @@ def _attach_trigger(
         if event.data[ATTR_ENTITY_ID] == config[CONF_ENTITY_ID]:
             hass.async_run_hass_job(
                 job,
-                {"trigger": {**config, "description": event_type, "id": trigger_id}},
+                {"trigger": {**trigger_data, **config, "description": event_type}},
                 event.context,
             )
 
@@ -86,7 +93,7 @@ async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
     action: AutomationActionType,
-    automation_info: dict,
+    automation_info: AutomationTriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
     if config[CONF_TYPE] == "turn_on":

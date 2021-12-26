@@ -4,6 +4,7 @@ from datetime import timedelta
 import pytest
 
 import homeassistant.components.automation as automation
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.light import DOMAIN
 from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON
 from homeassistant.helpers import device_registry
@@ -65,7 +66,9 @@ async def test_get_triggers(hass, device_reg, entity_reg):
             "entity_id": f"{DOMAIN}.test_5678",
         },
     ]
-    triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device_entry.id
+    )
     assert triggers == expected_triggers
 
 
@@ -83,15 +86,17 @@ async def test_get_trigger_capabilities(hass, device_reg, entity_reg):
             {"name": "for", "optional": True, "type": "positive_time_period_dict"}
         ]
     }
-    triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device_entry.id
+    )
     for trigger in triggers:
         capabilities = await async_get_device_automation_capabilities(
-            hass, "trigger", trigger
+            hass, DeviceAutomationType.TRIGGER, trigger
         )
         assert capabilities == expected_capabilities
 
 
-async def test_if_fires_on_state_change(hass, calls):
+async def test_if_fires_on_state_change(hass, calls, enable_custom_integrations):
     """Test for turn_on and turn_off triggers firing."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
 
@@ -178,7 +183,9 @@ async def test_if_fires_on_state_change(hass, calls):
     )
 
 
-async def test_if_fires_on_state_change_with_for(hass, calls):
+async def test_if_fires_on_state_change_with_for(
+    hass, calls, enable_custom_integrations
+):
     """Test for triggers firing with delay."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
 

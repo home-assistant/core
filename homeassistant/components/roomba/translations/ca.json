@@ -9,7 +9,7 @@
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3"
         },
-        "flow_title": "iRobot {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "init": {
                 "data": {
@@ -34,7 +34,7 @@
                     "blid": "BLID",
                     "host": "Amfitri\u00f3"
                 },
-                "description": "No s'ha descobert cap Roomba ni cap Braava a la teva xarxa. El BLID \u00e9s la part del nom d'amfitri\u00f3 del dispositiu despr\u00e9s de `iRobot-` o `Roomba-`. Segueix els passos de la documentaci\u00f3 seg\u00fcent: {auth_help_url}",
+                "description": "No s'ha descobert cap Roomba o Braava a la teva xarxa.",
                 "title": "Connecta't al dispositiu manualment"
             },
             "user": {
@@ -45,8 +45,8 @@
                     "host": "Amfitri\u00f3",
                     "password": "Contrasenya"
                 },
-                "description": "Actualment la recuperaci\u00f3 de BLID i la contrasenya \u00e9s un proc\u00e9s manual. Segueix els passos de la documentaci\u00f3 a: https://www.home-assistant.io/integrations/roomba/#retrieving-your-credentials",
-                "title": "Connexi\u00f3 amb el dispositiu"
+                "description": "Selecciona un/a Roomba o Braava.",
+                "title": "Connexi\u00f3 autom\u00e0tica amb el dispositiu"
             }
         }
     },
