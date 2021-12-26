@@ -65,17 +65,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         name = data[CONF_NAME]
         host = data[CONF_HOST]
 
+        self._async_abort_entries_match({CONF_HOST: host})
+
         reason = None
         try:
-            if self.host_already_configured(host):
-                raise AlreadyConfigured()
-
             info = await validate_host(self.hass, host, name)
         except InvalidHost:
             _LOGGER.exception("An invalid host is configured for Vallox")
             reason = "invalid_host"
-        except AlreadyConfigured:
-            reason = "already_configured"
         except CannotConnect:
             _LOGGER.exception("Cannot connect to Vallox")
             reason = "cannot_connect"
@@ -101,15 +98,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         name = user_input[CONF_NAME]
         host = user_input[CONF_HOST]
 
-        try:
-            if self.host_already_configured(host):
-                raise AlreadyConfigured()
+        self._async_abort_entries_match({CONF_HOST: host})
 
+        try:
             info = await validate_host(self.hass, host, name)
         except InvalidHost:
             errors[CONF_HOST] = "invalid_host"
-        except AlreadyConfigured:
-            errors[CONF_HOST] = "already_configured"
         except CannotConnect:
             errors[CONF_HOST] = "cannot_connect"
         except Exception:  # pylint: disable=broad-except
@@ -121,17 +115,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
-
-    def host_already_configured(self, host: str) -> bool:
-        """Check if we already have a Vallox entry configured matching the user input."""
-        existing_hosts = {
-            entry.data[CONF_HOST] for entry in self._async_current_entries()
-        }
-        return host in existing_hosts
-
-
-class AlreadyConfigured(HomeAssistantError):
-    """Error to indicate device is already configured."""
 
 
 class InvalidHost(HomeAssistantError):

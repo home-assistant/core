@@ -14,6 +14,8 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_FORM,
 )
 
+from tests.common import MockConfigEntry
+
 
 async def test_form_no_input(hass: HomeAssistant) -> None:
     """Test that the form is returned with no input."""
@@ -120,18 +122,23 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.vallox.config_flow.ConfigFlow.host_already_configured",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            init["flow_id"],
-            {"host": "20.40.10.30"},
-        )
-        await hass.async_block_till_done()
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "20.40.10.30",
+            CONF_NAME: "Vallox 110 MV",
+        },
+    )
+    mock_entry.add_to_hass(hass)
 
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] == {"host": "already_configured"}
+    result = await hass.config_entries.flow.async_configure(
+        init["flow_id"],
+        {"host": "20.40.10.30"},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_import(hass: HomeAssistant) -> None:
@@ -177,16 +184,21 @@ async def test_import_already_configured(hass: HomeAssistant) -> None:
     """Test that an already configured Vallox device is handled during import."""
     name = "Vallox 145 MV"
 
-    with patch(
-        "homeassistant.components.vallox.config_flow.ConfigFlow.host_already_configured",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={"host": "40.10.20.30", "name": name},
-        )
-        await hass.async_block_till_done()
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "40.10.20.30",
+            CONF_NAME: "Vallox 145 MV",
+        },
+    )
+    mock_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={"host": "40.10.20.30", "name": name},
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
