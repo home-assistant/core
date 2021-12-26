@@ -1999,6 +1999,9 @@ pytrafikverket==0.1.6.2
 # homeassistant.components.usb
 pyudev==0.22.0
 
+# homeassistant.components.unifiprotect
+pyunifiprotect==1.4.4
+
 # homeassistant.components.uptimerobot
 pyuptimerobot==21.11.0
 
