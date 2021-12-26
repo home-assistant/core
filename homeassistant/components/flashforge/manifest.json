@@ -1,0 +1,17 @@
+{
+  "domain": "flashforge",
+  "name": "FlashForge 3D Printer",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/flashforge",
+  "requirements": [
+    "ffpp==0.0.10"
+  ],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@joseffallman"
+  ],
+  "iot_class": "local_polling"
+}

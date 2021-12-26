@@ -94,6 +94,7 @@ FLOWS = [
     "faa_delays",
     "fireservicerota",
     "fjaraskupan",
+    "flashforge",
     "flick_electric",
     "flipr",
     "flo",
