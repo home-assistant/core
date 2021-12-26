@@ -56,7 +56,7 @@ async def async_setup_platform(
 ) -> None:
     """Set up the PVOutput sensor."""
     LOGGER.warning(
-        "Configuration of the Stookalert platform in YAML is deprecated and will be "
+        "Configuration of the PVOutput platform in YAML is deprecated and will be "
         "removed in Home Assistant 2022.1; Your existing configuration "
         "has been imported into the UI automatically and can be safely removed "
         "from your configuration.yaml file"
