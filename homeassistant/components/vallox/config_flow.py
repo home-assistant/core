@@ -62,7 +62,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, data: dict[str, Any]) -> FlowResult:
         """Handle import from YAML."""
-        name = data[CONF_NAME]
+        name = data.get(CONF_NAME, DEFAULT_NAME)
         host = data[CONF_HOST]
 
         self._async_abort_entries_match({CONF_HOST: host})

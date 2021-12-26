@@ -3,7 +3,6 @@ from unittest.mock import patch
 
 from vallox_websocket_api.exceptions import ValloxApiException
 
-from homeassistant.components.vallox.config_flow import host_valid
 from homeassistant.components.vallox.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_NAME
@@ -240,15 +239,3 @@ async def test_import_unknown_exception(hass: HomeAssistant) -> None:
 
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "unknown"
-
-
-async def test_host_valid_with_ip_address(hass: HomeAssistant) -> None:
-    """Test that host_valid can handle a valid IP address."""
-    result = host_valid("1.2.3.4")
-    assert result is True
-
-
-async def test_host_valid_with_illegal_character(hass: HomeAssistant) -> None:
-    """Test that host_valid fails with illegal character."""
-    result = host_valid("foo.bar.&")
-    assert result is False
