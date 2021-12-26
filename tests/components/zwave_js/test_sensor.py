@@ -22,6 +22,7 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_ICON,
+    ATTR_UNIT_OF_MEASUREMENT,
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
@@ -53,15 +54,15 @@ async def test_numeric_sensor(hass, multisensor_6, integration):
 
     assert state
     assert state.state == "9.0"
-    assert state.attributes["unit_of_measurement"] == TEMP_CELSIUS
-    assert state.attributes["device_class"] == SensorDeviceClass.TEMPERATURE
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TEMPERATURE
 
     state = hass.states.get(BATTERY_SENSOR)
 
     assert state
     assert state.state == "100.0"
-    assert state.attributes["unit_of_measurement"] == "%"
-    assert state.attributes["device_class"] == BinarySensorDeviceClass.BATTERY
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "%"
+    assert state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.BATTERY
 
     ent_reg = er.async_get(hass)
     entity_entry = ent_reg.async_get(BATTERY_SENSOR)
@@ -72,8 +73,8 @@ async def test_numeric_sensor(hass, multisensor_6, integration):
 
     assert state
     assert state.state == "65.0"
-    assert state.attributes["unit_of_measurement"] == "%"
-    assert state.attributes["device_class"] == SensorDeviceClass.HUMIDITY
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "%"
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.HUMIDITY
 
 
 async def test_energy_sensors(hass, hank_binary_switch, integration):
@@ -82,31 +83,31 @@ async def test_energy_sensors(hass, hank_binary_switch, integration):
 
     assert state
     assert state.state == "0.0"
-    assert state.attributes["unit_of_measurement"] == POWER_WATT
-    assert state.attributes["device_class"] == SensorDeviceClass.POWER
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == POWER_WATT
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.POWER
     assert state.attributes["state_class"] is SensorStateClass.MEASUREMENT
 
     state = hass.states.get(ENERGY_SENSOR)
 
     assert state
     assert state.state == "0.16"
-    assert state.attributes["unit_of_measurement"] == ENERGY_KILO_WATT_HOUR
-    assert state.attributes["device_class"] == SensorDeviceClass.ENERGY
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == ENERGY_KILO_WATT_HOUR
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENERGY
     assert state.attributes["state_class"] is SensorStateClass.TOTAL_INCREASING
 
     state = hass.states.get(VOLTAGE_SENSOR)
 
     assert state
     assert state.state == "122.96"
-    assert state.attributes["unit_of_measurement"] == ELECTRIC_POTENTIAL_VOLT
-    assert state.attributes["device_class"] == SensorDeviceClass.VOLTAGE
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == ELECTRIC_POTENTIAL_VOLT
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.VOLTAGE
 
     state = hass.states.get(CURRENT_SENSOR)
 
     assert state
     assert state.state == "0.0"
-    assert state.attributes["unit_of_measurement"] == ELECTRIC_CURRENT_AMPERE
-    assert state.attributes["device_class"] == SensorDeviceClass.CURRENT
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == ELECTRIC_CURRENT_AMPERE
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.CURRENT
 
 
 async def test_disabled_notification_sensor(hass, multisensor_6, integration):
