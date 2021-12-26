@@ -225,3 +225,61 @@ async def test_addressable_light_effect_speed(hass: HomeAssistant) -> None:
 
     state = hass.states.get(number_entity_id)
     assert state.state == "100"
+
+
+async def test_addressable_light_pixel_config(hass: HomeAssistant) -> None:
+    """Test an addressable light pixel config."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: IP_ADDRESS, CONF_NAME: DEFAULT_ENTRY_TITLE},
+        unique_id=MAC_ADDRESS,
+    )
+    config_entry.add_to_hass(hass)
+    bulb = _mocked_bulb()
+    bulb.addressable = True
+    bulb.raw_state = bulb.raw_state._replace(
+        model_num=0xA2
+    )  # Original addressable model
+    bulb.color_modes = {FLUX_COLOR_MODE_RGB}
+    bulb.color_mode = FLUX_COLOR_MODE_RGB
+    bulb.effect = "RBM 1"
+    bulb.speed = 50
+    with _patch_discovery(), _patch_wifibulb(device=bulb):
+        await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    await async_mock_device_turn_on(hass, bulb)
+
+    light_entity_id = "light.bulb_rgbcw_ddeeff"
+    number_entity_id = "number.bulb_rgbcw_ddeeff_effect_speed"
+
+    state = hass.states.get(light_entity_id)
+    assert state.state == STATE_ON
+
+    state = hass.states.get(number_entity_id)
+    assert state.state == "50"
+
+    await async_mock_device_turn_off(hass, bulb)
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: number_entity_id, ATTR_VALUE: 100},
+        blocking=True,
+    )
+    bulb.async_set_effect.assert_called_with("RBM 1", 100, 50)
+    bulb.async_set_effect.reset_mock()
+
+    await async_mock_device_turn_on(hass, bulb)
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: number_entity_id, ATTR_VALUE: 100},
+        blocking=True,
+    )
+    bulb.async_set_effect.assert_called_with("RBM 1", 100, 50)
+    bulb.async_set_effect.reset_mock()
+    await async_mock_effect_speed(hass, bulb, "RBM 2", 100)
+
+    state = hass.states.get(number_entity_id)
+    assert state.state == "100"
