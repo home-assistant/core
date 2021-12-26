@@ -19,7 +19,7 @@ from homeassistant.helpers import (
     entity_registry,
     update_coordinator,
 )
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import StateType
@@ -471,7 +471,7 @@ class ShellyBlockAttributeEntity(ShellyBlockEntity, entity.Entity):
         return self.description.extra_state_attributes(self.block)
 
     @property
-    def entity_category(self) -> str | None:
+    def entity_category(self) -> EntityCategory | str | None:
         """Return category of entity."""
         return self.description.entity_category
 
@@ -548,7 +548,7 @@ class ShellyRestAttributeEntity(update_coordinator.CoordinatorEntity):
         return self.description.extra_state_attributes(self.wrapper.device.status)
 
     @property
-    def entity_category(self) -> str | None:
+    def entity_category(self) -> EntityCategory | str | None:
         """Return category of entity."""
         return self.description.entity_category
 
@@ -614,7 +614,7 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, entity.Entity):
         )
 
     @property
-    def entity_category(self) -> str | None:
+    def entity_category(self) -> EntityCategory | str | None:
         """Return category of entity."""
         return self.description.entity_category
 

@@ -94,7 +94,7 @@ class NeatoSensor(SensorEntity):
         return self._available
 
     @property
-    def native_value(self) -> str | None:
+    def native_value(self) -> EntityCategory | str | None:
         """Return the state."""
         if self._state is not None:
             return str(self._state["details"]["charge"])
