@@ -17,7 +17,6 @@ from .data import ProtectData
 class ProtectDeviceEntity(Entity):
     """Base class for UniFi protect entities."""
 
-
     _attr_should_poll = False
 
     def __init__(
