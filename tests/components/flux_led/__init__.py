@@ -27,8 +27,8 @@ MODEL_NUM_HEX = "0x35"
 MODEL = "AZ120444"
 MODEL_DESCRIPTION = "Bulb RGBCW"
 MAC_ADDRESS = "aa:bb:cc:dd:ee:ff"
-FLUX_MAC_ADDRESS = "aabbccddeeff"
-SHORT_MAC_ADDRESS = "ddeeff"
+FLUX_MAC_ADDRESS = "AABBCCDDEEFF"
+SHORT_MAC_ADDRESS = "DDEEFF"
 
 DEFAULT_ENTRY_TITLE = f"{MODEL_DESCRIPTION} {SHORT_MAC_ADDRESS}"
 
@@ -79,6 +79,16 @@ def _mocked_bulb() -> AIOWifiLedBulb:
     bulb.async_set_effect = AsyncMock()
     bulb.async_set_white_temp = AsyncMock()
     bulb.async_set_brightness = AsyncMock()
+    bulb.pixels_per_segment = 300
+    bulb.segments = 2
+    bulb.music_pixels_per_segment = 150
+    bulb.music_segments = 4
+    bulb.operating_mode = "RGB&W"
+    bulb.operating_modes = ["RGB&W", "RGB/W"]
+    bulb.wirings = ["RGBW", "GRBW", "BGRW"]
+    bulb.wiring = "BGRW"
+    bulb.ic_types = ["WS2812B", "UCS1618"]
+    bulb.ic_type = "WS2812B"
     bulb.async_stop = AsyncMock()
     bulb.async_update = AsyncMock()
     bulb.async_turn_off = AsyncMock()
