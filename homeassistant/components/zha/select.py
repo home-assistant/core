@@ -59,21 +59,20 @@ class ZHAEnumSelectEntity(ZhaEntity, SelectEntity):
         """Init this select entity."""
         self._attr_name = self._enum.__name__
         self._attr_options = [entry.name.replace("_", " ") for entry in self._enum]
+        self._channel: ChannelType = channels[0]
         super().__init__(unique_id, zha_device, channels, **kwargs)
 
     @property
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
-        option = self.zha_device.data_cache.get(self._attr_name)
+        option = self._channel.data_cache.get(self._attr_name)
         if option is None:
             return None
         return option.name.replace("_", " ")
 
     async def async_select_option(self, option: str | int) -> None:
         """Change the selected option."""
-        self.zha_device.data_cache[self._attr_name] = self._enum[
-            option.replace(" ", "_")
-        ]
+        self._channel.data_cache[self._attr_name] = self._enum[option.replace(" ", "_")]
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
@@ -86,7 +85,7 @@ class ZHAEnumSelectEntity(ZhaEntity, SelectEntity):
     def async_restore_last_state(self, last_state) -> None:
         """Restore previous state."""
         if last_state.state and last_state.state != STATE_UNKNOWN:
-            self.zha_device.data_cache[self._attr_name] = self._enum[
+            self._channel.data_cache[self._attr_name] = self._enum[
                 last_state.state.replace(" ", "_")
             ]
 

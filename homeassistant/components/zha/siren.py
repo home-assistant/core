@@ -111,22 +111,22 @@ class ZHASiren(ZhaEntity, SirenEntity):
         if self._off_listener:
             self._off_listener()
             self._off_listener = None
-        tone_cache = self.zha_device.data_cache.get(WD.Warning.WarningMode.__name__)
+        tone_cache = self._channel.data_cache.get(WD.Warning.WarningMode.__name__)
         siren_tone = (
             tone_cache.value
             if tone_cache is not None
             else WARNING_DEVICE_MODE_EMERGENCY
         )
         siren_duration = DEFAULT_DURATION
-        level_cache = self.zha_device.data_cache.get(WD.Warning.SirenLevel.__name__)
+        level_cache = self._channel.data_cache.get(WD.Warning.SirenLevel.__name__)
         siren_level = (
             level_cache.value if level_cache is not None else WARNING_DEVICE_SOUND_HIGH
         )
-        strobe_cache = self.zha_device.data_cache.get(Strobe.__name__)
+        strobe_cache = self._channel.data_cache.get(Strobe.__name__)
         should_strobe = (
             strobe_cache.value if strobe_cache is not None else Strobe.No_Strobe
         )
-        strobe_level_cache = self.zha_device.data_cache.get(WD.StrobeLevel.__name__)
+        strobe_level_cache = self._channel.data_cache.get(WD.StrobeLevel.__name__)
         strobe_level = (
             strobe_level_cache.value
             if strobe_level_cache is not None

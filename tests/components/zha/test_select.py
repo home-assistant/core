@@ -78,16 +78,11 @@ async def test_select(hass, siren):
         qualifier=select_name.lower(),
     )
     assert entity_id is not None
-    assert zha_device.data_cache == {}
 
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_UNKNOWN
-
-    assert select_name not in zha_device.data_cache
-
-    attr = state.attributes
-    assert attr["options"] == [
+    assert state.attributes["options"] == [
         "Stop",
         "Burglar",
         "Fire",
@@ -98,7 +93,6 @@ async def test_select(hass, siren):
     ]
 
     entity_entry = entity_registry.async_get(entity_id)
-
     assert entity_entry
     assert entity_entry.entity_category == ENTITY_CATEGORY_CONFIG
 
@@ -106,14 +100,16 @@ async def test_select(hass, siren):
     await hass.services.async_call(
         "select",
         "select_option",
-        {"entity_id": entity_id, "option": "Burglar"},
+        {
+            "entity_id": entity_id,
+            "option": security.IasWd.Warning.WarningMode.Burglar.name,
+        },
         blocking=True,
     )
 
-    assert select_name in zha_device.data_cache
-    assert (
-        zha_device.data_cache[select_name] == security.IasWd.Warning.WarningMode.Burglar
-    )
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == security.IasWd.Warning.WarningMode.Burglar.name
 
 
 async def test_select_restore_state(
@@ -150,12 +146,6 @@ async def test_select_restore_state(
     )
 
     assert entity_id is not None
-    assert zha_device.data_cache != {}
-    assert select_name in zha_device.data_cache
-    assert (
-        zha_device.data_cache[select_name] == security.IasWd.Warning.WarningMode.Burglar
-    )
-
     state = hass.states.get(entity_id)
     assert state
     assert state.state == security.IasWd.Warning.WarningMode.Burglar.name
