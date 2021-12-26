@@ -4,10 +4,8 @@ from __future__ import annotations
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import dt as dt_util
 
 from .const import (
-    ATTR_FORECAST_TIME,
     ATTRIBUTION,
     DOMAIN,
     ENTRY_NAME,
@@ -132,6 +130,4 @@ class AemetForecastSensor(AbstractAemetSensor):
         )
         if forecasts:
             forecast = forecasts[0].get(self.entity_description.key)
-            if self.entity_description.key == ATTR_FORECAST_TIME:
-                forecast = dt_util.parse_datetime(forecast)
         return forecast
