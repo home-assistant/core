@@ -346,3 +346,19 @@ def get_rpc_input_triggers(device: RpcDevice) -> list[tuple[str, str]]:
             triggers.append((trigger_type, subtype))
 
     return triggers
+
+
+def parse_device_prod_date(hwinfo: str, gen: int) -> str:
+    """Elaborate the device production date."""
+
+    if hwinfo is None or hwinfo == "dev-prototype":
+        return "n/a"
+
+    if gen == 2:
+        return f'Year:20{hwinfo.split("-")[0][:2]}, Week:{hwinfo.split("-")[0][2:4]}'  # 2128-Yang
+
+    hwdate = hwinfo.split("-")
+    if len(hwdate) == 2:
+        return f"Year:20{hwdate[1][:2]}, Month:{hwdate[1][2:4]}"  # prod-190516
+
+    return f"Year:{hwdate[1]}, Month:{hwdate[2]}"  # prod-2019-03
