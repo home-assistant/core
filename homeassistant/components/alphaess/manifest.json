@@ -1,0 +1,17 @@
+{
+  "domain": "alphaess",
+  "name": "AlphaEss",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/alphaess",
+  "requirements": [
+    "alphaess==0.0.2"
+  ],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@CharlesGillanders"
+  ],
+  "iot_class": "cloud_polling"
+}

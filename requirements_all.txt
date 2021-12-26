@@ -289,6 +289,9 @@ aladdin_connect==0.3
 # homeassistant.components.alpha_vantage
 alpha_vantage==2.3.1
 
+# homeassistant.components.alphaess
+alphaess==0.0.2
+
 # homeassistant.components.ambee
 ambee==0.4.0
 

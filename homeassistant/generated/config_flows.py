@@ -21,6 +21,7 @@ FLOWS = [
     "airvisual",
     "alarmdecoder",
     "almond",
+    "alphaess",
     "ambee",
     "amberelectric",
     "ambiclimate",
