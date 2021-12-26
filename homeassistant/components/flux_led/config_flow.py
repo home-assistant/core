@@ -1,6 +1,7 @@
 """Config flow for Flux LED/MagicLight."""
 from __future__ import annotations
 
+import contextlib
 from typing import Any, Final, cast
 
 from flux_led.const import ATTR_ID, ATTR_IPADDR, ATTR_MODEL, ATTR_MODEL_DESCRIPTION
@@ -39,6 +40,11 @@ from .discovery import (
 CONF_DEVICE: Final = "device"
 
 
+def format_as_flux_mac(mac: str) -> str:
+    """Convert a device registry formatted mac to flux mac."""
+    return mac.replace(":", "").upper()
+
+
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Magic Home Integration."""
 
@@ -60,7 +66,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovered_device = FluxLEDDiscovery(
             ipaddr=discovery_info.ip,
             model=None,
-            id=discovery_info.macaddress.replace(":", ""),
+            id=format_as_flux_mac(discovery_info.macaddress),
             model_num=None,
             version_num=None,
             firmware_date=None,
@@ -182,7 +188,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             mac = user_input[CONF_DEVICE]
             await self.async_set_unique_id(mac, raise_on_progress=False)
-            return self._async_create_entry_from_device(self._discovered_devices[mac])
+            device = self._discovered_devices[mac]
+            if not device.get(ATTR_MODEL_DESCRIPTION):
+                with contextlib.suppress(*FLUX_LED_EXCEPTIONS):
+                    device = await self._async_try_connect(
+                        device[ATTR_IPADDR], format_as_flux_mac(mac), None
+                    )
+            return self._async_create_entry_from_device(device)
 
         current_unique_ids = self._async_current_ids()
         current_hosts = {
