@@ -97,10 +97,17 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors[CONF_PASSWORD] = "invalid_auth"
         except NvrError as ex:
             _LOGGER.debug(ex)
-            errors["base"] = "nvr_error"
+            errors["base"] = "unknown"
         else:
             if nvr_data.version < MIN_REQUIRED_PROTECT_V:
-                _LOGGER.debug("UniFi Protect Version not supported")
+                _LOGGER.error(
+                    (
+                        "You are running v%s of UniFi Protect. Minimum required version is v%s. "
+                        "Please upgrade UniFi Protect and then retry"
+                    ),
+                    nvr_data.version,
+                    MIN_REQUIRED_PROTECT_V,
+                )
                 errors["base"] = "protect_version"
 
         return nvr_data, errors
