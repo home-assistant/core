@@ -173,6 +173,25 @@ async def test_import_invalid_host(hass: HomeAssistant) -> None:
     assert result["reason"] == "invalid_host"
 
 
+async def test_import_already_configured(hass: HomeAssistant) -> None:
+    """Test that an already configured Vallox device is handled during import."""
+    name = "Vallox 145 MV"
+
+    with patch(
+        "homeassistant.components.vallox.config_flow.ConfigFlow.host_already_configured",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={"host": "40.10.20.30", "name": name},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+
+
 async def test_import_cannot_connect(hass: HomeAssistant) -> None:
     """Test that cannot connect error is handled."""
     name = "Vallox 90 MV"

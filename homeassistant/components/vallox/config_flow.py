@@ -62,9 +62,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, data: dict[str, Any]) -> FlowResult:
         """Handle import from YAML."""
-        if self.hass.config_entries.async_entries(DOMAIN):
-            return self.async_abort(reason="already_setup")
-
         name = data[CONF_NAME]
         host = data[CONF_HOST]
 
@@ -77,6 +74,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except InvalidHost:
             _LOGGER.exception("An invalid host is configured for Vallox")
             reason = "invalid_host"
+        except AlreadyConfigured:
+            reason = "already_configured"
         except CannotConnect:
             _LOGGER.exception("Cannot connect to Vallox")
             reason = "cannot_connect"
