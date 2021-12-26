@@ -13,7 +13,7 @@ from vallox_websocket_api.vallox import get_uuid as calculate_uuid
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, StateType
@@ -46,7 +46,10 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS: list[str] = ["sensor", "fan"]
+PLATFORMS: list[str] = [
+    Platform.SENSOR,
+    Platform.FAN,
+]
 
 ATTR_PROFILE = "profile"
 ATTR_PROFILE_FAN_SPEED = "fan_speed"
@@ -208,7 +211,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
 
-        if len(hass.data[DOMAIN]) != 0:
+        if hass.data[DOMAIN]:
             return unload_ok
 
         for service in SERVICE_TO_METHOD:

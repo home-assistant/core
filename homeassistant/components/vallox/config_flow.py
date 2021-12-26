@@ -44,7 +44,7 @@ def host_valid(host: str) -> bool:
     return all(x and not disallowed.search(x) for x in host.split("."))
 
 
-async def validate_host(hass: HomeAssistant, host: str, name: str) -> dict[str, Any]:
+async def validate_host(hass: HomeAssistant, host: str) -> dict[str, Any]:
     """Validate that the user input allows us to connect."""
 
     if not host_valid(host):
@@ -53,7 +53,7 @@ async def validate_host(hass: HomeAssistant, host: str, name: str) -> dict[str, 
     client = Vallox(host)
     info = await client.get_info()
 
-    return {"title": name, "model": info["model"]}
+    return {"model": info["model"]}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -70,7 +70,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         reason = None
         try:
-            info = await validate_host(self.hass, host, name)
+            await validate_host(self.hass, host)
         except InvalidHost:
             _LOGGER.exception("An invalid host is configured for Vallox")
             reason = "invalid_host"
@@ -81,7 +81,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             reason = "unknown"
         else:
-            return self.async_create_entry(title=info["title"], data=data)
+            return self.async_create_entry(title=name, data=data)
 
         return self.async_abort(reason=reason)
 
@@ -102,7 +102,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._async_abort_entries_match({CONF_HOST: host})
 
         try:
-            info = await validate_host(self.hass, host, name)
+            await validate_host(self.hass, host)
         except InvalidHost:
             errors[CONF_HOST] = "invalid_host"
         except VALLOX_CONNECTION_EXCEPTIONS:
@@ -111,7 +111,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors[CONF_HOST] = "unknown"
         else:
-            return self.async_create_entry(title=info["title"], data=user_input)
+            return self.async_create_entry(title=name, data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
