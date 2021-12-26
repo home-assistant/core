@@ -70,7 +70,7 @@ PATH_CONFIG = ".config_entries.json"
 
 SAVE_DELAY = 1
 
-T = TypeVar("T", bound="ConfigEntryState")
+_T = TypeVar("_T", bound="ConfigEntryState")
 
 
 class ConfigEntryState(Enum):
