@@ -1,10 +1,13 @@
 """Tests for the flux_led number platform."""
 
 
+from unittest.mock import patch
+
 from flux_led.const import COLOR_MODE_RGB as FLUX_COLOR_MODE_RGB
 import pytest
 
 from homeassistant.components import flux_led
+from homeassistant.components.flux_led import number as flux_number
 from homeassistant.components.flux_led.const import DOMAIN
 from homeassistant.components.number import (
     ATTR_VALUE,
@@ -236,50 +239,99 @@ async def test_addressable_light_pixel_config(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
-    bulb.addressable = True
     bulb.raw_state = bulb.raw_state._replace(
         model_num=0xA2
     )  # Original addressable model
     bulb.color_modes = {FLUX_COLOR_MODE_RGB}
     bulb.color_mode = FLUX_COLOR_MODE_RGB
-    bulb.effect = "RBM 1"
-    bulb.speed = 50
-    with _patch_discovery(), _patch_wifibulb(device=bulb):
+    with patch.object(
+        flux_number, "DEBOUNCE_TIME", 0
+    ), _patch_discovery(), _patch_wifibulb(device=bulb):
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    await async_mock_device_turn_on(hass, bulb)
+    pixels_per_segment_entity_id = "number.bulb_rgbcw_ddeeff_pixels_per_segment"
+    state = hass.states.get(pixels_per_segment_entity_id)
+    assert state.state == "300"
 
-    light_entity_id = "light.bulb_rgbcw_ddeeff"
-    number_entity_id = "number.bulb_rgbcw_ddeeff_effect_speed"
+    segments_entity_id = "number.bulb_rgbcw_ddeeff_segments"
+    state = hass.states.get(segments_entity_id)
+    assert state.state == "2"
 
-    state = hass.states.get(light_entity_id)
-    assert state.state == STATE_ON
+    music_pixels_per_segment_entity_id = (
+        "number.bulb_rgbcw_ddeeff_music_pixels_per_segment"
+    )
+    state = hass.states.get(music_pixels_per_segment_entity_id)
+    assert state.state == "150"
 
-    state = hass.states.get(number_entity_id)
-    assert state.state == "50"
+    music_segments_entity_id = "number.bulb_rgbcw_ddeeff_music_segments"
+    state = hass.states.get(music_segments_entity_id)
+    assert state.state == "4"
 
-    await async_mock_device_turn_off(hass, bulb)
+    with pytest.raises(ValueError):
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: pixels_per_segment_entity_id, ATTR_VALUE: 5000},
+            blocking=True,
+        )
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: number_entity_id, ATTR_VALUE: 100},
+        {ATTR_ENTITY_ID: pixels_per_segment_entity_id, ATTR_VALUE: 100},
         blocking=True,
     )
-    bulb.async_set_effect.assert_called_with("RBM 1", 100, 50)
-    bulb.async_set_effect.reset_mock()
+    bulb.async_set_device_config.assert_called_with(pixels_per_segment=100)
+    bulb.async_set_device_config.reset_mock()
 
-    await async_mock_device_turn_on(hass, bulb)
+    with pytest.raises(ValueError):
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: music_pixels_per_segment_entity_id, ATTR_VALUE: 5000},
+            blocking=True,
+        )
+
     await hass.services.async_call(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: number_entity_id, ATTR_VALUE: 100},
+        {ATTR_ENTITY_ID: music_pixels_per_segment_entity_id, ATTR_VALUE: 100},
         blocking=True,
     )
-    bulb.async_set_effect.assert_called_with("RBM 1", 100, 50)
-    bulb.async_set_effect.reset_mock()
-    await async_mock_effect_speed(hass, bulb, "RBM 2", 100)
+    bulb.async_set_device_config.assert_called_with(music_pixels_per_segment=100)
+    bulb.async_set_device_config.reset_mock()
 
-    state = hass.states.get(number_entity_id)
-    assert state.state == "100"
+    with pytest.raises(ValueError):
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: segments_entity_id, ATTR_VALUE: 50},
+            blocking=True,
+        )
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: segments_entity_id, ATTR_VALUE: 5},
+        blocking=True,
+    )
+    bulb.async_set_device_config.assert_called_with(segments=5)
+    bulb.async_set_device_config.reset_mock()
+
+    with pytest.raises(ValueError):
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: music_segments_entity_id, ATTR_VALUE: 50},
+            blocking=True,
+        )
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: music_segments_entity_id, ATTR_VALUE: 5},
+        blocking=True,
+    )
+    bulb.async_set_device_config.assert_called_with(music_segments=5)
+    bulb.async_set_device_config.reset_mock()
