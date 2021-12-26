@@ -1,10 +1,12 @@
 """Test the UniFi Protect camera platform."""
 from __future__ import annotations
 
+from copy import copy
 from typing import cast
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, Mock
 
 from pyunifiprotect.data import Camera as ProtectCamera
+from pyunifiprotect.exceptions import NvrError
 
 from homeassistant.components.camera import Camera, async_get_image
 from homeassistant.components.unifiprotect.const import (
@@ -14,12 +16,15 @@ from homeassistant.components.unifiprotect.const import (
     ATTR_HEIGHT,
     ATTR_WIDTH,
     DEFAULT_ATTRIBUTION,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
 )
+from homeassistant.components.unifiprotect.data import ProtectData
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import MockEntityFixture
+from .conftest import MockEntityFixture, time_changed
 
 
 async def validate_camera_entity(
@@ -47,12 +52,11 @@ async def validate_camera_entity(
     assert entity.disabled is (not enabled)
     assert entity.unique_id == unique_id
 
-    camera_platform = hass.data.get("camera")
-    assert camera_platform
-
     if not enabled:
         return
 
+    camera_platform = hass.data.get("camera")
+    assert camera_platform
     ha_camera = cast(Camera, camera_platform.get_entity(entity_id))
     assert ha_camera
     if rtsp_enabled:
@@ -180,31 +184,179 @@ async def test_missing_channels(
 
 
 async def test_camera_image(
-    hass: HomeAssistant, mock_entry: MockEntityFixture, mock_camera: ProtectCamera
+    hass: HomeAssistant,
+    mock_entry: MockEntityFixture,
+    simple_camera: tuple[Camera, str],
 ):
     """Test retrieving camera image."""
 
-    camera = mock_camera.copy(deep=True)
-    camera._api = mock_entry.api
-    camera.channels[0]._api = mock_entry.api
-    camera.channels[1]._api = mock_entry.api
-    camera.channels[2]._api = mock_entry.api
-    camera.name = "Test Camera"
-    camera.channels[0].is_rtsp_enabled = True
-    camera.channels[0].name = "High"
-    camera.channels[1].is_rtsp_enabled = False
-    camera.channels[2].is_rtsp_enabled = False
-
     mock_entry.api.get_camera_snapshot = AsyncMock()
-    mock_entry.api.bootstrap.cameras = {camera.id: camera}
 
-    await hass.config_entries.async_setup(mock_entry.entry.entry_id)
+    await async_get_image(hass, simple_camera[1])
+    mock_entry.api.get_camera_snapshot.assert_called_once()
+
+
+async def test_camera_generic_update(
+    hass: HomeAssistant,
+    mock_entry: MockEntityFixture,
+    simple_camera: tuple[ProtectCamera, str],
+):
+    """Tests generic entity update service."""
+
+    data: ProtectData = hass.data[DOMAIN][mock_entry.entry.entry_id]
+    assert data
+    assert data.last_update_success
+
+    state = hass.states.get(simple_camera[1])
+    assert state and state.state == "idle"
+
+    mock_entry.api.update = AsyncMock(return_value=None)
+    camera_platform = hass.data.get("camera")
+    assert camera_platform
+    ha_camera = cast(Camera, camera_platform.get_entity(simple_camera[1]))
+    assert ha_camera
+    await ha_camera.async_device_update()
+
+    # TODO:
+    # await hass.services.async_call(
+    #     "homeassistant",
+    #     "update_entity",
+    #     {ATTR_ENTITY_ID: simple_camera[1]},
+    #     blocking=True,
+    # )
+
+    state = hass.states.get(simple_camera[1])
+    assert state and state.state == "idle"
+
+
+async def test_camera_interval_update(
+    hass: HomeAssistant,
+    mock_entry: MockEntityFixture,
+    simple_camera: tuple[ProtectCamera, str],
+):
+    """Interval updates updates camera entity."""
+
+    data: ProtectData = hass.data[DOMAIN][mock_entry.entry.entry_id]
+    assert data
+    assert data.last_update_success
+
+    state = hass.states.get(simple_camera[1])
+    assert state and state.state == "idle"
+
+    new_bootstrap = copy(mock_entry.api.bootstrap)
+    new_camera = simple_camera[0].copy()
+    new_camera.is_recording = True
+
+    new_bootstrap.cameras = {new_camera.id: new_camera}
+    mock_entry.api.update = AsyncMock(return_value=new_bootstrap)
+    mock_entry.api.bootstrap = new_bootstrap
+    await time_changed(hass, DEFAULT_SCAN_INTERVAL)
+
+    state = hass.states.get(simple_camera[1])
+    assert state and state.state == "recording"
+
+
+async def test_camera_bad_interval_update(
+    hass: HomeAssistant,
+    mock_entry: MockEntityFixture,
+    simple_camera: tuple[Camera, str],
+):
+    """Interval updates marks camera unavailable."""
+
+    data: ProtectData = hass.data[DOMAIN][mock_entry.entry.entry_id]
+    assert data
+    assert data.last_update_success
+
+    state = hass.states.get(simple_camera[1])
+    assert state and state.state == "idle"
+
+    # update fails
+    mock_entry.api.update = AsyncMock(side_effect=NvrError)
+    await time_changed(hass, DEFAULT_SCAN_INTERVAL)
+
+    assert not data.last_update_success
+    state = hass.states.get(simple_camera[1])
+    assert state and state.state == "unavailable"
+
+    # next update succeeds
+    mock_entry.api.update = AsyncMock(return_value=mock_entry.api.bootstrap)
+    await time_changed(hass, DEFAULT_SCAN_INTERVAL)
+
+    assert data.last_update_success
+    state = hass.states.get(simple_camera[1])
+    assert state and state.state == "idle"
+
+
+async def test_camera_ws_update(
+    hass: HomeAssistant,
+    mock_entry: MockEntityFixture,
+    simple_camera: tuple[ProtectCamera, str],
+):
+    """WS update updates camera entity."""
+
+    data: ProtectData = hass.data[DOMAIN][mock_entry.entry.entry_id]
+    assert data
+    assert data.last_update_success
+
+    state = hass.states.get(simple_camera[1])
+    assert state and state.state == "idle"
+
+    new_bootstrap = copy(mock_entry.api.bootstrap)
+    new_camera = simple_camera[0].copy()
+    new_camera.is_recording = True
+
+    mock_msg = Mock()
+    mock_msg.new_obj = new_camera
+
+    new_bootstrap.cameras = {new_camera.id: new_camera}
+    mock_entry.api.bootstrap = new_bootstrap
+    mock_entry.api.ws_subscription(mock_msg)
     await hass.async_block_till_done()
 
-    entity_registry = er.async_get(hass)
+    state = hass.states.get(simple_camera[1])
+    assert state and state.state == "recording"
 
-    assert len(hass.states.async_all()) == 1
-    assert len(entity_registry.entities) == 2
 
-    await async_get_image(hass, "camera.test_camera_high")
-    mock_entry.api.get_camera_snapshot.assert_called_once()
+async def test_camera_ws_update_offline(
+    hass: HomeAssistant,
+    mock_entry: MockEntityFixture,
+    simple_camera: tuple[ProtectCamera, str],
+):
+    """WS updates marks camera unavailable."""
+
+    data: ProtectData = hass.data[DOMAIN][mock_entry.entry.entry_id]
+    assert data
+    assert data.last_update_success
+
+    state = hass.states.get(simple_camera[1])
+    assert state and state.state == "idle"
+
+    # camera goes offline
+    new_bootstrap = copy(mock_entry.api.bootstrap)
+    new_camera = simple_camera[0].copy()
+    new_camera.is_connected = False
+
+    mock_msg = Mock()
+    mock_msg.new_obj = new_camera
+
+    new_bootstrap.cameras = {new_camera.id: new_camera}
+    mock_entry.api.bootstrap = new_bootstrap
+    mock_entry.api.ws_subscription(mock_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(simple_camera[1])
+    assert state and state.state == "unavailable"
+
+    # camera comes back online
+    new_camera.is_connected = True
+
+    mock_msg = Mock()
+    mock_msg.new_obj = new_camera
+
+    new_bootstrap.cameras = {new_camera.id: new_camera}
+    mock_entry.api.bootstrap = new_bootstrap
+    mock_entry.api.ws_subscription(mock_msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(simple_camera[1])
+    assert state and state.state == "idle"

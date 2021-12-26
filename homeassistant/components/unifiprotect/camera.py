@@ -148,6 +148,7 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
     def _async_update_extra_attrs_from_protect(self) -> dict[str, Any]:
         """Add additional Attributes to Camera."""
         return {
+            **super()._async_update_extra_attrs_from_protect(),
             ATTR_WIDTH: self.channel.width,
             ATTR_HEIGHT: self.channel.height,
             ATTR_FPS: self.channel.fps,

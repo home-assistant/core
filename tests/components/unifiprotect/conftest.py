@@ -2,19 +2,23 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import timedelta
 from ipaddress import IPv4Address
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from pyunifiprotect.data import Camera, Version
+from pyunifiprotect.data.websocket import WSSubscriptionMessage
 
 from homeassistant.components.unifiprotect.const import DOMAIN, MIN_REQUIRED_PROTECT_V
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+import homeassistant.util.dt as dt_util
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 MAC_ADDR = "aa:bb:cc:dd:ee:ff"
 
@@ -81,6 +85,12 @@ def mock_client():
     client.update = AsyncMock(return_value=MOCK_BOOTSTRAP)
     client.async_disconnect_ws = AsyncMock()
 
+    def subscribe(ws_callback: Callable[[WSSubscriptionMessage], None]) -> Any:
+        client.ws_subscription = ws_callback
+
+        return Mock()
+
+    client.subscribe_websocket = subscribe
     return client
 
 
@@ -117,3 +127,42 @@ def mock_camera():
         data = json.load(f)
 
     yield Camera.from_unifi_dict(**data)
+
+
+@pytest.fixture
+async def simple_camera(
+    hass: HomeAssistant, mock_entry: MockEntityFixture, mock_camera: Camera
+):
+    """Fixture for a single camera, no extra setup."""
+
+    camera = mock_camera.copy(deep=True)
+    camera._api = mock_entry.api
+    camera.channels[0]._api = mock_entry.api
+    camera.channels[1]._api = mock_entry.api
+    camera.channels[2]._api = mock_entry.api
+    camera.name = "Test Camera"
+    camera.channels[0].is_rtsp_enabled = True
+    camera.channels[0].name = "High"
+    camera.channels[1].is_rtsp_enabled = False
+    camera.channels[2].is_rtsp_enabled = False
+
+    mock_entry.api.bootstrap.cameras = {
+        camera.id: camera,
+    }
+
+    await hass.config_entries.async_setup(mock_entry.entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_registry = er.async_get(hass)
+
+    assert len(hass.states.async_all()) == 1
+    assert len(entity_registry.entities) == 2
+
+    yield (camera, "camera.test_camera_high")
+
+
+async def time_changed(hass, seconds):
+    """Trigger time changed."""
+    next_update = dt_util.utcnow() + timedelta(seconds)
+    async_fire_time_changed(hass, next_update)
+    await hass.async_block_till_done()
