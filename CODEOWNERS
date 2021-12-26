@@ -732,6 +732,7 @@ homeassistant/components/qbittorrent/* @geoffreylagaisse
 homeassistant/components/qld_bushfire/* @exxamalte
 tests/components/qld_bushfire/* @exxamalte
 homeassistant/components/qnap_qsw/* @noltari
+tests/components/qnap_qsw/* @noltari
 homeassistant/components/quantum_gateway/* @cisasteelersfan
 homeassistant/components/qvr_pro/* @oblogic7
 homeassistant/components/qwikswitch/* @kellerza
