@@ -28,6 +28,11 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
+VALLOX_CONNECTION_EXCEPTIONS = (
+    OSError,
+    ValloxApiException,
+)
+
 
 def host_valid(host: str) -> bool:
     """Return True if hostname or IP address is valid."""
@@ -46,11 +51,7 @@ async def validate_host(hass: HomeAssistant, host: str, name: str) -> dict[str, 
         raise InvalidHost(f"Invalid host: {host}")
 
     client = Vallox(host)
-
-    try:
-        info = await client.get_info()
-    except (OSError, ValloxApiException) as err:
-        raise CannotConnect("Failed to connect") from err
+    info = await client.get_info()
 
     return {"title": name, "model": info["model"]}
 
@@ -73,7 +74,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except InvalidHost:
             _LOGGER.exception("An invalid host is configured for Vallox")
             reason = "invalid_host"
-        except CannotConnect:
+        except VALLOX_CONNECTION_EXCEPTIONS:
             _LOGGER.exception("Cannot connect to Vallox")
             reason = "cannot_connect"
         except Exception:  # pylint: disable=broad-except
@@ -104,7 +105,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             info = await validate_host(self.hass, host, name)
         except InvalidHost:
             errors[CONF_HOST] = "invalid_host"
-        except CannotConnect:
+        except VALLOX_CONNECTION_EXCEPTIONS:
             errors[CONF_HOST] = "cannot_connect"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
@@ -119,7 +120,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 class InvalidHost(HomeAssistantError):
     """Error to indicate an invalid host was input."""
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""

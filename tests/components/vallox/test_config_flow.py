@@ -203,7 +203,7 @@ async def test_import_already_configured(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-async def test_import_cannot_connect(hass: HomeAssistant) -> None:
+async def test_import_cannot_connect_OSError(hass: HomeAssistant) -> None:
     """Test that cannot connect error is handled."""
     name = "Vallox 90 MV"
 
@@ -215,6 +215,25 @@ async def test_import_cannot_connect(hass: HomeAssistant) -> None:
             DOMAIN,
             context={"source": SOURCE_IMPORT},
             data={"host": "1.2.3.4", "name": name},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "cannot_connect"
+
+
+async def test_import_cannot_connect_ValloxApiException(hass: HomeAssistant) -> None:
+    """Test that cannot connect error is handled."""
+    name = "Vallox 90 MV"
+
+    with patch(
+        "homeassistant.components.vallox.config_flow.Vallox.get_info",
+        side_effect=ValloxApiException,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={"host": "5.6.3.1", "name": name},
         )
         await hass.async_block_till_done()
 
