@@ -101,7 +101,7 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
         else:
             if nvr_data.version < MIN_REQUIRED_PROTECT_V:
-                _LOGGER.error(
+                _LOGGER.debug(
                     OUTDATED_LOG_MESSAGE,
                     nvr_data.version,
                     MIN_REQUIRED_PROTECT_V,
