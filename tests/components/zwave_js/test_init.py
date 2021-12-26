@@ -1156,6 +1156,32 @@ async def test_node_model_change(hass, zp3111, client, integration):
     assert state.name == "Custom Entity Name"
 
 
+async def test_disabled_node_status_entity_on_node_replaced(
+    hass, zp3111_state, zp3111, client, integration
+):
+    """Test that when a node replacement event is received the node status sensor is disabled."""
+    node_status_entity = "sensor.4_in_1_sensor_node_status"
+    state = hass.states.get(node_status_entity)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+
+    event = Event(
+        type="node removed",
+        data={
+            "source": "controller",
+            "event": "node removed",
+            "replaced": True,
+            "node": zp3111_state,
+        },
+    )
+    client.driver.receive_event(event)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(node_status_entity)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+
 async def test_disabled_entity_on_value_removed(hass, zp3111, client, integration):
     """Test that when entity primary values are removed the entity is disabled."""
     er_reg = er.async_get(hass)
