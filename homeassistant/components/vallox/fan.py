@@ -66,11 +66,13 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the fan device."""
-    client = hass.data[DOMAIN]["client"]
+    client = hass.data[DOMAIN][entry.entry_id]["client"]
     client.set_settable_address(METRIC_KEY_MODE, int)
 
     device = ValloxFan(
-        hass.data[DOMAIN]["name"], client, hass.data[DOMAIN]["coordinator"]
+        hass.data[DOMAIN][entry.entry_id]["name"],
+        client,
+        hass.data[DOMAIN][entry.entry_id]["coordinator"],
     )
 
     async_add_entities([device])

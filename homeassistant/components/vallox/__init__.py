@@ -192,7 +192,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data[DOMAIN] = {"client": client, "coordinator": coordinator, "name": name}
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
+        "client": client,
+        "coordinator": coordinator,
+        "name": name,
+    }
+
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True

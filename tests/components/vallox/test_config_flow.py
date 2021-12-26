@@ -223,7 +223,7 @@ async def test_import_cannot_connect(hass: HomeAssistant) -> None:
 
 
 async def test_import_unknown_exception(hass: HomeAssistant) -> None:
-    """Test that cannot connect error is handled."""
+    """Test that unknown exceptions are handled."""
     name = "Vallox 245 MV"
 
     with patch(
