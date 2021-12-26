@@ -1,4 +1,5 @@
 """Support for Template alarm control panels."""
+from enum import Enum
 import logging
 
 import voluptuous as vol
@@ -6,7 +7,8 @@ import voluptuous as vol
 from homeassistant.components.alarm_control_panel import (
     ENTITY_ID_FORMAT,
     FORMAT_NUMBER,
-    PLATFORM_SCHEMA,
+    FORMAT_TEXT,
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     AlarmControlPanelEntity,
 )
 from homeassistant.components.alarm_control_panel.const import (
@@ -34,6 +36,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.script import Script
 
+from .const import DOMAIN
 from .template_entity import TemplateEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,6 +57,16 @@ CONF_ARM_NIGHT_ACTION = "arm_night"
 CONF_DISARM_ACTION = "disarm"
 CONF_ALARM_CONTROL_PANELS = "panels"
 CONF_CODE_ARM_REQUIRED = "code_arm_required"
+CONF_CODE_FORMAT = "code_format"
+
+
+class CodeFormat(Enum):
+    """Class to represent different code formats."""
+
+    no_code = None
+    number = FORMAT_NUMBER
+    text = FORMAT_TEXT
+
 
 ALARM_CONTROL_PANEL_SCHEMA = vol.Schema(
     {
@@ -63,12 +76,15 @@ ALARM_CONTROL_PANEL_SCHEMA = vol.Schema(
         vol.Optional(CONF_ARM_HOME_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_ARM_NIGHT_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
+        vol.Optional(CONF_CODE_FORMAT, default=CodeFormat.number.name): cv.enum(
+            CodeFormat
+        ),
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ALARM_CONTROL_PANELS): cv.schema_with_slug_keys(
             ALARM_CONTROL_PANEL_SCHEMA
@@ -81,27 +97,14 @@ async def _async_create_entities(hass, config):
     """Create Template Alarm Control Panels."""
     alarm_control_panels = []
 
-    for device, device_config in config[CONF_ALARM_CONTROL_PANELS].items():
-        name = device_config.get(CONF_NAME, device)
-        state_template = device_config.get(CONF_VALUE_TEMPLATE)
-        disarm_action = device_config.get(CONF_DISARM_ACTION)
-        arm_away_action = device_config.get(CONF_ARM_AWAY_ACTION)
-        arm_home_action = device_config.get(CONF_ARM_HOME_ACTION)
-        arm_night_action = device_config.get(CONF_ARM_NIGHT_ACTION)
-        code_arm_required = device_config[CONF_CODE_ARM_REQUIRED]
-        unique_id = device_config.get(CONF_UNIQUE_ID)
+    for object_id, entity_config in config[CONF_ALARM_CONTROL_PANELS].items():
+        unique_id = entity_config.get(CONF_UNIQUE_ID)
 
         alarm_control_panels.append(
             AlarmControlPanelTemplate(
                 hass,
-                device,
-                name,
-                state_template,
-                disarm_action,
-                arm_away_action,
-                arm_home_action,
-                arm_night_action,
-                code_arm_required,
+                object_id,
+                entity_config,
                 unique_id,
             )
         )
@@ -120,37 +123,31 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity):
     def __init__(
         self,
         hass,
-        device_id,
-        name,
-        state_template,
-        disarm_action,
-        arm_away_action,
-        arm_home_action,
-        arm_night_action,
-        code_arm_required,
+        object_id,
+        config,
         unique_id,
     ):
         """Initialize the panel."""
-        super().__init__()
+        super().__init__(config=config)
         self.entity_id = async_generate_entity_id(
-            ENTITY_ID_FORMAT, device_id, hass=hass
+            ENTITY_ID_FORMAT, object_id, hass=hass
         )
-        self._name = name
-        self._template = state_template
+        self._name = name = config.get(CONF_NAME, object_id)
+        self._template = config.get(CONF_VALUE_TEMPLATE)
         self._disarm_script = None
-        self._code_arm_required = code_arm_required
-        domain = __name__.split(".")[-2]
-        if disarm_action is not None:
-            self._disarm_script = Script(hass, disarm_action, name, domain)
+        self._code_arm_required = config[CONF_CODE_ARM_REQUIRED]
+        self._code_format = config[CONF_CODE_FORMAT]
+        if (disarm_action := config.get(CONF_DISARM_ACTION)) is not None:
+            self._disarm_script = Script(hass, disarm_action, name, DOMAIN)
         self._arm_away_script = None
-        if arm_away_action is not None:
-            self._arm_away_script = Script(hass, arm_away_action, name, domain)
+        if (arm_away_action := config.get(CONF_ARM_AWAY_ACTION)) is not None:
+            self._arm_away_script = Script(hass, arm_away_action, name, DOMAIN)
         self._arm_home_script = None
-        if arm_home_action is not None:
-            self._arm_home_script = Script(hass, arm_home_action, name, domain)
+        if (arm_home_action := config.get(CONF_ARM_HOME_ACTION)) is not None:
+            self._arm_home_script = Script(hass, arm_home_action, name, DOMAIN)
         self._arm_night_script = None
-        if arm_night_action is not None:
-            self._arm_night_script = Script(hass, arm_night_action, name, domain)
+        if (arm_night_action := config.get(CONF_ARM_NIGHT_ACTION)) is not None:
+            self._arm_night_script = Script(hass, arm_night_action, name, DOMAIN)
 
         self._state = None
         self._unique_id = unique_id
@@ -187,8 +184,8 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity):
 
     @property
     def code_format(self):
-        """Return one or more digits/characters."""
-        return FORMAT_NUMBER
+        """Regex for code format or None if no code is required."""
+        return self._code_format.value
 
     @property
     def code_arm_required(self):

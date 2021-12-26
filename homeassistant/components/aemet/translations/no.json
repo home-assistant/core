@@ -18,5 +18,14 @@
                 "title": "AEMET OpenData"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "station_updates": "Samle inn data fra AEMET v\u00e6rstasjoner"
+                }
+            }
+        }
     }
 }

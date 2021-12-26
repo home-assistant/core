@@ -73,7 +73,7 @@ class SentryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class SentryOptionsFlow(config_entries.OptionsFlow):
     """Handle Sentry options."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize Sentry options flow."""
         self.config_entry = config_entry
 

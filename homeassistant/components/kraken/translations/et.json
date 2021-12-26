@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Lubatud on ainult \u00fcks sidumine"
+        },
+        "step": {
+            "user": {
+                "description": "Kas soovid alustada seadistamist?"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "V\u00e4rskendamise intervall",
+                    "tracked_asset_pairs": "J\u00e4lgitavad paarid"
+                }
+            }
+        }
+    }
+}

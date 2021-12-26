@@ -1,5 +1,6 @@
 """Support for UK public transport data provided by transportapi.com."""
 from datetime import datetime, timedelta
+from http import HTTPStatus
 import logging
 import re
 
@@ -7,7 +8,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import CONF_MODE, HTTP_OK, TIME_MINUTES
+from homeassistant.const import CONF_MODE, TIME_MINUTES
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
@@ -92,7 +93,8 @@ class UkTransportSensor(SensorEntity):
     """
 
     TRANSPORT_API_URL_BASE = "https://transportapi.com/v3/uk/"
-    ICON = "mdi:train"
+    _attr_icon = "mdi:train"
+    _attr_native_unit_of_measurement = TIME_MINUTES
 
     def __init__(self, name, api_app_id, api_app_key, url):
         """Initialize the sensor."""
@@ -109,19 +111,9 @@ class UkTransportSensor(SensorEntity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit this state is expressed in."""
-        return TIME_MINUTES
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return self.ICON
 
     def _do_api_request(self, params):
         """Perform an API request."""
@@ -130,7 +122,7 @@ class UkTransportSensor(SensorEntity):
         )
 
         response = requests.get(self._url, params=request_params)
-        if response.status_code != HTTP_OK:
+        if response.status_code != HTTPStatus.OK:
             _LOGGER.warning("Invalid response from API")
         elif "error" in response.json():
             if "exceeded" in response.json()["error"]:
@@ -144,7 +136,7 @@ class UkTransportSensor(SensorEntity):
 class UkTransportLiveBusTimeSensor(UkTransportSensor):
     """Live bus time sensor from UK transportapi.com."""
 
-    ICON = "mdi:bus"
+    _attr_icon = "mdi:bus"
 
     def __init__(self, api_app_id, api_app_key, stop_atcocode, bus_direction, interval):
         """Construct a live bus time sensor."""
@@ -192,12 +184,12 @@ class UkTransportLiveBusTimeSensor(UkTransportSensor):
         """Return other details about the sensor state."""
         attrs = {}
         if self._data is not None:
-            for key in [
+            for key in (
                 ATTR_ATCOCODE,
                 ATTR_LOCALITY,
                 ATTR_STOP_NAME,
                 ATTR_REQUEST_TIME,
-            ]:
+            ):
                 attrs[key] = self._data.get(key)
             attrs[ATTR_NEXT_BUSES] = self._next_buses
             return attrs
@@ -206,7 +198,7 @@ class UkTransportLiveBusTimeSensor(UkTransportSensor):
 class UkTransportLiveTrainTimeSensor(UkTransportSensor):
     """Live train time sensor from UK transportapi.com."""
 
-    ICON = "mdi:train"
+    _attr_icon = "mdi:train"
 
     def __init__(self, api_app_id, api_app_key, station_code, calling_at, interval):
         """Construct a live bus time sensor."""

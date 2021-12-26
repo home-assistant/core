@@ -2,12 +2,12 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from datetime import timedelta
 from itertools import chain
 import logging
 from types import ModuleType
-from typing import Any, Callable
+from typing import Any
 
 import voluptuous as vol
 
@@ -49,9 +49,7 @@ async def async_update_entity(hass: HomeAssistant, entity_id: str) -> None:
         )
         return
 
-    entity_obj = entity_comp.get_entity(entity_id)
-
-    if entity_obj is None:
+    if (entity_obj := entity_comp.get_entity(entity_id)) is None:
         logging.getLogger(__name__).warning(
             "Forced update failed. Entity %s not found.", entity_id
         )
@@ -76,7 +74,7 @@ class EntityComponent:
         domain: str,
         hass: HomeAssistant,
         scan_interval: timedelta = DEFAULT_SCAN_INTERVAL,
-    ):
+    ) -> None:
         """Initialize an entity component."""
         self.logger = logger
         self.hass = hass
@@ -175,9 +173,7 @@ class EntityComponent:
         """Unload a config entry."""
         key = config_entry.entry_id
 
-        platform = self._platforms.pop(key, None)
-
-        if platform is None:
+        if (platform := self._platforms.pop(key, None)) is None:
             raise ValueError("Config entry was never loaded!")
 
         await platform.async_reset()
@@ -246,9 +242,7 @@ class EntityComponent:
                 platform_type, platform, scan_interval, entity_namespace
             )
 
-        await self._platforms[key].async_setup(  # type: ignore
-            platform_config, discovery_info
-        )
+        await self._platforms[key].async_setup(platform_config, discovery_info)
 
     async def _async_reset(self) -> None:
         """Remove entities and reset the entity component to initial values.
@@ -333,5 +327,5 @@ class EntityComponent:
     async def _async_shutdown(self, event: Event) -> None:
         """Call when Home Assistant is stopping."""
         await asyncio.gather(
-            *[platform.async_shutdown() for platform in chain(self._platforms.values())]
+            *(platform.async_shutdown() for platform in chain(self._platforms.values()))
         )

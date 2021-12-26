@@ -188,13 +188,13 @@ async def test_jewish_calendar_sensor(
         await hass.async_block_till_done()
 
     result = (
-        dt_util.as_utc(result.replace(tzinfo=time_zone))
+        dt_util.as_utc(result.replace(tzinfo=time_zone)).isoformat()
         if isinstance(result, dt)
         else result
     )
 
     sensor_object = hass.states.get(f"sensor.test_{sensor}")
-    assert sensor_object.state == str(result)
+    assert sensor_object.state == result
 
     if sensor == "holiday":
         assert sensor_object.attributes.get("id") == "rosh_hashana_i"
@@ -544,7 +544,7 @@ async def test_shabbat_times_sensor(
         sensor_type = sensor_type.replace(f"{language}_", "")
 
         result_value = (
-            dt_util.as_utc(result_value)
+            dt_util.as_utc(result_value).isoformat()
             if isinstance(result_value, dt)
             else result_value
         )

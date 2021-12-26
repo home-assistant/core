@@ -1,11 +1,9 @@
 """Sensor platform support for wiffi devices."""
 
 from homeassistant.components.sensor import (
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_PRESSURE,
-    DEVICE_CLASS_TEMPERATURE,
+    SensorDeviceClass,
     SensorEntity,
+    SensorStateClass,
 )
 from homeassistant.const import DEGREE, PRESSURE_MBAR, TEMP_CELSIUS
 from homeassistant.core import callback
@@ -23,10 +21,10 @@ from .wiffi_strings import (
 
 # map to determine HA device class from wiffi's unit of measurement
 UOM_TO_DEVICE_CLASS_MAP = {
-    WIFFI_UOM_TEMP_CELSIUS: DEVICE_CLASS_TEMPERATURE,
-    WIFFI_UOM_PERCENT: DEVICE_CLASS_HUMIDITY,
-    WIFFI_UOM_MILLI_BAR: DEVICE_CLASS_PRESSURE,
-    WIFFI_UOM_LUX: DEVICE_CLASS_ILLUMINANCE,
+    WIFFI_UOM_TEMP_CELSIUS: SensorDeviceClass.TEMPERATURE,
+    WIFFI_UOM_PERCENT: SensorDeviceClass.HUMIDITY,
+    WIFFI_UOM_MILLI_BAR: SensorDeviceClass.PRESSURE,
+    WIFFI_UOM_LUX: SensorDeviceClass.ILLUMINANCE,
 }
 
 # map to convert wiffi unit of measurements to common HA uom's
@@ -70,6 +68,12 @@ class NumberEntity(WiffiEntity, SensorEntity):
             metric.unit_of_measurement, metric.unit_of_measurement
         )
         self._value = metric.value
+
+        if self._is_measurement_entity():
+            self._attr_state_class = SensorStateClass.MEASUREMENT
+        elif self._is_metered_entity():
+            self._attr_state_class = SensorStateClass.TOTAL_INCREASING
+
         self.reset_expiration_date()
 
     @property
@@ -78,12 +82,12 @@ class NumberEntity(WiffiEntity, SensorEntity):
         return self._device_class
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity."""
         return self._unit_of_measurement
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the value of the entity."""
         return self._value
 
@@ -97,7 +101,9 @@ class NumberEntity(WiffiEntity, SensorEntity):
         self._unit_of_measurement = UOM_MAP.get(
             metric.unit_of_measurement, metric.unit_of_measurement
         )
+
         self._value = metric.value
+
         self.async_write_ha_state()
 
 
@@ -111,7 +117,7 @@ class StringEntity(WiffiEntity, SensorEntity):
         self.reset_expiration_date()
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the value of the entity."""
         return self._value
 

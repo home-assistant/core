@@ -7,7 +7,7 @@
         "error": {
             "cannot_connect": "\u00dchendamine nurjus"
         },
-        "flow_title": "WLED: {name}",
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {
@@ -18,6 +18,15 @@
             "zeroconf_confirm": {
                 "description": "Kas soovid lisada WLED {name} Home Assistanti?",
                 "title": "Leitud WLED seade"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "keep_master_light": "Kasuta p\u00f5hivalgust isegi \u00fche LED-segmendi korral."
+                }
             }
         }
     }

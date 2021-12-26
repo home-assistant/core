@@ -1,0 +1,31 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "azimuth": "Azimut (360 graus, 0 = nord, 90 = est, 180 = sud, 270 = oest)",
+                    "declination": "Inclinaci\u00f3 (0 = horitzontal, 90 = vertical)",
+                    "latitude": "Latitud",
+                    "longitude": "Longitud",
+                    "modules power": "Pot\u00e8ncia m\u00e0xima total dels panells solars",
+                    "name": "Nom"
+                },
+                "description": "Introdueix les dades dels teus panells solars. Consulta la documentaci\u00f3 si tens dubtes en algun camp."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "api_key": "Clau API de Forecast.Solar (opcional)",
+                    "azimuth": "Azimut (360 graus, 0 = nord, 90 = est, 180 = sud, 270 = oest)",
+                    "damping": "Factor d'amortiment: ajusta els resultats al mat\u00ed i al vespre",
+                    "declination": "Inclinaci\u00f3 (0 = horitzontal, 90 = vertical)",
+                    "modules power": "Pot\u00e8ncia m\u00e0xima total dels panells solars"
+                },
+                "description": "Aquests valors permeten ajustar els resultats de Solar.Forecast. Consulta la documentaci\u00f3 si tens dubtes sobre algun camp."
+            }
+        }
+    }
+}

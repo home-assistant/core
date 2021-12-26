@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u8bbe\u5907\u5df2\u5b58\u5728\u914d\u7f6e\u6587\u6863"
+        },
+        "error": {
+            "invalid_auth": "\u8ba4\u8bc1\u65e0\u6548",
+            "unknown": "\u672a\u77e5\u9519\u8bef"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "\u7535\u5b50\u90ae\u7bb1",
+                    "password": "\u5bc6\u7801"
+                }
+            }
+        }
+    }
+}

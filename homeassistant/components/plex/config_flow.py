@@ -131,8 +131,7 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Begin manual configuration."""
         if user_input is not None and errors is None:
             user_input.pop(CONF_URL, None)
-            host = user_input.get(CONF_HOST)
-            if host:
+            if host := user_input.get(CONF_HOST):
                 port = user_input[CONF_PORT]
                 prefix = "https" if user_input.get(CONF_SSL) else "http"
                 user_input[CONF_URL] = f"{prefix}://{host}:{port}"
@@ -422,6 +421,7 @@ class PlexAuthorizationCallbackView(HomeAssistantView):
 
     async def get(self, request):
         """Receive authorization confirmation."""
+        # pylint: disable=no-self-use
         hass = request.app["hass"]
         await hass.config_entries.flow.async_configure(
             flow_id=request.query["flow_id"], user_input=None

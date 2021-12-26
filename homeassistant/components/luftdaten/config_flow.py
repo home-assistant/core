@@ -13,29 +13,9 @@ from homeassistant.const import (
     CONF_SHOW_ON_MAP,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import aiohttp_client
 import homeassistant.helpers.config_validation as cv
 
 from .const import CONF_SENSOR_ID, DEFAULT_SCAN_INTERVAL, DOMAIN
-
-
-@callback
-def configured_sensors(hass):
-    """Return a set of configured Luftdaten sensors."""
-    return {
-        entry.data[CONF_SENSOR_ID]
-        for entry in hass.config_entries.async_entries(DOMAIN)
-    }
-
-
-@callback
-def duplicate_stations(hass):
-    """Return a set of duplicate configured Luftdaten stations."""
-    stations = [
-        int(entry.data[CONF_SENSOR_ID])
-        for entry in hass.config_entries.async_entries(DOMAIN)
-    ]
-    return {x for x in stations if stations.count(x) > 1}
 
 
 class LuftDatenFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -54,23 +34,16 @@ class LuftDatenFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=vol.Schema(data_schema), errors=errors or {}
         )
 
-    async def async_step_import(self, import_config):
-        """Import a config entry from configuration.yaml."""
-        return await self.async_step_user(import_config)
-
     async def async_step_user(self, user_input=None):
         """Handle the start of the config flow."""
 
         if not user_input:
             return self._show_form()
 
-        sensor_id = user_input[CONF_SENSOR_ID]
+        await self.async_set_unique_id(str(user_input[CONF_SENSOR_ID]))
+        self._abort_if_unique_id_configured()
 
-        if sensor_id in configured_sensors(self.hass):
-            return self._show_form({CONF_SENSOR_ID: "already_configured"})
-
-        session = aiohttp_client.async_get_clientsession(self.hass)
-        luftdaten = Luftdaten(user_input[CONF_SENSOR_ID], self.hass.loop, session)
+        luftdaten = Luftdaten(user_input[CONF_SENSOR_ID])
         try:
             await luftdaten.get_data()
             valid = await luftdaten.validate_sensor()
@@ -81,7 +54,7 @@ class LuftDatenFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self._show_form({CONF_SENSOR_ID: "invalid_sensor"})
 
         available_sensors = [
-            x for x in luftdaten.values if luftdaten.values[x] is not None
+            x for x, x_values in luftdaten.values.items() if x_values is not None
         ]
 
         if available_sensors:
@@ -92,4 +65,6 @@ class LuftDatenFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         scan_interval = user_input.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
         user_input.update({CONF_SCAN_INTERVAL: scan_interval.total_seconds()})
 
-        return self.async_create_entry(title=str(sensor_id), data=user_input)
+        return self.async_create_entry(
+            title=str(user_input[CONF_SENSOR_ID]), data=user_input
+        )

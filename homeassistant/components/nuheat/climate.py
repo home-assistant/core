@@ -24,6 +24,7 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import callback
 from homeassistant.helpers import event as event_helper
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -284,12 +285,12 @@ class NuHeatThermostat(CoordinatorEntity, ClimateEntity):
         self.async_write_ha_state()
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device_info of the device."""
-        return {
-            "identifiers": {(DOMAIN, self._thermostat.serial_number)},
-            "name": self._thermostat.room,
-            "model": "nVent Signature",
-            "manufacturer": MANUFACTURER,
-            "suggested_area": self._thermostat.room,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._thermostat.serial_number)},
+            name=self._thermostat.room,
+            model="nVent Signature",
+            manufacturer=MANUFACTURER,
+            suggested_area=self._thermostat.room,
+        )

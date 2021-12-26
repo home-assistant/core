@@ -1,11 +1,6 @@
 """Constants for Sonarr."""
 DOMAIN = "sonarr"
 
-# Attributes
-ATTR_IDENTIFIERS = "identifiers"
-ATTR_MANUFACTURER = "manufacturer"
-ATTR_SOFTWARE_VERSION = "sw_version"
-
 # Config Keys
 CONF_BASE_PATH = "base_path"
 CONF_DAYS = "days"
@@ -17,7 +12,6 @@ CONF_WANTED_MAX_ITEMS = "wanted_max_items"
 
 # Data
 DATA_SONARR = "sonarr"
-DATA_UNDO_UPDATE_LISTENER = "undo_update_listener"
 
 # Defaults
 DEFAULT_BASE_PATH = "/api"

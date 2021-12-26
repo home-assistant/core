@@ -19,7 +19,7 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, conf: dict):
         """Import a configuration from config.yaml."""
-        if self.hass.config_entries.async_entries(DOMAIN):
+        if self._async_current_entries():
             return self.async_abort(reason="already_setup")
 
         user, error = await self._check_connection(conf[CONF_ACCESS_TOKEN])
@@ -69,6 +69,7 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
 
             if error is None:
                 entry = await self.async_set_unique_id(self.unique_id)
+                assert entry
                 self.hass.config_entries.async_update_entry(entry, data=user_input)
                 return self.async_abort(reason="reauth_successful")
 

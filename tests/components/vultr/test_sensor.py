@@ -29,6 +29,7 @@ class TestVultrSensorSetup(unittest.TestCase):
     def add_entities(self, devices, action):
         """Mock add devices."""
         for device in devices:
+            device.hass = self.hass
             self.DEVICES.append(device)
 
     def setUp(self):
@@ -38,12 +39,12 @@ class TestVultrSensorSetup(unittest.TestCase):
             {
                 CONF_NAME: vultr.DEFAULT_NAME,
                 CONF_SUBSCRIPTION: "576965",
-                CONF_MONITORED_CONDITIONS: vultr.MONITORED_CONDITIONS,
+                CONF_MONITORED_CONDITIONS: vultr.SENSOR_KEYS,
             },
             {
                 CONF_NAME: "Server {}",
                 CONF_SUBSCRIPTION: "123456",
-                CONF_MONITORED_CONDITIONS: vultr.MONITORED_CONDITIONS,
+                CONF_MONITORED_CONDITIONS: vultr.SENSOR_KEYS,
             },
             {
                 CONF_NAME: "VPS Charges",
@@ -58,12 +59,12 @@ class TestVultrSensorSetup(unittest.TestCase):
         """Test the Vultr sensor class and methods."""
         mock.get(
             "https://api.vultr.com/v1/account/info?api_key=ABCDEFG1234567",
-            text=load_fixture("vultr_account_info.json"),
+            text=load_fixture("account_info.json", "vultr"),
         )
 
         with patch(
             "vultr.Vultr.server_list",
-            return_value=json.loads(load_fixture("vultr_server_list.json")),
+            return_value=json.loads(load_fixture("server_list.json", "vultr")),
         ):
             # Setup hub
             base_vultr.setup(self.hass, VALID_CONFIG)
@@ -125,7 +126,7 @@ class TestVultrSensorSetup(unittest.TestCase):
             vultr.PLATFORM_SCHEMA(
                 {
                     CONF_PLATFORM: base_vultr.DOMAIN,
-                    CONF_MONITORED_CONDITIONS: vultr.MONITORED_CONDITIONS,
+                    CONF_MONITORED_CONDITIONS: vultr.SENSOR_KEYS,
                 }
             )
         with pytest.raises(vol.Invalid):  # Bad monitored_conditions
@@ -142,18 +143,20 @@ class TestVultrSensorSetup(unittest.TestCase):
         """Test the VultrSensor fails."""
         mock.get(
             "https://api.vultr.com/v1/account/info?api_key=ABCDEFG1234567",
-            text=load_fixture("vultr_account_info.json"),
+            text=load_fixture("account_info.json", "vultr"),
         )
 
         with patch(
             "vultr.Vultr.server_list",
-            return_value=json.loads(load_fixture("vultr_server_list.json")),
+            return_value=json.loads(load_fixture("server_list.json", "vultr")),
         ):
             # Setup hub
             base_vultr.setup(self.hass, VALID_CONFIG)
 
         bad_conf = {
-            CONF_MONITORED_CONDITIONS: vultr.MONITORED_CONDITIONS
+            CONF_NAME: "Vultr {} {}",
+            CONF_SUBSCRIPTION: "",
+            CONF_MONITORED_CONDITIONS: vultr.SENSOR_KEYS,
         }  # No subs at all
 
         no_sub_setup = vultr.setup_platform(

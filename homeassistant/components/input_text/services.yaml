@@ -2,6 +2,8 @@ set_value:
   name: Set
   description: Set the value of an input text entity.
   target:
+    entity:
+      domain: input_text
   fields:
     value:
       name: Value

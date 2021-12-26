@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "no_devices_found": "Tidak ada perangkat yang ditemukan di jaringan",
             "single_instance_allowed": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan."
         },
         "error": {
@@ -10,10 +9,10 @@
         "step": {
             "config": {
                 "data": {
-                    "known_hosts": "Daftar opsional host yang diketahui jika penemuan mDNS tidak berfungsi."
+                    "known_hosts": "Host yang dikenal"
                 },
-                "description": "Masukkan konfigurasi Google Cast.",
-                "title": "Google Cast"
+                "description": "Host yang Dikenal - Daftar nama host atau alamat IP perangkat cast, dipisahkan dengan tanda koma, gunakan jika penemuan mDNS tidak berfungsi.",
+                "title": "Konfigurasi Google Cast"
             },
             "confirm": {
                 "description": "Ingin memulai penyiapan?"
@@ -25,13 +24,20 @@
             "invalid_known_hosts": "Host yang diketahui harus berupa daftar host yang dipisahkan koma."
         },
         "step": {
-            "options": {
+            "advanced_options": {
                 "data": {
-                    "ignore_cec": "Daftar opsional yang akan diteruskan ke pychromecast.IGNORE_CEC.",
-                    "known_hosts": "Daftar opsional host yang diketahui jika penemuan mDNS tidak berfungsi.",
-                    "uuid": "Daftar opsional UUID. Cast yang tidak tercantum tidak akan ditambahkan."
+                    "ignore_cec": "Abaikan CEC",
+                    "uuid": "UUID yang diizinkan"
                 },
-                "description": "Masukkan konfigurasi Google Cast."
+                "description": "UUID yang Diizinkan - Daftar UUID perangkat Cast yang dipisahkan koma untuk ditambahkan ke Home Assistant. Gunakan hanya jika Anda tidak ingin menambahkan semua perangkat cast yang tersedia.\nAbaikan CEC - Daftar Chromecast yang dipisahkan koma yang harus mengabaikan data CEC untuk menentukan input aktif. Daftar ini akan diteruskan ke pychromecast.IGNORE_CEC.",
+                "title": "Konfigurasi Google Cast tingkat lanjut"
+            },
+            "basic_options": {
+                "data": {
+                    "known_hosts": "Host yang dikenal"
+                },
+                "description": "Host yang Dikenal - Daftar nama host atau alamat IP perangkat cast, dipisahkan dengan tanda koma, gunakan jika penemuan mDNS tidak berfungsi.",
+                "title": "Konfigurasi Google Cast"
             }
         }
     }

@@ -1,7 +1,9 @@
 """Tests for the Twente Milieu config flow."""
-import aiohttp
+from unittest.mock import MagicMock
 
-from homeassistant import data_entry_flow
+from twentemilieu import TwenteMilieuAddressError, TwenteMilieuConnectionError
+
+from homeassistant import config_entries
 from homeassistant.components.twentemilieu import config_flow
 from homeassistant.components.twentemilieu.const import (
     CONF_HOUSE_LETTER,
@@ -9,107 +11,140 @@ from homeassistant.components.twentemilieu.const import (
     CONF_POST_CODE,
     DOMAIN,
 )
-from homeassistant.const import CONF_ID, CONTENT_TYPE_JSON
+from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import (
+    RESULT_TYPE_ABORT,
+    RESULT_TYPE_CREATE_ENTRY,
+    RESULT_TYPE_FORM,
+)
 
 from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
-
-FIXTURE_USER_INPUT = {
-    CONF_ID: "12345",
-    CONF_POST_CODE: "1234AB",
-    CONF_HOUSE_NUMBER: "1",
-    CONF_HOUSE_LETTER: "A",
-}
 
 
-async def test_show_set_form(hass: HomeAssistant) -> None:
-    """Test that the setup form is served."""
-    flow = config_flow.TwenteMilieuFlowHandler()
-    flow.hass = hass
-    result = await flow.async_step_user(user_input=None)
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-
-
-async def test_connection_error(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+async def test_full_user_flow(
+    hass: HomeAssistant,
+    mock_twentemilieu_config_flow: MagicMock,
+    mock_setup_entry: MagicMock,
 ) -> None:
-    """Test we show user form on Twente Milieu connection error."""
-    aioclient_mock.post(
-        "https://twentemilieuapi.ximmio.com/api/FetchAdress", exc=aiohttp.ClientError
+    """Test registering an integration and finishing flow works."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
-    flow = config_flow.TwenteMilieuFlowHandler()
-    flow.hass = hass
-    result = await flow.async_step_user(user_input=FIXTURE_USER_INPUT)
+    assert result.get("type") == RESULT_TYPE_FORM
+    assert result.get("step_id") == SOURCE_USER
+    assert "flow_id" in result
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "cannot_connect"}
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_POST_CODE: "1234AB",
+            CONF_HOUSE_NUMBER: "1",
+            CONF_HOUSE_LETTER: "A",
+        },
+    )
+
+    assert result2.get("type") == RESULT_TYPE_CREATE_ENTRY
+    assert result2.get("title") == "12345"
+    assert result2.get("data") == {
+        CONF_ID: 12345,
+        CONF_POST_CODE: "1234AB",
+        CONF_HOUSE_NUMBER: "1",
+        CONF_HOUSE_LETTER: "A",
+    }
 
 
 async def test_invalid_address(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    mock_twentemilieu_config_flow: MagicMock,
+    mock_setup_entry: MagicMock,
 ) -> None:
-    """Test we show user form on Twente Milieu invalid address error."""
-    aioclient_mock.post(
-        "https://twentemilieuapi.ximmio.com/api/FetchAdress",
-        json={"dataList": []},
-        headers={"Content-Type": CONTENT_TYPE_JSON},
+    """Test full user flow when the user enters an incorrect address.
+
+    This tests also tests if the user recovers from it by entering a valid
+    address in the second attempt.
+    """
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
-    flow = config_flow.TwenteMilieuFlowHandler()
-    flow.hass = hass
-    result = await flow.async_step_user(user_input=FIXTURE_USER_INPUT)
+    assert result.get("type") == RESULT_TYPE_FORM
+    assert result.get("step_id") == SOURCE_USER
+    assert "flow_id" in result
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "invalid_address"}
+    mock_twentemilieu_config_flow.unique_id.side_effect = TwenteMilieuAddressError
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_POST_CODE: "1234",
+            CONF_HOUSE_NUMBER: "1",
+        },
+    )
+
+    assert result2.get("type") == RESULT_TYPE_FORM
+    assert result2.get("step_id") == SOURCE_USER
+    assert result2.get("errors") == {"base": "invalid_address"}
+    assert "flow_id" in result2
+
+    mock_twentemilieu_config_flow.unique_id.side_effect = None
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_POST_CODE: "1234AB",
+            CONF_HOUSE_NUMBER: "1",
+        },
+    )
+
+    assert result3.get("type") == RESULT_TYPE_CREATE_ENTRY
+    assert result3.get("title") == "12345"
+    assert result3.get("data") == {
+        CONF_ID: 12345,
+        CONF_POST_CODE: "1234AB",
+        CONF_HOUSE_NUMBER: "1",
+        CONF_HOUSE_LETTER: None,
+    }
+
+
+async def test_connection_error(
+    hass: HomeAssistant,
+    mock_twentemilieu_config_flow: MagicMock,
+) -> None:
+    """Test we show user form on Twente Milieu connection error."""
+    mock_twentemilieu_config_flow.unique_id.side_effect = TwenteMilieuConnectionError
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={
+            CONF_POST_CODE: "1234AB",
+            CONF_HOUSE_NUMBER: "1",
+            CONF_HOUSE_LETTER: "A",
+        },
+    )
+
+    assert result.get("type") == RESULT_TYPE_FORM
+    assert result.get("step_id") == SOURCE_USER
+    assert result.get("errors") == {"base": "cannot_connect"}
 
 
 async def test_address_already_set_up(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    mock_twentemilieu_config_flow: MagicMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test we abort if address has already been set up."""
-    MockConfigEntry(domain=DOMAIN, data=FIXTURE_USER_INPUT, title="12345").add_to_hass(
-        hass
+    mock_config_entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+        data={
+            CONF_POST_CODE: "1234AB",
+            CONF_HOUSE_NUMBER: "1",
+            CONF_HOUSE_LETTER: "A",
+        },
     )
 
-    aioclient_mock.post(
-        "https://twentemilieuapi.ximmio.com/api/FetchAdress",
-        json={"dataList": [{"UniqueId": "12345"}]},
-        headers={"Content-Type": CONTENT_TYPE_JSON},
-    )
-
-    flow = config_flow.TwenteMilieuFlowHandler()
-    flow.hass = hass
-    result = await flow.async_step_user(user_input=FIXTURE_USER_INPUT)
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured"
-
-
-async def test_full_flow_implementation(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test registering an integration and finishing flow works."""
-    aioclient_mock.post(
-        "https://twentemilieuapi.ximmio.com/api/FetchAdress",
-        json={"dataList": [{"UniqueId": "12345"}]},
-        headers={"Content-Type": CONTENT_TYPE_JSON},
-    )
-
-    flow = config_flow.TwenteMilieuFlowHandler()
-    flow.hass = hass
-    result = await flow.async_step_user(user_input=None)
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-
-    result = await flow.async_step_user(user_input=FIXTURE_USER_INPUT)
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "12345"
-    assert result["data"][CONF_POST_CODE] == FIXTURE_USER_INPUT[CONF_POST_CODE]
-    assert result["data"][CONF_HOUSE_NUMBER] == FIXTURE_USER_INPUT[CONF_HOUSE_NUMBER]
-    assert result["data"][CONF_HOUSE_LETTER] == FIXTURE_USER_INPUT[CONF_HOUSE_LETTER]
+    assert result.get("type") == RESULT_TYPE_ABORT
+    assert result.get("reason") == "already_configured"

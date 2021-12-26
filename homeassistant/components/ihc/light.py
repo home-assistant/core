@@ -84,8 +84,7 @@ class IhcLight(IHCDevice, LightEntity):
         if ATTR_BRIGHTNESS in kwargs:
             brightness = kwargs[ATTR_BRIGHTNESS]
         else:
-            brightness = self._brightness
-            if brightness == 0:
+            if (brightness := self._brightness) == 0:
                 brightness = 255
 
         if self._dimmable:

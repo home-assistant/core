@@ -1,4 +1,6 @@
 """Camera platform that has a Raspberry Pi camera."""
+from __future__ import annotations
+
 import logging
 import os
 import shutil
@@ -26,9 +28,10 @@ _LOGGER = logging.getLogger(__name__)
 
 def kill_raspistill(*args):
     """Kill any previously running raspistill process.."""
-    subprocess.Popen(
+    with subprocess.Popen(
         ["killall", "raspistill"], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT
-    )
+    ):
+        pass
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -116,9 +119,17 @@ class RaspberryCamera(Camera):
             cmd_args.append("-a")
             cmd_args.append(str(device_info[CONF_OVERLAY_TIMESTAMP]))
 
-        subprocess.Popen(cmd_args, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+        # The raspistill process started below must run "forever" in
+        # the background until killed when Home Assistant is stopped.
+        # Therefore it must not be wrapped with "with", since that
+        # waits for the subprocess to exit before continuing.
+        subprocess.Popen(  # pylint: disable=consider-using-with
+            cmd_args, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT
+        )
 
-    def camera_image(self):
+    def camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return raspistill image response."""
         with open(self._config[CONF_FILE_PATH], "rb") as file:
             return file.read()

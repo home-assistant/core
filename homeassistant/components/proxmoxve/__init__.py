@@ -1,4 +1,6 @@
 """Support for Proxmox VE."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -18,6 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -84,7 +87,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the platform."""
     hass.data.setdefault(DOMAIN, {})
 
@@ -124,12 +127,16 @@ async def async_setup(hass: HomeAssistant, config: dict):
             except ConnectTimeout:
                 _LOGGER.warning("Connection to host %s timed out during setup", host)
                 continue
+            except requests.exceptions.ConnectionError:
+                _LOGGER.warning("Host %s is not reachable", host)
+                continue
 
             hass.data[PROXMOX_CLIENTS][host] = proxmox_client
 
     await hass.async_add_executor_job(build_client)
 
-    coordinators = hass.data[DOMAIN][COORDINATORS] = {}
+    coordinators: dict[str, dict[str, dict[int, DataUpdateCoordinator]]] = {}
+    hass.data[DOMAIN][COORDINATORS] = coordinators
 
     # Create a coordinator for each vm/container
     for host_config in config[DOMAIN]:

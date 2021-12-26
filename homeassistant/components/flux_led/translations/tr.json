@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "already_in_progress": "Yap\u0131land\u0131rma ak\u0131\u015f\u0131 zaten devam ediyor",
+            "no_devices_found": "A\u011fda cihaz bulunamad\u0131"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131"
+        },
+        "flow_title": "{model} {id} ({ipaddr})",
+        "step": {
+            "discovery_confirm": {
+                "description": "{model} {id} ( {ipaddr} ) kurulumu yapmak istiyor musunuz?"
+            },
+            "user": {
+                "data": {
+                    "host": "Sunucu"
+                },
+                "description": "Ana bilgisayar\u0131 bo\u015f b\u0131rak\u0131rsan\u0131z, cihazlar\u0131 bulmak i\u00e7in ke\u015fif kullan\u0131lacakt\u0131r."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "custom_effect_colors": "\u00d6zel Efekt: 1 ila 16 [R,G,B] renk listesi. \u00d6rnek: [255,0,255],[60,128,0]",
+                    "custom_effect_speed_pct": "\u00d6zel Efekt: Renkleri de\u011fi\u015ftiren efekt i\u00e7in y\u00fczde cinsinden h\u0131z.",
+                    "custom_effect_transition": "\u00d6zel Efekt: Renkler aras\u0131ndaki ge\u00e7i\u015f t\u00fcr\u00fc.",
+                    "mode": "Se\u00e7ilen parlakl\u0131k modu."
+                }
+            }
+        }
+    }
+}

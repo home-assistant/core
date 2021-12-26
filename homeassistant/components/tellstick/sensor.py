@@ -6,7 +6,11 @@ from tellcore import telldus
 import tellcore.constants as tellcore_constants
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
+)
 from homeassistant.const import (
     CONF_ID,
     CONF_NAME,
@@ -18,7 +22,9 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DatatypeDescription = namedtuple("DatatypeDescription", ["name", "unit"])
+DatatypeDescription = namedtuple(
+    "DatatypeDescription", ["name", "unit", "device_class"]
+)
 
 CONF_DATATYPE_MASK = "datatype_mask"
 CONF_ONLY_NAMED = "only_named"
@@ -58,20 +64,30 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     sensor_value_descriptions = {
         tellcore_constants.TELLSTICK_TEMPERATURE: DatatypeDescription(
-            "temperature", config.get(CONF_TEMPERATURE_SCALE)
+            "temperature",
+            config.get(CONF_TEMPERATURE_SCALE),
+            SensorDeviceClass.TEMPERATURE,
         ),
         tellcore_constants.TELLSTICK_HUMIDITY: DatatypeDescription(
-            "humidity", PERCENTAGE
+            "humidity",
+            PERCENTAGE,
+            SensorDeviceClass.HUMIDITY,
         ),
-        tellcore_constants.TELLSTICK_RAINRATE: DatatypeDescription("rain rate", ""),
-        tellcore_constants.TELLSTICK_RAINTOTAL: DatatypeDescription("rain total", ""),
+        tellcore_constants.TELLSTICK_RAINRATE: DatatypeDescription(
+            "rain rate", "", None
+        ),
+        tellcore_constants.TELLSTICK_RAINTOTAL: DatatypeDescription(
+            "rain total", "", None
+        ),
         tellcore_constants.TELLSTICK_WINDDIRECTION: DatatypeDescription(
-            "wind direction", ""
+            "wind direction", "", None
         ),
         tellcore_constants.TELLSTICK_WINDAVERAGE: DatatypeDescription(
-            "wind average", ""
+            "wind average", "", None
         ),
-        tellcore_constants.TELLSTICK_WINDGUST: DatatypeDescription("wind gust", ""),
+        tellcore_constants.TELLSTICK_WINDGUST: DatatypeDescription(
+            "wind gust", "", None
+        ),
     }
 
     try:
@@ -115,9 +131,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             else:
                 continue
 
-        for datatype in sensor_value_descriptions:
+        for datatype, sensor_info in sensor_value_descriptions.items():
             if datatype & datatype_mask and tellcore_sensor.has_value(datatype):
-                sensor_info = sensor_value_descriptions[datatype]
                 sensors.append(
                     TellstickSensor(sensor_name, tellcore_sensor, datatype, sensor_info)
                 )
@@ -132,26 +147,9 @@ class TellstickSensor(SensorEntity):
         """Initialize the sensor."""
         self._datatype = datatype
         self._tellcore_sensor = tellcore_sensor
-        self._unit_of_measurement = sensor_info.unit or None
-        self._value = None
-
-        self._name = f"{name} {sensor_info.name}"
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._value
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
+        self._attr_native_unit_of_measurement = sensor_info.unit or None
+        self._attr_name = f"{name} {sensor_info.name}"
 
     def update(self):
         """Update tellstick sensor."""
-        self._value = self._tellcore_sensor.value(self._datatype).value
+        self._attr_native_value = self._tellcore_sensor.value(self._datatype).value

@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen kapcsol\u00f3d\u00e1s",
+            "no_units": "Nem tal\u00e1lhat\u00f3 AirTouch 4 csoport."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "C\u00edm"
+                },
+                "title": "\u00c1ll\u00edtsa be az AirTouch 4 csatlakoz\u00e1si adatait."
+            }
+        }
+    }
+}

@@ -120,9 +120,7 @@ async def async_handle_message(hass, message):
     req = message.get("request")
     req_type = req["type"]
 
-    handler = HANDLERS.get(req_type)
-
-    if not handler:
+    if not (handler := HANDLERS.get(req_type)):
         raise UnknownRequest(f"Received unknown request {req_type}")
 
     return await handler(hass, message)

@@ -1,42 +1,24 @@
 """Nuki.io lock platform."""
 from abc import ABC, abstractmethod
-import logging
 
+from pynuki import MODE_OPENER_CONTINUOUS
 import voluptuous as vol
 
-from homeassistant.components.lock import PLATFORM_SCHEMA, SUPPORT_OPEN, LockEntity
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
+from homeassistant.components.lock import SUPPORT_OPEN, LockEntity
 from homeassistant.helpers import config_validation as cv, entity_platform
 
 from . import NukiEntity
 from .const import (
     ATTR_BATTERY_CRITICAL,
+    ATTR_ENABLE,
     ATTR_NUKI_ID,
     ATTR_UNLATCH,
     DATA_COORDINATOR,
     DATA_LOCKS,
     DATA_OPENERS,
-    DEFAULT_PORT,
     DOMAIN as NUKI_DOMAIN,
     ERROR_STATES,
 )
-
-_LOGGER = logging.getLogger(__name__)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Required(CONF_TOKEN): cv.string,
-    }
-)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Nuki lock platform."""
-    _LOGGER.warning(
-        "Loading Nuki by lock platform configuration is deprecated and will be removed in the future"
-    )
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -57,6 +39,14 @@ async def async_setup_entry(hass, entry, async_add_entities):
             vol.Optional(ATTR_UNLATCH, default=False): cv.boolean,
         },
         "lock_n_go",
+    )
+
+    platform.async_register_entity_service(
+        "set_continuous_mode",
+        {
+            vol.Required(ATTR_ENABLE): cv.boolean,
+        },
+        "set_continuous_mode",
     )
 
 
@@ -144,8 +134,11 @@ class NukiOpenerEntity(NukiDeviceEntity):
 
     @property
     def is_locked(self):
-        """Return true if ring-to-open is enabled."""
-        return not self._nuki_device.is_rto_activated
+        """Return true if either ring-to-open or continuous mode is enabled."""
+        return not (
+            self._nuki_device.is_rto_activated
+            or self._nuki_device.mode == MODE_OPENER_CONTINUOUS
+        )
 
     def lock(self, **kwargs):
         """Disable ring-to-open."""
@@ -161,3 +154,15 @@ class NukiOpenerEntity(NukiDeviceEntity):
 
     def lock_n_go(self, unlatch):
         """Stub service."""
+
+    def set_continuous_mode(self, enable):
+        """Continuous Mode.
+
+        This feature will cause the door to automatically open when anyone
+        rings the bell. This is similar to ring-to-open, except that it does
+        not automatically deactivate
+        """
+        if enable:
+            self._nuki_device.activate_continuous_mode()
+        else:
+            self._nuki_device.deactivate_continuous_mode()

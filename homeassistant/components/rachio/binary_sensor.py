@@ -3,8 +3,7 @@ from abc import abstractmethod
 import logging
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
-    DEVICE_CLASS_MOISTURE,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.core import callback
@@ -89,9 +88,9 @@ class RachioControllerOnlineBinarySensor(RachioControllerBinarySensor):
         return f"{self._controller.controller_id}-online"
 
     @property
-    def device_class(self) -> str:
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_CONNECTIVITY
+    def device_class(self) -> BinarySensorDeviceClass:
+        """Return the class of this device, from BinarySensorDeviceClass."""
+        return BinarySensorDeviceClass.CONNECTIVITY
 
     @property
     def icon(self) -> str:
@@ -138,9 +137,9 @@ class RachioRainSensor(RachioControllerBinarySensor):
         return f"{self._controller.controller_id}-rain_sensor"
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> BinarySensorDeviceClass:
         """Return the class of this device."""
-        return DEVICE_CLASS_MOISTURE
+        return BinarySensorDeviceClass.MOISTURE
 
     @property
     def icon(self) -> str:

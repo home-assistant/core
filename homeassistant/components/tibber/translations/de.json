@@ -11,9 +11,9 @@
         "step": {
             "user": {
                 "data": {
-                    "access_token": "Zugriffs-Token"
+                    "access_token": "Zugangstoken"
                 },
-                "description": "Geben Sie Ihr Zugangsk\u00fcrzel von https://developer.tibber.com/settings/accesstoken ein.",
+                "description": "Gib dein Zugangsk\u00fcrzel von https://developer.tibber.com/settings/accesstoken ein.",
                 "title": "Tibber"
             }
         }

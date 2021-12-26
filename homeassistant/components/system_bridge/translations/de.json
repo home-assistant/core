@@ -10,19 +10,23 @@
             "invalid_auth": "Ung\u00fcltige Authentifizierung",
             "unknown": "Unerwarteter Fehler"
         },
+        "flow_title": "{name}",
         "step": {
             "authenticate": {
                 "data": {
                     "api_key": "API-Schl\u00fcssel"
-                }
+                },
+                "description": "Bitte gib den API-Schl\u00fcssel ein, den du in deiner Konfiguration f\u00fcr {name} festgelegt hast."
             },
             "user": {
                 "data": {
                     "api_key": "API-Schl\u00fcssel",
                     "host": "Host",
                     "port": "Port"
-                }
+                },
+                "description": "Bitte gib Verbindungsdaten ein."
             }
         }
-    }
+    },
+    "title": "System-Br\u00fccke"
 }

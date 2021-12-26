@@ -5,20 +5,19 @@
             "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
         },
         "error": {
-            "invalid_auth": "Autenticazione non valida",
-            "unknown": "Errore imprevisto"
+            "invalid_auth": "Autenticazione non valida"
         },
         "step": {
             "reauth_confirm": {
                 "description": "L'integrazione di SmartTub deve autenticare nuovamente il tuo account",
-                "title": "Autenticare nuovamente l'integrazione"
+                "title": "Autentica nuovamente l'integrazione"
             },
             "user": {
                 "data": {
-                    "email": "E-mail",
+                    "email": "Email",
                     "password": "Password"
                 },
-                "description": "Inserisci il tuo indirizzo e-mail e la password SmartTub per accedere",
+                "description": "Inserisci il tuo indirizzo email e la password SmartTub per accedere",
                 "title": "Accesso"
             }
         }

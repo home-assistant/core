@@ -17,6 +17,8 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMED_VACATION,
+    STATE_ALARM_ARMING,
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
     STATE_UNKNOWN,
@@ -79,7 +81,7 @@ async def test_switch_set_state(hass, hk_driver, events):
     call_arm_night = async_mock_service(hass, DOMAIN, "alarm_arm_night")
     call_disarm = async_mock_service(hass, DOMAIN, "alarm_disarm")
 
-    await hass.async_add_executor_job(acc.char_target_state.client_update_value, 0)
+    acc.char_target_state.client_update_value(0)
     await hass.async_block_till_done()
     assert call_arm_home
     assert call_arm_home[0].data[ATTR_ENTITY_ID] == entity_id
@@ -88,7 +90,7 @@ async def test_switch_set_state(hass, hk_driver, events):
     assert len(events) == 1
     assert events[-1].data[ATTR_VALUE] is None
 
-    await hass.async_add_executor_job(acc.char_target_state.client_update_value, 1)
+    acc.char_target_state.client_update_value(1)
     await hass.async_block_till_done()
     assert call_arm_away
     assert call_arm_away[0].data[ATTR_ENTITY_ID] == entity_id
@@ -97,7 +99,7 @@ async def test_switch_set_state(hass, hk_driver, events):
     assert len(events) == 2
     assert events[-1].data[ATTR_VALUE] is None
 
-    await hass.async_add_executor_job(acc.char_target_state.client_update_value, 2)
+    acc.char_target_state.client_update_value(2)
     await hass.async_block_till_done()
     assert call_arm_night
     assert call_arm_night[0].data[ATTR_ENTITY_ID] == entity_id
@@ -106,7 +108,7 @@ async def test_switch_set_state(hass, hk_driver, events):
     assert len(events) == 3
     assert events[-1].data[ATTR_VALUE] is None
 
-    await hass.async_add_executor_job(acc.char_target_state.client_update_value, 3)
+    acc.char_target_state.client_update_value(3)
     await hass.async_block_till_done()
     assert call_disarm
     assert call_disarm[0].data[ATTR_ENTITY_ID] == entity_id
@@ -128,7 +130,7 @@ async def test_no_alarm_code(hass, hk_driver, config, events):
     # Set from HomeKit
     call_arm_home = async_mock_service(hass, DOMAIN, "alarm_arm_home")
 
-    await hass.async_add_executor_job(acc.char_target_state.client_update_value, 0)
+    acc.char_target_state.client_update_value(0)
     await hass.async_block_till_done()
     assert call_arm_home
     assert call_arm_home[0].data[ATTR_ENTITY_ID] == entity_id
@@ -136,6 +138,57 @@ async def test_no_alarm_code(hass, hk_driver, config, events):
     assert acc.char_target_state.value == 0
     assert len(events) == 1
     assert events[-1].data[ATTR_VALUE] is None
+
+
+async def test_arming(hass, hk_driver, events):
+    """Test to make sure arming sets the right state."""
+    entity_id = "alarm_control_panel.test"
+
+    hass.states.async_set(entity_id, None)
+
+    acc = SecuritySystem(hass, hk_driver, "SecuritySystem", entity_id, 2, {})
+    await acc.run()
+    await hass.async_block_till_done()
+
+    hass.states.async_set(entity_id, STATE_ALARM_ARMED_AWAY)
+    await hass.async_block_till_done()
+    assert acc.char_target_state.value == 1
+    assert acc.char_current_state.value == 1
+
+    hass.states.async_set(entity_id, STATE_ALARM_ARMED_HOME)
+    await hass.async_block_till_done()
+    assert acc.char_target_state.value == 0
+    assert acc.char_current_state.value == 0
+
+    hass.states.async_set(entity_id, STATE_ALARM_ARMED_VACATION)
+    await hass.async_block_till_done()
+    assert acc.char_target_state.value == 1
+    assert acc.char_current_state.value == 1
+
+    hass.states.async_set(entity_id, STATE_ALARM_ARMED_NIGHT)
+    await hass.async_block_till_done()
+    assert acc.char_target_state.value == 2
+    assert acc.char_current_state.value == 2
+
+    hass.states.async_set(entity_id, STATE_ALARM_ARMING)
+    await hass.async_block_till_done()
+    assert acc.char_target_state.value == 1
+    assert acc.char_current_state.value == 3
+
+    hass.states.async_set(entity_id, STATE_ALARM_DISARMED)
+    await hass.async_block_till_done()
+    assert acc.char_target_state.value == 3
+    assert acc.char_current_state.value == 3
+
+    hass.states.async_set(entity_id, STATE_ALARM_ARMED_AWAY)
+    await hass.async_block_till_done()
+    assert acc.char_target_state.value == 1
+    assert acc.char_current_state.value == 1
+
+    hass.states.async_set(entity_id, STATE_ALARM_TRIGGERED)
+    await hass.async_block_till_done()
+    assert acc.char_target_state.value == 1
+    assert acc.char_current_state.value == 4
 
 
 async def test_supported_states(hass, hk_driver, events):

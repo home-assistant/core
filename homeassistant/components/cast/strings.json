@@ -30,7 +30,7 @@
       },
       "advanced_options": {
         "title": "Advanced Google Cast configuration",
-        "description": "Allowed UUIDs - A comma-separated list of UUIDs of Cast devices to add to Home Assistant. Use only if you don’t want to add all available cast devices.\nIgnore CEC - A comma-separated list of Chromecasts that should ignore CEC data for determining the active input. This will be will be passed to pychromecast.IGNORE_CEC.",
+        "description": "Allowed UUIDs - A comma-separated list of UUIDs of Cast devices to add to Home Assistant. Use only if you don’t want to add all available cast devices.\nIgnore CEC - A comma-separated list of Chromecasts that should ignore CEC data for determining the active input. This will be passed to pychromecast.IGNORE_CEC.",
         "data": {
           "ignore_cec": "Ignore CEC",
           "uuid": "Allowed UUIDs"

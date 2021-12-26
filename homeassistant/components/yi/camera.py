@@ -1,12 +1,13 @@
 """Support for Xiaomi Cameras (HiSilicon Hi3518e V200)."""
-import asyncio
+from __future__ import annotations
+
 import logging
 
 from aioftp import Client, StatusCodeError
 from haffmpeg.camera import CameraMjpeg
-from haffmpeg.tools import IMAGE_JPEG, ImageFrame
 import voluptuous as vol
 
+from homeassistant.components import ffmpeg
 from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
 from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.const import (
@@ -119,15 +120,18 @@ class YiCamera(Camera):
             self._is_on = False
             return None
 
-    async def async_camera_image(self):
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return a still image response from the camera."""
         url = await self._get_latest_video_url()
         if url and url != self._last_url:
-            ffmpeg = ImageFrame(self._manager.binary)
-            self._last_image = await asyncio.shield(
-                ffmpeg.get_image(
-                    url, output_format=IMAGE_JPEG, extra_cmd=self._extra_arguments
-                ),
+            self._last_image = await ffmpeg.async_get_image(
+                self.hass,
+                url,
+                extra_cmd=self._extra_arguments,
+                width=width,
+                height=height,
             )
             self._last_url = url
 

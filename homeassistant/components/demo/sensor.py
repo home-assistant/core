@@ -1,20 +1,36 @@
 """Demo platform that has a couple of fake sensors."""
-from homeassistant.components.sensor import SensorEntity
+from __future__ import annotations
+
+from typing import Any
+
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     CONCENTRATION_PARTS_PER_MILLION,
-    DEVICE_CLASS_CO,
-    DEVICE_CLASS_CO2,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_TEMPERATURE,
+    ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
+    POWER_WATT,
     TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, StateType
 
 from . import DOMAIN
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: dict[str, Any] | None = None,
+) -> None:
     """Set up the Demo sensors."""
     async_add_entities(
         [
@@ -22,7 +38,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 "sensor_1",
                 "Outside Temperature",
                 15.6,
-                DEVICE_CLASS_TEMPERATURE,
+                SensorDeviceClass.TEMPERATURE,
+                SensorStateClass.MEASUREMENT,
                 TEMP_CELSIUS,
                 12,
             ),
@@ -30,7 +47,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 "sensor_2",
                 "Outside Humidity",
                 54,
-                DEVICE_CLASS_HUMIDITY,
+                SensorDeviceClass.HUMIDITY,
+                SensorStateClass.MEASUREMENT,
                 PERCENTAGE,
                 None,
             ),
@@ -38,7 +56,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 "sensor_3",
                 "Carbon monoxide",
                 54,
-                DEVICE_CLASS_CO,
+                SensorDeviceClass.CO,
+                SensorStateClass.MEASUREMENT,
                 CONCENTRATION_PARTS_PER_MILLION,
                 None,
             ),
@@ -46,15 +65,38 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 "sensor_4",
                 "Carbon dioxide",
                 54,
-                DEVICE_CLASS_CO2,
+                SensorDeviceClass.CO2,
+                SensorStateClass.MEASUREMENT,
                 CONCENTRATION_PARTS_PER_MILLION,
                 14,
+            ),
+            DemoSensor(
+                "sensor_5",
+                "Power consumption",
+                100,
+                SensorDeviceClass.POWER,
+                SensorStateClass.MEASUREMENT,
+                POWER_WATT,
+                None,
+            ),
+            DemoSensor(
+                "sensor_6",
+                "Today energy",
+                15,
+                SensorDeviceClass.ENERGY,
+                SensorStateClass.MEASUREMENT,
+                ENERGY_KILO_WATT_HOUR,
+                None,
             ),
         ]
     )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Demo config entry."""
     await async_setup_platform(hass, {}, async_add_entities)
 
@@ -62,60 +104,30 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class DemoSensor(SensorEntity):
     """Representation of a Demo sensor."""
 
+    _attr_should_poll = False
+
     def __init__(
-        self, unique_id, name, state, device_class, unit_of_measurement, battery
-    ):
+        self,
+        unique_id: str,
+        name: str,
+        state: StateType,
+        device_class: SensorDeviceClass,
+        state_class: SensorStateClass | None,
+        unit_of_measurement: str | None,
+        battery: StateType,
+    ) -> None:
         """Initialize the sensor."""
-        self._unique_id = unique_id
-        self._name = name
-        self._state = state
-        self._device_class = device_class
-        self._unit_of_measurement = unit_of_measurement
-        self._battery = battery
+        self._attr_device_class = device_class
+        self._attr_name = name
+        self._attr_native_unit_of_measurement = unit_of_measurement
+        self._attr_native_value = state
+        self._attr_state_class = state_class
+        self._attr_unique_id = unique_id
 
-    @property
-    def device_info(self):
-        """Return device info."""
-        return {
-            "identifiers": {
-                # Serial numbers are unique identifiers within a specific domain
-                (DOMAIN, self.unique_id)
-            },
-            "name": self.name,
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, unique_id)},
+            name=name,
+        )
 
-    @property
-    def unique_id(self):
-        """Return the unique id."""
-        return self._unique_id
-
-    @property
-    def should_poll(self):
-        """No polling needed for a demo sensor."""
-        return False
-
-    @property
-    def device_class(self):
-        """Return the device class of the sensor."""
-        return self._device_class
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit this state is expressed in."""
-        return self._unit_of_measurement
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        if self._battery:
-            return {ATTR_BATTERY_LEVEL: self._battery}
+        if battery:
+            self._attr_extra_state_attributes = {ATTR_BATTERY_LEVEL: battery}

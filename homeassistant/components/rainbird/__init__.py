@@ -1,10 +1,14 @@
 """Support for Rain Bird Irrigation system LNK WiFi Module."""
+from __future__ import annotations
+
 import logging
 
 from pyrainbird import RainbirdController
 import voluptuous as vol
 
 from homeassistant.components import binary_sensor, sensor, switch
+from homeassistant.components.binary_sensor import BinarySensorEntityDescription
+from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.const import (
     CONF_FRIENDLY_NAME,
     CONF_HOST,
@@ -26,11 +30,33 @@ DOMAIN = "rainbird"
 
 SENSOR_TYPE_RAINDELAY = "raindelay"
 SENSOR_TYPE_RAINSENSOR = "rainsensor"
-# sensor_type [ description, unit, icon ]
-SENSOR_TYPES = {
-    SENSOR_TYPE_RAINSENSOR: ["Rainsensor", None, "mdi:water"],
-    SENSOR_TYPE_RAINDELAY: ["Raindelay", None, "mdi:water-off"],
-}
+
+
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key=SENSOR_TYPE_RAINSENSOR,
+        name="Rainsensor",
+        icon="mdi:water",
+    ),
+    SensorEntityDescription(
+        key=SENSOR_TYPE_RAINDELAY,
+        name="Raindelay",
+        icon="mdi:water-off",
+    ),
+)
+
+BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
+    BinarySensorEntityDescription(
+        key=SENSOR_TYPE_RAINSENSOR,
+        name="Rainsensor",
+        icon="mdi:water",
+    ),
+    BinarySensorEntityDescription(
+        key=SENSOR_TYPE_RAINDELAY,
+        name="Raindelay",
+        icon="mdi:water-off",
+    ),
+)
 
 TRIGGER_TIME_SCHEMA = vol.All(
     cv.time_period, cv.positive_timedelta, lambda td: (td.total_seconds() // 60)

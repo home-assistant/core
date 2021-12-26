@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-import logging
 from typing import Any
 from unittest.mock import patch
 
@@ -50,8 +49,6 @@ from homeassistant.util import dt as dt_util
 from .const import API_V3_ENTRY_DATA, API_V4_ENTRY_DATA
 
 from tests.common import MockConfigEntry
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @callback
@@ -228,7 +225,7 @@ async def test_v3_weather(
     assert weather_state.attributes[ATTR_WEATHER_VISIBILITY] == 9.9940
     assert weather_state.attributes[ATTR_WEATHER_WIND_BEARING] == 320.31
     assert weather_state.attributes[ATTR_WEATHER_WIND_SPEED] == 14.6289
-    assert weather_state.attributes[ATTR_CLOUD_COVER] == 1
+    assert weather_state.attributes[ATTR_CLOUD_COVER] == 100
     assert weather_state.attributes[ATTR_WIND_GUST] == 24.0758
     assert weather_state.attributes[ATTR_PRECIPITATION_TYPE] == "rain"
 
@@ -391,6 +388,6 @@ async def test_v4_weather(
     assert weather_state.attributes[ATTR_WEATHER_VISIBILITY] == 13.1162
     assert weather_state.attributes[ATTR_WEATHER_WIND_BEARING] == 315.14
     assert weather_state.attributes[ATTR_WEATHER_WIND_SPEED] == 15.0152
-    assert weather_state.attributes[ATTR_CLOUD_COVER] == 1
+    assert weather_state.attributes[ATTR_CLOUD_COVER] == 100
     assert weather_state.attributes[ATTR_WIND_GUST] == 20.3421
     assert weather_state.attributes[ATTR_PRECIPITATION_TYPE] == "rain"

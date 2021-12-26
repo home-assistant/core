@@ -1,14 +1,13 @@
 """Utilities to help with aiohttp."""
 from __future__ import annotations
 
+from http import HTTPStatus
 import io
 import json
 from typing import Any
 from urllib.parse import parse_qsl
 
 from multidict import CIMultiDict, MultiDict
-
-from homeassistant.const import HTTP_OK
 
 
 class MockStreamReader:
@@ -35,7 +34,7 @@ class MockRequest:
         content: bytes,
         mock_source: str,
         method: str = "GET",
-        status: int = HTTP_OK,
+        status: int = HTTPStatus.OK,
         headers: dict[str, str] | None = None,
         query_string: str | None = None,
         url: str = "",

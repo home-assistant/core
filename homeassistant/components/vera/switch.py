@@ -40,7 +40,7 @@ class VeraSwitch(VeraDevice[veraApi.VeraSwitch], SwitchEntity):
 
     def __init__(
         self, vera_device: veraApi.VeraSwitch, controller_data: ControllerData
-    ):
+    ) -> None:
         """Initialize the Vera device."""
         self._state = False
         VeraDevice.__init__(self, vera_device, controller_data)
@@ -61,9 +61,9 @@ class VeraSwitch(VeraDevice[veraApi.VeraSwitch], SwitchEntity):
     @property
     def current_power_w(self) -> float | None:
         """Return the current power usage in W."""
-        power = self.vera_device.power
-        if power:
+        if power := self.vera_device.power:
             return convert(power, float, 0.0)
+        return None
 
     @property
     def is_on(self) -> bool:

@@ -53,7 +53,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Let user select host or cloud."""
-        if self.hass.config_entries.async_entries(DOMAIN):
+        if self._async_current_entries():
             return self.async_abort(reason="already_setup")
 
         if user_input is not None or len(self._hosts) == 1:
@@ -92,7 +92,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "invalid_auth"
 
         try:
-            with async_timeout.timeout(10):
+            async with async_timeout.timeout(10):
                 auth_url = await self.hass.async_add_executor_job(self._get_auth_url)
             if not auth_url:
                 return self.async_abort(reason="unknown_authorize_url_generation")
@@ -125,7 +125,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input):
         """Import a config entry."""
-        if self.hass.config_entries.async_entries(DOMAIN):
+        if self._async_current_entries():
             return self.async_abort(reason="already_setup")
 
         self._scan_interval = user_input[KEY_SCAN_INTERVAL]

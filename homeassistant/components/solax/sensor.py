@@ -6,7 +6,12 @@ from solax import real_time_api
 from solax.inverter import InverterError
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, TEMP_CELSIUS
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
@@ -34,10 +39,28 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_track_time_interval(hass, endpoint.async_refresh, SCAN_INTERVAL)
     devices = []
     for sensor, (idx, unit) in api.inverter.sensor_map().items():
+        device_class = state_class = None
         if unit == "C":
+            device_class = SensorDeviceClass.TEMPERATURE
+            state_class = SensorStateClass.MEASUREMENT
             unit = TEMP_CELSIUS
+        elif unit == "kWh":
+            device_class = SensorDeviceClass.ENERGY
+            state_class = SensorStateClass.TOTAL_INCREASING
+        elif unit == "V":
+            device_class = SensorDeviceClass.VOLTAGE
+            state_class = SensorStateClass.MEASUREMENT
+        elif unit == "A":
+            device_class = SensorDeviceClass.CURRENT
+            state_class = SensorStateClass.MEASUREMENT
+        elif unit == "W":
+            device_class = SensorDeviceClass.POWER
+            state_class = SensorStateClass.MEASUREMENT
+        elif unit == "%":
+            device_class = SensorDeviceClass.BATTERY
+            state_class = SensorStateClass.MEASUREMENT
         uid = f"{serial}-{idx}"
-        devices.append(Inverter(uid, serial, sensor, unit))
+        devices.append(Inverter(uid, serial, sensor, unit, state_class, device_class))
     endpoint.sensors = devices
     async_add_entities(devices)
 
@@ -75,35 +98,27 @@ class RealTimeDataEndpoint:
 class Inverter(SensorEntity):
     """Class for a sensor."""
 
-    def __init__(self, uid, serial, key, unit):
+    _attr_should_poll = False
+
+    def __init__(
+        self,
+        uid,
+        serial,
+        key,
+        unit,
+        state_class=None,
+        device_class=None,
+    ):
         """Initialize an inverter sensor."""
-        self.uid = uid
-        self.serial = serial
+        self._attr_unique_id = uid
+        self._attr_name = f"Solax {serial} {key}"
+        self._attr_native_unit_of_measurement = unit
+        self._attr_state_class = state_class
+        self._attr_device_class = device_class
         self.key = key
         self.value = None
-        self.unit = unit
 
     @property
-    def state(self):
+    def native_value(self):
         """State of this inverter attribute."""
         return self.value
-
-    @property
-    def unique_id(self):
-        """Return unique id."""
-        return self.uid
-
-    @property
-    def name(self):
-        """Name of this inverter attribute."""
-        return f"Solax {self.serial} {self.key}"
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return self.unit
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False

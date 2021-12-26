@@ -1,13 +1,13 @@
 """Tests for HomematicIP Cloud weather."""
 from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
 from homeassistant.components.weather import (
-    ATTR_WEATHER_ATTRIBUTION,
     ATTR_WEATHER_HUMIDITY,
     ATTR_WEATHER_TEMPERATURE,
     ATTR_WEATHER_WIND_BEARING,
     ATTR_WEATHER_WIND_SPEED,
     DOMAIN as WEATHER_DOMAIN,
 )
+from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.setup import async_setup_component
 
 from .helper import async_manipulate_test_data, get_and_check_entity_basics
@@ -38,7 +38,7 @@ async def test_hmip_weather_sensor(hass, default_mock_hap_factory):
     assert ha_state.attributes[ATTR_WEATHER_TEMPERATURE] == 4.3
     assert ha_state.attributes[ATTR_WEATHER_HUMIDITY] == 97
     assert ha_state.attributes[ATTR_WEATHER_WIND_SPEED] == 15.0
-    assert ha_state.attributes[ATTR_WEATHER_ATTRIBUTION] == "Powered by Homematic IP"
+    assert ha_state.attributes[ATTR_ATTRIBUTION] == "Powered by Homematic IP"
 
     await async_manipulate_test_data(hass, hmip_device, "actualTemperature", 12.1)
     ha_state = hass.states.get(entity_id)
@@ -63,7 +63,7 @@ async def test_hmip_weather_sensor_pro(hass, default_mock_hap_factory):
     assert ha_state.attributes[ATTR_WEATHER_HUMIDITY] == 65
     assert ha_state.attributes[ATTR_WEATHER_WIND_SPEED] == 2.6
     assert ha_state.attributes[ATTR_WEATHER_WIND_BEARING] == 295.0
-    assert ha_state.attributes[ATTR_WEATHER_ATTRIBUTION] == "Powered by Homematic IP"
+    assert ha_state.attributes[ATTR_ATTRIBUTION] == "Powered by Homematic IP"
 
     await async_manipulate_test_data(hass, hmip_device, "actualTemperature", 12.1)
     ha_state = hass.states.get(entity_id)
@@ -86,7 +86,7 @@ async def test_hmip_home_weather(hass, default_mock_hap_factory):
     assert ha_state.attributes[ATTR_WEATHER_HUMIDITY] == 54
     assert ha_state.attributes[ATTR_WEATHER_WIND_SPEED] == 8.6
     assert ha_state.attributes[ATTR_WEATHER_WIND_BEARING] == 294
-    assert ha_state.attributes[ATTR_WEATHER_ATTRIBUTION] == "Powered by Homematic IP"
+    assert ha_state.attributes[ATTR_ATTRIBUTION] == "Powered by Homematic IP"
 
     await async_manipulate_test_data(
         hass, mock_hap.home.weather, "temperature", 28.3, fire_device=mock_hap.home

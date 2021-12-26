@@ -5,17 +5,11 @@
         },
         "error": {
             "cannot_connect": "Impossibile connettersi",
-            "invalid_auth": "Autenticazione non valida",
             "unknown": "Errore imprevisto"
         },
         "step": {
             "user": {
-                "data": {
-                    "host": "Host",
-                    "password": "Password",
-                    "username": "Nome utente"
-                },
-                "description": "Configurare l'integrazione VPN Mullvad?"
+                "description": "Vuoi configurare l'integrazione VPN Mullvad?"
             }
         }
     }

@@ -1,8 +1,8 @@
 """Code to handle a DenonAVR receiver."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import logging
-from typing import Callable
 
 from denonavr import DenonAVR
 
@@ -20,7 +20,7 @@ class ConnectDenonAVR:
         zone2: bool,
         zone3: bool,
         async_client_getter: Callable,
-    ):
+    ) -> None:
         """Initialize the class."""
         self._async_client_getter = async_client_getter
         self._receiver = None

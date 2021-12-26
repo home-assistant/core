@@ -7,6 +7,7 @@ import pytest
 import homeassistant.components.automation as automation
 from homeassistant.components.binary_sensor import DEVICE_CLASSES, DOMAIN
 from homeassistant.components.binary_sensor.device_condition import ENTITY_CONDITIONS
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON
 from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
@@ -41,7 +42,7 @@ def calls(hass):
     return async_mock_service(hass, "test", "automation")
 
 
-async def test_get_conditions(hass, device_reg, entity_reg):
+async def test_get_conditions(hass, device_reg, entity_reg, enable_custom_integrations):
     """Test we get the expected conditions from a binary_sensor."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
     platform.init()
@@ -74,7 +75,46 @@ async def test_get_conditions(hass, device_reg, entity_reg):
         for device_class in DEVICE_CLASSES
         for condition in ENTITY_CONDITIONS[device_class]
     ]
-    conditions = await async_get_device_automations(hass, "condition", device_entry.id)
+    conditions = await async_get_device_automations(
+        hass, DeviceAutomationType.CONDITION, device_entry.id
+    )
+    assert conditions == expected_conditions
+
+
+async def test_get_conditions_no_state(hass, device_reg, entity_reg):
+    """Test we get the expected conditions from a binary_sensor."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_ids = {}
+    for device_class in DEVICE_CLASSES:
+        entity_ids[device_class] = entity_reg.async_get_or_create(
+            DOMAIN,
+            "test",
+            f"5678_{device_class}",
+            device_id=device_entry.id,
+            original_device_class=device_class,
+        ).entity_id
+
+    await hass.async_block_till_done()
+
+    expected_conditions = [
+        {
+            "condition": "device",
+            "domain": DOMAIN,
+            "type": condition["type"],
+            "device_id": device_entry.id,
+            "entity_id": entity_ids[device_class],
+        }
+        for device_class in DEVICE_CLASSES
+        for condition in ENTITY_CONDITIONS[device_class]
+    ]
+    conditions = await async_get_device_automations(
+        hass, DeviceAutomationType.CONDITION, device_entry.id
+    )
     assert conditions == expected_conditions
 
 
@@ -92,15 +132,17 @@ async def test_get_condition_capabilities(hass, device_reg, entity_reg):
             {"name": "for", "optional": True, "type": "positive_time_period_dict"}
         ]
     }
-    conditions = await async_get_device_automations(hass, "condition", device_entry.id)
+    conditions = await async_get_device_automations(
+        hass, DeviceAutomationType.CONDITION, device_entry.id
+    )
     for condition in conditions:
         capabilities = await async_get_device_automation_capabilities(
-            hass, "condition", condition
+            hass, DeviceAutomationType.CONDITION, condition
         )
         assert capabilities == expected_capabilities
 
 
-async def test_if_state(hass, calls):
+async def test_if_state(hass, calls, enable_custom_integrations):
     """Test for turn_on and turn_off conditions."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
 
@@ -173,7 +215,7 @@ async def test_if_state(hass, calls):
     assert calls[1].data["some"] == "is_off event - test_event2"
 
 
-async def test_if_fires_on_for_condition(hass, calls):
+async def test_if_fires_on_for_condition(hass, calls, enable_custom_integrations):
     """Test for firing if condition is on with delay."""
     point1 = dt_util.utcnow()
     point2 = point1 + timedelta(seconds=10)

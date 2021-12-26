@@ -82,11 +82,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class AnthemAVR(MediaPlayerEntity):
     """Entity reading values from Anthem AVR protocol."""
 
+    _attr_should_poll = False
+    _attr_supported_features = SUPPORT_ANTHEMAV
+
     def __init__(self, avr, name):
         """Initialize entity with transport."""
         super().__init__()
         self.avr = avr
-        self._name = name
+        self._attr_name = name or self._lookup("model")
 
     def _lookup(self, propname, dval=None):
         return getattr(self.avr.protocol, propname, dval)
@@ -96,21 +99,6 @@ class AnthemAVR(MediaPlayerEntity):
         self.async_on_remove(
             async_dispatcher_connect(self.hass, DOMAIN, self.async_write_ha_state)
         )
-
-    @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return SUPPORT_ANTHEMAV
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def name(self):
-        """Return name of device."""
-        return self._name or self._lookup("model")
 
     @property
     def state(self):

@@ -35,12 +35,12 @@ class TahomaSensor(TahomaDevice, SensorEntity):
         super().__init__(tahoma_device, controller)
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the name of the sensor."""
         return self.current_value
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         if self.tahoma_device.type == "io:TemperatureIOSystemSensor":
             return TEMP_CELSIUS
@@ -113,8 +113,7 @@ class TahomaSensor(TahomaDevice, SensorEntity):
     def extra_state_attributes(self):
         """Return the device state attributes."""
         attr = {}
-        super_attr = super().extra_state_attributes
-        if super_attr is not None:
+        if (super_attr := super().extra_state_attributes) is not None:
             attr.update(super_attr)
 
         if "core:RSSILevelState" in self.tahoma_device.active_states:

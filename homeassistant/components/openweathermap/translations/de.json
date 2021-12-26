@@ -10,14 +10,14 @@
         "step": {
             "user": {
                 "data": {
-                    "api_key": "API Key",
+                    "api_key": "API-Schl\u00fcssel",
                     "language": "Sprache",
                     "latitude": "Breitengrad",
                     "longitude": "L\u00e4ngengrad",
                     "mode": "Modus",
                     "name": "Name der Integration"
                 },
-                "description": "Richten Sie die OpenWeatherMap-Integration ein. Zum Generieren des API-Schl\u00fcssels gehen Sie auf https://openweathermap.org/appid",
+                "description": "Richte die OpenWeatherMap-Integration ein. Zum Generieren des API-Schl\u00fcssels gehe auf https://openweathermap.org/appid",
                 "title": "OpenWeatherMap"
             }
         }

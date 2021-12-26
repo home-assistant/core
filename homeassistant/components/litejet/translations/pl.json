@@ -15,5 +15,15 @@
                 "title": "Po\u0142\u0105czenie z LiteJet"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "default_transition": "Domy\u015blny czas efektu przej\u015bcia (w sekundach)"
+                },
+                "title": "Konfiguracja LiteJet"
+            }
+        }
     }
 }

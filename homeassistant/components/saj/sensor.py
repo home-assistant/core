@@ -1,19 +1,24 @@
 """SAJ solar inverter interface."""
+from __future__ import annotations
+
 from datetime import date
 import logging
 
 import pysaj
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_TYPE,
     CONF_USERNAME,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_TEMPERATURE,
     ENERGY_KILO_WATT_HOUR,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
@@ -169,6 +174,11 @@ class SAJsensor(SensorEntity):
         self._serialnumber = serialnumber
         self._state = self._sensor.value
 
+        if pysaj_sensor.name in ("current_power", "temperature"):
+            self._attr_state_class = SensorStateClass.MEASUREMENT
+        if pysaj_sensor.name == "total_yield":
+            self._attr_state_class = SensorStateClass.TOTAL_INCREASING
+
     @property
     def name(self):
         """Return the name of the sensor."""
@@ -178,12 +188,12 @@ class SAJsensor(SensorEntity):
         return f"saj_{self._sensor.name}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return SAJ_UNIT_MAPPINGS[self._sensor.unit]
 
@@ -191,12 +201,14 @@ class SAJsensor(SensorEntity):
     def device_class(self):
         """Return the device class the sensor belongs to."""
         if self.unit_of_measurement == POWER_WATT:
-            return DEVICE_CLASS_POWER
+            return SensorDeviceClass.POWER
+        if self.unit_of_measurement == ENERGY_KILO_WATT_HOUR:
+            return SensorDeviceClass.ENERGY
         if (
             self.unit_of_measurement == TEMP_CELSIUS
             or self._sensor.unit == TEMP_FAHRENHEIT
         ):
-            return DEVICE_CLASS_TEMPERATURE
+            return SensorDeviceClass.TEMPERATURE
 
     @property
     def should_poll(self) -> bool:

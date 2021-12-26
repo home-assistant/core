@@ -7,20 +7,15 @@ purge:
     keep_days:
       name: Days to keep
       description: Number of history days to keep in database after purge.
-      example: 2
       selector:
         number:
           min: 0
           max: 365
-          step: 1
           unit_of_measurement: days
-          mode: slider
 
     repack:
       name: Repack
-      description:
-        Attempt to save disk space by rewriting the entire database file.
-      example: true
+      description: Attempt to save disk space by rewriting the entire database file.
       default: false
       selector:
         boolean:
@@ -28,13 +23,38 @@ purge:
     apply_filter:
       name: Apply filter
       description: Apply entity_id and event_type filter in addition to time based purge.
-      example: true
       default: false
       selector:
         boolean:
 
+purge_entities:
+  name: Purge Entities
+  description: Start purge task to remove specific entities from your database.
+  target:
+    entity: {}
+  fields:
+    domains:
+      name: Domains to remove
+      description: List the domains that need to be removed from the recorder database.
+      example: "sun"
+      required: false
+      default: []
+      selector:
+        object:
+
+    entity_globs:
+      name: Entity Globs to remove
+      description: List the regular expressions to select entities for removal from the recorder database.
+      example: "domain*.object_id*"
+      required: false
+      default: []
+      selector:
+        object:
+
 disable:
+  name: Disable
   description: Stop the recording of events and state changes
 
-enabled:
+enable:
+  name: Enable
   description: Start the recording of events and state changes

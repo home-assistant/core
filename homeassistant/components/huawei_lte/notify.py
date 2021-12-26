@@ -9,11 +9,11 @@ import attr
 from huawei_lte_api.exceptions import ResponseErrorException
 
 from homeassistant.components.notify import ATTR_TARGET, BaseNotificationService
-from homeassistant.const import CONF_RECIPIENT, CONF_URL
+from homeassistant.const import CONF_RECIPIENT
 from homeassistant.core import HomeAssistant
 
 from . import Router
-from .const import DOMAIN
+from .const import ATTR_UNIQUE_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ async def async_get_service(
     if discovery_info is None:
         return None
 
-    router = hass.data[DOMAIN].routers[discovery_info[CONF_URL]]
+    router = hass.data[DOMAIN].routers[discovery_info[ATTR_UNIQUE_ID]]
     default_targets = discovery_info[CONF_RECIPIENT] or []
 
     return HuaweiLteSmsNotificationService(router, default_targets)

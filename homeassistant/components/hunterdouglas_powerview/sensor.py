@@ -3,13 +3,10 @@ import logging
 
 from aiopvapi.resources.shade import factory as PvShade
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import (
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_SIGNAL_STRENGTH,
-    PERCENTAGE,
-)
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.const import DEVICE_CLASS_SIGNAL_STRENGTH, PERCENTAGE
 from homeassistant.core import callback
+from homeassistant.helpers.entity import EntityCategory
 
 from .const import (
     CONF_IMPORT_BATTERY_SENSOR,
@@ -85,8 +82,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class PowerViewShadeBatterySensor(ShadeEntity, SensorEntity):
     """Representation of an shade battery charge sensor."""
 
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return PERCENTAGE
 
@@ -98,7 +97,7 @@ class PowerViewShadeBatterySensor(ShadeEntity, SensorEntity):
     @property
     def device_class(self):
         """Shade battery Class."""
-        return DEVICE_CLASS_BATTERY
+        return SensorDeviceClass.BATTERY
 
     @property
     def unique_id(self):
@@ -106,7 +105,7 @@ class PowerViewShadeBatterySensor(ShadeEntity, SensorEntity):
         return f"{self._unique_id}_charge"
 
     @property
-    def state(self):
+    def native_value(self):
         """Get the current value in percentage."""
         return round(
             self._shade.raw_data[SHADE_BATTERY_LEVEL] / SHADE_BATTERY_LEVEL_MAX * 100

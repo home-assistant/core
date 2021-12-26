@@ -1,10 +1,15 @@
 """Support the sensor of a BloomSky weather station."""
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
+)
 from homeassistant.const import (
     AREA_SQUARE_METERS,
     CONF_MONITORED_CONDITIONS,
+    ELECTRIC_POTENTIAL_MILLIVOLT,
     PERCENTAGE,
     PRESSURE_INHG,
     PRESSURE_MBAR,
@@ -31,7 +36,7 @@ SENSOR_UNITS_IMPERIAL = {
     "Humidity": PERCENTAGE,
     "Pressure": PRESSURE_INHG,
     "Luminance": f"cd/{AREA_SQUARE_METERS}",
-    "Voltage": "mV",
+    "Voltage": ELECTRIC_POTENTIAL_MILLIVOLT,
 }
 
 # Metric units
@@ -40,7 +45,12 @@ SENSOR_UNITS_METRIC = {
     "Humidity": PERCENTAGE,
     "Pressure": PRESSURE_MBAR,
     "Luminance": f"cd/{AREA_SQUARE_METERS}",
-    "Voltage": "mV",
+    "Voltage": ELECTRIC_POTENTIAL_MILLIVOLT,
+}
+
+# Device class
+SENSOR_DEVICE_CLASS = {
+    "Temperature": SensorDeviceClass.TEMPERATURE,
 }
 
 # Which sensors to format numerically
@@ -72,44 +82,30 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class BloomSkySensor(SensorEntity):
     """Representation of a single sensor in a BloomSky device."""
 
-    def __init__(self, bs, device, sensor_name):
+    def __init__(self, bs, device, sensor_name):  # pylint: disable=invalid-name
         """Initialize a BloomSky sensor."""
         self._bloomsky = bs
         self._device_id = device["DeviceID"]
         self._sensor_name = sensor_name
-        self._name = f"{device['DeviceName']} {sensor_name}"
-        self._state = None
-        self._unique_id = f"{self._device_id}-{self._sensor_name}"
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self._unique_id
-
-    @property
-    def name(self):
-        """Return the name of the BloomSky device and this sensor."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the current state, eg. value, of this sensor."""
-        return self._state
-
-    @property
-    def unit_of_measurement(self):
-        """Return the sensor units."""
+        self._attr_name = f"{device['DeviceName']} {sensor_name}"
+        self._attr_unique_id = f"{self._device_id}-{sensor_name}"
+        self._attr_native_unit_of_measurement = SENSOR_UNITS_IMPERIAL.get(
+            sensor_name, None
+        )
         if self._bloomsky.is_metric:
-            return SENSOR_UNITS_METRIC.get(self._sensor_name, None)
-        return SENSOR_UNITS_IMPERIAL.get(self._sensor_name, None)
+            self._attr_native_unit_of_measurement = SENSOR_UNITS_METRIC.get(
+                sensor_name, None
+            )
+
+    @property
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return SENSOR_DEVICE_CLASS.get(self._sensor_name)
 
     def update(self):
         """Request an update from the BloomSky API."""
         self._bloomsky.refresh_devices()
-
         state = self._bloomsky.devices[self._device_id]["Data"][self._sensor_name]
-
-        if self._sensor_name in FORMAT_NUMBERS:
-            self._state = f"{state:.2f}"
-        else:
-            self._state = state
+        self._attr_native_value = (
+            f"{state:.2f}" if self._sensor_name in FORMAT_NUMBERS else state
+        )

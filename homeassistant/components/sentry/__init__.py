@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import re
+from types import MappingProxyType
+from typing import Any
 
 import sentry_sdk
 from sentry_sdk.integrations.aiohttp import AioHttpIntegration
@@ -34,7 +36,7 @@ from .const import (
     ENTITY_COMPONENTS,
 )
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 LOGGER_INFO_REGEX = re.compile(r"^(\w+)\.?(\w+)?\.?(\w+)?\.?(\w+)?(?:\..*)?$")
@@ -119,19 +121,19 @@ def get_channel(version: str) -> str:
 
 def process_before_send(
     hass: HomeAssistant,
-    options,
+    options: MappingProxyType[str, Any],
     channel: str,
     huuid: str,
     system_info: dict[str, bool | str],
     custom_components: dict[str, Integration],
-    event,
-    hint,
+    event: dict[str, Any],
+    hint: dict[str, Any],
 ):
     """Process a Sentry event before sending it to Sentry."""
     # Filter out handled events by default
     if (
         "tags" in event
-        and event.tags.get("handled", "no") == "yes"
+        and event["tags"].get("handled", "no") == "yes"
         and not options.get(CONF_EVENT_HANDLED)
     ):
         return None
@@ -152,8 +154,7 @@ def process_before_send(
     ]
 
     # Add additional tags based on what caused the event.
-    platform = entity_platform.current_platform.get()
-    if platform is not None:
+    if (platform := entity_platform.current_platform.get()) is not None:
         # This event happened in a platform
         additional_tags["custom_component"] = "no"
         additional_tags["integration"] = platform.platform_name
@@ -203,7 +204,7 @@ def process_before_send(
                 "channel": channel,
                 "custom_components": "\n".join(sorted(custom_components)),
                 "integrations": "\n".join(sorted(integrations)),
-                **system_info,
+                **system_info,  # type: ignore[arg-type]
             },
         }
     )

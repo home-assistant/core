@@ -7,14 +7,14 @@ from homeassistant.components.websocket_api.http import URL
 from .test_auth import test_auth_active_with_token
 
 
-async def test_websocket_api(hass, aiohttp_client, hass_access_token, legacy_auth):
+async def test_websocket_api(hass, hass_client_no_auth, hass_access_token, legacy_auth):
     """Test API streams."""
     await async_setup_component(
         hass, "sensor", {"sensor": {"platform": "websocket_api"}}
     )
     await hass.async_block_till_done()
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
     ws = await client.ws_connect(URL)
 
     auth_ok = await ws.receive_json()

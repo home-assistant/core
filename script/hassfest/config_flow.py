@@ -29,31 +29,6 @@ def validate_integration(config: Config, integration: Integration):
                 "config_flow",
                 "Config flows need to be defined in the file config_flow.py",
             )
-        if integration.manifest.get("homekit"):
-            integration.add_error(
-                "config_flow",
-                "HomeKit information in a manifest requires a config flow to exist",
-            )
-        if integration.manifest.get("mqtt"):
-            integration.add_error(
-                "config_flow",
-                "MQTT information in a manifest requires a config flow to exist",
-            )
-        if integration.manifest.get("ssdp"):
-            integration.add_error(
-                "config_flow",
-                "SSDP information in a manifest requires a config flow to exist",
-            )
-        if integration.manifest.get("zeroconf"):
-            integration.add_error(
-                "config_flow",
-                "Zeroconf information in a manifest requires a config flow to exist",
-            )
-        if integration.manifest.get("dhcp"):
-            integration.add_error(
-                "config_flow",
-                "DHCP information in a manifest requires a config flow to exist",
-            )
         return
 
     config_flow = config_flow_file.read_text()
@@ -66,6 +41,7 @@ def validate_integration(config: Config, integration: Integration):
         or "async_step_ssdp" in config_flow
         or "async_step_zeroconf" in config_flow
         or "async_step_dhcp" in config_flow
+        or "async_step_usb" in config_flow
     )
 
     if not needs_unique_id:
@@ -98,17 +74,7 @@ def generate_and_validate(integrations: dict[str, Integration], config: Config):
     for domain in sorted(integrations):
         integration = integrations[domain]
 
-        if not integration.manifest:
-            continue
-
-        if not (
-            integration.manifest.get("config_flow")
-            or integration.manifest.get("homekit")
-            or integration.manifest.get("mqtt")
-            or integration.manifest.get("ssdp")
-            or integration.manifest.get("zeroconf")
-            or integration.manifest.get("dhcp")
-        ):
+        if not integration.manifest or not integration.config_flow:
             continue
 
         validate_integration(config, integration)

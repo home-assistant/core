@@ -5,12 +5,13 @@ from homeassistant.components import websocket_api
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
+from homeassistant.helpers.typing import ConfigType
 
 from .analytics import Analytics
 from .const import ATTR_ONBOARDED, ATTR_PREFERENCES, DOMAIN, INTERVAL, PREFERENCE_SCHEMA
 
 
-async def async_setup(hass: HomeAssistant, _):
+async def async_setup(hass: HomeAssistant, _: ConfigType) -> bool:
     """Set up the analytics integration."""
     analytics = Analytics(hass)
 
@@ -35,8 +36,8 @@ async def async_setup(hass: HomeAssistant, _):
 
 
 @websocket_api.require_admin
-@websocket_api.async_response
 @websocket_api.websocket_command({vol.Required("type"): "analytics"})
+@websocket_api.async_response
 async def websocket_analytics(
     hass: HomeAssistant,
     connection: websocket_api.connection.ActiveConnection,
@@ -51,13 +52,13 @@ async def websocket_analytics(
 
 
 @websocket_api.require_admin
-@websocket_api.async_response
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "analytics/preferences",
         vol.Required("preferences", default={}): PREFERENCE_SCHEMA,
     }
 )
+@websocket_api.async_response
 async def websocket_analytics_preferences(
     hass: HomeAssistant,
     connection: websocket_api.connection.ActiveConnection,

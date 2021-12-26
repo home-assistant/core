@@ -1,15 +1,14 @@
 """Doorsensor Support for the Nuki Lock."""
 
-import logging
-
 from pynuki import STATE_DOORSENSOR_OPENED
 
-from homeassistant.components.binary_sensor import DEVICE_CLASS_DOOR, BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+)
 
 from . import NukiEntity
 from .const import ATTR_NUKI_ID, DATA_COORDINATOR, DATA_LOCKS, DOMAIN as NUKI_DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -28,6 +27,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
 class NukiDoorsensorEntity(NukiEntity, BinarySensorEntity):
     """Representation of a Nuki Lock Doorsensor."""
+
+    _attr_device_class = BinarySensorDeviceClass.DOOR
 
     @property
     def name(self):
@@ -66,8 +67,3 @@ class NukiDoorsensorEntity(NukiEntity, BinarySensorEntity):
     def is_on(self):
         """Return true if the door is open."""
         return self.door_sensor_state == STATE_DOORSENSOR_OPENED
-
-    @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_DOOR

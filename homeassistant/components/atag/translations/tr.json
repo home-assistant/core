@@ -10,8 +10,7 @@
         "step": {
             "user": {
                 "data": {
-                    "email": "E-posta",
-                    "host": "Ana Bilgisayar",
+                    "host": "Sunucu",
                     "port": "Port"
                 },
                 "title": "Cihaza ba\u011flan\u0131n"

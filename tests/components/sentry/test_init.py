@@ -1,6 +1,6 @@
 """Tests for Sentry integration."""
 import logging
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -112,12 +112,12 @@ async def test_setup_entry_with_tracing(hass: HomeAssistant) -> None:
         ("0.115.0dev0", "dev"),
     ],
 )
-async def test_get_channel(version, channel) -> None:
+async def test_get_channel(version: str, channel: str) -> None:
     """Test if channel detection works from Home Assistant version number."""
     assert get_channel(version) == channel
 
 
-async def test_process_before_send(hass: HomeAssistant):
+async def test_process_before_send(hass: HomeAssistant) -> None:
     """Test regular use of the Sentry process before sending function."""
     hass.config.components.add("puppies")
     hass.config.components.add("a_integration")
@@ -308,12 +308,6 @@ async def test_filter_log_events(hass: HomeAssistant, logger, options, event):
 )
 async def test_filter_handled_events(hass: HomeAssistant, handled, options, event):
     """Tests filtering of handled events based on configuration options."""
-
-    event_mock = MagicMock()
-    event_mock.__iter__ = ["tags"]
-    event_mock.__contains__ = lambda _, val: val == "tags"
-    event_mock.tags = {"handled": handled}
-
     result = process_before_send(
         hass,
         options=options,
@@ -321,7 +315,7 @@ async def test_filter_handled_events(hass: HomeAssistant, handled, options, even
         huuid="12345",
         system_info={"installation_type": "pytest"},
         custom_components=[],
-        event=event_mock,
+        event={"tags": {"handled": handled}},
         hint={},
     )
 
