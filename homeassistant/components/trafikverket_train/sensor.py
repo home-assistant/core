@@ -39,6 +39,7 @@ ATTR_DEVIATIONS = "deviations"
 
 ICON = "mdi:train"
 SCAN_INTERVAL = timedelta(minutes=5)
+TIMEZONE = get_time_zone("Europe/Stockholm")
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -147,23 +148,21 @@ class TrainSensor(SensorEntity):
         self._weekday = weekday
         self._time = departuretime
         self._state: TrainStop | None = None
-        self._delay_in_minutes: timedelta | None = None
-        self._timezone = get_time_zone("Europe/Stockholm")
         self._attr_extra_state_attributes = {}
 
     async def async_update(self) -> None:
         """Retrieve latest state."""
+        when = datetime.now()
+        if self._time:
+            departure_day = next_departuredate(self._weekday)
+            when = datetime.combine(departure_day, self._time).astimezone(TIMEZONE)
         try:
             if self._time:
-                departure_day = next_departuredate(self._weekday)
-                when = datetime.combine(departure_day, self._time).astimezone(
-                    self._timezone
-                )
                 self._state = await self._train_api.async_get_train_stop(
                     self._from_station, self._to_station, when
                 )
             else:
-                when = datetime.now()
+
                 self._state = await self._train_api.async_get_next_train_stop(
                     self._from_station, self._to_station, when
                 )
@@ -179,15 +178,13 @@ class TrainSensor(SensorEntity):
         self._attr_available = True
 
         self._attr_native_value = self._state.advertised_time_at_location.astimezone(
-            self._timezone
+            TIMEZONE
         )
         if self._state.time_at_location:
-            self._attr_native_value = self._state.time_at_location.astimezone(
-                self._timezone
-            )
+            self._attr_native_value = self._state.time_at_location.astimezone(TIMEZONE)
         if self._state.estimated_time_at_location:
             self._attr_native_value = self._state.estimated_time_at_location.astimezone(
-                self._timezone
+                TIMEZONE
             )
 
         self._attr_extra_state_attributes[ATTR_DEPARTURE_STATE] = (
@@ -196,28 +193,26 @@ class TrainSensor(SensorEntity):
         self._attr_extra_state_attributes[ATTR_CANCELED] = (
             self._state.canceled if self._state.canceled else None
         )
-        self._delay_in_minutes = self._state.get_delay_time()
+        delay_in_minutes = self._state.get_delay_time()
         self._attr_extra_state_attributes[ATTR_DELAY_TIME] = (
-            self._delay_in_minutes.total_seconds() / 60
-            if self._delay_in_minutes
-            else None
+            delay_in_minutes.total_seconds() / 60 if delay_in_minutes else None
         )
         self._attr_extra_state_attributes[ATTR_PLANNED_TIME] = (
             as_utc(
-                self._state.advertised_time_at_location.astimezone(self._timezone)
+                self._state.advertised_time_at_location.astimezone(TIMEZONE)
             ).isoformat()
             if self._state.advertised_time_at_location
             else None
         )
         self._attr_extra_state_attributes[ATTR_ESTIMATED_TIME] = (
             as_utc(
-                self._state.estimated_time_at_location.astimezone(self._timezone)
+                self._state.estimated_time_at_location.astimezone(TIMEZONE)
             ).isoformat()
             if self._state.estimated_time_at_location
             else None
         )
         self._attr_extra_state_attributes[ATTR_ACTUAL_TIME] = (
-            as_utc(self._state.time_at_location.astimezone(self._timezone)).isoformat()
+            as_utc(self._state.time_at_location.astimezone(TIMEZONE)).isoformat()
             if self._state.time_at_location
             else None
         )
