@@ -17,6 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_SENDER_NR = "number"
 CONF_RECP_NR = "recipients"
 CONF_SIGNAL_CLI_REST_API = "url"
+CONF_MAX_ALLOWED_DOWNLOAD_SIZE_BYTES = 52428800
 ATTR_FILENAME = "attachment"
 ATTR_FILENAMES = "attachments"
 ATTR_URLS = "urls"
@@ -79,7 +80,22 @@ class SignalNotificationService(BaseNotificationService):
                 urls = data[ATTR_URLS]
                 for url in urls:
                     try:
-                        attachments_as_bytes.append((requests.get(url, verify=False, timeout=10)).content)
+                        r = requests.get(url, verify=False, timeout=10,stream=True)
+                        r.raise_for_status()
+
+                        if int(r.headers.get('Content-Length')) > CONF_MAX_ALLOWED_DOWNLOAD_SIZE_BYTES:
+                            raise ValueError('Response too large')
+
+                        size = 0
+                        data = []
+                        for chunk in r.iter_content(1024):
+                            size += len(chunk)
+                            if size > CONF_MAX_ALLOWED_DOWNLOAD_SIZE_BYTES:
+                                raise ValueError('Response too large')
+
+                            data.append(chunk)
+
+                        attachments_as_bytes.append(data)
                     except Exception as ex:
                         _LOGGER.error("%s", ex)
                         raise ex
