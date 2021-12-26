@@ -41,7 +41,7 @@ async def test_form_create_entry(hass: HomeAssistant) -> None:
     assert result["errors"] == {"host": "unknown"}
 
     with patch(
-        "vallox_websocket_api.Vallox.get_info",
+        "homeassistant.components.vallox.config_flow.Vallox.get_info",
         return_value={"model": "Vallox 110 MV"},
     ), patch(
         "homeassistant.components.vallox.async_setup_entry",
@@ -82,7 +82,7 @@ async def test_form_vallox_api_exception_cannot_connect(hass: HomeAssistant) -> 
     )
 
     with patch(
-        "vallox_websocket_api.Vallox.get_info",
+        "homeassistant.components.vallox.config_flow.Vallox.get_info",
         side_effect=ValloxApiException,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -102,7 +102,7 @@ async def test_form_os_error_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "vallox_websocket_api.Vallox.get_info",
+        "homeassistant.components.vallox.config_flow.Vallox.get_info",
         side_effect=OSError,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -145,7 +145,7 @@ async def test_import(hass: HomeAssistant) -> None:
     name = "Vallox 90 MV"
 
     with patch(
-        "vallox_websocket_api.Vallox.get_info",
+        "homeassistant.components.vallox.config_flow.Vallox.get_info",
         return_value={"model": "Vallox 90 MV"},
     ), patch(
         "homeassistant.components.vallox.async_setup_entry",
@@ -208,7 +208,7 @@ async def test_import_cannot_connect(hass: HomeAssistant) -> None:
     name = "Vallox 90 MV"
 
     with patch(
-        "vallox_websocket_api.Vallox.get_info",
+        "homeassistant.components.vallox.config_flow.Vallox.get_info",
         side_effect=OSError,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -227,7 +227,7 @@ async def test_import_unknown_exception(hass: HomeAssistant) -> None:
     name = "Vallox 245 MV"
 
     with patch(
-        "homeassistant.components.vallox.config_flow.validate_host",
+        "homeassistant.components.vallox.config_flow.Vallox.get_info",
         side_effect=Exception,
     ):
         result = await hass.config_entries.flow.async_init(
