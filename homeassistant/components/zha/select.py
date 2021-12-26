@@ -7,8 +7,6 @@ import functools
 from zigpy.zcl.clusters.security import IasWd
 
 from homeassistant.components.select import SelectEntity
-from homeassistant.components.zha.core.registries import ZHA_ENTITIES
-from homeassistant.components.zha.core.typing import ChannelType, ZhaDeviceType
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ENTITY_CATEGORY_CONFIG, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant, callback
@@ -17,6 +15,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .core import discovery
 from .core.const import CHANNEL_IAS_WD, DATA_ZHA, SIGNAL_ADD_ENTITIES, Strobe
+from .core.registries import ZHA_ENTITIES
+from .core.typing import ChannelType, ZhaDeviceType
 from .entity import ZhaEntity
 
 MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, Platform.SELECT)
