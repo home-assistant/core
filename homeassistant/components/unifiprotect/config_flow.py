@@ -56,7 +56,7 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return OptionsFlowHandler(config_entry)
 
     @callback
-    async def _async_create_entry(self, title: str, data: dict[str, Any]) -> FlowResult:
+    def _async_create_entry(self, title: str, data: dict[str, Any]) -> FlowResult:
         return self.async_create_entry(
             title=title,
             data={**data, CONF_ID: title},
@@ -67,7 +67,6 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    @callback
     async def _async_get_nvr_data(
         self,
         user_input: dict[str, Any],
@@ -161,7 +160,7 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(nvr_data.mac)
                 self._abort_if_unique_id_configured()
 
-                return await self._async_create_entry(nvr_data.name, user_input)
+                return self._async_create_entry(nvr_data.name, user_input)
 
         user_input = user_input or {}
         return self.async_show_form(
