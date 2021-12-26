@@ -47,6 +47,10 @@ async def async_setup_entry(
         async_add_entities(entities)
 
 
+def _human_readable_option(const_option: str) -> str:
+    return const_option.replace("_", " ").title()
+
+
 class FluxPowerStateSelect(FluxBaseEntity, SelectEntity):
     """Representation of a Flux power restore state option."""
 
@@ -82,10 +86,6 @@ class FluxPowerStateSelect(FluxBaseEntity, SelectEntity):
         await self._device.async_set_power_restore(channel1=self._name_to_state[option])
         self._async_set_current_option_from_device()
         self.async_write_ha_state()
-
-
-def _human_readable_option(const_option: str) -> str:
-    return const_option.replace("_", " ").title()
 
 
 class FluxConfigSelect(FluxEntity, SelectEntity):
