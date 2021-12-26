@@ -211,6 +211,25 @@ async def test_import_cannot_connect(hass: HomeAssistant) -> None:
     assert result["reason"] == "cannot_connect"
 
 
+async def test_import_unknown_exception(hass: HomeAssistant) -> None:
+    """Test that cannot connect error is handled."""
+    name = "Vallox 245 MV"
+
+    with patch(
+        "homeassistant.components.vallox.config_flow.validate_host",
+        side_effect=Exception,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={"host": "1.2.3.4", "name": name},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "unknown"
+
+
 async def test_host_valid_with_ip_address(hass: HomeAssistant) -> None:
     """Test that host_valid can handle a valid IP address."""
     result = host_valid("1.2.3.4")
