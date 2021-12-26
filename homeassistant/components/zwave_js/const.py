@@ -66,6 +66,8 @@ ATTR_PREVIOUS_VALUE_RAW = "previous_value_raw"
 ATTR_CURRENT_VALUE = "current_value"
 ATTR_CURRENT_VALUE_RAW = "current_value_raw"
 ATTR_DESCRIPTION = "description"
+ATTR_EVENT_SOURCE = "event_source"
+ATTR_CONFIG_ENTRY_ID = "config_entry_id"
 
 # service constants
 SERVICE_SET_LOCK_USERCODE = "set_lock_usercode"
