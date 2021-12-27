@@ -75,9 +75,10 @@ class ScreenLogicIntelliBriteLight(ScreenLogicLight):
             return
         actual_rgb = find_closest_color(rgb)
         color_num = SUPPORTED_COLORS[actual_rgb]
-        self._attr_rgb_color = actual_rgb
         if not await self.coordinator.gateway.async_set_color_lights(color_num):
             raise HomeAssistantError(f"Failed to set color lights to {rgb}")
+        self._attr_rgb_color = actual_rgb
+        self.async_write_ha_state()
         # Debounced refresh to catch any secondary
         # changes in the device
         await self.coordinator.async_request_refresh()
