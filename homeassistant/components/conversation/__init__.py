@@ -55,7 +55,7 @@ async def async_setup(hass, config):
     """Register the process service."""
     hass.data[DATA_CONFIG] = config
 
-    async def handle_service(service: core.ServiceCall) -> None:
+    async def handle_service(service):
         """Parse text into commands."""
         text = service.data[ATTR_TEXT]
         _LOGGER.debug("Processing: <%s>", text)

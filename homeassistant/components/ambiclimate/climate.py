@@ -19,7 +19,6 @@ from homeassistant.const import (
     CONF_CLIENT_SECRET,
     TEMP_CELSIUS,
 )
-from homeassistant.core import ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
@@ -97,7 +96,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     async_add_entities(devs, True)
 
-    async def send_comfort_feedback(service: ServiceCall) -> None:
+    async def send_comfort_feedback(service):
         """Send comfort feedback."""
         device_name = service.data[ATTR_NAME]
         device = data_connection.find_device_by_room_name(device_name)
@@ -111,7 +110,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         schema=SEND_COMFORT_FEEDBACK_SCHEMA,
     )
 
-    async def set_comfort_mode(service: ServiceCall) -> None:
+    async def set_comfort_mode(service):
         """Set comfort mode."""
         device_name = service.data[ATTR_NAME]
         device = data_connection.find_device_by_room_name(device_name)
@@ -122,7 +121,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         DOMAIN, SERVICE_COMFORT_MODE, set_comfort_mode, schema=SET_COMFORT_MODE_SCHEMA
     )
 
-    async def set_temperature_mode(service: ServiceCall) -> None:
+    async def set_temperature_mode(service):
         """Set temperature mode."""
         device_name = service.data[ATTR_NAME]
         device = data_connection.find_device_by_room_name(device_name)
