@@ -15,6 +15,7 @@ from homeassistant.components.light import (
     LIGHT_TURN_ON_SCHEMA,
     SERVICE_TURN_ON as LIGHT_SERVICE_TURN_ON,
 )
+from homeassistant.core import ServiceCall
 from homeassistant.helpers import aiohttp_client
 import homeassistant.helpers.config_validation as cv
 
@@ -58,7 +59,7 @@ def _get_color(file_handler) -> tuple:
 async def async_setup(hass, hass_config):
     """Set up services for color_extractor integration."""
 
-    async def async_handle_service(service_call):
+    async def async_handle_service(service_call: ServiceCall) -> None:
         """Decide which color_extractor method to call based on service."""
         service_data = dict(service_call.data)
 
