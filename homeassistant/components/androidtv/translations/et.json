@@ -43,12 +43,12 @@
             "init": {
                 "data": {
                     "apps": "Rakenduste loendi seadistamine",
-                    "exclude_unnamed_apps": "V\u00e4lista tundmatu nimega rakendus",
-                    "get_sources": "Kas tuua t\u00f6\u00f6tavad rakendused allikate loendina v\u00f5i mitte",
-                    "screencap": "M\u00e4\u00e4rab kas albumi kujundus tuleks ekraanil kuvatavast pildist v\u00f5tta",
+                    "exclude_unnamed_apps": "V\u00e4lista allikate loendist tundmatu nimega rakendused",
+                    "get_sources": "Jooksvate rakenduste toomine allikate loendina",
+                    "screencap": "Kasutage albumipildi jaoks ekraanit\u00f5mmist",
                     "state_detection_rules": "M\u00e4\u00e4ra oleku tuvastamise reeglid",
-                    "turn_off_command": "ADB k\u00e4sk vaikimisi k\u00e4su turn_off t\u00fchistamiseks",
-                    "turn_on_command": "ADB  k\u00e4sk vaikimisi k\u00e4su turn_on t\u00fchistamiseks"
+                    "turn_off_command": "ADB shell turn off k\u00e4sk (vaikimisi j\u00e4ta t\u00fchjaks)",
+                    "turn_on_command": "ADB shell turn on k\u00e4sk (vaikimisi j\u00e4ta t\u00fchjaks)"
                 },
                 "title": "Android TV suvandid"
             },

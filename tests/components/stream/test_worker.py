@@ -892,6 +892,6 @@ async def test_get_image(hass, record_worker_sync):
 
     await record_worker_sync.join()
 
-    assert await stream.get_image() == EMPTY_8_6_JPEG
+    assert await stream.async_get_image() == EMPTY_8_6_JPEG
 
     stream.stop()

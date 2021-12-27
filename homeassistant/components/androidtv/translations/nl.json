@@ -8,13 +8,31 @@
             "adbkey_not_file": "ADB key file niet gevonden",
             "cannot_connect": "Kan geen verbinding maken",
             "invalid_host": "Ongeldige hostnaam of IP-adres",
-            "key_and_server": "Geef alleen ADB-sleutel of ADB-server op"
+            "key_and_server": "Geef alleen ADB-sleutel of ADB-server op",
+            "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "adb_server_ip": "IP-adres van de ADB-server (leeg laten om niet te gebruiken)",
+                    "adb_server_port": "Poort van de ADB-server",
+                    "adbkey": "Pad naar uw ADB-key file (leeg laten om automatisch te genereren)",
+                    "device_class": "Het type apparaat",
+                    "host": "Host"
+                },
+                "description": "Stel de vereiste parameters in om verbinding te maken met uw Android TV-apparaat",
+                "title": "Android TV"
+            }
         }
     },
     "options": {
+        "error": {
+            "invalid_det_rules": "Ongeldige statusdetectieregels"
+        },
         "step": {
             "apps": {
                 "data": {
+                    "app_delete": "Vink aan om deze applicatie te verwijderen",
                     "app_id": "Applicatie ID",
                     "app_name": "Applicatienaam"
                 },
@@ -36,7 +54,8 @@
             "rules": {
                 "data": {
                     "rule_delete": "Vink aan om deze regel te verwijderen",
-                    "rule_id": "Application ID"
+                    "rule_id": "Application ID",
+                    "rule_values": "Lijst met statusdetectieregels (zie documentatie)"
                 },
                 "description": "Detectieregel configureren voor applicatie-ID {rule_id}",
                 "title": "Regels voor statusdetectie van Android TV configureren"

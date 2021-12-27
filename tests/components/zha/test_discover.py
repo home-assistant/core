@@ -2,7 +2,7 @@
 
 import re
 from unittest import mock
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from zigpy.const import SIG_ENDPOINTS, SIG_MANUFACTURER, SIG_MODEL, SIG_NODE_DESC
@@ -69,6 +69,14 @@ def channels_mock(zha_device_mock):
 @patch(
     "zigpy.zcl.clusters.general.Identify.request",
     new=AsyncMock(return_value=[mock.sentinel.data, zcl_f.Status.SUCCESS]),
+)
+# We do this here because we are testing ZHA discovery logic. Point being we want to ensure that
+# all discovered entities are dispatched for creation. In order to test this we need the entities
+# added to HA. So we ensure that they are all enabled even though they won't necessarily be in reality
+# at runtime
+@patch(
+    "homeassistant.components.zha.entity.ZhaEntity.entity_registry_enabled_default",
+    new=Mock(return_value=True),
 )
 @pytest.mark.parametrize("device", DEVICES)
 async def test_devices(

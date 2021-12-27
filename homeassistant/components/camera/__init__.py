@@ -312,7 +312,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             camera_prefs = prefs.get(camera.entity_id)
             if not camera_prefs.preload_stream:
                 continue
-            stream = await camera.create_stream()
+            stream = await camera.async_create_stream()
             if not stream:
                 continue
             stream.keepalive = True
@@ -390,6 +390,7 @@ class Camera(Entity):
         self.access_tokens: collections.deque = collections.deque([], 2)
         self._warned_old_signature = False
         self.async_update_token()
+        self._create_stream_lock: asyncio.Lock | None = None
 
     @property
     def entity_picture(self) -> str:
@@ -454,22 +455,25 @@ class Camera(Entity):
             return self.stream.available
         return super().available
 
-    async def create_stream(self) -> Stream | None:
+    async def async_create_stream(self) -> Stream | None:
         """Create a Stream for stream_source."""
         # There is at most one stream (a decode worker) per camera
-        if not self.stream:
-            async with async_timeout.timeout(CAMERA_STREAM_SOURCE_TIMEOUT):
-                source = await self.stream_source()
-            if not source:
-                return None
-            self.stream = create_stream(
-                self.hass,
-                source,
-                options=self.stream_options,
-                stream_label=self.entity_id,
-            )
-            self.stream.set_update_callback(self.async_write_ha_state)
-        return self.stream
+        if not self._create_stream_lock:
+            self._create_stream_lock = asyncio.Lock()
+        async with self._create_stream_lock:
+            if not self.stream:
+                async with async_timeout.timeout(CAMERA_STREAM_SOURCE_TIMEOUT):
+                    source = await self.stream_source()
+                if not source:
+                    return None
+                self.stream = create_stream(
+                    self.hass,
+                    source,
+                    options=self.stream_options,
+                    stream_label=self.entity_id,
+                )
+                self.stream.set_update_callback(self.async_write_ha_state)
+            return self.stream
 
     async def stream_source(self) -> str | None:
         """Return the source of the stream.
@@ -918,7 +922,7 @@ async def async_handle_play_stream_service(
 async def _async_stream_endpoint_url(
     hass: HomeAssistant, camera: Camera, fmt: str
 ) -> str:
-    stream = await camera.create_stream()
+    stream = await camera.async_create_stream()
     if not stream:
         raise HomeAssistantError(
             f"{camera.entity_id} does not support play stream service"
@@ -937,7 +941,7 @@ async def async_handle_record_service(
     camera: Camera, service_call: ServiceCall
 ) -> None:
     """Handle stream recording service calls."""
-    stream = await camera.create_stream()
+    stream = await camera.async_create_stream()
 
     if not stream:
         raise HomeAssistantError(f"{camera.entity_id} does not support record service")

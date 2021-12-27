@@ -1,15 +1,10 @@
 """Parent class for every Overkiz device."""
 from __future__ import annotations
 
-from collections.abc import Callable
-from dataclasses import dataclass
-
 from pyoverkiz.enums import OverkizAttribute, OverkizState
 from pyoverkiz.models import Device
 
-from homeassistant.components.button import ButtonEntityDescription
-from homeassistant.components.sensor import SensorEntityDescription
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -84,15 +79,6 @@ class OverkizEntity(CoordinatorEntity):
         )
 
 
-@dataclass
-class OverkizSensorDescription(SensorEntityDescription):
-    """Class to describe an Overkiz sensor."""
-
-    native_value: Callable[
-        [str | int | float], str | int | float
-    ] | None = lambda val: val
-
-
 class OverkizDescriptiveEntity(OverkizEntity):
     """Representation of a Overkiz device entity based on a description."""
 
@@ -100,7 +86,7 @@ class OverkizDescriptiveEntity(OverkizEntity):
         self,
         device_url: str,
         coordinator: OverkizDataUpdateCoordinator,
-        description: OverkizSensorDescription | ButtonEntityDescription,
+        description: EntityDescription,
     ) -> None:
         """Initialize the device."""
         super().__init__(device_url, coordinator)
