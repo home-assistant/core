@@ -65,6 +65,9 @@ class TailscaleFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
+            description_placeholders={
+                "account_url": "https://pvoutput.org/account.jsp"
+            },
             data_schema=vol.Schema(
                 {
                     vol.Required(

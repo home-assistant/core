@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "To authenticate with PVOutput you'll need to get the API key at https://pvoutput.org/account.jsp.\n\nThe system IDs of registered systems are listed on that same page.",
+        "description": "To authenticate with PVOutput you'll need to get the API key at {account_url}.\n\nThe system IDs of registered systems are listed on that same page.",
         "data": {
           "system_id": "System ID",
           "api_key": "[%key:common::config_flow::data::api_key%]"
