@@ -69,7 +69,7 @@ class NukiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Prepare configuration for a DHCP discovered Nuki bridge."""
-        await self.async_set_unique_id(int(discovery_info.hostname[12:], 16))
+        await self.async_set_unique_id(discovery_info.hostname[12:].upper())
 
         self._abort_if_unique_id_configured()
 
