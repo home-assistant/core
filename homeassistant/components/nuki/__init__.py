@@ -56,7 +56,12 @@ async def async_setup_entry(hass, entry):
     # Migration of entry id
     if isinstance(entry.unique_id, int):
         new_id = hex(entry.unique_id).split("x")[-1].upper()
-        hass.config_entries.async_update_entry(entry, unique_id=new_id, title=new_id)
+        if entry.title == entry.unique_id:
+            hass.config_entries.async_update_entry(
+                entry, unique_id=new_id, title=new_id
+            )
+        else:
+            hass.config_entries.async_update_entry(entry, unique_id=new_id)
 
     try:
         bridge = await hass.async_add_executor_job(
