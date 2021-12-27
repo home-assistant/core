@@ -479,6 +479,18 @@ def fortrezz_ssa3_siren_state_fixture():
     return json.loads(load_fixture("zwave_js/fortrezz_ssa3_siren_state.json"))
 
 
+@pytest.fixture(name="zp3111_not_ready_state", scope="session")
+def zp3111_not_ready_state_fixture():
+    """Load the zp3111 4-in-1 sensor not-ready node state fixture data."""
+    return json.loads(load_fixture("zwave_js/zp3111-5_not_ready_state.json"))
+
+
+@pytest.fixture(name="zp3111_state", scope="session")
+def zp3111_state_fixture():
+    """Load the zp3111 4-in-1 sensor node state fixture data."""
+    return json.loads(load_fixture("zwave_js/zp3111-5_state.json"))
+
+
 @pytest.fixture(name="client")
 def mock_client_fixture(controller_state, version_state, log_config_state):
     """Mock a client."""
@@ -919,3 +931,19 @@ def fortrezz_ssa3_siren_fixture(client, fortrezz_ssa3_siren_state):
 def firmware_file_fixture():
     """Return mock firmware file stream."""
     return io.BytesIO(bytes(10))
+
+
+@pytest.fixture(name="zp3111_not_ready")
+def zp3111_not_ready_fixture(client, zp3111_not_ready_state):
+    """Mock a zp3111 4-in-1 sensor node in a not-ready state."""
+    node = Node(client, copy.deepcopy(zp3111_not_ready_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="zp3111")
+def zp3111_fixture(client, zp3111_state):
+    """Mock a zp3111 4-in-1 sensor node."""
+    node = Node(client, copy.deepcopy(zp3111_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
