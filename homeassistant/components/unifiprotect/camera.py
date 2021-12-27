@@ -1,9 +1,8 @@
 """Support for Ubiquiti's UniFi Protect NVR."""
 from __future__ import annotations
 
-from collections.abc import Callable, Generator, Sequence
+from collections.abc import Generator
 import logging
-from typing import Any
 
 from pyunifiprotect.api import ProtectApiClient
 from pyunifiprotect.data import Camera as UFPCamera
@@ -12,7 +11,7 @@ from pyunifiprotect.data.devices import CameraChannel
 from homeassistant.components.camera import SUPPORT_STREAM, Camera
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     ATTR_BITRATE,
@@ -33,7 +32,7 @@ def get_camera_channels(
 ) -> Generator[tuple[UFPCamera, CameraChannel, bool], None, None]:
     """Get all the camera channels."""
     for camera in protect.bootstrap.cameras.values():
-        if len(camera.channels) == 0:
+        if not camera.channels:
             _LOGGER.warning(
                 "Camera does not have any channels: %s (id: %s)", camera.name, camera.id
             )
@@ -53,7 +52,7 @@ def get_camera_channels(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[Sequence[Entity]], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Discover cameras on a UniFi Protect NVR."""
     data: ProtectData = hass.data[DOMAIN][entry.entry_id]
@@ -143,12 +142,7 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         self._attr_is_recording = self.device.is_connected and self.device.is_recording
 
         self._async_set_stream_source()
-
-    @callback
-    def _async_update_extra_attrs_from_protect(self) -> dict[str, Any]:
-        """Add additional Attributes to Camera."""
-        return {
-            **super()._async_update_extra_attrs_from_protect(),
+        self._attr_extra_state_attributes = {
             ATTR_WIDTH: self.channel.width,
             ATTR_HEIGHT: self.channel.height,
             ATTR_FPS: self.channel.fps,

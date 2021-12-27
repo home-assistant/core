@@ -7,6 +7,7 @@ import contextlib
 import logging.handlers
 from timeit import default_timer as timer
 from types import ModuleType
+from typing import Any
 
 from . import config as conf_util, core, loader, requirements
 from .config import async_notify_setup_error
@@ -210,15 +211,15 @@ async def _async_setup_component(
             )
 
         task = None
-        result = True
+        result: Any | bool = True
         try:
             if hasattr(component, "async_setup"):
-                task = component.async_setup(hass, processed_config)  # type: ignore
+                task = component.async_setup(hass, processed_config)
             elif hasattr(component, "setup"):
                 # This should not be replaced with hass.async_add_executor_job because
                 # we don't want to track this task in case it blocks startup.
                 task = hass.loop.run_in_executor(
-                    None, component.setup, hass, processed_config  # type: ignore
+                    None, component.setup, hass, processed_config
                 )
             elif not hasattr(component, "async_setup_entry"):
                 log_error("No setup or config entry setup function defined.")

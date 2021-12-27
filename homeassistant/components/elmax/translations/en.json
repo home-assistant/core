@@ -1,14 +1,15 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured"
+            "single_instance_allowed": "There already is an integration for that Elmaxc panel."
         },
         "error": {
-            "bad_auth": "Invalid authentication",
+            "invalid_auth": "Invalid authentication",
             "invalid_pin": "The provided pin is invalid",
             "network_error": "A network error occurred",
             "no_panel_online": "No online Elmax control panel was found.",
-            "unknown_error": "An unexpected error occurred"
+            "reauth_panel_disappeared": "The panel is no longer associated to your account.",
+            "unknown": "Unexpected error"
         },
         "step": {
             "panels": {
@@ -19,6 +20,16 @@
                 },
                 "description": "Select which panel you would like to control with this integration. Please note that the panel must be ON in order to be configured.",
                 "title": "Panel selection"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "username": "Username",
+                    "password": "Password",
+                    "panel_id": "Panel ID",
+                    "panel_pin": "PIN Code"
+                },
+                "description": "Please authenticate again to the Elmax cloud.",
+                "title": "Re-Authenticate"
             },
             "user": {
                 "data": {

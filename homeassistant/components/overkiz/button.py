@@ -57,18 +57,20 @@ async def async_setup_entry(
 
     for device in data.coordinator.data.values():
         if (
-            device.widget not in IGNORED_OVERKIZ_DEVICES
-            and device.ui_class not in IGNORED_OVERKIZ_DEVICES
+            device.widget in IGNORED_OVERKIZ_DEVICES
+            or device.ui_class in IGNORED_OVERKIZ_DEVICES
         ):
-            for command in device.definition.commands:
-                if description := supported_commands.get(command.command_name):
-                    entities.append(
-                        OverkizButton(
-                            device.device_url,
-                            data.coordinator,
-                            description,
-                        )
+            continue
+
+        for command in device.definition.commands:
+            if description := supported_commands.get(command.command_name):
+                entities.append(
+                    OverkizButton(
+                        device.device_url,
+                        data.coordinator,
+                        description,
                     )
+                )
 
     async_add_entities(entities)
 

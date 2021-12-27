@@ -362,7 +362,7 @@ class HomeAssistant:
             raise ValueError("Don't call async_add_job with None")
 
         if asyncio.iscoroutine(target):
-            return self.async_create_task(cast(Coroutine, target))
+            return self.async_create_task(target)
 
         return self.async_add_hass_job(HassJob(target), *args)
 
@@ -462,7 +462,7 @@ class HomeAssistant:
         args: parameters for method to call.
         """
         if asyncio.iscoroutine(target):
-            return self.async_create_task(cast(Coroutine, target))
+            return self.async_create_task(target)
 
         return self.async_run_hass_job(HassJob(target), *args)
 
