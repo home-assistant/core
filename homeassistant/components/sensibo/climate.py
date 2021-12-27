@@ -185,11 +185,10 @@ class SensiboClimate(ClimateEntity):
         self._attr_current_humidity = data["measurements"].get("humidity")
 
         self._attr_target_temperature = self._ac_states.get("targetTemperature")
-        self._attr_hvac_mode = (
-            HVAC_MODE_OFF
-            if not self._ac_states["on"]
-            else SENSIBO_TO_HA.get(self._ac_states["mode"], "")
-        )
+        if self._ac_states["on"]:
+            self._attr_hvac_mode = SENSIBO_TO_HA.get(self._ac_states["mode"], "")
+        else:
+            self._attr_hvac_mode = HVAC_MODE_OFF
         self._attr_fan_mode = self._ac_states.get("fanLevel")
         self._attr_swing_mode = self._ac_states.get("swing")
 
@@ -320,11 +319,11 @@ class SensiboClimate(ClimateEntity):
             self._failed_update = True
             return
 
-        self._attr_target_temperature_step = (
-            1
-            if self.temperature_unit == self.hass.config.units.temperature_unit
-            else None
-        )
+        if self.temperature_unit == self.hass.config.units.temperature_unit:
+            self._attr_target_temperature_step = 1
+        else:
+            self._attr_target_temperature_step = None
+
         self._failed_update = False
         self._do_update(data)
 
