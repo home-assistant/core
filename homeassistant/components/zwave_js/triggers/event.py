@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import functools
+import logging
 
 import voluptuous as vol
 from zwave_js_server.client import Client
@@ -17,6 +18,7 @@ from homeassistant.components.zwave_js.const import (
     ATTR_EVENT_DATA,
     ATTR_EVENT_SOURCE,
     ATTR_NODE_ID,
+    ATTR_PARTIAL_DICT_MATCH,
     DATA_CLIENT,
     DOMAIN,
 )
@@ -53,6 +55,7 @@ TRIGGER_SCHEMA = vol.All(
             vol.Required(ATTR_EVENT_SOURCE): vol.In(["node", "controller", "driver"]),
             vol.Required(ATTR_EVENT): cv.string,
             vol.Optional(ATTR_EVENT_DATA): dict,
+            vol.Optional(ATTR_PARTIAL_DICT_MATCH, default=False): bool,
         },
     ),
     vol.Any(
@@ -118,8 +121,22 @@ async def async_attach_trigger(
     @callback
     def async_on_event(event_data: dict, device: dr.DeviceEntry | None = None) -> None:
         """Handle event."""
+        logging.getLogger(__name__).error(config)
+        logging.getLogger(__name__).error(event_data)
+        logging.getLogger(__name__).error(event_data_filter)
         for key, val in event_data_filter.items():
-            if key not in event_data or event_data[key] != val:
+            if key not in event_data:
+                return
+            if (
+                config[ATTR_PARTIAL_DICT_MATCH]
+                and isinstance(event_data[key], dict)
+                and isinstance(event_data_filter[key], dict)
+            ):
+                for key2, val2 in event_data_filter[key].items():
+                    if key2 not in event_data[key] or event_data[key][key2] != val2:
+                        return
+                continue
+            if event_data[key] != val:
                 return
 
         payload = {

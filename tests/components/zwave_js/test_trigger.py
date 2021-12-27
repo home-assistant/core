@@ -283,6 +283,18 @@ async def test_zwave_js_event(hass, client, lock_schlage_be469, integration):
         hass, "driver_no_event_data_filter"
     )
     driver_event_data_filter = async_capture_events(hass, "driver_event_data_filter")
+    node_event_data_no_partial_dict_match_wrong_type_filter = async_capture_events(
+        hass, "node_event_data_no_partial_dict_match_wrong_type_filter"
+    )
+    node_event_data_partial_dict_match_wrong_type_filter = async_capture_events(
+        hass, "node_event_data_partial_dict_match_wrong_type_filter"
+    )
+    node_event_data_no_partial_dict_match_filter = async_capture_events(
+        hass, "node_event_data_no_partial_dict_match_filter"
+    )
+    node_event_data_partial_dict_match_filter = async_capture_events(
+        hass, "node_event_data_partial_dict_match_filter"
+    )
 
     def clear_events():
         """Clear all events in the event list."""
@@ -292,13 +304,17 @@ async def test_zwave_js_event(hass, client, lock_schlage_be469, integration):
         controller_event_data_filter.clear()
         driver_no_event_data_filter.clear()
         driver_event_data_filter.clear()
+        node_event_data_no_partial_dict_match_wrong_type_filter.clear()
+        node_event_data_partial_dict_match_wrong_type_filter.clear()
+        node_event_data_no_partial_dict_match_filter.clear()
+        node_event_data_partial_dict_match_filter.clear()
 
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
         {
             automation.DOMAIN: [
-                # node no event data filter
+                # node filter: no event data
                 {
                     "trigger": {
                         "platform": trigger_type,
@@ -310,7 +326,7 @@ async def test_zwave_js_event(hass, client, lock_schlage_be469, integration):
                         "event": "node_no_event_data_filter",
                     },
                 },
-                # node event data filter
+                # node filter: event data
                 {
                     "trigger": {
                         "platform": trigger_type,
@@ -323,7 +339,7 @@ async def test_zwave_js_event(hass, client, lock_schlage_be469, integration):
                         "event": "node_event_data_filter",
                     },
                 },
-                # controller no event data filter
+                # controller filter: no event data
                 {
                     "trigger": {
                         "platform": trigger_type,
@@ -335,7 +351,7 @@ async def test_zwave_js_event(hass, client, lock_schlage_be469, integration):
                         "event": "controller_no_event_data_filter",
                     },
                 },
-                # controller event data filter
+                # controller filter: event data
                 {
                     "trigger": {
                         "platform": trigger_type,
@@ -348,7 +364,7 @@ async def test_zwave_js_event(hass, client, lock_schlage_be469, integration):
                         "event": "controller_event_data_filter",
                     },
                 },
-                # driver no event data filter
+                # driver filter: no event data
                 {
                     "trigger": {
                         "platform": trigger_type,
@@ -360,7 +376,7 @@ async def test_zwave_js_event(hass, client, lock_schlage_be469, integration):
                         "event": "driver_no_event_data_filter",
                     },
                 },
-                # driver event data filter
+                # driver filter: event data
                 {
                     "trigger": {
                         "platform": trigger_type,
@@ -371,6 +387,74 @@ async def test_zwave_js_event(hass, client, lock_schlage_be469, integration):
                     },
                     "action": {
                         "event": "driver_event_data_filter",
+                    },
+                },
+                # node filter: event data, no partial dict match, wrong type
+                {
+                    "trigger": {
+                        "platform": trigger_type,
+                        "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
+                        "event_source": "node",
+                        "event": "value updated",
+                        "event_data": {"args": "wrong type"},
+                    },
+                    "action": {
+                        "event": "node_event_data_no_partial_dict_match_wrong_type_filter",
+                    },
+                },
+                # node filter: event data, partial dict match, wrong type
+                {
+                    "trigger": {
+                        "platform": trigger_type,
+                        "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
+                        "event_source": "node",
+                        "event": "value updated",
+                        "event_data": {"args": "wrong type"},
+                        "partial_dict_match": True,
+                    },
+                    "action": {
+                        "event": "node_event_data_partial_dict_match_wrong_type_filter",
+                    },
+                },
+                # node filter: event data, no partial dict match
+                {
+                    "trigger": {
+                        "platform": trigger_type,
+                        "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
+                        "event_source": "node",
+                        "event": "value updated",
+                        "event_data": {"args": {"commandClassName": "Door Lock"}},
+                    },
+                    "action": {
+                        "event": "node_event_data_no_partial_dict_match_filter",
+                    },
+                },
+                # node filter: event data, partial dict match
+                {
+                    "trigger": {
+                        "platform": trigger_type,
+                        "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
+                        "event_source": "node",
+                        "event": "value updated",
+                        "event_data": {"args": {"commandClassName": "Door Lock"}},
+                        "partial_dict_match": True,
+                    },
+                    "action": {
+                        "event": "node_event_data_partial_dict_match_filter",
+                    },
+                },
+                # node filter: event data, partial dict with a nonexistent key
+                {
+                    "trigger": {
+                        "platform": trigger_type,
+                        "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
+                        "event_source": "node",
+                        "event": "value updated",
+                        "event_data": {"non-existent key": True},
+                        "partial_dict_match": True,
+                    },
+                    "action": {
+                        "event": "node_event_data_partial_dict_match_filter",
                     },
                 },
             ]
@@ -396,6 +480,10 @@ async def test_zwave_js_event(hass, client, lock_schlage_be469, integration):
     assert len(controller_event_data_filter) == 0
     assert len(driver_no_event_data_filter) == 0
     assert len(driver_event_data_filter) == 0
+    assert len(node_event_data_no_partial_dict_match_wrong_type_filter) == 0
+    assert len(node_event_data_partial_dict_match_wrong_type_filter) == 0
+    assert len(node_event_data_no_partial_dict_match_filter) == 0
+    assert len(node_event_data_partial_dict_match_filter) == 0
 
     clear_events()
 
@@ -418,6 +506,10 @@ async def test_zwave_js_event(hass, client, lock_schlage_be469, integration):
     assert len(controller_event_data_filter) == 0
     assert len(driver_no_event_data_filter) == 0
     assert len(driver_event_data_filter) == 0
+    assert len(node_event_data_no_partial_dict_match_wrong_type_filter) == 0
+    assert len(node_event_data_partial_dict_match_wrong_type_filter) == 0
+    assert len(node_event_data_no_partial_dict_match_filter) == 0
+    assert len(node_event_data_partial_dict_match_filter) == 0
 
     clear_events()
 
@@ -439,6 +531,10 @@ async def test_zwave_js_event(hass, client, lock_schlage_be469, integration):
     assert len(controller_event_data_filter) == 0
     assert len(driver_no_event_data_filter) == 0
     assert len(driver_event_data_filter) == 0
+    assert len(node_event_data_no_partial_dict_match_wrong_type_filter) == 0
+    assert len(node_event_data_partial_dict_match_wrong_type_filter) == 0
+    assert len(node_event_data_no_partial_dict_match_filter) == 0
+    assert len(node_event_data_partial_dict_match_filter) == 0
 
     clear_events()
 
@@ -460,6 +556,10 @@ async def test_zwave_js_event(hass, client, lock_schlage_be469, integration):
     assert len(controller_event_data_filter) == 1
     assert len(driver_no_event_data_filter) == 0
     assert len(driver_event_data_filter) == 0
+    assert len(node_event_data_no_partial_dict_match_wrong_type_filter) == 0
+    assert len(node_event_data_partial_dict_match_wrong_type_filter) == 0
+    assert len(node_event_data_no_partial_dict_match_filter) == 0
+    assert len(node_event_data_partial_dict_match_filter) == 0
 
     clear_events()
 
@@ -490,6 +590,10 @@ async def test_zwave_js_event(hass, client, lock_schlage_be469, integration):
     assert len(controller_event_data_filter) == 0
     assert len(driver_no_event_data_filter) == 1
     assert len(driver_event_data_filter) == 0
+    assert len(node_event_data_no_partial_dict_match_wrong_type_filter) == 0
+    assert len(node_event_data_partial_dict_match_wrong_type_filter) == 0
+    assert len(node_event_data_no_partial_dict_match_filter) == 0
+    assert len(node_event_data_partial_dict_match_filter) == 0
 
     clear_events()
 
@@ -520,6 +624,79 @@ async def test_zwave_js_event(hass, client, lock_schlage_be469, integration):
     assert len(controller_event_data_filter) == 0
     assert len(driver_no_event_data_filter) == 1
     assert len(driver_event_data_filter) == 1
+    assert len(node_event_data_no_partial_dict_match_wrong_type_filter) == 0
+    assert len(node_event_data_partial_dict_match_wrong_type_filter) == 0
+    assert len(node_event_data_no_partial_dict_match_filter) == 0
+    assert len(node_event_data_partial_dict_match_filter) == 0
+
+    clear_events()
+
+    # Test that only `node with event data and partial match dict filter` is triggered
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Door Lock",
+                "commandClass": 49,
+                "endpoint": 0,
+                "property": "latchStatus",
+                "newValue": "closed",
+                "prevValue": "open",
+                "propertyName": "latchStatus",
+            },
+        },
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
+
+    assert len(node_no_event_data_filter) == 0
+    assert len(node_event_data_filter) == 0
+    assert len(controller_no_event_data_filter) == 0
+    assert len(controller_event_data_filter) == 0
+    assert len(driver_no_event_data_filter) == 0
+    assert len(driver_event_data_filter) == 0
+    assert len(node_event_data_no_partial_dict_match_wrong_type_filter) == 0
+    assert len(node_event_data_partial_dict_match_wrong_type_filter) == 0
+    assert len(node_event_data_no_partial_dict_match_filter) == 0
+    assert len(node_event_data_partial_dict_match_filter) == 1
+
+    clear_events()
+
+    # Test that `node with event data and partial match dict filter` is not triggered
+    # when partial dict doesn't match
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "fake command class name",
+                "commandClass": 49,
+                "endpoint": 0,
+                "property": "latchStatus",
+                "newValue": "closed",
+                "prevValue": "open",
+                "propertyName": "latchStatus",
+            },
+        },
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
+
+    assert len(node_no_event_data_filter) == 0
+    assert len(node_event_data_filter) == 0
+    assert len(controller_no_event_data_filter) == 0
+    assert len(controller_event_data_filter) == 0
+    assert len(driver_no_event_data_filter) == 0
+    assert len(driver_event_data_filter) == 0
+    assert len(node_event_data_no_partial_dict_match_wrong_type_filter) == 0
+    assert len(node_event_data_partial_dict_match_wrong_type_filter) == 0
+    assert len(node_event_data_no_partial_dict_match_filter) == 0
+    assert len(node_event_data_partial_dict_match_filter) == 0
 
     clear_events()
 

@@ -68,6 +68,7 @@ ATTR_CURRENT_VALUE_RAW = "current_value_raw"
 ATTR_DESCRIPTION = "description"
 ATTR_EVENT_SOURCE = "event_source"
 ATTR_CONFIG_ENTRY_ID = "config_entry_id"
+ATTR_PARTIAL_DICT_MATCH = "partial_dict_match"
 
 # service constants
 SERVICE_SET_LOCK_USERCODE = "set_lock_usercode"
