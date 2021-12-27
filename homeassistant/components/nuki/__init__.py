@@ -54,7 +54,7 @@ async def async_setup_entry(hass, entry):
 
     hass.data.setdefault(DOMAIN, {})
 
-    # Migration of entry id
+    # Migration of entry unique_id
     if isinstance(entry.unique_id, int):
         new_id = parse_id(entry.unique_id)
         params = {"unique_id": new_id}
