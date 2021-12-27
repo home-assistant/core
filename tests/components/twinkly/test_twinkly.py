@@ -10,7 +10,6 @@ from homeassistant.components.twinkly.const import (
     CONF_ENTRY_NAME,
     DOMAIN as TWINKLY_DOMAIN,
 )
-from homeassistant.components.twinkly.light import TwinklyLight
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
@@ -19,29 +18,10 @@ from homeassistant.helpers.entity_registry import RegistryEntry
 from tests.common import MockConfigEntry
 from tests.components.twinkly import (
     TEST_HOST,
-    TEST_ID,
     TEST_MODEL,
     TEST_NAME_ORIGINAL,
     ClientMock,
 )
-
-
-async def test_missing_client(hass: HomeAssistant):
-    """Validate that if client has not been setup, it fails immediately in setup."""
-    try:
-        config_entry = MockConfigEntry(
-            data={
-                CONF_ENTRY_HOST: TEST_HOST,
-                CONF_ENTRY_ID: TEST_ID,
-                CONF_ENTRY_NAME: TEST_NAME_ORIGINAL,
-                CONF_ENTRY_MODEL: TEST_MODEL,
-            }
-        )
-        TwinklyLight(config_entry, hass)
-    except ValueError:
-        return
-
-    assert False
 
 
 async def test_initial_state(hass: HomeAssistant):
@@ -65,27 +45,6 @@ async def test_initial_state(hass: HomeAssistant):
     assert entity.original_icon == "mdi:string-lights"
 
     assert device.name == entity.unique_id
-    assert device.model == TEST_MODEL
-    assert device.manufacturer == "LEDWORKS"
-
-
-async def test_initial_state_offline(hass: HomeAssistant):
-    """Validate that entity and device are restored from config is offline on startup."""
-    client = ClientMock()
-    client.is_offline = True
-    entity, device, _ = await _create_entries(hass, client)
-
-    state = hass.states.get(entity.entity_id)
-
-    assert state.name == TEST_NAME_ORIGINAL
-    assert state.state == "unavailable"
-    assert state.attributes["friendly_name"] == TEST_NAME_ORIGINAL
-    assert state.attributes["icon"] == "mdi:string-lights"
-
-    assert entity.original_name == TEST_NAME_ORIGINAL
-    assert entity.original_icon == "mdi:string-lights"
-
-    assert device.name == TEST_NAME_ORIGINAL
     assert device.model == TEST_MODEL
     assert device.manufacturer == "LEDWORKS"
 
@@ -148,6 +107,7 @@ async def test_turn_on_with_color(hass: HomeAssistant):
     """Test support of the light.turn_on service with a brightness parameter."""
     client = ClientMock()
     client.state = False
+    client.device_info["led_profile"] = "RGBW"
     client.brightness = {"mode": "enabled", "value": 255}
     entity, _, _ = await _create_entries(hass, client)
 
@@ -227,9 +187,6 @@ async def _create_entries(
     hass: HomeAssistant, client=None
 ) -> tuple[RegistryEntry, DeviceEntry, ClientMock]:
     client = ClientMock() if client is None else client
-
-    def get_client_mock(client, _):
-        return client
 
     with patch("homeassistant.components.twinkly.Twinkly", return_value=client):
         config_entry = MockConfigEntry(

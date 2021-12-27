@@ -5,10 +5,12 @@ import asyncio
 import logging
 
 from aiohttp import ClientError
+from ttls.client import Twinkly
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_RGBW_COLOR,
+    COLOR_MODE_BRIGHTNESS,
     COLOR_MODE_RGBW,
     LightEntity,
 )
@@ -22,8 +24,12 @@ from .const import (
     CONF_ENTRY_ID,
     CONF_ENTRY_MODEL,
     CONF_ENTRY_NAME,
+    DATA_CLIENT,
+    DATA_DEVICE_INFO,
+    DEV_LED_PROFILE,
     DEV_MODEL,
     DEV_NAME,
+    DEV_PROFILE_RGBW,
     DOMAIN,
     HIDDEN_DEV_VALUES,
 )
@@ -36,7 +42,10 @@ async def async_setup_entry(
 ) -> None:
     """Setups an entity from a config entry (UI config flow)."""
 
-    entity = TwinklyLight(config_entry, hass)
+    client = hass.data[DOMAIN][config_entry.data[CONF_ENTRY_ID]][DATA_CLIENT]
+    device_info = hass.data[DOMAIN][config_entry.data[CONF_ENTRY_ID]][DATA_DEVICE_INFO]
+
+    entity = TwinklyLight(config_entry, client, device_info)
 
     async_add_entities([entity], update_before_add=True)
 
@@ -47,16 +56,20 @@ class TwinklyLight(LightEntity):
     def __init__(
         self,
         conf: ConfigEntry,
-        hass: HomeAssistant,
+        client: Twinkly,
+        device_info,
     ) -> None:
         """Initialize a TwinklyLight entity."""
         self._id = conf.data[CONF_ENTRY_ID]
-        self._hass = hass
         self._conf = conf
 
-        self._attr_supported_color_modes = {COLOR_MODE_RGBW}
-        self._attr_color_mode = COLOR_MODE_RGBW
-        self._attr_rgbw_color = (255, 255, 255, 0)
+        if device_info.get(DEV_LED_PROFILE) == DEV_PROFILE_RGBW:
+            self._attr_supported_color_modes = {COLOR_MODE_RGBW}
+            self._attr_color_mode = COLOR_MODE_RGBW
+            self._attr_rgbw_color = (255, 255, 255, 0)
+        else:
+            self._attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
+            self._attr_color_mode = COLOR_MODE_BRIGHTNESS
 
         # Those are saved in the config entry in order to have meaningful values even
         # if the device is currently offline.
@@ -64,9 +77,7 @@ class TwinklyLight(LightEntity):
         self.__name = conf.data[CONF_ENTRY_NAME]
         self.__model = conf.data[CONF_ENTRY_MODEL]
 
-        self._client = hass.data.get(DOMAIN, {}).get(self._id)
-        if self._client is None:
-            raise ValueError(f"Client for {self._id} has not been configured.")
+        self._client = client
 
         # Set default state before any update
         self._is_on = False
@@ -203,7 +214,7 @@ class TwinklyLight(LightEntity):
                 if self._conf is not None:
                     # If the name has changed, persist it in conf entry,
                     # so we will be able to restore this new name if hass is started while the LED string is offline.
-                    self._hass.config_entries.async_update_entry(
+                    self.hass.config_entries.async_update_entry(
                         self._conf,
                         data={
                             CONF_ENTRY_HOST: self._client.host,  # this cannot change
