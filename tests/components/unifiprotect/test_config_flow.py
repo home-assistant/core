@@ -129,7 +129,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] == RESULT_TYPE_FORM
-    assert result2["errors"] == {"base": "nvr_error"}
+    assert result2["errors"] == {"base": "cannot_connect"}
 
 
 async def test_form_reauth_auth(hass: HomeAssistant) -> None:
@@ -190,7 +190,7 @@ async def test_form_reauth_auth(hass: HomeAssistant) -> None:
     assert result3["reason"] == "reauth_successful"
 
 
-async def test_form_options(hass: HomeAssistant) -> None:
+async def test_form_options(hass: HomeAssistant, mock_client) -> None:
     """Test we handle options flows."""
     mock_config = MockConfigEntry(
         domain=DOMAIN,
@@ -207,7 +207,12 @@ async def test_form_options(hass: HomeAssistant) -> None:
     )
     mock_config.add_to_hass(hass)
 
-    # Integration not setup, since we are only flipping bits in options entry
+    with patch("homeassistant.components.unifiprotect.ProtectApiClient") as mock_api:
+        mock_api.return_value = mock_client
+
+        await hass.config_entries.async_setup(mock_config.entry_id)
+        await hass.async_block_till_done()
+        assert mock_config.state == config_entries.ConfigEntryState.LOADED
 
     result = await hass.config_entries.options.async_init(mock_config.entry_id)
     assert result["type"] == RESULT_TYPE_FORM

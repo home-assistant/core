@@ -12,7 +12,7 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "protect_version": "Minimum required version is v1.20.0. Please upgrade UniFi Protect and then retry."
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
@@ -22,7 +22,7 @@
     "step": {
       "init": {
         "title": "UniFi Protect Options",
-        "description": "Realtime metrics option should only be enabled if you have enabled the diagnostics sensors and want them updated in realtime. If if not enabled, they will only update once every 15 minutes.",
+        "description": "Realtime metrics option should only be enabled if you have enabled the diagnostics sensors and want them updated in realtime. If not enabled, they will only update once every 15 minutes.",
         "data": {
           "disable_rtsp": "Disable the RTSP stream",
           "all_updates": "Realtime metrics (WARNING: Greatly increases CPU usage)",
