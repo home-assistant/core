@@ -43,13 +43,9 @@ from .discovery import (
     async_populate_data_from_discovery,
     async_update_entry_from_discovery,
 )
+from .util import format_as_flux_mac
 
 CONF_DEVICE: Final = "device"
-
-
-def format_as_flux_mac(mac: str) -> str:
-    """Convert a device registry formatted mac to flux mac."""
-    return mac.replace(":", "").upper()
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
