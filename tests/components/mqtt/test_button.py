@@ -325,18 +325,27 @@ async def test_valid_device_class(hass, mqtt_mock):
 
 
 @pytest.mark.parametrize(
-    "service,topic,parameters,payload",
+    "service,topic,parameters,payload,template",
     [
-        (button.SERVICE_PRESS, "command_topic", None, "PRESS"),
+        (button.SERVICE_PRESS, "command_topic", None, "PRESS", None),
     ],
 )
 async def test_publishing_with_custom_encoding(
-    hass, mqtt_mock, caplog, service, topic, parameters, payload
+    hass, mqtt_mock, caplog, service, topic, parameters, payload, template
 ):
     """Test publishing MQTT payload with different encoding."""
     domain = button.DOMAIN
     config = DEFAULT_CONFIG[domain]
 
     await help_test_publishing_with_custom_encoding(
-        hass, mqtt_mock, caplog, domain, config, service, topic, parameters, payload
+        hass,
+        mqtt_mock,
+        caplog,
+        domain,
+        config,
+        service,
+        topic,
+        parameters,
+        payload,
+        template,
     )
