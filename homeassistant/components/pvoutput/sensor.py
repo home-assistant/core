@@ -109,7 +109,7 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up a Tailscale binary sensors based on a config entry."""
+    """Set up a PVOutput sensors based on a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         PVOutputSensorEntity(
