@@ -1,8 +1,8 @@
 """Support for Ubiquiti's UniFi Protect NVR."""
 from __future__ import annotations
 
+from collections.abc import Callable, Sequence
 import logging
-from typing import Callable, Sequence
 
 from pyunifiprotect.data.base import ProtectAdoptableDeviceModel
 
@@ -44,7 +44,7 @@ class ProtectButton(ProtectDeviceEntity, ButtonEntity):
         self,
         data: ProtectData,
         device: ProtectAdoptableDeviceModel,
-    ):
+    ) -> None:
         """Initialize an UniFi camera."""
         super().__init__(data, device)
         self._attr_name = f"{self.device.name} Reboot Device"
