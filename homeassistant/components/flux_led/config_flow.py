@@ -4,7 +4,14 @@ from __future__ import annotations
 import contextlib
 from typing import Any, Final, cast
 
-from flux_led.const import ATTR_ID, ATTR_IPADDR, ATTR_MODEL, ATTR_MODEL_DESCRIPTION
+from flux_led.const import (
+    ATTR_ID,
+    ATTR_IPADDR,
+    ATTR_MODEL,
+    ATTR_MODEL_DESCRIPTION,
+    ATTR_MODEL_INFO,
+    ATTR_VERSION_NUM,
+)
 from flux_led.scanner import FluxLEDDiscovery
 import voluptuous as vol
 
@@ -239,16 +246,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await bulb.async_setup(lambda: None)
         finally:
             await bulb.async_stop()
-        mac_address = discovery[ATTR_ID] if discovery else None
-        model = discovery[ATTR_MODEL] if discovery else None
         return FluxLEDDiscovery(
             ipaddr=host,
-            model=model,
-            id=mac_address,
+            model=discovery[ATTR_MODEL] if discovery else None,
+            id=discovery[ATTR_ID] if discovery else None,
             model_num=bulb.model_num,
-            version_num=None,  # This is the minor version number
+            version_num=discovery[ATTR_VERSION_NUM] if discovery else None,
             firmware_date=None,
-            model_info=None,
+            model_info=discovery[ATTR_MODEL_INFO] if discovery else None,
             model_description=bulb.model_data.description,
             remote_access_enabled=None,
             remote_access_host=None,
