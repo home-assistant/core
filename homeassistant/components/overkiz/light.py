@@ -1,6 +1,8 @@
 """Support for Overkiz lights."""
 from __future__ import annotations
 
+from typing import Any
+
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
 from homeassistant.components.light import (
@@ -30,12 +32,10 @@ async def async_setup_entry(
     """Set up the Overkiz lights from a config entry."""
     data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
 
-    entities: list[OverkizLight] = [
+    async_add_entities(
         OverkizLight(device.device_url, data.coordinator)
         for device in data.platforms[Platform.LIGHT]
-    ]
-
-    async_add_entities(entities)
+    )
 
 
 class OverkizLight(OverkizEntity, LightEntity):
@@ -47,7 +47,7 @@ class OverkizLight(OverkizEntity, LightEntity):
         """Initialize a device."""
         super().__init__(device_url, coordinator)
 
-        self._attr_supported_color_modes: set[str] = set()
+        self._attr_supported_color_modes = set()
 
         if self.executor.has_command(OverkizCommand.SET_RGB):
             self._attr_supported_color_modes.add(COLOR_MODE_RGB)
@@ -84,7 +84,7 @@ class OverkizLight(OverkizEntity, LightEntity):
 
         return None
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         rgb_color = kwargs.get(ATTR_RGB_COLOR)
         brightness = kwargs.get(ATTR_BRIGHTNESS)
@@ -94,15 +94,16 @@ class OverkizLight(OverkizEntity, LightEntity):
                 OverkizCommand.SET_RGB,
                 *[round(float(c)) for c in kwargs[ATTR_RGB_COLOR]],
             )
+            return
 
         if brightness is not None:
             await self.executor.async_execute_command(
                 OverkizCommand.SET_INTENSITY, round(float(brightness) / 255 * 100)
             )
+            return
 
-        else:
-            await self.executor.async_execute_command(OverkizCommand.ON)
+        await self.executor.async_execute_command(OverkizCommand.ON)
 
-    async def async_turn_off(self, **_) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self.executor.async_execute_command(OverkizCommand.OFF)
