@@ -6,16 +6,15 @@ import logging
 from pytrafikverket import TrafikverketTrain
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_NAME,
-    CONF_WEEKDAY,
-    DEVICE_CLASS_TIMESTAMP,
-    WEEKDAYS,
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
 )
+from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_WEEKDAY, WEEKDAYS
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.dt import as_utc, get_time_zone
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -118,6 +117,8 @@ def next_departuredate(departure):
 class TrainSensor(SensorEntity):
     """Contains data about a train depature."""
 
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+
     def __init__(self, train_api, name, from_station, to_station, weekday, time):
         """Initialize the sensor."""
         self._train_api = train_api
@@ -129,12 +130,15 @@ class TrainSensor(SensorEntity):
         self._state = None
         self._departure_state = None
         self._delay_in_minutes = None
+        self._timezone = get_time_zone("Europe/Stockholm")
 
     async def async_update(self):
         """Retrieve latest state."""
         if self._time is not None:
             departure_day = next_departuredate(self._weekday)
-            when = datetime.combine(departure_day, self._time)
+            when = datetime.combine(departure_day, self._time).astimezone(
+                self._timezone
+            )
             try:
                 self._state = await self._train_api.async_get_train_stop(
                     self._from_station, self._to_station, when
@@ -154,32 +158,39 @@ class TrainSensor(SensorEntity):
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
-        if self._state is None:
+        if not self._state:
             return None
-        state = self._state
-        other_information = None
-        if state.other_information is not None:
-            other_information = ", ".join(state.other_information)
-        deviations = None
-        if state.deviations is not None:
-            deviations = ", ".join(state.deviations)
-        if self._delay_in_minutes is not None:
-            self._delay_in_minutes = self._delay_in_minutes.total_seconds() / 60
-        return {
+        attributes = {
             ATTR_DEPARTURE_STATE: self._departure_state,
-            ATTR_CANCELED: state.canceled,
-            ATTR_DELAY_TIME: self._delay_in_minutes,
-            ATTR_PLANNED_TIME: state.advertised_time_at_location,
-            ATTR_ESTIMATED_TIME: state.estimated_time_at_location,
-            ATTR_ACTUAL_TIME: state.time_at_location,
-            ATTR_OTHER_INFORMATION: other_information,
-            ATTR_DEVIATIONS: deviations,
+            ATTR_CANCELED: self._state.canceled,
+            ATTR_DELAY_TIME: None,
+            ATTR_PLANNED_TIME: None,
+            ATTR_ESTIMATED_TIME: None,
+            ATTR_ACTUAL_TIME: None,
+            ATTR_OTHER_INFORMATION: None,
+            ATTR_DEVIATIONS: None,
         }
-
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return DEVICE_CLASS_TIMESTAMP
+        if self._state.other_information:
+            attributes[ATTR_OTHER_INFORMATION] = ", ".join(
+                self._state.other_information
+            )
+        if self._state.deviations:
+            attributes[ATTR_DEVIATIONS] = ", ".join(self._state.deviations)
+        if self._delay_in_minutes:
+            attributes[ATTR_DELAY_TIME] = self._delay_in_minutes.total_seconds() / 60
+        if self._state.advertised_time_at_location:
+            attributes[ATTR_PLANNED_TIME] = as_utc(
+                self._state.advertised_time_at_location.astimezone(self._timezone)
+            ).isoformat()
+        if self._state.estimated_time_at_location:
+            attributes[ATTR_ESTIMATED_TIME] = as_utc(
+                self._state.estimated_time_at_location.astimezone(self._timezone)
+            ).isoformat()
+        if self._state.time_at_location:
+            attributes[ATTR_ACTUAL_TIME] = as_utc(
+                self._state.time_at_location.astimezone(self._timezone)
+            ).isoformat()
+        return attributes
 
     @property
     def name(self):
@@ -192,13 +203,12 @@ class TrainSensor(SensorEntity):
         return ICON
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the departure state."""
-        state = self._state
-        if state is not None:
+        if (state := self._state) is not None:
             if state.time_at_location is not None:
-                return state.time_at_location
+                return state.time_at_location.astimezone(self._timezone)
             if state.estimated_time_at_location is not None:
-                return state.estimated_time_at_location
-            return state.advertised_time_at_location
+                return state.estimated_time_at_location.astimezone(self._timezone)
+            return state.advertised_time_at_location.astimezone(self._timezone)
         return None

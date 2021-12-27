@@ -90,6 +90,7 @@ async def test_state_value(hass: HomeAssistant) -> None:
                     "command_on": f"echo 1 > {path}",
                     "command_off": f"echo 0 > {path}",
                     "value_template": '{{ value=="1" }}',
+                    "icon_template": '{% if value=="1" %} mdi:on {% else %} mdi:off {% endif %}',
                 }
             },
         )
@@ -108,6 +109,7 @@ async def test_state_value(hass: HomeAssistant) -> None:
         entity_state = hass.states.get("switch.test")
         assert entity_state
         assert entity_state.state == STATE_ON
+        assert entity_state.attributes.get("icon") == "mdi:on"
 
         await hass.services.async_call(
             DOMAIN,
@@ -119,6 +121,7 @@ async def test_state_value(hass: HomeAssistant) -> None:
         entity_state = hass.states.get("switch.test")
         assert entity_state
         assert entity_state.state == STATE_OFF
+        assert entity_state.attributes.get("icon") == "mdi:off"
 
 
 async def test_state_json_value(hass: HomeAssistant) -> None:
@@ -136,6 +139,7 @@ async def test_state_json_value(hass: HomeAssistant) -> None:
                     "command_on": f"echo '{oncmd}' > {path}",
                     "command_off": f"echo '{offcmd}' > {path}",
                     "value_template": '{{ value_json.status=="ok" }}',
+                    "icon_template": '{% if value_json.status=="ok" %} mdi:on {% else %} mdi:off {% endif %}',
                 }
             },
         )
@@ -154,6 +158,7 @@ async def test_state_json_value(hass: HomeAssistant) -> None:
         entity_state = hass.states.get("switch.test")
         assert entity_state
         assert entity_state.state == STATE_ON
+        assert entity_state.attributes.get("icon") == "mdi:on"
 
         await hass.services.async_call(
             DOMAIN,
@@ -165,6 +170,7 @@ async def test_state_json_value(hass: HomeAssistant) -> None:
         entity_state = hass.states.get("switch.test")
         assert entity_state
         assert entity_state.state == STATE_OFF
+        assert entity_state.attributes.get("icon") == "mdi:off"
 
 
 async def test_state_code(hass: HomeAssistant) -> None:

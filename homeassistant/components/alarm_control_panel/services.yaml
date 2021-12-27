@@ -70,6 +70,20 @@ alarm_arm_night:
       selector:
         text:
 
+alarm_arm_vacation:
+  name: Arm vacation
+  description: Send the alarm the command for arm vacation.
+  target:
+    entity:
+      domain: alarm_control_panel
+  fields:
+    code:
+      name: Code
+      description: An optional code to arm vacation the alarm control panel with.
+      example: "1234"
+      selector:
+        text:
+
 alarm_trigger:
   name: Trigger
   description: Send the alarm the command for trigger.

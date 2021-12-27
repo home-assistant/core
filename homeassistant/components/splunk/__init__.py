@@ -1,5 +1,6 @@
 """Support to send data to a Splunk instance."""
 import asyncio
+from http import HTTPStatus
 import json
 import logging
 import time
@@ -111,7 +112,7 @@ async def async_setup(hass, config):
         try:
             await event_collector.queue(json.dumps(payload, cls=JSONEncoder), send=True)
         except SplunkPayloadError as err:
-            if err.status == 401:
+            if err.status == HTTPStatus.UNAUTHORIZED:
                 _LOGGER.error(err)
             else:
                 _LOGGER.warning(err)

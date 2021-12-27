@@ -5,12 +5,6 @@ from pyvlx.opening_device import Awning, Blind, GarageDoor, Gate, RollerShutter,
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    DEVICE_CLASS_AWNING,
-    DEVICE_CLASS_BLIND,
-    DEVICE_CLASS_GARAGE,
-    DEVICE_CLASS_GATE,
-    DEVICE_CLASS_SHUTTER,
-    DEVICE_CLASS_WINDOW,
     SUPPORT_CLOSE,
     SUPPORT_CLOSE_TILT,
     SUPPORT_OPEN,
@@ -19,11 +13,11 @@ from homeassistant.components.cover import (
     SUPPORT_SET_TILT_POSITION,
     SUPPORT_STOP,
     SUPPORT_STOP_TILT,
+    CoverDeviceClass,
     CoverEntity,
 )
-from homeassistant.core import callback
 
-from . import DATA_VELUX
+from . import DATA_VELUX, VeluxEntity
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -35,41 +29,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(entities)
 
 
-class VeluxCover(CoverEntity):
+class VeluxCover(VeluxEntity, CoverEntity):
     """Representation of a Velux cover."""
-
-    def __init__(self, node):
-        """Initialize the cover."""
-        self.node = node
-
-    @callback
-    def async_register_callbacks(self):
-        """Register callbacks to update hass after device was changed."""
-
-        async def after_update_callback(device):
-            """Call after device was updated."""
-            self.async_write_ha_state()
-
-        self.node.register_device_updated_cb(after_update_callback)
-
-    async def async_added_to_hass(self):
-        """Store register state change callback."""
-        self.async_register_callbacks()
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of this cover."""
-        return self.node.serial_number
-
-    @property
-    def name(self):
-        """Return the name of the Velux device."""
-        return self.node.name
-
-    @property
-    def should_poll(self):
-        """No polling needed within Velux."""
-        return False
 
     @property
     def supported_features(self):
@@ -102,18 +63,18 @@ class VeluxCover(CoverEntity):
     def device_class(self):
         """Define this cover as either awning, blind, garage, gate, shutter or window."""
         if isinstance(self.node, Awning):
-            return DEVICE_CLASS_AWNING
+            return CoverDeviceClass.AWNING
         if isinstance(self.node, Blind):
-            return DEVICE_CLASS_BLIND
+            return CoverDeviceClass.BLIND
         if isinstance(self.node, GarageDoor):
-            return DEVICE_CLASS_GARAGE
+            return CoverDeviceClass.GARAGE
         if isinstance(self.node, Gate):
-            return DEVICE_CLASS_GATE
+            return CoverDeviceClass.GATE
         if isinstance(self.node, RollerShutter):
-            return DEVICE_CLASS_SHUTTER
+            return CoverDeviceClass.SHUTTER
         if isinstance(self.node, Window):
-            return DEVICE_CLASS_WINDOW
-        return DEVICE_CLASS_WINDOW
+            return CoverDeviceClass.WINDOW
+        return CoverDeviceClass.WINDOW
 
     @property
     def is_closed(self):

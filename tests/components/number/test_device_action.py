@@ -3,6 +3,7 @@ import pytest
 import voluptuous_serialize
 
 import homeassistant.components.automation as automation
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.number import DOMAIN, device_action
 from homeassistant.helpers import config_validation as cv, device_registry
 from homeassistant.setup import async_setup_component
@@ -48,7 +49,9 @@ async def test_get_actions(hass, device_reg, entity_reg):
             "entity_id": "number.test_5678",
         },
     ]
-    actions = await async_get_device_automations(hass, "action", device_entry.id)
+    actions = await async_get_device_automations(
+        hass, DeviceAutomationType.ACTION, device_entry.id
+    )
     assert_lists_same(actions, expected_actions)
 
 
@@ -69,7 +72,9 @@ async def test_get_action_no_state(hass, device_reg, entity_reg):
             "entity_id": "number.test_5678",
         },
     ]
-    actions = await async_get_device_automations(hass, "action", device_entry.id)
+    actions = await async_get_device_automations(
+        hass, DeviceAutomationType.ACTION, device_entry.id
+    )
     assert_lists_same(actions, expected_actions)
 
 

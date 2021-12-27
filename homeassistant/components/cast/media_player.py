@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from contextlib import suppress
-from datetime import timedelta
+from datetime import datetime, timedelta
 import functools as ft
 import json
 import logging
@@ -46,6 +46,7 @@ from homeassistant.components.media_player.const import (
 from homeassistant.components.plex.const import PLEX_URI_SCHEME
 from homeassistant.components.plex.services import lookup_plex_media
 from homeassistant.const import (
+    CAST_APP_ID_HOMEASSISTANT_LOVELACE,
     EVENT_HOMEASSISTANT_STOP,
     STATE_IDLE,
     STATE_OFF,
@@ -55,6 +56,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 import homeassistant.util.dt as dt_util
 from homeassistant.util.logging import async_create_catching_coro
@@ -74,17 +76,11 @@ from .helpers import CastStatusListener, ChromecastInfo, ChromeCastZeroconf
 
 _LOGGER = logging.getLogger(__name__)
 
+APP_IDS_UNRELIABLE_MEDIA_INFO = ("Netflix",)
+
 CAST_SPLASH = "https://www.home-assistant.io/images/cast/splash.png"
 
-SUPPORT_CAST = (
-    SUPPORT_PAUSE
-    | SUPPORT_PLAY
-    | SUPPORT_PLAY_MEDIA
-    | SUPPORT_STOP
-    | SUPPORT_TURN_OFF
-    | SUPPORT_TURN_ON
-)
-
+SUPPORT_CAST = SUPPORT_PLAY_MEDIA | SUPPORT_TURN_OFF
 
 ENTITY_SCHEMA = vol.All(
     vol.Schema(
@@ -139,7 +135,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         """Handle discovery of a new chromecast."""
         # If wanted_uuids is set, we're only accepting specific cast devices identified
         # by UUID
-        if wanted_uuids is not None and discover.uuid not in wanted_uuids:
+        if wanted_uuids is not None and str(discover.uuid) not in wanted_uuids:
             # UUID not matching, ignore.
             return
 
@@ -160,24 +156,35 @@ class CastDevice(MediaPlayerEntity):
     "elected leader" itself.
     """
 
-    def __init__(self, cast_info: ChromecastInfo):
+    _attr_should_poll = False
+    _attr_media_image_remotely_accessible = True
+
+    def __init__(self, cast_info: ChromecastInfo) -> None:
         """Initialize the cast device."""
 
         self._cast_info = cast_info
-        self.services = cast_info.services
         self._chromecast: pychromecast.Chromecast | None = None
         self.cast_status = None
         self.media_status = None
         self.media_status_received = None
-        self.mz_media_status = {}
-        self.mz_media_status_received = {}
+        self.mz_media_status: dict[str, pychromecast.controllers.media.MediaStatus] = {}
+        self.mz_media_status_received: dict[str, datetime] = {}
         self.mz_mgr = None
-        self._available = False
+        self._attr_available = False
         self._status_listener: CastStatusListener | None = None
         self._hass_cast_controller: HomeAssistantController | None = None
 
         self._add_remove_handler = None
         self._cast_view_remove_handler = None
+        self._attr_unique_id = str(cast_info.uuid)
+        self._attr_name = cast_info.friendly_name
+        if cast_info.cast_info.model_name != "Google Cast Group":
+            self._attr_device_info = DeviceInfo(
+                identifiers={(CAST_DOMAIN, str(cast_info.uuid).replace("-", ""))},
+                manufacturer=str(cast_info.cast_info.manufacturer),
+                model=cast_info.cast_info.model_name,
+                name=str(cast_info.friendly_name),
+            )
 
     async def async_added_to_hass(self):
         """Create chromecast object when added to hass."""
@@ -217,18 +224,11 @@ class CastDevice(MediaPlayerEntity):
             "[%s %s] Connecting to cast device by service %s",
             self.entity_id,
             self._cast_info.friendly_name,
-            self.services,
+            self._cast_info.cast_info.services,
         )
         chromecast = await self.hass.async_add_executor_job(
             pychromecast.get_chromecast_from_cast_info,
-            pychromecast.discovery.CastInfo(
-                self.services,
-                self._cast_info.uuid,
-                self._cast_info.model_name,
-                self._cast_info.friendly_name,
-                None,
-                None,
-            ),
+            self._cast_info.cast_info,
             ChromeCastZeroconf.get_zeroconf(),
         )
         self._chromecast = chromecast
@@ -239,7 +239,7 @@ class CastDevice(MediaPlayerEntity):
         self.mz_mgr = self.hass.data[CAST_MULTIZONE_MANAGER_KEY]
 
         self._status_listener = CastStatusListener(self, chromecast, self.mz_mgr)
-        self._available = False
+        self._attr_available = False
         self.cast_status = chromecast.status
         self.media_status = chromecast.media_controller.status
         self._chromecast.start()
@@ -255,7 +255,7 @@ class CastDevice(MediaPlayerEntity):
             self.entity_id,
             self._cast_info.friendly_name,
         )
-        self._available = False
+        self._attr_available = False
         self.async_write_ha_state()
 
         await self.hass.async_add_executor_job(self._chromecast.disconnect)
@@ -282,6 +282,10 @@ class CastDevice(MediaPlayerEntity):
     def new_cast_status(self, cast_status):
         """Handle updates of the cast status."""
         self.cast_status = cast_status
+        self._attr_volume_level = cast_status.volume_level if cast_status else None
+        self._attr_is_volume_muted = (
+            cast_status.volume_muted if self.cast_status else None
+        )
         self.schedule_update_ha_state()
 
     def new_media_status(self, media_status):
@@ -334,13 +338,13 @@ class CastDevice(MediaPlayerEntity):
             connection_status.status,
         )
         if connection_status.status == CONNECTION_STATUS_DISCONNECTED:
-            self._available = False
+            self._attr_available = False
             self._invalidate()
             self.schedule_update_ha_state()
             return
 
         new_available = connection_status.status == CONNECTION_STATUS_CONNECTED
-        if new_available != self._available:
+        if new_available != self.available:
             # Connection status callbacks happen often when disconnected.
             # Only update state when availability changed to put less pressure
             # on state machine.
@@ -350,7 +354,7 @@ class CastDevice(MediaPlayerEntity):
                 self._cast_info.friendly_name,
                 connection_status.status,
             )
-            self._available = new_available
+            self._attr_available = new_available
             self.schedule_update_ha_state()
 
     def multizone_new_media_status(self, group_uuid, media_status):
@@ -393,11 +397,14 @@ class CastDevice(MediaPlayerEntity):
             return
 
         if self._chromecast.app_id is not None:
-            # Quit the previous app before starting splash screen
+            # Quit the previous app before starting splash screen or media player
             self._chromecast.quit_app()
 
         # The only way we can turn the Chromecast is on is by launching an app
-        self._chromecast.play_media(CAST_SPLASH, pychromecast.STREAM_TYPE_BUFFERED)
+        if self._chromecast.cast_type == pychromecast.const.CAST_TYPE_CHROMECAST:
+            self._chromecast.play_media(CAST_SPLASH, pychromecast.STREAM_TYPE_BUFFERED)
+        else:
+            self._chromecast.start_app(pychromecast.config.APP_MEDIA_RECEIVER)
 
     def turn_off(self):
         """Turn off the cast device."""
@@ -482,10 +489,15 @@ class CastDevice(MediaPlayerEntity):
 
     def play_media(self, media_type, media_id, **kwargs):
         """Play media from a URL."""
+        extra = kwargs.get(ATTR_MEDIA_EXTRA, {})
+        metadata = extra.get("metadata")
+
         # We do not want this to be forwarded to a group
         if media_type == CAST_DOMAIN:
             try:
                 app_data = json.loads(media_id)
+                if metadata is not None:
+                    app_data["metadata"] = extra.get("metadata")
             except json.JSONDecodeError:
                 _LOGGER.error("Invalid JSON in media_content_id")
                 raise
@@ -518,35 +530,8 @@ class CastDevice(MediaPlayerEntity):
             self._chromecast.register_handler(controller)
             controller.play_media(media)
         else:
-            self._chromecast.media_controller.play_media(
-                media_id, media_type, **kwargs.get(ATTR_MEDIA_EXTRA, {})
-            )
-
-    # ========== Properties ==========
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._cast_info.friendly_name
-
-    @property
-    def device_info(self):
-        """Return information about the device."""
-        cast_info = self._cast_info
-
-        if cast_info.model_name == "Google Cast Group":
-            return None
-
-        return {
-            "name": cast_info.friendly_name,
-            "identifiers": {(CAST_DOMAIN, cast_info.uuid.replace("-", ""))},
-            "model": cast_info.model_name,
-            "manufacturer": cast_info.manufacturer,
-        }
+            app_data = {"media_id": media_id, "media_type": media_type, **extra}
+            quick_play(self._chromecast, "default_media_receiver", app_data)
 
     def _media_status(self):
         """
@@ -570,46 +555,41 @@ class CastDevice(MediaPlayerEntity):
     @property
     def state(self):
         """Return the state of the player."""
-        media_status = self._media_status()[0]
-
-        if media_status is None:
-            return None
-        if media_status.player_is_playing:
+        # The lovelace app loops media to prevent timing out, don't show that
+        if self.app_id == CAST_APP_ID_HOMEASSISTANT_LOVELACE:
             return STATE_PLAYING
-        if media_status.player_is_paused:
-            return STATE_PAUSED
-        if media_status.player_is_idle:
+        if (media_status := self._media_status()[0]) is not None:
+            if media_status.player_is_playing:
+                return STATE_PLAYING
+            if media_status.player_is_paused:
+                return STATE_PAUSED
+            if media_status.player_is_idle:
+                return STATE_IDLE
+        if self.app_id is not None and self.app_id != pychromecast.IDLE_APP_ID:
+            if self.app_id in APP_IDS_UNRELIABLE_MEDIA_INFO:
+                # Some apps don't report media status, show the player as playing
+                return STATE_PLAYING
             return STATE_IDLE
         if self._chromecast is not None and self._chromecast.is_idle:
             return STATE_OFF
         return None
 
     @property
-    def available(self):
-        """Return True if the cast device is connected."""
-        return self._available
-
-    @property
-    def volume_level(self):
-        """Volume level of the media player (0..1)."""
-        return self.cast_status.volume_level if self.cast_status else None
-
-    @property
-    def is_volume_muted(self):
-        """Boolean if volume is currently muted."""
-        return self.cast_status.volume_muted if self.cast_status else None
-
-    @property
     def media_content_id(self):
         """Content ID of current playing media."""
+        # The lovelace app loops media to prevent timing out, don't show that
+        if self.app_id == CAST_APP_ID_HOMEASSISTANT_LOVELACE:
+            return None
         media_status = self._media_status()[0]
         return media_status.content_id if media_status else None
 
     @property
     def media_content_type(self):
         """Content type of current playing media."""
-        media_status = self._media_status()[0]
-        if media_status is None:
+        # The lovelace app loops media to prevent timing out, don't show that
+        if self.app_id == CAST_APP_ID_HOMEASSISTANT_LOVELACE:
+            return None
+        if (media_status := self._media_status()[0]) is None:
             return None
         if media_status.media_is_tvshow:
             return MEDIA_TYPE_TVSHOW
@@ -622,24 +602,21 @@ class CastDevice(MediaPlayerEntity):
     @property
     def media_duration(self):
         """Duration of current playing media in seconds."""
+        # The lovelace app loops media to prevent timing out, don't show that
+        if self.app_id == CAST_APP_ID_HOMEASSISTANT_LOVELACE:
+            return None
         media_status = self._media_status()[0]
         return media_status.duration if media_status else None
 
     @property
     def media_image_url(self):
         """Image url of current playing media."""
-        media_status = self._media_status()[0]
-        if media_status is None:
+        if (media_status := self._media_status()[0]) is None:
             return None
 
         images = media_status.images
 
         return images[0].url if images and images[0].url else None
-
-    @property
-    def media_image_remotely_accessible(self) -> bool:
-        """If the image url is remotely accessible."""
-        return True
 
     @property
     def media_title(self):
@@ -705,13 +682,20 @@ class CastDevice(MediaPlayerEntity):
         support = SUPPORT_CAST
         media_status = self._media_status()[0]
 
+        if self._chromecast and self._chromecast.cast_type in (
+            pychromecast.const.CAST_TYPE_CHROMECAST,
+            pychromecast.const.CAST_TYPE_AUDIO,
+        ):
+            support |= SUPPORT_TURN_ON
+
         if (
             self.cast_status
             and self.cast_status.volume_control_type != VOLUME_CONTROL_TYPE_FIXED
         ):
             support |= SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET
 
-        if media_status:
+        if media_status and self.app_id != CAST_APP_ID_HOMEASSISTANT_LOVELACE:
+            support |= SUPPORT_PAUSE | SUPPORT_PLAY | SUPPORT_STOP
             if media_status.supports_queue_next:
                 support |= SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK
             if media_status.supports_seek:
@@ -725,6 +709,9 @@ class CastDevice(MediaPlayerEntity):
     @property
     def media_position(self):
         """Position of current playing media in seconds."""
+        # The lovelace app loops media to prevent timing out, don't show that
+        if self.app_id == CAST_APP_ID_HOMEASSISTANT_LOVELACE:
+            return None
         media_status = self._media_status()[0]
         if media_status is None or not (
             media_status.player_is_playing
@@ -740,13 +727,10 @@ class CastDevice(MediaPlayerEntity):
 
         Returns value from homeassistant.util.dt.utcnow().
         """
+        if self.app_id == CAST_APP_ID_HOMEASSISTANT_LOVELACE:
+            return None
         media_status_recevied = self._media_status()[1]
         return media_status_recevied
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return a unique ID."""
-        return self._cast_info.uuid
 
     async def _async_cast_discovered(self, discover: ChromecastInfo):
         """Handle discovery of new Chromecast."""
@@ -769,7 +753,7 @@ class CastDevice(MediaPlayerEntity):
         url_path: str | None,
     ):
         """Handle a show view signal."""
-        if entity_id != self.entity_id:
+        if entity_id != self.entity_id or self._chromecast is None:
             return
 
         if self._hass_cast_controller is None:
@@ -787,7 +771,6 @@ class DynamicCastGroup:
 
         self.hass = hass
         self._cast_info = cast_info
-        self.services = cast_info.services
         self._chromecast: pychromecast.Chromecast | None = None
         self.mz_mgr = None
         self._status_listener: CastStatusListener | None = None
@@ -835,18 +818,11 @@ class DynamicCastGroup:
             "[%s %s] Connecting to cast device by service %s",
             "Dynamic group",
             self._cast_info.friendly_name,
-            self.services,
+            self._cast_info.cast_info.services,
         )
         chromecast = await self.hass.async_add_executor_job(
             pychromecast.get_chromecast_from_cast_info,
-            pychromecast.discovery.CastInfo(
-                self.services,
-                self._cast_info.uuid,
-                self._cast_info.model_name,
-                self._cast_info.friendly_name,
-                None,
-                None,
-            ),
+            self._cast_info.cast_info,
             ChromeCastZeroconf.get_zeroconf(),
         )
         self._chromecast = chromecast
@@ -897,7 +873,7 @@ class DynamicCastGroup:
             # Removed is not our device.
             return
 
-        if not discover.services:
+        if not discover.cast_info.services:
             # Clean up the dynamic group
             _LOGGER.debug("Clean up dynamic group: %s", discover)
             await self.async_tear_down()

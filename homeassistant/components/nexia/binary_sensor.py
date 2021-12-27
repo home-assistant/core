@@ -2,16 +2,15 @@
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 
-from .const import DOMAIN, NEXIA_DEVICE, UPDATE_COORDINATOR
+from .const import DOMAIN
+from .coordinator import NexiaDataUpdateCoordinator
 from .entity import NexiaThermostatEntity
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up sensors for a Nexia device."""
-
-    nexia_data = hass.data[DOMAIN][config_entry.entry_id]
-    nexia_home = nexia_data[NEXIA_DEVICE]
-    coordinator = nexia_data[UPDATE_COORDINATOR]
+    coordinator: NexiaDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    nexia_home = coordinator.nexia_home
 
     entities = []
     for thermostat_id in nexia_home.get_thermostat_ids():

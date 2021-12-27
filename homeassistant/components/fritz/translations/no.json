@@ -51,5 +51,14 @@
                 "title": "Sett opp FRITZ!Box verkt\u00f8y"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "consider_home": "Sekunder \u00e5 vurdere en enhet hjemme"
+                }
+            }
+        }
     }
 }

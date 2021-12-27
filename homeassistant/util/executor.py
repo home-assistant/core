@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
+import contextlib
 import logging
 import queue
 import sys
@@ -9,7 +10,7 @@ from threading import Thread
 import time
 import traceback
 
-from homeassistant.util.thread import async_raise
+from .thread import async_raise
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,7 +50,11 @@ def join_or_interrupt_threads(
         if log:
             _log_thread_running_at_shutdown(thread.name, thread.ident)
 
-        async_raise(thread.ident, SystemExit)
+        with contextlib.suppress(SystemError):
+            # SystemError at this stage is usually a race condition
+            # where the thread happens to die right before we force
+            # it to raise the exception
+            async_raise(thread.ident, SystemExit)
 
     return joined
 
@@ -57,9 +62,9 @@ def join_or_interrupt_threads(
 class InterruptibleThreadPoolExecutor(ThreadPoolExecutor):
     """A ThreadPoolExecutor instance that will not deadlock on shutdown."""
 
-    def logged_shutdown(self) -> None:
+    def shutdown(self, *args, **kwargs) -> None:  # type: ignore
         """Shutdown backport from cpython 3.9 with interrupt support added."""
-        with self._shutdown_lock:  # type: ignore[attr-defined]
+        with self._shutdown_lock:
             self._shutdown = True
             # Drain all work items from the queue, and then cancel their
             # associated futures.
@@ -72,7 +77,7 @@ class InterruptibleThreadPoolExecutor(ThreadPoolExecutor):
                     work_item.future.cancel()
             # Send a wake-up to prevent threads calling
             # _work_queue.get(block=True) from permanently blocking.
-            self._work_queue.put(None)
+            self._work_queue.put(None)  # type: ignore[arg-type]
 
         # The above code is backported from python 3.9
         #
@@ -84,7 +89,7 @@ class InterruptibleThreadPoolExecutor(ThreadPoolExecutor):
 
     def join_threads_or_timeout(self) -> None:
         """Join threads or timeout."""
-        remaining_threads = set(self._threads)  # type: ignore[attr-defined]
+        remaining_threads = set(self._threads)
         start_time = time.monotonic()
         timeout_remaining: float = EXECUTOR_SHUTDOWN_TIMEOUT
         attempt = 0

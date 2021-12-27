@@ -16,7 +16,7 @@ CLIENT_SECRET = "5678"
 
 async def test_full_flow(
     hass: HomeAssistant,
-    aiohttp_client,
+    hass_client_no_auth,
     aioclient_mock,
     current_request_with_host,
 ) -> None:
@@ -47,7 +47,7 @@ async def test_full_flow(
         f"&state={state}"
     )
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
     resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
     assert resp.status == 200
     assert resp.headers["content-type"] == "text/html; charset=utf-8"

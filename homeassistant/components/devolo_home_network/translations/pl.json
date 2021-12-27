@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "home_control": "Ta jednostka devolo Home Control Central nie wsp\u00f3\u0142pracuje z t\u0105 integracj\u0105."
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
+        },
+        "flow_title": "{product} ({name})",
+        "step": {
+            "user": {
+                "data": {
+                    "ip_address": "Adres IP"
+                },
+                "description": "Czy chcesz rozpocz\u0105\u0107 konfiguracj\u0119?"
+            },
+            "zeroconf_confirm": {
+                "description": "Czy chcesz doda\u0107 do Home Assistanta urz\u0105dzenie sieciowe devolo o nazwie \"{host_name}\"?",
+                "title": "Wykryto urz\u0105dzenie sieciowe devolo"
+            }
+        }
+    }
+}

@@ -1,4 +1,6 @@
 """Support for ADS light sources."""
+from __future__ import annotations
+
 import voluptuous as vol
 
 from homeassistant.components.light import (
@@ -8,7 +10,10 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import (
     CONF_ADS_VAR,
@@ -29,7 +34,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the light platform for ADS."""
     ads_hub = hass.data.get(DATA_ADS)
 
@@ -48,6 +58,8 @@ class AdsLight(AdsEntity, LightEntity):
         super().__init__(ads_hub, name, ads_var_enable)
         self._state_dict[STATE_KEY_BRIGHTNESS] = None
         self._ads_var_brightness = ads_var_brightness
+        if ads_var_brightness is not None:
+            self._attr_supported_features = SUPPORT_BRIGHTNESS
 
     async def async_added_to_hass(self):
         """Register device notification."""
@@ -61,19 +73,12 @@ class AdsLight(AdsEntity, LightEntity):
             )
 
     @property
-    def brightness(self):
+    def brightness(self) -> int | None:
         """Return the brightness of the light (0..255)."""
         return self._state_dict[STATE_KEY_BRIGHTNESS]
 
     @property
-    def supported_features(self):
-        """Flag supported features."""
-        if self._ads_var_brightness is not None:
-            return SUPPORT_BRIGHTNESS
-        return 0
-
-    @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return True if the entity is on."""
         return self._state_dict[STATE_KEY_STATE]
 

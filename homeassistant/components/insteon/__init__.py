@@ -9,6 +9,7 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_PLATFORM, EVENT_HOMEASSISTANT_STOP
 from homeassistant.exceptions import ConfigEntryNotReady
 
+from . import api
 from .const import (
     CONF_CAT,
     CONF_DIM_STEPS,
@@ -38,6 +39,8 @@ async def async_get_device_config(hass, config_entry):
     # Make a copy of addresses due to edge case where the list of devices could change during status update
     # Cannot be done concurrently due to issues with the underlying protocol.
     for address in list(devices):
+        if devices[address].is_battery:
+            continue
         with suppress(AttributeError):
             await devices[address].async_status()
 
@@ -163,6 +166,8 @@ async def async_setup_entry(hass, entry):
         model=f"{devices.modem.model} ({devices.modem.cat!r}, 0x{devices.modem.subcat:02x})",
         sw_version=f"{devices.modem.firmware:02x} Engine Version: {devices.modem.engine_version}",
     )
+
+    api.async_load_api(hass)
 
     asyncio.create_task(async_get_device_config(hass, entry))
 

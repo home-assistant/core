@@ -217,6 +217,12 @@ async def test_switch_power(hass):
         SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_SWITCH}, blocking=True
     )
 
+    hass.states.async_set(
+        ENTITY_SWITCH,
+        STATE_ON,
+        attributes={ATTR_CURRENT_POWER_W: 100, ATTR_FRIENDLY_NAME: "AC"},
+    )
+
     switch = hass.states.get(ENTITY_SWITCH)
     assert switch.state == STATE_ON
     power = switch.attributes[ATTR_CURRENT_POWER_W]

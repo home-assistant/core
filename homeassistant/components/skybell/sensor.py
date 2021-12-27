@@ -1,9 +1,15 @@
 """Sensor support for Skybell Doorbells."""
+from __future__ import annotations
+
 from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.const import CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS
 import homeassistant.helpers.config_validation as cv
 
@@ -11,8 +17,15 @@ from . import DEFAULT_ENTITY_NAMESPACE, DOMAIN as SKYBELL_DOMAIN, SkybellDevice
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
-# Sensor types: Name, icon
-SENSOR_TYPES = {"chime_level": ["Chime Level", "bell-ring"]}
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="chime_level",
+        name="Chime Level",
+        icon="mdi:bell-ring",
+    ),
+)
+MONITORED_CONDITIONS: list[str] = [desc.key for desc in SENSOR_TYPES]
+
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -20,7 +33,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             CONF_ENTITY_NAMESPACE, default=DEFAULT_ENTITY_NAMESPACE
         ): cv.string,
         vol.Required(CONF_MONITORED_CONDITIONS, default=[]): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_TYPES)]
+            cv.ensure_list, [vol.In(MONITORED_CONDITIONS)]
         ),
     }
 )
@@ -30,10 +43,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the platform for a Skybell device."""
     skybell = hass.data.get(SKYBELL_DOMAIN)
 
-    sensors = []
-    for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
-        for device in skybell.get_devices():
-            sensors.append(SkybellSensor(device, sensor_type))
+    sensors = [
+        SkybellSensor(device, description)
+        for device in skybell.get_devices()
+        for description in SENSOR_TYPES
+        if description.key in config[CONF_MONITORED_CONDITIONS]
+    ]
 
     add_entities(sensors, True)
 
@@ -41,34 +56,19 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class SkybellSensor(SkybellDevice, SensorEntity):
     """A sensor implementation for Skybell devices."""
 
-    def __init__(self, device, sensor_type):
+    def __init__(
+        self,
+        device,
+        description: SensorEntityDescription,
+    ):
         """Initialize a sensor for a Skybell device."""
         super().__init__(device)
-        self._sensor_type = sensor_type
-        self._icon = f"mdi:{SENSOR_TYPES[self._sensor_type][1]}"
-        self._name = "{} {}".format(
-            self._device.name, SENSOR_TYPES[self._sensor_type][0]
-        )
-        self._state = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return self._icon
+        self.entity_description = description
+        self._attr_name = f"{self._device.name} {description.name}"
 
     def update(self):
         """Get the latest data and updates the state."""
         super().update()
 
-        if self._sensor_type == "chime_level":
-            self._state = self._device.outdoor_chime_level
+        if self.entity_description.key == "chime_level":
+            self._attr_native_value = self._device.outdoor_chime_level

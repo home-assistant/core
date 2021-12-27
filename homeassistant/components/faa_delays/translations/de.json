@@ -13,7 +13,7 @@
                 "data": {
                     "id": "Flughafen"
                 },
-                "description": "Geben Sie einen US-Flughafencode im IATA-Format ein",
+                "description": "Gib einen US-Flughafencode im IATA-Format ein",
                 "title": "FAA Delays"
             }
         }

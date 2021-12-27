@@ -1,10 +1,12 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Konto on juba seadistatud"
+            "already_configured": "Konto on juba seadistatud",
+            "reauth_successful": "Taastuvastamine \u00f5nnestus"
         },
         "error": {
-            "invalid_auth": "Tuvastamise viga"
+            "invalid_auth": "Tuvastamise viga",
+            "reauth_failed": "Palun kasuta sama mydevolo kasutajat nagu varem."
         },
         "step": {
             "user": {

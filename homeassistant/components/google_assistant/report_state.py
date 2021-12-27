@@ -106,7 +106,7 @@ def async_enable_report_state(hass: HomeAssistant, google_config: AbstractConfig
         """Check if the serialized data has changed."""
         return old_extra_arg != new_extra_arg
 
-    async def inital_report(_now):
+    async def initial_report(_now):
         """Report initially all states."""
         nonlocal unsub, checker
         entities = {}
@@ -140,7 +140,7 @@ def async_enable_report_state(hass: HomeAssistant, google_config: AbstractConfig
             MATCH_ALL, async_entity_state_listener
         )
 
-    unsub = async_call_later(hass, INITIAL_REPORT_DELAY, inital_report)
+    unsub = async_call_later(hass, INITIAL_REPORT_DELAY, initial_report)
 
     @callback
     def unsub_all():

@@ -9,7 +9,6 @@ create_vacation:
       name: Entity
       description: ecobee thermostat on which to create the vacation.
       required: true
-      example: "climate.kitchen"
       selector:
         entity:
           integration: ecobee
@@ -25,7 +24,6 @@ create_vacation:
       name: Cool temperature
       description: Cooling temperature during the vacation.
       required: true
-      example: 23
       selector:
         number:
           min: 7
@@ -36,7 +34,6 @@ create_vacation:
       name: Heat temperature
       description: Heating temperature during the vacation.
       required: true
-      example: 25
       selector:
         number:
           min: 7
@@ -74,7 +71,6 @@ create_vacation:
     fan_mode:
       name: Fan mode
       description: Fan mode of the thermostat during the vacation.
-      example: "on"
       default: "auto"
       selector:
         select:
@@ -84,7 +80,6 @@ create_vacation:
     fan_min_on_time:
       name: Fan minimum on time
       description: Minimum number of minutes to run the fan each hour (0 to 60) during the vacation.
-      example: 30
       default: 0
       selector:
         number:
@@ -121,7 +116,6 @@ resume_program:
     entity_id:
       name: Entity
       description: Name(s) of entities to change.
-      example: "climate.kitchen"
       selector:
         entity:
           integration: ecobee
@@ -129,7 +123,6 @@ resume_program:
     resume_all:
       name: Resume all
       description: Resume all events and return to the scheduled program.
-      example: true
       default: false
       selector:
         boolean:
@@ -141,7 +134,6 @@ set_fan_min_on_time:
     entity_id:
       name: Entity
       description: Name(s) of entities to change.
-      example: "climate.kitchen"
       selector:
         entity:
           integration: ecobee
@@ -150,7 +142,6 @@ set_fan_min_on_time:
       name: Fan minimum on time
       description: New value of fan min on time.
       required: true
-      example: 5
       selector:
         number:
           min: 0
@@ -169,7 +160,6 @@ set_dst_mode:
       name: Daylight savings time enabled
       description: Enable automatic daylight savings time.
       required: true
-      example: "true"
       selector:
         boolean:
 
@@ -185,7 +175,6 @@ set_mic_mode:
       name: Mic enabled
       description: Enable Alexa mic.
       required: true
-      example: "true"
       selector:
         boolean:
 
@@ -200,12 +189,10 @@ set_occupancy_modes:
     auto_away:
       name: Auto away
       description: Enable Smart Home/Away mode.
-      example: "true"
       selector:
         boolean:
     follow_me:
       name: Follow me
       description: Enable Follow Me mode.
-      example: "true"
       selector:
         boolean:

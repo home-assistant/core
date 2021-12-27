@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
+            "cannot_connect": "\u00c9chec de connexion",
+            "invalid_token": "Jeton d'acc\u00e8s non valide",
+            "reauth_successful": "La r\u00e9-authentification a r\u00e9ussi",
+            "unknown": "Erreur inattendue"
+        },
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion",
+            "not_allowing_new_tokens": "Nanoleaf n'autorise pas les nouveaux jetons, suivez les instructions ci-dessus.",
+            "unknown": "Erreur inattendue"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "link": {
+                "description": "Appuyez sur le bouton d'alimentation de votre Nanoleaf et maintenez-le enfonc\u00e9 pendant 5 secondes jusqu'\u00e0 ce que les voyants du bouton commencent \u00e0 clignoter, puis cliquez sur **ENVOYER** dans les 30 secondes.",
+                "title": "Lier Nanoleaf"
+            },
+            "user": {
+                "data": {
+                    "host": "H\u00f4te"
+                }
+            }
+        }
+    }
+}

@@ -51,5 +51,14 @@
                 "title": "\u8a2d\u5b9a FRITZ!Box Tools"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "consider_home": "\u8996\u70ba\u5728\u5bb6\u7684\u7b49\u5019\u79d2\u6578"
+                }
+            }
+        }
     }
 }

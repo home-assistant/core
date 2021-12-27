@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "confirm_discovery": {
+                "description": "Se recomienda reservar DHCP en su enrutador. Si no se configura, es posible que el dispositivo no est\u00e9 disponible hasta que Home Assistant detecte la nueva direcci\u00f3n IP. Consulte el manual de usuario de su enrutador."
+            },
+            "user": {
+                "description": "Primero, debe descargar la aplicaci\u00f3n Goal Zero: https://www.goalzero.com/product-features/yeti-app/ \n\nSiga las instrucciones para conectar su Yeti a su red Wi-Fi. Se recomienda reservar DHCP en su enrutador. Si no se configura, es posible que el dispositivo no est\u00e9 disponible hasta que Home Assistant detecte la nueva direcci\u00f3n IP. Consulte el manual de usuario de su enrutador."
+            }
+        }
+    }
+}

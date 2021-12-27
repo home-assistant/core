@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from contextlib import suppress
+from http import HTTPStatus
 import secrets
 
 from aiohttp.web import Request, Response
@@ -11,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
-from homeassistant.const import ATTR_DEVICE_ID, CONF_WEBHOOK_ID, HTTP_CREATED
+from homeassistant.const import ATTR_DEVICE_ID, CONF_WEBHOOK_ID
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import slugify
 
@@ -109,5 +110,5 @@ class RegistrationsView(HomeAssistantView):
                 CONF_SECRET: data.get(CONF_SECRET),
                 CONF_WEBHOOK_ID: data[CONF_WEBHOOK_ID],
             },
-            status_code=HTTP_CREATED,
+            status_code=HTTPStatus.CREATED,
         )

@@ -4,6 +4,7 @@
             "arm_away": "Aktiver {entity_name} borte",
             "arm_home": "Aktiver {entity_name} hjemme",
             "arm_night": "Aktiver {entity_name} natt",
+            "arm_vacation": "{entity_name} ferie",
             "disarm": "Deaktiver {entity_name}",
             "trigger": "Utl\u00f8ser {entity_name}"
         },
@@ -11,6 +12,7 @@
             "is_armed_away": "{entity_name} er aktivert borte",
             "is_armed_home": "{entity_name} er aktivert hjemme",
             "is_armed_night": "{entity_name} er aktivert natt",
+            "is_armed_vacation": "{entity_name} er armert ferie",
             "is_disarmed": "{entity_name} er deaktivert",
             "is_triggered": "{entity_name} er utl\u00f8st"
         },
@@ -18,6 +20,7 @@
             "armed_away": "{entity_name} aktivert borte",
             "armed_home": "{entity_name} aktivert hjemme",
             "armed_night": "{entity_name} aktivert natt",
+            "armed_vacation": "{entity_name} armert ferie",
             "disarmed": "{entity_name} deaktivert",
             "triggered": "{entity_name} utl\u00f8st"
         }
@@ -29,6 +32,7 @@
             "armed_custom_bypass": "Armert tilpasset unntak",
             "armed_home": "Armert hjemme",
             "armed_night": "Armert natt",
+            "armed_vacation": "Armert ferie",
             "arming": "Armerer",
             "disarmed": "Avsl\u00e5tt",
             "disarming": "Disarmer",

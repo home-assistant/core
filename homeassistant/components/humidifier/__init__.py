@@ -1,12 +1,14 @@
 """Provides functionality to interact with humidifier devices."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import Any, final
 
 import voluptuous as vol
 
+from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_MODE,
@@ -21,12 +23,12 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
-from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
-from .const import (
+from .const import (  # noqa: F401
     ATTR_AVAILABLE_MODES,
     ATTR_HUMIDITY,
     ATTR_MAX_HUMIDITY,
@@ -46,9 +48,21 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
-DEVICE_CLASSES = [DEVICE_CLASS_HUMIDIFIER, DEVICE_CLASS_DEHUMIDIFIER]
+ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
-DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
+
+class HumidifierDeviceClass(StrEnum):
+    """Device class for humidifiers."""
+
+    HUMIDIFIER = "humidifier"
+    DEHUMIDIFIER = "dehumidifier"
+
+
+DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(HumidifierDeviceClass))
+
+# DEVICE_CLASSES below is deprecated as of 2021.12
+# use the HumidifierDeviceClass enum instead.
+DEVICE_CLASSES = [cls.value for cls in HumidifierDeviceClass]
 
 
 @bind_hass
@@ -91,16 +105,33 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    return await hass.data[DOMAIN].async_setup_entry(entry)
+    component: EntityComponent = hass.data[DOMAIN]
+    return await component.async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.data[DOMAIN].async_unload_entry(entry)
+    component: EntityComponent = hass.data[DOMAIN]
+    return await component.async_unload_entry(entry)
+
+
+@dataclass
+class HumidifierEntityDescription(ToggleEntityDescription):
+    """A class that describes humidifier entities."""
+
+    device_class: HumidifierDeviceClass | str | None = None
 
 
 class HumidifierEntity(ToggleEntity):
     """Base class for humidifier entities."""
+
+    entity_description: HumidifierEntityDescription
+    _attr_available_modes: list[str] | None
+    _attr_device_class: HumidifierDeviceClass | str | None
+    _attr_max_humidity: int = DEFAULT_MAX_HUMIDITY
+    _attr_min_humidity: int = DEFAULT_MIN_HUMIDITY
+    _attr_mode: str | None
+    _attr_target_humidity: int | None = None
 
     @property
     def capability_attributes(self) -> dict[str, Any]:
@@ -115,6 +146,15 @@ class HumidifierEntity(ToggleEntity):
             data[ATTR_AVAILABLE_MODES] = self.available_modes
 
         return data
+
+    @property
+    def device_class(self) -> HumidifierDeviceClass | str | None:
+        """Return the class of this entity."""
+        if hasattr(self, "_attr_device_class"):
+            return self._attr_device_class
+        if hasattr(self, "entity_description"):
+            return self.entity_description.device_class
+        return None
 
     @final
     @property
@@ -134,7 +174,7 @@ class HumidifierEntity(ToggleEntity):
     @property
     def target_humidity(self) -> int | None:
         """Return the humidity we try to reach."""
-        return None
+        return self._attr_target_humidity
 
     @property
     def mode(self) -> str | None:
@@ -142,7 +182,7 @@ class HumidifierEntity(ToggleEntity):
 
         Requires SUPPORT_MODES.
         """
-        raise NotImplementedError
+        return self._attr_mode
 
     @property
     def available_modes(self) -> list[str] | None:
@@ -150,7 +190,7 @@ class HumidifierEntity(ToggleEntity):
 
         Requires SUPPORT_MODES.
         """
-        raise NotImplementedError
+        return self._attr_available_modes
 
     def set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
@@ -171,9 +211,9 @@ class HumidifierEntity(ToggleEntity):
     @property
     def min_humidity(self) -> int:
         """Return the minimum humidity."""
-        return DEFAULT_MIN_HUMIDITY
+        return self._attr_min_humidity
 
     @property
     def max_humidity(self) -> int:
         """Return the maximum humidity."""
-        return DEFAULT_MAX_HUMIDITY
+        return self._attr_max_humidity

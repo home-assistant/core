@@ -3,6 +3,7 @@ from datetime import timedelta
 import logging
 
 from aiopvapi.helpers.aiorequest import AioRequest
+from aiopvapi.helpers.api_base import ApiEntryPoint
 from aiopvapi.helpers.constants import ATTR_ID
 from aiopvapi.helpers.tools import base64_to_unicode
 from aiopvapi.rooms import Rooms
@@ -12,7 +13,7 @@ from aiopvapi.userdata import UserData
 import async_timeout
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -20,7 +21,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
+    API_PATH_FWVERSION,
     COORDINATOR,
+    DEFAULT_LEGACY_MAINPROCESSOR,
     DEVICE_FIRMWARE,
     DEVICE_INFO,
     DEVICE_MAC_ADDRESS,
@@ -29,24 +32,18 @@ from .const import (
     DEVICE_REVISION,
     DEVICE_SERIAL_NUMBER,
     DOMAIN,
-    FIRMWARE_BUILD,
-    FIRMWARE_IN_USERDATA,
-    FIRMWARE_SUB_REVISION,
+    FIRMWARE,
+    FIRMWARE_MAINPROCESSOR,
+    FIRMWARE_NAME,
+    FIRMWARE_REVISION,
     HUB_EXCEPTIONS,
     HUB_NAME,
-    LEGACY_DEVICE_BUILD,
-    LEGACY_DEVICE_MODEL,
-    LEGACY_DEVICE_REVISION,
-    LEGACY_DEVICE_SUB_REVISION,
     MAC_ADDRESS_IN_USERDATA,
-    MAINPROCESSOR_IN_USERDATA_FIRMWARE,
-    MODEL_IN_MAINPROCESSOR,
     PV_API,
     PV_ROOM_DATA,
     PV_SCENE_DATA,
     PV_SHADE_DATA,
     PV_SHADES,
-    REVISION_IN_MAINPROCESSOR,
     ROOM_DATA,
     SCENE_DATA,
     SERIAL_NUMBER_IN_USERDATA,
@@ -56,13 +53,13 @@ from .const import (
 
 PARALLEL_UPDATES = 1
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
-PLATFORMS = ["cover", "scene", "sensor"]
+PLATFORMS = [Platform.COVER, Platform.SCENE, Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Hunter Douglas PowerView from a config entry."""
 
     config = entry.data
@@ -92,12 +89,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
                 (await shades.get_resources())[SHADE_DATA]
             )
     except HUB_EXCEPTIONS as err:
-        _LOGGER.error("Connection error to PowerView hub: %s", hub_address)
-        raise ConfigEntryNotReady from err
-
+        raise ConfigEntryNotReady(
+            f"Connection error to PowerView hub: {hub_address}: {err}"
+        ) from err
     if not device_info:
-        _LOGGER.error("Unable to initialize PowerView hub: %s", hub_address)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady(f"Unable to initialize PowerView hub: {hub_address}")
 
     async def async_update_data():
         """Fetch data from shade endpoint."""
@@ -137,26 +133,25 @@ async def async_get_device_info(pv_request):
     resources = await userdata.get_resources()
     userdata_data = resources[USER_DATA]
 
-    if FIRMWARE_IN_USERDATA in userdata_data:
-        main_processor_info = userdata_data[FIRMWARE_IN_USERDATA][
-            MAINPROCESSOR_IN_USERDATA_FIRMWARE
-        ]
-    else:
+    if FIRMWARE in userdata_data:
+        main_processor_info = userdata_data[FIRMWARE][FIRMWARE_MAINPROCESSOR]
+    elif userdata_data:
         # Legacy devices
-        main_processor_info = {
-            REVISION_IN_MAINPROCESSOR: LEGACY_DEVICE_REVISION,
-            FIRMWARE_SUB_REVISION: LEGACY_DEVICE_SUB_REVISION,
-            FIRMWARE_BUILD: LEGACY_DEVICE_BUILD,
-            MODEL_IN_MAINPROCESSOR: LEGACY_DEVICE_MODEL,
-        }
+        fwversion = ApiEntryPoint(pv_request, API_PATH_FWVERSION)
+        resources = await fwversion.get_resources()
+
+        if FIRMWARE in resources:
+            main_processor_info = resources[FIRMWARE][FIRMWARE_MAINPROCESSOR]
+        else:
+            main_processor_info = DEFAULT_LEGACY_MAINPROCESSOR
 
     return {
         DEVICE_NAME: base64_to_unicode(userdata_data[HUB_NAME]),
         DEVICE_MAC_ADDRESS: userdata_data[MAC_ADDRESS_IN_USERDATA],
         DEVICE_SERIAL_NUMBER: userdata_data[SERIAL_NUMBER_IN_USERDATA],
-        DEVICE_REVISION: main_processor_info[REVISION_IN_MAINPROCESSOR],
+        DEVICE_REVISION: main_processor_info[FIRMWARE_REVISION],
         DEVICE_FIRMWARE: main_processor_info,
-        DEVICE_MODEL: main_processor_info[MODEL_IN_MAINPROCESSOR],
+        DEVICE_MODEL: main_processor_info[FIRMWARE_NAME],
     }
 
 
@@ -166,7 +161,7 @@ def _async_map_data_by_id(data):
     return {entry[ATTR_ID]: entry for entry in data}
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:

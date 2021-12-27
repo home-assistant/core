@@ -6,7 +6,6 @@ show_lovelace_view:
       name: Entity
       description: Media Player entity to show the Lovelace view on.
       required: true
-      example: "media_player.kitchen"
       selector:
         entity:
           integration: cast

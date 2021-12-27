@@ -2,10 +2,8 @@
 import logging
 
 from pyvesync import VeSync
-import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -25,42 +23,7 @@ PLATFORMS = ["switch", "fan", "light"]
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: vol.Schema(
-                {
-                    vol.Required(CONF_USERNAME): cv.string,
-                    vol.Required(CONF_PASSWORD): cv.string,
-                }
-            )
-        },
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
-
-
-async def async_setup(hass, config):
-    """Set up the VeSync component."""
-    conf = config.get(DOMAIN)
-
-    if conf is None:
-        return True
-
-    if not hass.config_entries.async_entries(DOMAIN):
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data={
-                    CONF_USERNAME: conf[CONF_USERNAME],
-                    CONF_PASSWORD: conf[CONF_PASSWORD],
-                },
-            )
-        )
-
-    return True
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup_entry(hass, config_entry):
@@ -93,15 +56,15 @@ async def async_setup_entry(hass, config_entry):
 
     if device_dict[VS_SWITCHES]:
         switches.extend(device_dict[VS_SWITCHES])
-        hass.async_create_task(forward_setup(config_entry, "switch"))
+        hass.async_create_task(forward_setup(config_entry, Platform.SWITCH))
 
     if device_dict[VS_FANS]:
         fans.extend(device_dict[VS_FANS])
-        hass.async_create_task(forward_setup(config_entry, "fan"))
+        hass.async_create_task(forward_setup(config_entry, Platform.FAN))
 
     if device_dict[VS_LIGHTS]:
         lights.extend(device_dict[VS_LIGHTS])
-        hass.async_create_task(forward_setup(config_entry, "light"))
+        hass.async_create_task(forward_setup(config_entry, Platform.LIGHT))
 
     async def async_new_device_discovery(service):
         """Discover if new devices should be added."""

@@ -15,5 +15,15 @@
                 "title": "Maak verbinding met LiteJet"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "default_transition": "Standaard overgang (seconden)"
+                },
+                "title": "Configureer LiteJet"
+            }
+        }
     }
 }

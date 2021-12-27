@@ -10,12 +10,10 @@ set_zone_moisture_percent:
       name: Percent
       description: Set the desired zone moisture percentage.
       required: true
-      example: 50
       selector:
         number:
           min: 0
           max: 100
-          mode: slider
           unit_of_measurement: "%"
 start_multiple_zone_schedule:
   name: Start multiple zones
@@ -45,13 +43,11 @@ pause_watering:
     duration:
       name: Duration
       description: The time to pause running schedules.
-      example: 30
       default: 60
       selector:
         number:
           min: 1
           max: 60
-          mode: slider
           unit_of_measurement: "minutes"
 resume_watering:
   name: Resume watering
@@ -60,6 +56,16 @@ resume_watering:
     devices:
       name: Devices
       description: Name of controllers to resume. Defaults to all controllers on the account if not provided.
+      example: "Main House"
+      selector:
+        text:
+stop_watering:
+  name: Stop watering
+  description: Stop any currently running zones or schedules.
+  fields:
+    devices:
+      name: Devices
+      description: Name of controllers to stop. Defaults to all controllers on the account if not provided.
       example: "Main House"
       selector:
         text:

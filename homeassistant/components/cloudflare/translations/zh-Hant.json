@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f",
             "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u88dd\u7f6e\u3002",
             "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
         },
@@ -11,6 +12,12 @@
         },
         "flow_title": "{name}",
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_token": "API \u6b0a\u6756",
+                    "description": "\u91cd\u65b0\u8a8d\u8b49 Cloudflare \u5e33\u865f\u3002"
+                }
+            },
             "records": {
                 "data": {
                     "records": "\u8a18\u9304"

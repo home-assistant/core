@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_device": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "cannot_connect": "A csatlakoz\u00e1s sikertelen",
+            "no_unconfigured_devices": "Nem tal\u00e1lhat\u00f3 konfigur\u00e1latlan eszk\u00f6z.",
+            "switchbot_unsupported_type": "Nem t\u00e1mogatott Switchbot t\u00edpus.",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "one": "\u00dcres",
+            "other": "\u00dcres"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "user": {
+                "data": {
+                    "mac": "Eszk\u00f6z MAC-c\u00edme",
+                    "name": "N\u00e9v",
+                    "password": "Jelsz\u00f3"
+                },
+                "title": "Switchbot eszk\u00f6z be\u00e1ll\u00edt\u00e1sa"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "retry_count": "\u00dajrapr\u00f3b\u00e1lkoz\u00e1sok sz\u00e1ma",
+                    "retry_timeout": "\u00dajrapr\u00f3b\u00e1lkoz\u00e1sok k\u00f6z\u00f6tti id\u0151korl\u00e1t",
+                    "scan_timeout": "Mennyi ideig keresse a hirdet\u00e9si adatokat",
+                    "update_time": "Friss\u00edt\u00e9sek k\u00f6z\u00f6tti id\u0151 (m\u00e1sodperc)"
+                }
+            }
+        }
+    }
+}

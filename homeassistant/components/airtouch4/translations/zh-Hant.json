@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "no_units": "\u627e\u4e0d\u5230\u4efb\u4f55 AirTouch 4 \u7fa4\u7d44\u3002"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u4e3b\u6a5f\u7aef"
+                },
+                "title": "\u8a2d\u5b9a AirTouch 4  \u9023\u7dda\u8cc7\u8a0a\u3002"
+            }
+        }
+    }
+}

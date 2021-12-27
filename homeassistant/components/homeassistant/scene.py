@@ -1,9 +1,8 @@
 """Allow users to set and activate scenes."""
 from __future__ import annotations
 
-from collections import namedtuple
 import logging
-from typing import Any
+from typing import Any, NamedTuple
 
 import voluptuous as vol
 
@@ -115,8 +114,17 @@ CREATE_SCENE_SCHEMA = vol.All(
 
 SERVICE_APPLY = "apply"
 SERVICE_CREATE = "create"
-SCENECONFIG = namedtuple("SceneConfig", [CONF_ID, CONF_NAME, CONF_ICON, STATES])
+
 _LOGGER = logging.getLogger(__name__)
+
+
+class SceneConfig(NamedTuple):
+    """Object for storing scene config."""
+
+    id: str
+    name: str
+    icon: str
+    states: dict
 
 
 @callback
@@ -142,9 +150,7 @@ def entities_in_scene(hass: HomeAssistant, entity_id: str) -> list[str]:
 
     platform = hass.data[DATA_PLATFORM]
 
-    entity = platform.entities.get(entity_id)
-
-    if entity is None:
+    if (entity := platform.entities.get(entity_id)) is None:
         return []
 
     return list(entity.scene_config.states)
@@ -225,8 +231,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         entities = call.data[CONF_ENTITIES]
 
         for entity_id in snapshot:
-            state = hass.states.get(entity_id)
-            if state is None:
+            if (state := hass.states.get(entity_id)) is None:
                 _LOGGER.warning(
                     "Entity %s does not exist and therefore cannot be snapshotted",
                     entity_id,
@@ -238,10 +243,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             _LOGGER.warning("Empty scenes are not allowed")
             return
 
-        scene_config = SCENECONFIG(None, call.data[CONF_SCENE_ID], None, entities)
+        scene_config = SceneConfig(None, call.data[CONF_SCENE_ID], None, entities)
         entity_id = f"{SCENE_DOMAIN}.{scene_config.name}"
-        old = platform.entities.get(entity_id)
-        if old is not None:
+        if (old := platform.entities.get(entity_id)) is not None:
             if not old.from_service:
                 _LOGGER.warning("The scene %s already exists", entity_id)
                 return
@@ -255,16 +259,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 def _process_scenes_config(hass, async_add_entities, config):
     """Process multiple scenes and add them."""
-    scene_config = config[STATES]
-
     # Check empty list
-    if not scene_config:
+    if not (scene_config := config[STATES]):
         return
 
     async_add_entities(
         HomeAssistantScene(
             hass,
-            SCENECONFIG(
+            SceneConfig(
                 scene.get(CONF_ID),
                 scene[CONF_NAME],
                 scene.get(CONF_ICON),
@@ -303,8 +305,7 @@ class HomeAssistantScene(Scene):
     def extra_state_attributes(self):
         """Return the scene state attributes."""
         attributes = {ATTR_ENTITY_ID: list(self.scene_config.states)}
-        unique_id = self.unique_id
-        if unique_id is not None:
+        if (unique_id := self.unique_id) is not None:
             attributes[CONF_ID] = unique_id
         return attributes
 

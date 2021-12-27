@@ -9,7 +9,7 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import CONF_NAME, WEEKDAYS
 import homeassistant.helpers.config_validation as cv
-import homeassistant.util.dt as dt
+from homeassistant.util import dt
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -103,7 +103,20 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     # Remove holidays
     try:
         for date in remove_holidays:
-            obj_holidays.pop(date)
+            try:
+                # is this formatted as a date?
+                if dt.parse_date(date):
+                    # remove holiday by date
+                    removed = obj_holidays.pop(date)
+                    _LOGGER.debug("Removed %s", date)
+                else:
+                    # remove holiday by name
+                    _LOGGER.debug("Treating '%s' as named holiday", date)
+                    removed = obj_holidays.pop_named(date)
+                    for holiday in removed:
+                        _LOGGER.debug("Removed %s by name '%s'", holiday, date)
+            except KeyError as unmatched:
+                _LOGGER.warning("No holiday found matching %s", unmatched)
     except TypeError:
         _LOGGER.debug("No holidays to remove or invalid holidays")
 

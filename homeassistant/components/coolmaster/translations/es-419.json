@@ -6,6 +6,11 @@
         "step": {
             "user": {
                 "data": {
+                    "cool": "Soporta el modo de enfriamiento",
+                    "dry": "Soporta el modo seco",
+                    "fan_only": "Soporta el modo solo ventilador",
+                    "heat": "Soporta el modo de calor",
+                    "heat_cool": "Soporta el modo autom\u00e1tico de calor/fr\u00edo",
                     "host": "Host",
                     "off": "Puede ser apagado"
                 },

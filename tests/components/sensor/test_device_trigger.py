@@ -4,7 +4,8 @@ from datetime import timedelta
 import pytest
 
 import homeassistant.components.automation as automation
-from homeassistant.components.sensor import DOMAIN
+from homeassistant.components.device_automation import DeviceAutomationType
+from homeassistant.components.sensor import DOMAIN, SensorDeviceClass
 from homeassistant.components.sensor.device_trigger import ENTITY_TRIGGERS
 from homeassistant.const import CONF_PLATFORM, PERCENTAGE, STATE_UNKNOWN
 from homeassistant.helpers import device_registry
@@ -21,10 +22,7 @@ from tests.common import (
     mock_registry,
 )
 from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
-from tests.testing_config.custom_components.test.sensor import (
-    DEVICE_CLASSES,
-    UNITS_OF_MEASUREMENT,
-)
+from tests.testing_config.custom_components.test.sensor import UNITS_OF_MEASUREMENT
 
 
 @pytest.fixture
@@ -56,7 +54,7 @@ async def test_get_triggers(hass, device_reg, entity_reg, enable_custom_integrat
         config_entry_id=config_entry.entry_id,
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    for device_class in DEVICE_CLASSES:
+    for device_class in SensorDeviceClass:
         entity_reg.async_get_or_create(
             DOMAIN,
             "test",
@@ -75,18 +73,34 @@ async def test_get_triggers(hass, device_reg, entity_reg, enable_custom_integrat
             "device_id": device_entry.id,
             "entity_id": platform.ENTITIES[device_class].entity_id,
         }
-        for device_class in DEVICE_CLASSES
+        for device_class in SensorDeviceClass
         if device_class in UNITS_OF_MEASUREMENT
         for trigger in ENTITY_TRIGGERS[device_class]
         if device_class != "none"
     ]
-    triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
-    assert len(triggers) == 13
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device_entry.id
+    )
+    assert len(triggers) == 26
     assert triggers == expected_triggers
 
 
+@pytest.mark.parametrize(
+    "set_state,device_class_reg,device_class_state,unit_reg,unit_state",
+    [
+        (False, SensorDeviceClass.BATTERY, None, PERCENTAGE, None),
+        (True, None, SensorDeviceClass.BATTERY, None, PERCENTAGE),
+    ],
+)
 async def test_get_trigger_capabilities(
-    hass, device_reg, entity_reg, enable_custom_integrations
+    hass,
+    device_reg,
+    entity_reg,
+    set_state,
+    device_class_reg,
+    device_class_state,
+    unit_reg,
+    unit_state,
 ):
     """Test we get the expected capabilities from a sensor trigger."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
@@ -98,15 +112,20 @@ async def test_get_trigger_capabilities(
         config_entry_id=config_entry.entry_id,
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(
+    entity_id = entity_reg.async_get_or_create(
         DOMAIN,
         "test",
         platform.ENTITIES["battery"].unique_id,
         device_id=device_entry.id,
-    )
-
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
-    await hass.async_block_till_done()
+        original_device_class=device_class_reg,
+        unit_of_measurement=unit_reg,
+    ).entity_id
+    if set_state:
+        hass.states.async_set(
+            entity_id,
+            None,
+            {"device_class": device_class_state, "unit_of_measurement": unit_state},
+        )
 
     expected_capabilities = {
         "extra_fields": [
@@ -125,11 +144,13 @@ async def test_get_trigger_capabilities(
             {"name": "for", "optional": True, "type": "positive_time_period_dict"},
         ]
     }
-    triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device_entry.id
+    )
     assert len(triggers) == 1
     for trigger in triggers:
         capabilities = await async_get_device_automation_capabilities(
-            hass, "trigger", trigger
+            hass, DeviceAutomationType.TRIGGER, trigger
         )
         assert capabilities == expected_capabilities
 
@@ -167,7 +188,7 @@ async def test_get_trigger_capabilities_none(
     expected_capabilities = {}
     for trigger in triggers:
         capabilities = await async_get_device_automation_capabilities(
-            hass, "trigger", trigger
+            hass, DeviceAutomationType.TRIGGER, trigger
         )
         assert capabilities == expected_capabilities
 

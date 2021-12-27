@@ -2,11 +2,11 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Callable
 from datetime import datetime, timedelta
 import logging
 from time import monotonic
-from typing import Callable, Generic, TypeVar
+from typing import Generic, TypeVar
 import urllib.error
 
 import aiohttp
@@ -15,9 +15,9 @@ import requests
 from homeassistant import config_entries
 from homeassistant.core import CALLBACK_TYPE, Event, HassJob, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import entity, event
 from homeassistant.util.dt import utcnow
 
+from . import entity, event
 from .debounce import Debouncer
 
 REQUEST_REFRESH_DEFAULT_COOLDOWN = 10
@@ -42,13 +42,14 @@ class DataUpdateCoordinator(Generic[T]):
         update_interval: timedelta | None = None,
         update_method: Callable[[], Awaitable[T]] | None = None,
         request_refresh_debouncer: Debouncer | None = None,
-    ):
+    ) -> None:
         """Initialize global data updater."""
         self.hass = hass
         self.logger = logger
         self.name = name
         self.update_method = update_method
         self.update_interval = update_interval
+        self.config_entry = config_entries.current_entry.get()
 
         # It's None before the first successful update.
         # Components should call async_config_entry_first_refresh
@@ -108,6 +109,9 @@ class DataUpdateCoordinator(Generic[T]):
     def _schedule_refresh(self) -> None:
         """Schedule a refresh."""
         if self.update_interval is None:
+            return
+
+        if self.config_entry and self.config_entry.pref_disable_polling:
             return
 
         if self._unsub_refresh:
@@ -229,9 +233,8 @@ class DataUpdateCoordinator(Generic[T]):
             if raise_on_auth_failed:
                 raise
 
-            config_entry = config_entries.current_entry.get()
-            if config_entry:
-                config_entry.async_start_reauth(self.hass)
+            if self.config_entry:
+                self.config_entry.async_start_reauth(self.hass)
         except NotImplementedError as err:
             self.last_exception = err
             raise err
@@ -239,10 +242,9 @@ class DataUpdateCoordinator(Generic[T]):
         except Exception as err:  # pylint: disable=broad-except
             self.last_exception = err
             self.last_update_success = False
-            if log_failures:
-                self.logger.exception(
-                    "Unexpected error fetching %s data: %s", self.name, err
-                )
+            self.logger.exception(
+                "Unexpected error fetching %s data: %s", self.name, err
+            )
 
         else:
             if not self.last_update_success:
@@ -251,9 +253,10 @@ class DataUpdateCoordinator(Generic[T]):
 
         finally:
             self.logger.debug(
-                "Finished fetching %s data in %.3f seconds",
+                "Finished fetching %s data in %.3f seconds (success: %s)",
                 self.name,
                 monotonic() - start,
+                self.last_update_success,
             )
             if not auth_failed and self._listeners and not self.hass.is_stopping:
                 self._schedule_refresh()

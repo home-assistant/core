@@ -1,4 +1,6 @@
 """Support for Abode Security System cameras."""
+from __future__ import annotations
+
 from datetime import timedelta
 
 import abodepy.helpers.constants as CONST
@@ -6,7 +8,10 @@ import abodepy.helpers.timeline as TIMELINE
 import requests
 
 from homeassistant.components.camera import Camera
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import Throttle
 
 from . import AbodeDevice
@@ -15,7 +20,11 @@ from .const import DOMAIN, LOGGER
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=90)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Abode camera devices."""
     data = hass.data[DOMAIN]
 
@@ -73,7 +82,9 @@ class AbodeCamera(AbodeDevice, Camera):
         else:
             self._response = None
 
-    def camera_image(self):
+    def camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Get a camera image."""
         self.refresh_image()
 

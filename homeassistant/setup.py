@@ -2,51 +2,33 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Generator, Iterable
+from collections.abc import Awaitable, Callable, Generator, Iterable
 import contextlib
 import logging.handlers
 from timeit import default_timer as timer
 from types import ModuleType
-from typing import Callable
+from typing import Any
 
-from homeassistant import config as conf_util, core, loader, requirements
-from homeassistant.config import async_notify_setup_error
-from homeassistant.const import (
+from . import config as conf_util, core, loader, requirements
+from .config import async_notify_setup_error
+from .const import (
     EVENT_COMPONENT_LOADED,
     EVENT_HOMEASSISTANT_START,
     PLATFORM_FORMAT,
+    Platform,
 )
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import dt as dt_util, ensure_unique_string
+from .core import CALLBACK_TYPE
+from .exceptions import HomeAssistantError
+from .helpers.typing import ConfigType
+from .util import dt as dt_util, ensure_unique_string
+
+# mypy: disallow-any-generics
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_COMPONENT = "component"
 
-BASE_PLATFORMS = {
-    "air_quality",
-    "alarm_control_panel",
-    "binary_sensor",
-    "camera",
-    "climate",
-    "cover",
-    "device_tracker",
-    "fan",
-    "humidifier",
-    "image_processing",
-    "light",
-    "lock",
-    "media_player",
-    "notify",
-    "remote",
-    "scene",
-    "sensor",
-    "switch",
-    "tts",
-    "vacuum",
-    "water_heater",
-}
+BASE_PLATFORMS = {platform.value for platform in Platform}
 
 DATA_SETUP_DONE = "setup_done"
 DATA_SETUP_STARTED = "setup_started"
@@ -229,15 +211,15 @@ async def _async_setup_component(
             )
 
         task = None
-        result = True
+        result: Any | bool = True
         try:
             if hasattr(component, "async_setup"):
-                task = component.async_setup(hass, processed_config)  # type: ignore
+                task = component.async_setup(hass, processed_config)
             elif hasattr(component, "setup"):
                 # This should not be replaced with hass.async_add_executor_job because
                 # we don't want to track this task in case it blocks startup.
                 task = hass.loop.run_in_executor(
-                    None, component.setup, hass, processed_config  # type: ignore
+                    None, component.setup, hass, processed_config
                 )
             elif not hasattr(component, "async_setup_entry"):
                 log_error("No setup or config entry setup function defined.")
@@ -279,10 +261,10 @@ async def _async_setup_component(
         await hass.config_entries.flow.async_wait_init_flow_finish(domain)
 
         await asyncio.gather(
-            *[
+            *(
                 entry.async_setup(hass, integration=integration)
                 for entry in hass.config_entries.async_entries(domain)
-            ]
+            )
         )
 
         hass.config.components.add(domain)
@@ -359,9 +341,7 @@ async def async_process_deps_reqs(
 
     Module is a Python module of either a component or platform.
     """
-    processed = hass.data.get(DATA_DEPS_REQS)
-
-    if processed is None:
+    if (processed := hass.data.get(DATA_DEPS_REQS)) is None:
         processed = hass.data[DATA_DEPS_REQS] = set()
     elif integration.domain in processed:
         return
@@ -418,7 +398,7 @@ def _async_when_setup(
         hass.async_create_task(when_setup())
         return
 
-    listeners: list[Callable] = []
+    listeners: list[CALLBACK_TYPE] = []
 
     async def _matched_event(event: core.Event) -> None:
         """Call the callback when we matched an event."""
@@ -439,7 +419,7 @@ def _async_when_setup(
 
 
 @core.callback
-def async_get_loaded_integrations(hass: core.HomeAssistant) -> set:
+def async_get_loaded_integrations(hass: core.HomeAssistant) -> set[str]:
     """Return the complete list of loaded integrations."""
     integrations = set()
     for component in hass.config.components:
@@ -453,7 +433,9 @@ def async_get_loaded_integrations(hass: core.HomeAssistant) -> set:
 
 
 @contextlib.contextmanager
-def async_start_setup(hass: core.HomeAssistant, components: Iterable) -> Generator:
+def async_start_setup(
+    hass: core.HomeAssistant, components: Iterable[str]
+) -> Generator[None, None, None]:
     """Keep track of when setup starts and finishes."""
     setup_started = hass.data.setdefault(DATA_SETUP_STARTED, {})
     started = dt_util.utcnow()

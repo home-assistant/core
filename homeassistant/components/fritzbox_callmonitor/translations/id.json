@@ -8,7 +8,7 @@
         "error": {
             "invalid_auth": "Autentikasi tidak valid"
         },
-        "flow_title": "Pantau panggilan AVM FRITZ!Box: {name}",
+        "flow_title": "{name}",
         "step": {
             "phonebook": {
                 "data": {

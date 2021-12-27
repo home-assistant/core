@@ -3,26 +3,22 @@ from copy import deepcopy
 from unittest.mock import call, patch
 
 import pytest
+from zwave_js_server.event import Event
 from zwave_js_server.exceptions import BaseZwaveJSServerError, InvalidServerVersion
 from zwave_js_server.model.node import Node
 
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.zwave_js.const import DOMAIN
 from homeassistant.components.zwave_js.helpers import get_device_id
-from homeassistant.config_entries import (
-    DISABLED_USER,
-    ENTRY_STATE_LOADED,
-    ENTRY_STATE_NOT_LOADED,
-    ENTRY_STATE_SETUP_RETRY,
-)
+from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-
-from .common import (
-    AIR_TEMPERATURE_SENSOR,
-    EATON_RF9640_ENTITY,
-    NOTIFICATION_MOTION_BINARY_SENSOR,
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
 )
+
+from .common import AIR_TEMPERATURE_SENSOR, EATON_RF9640_ENTITY
 
 from tests.common import MockConfigEntry
 
@@ -39,12 +35,12 @@ async def test_entry_setup_unload(hass, client, integration):
     entry = integration
 
     assert client.connect.call_count == 1
-    assert entry.state == ENTRY_STATE_LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     await hass.config_entries.async_unload(entry.entry_id)
 
     assert client.disconnect.call_count == 1
-    assert entry.state == ENTRY_STATE_NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_home_assistant_stop(hass, client, integration):
@@ -62,7 +58,7 @@ async def test_initialized_timeout(hass, client, connect_timeout):
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state == ENTRY_STATE_SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_enabled_statistics(hass, client):
@@ -130,21 +126,53 @@ async def test_listen_failure(hass, client, error):
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state == ENTRY_STATE_SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_on_node_added_ready(
-    hass, multisensor_6_state, client, integration, device_registry
-):
-    """Test we handle a ready node added event."""
-    node = Node(client, multisensor_6_state)
+async def test_new_entity_on_value_added(hass, multisensor_6, client, integration):
+    """Test we create a new entity if a value is added after the fact."""
+    node: Node = multisensor_6
+
+    # Add a value on a random endpoint so we can be sure we should get a new entity
+    event = Event(
+        type="value added",
+        data={
+            "source": "node",
+            "event": "value added",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Multilevel Sensor",
+                "commandClass": 49,
+                "endpoint": 10,
+                "property": "Ultraviolet",
+                "propertyName": "Ultraviolet",
+                "metadata": {
+                    "type": "number",
+                    "readable": True,
+                    "writeable": False,
+                    "label": "Ultraviolet",
+                    "ccSpecific": {"sensorType": 27, "scale": 0},
+                },
+                "value": 0,
+            },
+        },
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.multisensor_6_ultraviolet_10") is not None
+
+
+async def test_on_node_added_ready(hass, multisensor_6_state, client, integration):
+    """Test we handle a node added event with a ready node."""
+    dev_reg = dr.async_get(hass)
+    node = Node(client, deepcopy(multisensor_6_state))
     event = {"node": node}
     air_temperature_device_id = f"{client.driver.controller.home_id}-{node.node_id}"
 
     state = hass.states.get(AIR_TEMPERATURE_SENSOR)
 
     assert not state  # entity and device not yet added
-    assert not device_registry.async_get_device(
+    assert not dev_reg.async_get_device(
         identifiers={(DOMAIN, air_temperature_device_id)}
     )
 
@@ -155,380 +183,195 @@ async def test_on_node_added_ready(
 
     assert state  # entity and device added
     assert state.state != STATE_UNAVAILABLE
-    assert device_registry.async_get_device(
-        identifiers={(DOMAIN, air_temperature_device_id)}
-    )
-
-
-async def test_unique_id_migration_dupes(
-    hass, multisensor_6_state, client, integration
-):
-    """Test we remove an entity when ."""
-    ent_reg = er.async_get(hass)
-
-    entity_name = AIR_TEMPERATURE_SENSOR.split(".")[1]
-
-    # Create entity RegistryEntry using old unique ID format
-    old_unique_id_1 = (
-        f"{client.driver.controller.home_id}.52.52-49-00-Air temperature-00"
-    )
-    entity_entry = ent_reg.async_get_or_create(
-        "sensor",
-        DOMAIN,
-        old_unique_id_1,
-        suggested_object_id=entity_name,
-        config_entry=integration,
-        original_name=entity_name,
-    )
-    assert entity_entry.entity_id == AIR_TEMPERATURE_SENSOR
-    assert entity_entry.unique_id == old_unique_id_1
-
-    # Create entity RegistryEntry using b0 unique ID format
-    old_unique_id_2 = (
-        f"{client.driver.controller.home_id}.52.52-49-0-Air temperature-00-00"
-    )
-    entity_entry = ent_reg.async_get_or_create(
-        "sensor",
-        DOMAIN,
-        old_unique_id_2,
-        suggested_object_id=f"{entity_name}_1",
-        config_entry=integration,
-        original_name=entity_name,
-    )
-    assert entity_entry.entity_id == f"{AIR_TEMPERATURE_SENSOR}_1"
-    assert entity_entry.unique_id == old_unique_id_2
-
-    # Add a ready node, unique ID should be migrated
-    node = Node(client, multisensor_6_state)
-    event = {"node": node}
-
-    client.driver.controller.emit("node added", event)
-    await hass.async_block_till_done()
-
-    # Check that new RegistryEntry is using new unique ID format
-    entity_entry = ent_reg.async_get(AIR_TEMPERATURE_SENSOR)
-    new_unique_id = f"{client.driver.controller.home_id}.52-49-0-Air temperature"
-    assert entity_entry.unique_id == new_unique_id
-    assert ent_reg.async_get_entity_id("sensor", DOMAIN, old_unique_id_1) is None
-    assert ent_reg.async_get_entity_id("sensor", DOMAIN, old_unique_id_2) is None
-
-
-@pytest.mark.parametrize(
-    "id",
-    [
-        ("52.52-49-00-Air temperature-00"),
-        ("52.52-49-0-Air temperature-00-00"),
-        ("52-49-0-Air temperature-00-00"),
-    ],
-)
-async def test_unique_id_migration(hass, multisensor_6_state, client, integration, id):
-    """Test unique ID is migrated from old format to new."""
-    ent_reg = er.async_get(hass)
-
-    # Migrate version 1
-    entity_name = AIR_TEMPERATURE_SENSOR.split(".")[1]
-
-    # Create entity RegistryEntry using old unique ID format
-    old_unique_id = f"{client.driver.controller.home_id}.{id}"
-    entity_entry = ent_reg.async_get_or_create(
-        "sensor",
-        DOMAIN,
-        old_unique_id,
-        suggested_object_id=entity_name,
-        config_entry=integration,
-        original_name=entity_name,
-    )
-    assert entity_entry.entity_id == AIR_TEMPERATURE_SENSOR
-    assert entity_entry.unique_id == old_unique_id
-
-    # Add a ready node, unique ID should be migrated
-    node = Node(client, multisensor_6_state)
-    event = {"node": node}
-
-    client.driver.controller.emit("node added", event)
-    await hass.async_block_till_done()
-
-    # Check that new RegistryEntry is using new unique ID format
-    entity_entry = ent_reg.async_get(AIR_TEMPERATURE_SENSOR)
-    new_unique_id = f"{client.driver.controller.home_id}.52-49-0-Air temperature"
-    assert entity_entry.unique_id == new_unique_id
-    assert ent_reg.async_get_entity_id("sensor", DOMAIN, old_unique_id) is None
-
-
-@pytest.mark.parametrize(
-    "id",
-    [
-        ("32.32-50-00-value-W_Consumed"),
-        ("32.32-50-0-value-66049-W_Consumed"),
-        ("32-50-0-value-66049-W_Consumed"),
-    ],
-)
-async def test_unique_id_migration_property_key(
-    hass, hank_binary_switch_state, client, integration, id
-):
-    """Test unique ID with property key is migrated from old format to new."""
-    ent_reg = er.async_get(hass)
-
-    SENSOR_NAME = "sensor.smart_plug_with_two_usb_ports_value_electric_consumed"
-    entity_name = SENSOR_NAME.split(".")[1]
-
-    # Create entity RegistryEntry using old unique ID format
-    old_unique_id = f"{client.driver.controller.home_id}.{id}"
-    entity_entry = ent_reg.async_get_or_create(
-        "sensor",
-        DOMAIN,
-        old_unique_id,
-        suggested_object_id=entity_name,
-        config_entry=integration,
-        original_name=entity_name,
-    )
-    assert entity_entry.entity_id == SENSOR_NAME
-    assert entity_entry.unique_id == old_unique_id
-
-    # Add a ready node, unique ID should be migrated
-    node = Node(client, hank_binary_switch_state)
-    event = {"node": node}
-
-    client.driver.controller.emit("node added", event)
-    await hass.async_block_till_done()
-
-    # Check that new RegistryEntry is using new unique ID format
-    entity_entry = ent_reg.async_get(SENSOR_NAME)
-    new_unique_id = f"{client.driver.controller.home_id}.32-50-0-value-66049"
-    assert entity_entry.unique_id == new_unique_id
-    assert ent_reg.async_get_entity_id("sensor", DOMAIN, old_unique_id) is None
-
-
-async def test_unique_id_migration_notification_binary_sensor(
-    hass, multisensor_6_state, client, integration
-):
-    """Test unique ID is migrated from old format to new for a notification binary sensor."""
-    ent_reg = er.async_get(hass)
-
-    entity_name = NOTIFICATION_MOTION_BINARY_SENSOR.split(".")[1]
-
-    # Create entity RegistryEntry using old unique ID format
-    old_unique_id = f"{client.driver.controller.home_id}.52.52-113-00-Home Security-Motion sensor status.8"
-    entity_entry = ent_reg.async_get_or_create(
-        "binary_sensor",
-        DOMAIN,
-        old_unique_id,
-        suggested_object_id=entity_name,
-        config_entry=integration,
-        original_name=entity_name,
-    )
-    assert entity_entry.entity_id == NOTIFICATION_MOTION_BINARY_SENSOR
-    assert entity_entry.unique_id == old_unique_id
-
-    # Add a ready node, unique ID should be migrated
-    node = Node(client, multisensor_6_state)
-    event = {"node": node}
-
-    client.driver.controller.emit("node added", event)
-    await hass.async_block_till_done()
-
-    # Check that new RegistryEntry is using new unique ID format
-    entity_entry = ent_reg.async_get(NOTIFICATION_MOTION_BINARY_SENSOR)
-    new_unique_id = f"{client.driver.controller.home_id}.52-113-0-Home Security-Motion sensor status.8"
-    assert entity_entry.unique_id == new_unique_id
-    assert ent_reg.async_get_entity_id("binary_sensor", DOMAIN, old_unique_id) is None
-
-
-async def test_old_entity_migration(
-    hass, hank_binary_switch_state, client, integration
-):
-    """Test old entity on a different endpoint is migrated to a new one."""
-    node = Node(client, hank_binary_switch_state)
-
-    ent_reg = er.async_get(hass)
-    dev_reg = dr.async_get(hass)
-    device = dev_reg.async_get_or_create(
-        config_entry_id=integration.entry_id, identifiers={get_device_id(client, node)}
-    )
-
-    SENSOR_NAME = "sensor.smart_plug_with_two_usb_ports_value_electric_consumed"
-    entity_name = SENSOR_NAME.split(".")[1]
-
-    # Create entity RegistryEntry using fake endpoint
-    old_unique_id = f"{client.driver.controller.home_id}.32-50-1-value-66049"
-    entity_entry = ent_reg.async_get_or_create(
-        "sensor",
-        DOMAIN,
-        old_unique_id,
-        suggested_object_id=entity_name,
-        config_entry=integration,
-        original_name=entity_name,
-        device_id=device.id,
-    )
-    assert entity_entry.entity_id == SENSOR_NAME
-    assert entity_entry.unique_id == old_unique_id
-
-    # Do this twice to make sure re-interview doesn't do anything weird
-    for i in range(0, 2):
-        # Add a ready node, unique ID should be migrated
-        event = {"node": node}
-        client.driver.controller.emit("node added", event)
-        await hass.async_block_till_done()
-
-        # Check that new RegistryEntry is using new unique ID format
-        entity_entry = ent_reg.async_get(SENSOR_NAME)
-        new_unique_id = f"{client.driver.controller.home_id}.32-50-0-value-66049"
-        assert entity_entry.unique_id == new_unique_id
-        assert ent_reg.async_get_entity_id("sensor", DOMAIN, old_unique_id) is None
-
-
-async def test_skip_old_entity_migration_for_multiple(
-    hass, hank_binary_switch_state, client, integration
-):
-    """Test that multiple entities of the same value but on a different endpoint get skipped."""
-    node = Node(client, hank_binary_switch_state)
-
-    ent_reg = er.async_get(hass)
-    dev_reg = dr.async_get(hass)
-    device = dev_reg.async_get_or_create(
-        config_entry_id=integration.entry_id, identifiers={get_device_id(client, node)}
-    )
-
-    SENSOR_NAME = "sensor.smart_plug_with_two_usb_ports_value_electric_consumed"
-    entity_name = SENSOR_NAME.split(".")[1]
-
-    # Create two entity entrrys using different endpoints
-    old_unique_id_1 = f"{client.driver.controller.home_id}.32-50-1-value-66049"
-    entity_entry = ent_reg.async_get_or_create(
-        "sensor",
-        DOMAIN,
-        old_unique_id_1,
-        suggested_object_id=f"{entity_name}_1",
-        config_entry=integration,
-        original_name=f"{entity_name}_1",
-        device_id=device.id,
-    )
-    assert entity_entry.entity_id == f"{SENSOR_NAME}_1"
-    assert entity_entry.unique_id == old_unique_id_1
-
-    # Create two entity entrrys using different endpoints
-    old_unique_id_2 = f"{client.driver.controller.home_id}.32-50-2-value-66049"
-    entity_entry = ent_reg.async_get_or_create(
-        "sensor",
-        DOMAIN,
-        old_unique_id_2,
-        suggested_object_id=f"{entity_name}_2",
-        config_entry=integration,
-        original_name=f"{entity_name}_2",
-        device_id=device.id,
-    )
-    assert entity_entry.entity_id == f"{SENSOR_NAME}_2"
-    assert entity_entry.unique_id == old_unique_id_2
-    # Add a ready node, unique ID should be migrated
-    event = {"node": node}
-    client.driver.controller.emit("node added", event)
-    await hass.async_block_till_done()
-
-    # Check that new RegistryEntry is created using new unique ID format
-    entity_entry = ent_reg.async_get(SENSOR_NAME)
-    new_unique_id = f"{client.driver.controller.home_id}.32-50-0-value-66049"
-    assert entity_entry.unique_id == new_unique_id
-
-    # Check that the old entities stuck around because we skipped the migration step
-    assert ent_reg.async_get_entity_id("sensor", DOMAIN, old_unique_id_1)
-    assert ent_reg.async_get_entity_id("sensor", DOMAIN, old_unique_id_2)
-
-
-async def test_old_entity_migration_notification_binary_sensor(
-    hass, multisensor_6_state, client, integration
-):
-    """Test old entity on a different endpoint is migrated to a new one for a notification binary sensor."""
-    node = Node(client, multisensor_6_state)
-
-    ent_reg = er.async_get(hass)
-    dev_reg = dr.async_get(hass)
-    device = dev_reg.async_get_or_create(
-        config_entry_id=integration.entry_id, identifiers={get_device_id(client, node)}
-    )
-
-    entity_name = NOTIFICATION_MOTION_BINARY_SENSOR.split(".")[1]
-
-    # Create entity RegistryEntry using old unique ID format
-    old_unique_id = f"{client.driver.controller.home_id}.52-113-1-Home Security-Motion sensor status.8"
-    entity_entry = ent_reg.async_get_or_create(
-        "binary_sensor",
-        DOMAIN,
-        old_unique_id,
-        suggested_object_id=entity_name,
-        config_entry=integration,
-        original_name=entity_name,
-        device_id=device.id,
-    )
-    assert entity_entry.entity_id == NOTIFICATION_MOTION_BINARY_SENSOR
-    assert entity_entry.unique_id == old_unique_id
-
-    # Do this twice to make sure re-interview doesn't do anything weird
-    for _ in range(0, 2):
-        # Add a ready node, unique ID should be migrated
-        event = {"node": node}
-        client.driver.controller.emit("node added", event)
-        await hass.async_block_till_done()
-
-        # Check that new RegistryEntry is using new unique ID format
-        entity_entry = ent_reg.async_get(NOTIFICATION_MOTION_BINARY_SENSOR)
-        new_unique_id = f"{client.driver.controller.home_id}.52-113-0-Home Security-Motion sensor status.8"
-        assert entity_entry.unique_id == new_unique_id
-        assert (
-            ent_reg.async_get_entity_id("binary_sensor", DOMAIN, old_unique_id) is None
-        )
+    assert dev_reg.async_get_device(identifiers={(DOMAIN, air_temperature_device_id)})
 
 
 async def test_on_node_added_not_ready(
-    hass, multisensor_6_state, client, integration, device_registry
+    hass, zp3111_not_ready_state, client, integration
 ):
-    """Test we handle a non ready node added event."""
-    node_data = deepcopy(multisensor_6_state)  # Copy to allow modification in tests.
-    node = Node(client, node_data)
-    node.data["ready"] = False
-    event = {"node": node}
-    air_temperature_device_id = f"{client.driver.controller.home_id}-{node.node_id}"
+    """Test we handle a node added event with a non-ready node."""
+    dev_reg = dr.async_get(hass)
+    device_id = f"{client.driver.controller.home_id}-{zp3111_not_ready_state['nodeId']}"
 
-    state = hass.states.get(AIR_TEMPERATURE_SENSOR)
+    assert len(hass.states.async_all()) == 0
+    assert not dev_reg.devices
 
-    assert not state  # entity and device not yet added
-    assert not device_registry.async_get_device(
-        identifiers={(DOMAIN, air_temperature_device_id)}
+    event = Event(
+        type="node added",
+        data={
+            "source": "controller",
+            "event": "node added",
+            "node": deepcopy(zp3111_not_ready_state),
+        },
     )
-
-    client.driver.controller.emit("node added", event)
+    client.driver.receive_event(event)
     await hass.async_block_till_done()
 
-    state = hass.states.get(AIR_TEMPERATURE_SENSOR)
+    # the only entity is the node status sensor
+    assert len(hass.states.async_all()) == 1
 
-    assert not state  # entity not yet added but device added in registry
-    assert device_registry.async_get_device(
-        identifiers={(DOMAIN, air_temperature_device_id)}
-    )
-
-    node.data["ready"] = True
-    node.emit("ready", event)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(AIR_TEMPERATURE_SENSOR)
-
-    assert state  # entity added
-    assert state.state != STATE_UNAVAILABLE
+    device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    assert device
+    # no extended device identifier yet
+    assert len(device.identifiers) == 1
 
 
-async def test_existing_node_ready(
-    hass, client, multisensor_6, integration, device_registry
-):
+async def test_existing_node_ready(hass, client, multisensor_6, integration):
     """Test we handle a ready node that exists during integration setup."""
+    dev_reg = dr.async_get(hass)
     node = multisensor_6
     air_temperature_device_id = f"{client.driver.controller.home_id}-{node.node_id}"
+    air_temperature_device_id_ext = (
+        f"{air_temperature_device_id}-{node.manufacturer_id}:"
+        f"{node.product_type}:{node.product_id}"
+    )
 
     state = hass.states.get(AIR_TEMPERATURE_SENSOR)
 
     assert state  # entity and device added
     assert state.state != STATE_UNAVAILABLE
-    assert device_registry.async_get_device(
-        identifiers={(DOMAIN, air_temperature_device_id)}
+
+    device = dev_reg.async_get_device(identifiers={(DOMAIN, air_temperature_device_id)})
+    assert device
+    assert device == dev_reg.async_get_device(
+        identifiers={(DOMAIN, air_temperature_device_id_ext)}
     )
+
+
+async def test_existing_node_not_ready(hass, zp3111_not_ready, client, integration):
+    """Test we handle a non-ready node that exists during integration setup."""
+    dev_reg = dr.async_get(hass)
+    node = zp3111_not_ready
+    device_id = f"{client.driver.controller.home_id}-{node.node_id}"
+
+    device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    assert device.name == f"Node {node.node_id}"
+    assert not device.manufacturer
+    assert not device.model
+    assert not device.sw_version
+
+    # the only entity is the node status sensor
+    assert len(hass.states.async_all()) == 1
+
+    device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    assert device
+    # no extended device identifier yet
+    assert len(device.identifiers) == 1
+
+
+async def test_existing_node_not_replaced_when_not_ready(
+    hass, zp3111, zp3111_not_ready_state, zp3111_state, client, integration
+):
+    """Test when a node added event with a non-ready node is received.
+
+    The existing node should not be replaced, and no customization should be lost.
+    """
+    dev_reg = dr.async_get(hass)
+    er_reg = er.async_get(hass)
+    kitchen_area = ar.async_get(hass).async_create("Kitchen")
+
+    device_id = f"{client.driver.controller.home_id}-{zp3111.node_id}"
+    device_id_ext = (
+        f"{device_id}-{zp3111.manufacturer_id}:"
+        f"{zp3111.product_type}:{zp3111.product_id}"
+    )
+
+    device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    assert device
+    assert device.name == "4-in-1 Sensor"
+    assert not device.name_by_user
+    assert device.manufacturer == "Vision Security"
+    assert device.model == "ZP3111-5"
+    assert device.sw_version == "5.1"
+    assert not device.area_id
+    assert device == dev_reg.async_get_device(identifiers={(DOMAIN, device_id_ext)})
+
+    motion_entity = "binary_sensor.4_in_1_sensor_home_security_motion_detection"
+    state = hass.states.get(motion_entity)
+    assert state
+    assert state.name == "4-in-1 Sensor: Home Security - Motion detection"
+
+    dev_reg.async_update_device(
+        device.id, name_by_user="Custom Device Name", area_id=kitchen_area.id
+    )
+
+    custom_device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    assert custom_device
+    assert custom_device.name == "4-in-1 Sensor"
+    assert custom_device.name_by_user == "Custom Device Name"
+    assert custom_device.manufacturer == "Vision Security"
+    assert custom_device.model == "ZP3111-5"
+    assert device.sw_version == "5.1"
+    assert custom_device.area_id == kitchen_area.id
+    assert custom_device == dev_reg.async_get_device(
+        identifiers={(DOMAIN, device_id_ext)}
+    )
+
+    custom_entity = "binary_sensor.custom_motion_sensor"
+    er_reg.async_update_entity(
+        motion_entity, new_entity_id=custom_entity, name="Custom Entity Name"
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get(custom_entity)
+    assert state
+    assert state.name == "Custom Entity Name"
+    assert not hass.states.get(motion_entity)
+
+    event = Event(
+        type="node added",
+        data={
+            "source": "controller",
+            "event": "node added",
+            "node": deepcopy(zp3111_not_ready_state),
+        },
+    )
+    client.driver.receive_event(event)
+    await hass.async_block_till_done()
+
+    device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    assert device
+    assert device == dev_reg.async_get_device(identifiers={(DOMAIN, device_id_ext)})
+    assert device.id == custom_device.id
+    assert device.identifiers == custom_device.identifiers
+    assert device.name == f"Node {zp3111.node_id}"
+    assert device.name_by_user == "Custom Device Name"
+    assert not device.manufacturer
+    assert not device.model
+    assert not device.sw_version
+    assert device.area_id == kitchen_area.id
+
+    state = hass.states.get(custom_entity)
+    assert state
+    assert state.name == "Custom Entity Name"
+
+    event = Event(
+        type="ready",
+        data={
+            "source": "node",
+            "event": "ready",
+            "nodeId": zp3111_state["nodeId"],
+            "nodeState": deepcopy(zp3111_state),
+        },
+    )
+    client.driver.receive_event(event)
+    await hass.async_block_till_done()
+
+    device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    assert device
+    assert device == dev_reg.async_get_device(identifiers={(DOMAIN, device_id_ext)})
+    assert device.id == custom_device.id
+    assert device.identifiers == custom_device.identifiers
+    assert device.name == "4-in-1 Sensor"
+    assert device.name_by_user == "Custom Device Name"
+    assert device.manufacturer == "Vision Security"
+    assert device.model == "ZP3111-5"
+    assert device.area_id == kitchen_area.id
+    assert device.sw_version == "5.1"
+
+    state = hass.states.get(custom_entity)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+    assert state.name == "Custom Entity Name"
 
 
 async def test_null_name(hass, client, null_name_check, integration):
@@ -537,60 +380,40 @@ async def test_null_name(hass, client, null_name_check, integration):
     assert hass.states.get(f"switch.node_{node.node_id}")
 
 
-async def test_existing_node_not_ready(hass, client, multisensor_6, device_registry):
-    """Test we handle a non ready node that exists during integration setup."""
-    node = multisensor_6
-    node.data = deepcopy(node.data)  # Copy to allow modification in tests.
-    node.data["ready"] = False
-    event = {"node": node}
-    air_temperature_device_id = f"{client.driver.controller.home_id}-{node.node_id}"
-    entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
-    entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(AIR_TEMPERATURE_SENSOR)
-
-    assert not state  # entity not yet added
-    assert device_registry.async_get_device(  # device should be added
-        identifiers={(DOMAIN, air_temperature_device_id)}
-    )
-
-    node.data["ready"] = True
-    node.emit("ready", event)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(AIR_TEMPERATURE_SENSOR)
-
-    assert state  # entity and device added
-    assert state.state != STATE_UNAVAILABLE
-    assert device_registry.async_get_device(
-        identifiers={(DOMAIN, air_temperature_device_id)}
-    )
-
-
 async def test_start_addon(
     hass, addon_installed, install_addon, addon_options, set_addon_options, start_addon
 ):
     """Test start the Z-Wave JS add-on during entry setup."""
     device = "/test"
-    network_key = "abc123"
+    s0_legacy_key = "s0_legacy"
+    s2_access_control_key = "s2_access_control"
+    s2_authenticated_key = "s2_authenticated"
+    s2_unauthenticated_key = "s2_unauthenticated"
     addon_options = {
         "device": device,
-        "network_key": network_key,
+        "s0_legacy_key": s0_legacy_key,
+        "s2_access_control_key": s2_access_control_key,
+        "s2_authenticated_key": s2_authenticated_key,
+        "s2_unauthenticated_key": s2_unauthenticated_key,
     }
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Z-Wave JS",
-        data={"use_addon": True, "usb_path": device, "network_key": network_key},
+        data={
+            "use_addon": True,
+            "usb_path": device,
+            "s0_legacy_key": s0_legacy_key,
+            "s2_access_control_key": s2_access_control_key,
+            "s2_authenticated_key": s2_authenticated_key,
+            "s2_unauthenticated_key": s2_unauthenticated_key,
+        },
     )
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state == ENTRY_STATE_SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY
     assert install_addon.call_count == 0
     assert set_addon_options.call_count == 1
     assert set_addon_options.call_args == call(
@@ -606,22 +429,35 @@ async def test_install_addon(
     """Test install and start the Z-Wave JS add-on during entry setup."""
     addon_installed.return_value["version"] = None
     device = "/test"
-    network_key = "abc123"
+    s0_legacy_key = "s0_legacy"
+    s2_access_control_key = "s2_access_control"
+    s2_authenticated_key = "s2_authenticated"
+    s2_unauthenticated_key = "s2_unauthenticated"
     addon_options = {
         "device": device,
-        "network_key": network_key,
+        "s0_legacy_key": s0_legacy_key,
+        "s2_access_control_key": s2_access_control_key,
+        "s2_authenticated_key": s2_authenticated_key,
+        "s2_unauthenticated_key": s2_unauthenticated_key,
     }
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Z-Wave JS",
-        data={"use_addon": True, "usb_path": device, "network_key": network_key},
+        data={
+            "use_addon": True,
+            "usb_path": device,
+            "s0_legacy_key": s0_legacy_key,
+            "s2_access_control_key": s2_access_control_key,
+            "s2_authenticated_key": s2_authenticated_key,
+            "s2_unauthenticated_key": s2_unauthenticated_key,
+        },
     )
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state == ENTRY_STATE_SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY
     assert install_addon.call_count == 1
     assert install_addon.call_args == call(hass, "core_zwave_js")
     assert set_addon_options.call_count == 1
@@ -654,14 +490,90 @@ async def test_addon_info_failure(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state == ENTRY_STATE_SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY
     assert install_addon.call_count == 0
     assert start_addon.call_count == 0
 
 
 @pytest.mark.parametrize(
-    "addon_version, update_available, update_calls, snapshot_calls, "
-    "update_addon_side_effect, create_shapshot_side_effect",
+    (
+        "old_device, new_device, "
+        "old_s0_legacy_key, new_s0_legacy_key, "
+        "old_s2_access_control_key, new_s2_access_control_key, "
+        "old_s2_authenticated_key, new_s2_authenticated_key, "
+        "old_s2_unauthenticated_key, new_s2_unauthenticated_key"
+    ),
+    [
+        (
+            "/old_test",
+            "/new_test",
+            "old123",
+            "new123",
+            "old456",
+            "new456",
+            "old789",
+            "new789",
+            "old987",
+            "new987",
+        )
+    ],
+)
+async def test_addon_options_changed(
+    hass,
+    client,
+    addon_installed,
+    addon_running,
+    install_addon,
+    addon_options,
+    start_addon,
+    old_device,
+    new_device,
+    old_s0_legacy_key,
+    new_s0_legacy_key,
+    old_s2_access_control_key,
+    new_s2_access_control_key,
+    old_s2_authenticated_key,
+    new_s2_authenticated_key,
+    old_s2_unauthenticated_key,
+    new_s2_unauthenticated_key,
+):
+    """Test update config entry data on entry setup if add-on options changed."""
+    addon_options["device"] = new_device
+    addon_options["s0_legacy_key"] = new_s0_legacy_key
+    addon_options["s2_access_control_key"] = new_s2_access_control_key
+    addon_options["s2_authenticated_key"] = new_s2_authenticated_key
+    addon_options["s2_unauthenticated_key"] = new_s2_unauthenticated_key
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Z-Wave JS",
+        data={
+            "url": "ws://host1:3001",
+            "use_addon": True,
+            "usb_path": old_device,
+            "s0_legacy_key": old_s0_legacy_key,
+            "s2_access_control_key": old_s2_access_control_key,
+            "s2_authenticated_key": old_s2_authenticated_key,
+            "s2_unauthenticated_key": old_s2_unauthenticated_key,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state == ConfigEntryState.LOADED
+    assert entry.data["usb_path"] == new_device
+    assert entry.data["s0_legacy_key"] == new_s0_legacy_key
+    assert entry.data["s2_access_control_key"] == new_s2_access_control_key
+    assert entry.data["s2_authenticated_key"] == new_s2_authenticated_key
+    assert entry.data["s2_unauthenticated_key"] == new_s2_unauthenticated_key
+    assert install_addon.call_count == 0
+    assert start_addon.call_count == 0
+
+
+@pytest.mark.parametrize(
+    "addon_version, update_available, update_calls, backup_calls, "
+    "update_addon_side_effect, create_backup_side_effect",
     [
         ("1.0", True, 1, 1, None, None),
         ("1.0", False, 0, 0, None, None),
@@ -675,24 +587,26 @@ async def test_update_addon(
     addon_info,
     addon_installed,
     addon_running,
-    create_shapshot,
+    create_backup,
     update_addon,
     addon_options,
     addon_version,
     update_available,
     update_calls,
-    snapshot_calls,
+    backup_calls,
     update_addon_side_effect,
-    create_shapshot_side_effect,
+    create_backup_side_effect,
 ):
     """Test update the Z-Wave JS add-on during entry setup."""
-    addon_info.return_value["version"] = addon_version
-    addon_info.return_value["update_available"] = update_available
-    create_shapshot.side_effect = create_shapshot_side_effect
-    update_addon.side_effect = update_addon_side_effect
-    client.connect.side_effect = InvalidServerVersion("Invalid version")
     device = "/test"
     network_key = "abc123"
+    addon_options["device"] = device
+    addon_options["network_key"] = network_key
+    addon_info.return_value["version"] = addon_version
+    addon_info.return_value["update_available"] = update_available
+    create_backup.side_effect = create_backup_side_effect
+    update_addon.side_effect = update_addon_side_effect
+    client.connect.side_effect = InvalidServerVersion("Invalid version")
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Z-Wave JS",
@@ -708,16 +622,16 @@ async def test_update_addon(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state == ENTRY_STATE_SETUP_RETRY
-    assert create_shapshot.call_count == snapshot_calls
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert create_backup.call_count == backup_calls
     assert update_addon.call_count == update_calls
 
 
 @pytest.mark.parametrize(
     "stop_addon_side_effect, entry_state",
     [
-        (None, ENTRY_STATE_NOT_LOADED),
-        (HassioAPIError("Boom"), ENTRY_STATE_LOADED),
+        (None, ConfigEntryState.NOT_LOADED),
+        (HassioAPIError("Boom"), ConfigEntryState.LOADED),
     ],
 )
 async def test_stop_addon(
@@ -734,6 +648,8 @@ async def test_stop_addon(
     stop_addon.side_effect = stop_addon_side_effect
     device = "/test"
     network_key = "abc123"
+    addon_options["device"] = device
+    addon_options["network_key"] = network_key
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Z-Wave JS",
@@ -749,9 +665,11 @@ async def test_stop_addon(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state == ENTRY_STATE_LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
-    await hass.config_entries.async_set_disabled_by(entry.entry_id, DISABLED_USER)
+    await hass.config_entries.async_set_disabled_by(
+        entry.entry_id, ConfigEntryDisabler.USER
+    )
     await hass.async_block_till_done()
 
     assert entry.state == entry_state
@@ -760,7 +678,7 @@ async def test_stop_addon(
 
 
 async def test_remove_entry(
-    hass, addon_installed, stop_addon, create_shapshot, uninstall_addon, caplog
+    hass, addon_installed, stop_addon, create_backup, uninstall_addon, caplog
 ):
     """Test remove the config entry."""
     # test successful remove without created add-on
@@ -770,12 +688,12 @@ async def test_remove_entry(
         data={"integration_created_addon": False},
     )
     entry.add_to_hass(hass)
-    assert entry.state == ENTRY_STATE_NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
     await hass.config_entries.async_remove(entry.entry_id)
 
-    assert entry.state == ENTRY_STATE_NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
 
     # test successful remove with created add-on
@@ -791,18 +709,18 @@ async def test_remove_entry(
 
     assert stop_addon.call_count == 1
     assert stop_addon.call_args == call(hass, "core_zwave_js")
-    assert create_shapshot.call_count == 1
-    assert create_shapshot.call_args == call(
+    assert create_backup.call_count == 1
+    assert create_backup.call_args == call(
         hass,
         {"name": "addon_core_zwave_js_1.0", "addons": ["core_zwave_js"]},
         partial=True,
     )
     assert uninstall_addon.call_count == 1
     assert uninstall_addon.call_args == call(hass, "core_zwave_js")
-    assert entry.state == ENTRY_STATE_NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
     stop_addon.reset_mock()
-    create_shapshot.reset_mock()
+    create_backup.reset_mock()
     uninstall_addon.reset_mock()
 
     # test add-on stop failure
@@ -814,38 +732,38 @@ async def test_remove_entry(
 
     assert stop_addon.call_count == 1
     assert stop_addon.call_args == call(hass, "core_zwave_js")
-    assert create_shapshot.call_count == 0
+    assert create_backup.call_count == 0
     assert uninstall_addon.call_count == 0
-    assert entry.state == ENTRY_STATE_NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
     assert "Failed to stop the Z-Wave JS add-on" in caplog.text
     stop_addon.side_effect = None
     stop_addon.reset_mock()
-    create_shapshot.reset_mock()
+    create_backup.reset_mock()
     uninstall_addon.reset_mock()
 
-    # test create snapshot failure
+    # test create backup failure
     entry.add_to_hass(hass)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    create_shapshot.side_effect = HassioAPIError()
+    create_backup.side_effect = HassioAPIError()
 
     await hass.config_entries.async_remove(entry.entry_id)
 
     assert stop_addon.call_count == 1
     assert stop_addon.call_args == call(hass, "core_zwave_js")
-    assert create_shapshot.call_count == 1
-    assert create_shapshot.call_args == call(
+    assert create_backup.call_count == 1
+    assert create_backup.call_args == call(
         hass,
         {"name": "addon_core_zwave_js_1.0", "addons": ["core_zwave_js"]},
         partial=True,
     )
     assert uninstall_addon.call_count == 0
-    assert entry.state == ENTRY_STATE_NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
-    assert "Failed to create a snapshot of the Z-Wave JS add-on" in caplog.text
-    create_shapshot.side_effect = None
+    assert "Failed to create a backup of the Z-Wave JS add-on" in caplog.text
+    create_backup.side_effect = None
     stop_addon.reset_mock()
-    create_shapshot.reset_mock()
+    create_backup.reset_mock()
     uninstall_addon.reset_mock()
 
     # test add-on uninstall failure
@@ -857,15 +775,15 @@ async def test_remove_entry(
 
     assert stop_addon.call_count == 1
     assert stop_addon.call_args == call(hass, "core_zwave_js")
-    assert create_shapshot.call_count == 1
-    assert create_shapshot.call_args == call(
+    assert create_backup.call_count == 1
+    assert create_backup.call_args == call(
         hass,
         {"name": "addon_core_zwave_js_1.0", "addons": ["core_zwave_js"]},
         partial=True,
     )
     assert uninstall_addon.call_count == 1
     assert uninstall_addon.call_args == call(hass, "core_zwave_js")
-    assert entry.state == ENTRY_STATE_NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
     assert "Failed to uninstall the Z-Wave JS add-on" in caplog.text
 
@@ -885,7 +803,7 @@ async def test_removed_device(hass, client, multiple_devices, integration):
     # Check how many entities there are
     ent_reg = er.async_get(hass)
     entity_entries = er.async_entries_for_config_entry(ent_reg, integration.entry_id)
-    assert len(entity_entries) == 24
+    assert len(entity_entries) == 26
 
     # Remove a node and reload the entry
     old_node = nodes.pop(13)
@@ -897,7 +815,7 @@ async def test_removed_device(hass, client, multiple_devices, integration):
     device_entries = dr.async_entries_for_config_entry(dev_reg, integration.entry_id)
     assert len(device_entries) == 1
     entity_entries = er.async_entries_for_config_entry(ent_reg, integration.entry_id)
-    assert len(entity_entries) == 15
+    assert len(entity_entries) == 16
     assert dev_reg.async_get_device({get_device_id(client, old_node)}) is None
 
 
@@ -913,3 +831,482 @@ async def test_suggested_area(hass, client, eaton_rf9640_dimmer):
 
     entity = ent_reg.async_get(EATON_RF9640_ENTITY)
     assert dev_reg.async_get(entity.device_id).area_id is not None
+
+
+async def test_node_removed(hass, multisensor_6_state, client, integration):
+    """Test that device gets removed when node gets removed."""
+    dev_reg = dr.async_get(hass)
+    node = Node(client, deepcopy(multisensor_6_state))
+    device_id = f"{client.driver.controller.home_id}-{node.node_id}"
+    event = {"node": node}
+
+    client.driver.controller.emit("node added", event)
+    await hass.async_block_till_done()
+    old_device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    assert old_device.id
+
+    event = {"node": node, "replaced": False}
+
+    client.driver.controller.emit("node removed", event)
+    await hass.async_block_till_done()
+    # Assert device has been removed
+    assert not dev_reg.async_get(old_device.id)
+
+
+async def test_replace_same_node(
+    hass, multisensor_6, multisensor_6_state, client, integration
+):
+    """Test when a node is replaced with itself that the device remains."""
+    dev_reg = dr.async_get(hass)
+    node_id = multisensor_6.node_id
+    multisensor_6_state = deepcopy(multisensor_6_state)
+
+    device_id = f"{client.driver.controller.home_id}-{node_id}"
+    multisensor_6_device_id = (
+        f"{device_id}-{multisensor_6.manufacturer_id}:"
+        f"{multisensor_6.product_type}:{multisensor_6.product_id}"
+    )
+
+    device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    assert device
+    assert device == dev_reg.async_get_device(
+        identifiers={(DOMAIN, multisensor_6_device_id)}
+    )
+    assert device.manufacturer == "AEON Labs"
+    assert device.model == "ZW100"
+    dev_id = device.id
+
+    assert hass.states.get(AIR_TEMPERATURE_SENSOR)
+
+    # A replace node event has the extra field "replaced" set to True
+    # to distinguish it from an exclusion
+    event = Event(
+        type="node removed",
+        data={
+            "source": "controller",
+            "event": "node removed",
+            "replaced": True,
+            "node": multisensor_6_state,
+        },
+    )
+    client.driver.receive_event(event)
+    await hass.async_block_till_done()
+
+    # Device should still be there after the node was removed
+    device = dev_reg.async_get(dev_id)
+    assert device
+
+    # When the node is replaced, a non-ready node added event is emitted
+    event = Event(
+        type="node added",
+        data={
+            "source": "controller",
+            "event": "node added",
+            "node": {
+                "nodeId": node_id,
+                "index": 0,
+                "status": 4,
+                "ready": False,
+                "isSecure": "unknown",
+                "interviewAttempts": 1,
+                "endpoints": [{"nodeId": node_id, "index": 0, "deviceClass": None}],
+                "values": [],
+                "deviceClass": None,
+                "commandClasses": [],
+                "interviewStage": "None",
+                "statistics": {
+                    "commandsTX": 0,
+                    "commandsRX": 0,
+                    "commandsDroppedRX": 0,
+                    "commandsDroppedTX": 0,
+                    "timeoutResponse": 0,
+                },
+            },
+        },
+    )
+
+    # Device is still not removed
+    client.driver.receive_event(event)
+    await hass.async_block_till_done()
+
+    device = dev_reg.async_get(dev_id)
+    assert device
+
+    event = Event(
+        type="ready",
+        data={
+            "source": "node",
+            "event": "ready",
+            "nodeId": node_id,
+            "nodeState": multisensor_6_state,
+        },
+    )
+    client.driver.receive_event(event)
+    await hass.async_block_till_done()
+
+    # Device is the same
+    device = dev_reg.async_get(dev_id)
+    assert device
+    assert device == dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    assert device == dev_reg.async_get_device(
+        identifiers={(DOMAIN, multisensor_6_device_id)}
+    )
+    assert device.manufacturer == "AEON Labs"
+    assert device.model == "ZW100"
+
+    assert hass.states.get(AIR_TEMPERATURE_SENSOR)
+
+
+async def test_replace_different_node(
+    hass,
+    multisensor_6,
+    multisensor_6_state,
+    hank_binary_switch_state,
+    client,
+    integration,
+):
+    """Test when a node is replaced with a different node."""
+    dev_reg = dr.async_get(hass)
+    node_id = multisensor_6.node_id
+    hank_binary_switch_state = deepcopy(hank_binary_switch_state)
+    hank_binary_switch_state["nodeId"] = node_id
+
+    device_id = f"{client.driver.controller.home_id}-{node_id}"
+    multisensor_6_device_id = (
+        f"{device_id}-{multisensor_6.manufacturer_id}:"
+        f"{multisensor_6.product_type}:{multisensor_6.product_id}"
+    )
+    hank_device_id = (
+        f"{device_id}-{hank_binary_switch_state['manufacturerId']}:"
+        f"{hank_binary_switch_state['productType']}:"
+        f"{hank_binary_switch_state['productId']}"
+    )
+
+    device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    assert device
+    assert device == dev_reg.async_get_device(
+        identifiers={(DOMAIN, multisensor_6_device_id)}
+    )
+    assert device.manufacturer == "AEON Labs"
+    assert device.model == "ZW100"
+    dev_id = device.id
+
+    assert hass.states.get(AIR_TEMPERATURE_SENSOR)
+
+    # A replace node event has the extra field "replaced" set to True
+    # to distinguish it from an exclusion
+    event = Event(
+        type="node removed",
+        data={
+            "source": "controller",
+            "event": "node removed",
+            "replaced": True,
+            "node": multisensor_6_state,
+        },
+    )
+    client.driver.receive_event(event)
+    await hass.async_block_till_done()
+
+    # Device should still be there after the node was removed
+    device = dev_reg.async_get(dev_id)
+    assert device
+
+    # When the node is replaced, a non-ready node added event is emitted
+    event = Event(
+        type="node added",
+        data={
+            "source": "controller",
+            "event": "node added",
+            "node": {
+                "nodeId": multisensor_6.node_id,
+                "index": 0,
+                "status": 4,
+                "ready": False,
+                "isSecure": "unknown",
+                "interviewAttempts": 1,
+                "endpoints": [
+                    {"nodeId": multisensor_6.node_id, "index": 0, "deviceClass": None}
+                ],
+                "values": [],
+                "deviceClass": None,
+                "commandClasses": [],
+                "interviewStage": "None",
+                "statistics": {
+                    "commandsTX": 0,
+                    "commandsRX": 0,
+                    "commandsDroppedRX": 0,
+                    "commandsDroppedTX": 0,
+                    "timeoutResponse": 0,
+                },
+            },
+        },
+    )
+
+    # Device is still not removed
+    client.driver.receive_event(event)
+    await hass.async_block_till_done()
+
+    device = dev_reg.async_get(dev_id)
+    assert device
+
+    event = Event(
+        type="ready",
+        data={
+            "source": "node",
+            "event": "ready",
+            "nodeId": node_id,
+            "nodeState": hank_binary_switch_state,
+        },
+    )
+    client.driver.receive_event(event)
+    await hass.async_block_till_done()
+
+    # Old device and entities were removed, but the ID is re-used
+    device = dev_reg.async_get(dev_id)
+    assert device
+    assert device == dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    assert device == dev_reg.async_get_device(identifiers={(DOMAIN, hank_device_id)})
+    assert not dev_reg.async_get_device(identifiers={(DOMAIN, multisensor_6_device_id)})
+    assert device.manufacturer == "HANK Electronics Ltd."
+    assert device.model == "HKZW-SO01"
+
+    assert not hass.states.get(AIR_TEMPERATURE_SENSOR)
+    assert hass.states.get("switch.smart_plug_with_two_usb_ports")
+
+
+async def test_node_model_change(hass, zp3111, client, integration):
+    """Test when a node's model is changed due to an updated device config file.
+
+    The device and entities should not be removed.
+    """
+    dev_reg = dr.async_get(hass)
+    er_reg = er.async_get(hass)
+
+    device_id = f"{client.driver.controller.home_id}-{zp3111.node_id}"
+    device_id_ext = (
+        f"{device_id}-{zp3111.manufacturer_id}:"
+        f"{zp3111.product_type}:{zp3111.product_id}"
+    )
+
+    # Verify device and entities have default names/ids
+    device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    assert device
+    assert device == dev_reg.async_get_device(identifiers={(DOMAIN, device_id_ext)})
+    assert device.manufacturer == "Vision Security"
+    assert device.model == "ZP3111-5"
+    assert device.name == "4-in-1 Sensor"
+    assert not device.name_by_user
+
+    dev_id = device.id
+
+    motion_entity = "binary_sensor.4_in_1_sensor_home_security_motion_detection"
+    state = hass.states.get(motion_entity)
+    assert state
+    assert state.name == "4-in-1 Sensor: Home Security - Motion detection"
+
+    # Customize device and entity names/ids
+    dev_reg.async_update_device(device.id, name_by_user="Custom Device Name")
+    device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
+    assert device
+    assert device.id == dev_id
+    assert device == dev_reg.async_get_device(identifiers={(DOMAIN, device_id_ext)})
+    assert device.manufacturer == "Vision Security"
+    assert device.model == "ZP3111-5"
+    assert device.name == "4-in-1 Sensor"
+    assert device.name_by_user == "Custom Device Name"
+
+    custom_entity = "binary_sensor.custom_motion_sensor"
+    er_reg.async_update_entity(
+        motion_entity, new_entity_id=custom_entity, name="Custom Entity Name"
+    )
+    await hass.async_block_till_done()
+    assert not hass.states.get(motion_entity)
+    state = hass.states.get(custom_entity)
+    assert state
+    assert state.name == "Custom Entity Name"
+
+    # Unload the integration
+    assert await hass.config_entries.async_unload(integration.entry_id)
+    await hass.async_block_till_done()
+    assert integration.state is ConfigEntryState.NOT_LOADED
+    assert not hass.data.get(DOMAIN)
+
+    # Simulate changes to the node labels
+    zp3111.device_config.data["description"] = "New Device Name"
+    zp3111.device_config.data["label"] = "New Device Model"
+    zp3111.device_config.data["manufacturer"] = "New Device Manufacturer"
+
+    # Reload integration, it will re-add the nodes
+    integration.add_to_hass(hass)
+    await hass.config_entries.async_setup(integration.entry_id)
+    await hass.async_block_till_done()
+
+    # Device name changes, but the customization is the same
+    device = dev_reg.async_get(dev_id)
+    assert device
+    assert device.id == dev_id
+    assert device.manufacturer == "New Device Manufacturer"
+    assert device.model == "New Device Model"
+    assert device.name == "New Device Name"
+    assert device.name_by_user == "Custom Device Name"
+
+    assert not hass.states.get(motion_entity)
+    state = hass.states.get(custom_entity)
+    assert state
+    assert state.name == "Custom Entity Name"
+
+
+async def test_disabled_node_status_entity_on_node_replaced(
+    hass, zp3111_state, zp3111, client, integration
+):
+    """Test that when a node replacement event is received the node status sensor is removed."""
+    node_status_entity = "sensor.4_in_1_sensor_node_status"
+    state = hass.states.get(node_status_entity)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+
+    event = Event(
+        type="node removed",
+        data={
+            "source": "controller",
+            "event": "node removed",
+            "replaced": True,
+            "node": zp3111_state,
+        },
+    )
+    client.driver.receive_event(event)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(node_status_entity)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_disabled_entity_on_value_removed(hass, zp3111, client, integration):
+    """Test that when entity primary values are removed the entity is removed."""
+    er_reg = er.async_get(hass)
+
+    # re-enable this default-disabled entity
+    sensor_cover_entity = "sensor.4_in_1_sensor_home_security_cover_status"
+    er_reg.async_update_entity(entity_id=sensor_cover_entity, disabled_by=None)
+    await hass.async_block_till_done()
+
+    # must reload the integration when enabling an entity
+    await hass.config_entries.async_unload(integration.entry_id)
+    await hass.async_block_till_done()
+    assert integration.state is ConfigEntryState.NOT_LOADED
+    integration.add_to_hass(hass)
+    await hass.config_entries.async_setup(integration.entry_id)
+    await hass.async_block_till_done()
+    assert integration.state is ConfigEntryState.LOADED
+
+    state = hass.states.get(sensor_cover_entity)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+
+    # check for expected entities
+    binary_cover_entity = (
+        "binary_sensor.4_in_1_sensor_home_security_tampering_product_cover_removed"
+    )
+    state = hass.states.get(binary_cover_entity)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+
+    battery_level_entity = "sensor.4_in_1_sensor_battery_level"
+    state = hass.states.get(battery_level_entity)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+
+    unavailable_entities = {
+        state.entity_id
+        for state in hass.states.async_all()
+        if state.state == STATE_UNAVAILABLE
+    }
+
+    # This value ID removal does not remove any entity
+    event = Event(
+        type="value removed",
+        data={
+            "source": "node",
+            "event": "value removed",
+            "nodeId": zp3111.node_id,
+            "args": {
+                "commandClassName": "Wake Up",
+                "commandClass": 132,
+                "endpoint": 0,
+                "property": "wakeUpInterval",
+                "prevValue": 3600,
+                "propertyName": "wakeUpInterval",
+            },
+        },
+    )
+    client.driver.receive_event(event)
+    await hass.async_block_till_done()
+
+    assert all(state != STATE_UNAVAILABLE for state in hass.states.async_all())
+
+    # This value ID removal only affects the battery level entity
+    event = Event(
+        type="value removed",
+        data={
+            "source": "node",
+            "event": "value removed",
+            "nodeId": zp3111.node_id,
+            "args": {
+                "commandClassName": "Battery",
+                "commandClass": 128,
+                "endpoint": 0,
+                "property": "level",
+                "prevValue": 100,
+                "propertyName": "level",
+            },
+        },
+    )
+    client.driver.receive_event(event)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(battery_level_entity)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+    # This value ID removal affects its multiple notification sensors
+    event = Event(
+        type="value removed",
+        data={
+            "source": "node",
+            "event": "value removed",
+            "nodeId": zp3111.node_id,
+            "args": {
+                "commandClassName": "Notification",
+                "commandClass": 113,
+                "endpoint": 0,
+                "property": "Home Security",
+                "propertyKey": "Cover status",
+                "prevValue": 0,
+                "propertyName": "Home Security",
+                "propertyKeyName": "Cover status",
+            },
+        },
+    )
+    client.driver.receive_event(event)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(binary_cover_entity)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+    state = hass.states.get(sensor_cover_entity)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+    # existing entities and the entities with removed values should be unavailable
+    new_unavailable_entities = {
+        state.entity_id
+        for state in hass.states.async_all()
+        if state.state == STATE_UNAVAILABLE
+    }
+    assert (
+        unavailable_entities
+        | {battery_level_entity, binary_cover_entity, sensor_cover_entity}
+        == new_unavailable_entities
+    )

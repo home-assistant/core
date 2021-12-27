@@ -1,14 +1,18 @@
 """Provides device automations for MQTT."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import logging
-from typing import Callable
+from typing import Any
 
 import attr
 import voluptuous as vol
 
-from homeassistant.components.automation import AutomationActionType
-from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
+from homeassistant.components.automation import (
+    AutomationActionType,
+    AutomationTriggerInfo,
+)
+from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.const import (
     CONF_DEVICE,
     CONF_DEVICE_ID,
@@ -26,9 +30,16 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from . import CONF_PAYLOAD, CONF_QOS, DOMAIN, debug_info, trigger as mqtt_trigger
+from . import debug_info, trigger as mqtt_trigger
 from .. import mqtt
-from .const import ATTR_DISCOVERY_HASH, ATTR_DISCOVERY_TOPIC
+from .const import (
+    ATTR_DISCOVERY_HASH,
+    ATTR_DISCOVERY_TOPIC,
+    CONF_PAYLOAD,
+    CONF_QOS,
+    CONF_TOPIC,
+    DOMAIN,
+)
 from .discovery import MQTT_DISCOVERY_DONE, MQTT_DISCOVERY_UPDATED, clear_discovery_hash
 from .mixins import (
     CONF_CONNECTIONS,
@@ -36,7 +47,6 @@ from .mixins import (
     MQTT_ENTITY_DEVICE_INFO_SCHEMA,
     cleanup_device_registry,
     device_info_from_config,
-    validate_device_has_at_least_one_identifier,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,7 +54,6 @@ _LOGGER = logging.getLogger(__name__)
 CONF_AUTOMATION_TYPE = "automation_type"
 CONF_DISCOVERY_ID = "discovery_id"
 CONF_SUBTYPE = "subtype"
-CONF_TOPIC = "topic"
 DEFAULT_ENCODING = "utf-8"
 DEVICE = "device"
 
@@ -54,7 +63,7 @@ MQTT_TRIGGER_BASE = {
     CONF_DOMAIN: DOMAIN,
 }
 
-TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
+TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_PLATFORM): DEVICE,
         vol.Required(CONF_DOMAIN): DOMAIN,
@@ -75,7 +84,7 @@ TRIGGER_DISCOVERY_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
         vol.Required(CONF_TYPE): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE, default=None): vol.Any(None, cv.string),
     },
-    validate_device_has_at_least_one_identifier,
+    extra=vol.REMOVE_EXTRA,
 )
 
 DEVICE_TRIGGERS = "mqtt_device_triggers"
@@ -86,7 +95,7 @@ class TriggerInstance:
     """Attached trigger settings."""
 
     action: AutomationActionType = attr.ib()
-    automation_info: dict = attr.ib()
+    automation_info: AutomationTriggerInfo = attr.ib()
     trigger: Trigger = attr.ib()
     remove: CALLBACK_TYPE | None = attr.ib(default=None)
 
@@ -119,15 +128,15 @@ class Trigger:
     """Device trigger settings."""
 
     device_id: str = attr.ib()
-    discovery_data: dict = attr.ib()
+    discovery_data: dict | None = attr.ib()
     hass: HomeAssistant = attr.ib()
-    payload: str = attr.ib()
-    qos: int = attr.ib()
-    remove_signal: Callable[[], None] = attr.ib()
+    payload: str | None = attr.ib()
+    qos: int | None = attr.ib()
+    remove_signal: Callable[[], None] | None = attr.ib()
     subtype: str = attr.ib()
-    topic: str = attr.ib()
+    topic: str | None = attr.ib()
     type: str = attr.ib()
-    value_template: str = attr.ib()
+    value_template: str | None = attr.ib()
     trigger_instances: list[TriggerInstance] = attr.ib(factory=list)
 
     async def add_trigger(self, action, automation_info):
@@ -287,9 +296,11 @@ async def async_device_removed(hass: HomeAssistant, device_id: str):
             )
 
 
-async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
+async def async_get_triggers(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, Any]]:
     """List device triggers for MQTT devices."""
-    triggers = []
+    triggers: list[dict] = []
 
     if DEVICE_TRIGGERS not in hass.data:
         return triggers
@@ -314,7 +325,7 @@ async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
     action: AutomationActionType,
-    automation_info: dict,
+    automation_info: AutomationTriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
     if DEVICE_TRIGGERS not in hass.data:

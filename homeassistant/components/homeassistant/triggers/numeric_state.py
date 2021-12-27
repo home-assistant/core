@@ -13,12 +13,18 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_VALUE_TEMPLATE,
 )
-from homeassistant.core import CALLBACK_TYPE, HassJob, callback
-from homeassistant.helpers import condition, config_validation as cv, template
+from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
+from homeassistant.helpers import (
+    condition,
+    config_validation as cv,
+    entity_registry as er,
+    template,
+)
 from homeassistant.helpers.event import (
     async_track_same_state,
     async_track_state_change_event,
 )
+from homeassistant.helpers.typing import ConfigType
 
 # mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs
@@ -43,11 +49,11 @@ def validate_above_below(value):
     return value
 
 
-TRIGGER_SCHEMA = vol.All(
-    vol.Schema(
+_TRIGGER_SCHEMA = vol.All(
+    cv.TRIGGER_BASE_SCHEMA.extend(
         {
             vol.Required(CONF_PLATFORM): "numeric_state",
-            vol.Required(CONF_ENTITY_ID): cv.entity_ids,
+            vol.Required(CONF_ENTITY_ID): cv.entity_ids_or_uuids,
             vol.Optional(CONF_BELOW): cv.NUMERIC_STATE_THRESHOLD_SCHEMA,
             vol.Optional(CONF_ABOVE): cv.NUMERIC_STATE_THRESHOLD_SCHEMA,
             vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
@@ -60,6 +66,18 @@ TRIGGER_SCHEMA = vol.All(
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def async_validate_trigger_config(
+    hass: HomeAssistant, config: ConfigType
+) -> ConfigType:
+    """Validate trigger config."""
+    config = _TRIGGER_SCHEMA(config)
+    registry = er.async_get(hass)
+    config[CONF_ENTITY_ID] = er.async_resolve_entity_ids(
+        registry, cv.entity_ids_or_uuids(config[CONF_ENTITY_ID])
+    )
+    return config
 
 
 async def async_attach_trigger(
@@ -78,10 +96,8 @@ async def async_attach_trigger(
     attribute = config.get(CONF_ATTRIBUTE)
     job = HassJob(action)
 
-    trigger_id = automation_info.get("trigger_id") if automation_info else None
-    _variables = {}
-    if automation_info:
-        _variables = automation_info.get("variables") or {}
+    trigger_data = automation_info["trigger_data"]
+    _variables = automation_info["variables"] or {}
 
     if value_template is not None:
         value_template.hass = hass
@@ -132,6 +148,7 @@ async def async_attach_trigger(
                 job,
                 {
                     "trigger": {
+                        **trigger_data,
                         "platform": platform_type,
                         "entity_id": entity_id,
                         "below": below,
@@ -140,7 +157,6 @@ async def async_attach_trigger(
                         "to_state": to_s,
                         "for": time_delta if not time_delta else period[entity_id],
                         "description": f"numeric state of {entity_id}",
-                        "id": trigger_id,
                     }
                 },
                 to_s.context,

@@ -4,8 +4,8 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Any
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import DEVICE_CLASS_BATTERY, PERCENTAGE
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
@@ -76,15 +76,15 @@ class GeniusBattery(GeniusDevice, SensorEntity):
     @property
     def device_class(self) -> str:
         """Return the device class of the sensor."""
-        return DEVICE_CLASS_BATTERY
+        return SensorDeviceClass.BATTERY
 
     @property
-    def unit_of_measurement(self) -> str:
+    def native_unit_of_measurement(self) -> str:
         """Return the unit of measurement of the sensor."""
         return PERCENTAGE
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return the state of the sensor."""
         level = self._device.data["state"][self._state_attr]
         return level if level != 255 else 0
@@ -105,7 +105,7 @@ class GeniusIssue(GeniusEntity, SensorEntity):
         self._issues = []
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return the number of issues."""
         return len(self._issues)
 

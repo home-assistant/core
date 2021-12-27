@@ -6,7 +6,6 @@ write_coil:
       name: Address
       description: Address of the register to write to.
       required: true
-      example: 0
       selector:
         number:
           min: 1
@@ -22,7 +21,6 @@ write_coil:
       name: Unit
       description: Address of the modbus unit.
       required: true
-      example: 21
       selector:
         number:
           min: 1
@@ -42,7 +40,6 @@ write_register:
       name: Address
       description: Address of the holding register to write to.
       required: true
-      example: 0
       selector:
         number:
           min: 1
@@ -51,7 +48,6 @@ write_register:
       name: Unit
       description: Address of the modbus unit.
       required: true
-      example: 21
       selector:
         number:
           min: 1
@@ -63,6 +59,28 @@ write_register:
       example: "0 or [4,0]"
       selector:
         object:
+    hub:
+      name: Hub
+      description: Modbus hub name.
+      example: "hub1"
+      default: "modbus_hub"
+      selector:
+        text:
+stop:
+  name: Stop
+  description: Stop modbus hub.
+  fields:
+    hub:
+      name: Hub
+      description: Modbus hub name.
+      example: "hub1"
+      default: "modbus_hub"
+      selector:
+        text:
+restart:
+  name: Restart
+  description: Restart modbus hub (if running stop then start).
+  fields:
     hub:
       name: Hub
       description: Modbus hub name.

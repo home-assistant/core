@@ -1,18 +1,25 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Apparaat is al geconfigureerd"
+            "already_configured": "Apparaat is al geconfigureerd",
+            "reauth_successful": "Herauthenticatie was succesvol"
         },
         "error": {
             "invalid_auth": "Ongeldige authenticatie"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Wachtwoord"
+                },
+                "title": "Herauthenticeer Tile"
+            },
             "user": {
                 "data": {
                     "password": "Wachtwoord",
                     "username": "E-mail"
                 },
-                "title": "Tegel configureren"
+                "title": "Configureer Tile"
             }
         }
     },
@@ -22,7 +29,7 @@
                 "data": {
                     "show_inactive": "Toon inactieve tegels"
                 },
-                "title": "Tegel configureren"
+                "title": "Configureer Tile"
             }
         }
     }

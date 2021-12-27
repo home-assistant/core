@@ -1,7 +1,6 @@
 """Config flow for kraken integration."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 import krakenex
@@ -17,14 +16,11 @@ from homeassistant.helpers import config_validation as cv
 from .const import CONF_TRACKED_ASSET_PAIRS, DEFAULT_SCAN_INTERVAL, DOMAIN
 from .utils import get_tradable_asset_pairs
 
-_LOGGER = logging.getLogger(__name__)
-
 
 class KrakenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for kraken."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     @staticmethod
     @callback
@@ -38,7 +34,7 @@ class KrakenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
-        if DOMAIN in self.hass.data:
+        if self._async_current_entries():
             return self.async_abort(reason="already_configured")
         if user_input is not None:
             return self.async_create_entry(title=DOMAIN, data=user_input)

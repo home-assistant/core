@@ -1,4 +1,6 @@
 """Platform for Control4 Lights."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import logging
@@ -120,7 +122,6 @@ async def async_setup_entry(
         entity_list.append(
             Control4Light(
                 entry_data,
-                entry,
                 item_coordinator,
                 item_name,
                 item_id,
@@ -141,20 +142,18 @@ class Control4Light(Control4Entity, LightEntity):
     def __init__(
         self,
         entry_data: dict,
-        entry: ConfigEntry,
         coordinator: DataUpdateCoordinator,
         name: str,
         idx: int,
-        device_name: str,
-        device_manufacturer: str,
-        device_model: str,
+        device_name: str | None,
+        device_manufacturer: str | None,
+        device_model: str | None,
         device_id: int,
         is_dimmer: bool,
-    ):
+    ) -> None:
         """Initialize Control4 light entity."""
         super().__init__(
             entry_data,
-            entry,
             coordinator,
             name,
             idx,

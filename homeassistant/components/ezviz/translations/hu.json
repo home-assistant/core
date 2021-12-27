@@ -1,0 +1,52 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_account": "A fi\u00f3k m\u00e1r konfigur\u00e1lva van",
+            "ezviz_cloud_account_missing": "Ezviz cloud fi\u00f3k hi\u00e1nyzik. K\u00e9rj\u00fck, konfigur\u00e1lja \u00fajra az Ezviz cloud fi\u00f3kot.",
+            "unknown": "V\u00e1ratlan hiba"
+        },
+        "error": {
+            "cannot_connect": "Nem siker\u00fclt csatlakozni",
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
+            "invalid_host": "\u00c9rv\u00e9nytelen C\u00edm"
+        },
+        "flow_title": "{serial}",
+        "step": {
+            "confirm": {
+                "data": {
+                    "password": "Jelsz\u00f3",
+                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
+                },
+                "description": "\u00cdrja be az RTSP-hiteles\u00edt\u0151 adatokat az Ezviz {serial} kamer\u00e1hoz IP- {ip_address}",
+                "title": "Felfedezett Ezviz kamera"
+            },
+            "user": {
+                "data": {
+                    "password": "Jelsz\u00f3",
+                    "url": "URL",
+                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
+                },
+                "title": "Csatlakozzon az Ezviz Cloud szolg\u00e1ltat\u00e1shoz"
+            },
+            "user_custom_url": {
+                "data": {
+                    "password": "Jelsz\u00f3",
+                    "url": "URL",
+                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
+                },
+                "description": "Adja meg k\u00e9zzel a r\u00e9gi\u00f3 URL-j\u00e9t",
+                "title": "Csatlakozzon az Ezviz-hez egy\u00e9ni URL"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "ffmpeg_arguments": "A kamer\u00e1khoz az ffmpeg-nek \u00e1tadott argumentumok",
+                    "timeout": "K\u00e9r\u00e9s id\u0151korl\u00e1tja (m\u00e1sodperc)"
+                }
+            }
+        }
+    }
+}

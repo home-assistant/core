@@ -12,8 +12,10 @@ from aiohomekit.model import Accessories
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
+from homeassistant.const import ATTR_VIA_DEVICE
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
@@ -22,13 +24,26 @@ from .const import (
     DOMAIN,
     ENTITY_MAP,
     HOMEKIT_ACCESSORY_DISPATCH,
+    IDENTIFIER_ACCESSORY_ID,
+    IDENTIFIER_SERIAL_NUMBER,
 )
 from .device_trigger import async_fire_triggers, async_setup_triggers_for_entry
 
 DEFAULT_SCAN_INTERVAL = datetime.timedelta(seconds=60)
 RETRY_INTERVAL = 60  # seconds
+MAX_POLL_FAILURES_TO_DECLARE_UNAVAILABLE = 3
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def valid_serial_number(serial):
+    """Return if the serial number appears to be valid."""
+    if not serial:
+        return False
+    try:
+        return float("".join(serial.rsplit(".", 1))) > 1
+    except ValueError:
+        return True
 
 
 def get_accessory_information(accessory):
@@ -107,7 +122,7 @@ class HKDevice:
         # Useful when routing events to triggers
         self.devices = {}
 
-        self.available = True
+        self.available = False
 
         self.signal_state_updated = "_".join((DOMAIN, self.unique_id, "state_updated"))
 
@@ -124,6 +139,7 @@ class HKDevice:
         # Never allow concurrent polling of the same accessory or bridge
         self._polling_lock = asyncio.Lock()
         self._polling_lock_warned = False
+        self._poll_failures = 0
 
         self.watchable_characteristics = []
 
@@ -151,9 +167,14 @@ class HKDevice:
         ]
 
     @callback
-    def async_set_unavailable(self):
-        """Mark state of all entities on this connection as unavailable."""
-        self.available = False
+    def async_set_available_state(self, available):
+        """Mark state of all entities on this connection when it becomes available or unavailable."""
+        _LOGGER.debug(
+            "Called async_set_available_state with %s for %s", available, self.unique_id
+        )
+        if self.available == available:
+            return
+        self.available = available
         self.hass.helpers.dispatcher.async_dispatcher_send(self.signal_state_updated)
 
     async def async_setup(self):
@@ -198,31 +219,41 @@ class HKDevice:
                 service_type=ServicesTypes.ACCESSORY_INFORMATION,
             )
 
-            device_info = {
-                "identifiers": {
+            serial_number = info.value(CharacteristicsTypes.SERIAL_NUMBER)
+
+            if valid_serial_number(serial_number):
+                identifiers = {(DOMAIN, IDENTIFIER_SERIAL_NUMBER, serial_number)}
+            else:
+                # Some accessories do not have a serial number
+                identifiers = {
                     (
                         DOMAIN,
-                        "serial-number",
-                        info.value(CharacteristicsTypes.SERIAL_NUMBER),
+                        IDENTIFIER_ACCESSORY_ID,
+                        f"{self.unique_id}_{accessory.aid}",
                     )
-                },
-                "name": info.value(CharacteristicsTypes.NAME),
-                "manufacturer": info.value(CharacteristicsTypes.MANUFACTURER, ""),
-                "model": info.value(CharacteristicsTypes.MODEL, ""),
-                "sw_version": info.value(CharacteristicsTypes.FIRMWARE_REVISION, ""),
-            }
+                }
 
             if accessory.aid == 1:
                 # Accessory 1 is the root device (sometimes the only device, sometimes a bridge)
                 # Link the root device to the pairing id for the connection.
-                device_info["identifiers"].add((DOMAIN, "accessory-id", self.unique_id))
-            else:
+                identifiers.add((DOMAIN, IDENTIFIER_ACCESSORY_ID, self.unique_id))
+
+            device_info = DeviceInfo(
+                identifiers=identifiers,
+                name=info.value(CharacteristicsTypes.NAME),
+                manufacturer=info.value(CharacteristicsTypes.MANUFACTURER, ""),
+                model=info.value(CharacteristicsTypes.MODEL, ""),
+                sw_version=info.value(CharacteristicsTypes.FIRMWARE_REVISION, ""),
+                hw_version=info.value(CharacteristicsTypes.HARDWARE_REVISION, ""),
+            )
+
+            if accessory.aid != 1:
                 # Every pairing has an accessory 1
                 # It *doesn't* have a via_device, as it is the device we are connecting to
                 # Every other accessory should use it as its via device.
-                device_info["via_device"] = (
+                device_info[ATTR_VIA_DEVICE] = (
                     DOMAIN,
-                    "serial-number",
+                    IDENTIFIER_SERIAL_NUMBER,
                     self.connection_info["serial-number"],
                 )
 
@@ -259,6 +290,8 @@ class HKDevice:
 
         if self.watchable_characteristics:
             await self.pairing.subscribe(self.watchable_characteristics)
+            if not self.pairing.connection.is_connected:
+                return
 
         await self.async_update()
 
@@ -267,7 +300,7 @@ class HKDevice:
         if self._polling_interval_remover:
             self._polling_interval_remover()
 
-        await self.pairing.unsubscribe(self.watchable_characteristics)
+        await self.pairing.close()
 
         return await self.hass.config_entries.async_unload_platforms(
             self.config_entry, self.platforms
@@ -386,25 +419,30 @@ class HKDevice:
     async def async_update(self, now=None):
         """Poll state of all entities attached to this bridge/accessory."""
         if not self.pollable_characteristics:
-            _LOGGER.debug("HomeKit connection not polling any characteristics")
+            self.async_set_available_state(self.pairing.connection.is_connected)
+            _LOGGER.debug(
+                "HomeKit connection not polling any characteristics: %s", self.unique_id
+            )
             return
 
         if self._polling_lock.locked():
             if not self._polling_lock_warned:
                 _LOGGER.warning(
-                    "HomeKit controller update skipped as previous poll still in flight"
+                    "HomeKit controller update skipped as previous poll still in flight: %s",
+                    self.unique_id,
                 )
                 self._polling_lock_warned = True
             return
 
         if self._polling_lock_warned:
             _LOGGER.info(
-                "HomeKit controller no longer detecting back pressure - not skipping poll"
+                "HomeKit controller no longer detecting back pressure - not skipping poll: %s",
+                self.unique_id,
             )
             self._polling_lock_warned = False
 
         async with self._polling_lock:
-            _LOGGER.debug("Starting HomeKit controller update")
+            _LOGGER.debug("Starting HomeKit controller update: %s", self.unique_id)
 
             try:
                 new_values_dict = await self.get_characteristics(
@@ -413,20 +451,24 @@ class HKDevice:
             except AccessoryNotFoundError:
                 # Not only did the connection fail, but also the accessory is not
                 # visible on the network.
-                self.async_set_unavailable()
+                self.async_set_available_state(False)
                 return
             except (AccessoryDisconnectedError, EncryptionError):
-                # Temporary connection failure. Device is still available but our
-                # connection was dropped.
+                # Temporary connection failure. Device may still available but our
+                # connection was dropped or we are reconnecting
+                self._poll_failures += 1
+                if self._poll_failures >= MAX_POLL_FAILURES_TO_DECLARE_UNAVAILABLE:
+                    self.async_set_available_state(False)
                 return
 
+            self._poll_failures = 0
             self.process_new_events(new_values_dict)
 
-            _LOGGER.debug("Finished HomeKit controller update")
+            _LOGGER.debug("Finished HomeKit controller update: %s", self.unique_id)
 
     def process_new_events(self, new_values_dict):
         """Process events from accessory into HA state."""
-        self.available = True
+        self.async_set_available_state(True)
 
         # Process any stateless events (via device_triggers)
         async_fire_triggers(self, new_values_dict)

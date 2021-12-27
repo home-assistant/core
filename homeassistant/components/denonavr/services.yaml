@@ -26,7 +26,6 @@ set_dynamic_eq:
     dynamic_eq:
       description: "True/false for enable/disable."
       default: true
-      example: true
       selector:
         boolean:
 update_audyssey:

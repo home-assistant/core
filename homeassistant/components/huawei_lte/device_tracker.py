@@ -1,11 +1,11 @@
 """Support for device tracking of Huawei LTE routers."""
 from __future__ import annotations
 
+from dataclasses import dataclass, field
 import logging
 import re
 from typing import Any, Dict, List, cast
 
-import attr
 from stringcase import snakecase
 
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
@@ -14,7 +14,6 @@ from homeassistant.components.device_tracker.const import (
     SOURCE_TYPE_ROUTER,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -61,7 +60,7 @@ async def async_setup_entry(
     # Grab hosts list once to examine whether the initial fetch has got some data for
     # us, i.e. if wlan host list is supported. Only set up a subscription and proceed
     # with adding and tracking entities if it is.
-    router = hass.data[DOMAIN].routers[config_entry.data[CONF_URL]]
+    router = hass.data[DOMAIN].routers[config_entry.unique_id]
     if (hosts := _get_hosts(router, True)) is None:
         return
 
@@ -94,10 +93,10 @@ async def async_setup_entry(
     router.subscriptions[KEY_LAN_HOST_INFO].add(_DEVICE_SCAN)
     router.subscriptions[KEY_WLAN_HOST_LIST].add(_DEVICE_SCAN)
 
-    async def _async_maybe_add_new_entities(url: str) -> None:
+    async def _async_maybe_add_new_entities(unique_id: str) -> None:
         """Add new entities if the update signal comes from our router."""
-        if url == router.url:
-            async_add_new_entities(hass, url, async_add_entities, tracked)
+        if config_entry.unique_id == unique_id:
+            async_add_new_entities(router, async_add_entities, tracked)
 
     # Register to handle router data updates
     disconnect_dispatcher = async_dispatcher_connect(
@@ -106,7 +105,7 @@ async def async_setup_entry(
     config_entry.async_on_unload(disconnect_dispatcher)
 
     # Add new entities from initial scan
-    async_add_new_entities(hass, router.url, async_add_entities, tracked)
+    async_add_new_entities(router, async_add_entities, tracked)
 
 
 def _is_wireless(host: _HostType) -> bool:
@@ -129,15 +128,12 @@ def _is_us(host: _HostType) -> bool:
 
 @callback
 def async_add_new_entities(
-    hass: HomeAssistant,
-    router_url: str,
+    router: Router,
     async_add_entities: AddEntitiesCallback,
     tracked: set[str],
 ) -> None:
     """Add new entities that are not already being tracked."""
-    router = hass.data[DOMAIN].routers[router_url]
-    hosts = _get_hosts(router)
-    if not hosts:
+    if not (hosts := _get_hosts(router)):
         return
 
     track_wired_clients = router.config_entry.options.get(
@@ -177,16 +173,16 @@ def _better_snakecase(text: str) -> str:
     return cast(str, snakecase(text))
 
 
-@attr.s
+@dataclass
 class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
     """Huawei LTE router scanner entity."""
 
-    _mac_address: str = attr.ib()
+    _mac_address: str
 
-    _ip_address: str | None = attr.ib(init=False, default=None)
-    _is_connected: bool = attr.ib(init=False, default=False)
-    _hostname: str | None = attr.ib(init=False, default=None)
-    _extra_state_attributes: dict[str, Any] = attr.ib(init=False, factory=dict)
+    _ip_address: str | None = field(default=None, init=False)
+    _is_connected: bool = field(default=False, init=False)
+    _hostname: str | None = field(default=None, init=False)
+    _extra_state_attributes: dict[str, Any] = field(default_factory=dict, init=False)
 
     @property
     def _entity_name(self) -> str:
@@ -228,8 +224,7 @@ class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
 
     async def async_update(self) -> None:
         """Update state."""
-        hosts = _get_hosts(self.router)
-        if hosts is None:
+        if (hosts := _get_hosts(self.router)) is None:
             self._available = False
             return
         self._available = True

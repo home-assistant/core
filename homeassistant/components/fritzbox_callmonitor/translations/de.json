@@ -8,7 +8,7 @@
         "error": {
             "invalid_auth": "Ung\u00fcltige Authentifizierung"
         },
-        "flow_title": "AVM FRITZ! Box-Anrufmonitor: {name}",
+        "flow_title": "AVM FRITZ!Box-Anrufmonitor: {name}",
         "step": {
             "phonebook": {
                 "data": {

@@ -56,7 +56,7 @@ class VeraThermostat(VeraDevice[veraApi.VeraThermostat], ClimateEntity):
 
     def __init__(
         self, vera_device: veraApi.VeraThermostat, controller_data: ControllerData
-    ):
+    ) -> None:
         """Initialize the Vera device."""
         VeraDevice.__init__(self, vera_device, controller_data)
         self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
@@ -92,8 +92,7 @@ class VeraThermostat(VeraDevice[veraApi.VeraThermostat], ClimateEntity):
     @property
     def fan_mode(self) -> str | None:
         """Return the fan setting."""
-        mode = self.vera_device.get_fan_mode()
-        if mode == "ContinuousOn":
+        if self.vera_device.get_fan_mode() == "ContinuousOn":
             return FAN_ON
         return FAN_AUTO
 
@@ -114,9 +113,9 @@ class VeraThermostat(VeraDevice[veraApi.VeraThermostat], ClimateEntity):
     @property
     def current_power_w(self) -> float | None:
         """Return the current power usage in W."""
-        power = self.vera_device.power
-        if power:
+        if power := self.vera_device.power:
             return convert(power, float, 0.0)
+        return None
 
     @property
     def temperature_unit(self) -> str:

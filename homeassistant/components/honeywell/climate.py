@@ -2,14 +2,11 @@
 from __future__ import annotations
 
 import datetime
-import logging
 from typing import Any
 
-import requests
 import somecomfort
-import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -33,48 +30,20 @@ from homeassistant.components.climate.const import (
     SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    CONF_PASSWORD,
-    CONF_REGION,
-    CONF_USERNAME,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-)
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 
-_LOGGER = logging.getLogger(__name__)
+from .const import (
+    _LOGGER,
+    CONF_COOL_AWAY_TEMPERATURE,
+    CONF_HEAT_AWAY_TEMPERATURE,
+    DOMAIN,
+)
 
 ATTR_FAN_ACTION = "fan_action"
 
-CONF_COOL_AWAY_TEMPERATURE = "away_cool_temperature"
-CONF_HEAT_AWAY_TEMPERATURE = "away_heat_temperature"
-CONF_DEV_ID = "thermostat"
-CONF_LOC_ID = "location"
-
-DEFAULT_COOL_AWAY_TEMPERATURE = 88
-DEFAULT_HEAT_AWAY_TEMPERATURE = 61
-
 ATTR_PERMANENT_HOLD = "permanent_hold"
 
-PLATFORM_SCHEMA = vol.All(
-    cv.deprecated(CONF_REGION),
-    PLATFORM_SCHEMA.extend(
-        {
-            vol.Required(CONF_USERNAME): cv.string,
-            vol.Required(CONF_PASSWORD): cv.string,
-            vol.Optional(
-                CONF_COOL_AWAY_TEMPERATURE, default=DEFAULT_COOL_AWAY_TEMPERATURE
-            ): vol.Coerce(int),
-            vol.Optional(
-                CONF_HEAT_AWAY_TEMPERATURE, default=DEFAULT_HEAT_AWAY_TEMPERATURE
-            ): vol.Coerce(int),
-            vol.Optional(CONF_REGION): cv.string,
-            vol.Optional(CONF_DEV_ID): cv.string,
-            vol.Optional(CONF_LOC_ID): cv.string,
-        }
-    ),
-)
+PRESET_HOLD = "Hold"
 
 HVAC_MODE_TO_HW_MODE = {
     "SwitchOffAllowed": {HVAC_MODE_OFF: "off"},
@@ -107,46 +76,20 @@ HW_FAN_MODE_TO_HA = {
     "follow schedule": FAN_AUTO,
 }
 
+PARALLEL_UPDATES = 1
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+
+async def async_setup_entry(hass, config, async_add_entities, discovery_info=None):
     """Set up the Honeywell thermostat."""
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
+    cool_away_temp = config.data.get(CONF_COOL_AWAY_TEMPERATURE)
+    heat_away_temp = config.data.get(CONF_HEAT_AWAY_TEMPERATURE)
 
-    try:
-        client = somecomfort.SomeComfort(username, password)
-    except somecomfort.AuthError:
-        _LOGGER.error("Failed to login to honeywell account %s", username)
-        return
-    except somecomfort.SomeComfortError:
-        _LOGGER.error(
-            "Failed to initialize the Honeywell client: "
-            "Check your configuration (username, password), "
-            "or maybe you have exceeded the API rate limit?"
-        )
-        return
+    data = hass.data[DOMAIN][config.entry_id]
 
-    dev_id = config.get(CONF_DEV_ID)
-    loc_id = config.get(CONF_LOC_ID)
-    cool_away_temp = config.get(CONF_COOL_AWAY_TEMPERATURE)
-    heat_away_temp = config.get(CONF_HEAT_AWAY_TEMPERATURE)
-
-    add_entities(
+    async_add_entities(
         [
-            HoneywellUSThermostat(
-                client,
-                device,
-                cool_away_temp,
-                heat_away_temp,
-                username,
-                password,
-            )
-            for location in client.locations_by_id.values()
-            for device in location.devices_by_id.values()
-            if (
-                (not loc_id or location.locationid == loc_id)
-                and (not dev_id or device.deviceid == dev_id)
-            )
+            HoneywellUSThermostat(data, device, cool_away_temp, heat_away_temp)
+            for device in data.devices.values()
         ]
     )
 
@@ -154,35 +97,38 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class HoneywellUSThermostat(ClimateEntity):
     """Representation of a Honeywell US Thermostat."""
 
-    def __init__(
-        self, client, device, cool_away_temp, heat_away_temp, username, password
-    ):
+    def __init__(self, data, device, cool_away_temp, heat_away_temp):
         """Initialize the thermostat."""
-        self._client = client
+        self._data = data
         self._device = device
         self._cool_away_temp = cool_away_temp
         self._heat_away_temp = heat_away_temp
         self._away = False
-        self._username = username
-        self._password = password
 
-        _LOGGER.debug("latestData = %s ", device._data)
+        self._attr_unique_id = device.deviceid
+        self._attr_name = device.name
+        self._attr_temperature_unit = (
+            TEMP_CELSIUS if device.temperature_unit == "C" else TEMP_FAHRENHEIT
+        )
+        self._attr_preset_modes = [PRESET_NONE, PRESET_AWAY, PRESET_HOLD]
+        self._attr_is_aux_heat = device.system_mode == "emheat"
 
         # not all honeywell HVACs support all modes
         mappings = [v for k, v in HVAC_MODE_TO_HW_MODE.items() if device.raw_ui_data[k]]
         self._hvac_mode_map = {k: v for d in mappings for k, v in d.items()}
+        self._attr_hvac_modes = list(self._hvac_mode_map)
 
-        self._supported_features = (
+        self._attr_supported_features = (
             SUPPORT_PRESET_MODE
             | SUPPORT_TARGET_TEMPERATURE
             | SUPPORT_TARGET_TEMPERATURE_RANGE
         )
 
         if device._data["canControlHumidification"]:
-            self._supported_features |= SUPPORT_TARGET_HUMIDITY
+            self._attr_supported_features |= SUPPORT_TARGET_HUMIDITY
 
         if device.raw_ui_data["SwitchEmergencyHeatAllowed"]:
-            self._supported_features |= SUPPORT_AUX_HEAT
+            self._attr_supported_features |= SUPPORT_AUX_HEAT
 
         if not device._data["hasFan"]:
             return
@@ -191,12 +137,9 @@ class HoneywellUSThermostat(ClimateEntity):
         mappings = [v for k, v in FAN_MODE_TO_HW.items() if device.raw_fan_data[k]]
         self._fan_mode_map = {k: v for d in mappings for k, v in d.items()}
 
-        self._supported_features |= SUPPORT_FAN_MODE
+        self._attr_fan_modes = list(self._fan_mode_map)
 
-    @property
-    def name(self) -> str | None:
-        """Return the name of the honeywell, if any."""
-        return self._device.name
+        self._attr_supported_features |= SUPPORT_FAN_MODE
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -207,11 +150,6 @@ class HoneywellUSThermostat(ClimateEntity):
         if self._device.raw_dr_data:
             data["dr_phase"] = self._device.raw_dr_data.get("Phase")
         return data
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return self._supported_features
 
     @property
     def min_temp(self) -> float:
@@ -232,11 +170,6 @@ class HoneywellUSThermostat(ClimateEntity):
         return None
 
     @property
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS if self._device.temperature_unit == "C" else TEMP_FAHRENHEIT
-
-    @property
     def current_humidity(self) -> int | None:
         """Return the current humidity."""
         return self._device.current_humidity
@@ -245,11 +178,6 @@ class HoneywellUSThermostat(ClimateEntity):
     def hvac_mode(self) -> str:
         """Return hvac operation ie. heat, cool mode."""
         return HW_MODE_TO_HVAC_MODE[self._device.system_mode]
-
-    @property
-    def hvac_modes(self) -> list[str]:
-        """Return the list of available hvac operation modes."""
-        return list(self._hvac_mode_map)
 
     @property
     def hvac_action(self) -> str | None:
@@ -289,27 +217,17 @@ class HoneywellUSThermostat(ClimateEntity):
     @property
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
-        return PRESET_AWAY if self._away else None
+        if self._away:
+            return PRESET_AWAY
+        if self._is_permanent_hold():
+            return PRESET_HOLD
 
-    @property
-    def preset_modes(self) -> list[str] | None:
-        """Return a list of available preset modes."""
-        return [PRESET_NONE, PRESET_AWAY]
-
-    @property
-    def is_aux_heat(self) -> str | None:
-        """Return true if aux heater."""
-        return self._device.system_mode == "emheat"
+        return None
 
     @property
     def fan_mode(self) -> str | None:
         """Return the fan setting."""
         return HW_FAN_MODE_TO_HA[self._device.fan_mode]
-
-    @property
-    def fan_modes(self) -> list[str] | None:
-        """Return the list of available fan modes."""
-        return list(self._fan_mode_map)
 
     def _is_permanent_hold(self) -> bool:
         heat_status = self._device.raw_ui_data.get("StatusHeat", 0)
@@ -318,8 +236,7 @@ class HoneywellUSThermostat(ClimateEntity):
 
     def _set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
-        if temperature is None:
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
         try:
             # Get current mode
@@ -346,11 +263,9 @@ class HoneywellUSThermostat(ClimateEntity):
 
         try:
             if HVAC_MODE_HEAT_COOL in self._hvac_mode_map:
-                temperature = kwargs.get(ATTR_TARGET_TEMP_HIGH)
-                if temperature:
+                if temperature := kwargs.get(ATTR_TARGET_TEMP_HIGH):
                     self._device.setpoint_cool = temperature
-                temperature = kwargs.get(ATTR_TARGET_TEMP_LOW)
-                if temperature:
+                if temperature := kwargs.get(ATTR_TARGET_TEMP_LOW):
                     self._device.setpoint_heat = temperature
         except somecomfort.SomeComfortError as err:
             _LOGGER.error("Invalid temperature %s: %s", temperature, err)
@@ -383,15 +298,35 @@ class HoneywellUSThermostat(ClimateEntity):
             setattr(self._device, f"hold_{mode}", True)
             # Set temperature
             setattr(
-                self._device, f"setpoint_{mode}", getattr(self, f"_{mode}_away_temp")
+                self._device,
+                f"setpoint_{mode}",
+                getattr(self, f"_{mode}_away_temp"),
             )
         except somecomfort.SomeComfortError:
             _LOGGER.error(
                 "Temperature %.1f out of range", getattr(self, f"_{mode}_away_temp")
             )
 
+    def _turn_hold_mode_on(self) -> None:
+        """Turn permanent hold on."""
+        try:
+            # Get current mode
+            mode = self._device.system_mode
+        except somecomfort.SomeComfortError:
+            _LOGGER.error("Can not get system mode")
+            return
+        # Check that we got a valid mode back
+        if mode in HW_MODE_TO_HVAC_MODE:
+            try:
+                # Set permanent hold
+                setattr(self._device, f"hold_{mode}", True)
+            except somecomfort.SomeComfortError:
+                _LOGGER.error("Couldn't set permanent hold")
+        else:
+            _LOGGER.error("Invalid system mode returned: %s", mode)
+
     def _turn_away_mode_off(self) -> None:
-        """Turn away off."""
+        """Turn away/hold off."""
         self._away = False
         try:
             # Disabling all hold modes
@@ -404,6 +339,9 @@ class HoneywellUSThermostat(ClimateEntity):
         """Set new preset mode."""
         if preset_mode == PRESET_AWAY:
             self._turn_away_mode_on()
+        elif preset_mode == PRESET_HOLD:
+            self._away = False
+            self._turn_hold_mode_on()
         else:
             self._turn_away_mode_off()
 
@@ -418,54 +356,6 @@ class HoneywellUSThermostat(ClimateEntity):
         else:
             self.set_hvac_mode(HVAC_MODE_OFF)
 
-    def _retry(self) -> bool:
-        """Recreate a new somecomfort client.
-
-        When we got an error, the best way to be sure that the next query
-        will succeed, is to recreate a new somecomfort client.
-        """
-        try:
-            self._client = somecomfort.SomeComfort(self._username, self._password)
-        except somecomfort.AuthError:
-            _LOGGER.error("Failed to login to honeywell account %s", self._username)
-            return False
-        except somecomfort.SomeComfortError as ex:
-            _LOGGER.error("Failed to initialize honeywell client: %s", str(ex))
-            return False
-
-        devices = [
-            device
-            for location in self._client.locations_by_id.values()
-            for device in location.devices_by_id.values()
-            if device.name == self._device.name
-        ]
-
-        if len(devices) != 1:
-            _LOGGER.error("Failed to find device %s", self._device.name)
-            return False
-
-        self._device = devices[0]
-        return True
-
-    def update(self) -> None:
-        """Update the state."""
-        retries = 3
-        while retries > 0:
-            try:
-                self._device.refresh()
-                break
-            except (
-                somecomfort.client.APIRateLimited,
-                OSError,
-                requests.exceptions.ReadTimeout,
-            ) as exp:
-                retries -= 1
-                if retries == 0:
-                    raise exp
-                if not self._retry():
-                    raise exp
-                _LOGGER.error("SomeComfort update failed, Retrying - Error: %s", exp)
-
-        _LOGGER.debug(
-            "latestData = %s ", self._device._data  # pylint: disable=protected-access
-        )
+    async def async_update(self):
+        """Get the latest state from the service."""
+        await self._data.async_update()

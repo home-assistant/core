@@ -109,7 +109,6 @@ async def test_disabled_by_default_sensors(
     """Test the disabled by default sensors."""
     await setup_integration(hass, aioclient_mock)
     registry = er.async_get(hass)
-    print(registry.entities)
 
     state = hass.states.get(entity_id)
     assert state is None
@@ -117,7 +116,7 @@ async def test_disabled_by_default_sensors(
     entry = registry.async_get(entity_id)
     assert entry
     assert entry.disabled
-    assert entry.disabled_by == er.DISABLED_INTEGRATION
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
 async def test_availability(

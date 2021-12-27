@@ -12,7 +12,7 @@
                 "data": {
                     "include_domains": "Domain yang disertakan"
                 },
-                "description": "Pilih domain yang akan disertakan. Semua entitas yang didukung di domain akan disertakan. Instans HomeKit terpisah dalam mode aksesori akan dibuat untuk setiap pemutar media TV dan kamera.",
+                "description": "Pilih domain yang akan disertakan. Semua entitas yang didukung di domain akan disertakan. Instans HomeKit terpisah dalam mode aksesori akan dibuat untuk setiap pemutar media TV, remote berbasis aktivitas, kunci, dan kamera.",
                 "title": "Pilih domain yang akan disertakan"
             }
         }
@@ -21,24 +21,26 @@
         "step": {
             "advanced": {
                 "data": {
-                    "auto_start": "Mulai otomatis (nonaktifkan jika Anda memanggil layanan homekit.start secara manual)"
+                    "auto_start": "Mulai otomatis (nonaktifkan jika Anda memanggil layanan homekit.start secara manual)",
+                    "devices": "Perangkat (Pemicu)"
                 },
-                "description": "Pengaturan ini hanya perlu disesuaikan jika HomeKit tidak berfungsi.",
+                "description": "Sakelar yang dapat diprogram dibuat untuk setiap perangkat yang dipilih. Saat pemicu perangkat aktif, HomeKit dapat dikonfigurasi untuk menjalankan otomatisasi atau skenario.",
                 "title": "Konfigurasi Tingkat Lanjut"
             },
             "cameras": {
                 "data": {
+                    "camera_audio": "Kamera yang mendukung audio",
                     "camera_copy": "Kamera yang mendukung aliran H.264 asli"
                 },
                 "description": "Periksa semua kamera yang mendukung streaming H.264 asli. Jika kamera tidak mengeluarkan aliran H.264, sistem akan mentranskode video ke H.264 untuk HomeKit. Proses transcoding membutuhkan CPU kinerja tinggi dan tidak mungkin bekerja pada komputer papan tunggal.",
-                "title": "Pilih codec video kamera."
+                "title": "Konfigurasi Kamera"
             },
             "include_exclude": {
                 "data": {
                     "entities": "Entitas",
                     "mode": "Mode"
                 },
-                "description": "Pilih entitas yang akan disertakan. Dalam mode aksesori, hanya satu entitas yang disertakan. Dalam mode \"bridge include\", semua entitas di domain akan disertakan, kecuali entitas tertentu dipilih. Dalam mode \"bridge exclude\", semua entitas di domain akan disertakan, kecuali untuk entitas tertentu yang dipilih. Untuk kinerja terbaik, aksesori HomeKit terpisah diperlukan untuk masing-masing pemutar media, TV, dan kamera.",
+                "description": "Pilih entitas yang akan disertakan. Dalam mode aksesori, hanya satu entitas yang disertakan. Dalam mode \"bridge include\", semua entitas di domain akan disertakan, kecuali entitas tertentu dipilih. Dalam mode \"bridge exclude\", semua entitas di domain akan disertakan, kecuali untuk entitas tertentu yang dipilih. Untuk kinerja terbaik, aksesori HomeKit terpisah diperlukan untuk masing-masing pemutar media TV, remote berbasis aktivitas, kunci, dan kamera.",
                 "title": "Pilih entitas untuk disertakan"
             },
             "init": {

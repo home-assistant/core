@@ -1,5 +1,6 @@
 """The tests for the Alexa component."""
 # pylint: disable=protected-access
+from http import HTTPStatus
 import json
 
 import pytest
@@ -134,7 +135,7 @@ async def test_intent_launch_request(alexa_client):
         },
     }
     req = await _intent_req(alexa_client, data)
-    assert req.status == 200
+    assert req.status == HTTPStatus.OK
     data = await req.json()
     text = data.get("response", {}).get("outputSpeech", {}).get("text")
     assert text == "LaunchRequest has been received."
@@ -160,7 +161,7 @@ async def test_intent_launch_request_not_configured(alexa_client):
         },
     }
     req = await _intent_req(alexa_client, data)
-    assert req.status == 200
+    assert req.status == HTTPStatus.OK
     data = await req.json()
     text = data.get("response", {}).get("outputSpeech", {}).get("text")
     assert text == "This intent is not yet configured within Home Assistant."
@@ -194,7 +195,7 @@ async def test_intent_request_with_slots(alexa_client):
         },
     }
     req = await _intent_req(alexa_client, data)
-    assert req.status == 200
+    assert req.status == HTTPStatus.OK
     data = await req.json()
     text = data.get("response", {}).get("outputSpeech", {}).get("text")
     assert text == "You told us your sign is virgo."
@@ -247,7 +248,7 @@ async def test_intent_request_with_slots_and_synonym_resolution(alexa_client):
         },
     }
     req = await _intent_req(alexa_client, data)
-    assert req.status == 200
+    assert req.status == HTTPStatus.OK
     data = await req.json()
     text = data.get("response", {}).get("outputSpeech", {}).get("text")
     assert text == "You told us your sign is Virgo."
@@ -300,7 +301,7 @@ async def test_intent_request_with_slots_and_multi_synonym_resolution(alexa_clie
         },
     }
     req = await _intent_req(alexa_client, data)
-    assert req.status == 200
+    assert req.status == HTTPStatus.OK
     data = await req.json()
     text = data.get("response", {}).get("outputSpeech", {}).get("text")
     assert text == "You told us your sign is V zodiac."
@@ -334,7 +335,7 @@ async def test_intent_request_with_slots_but_no_value(alexa_client):
         },
     }
     req = await _intent_req(alexa_client, data)
-    assert req.status == 200
+    assert req.status == HTTPStatus.OK
     data = await req.json()
     text = data.get("response", {}).get("outputSpeech", {}).get("text")
     assert text == "You told us your sign is ."
@@ -365,7 +366,7 @@ async def test_intent_request_without_slots(hass, alexa_client):
         },
     }
     req = await _intent_req(alexa_client, data)
-    assert req.status == 200
+    assert req.status == HTTPStatus.OK
     json = await req.json()
     text = json.get("response", {}).get("outputSpeech", {}).get("text")
 
@@ -375,7 +376,7 @@ async def test_intent_request_without_slots(hass, alexa_client):
     hass.states.async_set("device_tracker.anne_therese", "home")
 
     req = await _intent_req(alexa_client, data)
-    assert req.status == 200
+    assert req.status == HTTPStatus.OK
     json = await req.json()
     text = json.get("response", {}).get("outputSpeech", {}).get("text")
     assert text == "You are both home, you silly"
@@ -404,7 +405,7 @@ async def test_intent_request_calling_service(alexa_client):
     }
     call_count = len(calls)
     req = await _intent_req(alexa_client, data)
-    assert req.status == 200
+    assert req.status == HTTPStatus.OK
     assert call_count + 1 == len(calls)
     call = calls[-1]
     assert call.domain == "test"
@@ -445,7 +446,7 @@ async def test_intent_session_ended_request(alexa_client):
     }
 
     req = await _intent_req(alexa_client, data)
-    assert req.status == 200
+    assert req.status == HTTPStatus.OK
     text = await req.text()
     assert text == ""
 
@@ -482,7 +483,7 @@ async def test_intent_from_built_in_intent_library(alexa_client):
         },
     }
     req = await _intent_req(alexa_client, data)
-    assert req.status == 200
+    assert req.status == HTTPStatus.OK
     data = await req.json()
     text = data.get("response", {}).get("outputSpeech", {}).get("text")
     assert text == "Playing the shins."

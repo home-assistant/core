@@ -12,7 +12,7 @@
                 "data": {
                     "include_domains": "Domains to include"
                 },
-                "description": "Choose the domains to be included. All supported entities in the domain will be included. A separate HomeKit instance in accessory mode will be created for each tv media player and camera.",
+                "description": "Choose the domains to be included. All supported entities in the domain will be included. A separate HomeKit instance in accessory mode will be created for each tv media player, activity based remote, lock, and camera.",
                 "title": "Select domains to be included"
             }
         }
@@ -21,17 +21,19 @@
         "step": {
             "advanced": {
                 "data": {
-                    "auto_start": "Autostart (disable if you are calling the homekit.start service manually)"
+                    "auto_start": "Autostart (disable if you are calling the homekit.start service manually)",
+                    "devices": "Devices (Triggers)"
                 },
-                "description": "These settings only need to be adjusted if HomeKit is not functional.",
+                "description": "Programmable switches are created for each selected device. When a device trigger fires, HomeKit can be configured to run an automation or scene.",
                 "title": "Advanced Configuration"
             },
             "cameras": {
                 "data": {
+                    "camera_audio": "Cameras that support audio",
                     "camera_copy": "Cameras that support native H.264 streams"
                 },
                 "description": "Check all cameras that support native H.264 streams. If the camera does not output a H.264 stream, the system will transcode the video to H.264 for HomeKit. Transcoding requires a performant CPU and is unlikely to work on single board computers.",
-                "title": "Select camera video codec."
+                "title": "Camera Configuration"
             },
             "include_exclude": {
                 "data": {

@@ -1,4 +1,5 @@
 """The tests for the Xiaomi router device tracker platform."""
+from http import HTTPStatus
 import logging
 from unittest.mock import MagicMock, call, patch
 
@@ -40,8 +41,8 @@ def mocked_requests(*args, **kwargs):
             return self.json()
 
         def raise_for_status(self):
-            """Raise an HTTPError if status is not 200."""
-            if self.status_code != 200:
+            """Raise an HTTPError if status is not OK."""
+            if self.status_code != HTTPStatus.OK:
                 raise requests.HTTPError(self.status_code)
 
     data = kwargs.get("data")

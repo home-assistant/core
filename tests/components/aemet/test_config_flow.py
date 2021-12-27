@@ -6,7 +6,7 @@ import requests_mock
 
 from homeassistant import data_entry_flow
 from homeassistant.components.aemet.const import CONF_STATION_UPDATES, DOMAIN
-from homeassistant.config_entries import ENTRY_STATE_LOADED, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 import homeassistant.util.dt as dt_util
 
@@ -47,7 +47,7 @@ async def test_form(hass):
 
         conf_entries = hass.config_entries.async_entries(DOMAIN)
         entry = conf_entries[0]
-        assert entry.state == ENTRY_STATE_LOADED
+        assert entry.state is ConfigEntryState.LOADED
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == CONFIG[CONF_NAME]
@@ -75,7 +75,7 @@ async def test_form_options(hass):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        assert entry.state == "loaded"
+        assert entry.state is ConfigEntryState.LOADED
 
         result = await hass.config_entries.options.async_init(entry.entry_id)
 
@@ -93,7 +93,7 @@ async def test_form_options(hass):
 
         await hass.async_block_till_done()
 
-        assert entry.state == "loaded"
+        assert entry.state is ConfigEntryState.LOADED
 
         result = await hass.config_entries.options.async_init(entry.entry_id)
 
@@ -111,7 +111,7 @@ async def test_form_options(hass):
 
         await hass.async_block_till_done()
 
-        assert entry.state == "loaded"
+        assert entry.state is ConfigEntryState.LOADED
 
 
 async def test_form_duplicated_id(hass):

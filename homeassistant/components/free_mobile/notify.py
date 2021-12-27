@@ -1,17 +1,12 @@
 """Support for Free Mobile SMS platform."""
+from http import HTTPStatus
 import logging
 
 from freesms import FreeClient
 import voluptuous as vol
 
 from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
-from homeassistant.const import (
-    CONF_ACCESS_TOKEN,
-    CONF_USERNAME,
-    HTTP_BAD_REQUEST,
-    HTTP_FORBIDDEN,
-    HTTP_INTERNAL_SERVER_ERROR,
-)
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,11 +32,11 @@ class FreeSMSNotificationService(BaseNotificationService):
         """Send a message to the Free Mobile user cell."""
         resp = self.free_client.send_sms(message)
 
-        if resp.status_code == HTTP_BAD_REQUEST:
+        if resp.status_code == HTTPStatus.BAD_REQUEST:
             _LOGGER.error("At least one parameter is missing")
-        elif resp.status_code == 402:
+        elif resp.status_code == HTTPStatus.PAYMENT_REQUIRED:
             _LOGGER.error("Too much SMS send in a few time")
-        elif resp.status_code == HTTP_FORBIDDEN:
+        elif resp.status_code == HTTPStatus.FORBIDDEN:
             _LOGGER.error("Wrong Username/Password")
-        elif resp.status_code == HTTP_INTERNAL_SERVER_ERROR:
+        elif resp.status_code == HTTPStatus.INTERNAL_SERVER_ERROR:
             _LOGGER.error("Server error, try later")

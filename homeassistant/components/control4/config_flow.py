@@ -96,9 +96,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
 
             hub = Control4Validator(
-                user_input["host"],
-                user_input["username"],
-                user_input["password"],
+                user_input[CONF_HOST],
+                user_input[CONF_USERNAME],
+                user_input[CONF_PASSWORD],
                 self.hass,
             )
             try:
@@ -123,9 +123,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=controller_unique_id,
                     data={
-                        CONF_HOST: user_input["host"],
-                        CONF_USERNAME: user_input["username"],
-                        CONF_PASSWORD: user_input["password"],
+                        CONF_HOST: user_input[CONF_HOST],
+                        CONF_USERNAME: user_input[CONF_USERNAME],
+                        CONF_PASSWORD: user_input[CONF_PASSWORD],
                         CONF_CONTROLLER_UNIQUE_ID: controller_unique_id,
                     },
                 )
@@ -144,7 +144,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class OptionsFlowHandler(config_entries.OptionsFlow):
     """Handle a option flow for Control4."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 

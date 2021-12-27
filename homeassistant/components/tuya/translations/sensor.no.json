@@ -1,0 +1,15 @@
+{
+    "state": {
+        "tuya__status": {
+            "boiling_temp": "Kokende temperatur",
+            "cooling": "Kj\u00f8ling",
+            "heating": "Oppvarming",
+            "heating_temp": "Oppvarmingstemperatur",
+            "reserve_1": "Reserver 1",
+            "reserve_2": "Reserver 2",
+            "reserve_3": "Reserver 3",
+            "standby": "Avventer",
+            "warm": "Varmebevaring"
+        }
+    }
+}

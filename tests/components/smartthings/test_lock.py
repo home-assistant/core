@@ -9,6 +9,7 @@ from pysmartthings.device import Status
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.smartthings.const import DOMAIN, SIGNAL_SMARTTHINGS_UPDATE
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -31,6 +32,8 @@ async def test_entity_and_device_attributes(hass, device_factory):
 
     entry = device_registry.async_get_device({(DOMAIN, device.device_id)})
     assert entry
+    assert entry.configuration_url == "https://account.smartthings.com"
+    assert entry.identifiers == {(DOMAIN, device.device_id)}
     assert entry.name == device.label
     assert entry.model == device.device_type_name
     assert entry.manufacturer == "Unavailable"
@@ -103,6 +106,7 @@ async def test_unload_config_entry(hass, device_factory):
     # Arrange
     device = device_factory("Lock_1", [Capability.lock], {Attribute.lock: "locked"})
     config_entry = await setup_platform(hass, LOCK_DOMAIN, devices=[device])
+    config_entry.state = ConfigEntryState.LOADED
     # Act
     await hass.config_entries.async_forward_entry_unload(config_entry, "lock")
     # Assert

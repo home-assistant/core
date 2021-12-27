@@ -72,10 +72,10 @@ async def test_heartbeat_unload(hass):
     """Test that the heartbeat is deactivated when the last config entry is removed."""
     device = get_device("Office")
 
-    _, mock_entry = await device.setup_entry(hass)
+    mock_setup = await device.setup_entry(hass)
     await hass.async_block_till_done()
 
-    await hass.config_entries.async_remove(mock_entry.entry_id)
+    await hass.config_entries.async_remove(mock_setup.entry.entry_id)
     await hass.async_block_till_done()
 
     with patch(DEVICE_PING) as mock_ping:
@@ -91,11 +91,11 @@ async def test_heartbeat_do_not_unload(hass):
     device_a = get_device("Office")
     device_b = get_device("Bedroom")
 
-    _, mock_entry_a = await device_a.setup_entry(hass)
+    mock_setup = await device_a.setup_entry(hass)
     await device_b.setup_entry(hass)
     await hass.async_block_till_done()
 
-    await hass.config_entries.async_remove(mock_entry_a.entry_id)
+    await hass.config_entries.async_remove(mock_setup.entry.entry_id)
     await hass.async_block_till_done()
 
     with patch(DEVICE_PING) as mock_ping:

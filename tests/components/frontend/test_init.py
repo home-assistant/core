@@ -1,5 +1,6 @@
 """The tests for Home Assistant frontend."""
 from datetime import timedelta
+from http import HTTPStatus
 import re
 from unittest.mock import patch
 
@@ -16,7 +17,6 @@ from homeassistant.components.frontend import (
     THEMES_STORAGE_KEY,
 )
 from homeassistant.components.websocket_api.const import TYPE_RESULT
-from homeassistant.const import HTTP_NOT_FOUND, HTTP_OK
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
@@ -26,6 +26,25 @@ from tests.common import async_capture_events, async_fire_time_changed
 MOCK_THEMES = {
     "happy": {"primary-color": "red", "app-header-background-color": "blue"},
     "dark": {"primary-color": "black"},
+    "light_only": {
+        "primary-color": "blue",
+        "modes": {
+            "light": {"secondary-color": "black"},
+        },
+    },
+    "dark_only": {
+        "primary-color": "blue",
+        "modes": {
+            "dark": {"secondary-color": "white"},
+        },
+    },
+    "light_and_dark": {
+        "primary-color": "blue",
+        "modes": {
+            "light": {"secondary-color": "black"},
+            "dark": {"secondary-color": "white"},
+        },
+    },
 }
 
 CONFIG_THEMES = {DOMAIN: {CONF_THEMES: MOCK_THEMES}}
@@ -58,6 +77,12 @@ async def frontend_themes(hass):
         "frontend",
         CONFIG_THEMES,
     )
+
+
+@pytest.fixture
+def aiohttp_client(loop, aiohttp_client, socket_enabled):
+    """Return aiohttp_client and allow opening sockets."""
+    return aiohttp_client
 
 
 @pytest.fixture
@@ -131,7 +156,7 @@ async def test_dont_cache_service_worker(mock_http_client):
 async def test_404(mock_http_client):
     """Test for HTTP 404 error."""
     resp = await mock_http_client.get("/not-existing")
-    assert resp.status == HTTP_NOT_FOUND
+    assert resp.status == HTTPStatus.NOT_FOUND
 
 
 async def test_we_cannot_POST_to_root(mock_http_client):
@@ -279,6 +304,15 @@ async def test_themes_set_dark_theme(hass, themes_ws_client):
 
     assert msg["result"]["default_dark_theme"] is None
 
+    await hass.services.async_call(
+        DOMAIN, "set_theme", {"name": "light_and_dark", "mode": "dark"}, blocking=True
+    )
+
+    await themes_ws_client.send_json({"id": 8, "type": "frontend/get_themes"})
+    msg = await themes_ws_client.receive_json()
+
+    assert msg["result"]["default_dark_theme"] == "light_and_dark"
+
 
 async def test_themes_set_dark_theme_wrong_name(hass, frontend, themes_ws_client):
     """Test frontend.set_theme service called with mode dark and wrong name."""
@@ -331,7 +365,7 @@ async def test_get_panels(hass, hass_ws_client, mock_http_client):
     events = async_capture_events(hass, EVENT_PANELS_UPDATED)
 
     resp = await mock_http_client.get("/map")
-    assert resp.status == HTTP_NOT_FOUND
+    assert resp.status == HTTPStatus.NOT_FOUND
 
     hass.components.frontend.async_register_built_in_panel(
         "map", "Map", "mdi:tooltip-account", require_admin=True
@@ -359,7 +393,7 @@ async def test_get_panels(hass, hass_ws_client, mock_http_client):
     hass.components.frontend.async_remove_panel("map")
 
     resp = await mock_http_client.get("/map")
-    assert resp.status == HTTP_NOT_FOUND
+    assert resp.status == HTTPStatus.NOT_FOUND
 
     assert len(events) == 2
 
@@ -475,7 +509,7 @@ async def test_static_paths(hass, mock_http_client):
 async def test_manifest_json(hass, frontend_themes, mock_http_client):
     """Test for fetching manifest.json."""
     resp = await mock_http_client.get("/manifest.json")
-    assert resp.status == HTTP_OK
+    assert resp.status == HTTPStatus.OK
     assert "cache-control" not in resp.headers
 
     json = await resp.json()
@@ -487,7 +521,7 @@ async def test_manifest_json(hass, frontend_themes, mock_http_client):
     await hass.async_block_till_done()
 
     resp = await mock_http_client.get("/manifest.json")
-    assert resp.status == HTTP_OK
+    assert resp.status == HTTPStatus.OK
     assert "cache-control" not in resp.headers
 
     json = await resp.json()

@@ -7,7 +7,7 @@ import homeassistant.components.climate as climate
 import homeassistant.components.cover as cover
 from homeassistant.components.homekit.accessories import TYPES, get_accessory
 from homeassistant.components.homekit.const import (
-    ATTR_INTERGRATION,
+    ATTR_INTEGRATION,
     CONF_FEATURE_LIST,
     FEATURE_ON_OFF,
     TYPE_FAUCET,
@@ -18,6 +18,7 @@ from homeassistant.components.homekit.const import (
     TYPE_VALVE,
 )
 import homeassistant.components.media_player.const as media_player_c
+from homeassistant.components.sensor import SensorDeviceClass
 import homeassistant.components.vacuum as vacuum
 from homeassistant.const import (
     ATTR_CODE,
@@ -26,10 +27,9 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
     CONF_TYPE,
-    DEVICE_CLASS_CO,
-    DEVICE_CLASS_CO2,
     LIGHT_LUX,
     PERCENTAGE,
+    STATE_UNKNOWN,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
@@ -66,7 +66,7 @@ def test_customize_options(config, name):
     """Test with customized options."""
     mock_type = Mock()
     conf = config.copy()
-    conf[ATTR_INTERGRATION] = "platform_name"
+    conf[ATTR_INTEGRATION] = "platform_name"
     with patch.dict(TYPES, {"Light": mock_type}):
         entity_state = State("light.demo", "on")
         get_accessory(None, None, entity_state, 2, conf)
@@ -126,14 +126,40 @@ def test_types(type_name, entity_id, state, attrs, config):
             "Window",
             "cover.set_position",
             "open",
-            {ATTR_DEVICE_CLASS: "window", ATTR_SUPPORTED_FEATURES: 4},
+            {
+                ATTR_DEVICE_CLASS: "window",
+                ATTR_SUPPORTED_FEATURES: cover.SUPPORT_SET_POSITION,
+            },
         ),
-        ("WindowCovering", "cover.set_position", "open", {ATTR_SUPPORTED_FEATURES: 4}),
+        (
+            "WindowCovering",
+            "cover.set_position",
+            "open",
+            {ATTR_SUPPORTED_FEATURES: cover.SUPPORT_SET_POSITION},
+        ),
+        (
+            "WindowCovering",
+            "cover.tilt",
+            "open",
+            {ATTR_SUPPORTED_FEATURES: cover.SUPPORT_SET_TILT_POSITION},
+        ),
         (
             "WindowCoveringBasic",
             "cover.open_window",
             "open",
-            {ATTR_SUPPORTED_FEATURES: 3},
+            {ATTR_SUPPORTED_FEATURES: (cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE)},
+        ),
+        (
+            "WindowCoveringBasic",
+            "cover.open_window",
+            "open",
+            {
+                ATTR_SUPPORTED_FEATURES: (
+                    cover.SUPPORT_OPEN
+                    | cover.SUPPORT_CLOSE
+                    | cover.SUPPORT_SET_TILT_POSITION
+                )
+            },
         ),
     ],
 )
@@ -192,14 +218,14 @@ def test_type_media_player(type_name, entity_id, state, attrs, config):
             "CarbonMonoxideSensor",
             "sensor.co",
             "2",
-            {ATTR_DEVICE_CLASS: DEVICE_CLASS_CO},
+            {ATTR_DEVICE_CLASS: SensorDeviceClass.CO},
         ),
         ("CarbonDioxideSensor", "sensor.airmeter_co2", "500", {}),
         (
             "CarbonDioxideSensor",
             "sensor.co2",
             "500",
-            {ATTR_DEVICE_CLASS: DEVICE_CLASS_CO2},
+            {ATTR_DEVICE_CLASS: SensorDeviceClass.CO2},
         ),
         (
             "HumiditySensor",
@@ -244,10 +270,14 @@ def test_type_sensors(type_name, entity_id, state, attrs):
     [
         ("Outlet", "switch.test", "on", {}, {CONF_TYPE: TYPE_OUTLET}),
         ("Switch", "automation.test", "on", {}, {}),
+        ("Switch", "button.test", STATE_UNKNOWN, {}, {}),
         ("Switch", "input_boolean.test", "on", {}, {}),
+        ("Switch", "input_button.test", STATE_UNKNOWN, {}, {}),
         ("Switch", "remote.test", "on", {}, {}),
         ("Switch", "scene.test", "on", {}, {}),
         ("Switch", "script.test", "on", {}, {}),
+        ("SelectSwitch", "input_select.test", "option1", {}, {}),
+        ("SelectSwitch", "select.test", "option1", {}, {}),
         ("Switch", "switch.test", "on", {}, {}),
         ("Switch", "switch.test", "on", {}, {CONF_TYPE: TYPE_SWITCH}),
         ("Valve", "switch.test", "on", {}, {CONF_TYPE: TYPE_FAUCET}),

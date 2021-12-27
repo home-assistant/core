@@ -1,4 +1,5 @@
 """Test Z-Wave sensor."""
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.zwave import const, sensor
 import homeassistant.const
 
@@ -67,11 +68,13 @@ def test_get_device_detects_battery_sensor(mock_openzwave):
 
     device = sensor.get_device(node=node, values=values, node_config={})
     assert isinstance(device, sensor.ZWaveBatterySensor)
-    assert device.device_class == homeassistant.const.DEVICE_CLASS_BATTERY
+    assert device.device_class is SensorDeviceClass.BATTERY
 
 
-def test_multilevelsensor_value_changed_temp_fahrenheit(mock_openzwave):
+def test_multilevelsensor_value_changed_temp_fahrenheit(hass, mock_openzwave):
     """Test value changed for Z-Wave multilevel sensor for temperature."""
+    hass.config.units.temperature_unit = homeassistant.const.TEMP_FAHRENHEIT
+
     node = MockNode(
         command_classes=[
             const.COMMAND_CLASS_SENSOR_MULTILEVEL,
@@ -82,15 +85,18 @@ def test_multilevelsensor_value_changed_temp_fahrenheit(mock_openzwave):
     values = MockEntityValues(primary=value)
 
     device = sensor.get_device(node=node, values=values, node_config={})
+    device.hass = hass
     assert device.state == 191.0
     assert device.unit_of_measurement == homeassistant.const.TEMP_FAHRENHEIT
+    assert device.device_class is SensorDeviceClass.TEMPERATURE
     value.data = 197.95555
     value_changed(value)
     assert device.state == 198.0
 
 
-def test_multilevelsensor_value_changed_temp_celsius(mock_openzwave):
+def test_multilevelsensor_value_changed_temp_celsius(hass, mock_openzwave):
     """Test value changed for Z-Wave multilevel sensor for temperature."""
+    hass.config.units.temperature_unit = homeassistant.const.TEMP_CELSIUS
     node = MockNode(
         command_classes=[
             const.COMMAND_CLASS_SENSOR_MULTILEVEL,
@@ -101,14 +107,16 @@ def test_multilevelsensor_value_changed_temp_celsius(mock_openzwave):
     values = MockEntityValues(primary=value)
 
     device = sensor.get_device(node=node, values=values, node_config={})
+    device.hass = hass
     assert device.state == 38.9
     assert device.unit_of_measurement == homeassistant.const.TEMP_CELSIUS
+    assert device.device_class is SensorDeviceClass.TEMPERATURE
     value.data = 37.95555
     value_changed(value)
     assert device.state == 38.0
 
 
-def test_multilevelsensor_value_changed_other_units(mock_openzwave):
+def test_multilevelsensor_value_changed_other_units(hass, mock_openzwave):
     """Test value changed for Z-Wave multilevel sensor for other units."""
     node = MockNode(
         command_classes=[
@@ -122,14 +130,16 @@ def test_multilevelsensor_value_changed_other_units(mock_openzwave):
     values = MockEntityValues(primary=value)
 
     device = sensor.get_device(node=node, values=values, node_config={})
+    device.hass = hass
     assert device.state == 190.96
     assert device.unit_of_measurement == homeassistant.const.ENERGY_KILO_WATT_HOUR
+    assert device.device_class is None
     value.data = 197.95555
     value_changed(value)
     assert device.state == 197.96
 
 
-def test_multilevelsensor_value_changed_integer(mock_openzwave):
+def test_multilevelsensor_value_changed_integer(hass, mock_openzwave):
     """Test value changed for Z-Wave multilevel sensor for other units."""
     node = MockNode(
         command_classes=[
@@ -141,14 +151,16 @@ def test_multilevelsensor_value_changed_integer(mock_openzwave):
     values = MockEntityValues(primary=value)
 
     device = sensor.get_device(node=node, values=values, node_config={})
+    device.hass = hass
     assert device.state == 5
     assert device.unit_of_measurement == "counts"
+    assert device.device_class is None
     value.data = 6
     value_changed(value)
     assert device.state == 6
 
 
-def test_alarm_sensor_value_changed(mock_openzwave):
+def test_alarm_sensor_value_changed(hass, mock_openzwave):
     """Test value changed for Z-Wave sensor."""
     node = MockNode(
         command_classes=[const.COMMAND_CLASS_ALARM, const.COMMAND_CLASS_SENSOR_ALARM]
@@ -157,8 +169,10 @@ def test_alarm_sensor_value_changed(mock_openzwave):
     values = MockEntityValues(primary=value)
 
     device = sensor.get_device(node=node, values=values, node_config={})
+    device.hass = hass
     assert device.state == 12.34
     assert device.unit_of_measurement == homeassistant.const.PERCENTAGE
+    assert device.device_class is None
     value.data = 45.67
     value_changed(value)
     assert device.state == 45.67

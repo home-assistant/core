@@ -2,17 +2,14 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from collections.abc import Callable
 from contextlib import suppress
+from dataclasses import dataclass, field
 from datetime import timedelta
-from functools import partial
-import ipaddress
 import logging
 import time
-from typing import Any, Callable, cast
-from urllib.parse import urlparse
+from typing import Any, NamedTuple, cast
 
-import attr
-from getmac import get_mac_address
 from huawei_lte_api.AuthorizedConnection import AuthorizedConnection
 from huawei_lte_api.Client import Client
 from huawei_lte_api.Connection import Connection
@@ -25,28 +22,28 @@ from requests.exceptions import Timeout
 from url_normalize import url_normalize
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.device_tracker.const import (
-    DOMAIN as DEVICE_TRACKER_DOMAIN,
-)
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
+    ATTR_HW_VERSION,
+    ATTR_MODEL,
+    ATTR_SW_VERSION,
+    CONF_MAC,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_RECIPIENT,
     CONF_URL,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     discovery,
+    entity_registry,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo, Entity
@@ -56,6 +53,8 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     ADMIN_SERVICES,
     ALL_KEYS,
+    ATTR_UNIQUE_ID,
+    CONF_UNAUTHENTICATED_MODE,
     CONNECTION_TIMEOUT,
     DEFAULT_DEVICE_NAME,
     DEFAULT_NOTIFY_SERVICE_NAME,
@@ -81,6 +80,7 @@ from .const import (
     SERVICE_SUSPEND_INTEGRATION,
     UPDATE_SIGNAL,
 )
+from .utils import get_device_macs
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -119,35 +119,36 @@ CONFIG_SCHEMA = vol.Schema(
 
 SERVICE_SCHEMA = vol.Schema({vol.Optional(CONF_URL): cv.url})
 
-CONFIG_ENTRY_PLATFORMS = (
-    BINARY_SENSOR_DOMAIN,
-    DEVICE_TRACKER_DOMAIN,
-    SENSOR_DOMAIN,
-    SWITCH_DOMAIN,
-)
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.DEVICE_TRACKER,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 
-@attr.s
+@dataclass
 class Router:
     """Class for router state."""
 
-    config_entry: ConfigEntry = attr.ib()
-    connection: Connection = attr.ib()
-    url: str = attr.ib()
-    mac: str = attr.ib()
-    signal_update: CALLBACK_TYPE = attr.ib()
+    hass: HomeAssistant
+    config_entry: ConfigEntry
+    connection: Connection
+    url: str
 
-    data: dict[str, Any] = attr.ib(init=False, factory=dict)
-    subscriptions: dict[str, set[str]] = attr.ib(
+    data: dict[str, Any] = field(default_factory=dict, init=False)
+    subscriptions: dict[str, set[str]] = field(
+        default_factory=lambda: defaultdict(
+            set, ((x, {"initial_scan"}) for x in ALL_KEYS)
+        ),
         init=False,
-        factory=lambda: defaultdict(set, ((x, {"initial_scan"}) for x in ALL_KEYS)),
     )
-    inflight_gets: set[str] = attr.ib(init=False, factory=set)
-    client: Client
-    suspended = attr.ib(init=False, default=False)
-    notify_last_attempt: float = attr.ib(init=False, default=-1)
+    inflight_gets: set[str] = field(default_factory=set, init=False)
+    client: Client = field(init=False)
+    suspended: bool = field(default=False, init=False)
+    notify_last_attempt: float = field(default=-1, init=False)
 
-    def __attrs_post_init__(self) -> None:
+    def __post_init__(self) -> None:
         """Set up internal state on init."""
         self.client = Client(self.connection)
 
@@ -165,15 +166,15 @@ class Router:
     @property
     def device_identifiers(self) -> set[tuple[str, str]]:
         """Get router identifiers for device registry."""
-        try:
-            return {(DOMAIN, self.data[KEY_DEVICE_INFORMATION]["SerialNumber"])}
-        except (KeyError, TypeError):
-            return set()
+        assert self.config_entry.unique_id is not None
+        return {(DOMAIN, self.config_entry.unique_id)}
 
     @property
     def device_connections(self) -> set[tuple[str, str]]:
         """Get router connections for device registry."""
-        return {(dr.CONNECTION_NETWORK_MAC, self.mac)} if self.mac else set()
+        return {
+            (dr.CONNECTION_NETWORK_MAC, x) for x in self.config_entry.data[CONF_MAC]
+        }
 
     def _get_data(self, key: str, func: Callable[[], Any]) -> None:
         if not self.subscriptions.get(key):
@@ -185,11 +186,6 @@ class Router:
         _LOGGER.debug("Getting %s for subscribers %s", key, self.subscriptions[key])
         try:
             self.data[key] = func()
-        except ResponseErrorNotSupportedException:
-            _LOGGER.info(
-                "%s not supported by device, excluding from future updates", key
-            )
-            self.subscriptions.pop(key)
         except ResponseErrorLoginRequiredException:
             if isinstance(self.connection, AuthorizedConnection):
                 _LOGGER.debug("Trying to authorize again")
@@ -206,7 +202,13 @@ class Router:
             )
             self.subscriptions.pop(key)
         except ResponseErrorException as exc:
-            if exc.code != -1:
+            if not isinstance(
+                exc, ResponseErrorNotSupportedException
+            ) and exc.code not in (
+                # additional codes treated as unusupported
+                -1,
+                100006,
+            ):
                 raise
             _LOGGER.info(
                 "%s apparently not supported by device, excluding from future updates",
@@ -271,7 +273,7 @@ class Router:
             KEY_WLAN_WIFI_FEATURE_SWITCH, self.client.wlan.wifi_feature_switch
         )
 
-        self.signal_update()
+        dispatcher_send(self.hass, UPDATE_SIGNAL, self.config_entry.unique_id)
 
     def logout(self) -> None:
         """Log out router session."""
@@ -294,131 +296,167 @@ class Router:
         self.logout()
 
 
-@attr.s
-class HuaweiLteData:
+class HuaweiLteData(NamedTuple):
     """Shared state."""
 
-    hass_config: dict = attr.ib()
+    hass_config: ConfigType
     # Our YAML config, keyed by router URL
-    config: dict[str, dict[str, Any]] = attr.ib()
-    routers: dict[str, Router] = attr.ib(init=False, factory=dict)
+    config: dict[str, dict[str, Any]]
+    routers: dict[str, Router]
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(  # noqa: C901
+    hass: HomeAssistant, entry: ConfigEntry
+) -> bool:
     """Set up Huawei LTE component from config entry."""
-    url = config_entry.data[CONF_URL]
+    url = entry.data[CONF_URL]
 
     # Override settings from YAML config, but only if they're changed in it
     # Old values are stored as *_from_yaml in the config entry
-    yaml_config = hass.data[DOMAIN].config.get(url)
-    if yaml_config:
+    if yaml_config := hass.data[DOMAIN].config.get(url):
         # Config values
         new_data = {}
         for key in CONF_USERNAME, CONF_PASSWORD:
             if key in yaml_config:
                 value = yaml_config[key]
-                if value != config_entry.data.get(f"{key}_from_yaml"):
+                if value != entry.data.get(f"{key}_from_yaml"):
                     new_data[f"{key}_from_yaml"] = value
                     new_data[key] = value
         # Options
         new_options = {}
         yaml_recipient = yaml_config.get(NOTIFY_DOMAIN, {}).get(CONF_RECIPIENT)
-        if yaml_recipient is not None and yaml_recipient != config_entry.options.get(
+        if yaml_recipient is not None and yaml_recipient != entry.options.get(
             f"{CONF_RECIPIENT}_from_yaml"
         ):
             new_options[f"{CONF_RECIPIENT}_from_yaml"] = yaml_recipient
             new_options[CONF_RECIPIENT] = yaml_recipient
         yaml_notify_name = yaml_config.get(NOTIFY_DOMAIN, {}).get(CONF_NAME)
-        if (
-            yaml_notify_name is not None
-            and yaml_notify_name != config_entry.options.get(f"{CONF_NAME}_from_yaml")
+        if yaml_notify_name is not None and yaml_notify_name != entry.options.get(
+            f"{CONF_NAME}_from_yaml"
         ):
             new_options[f"{CONF_NAME}_from_yaml"] = yaml_notify_name
             new_options[CONF_NAME] = yaml_notify_name
         # Update entry if overrides were found
         if new_data or new_options:
             hass.config_entries.async_update_entry(
-                config_entry,
-                data={**config_entry.data, **new_data},
-                options={**config_entry.options, **new_options},
+                entry,
+                data={**entry.data, **new_data},
+                options={**entry.options, **new_options},
             )
-
-    # Get MAC address for use in unique ids. Being able to use something
-    # from the API would be nice, but all of that seems to be available only
-    # through authenticated calls (e.g. device_information.SerialNumber), and
-    # we want this available and the same when unauthenticated too.
-    host = urlparse(url).hostname
-    try:
-        if ipaddress.ip_address(host).version == 6:
-            mode = "ip6"
-        else:
-            mode = "ip"
-    except ValueError:
-        mode = "hostname"
-    mac = await hass.async_add_executor_job(partial(get_mac_address, **{mode: host}))
 
     def get_connection() -> Connection:
-        """
-        Set up a connection.
-
-        Authorized one if username/pass specified (even if empty), unauthorized one otherwise.
-        """
-        username = config_entry.data.get(CONF_USERNAME)
-        password = config_entry.data.get(CONF_PASSWORD)
-        if username or password:
-            connection: Connection = AuthorizedConnection(
+        """Set up a connection."""
+        if entry.options.get(CONF_UNAUTHENTICATED_MODE):
+            _LOGGER.debug("Connecting in unauthenticated mode, reduced feature set")
+            connection = Connection(url, timeout=CONNECTION_TIMEOUT)
+        else:
+            _LOGGER.debug("Connecting in authenticated mode, full feature set")
+            username = entry.data.get(CONF_USERNAME) or ""
+            password = entry.data.get(CONF_PASSWORD) or ""
+            connection = AuthorizedConnection(
                 url, username=username, password=password, timeout=CONNECTION_TIMEOUT
             )
-        else:
-            connection = Connection(url, timeout=CONNECTION_TIMEOUT)
         return connection
-
-    def signal_update() -> None:
-        """Signal updates to data."""
-        dispatcher_send(hass, UPDATE_SIGNAL, url)
 
     try:
         connection = await hass.async_add_executor_job(get_connection)
     except Timeout as ex:
         raise ConfigEntryNotReady from ex
 
-    # Set up router and store reference to it
-    router = Router(config_entry, connection, url, mac, signal_update)
-    hass.data[DOMAIN].routers[url] = router
+    # Set up router
+    router = Router(hass, entry, connection, url)
 
     # Do initial data update
     await hass.async_add_executor_job(router.update)
 
+    # Check that we found required information
+    router_info = router.data.get(KEY_DEVICE_INFORMATION)
+    if not entry.unique_id:
+        # Transitional from < 2021.8: update None config entry and entity unique ids
+        if router_info and (serial_number := router_info.get("SerialNumber")):
+            hass.config_entries.async_update_entry(entry, unique_id=serial_number)
+            ent_reg = entity_registry.async_get(hass)
+            for entity_entry in entity_registry.async_entries_for_config_entry(
+                ent_reg, entry.entry_id
+            ):
+                if not entity_entry.unique_id.startswith("None-"):
+                    continue
+                new_unique_id = (
+                    f"{serial_number}-{entity_entry.unique_id.split('-', 1)[1]}"
+                )
+                ent_reg.async_update_entity(
+                    entity_entry.entity_id, new_unique_id=new_unique_id
+                )
+        else:
+            await hass.async_add_executor_job(router.cleanup)
+            msg = (
+                "Could not resolve serial number to use as unique id for router at %s"
+                ", setup failed"
+            )
+            if not entry.data.get(CONF_PASSWORD):
+                msg += (
+                    ". Try setting up credentials for the router for one startup, "
+                    "unauthenticated mode can be enabled after that in integration "
+                    "settings"
+                )
+            _LOGGER.error(msg, url)
+            return False
+
+    # Store reference to router
+    hass.data[DOMAIN].routers[entry.unique_id] = router
+
     # Clear all subscriptions, enabled entities will push back theirs
     router.subscriptions.clear()
 
+    # Update device MAC addresses on record. These can change due to toggling between
+    # authenticated and unauthenticated modes, or likely also when enabling/disabling
+    # SSIDs in the router config.
+    try:
+        wlan_settings = await hass.async_add_executor_job(
+            router.client.wlan.multi_basic_settings
+        )
+    except Exception:  # pylint: disable=broad-except
+        # Assume not supported, or authentication required but in unauthenticated mode
+        wlan_settings = {}
+    macs = get_device_macs(router_info or {}, wlan_settings)
+    # Be careful not to overwrite a previous, more complete set with a partial one
+    if macs and (not entry.data[CONF_MAC] or (router_info and wlan_settings)):
+        new_data = dict(entry.data)
+        new_data[CONF_MAC] = macs
+        hass.config_entries.async_update_entry(entry, data=new_data)
+
     # Set up device registry
     if router.device_identifiers or router.device_connections:
-        device_data = {}
-        sw_version = None
-        if router.data.get(KEY_DEVICE_INFORMATION):
-            device_info = router.data[KEY_DEVICE_INFORMATION]
-            sw_version = device_info.get("SoftwareVersion")
-            if device_info.get("DeviceName"):
-                device_data["model"] = device_info["DeviceName"]
-        if not sw_version and router.data.get(KEY_DEVICE_BASIC_INFORMATION):
-            sw_version = router.data[KEY_DEVICE_BASIC_INFORMATION].get(
-                "SoftwareVersion"
-            )
-        if sw_version:
-            device_data["sw_version"] = sw_version
-        device_registry = await dr.async_get_registry(hass)
-        device_registry.async_get_or_create(
-            config_entry_id=config_entry.entry_id,
+        device_info = DeviceInfo(
+            configuration_url=router.url,
             connections=router.device_connections,
             identifiers=router.device_identifiers,
             name=router.device_name,
             manufacturer="Huawei",
-            **device_data,
+        )
+        hw_version = None
+        sw_version = None
+        if router_info:
+            hw_version = router_info.get("HardwareVersion")
+            sw_version = router_info.get("SoftwareVersion")
+            if router_info.get("DeviceName"):
+                device_info[ATTR_MODEL] = router_info["DeviceName"]
+        if not sw_version and router.data.get(KEY_DEVICE_BASIC_INFORMATION):
+            sw_version = router.data[KEY_DEVICE_BASIC_INFORMATION].get(
+                "SoftwareVersion"
+            )
+        if hw_version:
+            device_info[ATTR_HW_VERSION] = hw_version
+        if sw_version:
+            device_info[ATTR_SW_VERSION] = sw_version
+        device_registry = dr.async_get(hass)
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            **device_info,
         )
 
     # Forward config entry setup to platforms
-    hass.config_entries.async_setup_platforms(config_entry, CONFIG_ENTRY_PLATFORMS)
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     # Notify doesn't support config entry setup yet, load with discovery for now
     await discovery.async_load_platform(
@@ -426,9 +464,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         NOTIFY_DOMAIN,
         DOMAIN,
         {
-            CONF_URL: url,
-            CONF_NAME: config_entry.options.get(CONF_NAME, DEFAULT_NOTIFY_SERVICE_NAME),
-            CONF_RECIPIENT: config_entry.options.get(CONF_RECIPIENT),
+            ATTR_UNIQUE_ID: entry.unique_id,
+            CONF_NAME: entry.options.get(CONF_NAME, DEFAULT_NOTIFY_SERVICE_NAME),
+            CONF_RECIPIENT: entry.options.get(CONF_RECIPIENT),
         },
         hass.data[DOMAIN].hass_config,
     )
@@ -442,12 +480,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         router.update()
 
     # Set up periodic update
-    config_entry.async_on_unload(
+    entry.async_on_unload(
         async_track_time_interval(hass, _update_router, SCAN_INTERVAL)
     )
 
     # Clean up at end
-    config_entry.async_on_unload(
+    entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, router.cleanup)
     )
 
@@ -458,12 +496,10 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     """Unload config entry."""
 
     # Forward config entry unload to platforms
-    await hass.config_entries.async_unload_platforms(
-        config_entry, CONFIG_ENTRY_PLATFORMS
-    )
+    await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
     # Forget about the router and invoke its cleanup
-    router = hass.data[DOMAIN].routers.pop(config_entry.data[CONF_URL])
+    router = hass.data[DOMAIN].routers.pop(config_entry.unique_id)
     await hass.async_add_executor_job(router.cleanup)
 
     return True
@@ -479,15 +515,24 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # Arrange our YAML config to dict with normalized URLs as keys
     domain_config: dict[str, dict[str, Any]] = {}
     if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = HuaweiLteData(hass_config=config, config=domain_config)
+        hass.data[DOMAIN] = HuaweiLteData(
+            hass_config=config, config=domain_config, routers={}
+        )
     for router_config in config.get(DOMAIN, []):
         domain_config[url_normalize(router_config.pop(CONF_URL))] = router_config
 
     def service_handler(service: ServiceCall) -> None:
-        """Apply a service."""
+        """
+        Apply a service.
+
+        We key this using the router URL instead of its unique id / serial number,
+        because the latter is not available anywhere in the UI.
+        """
         routers = hass.data[DOMAIN].routers
         if url := service.data.get(CONF_URL):
-            router = routers.get(url)
+            router = next(
+                (router for router in routers.values() if router.url == url), None
+            )
         elif not routers:
             _LOGGER.error("%s: no routers configured", service.service)
             return
@@ -497,7 +542,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             _LOGGER.error(
                 "%s: more than one router configured, must specify one of URLs %s",
                 service.service,
-                sorted(routers),
+                sorted(router.url for router in routers.values()),
             )
             return
         if not router:
@@ -561,17 +606,23 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         config_entry.version = 2
         hass.config_entries.async_update_entry(config_entry, options=options)
         _LOGGER.info("Migrated config entry to version %d", config_entry.version)
+    if config_entry.version == 2:
+        config_entry.version = 3
+        data = dict(config_entry.data)
+        data[CONF_MAC] = []
+        hass.config_entries.async_update_entry(config_entry, data=data)
+        _LOGGER.info("Migrated config entry to version %d", config_entry.version)
     return True
 
 
-@attr.s
+@dataclass
 class HuaweiLteBaseEntity(Entity):
     """Huawei LTE entity base class."""
 
-    router: Router = attr.ib()
+    router: Router
 
-    _available: bool = attr.ib(init=False, default=True)
-    _unsub_handlers: list[Callable] = attr.ib(init=False, factory=list)
+    _available: bool = field(default=True, init=False)
+    _unsub_handlers: list[Callable] = field(default_factory=list, init=False)
 
     @property
     def _entity_name(self) -> str:
@@ -585,7 +636,7 @@ class HuaweiLteBaseEntity(Entity):
     @property
     def unique_id(self) -> str:
         """Return unique ID for entity."""
-        return f"{self.router.mac}-{self._device_unique_id}"
+        return f"{self.router.config_entry.unique_id}-{self._device_unique_id}"
 
     @property
     def name(self) -> str:
@@ -605,10 +656,10 @@ class HuaweiLteBaseEntity(Entity):
     @property
     def device_info(self) -> DeviceInfo:
         """Get info for matching with parent router."""
-        return {
-            "identifiers": self.router.device_identifiers,
-            "connections": self.router.device_connections,
-        }
+        return DeviceInfo(
+            connections=self.router.device_connections,
+            identifiers=self.router.device_identifiers,
+        )
 
     async def async_update(self) -> None:
         """Update state."""
@@ -620,9 +671,9 @@ class HuaweiLteBaseEntity(Entity):
             async_dispatcher_connect(self.hass, UPDATE_SIGNAL, self._async_maybe_update)
         )
 
-    async def _async_maybe_update(self, url: str) -> None:
+    async def _async_maybe_update(self, config_entry_unique_id: str) -> None:
         """Update state if the update signal comes from our router."""
-        if url == self.router.url:
+        if config_entry_unique_id == self.router.config_entry.unique_id:
             self.async_schedule_update_ha_state(True)
 
     async def async_will_remove_from_hass(self) -> None:

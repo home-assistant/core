@@ -12,6 +12,7 @@
         },
         "error": {
             "authentication_error": "C\u00f3digo HomeKit incorrecto. Por favor, compru\u00e9belo e int\u00e9ntelo de nuevo.",
+            "insecure_setup_code": "El c\u00f3digo de configuraci\u00f3n solicitado es inseguro debido a su naturaleza trivial. Este accesorio no cumple con los requisitos b\u00e1sicos de seguridad.",
             "max_peers_error": "El dispositivo rechaz\u00f3 el emparejamiento ya que no tiene almacenamiento de emparejamientos libres.",
             "pairing_failed": "Se ha producido un error no controlado al intentar emparejarse con este dispositivo. Esto puede ser un fallo temporal o que tu dispositivo no est\u00e9 admitido en este momento.",
             "unable_to_pair": "No se ha podido emparejar, por favor int\u00e9ntelo de nuevo.",
@@ -29,6 +30,7 @@
             },
             "pair": {
                 "data": {
+                    "allow_insecure_setup_codes": "Permitir el emparejamiento con c\u00f3digos de configuraci\u00f3n inseguros.",
                     "pairing_code": "C\u00f3digo de vinculaci\u00f3n"
                 },
                 "description": "El controlador de HomeKit se comunica con {name} a trav\u00e9s de la red de \u00e1rea local usando una conexi\u00f3n encriptada segura sin un controlador HomeKit separado o iCloud. Introduce el c\u00f3digo de vinculaci\u00f3n de tu HomeKit (con el formato XXX-XX-XXX) para usar este accesorio. Este c\u00f3digo suele encontrarse en el propio dispositivo o en el embalaje.",

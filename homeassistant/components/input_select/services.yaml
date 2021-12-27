@@ -9,7 +9,6 @@ select_next:
       name: Cycle
       description: If the option should cycle from the last to the first.
       default: true
-      example: true
       selector:
         boolean:
 
@@ -39,7 +38,6 @@ select_previous:
       name: Cycle
       description: If the option should cycle from the first to the last.
       default: true
-      example: true
       selector:
         boolean:
 

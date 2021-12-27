@@ -145,7 +145,7 @@ class RMVDepartureSensor(SensorEntity):
         return self._state is not None
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the next departure time."""
         return self._state
 
@@ -171,7 +171,7 @@ class RMVDepartureSensor(SensorEntity):
         return self._icon
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         return TIME_MINUTES
 
@@ -262,7 +262,7 @@ class RMVDepartureData:
             elif journey["minutes"] < self._time_offset:
                 continue
 
-            for attr in ["direction", "departure_time", "product", "minutes"]:
+            for attr in ("direction", "departure_time", "product", "minutes"):
                 _nextdep[attr] = journey.get(attr, "")
 
             _nextdep["line"] = journey.get("number", "")

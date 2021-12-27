@@ -7,7 +7,6 @@ from homeassistant.components.google_travel_time.const import (
     CONF_DEPARTURE_TIME,
     CONF_DESTINATION,
     CONF_LANGUAGE,
-    CONF_OPTIONS,
     CONF_ORIGIN,
     CONF_TIME,
     CONF_TIME_TYPE,
@@ -197,8 +196,8 @@ async def test_options_flow_departure_time(hass, validate_config_entry, bypass_u
     }
 
 
-async def test_dupe_id(hass, validate_config_entry, bypass_setup):
-    """Test setting up the same entry twice fails."""
+async def test_dupe(hass, validate_config_entry, bypass_setup):
+    """Test setting up the same entry data twice is OK."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -233,67 +232,4 @@ async def test_dupe_id(hass, validate_config_entry, bypass_setup):
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result2["reason"] == "already_configured"
-
-
-async def test_import_flow(hass, validate_config_entry, bypass_update):
-    """Test import_flow."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data={
-            CONF_API_KEY: "api_key",
-            CONF_ORIGIN: "location1",
-            CONF_DESTINATION: "location2",
-            CONF_NAME: "test_name",
-            CONF_OPTIONS: {
-                CONF_MODE: "driving",
-                CONF_LANGUAGE: "en",
-                CONF_AVOID: "tolls",
-                CONF_UNITS: CONF_UNIT_SYSTEM_IMPERIAL,
-                CONF_ARRIVAL_TIME: "test",
-                CONF_TRAFFIC_MODEL: "best_guess",
-                CONF_TRANSIT_MODE: "train",
-                CONF_TRANSIT_ROUTING_PREFERENCE: "less_walking",
-            },
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "test_name"
-    assert result["data"] == {
-        CONF_API_KEY: "api_key",
-        CONF_ORIGIN: "location1",
-        CONF_DESTINATION: "location2",
-        CONF_NAME: "test_name",
-        CONF_OPTIONS: {
-            CONF_MODE: "driving",
-            CONF_LANGUAGE: "en",
-            CONF_AVOID: "tolls",
-            CONF_UNITS: CONF_UNIT_SYSTEM_IMPERIAL,
-            CONF_ARRIVAL_TIME: "test",
-            CONF_TRAFFIC_MODEL: "best_guess",
-            CONF_TRANSIT_MODE: "train",
-            CONF_TRANSIT_ROUTING_PREFERENCE: "less_walking",
-        },
-    }
-
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
-    assert entry.data == {
-        CONF_NAME: "test_name",
-        CONF_API_KEY: "api_key",
-        CONF_ORIGIN: "location1",
-        CONF_DESTINATION: "location2",
-    }
-    assert entry.options == {
-        CONF_MODE: "driving",
-        CONF_LANGUAGE: "en",
-        CONF_AVOID: "tolls",
-        CONF_UNITS: CONF_UNIT_SYSTEM_IMPERIAL,
-        CONF_ARRIVAL_TIME: "test",
-        CONF_TRAFFIC_MODEL: "best_guess",
-        CONF_TRANSIT_MODE: "train",
-        CONF_TRANSIT_ROUTING_PREFERENCE: "less_walking",
-    }
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY

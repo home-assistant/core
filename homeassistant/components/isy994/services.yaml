@@ -20,7 +20,6 @@ send_raw_node_command:
     value:
       name: Value
       description: The integer value to be sent with the command.
-      example: 255
       selector:
         number:
           min: 0
@@ -35,7 +34,6 @@ send_raw_node_command:
     unit_of_measurement:
       name: Unit of measurement
       description: The ISY Unit of Measurement (UOM) to send with the command, if required.
-      example: 67
       selector:
         number:
           min: 0
@@ -53,7 +51,6 @@ send_node_command:
       name: Command
       description: The command to be sent to the device.
       required: true
-      example: "fast_on"
       selector:
         select:
           options:
@@ -150,7 +147,6 @@ set_on_level:
       name: Value
       description: integer value to set.
       required: true
-      example: 255
       selector:
         number:
           min: 0
@@ -167,7 +163,6 @@ set_ramp_rate:
       name: Value
       description: Integer value to set, see PyISY/ISY documentation for values to actual ramp times.
       required: true
-      example: 30
       selector:
         number:
           min: 0
@@ -195,7 +190,6 @@ set_variable:
     address:
       name: Address
       description: The address of the variable for which to set the value.
-      example: 5
       selector:
         number:
           min: 0
@@ -203,7 +197,6 @@ set_variable:
     type:
       name: Type
       description: The variable type, 1 = Integer, 2 = State.
-      example: 2
       selector:
         number:
           min: 1
@@ -217,7 +210,6 @@ set_variable:
     init:
       name: Init
       description: If True, the initial (init) value will be updated instead of the current value.
-      example: false
       default: false
       selector:
         boolean:
@@ -225,7 +217,6 @@ set_variable:
       name: Value
       description: The integer value to be sent.
       required: true
-      example: 255
       selector:
         number:
           min: 0
@@ -246,15 +237,18 @@ send_program_command:
       name: Address
       description: The address of the program to control (use either address or name).
       example: "04B1"
+      selector:
+        text:
     name:
       name: Name
       description: The name of the program to control (use either address or name).
       example: "My Program"
+      selector:
+        text:
     command:
       name: Command
       description: The ISY Program Command to be sent.
       required: true
-      example: "run"
       selector:
         select:
           options:
@@ -279,7 +273,6 @@ run_network_resource:
     address:
       name: Address
       description: The address of the network resource to execute (use either address or name).
-      example: 121
       selector:
         number:
           min: 0

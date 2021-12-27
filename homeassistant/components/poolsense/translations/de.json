@@ -12,8 +12,8 @@
                     "email": "E-Mail",
                     "password": "Passwort"
                 },
-                "description": "M\u00f6chten Sie mit der Einrichtung beginnen?",
-                "title": ""
+                "description": "M\u00f6chtest Du mit der Einrichtung beginnen?",
+                "title": "PoolSense"
             }
         }
     }

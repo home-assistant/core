@@ -38,9 +38,7 @@ command:
           domain: media_player
     command:
       name: Command
-      description: >-
-        Endpoint of the command. Known valid endpoints are listed in
-        https://github.com/TheRealLink/pylgtv/blob/master/pylgtv/endpoints.py
+      description: Endpoint of the command.
       required: true
       example: "system.launcher/open"
       selector:
@@ -63,7 +61,6 @@ select_sound_output:
       name: Entity
       description: Name(s) of the webostv entities to change sound output on.
       required: true
-      example: "media_player.living_room_tv"
       selector:
         entity:
           integration: webostv

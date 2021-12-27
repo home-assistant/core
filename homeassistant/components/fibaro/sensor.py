@@ -1,13 +1,9 @@
 """Support for Fibaro sensors."""
 from contextlib import suppress
 
-from homeassistant.components.sensor import DOMAIN, SensorEntity
+from homeassistant.components.sensor import DOMAIN, SensorDeviceClass, SensorEntity
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
-    DEVICE_CLASS_CO2,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_TEMPERATURE,
     LIGHT_LUX,
     PERCENTAGE,
     TEMP_CELSIUS,
@@ -21,7 +17,7 @@ SENSOR_TYPES = {
         "Temperature",
         None,
         None,
-        DEVICE_CLASS_TEMPERATURE,
+        SensorDeviceClass.TEMPERATURE,
     ],
     "com.fibaro.smokeSensor": [
         "Smoke",
@@ -34,15 +30,15 @@ SENSOR_TYPES = {
         CONCENTRATION_PARTS_PER_MILLION,
         None,
         None,
-        DEVICE_CLASS_CO2,
+        SensorDeviceClass.CO2,
     ],
     "com.fibaro.humiditySensor": [
         "Humidity",
         PERCENTAGE,
         None,
-        DEVICE_CLASS_HUMIDITY,
+        SensorDeviceClass.HUMIDITY,
     ],
-    "com.fibaro.lightSensor": ["Light", LIGHT_LUX, None, DEVICE_CLASS_ILLUMINANCE],
+    "com.fibaro.lightSensor": ["Light", LIGHT_LUX, None, SensorDeviceClass.ILLUMINANCE],
 }
 
 
@@ -85,12 +81,12 @@ class FibaroSensor(FibaroDevice, SensorEntity):
                     self._unit = self.fibaro_device.properties.unit
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self.current_value
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit
 

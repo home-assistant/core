@@ -5,10 +5,8 @@ import logging
 import async_timeout
 from pyatag import AtagException, AtagOne
 
-from homeassistant.components.climate import DOMAIN as CLIMATE
-from homeassistant.components.sensor import DOMAIN as SENSOR
-from homeassistant.components.water_heater import DOMAIN as WATER_HEATER
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import DeviceInfo
@@ -21,15 +19,15 @@ from homeassistant.helpers.update_coordinator import (
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "atag"
-PLATFORMS = [CLIMATE, WATER_HEATER, SENSOR]
+PLATFORMS = [Platform.CLIMATE, Platform.WATER_HEATER, Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Atag integration from a config entry."""
 
     async def _async_update_data():
         """Update data via library."""
-        with async_timeout.timeout(20):
+        async with async_timeout.timeout(20):
             try:
                 await atag.update()
             except AtagException as err:
@@ -75,27 +73,16 @@ class AtagEntity(CoordinatorEntity):
         super().__init__(coordinator)
 
         self._id = atag_id
-        self._name = DOMAIN.title()
+        self._attr_name = DOMAIN.title()
+        self._attr_unique_id = f"{coordinator.data.id}-{atag_id}"
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return info for device registry."""
-        device = self.coordinator.data.id
-        version = self.coordinator.data.apiversion
-        return {
-            "identifiers": {(DOMAIN, device)},
-            "name": "Atag Thermostat",
-            "model": "Atag One",
-            "sw_version": version,
-            "manufacturer": "Atag",
-        }
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return a unique ID to use for this entity."""
-        return f"{self.coordinator.data.id}-{self._id}"
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.coordinator.data.id)},
+            manufacturer="Atag",
+            model="Atag One",
+            name="Atag Thermostat",
+            sw_version=self.coordinator.data.apiversion,
+        )

@@ -31,40 +31,24 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     route = config[CONF_ROUTE]
 
     data = Bizkaibus(stop, route)
-    add_entities([BizkaibusSensor(data, stop, route, name)], True)
+    add_entities([BizkaibusSensor(data, name)], True)
 
 
 class BizkaibusSensor(SensorEntity):
     """The class for handling the data."""
 
-    def __init__(self, data, stop, route, name):
+    _attr_native_unit_of_measurement = TIME_MINUTES
+
+    def __init__(self, data, name):
         """Initialize the sensor."""
         self.data = data
-        self.stop = stop
-        self.route = route
-        self._name = name
-        self._state = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of the sensor."""
-        return TIME_MINUTES
+        self._attr_name = name
 
     def update(self):
         """Get the latest data from the webservice."""
         self.data.update()
         with suppress(TypeError):
-            self._state = self.data.info[0][ATTR_DUE_IN]
+            self._attr_native_value = self.data.info[0][ATTR_DUE_IN]
 
 
 class Bizkaibus:

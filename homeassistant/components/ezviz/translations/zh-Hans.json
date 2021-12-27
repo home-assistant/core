@@ -1,0 +1,52 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_account": "\u670d\u52a1\u5df2\u88ab\u914d\u7f6e",
+            "ezviz_cloud_account_missing": "\u8424\u77f3\u4e91\u8d26\u53f7\u4e22\u5931\u3002\u8bf7\u91cd\u65b0\u914d\u7f6e\u8424\u77f3\u4e91\u8d26\u53f7\u3002",
+            "unknown": "\u672a\u77e5\u9519\u8bef"
+        },
+        "error": {
+            "cannot_connect": "\u8fde\u63a5\u5931\u8d25",
+            "invalid_auth": "\u51ed\u8bc1\u65e0\u6548",
+            "invalid_host": "\u65e0\u6548\u7684\u4e3b\u673a\u5730\u5740\u6216 IP \u5730\u5740"
+        },
+        "flow_title": "{serial}",
+        "step": {
+            "confirm": {
+                "data": {
+                    "password": "\u5bc6\u7801",
+                    "username": "\u7528\u6237\u540d"
+                },
+                "description": "\u8f93\u5165\u5e26\u6709 RTSP \u51ed\u8bc1\u7684\u8424\u77f3\u6444\u50cf\u5934{serial} IP {ip_address} ",
+                "title": "\u5df2\u53d1\u73b0\u7684\u8424\u77f3\u6444\u50cf\u5934"
+            },
+            "user": {
+                "data": {
+                    "password": "\u5bc6\u7801",
+                    "url": "\u7f51\u5740",
+                    "username": "\u7528\u6237\u540d"
+                },
+                "title": "\u8fde\u63a5\u81f3\u8424\u77f3\u4e91"
+            },
+            "user_custom_url": {
+                "data": {
+                    "password": "\u5bc6\u7801",
+                    "url": "URL",
+                    "username": "\u7528\u6237\u540d"
+                },
+                "description": "\u624b\u52a8\u6307\u5b9a\u4f60\u7684\u533a\u57df\u7f51\u5740",
+                "title": "\u8fde\u63a5\u5230\u81ea\u5b9a\u4e49\u8424\u77f3\u4e91\u5730\u5740"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "ffmpeg_arguments": "FFmpeg \u53c2\u6570\u4f20\u9012\u81f3\u6444\u50cf\u673a",
+                    "timeout": "\u8bf7\u6c42\u8d85\u65f6\uff08\u79d2\uff09"
+                }
+            }
+        }
+    }
+}

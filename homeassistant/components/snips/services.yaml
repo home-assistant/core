@@ -52,7 +52,6 @@ say_action:
     can_be_enqueued:
       name: Can be enqueued
       description: If True, session waits for an open session to end, if False session is dropped if one is running
-      example: true
       default: true
       selector:
         boolean:

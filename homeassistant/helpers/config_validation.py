@@ -1,7 +1,8 @@
 """Helpers for config validation using voluptuous."""
 from __future__ import annotations
 
-from collections.abc import Hashable
+from collections.abc import Callable, Hashable
+import contextlib
 from datetime import (
     date as date_sys,
     datetime as datetime_sys,
@@ -15,7 +16,7 @@ from numbers import Number
 import os
 import re
 from socket import _GLOBAL_DEFAULT_TIMEOUT  # type: ignore # private, not in typeshed
-from typing import Any, Callable, Dict, TypeVar, cast
+from typing import Any, Dict, TypeVar, cast, overload
 from urllib.parse import urlparse
 from uuid import UUID
 
@@ -45,6 +46,7 @@ from homeassistant.const import (
     CONF_EVENT_DATA,
     CONF_EVENT_DATA_TEMPLATE,
     CONF_FOR,
+    CONF_ID,
     CONF_PLATFORM,
     CONF_REPEAT,
     CONF_SCAN_INTERVAL,
@@ -73,13 +75,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import split_entity_id, valid_entity_id
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import (
-    script_variables as script_variables_helper,
-    template as template_helper,
-)
-from homeassistant.helpers.logging import KeywordStyleAdapter
 from homeassistant.util import raise_if_invalid_path, slugify as util_slugify
 import homeassistant.util.dt as dt_util
+
+from . import script_variables as script_variables_helper, template as template_helper
 
 # pylint: disable=invalid-name
 
@@ -119,7 +118,7 @@ def path(value: Any) -> str:
 
 # Adapted from:
 # https://github.com/alecthomas/voluptuous/issues/115#issuecomment-144464666
-def has_at_least_one_key(*keys: str) -> Callable:
+def has_at_least_one_key(*keys: Any) -> Callable[[dict], dict]:
     """Validate that at least one key exists."""
 
     def validate(obj: dict) -> dict:
@@ -130,12 +129,13 @@ def has_at_least_one_key(*keys: str) -> Callable:
         for k in obj:
             if k in keys:
                 return obj
-        raise vol.Invalid("must contain at least one of {}.".format(", ".join(keys)))
+        expected = ", ".join(str(k) for k in keys)
+        raise vol.Invalid(f"must contain at least one of {expected}.")
 
     return validate
 
 
-def has_at_most_one_key(*keys: str) -> Callable[[dict], dict]:
+def has_at_most_one_key(*keys: Any) -> Callable[[dict], dict]:
     """Validate that zero keys exist or one key exists."""
 
     def validate(obj: dict) -> dict:
@@ -144,7 +144,8 @@ def has_at_most_one_key(*keys: str) -> Callable[[dict], dict]:
             raise vol.Invalid("expected dictionary")
 
         if len(set(keys) & set(obj)) > 1:
-            raise vol.Invalid("must contain at most one of {}.".format(", ".join(keys)))
+            expected = ", ".join(str(k) for k in keys)
+            raise vol.Invalid(f"must contain at most one of {expected}.")
         return obj
 
     return validate
@@ -244,7 +245,17 @@ def isdir(value: Any) -> str:
     return dir_in
 
 
-def ensure_list(value: T | list[T] | None) -> list[T]:
+@overload
+def ensure_list(value: None) -> list[Any]:
+    ...
+
+
+@overload
+def ensure_list(value: T | list[T]) -> list[T]:
+    ...
+
+
+def ensure_list(value: T | list[T] | None) -> list[T] | list[Any]:
     """Wrap value in list if it is not one."""
     if value is None:
         return []
@@ -260,14 +271,34 @@ def entity_id(value: Any) -> str:
     raise vol.Invalid(f"Entity ID {value} is an invalid entity ID")
 
 
-def entity_ids(value: str | list) -> list[str]:
-    """Validate Entity IDs."""
+def entity_id_or_uuid(value: Any) -> str:
+    """Validate Entity specified by entity_id or uuid."""
+    with contextlib.suppress(vol.Invalid):
+        return entity_id(value)
+    with contextlib.suppress(vol.Invalid):
+        return fake_uuid4_hex(value)
+    raise vol.Invalid(f"Entity {value} is neither a valid entity ID nor a valid UUID")
+
+
+def _entity_ids(value: str | list, allow_uuid: bool) -> list[str]:
+    """Help validate entity IDs or UUIDs."""
     if value is None:
         raise vol.Invalid("Entity IDs can not be None")
     if isinstance(value, str):
         value = [ent_id.strip() for ent_id in value.split(",")]
 
-    return [entity_id(ent_id) for ent_id in value]
+    validator = entity_id_or_uuid if allow_uuid else entity_id
+    return [validator(ent_id) for ent_id in value]
+
+
+def entity_ids(value: str | list) -> list[str]:
+    """Validate Entity IDs."""
+    return _entity_ids(value, False)
+
+
+def entity_ids_or_uuids(value: str | list) -> list[str]:
+    """Validate entities specified by entity IDs or UUIDs."""
+    return _entity_ids(value, True)
 
 
 comp_entity_ids = vol.Any(
@@ -648,6 +679,16 @@ def url(value: Any) -> str:
     raise vol.Invalid("invalid url")
 
 
+def url_no_path(value: Any) -> str:
+    """Validate a url without a path."""
+    url_in = url(value)
+
+    if urlparse(url_in).path not in ("", "/"):
+        raise vol.Invalid("url it not allowed to have a path component")
+
+    return url_in
+
+
 def x10_address(value: str) -> str:
     """Validate an x10 address."""
     regex = re.compile(r"([A-Pa-p]{1})(?:[2-9]|1[0-6]?)$")
@@ -668,6 +709,16 @@ def uuid4_hex(value: Any) -> str:
         raise vol.Invalid("Invalid Version4 UUID")
 
     return result.hex
+
+
+_FAKE_UUID_4_HEX = re.compile(r"^[0-9a-f]{32}$")
+
+
+def fake_uuid4_hex(value: Any) -> str:
+    """Validate a fake v4 UUID generated by random_uuid_hex."""
+    if not _FAKE_UUID_4_HEX.match(value):
+        raise vol.Invalid("Invalid UUID")
+    return cast(str, value)  # Pattern.match throws if input is not a string
 
 
 def ensure_list_csv(value: Any) -> list:
@@ -696,23 +747,26 @@ class multi_select:
         return selected
 
 
-def deprecated(
+def _deprecated_or_removed(
     key: str,
-    replacement_key: str | None = None,
-    default: Any | None = None,
+    replacement_key: str | None,
+    default: Any | None,
+    raise_if_present: bool,
+    option_removed: bool,
 ) -> Callable[[dict], dict]:
     """
-    Log key as deprecated and provide a replacement (if exists).
+    Log key as deprecated and provide a replacement (if exists) or fail.
 
     Expected behavior:
-        - Outputs the appropriate deprecation warning if key is detected
+        - Outputs or throws the appropriate deprecation warning if key is detected
+        - Outputs or throws the appropriate error if key is detected and removed from support
         - Processes schema moving the value from key to replacement_key
         - Processes schema changing nothing if only replacement_key provided
         - No warning if only replacement_key provided
         - No warning if neither key nor replacement_key are provided
             - Adds replacement_key with default value in this case
     """
-    module = inspect.getmodule(inspect.stack(context=0)[1].frame)
+    module = inspect.getmodule(inspect.stack(context=0)[2].frame)
     if module is not None:
         module_name = module.__name__
     else:
@@ -720,36 +774,34 @@ def deprecated(
         # will be missing information, so let's guard.
         # https://github.com/home-assistant/core/issues/24982
         module_name = __name__
-
-    if replacement_key:
-        warning = (
-            "The '{key}' option is deprecated,"
-            " please replace it with '{replacement_key}'"
-        )
+    if option_removed:
+        logger_func = logging.getLogger(module_name).error
+        option_status = "has been removed"
     else:
-        warning = (
-            "The '{key}' option is deprecated,"
-            " please remove it from your configuration"
-        )
+        logger_func = logging.getLogger(module_name).warning
+        option_status = "is deprecated"
 
     def validator(config: dict) -> dict:
-        """Check if key is in config and log warning."""
+        """Check if key is in config and log warning or error."""
         if key in config:
             try:
-                KeywordStyleAdapter(logging.getLogger(module_name)).warning(
-                    warning.replace(
-                        "'{key}' option",
-                        f"'{key}' option near {config.__config_file__}:{config.__line__}",  # type: ignore
-                    ),
-                    key=key,
-                    replacement_key=replacement_key,
-                )
+                near = f"near {config.__config_file__}:{config.__line__} "  # type: ignore
             except AttributeError:
-                KeywordStyleAdapter(logging.getLogger(module_name)).warning(
-                    warning,
-                    key=key,
-                    replacement_key=replacement_key,
+                near = ""
+            arguments: tuple[str, ...]
+            if replacement_key:
+                warning = "The '%s' option %s%s, please replace it with '%s'"
+                arguments = (key, near, option_status, replacement_key)
+            else:
+                warning = (
+                    "The '%s' option %s%s, please remove it from your configuration"
                 )
+                arguments = (key, near, option_status)
+
+            if raise_if_present:
+                raise vol.Invalid(warning % arguments)
+
+            logger_func(warning, *arguments)
             value = config[key]
             if replacement_key:
                 config.pop(key)
@@ -769,26 +821,82 @@ def deprecated(
     return validator
 
 
+def deprecated(
+    key: str,
+    replacement_key: str | None = None,
+    default: Any | None = None,
+    raise_if_present: bool | None = False,
+) -> Callable[[dict], dict]:
+    """
+    Log key as deprecated and provide a replacement (if exists).
+
+    Expected behavior:
+        - Outputs the appropriate deprecation warning if key is detected or raises an exception
+        - Processes schema moving the value from key to replacement_key
+        - Processes schema changing nothing if only replacement_key provided
+        - No warning if only replacement_key provided
+        - No warning if neither key nor replacement_key are provided
+            - Adds replacement_key with default value in this case
+    """
+    return _deprecated_or_removed(
+        key,
+        replacement_key=replacement_key,
+        default=default,
+        raise_if_present=raise_if_present or False,
+        option_removed=False,
+    )
+
+
+def removed(
+    key: str,
+    default: Any | None = None,
+    raise_if_present: bool | None = True,
+) -> Callable[[dict], dict]:
+    """
+    Log key as deprecated and fail the config validation.
+
+    Expected behavior:
+        - Outputs the appropriate error if key is detected and removed from support or raises an exception
+    """
+    return _deprecated_or_removed(
+        key,
+        replacement_key=None,
+        default=default,
+        raise_if_present=raise_if_present or False,
+        option_removed=True,
+    )
+
+
 def key_value_schemas(
-    key: str, value_schemas: dict[str, vol.Schema]
-) -> Callable[[Any], dict[str, Any]]:
+    key: str,
+    value_schemas: dict[Hashable, vol.Schema],
+    default_schema: vol.Schema | None = None,
+    default_description: str | None = None,
+) -> Callable[[Any], dict[Hashable, Any]]:
     """Create a validator that validates based on a value for specific key.
 
     This gives better error messages.
     """
 
-    def key_value_validator(value: Any) -> dict[str, Any]:
+    def key_value_validator(value: Any) -> dict[Hashable, Any]:
         if not isinstance(value, dict):
             raise vol.Invalid("Expected a dictionary")
 
         key_value = value.get(key)
 
-        if key_value not in value_schemas:
-            raise vol.Invalid(
-                f"Unexpected value for {key}: '{key_value}'. Expected {', '.join(value_schemas)}"
-            )
+        if isinstance(key_value, Hashable) and key_value in value_schemas:
+            return cast(Dict[Hashable, Any], value_schemas[key_value](value))
 
-        return cast(Dict[str, Any], value_schemas[key_value](value))
+        if default_schema:
+            with contextlib.suppress(vol.Invalid):
+                return cast(Dict[Hashable, Any], default_schema(value))
+
+        alternatives = ", ".join(str(key) for key in value_schemas)
+        if default_description:
+            alternatives += ", " + default_description
+        raise vol.Invalid(
+            f"Unexpected value for {key}: '{key_value}'. Expected {alternatives}"
+        )
 
     return key_value_validator
 
@@ -916,8 +1024,10 @@ SERVICE_SCHEMA = vol.All(
             vol.Exclusive(CONF_SERVICE_TEMPLATE, "service name"): vol.Any(
                 service, dynamic_template
             ),
-            vol.Optional("data"): vol.All(dict, template_complex),
-            vol.Optional("data_template"): vol.All(dict, template_complex),
+            vol.Optional("data"): vol.Any(template, vol.All(dict, template_complex)),
+            vol.Optional("data_template"): vol.Any(
+                template, vol.All(dict, template_complex)
+            ),
             vol.Optional(CONF_ENTITY_ID): comp_entity_ids,
             vol.Optional(CONF_TARGET): vol.Any(ENTITY_SERVICE_FIELDS, dynamic_template),
         }
@@ -926,7 +1036,7 @@ SERVICE_SCHEMA = vol.All(
 )
 
 NUMERIC_STATE_THRESHOLD_SCHEMA = vol.Any(
-    vol.Coerce(float), vol.All(str, entity_domain("input_number"))
+    vol.Coerce(float), vol.All(str, entity_domain(["input_number", "number", "sensor"]))
 )
 
 CONDITION_BASE_SCHEMA = {vol.Optional(CONF_ALIAS): string}
@@ -936,7 +1046,7 @@ NUMERIC_STATE_CONDITION_SCHEMA = vol.All(
         {
             **CONDITION_BASE_SCHEMA,
             vol.Required(CONF_CONDITION): "numeric_state",
-            vol.Required(CONF_ENTITY_ID): entity_ids,
+            vol.Required(CONF_ENTITY_ID): entity_ids_or_uuids,
             vol.Optional(CONF_ATTRIBUTE): str,
             CONF_BELOW: NUMERIC_STATE_THRESHOLD_SCHEMA,
             CONF_ABOVE: NUMERIC_STATE_THRESHOLD_SCHEMA,
@@ -949,7 +1059,7 @@ NUMERIC_STATE_CONDITION_SCHEMA = vol.All(
 STATE_CONDITION_BASE_SCHEMA = {
     **CONDITION_BASE_SCHEMA,
     vol.Required(CONF_CONDITION): "state",
-    vol.Required(CONF_ENTITY_ID): entity_ids,
+    vol.Required(CONF_ENTITY_ID): entity_ids_or_uuids,
     vol.Optional(CONF_ATTRIBUTE): str,
     vol.Optional(CONF_FOR): positive_time_period,
     # To support use_trigger_value in automation
@@ -1014,12 +1124,24 @@ TIME_CONDITION_SCHEMA = vol.All(
         {
             **CONDITION_BASE_SCHEMA,
             vol.Required(CONF_CONDITION): "time",
-            "before": vol.Any(time, vol.All(str, entity_domain("input_datetime"))),
-            "after": vol.Any(time, vol.All(str, entity_domain("input_datetime"))),
-            "weekday": weekdays,
+            vol.Optional("before"): vol.Any(
+                time, vol.All(str, entity_domain(["input_datetime", "sensor"]))
+            ),
+            vol.Optional("after"): vol.Any(
+                time, vol.All(str, entity_domain(["input_datetime", "sensor"]))
+            ),
+            vol.Optional("weekday"): weekdays,
         }
     ),
     has_at_least_one_key("before", "after", "weekday"),
+)
+
+TRIGGER_CONDITION_SCHEMA = vol.Schema(
+    {
+        **CONDITION_BASE_SCHEMA,
+        vol.Required(CONF_CONDITION): "trigger",
+        vol.Required(CONF_ID): vol.All(ensure_list, [string]),
+    }
 )
 
 ZONE_CONDITION_SCHEMA = vol.Schema(
@@ -1027,7 +1149,7 @@ ZONE_CONDITION_SCHEMA = vol.Schema(
         **CONDITION_BASE_SCHEMA,
         vol.Required(CONF_CONDITION): "zone",
         vol.Required(CONF_ENTITY_ID): entity_ids,
-        "zone": entity_ids,
+        vol.Required("zone"): entity_ids,
         # To support use_trigger_value in automation
         # Deprecated 2016/04/25
         vol.Optional("event"): vol.Any("enter", "leave"),
@@ -1081,29 +1203,79 @@ DEVICE_CONDITION_BASE_SCHEMA = vol.Schema(
 
 DEVICE_CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
 
+dynamic_template_condition_action = vol.All(
+    # Wrap a shorthand template condition in a template condition
+    dynamic_template,
+    lambda config: {
+        CONF_VALUE_TEMPLATE: config,
+        CONF_CONDITION: "template",
+    },
+)
+
+
 CONDITION_SCHEMA: vol.Schema = vol.Schema(
     vol.Any(
         key_value_schemas(
             CONF_CONDITION,
             {
+                "and": AND_CONDITION_SCHEMA,
+                "device": DEVICE_CONDITION_SCHEMA,
+                "not": NOT_CONDITION_SCHEMA,
                 "numeric_state": NUMERIC_STATE_CONDITION_SCHEMA,
+                "or": OR_CONDITION_SCHEMA,
                 "state": STATE_CONDITION_SCHEMA,
                 "sun": SUN_CONDITION_SCHEMA,
                 "template": TEMPLATE_CONDITION_SCHEMA,
                 "time": TIME_CONDITION_SCHEMA,
+                "trigger": TRIGGER_CONDITION_SCHEMA,
                 "zone": ZONE_CONDITION_SCHEMA,
-                "and": AND_CONDITION_SCHEMA,
-                "or": OR_CONDITION_SCHEMA,
-                "not": NOT_CONDITION_SCHEMA,
-                "device": DEVICE_CONDITION_SCHEMA,
             },
         ),
-        dynamic_template,
+        dynamic_template_condition_action,
     )
 )
 
+
+dynamic_template_condition_action = vol.All(
+    # Wrap a shorthand template condition action in a template condition
+    vol.Schema(
+        {**CONDITION_BASE_SCHEMA, vol.Required(CONF_CONDITION): dynamic_template}
+    ),
+    lambda config: {
+        **config,
+        CONF_VALUE_TEMPLATE: config[CONF_CONDITION],
+        CONF_CONDITION: "template",
+    },
+)
+
+
+CONDITION_ACTION_SCHEMA: vol.Schema = vol.Schema(
+    key_value_schemas(
+        CONF_CONDITION,
+        {
+            "and": AND_CONDITION_SCHEMA,
+            "device": DEVICE_CONDITION_SCHEMA,
+            "not": NOT_CONDITION_SCHEMA,
+            "numeric_state": NUMERIC_STATE_CONDITION_SCHEMA,
+            "or": OR_CONDITION_SCHEMA,
+            "state": STATE_CONDITION_SCHEMA,
+            "sun": SUN_CONDITION_SCHEMA,
+            "template": TEMPLATE_CONDITION_SCHEMA,
+            "time": TIME_CONDITION_SCHEMA,
+            "trigger": TRIGGER_CONDITION_SCHEMA,
+            "zone": ZONE_CONDITION_SCHEMA,
+        },
+        dynamic_template_condition_action,
+        "a valid template",
+    )
+)
+
+TRIGGER_BASE_SCHEMA = vol.Schema(
+    {vol.Required(CONF_PLATFORM): str, vol.Optional(CONF_ID): str}
+)
+
 TRIGGER_SCHEMA = vol.All(
-    ensure_list, [vol.Schema({vol.Required(CONF_PLATFORM): str}, extra=vol.ALLOW_EXTRA)]
+    ensure_list, [TRIGGER_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)]
 )
 
 _SCRIPT_DELAY_SCHEMA = vol.Schema(
@@ -1243,7 +1415,7 @@ ACTION_TYPE_SCHEMAS: dict[str, Callable[[Any], dict]] = {
     SCRIPT_ACTION_DELAY: _SCRIPT_DELAY_SCHEMA,
     SCRIPT_ACTION_WAIT_TEMPLATE: _SCRIPT_WAIT_TEMPLATE_SCHEMA,
     SCRIPT_ACTION_FIRE_EVENT: EVENT_SCHEMA,
-    SCRIPT_ACTION_CHECK_CONDITION: CONDITION_SCHEMA,
+    SCRIPT_ACTION_CHECK_CONDITION: CONDITION_ACTION_SCHEMA,
     SCRIPT_ACTION_DEVICE_AUTOMATION: DEVICE_ACTION_SCHEMA,
     SCRIPT_ACTION_ACTIVATE_SCENE: _SCRIPT_SCENE_SCHEMA,
     SCRIPT_ACTION_REPEAT: _SCRIPT_REPEAT_SCHEMA,
@@ -1251,3 +1423,169 @@ ACTION_TYPE_SCHEMAS: dict[str, Callable[[Any], dict]] = {
     SCRIPT_ACTION_WAIT_FOR_TRIGGER: _SCRIPT_WAIT_FOR_TRIGGER_SCHEMA,
     SCRIPT_ACTION_VARIABLES: _SCRIPT_SET_SCHEMA,
 }
+
+
+# Validate currencies adopted by countries
+currency = vol.In(
+    {
+        "AED",
+        "AFN",
+        "ALL",
+        "AMD",
+        "ANG",
+        "AOA",
+        "ARS",
+        "AUD",
+        "AWG",
+        "AZN",
+        "BAM",
+        "BBD",
+        "BDT",
+        "BGN",
+        "BHD",
+        "BIF",
+        "BMD",
+        "BND",
+        "BOB",
+        "BRL",
+        "BSD",
+        "BTN",
+        "BWP",
+        "BYN",
+        "BYR",
+        "BZD",
+        "CAD",
+        "CDF",
+        "CHF",
+        "CLP",
+        "CNY",
+        "COP",
+        "CRC",
+        "CUP",
+        "CVE",
+        "CZK",
+        "DJF",
+        "DKK",
+        "DOP",
+        "DZD",
+        "EGP",
+        "ERN",
+        "ETB",
+        "EUR",
+        "FJD",
+        "FKP",
+        "GBP",
+        "GEL",
+        "GHS",
+        "GIP",
+        "GMD",
+        "GNF",
+        "GTQ",
+        "GYD",
+        "HKD",
+        "HNL",
+        "HRK",
+        "HTG",
+        "HUF",
+        "IDR",
+        "ILS",
+        "INR",
+        "IQD",
+        "IRR",
+        "ISK",
+        "JMD",
+        "JOD",
+        "JPY",
+        "KES",
+        "KGS",
+        "KHR",
+        "KMF",
+        "KPW",
+        "KRW",
+        "KWD",
+        "KYD",
+        "KZT",
+        "LAK",
+        "LBP",
+        "LKR",
+        "LRD",
+        "LSL",
+        "LTL",
+        "LYD",
+        "MAD",
+        "MDL",
+        "MGA",
+        "MKD",
+        "MMK",
+        "MNT",
+        "MOP",
+        "MRO",
+        "MUR",
+        "MVR",
+        "MWK",
+        "MXN",
+        "MYR",
+        "MZN",
+        "NAD",
+        "NGN",
+        "NIO",
+        "NOK",
+        "NPR",
+        "NZD",
+        "OMR",
+        "PAB",
+        "PEN",
+        "PGK",
+        "PHP",
+        "PKR",
+        "PLN",
+        "PYG",
+        "QAR",
+        "RON",
+        "RSD",
+        "RUB",
+        "RWF",
+        "SAR",
+        "SBD",
+        "SCR",
+        "SDG",
+        "SEK",
+        "SGD",
+        "SHP",
+        "SLL",
+        "SOS",
+        "SRD",
+        "SSP",
+        "STD",
+        "SYP",
+        "SZL",
+        "THB",
+        "TJS",
+        "TMT",
+        "TND",
+        "TOP",
+        "TRY",
+        "TTD",
+        "TWD",
+        "TZS",
+        "UAH",
+        "UGX",
+        "USD",
+        "UYU",
+        "UZS",
+        "VEF",
+        "VND",
+        "VUV",
+        "WST",
+        "XAF",
+        "XCD",
+        "XOF",
+        "XPF",
+        "YER",
+        "ZAR",
+        "ZMK",
+        "ZMW",
+        "ZWL",
+    },
+    msg="invalid ISO 4217 formatted currency",
+)

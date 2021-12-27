@@ -1,14 +1,15 @@
 """This component provides support for Xiaomi Cameras."""
-import asyncio
+from __future__ import annotations
+
 from ftplib import FTP, error_perm
 import logging
 
 from haffmpeg.camera import CameraMjpeg
-from haffmpeg.tools import IMAGE_JPEG, ImageFrame
 import voluptuous as vol
 
+from homeassistant.components import ffmpeg
 from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
-from homeassistant.components.ffmpeg import DATA_FFMPEG
+from homeassistant.components.ffmpeg import get_ffmpeg_manager
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -64,7 +65,7 @@ class XiaomiCamera(Camera):
         self._extra_arguments = config.get(CONF_FFMPEG_ARGUMENTS)
         self._last_image = None
         self._last_url = None
-        self._manager = hass.data[DATA_FFMPEG]
+        self._manager = get_ffmpeg_manager(hass)
         self._name = config[CONF_NAME]
         self.host = config[CONF_HOST]
         self.host.hass = hass
@@ -138,7 +139,9 @@ class XiaomiCamera(Camera):
 
         return f"ftp://{self.user}:{self.passwd}@{host}:{self.port}{ftp.pwd()}/{video}"
 
-    async def async_camera_image(self):
+    async def async_camera_image(
+        self, width: int | None = None, height: int | None = None
+    ) -> bytes | None:
         """Return a still image response from the camera."""
 
         try:
@@ -149,11 +152,12 @@ class XiaomiCamera(Camera):
 
         url = await self.hass.async_add_executor_job(self.get_latest_video_url, host)
         if url != self._last_url:
-            ffmpeg = ImageFrame(self._manager.binary)
-            self._last_image = await asyncio.shield(
-                ffmpeg.get_image(
-                    url, output_format=IMAGE_JPEG, extra_cmd=self._extra_arguments
-                )
+            self._last_image = await ffmpeg.async_get_image(
+                self.hass,
+                url,
+                extra_cmd=self._extra_arguments,
+                width=width,
+                height=height,
             )
             self._last_url = url
 

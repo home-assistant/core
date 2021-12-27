@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Callable
 from contextlib import suppress
 from ssl import SSLContext
 import sys
-from typing import Any, Callable, cast
+from types import MappingProxyType
+from typing import Any, cast
 
 import aiohttp
 from aiohttp import web
@@ -17,9 +18,10 @@ import async_timeout
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE, __version__
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers.frame import warn_use
 from homeassistant.loader import bind_hass
 from homeassistant.util import ssl as ssl_util
+
+from .frame import warn_use
 
 DATA_CONNECTOR = "aiohttp_connector"
 DATA_CONNECTOR_NOTVERIFY = "aiohttp_connector_notverify"
@@ -95,9 +97,14 @@ def _async_create_clientsession(
     """Create a new ClientSession with kwargs, i.e. for cookies."""
     clientsession = aiohttp.ClientSession(
         connector=_async_get_connector(hass, verify_ssl),
-        headers={USER_AGENT: SERVER_SOFTWARE},
         **kwargs,
     )
+    # Prevent packages accidentally overriding our default headers
+    # It's important that we identify as Home Assistant
+    # If a package requires a different user agent, override it by passing a headers
+    # dictionary to the request method.
+    # pylint: disable=protected-access
+    clientsession._default_headers = MappingProxyType({USER_AGENT: SERVER_SOFTWARE})  # type: ignore
 
     clientsession.close = warn_use(clientsession.close, WARN_CLOSE_MSG)  # type: ignore
 
@@ -117,7 +124,7 @@ async def async_aiohttp_proxy_web(
 ) -> web.StreamResponse | None:
     """Stream websession request to aiohttp web response."""
     try:
-        with async_timeout.timeout(timeout):
+        async with async_timeout.timeout(timeout):
             req = await web_coro
 
     except asyncio.CancelledError:
@@ -158,7 +165,7 @@ async def async_aiohttp_proxy_stream(
     # Suppressing something went wrong fetching data, closed connection
     with suppress(asyncio.TimeoutError, aiohttp.ClientError):
         while hass.is_running:
-            with async_timeout.timeout(timeout):
+            async with async_timeout.timeout(timeout):
                 data = await stream.read(buffer_size)
 
             if not data:
@@ -186,8 +193,7 @@ def _async_register_clientsession_shutdown(
         EVENT_HOMEASSISTANT_CLOSE, _async_close_websession
     )
 
-    config_entry = config_entries.current_entry.get()
-    if not config_entry:
+    if not (config_entry := config_entries.current_entry.get()):
         return
 
     config_entry.async_on_unload(unsub)

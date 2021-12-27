@@ -4,8 +4,9 @@ import logging
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.data_entry_flow import AbortFlow, FlowResult
 
 from .const import CONF_INTEGRATION_CREATED_ADDON, CONF_USE_ADDON, DOMAIN
 
@@ -35,15 +36,6 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.integration_created_addon = False
         self.install_task = None
 
-    async def async_step_import(self, data):
-        """Handle imported data.
-
-        This step will be used when importing data during zwave to ozw migration.
-        """
-        self.network_key = data.get(CONF_NETWORK_KEY)
-        self.usb_path = data.get(CONF_USB_PATH)
-        return await self.async_step_user()
-
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
         if self._async_current_entries():
@@ -57,7 +49,7 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_on_supervisor()
 
-    async def async_step_hassio(self, discovery_info):
+    async def async_step_hassio(self, discovery_info: HassioServiceInfo) -> FlowResult:
         """Receive configuration from add-on discovery info.
 
         This flow is triggered by the OpenZWave add-on.
@@ -98,7 +90,7 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         mqtt_entries = self.hass.config_entries.async_entries("mqtt")
         if (
             not mqtt_entries
-            or mqtt_entries[0].state != config_entries.ENTRY_STATE_LOADED
+            or mqtt_entries[0].state is not config_entries.ConfigEntryState.LOADED
         ):
             return self.async_abort(reason="mqtt_required")
         return self._async_create_entry_from_vars()
