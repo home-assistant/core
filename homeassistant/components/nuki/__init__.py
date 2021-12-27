@@ -54,7 +54,7 @@ async def async_setup_entry(hass, entry):
     hass.data.setdefault(DOMAIN, {})
 
     # Migration of entry id
-    if type(entry.unique_id) == int:
+    if isinstance(entry.unique_id, int):
         new_id = hex(entry.unique_id).split("x")[-1].upper()
         hass.config_entries.async_update_entry(entry, unique_id=new_id, title=new_id)
 

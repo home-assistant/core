@@ -59,10 +59,6 @@ class NukiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.discovery_schema = {}
         self._data = {}
 
-    def parse_id(self, id):
-        """Parse Nuki ID."""
-        return hex(id).split("x")[-1].upper()
-
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
         return await self.async_step_validate(user_input)
@@ -115,7 +111,7 @@ class NukiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if not errors:
             existing_entry = await self.async_set_unique_id(
-                self.parse_id(info["ids"]["hardwareId"])
+                parse_id(info["ids"]["hardwareId"])
             )
             if existing_entry:
                 self.hass.config_entries.async_update_entry(existing_entry, data=conf)
@@ -145,7 +141,7 @@ class NukiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
 
             if "base" not in errors:
-                bridge_id = self.parse_id(info["ids"]["hardwareId"])
+                bridge_id = parse_id(info["ids"]["hardwareId"])
                 await self.async_set_unique_id(bridge_id)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=bridge_id, data=user_input)
@@ -162,3 +158,8 @@ class CannotConnect(exceptions.HomeAssistantError):
 
 class InvalidAuth(exceptions.HomeAssistantError):
     """Error to indicate there is invalid auth."""
+
+
+def parse_id(hardware_id):
+    """Parse Nuki ID."""
+    return hex(hardware_id).split("x")[-1].upper()
