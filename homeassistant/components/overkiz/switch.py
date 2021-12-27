@@ -79,14 +79,14 @@ async def async_setup_entry(
     data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
     entities: list[OverkizSwitch] = []
 
-    key_supported_devices = {
+    supported_devices = {
         description.key: description for description in SWITCH_DESCRIPTIONS
     }
 
     for device in data.platforms[Platform.SWITCH]:
-        if description := key_supported_devices.get(
-            device.widget
-        ) or key_supported_devices.get(device.ui_class):
+        if description := supported_devices.get(device.widget) or supported_devices.get(
+            device.ui_class
+        ):
             entities.append(
                 OverkizSwitch(
                     device.device_url,
