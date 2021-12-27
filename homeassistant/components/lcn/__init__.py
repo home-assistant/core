@@ -178,7 +178,7 @@ def async_host_input_received(
         logical_address.is_group,
     )
     identifiers = {(DOMAIN, generate_unique_id(config_entry.entry_id, address))}
-    device = device_registry.async_get_device(identifiers, set())
+    device = device_registry.async_get_device(identifiers)
     if device is None:
         return
 

@@ -204,7 +204,7 @@ class LegacyZWaveMigration:
         entity_entry = ent_reg.async_get(entity_id)
         assert entity_entry
         device_identifier = get_device_id(node.client, node)
-        device_entry = dev_reg.async_get_device({device_identifier}, set())
+        device_entry = dev_reg.async_get_device({device_identifier})
         assert device_entry
 
         # Normalize unit of measurement.

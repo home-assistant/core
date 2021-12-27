@@ -37,16 +37,33 @@ STORAGE_VERSION_MINOR = 3
 SAVE_DELAY = 10
 CLEANUP_DELAY = 10
 
-CONNECTION_NETWORK_MAC = "mac"
-CONNECTION_UPNP = "upnp"
-CONNECTION_ZIGBEE = "zigbee"
+
+class DeviceEntryConnectionType(StrEnum):
+    """Device connection kind."""
+
+    MAC = "mac"
+    UPNP = "upnp"
+    ZIGBEE = "zigbee"
+
+
+class DeviceEntryConnection(NamedTuple):
+    """Device connection."""
+
+    type: DeviceEntryConnectionType
+    value: str
+
+
+# Deprecated as of Home Assistant 2022.2, use DeviceEntryConnectionType instead
+CONNECTION_NETWORK_MAC = DeviceEntryConnectionType.MAC.value
+CONNECTION_UPNP = DeviceEntryConnectionType.UPNP.value
+CONNECTION_ZIGBEE = DeviceEntryConnectionType.ZIGBEE.value
 
 ORPHANED_DEVICE_KEEP_SECONDS = 86400 * 30
 
 
 class _DeviceIndex(NamedTuple):
     identifiers: dict[tuple[str, str], str]
-    connections: dict[tuple[str, str], str]
+    connections: dict[DeviceEntryConnection, str]
 
 
 class DeviceEntryDisabler(StrEnum):
@@ -76,7 +93,7 @@ class DeviceEntry:
     area_id: str | None = attr.ib(default=None)
     config_entries: set[str] = attr.ib(converter=set, factory=set)
     configuration_url: str | None = attr.ib(default=None)
-    connections: set[tuple[str, str]] = attr.ib(converter=set, factory=set)
+    connections: set[DeviceEntryConnection] = attr.ib(converter=set, factory=set)
     disabled_by: DeviceEntryDisabler | None = attr.ib(default=None)
     entry_type: DeviceEntryType | None = attr.ib(default=None)
     id: str = attr.ib(factory=uuid_util.random_uuid_hex)
@@ -103,7 +120,7 @@ class DeletedDeviceEntry:
     """Deleted Device Registry Entry."""
 
     config_entries: set[str] = attr.ib()
-    connections: set[tuple[str, str]] = attr.ib()
+    connections: set[DeviceEntryConnection] = attr.ib()
     identifiers: set[tuple[str, str]] = attr.ib()
     id: str = attr.ib()
     orphaned_timestamp: float | None = attr.ib()
@@ -111,7 +128,7 @@ class DeletedDeviceEntry:
     def to_device_entry(
         self,
         config_entry_id: str,
-        connections: set[tuple[str, str]],
+        connections: set[DeviceEntryConnection],
         identifiers: set[tuple[str, str]],
     ) -> DeviceEntry:
         """Create DeviceEntry from DeletedDeviceEntry."""
@@ -148,7 +165,7 @@ def format_mac(mac: str) -> str:
 def _async_get_device_id_from_index(
     devices_index: _DeviceIndex,
     identifiers: set[tuple[str, str]],
-    connections: set[tuple[str, str]] | None,
+    connections: set[DeviceEntryConnection] | set[tuple[str, str]] | None,
 ) -> str | None:
     """Check if device has previously been registered."""
     for identifier in identifiers:
@@ -235,7 +252,7 @@ class DeviceRegistry:
     def async_get_device(
         self,
         identifiers: set[tuple[str, str]],
-        connections: set[tuple[str, str]] | None = None,
+        connections: set[DeviceEntryConnection] | set[tuple[str, str]] | None = None,
     ) -> DeviceEntry | None:
         """Check if device is registered."""
         device_id = _async_get_device_id_from_index(
@@ -248,7 +265,7 @@ class DeviceRegistry:
     def _async_get_deleted_device(
         self,
         identifiers: set[tuple[str, str]],
-        connections: set[tuple[str, str]] | None,
+        connections: set[DeviceEntryConnection] | None,
     ) -> DeletedDeviceEntry | None:
         """Check if device is deleted."""
         device_id = _async_get_device_id_from_index(
@@ -307,7 +324,7 @@ class DeviceRegistry:
         *,
         config_entry_id: str,
         configuration_url: str | None | UndefinedType = UNDEFINED,
-        connections: set[tuple[str, str]] | None = None,
+        connections: set[DeviceEntryConnection] | set[tuple[str, str]] | None = None,
         default_manufacturer: str | None | UndefinedType = UNDEFINED,
         default_model: str | None | UndefinedType = UNDEFINED,
         default_name: str | None | UndefinedType = UNDEFINED,
@@ -331,20 +348,22 @@ class DeviceRegistry:
             identifiers = set()
 
         if connections is None:
-            connections = set()
+            normalized_connections: set[DeviceEntryConnection] = set()
         else:
-            connections = _normalize_connections(connections)
+            normalized_connections = _normalize_connections(connections)
 
-        device = self.async_get_device(identifiers, connections)
+        device = self.async_get_device(identifiers, normalized_connections)
 
         if device is None:
-            deleted_device = self._async_get_deleted_device(identifiers, connections)
+            deleted_device = self._async_get_deleted_device(
+                identifiers, normalized_connections
+            )
             if deleted_device is None:
                 device = DeviceEntry(is_new=True)
             else:
                 self._remove_device(deleted_device)
                 device = deleted_device.to_device_entry(
-                    config_entry_id, connections, identifiers
+                    config_entry_id, normalized_connections, identifiers
                 )
             self._add_device(device)
 
@@ -379,7 +398,7 @@ class DeviceRegistry:
             disabled_by=disabled_by,
             entry_type=entry_type,
             manufacturer=manufacturer,
-            merge_connections=connections or UNDEFINED,
+            merge_connections=normalized_connections or UNDEFINED,
             merge_identifiers=identifiers or UNDEFINED,
             model=model,
             name=name,
@@ -444,7 +463,7 @@ class DeviceRegistry:
         disabled_by: DeviceEntryDisabler | None | UndefinedType = UNDEFINED,
         entry_type: DeviceEntryType | None | UndefinedType = UNDEFINED,
         manufacturer: str | None | UndefinedType = UNDEFINED,
-        merge_connections: set[tuple[str, str]] | UndefinedType = UNDEFINED,
+        merge_connections: set[DeviceEntryConnection] | UndefinedType = UNDEFINED,
         merge_identifiers: set[tuple[str, str]] | UndefinedType = UNDEFINED,
         model: str | None | UndefinedType = UNDEFINED,
         name_by_user: str | None | UndefinedType = UNDEFINED,
@@ -594,8 +613,10 @@ class DeviceRegistry:
                     area_id=device["area_id"],
                     config_entries=set(device["config_entries"]),
                     configuration_url=device["configuration_url"],
-                    # type ignores (if tuple arg was cast): likely https://github.com/python/mypy/issues/8625
-                    connections={tuple(conn) for conn in device["connections"]},  # type: ignore[misc]
+                    connections={
+                        (DeviceEntryConnectionType(conn[0]), conn[1])  # type: ignore[misc]
+                        for conn in device["connections"]
+                    },
                     disabled_by=device["disabled_by"],
                     entry_type=DeviceEntryType(device["entry_type"])
                     if device["entry_type"]
@@ -614,8 +635,12 @@ class DeviceRegistry:
             for device in data["deleted_devices"]:
                 deleted_devices[device["id"]] = DeletedDeviceEntry(
                     config_entries=set(device["config_entries"]),
-                    # type ignores (if tuple arg was cast): likely https://github.com/python/mypy/issues/8625
-                    connections={tuple(conn) for conn in device["connections"]},  # type: ignore[misc]
+                    connections={
+                        DeviceEntryConnection(
+                            DeviceEntryConnectionType(conn[0]), conn[1]
+                        )
+                        for conn in device["connections"]
+                    },
                     identifiers={tuple(iden) for iden in device["identifiers"]},  # type: ignore[misc]
                     id=device["id"],
                     orphaned_timestamp=device["orphaned_timestamp"],
@@ -886,12 +911,26 @@ def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, startup_clean)
 
 
-def _normalize_connections(connections: set[tuple[str, str]]) -> set[tuple[str, str]]:
-    """Normalize connections to ensure we can match mac addresses."""
-    return {
-        (key, format_mac(value)) if key == CONNECTION_NETWORK_MAC else (key, value)
-        for key, value in connections
-    }
+def _normalize_connections(
+    connections: set[DeviceEntryConnection] | set[tuple[str, str]]
+) -> set[DeviceEntryConnection]:
+    """Normalize connections to clean up keys and for matching MAC addresses."""
+    normalized = set()
+    for key_value in connections:
+        key, value = key_value
+        if not isinstance(key_value, DeviceEntryConnection):
+            report(
+                "uses set of str tuples for device registry connections. This is "
+                "deprecated and will stop working in Home Assistant 2022.4, it should "
+                "be updated to use set of DeviceEntryConnection instead",
+                error_if_core=False,
+            )
+        if not isinstance(key, DeviceEntryConnectionType):
+            key = DeviceEntryConnectionType(key)
+        if key is DeviceEntryConnectionType.MAC:
+            value = format_mac(value)
+        normalized.add(DeviceEntryConnection(key, value))
+    return normalized
 
 
 def _add_device_to_index(

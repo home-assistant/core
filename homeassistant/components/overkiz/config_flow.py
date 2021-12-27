@@ -104,7 +104,5 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """See if we already have a gateway matching the id."""
         device_registry = dr.async_get(self.hass)
         return bool(
-            device_registry.async_get_device(
-                identifiers={(DOMAIN, gateway_id)}, connections=set()
-            )
+            device_registry.async_get_device(identifiers={(DOMAIN, gateway_id)})
         )
