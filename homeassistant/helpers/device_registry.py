@@ -38,6 +38,13 @@ SAVE_DELAY = 10
 CLEANUP_DELAY = 10
 
 
+class DeviceEntryIdentifier(NamedTuple):
+    """Device identifier."""
+
+    domain: str
+    value: str
+
+
 class DeviceEntryConnectionType(StrEnum):
     """Device connection kind."""
 
@@ -62,7 +69,7 @@ ORPHANED_DEVICE_KEEP_SECONDS = 86400 * 30
 
 
 class _DeviceIndex(NamedTuple):
-    identifiers: dict[tuple[str, str], str]
+    identifiers: dict[DeviceEntryIdentifier, str]
     connections: dict[DeviceEntryConnection, str]
 
 
@@ -97,7 +104,7 @@ class DeviceEntry:
     disabled_by: DeviceEntryDisabler | None = attr.ib(default=None)
     entry_type: DeviceEntryType | None = attr.ib(default=None)
     id: str = attr.ib(factory=uuid_util.random_uuid_hex)
-    identifiers: set[tuple[str, str]] = attr.ib(converter=set, factory=set)
+    identifiers: set[DeviceEntryIdentifier] = attr.ib(converter=set, factory=set)
     manufacturer: str | None = attr.ib(default=None)
     model: str | None = attr.ib(default=None)
     name_by_user: str | None = attr.ib(default=None)
@@ -121,7 +128,7 @@ class DeletedDeviceEntry:
 
     config_entries: set[str] = attr.ib()
     connections: set[DeviceEntryConnection] = attr.ib()
-    identifiers: set[tuple[str, str]] = attr.ib()
+    identifiers: set[DeviceEntryIdentifier] = attr.ib()
     id: str = attr.ib()
     orphaned_timestamp: float | None = attr.ib()
 
@@ -129,7 +136,7 @@ class DeletedDeviceEntry:
         self,
         config_entry_id: str,
         connections: set[DeviceEntryConnection],
-        identifiers: set[tuple[str, str]],
+        identifiers: set[DeviceEntryIdentifier],
     ) -> DeviceEntry:
         """Create DeviceEntry from DeletedDeviceEntry."""
         return DeviceEntry(
@@ -164,18 +171,18 @@ def format_mac(mac: str) -> str:
 
 def _async_get_device_id_from_index(
     devices_index: _DeviceIndex,
-    identifiers: set[tuple[str, str]],
+    identifiers: set[DeviceEntryIdentifier] | set[tuple[str, str]] | None,
     connections: set[DeviceEntryConnection] | set[tuple[str, str]] | None,
 ) -> str | None:
     """Check if device has previously been registered."""
-    for identifier in identifiers:
-        if identifier in devices_index.identifiers:
-            return devices_index.identifiers[identifier]
-    if not connections:
-        return None
-    for connection in _normalize_connections(connections):
-        if connection in devices_index.connections:
-            return devices_index.connections[connection]
+    if identifiers:
+        for identifier in _normalize_identifiers(identifiers):
+            if identifier in devices_index.identifiers:
+                return devices_index.identifiers[identifier]
+    if connections:
+        for connection in _normalize_connections(connections):
+            if connection in devices_index.connections:
+                return devices_index.connections[connection]
     return None
 
 
@@ -251,7 +258,7 @@ class DeviceRegistry:
     @callback
     def async_get_device(
         self,
-        identifiers: set[tuple[str, str]],
+        identifiers: set[DeviceEntryIdentifier] | set[tuple[str, str]] | None = None,
         connections: set[DeviceEntryConnection] | set[tuple[str, str]] | None = None,
     ) -> DeviceEntry | None:
         """Check if device is registered."""
@@ -264,7 +271,7 @@ class DeviceRegistry:
 
     def _async_get_deleted_device(
         self,
-        identifiers: set[tuple[str, str]],
+        identifiers: set[DeviceEntryIdentifier] | None,
         connections: set[DeviceEntryConnection] | None,
     ) -> DeletedDeviceEntry | None:
         """Check if device is deleted."""
@@ -331,7 +338,7 @@ class DeviceRegistry:
         # To disable a device if it gets created
         disabled_by: DeviceEntryDisabler | None | UndefinedType = UNDEFINED,
         entry_type: DeviceEntryType | None | UndefinedType = UNDEFINED,
-        identifiers: set[tuple[str, str]] | None = None,
+        identifiers: set[DeviceEntryIdentifier] | set[tuple[str, str]] | None = None,
         manufacturer: str | None | UndefinedType = UNDEFINED,
         model: str | None | UndefinedType = UNDEFINED,
         name: str | None | UndefinedType = UNDEFINED,
@@ -345,25 +352,27 @@ class DeviceRegistry:
             raise RequiredParameterMissing(["identifiers", "connections"])
 
         if identifiers is None:
-            identifiers = set()
+            normalized_identifiers = set()
+        else:
+            normalized_identifiers = _normalize_identifiers(identifiers)
 
         if connections is None:
             normalized_connections: set[DeviceEntryConnection] = set()
         else:
             normalized_connections = _normalize_connections(connections)
 
-        device = self.async_get_device(identifiers, normalized_connections)
+        device = self.async_get_device(normalized_identifiers, normalized_connections)
 
         if device is None:
             deleted_device = self._async_get_deleted_device(
-                identifiers, normalized_connections
+                normalized_identifiers, normalized_connections
             )
             if deleted_device is None:
                 device = DeviceEntry(is_new=True)
             else:
                 self._remove_device(deleted_device)
                 device = deleted_device.to_device_entry(
-                    config_entry_id, normalized_connections, identifiers
+                    config_entry_id, normalized_connections, normalized_identifiers
                 )
             self._add_device(device)
 
@@ -399,7 +408,7 @@ class DeviceRegistry:
             entry_type=entry_type,
             manufacturer=manufacturer,
             merge_connections=normalized_connections or UNDEFINED,
-            merge_identifiers=identifiers or UNDEFINED,
+            merge_identifiers=normalized_identifiers or UNDEFINED,
             model=model,
             name=name,
             suggested_area=suggested_area,
@@ -426,7 +435,9 @@ class DeviceRegistry:
         model: str | None | UndefinedType = UNDEFINED,
         name_by_user: str | None | UndefinedType = UNDEFINED,
         name: str | None | UndefinedType = UNDEFINED,
-        new_identifiers: set[tuple[str, str]] | UndefinedType = UNDEFINED,
+        new_identifiers: set[DeviceEntryIdentifier]
+        | set[tuple[str, str]]
+        | UndefinedType = UNDEFINED,
         remove_config_entry_id: str | UndefinedType = UNDEFINED,
         suggested_area: str | None | UndefinedType = UNDEFINED,
         sw_version: str | None | UndefinedType = UNDEFINED,
@@ -444,7 +455,9 @@ class DeviceRegistry:
             model=model,
             name_by_user=name_by_user,
             name=name,
-            new_identifiers=new_identifiers,
+            new_identifiers=new_identifiers
+            if new_identifiers is UNDEFINED
+            else _normalize_identifiers(new_identifiers),
             remove_config_entry_id=remove_config_entry_id,
             suggested_area=suggested_area,
             sw_version=sw_version,
@@ -464,11 +477,11 @@ class DeviceRegistry:
         entry_type: DeviceEntryType | None | UndefinedType = UNDEFINED,
         manufacturer: str | None | UndefinedType = UNDEFINED,
         merge_connections: set[DeviceEntryConnection] | UndefinedType = UNDEFINED,
-        merge_identifiers: set[tuple[str, str]] | UndefinedType = UNDEFINED,
+        merge_identifiers: set[DeviceEntryIdentifier] | UndefinedType = UNDEFINED,
         model: str | None | UndefinedType = UNDEFINED,
         name_by_user: str | None | UndefinedType = UNDEFINED,
         name: str | None | UndefinedType = UNDEFINED,
-        new_identifiers: set[tuple[str, str]] | UndefinedType = UNDEFINED,
+        new_identifiers: set[DeviceEntryIdentifier] | UndefinedType = UNDEFINED,
         remove_config_entry_id: str | UndefinedType = UNDEFINED,
         suggested_area: str | None | UndefinedType = UNDEFINED,
         sw_version: str | None | UndefinedType = UNDEFINED,
@@ -622,7 +635,8 @@ class DeviceRegistry:
                     if device["entry_type"]
                     else None,
                     id=device["id"],
-                    identifiers={tuple(iden) for iden in device["identifiers"]},  # type: ignore[misc]
+                    # TODO(scop) better way to handle existing tuples with != 2 elements?
+                    identifiers={DeviceEntryIdentifier(iden[0], iden[0] if len(iden) == 1 else iden[1]) for iden in device["identifiers"]},  # type: ignore[misc]
                     manufacturer=device["manufacturer"],
                     model=device["model"],
                     name_by_user=device["name_by_user"],
@@ -641,7 +655,13 @@ class DeviceRegistry:
                         )
                         for conn in device["connections"]
                     },
-                    identifiers={tuple(iden) for iden in device["identifiers"]},  # type: ignore[misc]
+                    # TODO(scop) better way to handle existing tuples with != 2 elements?
+                    identifiers={
+                        DeviceEntryIdentifier(
+                            iden[0], iden[0] if len(iden) == 1 else iden[1]
+                        )
+                        for iden in device["identifiers"]
+                    },
                     id=device["id"],
                     orphaned_timestamp=device["orphaned_timestamp"],
                 )
@@ -909,6 +929,24 @@ def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
         await debounced_cleanup.async_call()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, startup_clean)
+
+
+def _normalize_identifiers(
+    identifiers: set[DeviceEntryIdentifier] | set[tuple[str, str]]
+) -> set[DeviceEntryIdentifier]:
+    """Normalize identifiers to set of DeviceEntryIdentifier."""
+    normalized = set()
+    for key_value in identifiers:
+        if not isinstance(key_value, DeviceEntryIdentifier):
+            report(
+                "uses set of str tuples for device registry identifiers. This is "
+                "deprecated and will stop working in Home Assistant 2022.4, it should "
+                "be updated to use set of DeviceEntryIdentifier instead",
+                error_if_core=False,
+            )
+            key_value = DeviceEntryIdentifier(*key_value)
+        normalized.add(key_value)
+    return normalized
 
 
 def _normalize_connections(

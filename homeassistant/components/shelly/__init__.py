@@ -153,7 +153,6 @@ async def async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> bo
     device_entry = None
     if entry.unique_id is not None:
         device_entry = dev_reg.async_get_device(
-            identifiers=set(),
             connections={
                 (
                     device_registry.CONNECTION_NETWORK_MAC,
