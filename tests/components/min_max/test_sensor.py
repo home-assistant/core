@@ -25,6 +25,7 @@ MEAN = round(sum(VALUES) / COUNT, 2)
 MEAN_1_DIGIT = round(sum(VALUES) / COUNT, 1)
 MEAN_4_DIGITS = round(sum(VALUES) / COUNT, 4)
 MEDIAN = round(statistics.median(VALUES), 2)
+RANGE = max(VALUES) - min(VALUES)
 
 
 async def test_min_sensor(hass):
@@ -55,6 +56,7 @@ async def test_min_sensor(hass):
     assert entity_ids[1] == state.attributes.get("max_entity_id")
     assert state.attributes.get("mean") == MEAN
     assert state.attributes.get("median") == MEDIAN
+    assert state.attributes.get("range") == RANGE
 
 
 async def test_max_sensor(hass):
@@ -85,6 +87,7 @@ async def test_max_sensor(hass):
     assert entity_ids[1] == state.attributes.get("max_entity_id")
     assert state.attributes.get("mean") == MEAN
     assert state.attributes.get("median") == MEDIAN
+    assert state.attributes.get("range") == RANGE
 
 
 async def test_mean_sensor(hass):
@@ -115,6 +118,7 @@ async def test_mean_sensor(hass):
     assert state.attributes.get("max_value") == MAX_VALUE
     assert entity_ids[1] == state.attributes.get("max_entity_id")
     assert state.attributes.get("median") == MEDIAN
+    assert state.attributes.get("range") == RANGE
 
 
 async def test_mean_1_digit_sensor(hass):
@@ -146,6 +150,7 @@ async def test_mean_1_digit_sensor(hass):
     assert state.attributes.get("max_value") == MAX_VALUE
     assert entity_ids[1] == state.attributes.get("max_entity_id")
     assert state.attributes.get("median") == MEDIAN
+    assert state.attributes.get("range") == RANGE
 
 
 async def test_mean_4_digit_sensor(hass):
@@ -177,6 +182,7 @@ async def test_mean_4_digit_sensor(hass):
     assert state.attributes.get("max_value") == MAX_VALUE
     assert entity_ids[1] == state.attributes.get("max_entity_id")
     assert state.attributes.get("median") == MEDIAN
+    assert state.attributes.get("range") == RANGE
 
 
 async def test_median_sensor(hass):
@@ -207,6 +213,7 @@ async def test_median_sensor(hass):
     assert state.attributes.get("max_value") == MAX_VALUE
     assert entity_ids[1] == state.attributes.get("max_entity_id")
     assert state.attributes.get("mean") == MEAN
+    assert state.attributes.get("range") == RANGE
 
 
 async def test_not_enough_sensor_value(hass):
@@ -235,6 +242,7 @@ async def test_not_enough_sensor_value(hass):
     assert state.attributes.get("max_entity_id") is None
     assert state.attributes.get("max_value") is None
     assert state.attributes.get("median") is None
+    assert state.attributes.get("range") is None
 
     hass.states.async_set(entity_ids[1], VALUES[1])
     await hass.async_block_till_done()
@@ -265,6 +273,7 @@ async def test_not_enough_sensor_value(hass):
     assert state.attributes.get("min_value") is None
     assert state.attributes.get("max_entity_id") is None
     assert state.attributes.get("max_value") is None
+    assert state.attributes.get("range") is None
 
 
 async def test_different_unit_of_measurement(hass):
@@ -341,6 +350,7 @@ async def test_last_sensor(hass):
     assert state.attributes.get("max_value") == MAX_VALUE
     assert state.attributes.get("mean") == MEAN
     assert state.attributes.get("median") == MEDIAN
+    assert state.attributes.get("range") == RANGE
 
 
 async def test_reload(hass):

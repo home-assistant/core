@@ -29,6 +29,7 @@ ATTR_MEAN = "mean"
 ATTR_MEDIAN = "median"
 ATTR_LAST = "last"
 ATTR_LAST_ENTITY_ID = "last_entity_id"
+ATTR_RANGE = "range"
 
 ATTR_TO_PROPERTY = [
     ATTR_COUNT_SENSORS,
@@ -40,6 +41,7 @@ ATTR_TO_PROPERTY = [
     ATTR_MIN_ENTITY_ID,
     ATTR_LAST,
     ATTR_LAST_ENTITY_ID,
+    ATTR_RANGE,
 ]
 
 CONF_ENTITY_IDS = "entity_ids"
@@ -153,6 +155,7 @@ class MinMaxSensor(SensorEntity):
         self._unit_of_measurement_mismatch = False
         self.min_value = self.max_value = self.mean = self.last = self.median = None
         self.min_entity_id = self.max_entity_id = self.last_entity_id = None
+        self.range = None
         self.count_sensors = len(self._entity_ids)
         self.states = {}
 
@@ -258,3 +261,7 @@ class MinMaxSensor(SensorEntity):
         self.max_entity_id, self.max_value = calc_max(sensor_values)
         self.mean = calc_mean(sensor_values, self._round_digits)
         self.median = calc_median(sensor_values, self._round_digits)
+        if None in [self.max_value, self.min_value]:
+            self.range = None
+        else:
+            self.range = self.max_value - self.min_value
