@@ -87,7 +87,7 @@ class AlexaConfig(AbstractConfig):
         return await self._auth.async_do_auth(code)
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> None:
     """Activate Smart Home functionality of Alexa component.
 
     This is optional, triggered by having a `smart_home:` sub-section in the
@@ -101,8 +101,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     if smart_home_config.should_report_state:
         await async_enable_proactive_mode(hass, smart_home_config)
-
-    return True
 
 
 class SmartHomeView(HomeAssistantView):
