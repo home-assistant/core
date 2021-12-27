@@ -1,4 +1,6 @@
 """Collection of useful functions for the HomeKit component."""
+from __future__ import annotations
+
 import io
 import ipaddress
 import logging
@@ -76,6 +78,7 @@ from .const import (
     FEATURE_TOGGLE_MUTE,
     HOMEKIT_PAIRING_QR,
     HOMEKIT_PAIRING_QR_SECRET,
+    MAX_NAME_LENGTH,
     TYPE_FAUCET,
     TYPE_OUTLET,
     TYPE_SHOWER,
@@ -352,14 +355,16 @@ def convert_to_float(state):
         return None
 
 
-def cleanup_name_for_homekit(name):
+def cleanup_name_for_homekit(name: str | None) -> str | None:
     """Ensure the name of the device will not crash homekit."""
     #
     # This is not a security measure.
     #
     # UNICODE_EMOJI is also not allowed but that
     # likely isn't a problem
-    return name.translate(HOMEKIT_CHAR_TRANSLATIONS)
+    if name is None:
+        return None
+    return name.translate(HOMEKIT_CHAR_TRANSLATIONS)[:MAX_NAME_LENGTH]
 
 
 def temperature_to_homekit(temperature, unit):
