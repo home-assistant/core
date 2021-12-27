@@ -145,6 +145,7 @@ class HueBaseEntity(Entity):
         if self.device.product_data.certified:
             # certified products report their state correctly
             self._ignore_availability = False
+            return
         # some (3th party) Hue lights report their connection status incorrectly
         # causing the zigbee availability to report as disconnected while in fact
         # it can be controlled. Although this is in fact something the device manufacturer
