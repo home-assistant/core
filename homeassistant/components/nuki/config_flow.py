@@ -12,6 +12,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import DEFAULT_PORT, DEFAULT_TIMEOUT, DOMAIN
+from .helpers import parse_id
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -158,8 +159,3 @@ class CannotConnect(exceptions.HomeAssistantError):
 
 class InvalidAuth(exceptions.HomeAssistantError):
     """Error to indicate there is invalid auth."""
-
-
-def parse_id(hardware_id):
-    """Parse Nuki ID."""
-    return hex(hardware_id).split("x")[-1].upper()

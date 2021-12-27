@@ -25,6 +25,7 @@ from .const import (
     DOMAIN,
     ERROR_STATES,
 )
+from .helpers import parse_id
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,7 +56,7 @@ async def async_setup_entry(hass, entry):
 
     # Migration of entry id
     if isinstance(entry.unique_id, int):
-        new_id = hex(entry.unique_id).split("x")[-1].upper()
+        new_id = parse_id(entry.unique_id)
         if entry.title == entry.unique_id:
             hass.config_entries.async_update_entry(
                 entry, unique_id=new_id, title=new_id
