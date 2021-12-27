@@ -7,6 +7,7 @@ import abodepy.helpers.timeline as TIMELINE
 from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DATE,
     ATTR_DEVICE_ID,
@@ -17,6 +18,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
@@ -75,7 +77,7 @@ class AbodeSystem:
         self.logout_listener = None
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up Abode integration from a config entry."""
     username = config_entry.data.get(CONF_USERNAME)
     password = config_entry.data.get(CONF_PASSWORD)
@@ -110,7 +112,7 @@ async def async_setup_entry(hass, config_entry):
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     hass.services.async_remove(DOMAIN, SERVICE_SETTINGS)
     hass.services.async_remove(DOMAIN, SERVICE_CAPTURE_IMAGE)
@@ -129,7 +131,7 @@ async def async_unload_entry(hass, config_entry):
     return unload_ok
 
 
-def setup_hass_services(hass):
+def setup_hass_services(hass: HomeAssistant) -> None:
     """Home Assistant services."""
 
     def change_setting(call):
@@ -183,7 +185,7 @@ def setup_hass_services(hass):
     )
 
 
-async def setup_hass_events(hass):
+async def setup_hass_events(hass: HomeAssistant) -> None:
     """Home Assistant start and stop callbacks."""
 
     def logout(event):
@@ -202,7 +204,7 @@ async def setup_hass_events(hass):
     )
 
 
-def setup_abode_events(hass):
+def setup_abode_events(hass: HomeAssistant) -> None:
     """Event callbacks."""
 
     def event_callback(event, event_json):
