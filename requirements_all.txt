@@ -1684,7 +1684,7 @@ pynetio==0.1.9.1
 pynina==0.1.4
 
 # homeassistant.components.nuki
-pynuki==1.4.1
+pynuki==1.5.1
 
 # homeassistant.components.nut
 pynut2==2.1.2
