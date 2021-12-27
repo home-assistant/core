@@ -286,13 +286,11 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         await self._setup_platform()
 
         # Assert sensors are unknown
-        self._assert_sensor("sensor.picnic_selected_slot_start", STATE_UNAVAILABLE)
-        self._assert_sensor("sensor.picnic_selected_slot_end", STATE_UNAVAILABLE)
+        self._assert_sensor("sensor.picnic_selected_slot_start", STATE_UNKNOWN)
+        self._assert_sensor("sensor.picnic_selected_slot_end", STATE_UNKNOWN)
+        self._assert_sensor("sensor.picnic_selected_slot_max_order_time", STATE_UNKNOWN)
         self._assert_sensor(
-            "sensor.picnic_selected_slot_max_order_time", STATE_UNAVAILABLE
-        )
-        self._assert_sensor(
-            "sensor.picnic_selected_slot_min_order_value", STATE_UNAVAILABLE
+            "sensor.picnic_selected_slot_min_order_value", STATE_UNKNOWN
         )
 
     async def test_sensors_last_order_in_future(self):
@@ -309,7 +307,7 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         await self._setup_platform()
 
         # Assert delivery time is not available, but eta is
-        self._assert_sensor("sensor.picnic_last_order_delivery_time", STATE_UNAVAILABLE)
+        self._assert_sensor("sensor.picnic_last_order_delivery_time", STATE_UNKNOWN)
         self._assert_sensor(
             "sensor.picnic_last_order_eta_start", "2021-02-26T19:54:00+00:00"
         )
