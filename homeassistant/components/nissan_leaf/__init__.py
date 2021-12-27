@@ -423,41 +423,16 @@ class LeafDataStore:
 
     async def async_set_climate(self, toggle):
         """Set climate control mode via Nissan servers."""
-        climate_result = None
         if toggle:
             _LOGGER.debug("Requesting climate turn on for %s", self.leaf.vin)
             set_function = self.leaf.start_climate_control
-            result_function = self.leaf.get_start_climate_control_result
         else:
             _LOGGER.debug("Requesting climate turn off for %s", self.leaf.vin)
             set_function = self.leaf.stop_climate_control
-            result_function = self.leaf.get_stop_climate_control_result
 
-        request = await self.hass.async_add_executor_job(set_function)
-        for attempt in range(MAX_RESPONSE_ATTEMPTS):
-            if attempt > 0:
-                _LOGGER.debug(
-                    "Climate data not in yet (%s) (%s). Waiting (%s) seconds",
-                    self.leaf.vin,
-                    attempt,
-                    PYCARWINGS2_SLEEP,
-                )
-                await asyncio.sleep(PYCARWINGS2_SLEEP)
-
-            climate_result = await self.hass.async_add_executor_job(
-                result_function, request
-            )
-
-            if climate_result is not None:
-                break
-
-        if climate_result is not None:
-            _LOGGER.debug("Climate result: %s", climate_result.__dict__)
-            async_dispatcher_send(self.hass, SIGNAL_UPDATE_LEAF)
-            return climate_result.is_hvac_running == toggle
-
-        _LOGGER.debug("Climate result not returned by Nissan servers")
-        return False
+        # Setting climate control is now a fire and forget
+        await self.hass.async_add_executor_job(set_function)
+        return True
 
 
 class LeafEntity(Entity):
