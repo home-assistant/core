@@ -248,9 +248,9 @@ async def async_validate_action_config(
             hass, config[CONF_DOMAIN], device_automation.DeviceAutomationType.ACTION
         )
         if hasattr(platform, "async_validate_action_config"):
-            config = await platform.async_validate_action_config(hass, config)  # type: ignore
+            config = await platform.async_validate_action_config(hass, config)
         else:
-            config = platform.ACTION_SCHEMA(config)  # type: ignore
+            config = platform.ACTION_SCHEMA(config)
 
     elif action_type == cv.SCRIPT_ACTION_CHECK_CONDITION:
         config = await condition.async_validate_condition_config(hass, config)
