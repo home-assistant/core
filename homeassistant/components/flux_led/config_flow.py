@@ -107,9 +107,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="already_in_progress")
         if not device[ATTR_MODEL_DESCRIPTION]:
             try:
-                device = await self._async_try_connect(
-                    host, device[ATTR_ID], device[ATTR_MODEL]
-                )
+                device = await self._async_try_connect(host, device)
             except FLUX_LED_EXCEPTIONS:
                 return self.async_abort(reason="cannot_connect")
             else:
@@ -163,7 +161,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not (host := user_input[CONF_HOST]):
                 return await self.async_step_pick_device()
             try:
-                device = await self._async_try_connect(host, None, None)
+                device = await self._async_try_connect(host, None)
             except FLUX_LED_EXCEPTIONS:
                 errors["base"] = "cannot_connect"
             else:
@@ -191,9 +189,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             device = self._discovered_devices[mac]
             if not device.get(ATTR_MODEL_DESCRIPTION):
                 with contextlib.suppress(*FLUX_LED_EXCEPTIONS):
-                    device = await self._async_try_connect(
-                        device[ATTR_IPADDR], format_as_flux_mac(mac), None
-                    )
+                    device = await self._async_try_connect(device[ATTR_IPADDR], device)
             return self._async_create_entry_from_device(device)
 
         current_unique_ids = self._async_current_ids()
@@ -224,7 +220,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def _async_try_connect(
-        self, host: str, mac_address: str | None, model: str | None
+        self, host: str, discovery: FluxLEDDiscovery | None
     ) -> FluxLEDDiscovery:
         """Try to connect."""
         self._async_abort_entries_match({CONF_HOST: host})
@@ -238,10 +234,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # AKA `HF-LPB100-ZJ200`
             return device
         bulb = async_wifi_bulb_for_host(host, discovery=device)
+        bulb.discovery = discovery
         try:
             await bulb.async_setup(lambda: None)
         finally:
             await bulb.async_stop()
+        mac_address = discovery[ATTR_ID] if discovery else None
+        model = discovery[ATTR_MODEL] if discovery else None
         return FluxLEDDiscovery(
             ipaddr=host,
             model=model,
