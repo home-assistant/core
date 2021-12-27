@@ -115,6 +115,7 @@ async def async_setup_entry(
         PVOutputSensorEntity(
             coordinator=coordinator,
             description=description,
+            system_id=entry.data[CONF_SYSTEM_ID],
         )
         for description in SENSORS
     )
@@ -131,10 +132,12 @@ class PVOutputSensorEntity(CoordinatorEntity, SensorEntity):
         *,
         coordinator: DataUpdateCoordinator,
         description: PVOutputSensorEntityDescription,
+        system_id: str,
     ) -> None:
         """Initialize a PVOutput sensor."""
         super().__init__(coordinator=coordinator)
         self.entity_description = description
+        self._attr_unique_id = f"{system_id}_{description.key}"
 
     @property
     def native_value(self) -> int | float | None:
