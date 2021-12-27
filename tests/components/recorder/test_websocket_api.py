@@ -9,6 +9,7 @@ from pytest import approx
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder.const import DATA_INSTANCE
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
@@ -287,10 +288,12 @@ async def test_recorder_info_bad_recorder_config(hass, hass_ws_client):
     client = await hass_ws_client()
 
     with patch("homeassistant.components.recorder.migration.migrate_schema"):
-        assert not await async_setup_component(
+        assert await async_setup_component(
             hass, recorder.DOMAIN, {recorder.DOMAIN: config}
         )
-        assert recorder.DOMAIN not in hass.config.components
+        assert recorder.DOMAIN in hass.config.components
+        entries = hass.config_entries.async_entries(recorder.DOMAIN)
+        assert ConfigEntryState.SETUP_ERROR == entries[0].state
     await hass.async_block_till_done()
 
     # Wait for recorder to shut down

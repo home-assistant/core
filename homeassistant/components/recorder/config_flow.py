@@ -19,7 +19,7 @@ class RecorderFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Return logger."""
         return logging.getLogger(__name__)
 
-    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
+    async def async_step_system(self, user_input: dict[str, Any]) -> FlowResult:
         """Import data."""
         # Only allow 1 instance.
         if self._async_current_entries():

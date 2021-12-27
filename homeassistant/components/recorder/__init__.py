@@ -22,7 +22,7 @@ from sqlalchemy.pool import StaticPool
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_EXCLUDE,
@@ -236,11 +236,11 @@ def run_information_with_session(session, point_in_time: datetime | None = None)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the recorder."""
-    hass.data[DOMAIN] = {}
-    if not hass.config_entries.async_entries(DOMAIN):
+    entries = hass.config_entries.async_entries(DOMAIN)
+    if not entries:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=(config[DOMAIN])
+                DOMAIN, context={"source": "system"}, data=(config[DOMAIN])
             )
         )
     return True
@@ -251,6 +251,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
 ) -> bool:
     """Set up the recorder."""
+    hass.data[DOMAIN] = {}
     exclude = config_entry.data[CONF_EXCLUDE]
     exclude_t = exclude.get(CONF_EVENT_TYPES, [])
     if EVENT_STATE_CHANGED in exclude_t:

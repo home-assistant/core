@@ -55,6 +55,7 @@ from .common import (
 from .conftest import SetupRecorderInstanceT
 
 from tests.common import (
+    MockConfigEntry,
     async_fire_time_changed,
     async_init_recorder_component,
     fire_time_changed,
@@ -64,15 +65,11 @@ from tests.common import (
 
 def _default_recorder(hass):
     """Return a recorder with reasonable defaults."""
+    conf = CONFIG_SCHEMA({DOMAIN: {"db_url": "sqlite://"}})
+    config_entry = MockConfigEntry(data=conf[DOMAIN])
     return Recorder(
         hass,
-        auto_purge=True,
-        keep_days=7,
-        commit_interval=1,
-        uri="sqlite://",
-        db_max_retries=10,
-        db_retry_wait=3,
-        entity_filter=CONFIG_SCHEMA({DOMAIN: {}}),
+        config_entry,
         exclude_t=[],
     )
 
