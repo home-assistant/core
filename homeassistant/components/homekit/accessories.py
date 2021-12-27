@@ -57,7 +57,6 @@ from .const import (
     MANUFACTURER,
     MAX_MANUFACTURER_LENGTH,
     MAX_MODEL_LENGTH,
-    MAX_NAME_LENGTH,
     MAX_SERIAL_LENGTH,
     MAX_VERSION_LENGTH,
     SERV_BATTERY_SERVICE,
@@ -73,6 +72,7 @@ from .util import (
     accessory_friendly_name,
     async_dismiss_setup_message,
     async_show_setup_message,
+    cleanup_name_for_homekit,
     convert_to_float,
     format_sw_version,
     validate_media_player_features,
@@ -239,7 +239,11 @@ class HomeAccessory(Accessory):
     ):
         """Initialize a Accessory object."""
         super().__init__(
-            driver=driver, display_name=name[:MAX_NAME_LENGTH], aid=aid, *args, **kwargs
+            driver=driver,
+            display_name=cleanup_name_for_homekit(name),
+            aid=aid,
+            *args,
+            **kwargs,
         )
         self.config = config or {}
         if device_id:
