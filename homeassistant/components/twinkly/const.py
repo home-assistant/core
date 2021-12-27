@@ -17,6 +17,7 @@ DEV_NAME = "device_name"
 DEV_MODEL = "product_code"
 DEV_LED_PROFILE = "led_profile"
 
+DEV_PROFILE_RGB = "RGB"
 DEV_PROFILE_RGBW = "RGBW"
 
 DATA_CLIENT = "client"

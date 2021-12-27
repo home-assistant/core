@@ -9,8 +9,10 @@ from ttls.client import Twinkly
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
     COLOR_MODE_BRIGHTNESS,
+    COLOR_MODE_RGB,
     COLOR_MODE_RGBW,
     LightEntity,
 )
@@ -29,6 +31,7 @@ from .const import (
     DEV_LED_PROFILE,
     DEV_MODEL,
     DEV_NAME,
+    DEV_PROFILE_RGB,
     DEV_PROFILE_RGBW,
     DOMAIN,
     HIDDEN_DEV_VALUES,
@@ -67,6 +70,10 @@ class TwinklyLight(LightEntity):
             self._attr_supported_color_modes = {COLOR_MODE_RGBW}
             self._attr_color_mode = COLOR_MODE_RGBW
             self._attr_rgbw_color = (255, 255, 255, 0)
+        elif device_info.get(DEV_LED_PROFILE) == DEV_PROFILE_RGB:
+            self._attr_supported_color_modes = {COLOR_MODE_RGB}
+            self._attr_color_mode = COLOR_MODE_RGB
+            self._attr_rgb_color = (255, 255, 255)
         else:
             self._attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
             self._attr_color_mode = COLOR_MODE_BRIGHTNESS
@@ -174,6 +181,16 @@ class TwinklyLight(LightEntity):
                             self._attr_rgbw_color[2],
                         )
                     )
+
+        if ATTR_RGB_COLOR in kwargs:
+            if kwargs[ATTR_RGB_COLOR] != self._attr_rgb_color:
+                self._attr_rgb_color = kwargs[ATTR_RGB_COLOR]
+
+                if isinstance(self._attr_rgb_color, tuple):
+
+                    await self._client.interview()
+                    # Reagarrange from rgbw to wrgb
+                    await self._client.set_static_colour(self._attr_rgb_color)
 
         if not self._is_on:
             await self._client.turn_on()
