@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock
 
 from pyunifiprotect import NotAuthorized, NvrError
 
-from homeassistant.components.unifiprotect.const import CONF_DISABLE_RTSP, DOMAIN
+from homeassistant.components.unifiprotect.const import CONF_DISABLE_RTSP
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -21,7 +21,6 @@ async def test_setup(hass: HomeAssistant, mock_entry: MockEntityFixture):
     assert mock_entry.entry.state == ConfigEntryState.LOADED
     assert mock_entry.api.update.called
     assert mock_entry.entry.unique_id == mock_entry.api.bootstrap.nvr.mac
-    assert mock_entry.entry.entry_id in hass.data[DOMAIN]
 
 
 async def test_reload(hass: HomeAssistant, mock_entry: MockEntityFixture):
@@ -37,7 +36,6 @@ async def test_reload(hass: HomeAssistant, mock_entry: MockEntityFixture):
     await hass.async_block_till_done()
 
     assert mock_entry.entry.state == ConfigEntryState.LOADED
-    assert mock_entry.entry.entry_id in hass.data[DOMAIN]
     assert mock_entry.api.async_disconnect_ws.called
 
 

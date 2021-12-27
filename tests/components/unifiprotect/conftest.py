@@ -161,8 +161,22 @@ async def simple_camera(
     yield (camera, "camera.test_camera_high")
 
 
-async def time_changed(hass, seconds):
+async def time_changed(hass: HomeAssistant, seconds: int) -> None:
     """Trigger time changed."""
     next_update = dt_util.utcnow() + timedelta(seconds)
     async_fire_time_changed(hass, next_update)
     await hass.async_block_till_done()
+
+
+async def enable_entity(
+    hass: HomeAssistant, entry_id: str, entity_id: str
+) -> er.RegistryEntry:
+    """Enable a disabled entity."""
+    entity_registry = er.async_get(hass)
+
+    updated_entity = entity_registry.async_update_entity(entity_id, disabled_by=None)
+    assert not updated_entity.disabled
+    await hass.config_entries.async_reload(entry_id)
+    await hass.async_block_till_done()
+
+    return updated_entity
