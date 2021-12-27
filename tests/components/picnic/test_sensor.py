@@ -387,6 +387,21 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         self._assert_sensor("sensor.picnic_last_order_eta_end", STATE_UNAVAILABLE)
         self._assert_sensor("sensor.picnic_last_order_delivery_time", STATE_UNAVAILABLE)
 
+    async def test_sensors_malformed_delivery_data(self):
+        """Test sensor states when the delivery api returns not a list."""
+        # Setup platform with default responses
+        await self._setup_platform(use_default_responses=True)
+
+        # Change mock responses to empty data and refresh the coordinator
+        self.picnic_mock().get_deliveries.return_value = {"error": "message"}
+        await self._coordinator.async_refresh()
+
+        # Assert all last-order sensors have STATE_UNAVAILABLE because the delivery info fetch failed
+        assert self._coordinator.last_update_success is True
+        self._assert_sensor("sensor.picnic_last_order_eta_start", STATE_UNKNOWN)
+        self._assert_sensor("sensor.picnic_last_order_eta_end", STATE_UNKNOWN)
+        self._assert_sensor("sensor.picnic_last_order_delivery_time", STATE_UNKNOWN)
+
     async def test_sensors_malformed_response(self):
         """Test coordinator update fails when API yields ValueError."""
         # Setup platform with default responses
