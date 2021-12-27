@@ -1,0 +1,15 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                "hostname": "The hostname for which to perform the DNS query",
+                "name": "Name",
+                "resolver": "The DNS server to target the query at",
+                "ipv6": "Use IPv6 resolver",
+                "resolver_ipv6": "The IPv6 DNS server to target the query at"
+                }
+            }
+        }
+    }
+}
