@@ -515,7 +515,7 @@ hole==0.7.0
 holidays==0.11.3.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20211220.0
+home-assistant-frontend==20211227.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1236,7 +1236,7 @@ ring_doorbell==0.7.2
 rokuecp==0.8.4
 
 # homeassistant.components.roomba
-roombapy==1.6.4
+roombapy==1.6.5
 
 # homeassistant.components.roon
 roonapi==0.0.38
@@ -1291,7 +1291,7 @@ smarthab==0.21
 smhi-pkg==1.0.15
 
 # homeassistant.components.sonos
-soco==0.25.1
+soco==0.25.2
 
 # homeassistant.components.solaredge
 solaredge==0.0.2
@@ -1376,7 +1376,7 @@ total_connect_client==2021.12
 transmissionrpc==0.11
 
 # homeassistant.components.tuya
-tuya-iot-py-sdk==0.6.3
+tuya-iot-py-sdk==0.6.6
 
 # homeassistant.components.twentemilieu
 twentemilieu==0.5.0
@@ -1470,10 +1470,10 @@ yalexs==1.1.13
 yeelight==0.7.8
 
 # homeassistant.components.youless
-youless-api==0.15
+youless-api==0.16
 
 # homeassistant.components.zeroconf
-zeroconf==0.37.0
+zeroconf==0.38.1
 
 # homeassistant.components.zha
 zha-quirks==0.0.65
