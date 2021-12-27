@@ -1,11 +1,8 @@
 """Shared Entity definition for UniFi Protect Integration."""
 from __future__ import annotations
 
-from typing import Any
-
 from pyunifiprotect.data import ProtectAdoptableDeviceModel
 
-from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import callback
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
@@ -45,6 +42,7 @@ class ProtectDeviceEntity(Entity):
             name = description.name or ""
             self._attr_name = f"{self.device.name} {name.title()}"
 
+        self._attr_attribution = DEFAULT_ATTRIBUTION
         self._async_set_device_info()
         self._async_update_device_from_protect()
 
@@ -54,16 +52,6 @@ class ProtectDeviceEntity(Entity):
         Only used by the generic entity update service.
         """
         await self.data.async_refresh()
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return UniFi Protect device attributes."""
-        attrs = super().extra_state_attributes or {}
-        return {
-            **attrs,
-            ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION,
-            **self._extra_state_attributes,
-        }
 
     @callback
     def _async_set_device_info(self) -> None:
@@ -78,13 +66,6 @@ class ProtectDeviceEntity(Entity):
         )
 
     @callback
-    def _async_update_extra_attrs_from_protect(  # pylint: disable=no-self-use
-        self,
-    ) -> dict[str, Any]:
-        """Calculate extra state attributes. Primarily for subclass to override."""
-        return {}
-
-    @callback
     def _async_update_device_from_protect(self) -> None:
         """Update Entity object from Protect device."""
         if self.data.last_update_success:
@@ -95,7 +76,6 @@ class ProtectDeviceEntity(Entity):
         self._attr_available = (
             self.data.last_update_success and self.device.is_connected
         )
-        self._extra_state_attributes = self._async_update_extra_attrs_from_protect()
 
     @callback
     def _async_updated_event(self) -> None:

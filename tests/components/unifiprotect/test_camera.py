@@ -2,13 +2,18 @@
 from __future__ import annotations
 
 from copy import copy
-from typing import cast
 from unittest.mock import AsyncMock, Mock
 
 from pyunifiprotect.data import Camera as ProtectCamera
+from pyunifiprotect.data.devices import CameraChannel
 from pyunifiprotect.exceptions import NvrError
 
-from homeassistant.components.camera import Camera, async_get_image
+from homeassistant.components.camera import (
+    SUPPORT_STREAM,
+    Camera,
+    async_get_image,
+    async_get_stream_source,
+)
 from homeassistant.components.unifiprotect.const import (
     ATTR_BITRATE,
     ATTR_CHANNEL_ID,
@@ -17,65 +22,143 @@ from homeassistant.components.unifiprotect.const import (
     ATTR_WIDTH,
     DEFAULT_ATTRIBUTION,
     DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
 )
-from homeassistant.components.unifiprotect.data import ProtectData
-from homeassistant.const import ATTR_ATTRIBUTION, ATTR_ENTITY_ID
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .conftest import MockEntityFixture, time_changed
+from .conftest import MockEntityFixture, enable_entity, time_changed
 
 
-async def validate_camera_entity(
+def validate_default_camera_entity(
     hass: HomeAssistant,
     camera: ProtectCamera,
     channel_id: int,
-    secure: bool,
-    rtsp_enabled: bool,
-    enabled: bool,
-):
+) -> str:
     """Validate a camera entity."""
 
     channel = camera.channels[channel_id]
 
     entity_name = f"{camera.name} {channel.name}"
     unique_id = f"{camera.id}_{channel.id}"
-    if not secure:
-        entity_name += " Insecure"
-        unique_id += "_insecure"
     entity_id = f"camera.{entity_name.replace(' ', '_').lower()}"
 
     entity_registry = er.async_get(hass)
     entity = entity_registry.async_get(entity_id)
     assert entity
-    assert entity.disabled is (not enabled)
+    assert entity.disabled is False
     assert entity.unique_id == unique_id
 
-    if not enabled:
-        return
+    return entity_id
 
-    camera_platform = hass.data.get("camera")
-    assert camera_platform
-    ha_camera = cast(Camera, camera_platform.get_entity(entity_id))
-    assert ha_camera
-    if rtsp_enabled:
-        if secure:
-            assert await ha_camera.stream_source() == channel.rtsps_url
-        else:
-            assert await ha_camera.stream_source() == channel.rtsp_url
-    else:
-        assert await ha_camera.stream_source() is None
 
+def validate_rtsps_camera_entity(
+    hass: HomeAssistant,
+    camera: ProtectCamera,
+    channel_id: int,
+) -> str:
+    """Validate a disabled RTSPS camera entity."""
+
+    channel = camera.channels[channel_id]
+
+    entity_name = f"{camera.name} {channel.name}"
+    unique_id = f"{camera.id}_{channel.id}"
+    entity_id = f"camera.{entity_name.replace(' ', '_').lower()}"
+
+    entity_registry = er.async_get(hass)
+    entity = entity_registry.async_get(entity_id)
+    assert entity
+    assert entity.disabled is True
+    assert entity.unique_id == unique_id
+
+    return entity_id
+
+
+def validate_rtsp_camera_entity(
+    hass: HomeAssistant,
+    camera: ProtectCamera,
+    channel_id: int,
+) -> str:
+    """Validate a disabled RTSP camera entity."""
+
+    channel = camera.channels[channel_id]
+
+    entity_name = f"{camera.name} {channel.name} Insecure"
+    unique_id = f"{camera.id}_{channel.id}_insecure"
+    entity_id = f"camera.{entity_name.replace(' ', '_').lower()}"
+
+    entity_registry = er.async_get(hass)
+    entity = entity_registry.async_get(entity_id)
+    assert entity
+    assert entity.disabled is True
+    assert entity.unique_id == unique_id
+
+    return entity_id
+
+
+def validate_common_camera_state(
+    hass: HomeAssistant,
+    channel: CameraChannel,
+    entity_id: str,
+    features: int = SUPPORT_STREAM,
+):
+    """Validate state that is common to all camera entity, regradless of type."""
     entity_state = hass.states.get(entity_id)
     assert entity_state
     assert entity_state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
+    assert entity_state.attributes[ATTR_SUPPORTED_FEATURES] == features
     assert entity_state.attributes[ATTR_WIDTH] == channel.width
     assert entity_state.attributes[ATTR_HEIGHT] == channel.height
     assert entity_state.attributes[ATTR_FPS] == channel.fps
     assert entity_state.attributes[ATTR_BITRATE] == channel.bitrate
     assert entity_state.attributes[ATTR_CHANNEL_ID] == channel.id
+
+
+async def validate_rtsps_camera_state(
+    hass: HomeAssistant,
+    camera: ProtectCamera,
+    channel_id: int,
+    entity_id: str,
+    features: int = SUPPORT_STREAM,
+):
+    """Validate a camera's state."""
+    channel = camera.channels[channel_id]
+
+    assert await async_get_stream_source(hass, entity_id) == channel.rtsps_url
+    validate_common_camera_state(hass, channel, entity_id, features)
+
+
+async def validate_rtsp_camera_state(
+    hass: HomeAssistant,
+    camera: ProtectCamera,
+    channel_id: int,
+    entity_id: str,
+    features: int = SUPPORT_STREAM,
+):
+    """Validate a camera's state."""
+    channel = camera.channels[channel_id]
+
+    assert await async_get_stream_source(hass, entity_id) == channel.rtsp_url
+    validate_common_camera_state(hass, channel, entity_id, features)
+
+
+async def validate_no_stream_camera_state(
+    hass: HomeAssistant,
+    camera: ProtectCamera,
+    channel_id: int,
+    entity_id: str,
+    features: int = SUPPORT_STREAM,
+):
+    """Validate a camera's state."""
+    channel = camera.channels[channel_id]
+
+    assert await async_get_stream_source(hass, entity_id) is None
+    validate_common_camera_state(hass, channel, entity_id, features)
 
 
 async def test_basic_setup(
@@ -96,12 +179,25 @@ async def test_basic_setup(
     camera_high_only.channels[1].is_rtsp_enabled = False
     camera_high_only.channels[2].is_rtsp_enabled = False
 
+    camera_medium_only = mock_camera.copy(deep=True)
+    camera_medium_only._api = mock_entry.api
+    camera_medium_only.channels[0]._api = mock_entry.api
+    camera_medium_only.channels[1]._api = mock_entry.api
+    camera_medium_only.channels[2]._api = mock_entry.api
+    camera_medium_only.name = "Test Camera 2"
+    camera_medium_only.id = "test_medium"
+    camera_medium_only.channels[0].is_rtsp_enabled = False
+    camera_medium_only.channels[1].is_rtsp_enabled = True
+    camera_medium_only.channels[1].name = "Medium"
+    camera_medium_only.channels[1].rtsp_alias = "test_medium_alias"
+    camera_medium_only.channels[2].is_rtsp_enabled = False
+
     camera_all_channels = mock_camera.copy(deep=True)
     camera_all_channels._api = mock_entry.api
     camera_all_channels.channels[0]._api = mock_entry.api
     camera_all_channels.channels[1]._api = mock_entry.api
     camera_all_channels.channels[2]._api = mock_entry.api
-    camera_all_channels.name = "Test Camera 2"
+    camera_all_channels.name = "Test Camera 3"
     camera_all_channels.id = "test_all"
     camera_all_channels.channels[0].is_rtsp_enabled = True
     camera_all_channels.channels[0].name = "High"
@@ -118,7 +214,7 @@ async def test_basic_setup(
     camera_no_channels.channels[0]._api = mock_entry.api
     camera_no_channels.channels[1]._api = mock_entry.api
     camera_no_channels.channels[2]._api = mock_entry.api
-    camera_no_channels.name = "Test Camera 3"
+    camera_no_channels.name = "Test Camera 4"
     camera_no_channels.id = "test_none"
     camera_no_channels.channels[0].is_rtsp_enabled = False
     camera_no_channels.channels[0].name = "High"
@@ -127,6 +223,7 @@ async def test_basic_setup(
 
     mock_entry.api.bootstrap.cameras = {
         camera_high_only.id: camera_high_only,
+        camera_medium_only.id: camera_medium_only,
         camera_all_channels.id: camera_all_channels,
         camera_no_channels.id: camera_no_channels,
     }
@@ -134,34 +231,55 @@ async def test_basic_setup(
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
 
-    await validate_camera_entity(
-        hass, camera_high_only, 0, secure=True, rtsp_enabled=True, enabled=True
-    )
-    await validate_camera_entity(
-        hass, camera_high_only, 0, secure=False, rtsp_enabled=True, enabled=False
-    )
+    entity_registry = er.async_get(hass)
 
-    await validate_camera_entity(
-        hass, camera_all_channels, 0, secure=True, rtsp_enabled=True, enabled=True
-    )
-    await validate_camera_entity(
-        hass, camera_all_channels, 0, secure=False, rtsp_enabled=True, enabled=False
-    )
-    await validate_camera_entity(
-        hass, camera_all_channels, 1, secure=True, rtsp_enabled=True, enabled=False
-    )
-    await validate_camera_entity(
-        hass, camera_all_channels, 1, secure=False, rtsp_enabled=True, enabled=False
-    )
-    await validate_camera_entity(
-        hass, camera_all_channels, 2, secure=True, rtsp_enabled=True, enabled=False
-    )
-    await validate_camera_entity(
-        hass, camera_all_channels, 2, secure=False, rtsp_enabled=True, enabled=False
-    )
+    assert len(hass.states.async_all()) == 4
+    assert len(entity_registry.entities) == 11
 
-    await validate_camera_entity(
-        hass, camera_no_channels, 0, secure=True, rtsp_enabled=False, enabled=True
+    # test camera 1
+    entity_id = validate_default_camera_entity(hass, camera_high_only, 0)
+    await validate_rtsps_camera_state(hass, camera_high_only, 0, entity_id)
+
+    entity_id = validate_rtsp_camera_entity(hass, camera_high_only, 0)
+    await enable_entity(hass, mock_entry.entry.entry_id, entity_id)
+    await validate_rtsp_camera_state(hass, camera_high_only, 0, entity_id)
+
+    # test camera 2
+    entity_id = validate_default_camera_entity(hass, camera_medium_only, 1)
+    await validate_rtsps_camera_state(hass, camera_medium_only, 1, entity_id)
+
+    entity_id = validate_rtsp_camera_entity(hass, camera_medium_only, 1)
+    await enable_entity(hass, mock_entry.entry.entry_id, entity_id)
+    await validate_rtsp_camera_state(hass, camera_medium_only, 1, entity_id)
+
+    # test camera 3
+    entity_id = validate_default_camera_entity(hass, camera_all_channels, 0)
+    await validate_rtsps_camera_state(hass, camera_all_channels, 0, entity_id)
+
+    entity_id = validate_rtsp_camera_entity(hass, camera_all_channels, 0)
+    await enable_entity(hass, mock_entry.entry.entry_id, entity_id)
+    await validate_rtsp_camera_state(hass, camera_all_channels, 0, entity_id)
+
+    entity_id = validate_rtsps_camera_entity(hass, camera_all_channels, 1)
+    await enable_entity(hass, mock_entry.entry.entry_id, entity_id)
+    await validate_rtsps_camera_state(hass, camera_all_channels, 1, entity_id)
+
+    entity_id = validate_rtsp_camera_entity(hass, camera_all_channels, 1)
+    await enable_entity(hass, mock_entry.entry.entry_id, entity_id)
+    await validate_rtsp_camera_state(hass, camera_all_channels, 1, entity_id)
+
+    entity_id = validate_rtsps_camera_entity(hass, camera_all_channels, 2)
+    await enable_entity(hass, mock_entry.entry.entry_id, entity_id)
+    await validate_rtsps_camera_state(hass, camera_all_channels, 2, entity_id)
+
+    entity_id = validate_rtsp_camera_entity(hass, camera_all_channels, 2)
+    await enable_entity(hass, mock_entry.entry.entry_id, entity_id)
+    await validate_rtsp_camera_state(hass, camera_all_channels, 2, entity_id)
+
+    # test camera 4
+    entity_id = validate_default_camera_entity(hass, camera_no_channels, 0)
+    await validate_no_stream_camera_state(
+        hass, camera_no_channels, 0, entity_id, features=0
     )
 
 
@@ -206,10 +324,6 @@ async def test_camera_generic_update(
 
     assert await async_setup_component(hass, "homeassistant", {})
 
-    data: ProtectData = hass.data[DOMAIN][mock_entry.entry.entry_id]
-    assert data
-    assert data.last_update_success
-
     state = hass.states.get(simple_camera[1])
     assert state and state.state == "idle"
 
@@ -231,10 +345,6 @@ async def test_camera_interval_update(
     simple_camera: tuple[ProtectCamera, str],
 ):
     """Interval updates updates camera entity."""
-
-    data: ProtectData = hass.data[DOMAIN][mock_entry.entry.entry_id]
-    assert data
-    assert data.last_update_success
 
     state = hass.states.get(simple_camera[1])
     assert state and state.state == "idle"
@@ -259,10 +369,6 @@ async def test_camera_bad_interval_update(
 ):
     """Interval updates marks camera unavailable."""
 
-    data: ProtectData = hass.data[DOMAIN][mock_entry.entry.entry_id]
-    assert data
-    assert data.last_update_success
-
     state = hass.states.get(simple_camera[1])
     assert state and state.state == "idle"
 
@@ -270,7 +376,6 @@ async def test_camera_bad_interval_update(
     mock_entry.api.update = AsyncMock(side_effect=NvrError)
     await time_changed(hass, DEFAULT_SCAN_INTERVAL)
 
-    assert not data.last_update_success
     state = hass.states.get(simple_camera[1])
     assert state and state.state == "unavailable"
 
@@ -278,7 +383,6 @@ async def test_camera_bad_interval_update(
     mock_entry.api.update = AsyncMock(return_value=mock_entry.api.bootstrap)
     await time_changed(hass, DEFAULT_SCAN_INTERVAL)
 
-    assert data.last_update_success
     state = hass.states.get(simple_camera[1])
     assert state and state.state == "idle"
 
@@ -289,10 +393,6 @@ async def test_camera_ws_update(
     simple_camera: tuple[ProtectCamera, str],
 ):
     """WS update updates camera entity."""
-
-    data: ProtectData = hass.data[DOMAIN][mock_entry.entry.entry_id]
-    assert data
-    assert data.last_update_success
 
     state = hass.states.get(simple_camera[1])
     assert state and state.state == "idle"
@@ -319,10 +419,6 @@ async def test_camera_ws_update_offline(
     simple_camera: tuple[ProtectCamera, str],
 ):
     """WS updates marks camera unavailable."""
-
-    data: ProtectData = hass.data[DOMAIN][mock_entry.entry.entry_id]
-    assert data
-    assert data.last_update_success
 
     state = hass.states.get(simple_camera[1])
     assert state and state.state == "idle"
