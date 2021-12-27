@@ -1,11 +1,15 @@
 """Support for Overkiz sensors."""
 from __future__ import annotations
 
+from dataclasses import dataclass
+from typing import Callable
+
 from pyoverkiz.enums import OverkizAttribute, OverkizState, UIWidget
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -28,7 +32,17 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import HomeAssistantOverkizData
 from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES
 from .coordinator import OverkizDataUpdateCoordinator
-from .entity import OverkizDescriptiveEntity, OverkizEntity, OverkizSensorDescription
+from .entity import OverkizDescriptiveEntity, OverkizEntity
+
+
+@dataclass
+class OverkizSensorDescription(SensorEntityDescription):
+    """Class to describe an Overkiz sensor."""
+
+    native_value: Callable[
+        [str | int | float], str | int | float
+    ] | None = lambda val: val
+
 
 SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
     OverkizSensorDescription(
@@ -347,20 +361,6 @@ async def async_setup_entry(
     }
 
     for device in data.coordinator.data.values():
-        if (
-            device.widget not in IGNORED_OVERKIZ_DEVICES
-            and device.ui_class not in IGNORED_OVERKIZ_DEVICES
-        ):
-            for state in device.definition.states:
-                if description := key_supported_states.get(state.qualified_name):
-                    entities.append(
-                        OverkizStateSensor(
-                            device.device_url,
-                            data.coordinator,
-                            description,
-                        )
-                    )
-
         if device.widget == UIWidget.HOMEKIT_STACK:
             entities.append(
                 OverkizHomeKitSetupCodeSensor(
@@ -368,6 +368,22 @@ async def async_setup_entry(
                     data.coordinator,
                 )
             )
+
+        if (
+            device.widget in IGNORED_OVERKIZ_DEVICES
+            or device.ui_class in IGNORED_OVERKIZ_DEVICES
+        ):
+            continue
+
+        for state in device.definition.states:
+            if description := key_supported_states.get(state.qualified_name):
+                entities.append(
+                    OverkizStateSensor(
+                        device.device_url,
+                        data.coordinator,
+                        description,
+                    )
+                )
 
     async_add_entities(entities)
 
