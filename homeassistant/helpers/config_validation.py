@@ -16,7 +16,7 @@ from numbers import Number
 import os
 import re
 from socket import _GLOBAL_DEFAULT_TIMEOUT  # type: ignore # private, not in typeshed
-from typing import Any, Dict, TypeVar, cast
+from typing import Any, Dict, TypeVar, cast, overload
 from urllib.parse import urlparse
 from uuid import UUID
 
@@ -245,7 +245,17 @@ def isdir(value: Any) -> str:
     return dir_in
 
 
-def ensure_list(value: T | list[T] | None) -> list[T]:
+@overload
+def ensure_list(value: None) -> list[Any]:
+    ...
+
+
+@overload
+def ensure_list(value: T | list[T]) -> list[T]:
+    ...
+
+
+def ensure_list(value: T | list[T] | None) -> list[T] | list[Any]:
     """Wrap value in list if it is not one."""
     if value is None:
         return []

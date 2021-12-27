@@ -642,10 +642,10 @@ def _log_pkg_error(package: str, component: str, config: dict, message: str) -> 
 
 def _identify_config_schema(module: ModuleType) -> str | None:
     """Extract the schema and identify list or dict based."""
-    if not isinstance(module.CONFIG_SCHEMA, vol.Schema):  # type: ignore
+    if not isinstance(module.CONFIG_SCHEMA, vol.Schema):
         return None
 
-    schema = module.CONFIG_SCHEMA.schema  # type: ignore
+    schema = module.CONFIG_SCHEMA.schema
 
     if isinstance(schema, vol.All):
         for subschema in schema.validators:
@@ -656,7 +656,7 @@ def _identify_config_schema(module: ModuleType) -> str | None:
             return None
 
     try:
-        key = next(k for k in schema if k == module.DOMAIN)  # type: ignore
+        key = next(k for k in schema if k == module.DOMAIN)
     except (TypeError, AttributeError, StopIteration):
         return None
     except Exception:  # pylint: disable=broad-except
@@ -666,8 +666,8 @@ def _identify_config_schema(module: ModuleType) -> str | None:
     if hasattr(key, "default") and not isinstance(
         key.default, vol.schema_builder.Undefined
     ):
-        default_value = module.CONFIG_SCHEMA({module.DOMAIN: key.default()})[  # type: ignore
-            module.DOMAIN  # type: ignore
+        default_value = module.CONFIG_SCHEMA({module.DOMAIN: key.default()})[
+            module.DOMAIN
         ]
 
         if isinstance(default_value, dict):
@@ -747,7 +747,7 @@ async def merge_packages_config(
 
             # If integration has a custom config validator, it needs to provide a hint.
             if config_platform is not None:
-                merge_list = config_platform.PACKAGE_MERGE_HINT == "list"  # type: ignore[attr-defined]
+                merge_list = config_platform.PACKAGE_MERGE_HINT == "list"
 
             if not merge_list:
                 merge_list = hasattr(component, "PLATFORM_SCHEMA")
@@ -889,7 +889,7 @@ async def async_process_component_config(  # noqa: C901
         # Validate platform specific schema
         if hasattr(platform, "PLATFORM_SCHEMA"):
             try:
-                p_validated = platform.PLATFORM_SCHEMA(p_config)  # type: ignore
+                p_validated = platform.PLATFORM_SCHEMA(p_config)
             except vol.Invalid as ex:
                 async_log_exception(
                     ex,
