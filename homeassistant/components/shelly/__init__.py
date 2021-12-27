@@ -333,7 +333,7 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
                 break
 
         # Check for input events and config change
-        cfg_changed = 0
+        cfg_changed: int = 0
         for block in self.device.blocks:
             if block.type == "device":
                 cfg_changed = block.cfgChanged
@@ -395,12 +395,14 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
             )
             self.hass.async_create_task(self._debounced_reload.async_call())
 
-        if self._last_cfg_changed is None and int(cfg_changed) == 0:
-            _LOGGER.debug("Reboot detected")
-            if not self.entry.data.get(CONF_SLEEP_PERIOD):
-                self.hass.async_create_task(
-                    async_device_update_info(self.hass, self.device, self.entry)
-                )
+        if cfg_changed == 0:
+            self.hass.async_create_task(self.device.refresh())
+            if int(self.device.status["uptime"]) < ENTRY_RELOAD_COOLDOWN:
+                _LOGGER.debug("Reboot detected")
+                if not self.entry.data.get(CONF_SLEEP_PERIOD):
+                    self.hass.async_create_task(
+                        async_device_update_info(self.hass, self.device, self.entry)
+                    )
 
         self._last_cfg_changed = cfg_changed
 
