@@ -807,6 +807,7 @@ omit =
     homeassistant/components/overkiz/coordinator.py
     homeassistant/components/overkiz/entity.py
     homeassistant/components/overkiz/executor.py
+    homeassistant/components/overkiz/light.py
     homeassistant/components/overkiz/lock.py
     homeassistant/components/overkiz/number.py
     homeassistant/components/overkiz/sensor.py
