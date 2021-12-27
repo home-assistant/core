@@ -35,7 +35,6 @@ class CpuSpeedSensor(SensorEntity):
     def __init__(self, name):
         """Initialize the CPU sensor."""
         self._attr_name = name
-        self._state = None
         self.info = None
 
     @property
@@ -59,6 +58,6 @@ class CpuSpeedSensor(SensorEntity):
         """Get the latest data and updates the state."""
         self.info = cpuinfo.get_cpu_info()
         if HZ_ACTUAL in self.info:
-            self._state = round(float(self.info[HZ_ACTUAL][0]) / 10 ** 9, 2)
+            self._attr_native_value = round(float(self.info[HZ_ACTUAL][0]) / 10 ** 9, 2)
         else:
-            self._state = None
+            self._attr_native_value = None
