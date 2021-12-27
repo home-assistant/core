@@ -37,6 +37,7 @@ DATA_FRITZ = "fritz_data"
 DSL_CONNECTION: Literal["dsl"] = "dsl"
 
 DEFAULT_DEVICE_NAME = "Unknown device"
+DEFAULT_GUEST_WIFI_PW_LENGTH = 32
 DEFAULT_HOST = "192.168.178.1"
 DEFAULT_PORT = 49000
 DEFAULT_USERNAME = ""
@@ -49,6 +50,7 @@ FRITZ_SERVICES = "fritz_services"
 SERVICE_REBOOT = "reboot"
 SERVICE_RECONNECT = "reconnect"
 SERVICE_CLEANUP = "cleanup"
+SERVICE_SET_GUEST_WIFI_PW = "set_guest_wifi_password"
 
 SWITCH_TYPE_DEFLECTION = "CallDeflection"
 SWITCH_TYPE_PORTFORWARD = "PortForward"

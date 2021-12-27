@@ -13,12 +13,18 @@ from .const import (
     SERVICE_CLEANUP,
     SERVICE_REBOOT,
     SERVICE_RECONNECT,
+    SERVICE_SET_GUEST_WIFI_PW,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 
-SERVICE_LIST = [SERVICE_CLEANUP, SERVICE_REBOOT, SERVICE_RECONNECT]
+SERVICE_LIST = [
+    SERVICE_CLEANUP,
+    SERVICE_SET_GUEST_WIFI_PW,
+    SERVICE_REBOOT,
+    SERVICE_RECONNECT,
+]
 
 
 async def async_setup_services(hass: HomeAssistant) -> None:
