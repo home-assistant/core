@@ -810,6 +810,7 @@ omit =
     homeassistant/components/overkiz/light.py
     homeassistant/components/overkiz/lock.py
     homeassistant/components/overkiz/number.py
+    homeassistant/components/overkiz/scene.py
     homeassistant/components/overkiz/sensor.py
     homeassistant/components/ovo_energy/__init__.py
     homeassistant/components/ovo_energy/const.py
