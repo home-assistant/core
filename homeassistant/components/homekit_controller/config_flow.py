@@ -204,7 +204,6 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         This flow is triggered by the discovery component.
         """
-        _LOGGER.warning("HKC ZC discovery: %s", discovery_info)
         # Normalize properties from discovery
         # homekit_python has code to do this, but not in a form we can
         # easily use, so do the bare minimum ourselves here instead.
@@ -221,8 +220,6 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
             return self.async_abort(reason="invalid_properties")
 
-        _LOGGER.warning("HKC ZC discovery 2: %s", discovery_info)
-
         # The hkid is a unique random number that looks like a pairing code.
         # It changes if a device is factory reset.
         hkid = properties[zeroconf.ATTR_PROPERTIES_ID]
@@ -232,8 +229,6 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         name = discovery_info.name.replace("._hap._tcp.local.", "")
         status_flags = int(properties["sf"])
         paired = not status_flags & 0x01
-
-        _LOGGER.warning("HKC ZC discovery 3: %s", discovery_info)
 
         # The configuration number increases every time the characteristic map
         # needs updating. Some devices use a slightly off-spec name so handle
@@ -246,8 +241,6 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
             config_num = None
 
-        _LOGGER.warning("HKC ZC discovery 4: %s", discovery_info)
-
         # Set unique-id and error out if it's already configured
         existing_entry = await self.async_set_unique_id(
             normalized_hkid, raise_on_progress=False
@@ -256,19 +249,10 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             "AccessoryIP": discovery_info.host,
             "AccessoryPort": discovery_info.port,
         }
-        _LOGGER.warning(
-            "past set unique id -- Discovered device %s (%s - %s)", name, model, hkid
-        )
 
         # If the device is already paired and known to us we should monitor c#
         # (config_num) for changes. If it changes, we check for new entities
         if paired and hkid in self.hass.data.get(KNOWN_DEVICES, {}):
-            _LOGGER.warning(
-                "past set unique id -- in known -- Discovered device %s (%s - %s)",
-                name,
-                model,
-                hkid,
-            )
             if existing_entry:
                 self.hass.config_entries.async_update_entry(
                     existing_entry, data={**existing_entry.data, **updated_ip_port}
