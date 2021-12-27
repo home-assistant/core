@@ -13,6 +13,8 @@ from homeassistant.components.flux_led.const import (
     CONF_CUSTOM_EFFECT_TRANSITION,
     CONF_MINOR_VERSION,
     CONF_MODEL,
+    CONF_MODEL_DESCRIPTION,
+    CONF_MODEL_INFO,
     CONF_REMOTE_ACCESS_ENABLED,
     CONF_REMOTE_ACCESS_HOST,
     CONF_REMOTE_ACCESS_PORT,
@@ -32,6 +34,7 @@ from . import (
     IP_ADDRESS,
     MAC_ADDRESS,
     MODEL,
+    MODEL_DESCRIPTION,
     MODULE,
     _patch_discovery,
     _patch_wifibulb,
@@ -91,6 +94,8 @@ async def test_discovery(hass: HomeAssistant):
         CONF_HOST: IP_ADDRESS,
         CONF_NAME: DEFAULT_ENTRY_TITLE,
         CONF_MODEL: MODEL,
+        CONF_MODEL_INFO: MODEL,
+        CONF_MODEL_DESCRIPTION: MODEL_DESCRIPTION,
         CONF_REMOTE_ACCESS_ENABLED: True,
         CONF_REMOTE_ACCESS_HOST: "the.cloud",
         CONF_REMOTE_ACCESS_PORT: 8816,
@@ -164,6 +169,8 @@ async def test_discovery_legacy(hass: HomeAssistant):
         CONF_HOST: IP_ADDRESS,
         CONF_NAME: DEFAULT_ENTRY_TITLE,
         CONF_MODEL: MODEL,
+        CONF_MODEL_INFO: MODEL,
+        CONF_MODEL_DESCRIPTION: MODEL_DESCRIPTION,
         CONF_REMOTE_ACCESS_ENABLED: True,
         CONF_REMOTE_ACCESS_HOST: "the.cloud",
         CONF_REMOTE_ACCESS_PORT: 8816,
@@ -244,6 +251,8 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant):
             CONF_HOST: IP_ADDRESS,
             CONF_NAME: DEFAULT_ENTRY_TITLE,
             CONF_MODEL: MODEL,
+            CONF_MODEL_INFO: MODEL,
+            CONF_MODEL_DESCRIPTION: MODEL_DESCRIPTION,
             CONF_REMOTE_ACCESS_ENABLED: True,
             CONF_REMOTE_ACCESS_HOST: "the.cloud",
             CONF_REMOTE_ACCESS_PORT: 8816,
@@ -318,6 +327,8 @@ async def test_manual_working_discovery(hass: HomeAssistant):
         CONF_HOST: IP_ADDRESS,
         CONF_NAME: DEFAULT_ENTRY_TITLE,
         CONF_MODEL: MODEL,
+        CONF_MODEL_INFO: MODEL,
+        CONF_MODEL_DESCRIPTION: MODEL_DESCRIPTION,
         CONF_REMOTE_ACCESS_ENABLED: True,
         CONF_REMOTE_ACCESS_HOST: "the.cloud",
         CONF_REMOTE_ACCESS_PORT: 8816,
@@ -356,7 +367,11 @@ async def test_manual_no_discovery_data(hass: HomeAssistant):
         await hass.async_block_till_done()
 
     assert result["type"] == "create_entry"
-    assert result["data"] == {CONF_HOST: IP_ADDRESS, CONF_NAME: IP_ADDRESS}
+    assert result["data"] == {
+        CONF_HOST: IP_ADDRESS,
+        CONF_MODEL_DESCRIPTION: MODEL_DESCRIPTION,
+        CONF_NAME: IP_ADDRESS,
+    }
 
 
 async def test_discovered_by_discovery_and_dhcp(hass):
@@ -425,6 +440,8 @@ async def test_discovered_by_discovery(hass):
         CONF_HOST: IP_ADDRESS,
         CONF_NAME: DEFAULT_ENTRY_TITLE,
         CONF_MODEL: MODEL,
+        CONF_MODEL_INFO: MODEL,
+        CONF_MODEL_DESCRIPTION: MODEL_DESCRIPTION,
         CONF_REMOTE_ACCESS_ENABLED: True,
         CONF_REMOTE_ACCESS_HOST: "the.cloud",
         CONF_REMOTE_ACCESS_PORT: 8816,
@@ -460,6 +477,8 @@ async def test_discovered_by_dhcp_udp_responds(hass):
         CONF_HOST: IP_ADDRESS,
         CONF_NAME: DEFAULT_ENTRY_TITLE,
         CONF_MODEL: MODEL,
+        CONF_MODEL_INFO: MODEL,
+        CONF_MODEL_DESCRIPTION: MODEL_DESCRIPTION,
         CONF_REMOTE_ACCESS_ENABLED: True,
         CONF_REMOTE_ACCESS_HOST: "the.cloud",
         CONF_REMOTE_ACCESS_PORT: 8816,
@@ -492,6 +511,7 @@ async def test_discovered_by_dhcp_no_udp_response(hass):
     assert result2["type"] == "create_entry"
     assert result2["data"] == {
         CONF_HOST: IP_ADDRESS,
+        CONF_MODEL_DESCRIPTION: MODEL_DESCRIPTION,
         CONF_NAME: DEFAULT_ENTRY_TITLE,
     }
     assert mock_async_setup.called
@@ -521,6 +541,7 @@ async def test_discovered_by_dhcp_partial_udp_response_fallback_tcp(hass):
     assert result2["type"] == "create_entry"
     assert result2["data"] == {
         CONF_HOST: IP_ADDRESS,
+        CONF_MODEL_DESCRIPTION: MODEL_DESCRIPTION,
         CONF_NAME: DEFAULT_ENTRY_TITLE,
     }
     assert mock_async_setup.called
