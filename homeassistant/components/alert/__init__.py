@@ -23,6 +23,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import ServiceCall
 from homeassistant.helpers import event, service
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
@@ -117,7 +118,7 @@ async def async_setup(hass, config):
     if not entities:
         return False
 
-    async def async_handle_alert_service(service_call):
+    async def async_handle_alert_service(service_call: ServiceCall) -> None:
         """Handle calls to alert services."""
         alert_ids = await service.async_extract_entity_ids(hass, service_call)
 
