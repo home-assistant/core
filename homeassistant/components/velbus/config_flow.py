@@ -88,6 +88,9 @@ class VelbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_usb(self, discovery_info: usb.UsbServiceInfo) -> FlowResult:
         """Handle USB Discovery."""
+        await self.async_set_unique_id(
+            f"{discovery_info.vid}:{discovery_info.pid}_{discovery_info.serial_number}"
+        )
         dev_path = await self.hass.async_add_executor_job(
             usb.get_serial_by_id, discovery_info.device
         )
@@ -97,10 +100,10 @@ class VelbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # check if we can make a valid velbus connection
         if not await self._test_connection(dev_path):
             return self.async_abort(reason="cannot_connect")
-        # store the data for the configm step
+        # store the data for the config step
         self._device = dev_path
         self._title = "Velbus USB"
-        # call the configm step
+        # call the config step
         return await self.async_step_discovery_confirm()
 
     async def async_step_discovery_confirm(
