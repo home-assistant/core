@@ -70,7 +70,6 @@ class TwinklyLight(LightEntity):
 
         # Set default state before any update
         self._is_on = False
-        self._brightness = 0
         self._is_available = False
         self._attributes = {ATTR_HOST: self._client.host}
 
@@ -124,11 +123,6 @@ class TwinklyLight(LightEntity):
         return self._is_on
 
     @property
-    def brightness(self) -> int | None:
-        """Return the brightness of the light."""
-        return self._brightness
-
-    @property
     def extra_state_attributes(self) -> dict:
         """Return device specific state attributes."""
 
@@ -136,7 +130,7 @@ class TwinklyLight(LightEntity):
 
         # Make sure to update any normalized property
         attributes[ATTR_HOST] = self._client.host
-        attributes[ATTR_BRIGHTNESS] = self._brightness
+        attributes[ATTR_BRIGHTNESS] = self._attr_brightness
 
         return attributes
 
@@ -189,7 +183,9 @@ class TwinklyLight(LightEntity):
                 int(brightness["value"]) if brightness["mode"] == "enabled" else 100
             )
 
-            self._brightness = int(round(brightness_value * 2.55)) if self._is_on else 0
+            self._attr_brightness = (
+                int(round(brightness_value * 2.55)) if self._is_on else 0
+            )
 
             device_info = await self._client.get_details()
 
