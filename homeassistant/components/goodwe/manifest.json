@@ -2,7 +2,6 @@
   "domain": "goodwe",
   "name": "GoodWe Inverter",
   "documentation": "https://www.home-assistant.io/integrations/goodwe",
-  "dependencies": [],
   "codeowners": [
     "@mletenay",
     "@starkillerOG"
