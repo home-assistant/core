@@ -1,7 +1,6 @@
 """Config flow for the Vallox integration."""
 from __future__ import annotations
 
-import ipaddress
 import logging
 from typing import Any
 
@@ -14,6 +13,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util.network import is_ip_address
 
 from .const import DEFAULT_NAME, DOMAIN
 
@@ -31,21 +31,10 @@ VALLOX_CONNECTION_EXCEPTIONS = (
 )
 
 
-def ip_valid(host: str) -> bool:
-    """Return True if the host is a valid IP address."""
-    try:
-        if ipaddress.ip_address(host).version in [4, 6]:
-            return True
-    except ValueError:
-        pass
-
-    return False
-
-
 async def validate_host(hass: HomeAssistant, host: str) -> None:
     """Validate that the user input allows us to connect."""
 
-    if not ip_valid(host):
+    if not is_ip_address(host):
         raise InvalidHost(f"Invalid IP address: {host}")
 
     client = Vallox(host)
