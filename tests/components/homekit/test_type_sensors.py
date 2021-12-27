@@ -383,3 +383,20 @@ async def test_bad_name(hass, hk_driver):
 
     assert acc.char_humidity.value == 20
     assert acc.display_name == "--Humid--"
+
+
+async def test_empty_name(hass, hk_driver):
+    """Test an entity with a empty name."""
+    entity_id = "sensor.humidity"
+
+    hass.states.async_set(entity_id, "20")
+    await hass.async_block_till_done()
+    acc = HumiditySensor(hass, hk_driver, None, entity_id, 2, None)
+    await acc.run()
+    await hass.async_block_till_done()
+
+    assert acc.aid == 2
+    assert acc.category == 10  # Sensor
+
+    assert acc.char_humidity.value == 20
+    assert acc.display_name is None
