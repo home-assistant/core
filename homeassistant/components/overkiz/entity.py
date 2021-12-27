@@ -1,13 +1,9 @@
 """Parent class for every Overkiz device."""
 from __future__ import annotations
 
-from collections.abc import Callable
-from dataclasses import dataclass
-
 from pyoverkiz.enums import OverkizAttribute, OverkizState
 from pyoverkiz.models import Device
 
-from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.helpers.entity import DeviceInfo, EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -81,15 +77,6 @@ class OverkizEntity(CoordinatorEntity):
             via_device=self.executor.get_gateway_id(),
             configuration_url=self.coordinator.client.server.configuration_url,
         )
-
-
-@dataclass
-class OverkizSensorDescription(SensorEntityDescription):
-    """Class to describe an Overkiz sensor."""
-
-    native_value: Callable[
-        [str | int | float], str | int | float
-    ] | None = lambda val: val
 
 
 class OverkizDescriptiveEntity(OverkizEntity):
