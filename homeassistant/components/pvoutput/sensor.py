@@ -1,10 +1,7 @@
 """Support for getting collected information from PVOutput."""
 from __future__ import annotations
 
-from datetime import timedelta
-import logging
-
-from pvo import PVOutput, PVOutputError, Status
+from pvo import Status
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -13,6 +10,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     ATTR_VOLTAGE,
@@ -24,20 +22,22 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
-_LOGGER = logging.getLogger(__name__)
-
-ATTR_ENERGY_GENERATION = "energy_generation"
-ATTR_POWER_GENERATION = "power_generation"
-ATTR_ENERGY_CONSUMPTION = "energy_consumption"
-ATTR_POWER_CONSUMPTION = "power_consumption"
-ATTR_EFFICIENCY = "efficiency"
-
-CONF_SYSTEM_ID = "system_id"
-
-DEFAULT_NAME = "PVOutput"
-
-SCAN_INTERVAL = timedelta(minutes=2)
+from .const import (
+    ATTR_EFFICIENCY,
+    ATTR_ENERGY_CONSUMPTION,
+    ATTR_ENERGY_GENERATION,
+    ATTR_POWER_CONSUMPTION,
+    ATTR_POWER_GENERATION,
+    CONF_SYSTEM_ID,
+    DEFAULT_NAME,
+    DOMAIN,
+    LOGGER,
+)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -55,51 +55,58 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the PVOutput sensor."""
-    pvoutput = PVOutput(
-        api_key=config[CONF_API_KEY],
-        system_id=config[CONF_SYSTEM_ID],
+    LOGGER.warning(
+        "Configuration of the PVOutput platform in YAML is deprecated and will be "
+        "removed in Home Assistant 2022.4; Your existing configuration "
+        "has been imported into the UI automatically and can be safely removed "
+        "from your configuration.yaml file"
+    )
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={
+                CONF_SYSTEM_ID: config[CONF_SYSTEM_ID],
+                CONF_API_KEY: config[CONF_API_KEY],
+                CONF_NAME: config[CONF_NAME],
+            },
+        )
     )
 
-    try:
-        status = await pvoutput.status()
-    except PVOutputError:
-        _LOGGER.error("Unable to fetch data from PVOutput")
-        return
 
-    async_add_entities([PvoutputSensor(pvoutput, status, config[CONF_NAME])])
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up a Tailscale binary sensors based on a config entry."""
+    coordinator = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities([PvoutputSensor(coordinator)])
 
 
-class PvoutputSensor(SensorEntity):
+class PvoutputSensor(CoordinatorEntity, SensorEntity):
     """Representation of a PVOutput sensor."""
 
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
     _attr_device_class = SensorDeviceClass.ENERGY
     _attr_native_unit_of_measurement = ENERGY_WATT_HOUR
 
-    def __init__(self, pvoutput: PVOutput, status: Status, name: str) -> None:
-        """Initialize a PVOutput sensor."""
-        self._attr_name = name
-        self.pvoutput = pvoutput
-        self.status = status
+    coordinator: DataUpdateCoordinator[Status]
 
     @property
     def native_value(self) -> int | None:
         """Return the state of the device."""
-        return self.status.energy_generation
+        return self.coordinator.data.energy_generation
 
     @property
     def extra_state_attributes(self) -> dict[str, int | float | None]:
         """Return the state attributes of the monitored installation."""
         return {
-            ATTR_ENERGY_GENERATION: self.status.energy_generation,
-            ATTR_POWER_GENERATION: self.status.power_generation,
-            ATTR_ENERGY_CONSUMPTION: self.status.energy_consumption,
-            ATTR_POWER_CONSUMPTION: self.status.power_consumption,
-            ATTR_EFFICIENCY: self.status.normalized_ouput,
-            ATTR_TEMPERATURE: self.status.temperature,
-            ATTR_VOLTAGE: self.status.voltage,
+            ATTR_ENERGY_GENERATION: self.coordinator.data.energy_generation,
+            ATTR_POWER_GENERATION: self.coordinator.data.power_generation,
+            ATTR_ENERGY_CONSUMPTION: self.coordinator.data.energy_consumption,
+            ATTR_POWER_CONSUMPTION: self.coordinator.data.power_consumption,
+            ATTR_EFFICIENCY: self.coordinator.data.normalized_ouput,
+            ATTR_TEMPERATURE: self.coordinator.data.temperature,
+            ATTR_VOLTAGE: self.coordinator.data.voltage,
         }
-
-    async def async_update(self) -> None:
-        """Get the latest data from the PVOutput API and updates the state."""
-        self.status = await self.pvoutput.status()
