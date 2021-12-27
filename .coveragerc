@@ -803,6 +803,7 @@ omit =
     homeassistant/components/osramlightify/light.py
     homeassistant/components/otp/sensor.py
     homeassistant/components/overkiz/__init__.py
+    homeassistant/components/overkiz/binary_sensor.py
     homeassistant/components/overkiz/button.py
     homeassistant/components/overkiz/coordinator.py
     homeassistant/components/overkiz/entity.py
