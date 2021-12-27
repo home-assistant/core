@@ -45,7 +45,7 @@ async def test_setup_login_exception(hass, config_entry):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.SETUP_ERROR
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_setup_login_timeout(hass, config_entry):
@@ -59,7 +59,7 @@ async def test_setup_login_timeout(hass, config_entry):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_setup_systems_exception(hass, config_entry):
@@ -75,7 +75,7 @@ async def test_setup_systems_exception(hass, config_entry):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_setup_no_systems_recognized(hass, config_entry):
@@ -91,7 +91,7 @@ async def test_setup_no_systems_recognized(hass, config_entry):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.SETUP_ERROR
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_setup_devices_exception(hass, config_entry, client):
@@ -113,7 +113,7 @@ async def test_setup_devices_exception(hass, config_entry, client):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_setup_all_good_no_recognized_devices(hass, config_entry, client):
@@ -138,7 +138,7 @@ async def test_setup_all_good_no_recognized_devices(hass, config_entry, client):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     assert len(hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)) == 0
     assert len(hass.states.async_entity_ids(CLIMATE_DOMAIN)) == 0
@@ -149,7 +149,7 @@ async def test_setup_all_good_no_recognized_devices(hass, config_entry, client):
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_setup_all_good_all_device_types(hass, config_entry, client):
@@ -179,7 +179,7 @@ async def test_setup_all_good_all_device_types(hass, config_entry, client):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     assert len(hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN)) == 1
     assert len(hass.states.async_entity_ids(CLIMATE_DOMAIN)) == 1
@@ -190,7 +190,7 @@ async def test_setup_all_good_all_device_types(hass, config_entry, client):
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_multiple_updates(hass, config_entry, caplog, client):
@@ -213,7 +213,7 @@ async def test_multiple_updates(hass, config_entry, caplog, client):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     def set_online_to_true():
         system.online = True
@@ -293,7 +293,7 @@ async def test_multiple_updates(hass, config_entry, caplog, client):
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_entity_assumed_and_available(hass, config_entry, client):
