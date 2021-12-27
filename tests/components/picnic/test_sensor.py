@@ -12,11 +12,9 @@ from homeassistant import config_entries
 from homeassistant.components.picnic import const
 from homeassistant.components.picnic.const import CONF_COUNTRY_CODE, SENSOR_TYPES
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CURRENCY_EURO,
-    DEVICE_CLASS_TIMESTAMP,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
