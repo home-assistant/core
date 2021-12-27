@@ -35,14 +35,17 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_HOST): vol.All(ipaddress.ip_address, cv.string),
-                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            }
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                {
+                    vol.Required(CONF_HOST): vol.All(ipaddress.ip_address, cv.string),
+                    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                }
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -139,11 +142,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the integration from configuration.yaml (DEPRECATED)."""
     if DOMAIN not in config:
         return True
-
-    _LOGGER.warning(
-        "Loading vallox via platform config is deprecated. The configuration has been migrated"
-        " to a config entry and can be safely removed from configuration.yaml"
-    )
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(

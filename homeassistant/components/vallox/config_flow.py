@@ -99,7 +99,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         host = user_input[CONF_HOST]
-        user_input[CONF_NAME] = DEFAULT_NAME
 
         self._async_abort_entries_match({CONF_HOST: host})
 
@@ -113,7 +112,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors[CONF_HOST] = "unknown"
         else:
-            return self.async_create_entry(title=DEFAULT_NAME, data=user_input)
+            return self.async_create_entry(
+                title=DEFAULT_NAME,
+                data={
+                    **user_input,
+                    CONF_NAME: DEFAULT_NAME,
+                },
+            )
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
