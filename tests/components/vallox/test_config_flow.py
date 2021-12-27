@@ -29,33 +29,29 @@ async def test_form_no_input(hass: HomeAssistant) -> None:
 
 async def test_form_create_entry(hass: HomeAssistant) -> None:
     """Test that an entry is created with valid input."""
-    name = "Vallox 110 MV"
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_HOST: "1.2.3.4", CONF_NAME: name},
+    init = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] == {"host": "unknown"}
+    assert init["type"] == RESULT_TYPE_FORM
+    assert init["errors"] is None
 
     with patch(
         "homeassistant.components.vallox.config_flow.Vallox.get_info",
-        return_value={"model": "Vallox 110 MV"},
+        return_value=None,
     ), patch(
         "homeassistant.components.vallox.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"host": "1.2.3.4", "name": name},
+        result = await hass.config_entries.flow.async_configure(
+            init["flow_id"],
+            {"host": "1.2.3.4"},
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == name
-    assert result2["data"] == {"host": "1.2.3.4", "name": "Vallox 110 MV"}
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == "Vallox"
+    assert result["data"] == {"host": "1.2.3.4", "name": "Vallox"}
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -115,6 +111,26 @@ async def test_form_os_error_cannot_connect(hass: HomeAssistant) -> None:
     assert result["errors"] == {"host": "cannot_connect"}
 
 
+async def test_form_unknown_exception(hass: HomeAssistant) -> None:
+    """Test that unknown exceptions are handled."""
+    init = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.vallox.config_flow.Vallox.get_info",
+        side_effect=Exception,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            init["flow_id"],
+            {"host": "54.12.31.41"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] == {"host": "unknown"}
+
+
 async def test_form_already_configured(hass: HomeAssistant) -> None:
     """Test that already configured error is handled."""
     init = await hass.config_entries.flow.async_init(
@@ -140,13 +156,13 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-async def test_import(hass: HomeAssistant) -> None:
+async def test_import_with_custom_name(hass: HomeAssistant) -> None:
     """Test that import is handled."""
     name = "Vallox 90 MV"
 
     with patch(
         "homeassistant.components.vallox.config_flow.Vallox.get_info",
-        return_value={"model": "Vallox 90 MV"},
+        return_value=None,
     ), patch(
         "homeassistant.components.vallox.async_setup_entry",
         return_value=True,
@@ -161,6 +177,28 @@ async def test_import(hass: HomeAssistant) -> None:
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == name
     assert result["data"] == {"host": "1.2.3.4", "name": "Vallox 90 MV"}
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_import_without_custom_name(hass: HomeAssistant) -> None:
+    """Test that import is handled."""
+    with patch(
+        "homeassistant.components.vallox.config_flow.Vallox.get_info",
+        return_value=None,
+    ), patch(
+        "homeassistant.components.vallox.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={"host": "1.2.3.4"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == "Vallox"
+    assert result["data"] == {"host": "1.2.3.4", "name": "Vallox"}
     assert len(mock_setup_entry.mock_calls) == 1
 
 

@@ -24,7 +24,6 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
     }
 )
 
@@ -44,16 +43,14 @@ def host_valid(host: str) -> bool:
     return all(x and not disallowed.search(x) for x in host.split("."))
 
 
-async def validate_host(hass: HomeAssistant, host: str) -> dict[str, Any]:
+async def validate_host(hass: HomeAssistant, host: str) -> None:
     """Validate that the user input allows us to connect."""
 
     if not host_valid(host):
         raise InvalidHost(f"Invalid host: {host}")
 
     client = Vallox(host)
-    info = await client.get_info()
-
-    return {"model": info["model"]}
+    await client.get_info()
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -63,7 +60,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, data: dict[str, Any]) -> FlowResult:
         """Handle import from YAML."""
-        name = data.get(CONF_NAME, DEFAULT_NAME)
+        # We need to use the name from the YAML configuration to avoid
+        # breaking existing entity IDs.
+        if CONF_NAME not in data:
+            data[CONF_NAME] = DEFAULT_NAME
+
+        name = data[CONF_NAME]
         host = data[CONF_HOST]
 
         self._async_abort_entries_match({CONF_HOST: host})
@@ -96,8 +98,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors = {}
 
-        name = user_input[CONF_NAME]
         host = user_input[CONF_HOST]
+        user_input[CONF_NAME] = DEFAULT_NAME
 
         self._async_abort_entries_match({CONF_HOST: host})
 
@@ -111,7 +113,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors[CONF_HOST] = "unknown"
         else:
-            return self.async_create_entry(title=name, data=user_input)
+            return self.async_create_entry(title=DEFAULT_NAME, data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
