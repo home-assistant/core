@@ -39,7 +39,7 @@ from .entity import OverkizDescriptiveEntity, OverkizEntity
 class OverkizSensorDescription(SensorEntityDescription):
     """Class to describe an Overkiz sensor."""
 
-    native_value: Callable[[str | int | float], str | int | float] = lambda val: val
+    native_value: Callable[[str | int | float], str | int | float] | None = None
 
 
 SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
@@ -64,7 +64,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
-        native_value=lambda value: round(float(value)),
+        # native_value=lambda value: round(float(value)),
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     OverkizSensorDescription(
@@ -389,6 +389,8 @@ async def async_setup_entry(
 class OverkizStateSensor(OverkizDescriptiveEntity, SensorEntity):
     """Representation of an Overkiz Sensor."""
 
+    entity_description: OverkizSensorDescription
+
     @property
     def native_value(self):
         """Return the value of the sensor."""
@@ -398,7 +400,7 @@ class OverkizStateSensor(OverkizDescriptiveEntity, SensorEntity):
             return None
 
         # Transform the value with a lambda function
-        if hasattr(self.entity_description, "native_value"):
+        if self.entity_description.native_value:
             return self.entity_description.native_value(state.value)
 
         return state.value
