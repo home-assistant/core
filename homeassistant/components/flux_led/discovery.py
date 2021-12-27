@@ -12,6 +12,7 @@ from flux_led.const import (
     ATTR_IPADDR,
     ATTR_MODEL,
     ATTR_MODEL_DESCRIPTION,
+    ATTR_MODEL_INFO,
     ATTR_REMOTE_ACCESS_ENABLED,
     ATTR_REMOTE_ACCESS_HOST,
     ATTR_REMOTE_ACCESS_PORT,
@@ -21,6 +22,7 @@ from flux_led.scanner import FluxLEDDiscovery
 
 from homeassistant import config_entries
 from homeassistant.components import network
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
@@ -29,6 +31,8 @@ from homeassistant.util.network import is_ip_address
 from .const import (
     CONF_MINOR_VERSION,
     CONF_MODEL,
+    CONF_MODEL_DESCRIPTION,
+    CONF_MODEL_INFO,
     CONF_REMOTE_ACCESS_ENABLED,
     CONF_REMOTE_ACCESS_HOST,
     CONF_REMOTE_ACCESS_PORT,
@@ -36,6 +40,7 @@ from .const import (
     DOMAIN,
     FLUX_LED_DISCOVERY,
 )
+from .util import format_as_flux_mac
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +52,28 @@ CONF_TO_DISCOVERY: Final = {
     CONF_REMOTE_ACCESS_PORT: ATTR_REMOTE_ACCESS_PORT,
     CONF_MINOR_VERSION: ATTR_VERSION_NUM,
     CONF_MODEL: ATTR_MODEL,
+    CONF_MODEL_INFO: ATTR_MODEL_INFO,
+    CONF_MODEL_DESCRIPTION: ATTR_MODEL_DESCRIPTION,
 }
+
+
+@callback
+def async_build_cached_discovery(entry: ConfigEntry) -> FluxLEDDiscovery:
+    """When discovery is unavailable, load it from the config entry."""
+    data = entry.data
+    return FluxLEDDiscovery(
+        ipaddr=data[CONF_HOST],
+        model=data.get(CONF_MODEL),
+        id=format_as_flux_mac(entry.unique_id),
+        model_num=None,
+        version_num=data.get(CONF_MINOR_VERSION),
+        firmware_date=None,
+        model_info=data.get(CONF_MODEL_INFO),
+        model_description=data.get(CONF_MODEL_DESCRIPTION),
+        remote_access_enabled=data.get(CONF_REMOTE_ACCESS_ENABLED),
+        remote_access_host=data.get(CONF_REMOTE_ACCESS_HOST),
+        remote_access_port=data.get(CONF_REMOTE_ACCESS_PORT),
+    )
 
 
 @callback
