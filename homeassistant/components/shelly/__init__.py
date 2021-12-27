@@ -26,6 +26,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry, update_coordinator
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.debounce import Debouncer
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -422,18 +423,25 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         """Mac address of the device."""
         return cast(str, self.entry.unique_id)
 
-    def async_setup(self) -> None:
-        """Set up the wrapper."""
-        dev_reg = device_registry.async_get(self.hass)
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the device information."""
         sw_version = self.device.firmware_version if self.device.initialized else ""
-        entry = dev_reg.async_get_or_create(
-            config_entry_id=self.entry.entry_id,
+        return DeviceInfo(
             name=self.name,
             connections={(device_registry.CONNECTION_NETWORK_MAC, self.mac)},
             manufacturer="Shelly",
             model=aioshelly.const.MODEL_NAMES.get(self.model, self.model),
             sw_version=sw_version,
             configuration_url=f"http://{self.entry.data[CONF_HOST]}",
+        )
+
+    def async_setup(self) -> None:
+        """Set up the wrapper."""
+        dev_reg = device_registry.async_get(self.hass)
+        entry = dev_reg.async_get_or_create(
+            config_entry_id=self.entry.entry_id,
+            **self.device_info,
         )
         self.device_id = entry.id
         self.device.subscribe_updates(self.async_set_updated_data)
@@ -706,18 +714,25 @@ class RpcDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         """Mac address of the device."""
         return cast(str, self.entry.unique_id)
 
-    def async_setup(self) -> None:
-        """Set up the wrapper."""
-        dev_reg = device_registry.async_get(self.hass)
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the device information."""
         sw_version = self.device.firmware_version if self.device.initialized else ""
-        entry = dev_reg.async_get_or_create(
-            config_entry_id=self.entry.entry_id,
+        return DeviceInfo(
             name=self.name,
             connections={(device_registry.CONNECTION_NETWORK_MAC, self.mac)},
             manufacturer="Shelly",
             model=aioshelly.const.MODEL_NAMES.get(self.model, self.model),
             sw_version=sw_version,
             configuration_url=f"http://{self.entry.data[CONF_HOST]}",
+        )
+
+    def async_setup(self) -> None:
+        """Set up the wrapper."""
+        dev_reg = device_registry.async_get(self.hass)
+        entry = dev_reg.async_get_or_create(
+            config_entry_id=self.entry.entry_id,
+            **self.device_info,
         )
         self.device_id = entry.id
         self.device.subscribe_updates(self.async_set_updated_data)
