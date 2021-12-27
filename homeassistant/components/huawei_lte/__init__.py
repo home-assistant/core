@@ -25,6 +25,7 @@ import voluptuous as vol
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
+    ATTR_HW_VERSION,
     ATTR_MODEL,
     ATTR_SW_VERSION,
     CONF_MAC,
@@ -433,8 +434,10 @@ async def async_setup_entry(  # noqa: C901
             name=router.device_name,
             manufacturer="Huawei",
         )
+        hw_version = None
         sw_version = None
         if router_info:
+            hw_version = router_info.get("HardwareVersion")
             sw_version = router_info.get("SoftwareVersion")
             if router_info.get("DeviceName"):
                 device_info[ATTR_MODEL] = router_info["DeviceName"]
@@ -442,6 +445,8 @@ async def async_setup_entry(  # noqa: C901
             sw_version = router.data[KEY_DEVICE_BASIC_INFORMATION].get(
                 "SoftwareVersion"
             )
+        if hw_version:
+            device_info[ATTR_HW_VERSION] = hw_version
         if sw_version:
             device_info[ATTR_SW_VERSION] = sw_version
         device_registry = dr.async_get(hass)
