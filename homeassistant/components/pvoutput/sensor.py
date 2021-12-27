@@ -1,6 +1,9 @@
 """Support for getting collected information from PVOutput."""
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
+
 from pvo import Status
 import voluptuous as vol
 
@@ -8,6 +11,7 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -48,6 +52,32 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
+@dataclass
+class PVOutputSensorEntityDescriptionMixin:
+    """Mixin for required keys."""
+
+    value_fn: Callable[[Status], int | float | None]
+
+
+@dataclass
+class PVOutputSensorEntityDescription(
+    SensorEntityDescription, PVOutputSensorEntityDescriptionMixin
+):
+    """Describes a PVOutput sensor entity."""
+
+
+SENSORS: tuple[PVOutputSensorEntityDescription, ...] = (
+    PVOutputSensorEntityDescription(
+        key="energy_generation",
+        name="Energy Generated",
+        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda status: status.energy_generation,
+    ),
+)
+
+
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -79,28 +109,46 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up a Tailscale binary sensors based on a config entry."""
+    """Set up a PVOutput sensors based on a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([PvoutputSensor(coordinator)])
+    async_add_entities(
+        PVOutputSensorEntity(
+            coordinator=coordinator,
+            description=description,
+        )
+        for description in SENSORS
+    )
 
 
-class PvoutputSensor(CoordinatorEntity, SensorEntity):
+class PVOutputSensorEntity(CoordinatorEntity, SensorEntity):
     """Representation of a PVOutput sensor."""
 
-    _attr_state_class = SensorStateClass.TOTAL_INCREASING
-    _attr_device_class = SensorDeviceClass.ENERGY
-    _attr_native_unit_of_measurement = ENERGY_WATT_HOUR
-
     coordinator: DataUpdateCoordinator[Status]
+    entity_description: PVOutputSensorEntityDescription
+
+    def __init__(
+        self,
+        *,
+        coordinator: DataUpdateCoordinator,
+        description: PVOutputSensorEntityDescription,
+    ) -> None:
+        """Initialize a PVOutput sensor."""
+        super().__init__(coordinator=coordinator)
+        self.entity_description = description
 
     @property
-    def native_value(self) -> int | None:
+    def native_value(self) -> int | float | None:
         """Return the state of the device."""
-        return self.coordinator.data.energy_generation
+        return self.entity_description.value_fn(self.coordinator.data)
 
     @property
-    def extra_state_attributes(self) -> dict[str, int | float | None]:
+    def extra_state_attributes(self) -> dict[str, int | float | None] | None:
         """Return the state attributes of the monitored installation."""
+
+        # Only add attributes to the original sensor
+        if self.entity_description.key != "energy_generation":
+            return None
+
         return {
             ATTR_ENERGY_GENERATION: self.coordinator.data.energy_generation,
             ATTR_POWER_GENERATION: self.coordinator.data.power_generation,
