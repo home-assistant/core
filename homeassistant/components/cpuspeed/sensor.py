@@ -38,11 +38,6 @@ class CpuSpeedSensor(SensorEntity):
         self.info = None
 
     @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
     def extra_state_attributes(self):
         """Return the state attributes."""
         if self.info is not None:
