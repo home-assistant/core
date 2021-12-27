@@ -197,7 +197,7 @@ class Store:
     def async_delay_save(self, data_func: Callable[[], dict], delay: float = 0) -> None:
         """Save data with an optional delay."""
         # pylint: disable-next=import-outside-toplevel
-        from homeassistant.helpers.event import async_call_later
+        from .event import async_call_later
 
         self._data = {
             "version": self.version,

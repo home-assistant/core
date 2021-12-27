@@ -91,7 +91,6 @@ from .const import (
     MANUFACTURER,
     PERSIST_LOCK,
     SERVICE_HOMEKIT_RESET_ACCESSORY,
-    SERVICE_HOMEKIT_START,
     SERVICE_HOMEKIT_UNPAIR,
     SHUTDOWN_TIMEOUT,
 )
@@ -416,26 +415,6 @@ def _async_register_events_and_services(hass: HomeAssistant):
         SERVICE_HOMEKIT_UNPAIR,
         async_handle_homekit_unpair,
         schema=UNPAIR_SERVICE_SCHEMA,
-    )
-
-    async def async_handle_homekit_service_start(service):
-        """Handle start HomeKit service call."""
-        tasks = []
-        for homekit in _async_all_homekit_instances(hass):
-            if homekit.status == STATUS_RUNNING:
-                _LOGGER.debug("HomeKit is already running")
-                continue
-            if homekit.status != STATUS_READY:
-                _LOGGER.warning(
-                    "HomeKit is not ready. Either it is already starting up or has "
-                    "been stopped"
-                )
-                continue
-            tasks.append(homekit.async_start())
-        await asyncio.gather(*tasks)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_HOMEKIT_START, async_handle_homekit_service_start
     )
 
     async def _handle_homekit_reload(service):

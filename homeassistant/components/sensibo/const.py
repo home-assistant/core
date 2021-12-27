@@ -1,9 +1,11 @@
 """Constants for Sensibo."""
 
+from homeassistant.const import Platform
+
 DOMAIN = "sensibo"
-PLATFORMS = ["climate"]
+PLATFORMS = [Platform.CLIMATE]
 ALL = ["all"]
-DEFAULT_NAME = "Sensibo@Home"
+DEFAULT_NAME = "Sensibo"
 TIMEOUT = 8
 _FETCH_FIELDS = ",".join(
     [
@@ -15,4 +17,4 @@ _FETCH_FIELDS = ",".join(
         "temperatureUnit",
     ]
 )
-_INITIAL_FETCH_FIELDS = f"id,{_FETCH_FIELDS}"
+_INITIAL_FETCH_FIELDS = f"id,firmwareVersion,firmwareType,productModel,{_FETCH_FIELDS}"
