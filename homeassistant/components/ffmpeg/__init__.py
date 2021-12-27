@@ -20,6 +20,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
 DOMAIN = "ffmpeg"
@@ -54,7 +55,7 @@ CONFIG_SCHEMA = vol.Schema(
 SERVICE_FFMPEG_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.entity_ids})
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the FFmpeg component."""
     conf = config.get(DOMAIN, {})
 
