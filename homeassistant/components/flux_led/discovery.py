@@ -12,6 +12,7 @@ from flux_led.const import (
     ATTR_IPADDR,
     ATTR_MODEL,
     ATTR_MODEL_DESCRIPTION,
+    ATTR_MODEL_INFO,
     ATTR_REMOTE_ACCESS_ENABLED,
     ATTR_REMOTE_ACCESS_HOST,
     ATTR_REMOTE_ACCESS_PORT,
@@ -30,6 +31,8 @@ from homeassistant.util.network import is_ip_address
 from .const import (
     CONF_MINOR_VERSION,
     CONF_MODEL,
+    CONF_MODEL_DESCRIPTION,
+    CONF_MODEL_INFO,
     CONF_REMOTE_ACCESS_ENABLED,
     CONF_REMOTE_ACCESS_HOST,
     CONF_REMOTE_ACCESS_PORT,
@@ -49,6 +52,8 @@ CONF_TO_DISCOVERY: Final = {
     CONF_REMOTE_ACCESS_PORT: ATTR_REMOTE_ACCESS_PORT,
     CONF_MINOR_VERSION: ATTR_VERSION_NUM,
     CONF_MODEL: ATTR_MODEL,
+    CONF_MODEL_INFO: ATTR_MODEL_INFO,
+    CONF_MODEL_DESCRIPTION: ATTR_MODEL_DESCRIPTION,
 }
 
 
@@ -63,8 +68,8 @@ def async_build_cached_discovery(entry: ConfigEntry) -> FluxLEDDiscovery:
         model_num=None,
         version_num=data.get(CONF_MINOR_VERSION),
         firmware_date=None,
-        model_info=None,
-        model_description=None,
+        model_info=data.get(CONF_MODEL_INFO),
+        model_description=data.get(CONF_MODEL_DESCRIPTION),
         remote_access_enabled=data.get(CONF_REMOTE_ACCESS_ENABLED),
         remote_access_host=data.get(CONF_REMOTE_ACCESS_HOST),
         remote_access_port=data.get(CONF_REMOTE_ACCESS_PORT),
