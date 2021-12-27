@@ -26,16 +26,16 @@ and config flow.
 from __future__ import annotations
 
 import asyncio
-from collections import OrderedDict
+from collections import Iterable, OrderedDict
 from enum import Enum
 import logging
 import os
-from typing import Any, Iterable
+from typing import Any
 
 import async_timeout
 from google_nest_sdm.exceptions import (
-    AuthException,
     ApiException,
+    AuthException,
     ConfigurationException,
     SubscriberException,
 )
