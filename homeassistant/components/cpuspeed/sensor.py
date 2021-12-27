@@ -15,8 +15,6 @@ HZ_ADVERTISED = "hz_advertised"
 
 DEFAULT_NAME = "CPU speed"
 
-ICON = "mdi:pulse"
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string}
 )
@@ -31,26 +29,19 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class CpuSpeedSensor(SensorEntity):
     """Representation of a CPU sensor."""
 
+    _attr_native_unit_of_measurement = FREQUENCY_GIGAHERTZ
+    _attr_icon = "mdi:pulse"
+
     def __init__(self, name):
         """Initialize the CPU sensor."""
-        self._name = name
+        self._attr_name = name
         self._state = None
         self.info = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
 
     @property
     def native_value(self):
         """Return the state of the sensor."""
         return self._state
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return FREQUENCY_GIGAHERTZ
 
     @property
     def extra_state_attributes(self):
@@ -63,11 +54,6 @@ class CpuSpeedSensor(SensorEntity):
             if HZ_ADVERTISED in self.info:
                 attrs[ATTR_HZ] = round(self.info[HZ_ADVERTISED][0] / 10 ** 9, 2)
             return attrs
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return ICON
 
     def update(self):
         """Get the latest data and updates the state."""
