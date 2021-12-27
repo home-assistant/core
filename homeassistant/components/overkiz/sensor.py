@@ -64,7 +64,7 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
-        # native_value=lambda value: round(float(value)),
+        native_value=lambda value: round(float(value)),
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     OverkizSensorDescription(
