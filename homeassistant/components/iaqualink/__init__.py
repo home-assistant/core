@@ -111,7 +111,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         aiohttp.client_exceptions.ClientConnectorError,
     ) as aio_exception:
         raise ConfigEntryNotReady(
-            f"Errr while attempting login: {aio_exception}"
+            f"Error while attempting login: {aio_exception}"
         ) from aio_exception
 
     try:
