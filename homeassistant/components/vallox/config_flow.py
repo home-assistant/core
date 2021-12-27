@@ -1,10 +1,8 @@
 """Config flow for the Vallox integration."""
 from __future__ import annotations
 
-from contextlib import suppress
 import ipaddress
 import logging
-import re
 from typing import Any
 
 from vallox_websocket_api import Vallox
@@ -33,21 +31,22 @@ VALLOX_CONNECTION_EXCEPTIONS = (
 )
 
 
-def host_valid(host: str) -> bool:
-    """Return True if hostname or IP address is valid."""
-    with suppress(ValueError):
+def ip_valid(host: str) -> bool:
+    """Return True if the host is a valid IP address."""
+    try:
         if ipaddress.ip_address(host).version in [4, 6]:
             return True
+    except ValueError:
+        pass
 
-    disallowed = re.compile(r"[^a-zA-Z\d\-]")
-    return all(x and not disallowed.search(x) for x in host.split("."))
+    return False
 
 
 async def validate_host(hass: HomeAssistant, host: str) -> None:
     """Validate that the user input allows us to connect."""
 
-    if not host_valid(host):
-        raise InvalidHost(f"Invalid host: {host}")
+    if not ip_valid(host):
+        raise InvalidHost(f"Invalid IP address: {host}")
 
     client = Vallox(host)
     await client.get_info()

@@ -55,15 +55,15 @@ async def test_form_create_entry(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_host(hass: HomeAssistant) -> None:
-    """Test that invalid host error is handled."""
+async def test_form_invalid_ip(hass: HomeAssistant) -> None:
+    """Test that invalid IP error is handled."""
     init = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
     result = await hass.config_entries.flow.async_configure(
         init["flow_id"],
-        {"host": "test.host&.com"},
+        {"host": "test.host.com"},
     )
     await hass.async_block_till_done()
 
@@ -202,14 +202,14 @@ async def test_import_without_custom_name(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_import_invalid_host(hass: HomeAssistant) -> None:
-    """Test that invalid host error is handled during import."""
+async def test_import_invalid_ip(hass: HomeAssistant) -> None:
+    """Test that invalid IP error is handled during import."""
     name = "Vallox 90 MV"
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
-        data={"host": "vallox90mv.&host.name", "name": name},
+        data={"host": "vallox90mv.host.name", "name": name},
     )
     await hass.async_block_till_done()
 
