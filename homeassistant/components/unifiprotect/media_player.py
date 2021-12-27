@@ -4,6 +4,8 @@ from __future__ import annotations
 import logging
 from typing import Any, Callable, Sequence
 
+from pyunifiprotect.data import Camera
+
 from homeassistant.components.media_player import (
     DEVICE_CLASS_SPEAKER,
     MediaPlayerEntity,
@@ -21,7 +23,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_IDLE, STATE_PLAYING
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
-from pyunifiprotect.data import Camera
 
 from .const import DOMAIN
 from .data import ProtectData

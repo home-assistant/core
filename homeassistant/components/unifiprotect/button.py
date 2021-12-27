@@ -4,11 +4,12 @@ from __future__ import annotations
 import logging
 from typing import Callable, Sequence
 
+from pyunifiprotect.data.base import ProtectAdoptableDeviceModel
+
 from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
-from pyunifiprotect.data.base import ProtectAdoptableDeviceModel
 
 from .const import DEVICES_THAT_ADOPT, DOMAIN
 from .data import ProtectData
