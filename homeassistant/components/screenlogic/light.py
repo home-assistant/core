@@ -67,6 +67,7 @@ class ScreenLogicIntelliBriteLight(ScreenLogicLight):
         self._attr_color_mode = COLOR_MODE_RGB
         self._attr_supported_color_modes = [COLOR_MODE_RGB]
         self._attr_brightness = 255
+        self._attr_rgb_color = (255, 255, 255)
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn on the lights to the cloest color."""
