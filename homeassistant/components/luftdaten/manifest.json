@@ -1,6 +1,6 @@
 {
   "domain": "luftdaten",
-  "name": "Luftdaten",
+  "name": "Sensor.Community",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/luftdaten",
   "requirements": ["luftdaten==0.7.1"],
