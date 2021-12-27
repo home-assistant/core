@@ -641,6 +641,8 @@ class EnergyStorageTrait(_Trait):
     def query_attributes(self):
         """Return EnergyStorage query attributes."""
         battery_level = self.state.attributes.get(ATTR_BATTERY_LEVEL)
+        if battery_level is None:
+            return {}
         if battery_level == 100:
             descriptive_capacity_remaining = "FULL"
         elif 75 <= battery_level < 100:
