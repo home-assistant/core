@@ -21,6 +21,7 @@ from flux_led.scanner import FluxLEDDiscovery
 
 from homeassistant import config_entries
 from homeassistant.components import network
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
@@ -36,6 +37,7 @@ from .const import (
     DOMAIN,
     FLUX_LED_DISCOVERY,
 )
+from .util import format_as_flux_mac
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,6 +50,25 @@ CONF_TO_DISCOVERY: Final = {
     CONF_MINOR_VERSION: ATTR_VERSION_NUM,
     CONF_MODEL: ATTR_MODEL,
 }
+
+
+@callback
+def async_build_cached_discovery(entry: ConfigEntry) -> FluxLEDDiscovery:
+    """When discovery is unavailable, load it from the config entry."""
+    data = entry.data
+    return FluxLEDDiscovery(
+        ipaddr=data[CONF_HOST],
+        model=data.get(CONF_MODEL),
+        id=format_as_flux_mac(entry.unique_id),
+        model_num=None,
+        version_num=data.get(CONF_MINOR_VERSION),
+        firmware_date=None,
+        model_info=None,
+        model_description=None,
+        remote_access_enabled=data.get(CONF_REMOTE_ACCESS_ENABLED),
+        remote_access_host=data.get(CONF_REMOTE_ACCESS_HOST),
+        remote_access_port=data.get(CONF_REMOTE_ACCESS_PORT),
+    )
 
 
 @callback
