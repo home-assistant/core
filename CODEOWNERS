@@ -508,8 +508,8 @@ tests/components/lookin/* @ANMalko @bdraco
 homeassistant/components/lovelace/* @home-assistant/frontend
 tests/components/lovelace/* @home-assistant/frontend
 homeassistant/components/luci/* @mzdrale
-homeassistant/components/luftdaten/* @fabaff
-tests/components/luftdaten/* @fabaff
+homeassistant/components/luftdaten/* @fabaff @frenck
+tests/components/luftdaten/* @fabaff @frenck
 homeassistant/components/lupusec/* @majuss
 homeassistant/components/lutron/* @JonGilmore
 homeassistant/components/lutron_caseta/* @swails @bdraco
