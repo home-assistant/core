@@ -59,8 +59,10 @@ class SignalNotificationService(BaseNotificationService):
 
         data = kwargs.get(ATTR_DATA)
 
-        filenames = self._get_filenames(data)
-        attachments_as_bytes = self._get_attachments_as_bytes(data)
+        filenames = self.get_filenames(data)
+        attachments_as_bytes = self.get_attachments_as_bytes(
+            data, CONF_MAX_ALLOWED_DOWNLOAD_SIZE_BYTES
+        )
 
         try:
             self._signal_cli_rest_api.send_message(
@@ -71,7 +73,8 @@ class SignalNotificationService(BaseNotificationService):
             raise ex
 
     @staticmethod
-    def _get_filenames(data):
+    def get_filenames(data):
+        """Extract attachment filenames from data."""
         filenames = None
 
         if data is None:
@@ -91,7 +94,8 @@ class SignalNotificationService(BaseNotificationService):
         return filenames
 
     @staticmethod
-    def _get_attachments_as_bytes(data):
+    def get_attachments_as_bytes(data, attachment_size_limit):
+        """Retrieve attachments from URLs defined in data."""
         attachments_as_bytes = []
 
         if data is None or ATTR_URLS not in data:
@@ -105,17 +109,16 @@ class SignalNotificationService(BaseNotificationService):
 
                 if (
                     resp.headers.get("Content-Length") is not None
-                    and int(resp.headers.get("Content-Length"))
-                    > CONF_MAX_ALLOWED_DOWNLOAD_SIZE_BYTES
+                    and int(resp.headers.get("Content-Length")) > attachment_size_limit
                 ):
-                    raise ValueError("Attachment too large")
+                    raise ValueError("Attachment too large (Content-Length)")
 
                 size = 0
                 chunks = bytearray()
                 for chunk in resp.iter_content(1024):
                     size += len(chunk)
-                    if size > CONF_MAX_ALLOWED_DOWNLOAD_SIZE_BYTES:
-                        raise ValueError("Attachment too large")
+                    if size > attachment_size_limit:
+                        raise ValueError("Attachment too large (Stream)")
 
                     chunks.extend(chunk)
 
