@@ -1,6 +1,6 @@
 """Support for WiLight switches."""
 
-from pywilight.const import ITEM_SWITCH, SWITCH_PAUSE_VALVE, SWITCH_V1, SWITCH_VALVE
+from pywilight.const import ITEM_SWITCH, SWITCH_PAUSE_VALVE, SWITCH_VALVE
 import voluptuous as vol
 
 from homeassistant.components.switch import ToggleEntity
@@ -106,9 +106,7 @@ def entities_from_discovered_wilight(hass, api_device):
             continue
         index = item["index"]
         item_name = item["name"]
-        if item["sub_type"] == SWITCH_V1:
-            entity = WiLightSwitch(api_device, index, item_name)
-        elif item["sub_type"] == SWITCH_VALVE:
+        if item["sub_type"] == SWITCH_VALVE:
             entity = WiLightValveSwitch(api_device, index, item_name)
         elif item["sub_type"] == SWITCH_PAUSE_VALVE:
             entity = WiLightValvePauseSwitch(api_device, index, item_name)
@@ -225,23 +223,6 @@ async def async_setup_entry(
         set_pause_time,
         schema=SERVICE_SCHEMA_PAUSE_TIME,
     )
-
-
-class WiLightSwitch(WiLightDevice, ToggleEntity):
-    """Representation of a WiLights switch."""
-
-    @property
-    def is_on(self):
-        """Return true if device is on."""
-        return self._status.get("on")
-
-    async def async_turn_on(self, **kwargs):
-        """Turn the device on."""
-        await self._client.turn_on(self._index)
-
-    async def async_turn_off(self, **kwargs):
-        """Turn the device off."""
-        await self._client.turn_off(self._index)
 
 
 def wilight_to_hass_pause_time(value):

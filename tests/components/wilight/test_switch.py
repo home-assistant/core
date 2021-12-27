@@ -83,6 +83,15 @@ async def test_loading_switch(
     assert entry
     assert entry.unique_id == "WL000000000099_0"
 
+    # Seconnd segment of the strip
+    state = hass.states.get("switch.wl000000000099_2_pause")
+    assert state
+    assert state.state == STATE_OFF
+
+    entry = entity_registry.async_get("switch.wl000000000099_2_pause")
+    assert entry
+    assert entry.unique_id == "WL000000000099_1"
+
 
 async def test_on_off_switch_state(
     hass: HomeAssistant, dummy_device_from_host_switch
@@ -238,3 +247,99 @@ async def test_switch_services(
     state = hass.states.get("switch.wl000000000099_1_watering")
     assert state
     assert state.attributes.get(ATTR_TRIGGER_4) == "00008300"
+
+    # Set trigger_1 wrong 01
+    await hass.services.async_call(
+        WILIGHT_DOMAIN,
+        SERVICE_SET_TRIGGER_1,
+        {
+            ATTR_TRIGGER_1: 10,
+            ATTR_ENTITY_ID: "switch.wl000000000099_1_watering",
+        },
+        blocking=True,
+    )
+
+    await hass.async_block_till_done()
+    state = hass.states.get("switch.wl000000000099_1_watering")
+    assert state
+    assert state.attributes.get(ATTR_TRIGGER_1) == "12715301"
+
+    # Set trigger_1 wrong 02
+    await hass.services.async_call(
+        WILIGHT_DOMAIN,
+        SERVICE_SET_TRIGGER_1,
+        {
+            ATTR_TRIGGER_1: "ABCDEFGH",
+            ATTR_ENTITY_ID: "switch.wl000000000099_1_watering",
+        },
+        blocking=True,
+    )
+
+    await hass.async_block_till_done()
+    state = hass.states.get("switch.wl000000000099_1_watering")
+    assert state
+    assert state.attributes.get(ATTR_TRIGGER_1) == "12715301"
+
+    # Set trigger_1 wrong 03
+    await hass.services.async_call(
+        WILIGHT_DOMAIN,
+        SERVICE_SET_TRIGGER_1,
+        {
+            ATTR_TRIGGER_1: "12815301",
+            ATTR_ENTITY_ID: "switch.wl000000000099_1_watering",
+        },
+        blocking=True,
+    )
+
+    await hass.async_block_till_done()
+    state = hass.states.get("switch.wl000000000099_1_watering")
+    assert state
+    assert state.attributes.get(ATTR_TRIGGER_1) == "12715301"
+
+    # Set trigger_1 wrong 04
+    await hass.services.async_call(
+        WILIGHT_DOMAIN,
+        SERVICE_SET_TRIGGER_1,
+        {
+            ATTR_TRIGGER_1: "12724301",
+            ATTR_ENTITY_ID: "switch.wl000000000099_1_watering",
+        },
+        blocking=True,
+    )
+
+    await hass.async_block_till_done()
+    state = hass.states.get("switch.wl000000000099_1_watering")
+    assert state
+    assert state.attributes.get(ATTR_TRIGGER_1) == "12715301"
+
+    # Set trigger_1 wrong 05
+    await hass.services.async_call(
+        WILIGHT_DOMAIN,
+        SERVICE_SET_TRIGGER_1,
+        {
+            ATTR_TRIGGER_1: "12715601",
+            ATTR_ENTITY_ID: "switch.wl000000000099_1_watering",
+        },
+        blocking=True,
+    )
+
+    await hass.async_block_till_done()
+    state = hass.states.get("switch.wl000000000099_1_watering")
+    assert state
+    assert state.attributes.get(ATTR_TRIGGER_1) == "12715301"
+
+    # Set trigger_1 wrong 06
+    await hass.services.async_call(
+        WILIGHT_DOMAIN,
+        SERVICE_SET_TRIGGER_1,
+        {
+            ATTR_TRIGGER_1: "12715302",
+            ATTR_ENTITY_ID: "switch.wl000000000099_1_watering",
+        },
+        blocking=True,
+    )
+
+    await hass.async_block_till_done()
+    state = hass.states.get("switch.wl000000000099_1_watering")
+    assert state
+    assert state.attributes.get(ATTR_TRIGGER_1) == "12715301"
