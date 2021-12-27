@@ -1,4 +1,6 @@
 """Support for MQTT fans."""
+from __future__ import annotations
+
 import functools
 import logging
 import math

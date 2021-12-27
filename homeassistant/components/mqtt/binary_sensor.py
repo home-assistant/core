@@ -1,4 +1,6 @@
 """Support for MQTT binary sensors."""
+from __future__ import annotations
+
 from datetime import timedelta
 import functools
 import logging

@@ -1,4 +1,6 @@
 """Support for MQTT scenes."""
+from __future__ import annotations
+
 import functools
 
 import voluptuous as vol

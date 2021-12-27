@@ -1,4 +1,6 @@
 """Configure select in a device through MQTT topic."""
+from __future__ import annotations
+
 import functools
 import logging
 

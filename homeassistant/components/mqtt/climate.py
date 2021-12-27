@@ -1,4 +1,6 @@
 """Support for MQTT climate devices."""
+from __future__ import annotations
+
 import functools
 import logging
 

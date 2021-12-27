@@ -1,4 +1,6 @@
 """Support for MQTT cover devices."""
+from __future__ import annotations
+
 import functools
 from json import JSONDecodeError, loads as json_loads
 import logging

@@ -1,4 +1,6 @@
 """Support for MQTT humidifiers."""
+from __future__ import annotations
+
 import functools
 import logging
 

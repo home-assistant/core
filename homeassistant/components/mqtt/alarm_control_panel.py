@@ -1,4 +1,6 @@
 """This platform enables the possibility to control a MQTT alarm."""
+from __future__ import annotations
+
 import functools
 import logging
 import re
