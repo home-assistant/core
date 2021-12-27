@@ -25,7 +25,11 @@ async def test_list_devices(hass, client, registry):
     """Test list entries."""
     registry.async_get_or_create(
         config_entry_id="1234",
-        connections={("ethernet", "12:34:56:78:90:AB:CD:EF")},
+        connections={
+            helpers_dr.DeviceEntryConnection(
+                helpers_dr.DeviceEntryConnectionType.MAC, "12:34:56:AB:CD:EF"
+            ),
+        },
         identifiers={("bridgeid", "0123")},
         manufacturer="manufacturer",
         model="model",
@@ -47,7 +51,9 @@ async def test_list_devices(hass, client, registry):
     assert msg["result"] == [
         {
             "config_entries": ["1234"],
-            "connections": [["ethernet", "12:34:56:78:90:AB:CD:EF"]],
+            "connections": [
+                [helpers_dr.DeviceEntryConnectionType.MAC.value, "12:34:56:AB:CD:EF"],
+            ],
             "identifiers": [["bridgeid", "0123"]],
             "manufacturer": "manufacturer",
             "model": "model",
@@ -84,7 +90,11 @@ async def test_update_device(hass, client, registry):
     """Test update entry."""
     device = registry.async_get_or_create(
         config_entry_id="1234",
-        connections={("ethernet", "12:34:56:78:90:AB:CD:EF")},
+        connections={
+            helpers_dr.DeviceEntryConnection(
+                helpers_dr.DeviceEntryConnectionType.MAC, "12:34:56:AB:CD:EF"
+            ),
+        },
         identifiers={("bridgeid", "0123")},
         manufacturer="manufacturer",
         model="model",

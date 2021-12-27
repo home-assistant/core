@@ -836,7 +836,7 @@ async def test_no_unnecessary_changes(registry):
     """Make sure we do not consider devices changes."""
     entry = registry.async_get_or_create(
         config_entry_id="1234",
-        connections={("ethernet", "12:34:56:78:90:AB:CD:EF")},
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         identifiers={("hue", "456"), ("bla", "123")},
     )
     with patch(
