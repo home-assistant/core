@@ -69,7 +69,6 @@ class SensiboConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input:
 
             api_key = user_input[CONF_API_KEY]
-            name = DEFAULT_NAME
 
             await self.async_set_unique_id(api_key)
             self._abort_if_unique_id_configured()
@@ -77,7 +76,7 @@ class SensiboConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             validate = await async_validate_api(self.hass, api_key)
             if validate:
                 return self.async_create_entry(
-                    title=name,
+                    title=DEFAULT_NAME,
                     data={CONF_API_KEY: api_key},
                 )
             errors["base"] = "cannot_connect"
