@@ -12,7 +12,7 @@ from aioshelly.rpc_device import RpcDevice
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import singleton
+from homeassistant.helpers import device_registry, singleton
 from homeassistant.helpers.typing import EventType
 from homeassistant.util.dt import utcnow
 
@@ -346,3 +346,30 @@ def get_rpc_input_triggers(device: RpcDevice) -> list[tuple[str, str]]:
             triggers.append((trigger_type, subtype))
 
     return triggers
+
+
+async def async_device_update_info(
+    hass: HomeAssistant, shellydevice: BlockDevice | RpcDevice, shellyentry: ConfigEntry
+) -> None:
+    """Update device registry info."""
+
+    _LOGGER.debug("Updating device registry info")
+    dev_registry = device_registry.async_get(hass)
+    device = None
+    if shellyentry.unique_id:
+        device = dev_registry.async_get_device(
+            identifiers={(DOMAIN, shellyentry.entry_id)},
+            connections={
+                (
+                    device_registry.CONNECTION_NETWORK_MAC,
+                    device_registry.format_mac(shellyentry.unique_id),
+                )
+            },
+        )
+    if device is not None:
+        dev_registry.async_update_device(
+            device.id,
+            sw_version=shellydevice.firmware_version
+            if shellydevice.initialized
+            else "",
+        )

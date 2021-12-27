@@ -60,6 +60,7 @@ from .const import (
     UPDATE_PERIOD_MULTIPLIER,
 )
 from .utils import (
+    async_device_update_info,
     get_block_device_name,
     get_block_device_sleep_period,
     get_coap_context,
@@ -396,6 +397,11 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
             self.hass.async_create_task(self._debounced_reload.async_call())
         self._last_cfg_changed = cfg_changed
 
+        if not self.entry.data.get(CONF_SLEEP_PERIOD):
+            self.hass.async_create_task(
+                async_device_update_info(self.hass, self.device, self.entry)
+            )
+
     async def _async_update_data(self) -> None:
         """Fetch data."""
         if sleep_period := self.entry.data.get(CONF_SLEEP_PERIOD):
@@ -408,6 +414,7 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         try:
             async with async_timeout.timeout(POLLING_TIMEOUT_SEC):
                 await self.device.update()
+                await async_device_update_info(self.hass, self.device, self.entry)
         except OSError as err:
             raise update_coordinator.UpdateFailed("Error fetching data") from err
 
@@ -687,6 +694,7 @@ class RpcDeviceWrapper(update_coordinator.DataUpdateCoordinator):
             _LOGGER.debug("Reconnecting to Shelly RPC Device - %s", self.name)
             async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
                 await self.device.initialize()
+                await async_device_update_info(self.hass, self.device, self.entry)
         except OSError as err:
             raise update_coordinator.UpdateFailed("Device disconnected") from err
 
