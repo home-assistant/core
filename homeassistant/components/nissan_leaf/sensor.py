@@ -75,6 +75,8 @@ class LeafRangeSensor(LeafEntity, SensorEntity):
         """Set up range sensor. Store if AC on."""
         self._ac_on = ac_on
         super().__init__(car)
+        if ac_on:
+            self._attr_unique_id = self._attr_unique_id + "_ac"
 
     @property
     def name(self):

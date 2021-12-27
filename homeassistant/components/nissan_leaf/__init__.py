@@ -466,6 +466,7 @@ class LeafEntity(Entity):
     def __init__(self, car):
         """Store LeafDataStore upon init."""
         self.car = car
+        self._attr_unique_id = f"{self.car.leaf.vin}_{self.__class__.__name__}".lower()
 
     def log_registration(self):
         """Log registration."""
