@@ -1,4 +1,5 @@
 """Test MQTT fans."""
+import copy
 from unittest.mock import patch
 
 import pytest
@@ -32,6 +33,7 @@ from .test_common import (
     help_test_entity_device_info_with_identifier,
     help_test_entity_id_update_discovery_update,
     help_test_entity_id_update_subscriptions,
+    help_test_publishing_with_custom_encoding,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
@@ -1662,4 +1664,74 @@ async def test_entity_debug_info_message(hass, mqtt_mock):
     """Test MQTT debug info."""
     await help_test_entity_debug_info_message(
         hass, mqtt_mock, fan.DOMAIN, DEFAULT_CONFIG
+    )
+
+
+@pytest.mark.parametrize(
+    "service,topic,parameters,payload,template",
+    [
+        (
+            fan.SERVICE_TURN_ON,
+            "command_topic",
+            None,
+            "ON",
+            None,
+        ),
+        (
+            fan.SERVICE_TURN_OFF,
+            "command_topic",
+            None,
+            "OFF",
+            None,
+        ),
+        (
+            fan.SERVICE_SET_PRESET_MODE,
+            "preset_mode_command_topic",
+            {fan.ATTR_PRESET_MODE: "eco"},
+            "eco",
+            "preset_mode_command_template",
+        ),
+        (
+            fan.SERVICE_SET_PERCENTAGE,
+            "percentage_command_topic",
+            {fan.ATTR_PERCENTAGE: "45"},
+            45,
+            "percentage_command_template",
+        ),
+        (
+            fan.SERVICE_OSCILLATE,
+            "oscillation_command_topic",
+            {fan.ATTR_OSCILLATING: "on"},
+            "oscillate_on",
+            "oscillation_command_template",
+        ),
+    ],
+)
+async def test_publishing_with_custom_encoding(
+    hass,
+    mqtt_mock,
+    caplog,
+    service,
+    topic,
+    parameters,
+    payload,
+    template,
+):
+    """Test publishing MQTT payload with different encoding."""
+    domain = fan.DOMAIN
+    config = copy.deepcopy(DEFAULT_CONFIG[domain])
+    if topic == "preset_mode_command_topic":
+        config["preset_modes"] = ["auto", "eco"]
+
+    await help_test_publishing_with_custom_encoding(
+        hass,
+        mqtt_mock,
+        caplog,
+        domain,
+        config,
+        service,
+        topic,
+        parameters,
+        payload,
+        template,
     )
