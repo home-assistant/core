@@ -6,7 +6,13 @@ import lupupy
 from lupupy.exceptions import LupusecException
 import voluptuous as vol
 
-from homeassistant.const import CONF_IP_ADDRESS, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_IP_ADDRESS,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    Platform,
+)
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.entity import Entity
 
@@ -31,7 +37,11 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-LUPUSEC_PLATFORMS = ["alarm_control_panel", "binary_sensor", "switch"]
+LUPUSEC_PLATFORMS = [
+    Platform.ALARM_CONTROL_PANEL,
+    Platform.BINARY_SENSOR,
+    Platform.SWITCH,
+]
 
 
 def setup(hass, config):

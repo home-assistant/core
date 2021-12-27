@@ -4,7 +4,7 @@ import logging
 from streamlabswater import streamlabswater
 import voluptuous as vol
 
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 
@@ -17,7 +17,7 @@ SERVICE_SET_AWAY_MODE = "set_away_mode"
 AWAY_MODE_AWAY = "away"
 AWAY_MODE_HOME = "home"
 
-PLATFORMS = ["sensor", "binary_sensor"]
+PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR]
 
 CONF_LOCATION_ID = "location_id"
 

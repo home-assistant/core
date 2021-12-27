@@ -19,7 +19,7 @@ from .const import (
     VS_SWITCHES,
 )
 
-PLATFORMS = ["switch", "fan", "light"]
+PLATFORMS = [Platform.SWITCH, Platform.FAN, Platform.LIGHT]
 
 _LOGGER = logging.getLogger(__name__)
 
