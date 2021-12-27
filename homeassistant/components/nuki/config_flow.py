@@ -110,7 +110,9 @@ class NukiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
 
         if not errors:
-            existing_entry = await self.async_set_unique_id(info["ids"]["hardwareId"])
+            existing_entry = await self.async_set_unique_id(
+                hex(info["ids"]["hardwareId"]).split("x")[-1].upper()
+            )
             if existing_entry:
                 self.hass.config_entries.async_update_entry(existing_entry, data=conf)
                 self.hass.async_create_task(
@@ -139,11 +141,10 @@ class NukiConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
 
             if "base" not in errors:
-                await self.async_set_unique_id(info["ids"]["hardwareId"])
+                bridgeId = hex(info["ids"]["hardwareId"]).split("x")[-1].upper()
+                await self.async_set_unique_id(bridgeId)
                 self._abort_if_unique_id_configured()
-                return self.async_create_entry(
-                    title=info["ids"]["hardwareId"], data=user_input
-                )
+                return self.async_create_entry(title=bridgeId, data=user_input)
 
         data_schema = self.discovery_schema or USER_SCHEMA
         return self.async_show_form(
