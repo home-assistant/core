@@ -1,7 +1,8 @@
 """Tests for iAqualink integration."""
 
 import asyncio
-from unittest.mock import patch
+import logging
+from unittest.mock import AsyncMock, patch
 
 from iaqualink.device import (
     AqualinkAuxToggle,
@@ -23,11 +24,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed
-from tests.components.iaqualink.conftest import (
-    get_aqualink_client,
-    get_aqualink_device,
-    get_aqualink_system,
-)
+from tests.components.iaqualink.conftest import get_aqualink_device, get_aqualink_system
 
 
 def _ffwd_next_update_interval(hass):
@@ -95,11 +92,10 @@ async def test_setup_no_systems_recognized(hass, config_entry):
     assert config_entry.state == ConfigEntryState.SETUP_ERROR
 
 
-async def test_setup_devices_exception(hass, config_entry):
+async def test_setup_devices_exception(hass, config_entry, client):
     """Test setup encountering an exception while retrieving devices."""
     config_entry.add_to_hass(hass)
 
-    client = get_aqualink_client()
     system = get_aqualink_system(client)
     systems = {system.serial: system}
 
@@ -108,23 +104,23 @@ async def test_setup_devices_exception(hass, config_entry):
     ), patch(
         "homeassistant.components.iaqualink.AqualinkClient.get_systems",
         return_value=systems,
-    ), patch(
-        "iaqualink.system.AqualinkSystem.get_devices",
-        side_effect=AqualinkServiceException,
-    ):
+    ), patch.object(
+        system, "get_devices"
+    ) as mock_get_devices:
+        mock_get_devices.side_effect = AqualinkServiceException
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
     assert config_entry.state == ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_all_good_no_recognized_devices(hass, config_entry):
+async def test_setup_all_good_no_recognized_devices(hass, config_entry, client):
     """Test setup ending in no devices recognized."""
     config_entry.add_to_hass(hass)
 
-    client = get_aqualink_client()
     system = get_aqualink_system(client)
     systems = {system.serial: system}
+
     device = get_aqualink_device(system, AqualinkDevice)
     devices = {device.name: device}
 
@@ -133,9 +129,10 @@ async def test_setup_all_good_no_recognized_devices(hass, config_entry):
     ), patch(
         "homeassistant.components.iaqualink.AqualinkClient.get_systems",
         return_value=systems,
-    ), patch(
-        "iaqualink.system.AqualinkSystem.get_devices", return_value=devices
-    ):
+    ), patch.object(
+        system, "get_devices"
+    ) as mock_get_devices:
+        mock_get_devices.return_value = devices
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -153,13 +150,13 @@ async def test_setup_all_good_no_recognized_devices(hass, config_entry):
     assert config_entry.state == ConfigEntryState.NOT_LOADED
 
 
-async def test_setup_all_good_all_device_types(hass, config_entry):
+async def test_setup_all_good_all_device_types(hass, config_entry, client):
     """Test setup ending in one device of each type recognized."""
     config_entry.add_to_hass(hass)
 
-    client = get_aqualink_client()
     system = get_aqualink_system(client)
     systems = {system.serial: system}
+
     devices = [
         get_aqualink_device(system, AqualinkDevice),
         get_aqualink_device(system, AqualinkAuxToggle),
@@ -170,13 +167,13 @@ async def test_setup_all_good_all_device_types(hass, config_entry):
     ]
     devices = {d.name: d for d in devices}
 
+    system.get_devices = AsyncMock(return_value=devices)
+
     with patch(
         "homeassistant.components.iaqualink.AqualinkClient.login", return_value=None
     ), patch(
         "homeassistant.components.iaqualink.AqualinkClient.get_systems",
         return_value=systems,
-    ), patch(
-        "iaqualink.system.AqualinkSystem.get_devices", return_value=devices
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -195,21 +192,22 @@ async def test_setup_all_good_all_device_types(hass, config_entry):
     assert config_entry.state == ConfigEntryState.NOT_LOADED
 
 
-async def test_multiple_updates(hass, config_entry):
+async def test_multiple_updates(hass, config_entry, caplog, client):
     """Test all possible results of online status transition after update."""
     config_entry.add_to_hass(hass)
 
-    client = get_aqualink_client()
     system = get_aqualink_system(client)
     systems = {system.serial: system}
+
+    system.get_devices = AsyncMock(return_value={})
+
+    caplog.set_level(logging.WARNING)
 
     with patch(
         "homeassistant.components.iaqualink.AqualinkClient.login", return_value=None
     ), patch(
         "homeassistant.components.iaqualink.AqualinkClient.get_systems",
         return_value=systems,
-    ), patch(
-        "iaqualink.system.AqualinkSystem.get_devices", return_value={}
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -222,90 +220,84 @@ async def test_multiple_updates(hass, config_entry):
     def set_online_to_false():
         system.online = False
 
+    system.update = AsyncMock()
+
     # True -> True
     system.online = True
-    with patch(
-        "iaqualink.system.AqualinkSystem.update", side_effect=set_online_to_true
-    ), patch("homeassistant.components.iaqualink._LOGGER.warning") as mock_warn:
-        _ffwd_next_update_interval(hass)
-        await hass.async_block_till_done()
-        mock_warn.assert_not_called()
+    caplog.clear()
+    system.update.side_effect = set_online_to_true
+    _ffwd_next_update_interval(hass)
+    await hass.async_block_till_done()
+    assert len(caplog.records) == 0
 
     # True -> False
     system.online = True
-    with patch(
-        "iaqualink.system.AqualinkSystem.update", side_effect=set_online_to_false
-    ), patch("homeassistant.components.iaqualink._LOGGER.warning") as mock_warn:
-        _ffwd_next_update_interval(hass)
-        await hass.async_block_till_done()
-        mock_warn.assert_not_called()
+    caplog.clear()
+    system.update.side_effect = set_online_to_false
+    _ffwd_next_update_interval(hass)
+    await hass.async_block_till_done()
+    assert len(caplog.records) == 0
 
     # True -> None / ServiceException
     system.online = True
-    with patch(
-        "iaqualink.system.AqualinkSystem.update",
-        side_effect=AqualinkServiceException,
-    ), patch("homeassistant.components.iaqualink._LOGGER.warning") as mock_warn:
-        _ffwd_next_update_interval(hass)
-        await hass.async_block_till_done()
-        mock_warn.assert_called_once()
+    caplog.clear()
+    system.update.side_effect = AqualinkServiceException
+    _ffwd_next_update_interval(hass)
+    await hass.async_block_till_done()
+    assert len(caplog.records) == 1
+    assert "Failed" in caplog.text
 
     # False -> False
     system.online = False
-    with patch(
-        "iaqualink.system.AqualinkSystem.update", side_effect=set_online_to_false
-    ), patch("homeassistant.components.iaqualink._LOGGER.warning") as mock_warn:
-        _ffwd_next_update_interval(hass)
-        await hass.async_block_till_done()
-        mock_warn.assert_not_called()
+    caplog.clear()
+    system.update.side_effect = set_online_to_false
+    _ffwd_next_update_interval(hass)
+    await hass.async_block_till_done()
+    print(caplog.records)
+    assert len(caplog.records) == 0
 
     # False -> True
     system.online = False
-    with patch(
-        "iaqualink.system.AqualinkSystem.update", side_effect=set_online_to_true
-    ), patch("homeassistant.components.iaqualink._LOGGER.warning") as mock_warn:
-        _ffwd_next_update_interval(hass)
-        await hass.async_block_till_done()
-        mock_warn.assert_called_once()
+    caplog.clear()
+    system.update.side_effect = set_online_to_true
+    _ffwd_next_update_interval(hass)
+    await hass.async_block_till_done()
+    assert len(caplog.records) == 1
+    assert "Reconnected" in caplog.text
 
     # False -> None / ServiceException
     system.online = False
-    with patch(
-        "iaqualink.system.AqualinkSystem.update",
-        side_effect=AqualinkServiceException,
-    ), patch("homeassistant.components.iaqualink._LOGGER.warning") as mock_warn:
-        _ffwd_next_update_interval(hass)
-        await hass.async_block_till_done()
-        mock_warn.assert_called_once()
+    caplog.clear()
+    system.update.side_effect = AqualinkServiceException
+    _ffwd_next_update_interval(hass)
+    await hass.async_block_till_done()
+    assert len(caplog.records) == 1
+    assert "Failed" in caplog.text
 
     # None -> None / ServiceException
     system.online = None
-    with patch(
-        "iaqualink.system.AqualinkSystem.update",
-        side_effect=AqualinkServiceException,
-    ), patch("homeassistant.components.iaqualink._LOGGER.warning") as mock_warn:
-        _ffwd_next_update_interval(hass)
-        await hass.async_block_till_done()
-        mock_warn.assert_called_once()
+    caplog.clear()
+    system.update.side_effect = AqualinkServiceException
+    _ffwd_next_update_interval(hass)
+    await hass.async_block_till_done()
+    assert len(caplog.records) == 0
 
     # None -> True
     system.online = None
-    with patch(
-        "iaqualink.system.AqualinkSystem.update", side_effect=set_online_to_true
-    ), patch("homeassistant.components.iaqualink._LOGGER.warning") as mock_warn:
-
-        _ffwd_next_update_interval(hass)
-        await hass.async_block_till_done()
-        mock_warn.assert_called_once()
+    caplog.clear()
+    system.update.side_effect = set_online_to_true
+    _ffwd_next_update_interval(hass)
+    await hass.async_block_till_done()
+    assert len(caplog.records) == 1
+    assert "Reconnected" in caplog.text
 
     # None -> False
     system.online = None
-    with patch(
-        "iaqualink.system.AqualinkSystem.update", side_effect=set_online_to_false
-    ), patch("homeassistant.components.iaqualink._LOGGER.warning") as mock_warn:
-        _ffwd_next_update_interval(hass)
-        await hass.async_block_till_done()
-        mock_warn.assert_not_called()
+    caplog.clear()
+    system.update.side_effect = set_online_to_false
+    _ffwd_next_update_interval(hass)
+    await hass.async_block_till_done()
+    assert len(caplog.records) == 0
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -313,9 +305,8 @@ async def test_multiple_updates(hass, config_entry):
     assert config_entry.state == ConfigEntryState.NOT_LOADED
 
 
-async def test_entity_assumed_and_available(hass):
+async def test_entity_assumed_and_available(hass, client):
     """Test assumed_state and_available properties for all values of online."""
-    client = get_aqualink_client()
     system = get_aqualink_system(client)
     light = get_aqualink_device(system, AqualinkLightToggle)
     ha_light = AqualinkEntity(light)

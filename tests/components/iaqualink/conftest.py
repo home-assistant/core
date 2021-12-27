@@ -27,9 +27,10 @@ def async_raises(x):
     return AsyncMock(side_effect=x)
 
 
-def get_aqualink_client():
-    """Create aqualink client."""
-    return AqualinkClient(MOCK_USERNAME, MOCK_PASSWORD)
+@pytest.fixture(name="client")
+def client_fixture():
+    """Create client fixture."""
+    return AqualinkClient(username=MOCK_USERNAME, password=MOCK_PASSWORD)
 
 
 def get_aqualink_system(aqualink, cls=None, data=None):

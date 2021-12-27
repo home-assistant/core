@@ -170,7 +170,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         try:
             await systems[0].update()
         except AqualinkServiceException as svc_exception:
-            _LOGGER.warning("Failed to refresh iAqualink state: %s", svc_exception)
+            if prev is not None:
+                _LOGGER.warning("Failed to refresh iAqualink state: %s", svc_exception)
         else:
             cur = systems[0].online
             if cur is True and prev is not True:
