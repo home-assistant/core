@@ -66,6 +66,13 @@ class LeafClimateSwitch(LeafEntity, ToggleEntity):
         """Return true if climate control is on."""
         return bool(self.car.data[DATA_CLIMATE])
 
+    @property
+    def icon(self) -> str:
+        """Return a representative icon."""
+        if self.car.data[DATA_CLIMATE]:
+            return "mdi:fan"
+        return "mdi:fan-off"
+
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on climate control."""
         if await self.car.async_set_climate(True):
