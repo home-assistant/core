@@ -1,11 +1,12 @@
 """Support for the Nissan Leaf Carwings/Nissan Connect API."""
+from __future__ import annotations
+
 import asyncio
 from datetime import datetime, timedelta
 from http import HTTPStatus
 import logging
 import sys
-import typing
-from typing import Any, Dict, Union
+from typing import Any
 
 from pycarwings2 import CarwingsError, Leaf, Session
 from pycarwings2.responses import (
@@ -217,20 +218,20 @@ class LeafDataStore:
         self.leaf = leaf
         self.car_config = car_config
         self.force_miles = car_config[CONF_FORCE_MILES]
-        self.data: Dict[str, Any] = {}
+        self.data: dict[str, Any] = {}
         self.data[DATA_CLIMATE] = None
         self.data[DATA_BATTERY] = None
         self.data[DATA_CHARGING] = None
         self.data[DATA_RANGE_AC] = None
         self.data[DATA_RANGE_AC_OFF] = None
         self.data[DATA_PLUGGED_IN] = None
-        self.next_update: Union[datetime, None] = None
-        self.last_check: Union[datetime, None] = None
+        self.next_update: datetime | None = None
+        self.last_check: datetime | None = None
         self.request_in_progress: bool = False
         # Timestamp of last successful response from battery or climate.
-        self.last_battery_response: Union[datetime, None] = None
-        self.last_climate_response: Union[datetime, None] = None
-        self._remove_listener: Union[CALLBACK_TYPE, None] = None
+        self.last_battery_response: datetime | None = None
+        self.last_climate_response: datetime | None = None
+        self._remove_listener: CALLBACK_TYPE | None = None
 
     async def async_update_data(self, now: datetime) -> None:
         """Update data from nissan leaf."""
@@ -487,7 +488,7 @@ class LeafEntity(Entity):
         )
 
     @property
-    def extra_state_attributes(self) -> typing.Dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return default attributes for Nissan leaf entities."""
         return {
             "next_update": self.car.next_update,
