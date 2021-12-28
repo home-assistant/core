@@ -179,6 +179,9 @@ aiorecollect==1.0.8
 # homeassistant.components.ridwell
 aioridwell==2021.12.2
 
+# homeassistant.components.senseme
+aiosenseme==0.5.5
+
 # homeassistant.components.shelly
 aioshelly==1.0.5
 
@@ -522,7 +525,7 @@ hole==0.7.0
 holidays==0.11.3.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20211220.0
+home-assistant-frontend==20211227.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -550,7 +553,7 @@ huisbaasje-client==0.1.0
 hyperion-py==0.7.4
 
 # homeassistant.components.iaqualink
-iaqualink==0.3.90
+iaqualink==0.4.1
 
 # homeassistant.components.ping
 icmplib==3.0
@@ -788,6 +791,9 @@ pure-python-adb[async]==0.3.0.dev0
 
 # homeassistant.components.pushbullet
 pushbullet.py==0.11.0
+
+# homeassistant.components.pvoutput
+pvo==0.1.0
 
 # homeassistant.components.canary
 py-canary==0.5.1

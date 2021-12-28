@@ -14,7 +14,7 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     EVENT_TIME_CHANGED,
 )
-from homeassistant.core import Event, callback as async_callback
+from homeassistant.core import Event, ServiceCall, callback as async_callback
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -212,7 +212,7 @@ class Configurator:
 
         self.hass.bus.async_listen_once(EVENT_TIME_CHANGED, deferred_remove)
 
-    async def async_handle_service_call(self, call):
+    async def async_handle_service_call(self, call: ServiceCall) -> None:
         """Handle a configure service call."""
         request_id = call.data.get(ATTR_CONFIGURE_ID)
 
