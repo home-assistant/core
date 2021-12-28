@@ -57,7 +57,7 @@ def pywemo_device_fixture(pywemo_registry, pywemo_model):
     device.port = MOCK_PORT
     device.name = MOCK_NAME
     device.serialnumber = MOCK_SERIAL_NUMBER
-    device.model_name = pywemo_model
+    device.model_name = pywemo_model.replace("LongPress", "")
     device.get_state.return_value = 0  # Default to Off
     device.supports_long_press.return_value = cls.supports_long_press()
 

@@ -122,7 +122,7 @@ async def async_setup_entry(hass, config, async_add_entities, discovery_info=Non
     async_add_entities(
         [
             HoneywellUSThermostat(data, device, cool_away_temp, heat_away_temp)
-            for device in data.devices
+            for device in data.devices.values()
         ]
     )
 

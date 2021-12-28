@@ -490,7 +490,7 @@ async def async_setup_entry(hass, config_entry):  # noqa: C901
             await platform.async_add_entities([entity])
 
         if entity.unique_id:
-            hass.async_add_job(_add_node_to_component())
+            hass.create_task(_add_node_to_component())
             return
 
         @callback

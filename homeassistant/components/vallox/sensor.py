@@ -22,6 +22,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from . import ValloxDataUpdateCoordinator
 from .const import (
@@ -107,7 +108,7 @@ class ValloxFilterRemainingSensor(ValloxSensor):
         days_remaining_delta = timedelta(days=days_remaining)
         now = datetime.utcnow().replace(hour=13, minute=0, second=0, microsecond=0)
 
-        return now + days_remaining_delta
+        return (now + days_remaining_delta).astimezone(dt_util.UTC)
 
 
 class ValloxCellStateSensor(ValloxSensor):
