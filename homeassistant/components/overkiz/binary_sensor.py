@@ -107,7 +107,7 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ):
-    """Set up the Overkiz sensors from a config entry."""
+    """Set up the Overkiz binary sensors from a config entry."""
     data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
     entities: list[OverkizBinarySensor] = []
 
