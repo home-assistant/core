@@ -46,7 +46,7 @@ async def test_setup(hass: HomeAssistant) -> None:
     assert entity_state.state == "5"
     assert entity_state.name == "Test"
     assert entity_state.attributes["unit_of_measurement"] == "°C"
-    assert entity_state.attributes["device_class"] == "temperature"
+    assert entity_state.attributes["device_class"] == SensorDeviceClass.TEMPERATURE
 
 
 async def test_template(hass: HomeAssistant) -> None:
