@@ -3,6 +3,8 @@ Flux for Home-Assistant.
 
 The idea was taken from https://github.com/KpaBap/hue-flux/
 """
+from __future__ import annotations
+
 import datetime
 import logging
 
@@ -32,6 +34,7 @@ from homeassistant.const import (
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
 )
+from homeassistant.core import ServiceCall
 from homeassistant.helpers import config_validation as cv, event
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.sun import get_astral_event_date
@@ -159,7 +162,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
     async_add_entities([flux])
 
-    async def async_update(call=None):
+    async def async_update(call: ServiceCall | None = None) -> None:
         """Update lights."""
         await flux.async_flux_update()
 
