@@ -26,7 +26,13 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import CoreState, HomeAssistant, callback, split_entity_id
+from homeassistant.core import (
+    CoreState,
+    HomeAssistant,
+    ServiceCall,
+    callback,
+    split_entity_id,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
@@ -220,7 +226,7 @@ async def async_setup(hass, config):
 
     await _async_process_config(hass, config, component)
 
-    async def reload_service_handler(service):
+    async def reload_service_handler(service: ServiceCall) -> None:
         """Remove all user-defined groups and load new ones from config."""
         auto = list(filter(lambda e: not e.user_defined, component.entities))
 
@@ -238,12 +244,12 @@ async def async_setup(hass, config):
 
     service_lock = asyncio.Lock()
 
-    async def locked_service_handler(service):
+    async def locked_service_handler(service: ServiceCall) -> None:
         """Handle a service with an async lock."""
         async with service_lock:
             await groups_service_handler(service)
 
-    async def groups_service_handler(service):
+    async def groups_service_handler(service: ServiceCall) -> None:
         """Handle dynamic group service functions."""
         object_id = service.data[ATTR_OBJECT_ID]
         entity_id = f"{DOMAIN}.{object_id}"
