@@ -70,9 +70,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("Error occurred during Mazda login request: %s", ex)
         raise ConfigEntryNotReady from ex
 
-    async def async_handle_service_call(
-        service_call: ServiceCall,
-    ) -> None:
+    async def async_handle_service_call(service_call: ServiceCall) -> None:
         """Handle a service call."""
         # Get device entry from device registry
         dev_reg = device_registry.async_get(hass)
