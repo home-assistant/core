@@ -68,16 +68,9 @@ class HASensemeFan(SensemeEntity, FanEntity):
         self._attr_percentage = ranged_value_to_percentage(
             self._device.fan_speed_limits, self._device.fan_speed
         )
-        if self._device.fan_whoosh_mode:
-            self._attr_preset_mode = self._device.fan_whoosh_mode
-        else:
-            self._attr_preset_mode = None
-
-    @callback
-    def _async_update_from_device(self) -> None:
-        """Process an update from the device."""
-        self._async_update_attrs()
-        self.async_write_ha_state()
+        whoosh = self._device.fan_whoosh_mode
+        self._attr_preset_mode = whoosh if whoosh else None
+        super()._async_update_attrs()
 
     @property
     def extra_state_attributes(self) -> dict:
@@ -101,16 +94,13 @@ class HASensemeFan(SensemeEntity, FanEntity):
         preset_mode: str | None = None,
         **kwargs: Any,
     ) -> None:
-        """Turn the fan on with speed control."""
+        """Turn the fan on with a percentage or preset mode."""
         if preset_mode is not None:
             await self.async_set_preset_mode(preset_mode)
-            if preset_mode == PRESET_MODE_WHOOSH:
-                self._device.sleep_mode = True
-                return
-        if percentage is None:
+        elif percentage is None:
             self._device.fan_on = True
-            return
-        await self.async_set_percentage(percentage)
+        else:
+            await self.async_set_percentage(percentage)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
