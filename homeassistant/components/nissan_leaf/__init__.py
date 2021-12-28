@@ -9,7 +9,7 @@ from pycarwings2 import CarwingsError, Session
 import voluptuous as vol
 
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
-from homeassistant.core import callback
+from homeassistant.core import ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.dispatcher import (
@@ -97,7 +97,7 @@ START_CHARGE_LEAF_SCHEMA = vol.Schema({vol.Required(ATTR_VIN): cv.string})
 def setup(hass, config):
     """Set up the Nissan Leaf integration."""
 
-    async def async_handle_update(service):
+    async def async_handle_update(service: ServiceCall) -> None:
         """Handle service to update leaf data from Nissan servers."""
         # It would be better if this was changed to use nickname, or
         # an entity name rather than a vin.
@@ -109,7 +109,7 @@ def setup(hass, config):
         else:
             _LOGGER.debug("Vin %s not recognised for update", vin)
 
-    async def async_handle_start_charge(service):
+    async def async_handle_start_charge(service: ServiceCall) -> None:
         """Handle service to start charging."""
         # It would be better if this was changed to use nickname, or
         # an entity name rather than a vin.
