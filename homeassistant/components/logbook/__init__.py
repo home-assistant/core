@@ -34,7 +34,12 @@ from homeassistant.const import (
     EVENT_LOGBOOK_ENTRY,
     EVENT_STATE_CHANGED,
 )
-from homeassistant.core import DOMAIN as HA_DOMAIN, callback, split_entity_id
+from homeassistant.core import (
+    DOMAIN as HA_DOMAIN,
+    ServiceCall,
+    callback,
+    split_entity_id,
+)
 from homeassistant.exceptions import InvalidEntityFormatError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import (
@@ -130,7 +135,7 @@ async def async_setup(hass, config):
     hass.data[DOMAIN] = {}
 
     @callback
-    def log_message(service):
+    def log_message(service: ServiceCall) -> None:
         """Handle sending notification message service calls."""
         message = service.data[ATTR_MESSAGE]
         name = service.data[ATTR_NAME]
