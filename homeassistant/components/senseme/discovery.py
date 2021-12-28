@@ -43,9 +43,6 @@ async def async_discover(hass: HomeAssistant, timeout: float) -> list[SensemeDev
         discovery.stop()
         discovery.start()
     await asyncio.sleep(timeout)
-    import pprint
-
-    pprint.pprint([discovery, discovery.devices])
     devices: list[SensemeDevice] = discovery.devices
     return devices
 
