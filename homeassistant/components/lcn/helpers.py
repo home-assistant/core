@@ -5,7 +5,7 @@ import asyncio
 from copy import deepcopy
 from itertools import chain
 import re
-from typing import Union, cast
+from typing import Any, Union, cast
 
 import pypck
 import voluptuous as vol
@@ -248,7 +248,7 @@ def import_lcn_config(lcn_config: ConfigType) -> list[ConfigType]:
 
 
 def purge_entity_registry(
-    hass: HomeAssistant, entry_id: str, entry_data: ConfigType
+    hass: HomeAssistant, entry_id: str, entry_data: dict[str, Any]
 ) -> None:
     """Remove orphans from entity registry which are not in entry data."""
     entity_registry = er.async_get(hass)
@@ -278,7 +278,7 @@ def purge_entity_registry(
 
 
 def purge_device_registry(
-    hass: HomeAssistant, entry_id: str, entry_data: ConfigType
+    hass: HomeAssistant, entry_id: str, entry_data: dict[str, Any]
 ) -> None:
     """Remove orphans from device registry which are not in entry data."""
     device_registry = dr.async_get(hass)
