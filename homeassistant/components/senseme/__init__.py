@@ -2,18 +2,20 @@
 from __future__ import annotations
 
 from datetime import timedelta
-import logging
 from typing import Any, Final
 
 from aiosenseme import SensemeDevice, async_get_device_by_device_info, discover_all
 
 from homeassistant import config_entries
-from homeassistant.components.binary_sensor import DOMAIN as BINARYSENSOR_DOMAIN
-from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_ID, CONF_MAC, CONF_NAME
+from homeassistant.const import (
+    CONF_DEVICE,
+    CONF_HOST,
+    CONF_ID,
+    CONF_MAC,
+    CONF_NAME,
+    Platform,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.event import async_track_time_interval
@@ -21,9 +23,8 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_INFO, DISCOVERY, DOMAIN, UPDATE_RATE
 
-PLATFORMS = [FAN_DOMAIN, BINARYSENSOR_DOMAIN, LIGHT_DOMAIN, SWITCH_DOMAIN]
+PLATFORMS = [Platform.FAN]
 
-_LOGGER = logging.getLogger(__name__)
 
 STARTUP_SCAN_TIMEOUT = 5
 DISCOVER_SCAN_TIMEOUT = 10
