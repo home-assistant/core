@@ -59,7 +59,7 @@ class LeafChargingSensor(LeafEntity, BinarySensorEntity):
     def __init__(self, car):
         """Set up charging status sensor."""
         super().__init__(car)
-        self._attr_unique_id = self._attr_unique_id + "_chargingstatus"
+        self._attr_unique_id = f"{self._attr_unique_id}_chargingstatus"
 
     @property
     def name(self):
