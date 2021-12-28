@@ -44,11 +44,11 @@ class SensemeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     entry, data={CONF_INFO: {**entry.data[CONF_INFO], "address": host}}
                 )
             return self.async_abort(reason="already_configured")
-        device = await async_get_device_by_ip_address(host)
-        if device is None:
+        if not (device := await async_get_device_by_ip_address(host)):
             return self.async_abort(reason="cannot_connect")
         device.stop()
         self._discovered_device = device
+        self._set_confirm_only()
         return await self.async_step_discovery_confirm()
 
     async def async_step_discovery_confirm(
@@ -57,14 +57,10 @@ class SensemeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Confirm discovery."""
         device = self._discovered_device
         assert device is not None
+
         if user_input is not None:
             return await self._async_entry_for_device(device)
-
-        self._set_confirm_only()
-        placeholders = {
-            "model": device.model,
-            "host": device.address,
-        }
+        placeholders = {"model": device.model, "host": device.address}
         self.context["title_placeholders"] = placeholders
         return self.async_show_form(
             step_id="discovery_confirm", description_placeholders=placeholders
@@ -91,8 +87,7 @@ class SensemeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             except ValueError:
                 errors[CONF_HOST] = "invalid_host"
             else:
-                device = await async_get_device_by_ip_address(host)
-                if device is not None:
+                if device := await async_get_device_by_ip_address(host):
                     device.stop()
                     return await self._async_entry_for_device(device)
 
