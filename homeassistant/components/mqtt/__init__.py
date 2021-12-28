@@ -541,7 +541,7 @@ async def async_setup_entry(hass, entry):
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_mqtt)
 
-    async def async_publish_service(call: ServiceCall):
+    async def async_publish_service(call: ServiceCall) -> None:
         """Handle MQTT publish service calls."""
         msg_topic = call.data.get(ATTR_TOPIC)
         msg_topic_template = call.data.get(ATTR_TOPIC_TEMPLATE)
@@ -594,7 +594,7 @@ async def async_setup_entry(hass, entry):
         DOMAIN, SERVICE_PUBLISH, async_publish_service, schema=MQTT_PUBLISH_SCHEMA
     )
 
-    async def async_dump_service(call: ServiceCall):
+    async def async_dump_service(call: ServiceCall) -> None:
         """Handle MQTT dump service calls."""
         messages = []
 

@@ -4,6 +4,7 @@ import logging
 from pyvesync import VeSync
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.core import ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -66,7 +67,7 @@ async def async_setup_entry(hass, config_entry):
         lights.extend(device_dict[VS_LIGHTS])
         hass.async_create_task(forward_setup(config_entry, Platform.LIGHT))
 
-    async def async_new_device_discovery(service):
+    async def async_new_device_discovery(service: ServiceCall) -> None:
         """Discover if new devices should be added."""
         manager = hass.data[DOMAIN][VS_MANAGER]
         switches = hass.data[DOMAIN][VS_SWITCHES]

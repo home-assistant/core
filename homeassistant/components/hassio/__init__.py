@@ -25,7 +25,12 @@ from homeassistant.const import (
     SERVICE_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import DOMAIN as HASS_DOMAIN, HomeAssistant, callback
+from homeassistant.core import (
+    DOMAIN as HASS_DOMAIN,
+    HomeAssistant,
+    ServiceCall,
+    callback,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, recorder
 from homeassistant.helpers.device_registry import (
@@ -488,7 +493,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
     await push_config(None)
 
-    async def async_service_handler(service):
+    async def async_service_handler(service: ServiceCall) -> None:
         """Handle service calls for Hass.io."""
         api_endpoint = MAP_SERVICE_API[service.service]
 
@@ -566,7 +571,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     # Fetch data
     await update_info_data(None)
 
-    async def async_handle_core_service(call):
+    async def async_handle_core_service(call: ServiceCall) -> None:
         """Service handler for handling core services."""
         if call.service in SHUTDOWN_SERVICES and recorder.async_migration_in_progress(
             hass

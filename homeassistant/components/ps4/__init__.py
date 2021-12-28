@@ -19,7 +19,7 @@ from homeassistant.const import (
     CONF_TOKEN,
     Platform,
 )
-from homeassistant.core import HomeAssistant, split_entity_id
+from homeassistant.core import HomeAssistant, ServiceCall, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry
 from homeassistant.util import location
@@ -217,7 +217,7 @@ def _reformat_data(hass: HomeAssistant, games: dict, unique_id: str) -> dict:
 def service_handle(hass: HomeAssistant):
     """Handle for services."""
 
-    async def async_service_command(call):
+    async def async_service_command(call: ServiceCall) -> None:
         """Service for sending commands."""
         entity_ids = call.data[ATTR_ENTITY_ID]
         command = call.data[ATTR_COMMAND]

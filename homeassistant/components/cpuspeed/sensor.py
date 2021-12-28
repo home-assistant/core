@@ -1,10 +1,17 @@
 """Support for displaying the current CPU speed."""
+from __future__ import annotations
+
+from typing import Any
+
 from cpuinfo import cpuinfo
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME, FREQUENCY_GIGAHERTZ
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 ATTR_BRAND = "brand"
 ATTR_HZ = "ghz_advertised"
@@ -15,64 +22,51 @@ HZ_ADVERTISED = "hz_advertised"
 
 DEFAULT_NAME = "CPU speed"
 
-ICON = "mdi:pulse"
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string}
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the CPU speed sensor."""
     name = config[CONF_NAME]
-    add_entities([CpuSpeedSensor(name)], True)
+    async_add_entities([CpuSpeedSensor(name)], True)
 
 
 class CpuSpeedSensor(SensorEntity):
     """Representation of a CPU sensor."""
 
-    def __init__(self, name):
+    _attr_native_unit_of_measurement = FREQUENCY_GIGAHERTZ
+    _attr_icon = "mdi:pulse"
+
+    def __init__(self, name: str) -> None:
         """Initialize the CPU sensor."""
-        self._name = name
-        self._state = None
-        self.info = None
+        self._attr_name = name
+        self.info: dict[str, Any] | None = None
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return FREQUENCY_GIGAHERTZ
-
-    @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, float | str | None] | None:
         """Return the state attributes."""
-        if self.info is not None:
-            attrs = {
-                ATTR_ARCH: self.info["arch_string_raw"],
-                ATTR_BRAND: self.info["brand_raw"],
-            }
-            if HZ_ADVERTISED in self.info:
-                attrs[ATTR_HZ] = round(self.info[HZ_ADVERTISED][0] / 10 ** 9, 2)
-            return attrs
+        if self.info is None:
+            return None
 
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return ICON
+        attrs = {
+            ATTR_ARCH: self.info["arch_string_raw"],
+            ATTR_BRAND: self.info["brand_raw"],
+        }
+        if HZ_ADVERTISED in self.info:
+            attrs[ATTR_HZ] = round(self.info[HZ_ADVERTISED][0] / 10 ** 9, 2)
+        return attrs
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data and updates the state."""
         self.info = cpuinfo.get_cpu_info()
-        if HZ_ACTUAL in self.info:
-            self._state = round(float(self.info[HZ_ACTUAL][0]) / 10 ** 9, 2)
+        if self.info is not None and HZ_ACTUAL in self.info:
+            self._attr_native_value = round(float(self.info[HZ_ACTUAL][0]) / 10 ** 9, 2)
         else:
-            self._state = None
+            self._attr_native_value = None
