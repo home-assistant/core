@@ -1,4 +1,4 @@
-"""Config flow to configure the Luftdaten component."""
+"""Config flow to configure the Sensor.Community integration."""
 from __future__ import annotations
 
 from typing import Any
@@ -16,8 +16,8 @@ import homeassistant.helpers.config_validation as cv
 from .const import CONF_SENSOR_ID, DOMAIN
 
 
-class LuftDatenFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a Luftdaten config flow."""
+class SensorCommunityFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+    """Handle a Sensor.Community config flow."""
 
     VERSION = 1
 
@@ -45,10 +45,10 @@ class LuftDatenFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(str(user_input[CONF_SENSOR_ID]))
         self._abort_if_unique_id_configured()
 
-        luftdaten = Luftdaten(user_input[CONF_SENSOR_ID])
+        sensor_community = Luftdaten(user_input[CONF_SENSOR_ID])
         try:
-            await luftdaten.get_data()
-            valid = await luftdaten.validate_sensor()
+            await sensor_community.get_data()
+            valid = await sensor_community.validate_sensor()
         except LuftdatenConnectionError:
             return self._show_form({CONF_SENSOR_ID: "cannot_connect"})
 
