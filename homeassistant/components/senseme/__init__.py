@@ -13,13 +13,7 @@ from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_DEVICE,
-    CONF_ID,
-    CONF_IP_ADDRESS,
-    CONF_MAC,
-    CONF_NAME,
-)
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_ID, CONF_MAC, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.event import async_track_time_interval
@@ -86,7 +80,7 @@ def async_trigger_discovery(
                 DOMAIN,
                 context={"source": config_entries.SOURCE_DISCOVERY},
                 data={
-                    CONF_IP_ADDRESS: device.address,
+                    CONF_HOST: device.address,
                     CONF_ID: device.uuid,
                     CONF_MAC: device.mac,
                     CONF_NAME: device.name,
