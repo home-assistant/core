@@ -1,4 +1,6 @@
 """Update coordinator for HomeWizard."""
+from __future__ import annotations
+
 import asyncio
 import logging
 
@@ -17,18 +19,18 @@ _LOGGER = logging.getLogger(__name__)
 class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator):
     """Gather data for the energy device."""
 
-    host = None
-    api = None
+    api: aiohwenergy | None = None
+    host: str
 
     def __init__(
         self,
         hass: HomeAssistant,
-        host,
+        host: str,
     ) -> None:
         """Initialize Update Coordinator."""
 
-        self.host = host
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL)
+        self.host = host
 
     async def _async_update_data(self) -> dict:
         """Fetch all device and sensor data from api."""
@@ -36,10 +38,7 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator):
         async with async_timeout.timeout(10):
 
             if self.api is None:
-                await self.initialize_api()
-
-            # Tell MyPi that self.api is set (silence attr-defined)
-            assert self.api is not None
+                self.api = await self.initialize_api()
 
             # Update all properties
             try:
@@ -72,14 +71,14 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator):
 
         return data
 
-    async def initialize_api(self):
+    async def initialize_api(self) -> aiohwenergy:
         """Initialize API and validate connection."""
 
         api = aiohwenergy.HomeWizardEnergy(self.host)
 
         try:
             await api.initialize()
-            self.api = api
+            return api
 
         except (asyncio.TimeoutError, aiohwenergy.RequestError) as ex:
             raise UpdateFailed(
@@ -97,7 +96,7 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator):
                 f"Unknown error connecting with Energy Device at {self.host}"
             ) from ex
 
-    async def _close_api(self):
+    async def _close_api(self) -> None:
         if self.api is not None:
             await self.api.close()
             self.api = None

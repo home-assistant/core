@@ -49,7 +49,7 @@ async def test_manual_flow_works(hass, aioclient_mock):
     entry = entries[0]
     assert entry.unique_id == f"{device.device.product_type}_{device.device.serial}"
 
-    assert len(device.initialize.mock_calls) == 2
+    assert len(device.initialize.mock_calls) == 3
     assert len(device.close.mock_calls) == 1
 
 
