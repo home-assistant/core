@@ -8,9 +8,10 @@ from python_picnic_api.session import PicnicAuthError
 import requests
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant import config_entries, core, data_entry_flow, exceptions
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_PASSWORD, CONF_USERNAME
+
 from .const import CONF_COUNTRY_CODE, COUNTRY_CODES, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -86,22 +87,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
 
-        errors = {}
-
-        try:
-            auth_token, info = await validate_input(self.hass, user_input)
-        except CannotConnect:
-            errors["base"] = "cannot_connect"
-        except InvalidAuth:
-            errors["base"] = "invalid_auth"
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
-        else:
-            return await self.async_create_picnic_entry(auth_token, info, user_input)
-
-        return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+        return await self._async_picnic_authenticate(
+            "user", STEP_USER_DATA_SCHEMA, user_input
         )
 
     async def async_step_reauth(self, config):
@@ -119,11 +106,33 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         user_input[CONF_COUNTRY_CODE] = self._country_code
-        return await self.async_step_user(user_input)
+        return await self._async_picnic_authenticate(
+            "reauth_confirm", STEP_REAUTH_DATA_SCHEMA, user_input
+        )
 
-    async def async_create_picnic_entry(
+    async def _async_picnic_authenticate(self, step_id, data_schema, user_input):
+        """Authenticate the user and show the form with errors on failure."""
+        errors = {}
+
+        try:
+            auth_token, info = await validate_input(self.hass, user_input)
+        except CannotConnect:
+            errors["base"] = "cannot_connect"
+        except InvalidAuth:
+            errors["base"] = "invalid_auth"
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception")
+            errors["base"] = "unknown"
+        else:
+            return await self._async_create_picnic_entry(auth_token, info, user_input)
+
+        return self.async_show_form(
+            step_id=step_id, data_schema=data_schema, errors=errors
+        )
+
+    async def _async_create_picnic_entry(
         self, auth_token, info, user_input
-    ) -> dict:
+    ) -> data_entry_flow.FlowResult:
         """Create a config entry or update existing entry for re-auth."""
 
         data = {
@@ -132,7 +141,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         }
         existing_entry = await self.async_set_unique_id(info["unique_id"])
 
-        # Only update the existing entry if one exists and we're in a re-auth flow
+        # Only update the existing entry if one exists, and we're in a re-auth flow
         if existing_entry and self.source == SOURCE_REAUTH:
             self.hass.config_entries.async_update_entry(existing_entry, data=data)
             await self.hass.config_entries.async_reload(existing_entry.entry_id)
@@ -140,10 +149,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Abort if we're adding a new config and the unique id is already in use
         self._abort_if_unique_id_configured()
-        return self.async_create_entry(
-            title=info["title"],
-            data=data
-        )
+        return self.async_create_entry(title=info["title"], data=data)
 
 
 class CannotConnect(exceptions.HomeAssistantError):
