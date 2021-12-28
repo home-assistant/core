@@ -15,7 +15,7 @@ from pycarwings2.responses import (
 import voluptuous as vol
 
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.dispatcher import (
@@ -230,7 +230,7 @@ class LeafDataStore:
         # Timestamp of last successful response from battery or climate.
         self.last_battery_response: Union[datetime, None] = None
         self.last_climate_response: Union[datetime, None] = None
-        self._remove_listener = None
+        self._remove_listener: Union[CALLBACK_TYPE, None] = None
 
     async def async_update_data(self, now: datetime) -> None:
         """Update data from nissan leaf."""
@@ -249,9 +249,7 @@ class LeafDataStore:
 
         mynextupdate = self.next_update
         if mynextupdate is not None:
-            # self._remove_listener =
-
-            async_track_point_in_utc_time(
+            self._remove_listener = async_track_point_in_utc_time(
                 self.hass, self.async_update_data, mynextupdate
             )
 
