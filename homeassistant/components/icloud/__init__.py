@@ -4,9 +4,9 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType, ServiceDataType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 
 from .account import IcloudAccount
@@ -134,7 +134,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
-    def play_sound(service: ServiceDataType) -> None:
+    def play_sound(service: ServiceCall) -> None:
         """Play sound on the device."""
         account = service.data[ATTR_ACCOUNT]
         device_name = service.data.get(ATTR_DEVICE_NAME)
@@ -143,7 +143,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         for device in _get_account(account).get_devices_with_name(device_name):
             device.play_sound()
 
-    def display_message(service: ServiceDataType) -> None:
+    def display_message(service: ServiceCall) -> None:
         """Display a message on the device."""
         account = service.data[ATTR_ACCOUNT]
         device_name = service.data.get(ATTR_DEVICE_NAME)
@@ -154,7 +154,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         for device in _get_account(account).get_devices_with_name(device_name):
             device.display_message(message, sound)
 
-    def lost_device(service: ServiceDataType) -> None:
+    def lost_device(service: ServiceCall) -> None:
         """Make the device in lost state."""
         account = service.data[ATTR_ACCOUNT]
         device_name = service.data.get(ATTR_DEVICE_NAME)
@@ -165,7 +165,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         for device in _get_account(account).get_devices_with_name(device_name):
             device.lost_device(number, message)
 
-    def update_account(service: ServiceDataType) -> None:
+    def update_account(service: ServiceCall) -> None:
         """Call the update function of an iCloud account."""
         if (account := service.data.get(ATTR_ACCOUNT)) is None:
             for account in hass.data[DOMAIN].values():
