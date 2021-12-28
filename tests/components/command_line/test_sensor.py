@@ -5,7 +5,7 @@ from typing import Any
 from unittest.mock import patch
 
 from homeassistant import setup
-from homeassistant.components.sensor import DOMAIN
+from homeassistant.components.sensor import DOMAIN, SensorDeviceClass
 from homeassistant.core import HomeAssistant
 
 
