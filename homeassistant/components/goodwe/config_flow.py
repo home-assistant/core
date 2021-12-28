@@ -35,7 +35,7 @@ class GoodweFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 inverter = await connect(host=host, retries=10)
             except InverterError:
-                errors["base"] = "connection_error"
+                errors[CONF_HOST] = "connection_error"
             else:
                 await self.async_set_unique_id(inverter.serial_number)
                 self._abort_if_unique_id_configured()
