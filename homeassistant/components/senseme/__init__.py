@@ -24,10 +24,8 @@ from homeassistant.helpers.typing import ConfigType
 from .const import CONF_INFO, DISCOVERY, DOMAIN, UPDATE_RATE
 
 PLATFORMS = [Platform.FAN]
-
-
-STARTUP_SCAN_TIMEOUT = 5
-DISCOVER_SCAN_TIMEOUT = 10
+STARTUP_SCAN_TIMEOUT: Final = 5
+DISCOVER_SCAN_TIMEOUT: Final = 10
 DISCOVERY_INTERVAL: Final = timedelta(minutes=15)
 
 
