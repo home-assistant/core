@@ -26,7 +26,8 @@ and config flow.
 from __future__ import annotations
 
 import asyncio
-from collections import Iterable, OrderedDict
+from collections import OrderedDict
+from collections.abc import Iterable
 from enum import Enum
 import logging
 import os
