@@ -1,11 +1,9 @@
 """The SenseME integration entities."""
 from __future__ import annotations
 
-from abc import abstractmethod
-from typing import cast
-
 from aiosenseme import SensemeDevice
 
+from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
@@ -36,14 +34,16 @@ class SensemeEntity(Entity):
             "room_type": self._device.room_type,
         }
 
-    @property
-    def available(self) -> bool:
-        """Return True if available/operational."""
-        return cast(bool, self._device.available)
+    @callback
+    def _async_update_attrs(self) -> None:
+        """Update attrs from device."""
+        self._attr_available = self._device.available
 
-    @abstractmethod
+    @callback
     def _async_update_from_device(self) -> None:
         """Process an update from the device."""
+        self._async_update_attrs()
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Add data updated listener after this object has been initialized."""

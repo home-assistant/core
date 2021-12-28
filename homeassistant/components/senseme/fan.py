@@ -29,6 +29,12 @@ from .const import (
 )
 from .entity import SensemeEntity
 
+SENSEME_DIRECTION_TO_HASS = {
+    SENSEME_DIRECTION_FORWARD: DIRECTION_FORWARD,
+    SENSEME_DIRECTION_REVERSE: DIRECTION_REVERSE,
+}
+HASS_DIRECTION_TO_SENSEME = {v: k for k, v in SENSEME_DIRECTION_TO_HASS.items()}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -58,10 +64,7 @@ class HASensemeFan(SensemeEntity, FanEntity):
     def _async_update_attrs(self) -> None:
         """Update attrs from device."""
         self._attr_is_on = self._device.fan_on
-        if self._device.fan_dir == SENSEME_DIRECTION_FORWARD:
-            self._attr_current_direction = DIRECTION_FORWARD
-        else:
-            self._attr_current_direction = DIRECTION_REVERSE
+        self._attr_current_direction = SENSEME_DIRECTION_TO_HASS[self._device.fan_dir]
         self._attr_percentage = ranged_value_to_percentage(
             self._device.fan_speed_limits, self._device.fan_speed
         )
@@ -124,7 +127,4 @@ class HASensemeFan(SensemeEntity, FanEntity):
 
     async def async_set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
-        if direction == DIRECTION_FORWARD:
-            self._device.fan_dir = SENSEME_DIRECTION_FORWARD
-        else:
-            self._device.fan_dir = SENSEME_DIRECTION_REVERSE
+        self._device.fan_dir = HASS_DIRECTION_TO_SENSEME[direction]
