@@ -1,8 +1,10 @@
 """UK Environment Agency Flood Monitoring Integration."""
 
+from homeassistant.const import Platform
+
 from .const import DOMAIN
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass, entry):
