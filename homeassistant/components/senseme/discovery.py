@@ -6,7 +6,7 @@ import asyncio
 from aiosenseme import SensemeDevice, SensemeDiscovery
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_ID, CONF_NAME
+from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, callback
 
 from .const import DISCOVERY, DOMAIN
@@ -22,6 +22,17 @@ def async_start_discovery(hass: HomeAssistant) -> bool:
     discovery.add_callback(lambda devices: async_trigger_discovery(hass, devices))
     discovery.start()
     return True  # started
+
+
+@callback
+def async_get_discovered_device(hass: HomeAssistant, uuid: str) -> SensemeDevice:
+    """Return a discovered device."""
+    discovery: SensemeDiscovery = hass.data[DOMAIN][DISCOVERY]
+    devices: list[SensemeDevice] = discovery.devices
+    for discovered_device in devices:
+        if discovered_device.uuid == uuid:
+            return discovered_device
+    raise RuntimeError("Discovered device unexpectedly disappeared")
 
 
 async def async_discover(hass: HomeAssistant, timeout: float) -> list[SensemeDevice]:
@@ -47,10 +58,6 @@ def async_trigger_discovery(
             hass.config_entries.flow.async_init(
                 DOMAIN,
                 context={"source": config_entries.SOURCE_DISCOVERY},
-                data={
-                    CONF_HOST: device.address,
-                    CONF_ID: device.uuid,
-                    CONF_NAME: device.name,
-                },
+                data={CONF_ID: device.uuid},
             )
         )
