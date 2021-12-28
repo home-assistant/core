@@ -182,6 +182,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_method=async_update_data,
     )
 
+    await coordinator.async_config_entry_first_refresh()
+
     service_handler = ValloxServiceHandler(client, coordinator)
     for vallox_service, service_details in SERVICE_TO_METHOD.items():
         hass.services.async_register(
@@ -190,8 +192,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             service_handler.async_handle,
             schema=service_details.schema,
         )
-
-    await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         "client": client,
