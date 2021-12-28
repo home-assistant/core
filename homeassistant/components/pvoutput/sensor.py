@@ -89,11 +89,11 @@ SENSORS: tuple[PVOutputSensorEntityDescription, ...] = (
         value_fn=lambda status: status.energy_generation,
     ),
     PVOutputSensorEntityDescription(
-        key="normalized_ouput",
+        key="normalized_output",
         name="Efficiency",
         native_unit_of_measurement=f"{ENERGY_KILO_WATT_HOUR}/{POWER_KILO_WATT}",
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda status: status.normalized_ouput,
+        value_fn=lambda status: status.normalized_output,
     ),
     PVOutputSensorEntityDescription(
         key="power_consumption",
@@ -209,7 +209,7 @@ class PVOutputSensorEntity(CoordinatorEntity, SensorEntity):
             ATTR_POWER_GENERATION: self.coordinator.data.power_generation,
             ATTR_ENERGY_CONSUMPTION: self.coordinator.data.energy_consumption,
             ATTR_POWER_CONSUMPTION: self.coordinator.data.power_consumption,
-            ATTR_EFFICIENCY: self.coordinator.data.normalized_ouput,
+            ATTR_EFFICIENCY: self.coordinator.data.normalized_output,
             ATTR_TEMPERATURE: self.coordinator.data.temperature,
             ATTR_VOLTAGE: self.coordinator.data.voltage,
         }
