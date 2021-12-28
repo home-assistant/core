@@ -1,9 +1,14 @@
 """Battery Charge and Range Support for the Nissan Leaf."""
+from __future__ import annotations
+
 import logging
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import PERCENTAGE
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.distance import LENGTH_KILOMETERS, LENGTH_MILES
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 
@@ -21,12 +26,17 @@ _LOGGER = logging.getLogger(__name__)
 ICON_RANGE = "mdi:speedometer"
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_devices: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Sensors setup."""
     if discovery_info is None:
         return
 
-    devices = []
+    devices: list[LeafEntity] = []
     for vin, datastore in hass.data[DATA_LEAF].items():
         _LOGGER.debug("Adding sensors for vin=%s", vin)
         devices.append(LeafBatterySensor(datastore))
