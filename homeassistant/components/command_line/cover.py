@@ -1,4 +1,6 @@
 """Support for command line covers."""
+from __future__ import annotations
+
 import logging
 
 import voluptuous as vol
@@ -13,8 +15,11 @@ from homeassistant.const import (
     CONF_FRIENDLY_NAME,
     CONF_VALUE_TEMPLATE,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.reload import setup_reload_service
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import call_shell_with_timeout, check_output_or_log
 from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN, PLATFORMS
@@ -38,7 +43,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up cover controlled by shell commands."""
 
     setup_reload_service(hass, DOMAIN, PLATFORMS)
@@ -66,7 +76,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     if not covers:
         _LOGGER.error("No covers added")
-        return False
+        return
 
     add_entities(covers)
 
