@@ -25,6 +25,7 @@ class SensemeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the SenseME config flow."""
+        self._discovered_devices: list[SensemeDevice] | None = None
         self._discovered_device: SensemeDevice | None = None
 
     async def async_step_discovery(
@@ -110,11 +111,12 @@ class SensemeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initialized by the user."""
-        discovered_devices = await async_discover(self.hass, DISCOVER_TIMEOUT)
+        if self._discovered_devices is None:
+            self._discovered_devices = await async_discover(self.hass, DISCOVER_TIMEOUT)
         current_ids = self._async_current_ids()
         device_selection = [
             device.name
-            for device in discovered_devices
+            for device in self._discovered_devices
             if device.uuid not in current_ids
         ]
 
@@ -127,7 +129,7 @@ class SensemeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if user_input[CONF_HOST] == CONF_HOST_MANUAL:
                 return await self.async_step_manual()
 
-            for device in discovered_devices:
+            for device in self._discovered_devices:
                 if device == user_input[CONF_HOST]:
                     return await self._async_entry_for_device(device)
 
