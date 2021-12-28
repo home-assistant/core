@@ -64,7 +64,9 @@ class HASensemeFan(SensemeEntity, FanEntity):
     def _async_update_attrs(self) -> None:
         """Update attrs from device."""
         self._attr_is_on = self._device.fan_on
-        self._attr_current_direction = SENSEME_DIRECTION_TO_HASS[self._device.fan_dir]
+        self._attr_current_direction = SENSEME_DIRECTION_TO_HASS.get(
+            self._device.fan_dir, DIRECTION_FORWARD  # None also means forward
+        )
         self._attr_percentage = ranged_value_to_percentage(
             self._device.fan_speed_limits, self._device.fan_speed
         )
