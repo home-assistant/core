@@ -13,28 +13,5 @@
       "ok": "[%key:component::binary_sensor::state::problem::off%]",
       "problem": "[%key:component::binary_sensor::state::problem::on%]"
     }
-  },
-  "config": {
-    "step": {
-      "user": {
-        "data": {
-          "domain": "Domain to group"
-        }
-      },
-      "entities": {
-        "data": {
-          "entities": "Entities to group"
-        }
-      }
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "entities": "[%key:component::group::config::step::entities::data::entities%]"
-        }
-      }
-    }
-  }  
+  }
 }

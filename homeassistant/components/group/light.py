@@ -35,7 +35,6 @@ from homeassistant.components.light import (
     SUPPORT_TRANSITION,
     SUPPORT_WHITE_VALUE,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
@@ -69,15 +68,6 @@ SUPPORT_GROUP_LIGHT = (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
-) -> None:
-    """Initialize light group platform from a config entry."""
-    async_add_entities(
-        [LightGroup(entry.entry_id, entry.title, entry.options[CONF_ENTITIES])]
-    )
 
 
 async def async_setup_platform(

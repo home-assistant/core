@@ -11,13 +11,11 @@ from typing import Any, List, cast
 import voluptuous as vol
 
 from homeassistant import core as ha
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
     ATTR_ICON,
     ATTR_NAME,
-    CONF_DOMAIN,
     CONF_ENTITIES,
     CONF_ICON,
     CONF_NAME,
@@ -27,6 +25,7 @@ from homeassistant.const import (
     SERVICE_RELOAD,
     STATE_OFF,
     STATE_ON,
+    Platform,
 )
 from homeassistant.core import (
     CoreState,
@@ -45,11 +44,9 @@ from homeassistant.helpers.integration_platform import (
 from homeassistant.helpers.reload import async_reload_integration_platforms
 from homeassistant.loader import bind_hass
 
-from .const import DOMAIN
-
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
-
+DOMAIN = "group"
 GROUP_ORDER = "group_order"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
@@ -66,7 +63,13 @@ ATTR_ALL = "all"
 SERVICE_SET = "set"
 SERVICE_REMOVE = "remove"
 
-PLATFORMS = ["light", "cover", "notify", "fan", "binary_sensor", "media_player"]
+PLATFORMS = [
+    Platform.LIGHT,
+    Platform.COVER,
+    Platform.NOTIFY,
+    Platform.FAN,
+    Platform.BINARY_SENSOR,
+]
 
 REG_KEY = f"{DOMAIN}_registry"
 
@@ -350,25 +353,6 @@ async def async_setup(hass, config):
     return True
 
 
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Reload the config entry on change of title/entities."""
-    await hass.config_entries.async_reload(entry.entry_id)
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Group from a config entry."""
-    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
-    hass.config_entries.async_setup_platforms(entry, [entry.data[CONF_DOMAIN]])
-    return True
-
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload Group from a config entry."""
-    return await hass.config_entries.async_unload_platforms(
-        entry, [entry.data[CONF_DOMAIN]]
-    )
-
-
 async def _process_group_platform(hass, domain, platform):
     """Process a group platform."""
     current_domain.set(domain)
@@ -400,7 +384,6 @@ async def _async_process_config(hass, config, component):
                 object_id=object_id,
                 mode=mode,
                 order=hass.data[GROUP_ORDER],
-                add_entities=False,
             )
         )
 
@@ -409,7 +392,7 @@ async def _async_process_config(hass, config, component):
         # we setup a new group
         hass.data[GROUP_ORDER] += 1
 
-    await component.async_add_entities(await asyncio.gather(*tasks))
+    await asyncio.gather(*tasks)
 
 
 class GroupEntity(Entity):
@@ -504,7 +487,6 @@ class Group(Entity):
         object_id=None,
         mode=None,
         order=None,
-        add_entities=True,
     ):
         """Initialize a group.
 
@@ -536,8 +518,7 @@ class Group(Entity):
         if (component := hass.data.get(DOMAIN)) is None:
             component = hass.data[DOMAIN] = EntityComponent(_LOGGER, DOMAIN, hass)
 
-        if add_entities:
-            await component.async_add_entities([group])
+        await component.async_add_entities([group])
 
         return group
 

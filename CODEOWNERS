@@ -715,7 +715,7 @@ homeassistant/components/prometheus/* @knyar
 tests/components/prometheus/* @knyar
 homeassistant/components/prosegur/* @dgomes
 tests/components/prosegur/* @dgomes
-homeassistant/components/proxmoxve/* @k4ds3 @jhollowe @Corbeno
+homeassistant/components/proxmoxve/* @jhollowe @Corbeno
 homeassistant/components/ps4/* @ktnrg45
 tests/components/ps4/* @ktnrg45
 homeassistant/components/push/* @dgomes
@@ -991,7 +991,8 @@ homeassistant/components/usgs_earthquakes_feed/* @exxamalte
 tests/components/usgs_earthquakes_feed/* @exxamalte
 homeassistant/components/utility_meter/* @dgomes
 tests/components/utility_meter/* @dgomes
-homeassistant/components/vallox/* @andre-richter
+homeassistant/components/vallox/* @andre-richter @slovdahl
+tests/components/vallox/* @andre-richter @slovdahl
 homeassistant/components/velbus/* @Cereal2nd @brefra
 tests/components/velbus/* @Cereal2nd @brefra
 homeassistant/components/velux/* @Julius2342
@@ -1037,6 +1038,7 @@ homeassistant/components/wemo/* @esev
 tests/components/wemo/* @esev
 homeassistant/components/whirlpool/* @abmantis
 tests/components/whirlpool/* @abmantis
+homeassistant/components/whois/* @frenck
 homeassistant/components/wiffi/* @mampfes
 tests/components/wiffi/* @mampfes
 homeassistant/components/wilight/* @leofig-rj

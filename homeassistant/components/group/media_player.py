@@ -44,7 +44,6 @@ from homeassistant.components.media_player import (
     SUPPORT_VOLUME_STEP,
     MediaPlayerEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
@@ -58,7 +57,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, State, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
 
@@ -80,15 +78,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
-
-
-async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
-) -> None:
-    """Initialize media group from a config entry."""
-    async_add_entities(
-        [MediaGroup(entry.entry_id, entry.title, entry.options[CONF_ENTITIES])]
-    )
 
 
 async def async_setup_platform(
