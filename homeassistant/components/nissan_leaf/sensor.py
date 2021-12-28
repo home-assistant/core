@@ -81,7 +81,7 @@ class LeafRangeSensor(LeafEntity, SensorEntity):
         self._ac_on = ac_on
         super().__init__(car)
         if ac_on:
-            self._attr_unique_id = self._attr_unique_id + "_range_ac"
+            self._attr_unique_id = f"{self._attr_unique_id}_range_ac"
         else:
             self._attr_unique_id = self._attr_unique_id + "_range"
 
