@@ -9,8 +9,8 @@ import requests
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_PASSWORD, CONF_USERNAME
-
 from .const import CONF_COUNTRY_CODE, COUNTRY_CODES, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -22,6 +22,13 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_COUNTRY_CODE, default=COUNTRY_CODES[0]): vol.In(
             COUNTRY_CODES
         ),
+    }
+)
+
+STEP_REAUTH_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
     }
 )
 
@@ -70,6 +77,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Picnic."""
 
     VERSION = 1
+    _country_code = None
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
@@ -90,20 +98,51 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            # Set the unique id and abort if it already exists
-            await self.async_set_unique_id(info["unique_id"])
-            self._abort_if_unique_id_configured()
-
-            return self.async_create_entry(
-                title=info["title"],
-                data={
-                    CONF_ACCESS_TOKEN: auth_token,
-                    CONF_COUNTRY_CODE: user_input[CONF_COUNTRY_CODE],
-                },
-            )
+            return await self.async_create_picnic_entry(auth_token, info, user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+        )
+
+    async def async_step_reauth(self, config):
+        """Perform re-auth upon an API authentication error."""
+        self._country_code = config[CONF_COUNTRY_CODE]
+
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(self, user_input=None):
+        """Dialog that informs the user that re-auth is required."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                data_schema=STEP_REAUTH_DATA_SCHEMA,
+            )
+
+        user_input[CONF_COUNTRY_CODE] = self._country_code
+        return await self.async_step_user(user_input)
+
+    async def async_create_picnic_entry(
+        self, auth_token, info, user_input
+    ) -> dict:
+        """Create a config entry or update existing entry for re-auth."""
+
+        data = {
+            CONF_ACCESS_TOKEN: auth_token,
+            CONF_COUNTRY_CODE: user_input[CONF_COUNTRY_CODE],
+        }
+        existing_entry = await self.async_set_unique_id(info["unique_id"])
+
+        # Only update the existing entry if one exists and we're in a re-auth flow
+        if existing_entry and self.source == SOURCE_REAUTH:
+            self.hass.config_entries.async_update_entry(existing_entry, data=data)
+            await self.hass.config_entries.async_reload(existing_entry.entry_id)
+            return self.async_abort(reason="reauth_successful")
+
+        # Abort if we're adding a new config and the unique id is already in use
+        self._abort_if_unique_id_configured()
+        return self.async_create_entry(
+            title=info["title"],
+            data=data
         )
 
 
