@@ -68,10 +68,8 @@ class HASensemeFan(SensemeEntity, FanEntity):
         self._attr_percentage = ranged_value_to_percentage(
             self._device.fan_speed_limits, self._device.fan_speed
         )
-        if self._device.fan_whoosh_mode:
-            self._attr_preset_mode = self._device.fan_whoosh_mode
-        else:
-            self._attr_preset_mode = None
+        whoosh = self._device.fan_whoosh_mode
+        self._attr_preset_mode = whoosh if whoosh else None
         super()._async_update_attrs()
 
     @property
