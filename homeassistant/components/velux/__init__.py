@@ -4,7 +4,12 @@ import logging
 from pyvlx import PyVLX, PyVLXException
 import voluptuous as vol
 
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    EVENT_HOMEASSISTANT_STOP,
+    Platform,
+)
 from homeassistant.core import ServiceCall, callback
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
@@ -12,7 +17,7 @@ from homeassistant.helpers.entity import Entity
 
 DOMAIN = "velux"
 DATA_VELUX = "data_velux"
-PLATFORMS = ["cover", "light", "scene"]
+PLATFORMS = [Platform.COVER, Platform.LIGHT, Platform.SCENE]
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
