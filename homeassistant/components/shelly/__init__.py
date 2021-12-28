@@ -333,7 +333,7 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
                 break
 
         # Check for input events and config change
-        cfg_changed: int = 0
+        cfg_changed = 0
         for block in self.device.blocks:
             if block.type == "device":
                 cfg_changed = block.cfgChanged
@@ -516,13 +516,6 @@ class ShellyDeviceRestWrapper(update_coordinator.DataUpdateCoordinator):
             async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
                 _LOGGER.debug("REST update for %s", self.name)
                 await self.device.update_status()
-
-                old_firmware = self.device.firmware_version
-                _LOGGER.warning(
-                    "Simone: fw=%s, sw_info=%s",
-                    self.device.firmware_version,
-                    old_firmware,
-                )
 
                 if self.device.status["uptime"] < 2 * REST_SENSORS_UPDATE_INTERVAL:
                     old_firmware = self.device.firmware_version
