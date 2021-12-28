@@ -90,9 +90,18 @@ class ZHAEnumSelectEntity(ZhaEntity, SelectEntity):
             ]
 
 
+class ZHANonZCLSelectEntity(ZHAEnumSelectEntity):
+    """Representation of a ZHA select entity with no ZCL interaction."""
+
+    @property
+    def available(self) -> bool:
+        """Return entity availability."""
+        return True
+
+
 @MULTI_MATCH(channel_names=CHANNEL_IAS_WD)
 class ZHADefaultToneSelectEntity(
-    ZHAEnumSelectEntity, id_suffix=IasWd.Warning.WarningMode.__name__
+    ZHANonZCLSelectEntity, id_suffix=IasWd.Warning.WarningMode.__name__
 ):
     """Representation of a ZHA default siren tone select entity."""
 
@@ -101,7 +110,7 @@ class ZHADefaultToneSelectEntity(
 
 @MULTI_MATCH(channel_names=CHANNEL_IAS_WD)
 class ZHADefaultSirenLevelSelectEntity(
-    ZHAEnumSelectEntity, id_suffix=IasWd.Warning.SirenLevel.__name__
+    ZHANonZCLSelectEntity, id_suffix=IasWd.Warning.SirenLevel.__name__
 ):
     """Representation of a ZHA default siren level select entity."""
 
@@ -110,7 +119,7 @@ class ZHADefaultSirenLevelSelectEntity(
 
 @MULTI_MATCH(channel_names=CHANNEL_IAS_WD)
 class ZHADefaultStrobeLevelSelectEntity(
-    ZHAEnumSelectEntity, id_suffix=IasWd.StrobeLevel.__name__
+    ZHANonZCLSelectEntity, id_suffix=IasWd.StrobeLevel.__name__
 ):
     """Representation of a ZHA default siren strobe level select entity."""
 
@@ -118,7 +127,7 @@ class ZHADefaultStrobeLevelSelectEntity(
 
 
 @MULTI_MATCH(channel_names=CHANNEL_IAS_WD)
-class ZHADefaultStrobeSelectEntity(ZHAEnumSelectEntity, id_suffix=Strobe.__name__):
+class ZHADefaultStrobeSelectEntity(ZHANonZCLSelectEntity, id_suffix=Strobe.__name__):
     """Representation of a ZHA default siren strobe select entity."""
 
     _enum: Enum = Strobe
