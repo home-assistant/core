@@ -68,11 +68,9 @@ class SensemeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="discovery_confirm", description_placeholders=placeholders
         )
 
-    async def _async_entry_for_device(
-        self, device: SensemeDevice, raise_on_progress: bool = True
-    ) -> FlowResult:
+    async def _async_entry_for_device(self, device: SensemeDevice) -> FlowResult:
         """Create a config entry for a device."""
-        await self.async_set_unique_id(device.uuid, raise_on_progress=raise_on_progress)
+        await self.async_set_unique_id(device.uuid, raise_on_progress=False)
         self._abort_if_unique_id_configured()
         return self.async_create_entry(
             title=device.name,
@@ -93,9 +91,7 @@ class SensemeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 if device := await async_get_device_by_ip_address(host):
                     device.stop()
-                    return await self._async_entry_for_device(
-                        device, raise_on_progress=False
-                    )
+                    return await self._async_entry_for_device(device)
 
                 errors[CONF_HOST] = "cannot_connect"
 
@@ -129,9 +125,7 @@ class SensemeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             for device in self._discovered_devices:
                 if device.uuid == user_input[CONF_DEVICE]:
-                    return await self._async_entry_for_device(
-                        device, raise_on_progress=False
-                    )
+                    return await self._async_entry_for_device(device)
 
         return self.async_show_form(
             step_id="user",
