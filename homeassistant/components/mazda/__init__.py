@@ -77,6 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         device_id = service_call.data["device_id"]
         device_entry = dev_reg.async_get(device_id)
         if TYPE_CHECKING:
+            # For mypy: it has already been checked in validate_mazda_device_id
             assert device_entry
 
         # Get vehicle VIN from device identifiers
