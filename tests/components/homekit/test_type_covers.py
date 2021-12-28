@@ -223,11 +223,15 @@ async def test_windowcovering_set_cover_position(hass, hk_driver, events):
     assert events[-1].data[ATTR_VALUE] == 75
 
 
-async def test_window_instantiate(hass, hk_driver, events):
-    """Test if Window accessory is instantiated correctly."""
+async def test_window_instantiate_set_position(hass, hk_driver, events):
+    """Test if Window accessory is instantiated correctly and can set position."""
     entity_id = "cover.window"
 
-    hass.states.async_set(entity_id, None)
+    hass.states.async_set(
+        entity_id,
+        STATE_OPEN,
+        {ATTR_SUPPORTED_FEATURES: SUPPORT_SET_POSITION, ATTR_CURRENT_POSITION: 0},
+    )
     await hass.async_block_till_done()
     acc = Window(hass, hk_driver, "Window", entity_id, 2, None)
     await acc.run()
@@ -238,6 +242,29 @@ async def test_window_instantiate(hass, hk_driver, events):
 
     assert acc.char_current_position.value == 0
     assert acc.char_target_position.value == 0
+
+    hass.states.async_set(
+        entity_id,
+        STATE_OPEN,
+        {ATTR_SUPPORTED_FEATURES: SUPPORT_SET_POSITION, ATTR_CURRENT_POSITION: 50},
+    )
+    await hass.async_block_till_done()
+    assert acc.char_current_position.value == 50
+    assert acc.char_target_position.value == 50
+    assert acc.char_position_state.value == 2
+
+    hass.states.async_set(
+        entity_id,
+        STATE_OPEN,
+        {
+            ATTR_SUPPORTED_FEATURES: SUPPORT_SET_POSITION,
+            ATTR_CURRENT_POSITION: "GARBAGE",
+        },
+    )
+    await hass.async_block_till_done()
+    assert acc.char_current_position.value == 50
+    assert acc.char_target_position.value == 50
+    assert acc.char_position_state.value == 2
 
 
 async def test_windowcovering_cover_set_tilt(hass, hk_driver, events):

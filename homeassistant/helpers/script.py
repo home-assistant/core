@@ -1052,6 +1052,7 @@ class Script:
         if self._change_listener_job:
             self._hass.async_run_hass_job(self._change_listener_job)
 
+    @callback
     def _chain_change_listener(self, sub_script: Script) -> None:
         if sub_script.is_running:
             self.last_action = sub_script.last_action

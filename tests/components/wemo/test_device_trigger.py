@@ -3,7 +3,6 @@ import pytest
 from pywemo.subscribe import EVENT_TYPE_LONG_PRESS
 
 from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
-from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.wemo.const import DOMAIN, WEMO_SUBSCRIPTION_EVENT
 from homeassistant.const import (
     CONF_DEVICE_ID,
@@ -11,6 +10,7 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_PLATFORM,
     CONF_TYPE,
+    Platform,
 )
 from homeassistant.setup import async_setup_component
 
@@ -26,8 +26,8 @@ DATA_MESSAGE = {"message": "service-called"}
 
 @pytest.fixture
 def pywemo_model():
-    """Pywemo Dimmer models use the light platform (WemoDimmer class)."""
-    return "Dimmer"
+    """Pywemo LightSwitch models use the switch platform."""
+    return "LightSwitchLongPress"
 
 
 async def setup_automation(hass, device_id, trigger_type):
@@ -67,14 +67,14 @@ async def test_get_triggers(hass, wemo_entity):
         },
         {
             CONF_DEVICE_ID: wemo_entity.device_id,
-            CONF_DOMAIN: LIGHT_DOMAIN,
+            CONF_DOMAIN: Platform.SWITCH,
             CONF_ENTITY_ID: wemo_entity.entity_id,
             CONF_PLATFORM: "device",
             CONF_TYPE: "turned_off",
         },
         {
             CONF_DEVICE_ID: wemo_entity.device_id,
-            CONF_DOMAIN: LIGHT_DOMAIN,
+            CONF_DOMAIN: Platform.SWITCH,
             CONF_ENTITY_ID: wemo_entity.entity_id,
             CONF_PLATFORM: "device",
             CONF_TYPE: "turned_on",

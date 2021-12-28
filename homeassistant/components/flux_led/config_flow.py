@@ -94,6 +94,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             firmware_date=None,
             model_info=None,
             model_description=None,
+            remote_access_enabled=None,
+            remote_access_host=None,
+            remote_access_port=None,
         )
         return await self._async_handle_discovery()
 
@@ -261,6 +264,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             firmware_date=None,
             model_info=None,
             model_description=bulb.model_data.description,
+            remote_access_enabled=None,
+            remote_access_host=None,
+            remote_access_port=None,
         )
 
 
