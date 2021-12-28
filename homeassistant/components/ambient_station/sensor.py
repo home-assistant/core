@@ -171,7 +171,7 @@ SENSOR_DESCRIPTIONS = (
         name="Hourly Rain Rate",
         icon="mdi:water",
         native_unit_of_measurement=PRECIPITATION_INCHES_PER_HOUR,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_HUMIDITY10,
