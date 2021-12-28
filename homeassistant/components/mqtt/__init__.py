@@ -131,6 +131,7 @@ TIMEOUT_ACK = 10
 PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.CAMERA,
     Platform.CLIMATE,
     Platform.COVER,
@@ -139,6 +140,7 @@ PLATFORMS = [
     Platform.LIGHT,
     Platform.LOCK,
     Platform.NUMBER,
+    Platform.SELECT,
     Platform.SCENE,
     Platform.SENSOR,
     Platform.SWITCH,
