@@ -8,7 +8,7 @@ from aiosenseme import SensemeDevice, async_get_device_by_ip_address
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_ID
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_ID
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.typing import DiscoveryInfoType
 
@@ -108,32 +108,28 @@ class SensemeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if self._discovered_devices is None:
             self._discovered_devices = await async_discover(self.hass, DISCOVER_TIMEOUT)
         current_ids = self._async_current_ids()
-        device_selection = [
-            device.name
+        device_selection = {
+            device.uuid: device.name
             for device in self._discovered_devices
             if device.uuid not in current_ids
-        ]
+        }
 
         if not device_selection:
             return await self.async_step_manual(user_input=None)
 
-        device_selection.append(CONF_HOST_MANUAL)
+        device_selection[None] = CONF_HOST_MANUAL
 
         if user_input is not None:
-            if user_input[CONF_HOST] == CONF_HOST_MANUAL:
+            if user_input[CONF_DEVICE] is None:
                 return await self.async_step_manual()
 
             for device in self._discovered_devices:
-                if device == user_input[CONF_HOST]:
+                if device.uuid == user_input[CONF_DEVICE]:
                     return await self._async_entry_for_device(device)
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
-                {
-                    vol.Optional(CONF_HOST, default=device_selection[0]): vol.In(
-                        device_selection
-                    )
-                }
+                {vol.Required(CONF_DEVICE): vol.In(device_selection)}
             ),
         )
