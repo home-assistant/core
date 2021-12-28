@@ -688,7 +688,7 @@ freesms==0.2.0
 
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
-fritzconnection==1.7.2
+fritzconnection==1.8.0
 
 # homeassistant.components.google_translate
 gTTS==2.2.3
