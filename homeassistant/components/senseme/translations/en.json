@@ -5,20 +5,16 @@
         },
         "error": {
             "cannot_connect": "Failed to connect",
-            "invalid_host": "Invalid hostname or IP address"
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
         },
         "step": {
-            "manual": {
-                "data": {
-                    "host": "Host"
-                },
-                "description": "Enter an IP Address."
-            },
             "user": {
                 "data": {
-                    "host": "Device"
-                },
-                "description": "Select a device, or choose 'IP Address' to manually enter an IP Address."
+                    "host": "Host",
+                    "password": "Password",
+                    "username": "Username"
+                }
             }
         }
     }

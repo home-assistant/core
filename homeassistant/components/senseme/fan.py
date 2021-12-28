@@ -1,9 +1,12 @@
 """Support for Big Ass Fans SenseME fan."""
+from __future__ import annotations
+
 import math
-from typing import Any, List, Optional
+from typing import Any
 
 from aiosenseme import SensemeFan
 
+from homeassistant import config_entries
 from homeassistant.components.fan import (
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
@@ -12,21 +15,27 @@ from homeassistant.components.fan import (
     FanEntity,
 )
 from homeassistant.const import CONF_DEVICE
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
 
-from . import SensemeEntity
 from .const import (
     DOMAIN,
     PRESET_MODE_WHOOSH,
     SENSEME_DIRECTION_FORWARD,
     SENSEME_DIRECTION_REVERSE,
 )
+from .entity import SensemeEntity
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: config_entries.ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up SenseME fans."""
     device = hass.data[DOMAIN][entry.entry_id][CONF_DEVICE]
     if device.is_fan:
@@ -36,14 +45,37 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class HASensemeFan(SensemeEntity, FanEntity):
     """SenseME ceiling fan component."""
 
+    _attr_supported_features = SUPPORT_SET_SPEED | SUPPORT_DIRECTION
+    _attr_preset_modes = [PRESET_MODE_WHOOSH]
+
     def __init__(self, device: SensemeFan) -> None:
         """Initialize the entity."""
         super().__init__(device, device.name)
+        self._attr_speed_count = self._device.fan_speed_max
+        self._attr_unique_id = f"{self._device.uuid}-FAN"  # for legacy compat
+        self._async_update_attrs()
 
-    @property
-    def unique_id(self) -> str:
-        """Return a unique identifier for this fan."""
-        return f"{self._device.uuid}-FAN"
+    @callback
+    def _async_update_attrs(self) -> None:
+        """Update attrs from device."""
+        self._attr_is_on = self._device.fan_on
+        if self._device.fan_dir == SENSEME_DIRECTION_FORWARD:
+            self._attr_current_direction = DIRECTION_FORWARD
+        else:
+            self._attr_current_direction = DIRECTION_REVERSE
+        self._attr_percentage = ranged_value_to_percentage(
+            self._device.fan_speed_limits, self._device.fan_speed
+        )
+        if self._device.fan_whoosh_mode:
+            self._attr_preset_mode = self._device.fan_whoosh_mode
+        else:
+            self._attr_preset_mode = None
+
+    @callback
+    def _async_update_from_device(self) -> None:
+        """Process an update from the device."""
+        self._async_update_attrs()
+        self.async_write_ha_state()
 
     @property
     def extra_state_attributes(self) -> dict:
@@ -54,47 +86,6 @@ class HASensemeFan(SensemeEntity, FanEntity):
             **super().extra_state_attributes,
         }
 
-    @property
-    def is_on(self) -> bool:
-        """Return true if the fan is on."""
-        return self._device.fan_on
-
-    @property
-    def current_direction(self) -> str:
-        """Return the fan direction."""
-        if self._device.fan_dir == SENSEME_DIRECTION_FORWARD:
-            return DIRECTION_FORWARD
-        return DIRECTION_REVERSE
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return SUPPORT_SET_SPEED | SUPPORT_DIRECTION
-
-    @property
-    def speed_count(self) -> int:
-        """Return the number of speeds."""
-        return self._device.fan_speed_max
-
-    @property
-    def percentage(self) -> Optional[int]:
-        """Return the current speed."""
-        return ranged_value_to_percentage(
-            self._device.fan_speed_limits, self._device.fan_speed
-        )
-
-    @property
-    def preset_mode(self) -> Optional[str]:
-        """Return the current preset mode."""
-        if self._device.fan_whoosh_mode:
-            return PRESET_MODE_WHOOSH
-        return None
-
-    @property
-    def preset_modes(self) -> Optional[List[str]]:
-        """Return a list of available preset modes."""
-        return [PRESET_MODE_WHOOSH]
-
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
         self._device.fan_speed = math.ceil(
@@ -103,9 +94,9 @@ class HASensemeFan(SensemeEntity, FanEntity):
 
     async def async_turn_on(
         self,
-        speed: Optional[str] = None,
-        percentage: Optional[int] = None,
-        preset_mode: Optional[str] = None,
+        speed: str | None = None,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
         **kwargs: Any,
     ) -> None:
         """Turn the fan on with speed control."""
@@ -125,13 +116,12 @@ class HASensemeFan(SensemeEntity, FanEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
-        if preset_mode == PRESET_MODE_WHOOSH:
-            # Sleep mode must be off for Whoosh to work.
-            if self._device.sleep_mode:
-                self._device.sleep_mode = False
-            self._device.fan_whoosh_mode = True
-            return
-        raise ValueError(f"Invalid preset mode: {preset_mode}")
+        if preset_mode != PRESET_MODE_WHOOSH:
+            raise ValueError(f"Invalid preset mode: {preset_mode}")
+        # Sleep mode must be off for Whoosh to work.
+        if self._device.sleep_mode:
+            self._device.sleep_mode = False
+        self._device.fan_whoosh_mode = True
 
     async def async_set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""

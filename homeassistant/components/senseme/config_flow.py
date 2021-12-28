@@ -1,11 +1,16 @@
 """Config flow for SenseME."""
-import ipaddress
+from __future__ import annotations
 
-from aiosenseme import async_get_device_by_ip_address, discover_all
+import ipaddress
+from typing import Any
+
+from aiosenseme import SensemeDevice, async_get_device_by_ip_address, discover_all
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_ID
+from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import CONF_HOST_MANUAL, CONF_INFO, DOMAIN
 
@@ -16,13 +21,56 @@ class SensemeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle SenseME discovery config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     def __init__(self) -> None:
         """Initialize the SenseME config flow."""
-        self._discovered_devices = None
+        self._discovered_devices: list[SensemeDevice] | None = None
+        self._discovered_device: SensemeDevice | None = None
 
-    async def _async_entry_for_device(self, device):
+    async def async_step_discovery(
+        self, discovery_info: DiscoveryInfoType
+    ) -> FlowResult:
+        """Handle discovery."""
+        self._discovered_device = discovery_info
+        host = discovery_info[CONF_HOST]
+        await self.async_set_unique_id(discovery_info[CONF_ID])
+        for entry in self._async_current_entries(include_ignore=False):
+            if entry.data[CONF_INFO]["address"] == host:
+                return self.async_abort(reason="already_configured")
+            if entry.unique_id != discovery_info[CONF_ID]:
+                continue
+            if entry.data[CONF_INFO]["address"] != host:
+                self.hass.config_entries.async_update_entry(
+                    entry, data={CONF_INFO: {**entry.data[CONF_INFO], "address": host}}
+                )
+            return self.async_abort(reason="already_configured")
+        device = await async_get_device_by_ip_address(host)
+        if device is None:
+            return self.async_abort(reason="cannot_connect")
+        device.stop()
+        self._discovered_device = device
+        return await self.async_step_discovery_confirm()
+
+    async def async_step_discovery_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Confirm discovery."""
+        device = self._discovered_device
+        assert device is not None
+        if user_input is not None:
+            return await self._async_entry_for_device(device)
+
+        self._set_confirm_only()
+        placeholders = {
+            "model": device.model,
+            "host": device.address,
+        }
+        self.context["title_placeholders"] = placeholders
+        return self.async_show_form(
+            step_id="discovery_confirm", description_placeholders=placeholders
+        )
+
+    async def _async_entry_for_device(self, device: SensemeDevice) -> FlowResult:
         """Create a config entry for a device."""
         await self.async_set_unique_id(device.uuid)
         self._abort_if_unique_id_configured()
@@ -31,7 +79,9 @@ class SensemeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data={CONF_INFO: device.get_device_info},
         )
 
-    async def async_step_manual(self, user_input=None):
+    async def async_step_manual(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle manual entry of an ip address."""
         errors = {}
         if user_input is not None:
@@ -43,6 +93,7 @@ class SensemeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 device = await async_get_device_by_ip_address(host)
                 if device is not None:
+                    device.stop()
                     return await self._async_entry_for_device(device)
 
                 errors[CONF_HOST] = "cannot_connect"
@@ -53,7 +104,9 @@ class SensemeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initialized by the user."""
         # start discovery the first time through
         if self._discovered_devices is None:
