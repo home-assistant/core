@@ -1032,6 +1032,7 @@ homeassistant/components/wemo/* @esev
 tests/components/wemo/* @esev
 homeassistant/components/whirlpool/* @abmantis
 tests/components/whirlpool/* @abmantis
+homeassistant/components/whois/* @frenck
 homeassistant/components/wiffi/* @mampfes
 tests/components/wiffi/* @mampfes
 homeassistant/components/wilight/* @leofig-rj
