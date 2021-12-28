@@ -147,11 +147,11 @@ def has_tests(module: str):
 
     # Dev environments might have stale directories around
     # from removed tests. Check for that.
-    content = [f.name for f in path.glob("*")]
-
     # Directories need to contain more than `__pycache__`
     # to exist in Git and so be seen by CI.
-    return content != ["__pycache__"]
+    content = [f.name for f in path.glob("*") if f.name != "__pycache__"]
+
+    return len(content) > 0
 
 
 def explore_module(package, explore_children):
