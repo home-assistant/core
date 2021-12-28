@@ -13,7 +13,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -64,7 +64,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await manager.async_get_version()
 
     # Register service
-    async def async_service_handle(service):
+    async def async_service_handle(service: ServiceCall) -> None:
         """Handle service ffmpeg process."""
         entity_ids = service.data.get(ATTR_ENTITY_ID)
 

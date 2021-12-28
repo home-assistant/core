@@ -4,7 +4,13 @@ import logging
 from pylutron import Button, Lutron
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ID, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    ATTR_ID,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    Platform,
+)
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -12,7 +18,13 @@ from homeassistant.util import slugify
 
 DOMAIN = "lutron"
 
-PLATFORMS = ["light", "cover", "switch", "scene", "binary_sensor"]
+PLATFORMS = [
+    Platform.LIGHT,
+    Platform.COVER,
+    Platform.SWITCH,
+    Platform.SCENE,
+    Platform.BINARY_SENSOR,
+]
 
 _LOGGER = logging.getLogger(__name__)
 

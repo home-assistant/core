@@ -1,14 +1,24 @@
 """Charge and Climate Control Support for the Nissan Leaf."""
+from __future__ import annotations
+
 import logging
 
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DATA_CLIMATE, DATA_LEAF, LeafEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_devices: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Nissan Leaf switch platform setup."""
     if discovery_info is None:
         return
