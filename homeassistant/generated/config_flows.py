@@ -60,6 +60,7 @@ FLOWS = [
     "control4",
     "coolmaster",
     "coronavirus",
+    "cpuspeed",
     "crownstone",
     "daikin",
     "deconz",
