@@ -333,7 +333,7 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
                 break
 
         # Check for input events and config change
-        cfg_changed: int = 0
+        cfg_changed = 0
         for block in self.device.blocks:
             if block.type == "device":
                 cfg_changed = block.cfgChanged
