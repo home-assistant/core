@@ -223,7 +223,7 @@ async def async_block_device_setup(
     if not entry.data.get(CONF_SLEEP_PERIOD):
         hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][
             REST
-        ] = ShellyDeviceRestWrapper(hass, device)
+        ] = ShellyDeviceRestWrapper(hass, device, entry)
         platforms = BLOCK_PLATFORMS
 
     hass.config_entries.async_setup_platforms(entry, platforms)
@@ -394,16 +394,6 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
                 ENTRY_RELOAD_COOLDOWN,
             )
             self.hass.async_create_task(self._debounced_reload.async_call())
-
-        if cfg_changed == 0:
-            self.hass.async_create_task(self.device.refresh())
-            if int(self.device.status["uptime"]) < ENTRY_RELOAD_COOLDOWN:
-                _LOGGER.debug("Reboot detected")
-                if not self.entry.data.get(CONF_SLEEP_PERIOD):
-                    self.hass.async_create_task(
-                        async_device_update_info(self.hass, self.device, self.entry)
-                    )
-
         self._last_cfg_changed = cfg_changed
 
     async def _async_update_data(self) -> None:
@@ -497,7 +487,9 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
 class ShellyDeviceRestWrapper(update_coordinator.DataUpdateCoordinator):
     """Rest Wrapper for a Shelly device with Home Assistant specific functions."""
 
-    def __init__(self, hass: HomeAssistant, device: BlockDevice) -> None:
+    def __init__(
+        self, hass: HomeAssistant, device: BlockDevice, entry: ConfigEntry
+    ) -> None:
         """Initialize the Shelly device wrapper."""
         if (
             device.settings["device"]["type"]
@@ -516,6 +508,7 @@ class ShellyDeviceRestWrapper(update_coordinator.DataUpdateCoordinator):
             update_interval=timedelta(seconds=update_interval),
         )
         self.device = device
+        self.entry = entry
 
     async def _async_update_data(self) -> None:
         """Fetch data."""
@@ -523,6 +516,21 @@ class ShellyDeviceRestWrapper(update_coordinator.DataUpdateCoordinator):
             async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
                 _LOGGER.debug("REST update for %s", self.name)
                 await self.device.update_status()
+
+                old_firmware = self.device.firmware_version
+                _LOGGER.warning(
+                    "Simone: fw=%s, sw_info=%s",
+                    self.device.firmware_version,
+                    old_firmware,
+                )
+
+                if self.device.status["uptime"] < 2 * REST_SENSORS_UPDATE_INTERVAL:
+                    old_firmware = self.device.firmware_version
+                    await self.device.update_shelly()
+                    if self.device.firmware_version != old_firmware:
+                        await async_device_update_info(
+                            self.hass, self.device, self.entry
+                        )
         except OSError as err:
             raise update_coordinator.UpdateFailed("Error fetching data") from err
 
