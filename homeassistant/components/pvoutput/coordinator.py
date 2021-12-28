@@ -13,7 +13,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import CONF_SYSTEM_ID, DOMAIN, LOGGER, SCAN_INTERVAL
 
 
-class PVOutputDataUpdateCoordinator(DataUpdateCoordinator):
+class PVOutputDataUpdateCoordinator(DataUpdateCoordinator[Status]):
     """The PVOutput Data Update Coordinator."""
 
     config_entry: ConfigEntry
