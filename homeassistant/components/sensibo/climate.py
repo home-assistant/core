@@ -36,7 +36,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import (
@@ -116,7 +116,7 @@ async def async_setup_entry(
 
     async_add_entities(entities)
 
-    async def async_assume_state(service):
+    async def async_assume_state(service: ServiceCall) -> None:
         """Set state according to external service call.."""
         if entity_ids := service.data.get(ATTR_ENTITY_ID):
             target_climate = [
