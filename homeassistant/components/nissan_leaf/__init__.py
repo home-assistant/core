@@ -82,7 +82,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS = ["sensor", "switch", "binary_sensor"]
+PLATFORMS = ["sensor", "switch", "binary_sensor", "button"]
 
 SIGNAL_UPDATE_LEAF = "nissan_leaf_update"
 
@@ -99,8 +99,10 @@ def setup(hass, config):
 
     async def async_handle_update(service):
         """Handle service to update leaf data from Nissan servers."""
-        # It would be better if this was changed to use nickname, or
-        # an entity name rather than a vin.
+        _LOGGER.warning(
+            "The 'nissan_leaf.update' service is deprecated and has been replaced by a"
+            "dedicated button entity: Please use that to refresh the data instead"
+        )
         vin = service.data[ATTR_VIN]
 
         if vin in hass.data[DATA_LEAF]:
@@ -111,8 +113,11 @@ def setup(hass, config):
 
     async def async_handle_start_charge(service):
         """Handle service to start charging."""
-        # It would be better if this was changed to use nickname, or
-        # an entity name rather than a vin.
+        _LOGGER.warning(
+            "The 'nissan_leaf.start_charge' service is deprecated and has been"
+            "replaced by a dedicated button entity: Please use that to start"
+            "the charge instead"
+        )
         vin = service.data[ATTR_VIN]
 
         if vin in hass.data[DATA_LEAF]:
@@ -458,6 +463,18 @@ class LeafDataStore:
 
         _LOGGER.debug("Climate result not returned by Nissan servers")
         return False
+
+    async def async_start_charging(self):
+        """Request to start charging the car. Used by the button platform."""
+        result = await self.hass.async_add_executor_job(self.leaf.start_charging)
+        if result:
+            _LOGGER.debug("Start charging sent, request updated data in 1 minute")
+            check_charge_at = utcnow() + timedelta(minutes=1)
+            self.next_update = check_charge_at
+            async_track_point_in_utc_time(
+                self.hass, self.async_update_data, check_charge_at
+            )
+        return result
 
 
 class LeafEntity(Entity):
