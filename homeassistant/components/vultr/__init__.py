@@ -5,7 +5,7 @@ import logging
 import voluptuous as vol
 from vultr import Vultr as VultrAPI
 
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, Platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
@@ -35,7 +35,7 @@ DOMAIN = "vultr"
 NOTIFICATION_ID = "vultr_notification"
 NOTIFICATION_TITLE = "Vultr Setup"
 
-VULTR_PLATFORMS = ["binary_sensor", "sensor", "switch"]
+VULTR_PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
