@@ -18,7 +18,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for vin, datastore in hass.data[DATA_LEAF].items():
         _LOGGER.debug("Adding button for vin=%s", vin)
         devices.append(LeafChargingButton(datastore))
-        devices.append(LeafUpdateButton(datastore))
 
     add_entities(devices, True)
 
@@ -41,23 +40,3 @@ class LeafChargingButton(LeafEntity, ButtonEntity):
     async def async_press(self):
         """Start charging."""
         return await self.car.async_start_charging()
-
-
-class LeafUpdateButton(LeafEntity, ButtonEntity):
-    """Update Button class."""
-
-    _attr_icon = "mdi:refresh"
-
-    @property
-    def name(self):
-        """Sensor name."""
-        return f"Update {self.car.leaf.nickname}"
-
-    @property
-    def available(self):
-        """Button availability."""
-        return self.car.next_update is not None
-
-    async def async_press(self):
-        """Start charging."""
-        return await self.car.async_refresh_data(utcnow())

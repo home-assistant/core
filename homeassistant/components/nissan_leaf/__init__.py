@@ -99,10 +99,6 @@ def setup(hass, config):
 
     async def async_handle_update(service):
         """Handle service to update leaf data from Nissan servers."""
-        _LOGGER.warning(
-            "The 'nissan_leaf.update' service is deprecated and has been replaced by a"
-            "dedicated button entity: Please use that to refresh the data instead"
-        )
         vin = service.data[ATTR_VIN]
 
         if vin in hass.data[DATA_LEAF]:
