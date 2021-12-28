@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-import logging
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -31,8 +30,6 @@ from .const import (
     VALLOX_CELL_STATE_TO_STR,
     VALLOX_PROFILE_TO_STR_REPORTABLE,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class ValloxSensor(CoordinatorEntity, SensorEntity):
