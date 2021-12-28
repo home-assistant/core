@@ -60,7 +60,11 @@ class SensemeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             return await self._async_entry_for_device(device)
-        placeholders = {"model": device.model, "host": device.address}
+        placeholders = {
+            "name": device.name,
+            "model": device.model,
+            "host": device.address,
+        }
         self.context["title_placeholders"] = placeholders
         return self.async_show_form(
             step_id="discovery_confirm", description_placeholders=placeholders

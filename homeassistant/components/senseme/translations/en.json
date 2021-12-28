@@ -5,16 +5,24 @@
         },
         "error": {
             "cannot_connect": "Failed to connect",
-            "invalid_auth": "Invalid authentication",
-            "unknown": "Unexpected error"
+            "invalid_host": "Invalid hostname or IP address"
         },
+        "flow_title": "{name} {model} ({ipaddr})",
         "step": {
+            "discovery_confirm": {
+                "description": "Do you want to setup {name} {model} ({ipaddr})?"
+            },
+            "manual": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Enter an IP Address."
+            },
             "user": {
                 "data": {
-                    "host": "Host",
-                    "password": "Password",
-                    "username": "Username"
-                }
+                    "host": "Device"
+                },
+                "description": "Select a device, or choose 'IP Address' to manually enter an IP Address."
             }
         }
     }
