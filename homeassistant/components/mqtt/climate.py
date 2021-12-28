@@ -284,7 +284,7 @@ async def async_setup_platform(
 ) -> None:
     """Set up MQTT climate device through configuration.yaml."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
-    await _async_setup_entity(hass, config, async_add_entities)
+    await _async_setup_entity(hass, async_add_entities, config)
 
 
 async def async_setup_entry(
