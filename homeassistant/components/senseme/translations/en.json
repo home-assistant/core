@@ -20,7 +20,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Device"
+                    "device": "Device"
                 },
                 "description": "Select a device, or choose 'IP Address' to manually enter an IP Address."
             }
