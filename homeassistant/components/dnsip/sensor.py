@@ -21,7 +21,10 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     CONF_HOSTNAME,
+    CONF_IPV4_IPV4,
+    CONF_IPV4_IPV6,
     CONF_IPV6,
+    CONF_IPV6_IPV6,
     CONF_RESOLVER,
     CONF_RESOLVER_IPV6,
     DEFAULT_HOSTNAME,
@@ -54,7 +57,10 @@ async def async_setup_platform(
 ) -> None:
     """Set up the DNS IP sensor."""
     _LOGGER.warning(
-        "Loading dnsip via platform setup is deprecated; Please remove it from your configuration"
+        "Configuration of the DNS IP platform in YAML is deprecated and will be "
+        "removed in Home Assistant 2022.4; Your existing configuration "
+        "has been imported into the UI automatically and can be safely removed "
+        "from your configuration.yaml file"
     )
     hass.async_create_task(
         hass.config_entries.flow.async_init(
@@ -72,14 +78,32 @@ async def async_setup_entry(
 
     hostname = entry.data[CONF_HOSTNAME]
     name = entry.data[CONF_NAME]
-    ipv6 = entry.data[CONF_IPV6]
 
-    resolver = entry.data[CONF_RESOLVER_IPV6] if ipv6 else entry.data[CONF_RESOLVER]
-
-    async_add_entities(
-        [WanIpSensor(name, hostname, resolver, ipv6, entry.entry_id)],
-        update_before_add=True,
+    resolver_ipv4 = entry.options.get(CONF_RESOLVER, entry.data[CONF_RESOLVER])
+    resolver_ipv6 = entry.options.get(
+        CONF_RESOLVER_IPV6, entry.data[CONF_RESOLVER_IPV6]
     )
+    entities = []
+    if entry.data[CONF_IPV4_IPV4]:
+        entities.append(
+            WanIpSensor(
+                name, hostname, resolver_ipv4, False, entry, f"{hostname}_ipv4_ipv4"
+            )
+        )
+    if entry.data[CONF_IPV4_IPV6]:
+        entities.append(
+            WanIpSensor(
+                name, hostname, resolver_ipv4, True, entry, f"{hostname}_ipv4_ipv6"
+            )
+        )
+    if entry.data[CONF_IPV6_IPV6]:
+        entities.append(
+            WanIpSensor(
+                name, hostname, resolver_ipv6, True, entry, f"{hostname}_ipv6_ipv6"
+            )
+        )
+
+    async_add_entities(entities, update_before_add=True)
 
 
 class WanIpSensor(SensorEntity):
@@ -88,15 +112,25 @@ class WanIpSensor(SensorEntity):
     _attr_icon = "mdi:web"
 
     def __init__(
-        self, name: str, hostname: str, resolver: str, ipv6: bool, entry_id: str
+        self,
+        name: str,
+        hostname: str,
+        resolver: str,
+        ipv6: bool,
+        entry: ConfigEntry,
+        unique_id: str,
     ) -> None:
         """Initialize the DNS IP sensor."""
-        self._attr_name = name
-        self._attr_unique_id = f"{entry_id}_{hostname}"
+        self._attr_name = f"{name} IPv6" if ipv6 else name
+        self._attr_unique_id = f"{entry.entry_id}_{unique_id}"
         self.hostname = hostname
         self.resolver = aiodns.DNSResolver()
         self.resolver.nameservers = [resolver]
         self.querytype = "AAAA" if ipv6 else "A"
+        self._attr_extra_state_attributes = {
+            "Resolver": resolver,
+            "Querytype": self.querytype,
+        }
 
     async def async_update(self) -> None:
         """Get the current DNS IP address for hostname."""
@@ -108,5 +142,6 @@ class WanIpSensor(SensorEntity):
 
         if response:
             self._attr_native_value = response[0].host
+            self._attr_available = True
         else:
-            self._attr_native_value = None
+            self._attr_available = False

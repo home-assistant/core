@@ -15,14 +15,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up DNS IP from a config entry."""
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
-    _LOGGER.debug("Loaded entry for %s", entry.title)
+    entry.async_on_unload(entry.add_update_listener(update_listener))
     return True
+
+
+async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Trafikverket Weatherstation config entry."""
 
-    if await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        _LOGGER.debug("Unloaded entry for %s", entry.title)
-        return True
-    return False
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

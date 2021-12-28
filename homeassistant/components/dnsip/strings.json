@@ -10,6 +10,22 @@
                 "resolver_ipv6": "The IPv6 DNS server to target the query at"
                 }
             }
+        },
+        "error": {
+            "invalid_host": "[%key:common::config_flow::error::invalid_host%]"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "resolver": "Resolver for IPV4 lookup",
+                    "resolver_ipv6": "Resolver for IPV6 lookup"
+                }
+            }
+        },
+        "error": {
+            "invalid_host": "[%key:common::config_flow::error::invalid_host%]"
         }
     }
 }

@@ -8,6 +8,9 @@ CONF_HOSTNAME = "hostname"
 CONF_IPV6 = "ipv6"
 CONF_RESOLVER = "resolver"
 CONF_RESOLVER_IPV6 = "resolver_ipv6"
+CONF_IPV4_IPV4 = "ipv4_ipv4"
+CONF_IPV4_IPV6 = "ipv4_ipv6"
+CONF_IPV6_IPV6 = "ipv6_ipv6"
 
 DEFAULT_HOSTNAME = "myip.opendns.com"
 DEFAULT_IPV6 = False

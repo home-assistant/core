@@ -3,17 +3,38 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
+from aiodns.error import DNSError
 import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.dnsip.const import (
     CONF_HOSTNAME,
-    CONF_IPV6,
+    CONF_IPV4_IPV4,
+    CONF_IPV4_IPV6,
+    CONF_IPV6_IPV6,
     CONF_RESOLVER,
     CONF_RESOLVER_IPV6,
     DOMAIN,
 )
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
+
+from tests.common import MockConfigEntry
+
+
+class RetrieveDNS:
+    """Return list of test devices."""
+
+    @staticmethod
+    async def query(hostname, qtype) -> dict[str, str]:
+        """Return information."""
+        return {"hostname": "1.2.3.4"}
+
+    @property
+    def nameservers(self) -> list[str]:
+        """Return nameserver."""
+        return ["1.2.3.4"]
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -26,6 +47,9 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
 
     with patch(
+        "homeassistant.components.dnsip.config_flow.aiodns.DNSResolver",
+        return_value=RetrieveDNS(),
+    ), patch(
         "homeassistant.components.dnsip.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -33,51 +57,72 @@ async def test_form(hass: HomeAssistant) -> None:
             result["flow_id"],
             {
                 CONF_HOSTNAME: "home-assistant.io",
-                CONF_RESOLVER: "8.8.8.8",
-                CONF_IPV6: False,
-                CONF_RESOLVER_IPV6: "2620:0:ccc::2",
             },
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result2["title"] == "home-assistant.io"
     assert result2["data"] == {
         "hostname": "home-assistant.io",
-        "resolver": "8.8.8.8",
-        "ipv6": False,
-        "resolver_ipv6": "2620:0:ccc::2",
         "name": "home-assistant.io",
+        "resolver": "208.67.222.222",
+        "resolver_ipv6": "2620:0:ccc::2",
+        "ipv4_ipv4": True,
+        "ipv4_ipv6": True,
+        "ipv6_ipv6": False,
     }
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_error(hass: HomeAssistant) -> None:
+    """Test validate url fails."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.dnsip.config_flow.aiodns.DNSResolver",
+        side_effect=DNSError("Did not find"),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOSTNAME: "home-assistant.io",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["step_id"] == "user"
+    assert result2["errors"] == {"base": "invalid_host"}
 
 
 @pytest.mark.parametrize(
     "p_input,p_output",
     [
         (
+            {CONF_HOSTNAME: "home-assistant.io"},
             {
                 "hostname": "home-assistant.io",
-                "resolver": "8.8.8.8",
-                "ipv6": False,
-                "resolver_ipv6": "",
-            },
-            {
-                "hostname": "home-assistant.io",
-                "resolver": "8.8.8.8",
-                "ipv6": False,
-                "resolver_ipv6": "",
                 "name": "home-assistant.io",
+                "resolver": "208.67.222.222",
+                "resolver_ipv6": "2620:0:ccc::2",
+                "ipv4_ipv4": True,
+                "ipv4_ipv6": True,
+                "ipv6_ipv6": False,
             },
         ),
         (
             {},
             {
                 "hostname": "myip.opendns.com",
-                "resolver": "208.67.222.222",
-                "ipv6": False,
-                "resolver_ipv6": "2620:0:ccc::2",
                 "name": "myip",
+                "resolver": "208.67.222.222",
+                "resolver_ipv6": "2620:0:ccc::2",
+                "ipv4_ipv4": True,
+                "ipv4_ipv6": True,
+                "ipv6_ipv6": False,
             },
         ),
     ],
@@ -85,9 +130,12 @@ async def test_form(hass: HomeAssistant) -> None:
 async def test_import_flow_success(
     hass: HomeAssistant, p_input: dict[str, str], p_output: dict[str, str]
 ) -> None:
-    """Test a successful import of yaml."""
+    """Test a successful import of YAML."""
 
     with patch(
+        "homeassistant.components.dnsip.config_flow.aiodns.DNSResolver",
+        return_value=RetrieveDNS(),
+    ), patch(
         "homeassistant.components.dnsip.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -98,7 +146,91 @@ async def test_import_flow_success(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == "create_entry"
+    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result2["title"] == p_output["name"]
     assert result2["data"] == p_output
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_options_flow(hass: HomeAssistant) -> None:
+    """Test options config flow."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="12345",
+        data={
+            CONF_HOSTNAME: "home-assistant.io",
+            CONF_NAME: "home-assistant.io",
+            CONF_RESOLVER: "208.67.222.222",
+            CONF_RESOLVER_IPV6: "2620:0:ccc::2",
+            CONF_IPV4_IPV4: True,
+            CONF_IPV4_IPV6: True,
+            CONF_IPV6_IPV6: False,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.dnsip.config_flow.aiodns.DNSResolver",
+        return_value=RetrieveDNS(),
+    ), patch(
+        "homeassistant.components.dnsip.async_setup_entry",
+        return_value=True,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_RESOLVER: "8.8.8.8",
+            CONF_RESOLVER_IPV6: "2001:4860:4860::8888",
+        },
+    )
+
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["data"] == {
+        "resolver": "8.8.8.8",
+        "resolver_ipv6": "2001:4860:4860::8888",
+    }
+
+
+async def test_options_error(hass: HomeAssistant) -> None:
+    """Test validate url fails in options."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="12345",
+        data={
+            CONF_HOSTNAME: "home-assistant.io",
+            CONF_NAME: "home-assistant.io",
+            CONF_RESOLVER: "208.67.222.222",
+            CONF_RESOLVER_IPV6: "2620:0:ccc::2",
+            CONF_IPV4_IPV4: True,
+            CONF_IPV4_IPV6: True,
+            CONF_IPV6_IPV6: False,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    with patch(
+        "homeassistant.components.dnsip.config_flow.aiodns.DNSResolver",
+        side_effect=DNSError("Did not find"),
+    ):
+        result2 = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            {
+                CONF_RESOLVER: "192.168.200.34",
+                CONF_RESOLVER_IPV6: "2001:4860:4860::8888",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["step_id"] == "init"
+    assert result2["errors"] == {"base": "invalid_host"}
