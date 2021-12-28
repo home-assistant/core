@@ -23,7 +23,7 @@ from homeassistant.components.climate.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant, State, callback
-from homeassistant.helpers import device_registry, entity, entity_registry
+from homeassistant.helpers import device_registry, entity_registry, update_coordinator
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -98,6 +98,7 @@ async def async_restore_climate_entities(
         ent_reg, config_entry.entry_id
     )
 
+    restore_entries = []
     for entry in entries:
 
         if entry.domain != CLIMATE_DOMAIN:
@@ -105,13 +106,17 @@ async def async_restore_climate_entities(
 
         _LOGGER.debug("Setup sleeping climate device %s", wrapper.name)
         _LOGGER.debug("Found entry %s [%s]", entry.original_name, entry.domain)
-        async_add_entities([BlockSleepingClimate(wrapper, None, None, entry)])
+
+        restore_entries.append(BlockSleepingClimate(wrapper, None, None, entry))
+
+    if restore_entries:
+        async_add_entities(restore_entries)
 
 
 class BlockSleepingClimate(
+    update_coordinator.CoordinatorEntity,
     RestoreEntity,
     ClimateEntity,
-    entity.Entity,
 ):
     """Representation of a Shelly climate device."""
 
@@ -307,10 +312,6 @@ class BlockSleepingClimate(
             )
 
         self.async_on_remove(self.wrapper.async_add_listener(self._update_callback))
-
-    async def async_update(self) -> None:
-        """Update entity with latest info."""
-        await self.wrapper.async_request_refresh()
 
     @callback
     def _update_callback(self) -> None:
