@@ -7,10 +7,10 @@
             "cannot_connect": "Failed to connect",
             "invalid_host": "Invalid hostname or IP address"
         },
-        "flow_title": "{name} {model} ({ipaddr})",
+        "flow_title": "{name} - {model} ({host})",
         "step": {
             "discovery_confirm": {
-                "description": "Do you want to setup {name} {model} ({ipaddr})?"
+                "description": "Do you want to setup {name} - {model} ({host})?"
             },
             "manual": {
                 "data": {

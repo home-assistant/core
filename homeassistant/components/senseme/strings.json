@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "{name} {model} ({ipaddr})",
+    "flow_title": "{name} - {model} ({host})",
       "step": {
           "user": {
               "description": "Select a device, or choose 'IP Address' to manually enter an IP Address.",
@@ -9,7 +9,7 @@
               }
           },
           "discovery_confirm": {
-            "description": "Do you want to setup {name} {model} ({ipaddr})?"
+            "description": "Do you want to setup {name} - {model} ({host})?"
           },     
           "manual": {
               "description": "Enter an IP Address.",

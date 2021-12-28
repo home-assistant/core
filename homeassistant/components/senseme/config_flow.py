@@ -4,7 +4,7 @@ from __future__ import annotations
 import ipaddress
 from typing import Any
 
-from aiosenseme import SensemeDevice, async_get_device_by_ip_address, discover_all
+from aiosenseme import SensemeDevice, async_get_device_by_ip_address
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -13,6 +13,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import CONF_HOST_MANUAL, CONF_INFO, DOMAIN
+from .discovery import async_discover, async_get_discovered_device
 
 DISCOVER_TIMEOUT = 5
 
@@ -31,24 +32,21 @@ class SensemeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: DiscoveryInfoType
     ) -> FlowResult:
         """Handle discovery."""
-        self._discovered_device = discovery_info
-        host = discovery_info[CONF_HOST]
-        await self.async_set_unique_id(discovery_info[CONF_ID])
+        uuid = discovery_info[CONF_ID]
+        device = async_get_discovered_device(self.hass, discovery_info[CONF_ID])
+        host = device.address
+        await self.async_set_unique_id(uuid)
         for entry in self._async_current_entries(include_ignore=False):
             if entry.data[CONF_INFO]["address"] == host:
                 return self.async_abort(reason="already_configured")
-            if entry.unique_id != discovery_info[CONF_ID]:
+            if entry.unique_id != uuid:
                 continue
             if entry.data[CONF_INFO]["address"] != host:
                 self.hass.config_entries.async_update_entry(
                     entry, data={CONF_INFO: {**entry.data[CONF_INFO], "address": host}}
                 )
             return self.async_abort(reason="already_configured")
-        if not (device := await async_get_device_by_ip_address(host)):
-            return self.async_abort(reason="cannot_connect")
-        device.stop()
         self._discovered_device = device
-        self._set_confirm_only()
         return await self.async_step_discovery_confirm()
 
     async def async_step_discovery_confirm(
@@ -107,10 +105,8 @@ class SensemeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initialized by the user."""
-        # start discovery the first time through
         if self._discovered_devices is None:
-            self._discovered_devices = await discover_all(DISCOVER_TIMEOUT)
-
+            self._discovered_devices = await async_discover(self.hass, DISCOVER_TIMEOUT)
         current_ids = self._async_current_ids()
         device_selection = [
             device.name
