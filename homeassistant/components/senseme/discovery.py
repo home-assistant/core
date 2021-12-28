@@ -25,9 +25,10 @@ def async_start_discovery(hass: HomeAssistant) -> bool:
 
 
 async def async_discover(hass: HomeAssistant, timeout: float) -> list[SensemeDevice]:
-    """Discovery devices or return them if already running."""
+    """Discover devices or restart it if its already running."""
+    started = async_start_discovery(hass)
     discovery: SensemeDiscovery = hass.data[DOMAIN][DISCOVERY]
-    if not async_start_discovery(hass):
+    if not started:  # already running
         discovery.stop()
         discovery.start()
     await asyncio.sleep(timeout)
