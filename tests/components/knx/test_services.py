@@ -17,13 +17,19 @@ async def test_send(hass: HomeAssistant, knx: KNXTestKit):
 
         # send DPT 1 telegram
         await hass.services.async_call(
-            "knx", "send", {"address": test_address, "payload": True}, blocking=True
+            "knx",
+            "send",
+            {"address": test_address, "payload": True, "response": response},
+            blocking=True,
         )
         await assertion(test_address, True)
 
         # send raw DPT 5 telegram
         await hass.services.async_call(
-            "knx", "send", {"address": test_address, "payload": [99]}, blocking=True
+            "knx",
+            "send",
+            {"address": test_address, "payload": [99], "response": response},
+            blocking=True,
         )
         await assertion(test_address, (99,))
 
@@ -31,7 +37,12 @@ async def test_send(hass: HomeAssistant, knx: KNXTestKit):
         await hass.services.async_call(
             "knx",
             "send",
-            {"address": test_address, "payload": 99, "type": "percent"},
+            {
+                "address": test_address,
+                "payload": 99,
+                "type": "percent",
+                "response": response,
+            },
             blocking=True,
         )
         await assertion(test_address, (0xFC,))
@@ -40,7 +51,12 @@ async def test_send(hass: HomeAssistant, knx: KNXTestKit):
         await hass.services.async_call(
             "knx",
             "send",
-            {"address": test_address, "payload": 21.0, "type": "temperature"},
+            {
+                "address": test_address,
+                "payload": 21.0,
+                "type": "temperature",
+                "response": response,
+            },
             blocking=True,
         )
         await assertion(test_address, (0x0C, 0x1A))
@@ -53,6 +69,7 @@ async def test_send(hass: HomeAssistant, knx: KNXTestKit):
                 "address": [test_address, "2/2/2", "3/3/3"],
                 "payload": 99,
                 "type": "percent",
+                "response": response,
             },
             blocking=True,
         )
