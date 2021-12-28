@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Awaitable
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
@@ -22,7 +23,7 @@ class OverkizSelectDescriptionMixin:
     """Define an entity description mixin for select entities."""
 
     options: list[str]
-    select_option: Callable[[str, Callable], None]
+    select_option: Callable[[str, Callable], Awaitable]
 
 
 @dataclass
