@@ -13,10 +13,13 @@ MOCK_ADDRESS = "127.0.0.1"
 
 device = MagicMock(auto_spec=SensemeDevice)
 device.async_update = AsyncMock()
+device.model = "Haiku Fan"
+device.fan_speed_max = 7
+device.mac = "aa:bb:cc:dd:ee:ff"
 device.fan_dir = "REV"
 device.room_name = "Main"
 device.room_type = "Main"
-device.sw_version = "1"
+device.fw_version = "1"
 device.fan_autocomfort = "on"
 device.fan_smartmode = "on"
 device.fan_whoosh_mode = "on"
@@ -38,10 +41,13 @@ device.get_device_info = {
 
 device_alternate_ip = MagicMock(auto_spec=SensemeDevice)
 device_alternate_ip.async_update = AsyncMock()
+device_alternate_ip.model = "Haiku Fan"
+device_alternate_ip.fan_speed_max = 7
+device_alternate_ip.mac = "aa:bb:cc:dd:ee:ff"
 device_alternate_ip.fan_dir = "REV"
 device_alternate_ip.room_name = "Main"
 device_alternate_ip.room_type = "Main"
-device_alternate_ip.sw_version = "1"
+device_alternate_ip.fw_version = "1"
 device_alternate_ip.fan_autocomfort = "on"
 device_alternate_ip.fan_smartmode = "on"
 device_alternate_ip.fan_whoosh_mode = "on"
@@ -63,10 +69,13 @@ device_alternate_ip.get_device_info = {
 
 device2 = MagicMock(auto_spec=SensemeDevice)
 device2.async_update = AsyncMock()
+device2.model = "Haiku Fan"
+device2.fan_speed_max = 7
+device2.mac = "aa:bb:cc:dd:ee:ff"
 device2.fan_dir = "FWD"
 device2.room_name = "Main"
 device2.room_type = "Main"
-device2.sw_version = "1"
+device2.fw_version = "1"
 device2.fan_autocomfort = "on"
 device2.fan_smartmode = "on"
 device2.fan_whoosh_mode = "on"
