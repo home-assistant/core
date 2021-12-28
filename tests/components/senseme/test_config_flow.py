@@ -101,13 +101,25 @@ async def test_form_user_no_discovery(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
+                CONF_HOST: "not a valid address",
+            },
+        )
+        await hass.async_block_till_done()
+
+        assert result2["type"] == RESULT_TYPE_FORM
+        assert result2["step_id"] == "manual"
+        assert result2["errors"] == {CONF_HOST: "invalid_host"}
+
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
                 CONF_HOST: MOCK_ADDRESS,
             },
         )
         await hass.async_block_till_done()
 
-    assert result2["title"] == "Haiku Fan"
-    assert result2["data"] == {
+    assert result3["title"] == "Haiku Fan"
+    assert result3["data"] == {
         "info": MOCK_DEVICE.get_device_info,
     }
     assert len(mock_setup_entry.mock_calls) == 1
