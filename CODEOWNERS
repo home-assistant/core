@@ -508,8 +508,8 @@ tests/components/lookin/* @ANMalko @bdraco
 homeassistant/components/lovelace/* @home-assistant/frontend
 tests/components/lovelace/* @home-assistant/frontend
 homeassistant/components/luci/* @mzdrale
-homeassistant/components/luftdaten/* @fabaff
-tests/components/luftdaten/* @fabaff
+homeassistant/components/luftdaten/* @fabaff @frenck
+tests/components/luftdaten/* @fabaff @frenck
 homeassistant/components/lupusec/* @majuss
 homeassistant/components/lutron/* @JonGilmore
 homeassistant/components/lutron_caseta/* @swails @bdraco
@@ -720,6 +720,7 @@ tests/components/ps4/* @ktnrg45
 homeassistant/components/push/* @dgomes
 tests/components/push/* @dgomes
 homeassistant/components/pvoutput/* @fabaff @frenck
+tests/components/pvoutput/* @fabaff @frenck
 homeassistant/components/pvpc_hourly_pricing/* @azogue
 tests/components/pvpc_hourly_pricing/* @azogue
 homeassistant/components/qbittorrent/* @geoffreylagaisse
