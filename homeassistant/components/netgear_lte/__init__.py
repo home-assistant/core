@@ -19,7 +19,7 @@ from homeassistant.const import (
     CONF_RECIPIENT,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import callback
+from homeassistant.core import ServiceCall, callback
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.dispatcher import (
@@ -179,7 +179,7 @@ async def async_setup(hass, config):
         )
         hass.data[DATA_KEY] = LTEData(websession)
 
-        async def service_handler(service):
+        async def service_handler(service: ServiceCall) -> None:
             """Apply a service."""
             host = service.data.get(ATTR_HOST)
             conf = {CONF_HOST: host}
