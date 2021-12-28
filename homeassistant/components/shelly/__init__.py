@@ -394,16 +394,6 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
                 ENTRY_RELOAD_COOLDOWN,
             )
             self.hass.async_create_task(self._debounced_reload.async_call())
-
-        if cfg_changed == 0:
-            self.hass.async_create_task(self.device.refresh())
-            if int(self.device.status["uptime"]) < ENTRY_RELOAD_COOLDOWN:
-                _LOGGER.debug("Reboot detected")
-                if not self.entry.data.get(CONF_SLEEP_PERIOD):
-                    self.hass.async_create_task(
-                        async_device_update_info(self.hass, self.device, self.entry)
-                    )
-
         self._last_cfg_changed = cfg_changed
 
     async def _async_update_data(self) -> None:
