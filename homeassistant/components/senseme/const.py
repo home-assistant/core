@@ -1,7 +1,5 @@
 """Constants for the SenseME integration."""
 
-from datetime import timedelta
-from typing import Final
 
 from homeassistant.const import Platform
 
@@ -22,8 +20,4 @@ PRESET_MODE_WHOOSH = "Whoosh"
 SENSEME_DIRECTION_FORWARD = "FWD"
 SENSEME_DIRECTION_REVERSE = "REV"
 
-
 PLATFORMS = [Platform.FAN]
-STARTUP_SCAN_TIMEOUT: Final = 5
-DISCOVER_SCAN_TIMEOUT: Final = 10
-DISCOVERY_INTERVAL: Final = timedelta(minutes=15)

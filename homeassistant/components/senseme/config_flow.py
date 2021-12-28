@@ -4,7 +4,7 @@ from __future__ import annotations
 import ipaddress
 from typing import Any
 
-from aiosenseme import SensemeDevice, async_get_device_by_ip_address, discover_all
+from aiosenseme import SensemeDevice, async_get_device_by_ip_address
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -13,6 +13,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import CONF_HOST_MANUAL, CONF_INFO, DOMAIN
+from .discovery import async_discover
 
 DISCOVER_TIMEOUT = 5
 
@@ -108,9 +109,7 @@ class SensemeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle a flow initialized by the user."""
         # start discovery the first time through
-        if self._discovered_devices is None:
-            self._discovered_devices = await discover_all(DISCOVER_TIMEOUT)
-
+        self._discovered_devices = await async_discover(self.hass, DISCOVER_TIMEOUT)
         current_ids = self._async_current_ids()
         device_selection = [
             device.name
