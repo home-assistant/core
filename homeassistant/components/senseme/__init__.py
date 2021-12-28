@@ -1,32 +1,28 @@
 """The SenseME integration."""
 from __future__ import annotations
 
-from datetime import timedelta
-from typing import Any, Final
+from typing import Any
 
 from aiosenseme import SensemeDevice, async_get_device_by_device_info, discover_all
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_DEVICE,
-    CONF_HOST,
-    CONF_ID,
-    CONF_MAC,
-    CONF_NAME,
-    Platform,
-)
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_ID, CONF_MAC, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_INFO, DISCOVERY, DOMAIN, UPDATE_RATE
-
-PLATFORMS = [Platform.FAN]
-STARTUP_SCAN_TIMEOUT: Final = 5
-DISCOVER_SCAN_TIMEOUT: Final = 10
-DISCOVERY_INTERVAL: Final = timedelta(minutes=15)
+from .const import (
+    CONF_INFO,
+    DISCOVER_SCAN_TIMEOUT,
+    DISCOVERY,
+    DISCOVERY_INTERVAL,
+    DOMAIN,
+    PLATFORMS,
+    STARTUP_SCAN_TIMEOUT,
+    UPDATE_RATE,
+)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
