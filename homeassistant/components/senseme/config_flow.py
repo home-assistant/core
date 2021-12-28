@@ -25,14 +25,13 @@ class SensemeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the SenseME config flow."""
-        self._discovered_devices: list[SensemeDevice] | None = None
         self._discovered_device: SensemeDevice | None = None
 
     async def async_step_discovery(
         self, discovery_info: DiscoveryInfoType
     ) -> FlowResult:
         """Handle discovery."""
-        self._discovered_device = discovery_info
+        uuid = discovery_info[CONF_ID]
         host = discovery_info[CONF_HOST]
         await self.async_set_unique_id(discovery_info[CONF_ID])
         for entry in self._async_current_entries(include_ignore=False):
@@ -45,10 +44,13 @@ class SensemeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     entry, data={CONF_INFO: {**entry.data[CONF_INFO], "address": host}}
                 )
             return self.async_abort(reason="already_configured")
-        if not (device := await async_get_device_by_ip_address(host)):
+        discovered_devices = await async_discover(self.hass, DISCOVER_TIMEOUT)
+        for discovered_device in discovered_devices:
+            if discovered_device.uuid == uuid:
+                self._discovered_device = discovered_device
+                break
+        if not self._discovered_device:
             return self.async_abort(reason="cannot_connect")
-        device.stop()
-        self._discovered_device = device
         self._set_confirm_only()
         return await self.async_step_discovery_confirm()
 
@@ -108,12 +110,11 @@ class SensemeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initialized by the user."""
-        # start discovery the first time through
-        self._discovered_devices = await async_discover(self.hass, DISCOVER_TIMEOUT)
+        discovered_devices = await async_discover(self.hass, DISCOVER_TIMEOUT)
         current_ids = self._async_current_ids()
         device_selection = [
             device.name
-            for device in self._discovered_devices
+            for device in discovered_devices
             if device.uuid not in current_ids
         ]
 
@@ -126,7 +127,7 @@ class SensemeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if user_input[CONF_HOST] == CONF_HOST_MANUAL:
                 return await self.async_step_manual()
 
-            for device in self._discovered_devices:
+            for device in discovered_devices:
                 if device == user_input[CONF_HOST]:
                     return await self._async_entry_for_device(device)
 
