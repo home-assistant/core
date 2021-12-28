@@ -83,7 +83,7 @@ class LeafRangeSensor(LeafEntity, SensorEntity):
         if ac_on:
             self._attr_unique_id = f"{self._attr_unique_id}_range_ac"
         else:
-            self._attr_unique_id = self._attr_unique_id + "_range"
+            self._attr_unique_id = f"{self._attr_unique_id}_range"
 
     @property
     def name(self):
