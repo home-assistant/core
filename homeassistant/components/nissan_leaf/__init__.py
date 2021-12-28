@@ -247,10 +247,9 @@ class LeafDataStore:
         self.next_update = self.get_next_interval()
         _LOGGER.debug("Next update=%s", self.next_update)
 
-        mynextupdate = self.next_update
-        if mynextupdate is not None:
+        if self.next_update is not None:
             self._remove_listener = async_track_point_in_utc_time(
-                self.hass, self.async_update_data, mynextupdate
+                self.hass, self.async_update_data, self.next_update
             )
 
     def get_next_interval(self) -> datetime:
