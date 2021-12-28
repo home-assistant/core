@@ -7,11 +7,14 @@ from cpuinfo import cpuinfo
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_NAME, FREQUENCY_GIGAHERTZ
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from .const import DOMAIN, LOGGER
 
 ATTR_BRAND = "brand"
 ATTR_HZ = "ghz_advertised"
@@ -34,11 +37,31 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the CPU speed sensor."""
-    name = config[CONF_NAME]
-    async_add_entities([CpuSpeedSensor(name)], True)
+    LOGGER.warning(
+        "Configuration of the CPU Speed platform in YAML is deprecated and will be "
+        "removed in Home Assistant 2022.4; Your existing configuration "
+        "has been imported into the UI automatically and can be safely removed "
+        "from your configuration.yaml file"
+    )
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={CONF_NAME: config[CONF_NAME]},
+        )
+    )
 
 
-class CpuSpeedSensor(SensorEntity):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the platform from config_entry."""
+    async_add_entities([CPUSpeedSensor("CPU Speed")], True)
+
+
+class CPUSpeedSensor(SensorEntity):
     """Representation of a CPU sensor."""
 
     _attr_native_unit_of_measurement = FREQUENCY_GIGAHERTZ
