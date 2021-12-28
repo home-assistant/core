@@ -15,6 +15,11 @@ device = MagicMock(auto_spec=SensemeDevice)
 device.async_update = AsyncMock()
 device.fan_dir = "REV"
 device.room_name = "Main"
+device.room_type = "Main"
+device.sw_version = "1"
+device.fan_autocomfort = "on"
+device.fan_smartmode = "on"
+device.fan_whoosh_mode = "on"
 device.name = MOCK_NAME
 device.uuid = MOCK_UUID
 device.address = MOCK_ADDRESS
@@ -35,6 +40,11 @@ device_alternate_ip = MagicMock(auto_spec=SensemeDevice)
 device_alternate_ip.async_update = AsyncMock()
 device_alternate_ip.fan_dir = "REV"
 device_alternate_ip.room_name = "Main"
+device_alternate_ip.room_type = "Main"
+device_alternate_ip.sw_version = "1"
+device_alternate_ip.fan_autocomfort = "on"
+device_alternate_ip.fan_smartmode = "on"
+device_alternate_ip.fan_whoosh_mode = "on"
 device_alternate_ip.name = MOCK_NAME
 device_alternate_ip.uuid = MOCK_UUID
 device_alternate_ip.address = "127.0.0.8"
@@ -55,6 +65,11 @@ device2 = MagicMock(auto_spec=SensemeDevice)
 device2.async_update = AsyncMock()
 device2.fan_dir = "FWD"
 device2.room_name = "Main"
+device2.room_type = "Main"
+device2.sw_version = "1"
+device2.fan_autocomfort = "on"
+device2.fan_smartmode = "on"
+device2.fan_whoosh_mode = "on"
 device2.name = "Device 2"
 device2.uuid = "uuid2"
 device2.address = "127.0.0.2"
