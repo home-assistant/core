@@ -6,7 +6,7 @@ from typing import Any
 from pvo import PVOutput, PVOutputAuthenticationError, PVOutputError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
@@ -26,12 +26,13 @@ async def validate_input(hass: HomeAssistant, *, api_key: str, system_id: int) -
     await pvoutput.status()
 
 
-class TailscaleFlowHandler(ConfigFlow, domain=DOMAIN):
+class PVOutputFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow for PVOutput."""
 
     VERSION = 1
 
     imported_name: str | None = None
+    reauth_entry: ConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -89,4 +90,50 @@ class TailscaleFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_SYSTEM_ID: config[CONF_SYSTEM_ID],
                 CONF_API_KEY: config[CONF_API_KEY],
             }
+        )
+
+    async def async_step_reauth(self, data: dict[str, Any]) -> FlowResult:
+        """Handle initiation of re-authentication with PVOutput."""
+        self.reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle re-authentication with PVOutput."""
+        errors = {}
+
+        if user_input is not None and self.reauth_entry:
+            try:
+                await validate_input(
+                    self.hass,
+                    api_key=user_input[CONF_API_KEY],
+                    system_id=self.reauth_entry.data[CONF_SYSTEM_ID],
+                )
+            except PVOutputAuthenticationError:
+                errors["base"] = "invalid_auth"
+            except PVOutputError:
+                errors["base"] = "cannot_connect"
+            else:
+                self.hass.config_entries.async_update_entry(
+                    self.reauth_entry,
+                    data={
+                        **self.reauth_entry.data,
+                        CONF_API_KEY: user_input[CONF_API_KEY],
+                    },
+                )
+                self.hass.async_create_task(
+                    self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
+                )
+                return self.async_abort(reason="reauth_successful")
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            description_placeholders={
+                "account_url": "https://pvoutput.org/account.jsp"
+            },
+            data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
+            errors=errors,
         )
