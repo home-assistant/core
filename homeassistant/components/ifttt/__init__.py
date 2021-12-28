@@ -8,6 +8,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.const import CONF_WEBHOOK_ID
+from homeassistant.core import ServiceCall
 from homeassistant.helpers import config_entry_flow
 import homeassistant.helpers.config_validation as cv
 
@@ -57,7 +58,7 @@ async def async_setup(hass, config):
     if isinstance(api_keys, str):
         api_keys = {"default": api_keys}
 
-    def trigger_service(call):
+    def trigger_service(call: ServiceCall) -> None:
         """Handle IFTTT trigger service calls."""
         event = call.data[ATTR_EVENT]
         targets = call.data.get(ATTR_TARGET, list(api_keys))
