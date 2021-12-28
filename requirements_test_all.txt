@@ -795,6 +795,9 @@ pvo==0.2.0
 # homeassistant.components.canary
 py-canary==0.5.1
 
+# homeassistant.components.cpuspeed
+py-cpuinfo==8.0.0
+
 # homeassistant.components.melissa
 py-melissa-climate==2.1.4
 
