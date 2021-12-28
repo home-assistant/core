@@ -20,7 +20,12 @@ from homeassistant.const import (
     ATTR_VOLTAGE,
     CONF_API_KEY,
     CONF_NAME,
+    ELECTRIC_POTENTIAL_VOLT,
+    ENERGY_KILO_WATT_HOUR,
     ENERGY_WATT_HOUR,
+    POWER_KILO_WATT,
+    POWER_WATT,
+    TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -68,12 +73,59 @@ class PVOutputSensorEntityDescription(
 
 SENSORS: tuple[PVOutputSensorEntityDescription, ...] = (
     PVOutputSensorEntityDescription(
+        key="energy_consumption",
+        name="Energy Consumed",
+        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda status: status.energy_consumption,
+    ),
+    PVOutputSensorEntityDescription(
         key="energy_generation",
         name="Energy Generated",
         native_unit_of_measurement=ENERGY_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda status: status.energy_generation,
+    ),
+    PVOutputSensorEntityDescription(
+        key="normalized_ouput",
+        name="Efficiency",
+        native_unit_of_measurement=f"{ENERGY_KILO_WATT_HOUR}/{POWER_KILO_WATT}",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda status: status.normalized_ouput,
+    ),
+    PVOutputSensorEntityDescription(
+        key="power_consumption",
+        name="Power Consumed",
+        native_unit_of_measurement=POWER_WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda status: status.power_consumption,
+    ),
+    PVOutputSensorEntityDescription(
+        key="power_generation",
+        name="Power Generated",
+        native_unit_of_measurement=POWER_WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda status: status.power_generation,
+    ),
+    PVOutputSensorEntityDescription(
+        key="temperature",
+        name="Temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda status: status.temperature,
+    ),
+    PVOutputSensorEntityDescription(
+        key="voltage",
+        name="Voltage",
+        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda status: status.voltage,
     ),
 )
 

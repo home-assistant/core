@@ -20,6 +20,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     AREA_SQUARE_METERS,
     ATTR_BATTERY_LEVEL,
@@ -37,8 +38,9 @@ from homeassistant.const import (
     TIME_SECONDS,
     VOLUME_CUBIC_METERS,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import VacuumCoordinatorDataAttributes
@@ -550,7 +552,11 @@ def _setup_vacuum_sensors(hass, config_entry, async_add_entities):
     async_add_entities(entities)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Xiaomi sensor from a config entry."""
     entities = []
 
