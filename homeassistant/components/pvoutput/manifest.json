@@ -4,6 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/pvoutput",
   "config_flow": true,
   "codeowners": ["@fabaff", "@frenck"],
-  "requirements": ["pvo==0.1.0"],
+  "requirements": ["pvo==0.2.0"],
   "iot_class": "cloud_polling"
 }
