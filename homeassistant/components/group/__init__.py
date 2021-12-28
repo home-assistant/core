@@ -25,6 +25,7 @@ from homeassistant.const import (
     SERVICE_RELOAD,
     STATE_OFF,
     STATE_ON,
+    Platform,
 )
 from homeassistant.core import (
     CoreState,
@@ -62,7 +63,13 @@ ATTR_ALL = "all"
 SERVICE_SET = "set"
 SERVICE_REMOVE = "remove"
 
-PLATFORMS = ["light", "cover", "notify", "fan", "binary_sensor"]
+PLATFORMS = [
+    Platform.LIGHT,
+    Platform.COVER,
+    Platform.NOTIFY,
+    Platform.FAN,
+    Platform.BINARY_SENSOR,
+]
 
 REG_KEY = f"{DOMAIN}_registry"
 
