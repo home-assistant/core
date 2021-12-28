@@ -30,6 +30,11 @@ class LeafPluggedInSensor(LeafEntity, BinarySensorEntity):
 
     _attr_device_class = BinarySensorDeviceClass.PLUG
 
+    def __init__(self, car):
+        """Set up plug status sensor."""
+        super().__init__(car)
+        self._attr_unique_id = self._attr_unique_id + "_plugstatus"
+
     @property
     def name(self):
         """Sensor name."""
@@ -50,6 +55,11 @@ class LeafChargingSensor(LeafEntity, BinarySensorEntity):
     """Charging Sensor class."""
 
     _attr_device_class = BinarySensorDeviceClass.BATTERY_CHARGING
+
+    def __init__(self, car):
+        """Set up charging status sensor."""
+        super().__init__(car)
+        self._attr_unique_id = self._attr_unique_id + "_chargingstatus"
 
     @property
     def name(self):

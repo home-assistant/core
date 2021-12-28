@@ -24,6 +24,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class LeafClimateSwitch(LeafEntity, ToggleEntity):
     """Nissan Leaf Climate Control switch."""
 
+    def __init__(self, car):
+        """Set up climate control switch."""
+        super().__init__(car)
+        self._attr_unique_id = self._attr_unique_id + "_climatecontrol"
+
     @property
     def name(self):
         """Switch name."""

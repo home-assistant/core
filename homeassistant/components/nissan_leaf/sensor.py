@@ -39,6 +39,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class LeafBatterySensor(LeafEntity, SensorEntity):
     """Nissan Leaf Battery Sensor."""
 
+    def __init__(self, car):
+        """Set up battery sensor."""
+        super().__init__(car)
+        self._attr_unique_id = self._attr_unique_id + "_soc"
+
     @property
     def name(self):
         """Sensor Name."""
@@ -76,7 +81,9 @@ class LeafRangeSensor(LeafEntity, SensorEntity):
         self._ac_on = ac_on
         super().__init__(car)
         if ac_on:
-            self._attr_unique_id = self._attr_unique_id + "_ac"
+            self._attr_unique_id = self._attr_unique_id + "_range_ac"
+        else:
+            self._attr_unique_id = self._attr_unique_id + "_range"
 
     @property
     def name(self):
