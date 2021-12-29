@@ -24,14 +24,23 @@ SWITCH_TYPES: dict[str, SwitchEntityDescription] = {
     "smartplug": SwitchEntityDescription(
         key="smartplug",
         device_class=SwitchDeviceClass.OUTLET,
+        on_key = "state",
+        on_value = SHCSmartPlug.PowerSwitchService.State.ON,
+        has_consumption = True,
     ),
     "smartplugcompact": SwitchEntityDescription(
         key="smartplugcompact",
         device_class=SwitchDeviceClass.OUTLET,
+        on_key = "state",
+        on_value = SHCSmartPlugCompact.PowerSwitchService.State.ON,
+        has_consumption = True,
     ),
     "lightswitch": SwitchEntityDescription(
         key="lightswitch",
         device_class=SwitchDeviceClass.SWITCH,
+        on_key = "state",
+        on_value = SHCLightSwitch.PowerSwitchService.State.ON,
+        has_consumption = True,
     ),
 }
 
@@ -120,24 +129,28 @@ class SHCSwitch(SHCEntity, SwitchEntity):
     @property
     def today_energy_kwh(self):
         """Return the total energy usage in kWh."""
-        return self._device.energyconsumption / 1000.0
+        if self.entity_description.has_consumption:
+            return self._device.energyconsumption / 1000.0
+        return None
 
     @property
     def current_power_w(self):
         """Return the current power usage in W."""
-        return self._device.powerconsumption
+        if self.entity_description.has_consumption:
+            return self._device.powerconsumption
+        return None
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
-        self._device.state = True
+        setattr(self._device, self.entity_description.on_key, True)
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
-        self._device.state = False
+        setattr(self._device, self.entity_description.on_key, False)
 
     def toggle(self, **kwargs):
         """Toggle the switch."""
-        self._device.state = not self.is_on
+        setattr(self._device, self.entity_description.on_key, not self.is_on)
 
 
 class SHCCameraSwitch(SHCEntity, SwitchEntity):
