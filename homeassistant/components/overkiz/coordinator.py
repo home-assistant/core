@@ -97,9 +97,6 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator):
                 raise UpdateFailed("Too many requests, try again later.") from exception
 
             return self.devices
-        except Exception as exception:
-            _LOGGER.debug(exception)
-            raise UpdateFailed(exception) from exception
 
         for event in events:
             _LOGGER.debug(event)

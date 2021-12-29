@@ -54,7 +54,7 @@ async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-):
+) -> None:
     """Set up the Overkiz number from a config entry."""
     data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
     entities: list[OverkizNumber] = []
@@ -89,12 +89,12 @@ class OverkizNumber(OverkizDescriptiveEntity, NumberEntity):
     entity_description: OverkizNumberDescription
 
     @property
-    def value(self) -> float:
+    def value(self) -> float | None:
         """Return the entity value to represent the entity state."""
         if state := self.device.states.get(self.entity_description.key):
             return state.value
 
-        return 0
+        return None
 
     async def async_set_value(self, value: float) -> None:
         """Set new value."""
