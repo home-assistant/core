@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "alread_configured": "Already configured. Only a single configuration possible."
+        },
+        "step": {
+            "user": {
+                "description": "Do you want to start set up?",
+                "title": "CPU Speed"
+            }
+        }
+    },
+    "title": "CPU Speed"
+}

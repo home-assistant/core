@@ -492,8 +492,7 @@ def setup_platform(
     offset: datetime.timedelta = config[CONF_OFFSET]
     include_tomorrow = config[CONF_TOMORROW]
 
-    if not os.path.exists(gtfs_dir):
-        os.makedirs(gtfs_dir)
+    os.makedirs(gtfs_dir, exist_ok=True)
 
     if not os.path.exists(os.path.join(gtfs_dir, data)):
         _LOGGER.error("The given GTFS data file/folder was not found")

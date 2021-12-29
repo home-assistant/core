@@ -7,10 +7,13 @@ import logging
 from soco.exceptions import SoCoException, SoCoSlaveException, SoCoUPnPException
 
 from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchEntity
-from homeassistant.const import ATTR_TIME, ENTITY_CATEGORY_CONFIG
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_TIME
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     DATA_SONOS,
@@ -36,7 +39,7 @@ ATTR_INCLUDE_LINKED_ZONES = "include_linked_zones"
 
 ATTR_CROSSFADE = "cross_fade"
 ATTR_NIGHT_SOUND = "night_mode"
-ATTR_SPEECH_ENHANCEMENT = "dialog_mode"
+ATTR_SPEECH_ENHANCEMENT = "dialog_level"
 ATTR_STATUS_LIGHT = "status_light"
 ATTR_SUB_ENABLED = "sub_enabled"
 ATTR_SURROUND_ENABLED = "surround_enabled"
@@ -80,7 +83,11 @@ FEATURE_ICONS = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Sonos from a config entry."""
 
     async def _async_create_alarms(speaker: SonosSpeaker, alarm_ids: list[str]) -> None:
@@ -140,7 +147,7 @@ class SonosSwitchEntity(SonosEntity, SwitchEntity):
             f"sonos_{speaker.zone_name}_{FRIENDLY_NAMES[feature_type]}"
         )
         self.needs_coordinator = feature_type in COORDINATOR_FEATURES
-        self._attr_entity_category = ENTITY_CATEGORY_CONFIG
+        self._attr_entity_category = EntityCategory.CONFIG
         self._attr_name = f"{speaker.zone_name} {FRIENDLY_NAMES[feature_type]}"
         self._attr_unique_id = f"{speaker.soco.uid}-{feature_type}"
         self._attr_icon = FEATURE_ICONS.get(feature_type)
@@ -194,7 +201,7 @@ class SonosSwitchEntity(SonosEntity, SwitchEntity):
 class SonosAlarmEntity(SonosEntity, SwitchEntity):
     """Representation of a Sonos Alarm entity."""
 
-    _attr_entity_category = ENTITY_CATEGORY_CONFIG
+    _attr_entity_category = EntityCategory.CONFIG
     _attr_icon = "mdi:alarm"
 
     def __init__(self, alarm_id: str, speaker: SonosSpeaker) -> None:

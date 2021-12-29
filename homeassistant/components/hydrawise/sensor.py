@@ -7,14 +7,11 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS,
-    DEVICE_CLASS_TIMESTAMP,
-    TIME_MINUTES,
-)
+from homeassistant.const import CONF_MONITORED_CONDITIONS, TIME_MINUTES
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt
 
@@ -26,7 +23,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="next_cycle",
         name="Next Cycle",
-        device_class=DEVICE_CLASS_TIMESTAMP,
+        device_class=SensorDeviceClass.TIMESTAMP,
     ),
     SensorEntityDescription(
         key="watering_time",

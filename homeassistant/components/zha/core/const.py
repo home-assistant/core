@@ -102,6 +102,7 @@ CLUSTER_TYPE_OUT = "out"
 PLATFORMS = (
     Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.CLIMATE,
     Platform.COVER,
     Platform.DEVICE_TRACKER,

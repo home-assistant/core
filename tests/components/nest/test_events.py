@@ -39,13 +39,12 @@ async def async_setup_devices(hass, device_type, traits={}):
     return await async_setup_sdm_platform(hass, PLATFORM, devices=devices)
 
 
-def create_device_traits(event_trait):
+def create_device_traits(event_traits=[]):
     """Create fake traits for a device."""
-    return {
+    result = {
         "sdm.devices.traits.Info": {
             "customName": "Front",
         },
-        event_trait: {},
         "sdm.devices.traits.CameraLiveStream": {
             "maxVideoResolution": {
                 "width": 640,
@@ -55,6 +54,8 @@ def create_device_traits(event_trait):
             "audioCodecs": ["AAC"],
         },
     }
+    result.update({t: {} for t in event_traits})
+    return result
 
 
 def create_event(event_type, device_id=DEVICE_ID, timestamp=None):
@@ -91,7 +92,7 @@ async def test_doorbell_chime_event(hass):
     subscriber = await async_setup_devices(
         hass,
         "sdm.devices.types.DOORBELL",
-        create_device_traits("sdm.devices.traits.DoorbellChime"),
+        create_device_traits(["sdm.devices.traits.DoorbellChime"]),
     )
 
     registry = er.async_get(hass)
@@ -129,7 +130,7 @@ async def test_camera_motion_event(hass):
     subscriber = await async_setup_devices(
         hass,
         "sdm.devices.types.CAMERA",
-        create_device_traits("sdm.devices.traits.CameraMotion"),
+        create_device_traits(["sdm.devices.traits.CameraMotion"]),
     )
     registry = er.async_get(hass)
     entry = registry.async_get("camera.front")
@@ -157,7 +158,7 @@ async def test_camera_sound_event(hass):
     subscriber = await async_setup_devices(
         hass,
         "sdm.devices.types.CAMERA",
-        create_device_traits("sdm.devices.traits.CameraSound"),
+        create_device_traits(["sdm.devices.traits.CameraSound"]),
     )
     registry = er.async_get(hass)
     entry = registry.async_get("camera.front")
@@ -185,7 +186,7 @@ async def test_camera_person_event(hass):
     subscriber = await async_setup_devices(
         hass,
         "sdm.devices.types.DOORBELL",
-        create_device_traits("sdm.devices.traits.CameraEventImage"),
+        create_device_traits(["sdm.devices.traits.CameraPerson"]),
     )
     registry = er.async_get(hass)
     entry = registry.async_get("camera.front")
@@ -213,7 +214,9 @@ async def test_camera_multiple_event(hass):
     subscriber = await async_setup_devices(
         hass,
         "sdm.devices.types.DOORBELL",
-        create_device_traits("sdm.devices.traits.CameraEventImage"),
+        create_device_traits(
+            ["sdm.devices.traits.CameraMotion", "sdm.devices.traits.CameraPerson"]
+        ),
     )
     registry = er.async_get(hass)
     entry = registry.async_get("camera.front")
@@ -256,7 +259,7 @@ async def test_unknown_event(hass):
     subscriber = await async_setup_devices(
         hass,
         "sdm.devices.types.DOORBELL",
-        create_device_traits("sdm.devices.traits.DoorbellChime"),
+        create_device_traits(["sdm.devices.traits.DoorbellChime"]),
     )
     await subscriber.async_receive_event(create_event("some-event-id"))
     await hass.async_block_till_done()
@@ -270,7 +273,7 @@ async def test_unknown_device_id(hass):
     subscriber = await async_setup_devices(
         hass,
         "sdm.devices.types.DOORBELL",
-        create_device_traits("sdm.devices.traits.DoorbellChime"),
+        create_device_traits(["sdm.devices.traits.DoorbellChime"]),
     )
     await subscriber.async_receive_event(
         create_event("sdm.devices.events.DoorbellChime.Chime", "invalid-device-id")
@@ -286,7 +289,7 @@ async def test_event_message_without_device_event(hass):
     subscriber = await async_setup_devices(
         hass,
         "sdm.devices.types.DOORBELL",
-        create_device_traits("sdm.devices.traits.DoorbellChime"),
+        create_device_traits(["sdm.devices.traits.DoorbellChime"]),
     )
     timestamp = utcnow()
     event = EventMessage(
@@ -308,14 +311,12 @@ async def test_doorbell_event_thread(hass):
     subscriber = await async_setup_devices(
         hass,
         "sdm.devices.types.DOORBELL",
-        traits={
-            "sdm.devices.traits.Info": {
-                "customName": "Front",
-            },
-            "sdm.devices.traits.CameraLiveStream": {},
-            "sdm.devices.traits.CameraClipPreview": {},
-            "sdm.devices.traits.CameraPerson": {},
-        },
+        create_device_traits(
+            [
+                "sdm.devices.traits.CameraClipPreview",
+                "sdm.devices.traits.CameraPerson",
+            ]
+        ),
     )
     registry = er.async_get(hass)
     entry = registry.async_get("camera.front")
@@ -351,7 +352,7 @@ async def test_doorbell_event_thread(hass):
     )
     await subscriber.async_receive_event(EventMessage(message_data_1, auth=None))
 
-    # Publish message #1 that sends a no-op update to end the event thread
+    # Publish message #2 that sends a no-op update to end the event thread
     timestamp2 = timestamp1 + datetime.timedelta(seconds=1)
     message_data_2 = event_message_data.copy()
     message_data_2.update(
@@ -369,5 +370,79 @@ async def test_doorbell_event_thread(hass):
         "device_id": entry.device_id,
         "type": "camera_motion",
         "timestamp": timestamp1.replace(microsecond=0),
+        "nest_event_id": EVENT_SESSION_ID,
+    }
+
+
+async def test_doorbell_event_session_update(hass):
+    """Test a pubsub message with updates to an existing session."""
+    events = async_capture_events(hass, NEST_EVENT)
+    subscriber = await async_setup_devices(
+        hass,
+        "sdm.devices.types.DOORBELL",
+        create_device_traits(
+            [
+                "sdm.devices.traits.CameraClipPreview",
+                "sdm.devices.traits.CameraPerson",
+                "sdm.devices.traits.CameraMotion",
+            ]
+        ),
+    )
+    registry = er.async_get(hass)
+    entry = registry.async_get("camera.front")
+    assert entry is not None
+
+    # Message #1 has a motion event
+    timestamp1 = utcnow()
+    await subscriber.async_receive_event(
+        create_events(
+            {
+                "sdm.devices.events.CameraMotion.Motion": {
+                    "eventSessionId": EVENT_SESSION_ID,
+                    "eventId": "n:1",
+                },
+                "sdm.devices.events.CameraClipPreview.ClipPreview": {
+                    "eventSessionId": EVENT_SESSION_ID,
+                    "previewUrl": "image-url-1",
+                },
+            },
+            timestamp=timestamp1,
+        )
+    )
+
+    # Message #2 has an extra person event
+    timestamp2 = utcnow()
+    await subscriber.async_receive_event(
+        create_events(
+            {
+                "sdm.devices.events.CameraMotion.Motion": {
+                    "eventSessionId": EVENT_SESSION_ID,
+                    "eventId": "n:1",
+                },
+                "sdm.devices.events.CameraPerson.Person": {
+                    "eventSessionId": EVENT_SESSION_ID,
+                    "eventId": "n:2",
+                },
+                "sdm.devices.events.CameraClipPreview.ClipPreview": {
+                    "eventSessionId": EVENT_SESSION_ID,
+                    "previewUrl": "image-url-1",
+                },
+            },
+            timestamp=timestamp2,
+        )
+    )
+    await hass.async_block_till_done()
+
+    assert len(events) == 2
+    assert events[0].data == {
+        "device_id": entry.device_id,
+        "type": "camera_motion",
+        "timestamp": timestamp1.replace(microsecond=0),
+        "nest_event_id": EVENT_SESSION_ID,
+    }
+    assert events[1].data == {
+        "device_id": entry.device_id,
+        "type": "camera_person",
+        "timestamp": timestamp2.replace(microsecond=0),
         "nest_event_id": EVENT_SESSION_ID,
     }

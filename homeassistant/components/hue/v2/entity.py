@@ -47,6 +47,9 @@ class HueBaseEntity(Entity):
             self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, self.device.id)},
             )
+        # used for availability workaround
+        self._ignore_availability = None
+        self._last_state = None
 
     @property
     def name(self) -> str:
@@ -68,6 +71,7 @@ class HueBaseEntity(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
+        self._check_availability_workaround()
         # Add value_changed callbacks.
         self.async_on_remove(
             self.controller.subscribe(
@@ -98,13 +102,12 @@ class HueBaseEntity(Entity):
     def available(self) -> bool:
         """Return entity availability."""
         if self.device is None:
-            # devices without a device attached should be always available
+            # entities without a device attached should be always available
             return True
         if self.resource.type == ResourceTypes.ZIGBEE_CONNECTIVITY:
             # the zigbee connectivity sensor itself should be always available
             return True
-        if self.device.product_data.manufacturer_name != "Signify Netherlands B.V.":
-            # availability status for non-philips brand lights is unreliable
+        if self._ignore_availability:
             return True
         if zigbee := self.bridge.api.devices.get_zigbee_connectivity(self.device.id):
             # all device-attached entities get availability from the zigbee connectivity
@@ -127,5 +130,54 @@ class HueBaseEntity(Entity):
             ent_reg.async_remove(self.entity_id)
         else:
             self.logger.debug("Received status update for %s", self.entity_id)
+            self._check_availability_workaround()
             self.on_update()
             self.async_write_ha_state()
+
+    @callback
+    def _check_availability_workaround(self):
+        """Check availability of the device."""
+        if self.resource.type != ResourceTypes.LIGHT:
+            return
+        if self._ignore_availability is not None:
+            # already processed
+            return
+        if self.device.product_data.certified:
+            # certified products report their state correctly
+            self._ignore_availability = False
+            return
+        # some (3th party) Hue lights report their connection status incorrectly
+        # causing the zigbee availability to report as disconnected while in fact
+        # it can be controlled. Although this is in fact something the device manufacturer
+        # should fix, we work around it here. If the light is reported unavailable
+        # by the zigbee connectivity but the state changes its considered as a
+        # malfunctioning device and we report it.
+        # while the user should actually fix this issue instead of ignoring it, we
+        # ignore the availability for this light from this point.
+        cur_state = self.resource.on.on
+        if self._last_state is None:
+            self._last_state = cur_state
+            return
+        if zigbee := self.bridge.api.devices.get_zigbee_connectivity(self.device.id):
+            if (
+                self._last_state != cur_state
+                and zigbee.status != ConnectivityServiceStatus.CONNECTED
+            ):
+                # the device state changed from on->off or off->on
+                # while it was reported as not connected!
+                self.logger.warning(
+                    "Light %s changed state while reported as disconnected. "
+                    "This might be an indicator that routing is not working for this device. "
+                    "Home Assistant will ignore availability for this light from now on. "
+                    "Device details: %s - %s (%s) fw: %s",
+                    self.name,
+                    self.device.product_data.manufacturer_name,
+                    self.device.product_data.product_name,
+                    self.device.product_data.model_id,
+                    self.device.product_data.software_version,
+                )
+                # do we want to store this in some persistent storage?
+                self._ignore_availability = True
+            else:
+                self._ignore_availability = False
+        self._last_state = cur_state

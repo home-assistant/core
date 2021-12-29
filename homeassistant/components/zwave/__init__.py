@@ -1,5 +1,7 @@
 """Support for Z-Wave."""
 # pylint: disable=import-outside-toplevel
+from __future__ import annotations
+
 import asyncio
 import copy
 from importlib import import_module
@@ -17,7 +19,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import CoreState, HomeAssistant, callback
+from homeassistant.core import CoreState, Event, HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import (
@@ -493,7 +495,7 @@ async def async_setup_entry(  # noqa: C901
             await platform.async_add_entities([entity])
 
         if entity.unique_id:
-            hass.async_add_job(_add_node_to_component())
+            hass.create_task(_add_node_to_component())
             return
 
         @callback
@@ -876,7 +878,7 @@ async def async_setup_entry(  # noqa: C901
         _LOGGER.info("Sending %s test-messages to node %s", messages, node_id)
         node.test(messages)
 
-    def start_zwave(_service_or_event):
+    def start_zwave(_service_or_event: ServiceCall | Event) -> None:
         """Startup Z-Wave network."""
         _LOGGER.info("Starting Z-Wave network")
         network.start()

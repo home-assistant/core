@@ -5,31 +5,20 @@ import logging
 from re import sub
 
 from pyefergy import Efergy, exceptions
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    CONF_CURRENCY,
-    CONF_MONITORED_VARIABLES,
-    CONF_TYPE,
-    ENERGY_KILO_WATT_HOUR,
-    POWER_WATT,
-)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_WATT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import EfergyEntity
-from .const import CONF_APPTOKEN, CONF_CURRENT_VALUES, DATA_KEY_API, DOMAIN
+from .const import CONF_CURRENT_VALUES, DATA_KEY_API, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -112,42 +101,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
 )
-
-TYPES_SCHEMA = vol.In(
-    ["current_values", "instant_readings", "amount", "budget", "cost"]
-)
-
-
-SENSORS_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_TYPE): TYPES_SCHEMA,
-        vol.Optional(CONF_CURRENCY, default=""): cv.string,
-        vol.Optional("period", default="year"): cv.string,
-    }
-)
-
-# Deprecated in Home Assistant 2021.11
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_APPTOKEN): cv.string,
-        vol.Optional("utc_offset", default="0"): cv.string,
-        vol.Required(CONF_MONITORED_VARIABLES): [SENSORS_SCHEMA],
-    }
-)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the Efergy sensor from yaml."""
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
-    )
 
 
 async def async_setup_entry(

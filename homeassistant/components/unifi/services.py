@@ -3,7 +3,7 @@
 import voluptuous as vol
 
 from homeassistant.const import ATTR_DEVICE_ID
-from homeassistant.core import callback
+from homeassistant.core import ServiceCall, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
@@ -32,7 +32,7 @@ def async_setup_services(hass) -> None:
         SERVICE_REMOVE_CLIENTS: async_remove_clients,
     }
 
-    async def async_call_unifi_service(service_call) -> None:
+    async def async_call_unifi_service(service_call: ServiceCall) -> None:
         """Call correct UniFi service."""
         await services[service_call.service](hass, service_call.data)
 

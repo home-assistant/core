@@ -6,12 +6,10 @@ from dataclasses import dataclass
 from typing import Any
 
 from homeassistant.components.sensor import (
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_TEMPERATURE,
-    STATE_CLASS_MEASUREMENT,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, TEMP_CELSIUS, TEMP_FAHRENHEIT, TIME_MINUTES
@@ -145,8 +143,8 @@ class VenstarSensor(VenstarEntity, SensorEntity):
 SENSOR_ENTITIES: tuple[VenstarSensorEntityDescription, ...] = (
     VenstarSensorEntityDescription(
         key="hum",
-        device_class=DEVICE_CLASS_HUMIDITY,
-        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
         uom_fn=lambda coordinator: PERCENTAGE,
         value_fn=lambda coordinator, sensor_name: coordinator.client.get_sensor(
             sensor_name, "hum"
@@ -155,8 +153,8 @@ SENSOR_ENTITIES: tuple[VenstarSensorEntityDescription, ...] = (
     ),
     VenstarSensorEntityDescription(
         key="temp",
-        device_class=DEVICE_CLASS_TEMPERATURE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
         uom_fn=temperature_unit,
         value_fn=lambda coordinator, sensor_name: round(
             float(coordinator.client.get_sensor(sensor_name, "temp")), 1
@@ -165,8 +163,8 @@ SENSOR_ENTITIES: tuple[VenstarSensorEntityDescription, ...] = (
     ),
     VenstarSensorEntityDescription(
         key="battery",
-        device_class=DEVICE_CLASS_BATTERY,
-        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=SensorDeviceClass.BATTERY,
+        state_class=SensorStateClass.MEASUREMENT,
         uom_fn=lambda coordinator: PERCENTAGE,
         value_fn=lambda coordinator, sensor_name: coordinator.client.get_sensor(
             sensor_name, "battery"
@@ -177,7 +175,7 @@ SENSOR_ENTITIES: tuple[VenstarSensorEntityDescription, ...] = (
 
 RUNTIME_ENTITY = VenstarSensorEntityDescription(
     key="runtime",
-    state_class=STATE_CLASS_MEASUREMENT,
+    state_class=SensorStateClass.MEASUREMENT,
     uom_fn=lambda coordinator: TIME_MINUTES,
     value_fn=lambda coordinator, sensor_name: coordinator.runtimes[-1][sensor_name],
     name_fn=lambda coordinator, sensor_name: f"{coordinator.client.name} {RUNTIME_ATTRIBUTES[sensor_name]} Runtime",

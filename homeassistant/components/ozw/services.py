@@ -5,7 +5,7 @@ from openzwavemqtt.const import ATTR_LABEL, ATTR_POSITION, ATTR_VALUE
 from openzwavemqtt.util.node import get_node_from_manager, set_config_parameter
 import voluptuous as vol
 
-from homeassistant.core import callback
+from homeassistant.core import ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 
 from . import const
@@ -86,7 +86,7 @@ class ZWaveServices:
         )
 
     @callback
-    def async_set_config_parameter(self, service):
+    def async_set_config_parameter(self, service: ServiceCall) -> None:
         """Set a config parameter to a node."""
         instance_id = service.data[const.ATTR_INSTANCE_ID]
         node_id = service.data[const.ATTR_NODE_ID]
@@ -106,7 +106,7 @@ class ZWaveServices:
         )
 
     @callback
-    def async_add_node(self, service):
+    def async_add_node(self, service: ServiceCall) -> None:
         """Enter inclusion mode on the controller."""
         instance_id = service.data[const.ATTR_INSTANCE_ID]
         secure = service.data[const.ATTR_SECURE]
@@ -116,7 +116,7 @@ class ZWaveServices:
         instance.add_node(secure)
 
     @callback
-    def async_remove_node(self, service):
+    def async_remove_node(self, service: ServiceCall) -> None:
         """Enter exclusion mode on the controller."""
         instance_id = service.data[const.ATTR_INSTANCE_ID]
         instance = self._manager.get_instance(instance_id)
@@ -125,7 +125,7 @@ class ZWaveServices:
         instance.remove_node()
 
     @callback
-    def async_cancel_command(self, service):
+    def async_cancel_command(self, service: ServiceCall) -> None:
         """Tell the controller to cancel an add or remove command."""
         instance_id = service.data[const.ATTR_INSTANCE_ID]
         instance = self._manager.get_instance(instance_id)

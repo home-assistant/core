@@ -8,6 +8,7 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
+    Platform,
 )
 
 DOMAIN = "kaiterra"
@@ -71,4 +72,4 @@ DEFAULT_AQI_STANDARD = "us"
 DEFAULT_PREFERRED_UNIT = []
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 
-PLATFORMS = ["sensor", "air_quality"]
+PLATFORMS = [Platform.SENSOR, Platform.AIR_QUALITY]

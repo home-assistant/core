@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from rokuecp import RokuError
 
-from homeassistant.components.media_player import DEVICE_CLASS_RECEIVER, DEVICE_CLASS_TV
+from homeassistant.components.media_player import MediaPlayerDeviceClass
 from homeassistant.components.media_player.const import (
     ATTR_APP_ID,
     ATTR_APP_NAME,
@@ -89,7 +89,7 @@ async def test_setup(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -
 
     assert hass.states.get(MAIN_ENTITY_ID)
     assert main
-    assert main.original_device_class == DEVICE_CLASS_RECEIVER
+    assert main.original_device_class is MediaPlayerDeviceClass.RECEIVER
     assert main.unique_id == UPNP_SERIAL
 
 
@@ -121,7 +121,7 @@ async def test_tv_setup(
 
     assert hass.states.get(TV_ENTITY_ID)
     assert tv
-    assert tv.original_device_class == DEVICE_CLASS_TV
+    assert tv.original_device_class is MediaPlayerDeviceClass.TV
     assert tv.unique_id == TV_SERIAL
 
 

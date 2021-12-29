@@ -5,6 +5,7 @@ import pytest
 
 from homeassistant.components.alarm_control_panel import DOMAIN
 import homeassistant.components.automation as automation
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
@@ -125,7 +126,9 @@ async def test_get_triggers(
         }
         for trigger in expected_trigger_types
     ]
-    triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device_entry.id
+    )
     assert_lists_same(triggers, expected_triggers)
 
 
@@ -142,11 +145,13 @@ async def test_get_trigger_capabilities(hass, device_reg, entity_reg):
         "alarm_control_panel.test_5678", "attributes", {"supported_features": 15}
     )
 
-    triggers = await async_get_device_automations(hass, "trigger", device_entry.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device_entry.id
+    )
     assert len(triggers) == 6
     for trigger in triggers:
         capabilities = await async_get_device_automation_capabilities(
-            hass, "trigger", trigger
+            hass, DeviceAutomationType.TRIGGER, trigger
         )
         assert capabilities == {
             "extra_fields": [

@@ -42,7 +42,10 @@ CONF_STATE_ADDRESS: Final = "state_address"
 CONF_SYNC_STATE: Final = "sync_state"
 CONF_KNX_INITIAL_CONNECTION_TYPES: Final = [CONF_KNX_TUNNELING, CONF_KNX_ROUTING]
 
+# yaml config merged with config entry data
 DATA_KNX_CONFIG: Final = "knx_config"
+# original hass yaml config
+DATA_HASS_CONFIG: Final = "knx_hass_config"
 
 ATTR_COUNTER: Final = "counter"
 ATTR_SOURCE: Final = "source"

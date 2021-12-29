@@ -92,7 +92,6 @@ DEFAULT_HOMEKIT_MODE = HOMEKIT_MODE_BRIDGE
 HOMEKIT_MODES = [HOMEKIT_MODE_BRIDGE, HOMEKIT_MODE_ACCESSORY]
 
 # #### HomeKit Component Services ####
-SERVICE_HOMEKIT_START = "start"
 SERVICE_HOMEKIT_RESET_ACCESSORY = "reset_accessory"
 SERVICE_HOMEKIT_UNPAIR = "unpair"
 
@@ -233,18 +232,6 @@ PROP_MIN_VALUE = "minValue"
 PROP_MIN_STEP = "minStep"
 PROP_CELSIUS = {"minValue": -273, "maxValue": 999}
 PROP_VALID_VALUES = "ValidValues"
-
-# #### Device Classes ####
-DEVICE_CLASS_DOOR = "door"
-DEVICE_CLASS_GARAGE_DOOR = "garage_door"
-DEVICE_CLASS_GAS = "gas"
-DEVICE_CLASS_MOISTURE = "moisture"
-DEVICE_CLASS_MOTION = "motion"
-DEVICE_CLASS_OCCUPANCY = "occupancy"
-DEVICE_CLASS_OPENING = "opening"
-DEVICE_CLASS_PM25 = "pm25"
-DEVICE_CLASS_SMOKE = "smoke"
-DEVICE_CLASS_WINDOW = "window"
 
 # #### Thresholds ####
 THRESHOLD_CO = 25

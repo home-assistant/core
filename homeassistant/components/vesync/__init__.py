@@ -4,6 +4,7 @@ import logging
 from pyvesync import VeSync
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.core import ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -20,11 +21,11 @@ from .const import (
     VS_SWITCHES,
 )
 
-PLATFORMS = ["switch", "fan", "light", "sensor"]
+PLATFORMS = [Platform.SWITCH, Platform.FAN, Platform.LIGHT, Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup_entry(hass, config_entry):
@@ -72,7 +73,7 @@ async def async_setup_entry(hass, config_entry):
         sensors.extend(device_dict[VS_SENSORS])
         hass.async_create_task(forward_setup(config_entry, Platform.SENSOR))
 
-    async def async_new_device_discovery(service):
+    async def async_new_device_discovery(service: ServiceCall) -> None:
         """Discover if new devices should be added."""
         manager = hass.data[DOMAIN][VS_MANAGER]
         switches = hass.data[DOMAIN][VS_SWITCHES]
