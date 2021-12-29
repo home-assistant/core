@@ -2,10 +2,12 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+import logging
 
 from xknx import XKNX
 from xknx.devices import DateTime, ExposeSensor
 from xknx.dpt import DPTNumeric, DPTString
+from xknx.exceptions import ConversionError
 from xknx.remote_value import RemoteValueSensor
 
 from homeassistant.const import (
@@ -21,6 +23,8 @@ from homeassistant.helpers.typing import ConfigType, StateType
 
 from .const import KNX_ADDRESS
 from .schema import ExposeSchema
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @callback
@@ -101,7 +105,10 @@ class KNXExposeSensor:
         """Initialize state of the exposure."""
         init_state = self.hass.states.get(self.entity_id)
         state_value = self._get_expose_value(init_state)
-        self.device.sensor_value.value = state_value
+        try:
+            self.device.sensor_value.value = state_value
+        except ConversionError:
+            _LOGGER.exception("Error during sending of expose sensor value.")
 
     @callback
     def shutdown(self) -> None:
@@ -152,7 +159,10 @@ class KNXExposeSensor:
 
     async def _async_set_knx_value(self, value: StateType) -> None:
         """Set new value on xknx ExposeSensor."""
-        await self.device.set(value)
+        try:
+            await self.device.set(value)
+        except ConversionError:
+            _LOGGER.exception("Error during sending of expose sensor value.")
 
 
 class KNXExposeTime:
