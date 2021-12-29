@@ -353,7 +353,7 @@ async def async_device_update_info(
 ) -> None:
     """Update device registry info."""
 
-    _LOGGER.debug("Updating device registry info")
+    _LOGGER.debug("Updating device registry info for %s", entry.title)
     dev_registry = device_registry.async_get(hass)
     device = None
     if shellyentry.unique_id:
