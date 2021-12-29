@@ -55,11 +55,11 @@ SHUTDOWN_SERVICES = (SERVICE_HOMEASSISTANT_STOP, SERVICE_HOMEASSISTANT_RESTART)
 async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # noqa: C901
     """Set up general services related to Home Assistant."""
 
-    async def async_save_persistent_states(service):
+    async def async_save_persistent_states(service: ha.ServiceCall) -> None:
         """Handle calls to homeassistant.save_persistent_states."""
         await restore_state.RestoreStateData.async_save_persistent_states(hass)
 
-    async def async_handle_turn_service(service):
+    async def async_handle_turn_service(service: ha.ServiceCall) -> None:
         """Handle calls to homeassistant.turn_on/off."""
         referenced = async_extract_referenced_entity_ids(hass, service)
         all_referenced = referenced.referenced | referenced.indirectly_referenced
@@ -175,7 +175,7 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
         if call.service == SERVICE_HOMEASSISTANT_RESTART:
             asyncio.create_task(hass.async_stop(RESTART_EXIT_CODE))
 
-    async def async_handle_update_service(call):
+    async def async_handle_update_service(call: ha.ServiceCall) -> None:
         """Service handler for updating an entity."""
         if call.context.user_id:
             user = await hass.auth.async_get_user(call.context.user_id)
