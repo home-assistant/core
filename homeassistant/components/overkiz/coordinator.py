@@ -19,7 +19,7 @@ from pyoverkiz.exceptions import (
 from pyoverkiz.models import DataType, Device, Place, State
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, UPDATE_INTERVAL
@@ -120,7 +120,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator):
 
             elif event.name == EventName.DEVICE_REMOVED:
                 base_device_url, *_ = event.device_url.split("#")
-                registry = await device_registry.async_get_registry(self.hass)
+                registry = dr.async_get(self.hass)
 
                 if registered_device := registry.async_get_device(
                     {(DOMAIN, base_device_url)}
