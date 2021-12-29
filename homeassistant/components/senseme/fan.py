@@ -66,9 +66,12 @@ class HASensemeFan(SensemeEntity, FanEntity):
         self._attr_current_direction = SENSEME_DIRECTION_TO_HASS.get(
             self._device.fan_dir, DIRECTION_FORWARD  # None also means forward
         )
-        self._attr_percentage = ranged_value_to_percentage(
-            self._device.fan_speed_limits, self._device.fan_speed
-        )
+        if self._device.fan_speed is not None:
+            self._attr_percentage = ranged_value_to_percentage(
+                self._device.fan_speed_limits, self._device.fan_speed
+            )
+        else:
+            self._attr_percentage = None
         whoosh = self._device.fan_whoosh_mode
         self._attr_preset_mode = whoosh if whoosh else None
         super()._async_update_attrs()
