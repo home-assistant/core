@@ -11,10 +11,9 @@ from homeassistant.components.button import (
     ButtonEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENTITY_CATEGORY_CONFIG
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
@@ -40,7 +39,7 @@ BUTTONS: Final = [
         key="ota_update",
         name="OTA Update",
         device_class=ButtonDeviceClass.UPDATE,
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.CONFIG,
         press_action=lambda wrapper: wrapper.async_trigger_ota_update(),
     ),
     ShellyButtonDescription(
@@ -48,14 +47,14 @@ BUTTONS: Final = [
         name="OTA Update Beta",
         device_class=ButtonDeviceClass.UPDATE,
         entity_registry_enabled_default=False,
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.CONFIG,
         press_action=lambda wrapper: wrapper.async_trigger_ota_update(beta=True),
     ),
     ShellyButtonDescription(
         key="reboot",
         name="Reboot",
         device_class=ButtonDeviceClass.RESTART,
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.CONFIG,
         press_action=lambda wrapper: wrapper.device.trigger_reboot(),
     ),
 ]

@@ -8,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_ID
-from homeassistant.core import callback
+from homeassistant.core import ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -102,7 +102,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities)
     _LOGGER.info("%d Rachio switch(es) added", len(entities))
 
-    def start_multiple(service):
+    def start_multiple(service: ServiceCall) -> None:
         """Service to start multiple zones in sequence."""
         zones_list = []
         person = hass.data[DOMAIN_RACHIO][config_entry.entry_id]

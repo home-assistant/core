@@ -2,7 +2,7 @@
 from pylutron_caseta import OCCUPANCY_GROUP_OCCUPIED
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_OCCUPANCY,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 
@@ -35,7 +35,7 @@ class LutronOccupancySensor(LutronCasetaDevice, BinarySensorEntity):
     @property
     def device_class(self):
         """Flag supported features."""
-        return DEVICE_CLASS_OCCUPANCY
+        return BinarySensorDeviceClass.OCCUPANCY
 
     @property
     def is_on(self):

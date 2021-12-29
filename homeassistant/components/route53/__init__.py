@@ -10,6 +10,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.const import CONF_DOMAIN, CONF_TTL, CONF_ZONE
+from homeassistant.core import ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_time_interval
 
@@ -56,7 +57,7 @@ def setup(hass, config):
             aws_access_key_id, aws_secret_access_key, zone, domain, records, ttl
         )
 
-    def update_records_service(now):
+    def update_records_service(call: ServiceCall) -> None:
         """Set up service for manual trigger."""
         _update_route53(
             aws_access_key_id, aws_secret_access_key, zone, domain, records, ttl

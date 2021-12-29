@@ -8,8 +8,12 @@ from typing import Any
 from hdate import HDate
 from hdate.zmanim import Zmanim
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.const import DEVICE_CLASS_TIMESTAMP, SUN_EVENT_SUNSET
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
+from homeassistant.const import SUN_EVENT_SUNSET
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sun import get_astral_event_date
@@ -255,7 +259,7 @@ class JewishCalendarSensor(SensorEntity):
 class JewishCalendarTimeSensor(JewishCalendarSensor):
     """Implement attrbutes for sensors returning times."""
 
-    _attr_device_class = DEVICE_CLASS_TIMESTAMP
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
 
     def get_state(
         self, daytime_date: HDate, after_shkia_date: HDate, after_tzais_date: HDate

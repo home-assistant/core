@@ -307,3 +307,49 @@ async def test_zone_condition(hass, calls):
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
     assert len(calls) == 1
+
+
+async def test_unknown_zone(hass, calls, caplog):
+    """Test for firing on zone enter."""
+    context = Context()
+    hass.states.async_set(
+        "test.entity", "hello", {"latitude": 32.881011, "longitude": -117.234758}
+    )
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "My Automation",
+                "trigger": {
+                    "platform": "zone",
+                    "entity_id": "test.entity",
+                    "zone": "zone.no_such_zone",
+                    "event": "enter",
+                },
+                "action": {
+                    "service": "test.automation",
+                },
+            }
+        },
+    )
+
+    assert (
+        "Automation 'My Automation' is referencing non-existing zone 'zone.no_such_zone' in a zone trigger"
+        not in caplog.text
+    )
+
+    hass.states.async_set(
+        "test.entity",
+        "hello",
+        {"latitude": 32.880586, "longitude": -117.237564},
+        context=context,
+    )
+    await hass.async_block_till_done()
+
+    assert (
+        "Automation 'My Automation' is referencing non-existing zone 'zone.no_such_zone' in a zone trigger"
+        in caplog.text
+    )

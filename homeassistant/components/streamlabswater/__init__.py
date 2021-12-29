@@ -4,7 +4,8 @@ import logging
 from streamlabswater import streamlabswater
 import voluptuous as vol
 
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, Platform
+from homeassistant.core import ServiceCall
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 
@@ -17,7 +18,7 @@ SERVICE_SET_AWAY_MODE = "set_away_mode"
 AWAY_MODE_AWAY = "away"
 AWAY_MODE_HOME = "home"
 
-PLATFORMS = ["sensor", "binary_sensor"]
+PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR]
 
 CONF_LOCATION_ID = "location_id"
 
@@ -77,7 +78,7 @@ def setup(hass, config):
     for platform in PLATFORMS:
         discovery.load_platform(hass, platform, DOMAIN, {}, config)
 
-    def set_away_mode(service):
+    def set_away_mode(service: ServiceCall) -> None:
         """Set the StreamLabsWater Away Mode."""
         away_mode = service.data.get(ATTR_AWAY_MODE)
         client.update_location(location_id, away_mode)

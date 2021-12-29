@@ -49,17 +49,13 @@ async def async_setup_entry(
     for home_id in climate_topology.home_ids:
         signal_name = f"{CLIMATE_STATE_CLASS_NAME}-{home_id}"
 
-        try:
-            await data_handler.register_data_class(
-                CLIMATE_STATE_CLASS_NAME, signal_name, None, home_id=home_id
-            )
-        except KeyError:
-            continue
-
         await data_handler.register_data_class(
             CLIMATE_STATE_CLASS_NAME, signal_name, None, home_id=home_id
         )
-        climate_state = data_handler.data.get(signal_name)
+
+        if (climate_state := data_handler.data[signal_name]) is None:
+            continue
+
         climate_topology.register_handler(home_id, climate_state.process_topology)
 
         hass.data[DOMAIN][DATA_SCHEDULES][home_id] = climate_state.homes[

@@ -1,7 +1,6 @@
 """Sensor for Risco Events."""
 from homeassistant.components.binary_sensor import DOMAIN as BS_DOMAIN
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import DEVICE_CLASS_TIMESTAMP
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, EVENTS_COORDINATOR
@@ -116,4 +115,4 @@ class RiscoSensor(CoordinatorEntity, SensorEntity):
     @property
     def device_class(self):
         """Device class of sensor."""
-        return DEVICE_CLASS_TIMESTAMP
+        return SensorDeviceClass.TIMESTAMP

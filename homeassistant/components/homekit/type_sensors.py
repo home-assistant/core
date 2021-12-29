@@ -7,10 +7,10 @@ from typing import NamedTuple
 
 from pyhap.const import CATEGORY_SENSOR
 
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
-    DEVICE_CLASS_CO,
     DEVICE_CLASS_CO2,
     STATE_HOME,
     STATE_ON,
@@ -36,15 +36,6 @@ from .const import (
     CHAR_MOTION_DETECTED,
     CHAR_OCCUPANCY_DETECTED,
     CHAR_SMOKE_DETECTED,
-    DEVICE_CLASS_DOOR,
-    DEVICE_CLASS_GARAGE_DOOR,
-    DEVICE_CLASS_GAS,
-    DEVICE_CLASS_MOISTURE,
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_OCCUPANCY,
-    DEVICE_CLASS_OPENING,
-    DEVICE_CLASS_SMOKE,
-    DEVICE_CLASS_WINDOW,
     PROP_CELSIUS,
     SERV_AIR_QUALITY_SENSOR,
     SERV_CARBON_DIOXIDE_SENSOR,
@@ -74,21 +65,31 @@ class SI(NamedTuple):
 
 
 BINARY_SENSOR_SERVICE_MAP: dict[str, SI] = {
-    DEVICE_CLASS_CO: SI(
+    BinarySensorDeviceClass.CO: SI(
         SERV_CARBON_MONOXIDE_SENSOR, CHAR_CARBON_MONOXIDE_DETECTED, int
     ),
     DEVICE_CLASS_CO2: SI(SERV_CARBON_DIOXIDE_SENSOR, CHAR_CARBON_DIOXIDE_DETECTED, int),
-    DEVICE_CLASS_DOOR: SI(SERV_CONTACT_SENSOR, CHAR_CONTACT_SENSOR_STATE, int),
-    DEVICE_CLASS_GARAGE_DOOR: SI(SERV_CONTACT_SENSOR, CHAR_CONTACT_SENSOR_STATE, int),
-    DEVICE_CLASS_GAS: SI(
+    BinarySensorDeviceClass.DOOR: SI(
+        SERV_CONTACT_SENSOR, CHAR_CONTACT_SENSOR_STATE, int
+    ),
+    BinarySensorDeviceClass.GARAGE_DOOR: SI(
+        SERV_CONTACT_SENSOR, CHAR_CONTACT_SENSOR_STATE, int
+    ),
+    BinarySensorDeviceClass.GAS: SI(
         SERV_CARBON_MONOXIDE_SENSOR, CHAR_CARBON_MONOXIDE_DETECTED, int
     ),
-    DEVICE_CLASS_MOISTURE: SI(SERV_LEAK_SENSOR, CHAR_LEAK_DETECTED, int),
-    DEVICE_CLASS_MOTION: SI(SERV_MOTION_SENSOR, CHAR_MOTION_DETECTED, bool),
-    DEVICE_CLASS_OCCUPANCY: SI(SERV_OCCUPANCY_SENSOR, CHAR_OCCUPANCY_DETECTED, int),
-    DEVICE_CLASS_OPENING: SI(SERV_CONTACT_SENSOR, CHAR_CONTACT_SENSOR_STATE, int),
-    DEVICE_CLASS_SMOKE: SI(SERV_SMOKE_SENSOR, CHAR_SMOKE_DETECTED, int),
-    DEVICE_CLASS_WINDOW: SI(SERV_CONTACT_SENSOR, CHAR_CONTACT_SENSOR_STATE, int),
+    BinarySensorDeviceClass.MOISTURE: SI(SERV_LEAK_SENSOR, CHAR_LEAK_DETECTED, int),
+    BinarySensorDeviceClass.MOTION: SI(SERV_MOTION_SENSOR, CHAR_MOTION_DETECTED, bool),
+    BinarySensorDeviceClass.OCCUPANCY: SI(
+        SERV_OCCUPANCY_SENSOR, CHAR_OCCUPANCY_DETECTED, int
+    ),
+    BinarySensorDeviceClass.OPENING: SI(
+        SERV_CONTACT_SENSOR, CHAR_CONTACT_SENSOR_STATE, int
+    ),
+    BinarySensorDeviceClass.SMOKE: SI(SERV_SMOKE_SENSOR, CHAR_SMOKE_DETECTED, int),
+    BinarySensorDeviceClass.WINDOW: SI(
+        SERV_CONTACT_SENSOR, CHAR_CONTACT_SENSOR_STATE, int
+    ),
 }
 
 
@@ -115,7 +116,7 @@ class TemperatureSensor(HomeAccessory):
     def async_update_state(self, new_state):
         """Update temperature after state changed."""
         unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS)
-        if temperature := convert_to_float(new_state.state):
+        if (temperature := convert_to_float(new_state.state)) is not None:
             temperature = temperature_to_homekit(temperature, unit)
             self.char_temp.set_value(temperature)
             _LOGGER.debug(
@@ -142,7 +143,7 @@ class HumiditySensor(HomeAccessory):
     @callback
     def async_update_state(self, new_state):
         """Update accessory after state change."""
-        if humidity := convert_to_float(new_state.state):
+        if (humidity := convert_to_float(new_state.state)) is not None:
             self.char_humidity.set_value(humidity)
             _LOGGER.debug("%s: Percent set to %d%%", self.entity_id, humidity)
 
@@ -169,7 +170,7 @@ class AirQualitySensor(HomeAccessory):
     @callback
     def async_update_state(self, new_state):
         """Update accessory after state change."""
-        if density := convert_to_float(new_state.state):
+        if (density := convert_to_float(new_state.state)) is not None:
             if self.char_density.value != density:
                 self.char_density.set_value(density)
                 _LOGGER.debug("%s: Set density to %d", self.entity_id, density)
@@ -204,7 +205,7 @@ class CarbonMonoxideSensor(HomeAccessory):
     @callback
     def async_update_state(self, new_state):
         """Update accessory after state change."""
-        if value := convert_to_float(new_state.state):
+        if (value := convert_to_float(new_state.state)) is not None:
             self.char_level.set_value(value)
             if value > self.char_peak.value:
                 self.char_peak.set_value(value)
@@ -239,7 +240,7 @@ class CarbonDioxideSensor(HomeAccessory):
     @callback
     def async_update_state(self, new_state):
         """Update accessory after state change."""
-        if value := convert_to_float(new_state.state):
+        if (value := convert_to_float(new_state.state)) is not None:
             self.char_level.set_value(value)
             if value > self.char_peak.value:
                 self.char_peak.set_value(value)
@@ -267,7 +268,7 @@ class LightSensor(HomeAccessory):
     @callback
     def async_update_state(self, new_state):
         """Update accessory after state change."""
-        if luminance := convert_to_float(new_state.state):
+        if (luminance := convert_to_float(new_state.state)) is not None:
             self.char_light.set_value(luminance)
             _LOGGER.debug("%s: Set to %d", self.entity_id, luminance)
 
@@ -284,7 +285,7 @@ class BinarySensor(HomeAccessory):
         service_char = (
             BINARY_SENSOR_SERVICE_MAP[device_class]
             if device_class in BINARY_SENSOR_SERVICE_MAP
-            else BINARY_SENSOR_SERVICE_MAP[DEVICE_CLASS_OCCUPANCY]
+            else BINARY_SENSOR_SERVICE_MAP[BinarySensorDeviceClass.OCCUPANCY]
         )
 
         self.format = service_char.format

@@ -57,13 +57,13 @@ async def async_setup_entry(hass, entry, async_add_entities) -> None:
 
     platform.async_register_entity_service(
         SERVICE_ALARM_ARM_AWAY_INSTANT,
-        None,
+        {},
         "async_alarm_arm_away_instant",
     )
 
     platform.async_register_entity_service(
         SERVICE_ALARM_ARM_HOME_INSTANT,
-        None,
+        {},
         "async_alarm_arm_home_instant",
     )
 

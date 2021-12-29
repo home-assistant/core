@@ -1,0 +1,66 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert",
+            "invalid_unique_id": "Umulig \u00e5 bestemme en gyldig unik ID for enheten"
+        },
+        "error": {
+            "adbkey_not_file": "Finner ikke ADB-n\u00f8kkelfil",
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_host": "Ugyldig vertsnavn eller IP-adresse",
+            "key_and_server": "Oppgi kun ADB-n\u00f8kkel eller ADB-server",
+            "unknown": "Uventet feil"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "adb_server_ip": "IP-adressen til ADB-serveren (la den st\u00e5 tom for ikke \u00e5 bruke)",
+                    "adb_server_port": "Port til ADB-serveren",
+                    "adbkey": "Bane til ADB-n\u00f8kkelfilen (la den st\u00e5 tom for automatisk generering)",
+                    "device_class": "Type enhet",
+                    "host": "Vert",
+                    "port": "Port"
+                },
+                "description": "Angi n\u00f8dvendige parametere for \u00e5 koble til Android TV-enheten din",
+                "title": ""
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_det_rules": "Ugyldige regler for tilstandsgjenkjenning"
+        },
+        "step": {
+            "apps": {
+                "data": {
+                    "app_delete": "Merk av for \u00e5 slette denne applikasjonen",
+                    "app_id": "Applikasjons-ID",
+                    "app_name": "Navn p\u00e5 applikasjon"
+                },
+                "description": "Konfigurer app-ID {app_id}",
+                "title": "Konfigurer Android TV-apper"
+            },
+            "init": {
+                "data": {
+                    "apps": "Konfigurer applikasjonsliste",
+                    "exclude_unnamed_apps": "Ekskluder app med ukjent navn",
+                    "get_sources": "Om de kj\u00f8rende appene skal hentes eller ikke som kildeliste",
+                    "screencap": "Avgj\u00f8r om albumgrafikk skal hentes fra det som vises p\u00e5 skjermen",
+                    "state_detection_rules": "Konfigurere regler for tilstandsgjenkjenning",
+                    "turn_off_command": "ADB-skallkommando for \u00e5 overstyre standard turn_off-kommando",
+                    "turn_on_command": "ADB-skallkommando for \u00e5 overstyre standard turn_on-kommando"
+                },
+                "title": "Android TV-alternativer"
+            },
+            "rules": {
+                "data": {
+                    "rule_delete": "Merk av for \u00e5 slette denne regelen",
+                    "rule_id": "Applikasjons-ID",
+                    "rule_values": "Liste over regler for tilstandsgjenkjenning (se dokumentasjon)"
+                },
+                "description": "Konfigurer gjenkjenningsregel for app-ID {rule_id}",
+                "title": "Konfigurer Android TV-statusgjenkjenningsregler"
+            }
+        }
+    }
+}

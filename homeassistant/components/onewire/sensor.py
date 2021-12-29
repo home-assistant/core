@@ -11,10 +11,6 @@ from typing import TYPE_CHECKING, Any
 
 from pi1wire import InvalidCRCException, OneWireInterface, UnsupportResponseException
 
-from homeassistant.components.onewire.model import (
-    OWDirectDeviceDescription,
-    OWServerDeviceDescription,
-)
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -46,6 +42,7 @@ from .const import (
     READ_MODE_FLOAT,
     READ_MODE_INT,
 )
+from .model import OWDirectDeviceDescription, OWServerDeviceDescription
 from .onewire_entities import (
     OneWireBaseEntity,
     OneWireEntityDescription,

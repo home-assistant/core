@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.core import ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 
@@ -84,11 +85,11 @@ def setup(hass, config):
     load_platform(hass, CAMERA_DOMAIN, DOMAIN, {}, config)
 
     # Register services
-    def handle_start_record(call):
+    def handle_start_record(call: ServiceCall) -> None:
         guid = call.data[SERVICE_CHANNEL_GUID]
         qvrpro.start_recording(guid)
 
-    def handle_stop_record(call):
+    def handle_stop_record(call: ServiceCall) -> None:
         guid = call.data[SERVICE_CHANNEL_GUID]
         qvrpro.stop_recording(guid)
 

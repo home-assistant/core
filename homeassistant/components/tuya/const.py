@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
+import logging
 
 from tuya_iot import TuyaCloudOpenAPIEndpoint
 
@@ -39,6 +40,7 @@ from homeassistant.const import (
 )
 
 DOMAIN = "tuya"
+LOGGER = logging.getLogger(__package__)
 
 CONF_AUTH_TYPE = "auth_type"
 CONF_PROJECT_TYPE = "tuya_project_type"
@@ -206,6 +208,7 @@ class DPCode(str, Enum):
     LIGHT = "light"  # Light
     LIGHT_MODE = "light_mode"
     LOCK = "lock"  # Lock / Child lock
+    MACH_OPERATE = "mach_operate"
     MATERIAL = "material"  # Material
     MODE = "mode"  # Working mode / Mode
     MOTION_RECORD = "motion_record"
@@ -221,6 +224,7 @@ class DPCode(str, Enum):
     PERCENT_STATE = "percent_state"
     PERCENT_STATE_2 = "percent_state_2"
     PERCENT_STATE_3 = "percent_state_3"
+    POSITION = "position"
     PHASE_A = "phase_a"
     PHASE_B = "phase_b"
     PHASE_C = "phase_c"
