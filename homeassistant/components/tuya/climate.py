@@ -306,7 +306,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         if DPCode.MODE in self.device.function:
             data_type = EnumTypeData.from_json(self.device.function[DPCode.MODE].values)
             for tuya_mode in data_type.range:
-                if tuya_mode in TUYA_HVAC_TO_HA.values():
+                if tuya_mode not in TUYA_HVAC_TO_HA:
                     LOGGER.warning(
                         "Unknown HVAC mode '%s' for device %s; assuming it as off",
                         tuya_mode,
