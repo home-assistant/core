@@ -108,7 +108,8 @@ async def async_handle_message(hass, message):
     _api_version = get_api_version(message)
     if _api_version is V1:
         _LOGGER.warning(
-            "Dialogflow V1 API will be removed on October 23, 2019. Please change your DialogFlow settings to use the V2 api"
+            """Dialogflow V1 API will be removed on October 23, 2019
+            Please change your DialogFlow settings to use the V2 api"""
         )
         req = message.get("result")
         if req.get("actionIncomplete", True):
@@ -145,9 +146,11 @@ async def async_handle_message(hass, message):
     )
 
     if "plain" in intent_response.speech:
-        _LOGGER.error( "intent_response.speech : %s" %( intent_response.speech["plain"]["speech"] ))
-        dialogflow_response.add_speech( intent_response.speech["plain"]["speech"] )
-        dialogflow_response.add_next_scene( "actions.scene.END_CONVERSATION" )
+        _LOGGER.error(
+            "intent_response.speech : %s" % (intent_response.speech["plain"]["speech"])
+        )
+        dialogflow_response.add_speech(intent_response.speech["plain"]["speech"])
+        dialogflow_response.add_next_scene("actions.scene.END_CONVERSATION")
 
     return dialogflow_response.as_dict()
 
@@ -172,7 +175,7 @@ class DialogflowResponse:
         if isinstance(text, template.Template):
             text = text.async_render(self.parameters, parse_result=False)
         self.speech = text
-        
+
     def add_next_scene(self, next_scene):
         """Add next_scene to the response."""
         self.next_scene = next_scene
@@ -187,24 +190,16 @@ class DialogflowResponse:
 
         elif self.api_version is V3:
             return {
-                "session": {
-                "id": self.parameters["session_id"],
-                "params": {}
-                },
+                "session": {"id": self.parameters["session_id"], "params": {}},
                 "prompt": {
-                "override": False,
-                "firstSimple": {
-                  "speech": self.speech,
-                  "text": ""
-                }
+                    "override": False,
+                    "firstSimple": {"speech": self.speech, "text": ""},
                 },
                 "scene": {
-                "name": "SceneName",
-                "slots": {},
-                "next": {
-                  "name": self.next_scene
-                }
-                }
+                    "name": "SceneName",
+                    "slots": {},
+                    "next": {"name": self.next_scene},
+                },
             }
         else:
             return None
