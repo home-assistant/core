@@ -71,7 +71,16 @@ def setup(hass, config):
     entities = []
     conf = config[DOMAIN]
 
-    hass.services.register(DOMAIN, "order", dominos.handle_order)
+    hass.services.register(
+        DOMAIN,
+        "order",
+        dominos.handle_order,
+        vol.Schema(
+            {
+                vol.Required(ATTR_ORDER_ENTITY): cv.entity_ids,
+            }
+        ),
+    )
 
     if conf.get(ATTR_SHOW_MENU):
         hass.http.register_view(DominosProductListView(dominos))
