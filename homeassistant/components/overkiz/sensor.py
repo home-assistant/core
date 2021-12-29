@@ -54,7 +54,6 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
     OverkizSensorDescription(
         key=OverkizState.CORE_BATTERY,
         name="Battery",
-        device_class=SensorDeviceClass.BATTERY,
         native_value=lambda value: str(value).capitalize(),
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -126,7 +125,6 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
     OverkizSensorDescription(
         key=OverkizState.CORE_FOSSIL_ENERGY_CONSUMPTION,
         name="Fossil Energy Consumption",
-        device_class=SensorDeviceClass.ENERGY,
     ),
     OverkizSensorDescription(
         key=OverkizState.CORE_GAS_CONSUMPTION,
@@ -292,7 +290,6 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         key=OverkizState.CORE_SUN_ENERGY,
         name="Sun Energy",
         native_value=lambda value: round(float(value), 2),
-        device_class=SensorDeviceClass.ENERGY,
         icon="mdi:solar-power",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -330,7 +327,6 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         name="Discrete RSSI Level",
         entity_registry_enabled_default=False,
         native_value=lambda value: str(value).capitalize(),
-        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # DomesticHotWaterProduction/WaterHeatingSystem
