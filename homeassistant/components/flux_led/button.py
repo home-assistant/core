@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from flux_led.aio import AIOWifiLedBulb
+from flux_led.protocol import RemoteConfig
 
 from homeassistant import config_entries
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
@@ -66,3 +67,4 @@ class FluxButton(FluxBaseEntity, ButtonEntity):
             await self._device.async_reboot()
         else:
             await self._device.async_unpair_remotes()
+            await self._device.async_config_remotes(RemoteConfig.OPEN)
