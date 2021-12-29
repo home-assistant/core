@@ -252,9 +252,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if CONF_KNX_EXPOSE in config:
         for expose_config in config[CONF_KNX_EXPOSE]:
-            knx_module.exposures.append(
-                create_knx_exposure(hass, knx_module.xknx, expose_config)
-            )
+            try:
+                knx_module.exposures.append(
+                    create_knx_exposure(hass, knx_module.xknx, expose_config)
+                )
+            except XKNXException:
+                _LOGGER.exception("Error during setup of expose sensor.")
 
     hass.config_entries.async_setup_platforms(
         entry,
