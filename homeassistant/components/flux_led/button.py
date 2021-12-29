@@ -4,7 +4,7 @@ from __future__ import annotations
 from flux_led.aio import AIOWifiLedBulb
 
 from homeassistant import config_entries
-from homeassistant.components.button import ButtonEntity
+from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
@@ -14,6 +14,13 @@ from .const import DOMAIN
 from .coordinator import FluxLedUpdateCoordinator
 from .entity import FluxBaseEntity
 
+RESTART_BUTTON_DESCRIPTION = ButtonEntityDescription(
+    key="restart", name="Restart", icon="mdi:restart"
+)
+UNPAIR_REMOTES_DESCRIPTION = ButtonEntityDescription(
+    key="unpair_remotes", name="Unpair Remotes", icon="mdi:remote-off"
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -22,11 +29,20 @@ async def async_setup_entry(
 ) -> None:
     """Set up Magic Home button based on a config entry."""
     coordinator: FluxLedUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([FluxRestartButton(coordinator.device, entry)])
+    device = coordinator.device
+    entities: list[FluxButton] = [
+        FluxButton(coordinator.device, entry, RESTART_BUTTON_DESCRIPTION)
+    ]
+    if device.paired_remotes is not None:
+        entities.append(
+            FluxButton(coordinator.device, entry, UNPAIR_REMOTES_DESCRIPTION)
+        )
+
+    async_add_entities(entities)
 
 
-class FluxRestartButton(FluxBaseEntity, ButtonEntity):
-    """Representation of a Flux restart button."""
+class FluxButton(FluxBaseEntity, ButtonEntity):
+    """Representation of a Flux button."""
 
     _attr_should_poll = False
     _attr_entity_category = EntityCategory.CONFIG
@@ -35,13 +51,18 @@ class FluxRestartButton(FluxBaseEntity, ButtonEntity):
         self,
         device: AIOWifiLedBulb,
         entry: config_entries.ConfigEntry,
+        description: ButtonEntityDescription,
     ) -> None:
-        """Initialize the reboot button."""
+        """Initialize the button."""
+        self.entity_description = description
         super().__init__(device, entry)
-        self._attr_name = f"{entry.data[CONF_NAME]} Restart"
+        self._attr_name = f"{entry.data[CONF_NAME]} {description.name}"
         if entry.unique_id:
-            self._attr_unique_id = f"{entry.unique_id}_restart"
+            self._attr_unique_id = f"{entry.unique_id}_{description.key}"
 
     async def async_press(self) -> None:
-        """Send out a restart command."""
-        await self._device.async_reboot()
+        """Send out a command."""
+        if self.entity_description.key == "restart":
+            await self._device.async_reboot()
+        else:
+            await self._device.async_unpair_remotes()

@@ -44,6 +44,7 @@ class FluxPairedRemotes(FluxBaseEntity, SensorEntity):
         super().__init__(device, entry)
         self._attr_entity_category = EntityCategory.CONFIG
         self._attr_name = f"{entry.data[CONF_NAME]} Paired Remotes"
+        self._attr_icon = "mdi:remote"
         if entry.unique_id:
             self._attr_unique_id = f"{entry.unique_id}_paired_remotes"
 
