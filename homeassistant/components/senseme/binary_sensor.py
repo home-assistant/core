@@ -7,7 +7,6 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -21,7 +20,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up SenseME occupancy sensors."""
-    device = hass.data[DOMAIN][entry.entry_id][CONF_DEVICE]
+    device = hass.data[DOMAIN][entry.entry_id]
     if device.has_sensor:
         async_add_entities([HASensemeOccupancySensor(device)])
 

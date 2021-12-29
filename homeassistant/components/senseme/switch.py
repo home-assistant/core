@@ -5,7 +5,6 @@ from aiosenseme import SensemeFan
 
 from homeassistant import config_entries
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
-from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -34,7 +33,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up SenseME fans."""
-    device = hass.data[DOMAIN][entry.entry_id][CONF_DEVICE]
+    device = hass.data[DOMAIN][entry.entry_id]
 
     if device.is_fan:
         async_add_entities([HASensemeSwitch(device, *args) for args in FAN_SWITCHS])

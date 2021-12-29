@@ -11,7 +11,6 @@ from homeassistant.components.light import (
     COLOR_MODE_COLOR_TEMP,
     LightEntity,
 )
-from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.color import (
@@ -29,7 +28,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up SenseME lights."""
-    device = hass.data[DOMAIN][entry.entry_id][CONF_DEVICE]
+    device = hass.data[DOMAIN][entry.entry_id]
     if device.has_light:
         async_add_entities([HASensemeLight(device)])
 
