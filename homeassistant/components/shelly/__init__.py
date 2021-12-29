@@ -517,13 +517,13 @@ class ShellyDeviceRestWrapper(update_coordinator.DataUpdateCoordinator):
                 _LOGGER.debug("REST update for %s", self.name)
                 await self.device.update_status()
 
-                if self.device.status["uptime"] < 2 * REST_SENSORS_UPDATE_INTERVAL:
-                    old_firmware = self.device.firmware_version
-                    await self.device.update_shelly()
-                    if self.device.firmware_version != old_firmware:
-                        await async_device_update_info(
-                            self.hass, self.device, self.entry
-                        )
+                if self.device.status["uptime"] > 2 * REST_SENSORS_UPDATE_INTERVAL:
+                    return
+                old_firmware = self.device.firmware_version
+                await self.device.update_shelly()
+                if self.device.firmware_version == old_firmware:
+                    return
+                await async_device_update_info(self.hass, self.device, self.entry)
         except OSError as err:
             raise update_coordinator.UpdateFailed("Error fetching data") from err
 
