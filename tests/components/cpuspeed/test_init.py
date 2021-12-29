@@ -36,6 +36,7 @@ async def test_config_entry_not_compatible(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_cpuinfo: MagicMock,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the CPU Speed configuration entry loading on an unsupported system."""
     mock_config_entry.add_to_hass(hass)
@@ -46,6 +47,7 @@ async def test_config_entry_not_compatible(
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
     assert len(mock_cpuinfo.mock_calls) == 1
+    assert "is not compatible with your system" in caplog.text
 
 
 async def test_import_config(
