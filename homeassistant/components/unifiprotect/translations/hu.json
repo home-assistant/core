@@ -6,6 +6,7 @@
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
             "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
+            "protect_version": "A minim\u00e1lisan sz\u00fcks\u00e9ges verzi\u00f3 a v1.20.0. Friss\u00edtse az UniFi Protect-et, majd pr\u00f3b\u00e1lkozzon \u00fajra.",
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
         "step": {
