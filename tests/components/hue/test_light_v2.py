@@ -186,6 +186,26 @@ async def test_light_turn_off_service(hass, mock_bridge_v2, v2_resources_test_da
     assert mock_bridge_v2.mock_requests[1]["json"]["on"]["on"] is False
     assert mock_bridge_v2.mock_requests[1]["json"]["dynamics"]["duration"] == 200
 
+    # test again with sending long flash
+    await hass.services.async_call(
+        "light",
+        "turn_off",
+        {"entity_id": test_light_id, "flash": "long"},
+        blocking=True,
+    )
+    assert len(mock_bridge_v2.mock_requests) == 3
+    assert mock_bridge_v2.mock_requests[2]["json"]["alert"]["action"] == "breathe"
+
+    # test again with sending short flash
+    await hass.services.async_call(
+        "light",
+        "turn_off",
+        {"entity_id": test_light_id, "flash": "short"},
+        blocking=True,
+    )
+    assert len(mock_bridge_v2.mock_requests) == 4
+    assert mock_bridge_v2.mock_requests[3]["json"]["identify"]["action"] == "identify"
+
 
 async def test_light_added(hass, mock_bridge_v2):
     """Test new light added to bridge."""
