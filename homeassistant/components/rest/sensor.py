@@ -11,8 +11,10 @@ from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     DOMAIN as SENSOR_DOMAIN,
     PLATFORM_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
 )
+from homeassistant.components.sensor.helpers import async_parse_date_datetime
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_FORCE_UPDATE,
@@ -142,6 +144,7 @@ class RestSensor(RestEntity, SensorEntity):
                 content_type.startswith("text/xml")
                 or content_type.startswith("application/xml")
                 or content_type.startswith("application/xhtml+xml")
+                or content_type.startswith("application/rss+xml")
             ):
                 try:
                     value = json.dumps(xmltodict.parse(value))
@@ -186,4 +189,13 @@ class RestSensor(RestEntity, SensorEntity):
                 value, None
             )
 
-        self._state = value
+        if value is None or self.device_class not in (
+            SensorDeviceClass.DATE,
+            SensorDeviceClass.TIMESTAMP,
+        ):
+            self._state = value
+            return
+
+        self._state = async_parse_date_datetime(
+            value, self.entity_id, self.device_class
+        )

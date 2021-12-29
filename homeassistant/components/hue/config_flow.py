@@ -18,7 +18,7 @@ from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_ALLOW_HUE_GROUPS,
@@ -49,6 +49,14 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> HueOptionsFlowHandler:
         """Get the options flow for this handler."""
         return HueOptionsFlowHandler(config_entry)
+
+    @classmethod
+    @callback
+    def async_supports_options_flow(
+        cls, config_entry: config_entries.ConfigEntry
+    ) -> bool:
+        """Return options flow support for this handler."""
+        return config_entry.data.get(CONF_API_VERSION, 1) == 1
 
     def __init__(self) -> None:
         """Initialize the Hue flow."""
@@ -186,7 +194,7 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_ssdp(self, discovery_info: DiscoveryInfoType) -> FlowResult:
+    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Handle a discovered Hue bridge.
 
         This flow is triggered by the SSDP component. It will check if the
@@ -194,33 +202,39 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """
         # Filter out non-Hue bridges #1
         if (
-            discovery_info.get(ssdp.ATTR_UPNP_MANUFACTURER_URL)
+            discovery_info.upnp.get(ssdp.ATTR_UPNP_MANUFACTURER_URL)
             not in HUE_MANUFACTURERURL
         ):
             return self.async_abort(reason="not_hue_bridge")
 
         # Filter out non-Hue bridges #2
         if any(
-            name in discovery_info.get(ssdp.ATTR_UPNP_FRIENDLY_NAME, "")
+            name in discovery_info.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME, "")
             for name in HUE_IGNORED_BRIDGE_NAMES
         ):
             return self.async_abort(reason="not_hue_bridge")
 
         if (
-            not discovery_info.get(ssdp.ATTR_SSDP_LOCATION)
-            or ssdp.ATTR_UPNP_SERIAL not in discovery_info
+            not discovery_info.ssdp_location
+            or ssdp.ATTR_UPNP_SERIAL not in discovery_info.upnp
         ):
             return self.async_abort(reason="not_hue_bridge")
 
-        host = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION]).hostname
-        bridge = await self._get_bridge(host, discovery_info[ssdp.ATTR_UPNP_SERIAL])  # type: ignore[arg-type]
+        url = urlparse(discovery_info.ssdp_location)
+        if not url.hostname:
+            return self.async_abort(reason="not_hue_bridge")
 
-        await self.async_set_unique_id(bridge.id)
+        # abort if we already have exactly this bridge id/host
+        # reload the integration if the host got updated
+        bridge_id = normalize_bridge_id(discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL])
+        await self.async_set_unique_id(bridge_id)
         self._abort_if_unique_id_configured(
-            updates={CONF_HOST: bridge.host}, reload_on_update=False
+            updates={CONF_HOST: url.hostname}, reload_on_update=True
         )
 
-        self.bridge = bridge
+        self.bridge = await self._get_bridge(
+            url.hostname, discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL]
+        )
         return await self.async_step_link()
 
     async def async_step_zeroconf(
@@ -231,17 +245,18 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         This flow is triggered by the Zeroconf component. It will check if the
         host is already configured and delegate to the import step if not.
         """
-        bridge = await self._get_bridge(
-            discovery_info[zeroconf.ATTR_HOST],
-            discovery_info[zeroconf.ATTR_PROPERTIES]["bridgeid"],
-        )
-
-        await self.async_set_unique_id(bridge.id)
+        # abort if we already have exactly this bridge id/host
+        # reload the integration if the host got updated
+        bridge_id = normalize_bridge_id(discovery_info.properties["bridgeid"])
+        await self.async_set_unique_id(bridge_id)
         self._abort_if_unique_id_configured(
-            updates={CONF_HOST: bridge.host}, reload_on_update=False
+            updates={CONF_HOST: discovery_info.host}, reload_on_update=True
         )
 
-        self.bridge = bridge
+        # we need to query the other capabilities too
+        self.bridge = await self._get_bridge(
+            discovery_info.host, discovery_info.properties["bridgeid"]
+        )
         return await self.async_step_link()
 
     async def async_step_homekit(
@@ -253,7 +268,7 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         as the unique identifier. Therefore, this method uses discovery without
         a unique ID.
         """
-        self.bridge = await self._get_bridge(discovery_info[zeroconf.ATTR_HOST])
+        self.bridge = await self._get_bridge(discovery_info.host)
         await self._async_handle_discovery_without_unique_id()
         return await self.async_step_link()
 
@@ -284,10 +299,6 @@ class HueOptionsFlowHandler(config_entries.OptionsFlow):
         """Manage Hue options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
-
-        if self.config_entry.data.get(CONF_API_VERSION, 1) > 1:
-            # Options for Hue are only applicable to V1 bridges.
-            return self.async_show_form(step_id="init")
 
         return self.async_show_form(
             step_id="init",

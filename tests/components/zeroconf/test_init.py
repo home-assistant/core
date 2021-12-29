@@ -3,6 +3,7 @@ from ipaddress import ip_address
 from typing import Any
 from unittest.mock import call, patch
 
+import pytest
 from zeroconf import InterfaceChoice, IPVersion, ServiceStateChange
 from zeroconf.asyncio import AsyncServiceInfo
 
@@ -294,7 +295,11 @@ async def test_zeroconf_match_macaddress(hass, mock_async_zeroconf):
         zc_gen.ZEROCONF,
         {
             "_http._tcp.local.": [
-                {"domain": "shelly", "name": "shelly*", "macaddress": "FFAADD*"}
+                {
+                    "domain": "shelly",
+                    "name": "shelly*",
+                    "properties": {"macaddress": "ffaadd*"},
+                }
             ]
         },
         clear=True,
@@ -329,7 +334,11 @@ async def test_zeroconf_match_manufacturer(hass, mock_async_zeroconf):
 
     with patch.dict(
         zc_gen.ZEROCONF,
-        {"_airplay._tcp.local.": [{"domain": "samsungtv", "manufacturer": "samsung*"}]},
+        {
+            "_airplay._tcp.local.": [
+                {"domain": "samsungtv", "properties": {"manufacturer": "samsung*"}}
+            ]
+        },
         clear=True,
     ), patch.object(
         hass.config_entries.flow, "async_init"
@@ -362,7 +371,11 @@ async def test_zeroconf_match_model(hass, mock_async_zeroconf):
 
     with patch.dict(
         zc_gen.ZEROCONF,
-        {"_airplay._tcp.local.": [{"domain": "appletv", "model": "appletv*"}]},
+        {
+            "_airplay._tcp.local.": [
+                {"domain": "appletv", "properties": {"model": "appletv*"}}
+            ]
+        },
         clear=True,
     ), patch.object(
         hass.config_entries.flow, "async_init"
@@ -395,7 +408,11 @@ async def test_zeroconf_match_manufacturer_not_present(hass, mock_async_zeroconf
 
     with patch.dict(
         zc_gen.ZEROCONF,
-        {"_airplay._tcp.local.": [{"domain": "samsungtv", "manufacturer": "samsung*"}]},
+        {
+            "_airplay._tcp.local.": [
+                {"domain": "samsungtv", "properties": {"manufacturer": "samsung*"}}
+            ]
+        },
         clear=True,
     ), patch.object(
         hass.config_entries.flow, "async_init"
@@ -459,7 +476,11 @@ async def test_zeroconf_no_match_manufacturer(hass, mock_async_zeroconf):
 
     with patch.dict(
         zc_gen.ZEROCONF,
-        {"_airplay._tcp.local.": [{"domain": "samsungtv", "manufacturer": "samsung*"}]},
+        {
+            "_airplay._tcp.local.": [
+                {"domain": "samsungtv", "properties": {"manufacturer": "samsung*"}}
+            ]
+        },
         clear=True,
     ), patch.object(
         hass.config_entries.flow, "async_init"
@@ -671,12 +692,12 @@ async def test_info_from_service_non_utf8(hass):
     info = zeroconf.info_from_service(
         get_service_info_mock(service_type, f"test.{service_type}")
     )
-    raw_info = info["properties"].pop("_raw", False)
+    raw_info = info.properties.pop("_raw", False)
     assert raw_info
     assert len(raw_info) == len(PROPERTIES) - 1
     assert NON_ASCII_KEY not in raw_info
-    assert len(info["properties"]) <= len(raw_info)
-    assert "non-utf8-value" not in info["properties"]
+    assert len(info.properties) <= len(raw_info)
+    assert "non-utf8-value" not in info.properties
     assert raw_info["non-utf8-value"] is NON_UTF8_VALUE
 
 
@@ -695,7 +716,7 @@ async def test_info_from_service_with_link_local_address_first(hass):
     service_info = get_service_info_mock(service_type, f"test.{service_type}")
     service_info.addresses = ["169.254.12.3", "192.168.66.12"]
     info = zeroconf.info_from_service(service_info)
-    assert info["host"] == "192.168.66.12"
+    assert info.host == "192.168.66.12"
 
 
 async def test_info_from_service_with_link_local_address_second(hass):
@@ -704,7 +725,7 @@ async def test_info_from_service_with_link_local_address_second(hass):
     service_info = get_service_info_mock(service_type, f"test.{service_type}")
     service_info.addresses = ["192.168.66.12", "169.254.12.3"]
     info = zeroconf.info_from_service(service_info)
-    assert info["host"] == "192.168.66.12"
+    assert info.host == "192.168.66.12"
 
 
 async def test_info_from_service_with_link_local_address_only(hass):
@@ -722,7 +743,7 @@ async def test_info_from_service_prefers_ipv4(hass):
     service_info = get_service_info_mock(service_type, f"test.{service_type}")
     service_info.addresses = ["2001:db8:3333:4444:5555:6666:7777:8888", "192.168.66.12"]
     info = zeroconf.info_from_service(service_info)
-    assert info["host"] == "192.168.66.12"
+    assert info.host == "192.168.66.12"
 
 
 async def test_get_instance(hass, mock_async_zeroconf):
@@ -1030,3 +1051,32 @@ async def test_no_name(hass, mock_async_zeroconf):
     register_call = mock_async_zeroconf.async_register_service.mock_calls[-1]
     info = register_call.args[0]
     assert info.name == "Home._home-assistant._tcp.local."
+
+
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_service_info_compatibility(hass, caplog):
+    """Test compatibility with old-style dict.
+
+    To be removed in 2022.6
+    """
+    discovery_info = zeroconf.ZeroconfServiceInfo(
+        host="mock_host",
+        port=None,
+        hostname="mock_hostname",
+        type="mock_type",
+        name="mock_name",
+        properties={},
+    )
+
+    with patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set()):
+        assert discovery_info["host"] == "mock_host"
+    assert "Detected integration that accessed discovery_info['host']" in caplog.text
+
+    with patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set()):
+        assert discovery_info.get("host") == "mock_host"
+    assert (
+        "Detected integration that accessed discovery_info.get('host')" in caplog.text
+    )
+
+    assert discovery_info.get("host", "fallback_host") == "mock_host"
+    assert discovery_info.get("invalid_key", "fallback_host") == "fallback_host"

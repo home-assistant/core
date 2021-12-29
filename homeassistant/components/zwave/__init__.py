@@ -1,5 +1,7 @@
 """Support for Z-Wave."""
 # pylint: disable=import-outside-toplevel
+from __future__ import annotations
+
 import asyncio
 import copy
 from importlib import import_module
@@ -15,8 +17,9 @@ from homeassistant.const import (
     ATTR_VIA_DEVICE,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
-from homeassistant.core import CoreState, callback
+from homeassistant.core import CoreState, Event, HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import (
@@ -98,14 +101,14 @@ DEFAULT_CONF_REFRESH_VALUE = False
 DEFAULT_CONF_REFRESH_DELAY = 5
 
 PLATFORMS = [
-    "binary_sensor",
-    "climate",
-    "cover",
-    "fan",
-    "lock",
-    "light",
-    "sensor",
-    "switch",
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.FAN,
+    Platform.LIGHT,
+    Platform.LOCK,
+    Platform.SENSOR,
+    Platform.SWITCH,
 ]
 
 RENAME_NODE_SCHEMA = vol.Schema(
@@ -341,7 +344,9 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, config_entry):  # noqa: C901
+async def async_setup_entry(  # noqa: C901
+    hass: HomeAssistant, config_entry: config_entries.ConfigEntry
+) -> bool:
     """Set up Z-Wave from a config entry.
 
     Will automatically load components to support devices found on the network.
@@ -490,7 +495,7 @@ async def async_setup_entry(hass, config_entry):  # noqa: C901
             await platform.async_add_entities([entity])
 
         if entity.unique_id:
-            hass.async_add_job(_add_node_to_component())
+            hass.create_task(_add_node_to_component())
             return
 
         @callback
@@ -873,7 +878,7 @@ async def async_setup_entry(hass, config_entry):  # noqa: C901
         _LOGGER.info("Sending %s test-messages to node %s", messages, node_id)
         node.test(messages)
 
-    def start_zwave(_service_or_event):
+    def start_zwave(_service_or_event: ServiceCall | Event) -> None:
         """Startup Z-Wave network."""
         _LOGGER.info("Starting Z-Wave network")
         network.start()
@@ -1021,10 +1026,7 @@ async def async_setup_entry(hass, config_entry):  # noqa: C901
 
     hass.services.async_register(DOMAIN, const.SERVICE_START_NETWORK, start_zwave)
 
-    for entry_component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, entry_component)
-        )
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     return True
 

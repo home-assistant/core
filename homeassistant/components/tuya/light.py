@@ -19,9 +19,9 @@ from homeassistant.components.light import (
     LightEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENTITY_CATEGORY_CONFIG
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantTuyaData
@@ -146,7 +146,7 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
         TuyaLightEntityDescription(
             key=DPCode.BASIC_INDICATOR,
             name="Indicator Light",
-            entity_category=ENTITY_CATEGORY_CONFIG,
+            entity_category=EntityCategory.CONFIG,
         ),
     ),
     # Dimmer Switch
@@ -330,6 +330,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
     _brightness_type: IntegerTypeData | None = None
     _color_data_dpcode: DPCode | None = None
     _color_data_type: ColorTypeData | None = None
+    _color_mode_dpcode: DPCode | None = None
     _color_temp_dpcode: DPCode | None = None
     _color_temp_type: IntegerTypeData | None = None
 
@@ -360,6 +361,13 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                 ),
                 None,
             )
+
+        # Determine color mode DPCode
+        if (
+            description.color_mode is not None
+            and description.color_mode in device.function
+        ):
+            self._color_mode_dpcode = description.color_mode
 
         # Determine DPCodes for color temperature
         if (
@@ -451,10 +459,10 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         commands = [{"code": self.entity_description.key, "value": True}]
 
         if self._color_temp_type and ATTR_COLOR_TEMP in kwargs:
-            if color_mode_dpcode := self.entity_description.color_mode:
+            if self._color_mode_dpcode:
                 commands += [
                     {
-                        "code": color_mode_dpcode,
+                        "code": self._color_mode_dpcode,
                         "value": WorkMode.WHITE,
                     },
                 ]
@@ -476,10 +484,10 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
             ATTR_HS_COLOR in kwargs
             or (ATTR_BRIGHTNESS in kwargs and self.color_mode == COLOR_MODE_HS)
         ):
-            if color_mode_dpcode := self.entity_description.color_mode:
+            if self._color_mode_dpcode:
                 commands += [
                     {
-                        "code": color_mode_dpcode,
+                        "code": self._color_mode_dpcode,
                         "value": WorkMode.COLOUR,
                     },
                 ]
@@ -651,9 +659,8 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         # We consider it to be in HS color mode, when work mode is anything
         # else than "white".
         if (
-            self.entity_description.color_mode
-            and self.device.status.get(self.entity_description.color_mode)
-            != WorkMode.WHITE
+            self._color_mode_dpcode
+            and self.device.status.get(self._color_mode_dpcode) != WorkMode.WHITE
         ):
             return COLOR_MODE_HS
         if self._color_temp_dpcode:

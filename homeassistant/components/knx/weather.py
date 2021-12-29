@@ -6,12 +6,12 @@ from xknx.devices import Weather as XknxWeather
 
 from homeassistant import config_entries
 from homeassistant.components.weather import WeatherEntity
-from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME, TEMP_CELSIUS
+from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME, TEMP_CELSIUS, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DATA_KNX_CONFIG, DOMAIN, SupportedPlatforms
+from .const import DATA_KNX_CONFIG, DOMAIN
 from .knx_entity import KnxEntity
 from .schema import WeatherSchema
 
@@ -23,9 +23,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up switch(es) for KNX platform."""
     xknx: XKNX = hass.data[DOMAIN].xknx
-    config: list[ConfigType] = hass.data[DATA_KNX_CONFIG][
-        SupportedPlatforms.WEATHER.value
-    ]
+    config: list[ConfigType] = hass.data[DATA_KNX_CONFIG][Platform.WEATHER]
 
     async_add_entities(KNXWeather(xknx, entity_config) for entity_config in config)
 

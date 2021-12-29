@@ -8,7 +8,8 @@
             "reserve_1": "Cadangan 1",
             "reserve_2": "Cadangan 2",
             "reserve_3": "Cadangan 3",
-            "standby": "Siaga"
+            "standby": "Siaga",
+            "warm": "Pelestarian panas"
         }
     }
 }

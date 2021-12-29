@@ -5,6 +5,7 @@ import queue
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.const import (
     CONF_DISCOVERY,
     CONF_HOST,
@@ -14,6 +15,7 @@ from homeassistant.const import (
     CONF_PROTOCOL,
     CONF_USERNAME,
 )
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
     ATTR_PAYLOAD,
@@ -93,11 +95,11 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title="configuration.yaml", data={})
 
-    async def async_step_hassio(self, discovery_info):
+    async def async_step_hassio(self, discovery_info: HassioServiceInfo) -> FlowResult:
         """Receive a Hass.io discovery."""
         await self._async_handle_discovery_without_unique_id()
 
-        self._hassio_discovery = discovery_info
+        self._hassio_discovery = discovery_info.config
 
         return await self.async_step_hassio_confirm()
 

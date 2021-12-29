@@ -167,9 +167,11 @@ async def test_form_dhcp(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
-        data={
-            dhcp.MAC_ADDRESS: MOCK_MAC,
-        },
+        data=dhcp.DhcpServiceInfo(
+            ip="1.1.1.1",
+            hostname="mock_hostname",
+            macaddress=MOCK_MAC,
+        ),
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -249,9 +251,11 @@ async def test_dhcp_single_instance_allowed(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
-        data={
-            dhcp.MAC_ADDRESS: MOCK_MAC,
-        },
+        data=dhcp.DhcpServiceInfo(
+            ip="1.1.1.1",
+            hostname="mock_hostname",
+            macaddress=MOCK_MAC,
+        ),
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "single_instance_allowed"

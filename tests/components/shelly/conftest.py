@@ -58,9 +58,9 @@ MOCK_BLOCKS = [
 MOCK_CONFIG = {
     "input:0": {"id": 0, "type": "button"},
     "switch:0": {"name": "test switch_0"},
-    "sys": {"ui_data": {}},
-    "wifi": {
-        "ap": {"ssid": "Test name"},
+    "sys": {
+        "ui_data": {},
+        "device": {"name": "Test name"},
     },
 }
 
@@ -138,6 +138,7 @@ async def coap_wrapper(hass):
         firmware_version="some fw string",
         update=AsyncMock(),
         trigger_ota_update=AsyncMock(),
+        trigger_reboot=AsyncMock(),
         initialized=True,
     )
 
@@ -173,6 +174,7 @@ async def rpc_wrapper(hass):
         firmware_version="some fw string",
         update=AsyncMock(),
         trigger_ota_update=AsyncMock(),
+        trigger_reboot=AsyncMock(),
         initialized=True,
         shutdown=AsyncMock(),
     )

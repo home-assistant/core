@@ -2,16 +2,12 @@
 from beewi_smartclim import BeewiSmartClimPoller  # pylint: disable=import-error
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import (
-    CONF_MAC,
-    CONF_NAME,
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_TEMPERATURE,
-    PERCENTAGE,
-    TEMP_CELSIUS,
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
 )
+from homeassistant.const import CONF_MAC, CONF_NAME, PERCENTAGE, TEMP_CELSIUS
 import homeassistant.helpers.config_validation as cv
 
 # Default values
@@ -19,9 +15,9 @@ DEFAULT_NAME = "BeeWi SmartClim"
 
 # Sensor config
 SENSOR_TYPES = [
-    [DEVICE_CLASS_TEMPERATURE, "Temperature", TEMP_CELSIUS],
-    [DEVICE_CLASS_HUMIDITY, "Humidity", PERCENTAGE],
-    [DEVICE_CLASS_BATTERY, "Battery", PERCENTAGE],
+    [SensorDeviceClass.TEMPERATURE, "Temperature", TEMP_CELSIUS],
+    [SensorDeviceClass.HUMIDITY, "Humidity", PERCENTAGE],
+    [SensorDeviceClass.BATTERY, "Battery", PERCENTAGE],
 ]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -71,9 +67,9 @@ class BeewiSmartclimSensor(SensorEntity):
         """Fetch new state data from the poller."""
         self._poller.update_sensor()
         self._attr_native_value = None
-        if self._device == DEVICE_CLASS_TEMPERATURE:
+        if self._device == SensorDeviceClass.TEMPERATURE:
             self._attr_native_value = self._poller.get_temperature()
-        if self._device == DEVICE_CLASS_HUMIDITY:
+        if self._device == SensorDeviceClass.HUMIDITY:
             self._attr_native_value = self._poller.get_humidity()
-        if self._device == DEVICE_CLASS_BATTERY:
+        if self._device == SensorDeviceClass.BATTERY:
             self._attr_native_value = self._poller.get_battery()

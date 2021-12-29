@@ -11,8 +11,8 @@ from oauthlib.oauth2 import AccessDeniedError
 import requests
 from ring_doorbell import Auth, Ring
 
-from homeassistant.const import __version__
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import Platform, __version__
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.async_ import run_callback_threadsafe
 
@@ -26,7 +26,13 @@ NOTIFICATION_TITLE = "Ring Setup"
 DOMAIN = "ring"
 DEFAULT_ENTITY_NAMESPACE = "ring"
 
-PLATFORMS = ("binary_sensor", "light", "sensor", "switch", "camera")
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.LIGHT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.CAMERA,
+]
 
 
 async def async_setup(hass, config):
@@ -105,7 +111,7 @@ async def async_setup_entry(hass, entry):
     if hass.services.has_service(DOMAIN, "update"):
         return True
 
-    async def async_refresh_all(_):
+    async def async_refresh_all(_: ServiceCall) -> None:
         """Refresh all ring data."""
         for info in hass.data[DOMAIN].values():
             await info["device_data"].async_refresh_all()

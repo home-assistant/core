@@ -154,6 +154,7 @@ async def test_one_weather_site_running(hass, requests_mock, legacy_patchable_ti
         == "2020-04-28T21:00:00+00:00"
     )
     assert weather.attributes.get("forecast")[26]["condition"] == "cloudy"
+    assert weather.attributes.get("forecast")[26]["precipitation_probability"] == 9
     assert weather.attributes.get("forecast")[26]["temperature"] == 10
     assert weather.attributes.get("forecast")[26]["wind_speed"] == 4
     assert weather.attributes.get("forecast")[26]["wind_bearing"] == "NNE"
@@ -176,6 +177,7 @@ async def test_one_weather_site_running(hass, requests_mock, legacy_patchable_ti
         weather.attributes.get("forecast")[7]["datetime"] == "2020-04-29T12:00:00+00:00"
     )
     assert weather.attributes.get("forecast")[7]["condition"] == "rainy"
+    assert weather.attributes.get("forecast")[7]["precipitation_probability"] == 59
     assert weather.attributes.get("forecast")[7]["temperature"] == 13
     assert weather.attributes.get("forecast")[7]["wind_speed"] == 13
     assert weather.attributes.get("forecast")[7]["wind_bearing"] == "SE"
@@ -250,6 +252,7 @@ async def test_two_weather_sites_running(hass, requests_mock, legacy_patchable_t
         == "2020-04-27T21:00:00+00:00"
     )
     assert weather.attributes.get("forecast")[18]["condition"] == "clear-night"
+    assert weather.attributes.get("forecast")[18]["precipitation_probability"] == 1
     assert weather.attributes.get("forecast")[18]["temperature"] == 9
     assert weather.attributes.get("forecast")[18]["wind_speed"] == 4
     assert weather.attributes.get("forecast")[18]["wind_bearing"] == "NW"
@@ -272,6 +275,7 @@ async def test_two_weather_sites_running(hass, requests_mock, legacy_patchable_t
         weather.attributes.get("forecast")[7]["datetime"] == "2020-04-29T12:00:00+00:00"
     )
     assert weather.attributes.get("forecast")[7]["condition"] == "rainy"
+    assert weather.attributes.get("forecast")[7]["precipitation_probability"] == 59
     assert weather.attributes.get("forecast")[7]["temperature"] == 13
     assert weather.attributes.get("forecast")[7]["wind_speed"] == 13
     assert weather.attributes.get("forecast")[7]["wind_bearing"] == "SE"
@@ -295,6 +299,7 @@ async def test_two_weather_sites_running(hass, requests_mock, legacy_patchable_t
         == "2020-04-27T21:00:00+00:00"
     )
     assert weather.attributes.get("forecast")[18]["condition"] == "cloudy"
+    assert weather.attributes.get("forecast")[18]["precipitation_probability"] == 9
     assert weather.attributes.get("forecast")[18]["temperature"] == 10
     assert weather.attributes.get("forecast")[18]["wind_speed"] == 7
     assert weather.attributes.get("forecast")[18]["wind_bearing"] == "SE"
@@ -317,6 +322,7 @@ async def test_two_weather_sites_running(hass, requests_mock, legacy_patchable_t
         weather.attributes.get("forecast")[5]["datetime"] == "2020-04-28T12:00:00+00:00"
     )
     assert weather.attributes.get("forecast")[5]["condition"] == "cloudy"
+    assert weather.attributes.get("forecast")[5]["precipitation_probability"] == 14
     assert weather.attributes.get("forecast")[5]["temperature"] == 11
     assert weather.attributes.get("forecast")[5]["wind_speed"] == 7
     assert weather.attributes.get("forecast")[5]["wind_bearing"] == "ESE"

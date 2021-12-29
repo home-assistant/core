@@ -1,6 +1,7 @@
 """Allows the creation of a sensor that breaks out state_attributes."""
 from __future__ import annotations
 
+from datetime import date, datetime
 from typing import Any
 
 import voluptuous as vol
@@ -12,15 +13,16 @@ from homeassistant.components.sensor import (
     ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA,
     STATE_CLASSES_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
 )
+from homeassistant.components.sensor.helpers import async_parse_date_datetime
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE_CLASS,
     CONF_ENTITY_PICTURE_TEMPLATE,
     CONF_FRIENDLY_NAME,
     CONF_FRIENDLY_NAME_TEMPLATE,
-    CONF_ICON,
     CONF_ICON_TEMPLATE,
     CONF_NAME,
     CONF_SENSORS,
@@ -36,21 +38,18 @@ from homeassistant.helpers.entity import async_generate_entity_id
 
 from .const import (
     CONF_ATTRIBUTE_TEMPLATES,
-    CONF_ATTRIBUTES,
-    CONF_AVAILABILITY,
     CONF_AVAILABILITY_TEMPLATE,
     CONF_OBJECT_ID,
-    CONF_PICTURE,
     CONF_TRIGGER,
 )
-from .template_entity import TEMPLATE_ENTITY_COMMON_SCHEMA, TemplateEntity
+from .template_entity import (
+    TEMPLATE_ENTITY_COMMON_SCHEMA,
+    TemplateEntity,
+    rewrite_common_legacy_to_modern_conf,
+)
 from .trigger_entity import TriggerEntity
 
 LEGACY_FIELDS = {
-    CONF_ICON_TEMPLATE: CONF_ICON,
-    CONF_ENTITY_PICTURE_TEMPLATE: CONF_PICTURE,
-    CONF_AVAILABILITY_TEMPLATE: CONF_AVAILABILITY,
-    CONF_ATTRIBUTE_TEMPLATES: CONF_ATTRIBUTES,
     CONF_FRIENDLY_NAME_TEMPLATE: CONF_NAME,
     CONF_FRIENDLY_NAME: CONF_NAME,
     CONF_VALUE_TEMPLATE: CONF_STATE,
@@ -106,20 +105,13 @@ def extra_validation_checks(val):
 
 
 def rewrite_legacy_to_modern_conf(cfg: dict[str, dict]) -> list[dict]:
-    """Rewrite a legacy sensor definitions to modern ones."""
+    """Rewrite legacy sensor definitions to modern ones."""
     sensors = []
 
     for object_id, entity_cfg in cfg.items():
         entity_cfg = {**entity_cfg, CONF_OBJECT_ID: object_id}
 
-        for from_key, to_key in LEGACY_FIELDS.items():
-            if from_key not in entity_cfg or to_key in entity_cfg:
-                continue
-
-            val = entity_cfg.pop(from_key)
-            if isinstance(val, str):
-                val = template.Template(val)
-            entity_cfg[to_key] = val
+        entity_cfg = rewrite_common_legacy_to_modern_conf(entity_cfg, LEGACY_FIELDS)
 
         if CONF_NAME not in entity_cfg:
             entity_cfg[CONF_NAME] = template.Template(object_id)
@@ -238,7 +230,20 @@ class SensorTemplate(TemplateEntity, SensorEntity):
     @callback
     def _update_state(self, result):
         super()._update_state(result)
-        self._attr_native_value = None if isinstance(result, TemplateError) else result
+        if isinstance(result, TemplateError):
+            self._attr_native_value = None
+            return
+
+        if result is None or self.device_class not in (
+            SensorDeviceClass.DATE,
+            SensorDeviceClass.TIMESTAMP,
+        ):
+            self._attr_native_value = result
+            return
+
+        self._attr_native_value = async_parse_date_datetime(
+            result, self.entity_id, self.device_class
+        )
 
 
 class TriggerSensorEntity(TriggerEntity, SensorEntity):
@@ -248,7 +253,7 @@ class TriggerSensorEntity(TriggerEntity, SensorEntity):
     extra_template_keys = (CONF_STATE,)
 
     @property
-    def native_value(self) -> str | None:
+    def native_value(self) -> str | datetime | date | None:
         """Return state of the sensor."""
         return self._rendered.get(CONF_STATE)
 
@@ -256,3 +261,20 @@ class TriggerSensorEntity(TriggerEntity, SensorEntity):
     def state_class(self) -> str | None:
         """Sensor state class."""
         return self._config.get(CONF_STATE_CLASS)
+
+    @callback
+    def _process_data(self) -> None:
+        """Process new data."""
+        super()._process_data()
+
+        if (
+            state := self._rendered.get(CONF_STATE)
+        ) is None or self.device_class not in (
+            SensorDeviceClass.DATE,
+            SensorDeviceClass.TIMESTAMP,
+        ):
+            return
+
+        self._rendered[CONF_STATE] = async_parse_date_datetime(
+            state, self.entity_id, self.device_class
+        )

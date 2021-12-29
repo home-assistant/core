@@ -264,3 +264,60 @@ async def test_entity_id_update_discovery_update(hass, mqtt_mock):
     await help_test_entity_id_update_discovery_update(
         hass, mqtt_mock, button.DOMAIN, DEFAULT_CONFIG
     )
+
+
+async def test_invalid_device_class(hass, mqtt_mock):
+    """Test device_class option with invalid value."""
+    assert await async_setup_component(
+        hass,
+        button.DOMAIN,
+        {
+            button.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "state_topic": "test-topic",
+                "device_class": "foobarnotreal",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("button.test")
+    assert state is None
+
+
+async def test_valid_device_class(hass, mqtt_mock):
+    """Test device_class option with valid values."""
+    assert await async_setup_component(
+        hass,
+        button.DOMAIN,
+        {
+            button.DOMAIN: [
+                {
+                    "platform": "mqtt",
+                    "name": "Test 1",
+                    "command_topic": "test-topic",
+                    "device_class": "update",
+                },
+                {
+                    "platform": "mqtt",
+                    "name": "Test 2",
+                    "command_topic": "test-topic",
+                    "device_class": "restart",
+                },
+                {
+                    "platform": "mqtt",
+                    "name": "Test 3",
+                    "command_topic": "test-topic",
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("button.test_1")
+    assert state.attributes["device_class"] == button.ButtonDeviceClass.UPDATE
+    state = hass.states.get("button.test_2")
+    assert state.attributes["device_class"] == button.ButtonDeviceClass.RESTART
+    state = hass.states.get("button.test_3")
+    assert "device_class" not in state.attributes

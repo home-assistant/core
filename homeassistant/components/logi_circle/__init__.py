@@ -18,7 +18,9 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_SENSORS,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
+from homeassistant.core import ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -48,7 +50,7 @@ SERVICE_LIVESTREAM_RECORD = "livestream_record"
 ATTR_VALUE = "value"
 ATTR_DURATION = "duration"
 
-PLATFORMS = ["camera", "sensor"]
+PLATFORMS = [Platform.CAMERA, Platform.SENSOR]
 
 SENSOR_KEYS = [desc.key for desc in SENSOR_TYPES]
 
@@ -183,7 +185,7 @@ async def async_setup_entry(hass, entry):
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
-    async def service_handler(service):
+    async def service_handler(service: ServiceCall) -> None:
         """Dispatch service calls to target entities."""
         params = dict(service.data)
 

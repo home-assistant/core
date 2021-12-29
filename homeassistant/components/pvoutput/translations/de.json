@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API-Schl\u00fcssel",
+                    "system_id": "System-ID"
+                },
+                "description": "Um sich bei PVOutput zu authentifizieren, musst du den API-Schl\u00fcssel unter {account_url} abrufen.\n\nDie System-IDs der registrierten Systeme sind auf der gleichen Seite aufgef\u00fchrt."
+            }
+        }
+    }
+}

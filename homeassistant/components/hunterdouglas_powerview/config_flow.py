@@ -88,16 +88,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle DHCP discovery."""
-        self.discovered_ip = discovery_info[dhcp.IP_ADDRESS]
-        self.discovered_name = discovery_info[dhcp.HOSTNAME]
+        self.discovered_ip = discovery_info.ip
+        self.discovered_name = discovery_info.hostname
         return await self.async_step_discovery_confirm()
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle zeroconf discovery."""
-        self.discovered_ip = discovery_info[zeroconf.ATTR_HOST]
-        name = discovery_info[zeroconf.ATTR_NAME]
+        self.discovered_ip = discovery_info.host
+        name = discovery_info.name
         if name.endswith(POWERVIEW_SUFFIX):
             name = name[: -len(POWERVIEW_SUFFIX)]
         self.discovered_name = name
@@ -107,8 +107,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle HomeKit discovery."""
-        self.discovered_ip = discovery_info[zeroconf.ATTR_HOST]
-        name = discovery_info[zeroconf.ATTR_NAME]
+        self.discovered_ip = discovery_info.host
+        name = discovery_info.name
         if name.endswith(HAP_SUFFIX):
             name = name[: -len(HAP_SUFFIX)]
         self.discovered_name = name

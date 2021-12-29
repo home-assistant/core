@@ -88,6 +88,8 @@ class FritzboxThermostat(FritzBoxEntity, ClimateEntity):
     @property
     def current_temperature(self) -> float:
         """Return the current temperature."""
+        if self.device.has_temperature_sensor and self.device.temperature is not None:
+            return self.device.temperature  # type: ignore [no-any-return]
         return self.device.actual_temperature  # type: ignore [no-any-return]
 
     @property

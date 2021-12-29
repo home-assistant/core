@@ -1,19 +1,23 @@
 """Platform to retrieve Jewish calendar information for Home Assistant."""
 from __future__ import annotations
 
-from datetime import date as Date, datetime
+from datetime import date as Date
 import logging
 from typing import Any
 
 from hdate import HDate
 from hdate.zmanim import Zmanim
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.const import DEVICE_CLASS_TIMESTAMP, SUN_EVENT_SUNSET
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
+from homeassistant.const import SUN_EVENT_SUNSET
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sun import get_astral_event_date
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 from . import DOMAIN
@@ -166,13 +170,7 @@ class JewishCalendarSensor(SensorEntity):
         self._candle_lighting_offset = data["candle_lighting_offset"]
         self._havdalah_offset = data["havdalah_offset"]
         self._diaspora = data["diaspora"]
-        self._state: datetime | None = None
         self._holiday_attrs: dict[str, str] = {}
-
-    @property
-    def native_value(self) -> datetime | StateType:
-        """Return the state of the sensor."""
-        return self._state
 
     async def async_update(self) -> None:
         """Update the state of the sensor."""
@@ -208,8 +206,12 @@ class JewishCalendarSensor(SensorEntity):
         if today_times.havdalah and now > today_times.havdalah:
             after_tzais_date = daytime_date.next_day
 
-        self._state = self.get_state(daytime_date, after_shkia_date, after_tzais_date)
-        _LOGGER.debug("New value for %s: %s", self.entity_description.key, self._state)
+        self._attr_native_value = self.get_state(
+            daytime_date, after_shkia_date, after_tzais_date
+        )
+        _LOGGER.debug(
+            "New value for %s: %s", self.entity_description.key, self._attr_native_value
+        )
 
     def make_zmanim(self, date: Date) -> Zmanim:
         """Create a Zmanim object."""
@@ -257,14 +259,7 @@ class JewishCalendarSensor(SensorEntity):
 class JewishCalendarTimeSensor(JewishCalendarSensor):
     """Implement attrbutes for sensors returning times."""
 
-    _attr_device_class = DEVICE_CLASS_TIMESTAMP
-
-    @property
-    def native_value(self) -> datetime | None:
-        """Return the state of the sensor."""
-        if self._state is None:
-            return None
-        return dt_util.as_utc(self._state)
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
 
     def get_state(
         self, daytime_date: HDate, after_shkia_date: HDate, after_tzais_date: HDate

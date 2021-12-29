@@ -122,7 +122,7 @@ async def test_disabled_notification_sensor(hass, multisensor_6, integration):
 
     assert entity_entry
     assert entity_entry.disabled
-    assert entity_entry.disabled_by == er.DISABLED_INTEGRATION
+    assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
     # Test enabling entity
     updated_entry = ent_reg.async_update_entity(
@@ -149,7 +149,7 @@ async def test_disabled_indcator_sensor(
 
     assert entity_entry
     assert entity_entry.disabled
-    assert entity_entry.disabled_by == er.DISABLED_INTEGRATION
+    assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
 async def test_config_parameter_sensor(hass, lock_id_lock_as_id150, integration):

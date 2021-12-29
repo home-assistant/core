@@ -2,8 +2,8 @@
 
 from homeassistant.components.axis.const import DOMAIN as AXIS_DOMAIN
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_MOTION,
     DOMAIN as BINARY_SENSOR_DOMAIN,
+    BinarySensorDeviceClass,
 )
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.setup import async_setup_component
@@ -63,9 +63,9 @@ async def test_binary_sensors(hass, mock_rtsp_event):
     pir = hass.states.get(f"{BINARY_SENSOR_DOMAIN}.{NAME}_pir_0")
     assert pir.state == STATE_OFF
     assert pir.name == f"{NAME} PIR 0"
-    assert pir.attributes["device_class"] == DEVICE_CLASS_MOTION
+    assert pir.attributes["device_class"] == BinarySensorDeviceClass.MOTION
 
     vmd4 = hass.states.get(f"{BINARY_SENSOR_DOMAIN}.{NAME}_vmd4_profile_1")
     assert vmd4.state == STATE_ON
     assert vmd4.name == f"{NAME} VMD4 Profile 1"
-    assert vmd4.attributes["device_class"] == DEVICE_CLASS_MOTION
+    assert vmd4.attributes["device_class"] == BinarySensorDeviceClass.MOTION

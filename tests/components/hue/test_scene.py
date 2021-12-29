@@ -77,13 +77,13 @@ async def test_scene_turn_on_service(hass, mock_bridge_v2, v2_resources_test_dat
     await hass.services.async_call(
         "scene",
         "turn_on",
-        {"entity_id": test_entity_id, "transition": 6},
+        {"entity_id": test_entity_id, "transition": 0.25},
         blocking=True,
     )
     assert len(mock_bridge_v2.mock_requests) == 2
     assert mock_bridge_v2.mock_requests[1]["json"]["recall"] == {
         "action": "active",
-        "duration": 600,
+        "duration": 200,
     }
 
 
@@ -117,6 +117,19 @@ async def test_scene_updates(hass, mock_bridge_v2, v2_resources_test_data):
     test_entity = hass.states.get(test_entity_id)
     assert test_entity is not None
     assert test_entity.attributes["brightness"] == 35.0
+
+    # test entity name changes on group name change
+    mock_bridge_v2.api.emit_event(
+        "update",
+        {
+            "type": "room",
+            "id": "6ddc9066-7e7d-4a03-a773-c73937968296",
+            "metadata": {"name": "Test Room 2"},
+        },
+    )
+    await hass.async_block_till_done()
+    test_entity = hass.states.get(test_entity_id)
+    assert test_entity.name == "Test Room 2 - Mocked Scene"
 
     # test delete
     mock_bridge_v2.api.emit_event("delete", updated_resource)

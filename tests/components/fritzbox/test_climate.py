@@ -186,7 +186,7 @@ async def test_update(hass: HomeAssistant, fritz: Mock):
     assert state.attributes[ATTR_MIN_TEMP] == 8
     assert state.attributes[ATTR_TEMPERATURE] == 19.5
 
-    device.actual_temperature = 19
+    device.temperature = 19
     device.target_temperature = 20
 
     next_update = dt_util.utcnow() + timedelta(seconds=200)
@@ -197,6 +197,24 @@ async def test_update(hass: HomeAssistant, fritz: Mock):
     assert fritz().update_devices.call_count == 2
     assert state
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 19
+    assert state.attributes[ATTR_TEMPERATURE] == 20
+
+
+async def test_automatic_offset(hass: HomeAssistant, fritz: Mock):
+    """Test when automtaic offset is configured on fritz!box device."""
+    device = FritzDeviceClimateMock()
+    device.temperature = 18
+    device.actual_temperature = 19
+    device.target_temperature = 20
+    assert await setup_config_entry(
+        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+    )
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 18
+    assert state.attributes[ATTR_MAX_TEMP] == 28
+    assert state.attributes[ATTR_MIN_TEMP] == 8
     assert state.attributes[ATTR_TEMPERATURE] == 20
 
 

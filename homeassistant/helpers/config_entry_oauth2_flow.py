@@ -25,9 +25,9 @@ from homeassistant import config_entries
 from homeassistant.components import http
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.network import NoURLAvailableError
 
 from .aiohttp_client import async_get_clientsession
+from .network import NoURLAvailableError
 
 _LOGGER = logging.getLogger(__name__)
 

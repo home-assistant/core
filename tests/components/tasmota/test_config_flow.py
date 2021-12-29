@@ -1,6 +1,6 @@
 """Test config flow."""
 from homeassistant import config_entries
-from homeassistant.components.mqtt import discovery as mqtt
+from homeassistant.components import mqtt
 
 from tests.common import MockConfigEntry
 

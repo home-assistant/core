@@ -9,18 +9,13 @@ from tesla_wall_connector.exceptions import WallConnectorError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.dhcp import IP_ADDRESS
-from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.components import dhcp
+from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import (
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-    WALLCONNECTOR_DEVICE_NAME,
-    WALLCONNECTOR_SERIAL_NUMBER,
-)
+from .const import DOMAIN, WALLCONNECTOR_DEVICE_NAME, WALLCONNECTOR_SERIAL_NUMBER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,12 +45,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize config flow."""
         super().__init__()
-        self.ip_address = None
+        self.ip_address: str | None = None
         self.serial_number = None
 
-    async def async_step_dhcp(self, discovery_info) -> FlowResult:
+    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle dhcp discovery."""
-        self.ip_address = discovery_info[IP_ADDRESS]
+        self.ip_address = discovery_info.ip
         _LOGGER.debug("Discovered Tesla Wall Connector at [%s]", self.ip_address)
 
         self._async_abort_entries_match({CONF_HOST: self.ip_address})
@@ -112,49 +107,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
 
         if not errors:
-            existing_entry = await self.async_set_unique_id(
-                info[WALLCONNECTOR_SERIAL_NUMBER]
+            await self.async_set_unique_id(
+                unique_id=info[WALLCONNECTOR_SERIAL_NUMBER], raise_on_progress=True
             )
-            if existing_entry:
-                self.hass.config_entries.async_update_entry(
-                    existing_entry, data=user_input
-                )
-                await self.hass.config_entries.async_reload(existing_entry.entry_id)
-                return self.async_abort(reason="already_configured")
+            self._abort_if_unique_id_configured(
+                updates=user_input, reload_on_update=True
+            )
 
             return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=data_schema, errors=errors
         )
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(config_entry):
-        """Get the options flow for this handler."""
-        return OptionsFlowHandler(config_entry)
-
-
-class OptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle a option flow for Tesla Wall Connector."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
-
-    async def async_step_init(self, user_input=None):
-        """Handle options flow."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
-        data_schema = vol.Schema(
-            {
-                vol.Optional(
-                    CONF_SCAN_INTERVAL,
-                    default=self.config_entry.options.get(
-                        CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-                    ),
-                ): vol.All(vol.Coerce(int), vol.Clamp(min=1))
-            }
-        )
-        return self.async_show_form(step_id="init", data_schema=data_schema)

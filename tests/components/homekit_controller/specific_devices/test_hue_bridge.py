@@ -1,5 +1,6 @@
 """Tests for handling accessories on a Hue bridge via HomeKit."""
 
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import assert_lists_same, async_get_device_automations
@@ -63,5 +64,7 @@ async def test_hue_bridge_setup(hass):
             }
         )
 
-    triggers = await async_get_device_automations(hass, "trigger", device.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device.id
+    )
     assert_lists_same(triggers, expected)

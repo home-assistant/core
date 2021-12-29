@@ -350,15 +350,3 @@ async def async_service_temperature_set(entity, service):
             kwargs[value] = temp
 
     await entity.async_set_temperature(**kwargs)
-
-
-class WaterHeaterDevice(WaterHeaterEntity):
-    """Representation of a water heater (for backwards compatibility)."""
-
-    def __init_subclass__(cls, **kwargs):
-        """Print deprecation warning."""
-        super().__init_subclass__(**kwargs)
-        _LOGGER.warning(
-            "WaterHeaterDevice is deprecated, modify %s to extend WaterHeaterEntity",
-            cls.__name__,
-        )

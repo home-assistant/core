@@ -10,7 +10,7 @@ import voluptuous as vol
 from homeassistant import __path__ as HOMEASSISTANT_PATH
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import callback
+from homeassistant.core import ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 
 CONF_MAX_ENTRIES = "max_entries"
@@ -225,7 +225,7 @@ async def async_setup(hass, config):
 
     hass.http.register_view(AllErrorsView(handler))
 
-    async def async_service_handler(service):
+    async def async_service_handler(service: ServiceCall) -> None:
         """Handle logger services."""
         if service.service == "clear":
             handler.records.clear()

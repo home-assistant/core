@@ -28,7 +28,7 @@ from homeassistant.util import dt as dt_util
 
 from . import PLATFORMS, subscription
 from .. import mqtt
-from .const import CONF_QOS, CONF_STATE_TOPIC, DOMAIN
+from .const import CONF_ENCODING, CONF_QOS, CONF_STATE_TOPIC, DOMAIN
 from .debug_info import log_messages
 from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
@@ -200,6 +200,7 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity):
                     "topic": self._config[CONF_STATE_TOPIC],
                     "msg_callback": state_message_received,
                     "qos": self._config[CONF_QOS],
+                    "encoding": self._config[CONF_ENCODING] or None,
                 }
             },
         )

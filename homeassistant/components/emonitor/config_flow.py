@@ -65,10 +65,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle dhcp discovery."""
-        self.discovered_ip = discovery_info[dhcp.IP_ADDRESS]
-        await self.async_set_unique_id(format_mac(discovery_info[dhcp.MAC_ADDRESS]))
+        self.discovered_ip = discovery_info.ip
+        await self.async_set_unique_id(format_mac(discovery_info.macaddress))
         self._abort_if_unique_id_configured(updates={CONF_HOST: self.discovered_ip})
-        name = name_short_mac(short_mac(discovery_info[dhcp.MAC_ADDRESS]))
+        name = name_short_mac(short_mac(discovery_info.macaddress))
         self.context["title_placeholders"] = {"name": name}
         try:
             self.discovered_info = await fetch_mac_and_title(

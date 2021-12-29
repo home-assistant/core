@@ -160,11 +160,11 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle zeroconf discovery."""
-        name = discovery_info[zeroconf.ATTR_NAME]
-        self.host = discovery_info[zeroconf.ATTR_HOST]
-        self.mac = discovery_info[zeroconf.ATTR_PROPERTIES].get("mac")
+        name = discovery_info.name
+        self.host = discovery_info.host
+        self.mac = discovery_info.properties.get("mac")
         if self.mac is None:
-            poch = discovery_info[zeroconf.ATTR_PROPERTIES].get("poch", "")
+            poch = discovery_info.properties.get("poch", "")
             if (result := search(r"mac=\w+", poch)) is not None:
                 self.mac = result.group(0).split("=")[1]
 

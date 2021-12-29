@@ -11,8 +11,9 @@ import voluptuous as vol
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES
 from homeassistant.core import Context, HomeAssistant, State, T, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
 from homeassistant.loader import bind_hass
+
+from . import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 _SlotsType = Dict[str, Any]

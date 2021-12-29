@@ -6,15 +6,13 @@ from broadlink.exceptions import BroadlinkException
 import voluptuous as vol
 
 from homeassistant.components.switch import (
-    DEVICE_CLASS_OUTLET,
-    DEVICE_CLASS_SWITCH,
     PLATFORM_SCHEMA,
+    SwitchDeviceClass,
     SwitchEntity,
 )
 from homeassistant.const import (
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
-    CONF_FRIENDLY_NAME,
     CONF_HOST,
     CONF_MAC,
     CONF_NAME,
@@ -22,11 +20,12 @@ from homeassistant.const import (
     CONF_TIMEOUT,
     CONF_TYPE,
     STATE_ON,
+    Platform,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import DOMAIN, SWITCH_DOMAIN
+from .const import DOMAIN
 from .entity import BroadlinkEntity
 from .helpers import data_packet, import_device, mac_address
 
@@ -42,14 +41,6 @@ SWITCH_SCHEMA = vol.Schema(
     }
 )
 
-OLD_SWITCH_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_COMMAND_OFF): data_packet,
-        vol.Optional(CONF_COMMAND_ON): data_packet,
-        vol.Optional(CONF_FRIENDLY_NAME): cv.string,
-    }
-)
-
 PLATFORM_SCHEMA = vol.All(
     cv.deprecated(CONF_HOST),
     cv.deprecated(CONF_SLOTS),
@@ -59,9 +50,9 @@ PLATFORM_SCHEMA = vol.All(
         {
             vol.Required(CONF_MAC): mac_address,
             vol.Optional(CONF_HOST): cv.string,
-            vol.Optional(CONF_SWITCHES, default=[]): vol.Any(
-                cv.schema_with_slug_keys(OLD_SWITCH_SCHEMA),
-                vol.All(cv.ensure_list, [SWITCH_SCHEMA]),
+            vol.Optional(CONF_SWITCHES, default=[]): vol.All(
+                cv.ensure_list,
+                [SWITCH_SCHEMA],
             ),
         }
     ),
@@ -78,19 +69,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     host = config.get(CONF_HOST)
     switches = config.get(CONF_SWITCHES)
 
-    if not isinstance(switches, list):
-        switches = [
-            {CONF_NAME: switch.pop(CONF_FRIENDLY_NAME, name), **switch}
-            for name, switch in switches.items()
-        ]
-
-        _LOGGER.warning(
-            "Your configuration for the switch platform is deprecated. "
-            "Please refer to the Broadlink documentation to catch up"
-        )
-
     if switches:
-        platform_data = hass.data[DOMAIN].platforms.setdefault(SWITCH_DOMAIN, {})
+        platform_data = hass.data[DOMAIN].platforms.setdefault(Platform.SWITCH, {})
         platform_data.setdefault(mac_addr, []).extend(switches)
 
     else:
@@ -110,7 +90,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     switches = []
 
     if device.api.type in {"RM4MINI", "RM4PRO", "RMMINI", "RMMINIB", "RMPRO"}:
-        platform_data = hass.data[DOMAIN].platforms.get(SWITCH_DOMAIN, {})
+        platform_data = hass.data[DOMAIN].platforms.get(Platform.SWITCH, {})
         user_defined_switches = platform_data.get(device.api.mac, {})
         switches.extend(
             BroadlinkRMSwitch(device, config) for config in user_defined_switches
@@ -135,7 +115,7 @@ class BroadlinkSwitch(BroadlinkEntity, SwitchEntity, RestoreEntity, ABC):
     """Representation of a Broadlink switch."""
 
     _attr_assumed_state = True
-    _attr_device_class = DEVICE_CLASS_SWITCH
+    _attr_device_class = SwitchDeviceClass.SWITCH
 
     def __init__(self, device, command_on, command_off):
         """Initialize the switch."""
@@ -268,7 +248,7 @@ class BroadlinkBG1Slot(BroadlinkSwitch):
         self._attr_is_on = self._coordinator.data[f"pwr{slot}"]
 
         self._attr_name = f"{device.name} S{slot}"
-        self._attr_device_class = DEVICE_CLASS_OUTLET
+        self._attr_device_class = SwitchDeviceClass.OUTLET
         self._attr_unique_id = f"{device.unique_id}-s{slot}"
 
     def _update_state(self, data):

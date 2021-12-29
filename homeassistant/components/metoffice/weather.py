@@ -1,14 +1,14 @@
 """Support for UK Met Office weather service."""
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_PRECIPITATION,
+    ATTR_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_FORECAST_TEMP,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
     ATTR_FORECAST_WIND_SPEED,
     WeatherEntity,
 )
-from homeassistant.const import LENGTH_KILOMETERS, TEMP_CELSIUS
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -52,7 +52,7 @@ def _build_forecast_data(timestep):
     if timestep.weather:
         data[ATTR_FORECAST_CONDITION] = _get_weather_condition(timestep.weather.value)
     if timestep.precipitation:
-        data[ATTR_FORECAST_PRECIPITATION] = timestep.precipitation.value
+        data[ATTR_FORECAST_PRECIPITATION_PROBABILITY] = timestep.precipitation.value
     if timestep.temperature:
         data[ATTR_FORECAST_TEMP] = timestep.temperature.value
     if timestep.wind_direction:
@@ -116,11 +116,6 @@ class MetOfficeWeather(CoordinatorEntity, WeatherEntity):
             )
             _visibility = f"{visibility_class} - {visibility_distance}"
         return _visibility
-
-    @property
-    def visibility_unit(self):
-        """Return the unit of measurement."""
-        return LENGTH_KILOMETERS
 
     @property
     def pressure(self):

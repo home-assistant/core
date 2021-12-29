@@ -13,7 +13,7 @@ from aioesphomeapi import (
     APIIntEnum,
     APIVersion,
     DeviceInfo as EsphomeDeviceInfo,
-    EntityCategory,
+    EntityCategory as EsphomeEntityCategory,
     EntityInfo,
     EntityState,
     HomeassistantServiceCall,
@@ -33,8 +33,6 @@ from homeassistant.const import (
     CONF_MODE,
     CONF_PASSWORD,
     CONF_PORT,
-    ENTITY_CATEGORY_CONFIG,
-    ENTITY_CATEGORY_DIAGNOSTIC,
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall, State, callback
@@ -43,7 +41,7 @@ from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.json import JSONEncoder
@@ -647,11 +645,13 @@ class EsphomeEnumMapper(Generic[_EnumT, _ValT]):
 ICON_SCHEMA = vol.Schema(cv.icon)
 
 
-ENTITY_CATEGORIES: EsphomeEnumMapper[EntityCategory, str | None] = EsphomeEnumMapper(
+ENTITY_CATEGORIES: EsphomeEnumMapper[
+    EsphomeEntityCategory, EntityCategory | None
+] = EsphomeEnumMapper(
     {
-        EntityCategory.NONE: None,
-        EntityCategory.CONFIG: ENTITY_CATEGORY_CONFIG,
-        EntityCategory.DIAGNOSTIC: ENTITY_CATEGORY_DIAGNOSTIC,
+        EsphomeEntityCategory.NONE: None,
+        EsphomeEntityCategory.CONFIG: EntityCategory.CONFIG,
+        EsphomeEntityCategory.DIAGNOSTIC: EntityCategory.DIAGNOSTIC,
     }
 )
 
@@ -799,7 +799,7 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         return not self._static_info.disabled_by_default
 
     @property
-    def entity_category(self) -> str | None:
+    def entity_category(self) -> EntityCategory | None:
         """Return the category of the entity, if any."""
         if not self._static_info.entity_category:
             return None

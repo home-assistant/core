@@ -9,6 +9,12 @@
             "invalid_credentials": "Autentikasi tidak valid"
         },
         "step": {
+            "kamereon": {
+                "data": {
+                    "kamereon_account_id": "Id akun Kamereon"
+                },
+                "title": "Pilih id akun Kamereon"
+            },
             "reauth_confirm": {
                 "data": {
                     "password": "Kata Sandi"
@@ -18,9 +24,11 @@
             },
             "user": {
                 "data": {
+                    "locale": "Pelokalan",
                     "password": "Kata Sandi",
                     "username": "Email"
-                }
+                },
+                "title": "Setel kredensial Renault"
             }
         }
     }

@@ -6,7 +6,22 @@ This configuration flow supports the following:
   - Legacy Nest API auth flow with where user enters an auth code manually
 
 NestFlowHandler is an implementation of AbstractOAuth2FlowHandler with
-some overrides to support installed app and old APIs auth flow.
+some overrides to support installed app and old APIs auth flow, reauth,
+and other custom steps inserted in the middle of the flow.
+
+The notable config flow steps are:
+- user: To dispatch between API versions
+- auth: Inserted to add a hook for the installed app flow to accept a token
+- async_oauth_create_entry: Overridden to handle when OAuth is complete.  This
+    does not actually create the entry, but holds on to the OAuth token data
+    for later
+- pubsub: Configure the pubsub subscription. Note that subscriptions created
+    by the config flow are deleted when removed.
+- finish: Handles creating a new configuration entry or updating the existing
+    configuration entry for reauth.
+
+The SDM API config flow supports a hybrid of configuration.yaml (used as defaults)
+and config flow.
 """
 from __future__ import annotations
 
@@ -17,18 +32,44 @@ import os
 from typing import Any
 
 import async_timeout
+from google_nest_sdm.exceptions import (
+    AuthException,
+    ConfigurationException,
+    GoogleNestException,
+)
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.util import get_random_string
 from homeassistant.util.json import load_json
 
-from .const import DATA_SDM, DOMAIN, OOB_REDIRECT_URI, SDM_SCOPES
+from . import api
+from .const import (
+    CONF_CLOUD_PROJECT_ID,
+    CONF_PROJECT_ID,
+    CONF_SUBSCRIBER_ID,
+    DATA_NEST_CONFIG,
+    DATA_SDM,
+    DOMAIN,
+    OOB_REDIRECT_URI,
+    SDM_SCOPES,
+)
 
 DATA_FLOW_IMPL = "nest_flow_implementation"
+SUBSCRIPTION_FORMAT = "projects/{cloud_project_id}/subscriptions/home-assistant-{rnd}"
+SUBSCRIPTION_RAND_LENGTH = 10
+CLOUD_CONSOLE_URL = "https://console.cloud.google.com/home/dashboard"
 _LOGGER = logging.getLogger(__name__)
+
+
+def _generate_subscription_id(cloud_project_id: str) -> str:
+    """Create a new subscription id."""
+    rnd = get_random_string(SUBSCRIPTION_RAND_LENGTH)
+    return SUBSCRIPTION_FORMAT.format(cloud_project_id=cloud_project_id, rnd=rnd)
 
 
 @callback
@@ -80,8 +121,10 @@ class NestFlowHandler(
     def __init__(self) -> None:
         """Initialize NestFlowHandler."""
         super().__init__()
-        # When invoked for reauth, allows updating an existing config entry
-        self._reauth = False
+        # Allows updating an existing config entry
+        self._reauth_data: dict[str, Any] | None = None
+        # ConfigEntry data for SDM API
+        self._data: dict[str, Any] = {DATA_SDM: {}}
 
     @classmethod
     def register_sdm_api(cls, hass: HomeAssistant) -> None:
@@ -110,35 +153,24 @@ class NestFlowHandler(
         }
 
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> FlowResult:
-        """Create an entry for the SDM flow."""
+        """Complete OAuth setup and finish pubsub or finish."""
         assert self.is_sdm_api(), "Step only supported for SDM API"
-        data[DATA_SDM] = {}
-        await self.async_set_unique_id(DOMAIN)
-        # Update existing config entry when in the reauth flow.  This
-        # integration only supports one config entry so remove any prior entries
-        # added before the "single_instance_allowed" check was added
-        existing_entries = self._async_current_entries()
-        if existing_entries:
-            updated = False
-            for entry in existing_entries:
-                if updated:
-                    await self.hass.config_entries.async_remove(entry.entry_id)
-                    continue
-                updated = True
-                self.hass.config_entries.async_update_entry(
-                    entry, data=data, unique_id=DOMAIN
-                )
-                await self.hass.config_entries.async_reload(entry.entry_id)
-            return self.async_abort(reason="reauth_successful")
-
-        return await super().async_oauth_create_entry(data)
+        self._data.update(data)
+        if not self._configure_pubsub():
+            _LOGGER.debug("Skipping Pub/Sub configuration")
+            return await self.async_step_finish()
+        return await self.async_step_pubsub()
 
     async def async_step_reauth(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Perform reauth upon an API authentication error."""
         assert self.is_sdm_api(), "Step only supported for SDM API"
-        self._reauth = True  # Forces update of existing config entry
+        if user_input is None:
+            _LOGGER.error("Reauth invoked with empty config entry data")
+            return self.async_abort(reason="missing_configuration")
+        self._reauth_data = user_input
+        self._data.update(user_input)
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -167,7 +199,7 @@ class NestFlowHandler(
         """Handle a flow initialized by the user."""
         if self.is_sdm_api():
             # Reauth will update an existing entry
-            if self._async_current_entries() and not self._reauth:
+            if self._async_current_entries() and not self._reauth_data:
                 return self.async_abort(reason="single_instance_allowed")
             return await super().async_step_user(user_input)
         return await self.async_step_init(user_input)
@@ -198,6 +230,106 @@ class NestFlowHandler(
                 data_schema=vol.Schema({vol.Required("code"): str}),
             )
         return await super().async_step_auth(user_input)
+
+    def _configure_pubsub(self) -> bool:
+        """Return True if the config flow should configure Pub/Sub."""
+        if self._reauth_data is not None and CONF_SUBSCRIBER_ID in self._reauth_data:
+            # Existing entry needs to be reconfigured
+            return True
+        if CONF_SUBSCRIBER_ID in self.hass.data[DOMAIN][DATA_NEST_CONFIG]:
+            # Hard coded configuration.yaml skips pubsub in config flow
+            return False
+        # No existing subscription configured, so create in config flow
+        return True
+
+    async def async_step_pubsub(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Configure and create Pub/Sub subscriber."""
+        # Populate data from the previous config entry during reauth, then
+        # overwrite with the user entered values.
+        data = {}
+        if self._reauth_data:
+            data.update(self._reauth_data)
+        if user_input:
+            data.update(user_input)
+        cloud_project_id = data.get(CONF_CLOUD_PROJECT_ID, "")
+
+        errors = {}
+        config = self.hass.data[DOMAIN][DATA_NEST_CONFIG]
+        if cloud_project_id == config[CONF_PROJECT_ID]:
+            _LOGGER.error(
+                "Wrong Project ID. Device Access Project ID used, but expected Cloud Project ID"
+            )
+            errors[CONF_CLOUD_PROJECT_ID] = "wrong_project_id"
+
+        if user_input is not None and not errors:
+            # Create the subscriber id and/or verify it already exists. Note that
+            # the existing id is used, and create call below is idempotent
+            subscriber_id = data.get(CONF_SUBSCRIBER_ID, "")
+            if not subscriber_id:
+                subscriber_id = _generate_subscription_id(cloud_project_id)
+            _LOGGER.debug("Creating subscriber id '%s'", subscriber_id)
+            # Create a placeholder ConfigEntry to use since with the auth we've already created.
+            entry = ConfigEntry(
+                version=1, domain=DOMAIN, title="", data=self._data, source=""
+            )
+            subscriber = await api.new_subscriber_with_impl(
+                self.hass, entry, subscriber_id, self.flow_impl
+            )
+            try:
+                await subscriber.create_subscription()
+            except AuthException as err:
+                _LOGGER.error("Subscriber authentication error: %s", err)
+                return self.async_abort(reason="invalid_access_token")
+            except ConfigurationException as err:
+                _LOGGER.error("Configuration error creating subscription: %s", err)
+                errors[CONF_CLOUD_PROJECT_ID] = "bad_project_id"
+            except GoogleNestException as err:
+                _LOGGER.error("Error creating subscription: %s", err)
+                errors[CONF_CLOUD_PROJECT_ID] = "subscriber_error"
+
+            if not errors:
+                self._data.update(
+                    {
+                        CONF_SUBSCRIBER_ID: subscriber_id,
+                        CONF_CLOUD_PROJECT_ID: cloud_project_id,
+                    }
+                )
+                return await self.async_step_finish()
+
+        return self.async_show_form(
+            step_id="pubsub",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_CLOUD_PROJECT_ID, default=cloud_project_id): str,
+                }
+            ),
+            description_placeholders={"url": CLOUD_CONSOLE_URL},
+            errors=errors,
+        )
+
+    async def async_step_finish(self, data: dict[str, Any] | None = None) -> FlowResult:
+        """Create an entry for the SDM flow."""
+        assert self.is_sdm_api(), "Step only supported for SDM API"
+        await self.async_set_unique_id(DOMAIN)
+        # Update existing config entry when in the reauth flow.  This
+        # integration only supports one config entry so remove any prior entries
+        # added before the "single_instance_allowed" check was added
+        existing_entries = self._async_current_entries()
+        if existing_entries:
+            updated = False
+            for entry in existing_entries:
+                if updated:
+                    await self.hass.config_entries.async_remove(entry.entry_id)
+                    continue
+                updated = True
+                self.hass.config_entries.async_update_entry(
+                    entry, data=self._data, unique_id=DOMAIN
+                )
+                await self.hass.config_entries.async_reload(entry.entry_id)
+            return self.async_abort(reason="reauth_successful")
+        return await super().async_oauth_create_entry(self._data)
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

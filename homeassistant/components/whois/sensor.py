@@ -1,4 +1,6 @@
 """Get WHOIS information for a given host."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -7,7 +9,10 @@ import whois
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_DOMAIN, CONF_NAME, TIME_DAYS
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,10 +33,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the WHOIS sensor."""
-    domain = config.get(CONF_DOMAIN)
-    name = config.get(CONF_NAME)
+    domain = config[CONF_DOMAIN]
+    name = config[CONF_NAME]
 
     try:
         if "expiration_date" in whois.whois(domain):
@@ -49,53 +59,27 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class WhoisSensor(SensorEntity):
     """Implementation of a WHOIS sensor."""
 
-    def __init__(self, name, domain):
+    _attr_icon = "mdi:calendar-clock"
+    _attr_native_unit_of_measurement = TIME_DAYS
+
+    def __init__(self, name: str, domain: str) -> None:
         """Initialize the sensor."""
         self.whois = whois.whois
-
-        self._name = name
         self._domain = domain
+        self._attr_name = name
 
-        self._state = None
-        self._attributes = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def icon(self):
-        """Return the icon to represent this sensor."""
-        return "mdi:calendar-clock"
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement to present the value in."""
-        return TIME_DAYS
-
-    @property
-    def native_value(self):
-        """Return the expiration days for hostname."""
-        return self._state
-
-    @property
-    def extra_state_attributes(self):
-        """Get the more info attributes."""
-        return self._attributes
-
-    def _empty_state_and_attributes(self):
+    def _empty_value_and_attributes(self) -> None:
         """Empty the state and attributes on an error."""
-        self._state = None
-        self._attributes = None
+        self._attr_native_value = None
+        self._attr_extra_state_attributes = {}
 
-    def update(self):
+    def update(self) -> None:
         """Get the current WHOIS data for the domain."""
         try:
             response = self.whois(self._domain)
         except whois.BaseException as ex:  # pylint: disable=broad-except
             _LOGGER.error("Exception %s occurred during WHOIS lookup", ex)
-            self._empty_state_and_attributes()
+            self._empty_value_and_attributes()
             return
 
         if response:
@@ -105,12 +89,12 @@ class WhoisSensor(SensorEntity):
                     "Did find: %s",
                     ", ".join(response.keys()),
                 )
-                self._empty_state_and_attributes()
+                self._empty_value_and_attributes()
                 return
 
             if not response["expiration_date"]:
                 _LOGGER.error("Whois response contains empty expiration_date")
-                self._empty_state_and_attributes()
+                self._empty_value_and_attributes()
                 return
 
             attrs = {}
@@ -137,5 +121,5 @@ class WhoisSensor(SensorEntity):
 
             time_delta = expiration_date - expiration_date.now()
 
-            self._attributes = attrs
-            self._state = time_delta.days
+            self._attr_extra_state_attributes = attrs
+            self._attr_native_value = time_delta.days

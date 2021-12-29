@@ -17,6 +17,7 @@ homeassistant.components.ambee.*
 homeassistant.components.ambient_station.*
 homeassistant.components.amcrest.*
 homeassistant.components.ampio.*
+homeassistant.components.aseko_pool_live.*
 homeassistant.components.automation.*
 homeassistant.components.binary_sensor.*
 homeassistant.components.bluetooth_tracker.*
@@ -30,6 +31,7 @@ homeassistant.components.camera.*
 homeassistant.components.canary.*
 homeassistant.components.cover.*
 homeassistant.components.crownstone.*
+homeassistant.components.cpuspeed.*
 homeassistant.components.device_automation.*
 homeassistant.components.device_tracker.*
 homeassistant.components.devolo_home_control.*
@@ -64,6 +66,7 @@ homeassistant.components.http.*
 homeassistant.components.huawei_lte.*
 homeassistant.components.hyperion.*
 homeassistant.components.image_processing.*
+homeassistant.components.input_button.*
 homeassistant.components.input_select.*
 homeassistant.components.integration.*
 homeassistant.components.iqvia.*
@@ -76,6 +79,7 @@ homeassistant.components.light.*
 homeassistant.components.local_ip.*
 homeassistant.components.lock.*
 homeassistant.components.lookin.*
+homeassistant.components.luftdaten.*
 homeassistant.components.mailbox.*
 homeassistant.components.media_player.*
 homeassistant.components.modbus.*
@@ -94,10 +98,12 @@ homeassistant.components.notify.*
 homeassistant.components.notion.*
 homeassistant.components.number.*
 homeassistant.components.onewire.*
+homeassistant.components.open_meteo.*
 homeassistant.components.openuv.*
 homeassistant.components.persistent_notification.*
 homeassistant.components.pi_hole.*
 homeassistant.components.proximity.*
+homeassistant.components.pvoutput.*
 homeassistant.components.rainmachine.*
 homeassistant.components.rdw.*
 homeassistant.components.recollect_waste.*
@@ -119,6 +125,7 @@ homeassistant.components.slack.*
 homeassistant.components.sonos.media_player
 homeassistant.components.ssdp.*
 homeassistant.components.stookalert.*
+homeassistant.components.statistics.*
 homeassistant.components.stream.*
 homeassistant.components.sun.*
 homeassistant.components.surepetcare.*
@@ -127,6 +134,7 @@ homeassistant.components.switcher_kis.*
 homeassistant.components.synology_dsm.*
 homeassistant.components.systemmonitor.*
 homeassistant.components.tag.*
+homeassistant.components.tailscale.*
 homeassistant.components.tautulli.*
 homeassistant.components.tcp.*
 homeassistant.components.tile.*
@@ -136,6 +144,7 @@ homeassistant.components.tractive.*
 homeassistant.components.tradfri.*
 homeassistant.components.tts.*
 homeassistant.components.twentemilieu.*
+homeassistant.components.unifiprotect.*
 homeassistant.components.upcloud.*
 homeassistant.components.uptime.*
 homeassistant.components.uptimerobot.*
@@ -148,6 +157,8 @@ homeassistant.components.water_heater.*
 homeassistant.components.watttime.*
 homeassistant.components.weather.*
 homeassistant.components.websocket_api.*
+homeassistant.components.wemo.*
+homeassistant.components.whois.*
 homeassistant.components.zodiac.*
 homeassistant.components.zeroconf.*
 homeassistant.components.zone.*

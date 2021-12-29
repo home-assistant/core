@@ -8,6 +8,7 @@ from functools import partial, wraps
 import logging
 from typing import TYPE_CHECKING, Any, TypedDict
 
+from typing_extensions import TypeGuard
 import voluptuous as vol
 
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
@@ -31,14 +32,6 @@ from homeassistant.exceptions import (
     Unauthorized,
     UnknownUser,
 )
-from homeassistant.helpers import (
-    area_registry,
-    config_validation as cv,
-    device_registry,
-    entity_registry,
-    template,
-)
-from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from homeassistant.loader import (
     MAX_LOAD_CONCURRENTLY,
     Integration,
@@ -49,9 +42,18 @@ from homeassistant.util.async_ import gather_with_concurrency
 from homeassistant.util.yaml import load_yaml
 from homeassistant.util.yaml.loader import JSON_TYPE
 
+from . import (
+    area_registry,
+    config_validation as cv,
+    device_registry,
+    entity_registry,
+    template,
+)
+from .typing import ConfigType, TemplateVarsType
+
 if TYPE_CHECKING:
-    from homeassistant.helpers.entity import Entity
-    from homeassistant.helpers.entity_platform import EntityPlatform
+    from .entity import Entity
+    from .entity_platform import EntityPlatform
 
 
 CONF_SERVICE_ENTITY_ID = "entity_id"
@@ -318,7 +320,7 @@ async def async_extract_entity_ids(
     return referenced.referenced | referenced.indirectly_referenced
 
 
-def _has_match(ids: str | list | None) -> bool:
+def _has_match(ids: str | list[str] | None) -> TypeGuard[str | list[str]]:
     """Check if ids can match anything."""
     return ids not in (None, ENTITY_MATCH_NONE)
 
@@ -705,7 +707,7 @@ async def _handle_entity_call(
             func,
             entity.entity_id,
         )
-        await result  # type: ignore
+        await result
 
 
 @bind_hass

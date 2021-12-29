@@ -7,8 +7,7 @@ from renault_api.kamereon.enums import ChargeState, PlugState
 from renault_api.kamereon.models import KamereonVehicleBatteryStatusData
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_BATTERY_CHARGING,
-    DEVICE_CLASS_PLUG,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -75,7 +74,7 @@ BINARY_SENSOR_TYPES: tuple[RenaultBinarySensorEntityDescription, ...] = (
     RenaultBinarySensorEntityDescription(
         key="plugged_in",
         coordinator="battery",
-        device_class=DEVICE_CLASS_PLUG,
+        device_class=BinarySensorDeviceClass.PLUG,
         name="Plugged In",
         on_key="plugStatus",
         on_value=PlugState.PLUGGED.value,
@@ -83,7 +82,7 @@ BINARY_SENSOR_TYPES: tuple[RenaultBinarySensorEntityDescription, ...] = (
     RenaultBinarySensorEntityDescription(
         key="charging",
         coordinator="battery",
-        device_class=DEVICE_CLASS_BATTERY_CHARGING,
+        device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
         name="Charging",
         on_key="chargingStatus",
         on_value=ChargeState.CHARGE_IN_PROGRESS.value,

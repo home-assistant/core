@@ -5,8 +5,7 @@ import xml.etree.ElementTree as et
 
 from env_canada import ECRadar, ECWeather, ec_exc
 
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, Platform
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_LANGUAGE, CONF_STATION, DOMAIN
@@ -14,7 +13,7 @@ from .const import CONF_LANGUAGE, CONF_STATION, DOMAIN
 DEFAULT_RADAR_UPDATE_INTERVAL = timedelta(minutes=5)
 DEFAULT_WEATHER_UPDATE_INTERVAL = timedelta(minutes=5)
 
-PLATFORMS = ["camera", "sensor", "weather"]
+PLATFORMS = [Platform.CAMERA, Platform.SENSOR, Platform.WEATHER]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,32 +60,6 @@ async def async_unload_entry(hass, config_entry):
     hass.data[DOMAIN].pop(config_entry.entry_id)
 
     return unload_ok
-
-
-def trigger_import(hass, config):
-    """Trigger a import of YAML config into a config_entry."""
-    _LOGGER.warning(
-        "Environment Canada YAML configuration is deprecated; your YAML configuration "
-        "has been imported into the UI and can be safely removed"
-    )
-    if not config.get(CONF_LANGUAGE):
-        config[CONF_LANGUAGE] = "English"
-
-    data = {}
-    for key in (
-        CONF_STATION,
-        CONF_LATITUDE,
-        CONF_LONGITUDE,
-        CONF_LANGUAGE,
-    ):
-        if config.get(key):
-            data[key] = config[key]
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=data
-        )
-    )
 
 
 class ECDataUpdateCoordinator(DataUpdateCoordinator):

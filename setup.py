@@ -32,7 +32,7 @@ PROJECT_URLS = {
 PACKAGES = find_packages(exclude=["tests", "tests.*"])
 
 REQUIRES = [
-    "aiohttp==3.8.0",
+    "aiohttp==3.8.1",
     "astral==2.2",
     "async_timeout==4.0.0",
     "attrs==21.2.0",
@@ -53,7 +53,7 @@ REQUIRES = [
     "pyyaml==6.0",
     "requests==2.26.0",
     "voluptuous==0.12.2",
-    "voluptuous-serialize==2.4.0",
+    "voluptuous-serialize==2.5.0",
     "yarl==1.6.3",
 ]
 

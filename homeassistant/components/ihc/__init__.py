@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_URL,
     CONF_USERNAME,
     TEMP_CELSIUS,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
@@ -55,7 +56,12 @@ DOMAIN = "ihc"
 
 IHC_CONTROLLER = "controller"
 IHC_INFO = "info"
-PLATFORMS = ("binary_sensor", "light", "sensor", "switch")
+PLATFORMS = (
+    Platform.BINARY_SENSOR,
+    Platform.LIGHT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+)
 
 
 def validate_name(config):

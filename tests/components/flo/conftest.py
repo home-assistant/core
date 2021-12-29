@@ -44,6 +44,13 @@ def aioclient_mock_fixture(aioclient_mock):
         headers={"Content-Type": CONTENT_TYPE_JSON},
         status=HTTPStatus.OK,
     )
+    # Mocks the presence ping response for flo.
+    aioclient_mock.post(
+        "https://api-gw.meetflo.com/api/v2/presence/me",
+        text=load_fixture("flo/ping_response.json"),
+        headers={"Content-Type": CONTENT_TYPE_JSON},
+        status=HTTPStatus.OK,
+    )
     # Mocks the devices for flo.
     aioclient_mock.get(
         "https://api-gw.meetflo.com/api/v2/devices/98765",

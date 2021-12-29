@@ -19,11 +19,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
-from homeassistant.helpers.entity_registry import EntityRegistry
+from homeassistant.helpers.entity_registry import EntityRegistry, RegistryEntryDisabler
 
 from .const import (
     ATTR_DEFAULT_DISABLED,
     ATTR_DEVICE_FILE,
+    ATTR_ENTITY_CATEGORY,
     ATTR_INJECT_READS,
     ATTR_UNIQUE_ID,
     FIXED_ATTRIBUTES,
@@ -41,7 +42,7 @@ def check_and_enable_disabled_entities(
             entity_id = expected_entity[ATTR_ENTITY_ID]
             registry_entry = entity_registry.entities.get(entity_id)
             assert registry_entry.disabled
-            assert registry_entry.disabled_by == "integration"
+            assert registry_entry.disabled_by is RegistryEntryDisabler.INTEGRATION
             entity_registry.async_update_entity(entity_id, **{"disabled_by": None})
 
 
@@ -77,6 +78,9 @@ def check_entities(
         entity_id = expected_entity[ATTR_ENTITY_ID]
         registry_entry = entity_registry.entities.get(entity_id)
         assert registry_entry is not None
+        assert registry_entry.entity_category == expected_entity.get(
+            ATTR_ENTITY_CATEGORY
+        )
         assert registry_entry.unique_id == expected_entity[ATTR_UNIQUE_ID]
         state = hass.states.get(entity_id)
         assert state.state == expected_entity[ATTR_STATE]

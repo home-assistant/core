@@ -10,9 +10,8 @@ from homeassistant.components.humidifier import (
     ATTR_MODE,
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MIN_HUMIDITY,
-    DEVICE_CLASS_DEHUMIDIFIER,
-    DEVICE_CLASS_HUMIDIFIER,
     SUPPORT_MODES,
+    HumidifierDeviceClass,
     HumidifierEntity,
 )
 from homeassistant.const import (
@@ -27,7 +26,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType
 
-from . import PLATFORMS, subscription
+from . import PLATFORMS, MqttCommandTemplate, subscription
 from .. import mqtt
 from .const import CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC, DOMAIN
 from .debug_info import log_messages
@@ -96,8 +95,10 @@ _PLATFORM_SCHEMA_BASE = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
             CONF_MODE_COMMAND_TOPIC, "available_modes"
         ): mqtt.valid_publish_topic,
         vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_DEVICE_CLASS, default=DEVICE_CLASS_HUMIDIFIER): vol.In(
-            [DEVICE_CLASS_HUMIDIFIER, DEVICE_CLASS_DEHUMIDIFIER]
+        vol.Optional(
+            CONF_DEVICE_CLASS, default=HumidifierDeviceClass.HUMIDIFIER
+        ): vol.In(
+            [HumidifierDeviceClass.HUMIDIFIER, HumidifierDeviceClass.DEHUMIDIFIER]
         ),
         vol.Optional(CONF_MODE_COMMAND_TEMPLATE): cv.template,
         vol.Optional(CONF_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
@@ -237,13 +238,17 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
         )
         self._optimistic_mode = optimistic or self._topic[CONF_MODE_STATE_TOPIC] is None
 
-        for tpl_dict in (self._command_templates, self._value_templates):
-            for key, tpl in tpl_dict.items():
-                if tpl is None:
-                    tpl_dict[key] = lambda value: value
-                else:
-                    tpl.hass = self.hass
-                    tpl_dict[key] = tpl.async_render_with_possible_json_value
+        for key, tpl in self._command_templates.items():
+            self._command_templates[key] = MqttCommandTemplate(
+                tpl, self.hass
+            ).async_render
+
+        for key, tpl in self._value_templates.items():
+            if tpl is None:
+                self._value_templates[key] = lambda value: value
+            else:
+                tpl.hass = self.hass
+                self._value_templates[key] = tpl.async_render_with_possible_json_value
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""

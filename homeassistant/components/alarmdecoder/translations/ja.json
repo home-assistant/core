@@ -37,7 +37,9 @@
         "step": {
             "arm_settings": {
                 "data": {
-                    "alt_night_mode": "\u4ee3\u66ff\u30ca\u30a4\u30c8\u30e2\u30fc\u30c9"
+                    "alt_night_mode": "\u4ee3\u66ff\u30ca\u30a4\u30c8\u30e2\u30fc\u30c9",
+                    "auto_bypass": "\u8b66\u6212\u306e\u30aa\u30fc\u30c8\u30d0\u30a4\u30d1\u30b9",
+                    "code_arm_required": "\u8b66\u6212\u306b\u5fc5\u8981\u306a\u30b3\u30fc\u30c9"
                 },
                 "title": "AlarmDecoder\u306e\u8a2d\u5b9a"
             },

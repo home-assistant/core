@@ -4,16 +4,15 @@ from __future__ import annotations
 from typing import cast
 
 from homeassistant import config_entries
-from homeassistant.components.number import NumberEntity
-from homeassistant.components.number.const import MODE_SLIDER
+from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import FluxLedUpdateCoordinator
 from .const import DOMAIN, EFFECT_SPEED_SUPPORT_MODES
+from .coordinator import FluxLedUpdateCoordinator
 from .entity import FluxEntity
 from .util import _effect_brightness, _hass_color_modes
 
@@ -47,7 +46,7 @@ class FluxNumber(FluxEntity, CoordinatorEntity, NumberEntity):
     _attr_min_value = 1
     _attr_max_value = 100
     _attr_step = 1
-    _attr_mode = MODE_SLIDER
+    _attr_mode = NumberMode.SLIDER
     _attr_icon = "mdi:speedometer"
 
     def __init__(
