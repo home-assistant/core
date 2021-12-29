@@ -179,8 +179,6 @@ omit =
     homeassistant/components/coolmaster/climate.py
     homeassistant/components/coolmaster/const.py
     homeassistant/components/cppm_tracker/device_tracker.py
-    homeassistant/components/cpuspeed/__init__.py
-    homeassistant/components/cpuspeed/sensor.py
     homeassistant/components/crownstone/__init__.py
     homeassistant/components/crownstone/const.py
     homeassistant/components/crownstone/listeners.py
