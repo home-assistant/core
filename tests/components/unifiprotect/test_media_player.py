@@ -1,4 +1,4 @@
-"""Test the UniFi Protect button platform."""
+"""Test the UniFi Protect media_player platform."""
 # pylint: disable=protected-access
 from __future__ import annotations
 
@@ -23,6 +23,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import MockEntityFixture
@@ -85,7 +86,7 @@ async def test_media_player_setup(
     assert state
     assert state.state == STATE_IDLE
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
-    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 7684
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 5636
     assert state.attributes[ATTR_MEDIA_CONTENT_TYPE] == "music"
     assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == expected_volume
 
@@ -201,16 +202,17 @@ async def test_media_player_play_invalid(
     camera[0].__fields__["play_audio"] = Mock()
     camera[0].play_audio = AsyncMock()
 
-    await hass.services.async_call(
-        "media_player",
-        "play_media",
-        {
-            ATTR_ENTITY_ID: camera[1],
-            "media_content_id": "/test.png",
-            "media_content_type": "image",
-        },
-        blocking=True,
-    )
+    with pytest.raises(ValueError):
+        await hass.services.async_call(
+            "media_player",
+            "play_media",
+            {
+                ATTR_ENTITY_ID: camera[1],
+                "media_content_id": "/test.png",
+                "media_content_type": "image",
+            },
+            blocking=True,
+        )
 
     assert not camera[0].play_audio.called
 
@@ -226,16 +228,17 @@ async def test_media_player_play_error(
     camera[0].play_audio = AsyncMock(side_effect=StreamError)
     camera[0].wait_until_audio_completes = AsyncMock()
 
-    await hass.services.async_call(
-        "media_player",
-        "play_media",
-        {
-            ATTR_ENTITY_ID: camera[1],
-            "media_content_id": "/test.mp3",
-            "media_content_type": "music",
-        },
-        blocking=True,
-    )
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "media_player",
+            "play_media",
+            {
+                ATTR_ENTITY_ID: camera[1],
+                "media_content_id": "/test.mp3",
+                "media_content_type": "music",
+            },
+            blocking=True,
+        )
 
     assert camera[0].play_audio.called
     assert not camera[0].wait_until_audio_completes.called
