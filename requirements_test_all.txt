@@ -131,7 +131,7 @@ aiohomekit==0.6.4
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==3.0.10
+aiohue==3.0.11
 
 # homeassistant.components.apache_kafka
 aiokafka==0.6.0
@@ -399,7 +399,7 @@ fjaraskupan==1.0.2
 flipr-api==1.4.1
 
 # homeassistant.components.flux_led
-flux_led==0.27.13
+flux_led==0.27.21
 
 # homeassistant.components.homekit
 fnvhash==0.1.0
@@ -515,7 +515,7 @@ hole==0.7.0
 holidays==0.11.3.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20211227.0
+home-assistant-frontend==20211229.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.10
@@ -1157,7 +1157,7 @@ python-openzwave-mqtt[mqtt-client]==1.4.0
 python-picnic-api==1.1.0
 
 # homeassistant.components.smarttub
-python-smarttub==0.0.28
+python-smarttub==0.0.29
 
 # homeassistant.components.songpal
 python-songpal==0.12
