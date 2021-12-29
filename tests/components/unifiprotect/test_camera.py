@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 from pyunifiprotect.data import Camera as ProtectCamera
 from pyunifiprotect.data.devices import CameraChannel
+from pyunifiprotect.data.types import StateType
 from pyunifiprotect.exceptions import NvrError
 
 from homeassistant.components.camera import (
@@ -463,7 +464,7 @@ async def test_camera_ws_update_offline(
     # camera goes offline
     new_bootstrap = copy(mock_entry.api.bootstrap)
     new_camera = camera[0].copy()
-    new_camera.is_connected = False
+    new_camera.state = StateType.DISCONNECTED
 
     mock_msg = Mock()
     mock_msg.new_obj = new_camera
@@ -477,7 +478,7 @@ async def test_camera_ws_update_offline(
     assert state and state.state == "unavailable"
 
     # camera comes back online
-    new_camera.is_connected = True
+    new_camera.state = StateType.CONNECTED
 
     mock_msg = Mock()
     mock_msg.new_obj = new_camera
