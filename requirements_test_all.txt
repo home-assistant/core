@@ -807,7 +807,7 @@ py-synologydsm-api==1.0.4
 py17track==2021.12.2
 
 # homeassistant.components.control4
-pyControl4==1.0.0b4
+pyControl4==1.0.0b5
 
 # homeassistant.components.met_eireann
 pyMetEireann==2021.8.0
