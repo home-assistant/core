@@ -37,7 +37,7 @@ async def test_config_entry_not_compatible(
     mock_config_entry: MockConfigEntry,
     mock_cpuinfo: MagicMock,
 ) -> None:
-    """Test the CPU Speed configuration entry loading/unloading."""
+    """Test the CPU Speed configuration entry loading on an unsupported system."""
     mock_config_entry.add_to_hass(hass)
     mock_cpuinfo.return_value = {}
 
