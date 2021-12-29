@@ -14,7 +14,7 @@ async def test_loading_file(hass, hass_client):
 
     with mock.patch("os.path.isfile", mock.Mock(return_value=True)), mock.patch(
         "os.access", mock.Mock(return_value=True)
-    ):
+    ), mock.patch("mimetypes.guess_type", mock.Mock(return_value=(None, None))):
         await async_setup_component(
             hass,
             "camera",
@@ -138,7 +138,7 @@ async def test_update_file_path(hass):
 
     with mock.patch("os.path.isfile", mock.Mock(return_value=True)), mock.patch(
         "os.access", mock.Mock(return_value=True)
-    ):
+    ), mock.patch("mimetypes.guess_type", mock.Mock(return_value=(None, None))):
 
         camera_1 = {"platform": "local_file", "file_path": "mock/path.jpg"}
         camera_2 = {
