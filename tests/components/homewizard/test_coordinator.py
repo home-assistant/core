@@ -101,16 +101,14 @@ async def test_coordinator_failed_to_update(aioclient_mock, hass):
 
     meter.update = _failed_update
 
-    coordinator = Coordinator(hass, "1.2.3.4")
+    with patch(
+        "aiohwenergy.HomeWizardEnergy",
+        return_value=meter,
+    ):
+        coordinator = Coordinator(hass, "1.2.3.4")
 
     with raises(UpdateFailed):
-        with patch(
-            "aiohwenergy.HomeWizardEnergy",
-            return_value=meter,
-        ):
-            await coordinator._async_update_data()
-
-    assert coordinator.api.device is None
+        await coordinator._async_update_data()
 
 
 async def test_coordinator_detected_disabled_api(aioclient_mock, hass):
@@ -124,13 +122,11 @@ async def test_coordinator_detected_disabled_api(aioclient_mock, hass):
 
     meter.update = _failed_update
 
-    coordinator = Coordinator(hass, "1.2.3.4")
+    with patch(
+        "aiohwenergy.HomeWizardEnergy",
+        return_value=meter,
+    ):
+        coordinator = Coordinator(hass, "1.2.3.4")
 
     with raises(UpdateFailed):
-        with patch(
-            "aiohwenergy.HomeWizardEnergy",
-            return_value=meter,
-        ):
-            await coordinator._async_update_data()
-
-    assert coordinator.api.device is None
+        await coordinator._async_update_data()
