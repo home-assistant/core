@@ -57,7 +57,7 @@ class OverkizExecutor:
 
         return None
 
-    async def async_execute_command(self, command_name: str, *args: Any):
+    async def async_execute_command(self, command_name: str, *args: Any) -> None:
         """Execute device command in async context."""
         try:
             exec_id = await self.coordinator.client.execute_command(
