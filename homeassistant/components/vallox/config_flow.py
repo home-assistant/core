@@ -13,6 +13,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.loader import async_get_integration
 from homeassistant.util.network import is_ip_address
 
 from .const import DEFAULT_NAME, DOMAIN
@@ -29,8 +30,6 @@ VALLOX_CONNECTION_EXCEPTIONS = (
     OSError,
     ValloxApiException,
 )
-
-INTEGRATION_DOCS_URL = "https://www.home-assistant.io/integrations/vallox"
 
 
 async def validate_host(hass: HomeAssistant, host: str) -> None:
@@ -84,10 +83,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
+        integration = await async_get_integration(self.hass, DOMAIN)
+
         if user_input is None or user_input[CONF_HOST] is None:
             return self.async_show_form(
                 step_id="user",
-                description_placeholders={"integration_docs_url": INTEGRATION_DOCS_URL},
+                description_placeholders={
+                    "integration_docs_url": integration.documentation
+                },
                 data_schema=STEP_USER_DATA_SCHEMA,
             )
 
@@ -117,7 +120,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            description_placeholders={"integration_docs_url": INTEGRATION_DOCS_URL},
+            description_placeholders={
+                "integration_docs_url": integration.documentation
+            },
             data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
         )
