@@ -4,6 +4,8 @@ from __future__ import annotations
 import re
 from typing import Final
 
+DEFAULT_OFFSET: Final = 0
+
 BLOCK: Final = "block"
 DATA_CONFIG_ENTRY: Final = "config_entry"
 DEVICE: Final = "device"

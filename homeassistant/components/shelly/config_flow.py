@@ -15,12 +15,17 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_OFFSET, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
 
-from .const import AIOSHELLY_DEVICE_TIMEOUT_SEC, CONF_SLEEP_PERIOD, DOMAIN
+from .const import (
+    AIOSHELLY_DEVICE_TIMEOUT_SEC,
+    CONF_SLEEP_PERIOD,
+    DEFAULT_OFFSET,
+    DOMAIN,
+)
 from .utils import (
     get_block_device_name,
     get_block_device_sleep_period,
@@ -36,6 +41,14 @@ _LOGGER: Final = logging.getLogger(__name__)
 HOST_SCHEMA: Final = vol.Schema({vol.Required(CONF_HOST): str})
 
 HTTP_CONNECT_ERRORS: Final = (asyncio.TimeoutError, aiohttp.ClientError)
+
+ROLLER_SCHEMA: Final = vol.Schema(
+    {
+        vol.Required(CONF_OFFSET, default=DEFAULT_OFFSET): vol.All(
+            vol.Coerce(int), vol.Range(min=0, max=99)
+        )
+    }
+)
 
 
 async def validate_input(
@@ -81,6 +94,7 @@ async def validate_input(
             CONF_SLEEP_PERIOD: get_block_device_sleep_period(block_device.settings),
             "model": block_device.model,
             "gen": 1,
+            "roller": block_device.settings.get("mode", "") == "roller",
         }
 
 
@@ -126,6 +140,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     _LOGGER.exception("Unexpected exception")
                     errors["base"] = "unknown"
                 else:
+                    if device_info["roller"]:
+                        self.device_info = device_info
+                        return await self.async_step_roller()
                     return self.async_create_entry(
                         title=device_info["title"],
                         data={
@@ -161,6 +178,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                if device_info["roller"]:
+                    self.device_info = device_info
+                    self.device_info[CONF_USERNAME] = user_input[CONF_USERNAME]
+                    self.device_info[CONF_PASSWORD] = user_input[CONF_PASSWORD]
+                    return await self.async_step_roller()
                 return self.async_create_entry(
                     title=device_info["title"],
                     data={
@@ -184,6 +206,31 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="credentials", data_schema=schema, errors=errors
         )
+
+    async def async_step_roller(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle the roller step."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            if self.device_info.get(CONF_USERNAME):
+                user_input[CONF_USERNAME] = self.device_info[CONF_USERNAME]
+            if self.device_info.get(CONF_PASSWORD):
+                user_input[CONF_PASSWORD] = self.device_info[CONF_PASSWORD]
+            return self.async_create_entry(
+                title=self.device_info["title"],
+                data={
+                    **user_input,
+                    CONF_HOST: self.host,
+                    CONF_SLEEP_PERIOD: self.device_info[CONF_SLEEP_PERIOD],
+                    "model": self.device_info["model"],
+                    "gen": self.device_info["gen"],
+                },
+            )
+        else:
+            return self.async_show_form(
+                step_id="roller", data_schema=ROLLER_SCHEMA, errors=errors
+            )
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo

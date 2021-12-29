@@ -15,6 +15,7 @@ from homeassistant.components.cover import (
     CoverEntity,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_OFFSET
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -50,6 +51,10 @@ class ShellyCover(ShellyBlockEntity, CoverEntity):
         self._supported_features: int = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP
         if self.wrapper.device.settings["rollers"][0]["positioning"]:
             self._supported_features |= SUPPORT_SET_POSITION
+        if wrapper.config_entry:
+            self._offset = wrapper.config_entry.data.get(CONF_OFFSET, 0)
+        else:
+            self._offset = 0
 
     @property
     def is_closed(self) -> bool:
@@ -63,9 +68,11 @@ class ShellyCover(ShellyBlockEntity, CoverEntity):
     def current_cover_position(self) -> int:
         """Position of the cover."""
         if self.control_result:
-            return cast(int, self.control_result["current_pos"])
+            return self._get_position_with_offset(
+                cast(int, self.control_result["current_pos"])
+            )
 
-        return cast(int, self.block.rollerPos)
+        return self._get_position_with_offset(cast(int, self.block.rollerPos))
 
     @property
     def is_closing(self) -> bool:
@@ -100,9 +107,10 @@ class ShellyCover(ShellyBlockEntity, CoverEntity):
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        self.control_result = await self.set_state(
-            go="to_pos", roller_pos=kwargs[ATTR_POSITION]
-        )
+        position = kwargs[ATTR_POSITION]
+        if position >= 1:
+            position = position + ((100 - position) * self._offset / 100)
+        self.control_result = await self.set_state(go="to_pos", roller_pos=position)
         self.async_write_ha_state()
 
     async def async_stop_cover(self, **_kwargs: Any) -> None:
@@ -115,3 +123,12 @@ class ShellyCover(ShellyBlockEntity, CoverEntity):
         """When device updates, clear control result that overrides state."""
         self.control_result = None
         super()._update_callback()
+
+    def _get_position_with_offset(self, position: int) -> int:
+        """Calculate the shelly's position from the real cover position. Apply the offset."""
+        if position is None or position == 0:
+            return 0
+        elif position <= self._offset:
+            return 1
+        else:
+            return cast(int, (100 * (position - self._offset)) / (100 - self._offset))

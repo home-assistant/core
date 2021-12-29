@@ -14,6 +14,12 @@
           "password": "[%key:common::config_flow::data::password%]"
         }
       },
+      "roller": {
+        "description": "Device configured in 'roller' mode, if you want it is possible to configure an offset value to convert the shelly position into the real cover position.\nAll shelly positions between 0 and offset will be set as cover position 1. From offset to 100 the proportional value.\nThis is useful for some blinds that needs some seconds to start opening.\n\nIf you are not sure, use 0.",
+        "data": {
+          "offset": "Offset"
+        }
+      },
       "confirm_discovery": {
         "description": "Do you want to set up the {model} at {host}?\n\nBattery-powered devices that are password protected must be woken up before continuing with setting up.\nBattery-powered devices that are not password protected will be added when the device wakes up, you can now manually wake the device up using a button on it or wait for the next data update from the device."
       }
