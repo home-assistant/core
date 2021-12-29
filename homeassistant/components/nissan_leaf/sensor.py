@@ -42,7 +42,7 @@ class LeafBatterySensor(LeafEntity, SensorEntity):
     def __init__(self, car):
         """Set up battery sensor."""
         super().__init__(car)
-        self._attr_unique_id = f"{self._attr_unique_id}_soc"
+        self._attr_unique_id = f"{self.car.leaf.vin.lower()}_soc"
 
     @property
     def name(self):
