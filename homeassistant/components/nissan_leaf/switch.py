@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import ToggleEntity
@@ -35,11 +36,11 @@ class LeafClimateSwitch(LeafEntity, ToggleEntity):
     """Nissan Leaf Climate Control switch."""
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Switch name."""
         return f"{self.car.leaf.nickname} Climate Control"
 
-    def log_registration(self):
+    def log_registration(self) -> None:
         """Log registration."""
         _LOGGER.debug(
             "Registered LeafClimateSwitch integration with Home Assistant for VIN %s",
@@ -47,23 +48,23 @@ class LeafClimateSwitch(LeafEntity, ToggleEntity):
         )
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return climate control attributes."""
         attrs = super().extra_state_attributes
         attrs["updated_on"] = self.car.last_climate_response
         return attrs
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if climate control is on."""
-        return self.car.data[DATA_CLIMATE]
+        return bool(self.car.data[DATA_CLIMATE])
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on climate control."""
         if await self.car.async_set_climate(True):
             self.car.data[DATA_CLIMATE] = True
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off climate control."""
         if await self.car.async_set_climate(False):
             self.car.data[DATA_CLIMATE] = False
