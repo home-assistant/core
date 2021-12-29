@@ -350,6 +350,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         if (
             isinstance(description.brightness, DPCode)
             and description.brightness in device.function
+            and description.brightness in device.status_range
         ):
             self._brightness_dpcode = description.brightness
         elif isinstance(description.brightness, tuple):
@@ -357,7 +358,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                 (
                     dpcode
                     for dpcode in description.brightness
-                    if dpcode in device.function
+                    if dpcode in device.function and dpcode in device.status_range
                 ),
                 None,
             )
@@ -373,6 +374,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         if (
             isinstance(description.color_temp, DPCode)
             and description.color_temp in device.function
+            and description.color_temp in device.status_range
         ):
             self._color_temp_dpcode = description.color_temp
         elif isinstance(description.color_temp, tuple):
@@ -380,7 +382,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                 (
                     dpcode
                     for dpcode in description.color_temp
-                    if dpcode in device.function
+                    if dpcode in device.function and dpcode in device.status_range
                 ),
                 None,
             )
