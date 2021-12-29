@@ -32,6 +32,7 @@ from .const import (
     ATTR_ADVICE,
     ATTR_API_ADVICE,
     ATTR_API_CAQI,
+    ATTR_API_CAQI_COLOR,
     ATTR_API_CAQI_DESCRIPTION,
     ATTR_API_CAQI_LEVEL,
     ATTR_API_HUMIDITY,
@@ -40,6 +41,7 @@ from .const import (
     ATTR_API_PM25,
     ATTR_API_PRESSURE,
     ATTR_API_TEMPERATURE,
+    ATTR_COLOR,
     ATTR_DESCRIPTION,
     ATTR_LEVEL,
     ATTR_LIMIT,
@@ -176,6 +178,7 @@ class AirlySensor(CoordinatorEntity, SensorEntity):
         if self.entity_description.key == ATTR_API_CAQI:
             self._attrs[ATTR_LEVEL] = self.coordinator.data[ATTR_API_CAQI_LEVEL]
             self._attrs[ATTR_ADVICE] = self.coordinator.data[ATTR_API_ADVICE]
+            self._attrs[ATTR_COLOR] = self.coordinator.data[ATTR_API_CAQI_COLOR]
             self._attrs[ATTR_DESCRIPTION] = self.coordinator.data[
                 ATTR_API_CAQI_DESCRIPTION
             ]

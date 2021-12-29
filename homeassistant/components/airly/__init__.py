@@ -24,6 +24,7 @@ from homeassistant.util import dt as dt_util
 from .const import (
     ATTR_API_ADVICE,
     ATTR_API_CAQI,
+    ATTR_API_CAQI_COLOR,
     ATTR_API_CAQI_DESCRIPTION,
     ATTR_API_CAQI_LEVEL,
     CONF_USE_NEAREST,
@@ -200,6 +201,7 @@ class AirlyDataUpdateCoordinator(DataUpdateCoordinator):
             data[f"{standard['pollutant']}_PERCENT"] = standard["percent"]
         data[ATTR_API_CAQI] = index["value"]
         data[ATTR_API_CAQI_LEVEL] = index["level"].lower().replace("_", " ")
+        data[ATTR_API_CAQI_COLOR] = index["color"]
         data[ATTR_API_CAQI_DESCRIPTION] = index["description"]
         data[ATTR_API_ADVICE] = index["advice"]
         return data

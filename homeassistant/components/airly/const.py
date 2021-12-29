@@ -5,6 +5,7 @@ from typing import Final
 
 ATTR_API_ADVICE: Final = "ADVICE"
 ATTR_API_CAQI: Final = "CAQI"
+ATTR_API_CAQI_COLOR: Final = "COLOR"
 ATTR_API_CAQI_DESCRIPTION: Final = "DESCRIPTION"
 ATTR_API_CAQI_LEVEL: Final = "LEVEL"
 ATTR_API_HUMIDITY: Final = "HUMIDITY"
@@ -15,6 +16,7 @@ ATTR_API_PRESSURE: Final = "PRESSURE"
 ATTR_API_TEMPERATURE: Final = "TEMPERATURE"
 
 ATTR_ADVICE: Final = "advice"
+ATTR_COLOR: Final = "color"
 ATTR_DESCRIPTION: Final = "description"
 ATTR_LEVEL: Final = "level"
 ATTR_LIMIT: Final = "limit"
