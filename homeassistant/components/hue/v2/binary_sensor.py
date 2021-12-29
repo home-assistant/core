@@ -85,7 +85,8 @@ class HueMotionSensor(HueBinarySensorBase):
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         if not self.resource.enabled:
-            return False
+            # Force None (unknown) if the sensor is set to disabled in Hue
+            return None
         return self.resource.motion.motion
 
     @property
