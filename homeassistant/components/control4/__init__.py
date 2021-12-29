@@ -215,13 +215,13 @@ class Control4Entity(Entity):
         """Add entity to hass. Register Websockets callbacks to receive entity state updates from Control4."""
         await super().async_added_to_hass()
         await self.hass.async_add_executor_job(
-            self.entry_data[CONF_WEBSOCKET].add_device_callback,
+            self.entry_data[CONF_WEBSOCKET].add_item_callback,
             self._idx,
             self._update_callback,
         )
         _LOGGER.debug("Registering item id %s for callback", self._idx)
         await self.hass.async_add_executor_job(
-            self.entry_data[CONF_WEBSOCKET].add_device_callback,
+            self.entry_data[CONF_WEBSOCKET].add_item_callback,
             self._device_id,
             self._update_callback,
         )
@@ -235,13 +235,13 @@ class Control4Entity(Entity):
     async def async_will_remove_from_hass(self) -> None:
         """Entity being removed from hass. Unregister Control4 Websockets callbacks for this entity."""
         _LOGGER.debug("Deregistering callback for item id %s", self._idx)
-        self.entry_data[CONF_WEBSOCKET].remove_device_callback(self._idx)
+        self.entry_data[CONF_WEBSOCKET].remove_item_callback(self._idx)
         _LOGGER.debug(
             "Deregistering callback for parent device %s of item id %s",
             self._device_id,
             self._idx,
         )
-        self.entry_data[CONF_WEBSOCKET].remove_device_callback(self._device_id)
+        self.entry_data[CONF_WEBSOCKET].remove_item_callback(self._device_id)
 
     async def _update_callback(self, device, message):
         """Update state attributes in hass after receiving a Websocket update for our item id/parent device id."""
