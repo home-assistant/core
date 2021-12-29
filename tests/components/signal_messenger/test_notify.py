@@ -6,6 +6,7 @@ import os
 import tempfile
 from unittest.mock import patch
 
+from pysignalclirestapi.api import SignalCliRestApiError
 import pytest
 
 from homeassistant.setup import async_setup_component
@@ -75,6 +76,23 @@ def test_send_message_should_show_deprecation_warning(
     assert_sending_requests(signal_requests_mock, 1)
 
 
+def test_send_message_with_bad_data_throws_error(
+    signal_notification_service, signal_requests_mock_factory, caplog
+):
+    """Test sending a message with bad data throws an error."""
+    signal_requests_mock = signal_requests_mock_factory(False)
+    with caplog.at_level(
+        logging.DEBUG, logger="homeassistant.components.signal_messenger.notify"
+    ):
+        with pytest.raises(SignalCliRestApiError) as exc:
+            signal_notification_service.send_message(MESSAGE)
+
+    assert "Sending signal message" in caplog.text
+    assert signal_requests_mock.called
+    assert signal_requests_mock.call_count == 2
+    assert "Couldn't send signal message" in str(exc.value)
+
+
 def test_send_message_with_attachment(
     signal_notification_service, signal_requests_mock_factory, caplog
 ):
@@ -105,7 +123,7 @@ def test_send_message_with_attachment_as_url(
     signal_notification_service, signal_requests_mock_factory, caplog
 ):
     """Test send message with attachment as URL."""
-    signal_requests_mock = signal_requests_mock_factory(str(len(CONTENT)))
+    signal_requests_mock = signal_requests_mock_factory(True, str(len(CONTENT)))
     with caplog.at_level(
         logging.DEBUG, logger="homeassistant.components.signal_messenger.notify"
     ):
@@ -120,7 +138,7 @@ def test_send_message_with_attachment_as_url(
 
 def test_get_attachments(signal_notification_service, signal_requests_mock_factory):
     """Test getting attachments as URL."""
-    signal_requests_mock = signal_requests_mock_factory(str(len(CONTENT)))
+    signal_requests_mock = signal_requests_mock_factory(True, str(len(CONTENT)))
     data = {"urls": [URL_ATTACHMENT]}
     result = signal_notification_service.get_attachments_as_bytes(data, len(CONTENT))
 
@@ -133,7 +151,7 @@ def test_get_attachments_with_large_attachment(
     signal_notification_service, signal_requests_mock_factory
 ):
     """Test getting attachments as URL with large attachment (per Content-Length header) throws error."""
-    signal_requests_mock = signal_requests_mock_factory(str(len(CONTENT) + 1))
+    signal_requests_mock = signal_requests_mock_factory(True, str(len(CONTENT) + 1))
     with pytest.raises(ValueError) as exc:
         data = {"urls": [URL_ATTACHMENT]}
         signal_notification_service.get_attachments_as_bytes(data, len(CONTENT))

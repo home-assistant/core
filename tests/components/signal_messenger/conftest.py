@@ -28,18 +28,27 @@ URL_ATTACHMENT = "http://127.0.0.1:8080/image.jpg"
 def signal_requests_mock_factory(requests_mock):
     """Create signal service mock from factory."""
 
-    def _signal_requests_mock_factory(content_length_header=None):
-        requests_mock.register_uri(
-            "POST",
-            "http://127.0.0.1:8080" + SIGNAL_SEND_PATH_SUFIX,
-            status_code=HTTPStatus.CREATED,
-        )
+    def _signal_requests_mock_factory(
+        success_send_result=True, content_length_header=None
+    ):
         requests_mock.register_uri(
             "GET",
             "http://127.0.0.1:8080/v1/about",
             status_code=HTTPStatus.OK,
             json={"versions": ["v1", "v2"]},
         )
+        if success_send_result:
+            requests_mock.register_uri(
+                "POST",
+                "http://127.0.0.1:8080" + SIGNAL_SEND_PATH_SUFIX,
+                status_code=HTTPStatus.CREATED,
+            )
+        else:
+            requests_mock.register_uri(
+                "POST",
+                "http://127.0.0.1:8080" + SIGNAL_SEND_PATH_SUFIX,
+                status_code=HTTPStatus.BAD_REQUEST,
+            )
         if content_length_header is not None:
             requests_mock.register_uri(
                 "GET",
