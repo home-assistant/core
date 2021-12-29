@@ -1,7 +1,6 @@
 """Support for Ubiquiti's UniFi Protect NVR."""
 from __future__ import annotations
 
-from collections.abc import Callable, Sequence
 import logging
 from typing import Any
 
@@ -16,7 +15,6 @@ from homeassistant.components.media_player import (
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     SUPPORT_PLAY_MEDIA,
-    SUPPORT_SELECT_SOURCE,
     SUPPORT_STOP,
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
@@ -24,7 +22,8 @@ from homeassistant.components.media_player.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_IDLE, STATE_PLAYING
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import Entity
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .data import ProtectData
@@ -36,7 +35,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[Sequence[Entity]], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Discover cameras with speakers on a UniFi Protect NVR."""
     data: ProtectData = hass.data[DOMAIN][entry.entry_id]
@@ -71,11 +70,7 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
 
         self._attr_name = f"{self.device.name} Speaker"
         self._attr_supported_features = (
-            SUPPORT_PLAY_MEDIA
-            | SUPPORT_VOLUME_SET
-            | SUPPORT_VOLUME_STEP
-            | SUPPORT_STOP
-            | SUPPORT_SELECT_SOURCE
+            SUPPORT_PLAY_MEDIA | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_STEP | SUPPORT_STOP
         )
         self._attr_media_content_type = MEDIA_TYPE_MUSIC
 
@@ -92,7 +87,6 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
         else:
             self._attr_state = STATE_IDLE
 
-    @callback
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
 
@@ -116,20 +110,14 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
         """Play a piece of media."""
 
         if media_type != MEDIA_TYPE_MUSIC:
-            _LOGGER.warning(
-                "%s: Cannot play media type of %s, only `%s` supported",
-                self.device.name,
-                media_type,
-                MEDIA_TYPE_MUSIC,
-            )
-            return
+            raise ValueError("Only music media type is supported")
 
         _LOGGER.debug("Playing Media %s for %s Speaker", media_id, self.device.name)
         await self.async_media_stop()
         try:
             await self.device.play_audio(media_id, blocking=False)
         except StreamError as err:
-            _LOGGER.error("Error while playing media: %s", err)
+            raise HomeAssistantError from err
         else:
             # update state after starting player
             self._async_updated_event()
