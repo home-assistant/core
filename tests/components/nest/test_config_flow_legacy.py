@@ -35,8 +35,8 @@ async def test_abort_if_single_instance_allowed(hass):
     assert result["reason"] == "single_instance_allowed"
 
 
-async def test_full_flow_implementation_with_multiple(hass):
-    """Test the flow with multiple auth implementations registered."""
+async def test_full_flow_implementation(hass):
+    """Test registering an implementation and finishing flow works."""
     assert await async_setup_component(hass, DOMAIN, CONFIG)
     await hass.async_block_till_done()
     # Register an additional implementation to select from during the flow
@@ -78,8 +78,8 @@ async def test_full_flow_implementation_with_multiple(hass):
         assert result["title"] == "Nest (via configuration.yaml)"
 
 
-async def test_flow_end_to_end(hass):
-    """Test the flow end to end with a single auth implementation."""
+async def test_not_pick_implementation_if_only_one(hass):
+    """Test we pick the default implementation when registered."""
     assert await async_setup_component(hass, DOMAIN, CONFIG)
     await hass.async_block_till_done()
 
