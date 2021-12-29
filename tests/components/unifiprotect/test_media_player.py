@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from pyunifiprotect.data import Camera
+from pyunifiprotect.exceptions import StreamError
 
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_TYPE,
@@ -142,7 +143,7 @@ async def test_media_player_stop(
 
     new_bootstrap = copy(mock_entry.api.bootstrap)
     new_camera = camera[0].copy()
-    new_camera.talkback_stream = Mock()
+    new_camera.talkback_stream = AsyncMock()
     new_camera.talkback_stream.is_running = True
 
     mock_msg = Mock()
@@ -169,8 +170,12 @@ async def test_media_player_play(
 ):
     """Test media_player entity test play_media."""
 
+    camera[0].__fields__["stop_audio"] = Mock()
     camera[0].__fields__["play_audio"] = Mock()
+    camera[0].__fields__["wait_until_audio_completes"] = Mock()
+    camera[0].stop_audio = AsyncMock()
     camera[0].play_audio = AsyncMock()
+    camera[0].wait_until_audio_completes = AsyncMock()
 
     await hass.services.async_call(
         "media_player",
@@ -183,7 +188,8 @@ async def test_media_player_play(
         blocking=True,
     )
 
-    camera[0].play_audio.assert_called_once_with("/test.mp3")
+    camera[0].play_audio.assert_called_once_with("/test.mp3", blocking=False)
+    camera[0].wait_until_audio_completes.assert_called_once()
 
 
 async def test_media_player_play_invalid(
@@ -206,4 +212,30 @@ async def test_media_player_play_invalid(
         blocking=True,
     )
 
-    camera[0].play_audio.assert_not_called
+    assert not camera[0].play_audio.called
+
+
+async def test_media_player_play_error(
+    hass: HomeAssistant,
+    camera: tuple[Camera, str],
+):
+    """Test media_player entity test play_media, not music."""
+
+    camera[0].__fields__["play_audio"] = Mock()
+    camera[0].__fields__["wait_until_audio_completes"] = Mock()
+    camera[0].play_audio = AsyncMock(side_effect=StreamError)
+    camera[0].wait_until_audio_completes = AsyncMock()
+
+    await hass.services.async_call(
+        "media_player",
+        "play_media",
+        {
+            ATTR_ENTITY_ID: camera[1],
+            "media_content_id": "/test.mp3",
+            "media_content_type": "music",
+        },
+        blocking=True,
+    )
+
+    assert camera[0].play_audio.called
+    assert not camera[0].wait_until_audio_completes.called

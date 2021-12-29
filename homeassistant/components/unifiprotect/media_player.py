@@ -6,6 +6,7 @@ import logging
 from typing import Any
 
 from pyunifiprotect.data import Camera
+from pyunifiprotect.exceptions import StreamError
 
 from homeassistant.components.media_player import (
     DEVICE_CLASS_SPEAKER,
@@ -98,7 +99,7 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
         volume_int = int(volume * 100)
         await self.device.set_speaker_volume(volume_int)
 
-    def media_stop(self) -> None:
+    async def async_media_stop(self) -> None:
         """Send stop command."""
 
         if (
@@ -106,7 +107,8 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
             and self.device.talkback_stream.is_running
         ):
             _LOGGER.debug("Stopping playback for %s Speaker", self.device.name)
-            self.device.talkback_stream.stop()
+            await self.device.stop_audio()
+            self._async_updated_event()
 
     async def async_play_media(
         self, media_type: str, media_id: str, **kwargs: Any
@@ -114,12 +116,24 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
         """Play a piece of media."""
 
         if media_type != MEDIA_TYPE_MUSIC:
+            _LOGGER.warning(
+                "%s: Cannot play media type of %s, only `%s` supported",
+                self.device.name,
+                media_type,
+                MEDIA_TYPE_MUSIC,
+            )
             return
 
         _LOGGER.debug("Playing Media %s for %s Speaker", media_id, self.device.name)
-        self.media_stop()
-        self._attr_state = STATE_PLAYING
+        await self.async_media_stop()
         try:
-            await self.device.play_audio(media_id)
-        finally:
+            await self.device.play_audio(media_id, blocking=False)
+        except StreamError as err:
+            _LOGGER.error("Error while playing media: %s", err)
+        else:
+            # update state after starting player
             self._async_updated_event()
+            # wait until player finishes to update state again
+            await self.device.wait_until_audio_completes()
+
+        self._async_updated_event()
