@@ -30,6 +30,8 @@ VALLOX_CONNECTION_EXCEPTIONS = (
     ValloxApiException,
 )
 
+INTEGRATION_DOCS_URL = "https://www.home-assistant.io/integrations/vallox"
+
 
 async def validate_host(hass: HomeAssistant, host: str) -> None:
     """Validate that the user input allows us to connect."""
@@ -59,10 +61,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             await validate_host(self.hass, host)
         except InvalidHost:
-            _LOGGER.exception("An invalid host is configured for Vallox")
+            _LOGGER.error(f"An invalid host is configured for Vallox: {host}")
             reason = "invalid_host"
         except VALLOX_CONNECTION_EXCEPTIONS:
-            _LOGGER.exception("Cannot connect to Vallox")
+            _LOGGER.error(f"Cannot connect to Vallox host {host}")
             reason = "cannot_connect"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
@@ -84,7 +86,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         if user_input is None or user_input[CONF_HOST] is None:
             return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
+                step_id="user",
+                description_placeholders={"integration_docs_url": INTEGRATION_DOCS_URL},
+                data_schema=STEP_USER_DATA_SCHEMA,
             )
 
         errors = {}
@@ -112,7 +116,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user",
+            description_placeholders={"integration_docs_url": INTEGRATION_DOCS_URL},
+            data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors,
         )
 
 
