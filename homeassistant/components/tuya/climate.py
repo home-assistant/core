@@ -182,10 +182,10 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         # it to define min, max & step temperatures
         if (
             self._set_temperature_dpcode
-            and self._set_temperature_dpcode in device.status_range
+            and self._set_temperature_dpcode in device.function
         ):
             type_data = IntegerTypeData.from_json(
-                device.status_range[self._set_temperature_dpcode].values
+                device.function[self._set_temperature_dpcode].values
             )
             self._attr_supported_features |= SUPPORT_TARGET_TEMPERATURE
             self._set_temperature_type = type_data
@@ -232,14 +232,11 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             ]
 
         # Determine dpcode to use for setting the humidity
-        if (
-            DPCode.HUMIDITY_SET in device.status
-            and DPCode.HUMIDITY_SET in device.status_range
-        ):
+        if DPCode.HUMIDITY_SET in device.function:
             self._attr_supported_features |= SUPPORT_TARGET_HUMIDITY
             self._set_humidity_dpcode = DPCode.HUMIDITY_SET
             type_data = IntegerTypeData.from_json(
-                device.status_range[DPCode.HUMIDITY_SET].values
+                device.function[DPCode.HUMIDITY_SET].values
             )
             self._set_humidity_type = type_data
             self._attr_min_humidity = int(type_data.min_scaled)
