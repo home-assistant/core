@@ -864,8 +864,6 @@ omit =
     homeassistant/components/pushbullet/sensor.py
     homeassistant/components/pushover/notify.py
     homeassistant/components/pushsafer/notify.py
-    homeassistant/components/pvoutput/__init__.py
-    homeassistant/components/pvoutput/coordinator.py
     homeassistant/components/pvoutput/sensor.py
     homeassistant/components/pyload/sensor.py
     homeassistant/components/qbittorrent/sensor.py
