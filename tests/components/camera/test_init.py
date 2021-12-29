@@ -109,7 +109,10 @@ async def mock_hls_stream_source_fixture():
     with patch(
         "homeassistant.components.camera.Camera.stream_source",
         return_value=HLS_STREAM_SOURCE,
-    ) as mock_hls_stream_source:
+    ) as mock_hls_stream_source, patch(
+        "homeassistant.components.camera.Camera.supported_features",
+        return_value=camera.SUPPORT_STREAM,
+    ):
         yield mock_hls_stream_source
 
 

@@ -695,10 +695,8 @@ class Camera(Entity):
         if DATA_RTSP_TO_WEB_RTC not in self.hass.data:
             return False
         stream_source = await self.stream_source()
-        if not stream_source:
-            return False
         for prefix in RTSP_PREFIXES:
-            if stream_source.startswith(prefix):
+            if stream_source and stream_source.startswith(prefix):
                 return True
         return False
 
