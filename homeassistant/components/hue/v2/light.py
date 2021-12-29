@@ -6,7 +6,6 @@ from typing import Any
 from aiohue import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
 from aiohue.v2.controllers.lights import LightsController
-from aiohue.v2.models.feature import AlertEffectType
 from aiohue.v2.models.light import Light
 
 from homeassistant.components.light import (
@@ -19,6 +18,7 @@ from homeassistant.components.light import (
     COLOR_MODE_COLOR_TEMP,
     COLOR_MODE_ONOFF,
     COLOR_MODE_XY,
+    FLASH_SHORT,
     SUPPORT_FLASH,
     SUPPORT_TRANSITION,
     LightEntity,
@@ -35,7 +35,6 @@ from .helpers import normalize_hue_brightness, normalize_hue_transition
 ALLOWED_ERRORS = [
     "device (light) has communication issues, command (on) may not have effect",
     'device (light) is "soft off", command (on) may not have effect',
-    "attribute (supportedAlertActions) cannot be written",
 ]
 
 
@@ -73,7 +72,8 @@ class HueLight(HueBaseEntity, LightEntity):
     ) -> None:
         """Initialize the light."""
         super().__init__(bridge, controller, resource)
-        self._attr_supported_features |= SUPPORT_FLASH
+        if self.resource.alert and self.resource.alert.action_values:
+            self._attr_supported_features |= SUPPORT_FLASH
         self.resource = resource
         self.controller = controller
         self._supported_color_modes = set()
@@ -162,6 +162,14 @@ class HueLight(HueBaseEntity, LightEntity):
         brightness = normalize_hue_brightness(kwargs.get(ATTR_BRIGHTNESS))
         flash = kwargs.get(ATTR_FLASH)
 
+        if flash is not None:
+            await self.async_set_flash(flash)
+            # flash can not be sent with other commands at the same time or result will be flaky
+            # Hue's default behavior is that a light returns to its previous state for short
+            # flash (identify) and the light is kept turned on for long flash (breathe effect)
+            # Why is this flash alert/effect hidden in the turn_on/off commands ?
+            return
+
         await self.bridge.async_request_call(
             self.controller.set_state,
             id=self.resource.id,
@@ -170,7 +178,6 @@ class HueLight(HueBaseEntity, LightEntity):
             color_xy=xy_color,
             color_temp=color_temp,
             transition_time=transition,
-            alert=AlertEffectType.BREATHE if flash is not None else None,
             allowed_errors=ALLOWED_ERRORS,
         )
 
@@ -179,11 +186,25 @@ class HueLight(HueBaseEntity, LightEntity):
         transition = normalize_hue_transition(kwargs.get(ATTR_TRANSITION))
         flash = kwargs.get(ATTR_FLASH)
 
+        if flash is not None:
+            await self.async_set_flash(flash)
+            # flash can not be sent with other commands at the same time or result will be flaky
+            # Hue's default behavior is that a light returns to its previous state for short
+            # flash (identify) and the light is kept turned on for long flash (breathe effect)
+            return
+
         await self.bridge.async_request_call(
             self.controller.set_state,
             id=self.resource.id,
             on=False,
             transition_time=transition,
-            alert=AlertEffectType.BREATHE if flash is not None else None,
             allowed_errors=ALLOWED_ERRORS,
+        )
+
+    async def async_set_flash(self, flash: str) -> None:
+        """Send flash command to light."""
+        await self.bridge.async_request_call(
+            self.controller.set_flash,
+            id=self.resource.id,
+            short=flash == FLASH_SHORT,
         )

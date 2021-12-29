@@ -19,6 +19,7 @@ from homeassistant.components.light import (
     COLOR_MODE_COLOR_TEMP,
     COLOR_MODE_ONOFF,
     COLOR_MODE_XY,
+    FLASH_SHORT,
     SUPPORT_FLASH,
     SUPPORT_TRANSITION,
     LightEntity,
@@ -37,7 +38,6 @@ ALLOWED_ERRORS = [
     'device (groupedLight) is "soft off", command (on) may not have effect',
     "device (light) has communication issues, command (on) may not have effect",
     'device (light) is "soft off", command (on) may not have effect',
-    "attribute (supportedAlertActions) cannot be written",
 ]
 
 
@@ -155,6 +155,11 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
         brightness = normalize_hue_brightness(kwargs.get(ATTR_BRIGHTNESS))
         flash = kwargs.get(ATTR_FLASH)
 
+        if flash is not None:
+            await self.async_set_flash(flash)
+            # flash can not be sent with other commands at the same time
+            return
+
         # NOTE: a grouped_light can only handle turn on/off
         # To set other features, you'll have to control the attached lights
         if (
@@ -194,6 +199,12 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         transition = normalize_hue_transition(kwargs.get(ATTR_TRANSITION))
+        flash = kwargs.get(ATTR_FLASH)
+
+        if flash is not None:
+            await self.async_set_flash(flash)
+            # flash can not be sent with other commands at the same time
+            return
 
         # NOTE: a grouped_light can only handle turn on/off
         # To set other features, you'll have to control the attached lights
@@ -215,6 +226,19 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
                     on=False,
                     transition_time=transition,
                     allowed_errors=ALLOWED_ERRORS,
+                )
+                for light in self.controller.get_lights(self.resource.id)
+            ]
+        )
+
+    async def async_set_flash(self, flash: str) -> None:
+        """Send flash command to light."""
+        await asyncio.gather(
+            *[
+                self.bridge.async_request_call(
+                    self.api.lights.set_flash,
+                    id=light.id,
+                    short=flash == FLASH_SHORT,
                 )
                 for light in self.controller.get_lights(self.resource.id)
             ]
