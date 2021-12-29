@@ -26,7 +26,6 @@ from homeassistant.helpers.event import async_call_later
 
 from .const import (
     CONF_ACCOUNT,
-    CONF_CONFIG_LISTENER,
     CONF_CONTROLLER_UNIQUE_ID,
     CONF_DIRECTOR,
     CONF_DIRECTOR_ALL_ITEMS,
@@ -48,66 +47,47 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     config = entry.data
 
     await refresh_tokens(hass, entry)
-    account = entry_data[CONF_ACCOUNT]
-    director = entry_data[CONF_DIRECTOR]
     # Copy controller unique id from config to entry_data for use by entities
-    controller_unique_id = config[CONF_CONTROLLER_UNIQUE_ID]
-    entry_data[CONF_CONTROLLER_UNIQUE_ID] = controller_unique_id
-
-    websocket_session = aiohttp_client.async_get_clientsession(hass, verify_ssl=False)
-    websocket = C4Websocket(
-        config[CONF_HOST], director.director_bearer_token, websocket_session
-    )
-    # Silence C4Websocket related loggers, that would otherwise spam INFO logs with debugging messages
-    logging.getLogger("socketio.client").setLevel(logging.WARNING)
-    logging.getLogger("engineio.client").setLevel(logging.WARNING)
-    logging.getLogger("charset_normalizer").setLevel(logging.ERROR)
-    entry_data[CONF_WEBSOCKET] = websocket
-    await websocket.sio_connect()
+    entry_data[CONF_CONTROLLER_UNIQUE_ID] = config[CONF_CONTROLLER_UNIQUE_ID]
 
     # Add Control4 controller to device registry
-    controller_href = (await account.getAccountControllers())["href"]
-    entry_data[CONF_DIRECTOR_SW_VERSION] = await account.getControllerOSVersion(
-        controller_href
-    )
+    controller_href = (await entry_data[CONF_ACCOUNT].getAccountControllers())["href"]
+    entry_data[CONF_DIRECTOR_SW_VERSION] = await entry_data[
+        CONF_ACCOUNT
+    ].getControllerOSVersion(controller_href)
 
-    _, model, mac_address = controller_unique_id.split("_", 3)
+    _, model, mac_address = entry_data[CONF_CONTROLLER_UNIQUE_ID].split("_", 3)
     entry_data[CONF_DIRECTOR_MODEL] = model.upper()
 
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, controller_unique_id)},
+        identifiers={(DOMAIN, entry_data[CONF_CONTROLLER_UNIQUE_ID])},
         connections={(dr.CONNECTION_NETWORK_MAC, mac_address)},
         manufacturer="Control4",
-        name=controller_unique_id,
+        name=entry_data[CONF_CONTROLLER_UNIQUE_ID],
         model=entry_data[CONF_DIRECTOR_MODEL],
         sw_version=entry_data[CONF_DIRECTOR_SW_VERSION],
     )
 
     # Store all items found on controller for platforms to use
-    director_all_items = await director.getAllItemInfo()
+    director_all_items = await entry_data[CONF_DIRECTOR].getAllItemInfo()
     director_all_items = json.loads(director_all_items)
     entry_data[CONF_DIRECTOR_ALL_ITEMS] = director_all_items
-
-    entry_data[CONF_CONFIG_LISTENER] = entry.add_update_listener(update_listener)
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
-async def update_listener(hass, config_entry):
-    """Update when config_entry options update."""
-    _LOGGER.debug("Config entry was updated, rerunning setup")
-    await hass.config_entries.async_reload(config_entry.entry_id)
-
-
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    hass.data[DOMAIN][entry.entry_id][CONF_CONFIG_LISTENER]()
+    entry_data = hass.data[DOMAIN][entry.entry_id]
+    _LOGGER.debug("Disconnecting C4Websocket for config entry unload")
+    await entry_data[CONF_WEBSOCKET].sio_disconnect()
+
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
         _LOGGER.debug("Unloaded entry for %s", entry.entry_id)
@@ -126,9 +106,11 @@ async def get_items_of_category(hass: HomeAssistant, entry: ConfigEntry, categor
 async def refresh_tokens(hass: HomeAssistant, entry: ConfigEntry):
     """Store updated authentication and director tokens in hass.data, and schedule next token refresh."""
     config = entry.data
-    account_session = aiohttp_client.async_get_clientsession(hass)
+    verify_ssl_session = aiohttp_client.async_get_clientsession(hass)
 
-    account = C4Account(config[CONF_USERNAME], config[CONF_PASSWORD], account_session)
+    account = C4Account(
+        config[CONF_USERNAME], config[CONF_PASSWORD], verify_ssl_session
+    )
     try:
         await account.getAccountBearerToken()
     except client_exceptions.ClientError as exception:
@@ -143,16 +125,39 @@ async def refresh_tokens(hass: HomeAssistant, entry: ConfigEntry):
 
     controller_unique_id = config[CONF_CONTROLLER_UNIQUE_ID]
     director_token_dict = await account.getDirectorBearerToken(controller_unique_id)
-    director_session = aiohttp_client.async_get_clientsession(hass, verify_ssl=False)
-
-    director = C4Director(
-        config[CONF_HOST], director_token_dict[CONF_TOKEN], director_session
+    no_verify_ssl_session = aiohttp_client.async_get_clientsession(
+        hass, verify_ssl=False
     )
 
-    _LOGGER.debug("Saving new tokens in hass data")
+    director = C4Director(
+        config[CONF_HOST], director_token_dict[CONF_TOKEN], no_verify_ssl_session
+    )
+
+    _LOGGER.debug("Saving new account and director tokens in hass data")
     entry_data = hass.data[DOMAIN][entry.entry_id]
     entry_data[CONF_ACCOUNT] = account
     entry_data[CONF_DIRECTOR] = director
+
+    if not (
+        CONF_WEBSOCKET in entry_data
+        and isinstance(entry_data[CONF_WEBSOCKET], C4Websocket)
+    ):
+        _LOGGER.debug("First time setup, creating new C4Websocket object")
+        websocket = C4Websocket(config[CONF_HOST], no_verify_ssl_session)
+        entry_data[CONF_WEBSOCKET] = websocket
+
+        # Silence C4Websocket related loggers, that would otherwise spam INFO logs with debugging messages
+        logging.getLogger("socketio.client").setLevel(logging.WARNING)
+        logging.getLogger("engineio.client").setLevel(logging.WARNING)
+        logging.getLogger("charset_normalizer").setLevel(logging.ERROR)
+
+    _LOGGER.debug("Starting new WebSocket connection")
+    await entry_data[CONF_WEBSOCKET].sio_connect(director.director_bearer_token)
+
+    _LOGGER.debug(
+        "Registering next token refresh in %s seconds",
+        director_token_dict["validSeconds"],
+    )
     obj = RefreshTokensObject(hass, entry)
     async_call_later(
         hass=hass,
@@ -207,7 +212,7 @@ class Control4Entity(Entity):
         self._extra_state_attributes = device_attributes
 
     async def async_added_to_hass(self):
-        """Add entity to hass, adding Websockets callbacks to receive entity state updates from Control4."""
+        """Add entity to hass. Register Websockets callbacks to receive entity state updates from Control4."""
         await super().async_added_to_hass()
         await self.hass.async_add_executor_job(
             self.entry_data[CONF_WEBSOCKET].add_device_callback,
@@ -226,6 +231,17 @@ class Control4Entity(Entity):
             self._idx,
         )
         return True
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Entity being removed from hass. Unregister Control4 Websockets callbacks for this entity."""
+        _LOGGER.debug("Deregistering callback for item id %s", self._idx)
+        self.entry_data[CONF_WEBSOCKET].remove_device_callback(self._idx)
+        _LOGGER.debug(
+            "Deregistering callback for parent device %s of item id %s",
+            self._device_id,
+            self._idx,
+        )
+        self.entry_data[CONF_WEBSOCKET].remove_device_callback(self._device_id)
 
     async def _update_callback(self, device, message):
         """Update state attributes in hass after receiving a Websocket update for our item id/parent device id."""
