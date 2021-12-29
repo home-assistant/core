@@ -61,10 +61,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             await validate_host(self.hass, host)
         except InvalidHost:
-            _LOGGER.error(f"An invalid host is configured for Vallox: {host}")
+            _LOGGER.error("An invalid host is configured for Vallox: %s", host)
             reason = "invalid_host"
         except VALLOX_CONNECTION_EXCEPTIONS:
-            _LOGGER.error(f"Cannot connect to Vallox host {host}")
+            _LOGGER.error("Cannot connect to Vallox host %s", host)
             reason = "cannot_connect"
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
