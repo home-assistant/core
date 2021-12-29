@@ -10,3 +10,5 @@ ATTR_CURRENT_POWER_W = "current_power_w"
 ATTR_CURRENT_ENERGY_KWH = "current_energy_kwh"
 
 CONTROLLER_DATAS = "controller_datas"
+
+SCENE_EXCLUDE = "scene_exclude"

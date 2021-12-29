@@ -9,13 +9,13 @@ import pyvera as pv
 from requests.exceptions import RequestException
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant import config_entries, const
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EXCLUDE, CONF_LIGHTS, CONF_SOURCE
 from homeassistant.core import callback
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from .const import CONF_CONTROLLER, CONF_LEGACY_UNIQUE_ID, DOMAIN
+from .const import CONF_CONTROLLER, CONF_LEGACY_UNIQUE_ID, DOMAIN, SCENE_EXCLUDE
 
 LIST_REGEX = re.compile("[^0-9]+")
 _LOGGER = logging.getLogger(__name__)
@@ -36,9 +36,11 @@ def list_to_str(data: list[Any]) -> str:
     return " ".join([str(i) for i in data])
 
 
-def new_options(lights: list[int], exclude: list[int]) -> dict:
+def new_options(
+    lights: list[int], exclude: list[int], scene_exclude: list[int]
+) -> dict:
     """Create a standard options object."""
-    return {CONF_LIGHTS: lights, CONF_EXCLUDE: exclude}
+    return {CONF_LIGHTS: lights, CONF_EXCLUDE: exclude, SCENE_EXCLUDE: scene_exclude}
 
 
 def options_schema(options: dict = None) -> dict:
@@ -53,6 +55,10 @@ def options_schema(options: dict = None) -> dict:
             CONF_EXCLUDE,
             default=list_to_str(options.get(CONF_EXCLUDE, [])),
         ): str,
+        vol.Optional(
+            SCENE_EXCLUDE,
+            default=list_to_str(options.get(SCENE_EXCLUDE, [])),
+        ): str,
     }
 
 
@@ -61,6 +67,7 @@ def options_data(user_input: dict) -> dict:
     return new_options(
         str_to_int_list(user_input.get(CONF_LIGHTS, "")),
         str_to_int_list(user_input.get(CONF_EXCLUDE, "")),
+        str_to_int_list(user_input.get(SCENE_EXCLUDE, "")),
     )
 
 

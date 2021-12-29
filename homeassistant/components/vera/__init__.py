@@ -44,6 +44,7 @@ from .const import (
     CONF_CONTROLLER,
     CONF_LEGACY_UNIQUE_ID,
     DOMAIN,
+    SCENE_EXCLUDE,
     VERA_ID_FORMAT,
 )
 
@@ -58,6 +59,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Required(CONF_CONTROLLER): cv.url,
                 vol.Optional(CONF_EXCLUDE, default=[]): VERA_ID_LIST_SCHEMA,
                 vol.Optional(CONF_LIGHTS, default=[]): VERA_ID_LIST_SCHEMA,
+                vol.Optional(SCENE_EXCLUDE, default=[]): VERA_ID_LIST_SCHEMA,
             }
         )
     },
@@ -86,27 +88,38 @@ async def async_setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Do setup of vera."""
     # Use options entered during initial config flow or provided from configuration.yml
-    if entry.data.get(CONF_LIGHTS) or entry.data.get(CONF_EXCLUDE):
+    if (
+        entry.data.get(CONF_LIGHTS)
+        or entry.data.get(CONF_EXCLUDE)
+        or entry.data.get(SCENE_EXCLUDE)
+    ):
         hass.config_entries.async_update_entry(
             entry=entry,
             data=entry.data,
             options=new_options(
                 entry.data.get(CONF_LIGHTS, []),
                 entry.data.get(CONF_EXCLUDE, []),
+                entry.data.get(SCENE_EXCLUDE, []),
             ),
         )
 
     saved_light_ids = entry.options.get(CONF_LIGHTS, [])
     saved_exclude_ids = entry.options.get(CONF_EXCLUDE, [])
+    saved_exclude_scenes = entry.options.get(SCENE_EXCLUDE, [])
 
     base_url = entry.data[CONF_CONTROLLER]
     light_ids = fix_device_id_list(saved_light_ids)
     exclude_ids = fix_device_id_list(saved_exclude_ids)
+    exclude_scene_ids = fix_device_id_list(saved_exclude_scenes)
 
     # If the ids were corrected. Update the config entry.
-    if light_ids != saved_light_ids or exclude_ids != saved_exclude_ids:
+    if (
+        light_ids != saved_light_ids
+        or exclude_ids != saved_exclude_ids
+        or exclude_scene_ids != saved_exclude_scenes
+    ):
         hass.config_entries.async_update_entry(
-            entry=entry, options=new_options(light_ids, exclude_ids)
+            entry=entry, options=new_options(light_ids, exclude_ids, exclude_scene_ids)
         )
 
     # Initialize the Vera controller.
@@ -133,7 +146,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     vera_scenes = []
     for scene in all_scenes:
-        vera_scenes.append(scene)
+        if scene.scene_id not in exclude_scene_ids:
+            vera_scenes.append(scene)
 
     controller_data = ControllerData(
         controller=controller,
