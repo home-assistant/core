@@ -25,7 +25,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 CAMERA_SERVICE_UPDATE_FILE_PATH = vol.Schema(
     {
-        vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
+        vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids,
         vol.Required(CONF_FILE_PATH): cv.string,
     }
 )
