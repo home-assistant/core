@@ -127,6 +127,8 @@ class FluxICTypeSelect(FluxConfigSelect):
 class FluxWiringsSelect(FluxConfigSelect):
     """Representation of Flux wirings."""
 
+    _attr_icon = "mdi:led-strip-variant"
+
     def __init__(
         self,
         coordinator: FluxLedUpdateCoordinator,
