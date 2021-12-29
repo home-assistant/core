@@ -57,14 +57,14 @@ class LeafClimateSwitch(LeafEntity, ToggleEntity):
     @property
     def is_on(self) -> bool:
         """Return true if climate control is on."""
-        return self.car.data[DATA_CLIMATE]
+        return bool(self.car.data[DATA_CLIMATE])
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on climate control."""
         if await self.car.async_set_climate(True):
             self.car.data[DATA_CLIMATE] = True
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off climate control."""
         if await self.car.async_set_climate(False):
             self.car.data[DATA_CLIMATE] = False

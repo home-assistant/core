@@ -53,7 +53,7 @@ class LeafPluggedInSensor(LeafEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return true if plugged in."""
-        return self.car.data[DATA_PLUGGED_IN]
+        return bool(self.car.data[DATA_PLUGGED_IN])
 
 
 class LeafChargingSensor(LeafEntity, BinarySensorEntity):
@@ -74,4 +74,4 @@ class LeafChargingSensor(LeafEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return true if charging."""
-        return self.car.data[DATA_CHARGING]
+        return bool(self.car.data[DATA_CHARGING])

@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from http import HTTPStatus
 import logging
 import sys
-from typing import Any
+from typing import Any, cast
 
 from pycarwings2 import CarwingsError, Leaf, Session
 from pycarwings2.responses import (
@@ -16,7 +16,7 @@ from pycarwings2.responses import (
 import voluptuous as vol
 
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME, Platform
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.dispatcher import (
@@ -25,6 +25,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.dt import utcnow
 
 _LOGGER = logging.getLogger(__name__)
@@ -101,10 +102,10 @@ UPDATE_LEAF_SCHEMA = vol.Schema({vol.Required(ATTR_VIN): cv.string})
 START_CHARGE_LEAF_SCHEMA = vol.Schema({vol.Required(ATTR_VIN): cv.string})
 
 
-def setup(hass: HomeAssistant, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Nissan Leaf integration."""
 
-    async def async_handle_update(service):
+    async def async_handle_update(service: ServiceCall) -> None:
         """Handle service to update leaf data from Nissan servers."""
         # It would be better if this was changed to use nickname, or
         # an entity name rather than a vin.
@@ -116,7 +117,7 @@ def setup(hass: HomeAssistant, config):
         else:
             _LOGGER.debug("Vin %s not recognised for update", vin)
 
-    async def async_handle_start_charge(service):
+    async def async_handle_start_charge(service: ServiceCall) -> None:
         """Handle service to start charging."""
         # It would be better if this was changed to use nickname, or
         # an entity name rather than a vin.
@@ -141,7 +142,7 @@ def setup(hass: HomeAssistant, config):
         else:
             _LOGGER.debug("Vin %s not recognised for update", vin)
 
-    def setup_leaf(car_config):
+    def setup_leaf(car_config: dict[str, Any]) -> None:
         """Set up a car."""
         _LOGGER.debug("Logging into You+Nissan")
 
@@ -159,13 +160,13 @@ def setup(hass: HomeAssistant, config):
                 "Unable to fetch car details..."
                 " do you actually have a Leaf connected to your account?"
             )
-            return False
+            return
         except CarwingsError:
             _LOGGER.error(
                 "An unknown error occurred while connecting to Nissan: %s",
                 sys.exc_info()[0],
             )
-            return False
+            return
 
         _LOGGER.warning(
             "WARNING: This may poll your Leaf too often, and drain the 12V"
@@ -201,10 +202,15 @@ def setup(hass: HomeAssistant, config):
     return True
 
 
-def _extract_start_date(battery_info):
+def _extract_start_date(
+    battery_info: CarwingsLatestBatteryStatusResponse,
+) -> datetime | None:
     """Extract the server date from the battery response."""
     try:
-        return battery_info.answer["BatteryStatusRecords"]["OperationDateAndTime"]
+        return cast(
+            datetime,
+            battery_info.answer["BatteryStatusRecords"]["OperationDateAndTime"],
+        )
     except KeyError:
         return None
 
@@ -212,7 +218,9 @@ def _extract_start_date(battery_info):
 class LeafDataStore:
     """Nissan Leaf Data Store."""
 
-    def __init__(self, hass: HomeAssistant, leaf: Leaf, car_config) -> None:
+    def __init__(
+        self, hass: HomeAssistant, leaf: Leaf, car_config: dict[str, Any]
+    ) -> None:
         """Initialise the data store."""
         self.hass = hass
         self.leaf = leaf
@@ -348,7 +356,7 @@ class LeafDataStore:
         try:
             # Request battery update from the car
             _LOGGER.debug("Requesting battery update, %s", self.leaf.vin)
-            start_date = None
+            start_date: datetime | None = None
             try:
                 start_server_info = await self.hass.async_add_executor_job(
                     self.leaf.get_latest_battery_status
@@ -466,7 +474,7 @@ class LeafDataStore:
         if climate_result is not None:
             _LOGGER.debug("Climate result: %s", climate_result.__dict__)
             async_dispatcher_send(self.hass, SIGNAL_UPDATE_LEAF)
-            return climate_result.is_hvac_running == toggle
+            return bool(climate_result.is_hvac_running) == toggle
 
         _LOGGER.debug("Climate result not returned by Nissan servers")
         return False
