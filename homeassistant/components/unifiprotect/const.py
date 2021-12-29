@@ -41,4 +41,4 @@ DEVICES_FOR_SUBSCRIBE = DEVICES_WITH_ENTITIES | {ModelType.EVENT}
 MIN_REQUIRED_PROTECT_V = Version("1.20.0")
 OUTDATED_LOG_MESSAGE = "You are running v%s of UniFi Protect. Minimum required version is v%s. Please upgrade UniFi Protect and then retry"
 
-PLATFORMS = [Platform.CAMERA]
+PLATFORMS = [Platform.CAMERA, Platform.MEDIA_PLAYER]
