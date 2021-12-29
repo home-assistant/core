@@ -88,7 +88,6 @@ async def test_not_compatible(
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test we abort the configuration flow when incompatible."""
-    """Test the full user configuration flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
