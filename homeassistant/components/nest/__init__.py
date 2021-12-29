@@ -1,9 +1,9 @@
 """Support for Nest devices."""
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 import logging
-from typing import Awaitable, Callable
 
 from aiohttp import web
 from google_nest_sdm.event import EventMessage
