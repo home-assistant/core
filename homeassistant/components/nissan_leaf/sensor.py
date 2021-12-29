@@ -52,6 +52,11 @@ def setup_platform(
 class LeafBatterySensor(LeafEntity, SensorEntity):
     """Nissan Leaf Battery Sensor."""
 
+    def __init__(self, car: Leaf) -> None:
+        """Set up battery sensor."""
+        super().__init__(car)
+        self._attr_unique_id = f"{self.car.leaf.vin.lower()}_soc"
+
     @property
     def name(self) -> str:
         """Sensor Name."""
@@ -88,6 +93,10 @@ class LeafRangeSensor(LeafEntity, SensorEntity):
         """Set up range sensor. Store if AC on."""
         self._ac_on = ac_on
         super().__init__(car)
+        if ac_on:
+            self._attr_unique_id = f"{self.car.leaf.vin.lower()}_range_ac"
+        else:
+            self._attr_unique_id = f"{self.car.leaf.vin.lower()}_range"
 
     @property
     def name(self) -> str:
