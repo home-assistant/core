@@ -7,7 +7,7 @@ from pyunifiprotect.data.base import ProtectAdoptableDeviceModel
 
 from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DEVICES_THAT_ADOPT, DOMAIN
@@ -50,7 +50,6 @@ class ProtectButton(ProtectDeviceEntity, ButtonEntity):
         self._attr_entity_registry_enabled_default = False
         self._attr_device_class = ButtonDeviceClass.RESTART
 
-    @callback
     async def async_press(self) -> None:
         """Press the button."""
 
