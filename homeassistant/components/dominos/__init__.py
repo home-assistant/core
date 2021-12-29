@@ -7,7 +7,7 @@ from pizzapi.address import StoreException
 import voluptuous as vol
 
 from homeassistant.components import http
-from homeassistant.core import callback
+from homeassistant.core import ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -111,9 +111,9 @@ class Dominos:
         except StoreException:
             self.closest_store = None
 
-    def handle_order(self, call):
+    def handle_order(self, call: ServiceCall) -> None:
         """Handle ordering pizza."""
-        entity_ids = call.data.get(ATTR_ORDER_ENTITY)
+        entity_ids = call.data[ATTR_ORDER_ENTITY]
 
         target_orders = [
             order
