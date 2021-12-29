@@ -33,7 +33,7 @@ class LeafPluggedInSensor(LeafEntity, BinarySensorEntity):
     def __init__(self, car):
         """Set up plug status sensor."""
         super().__init__(car)
-        self._attr_unique_id = f"{self._attr_unique_id}_plugstatus"
+        self._attr_unique_id = f"{self.car.leaf.vin.lower()}_plugstatus"
 
     @property
     def name(self):
