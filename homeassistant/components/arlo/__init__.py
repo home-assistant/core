@@ -76,7 +76,7 @@ def setup(hass, config):
         )
         return False
 
-    def hub_refresh(event_time: ServiceCall | datetime) -> None:
+    def hub_refresh(_: ServiceCall | datetime) -> None:
         """Call ArloHub to refresh information."""
         _LOGGER.debug("Updating Arlo Hub component")
         hass.data[DATA_ARLO].update(update_cameras=True, update_base_station=True)
