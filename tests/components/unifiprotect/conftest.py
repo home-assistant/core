@@ -95,7 +95,9 @@ def mock_client():
 
 
 @pytest.fixture
-def mock_entry(hass: HomeAssistant, mock_client):
+def mock_entry(
+    hass: HomeAssistant, mock_client  # pylint: disable=redefined-outer-name
+):
     """Mock ProtectApiClient for testing."""
 
     with patch("homeassistant.components.unifiprotect.ProtectApiClient") as mock_api:
@@ -123,42 +125,10 @@ def mock_camera():
     """Mock UniFi Protect Camera device."""
 
     path = Path(__file__).parent / "sample_data" / "sample_camera.json"
-    with open(path, encoding="utf-8") as f:
-        data = json.load(f)
+    with open(path, encoding="utf-8") as json_file:
+        data = json.load(json_file)
 
     yield Camera.from_unifi_dict(**data)
-
-
-@pytest.fixture
-async def simple_camera(
-    hass: HomeAssistant, mock_entry: MockEntityFixture, mock_camera: Camera
-):
-    """Fixture for a single camera, no extra setup."""
-
-    camera = mock_camera.copy(deep=True)
-    camera._api = mock_entry.api
-    camera.channels[0]._api = mock_entry.api
-    camera.channels[1]._api = mock_entry.api
-    camera.channels[2]._api = mock_entry.api
-    camera.name = "Test Camera"
-    camera.channels[0].is_rtsp_enabled = True
-    camera.channels[0].name = "High"
-    camera.channels[1].is_rtsp_enabled = False
-    camera.channels[2].is_rtsp_enabled = False
-
-    mock_entry.api.bootstrap.cameras = {
-        camera.id: camera,
-    }
-
-    await hass.config_entries.async_setup(mock_entry.entry.entry_id)
-    await hass.async_block_till_done()
-
-    entity_registry = er.async_get(hass)
-
-    assert len(hass.states.async_all()) == 1
-    assert len(entity_registry.entities) == 2
-
-    yield (camera, "camera.test_camera_high")
 
 
 async def time_changed(hass: HomeAssistant, seconds: int) -> None:
