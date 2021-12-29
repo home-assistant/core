@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
+import logging
 
 from tuya_iot import TuyaCloudOpenAPIEndpoint
 
@@ -38,6 +39,7 @@ from homeassistant.const import (
 )
 
 DOMAIN = "tuya"
+LOGGER = logging.getLogger(__package__)
 
 CONF_AUTH_TYPE = "auth_type"
 CONF_PROJECT_TYPE = "tuya_project_type"
