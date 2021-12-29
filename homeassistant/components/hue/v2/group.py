@@ -1,6 +1,7 @@
 """Support for Hue groups (room/zone)."""
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
 from aiohue.v2 import HueBridgeV2
@@ -173,18 +174,22 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
 
         # redirect all other feature commands to underlying lights
         # note that this silently ignores params sent to light that are not supported
-        for light in self.controller.get_lights(self.resource.id):
-            await self.bridge.async_request_call(
-                self.api.lights.set_state,
-                light.id,
-                on=True,
-                brightness=brightness if light.supports_dimming else None,
-                color_xy=xy_color if light.supports_color else None,
-                color_temp=color_temp if light.supports_color_temperature else None,
-                transition_time=transition,
-                alert=AlertEffectType.BREATHE if flash is not None else None,
-                allowed_errors=ALLOWED_ERRORS,
-            )
+        await asyncio.gather(
+            *[
+                self.bridge.async_request_call(
+                    self.api.lights.set_state,
+                    light.id,
+                    on=True,
+                    brightness=brightness if light.supports_dimming else None,
+                    color_xy=xy_color if light.supports_color else None,
+                    color_temp=color_temp if light.supports_color_temperature else None,
+                    transition_time=transition,
+                    alert=AlertEffectType.BREATHE if flash is not None else None,
+                    allowed_errors=ALLOWED_ERRORS,
+                )
+                for light in self.controller.get_lights(self.resource.id)
+            ]
+        )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
@@ -202,14 +207,18 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
             return
 
         # redirect all other feature commands to underlying lights
-        for light in self.controller.get_lights(self.resource.id):
-            await self.bridge.async_request_call(
-                self.api.lights.set_state,
-                light.id,
-                on=False,
-                transition_time=transition,
-                allowed_errors=ALLOWED_ERRORS,
-            )
+        await asyncio.gather(
+            *[
+                self.bridge.async_request_call(
+                    self.api.lights.set_state,
+                    light.id,
+                    on=False,
+                    transition_time=transition,
+                    allowed_errors=ALLOWED_ERRORS,
+                )
+                for light in self.controller.get_lights(self.resource.id)
+            ]
+        )
 
     @callback
     def on_update(self) -> None:
