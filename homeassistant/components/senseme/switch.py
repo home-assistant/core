@@ -1,10 +1,16 @@
 """Support for Big Ass Fans SenseME switch."""
+from __future__ import annotations
+
 from typing import Any
 
 from aiosenseme import SensemeFan
 
 from homeassistant import config_entries
-from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
+from homeassistant.components.switch import (
+    SwitchDeviceClass,
+    SwitchEntity,
+    SwitchEntityDescription,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -13,17 +19,32 @@ from .entity import SensemeEntity
 
 FAN_SWITCHS = [
     # Turning on sleep mode will disable Whoosh
-    ["sleep_mode", "sleep_mode", "Sleep Mode"],
-    ["motion_fan_auto", "motion_fan_auto", "Motion"],
+    SwitchEntityDescription(
+        key="sleep_mode",
+        name="Sleep Mode",
+    ),
+    SwitchEntityDescription(
+        key="motion_fan_auto",
+        name="Motion",
+    ),
 ]
 
 FAN_LIGHT_SWITCHES = [
-    ["motion_light_auto", "motion_light_auto", "Light Motion"],
+    SwitchEntityDescription(
+        key="motion_light_auto",
+        name="Light Motion",
+    ),
 ]
 
 LIGHT_SWITCHES = [
-    ["sleep_mode", "sleep_mode", "Sleep Mode"],
-    ["motion_light_auto", "motion_light_auto", "Motion"],
+    SwitchEntityDescription(
+        key="sleep_mode",
+        name="Sleep Mode",
+    ),
+    SwitchEntityDescription(
+        key="motion_light_auto",
+        name="Motion",
+    ),
 ]
 
 
@@ -34,39 +55,41 @@ async def async_setup_entry(
 ) -> None:
     """Set up SenseME fans."""
     device = hass.data[DOMAIN][entry.entry_id]
+    descriptions: list[SwitchEntityDescription] = []
 
     if device.is_fan:
-        async_add_entities([HASensemeSwitch(device, *args) for args in FAN_SWITCHS])
+        descriptions.extend(FAN_SWITCHS)
         if device.has_light:
-            async_add_entities(
-                [HASensemeSwitch(device, *args) for args in FAN_LIGHT_SWITCHES]
-            )
+            descriptions.extend(FAN_LIGHT_SWITCHES)
     elif device.is_light:
-        async_add_entities([HASensemeSwitch(device, *args) for args in LIGHT_SWITCHES])
+        descriptions.extend(LIGHT_SWITCHES)
+
+    async_add_entities(
+        [HASensemeSwitch(device, description) for description in descriptions]
+    )
 
 
 class HASensemeSwitch(SensemeEntity, SwitchEntity):
     """SenseME switch component."""
 
     def __init__(
-        self, device: SensemeFan, switch_type: str, attr: str, switch_name: str
+        self, device: SensemeFan, description: SwitchEntityDescription
     ) -> None:
         """Initialize the entity."""
-        self._attr = attr
-        self._switch_type = switch_type
+        self.entity_description = description
         self._attr_device_class = SwitchDeviceClass.SWITCH
-        super().__init__(device, f"{device.name} {switch_name}")
-        self._attr_unique_id = f"{self._device.uuid}-SWITCH-{self._switch_type}"
+        super().__init__(device, f"{device.name} {description.name}")
+        self._attr_unique_id = f"{self._device.uuid}-SWITCH-{description.key}"
 
     @callback
     def _async_update_attrs(self) -> None:
         """Update attrs from device."""
-        self._attr_is_on = getattr(self._device, self._attr)
+        self._attr_is_on = getattr(self._device, self.entity_description.key)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
-        setattr(self._device, self._attr, True)
+        setattr(self._device, self.entity_description.key, True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
-        setattr(self._device, self._attr, False)
+        setattr(self._device, self.entity_description.key, False)

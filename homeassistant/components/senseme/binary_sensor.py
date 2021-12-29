@@ -1,4 +1,5 @@
 """Support for Big Ass Fans SenseME occupancy sensor."""
+from __future__ import annotations
 
 from aiosenseme import SensemeDevice
 
