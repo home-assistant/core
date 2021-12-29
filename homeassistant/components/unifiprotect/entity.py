@@ -1,7 +1,7 @@
 """Shared Entity definition for UniFi Protect Integration."""
 from __future__ import annotations
 
-from pyunifiprotect.data import ProtectAdoptableDeviceModel
+from pyunifiprotect.data import ProtectAdoptableDeviceModel, StateType
 
 from homeassistant.core import callback
 import homeassistant.helpers.device_registry as dr
@@ -74,7 +74,7 @@ class ProtectDeviceEntity(Entity):
             self.device = devices[self.device.id]
 
         self._attr_available = (
-            self.data.last_update_success and self.device.is_connected
+            self.data.last_update_success and self.device.state == StateType.CONNECTED
         )
 
     @callback
