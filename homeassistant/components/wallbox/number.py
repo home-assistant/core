@@ -9,10 +9,16 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEVICE_CLASS_CURRENT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import InvalidAuth, WallboxCoordinator
-from .const import CONF_MAX_AVAILABLE_POWER_KEY, CONF_MAX_CHARGING_CURRENT_KEY, DOMAIN
+from .const import (
+    CONF_DATA_KEY,
+    CONF_MAX_AVAILABLE_POWER_KEY,
+    CONF_MAX_CHARGING_CURRENT_KEY,
+    CONF_SERIAL_NUMBER_KEY,
+    DOMAIN,
+)
+from .model import WallboxEntity
 
 
 @dataclass
@@ -52,7 +58,7 @@ async def async_setup_entry(
     )
 
 
-class WallboxNumber(CoordinatorEntity, NumberEntity):
+class WallboxNumber(WallboxEntity, NumberEntity):
     """Representation of the Wallbox portal."""
 
     entity_description: WallboxNumberEntityDescription
@@ -69,6 +75,7 @@ class WallboxNumber(CoordinatorEntity, NumberEntity):
         self.entity_description = description
         self._coordinator = coordinator
         self._attr_name = f"{entry.title} {description.name}"
+        self._unique_id = f"{description.key}-{coordinator.data[CONF_DATA_KEY][CONF_SERIAL_NUMBER_KEY]}"
 
     @property
     def max_value(self) -> float:
@@ -81,6 +88,11 @@ class WallboxNumber(CoordinatorEntity, NumberEntity):
         return cast(
             Optional[float], self._coordinator.data[CONF_MAX_CHARGING_CURRENT_KEY]
         )
+
+    @property
+    def unique_id(self) -> str:
+        """Return the unique id."""
+        return self._unique_id
 
     async def async_set_value(self, value: float) -> None:
         """Set the value of the entity."""
