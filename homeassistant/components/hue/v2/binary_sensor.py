@@ -82,9 +82,11 @@ class HueMotionSensor(HueBinarySensorBase):
     _attr_device_class = BinarySensorDeviceClass.MOTION
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
-        return self.resource.motion.motion is True
+        if not self.resource.enabled:
+            return False
+        return self.resource.motion.motion
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
