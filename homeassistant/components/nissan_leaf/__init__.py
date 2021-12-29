@@ -453,6 +453,17 @@ class LeafDataStore:
         # Setting climate control is now a fire and forget
         await self.hass.async_add_executor_job(set_function)
 
+        # Cancel the routine refresh and immediately request updated info so that we can retrieve the
+        # climate control state from the car.
+        if self._remove_listener:
+            _LOGGER.debug("Cancelling planned refresh")
+            self._remove_listener()
+        self.next_update = utcnow() + MIN_UPDATE_INTERVAL
+        _LOGGER.debug("Scheduling new refresh at %s", self.next_update)
+        self._remove_listener = async_track_point_in_utc_time(
+            self.hass, self.async_update_data, self.next_update
+        )
+
         return True
 
 
