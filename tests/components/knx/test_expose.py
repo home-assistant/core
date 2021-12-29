@@ -128,6 +128,37 @@ async def test_expose_attribute_with_default(hass: HomeAssistant, knx: KNXTestKi
     await knx.assert_write("1/1/8", (0,))
 
 
+async def test_expose_string(hass: HomeAssistant, knx: KNXTestKit):
+    """Test an expose to send string values of up to 14 bytes only."""
+    entity_id = "fake.entity"
+    attribute = "fake_attribute"
+    await knx.setup_integration(
+        {
+            CONF_KNX_EXPOSE: {
+                CONF_TYPE: "string",
+                KNX_ADDRESS: "1/1/8",
+                CONF_ENTITY_ID: entity_id,
+                CONF_ATTRIBUTE: attribute,
+            }
+        },
+    )
+    assert not hass.states.async_all()
+
+    # Before init no response shall be sent
+    await knx.receive_read("1/1/8")
+    await knx.assert_telegram_count(0)
+
+    # Change attribute; keep state
+    hass.states.async_set(
+        entity_id,
+        "on",
+        {attribute: "This is a very long string that is larger than 14 bytes"},
+    )
+    await knx.assert_write(
+        "1/1/8", (84, 104, 105, 115, 32, 105, 115, 32, 97, 32, 118, 101, 114, 121)
+    )
+
+
 @patch("time.localtime")
 async def test_expose_with_date(localtime, hass: HomeAssistant, knx: KNXTestKit):
     """Test an expose with a date."""
@@ -138,9 +169,8 @@ async def test_expose_with_date(localtime, hass: HomeAssistant, knx: KNXTestKit)
                 CONF_TYPE: "datetime",
                 KNX_ADDRESS: "1/1/8",
             }
-        },
+        }
     )
-    assert not hass.states.async_all()
 
     await knx.assert_write("1/1/8", (0x7A, 0x1, 0x7, 0xE9, 0xD, 0xE, 0x20, 0x80))
 
