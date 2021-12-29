@@ -22,7 +22,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("__init__ async_setup_entry")
 
     # Create coordinator
-    coordinator = Coordinator(hass, entry.data.get(CONF_IP_ADDRESS))
+    coordinator = Coordinator(hass, entry.data[CONF_IP_ADDRESS])
     try:
         await coordinator.initialize_api()
 

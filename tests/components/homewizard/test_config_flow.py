@@ -5,6 +5,7 @@ from unittest.mock import patch
 from aiohwenergy import DisabledError
 
 from homeassistant import config_entries
+from homeassistant.components import zeroconf
 from homeassistant.components.homewizard.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_CREATE_ENTRY
@@ -49,25 +50,27 @@ async def test_manual_flow_works(hass, aioclient_mock):
     entry = entries[0]
     assert entry.unique_id == f"{device.device.product_type}_{device.device.serial}"
 
-    assert len(device.initialize.mock_calls) == 3
+    assert len(device.initialize.mock_calls) == 2
     assert len(device.close.mock_calls) == 1
 
 
 async def test_discovery_flow_works(hass, aioclient_mock):
     """Test discovery setup flow works."""
 
-    service_info = {
-        "host": "192.168.43.183",
-        "port": 80,
-        "hostname": "p1meter-ddeeff.local.",
-        "properties": {
+    service_info = zeroconf.ZeroconfServiceInfo(
+        host="192.168.43.183",
+        port=80,
+        hostname="p1meter-ddeeff.local.",
+        type="",
+        name="",
+        properties={
             "api_enabled": "1",
             "path": "/api/v1",
             "product_name": "P1 meter",
             "product_type": "HWE-P1",
             "serial": "aabbccddeeff",
         },
-    }
+    )
 
     with patch("aiohwenergy.HomeWizardEnergy", return_value=get_mock_device()), patch(
         "homeassistant.components.homewizard.async_setup_entry",
@@ -98,18 +101,20 @@ async def test_discovery_flow_works(hass, aioclient_mock):
 async def test_discovery_disabled_api(hass, aioclient_mock):
     """Test discovery detecting disabled api."""
 
-    service_info = {
-        "host": "192.168.43.183",
-        "port": 80,
-        "hostname": "p1meter-ddeeff.local.",
-        "properties": {
+    service_info = zeroconf.ZeroconfServiceInfo(
+        host="192.168.43.183",
+        port=80,
+        hostname="p1meter-ddeeff.local.",
+        type="",
+        name="",
+        properties={
             "api_enabled": "0",
             "path": "/api/v1",
             "product_name": "P1 meter",
             "product_type": "HWE-P1",
             "serial": "aabbccddeeff",
         },
-    }
+    )
 
     with patch("aiohwenergy.HomeWizardEnergy", return_value=get_mock_device()), patch(
         "homeassistant.components.homewizard.async_setup_entry",
@@ -128,44 +133,20 @@ async def test_discovery_disabled_api(hass, aioclient_mock):
 async def test_discovery_missing_data_in_service_info(hass, aioclient_mock):
     """Test discovery detecting missing discovery info."""
 
-    service_info = {
-        # "host": "192.168.43.183", -> Removed
-        "port": 80,
-        "hostname": "p1meter-ddeeff.local.",
-        "properties": {
-            "api_enabled": "1",
+    service_info = zeroconf.ZeroconfServiceInfo(
+        host="192.168.43.183",
+        port=80,
+        hostname="p1meter-ddeeff.local.",
+        type="",
+        name="",
+        properties={
+            # "api_enabled": "1", --> removed
             "path": "/api/v1",
             "product_name": "P1 meter",
             "product_type": "HWE-P1",
             "serial": "aabbccddeeff",
         },
-    }
-
-    with patch("aiohwenergy.HomeWizardEnergy", return_value=get_mock_device()), patch(
-        "homeassistant.components.homewizard.async_setup_entry",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_ZEROCONF},
-            data=service_info,
-        )
-
-    assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == "invalid_discovery_parameters"
-
-    service_info = {
-        "host": "192.168.43.183",
-        "port": 80,
-        "hostname": "p1meter-ddeeff.local.",
-        "properties": {
-            # "api_enabled": "0", - Removed
-            "path": "/api/v1",
-            "product_name": "P1 meter",
-            "product_type": "HWE-P1",
-            "serial": "aabbccddeeff",
-        },
-    }
+    )
 
     with patch("aiohwenergy.HomeWizardEnergy", return_value=get_mock_device()), patch(
         "homeassistant.components.homewizard.async_setup_entry",
@@ -184,18 +165,20 @@ async def test_discovery_missing_data_in_service_info(hass, aioclient_mock):
 async def test_discovery_invalid_api(hass, aioclient_mock):
     """Test discovery detecting invalid_api."""
 
-    service_info = {
-        "host": "192.168.43.183",
-        "port": 80,
-        "hostname": "p1meter-ddeeff.local.",
-        "properties": {
+    service_info = zeroconf.ZeroconfServiceInfo(
+        host="192.168.43.183",
+        port=80,
+        hostname="p1meter-ddeeff.local.",
+        type="",
+        name="",
+        properties={
             "api_enabled": "1",
             "path": "/api/not_v1",
             "product_name": "P1 meter",
             "product_type": "HWE-P1",
             "serial": "aabbccddeeff",
         },
-    }
+    )
 
     with patch("aiohwenergy.HomeWizardEnergy", return_value=get_mock_device()), patch(
         "homeassistant.components.homewizard.async_setup_entry",

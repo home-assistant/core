@@ -11,7 +11,7 @@ def get_mock_device(
 ):
     """Return a mock bridge."""
     mock_device = AsyncMock()
-    mock_device._host = host
+    mock_device.host = host
 
     mock_device.device.product_name = product_name
     mock_device.device.product_type = product_type

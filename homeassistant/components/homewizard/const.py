@@ -1,7 +1,13 @@
 """Constants for the Homewizard integration."""
+from __future__ import annotations
+
+from datetime import timedelta
+from typing import TypedDict
 
 # Set up.
-from datetime import timedelta
+from aiohwenergy.device import Device
+
+from homeassistant.helpers.typing import StateType
 
 DOMAIN = "homewizard"
 COORDINATOR = "coordinator"
@@ -15,3 +21,10 @@ CONF_DEVICE = "device"
 CONF_DATA = "data"
 
 UPDATE_INTERVAL = timedelta(seconds=5)
+
+
+class DeviceResponseEntry(TypedDict):
+    """Dict describing a single response entry."""
+
+    device: Device
+    data: dict[str, StateType]

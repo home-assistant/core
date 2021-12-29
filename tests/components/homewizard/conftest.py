@@ -2,6 +2,7 @@
 import pytest
 
 from homeassistant.components.homewizard.const import DOMAIN
+from homeassistant.const import CONF_IP_ADDRESS
 
 from tests.common import MockConfigEntry
 
@@ -14,6 +15,7 @@ def mock_config_entry_data():
         "product_type": "product_type",
         "serial": "aabbccddeeff",
         "name": "Product Name",
+        CONF_IP_ADDRESS: "1.2.3.4",
     }
 
 

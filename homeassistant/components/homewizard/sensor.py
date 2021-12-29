@@ -10,6 +10,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_GAS,
@@ -21,10 +22,14 @@ from homeassistant.const import (
     POWER_WATT,
     VOLUME_CUBIC_METERS,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_DATA, CONF_DEVICE, COORDINATOR, DOMAIN
+from .const import COORDINATOR, DOMAIN, DeviceResponseEntry
+from .coordinator import HWEnergyDeviceUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -127,21 +132,31 @@ SENSORS: Final[tuple[SensorEntityDescription, ...]] = (
 )
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Initialize sensors."""
-    coordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR]
+    coordinator: HWEnergyDeviceUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
+        COORDINATOR
+    ]
 
     entities = []
-    for description in SENSORS:
-        if description.key in coordinator.api.data.available_datapoints:
-            entities.append(HWEnergySensor(coordinator, entry, description))
+    if coordinator.api.data is not None:
+        for description in SENSORS:
+            if description.key in coordinator.api.data.available_datapoints:
+                entities.append(HWEnergySensor(coordinator, entry, description))
     async_add_entities(entities)
 
 
-class HWEnergySensor(CoordinatorEntity, SensorEntity):
+class HWEnergySensor(CoordinatorEntity[DeviceResponseEntry], SensorEntity):
     """Representation of a HomeWizard Sensor."""
 
-    def __init__(self, coordinator, entry, description):
+    def __init__(
+        self,
+        coordinator: HWEnergyDeviceUpdateCoordinator,
+        entry: ConfigEntry,
+        description: SensorEntityDescription,
+    ) -> None:
         """Initialize Sensor Domain."""
 
         super().__init__(coordinator)
@@ -154,7 +169,7 @@ class HWEnergySensor(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = f"{entry.unique_id}_{description.key}"
 
         # Some values are given, but set to NULL (eg. gas_timestamp when no gas meter is connected)
-        if self.data[CONF_DATA][self.data_type] is None:
+        if self.data["data"][self.data_type] is None:
             self.entity_description.entity_registry_enabled_default = False
 
         # Special case for export, not everyone has solarpanels
@@ -163,7 +178,7 @@ class HWEnergySensor(CoordinatorEntity, SensorEntity):
             "total_power_export_t1_kwh",
             "total_power_export_t2_kwh",
         ]:
-            if self.data[CONF_DATA][self.data_type] == 0:
+            if self.data["data"][self.data_type] == 0:
                 self.entity_description.entity_registry_enabled_default = False
 
     @property
@@ -172,22 +187,22 @@ class HWEnergySensor(CoordinatorEntity, SensorEntity):
         return {
             "name": self.entry.title,
             "manufacturer": "HomeWizard",
-            "sw_version": self.data[CONF_DEVICE].firmware_version,
-            "model": self.data[CONF_DEVICE].product_type,
-            "identifiers": {(DOMAIN, self.data[CONF_DEVICE].serial)},
+            "sw_version": self.data["device"].firmware_version,
+            "model": self.data["device"].product_type,
+            "identifiers": {(DOMAIN, self.data["device"].serial)},
         }
 
     @property
-    def data(self):
+    def data(self) -> DeviceResponseEntry:
         """Return data object from DataUpdateCoordinator."""
         return self.coordinator.data
 
     @property
-    def native_value(self):
+    def native_value(self) -> StateType:
         """Return state of meter."""
-        return self.data[CONF_DATA][self.data_type]
+        return self.data["data"][self.data_type]
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return availability of meter."""
-        return self.data_type in self.data[CONF_DATA]
+        return self.data_type in self.data["data"]
