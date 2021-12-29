@@ -140,7 +140,7 @@ async def test_light_turn_on_service(hass, mock_bridge_v2, v2_resources_test_dat
     )
     assert len(mock_bridge_v2.mock_requests) == 4
     assert mock_bridge_v2.mock_requests[3]["json"]["identify"]["action"] == "identify"
-    
+
     # test again with sending a colortemperature which is out of range
     # which should be normalized to the upper/lower bounds Hue can handle
     await hass.services.async_call(

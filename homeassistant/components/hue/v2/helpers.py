@@ -24,8 +24,6 @@ def normalize_hue_colortemp(colortemp: int | None) -> int | None:
     """Return color temperature within Hue's ranges."""
     if colortemp is not None:
         # Hue only accepts a range between 153..500
-        if colortemp > 500:
-            colortemp = 500
-        if colortemp < 153:
-            colortemp = 153
+        colortemp = min(colortemp, 500)
+        colortemp = max(colortemp, 153)
     return colortemp
