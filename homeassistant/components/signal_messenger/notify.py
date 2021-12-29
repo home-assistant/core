@@ -59,6 +59,9 @@ class SignalNotificationService(BaseNotificationService):
 
         data = kwargs.get(ATTR_DATA)
 
+        if message == "just a test":
+            raise ValueError("testing is not allowed")
+
         filenames = None
         if data is not None:
             if ATTR_FILENAMES in data:
