@@ -73,7 +73,7 @@ class Ticker(CoordinatorEntity, SensorEntity):
         return self.coordinator.data[CONF_TICKERS][self._symbol][property_name]
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return round(float(self._get_data_property("price")), 4)
 
@@ -106,7 +106,7 @@ class Balance(CoordinatorEntity, SensorEntity):
         return self.coordinator.data[CONF_BALANCES][self._balance][property_name]
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         state = float(self._get_data_property("available")) + float(
             self._get_data_property("inOrder")
@@ -117,10 +117,11 @@ class Balance(CoordinatorEntity, SensorEntity):
 class OpenOrders(CoordinatorEntity, SensorEntity):
     """Implementation of the open orders sensor."""
 
-    def __init__(self, coordinator: BitvavoDataUpdateCoordinator, order):
+    def __init__(self, coordinator: BitvavoDataUpdateCoordinator, orders):
         """Initialize the sensor."""
         super().__init__(coordinator)
 
+        self._orders = orders
         self._attr_icon = "mdi:format-list-bulleted"
         self._attr_name = "Bitvavo Open Orders"
         self._attr_unique_id = "bitvavo_orders_open"
@@ -132,19 +133,19 @@ class OpenOrders(CoordinatorEntity, SensorEntity):
 
     def _get_orders(self):
         """Return the data from self.coordinator.data."""
-        return self.coordinator.data[CONF_OPEN_ORDERS]
+        return self._orders
 
     def _type_orders(self, side):
         """Return the number of orders per type."""
         number = 0
-        for order in self.coordinator.data[CONF_OPEN_ORDERS]:
+        for order in self._orders:
             if order["side"] == side:
                 number += 1
 
         return number
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return len(self._get_orders())
 
@@ -167,7 +168,7 @@ class TotalAssetValue(CoordinatorEntity, SensorEntity):
         }
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         total_base_asset_value = self.coordinator.data["total_base_asset"]
 
