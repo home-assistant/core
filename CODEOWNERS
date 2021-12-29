@@ -113,6 +113,7 @@ tests/components/balboa/* @garbled1
 homeassistant/components/beewi_smartclim/* @alemuro
 homeassistant/components/bitcoin/* @fabaff
 homeassistant/components/bitvavo/* @cyberjunky
+tests/components/bitvavo/* @cyberjunky
 homeassistant/components/bizkaibus/* @UgaitzEtxebarria
 homeassistant/components/blebox/* @bbx-a @bbx-jp
 tests/components/blebox/* @bbx-a @bbx-jp
