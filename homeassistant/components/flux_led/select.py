@@ -55,6 +55,7 @@ class FluxPowerStateSelect(FluxBaseEntity, SelectEntity):
     """Representation of a Flux power restore state option."""
 
     _attr_should_poll = False
+    _attr_icon = "mdi:transmission-tower-off"
 
     def __init__(
         self,
@@ -96,6 +97,8 @@ class FluxConfigSelect(FluxEntity, SelectEntity):
 
 class FluxICTypeSelect(FluxConfigSelect):
     """Representation of Flux ic type."""
+
+    _attr_icon = "mdi:chip"
 
     def __init__(
         self,
