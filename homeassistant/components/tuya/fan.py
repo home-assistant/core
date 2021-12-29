@@ -160,9 +160,9 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
         return self.ha_preset_modes
 
     @property
-    def preset_mode(self) -> str:
+    def preset_mode(self) -> str | None:
         """Return the current preset_mode."""
-        return self.device.status[DPCode.MODE]
+        return self.device.status.get(DPCode.MODE)
 
     @property
     def percentage(self) -> int | None:
