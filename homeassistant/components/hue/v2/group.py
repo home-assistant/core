@@ -31,7 +31,11 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from ..bridge import HueBridge
 from ..const import CONF_ALLOW_HUE_GROUPS, DOMAIN
 from .entity import HueBaseEntity
-from .helpers import normalize_hue_brightness, normalize_hue_transition
+from .helpers import (
+    normalize_hue_brightness,
+    normalize_hue_colortemp,
+    normalize_hue_transition,
+)
 
 ALLOWED_ERRORS = [
     "device (groupedLight) has communication issues, command (on) may not have effect",
@@ -151,7 +155,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
         """Turn the light on."""
         transition = normalize_hue_transition(kwargs.get(ATTR_TRANSITION))
         xy_color = kwargs.get(ATTR_XY_COLOR)
-        color_temp = kwargs.get(ATTR_COLOR_TEMP)
+        color_temp = normalize_hue_colortemp(kwargs.get(ATTR_COLOR_TEMP))
         brightness = normalize_hue_brightness(kwargs.get(ATTR_BRIGHTNESS))
         flash = kwargs.get(ATTR_FLASH)
 
