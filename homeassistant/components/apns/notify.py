@@ -211,8 +211,6 @@ class ApnsNotificationService(BaseNotificationService):
             self.devices[push_id] = device
             self.write_devices()
 
-        return
-
     def send_message(self, message=None, **kwargs):
         """Send push message to registered devices."""
 
