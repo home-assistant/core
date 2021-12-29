@@ -5,7 +5,7 @@ import logging
 import linode
 import voluptuous as vol
 
-from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
@@ -23,7 +23,7 @@ ATTR_VCPUS = "vcpus"
 CONF_NODES = "nodes"
 
 DATA_LINODE = "data_li"
-LINODE_PLATFORMS = ["binary_sensor", "switch"]
+LINODE_PLATFORMS = [Platform.BINARY_SENSOR, Platform.SWITCH]
 DOMAIN = "linode"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)

@@ -144,6 +144,7 @@ class RestSensor(RestEntity, SensorEntity):
                 content_type.startswith("text/xml")
                 or content_type.startswith("application/xml")
                 or content_type.startswith("application/xhtml+xml")
+                or content_type.startswith("application/rss+xml")
             ):
                 try:
                     value = json.dumps(xmltodict.parse(value))

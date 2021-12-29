@@ -19,7 +19,6 @@ from homeassistant import config_entries
 from homeassistant.components import dhcp
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers import device_registry as dr
 
 from .const import CONF_HUB, DEFAULT_HUB, DOMAIN
 
@@ -94,17 +93,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         _LOGGER.debug("DHCP discovery detected gateway %s", obfuscate_id(gateway_id))
 
-        if self._gateway_already_configured(gateway_id):
-            _LOGGER.debug("Gateway %s is already configured", obfuscate_id(gateway_id))
-            return self.async_abort(reason="already_configured")
+        await self.async_set_unique_id(gateway_id)
+        self._abort_if_unique_id_configured()
 
         return await self.async_step_user()
-
-    def _gateway_already_configured(self, gateway_id: str) -> bool:
-        """See if we already have a gateway matching the id."""
-        device_registry = dr.async_get(self.hass)
-        return bool(
-            device_registry.async_get_device(
-                identifiers={(DOMAIN, gateway_id)}, connections=set()
-            )
-        )
