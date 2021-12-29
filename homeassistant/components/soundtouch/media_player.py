@@ -30,7 +30,7 @@ from homeassistant.const import (
     STATE_PLAYING,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import callback
+from homeassistant.core import ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
@@ -122,7 +122,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         hass.data[DATA_SOUNDTOUCH].append(bose_soundtouch_entity)
         add_entities([bose_soundtouch_entity], True)
 
-    def service_handle(service):
+    def service_handle(service: ServiceCall) -> None:
         """Handle the applying of a service."""
         master_device_id = service.data.get("master")
         slaves_ids = service.data.get("slaves")
