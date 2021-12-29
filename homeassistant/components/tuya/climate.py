@@ -225,6 +225,16 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
                 if tuya_mode in data_type.range:
                     self._hvac_to_tuya[ha_mode] = tuya_mode
                     self._attr_hvac_modes.append(ha_mode)
+
+            # Log unknown modes
+            for tuya_mode in data_type.range:
+                if tuya_mode in TUYA_HVAC_TO_HA.values():
+                    LOGGER.warning(
+                        "Unknown HVAC mode '%s' for device %s; assuming it as off",
+                        tuya_mode,
+                        device.name,
+                    )
+
         elif DPCode.SWITCH in device.function:
             self._attr_hvac_modes = [
                 HVAC_MODE_OFF,
@@ -436,14 +446,9 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
                 return self.entity_description.switch_only_hvac_mode
             return HVAC_MODE_OFF
 
-        if (mode := self.device.status.get(DPCode.MODE)) is not None:
-            if mode not in TUYA_HVAC_TO_HA:
-                LOGGER.warning(
-                    "Unknown HVAC mode '%s' for device %s, assuming off",
-                    mode,
-                    self.name,
-                )
-                return HVAC_MODE_OFF
+        if (
+            mode := self.device.status.get(DPCode.MODE)
+        ) is not None and mode in TUYA_HVAC_TO_HA:
             return TUYA_HVAC_TO_HA[mode]
 
         return HVAC_MODE_OFF
