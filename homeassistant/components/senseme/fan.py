@@ -58,7 +58,6 @@ class HASensemeFan(SensemeEntity, FanEntity):
         super().__init__(device, device.name)
         self._attr_speed_count = self._device.fan_speed_max
         self._attr_unique_id = f"{self._device.uuid}-FAN"  # for legacy compat
-        self._async_update_attrs()
 
     @callback
     def _async_update_attrs(self) -> None:

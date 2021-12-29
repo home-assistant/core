@@ -1,4 +1,6 @@
 """Support for Big Ass Fans SenseME light."""
+from __future__ import annotations
+
 from typing import Any
 
 from aiosenseme import SensemeDevice
