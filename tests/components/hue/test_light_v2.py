@@ -396,12 +396,53 @@ async def test_grouped_lights(hass, mock_bridge_v2, v2_resources_test_data):
             mock_bridge_v2.mock_requests[index]["json"]["dynamics"]["duration"] == 200
         )
 
-    # Test sending flash effect to a grouped light
+    # Test sending short flash effect to a grouped light
     mock_bridge_v2.mock_requests.clear()
     test_light_id = "light.test_zone"
     await hass.services.async_call(
         "light",
         "turn_on",
+        {
+            "entity_id": test_light_id,
+            "flash": "short",
+        },
+        blocking=True,
+    )
+
+    # PUT request should have been sent to ALL group lights with correct params
+    assert len(mock_bridge_v2.mock_requests) == 3
+    for index in range(0, 3):
+        assert (
+            mock_bridge_v2.mock_requests[index]["json"]["identify"]["action"]
+            == "identify"
+        )
+
+    # Test sending long flash effect to a grouped light
+    mock_bridge_v2.mock_requests.clear()
+    test_light_id = "light.test_zone"
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {
+            "entity_id": test_light_id,
+            "flash": "long",
+        },
+        blocking=True,
+    )
+
+    # PUT request should have been sent to ALL group lights with correct params
+    assert len(mock_bridge_v2.mock_requests) == 3
+    for index in range(0, 3):
+        assert (
+            mock_bridge_v2.mock_requests[index]["json"]["alert"]["action"] == "breathe"
+        )
+
+    # Test sending flash effect in turn_off call
+    mock_bridge_v2.mock_requests.clear()
+    test_light_id = "light.test_zone"
+    await hass.services.async_call(
+        "light",
+        "turn_off",
         {
             "entity_id": test_light_id,
             "flash": "short",
