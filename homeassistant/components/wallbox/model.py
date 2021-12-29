@@ -1,4 +1,4 @@
-"""Models for WLED."""
+"""Models for Wallbox."""
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
