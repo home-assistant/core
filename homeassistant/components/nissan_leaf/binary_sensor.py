@@ -41,19 +41,19 @@ class LeafPluggedInSensor(LeafEntity, BinarySensorEntity):
     _attr_device_class = BinarySensorDeviceClass.PLUG
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Sensor name."""
         return f"{self.car.leaf.nickname} Plug Status"
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Sensor availability."""
         return self.car.data[DATA_PLUGGED_IN] is not None
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if plugged in."""
-        return self.car.data[DATA_PLUGGED_IN]
+        return bool(self.car.data[DATA_PLUGGED_IN])
 
 
 class LeafChargingSensor(LeafEntity, BinarySensorEntity):
@@ -62,16 +62,16 @@ class LeafChargingSensor(LeafEntity, BinarySensorEntity):
     _attr_device_class = BinarySensorDeviceClass.BATTERY_CHARGING
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Sensor name."""
         return f"{self.car.leaf.nickname} Charging Status"
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Sensor availability."""
         return self.car.data[DATA_CHARGING] is not None
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if charging."""
-        return self.car.data[DATA_CHARGING]
+        return bool(self.car.data[DATA_CHARGING])
