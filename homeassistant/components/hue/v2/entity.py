@@ -80,7 +80,7 @@ class HueBaseEntity(Entity):
                 (EventType.RESOURCE_UPDATED, EventType.RESOURCE_DELETED),
             )
         )
-        # also subscribe to device update event to catch devicer changes (e.g. name)
+        # also subscribe to device update event to catch device changes (e.g. name)
         if self.device is None:
             return
         self.async_on_remove(
@@ -92,10 +92,12 @@ class HueBaseEntity(Entity):
         )
         # subscribe to zigbee_connectivity to catch availability changes
         if zigbee := self.bridge.api.devices.get_zigbee_connectivity(self.device.id):
-            self.bridge.api.sensors.zigbee_connectivity.subscribe(
-                self._handle_event,
-                zigbee.id,
-                EventType.RESOURCE_UPDATED,
+            self.async_on_remove(
+                self.bridge.api.sensors.zigbee_connectivity.subscribe(
+                    self._handle_event,
+                    zigbee.id,
+                    EventType.RESOURCE_UPDATED,
+                )
             )
 
     @property
