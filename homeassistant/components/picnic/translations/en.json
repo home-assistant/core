@@ -10,13 +10,7 @@
             "unknown": "Unexpected error"
         },
         "step": {
-            "reauth_confirm": {
-                "data": {
-                    "password": "Password",
-                    "username": "Username"
-                }
-            },
-            "user": {
+            "authenticate": {
                 "data": {
                     "country_code": "Country code",
                     "password": "Password",

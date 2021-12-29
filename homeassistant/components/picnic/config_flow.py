@@ -26,13 +26,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
-STEP_REAUTH_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
-    }
-)
-
 
 class PicnicHub:
     """Hub class to test user authentication."""
@@ -78,40 +71,23 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Picnic."""
 
     VERSION = 1
-    _country_code = None
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
+        # Call the generic step to handle authentication
+        return await self.async_step_authenticate(user_input)
+
+    async def async_step_reauth(self, _):
+        """Perform the re-auth step upon an API authentication error."""
+        return await self.async_step_authenticate()
+
+    async def async_step_authenticate(self, user_input=None):
+        """Handle the authentication step, this is the generic step for both `step_user` and `step_reauth`."""
         if user_input is None:
             return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
+                step_id="authenticate", data_schema=STEP_USER_DATA_SCHEMA
             )
 
-        return await self._async_picnic_authenticate(
-            "user", STEP_USER_DATA_SCHEMA, user_input
-        )
-
-    async def async_step_reauth(self, config):
-        """Perform re-auth upon an API authentication error."""
-        self._country_code = config[CONF_COUNTRY_CODE]
-
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(self, user_input=None):
-        """Dialog that informs the user that re-auth is required."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="reauth_confirm",
-                data_schema=STEP_REAUTH_DATA_SCHEMA,
-            )
-
-        user_input[CONF_COUNTRY_CODE] = self._country_code
-        return await self._async_picnic_authenticate(
-            "reauth_confirm", STEP_REAUTH_DATA_SCHEMA, user_input
-        )
-
-    async def _async_picnic_authenticate(self, step_id, data_schema, user_input):
-        """Authenticate the user and show the form with errors on failure."""
         errors = {}
 
         try:
@@ -127,7 +103,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self._async_create_picnic_entry(auth_token, info, user_input)
 
         return self.async_show_form(
-            step_id=step_id, data_schema=data_schema, errors=errors
+            step_id="authenticate", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
     async def _async_create_picnic_entry(
