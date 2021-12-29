@@ -139,14 +139,17 @@ async def test_expose_string(hass: HomeAssistant, knx: KNXTestKit):
                 KNX_ADDRESS: "1/1/8",
                 CONF_ENTITY_ID: entity_id,
                 CONF_ATTRIBUTE: attribute,
+                ExposeSchema.CONF_KNX_EXPOSE_DEFAULT: "Test",
             }
         },
     )
     assert not hass.states.async_all()
 
-    # Before init no response shall be sent
+    # Before init default value shall be sent as response
     await knx.receive_read("1/1/8")
-    await knx.assert_telegram_count(0)
+    await knx.assert_response(
+        "1/1/8", (84, 101, 115, 116, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+    )
 
     # Change attribute; keep state
     hass.states.async_set(
