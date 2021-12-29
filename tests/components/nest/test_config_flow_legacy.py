@@ -6,7 +6,7 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.nest import DOMAIN, config_flow
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, mock_coro
+from tests.common import MockConfigEntry
 
 CONFIG = {DOMAIN: {"client_id": "bla", "client_secret": "bla"}}
 
@@ -68,10 +68,14 @@ async def test_full_flow_implementation(hass):
 
     with patch(
         "homeassistant.components.nest.legacy.local_auth.NestAuth.login", new=mock_login
-    ):
+    ), patch(
+        "homeassistant.components.nest.async_setup_legacy_entry", return_value=True
+    ) as mock_setup:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"code": "123ABC"}
         )
+        await hass.async_block_till_done()
+        assert len(mock_setup.mock_calls) == 1
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["data"]["tokens"] == {"access_token": "yoo"}
         assert result["data"]["impl_domain"] == "nest"
@@ -233,10 +237,11 @@ async def test_step_import_with_token_cache(hass):
         "homeassistant.components.nest.config_flow.load_json",
         return_value={"access_token": "yo"},
     ), patch(
-        "homeassistant.components.nest.async_setup_entry", return_value=mock_coro(True)
-    ):
+        "homeassistant.components.nest.async_setup_legacy_entry", return_value=True
+    ) as mock_setup:
         assert await async_setup_component(hass, DOMAIN, CONFIG)
         await hass.async_block_till_done()
+        assert len(mock_setup.mock_calls) == 1
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
 
