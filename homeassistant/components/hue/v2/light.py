@@ -72,7 +72,8 @@ class HueLight(HueBaseEntity, LightEntity):
     ) -> None:
         """Initialize the light."""
         super().__init__(bridge, controller, resource)
-        self._attr_supported_features |= SUPPORT_FLASH
+        if self.resource.alert and self.resource.alert.action_values:
+            self._attr_supported_features |= SUPPORT_FLASH
         self.resource = resource
         self.controller = controller
         self._supported_color_modes = set()
