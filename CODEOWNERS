@@ -180,8 +180,8 @@ homeassistant/components/counter/* @fabaff
 tests/components/counter/* @fabaff
 homeassistant/components/cover/* @home-assistant/core
 tests/components/cover/* @home-assistant/core
-homeassistant/components/cpuspeed/* @fabaff
-tests/components/cpuspeed/* @fabaff
+homeassistant/components/cpuspeed/* @fabaff @frenck
+tests/components/cpuspeed/* @fabaff @frenck
 homeassistant/components/crownstone/* @Crownstone @RicArch97
 tests/components/crownstone/* @Crownstone @RicArch97
 homeassistant/components/cups/* @fabaff
