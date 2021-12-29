@@ -7,7 +7,6 @@ from typing import Any
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
 from aiohue.v2.controllers.groups import GroupedLight, Room, Zone
-from aiohue.v2.models.feature import AlertEffectType
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -193,7 +192,6 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
                     color_xy=xy_color if light.supports_color else None,
                     color_temp=color_temp if light.supports_color_temperature else None,
                     transition_time=transition,
-                    alert=AlertEffectType.BREATHE if flash is not None else None,
                     allowed_errors=ALLOWED_ERRORS,
                 )
                 for light in self.controller.get_lights(self.resource.id)
