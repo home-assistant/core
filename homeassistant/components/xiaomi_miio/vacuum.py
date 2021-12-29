@@ -196,7 +196,11 @@ async def async_setup_entry(
         )
         platform.async_register_entity_service(
             SERVICE_CLEAN_SEGMENT,
-            {vol.Required("segments"): vol.Any(vol.Coerce(int), [vol.Coerce(int)])},
+            {
+                vol.Required("segments"): vol.Any(
+                    vol.Coerce(int), [vol.Coerce(int)], vol.Coerce(str)
+                )
+            },
             MiroboVacuum.async_clean_segment.__name__,
         )
 
@@ -399,6 +403,8 @@ class MiroboVacuum(XiaomiCoordinatedMiioEntity, StateVacuumEntity):
         """Clean the specified segments(s)."""
         if isinstance(segments, int):
             segments = [segments]
+        elif isinstance(segments, str):
+            segments = list(map(int, segments.split(",")))
 
         await self._try_command(
             "Unable to start cleaning of the specified segments: %s",
