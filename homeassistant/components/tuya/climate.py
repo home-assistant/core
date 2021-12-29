@@ -32,7 +32,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantTuyaData
 from .base import EnumTypeData, IntegerTypeData, TuyaEntity
-from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode
+from .const import DOMAIN, LOGGER, TUYA_DISCOVERY_NEW, DPCode
 
 TUYA_HVAC_TO_HA = {
     "auto": HVAC_MODE_HEAT_COOL,
@@ -436,8 +436,16 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
                 return self.entity_description.switch_only_hvac_mode
             return HVAC_MODE_OFF
 
-        if self.device.status.get(DPCode.MODE) is not None:
-            return TUYA_HVAC_TO_HA[self.device.status[DPCode.MODE]]
+        if (mode := self.device.status.get(DPCode.MODE)) is not None:
+            if mode not in TUYA_HVAC_TO_HA:
+                LOGGER.warning(
+                    "Unknown HVAC mode '%s' for device %s, assuming off",
+                    mode,
+                    self.name,
+                )
+                return HVAC_MODE_OFF
+            return TUYA_HVAC_TO_HA[mode]
+
         return HVAC_MODE_OFF
 
     @property
