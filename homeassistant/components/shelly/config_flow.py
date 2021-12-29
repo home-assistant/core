@@ -227,10 +227,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     "gen": self.device_info["gen"],
                 },
             )
-        else:
-            return self.async_show_form(
-                step_id="roller", data_schema=ROLLER_SCHEMA, errors=errors
-            )
+
+        return self.async_show_form(
+            step_id="roller", data_schema=ROLLER_SCHEMA, errors=errors
+        )
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo

@@ -128,7 +128,6 @@ class ShellyCover(ShellyBlockEntity, CoverEntity):
         """Calculate the shelly's position from the real cover position. Apply the offset."""
         if position is None or position == 0:
             return 0
-        elif position <= self._offset:
+        if position <= self._offset:
             return 1
-        else:
-            return cast(int, (100 * (position - self._offset)) / (100 - self._offset))
+        return cast(int, (100 * (position - self._offset)) / (100 - self._offset))
