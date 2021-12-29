@@ -225,16 +225,6 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
                 if tuya_mode in data_type.range:
                     self._hvac_to_tuya[ha_mode] = tuya_mode
                     self._attr_hvac_modes.append(ha_mode)
-
-            # Log unknown modes
-            for tuya_mode in data_type.range:
-                if tuya_mode in TUYA_HVAC_TO_HA.values():
-                    LOGGER.warning(
-                        "Unknown HVAC mode '%s' for device %s; assuming it as off",
-                        tuya_mode,
-                        device.name,
-                    )
-
         elif DPCode.SWITCH in device.function:
             self._attr_hvac_modes = [
                 HVAC_MODE_OFF,
@@ -307,6 +297,21 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
 
             if DPCode.SWITCH_VERTICAL in device.function:
                 self._attr_swing_modes.append(SWING_VERTICAL)
+
+    async def async_added_to_hass(self) -> None:
+        """Call when entity is added to hass."""
+        await super().async_added_to_hass()
+
+        # Log unknown modes
+        if DPCode.MODE in self.device.function:
+            data_type = EnumTypeData.from_json(self.device.function[DPCode.MODE].values)
+            for tuya_mode in data_type.range:
+                if tuya_mode in TUYA_HVAC_TO_HA.values():
+                    LOGGER.warning(
+                        "Unknown HVAC mode '%s' for device %s; assuming it as off",
+                        tuya_mode,
+                        self.device.name,
+                    )
 
     def set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
