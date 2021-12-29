@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API kulcs",
+                    "system_id": "Rendszerazonos\u00edt\u00f3"
+                },
+                "description": "A PVOutput hiteles\u00edt\u00e9s\u00e9hez meg kell szereznie az API-kulcsot a {account_url} c\u00edmen.\n\nA regisztr\u00e1lt rendszerek rendszerazonos\u00edt\u00f3i ugyanezen az oldalon tal\u00e1lhat\u00f3k."
+            }
+        }
+    }
+}
