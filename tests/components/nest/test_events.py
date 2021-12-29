@@ -502,6 +502,7 @@ async def test_structure_update_event(hass):
     ):
         await subscriber.async_receive_event(message)
         await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
     # No home assistant events published
     assert not events
