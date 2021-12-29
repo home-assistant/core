@@ -35,3 +35,23 @@ cleanup:
           integration: fritz
           entity:
             device_class: connectivity
+
+generate_guest_wifi_qr:
+  name: Generate QR code for guest wifi
+  description: Generates a QR code for the guest wifi. The QR code will be located in /config/www.
+  fields:
+    device_id:
+      name: Fritz!Box Device
+      description: Select the Fritz!Box to check
+      required: true
+      selector:
+        device:
+          integration: fritz
+          entity:
+            device_class: connectivity
+    filename:
+      name: Filename
+      description: Name of the qr code file. Filename must be specified with SVG ending.
+      required: false
+      selector:
+        text:

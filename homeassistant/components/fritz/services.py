@@ -10,6 +10,7 @@ from .const import (
     DOMAIN,
     FRITZ_SERVICES,
     SERVICE_CLEANUP,
+    SERVICE_GEN_GUEST_WIFI_QR,
     SERVICE_REBOOT,
     SERVICE_RECONNECT,
 )
@@ -17,7 +18,12 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-SERVICE_LIST = [SERVICE_CLEANUP, SERVICE_REBOOT, SERVICE_RECONNECT]
+SERVICE_LIST = [
+    SERVICE_CLEANUP,
+    SERVICE_REBOOT,
+    SERVICE_RECONNECT,
+    SERVICE_GEN_GUEST_WIFI_QR,
+]
 
 
 async def async_setup_services(hass: HomeAssistant) -> None:

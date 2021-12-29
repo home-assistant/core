@@ -5,6 +5,7 @@ from collections.abc import Callable, ValuesView
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 import logging
+import os
 from types import MappingProxyType
 from typing import Any, TypedDict, cast
 
@@ -17,6 +18,8 @@ from fritzconnection.core.exceptions import (
 )
 from fritzconnection.lib.fritzhosts import FritzHosts
 from fritzconnection.lib.fritzstatus import FritzStatus
+from fritzconnection.lib.fritzwlan import FritzGuestWLAN
+import pyqrcode
 
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.device_tracker.const import (
@@ -44,11 +47,14 @@ from homeassistant.util import dt as dt_util
 
 from .const import (
     DEFAULT_DEVICE_NAME,
+    DEFAULT_GUEST_WIFI_ENCRYPTION,
+    DEFAULT_GUEST_WIFI_QR_FILENAME,
     DEFAULT_HOST,
     DEFAULT_PORT,
     DEFAULT_USERNAME,
     DOMAIN,
     SERVICE_CLEANUP,
+    SERVICE_GEN_GUEST_WIFI_QR,
     SERVICE_REBOOT,
     SERVICE_RECONNECT,
 )
@@ -140,6 +146,7 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
         self._options: MappingProxyType[str, Any] | None = None
         self._unique_id: str | None = None
         self.connection: FritzConnection = None
+        self.fritz_guest_wifi: FritzGuestWLAN = None
         self.fritz_hosts: FritzHosts = None
         self.fritz_status: FritzStatus = None
         self.hass = hass
@@ -175,6 +182,7 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
             _LOGGER.error("Unable to establish a connection with %s", self.host)
             return
 
+        self.fritz_guest_wifi = FritzGuestWLAN(fc=self.connection)
         self.fritz_status = FritzStatus(fc=self.connection)
         info = self.connection.call_action("DeviceInfo:1", "GetInfo")
         if not self._unique_id:
@@ -246,6 +254,18 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
     def signal_device_update(self) -> str:
         """Event specific per FRITZ!Box entry to signal updates in devices."""
         return f"{DOMAIN}-device-update-{self._unique_id}"
+
+    def _generate_guest_wifi_qr(self, filename: str) -> None:
+        """Generate a QR code for the guest wifi and save it in the www-root folder."""
+
+        if not filename.endswith(".svg"):
+            raise HomeAssistantError("Filetype must be *.svg")
+
+        filepath = os.path.join(str(self.hass.config.config_dir), "www", filename)
+        wifi = f"WIFI:S:{self.fritz_guest_wifi.ssid};T:{DEFAULT_GUEST_WIFI_ENCRYPTION};P:{self.fritz_guest_wifi.get_password()};;"
+
+        img = pyqrcode.create(wifi)
+        img.svg(filepath, scale=5, module_color="#000", background="#FFF")
 
     def _update_hosts_info(self) -> list[HostInfo]:
         """Retrieve latest hosts information from the FRITZ!Box."""
@@ -364,6 +384,12 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
                 )
                 return
 
+            if service_call.service == SERVICE_GEN_GUEST_WIFI_QR:
+                await self.hass.async_add_executor_job(
+                    self._generate_guest_wifi_qr,
+                    service_call.data.get("filename", DEFAULT_GUEST_WIFI_QR_FILENAME),
+                )
+                return
             if service_call.service == SERVICE_CLEANUP:
                 device_hosts_list: list = await self.hass.async_add_executor_job(
                     self.fritz_hosts.get_hosts_info
