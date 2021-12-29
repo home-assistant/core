@@ -173,7 +173,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator):
         cast_to_python = DATA_TYPE_TO_PYTHON[data_type]
         return cast_to_python(state.value)
 
-    def places_to_area(self, place):
+    def places_to_area(self, place: Place) -> dict[str, str]:
         """Convert places with sub_places to a flat dictionary."""
         areas = {}
         if isinstance(place, Place):

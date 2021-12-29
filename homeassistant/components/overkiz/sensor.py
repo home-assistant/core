@@ -28,6 +28,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from . import HomeAssistantOverkizData
 from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES
@@ -345,7 +346,7 @@ async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-):
+) -> None:
     """Set up the Overkiz sensors from a config entry."""
     data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
     entities: list[SensorEntity] = []
@@ -388,7 +389,7 @@ class OverkizStateSensor(OverkizDescriptiveEntity, SensorEntity):
     entity_description: OverkizSensorDescription
 
     @property
-    def native_value(self):
+    def native_value(self) -> StateType:
         """Return the value of the sensor."""
         state = self.device.states.get(self.entity_description.key)
 
@@ -416,7 +417,7 @@ class OverkizHomeKitSetupCodeSensor(OverkizEntity, SensorEntity):
         self._attr_name = "HomeKit Setup Code"
 
     @property
-    def native_value(self):
+    def native_value(self) -> str:
         """Return the value of the sensor."""
         return self.device.attributes.get(OverkizAttribute.HOMEKIT_SETUP_CODE).value
 
