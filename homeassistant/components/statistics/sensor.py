@@ -51,10 +51,12 @@ from . import DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
+# Stats for attributes only
 STAT_AGE_COVERAGE_RATIO = "age_coverage_ratio"
 STAT_BUFFER_USAGE_RATIO = "buffer_usage_ratio"
 STAT_SOURCE_VALUE_VALID = "source_value_valid"
 
+# All sensor statistics
 STAT_AVERAGE_LINEAR = "average_linear"
 STAT_AVERAGE_STEP = "average_step"
 STAT_AVERAGE_TIMELESS = "average_timeless"
@@ -86,6 +88,7 @@ DEPRECATION_WARNING_CHARACTERISTIC = (
     "https://www.home-assistant.io/integrations/statistics/"
 )
 
+# Statistics supported by a sensor source (numeric)
 STATS_NUMERIC_SUPPORT = (
     STAT_AVERAGE_LINEAR,
     STAT_AVERAGE_STEP,
@@ -110,6 +113,7 @@ STATS_NUMERIC_SUPPORT = (
     STAT_VARIANCE,
 )
 
+# Statistics supported by a binary_sensor source
 STATS_BINARY_SUPPORT = (
     STAT_AVERAGE_STEP,
     STAT_AVERAGE_TIMELESS,
