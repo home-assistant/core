@@ -18,7 +18,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
 from . import BlockDeviceWrapper, RpcDeviceWrapper
-from .const import BLOCK, DATA_CONFIG_ENTRY, DOMAIN, RPC
+from .const import BLOCK, DATA_CONFIG_ENTRY, DOMAIN, RPC, SHELLY_GAS_MODELS
 from .utils import get_block_device_name, get_device_entry_gen, get_rpc_device_name
 
 
@@ -32,6 +32,8 @@ class ShellyButtonDescriptionMixin:
 @dataclass
 class ShellyButtonDescription(ButtonEntityDescription, ShellyButtonDescriptionMixin):
     """Class to describe a Button entity."""
+
+    supported: Callable = lambda _: True
 
 
 BUTTONS: Final = [
@@ -63,6 +65,7 @@ BUTTONS: Final = [
         icon="mdi:progress-wrench",
         entity_category=EntityCategory.DIAGNOSTIC,
         press_action=lambda wrapper: wrapper.device.trigger_shelly_gas_self_test(),
+        supported=lambda wrapper: wrapper.device.model in SHELLY_GAS_MODELS,
     ),
     ShellyButtonDescription(
         key="mute",
@@ -70,6 +73,7 @@ BUTTONS: Final = [
         icon="mdi:volume-variant-off",
         entity_category=EntityCategory.CONFIG,
         press_action=lambda wrapper: wrapper.device.trigger_shelly_gas_mute(),
+        supported=lambda wrapper: wrapper.device.model in SHELLY_GAS_MODELS,
     ),
     ShellyButtonDescription(
         key="unmute",
@@ -77,6 +81,7 @@ BUTTONS: Final = [
         icon="mdi:volume-high",
         entity_category=EntityCategory.CONFIG,
         press_action=lambda wrapper: wrapper.device.trigger_shelly_gas_unmute(),
+        supported=lambda wrapper: wrapper.device.model in SHELLY_GAS_MODELS,
     ),
 ]
 
@@ -103,12 +108,8 @@ async def async_setup_entry(
         entities = []
 
         for button in BUTTONS:
-            if (
-                button.key in ("self_test", "mute", "unmute")
-                and wrapper.device.model != "SHGS-1"
-            ):
+            if not button.supported(wrapper):
                 continue
-
             entities.append(ShellyButton(wrapper, button))
 
         async_add_entities(entities)
