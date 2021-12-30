@@ -13,12 +13,6 @@ PLATFORMS: list[str] = [
 ]
 
 
-async def async_setup(hass, config):
-    """Set up the component."""
-    hass.data.setdefault(DOMAIN, {})
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Wevolor Control for Levolor Motorized Blinds from a config entry."""
     hass.data.setdefault(DOMAIN, {})
