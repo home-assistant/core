@@ -214,7 +214,7 @@ class SHCSwitch(SHCEntity, SwitchEntity):
         """Switch needs polling."""
         return self.entity_description.should_poll
 
-    def update(self):
+    def update(self) -> None:
         """Trigger an update of the device."""
         self._device.update()
 
