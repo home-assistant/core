@@ -1330,7 +1330,7 @@ class ServiceRegistry:
         self,
         domain: str,
         service: str,
-        service_func: Callable,
+        service_func: Callable[[ServiceCall], Awaitable[None] | None],
         schema: vol.Schema | None = None,
     ) -> None:
         """
@@ -1347,7 +1347,7 @@ class ServiceRegistry:
         self,
         domain: str,
         service: str,
-        service_func: Callable,
+        service_func: Callable[[ServiceCall], Awaitable[None] | None],
         schema: vol.Schema | None = None,
     ) -> None:
         """
