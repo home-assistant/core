@@ -1,19 +1,15 @@
 {
     "config": {
-        "abort": {
-            "already_configured": "Device is already configured"
-        },
         "error": {
             "cannot_connect": "Failed to connect",
-            "invalid_auth": "Invalid authentication",
             "unknown": "Unexpected error"
         },
         "step": {
             "user": {
                 "data": {
+                    "channel_count": "How many channels should the UI display for this Wevolor?",
                     "host": "IP address of Wevolor device on local network",
-                    "support_tilt": "Do the devices controlled by this Wevolor support tilting?",
-                    "channel_count": "How many channels should the UI display for this Wevolor?"
+                    "support_tilt": "Do the devices controlled by this Wevolor support tilting?"
                 }
             }
         }
