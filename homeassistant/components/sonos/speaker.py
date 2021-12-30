@@ -557,7 +557,7 @@ class SonosSpeaker:
     #
     async def async_update_battery_info(self, more_info: str) -> None:
         """Update battery info using a SonosEvent payload value."""
-        battery_dict = {x.split(":") for x in more_info.split(",")}
+        battery_dict = dict(x.split(":") for x in more_info.split(","))
         for unused in UNUSED_DEVICE_KEYS:
             battery_dict.pop(unused, None)
         if not battery_dict:
