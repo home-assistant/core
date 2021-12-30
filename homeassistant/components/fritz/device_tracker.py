@@ -141,11 +141,18 @@ class FritzBoxTracker(FritzDeviceBase, ScannerEntity):
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the attributes."""
         attrs: dict[str, str] = {}
-        self._last_activity = self._router.devices[self._mac].last_activity
+        device = self._router.devices[self._mac]
+        self._last_activity = device.last_activity
         if self._last_activity is not None:
             attrs["last_time_reachable"] = self._last_activity.isoformat(
                 timespec="seconds"
             )
+        if device.connected_to:
+            attrs["connected_to"] = device.connected_to
+        if device.connection_type:
+            attrs["connection_type"] = device.connection_type
+        if device.ssid:
+            attrs["ssid"] = device.ssid
         return attrs
 
     @property
