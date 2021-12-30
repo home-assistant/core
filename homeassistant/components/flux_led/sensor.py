@@ -25,27 +25,23 @@ async def async_setup_entry(
     coordinator: FluxLedUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     device = coordinator.device
     if device.paired_remotes is not None:
-        async_add_entities([FluxPairedRemotes(coordinator, entry)])
+        async_add_entities(
+            [
+                FluxPairedRemotes(
+                    coordinator,
+                    "{entry.unique_id}_paired_remotes",
+                    f"{entry.data[CONF_NAME]} Paired Remotes",
+                )
+            ]
+        )
 
 
 class FluxPairedRemotes(FluxEntity, SensorEntity):
     """Representation of a Flux power restore state option."""
 
     _attr_should_poll = False
-
-    def __init__(
-        self,
-        coordinator: FluxLedUpdateCoordinator,
-        entry: config_entries.ConfigEntry,
-    ) -> None:
-        """Initialize the power state select."""
-        super().__init__(
-            coordinator, entry.unique_id, f"{entry.data[CONF_NAME]} Paired Remotes"
-        )
-        self._attr_entity_category = EntityCategory.CONFIG
-        self._attr_icon = "mdi:remote"
-        if entry.unique_id:
-            self._attr_unique_id = f"{entry.unique_id}_paired_remotes"
+    _attr_icon = "mdi:remote"
+    _attr_entity_category = EntityCategory.CONFIG
 
     @property
     def native_value(self) -> StateType | date | datetime:
