@@ -29,8 +29,9 @@ async def async_setup_entry(
             [
                 FluxPairedRemotes(
                     coordinator,
-                    "{entry.unique_id}_paired_remotes",
+                    entry.unique_id,
                     f"{entry.data[CONF_NAME]} Paired Remotes",
+                    "paired_remotes",
                 )
             ]
         )
