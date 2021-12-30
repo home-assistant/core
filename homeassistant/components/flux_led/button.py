@@ -45,7 +45,6 @@ async def async_setup_entry(
 class FluxButton(FluxBaseEntity, ButtonEntity):
     """Representation of a Flux button."""
 
-    _attr_should_poll = False
     _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(

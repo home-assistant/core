@@ -40,7 +40,6 @@ async def async_setup_entry(
 class FluxPairedRemotes(FluxEntity, SensorEntity):
     """Representation of a Flux power restore state option."""
 
-    _attr_should_poll = False
     _attr_icon = "mdi:remote"
     _attr_entity_category = EntityCategory.CONFIG
 

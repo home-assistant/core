@@ -65,7 +65,6 @@ async def async_setup_entry(
 class FluxPowerStateSelect(FluxBaseEntity, SelectEntity):
     """Representation of a Flux power restore state option."""
 
-    _attr_should_poll = False
     _attr_icon = "mdi:transmission-tower-off"
     _attr_entity_category = EntityCategory.CONFIG
 
