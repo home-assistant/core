@@ -41,7 +41,7 @@ class HomeAssistantOverkizData:
     """Overkiz data stored in the Home Assistant data object."""
 
     coordinator: OverkizDataUpdateCoordinator
-    platforms: defaultdict[Platform, Device | Scenario]
+    platforms: defaultdict[Platform, list[Device | Scenario]]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -95,7 +95,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         coordinator.update_interval = UPDATE_INTERVAL_ALL_ASSUMED_STATE
 
-    platforms: defaultdict[Platform, Device | Scenario] = defaultdict(list)
+    platforms: defaultdict[Platform, list[Device | Scenario]] = defaultdict(list)
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = HomeAssistantOverkizData(
         coordinator=coordinator,
