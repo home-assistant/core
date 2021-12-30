@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime, timedelta
+from datetime import datetime
 from http import HTTPStatus
 import sys
 from typing import Any, cast
@@ -40,19 +40,18 @@ from .const import (
     DATA_PLUGGED_IN,
     DATA_RANGE_AC,
     DATA_RANGE_AC_OFF,
+    DEFAULT_CHARGING_INTERVAL,
+    DEFAULT_CLIMATE_INTERVAL,
+    DEFAULT_INTERVAL,
     DOMAIN,
+    INITIAL_UPDATE,
     LOGGER,
     MAX_RESPONSE_ATTEMPTS,
+    MIN_UPDATE_INTERVAL,
     PYCARWINGS2_SLEEP,
     RESTRICTED_BATTERY,
+    RESTRICTED_INTERVAL,
 )
-
-INITIAL_UPDATE = timedelta(seconds=15)
-MIN_UPDATE_INTERVAL = timedelta(minutes=2)
-DEFAULT_INTERVAL = timedelta(hours=1)
-DEFAULT_CHARGING_INTERVAL = timedelta(minutes=15)
-DEFAULT_CLIMATE_INTERVAL = timedelta(minutes=5)
-RESTRICTED_INTERVAL = timedelta(hours=12)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -129,7 +128,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
             result = await hass.async_add_executor_job(data_store.leaf.start_charging)
             if result:
                 LOGGER.debug("Start charging sent, request updated data in 1 minute")
-                check_charge_at = utcnow() + timedelta(minutes=1)
+                check_charge_at = utcnow() + MIN_UPDATE_INTERVAL
                 data_store.next_update = check_charge_at
                 async_track_point_in_utc_time(
                     hass, data_store.async_update_data, check_charge_at

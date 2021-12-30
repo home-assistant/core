@@ -1,30 +1,38 @@
 """Constants for the Nissan Leaf integration."""
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
-from typing import Final, Literal
+from typing import Final
 
 DOMAIN: Final = "nissan_leaf"
 
 LOGGER = logging.getLogger(__package__)
 
-DATA_LEAF = "nissan_leaf_data"
+DATA_LEAF: Final = "nissan_leaf_data"
 
-DATA_BATTERY = "battery"
-DATA_CHARGING = "charging"
-DATA_PLUGGED_IN = "plugged_in"
-DATA_CLIMATE = "climate"
-DATA_RANGE_AC = "range_ac_on"
-DATA_RANGE_AC_OFF = "range_ac_off"
+DATA_BATTERY: Final = "battery"
+DATA_CHARGING: Final = "charging"
+DATA_PLUGGED_IN: Final = "plugged_in"
+DATA_CLIMATE: Final = "climate"
+DATA_RANGE_AC: Final = "range_ac_on"
+DATA_RANGE_AC_OFF: Final = "range_ac_off"
 
-CONF_INTERVAL = "update_interval"
-CONF_CHARGING_INTERVAL = "update_interval_charging"
-CONF_CLIMATE_INTERVAL = "update_interval_climate"
-CONF_VALID_REGIONS = Literal["NNA", "NE", "NCI", "NMA", "NML"]
-CONF_FORCE_MILES = "force_miles"
+CONF_INTERVAL: Final = "update_interval"
+CONF_CHARGING_INTERVAL: Final = "update_interval_charging"
+CONF_CLIMATE_INTERVAL: Final = "update_interval_climate"
+CONF_FORCE_MILES: Final = "force_miles"
 
-RESTRICTED_BATTERY = 2
+CONF_VALID_REGIONS: Final = ["NNA", "NE", "NCI", "NMA", "NML"]
 
-MAX_RESPONSE_ATTEMPTS = 3
+INITIAL_UPDATE: Final = timedelta(seconds=15)
+MIN_UPDATE_INTERVAL: Final = timedelta(minutes=2)
+DEFAULT_INTERVAL: Final = timedelta(hours=1)
+DEFAULT_CHARGING_INTERVAL: Final = timedelta(minutes=15)
+DEFAULT_CLIMATE_INTERVAL: Final = timedelta(minutes=5)
+RESTRICTED_INTERVAL: Final = timedelta(hours=12)
+RESTRICTED_BATTERY: Final = 2
 
-PYCARWINGS2_SLEEP = 30
+MAX_RESPONSE_ATTEMPTS: Final = 3
+
+PYCARWINGS2_SLEEP: Final = 30
