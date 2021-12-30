@@ -564,7 +564,7 @@ jobs:
         with:
           path: ${{ env.PIP_CACHE }}
           key: >-
-            ${{ runner.os }}-${{ matrix.python-version }}-pip-${{ env.PIP_CACHE_VERSION }}-${{
+            ${{ runner.os }}-${{ matrix.python-version }}-${{
             steps.generate-pip-key.outputs.key }}
           restore-keys: |
             ${{ runner.os }}-${{ matrix.python-version }}-pip-${{ env.PIP_CACHE_VERSION }}-
