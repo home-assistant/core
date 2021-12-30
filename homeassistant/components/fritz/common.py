@@ -335,7 +335,7 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
                     type=interf["type"],
                 )
                 if format_mac(int_mac) == format_mac(self.mac):
-                    self.mesh_role = node["mesh_role"]
+                    self.mesh_role = MeshRoles(node["mesh_role"])
 
         # second get all client devices
         for node in topology["nodes"]:
