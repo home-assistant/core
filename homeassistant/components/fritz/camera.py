@@ -30,7 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Add a weather entity from a config_entry."""
+    """Add a entities from a config_entry."""
     _LOGGER.debug("Setting up FRITZ!Box camera entities")
     fritzbox_tools: FritzBoxTools = hass.data[DOMAIN][entry.entry_id]
 
