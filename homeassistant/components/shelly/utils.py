@@ -368,8 +368,5 @@ async def async_device_update_info(
         )
     if device is not None:
         dev_registry.async_update_device(
-            device.id,
-            sw_version=shellydevice.firmware_version
-            if shellydevice.initialized
-            else "",
+            device.id, sw_version=shellydevice.firmware_version
         )
