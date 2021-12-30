@@ -8,6 +8,7 @@ import threading
 import requests
 import voluptuous as vol
 
+from homeassistant.core import ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import raise_if_invalid_filename, raise_if_invalid_path
 
@@ -56,7 +57,7 @@ def setup(hass, config):
 
         return False
 
-    def download_file(service):
+    def download_file(service: ServiceCall) -> None:
         """Start thread to download file specified in the URL."""
 
         def do_download():

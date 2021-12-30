@@ -13,7 +13,7 @@ from homeassistant.const import (
     CONF_REGION,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import callback
+from homeassistant.core import ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entityfilter
 from homeassistant.loader import bind_hass
@@ -197,7 +197,7 @@ async def async_setup(hass, config):
 
     _remote_handle_prefs_updated(cloud)
 
-    async def _service_handler(service):
+    async def _service_handler(service: ServiceCall) -> None:
         """Handle service for cloud."""
         if service.service == SERVICE_REMOTE_CONNECT:
             await prefs.async_update(remote_enabled=True)

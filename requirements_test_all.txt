@@ -183,7 +183,7 @@ aioridwell==2021.12.2
 aiosenseme==0.5.5
 
 # homeassistant.components.shelly
-aioshelly==1.0.5
+aioshelly==1.0.7
 
 # homeassistant.components.switcher_kis
 aioswitcher==2.0.6
@@ -250,6 +250,9 @@ auroranoaa==0.0.2
 
 # homeassistant.components.aurora_abb_powerone
 aurorapy==0.2.6
+
+# homeassistant.components.stream
+av==8.1.0
 
 # homeassistant.components.axis
 axis==44
@@ -425,7 +428,7 @@ freebox-api==0.0.10
 
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
-fritzconnection==1.7.2
+fritzconnection==1.8.0
 
 # homeassistant.components.google_translate
 gTTS==2.2.3
@@ -477,7 +480,7 @@ google-nest-sdm==1.1.0
 googlemaps==2.5.1
 
 # homeassistant.components.gree
-greeclimate==0.12.5
+greeclimate==1.0.1
 
 # homeassistant.components.greeneye_monitor
 greeneye_monitor==2.1
@@ -487,9 +490,6 @@ growattServer==1.1.0
 
 # homeassistant.components.profiler
 guppy3==3.1.2
-
-# homeassistant.components.stream
-ha-av==8.0.4-rc.1
 
 # homeassistant.components.ffmpeg
 ha-ffmpeg==3.0.2
@@ -851,7 +851,7 @@ pyarlo==0.2.4
 pyatag==0.3.5.3
 
 # homeassistant.components.netatmo
-pyatmo==6.2.1
+pyatmo==6.2.2
 
 # homeassistant.components.apple_tv
 pyatv==0.9.8
