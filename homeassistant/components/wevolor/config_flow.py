@@ -57,8 +57,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             info = await validate_input(self.hass, user_input)
         except CannotConnect:
             errors["base"] = "cannot_connect"
-        except Exception as e:  # pylint: disable=broad-except
-            _LOGGER.exception(f"Unexpected exception: {e}")
+        except Exception as err:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception: %s", err)
             errors["base"] = "unknown"
         else:
             return self.async_create_entry(title=info["remote"], data=user_input)
