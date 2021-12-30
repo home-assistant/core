@@ -15,6 +15,7 @@ from homeassistant.components.flux_led.const import (
     CONF_MODEL,
     CONF_MODEL_DESCRIPTION,
     CONF_MODEL_INFO,
+    CONF_MODEL_NUM,
     CONF_REMOTE_ACCESS_ENABLED,
     CONF_REMOTE_ACCESS_HOST,
     CONF_REMOTE_ACCESS_PORT,
@@ -35,6 +36,7 @@ from . import (
     MAC_ADDRESS,
     MODEL,
     MODEL_DESCRIPTION,
+    MODEL_NUM,
     MODULE,
     _patch_discovery,
     _patch_wifibulb,
@@ -94,6 +96,7 @@ async def test_discovery(hass: HomeAssistant):
         CONF_HOST: IP_ADDRESS,
         CONF_NAME: DEFAULT_ENTRY_TITLE,
         CONF_MODEL: MODEL,
+        CONF_MODEL_NUM: MODEL_NUM,
         CONF_MODEL_INFO: MODEL,
         CONF_MODEL_DESCRIPTION: MODEL_DESCRIPTION,
         CONF_REMOTE_ACCESS_ENABLED: True,
@@ -169,6 +172,7 @@ async def test_discovery_legacy(hass: HomeAssistant):
         CONF_HOST: IP_ADDRESS,
         CONF_NAME: DEFAULT_ENTRY_TITLE,
         CONF_MODEL: MODEL,
+        CONF_MODEL_NUM: MODEL_NUM,
         CONF_MODEL_INFO: MODEL,
         CONF_MODEL_DESCRIPTION: MODEL_DESCRIPTION,
         CONF_REMOTE_ACCESS_ENABLED: True,
@@ -251,6 +255,7 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant):
             CONF_HOST: IP_ADDRESS,
             CONF_NAME: DEFAULT_ENTRY_TITLE,
             CONF_MODEL: MODEL,
+            CONF_MODEL_NUM: MODEL_NUM,
             CONF_MODEL_INFO: MODEL,
             CONF_MODEL_DESCRIPTION: MODEL_DESCRIPTION,
             CONF_REMOTE_ACCESS_ENABLED: True,
@@ -327,6 +332,7 @@ async def test_manual_working_discovery(hass: HomeAssistant):
         CONF_HOST: IP_ADDRESS,
         CONF_NAME: DEFAULT_ENTRY_TITLE,
         CONF_MODEL: MODEL,
+        CONF_MODEL_NUM: MODEL_NUM,
         CONF_MODEL_INFO: MODEL,
         CONF_MODEL_DESCRIPTION: MODEL_DESCRIPTION,
         CONF_REMOTE_ACCESS_ENABLED: True,
@@ -369,6 +375,7 @@ async def test_manual_no_discovery_data(hass: HomeAssistant):
     assert result["type"] == "create_entry"
     assert result["data"] == {
         CONF_HOST: IP_ADDRESS,
+        CONF_MODEL_NUM: MODEL_NUM,
         CONF_MODEL_DESCRIPTION: MODEL_DESCRIPTION,
         CONF_NAME: IP_ADDRESS,
     }
@@ -440,6 +447,7 @@ async def test_discovered_by_discovery(hass):
         CONF_HOST: IP_ADDRESS,
         CONF_NAME: DEFAULT_ENTRY_TITLE,
         CONF_MODEL: MODEL,
+        CONF_MODEL_NUM: MODEL_NUM,
         CONF_MODEL_INFO: MODEL,
         CONF_MODEL_DESCRIPTION: MODEL_DESCRIPTION,
         CONF_REMOTE_ACCESS_ENABLED: True,
@@ -477,6 +485,7 @@ async def test_discovered_by_dhcp_udp_responds(hass):
         CONF_HOST: IP_ADDRESS,
         CONF_NAME: DEFAULT_ENTRY_TITLE,
         CONF_MODEL: MODEL,
+        CONF_MODEL_NUM: MODEL_NUM,
         CONF_MODEL_INFO: MODEL,
         CONF_MODEL_DESCRIPTION: MODEL_DESCRIPTION,
         CONF_REMOTE_ACCESS_ENABLED: True,
@@ -511,6 +520,7 @@ async def test_discovered_by_dhcp_no_udp_response(hass):
     assert result2["type"] == "create_entry"
     assert result2["data"] == {
         CONF_HOST: IP_ADDRESS,
+        CONF_MODEL_NUM: MODEL_NUM,
         CONF_MODEL_DESCRIPTION: MODEL_DESCRIPTION,
         CONF_NAME: DEFAULT_ENTRY_TITLE,
     }
@@ -541,6 +551,7 @@ async def test_discovered_by_dhcp_partial_udp_response_fallback_tcp(hass):
     assert result2["type"] == "create_entry"
     assert result2["data"] == {
         CONF_HOST: IP_ADDRESS,
+        CONF_MODEL_NUM: MODEL_NUM,
         CONF_MODEL_DESCRIPTION: MODEL_DESCRIPTION,
         CONF_NAME: DEFAULT_ENTRY_TITLE,
     }
