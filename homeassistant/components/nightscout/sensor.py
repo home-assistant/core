@@ -17,7 +17,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DATE, ENTITY_CATEGORY_DIAGNOSTIC, PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -181,7 +180,6 @@ class Battery(CoordinatorEntity, SensorEntity):
         self._unique_id = unique_id
         self._name = name
         self._device_name = name
-        self._icon = "mdi:battery-unknown"
 
     @property
     def unique_id(self):
@@ -202,14 +200,6 @@ class Battery(CoordinatorEntity, SensorEntity):
     def native_value(self):
         """Return the state of the device."""
         return self.coordinator.data[self._name].uploader.battery
-
-    @property
-    def icon(self) -> str:
-        """Battery state icon handling."""
-        return icon_for_battery_level(
-            battery_level=self.coordinator.data[self._name].uploader.battery,
-            charging=False,
-        )
 
     @property
     def extra_state_attributes(self):
