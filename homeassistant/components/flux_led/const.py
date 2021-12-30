@@ -50,6 +50,7 @@ STARTUP_SCAN_TIMEOUT: Final = 5
 DISCOVER_SCAN_TIMEOUT: Final = 10
 
 CONF_MODEL: Final = "model"
+CONF_MODEL_NUM: Final = "model_num"
 CONF_MODEL_INFO: Final = "model_info"
 CONF_MODEL_DESCRIPTION: Final = "model_description"
 CONF_MINOR_VERSION: Final = "minor_version"
