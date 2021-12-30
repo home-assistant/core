@@ -57,8 +57,10 @@ async def async_setup_entry(
         try:
             return await api.get_latest_devices_status()
         except OSError as error:
-            _LOGGER.error(f"Error fetching battery devices status. Failed with {error}")
-            raise UpdateFailed(f"Error communicating with API: {error}")
+            _LOGGER.error(
+                "Error fetching battery devices status. Failed with %s", error
+            )
+            raise UpdateFailed(f"Error communicating with API: {error}") from error
 
     coordinator = DataUpdateCoordinator(
         hass,

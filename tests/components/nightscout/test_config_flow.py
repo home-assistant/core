@@ -9,12 +9,9 @@ from homeassistant.components.nightscout.const import DOMAIN
 from homeassistant.components.nightscout.utils import hash_from_url
 from homeassistant.const import CONF_URL
 
+from . import GLUCOSE_READINGS, SERVER_STATUS, SERVER_STATUS_STATUS_ONLY
+
 from tests.common import MockConfigEntry
-from tests.components.nightscout import (
-    GLUCOSE_READINGS,
-    SERVER_STATUS,
-    SERVER_STATUS_STATUS_ONLY,
-)
 
 CONFIG = {CONF_URL: "https://some.url:1234"}
 

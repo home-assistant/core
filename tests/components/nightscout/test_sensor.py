@@ -19,7 +19,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 
-from tests.components.nightscout import (
+from . import (
     GLUCOSE_READINGS,
     init_integration,
     init_integration_empty_response,

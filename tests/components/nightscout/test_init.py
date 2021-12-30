@@ -7,8 +7,9 @@ from homeassistant.components.nightscout.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_URL
 
+from . import init_integration
+
 from tests.common import MockConfigEntry
-from tests.components.nightscout import init_integration
 
 
 async def test_unload_entry(hass):
