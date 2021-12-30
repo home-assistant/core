@@ -482,7 +482,7 @@ class SonosSpeaker:
 
         for bool_var in (
             "dialog_level",
-            "night_level",
+            "night_mode",
             "sub_enabled",
             "surround_enabled",
         ):
