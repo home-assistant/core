@@ -16,7 +16,7 @@ from homeassistant.helpers import entity_platform
 from .bridge import HueBridge
 from .const import DOMAIN
 from .v2.entity import HueBaseEntity
-from .v2.helpers import normalize_hue_transition
+from .v2.helpers import normalize_hue_brightness, normalize_hue_transition
 
 SERVICE_ACTIVATE_SCENE = "activate_scene"
 ATTR_DYNAMIC = "dynamic"
@@ -57,10 +57,16 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_ACTIVATE_SCENE,
         {
-            vol.Optional(ATTR_DYNAMIC): vol.Coerce(int),
-            vol.Optional(ATTR_SPEED): vol.Coerce(int),
-            vol.Optional(ATTR_TRANSITION): vol.Coerce(int),
-            vol.Optional(ATTR_BRIGHTNESS): vol.Coerce(int),
+            vol.Optional(ATTR_DYNAMIC): vol.Coerce(bool),
+            vol.Optional(ATTR_SPEED): vol.All(
+                vol.Coerce(int), vol.Clamp(min=0, max=100)
+            ),
+            vol.Optional(ATTR_TRANSITION): vol.All(
+                vol.Coerce(float), vol.Clamp(min=0, max=300)
+            ),
+            vol.Optional(ATTR_BRIGHTNESS): vol.All(
+                vol.Coerce(int), vol.Clamp(min=0, max=255)
+            ),
         },
         "async_activate",
     )
@@ -119,7 +125,7 @@ class HueSceneEntity(HueBaseEntity, SceneEntity):
         # we've implemented a `activate_scene` entity service
         dynamic = kwargs.get(ATTR_DYNAMIC, False)
         speed = kwargs.get(ATTR_SPEED)
-        brightness = kwargs.get(ATTR_BRIGHTNESS)
+        brightness = normalize_hue_brightness(kwargs.get(ATTR_BRIGHTNESS))
 
         if speed is not None:
             await self.bridge.async_request_call(

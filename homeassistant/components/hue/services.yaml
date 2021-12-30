@@ -30,6 +30,7 @@ activate_scene:
   target:
     entity:
       domain: scene
+      integration: hue
   fields:
     transition:
       name: Transition
@@ -60,4 +61,4 @@ activate_scene:
       selector:
         number:
           min: 0
-          max: 100
+          max: 255
