@@ -41,7 +41,7 @@ async def async_unload_entry(hass, entry):
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         controller = hass.data[DOMAIN].pop(entry.entry_id)
-        hass.async_create_task(controller.zwave_api.close_ws())
+        await hass.async_create_task(controller.zwave_api.close_ws())
     return unload_ok
 
 
