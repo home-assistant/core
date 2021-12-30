@@ -7,10 +7,11 @@ from pizzapi.address import StoreException
 import voluptuous as vol
 
 from homeassistant.components import http
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -62,7 +63,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up is called when Home Assistant is loading our component."""
     dominos = Dominos(hass, config)
 
