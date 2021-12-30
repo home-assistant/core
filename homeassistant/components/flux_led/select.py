@@ -39,16 +39,16 @@ async def async_setup_entry(
     if device.operating_modes:
         entities.append(
             FluxOperatingModesSelect(
-                coordinator, f"{unique_id}_operating_mode", f"{name} Operating Mode"
+                coordinator, unique_id, f"{name} Operating Mode", "operating_mode"
             )
         )
     if device.wirings:
         entities.append(
-            FluxWiringsSelect(coordinator, f"{unique_id}_wiring", f"{name} Wiring")
+            FluxWiringsSelect(coordinator, unique_id, f"{name} Wiring", "wiring")
         )
     if device.ic_types:
         entities.append(
-            FluxICTypeSelect(coordinator, f"{unique_id}_ic_type", f"{name} IC Type")
+            FluxICTypeSelect(coordinator, unique_id, f"{name} IC Type", "ic_type")
         )
 
     if entities:
