@@ -102,6 +102,6 @@ class SonosMicrophoneSensorEntity(SonosEntity, BinarySensorEntity):
         """Stub for abstract class implementation. Not a pollable attribute."""
 
     @property
-    def is_on(self) -> bool | None:
+    def is_on(self) -> bool:
         """Return the state of the binary sensor."""
         return self.speaker.mic_enabled
