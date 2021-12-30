@@ -29,12 +29,12 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     """Validate the user input allows us to connect."""
 
     wevolor = Wevolor(data[CONFIG_HOST])
-    status = await hass.async_add_executor_job(wevolor.get_status)
+    status = await wevolor.get_status()
 
     if not status:
         raise CannotConnect
 
-    return await status
+    return status
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
