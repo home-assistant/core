@@ -24,7 +24,7 @@ from .const import (
     LOGGER,
 )
 
-SCANTERVAL = timedelta(hours=24)
+SCAN_INTERVAL = timedelta(hours=24)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
