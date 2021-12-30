@@ -1029,6 +1029,8 @@ homeassistant/components/websocket_api/* @home-assistant/core
 tests/components/websocket_api/* @home-assistant/core
 homeassistant/components/wemo/* @esev
 tests/components/wemo/* @esev
+homeassistant/components/wevolor/* @timstallmann
+tests/components/wevolor/* @timstallmann
 homeassistant/components/whirlpool/* @abmantis
 tests/components/whirlpool/* @abmantis
 homeassistant/components/wiffi/* @mampfes

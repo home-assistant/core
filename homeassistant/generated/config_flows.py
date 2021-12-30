@@ -343,6 +343,7 @@ FLOWS = [
     "watttime",
     "waze_travel_time",
     "wemo",
+    "wevolor",
     "whirlpool",
     "wiffi",
     "wilight",
