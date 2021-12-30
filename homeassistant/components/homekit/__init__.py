@@ -417,7 +417,7 @@ def _async_register_events_and_services(hass: HomeAssistant):
         schema=UNPAIR_SERVICE_SCHEMA,
     )
 
-    async def _handle_homekit_reload(service):
+    async def _handle_homekit_reload(service: ServiceCall) -> None:
         """Handle start HomeKit service call."""
         config = await async_integration_yaml_config(hass, DOMAIN)
 
