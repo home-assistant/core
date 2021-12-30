@@ -1193,6 +1193,9 @@ python-tado==0.12.0
 # homeassistant.components.twitch
 python-twitch-client==0.6.0
 
+# homeassistant.components.whois
+python-whois==0.7.3
+
 # homeassistant.components.awair
 python_awair==0.2.1
 

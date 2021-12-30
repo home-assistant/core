@@ -347,6 +347,7 @@ FLOWS = [
     "waze_travel_time",
     "wemo",
     "whirlpool",
+    "whois",
     "wiffi",
     "wilight",
     "withings",
