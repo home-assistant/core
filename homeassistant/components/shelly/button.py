@@ -70,7 +70,7 @@ BUTTONS: Final = [
     ShellyButtonDescription(
         key="mute",
         name="Mute",
-        icon="mdi:volume-variant-off",
+        icon="mdi:volume-mute",
         entity_category=EntityCategory.CONFIG,
         press_action=lambda wrapper: wrapper.device.trigger_shelly_gas_mute(),
         supported=lambda wrapper: wrapper.device.model in SHELLY_GAS_MODELS,
