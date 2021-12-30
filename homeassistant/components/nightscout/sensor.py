@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from asyncio import TimeoutError as AsyncIOTimeoutError
-from datetime import timedelta
 import logging
 
 from aiohttp import ClientError
@@ -17,15 +16,17 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DATE, ENTITY_CATEGORY_DIAGNOSTIC, PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .const import (
+    API,
+    ATTR_DELTA,
+    ATTR_DEVICE,
+    ATTR_DIRECTION,
+    ATTR_TYPE,
+    COORDINATOR,
+    DOMAIN,
 )
-
-from .const import ATTR_DELTA, ATTR_DEVICE, ATTR_DIRECTION, ATTR_TYPE, DOMAIN
-
-SCAN_INTERVAL = timedelta(minutes=1)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,30 +39,14 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up entities."""
-    api = hass.data[DOMAIN][entry.entry_id]
+    data = hass.data[DOMAIN][entry.entry_id]
+    api = data[API]
+    coordinator = data[COORDINATOR]
 
     # Glucose sensor
     async_add_entities([NightscoutSensor(api, "Blood Sugar", entry.unique_id)], True)
 
     # Uploader batteries
-    async def async_update_batteries():
-        """Fetch the latest data from Nightscout REST API and update the state of devices batteries."""
-        try:
-            return await api.get_latest_devices_status()
-        except OSError as error:
-            _LOGGER.error(
-                "Error fetching battery devices status. Failed with %s", error
-            )
-            raise UpdateFailed(f"Error communicating with API: {error}") from error
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name="battery_sensor",
-        update_method=async_update_batteries,
-        update_interval=timedelta(minutes=5),
-    )
-
     entities = []
 
     for device_name in coordinator.data:
@@ -70,7 +55,6 @@ async def async_setup_entry(
         )
 
     async_add_entities(entities)
-    await coordinator.async_refresh()
 
 
 class NightscoutSensor(SensorEntity):

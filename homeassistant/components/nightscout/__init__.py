@@ -1,5 +1,7 @@
 """The Nightscout integration."""
 from asyncio import TimeoutError as AsyncIOTimeoutError
+from datetime import timedelta
+import logging
 
 from aiohttp import ClientError
 from py_nightscout import Api as NightscoutAPI
@@ -11,11 +13,16 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import SLOW_UPDATE_WARNING
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import API, COORDINATOR, DOMAIN
 
 PLATFORMS = [Platform.SENSOR]
 _API_TIMEOUT = SLOW_UPDATE_WARNING - 1
+
+SCAN_INTERVAL = timedelta(minutes=5)
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -30,7 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from error
 
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = api
+    hass.data[DOMAIN][entry.entry_id] = {API: api}
 
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
@@ -42,7 +49,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry_type=dr.DeviceEntryType.SERVICE,
     )
 
+    async def async_update_batteries():
+        """Fetch the latest data from Nightscout REST API and update the state of devices batteries."""
+        try:
+            return await api.get_latest_devices_status()
+        except OSError as error:
+            _LOGGER.error(
+                "Error fetching battery devices status. Failed with %s", error
+            )
+            raise UpdateFailed(f"Error communicating with API: {error}") from error
+
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name="battery_sensor",
+        update_method=async_update_batteries,
+        update_interval=SCAN_INTERVAL,
+    )
+
+    hass.data[DOMAIN][entry.entry_id][COORDINATOR] = coordinator
+
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+
+    await coordinator.async_config_entry_first_refresh()
 
     return True
 
