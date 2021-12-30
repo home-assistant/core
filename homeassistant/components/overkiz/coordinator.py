@@ -19,7 +19,7 @@ from pyoverkiz.exceptions import (
 from pyoverkiz.models import DataType, Device, Place, State
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, UPDATE_INTERVAL
@@ -97,9 +97,6 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator):
                 raise UpdateFailed("Too many requests, try again later.") from exception
 
             return self.devices
-        except Exception as exception:
-            _LOGGER.debug(exception)
-            raise UpdateFailed(exception) from exception
 
         for event in events:
             _LOGGER.debug(event)
@@ -123,7 +120,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator):
 
             elif event.name == EventName.DEVICE_REMOVED:
                 base_device_url, *_ = event.device_url.split("#")
-                registry = await device_registry.async_get_registry(self.hass)
+                registry = dr.async_get(self.hass)
 
                 if registered_device := registry.async_get_device(
                     {(DOMAIN, base_device_url)}
@@ -176,7 +173,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator):
         cast_to_python = DATA_TYPE_TO_PYTHON[data_type]
         return cast_to_python(state.value)
 
-    def places_to_area(self, place):
+    def places_to_area(self, place: Place) -> dict[str, str]:
         """Convert places with sub_places to a flat dictionary."""
         areas = {}
         if isinstance(place, Place):
