@@ -67,7 +67,7 @@ async def async_setup_entry(
         _LOGGER,
         name="battery_sensor",
         update_method=async_update_batteries,
-        update_interval=timedelta(minutes=1),
+        update_interval=timedelta(minutes=5),
     )
 
     await coordinator.async_config_entry_first_refresh()
