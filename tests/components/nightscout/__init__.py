@@ -3,7 +3,7 @@ import json
 from unittest.mock import patch
 
 from aiohttp import ClientConnectionError
-from py_nightscout.models import SGV, ServerStatus, DeviceStatus
+from py_nightscout.models import SGV, DeviceStatus, ServerStatus
 
 from homeassistant.components.nightscout.const import DOMAIN
 from homeassistant.const import CONF_URL
