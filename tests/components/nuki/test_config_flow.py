@@ -41,7 +41,7 @@ async def test_form(hass):
         await hass.async_block_till_done()
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == 123456789
+    assert result2["title"] == "75BCD15"
     assert result2["data"] == {
         "host": "1.1.1.1",
         "port": 8080,
@@ -69,7 +69,7 @@ async def test_import(hass):
             data={"host": "1.1.1.1", "port": 8080, "token": "test-token"},
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result["title"] == 123456789
+        assert result["title"] == "75BCD15"
         assert result["data"] == {
             "host": "1.1.1.1",
             "port": 8080,
@@ -204,7 +204,7 @@ async def test_dhcp_flow(hass):
         )
 
         assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-        assert result2["title"] == 123456789
+        assert result2["title"] == "75BCD15"
         assert result2["data"] == {
             "host": "1.1.1.1",
             "port": 8080,
