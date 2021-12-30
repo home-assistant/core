@@ -54,13 +54,31 @@ async def async_setup_entry(
     unique_id = entry.unique_id
 
     if device.pixels_per_segment is not None:
-        entities.append(FluxPixelsPerSegmentNumber(coordinator, unique_id, name))
+        entities.append(
+            FluxPixelsPerSegmentNumber(
+                coordinator,
+                f"{unique_id}_pixels_per_segment",
+                f"{name}  Pixels Per Segment",
+            )
+        )
     if device.segments is not None:
-        entities.append(FluxSegmentsNumber(coordinator, unique_id, name))
+        entities.append(
+            FluxSegmentsNumber(coordinator, f"{unique_id}_segments", f"{name} Segments")
+        )
     if device.music_pixels_per_segment is not None:
-        entities.append(FluxMusicPixelsPerSegmentNumber(coordinator, unique_id, name))
+        entities.append(
+            FluxMusicPixelsPerSegmentNumber(
+                coordinator,
+                f"{unique_id}_music_pixels_per_segment",
+                f"{name} Music Pixels Per Segment",
+            )
+        )
     if device.music_segments is not None:
-        entities.append(FluxMusicSegmentsNumber(coordinator, unique_id, name))
+        entities.append(
+            FluxMusicSegmentsNumber(
+                coordinator, f"{unique_id}_music_segments", f"{name} Music Segments"
+            )
+        )
     if device.effect_list and device.effect_list != [EFFECT_RANDOM]:
         entities.append(FluxSpeedNumber(coordinator, unique_id, name))
 
@@ -169,18 +187,6 @@ class FluxPixelsPerSegmentNumber(FluxConfigNumber):
 
     _attr_icon = "mdi:dots-grid"
 
-    def __init__(
-        self,
-        coordinator: FluxLedUpdateCoordinator,
-        unique_id: str | None,
-        name: str,
-    ) -> None:
-        """Initialize the flux number."""
-        super().__init__(coordinator, unique_id, name)
-        if unique_id:
-            self._attr_unique_id = f"{unique_id}_pixels_per_segment"
-        self._attr_name = f"{name} Pixels Per Segment"
-
     @property
     def max_value(self) -> int:
         """Return the max value."""
@@ -207,18 +213,6 @@ class FluxSegmentsNumber(FluxConfigNumber):
 
     _attr_icon = "mdi:segment"
 
-    def __init__(
-        self,
-        coordinator: FluxLedUpdateCoordinator,
-        unique_id: str | None,
-        name: str,
-    ) -> None:
-        """Initialize the flux number."""
-        super().__init__(coordinator, unique_id, name)
-        if unique_id:
-            self._attr_unique_id = f"{unique_id}_segments"
-        self._attr_name = f"{name} Segments"
-
     @property
     def max_value(self) -> int:
         """Return the max value."""
@@ -239,22 +233,19 @@ class FluxSegmentsNumber(FluxConfigNumber):
         await self._device.async_set_device_config(segments=self._pending_value)
 
 
-class FluxMusicPixelsPerSegmentNumber(FluxConfigNumber):
+class FluxMusicNumber(FluxConfigNumber):
+    """A number that is only available if the base pixels do not fit in music mode."""
+
+    @property
+    def available(self) -> bool:
+        """Return if music pixels per segment can be set."""
+        return super().available and not self._pixels_and_segments_fit_in_music_mode()
+
+
+class FluxMusicPixelsPerSegmentNumber(FluxMusicNumber):
     """Defines a flux_led music pixels per segment number."""
 
     _attr_icon = "mdi:dots-grid"
-
-    def __init__(
-        self,
-        coordinator: FluxLedUpdateCoordinator,
-        unique_id: str | None,
-        name: str,
-    ) -> None:
-        """Initialize the flux number."""
-        super().__init__(coordinator, unique_id, name)
-        if unique_id:
-            self._attr_unique_id = f"{unique_id}_music_pixels_per_segment"
-        self._attr_name = f"{name} Music Pixels Per Segment"
 
     @property
     def max_value(self) -> int:
@@ -271,11 +262,6 @@ class FluxMusicPixelsPerSegmentNumber(FluxConfigNumber):
         assert self._device.music_pixels_per_segment is not None
         return self._device.music_pixels_per_segment
 
-    @property
-    def available(self) -> bool:
-        """Return if music pixels per segment can be set."""
-        return super().available and not self._pixels_and_segments_fit_in_music_mode()
-
     async def _async_set_value(self) -> None:
         """Set the music pixels per segment."""
         assert self._pending_value is not None
@@ -284,22 +270,10 @@ class FluxMusicPixelsPerSegmentNumber(FluxConfigNumber):
         )
 
 
-class FluxMusicSegmentsNumber(FluxConfigNumber):
+class FluxMusicSegmentsNumber(FluxMusicNumber):
     """Defines a flux_led music segments number."""
 
     _attr_icon = "mdi:segment"
-
-    def __init__(
-        self,
-        coordinator: FluxLedUpdateCoordinator,
-        unique_id: str | None,
-        name: str,
-    ) -> None:
-        """Initialize the flux number."""
-        super().__init__(coordinator, unique_id, name)
-        if unique_id:
-            self._attr_unique_id = f"{unique_id}_music_segments"
-        self._attr_name = f"{name} Music Segments"
 
     @property
     def max_value(self) -> int:
@@ -315,11 +289,6 @@ class FluxMusicSegmentsNumber(FluxConfigNumber):
         """Return the music segments."""
         assert self._device.music_segments is not None
         return self._device.music_segments
-
-    @property
-    def available(self) -> bool:
-        """Return if music segments can be set."""
-        return super().available and not self._pixels_and_segments_fit_in_music_mode()
 
     async def _async_set_value(self) -> None:
         """Set the music segments."""
