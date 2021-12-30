@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import logging
 
+from pycarwings2.pycarwings2 import Leaf
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -40,6 +42,11 @@ class LeafPluggedInSensor(LeafEntity, BinarySensorEntity):
 
     _attr_device_class = BinarySensorDeviceClass.PLUG
 
+    def __init__(self, car: Leaf) -> None:
+        """Set up plug status sensor."""
+        super().__init__(car)
+        self._attr_unique_id = f"{self.car.leaf.vin.lower()}_plugstatus"
+
     @property
     def name(self) -> str:
         """Sensor name."""
@@ -60,6 +67,11 @@ class LeafChargingSensor(LeafEntity, BinarySensorEntity):
     """Charging Sensor class."""
 
     _attr_device_class = BinarySensorDeviceClass.BATTERY_CHARGING
+
+    def __init__(self, car: Leaf) -> None:
+        """Set up charging status sensor."""
+        super().__init__(car)
+        self._attr_unique_id = f"{self.car.leaf.vin.lower()}_chargingstatus"
 
     @property
     def name(self) -> str:

@@ -74,12 +74,12 @@ class CPUSpeedSensor(SensorEntity):
         """Get the latest data and updates the state."""
         info = cpuinfo.get_cpu_info()
 
-        if info is not None and HZ_ACTUAL in info:
+        if info and HZ_ACTUAL in info:
             self._attr_native_value = round(float(info[HZ_ACTUAL][0]) / 10 ** 9, 2)
         else:
             self._attr_native_value = None
 
-        if info is not None:
+        if info:
             self._attr_extra_state_attributes = {
                 ATTR_ARCH: info["arch_string_raw"],
                 ATTR_BRAND: info["brand_raw"],

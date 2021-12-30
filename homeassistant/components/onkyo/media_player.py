@@ -26,6 +26,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import ServiceCall
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -176,14 +177,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     host = config.get(CONF_HOST)
     hosts = []
 
-    def service_handle(service):
+    def service_handle(service: ServiceCall) -> None:
         """Handle for services."""
-        entity_ids = service.data.get(ATTR_ENTITY_ID)
+        entity_ids = service.data[ATTR_ENTITY_ID]
         devices = [d for d in hosts if d.entity_id in entity_ids]
 
         for device in devices:
             if service.service == SERVICE_SELECT_HDMI_OUTPUT:
-                device.select_output(service.data.get(ATTR_HDMI_OUTPUT))
+                device.select_output(service.data[ATTR_HDMI_OUTPUT])
 
     hass.services.register(
         DOMAIN,
