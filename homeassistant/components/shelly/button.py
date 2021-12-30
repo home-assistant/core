@@ -115,7 +115,7 @@ async def async_setup_entry(
 
 
 class ShellyButton(ButtonEntity):
-    """Defines a Shelly OTA update base button."""
+    """Defines a Shelly base button."""
 
     entity_description: ShellyButtonDescription
 
@@ -124,7 +124,7 @@ class ShellyButton(ButtonEntity):
         wrapper: RpcDeviceWrapper | BlockDeviceWrapper,
         description: ShellyButtonDescription,
     ) -> None:
-        """Initialize Shelly OTA update button."""
+        """Initialize Shelly button."""
         self.entity_description = description
         self.wrapper = wrapper
 
@@ -140,5 +140,5 @@ class ShellyButton(ButtonEntity):
         )
 
     async def async_press(self) -> None:
-        """Triggers the OTA update service."""
+        """Triggers the Shelly button press service."""
         await self.entity_description.press_action(self.wrapper)
