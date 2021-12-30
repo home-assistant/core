@@ -1,8 +1,6 @@
 """Battery Charge and Range Support for the Nissan Leaf."""
 from __future__ import annotations
 
-import logging
-
 from pycarwings2.pycarwings2 import Leaf
 from voluptuous.validators import Number
 
@@ -15,16 +13,15 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.distance import LENGTH_KILOMETERS, LENGTH_MILES
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 
-from . import (
+from . import LeafEntity
+from .const import (
     DATA_BATTERY,
     DATA_CHARGING,
     DATA_LEAF,
     DATA_RANGE_AC,
     DATA_RANGE_AC_OFF,
-    LeafEntity,
+    LOGGER,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 ICON_RANGE = "mdi:speedometer"
 
@@ -41,7 +38,7 @@ def setup_platform(
 
     devices: list[LeafEntity] = []
     for vin, datastore in hass.data[DATA_LEAF].items():
-        _LOGGER.debug("Adding sensors for vin=%s", vin)
+        LOGGER.debug("Adding sensors for vin=%s", vin)
         devices.append(LeafBatterySensor(datastore))
         devices.append(LeafRangeSensor(datastore, True))
         devices.append(LeafRangeSensor(datastore, False))
@@ -107,7 +104,7 @@ class LeafRangeSensor(LeafEntity, SensorEntity):
 
     def log_registration(self) -> None:
         """Log registration."""
-        _LOGGER.debug(
+        LOGGER.debug(
             "Registered LeafRangeSensor integration with Home Assistant for VIN %s",
             self.car.leaf.vin,
         )
