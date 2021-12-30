@@ -99,19 +99,19 @@ async def async_setup_entry(
         ].get(BLOCK):
             wrapper = cast(BlockDeviceWrapper, block_wrapper)
 
-    if wrapper is None:
-        return
+    if wrapper is not None:
+        entities = []
 
-    entities = []
-    for button in BUTTONS:
-        if (
-            button.key in ("self_test", "mute", "unmute")
-            and wrapper.device.model != "SHGS-1"
-        ):
-            continue
-        entities.append(ShellyButton(wrapper, button))
+        for button in BUTTONS:
+            if (
+                button.key in ("self_test", "mute", "unmute")
+                and wrapper.device.model != "SHGS-1"
+            ):
+                continue
 
-    async_add_entities(entities)
+            entities.append(ShellyButton(wrapper, button))
+
+        async_add_entities(entities)
 
 
 class ShellyButton(ButtonEntity):
