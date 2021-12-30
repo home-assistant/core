@@ -14,12 +14,7 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_TEMPERATURE,
-    CONF_NAME,
-    PRECISION_WHOLE,
-    TEMP_CELSIUS,
-)
+from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -29,6 +24,7 @@ from .const import (
     VICARE_API,
     VICARE_CIRCUITS,
     VICARE_DEVICE_CONFIG,
+    VICARE_NAME,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -79,7 +75,7 @@ async def async_setup_entry(
     async_add_devices: AddEntitiesCallback,
 ) -> None:
     """Set up the ViCare climate platform."""
-    name = config_entry.data[CONF_NAME]
+    name = VICARE_NAME
 
     all_devices = []
     for circuit in hass.data[DOMAIN][config_entry.entry_id][VICARE_CIRCUITS]:
