@@ -37,11 +37,19 @@ async def async_setup_entry(
     if device.device_type == DeviceType.Switch:
         entities.append(FluxPowerStateSelect(coordinator.device, entry))
     if device.operating_modes:
-        entities.append(FluxOperatingModesSelect(coordinator, unique_id, name))
+        entities.append(
+            FluxOperatingModesSelect(
+                coordinator, f"{unique_id}_operating_mode", f"{name} Operating Mode"
+            )
+        )
     if device.wirings:
-        entities.append(FluxWiringsSelect(coordinator, unique_id, name))
+        entities.append(
+            FluxWiringsSelect(coordinator, f"{unique_id}_wiring", f"{name} Wiring")
+        )
     if device.ic_types:
-        entities.append(FluxICTypeSelect(coordinator, unique_id, name))
+        entities.append(
+            FluxICTypeSelect(coordinator, f"{unique_id}_ic_type", f"{name} IC Type")
+        )
 
     if entities:
         async_add_entities(entities)
@@ -56,6 +64,7 @@ class FluxPowerStateSelect(FluxBaseEntity, SelectEntity):
 
     _attr_should_poll = False
     _attr_icon = "mdi:transmission-tower-off"
+    _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
         self,
@@ -64,7 +73,6 @@ class FluxPowerStateSelect(FluxBaseEntity, SelectEntity):
     ) -> None:
         """Initialize the power state select."""
         super().__init__(device, entry)
-        self._attr_entity_category = EntityCategory.CONFIG
         self._attr_name = f"{entry.data[CONF_NAME]} Power Restored"
         if entry.unique_id:
             self._attr_unique_id = f"{entry.unique_id}_power_restored"
@@ -100,19 +108,11 @@ class FluxICTypeSelect(FluxConfigSelect):
 
     _attr_icon = "mdi:chip"
 
-    def __init__(
-        self,
-        coordinator: FluxLedUpdateCoordinator,
-        unique_id: str | None,
-        name: str,
-    ) -> None:
-        """Initialize the ic type select."""
-        super().__init__(coordinator, unique_id, name)
-        self._attr_name = f"{name} IC Type"
-        if unique_id:
-            self._attr_unique_id = f"{unique_id}_ic_type"
+    @property
+    def options(self) -> list[str]:
+        """Return the available ic types."""
         assert self._device.ic_types is not None
-        self._attr_options = self._device.ic_types
+        return self._device.ic_types
 
     @property
     def current_option(self) -> str | None:
@@ -128,18 +128,6 @@ class FluxWiringsSelect(FluxConfigSelect):
     """Representation of Flux wirings."""
 
     _attr_icon = "mdi:led-strip-variant"
-
-    def __init__(
-        self,
-        coordinator: FluxLedUpdateCoordinator,
-        unique_id: str | None,
-        name: str,
-    ) -> None:
-        """Initialize the wiring select."""
-        super().__init__(coordinator, unique_id, name)
-        self._attr_name = f"{name} Wiring"
-        if unique_id:
-            self._attr_unique_id = f"{unique_id}_wiring"
 
     @property
     def options(self) -> list[str]:
@@ -160,19 +148,11 @@ class FluxWiringsSelect(FluxConfigSelect):
 class FluxOperatingModesSelect(FluxConfigSelect):
     """Representation of Flux operating modes."""
 
-    def __init__(
-        self,
-        coordinator: FluxLedUpdateCoordinator,
-        unique_id: str | None,
-        name: str,
-    ) -> None:
-        """Initialize the protocol select."""
-        super().__init__(coordinator, unique_id, name)
-        self._attr_name = f"{name} Operating Mode"
-        if unique_id:
-            self._attr_unique_id = f"{unique_id}_operating_mode"
+    @property
+    def options(self) -> list[str]:
+        """Return the current operating mode."""
         assert self._device.operating_modes is not None
-        self._attr_options = self._device.operating_modes
+        return self._device.operating_modes
 
     @property
     def current_option(self) -> str | None:
