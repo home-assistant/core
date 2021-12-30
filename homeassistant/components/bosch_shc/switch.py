@@ -80,7 +80,11 @@ SWITCH_TYPES: dict[str, SHCSwitchEntityDescription] = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the SHC switch platform."""
     entities = []
     session: SHCSession = hass.data[DOMAIN][config_entry.entry_id][DATA_SESSION]
@@ -159,7 +163,7 @@ class SHCSwitch(SHCEntity, SwitchEntity):
         self.entity_description = description
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return the state of the switch."""
         return (
             getattr(self._device, self.entity_description.on_key)
@@ -167,33 +171,33 @@ class SHCSwitch(SHCEntity, SwitchEntity):
         )
 
     @property
-    def today_energy_kwh(self):
+    def today_energy_kwh(self) -> float | None:
         """Return the total energy usage in kWh."""
         if self.entity_description.has_consumption:
             return self._device.energyconsumption / 1000.0
         return None
 
     @property
-    def current_power_w(self):
+    def current_power_w(self) -> float | None:
         """Return the current power usage in W."""
         if self.entity_description.has_consumption:
             return self._device.powerconsumption
         return None
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs) -> None:
         """Turn the switch on."""
         setattr(self._device, self.entity_description.on_key, True)
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs) -> None:
         """Turn the switch off."""
         setattr(self._device, self.entity_description.on_key, False)
 
-    def toggle(self, **kwargs):
+    def toggle(self, **kwargs) -> None:
         """Toggle the switch."""
         setattr(self._device, self.entity_description.on_key, not self.is_on)
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes."""
         if self.entity_description.key == "smartplug":
             return {
