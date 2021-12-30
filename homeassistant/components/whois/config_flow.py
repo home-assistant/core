@@ -27,7 +27,7 @@ class WhoisFlowHandler(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(user_input[CONF_DOMAIN].lower())
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
-                title=self.imported_name or str(user_input[CONF_DOMAIN]),
+                title=self.imported_name or user_input[CONF_DOMAIN],
                 data={
                     CONF_DOMAIN: user_input[CONF_DOMAIN].lower(),
                 },
