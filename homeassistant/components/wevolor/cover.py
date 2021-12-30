@@ -15,21 +15,18 @@ from homeassistant.components.cover import (
     CoverEntity,
 )
 
-from .const import DOMAIN
+from .const import CONFIG_CHANNELS, CONFIG_TILT, DOMAIN
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Wevolor shades."""
 
-    entities = []
     wevolor = hass.data[DOMAIN][config_entry.entry_id]
 
-    channel_ids = range(1, config_entry.data["channel_count"] + 1)
-
-    for channel_id in channel_ids:
-        entity = WevolorShade(wevolor, channel_id, config_entry.data["support_tilt"])
-        entities.append(entity)
-
+    entities = [
+        WevolorShade(wevolor, i, config_entry.data[CONFIG_TILT])
+        for i in range(1, config_entry.data[CONFIG_CHANNELS] + 1)
+    ]
     async_add_entities(entities, True)
 
 
@@ -37,34 +34,21 @@ class WevolorShade(CoverEntity):
     """Cover entity for control of Wevolor remote channel."""
 
     _attr_assumed_state = True
-    _wevolor: Wevolor | None = None
-    _attr_assumed_state = True
-    _support_tilt: bool = False
+    _wevolor: Wevolor
+    _channel: int
 
     def __init__(self, wevolor: Wevolor, channel: int, support_tilt: bool = False):
         """Create this wevolor shade cover entity."""
         self._wevolor = wevolor
         self._channel = channel
-        self._support_tilt = support_tilt
-
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return CoverDeviceClass.BLIND if self._support_tilt else CoverDeviceClass.SHADE
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return f"Wevolor Channel #{self._channel}"
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        flags = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP
-        if self._support_tilt:
-            return flags | SUPPORT_OPEN_TILT | SUPPORT_CLOSE_TILT | SUPPORT_STOP_TILT
-
-        return flags
+        self._attr_name = f"Wevolor Channel #{channel}"
+        self._attr_device_class = CoverDeviceClass.SHADE
+        self._attr_supported_features = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP
+        if support_tilt:
+            self._attr_device_class = CoverDeviceClass.BLIND
+            self._attr_supported_features |= (
+                SUPPORT_OPEN_TILT | SUPPORT_CLOSE_TILT | SUPPORT_STOP_TILT
+            )
 
     async def async_stop_cover(self, **kwargs):
         """Stop motion."""

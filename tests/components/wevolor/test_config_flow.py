@@ -3,7 +3,12 @@ from unittest.mock import patch
 
 from homeassistant import config_entries
 from homeassistant.components.wevolor.config_flow import CannotConnect
-from homeassistant.components.wevolor.const import DOMAIN
+from homeassistant.components.wevolor.const import (
+    CONFIG_CHANNELS,
+    CONFIG_HOST,
+    CONFIG_TILT,
+    DOMAIN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
 
@@ -26,9 +31,9 @@ async def test_form(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
-                "support_tilt": True,
-                "channel_count": 3,
+                CONFIG_HOST: "1.1.1.1",
+                CONFIG_TILT: True,
+                CONFIG_CHANNELS: 3,
             },
         )
         await hass.async_block_till_done()
@@ -36,9 +41,9 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result2["title"] == "My Wevolor"
     assert result2["data"] == {
-        "host": "1.1.1.1",
-        "support_tilt": True,
-        "channel_count": 3,
+        CONFIG_HOST: "1.1.1.1",
+        CONFIG_TILT: True,
+        CONFIG_CHANNELS: 3,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -56,9 +61,9 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
-                "support_tilt": True,
-                "channel_count": 3,
+                CONFIG_HOST: "1.1.1.1",
+                CONFIG_TILT: True,
+                CONFIG_CHANNELS: 3,
             },
         )
 

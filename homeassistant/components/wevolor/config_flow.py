@@ -12,15 +12,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DOMAIN
+from .const import CONFIG_CHANNELS, CONFIG_HOST, CONFIG_TILT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required("host"): str,
-        vol.Required("support_tilt", default=False): bool,
-        vol.Required("channel_count", default=6): vol.All(int, vol.Range(min=1, max=6)),
+        vol.Required(CONFIG_HOST): str,
+        vol.Required(CONFIG_TILT, default=False): bool,
+        vol.Required(CONFIG_CHANNELS, default=6): vol.All(int, vol.Range(min=1, max=6)),
     }
 )
 
@@ -28,7 +28,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input allows us to connect."""
 
-    wevolor = Wevolor(data["host"])
+    wevolor = Wevolor(data[CONFIG_HOST])
     status = await hass.async_add_executor_job(wevolor.get_status)
 
     if not status:
