@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Já está configurado. Apenas uma configuração é possível."
+        },
+        "error": {
+            "cannot_connect": "Não é possível conectar",
+            "invalid_auth": "Autenticação inválida",
+            "unknown": "Erro inesperado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Palavra Passe",
+                    "url": "Endereço",
+                    "username": "Nome do usuário"
+                }
+            }
+        }
+    }
+}
