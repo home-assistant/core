@@ -1,6 +1,7 @@
 """Support for Nest devices."""
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 import logging
 
@@ -178,12 +179,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class SignalUpdateCallback:
     """An EventCallback invoked when new events arrive from subscriber."""
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_reload_cb: Callable[[], Awaitable[None]]
+    ) -> None:
         """Initialize EventCallback."""
         self._hass = hass
+        self._config_reload_cb = config_reload_cb
 
     async def async_handle_event(self, event_message: EventMessage) -> None:
         """Process an incoming EventMessage."""
+        if event_message.relation_update:
+            # A device was added/removed or a home was added/removed. Reload the integration
+            # in order to detect any changes.
+            _LOGGER.info("Devices or homes have changed; Reloading")
+            self._hass.async_create_task(self._config_reload_cb())
+            return
         if not event_message.resource_update_name:
             return
         device_id = event_message.resource_update_name
@@ -221,7 +231,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Use disk backed event media store
     subscriber.cache_policy.store = await async_get_media_event_store(hass, subscriber)
 
-    callback = SignalUpdateCallback(hass)
+    async def async_config_reload() -> None:
+        await hass.config_entries.async_reload(entry.entry_id)
+
+    callback = SignalUpdateCallback(hass, async_config_reload)
     subscriber.set_update_callback(callback.async_handle_event)
     try:
         await subscriber.start_async()

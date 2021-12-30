@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import logging
 from typing import Any
 
 from tuya_iot import TuyaDevice, TuyaDeviceManager
@@ -26,8 +25,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from . import HomeAssistantTuyaData
 from .base import EnumTypeData, IntegerTypeData, TuyaEntity
 from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
