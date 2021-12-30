@@ -40,21 +40,21 @@ async def async_setup_entry(
     if device.operating_modes:
         entities.append(
             FluxOperatingModesSelect(
-                coordinator, f"{unique_id}_operating_mode", f"{name} Operating Mode"
+                coordinator, unique_id, f"{name} Operating Mode", "operating_mode"
             )
         )
     if device.wirings:
         entities.append(
-            FluxWiringsSelect(coordinator, f"{unique_id}_wiring", f"{name} Wiring")
+            FluxWiringsSelect(coordinator, unique_id, f"{name} Wiring", "wiring")
         )
     if device.ic_types:
         entities.append(
-            FluxICTypeSelect(coordinator, f"{unique_id}_ic_type", f"{name} IC Type")
+            FluxICTypeSelect(coordinator, unique_id, f"{name} IC Type", "ic_type")
         )
     if device.remote_config:
         entities.append(
             FluxRemoteConfigSelect(
-                coordinator, f"{unique_id}_remote_config", f"{name} Remote Config"
+                coordinator, unique_id, f"{name} Remote Config", "remote_config"
             )
         )
 
@@ -183,12 +183,10 @@ class FluxRemoteConfigSelect(FluxConfigSelect):
         coordinator: FluxLedUpdateCoordinator,
         unique_id: str | None,
         name: str,
+        key: str,
     ) -> None:
         """Initialize the remote config type select."""
-        super().__init__(coordinator, unique_id, name)
-        self._attr_name = f"{name} Remote Config"
-        if unique_id:
-            self._attr_unique_id = f"{unique_id}_remote_config"
+        super().__init__(coordinator, unique_id, name, key)
         assert self._device.remote_config is not None
         self._name_to_state = {
             _human_readable_option(option.name): option for option in RemoteConfig

@@ -57,30 +57,34 @@ async def async_setup_entry(
         entities.append(
             FluxPixelsPerSegmentNumber(
                 coordinator,
-                f"{unique_id}_pixels_per_segment",
-                f"{name}  Pixels Per Segment",
+                unique_id,
+                f"{name} Pixels Per Segment",
+                "pixels_per_segment",
             )
         )
     if device.segments is not None:
         entities.append(
-            FluxSegmentsNumber(coordinator, f"{unique_id}_segments", f"{name} Segments")
+            FluxSegmentsNumber(coordinator, unique_id, f"{name} Segments", "segments")
         )
     if device.music_pixels_per_segment is not None:
         entities.append(
             FluxMusicPixelsPerSegmentNumber(
                 coordinator,
-                f"{unique_id}_music_pixels_per_segment",
+                unique_id,
                 f"{name} Music Pixels Per Segment",
+                "music_pixels_per_segment",
             )
         )
     if device.music_segments is not None:
         entities.append(
             FluxMusicSegmentsNumber(
-                coordinator, f"{unique_id}_music_segments", f"{name} Music Segments"
+                coordinator, unique_id, f"{name} Music Segments", "music_segments"
             )
         )
     if device.effect_list and device.effect_list != [EFFECT_RANDOM]:
-        entities.append(FluxSpeedNumber(coordinator, unique_id, name))
+        entities.append(
+            FluxSpeedNumber(coordinator, unique_id, f"{name} Effect Speed", None)
+        )
 
     if entities:
         async_add_entities(entities)
@@ -94,16 +98,6 @@ class FluxSpeedNumber(FluxEntity, CoordinatorEntity, NumberEntity):
     _attr_step = 1
     _attr_mode = NumberMode.SLIDER
     _attr_icon = "mdi:speedometer"
-
-    def __init__(
-        self,
-        coordinator: FluxLedUpdateCoordinator,
-        unique_id: str | None,
-        name: str,
-    ) -> None:
-        """Initialize the flux number."""
-        super().__init__(coordinator, unique_id, name)
-        self._attr_name = f"{name} Effect Speed"
 
     @property
     def value(self) -> float:
@@ -139,9 +133,10 @@ class FluxConfigNumber(FluxEntity, CoordinatorEntity, NumberEntity):
         coordinator: FluxLedUpdateCoordinator,
         unique_id: str | None,
         name: str,
+        key: str | None,
     ) -> None:
         """Initialize the flux number."""
-        super().__init__(coordinator, unique_id, name)
+        super().__init__(coordinator, unique_id, name, key)
         self._debouncer: Debouncer | None = None
         self._pending_value: int | None = None
 

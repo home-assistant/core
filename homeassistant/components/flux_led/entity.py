@@ -64,13 +64,17 @@ class FluxEntity(CoordinatorEntity):
         coordinator: FluxLedUpdateCoordinator,
         unique_id: str | None,
         name: str,
+        key: str | None,
     ) -> None:
         """Initialize the light."""
         super().__init__(coordinator)
         self._device: AIOWifiLedBulb = coordinator.device
         self._responding = True
         self._attr_name = name
-        self._attr_unique_id = unique_id
+        if key:
+            self._attr_unique_id = f"{unique_id}_{key}"
+        else:
+            self._attr_unique_id = unique_id
         if unique_id:
             self._attr_device_info = _async_device_info(
                 unique_id, self._device, coordinator.entry
