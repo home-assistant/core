@@ -679,8 +679,6 @@ class Thermostat(ClimateEntity):
             isinstance(cool_temp, (int, float)),
         )
 
-        self.update_without_throttle = True
-
     def set_temp_hold(self, temp):
         """Set temperature hold in modes other than auto.
 
@@ -728,8 +726,6 @@ class Thermostat(ClimateEntity):
         # set_humidity was successful, reflect changes in thermostat
         self.thermostat["runtime"]["desiredHumidity"] = humidity
 
-        self.update_without_throttle = True
-
     def set_hvac_mode(self, hvac_mode):
         """Set HVAC mode (auto, auxHeatOnly, cool, heat, off)."""
         ecobee_value = next(
@@ -743,8 +739,6 @@ class Thermostat(ClimateEntity):
 
         # set_hvac_mode was successful, reflect changes in thermostat
         self.thermostat["settings"]["hvacMode"] = ecobee_value
-
-        self.update_without_throttle = True
 
     def set_fan_min_on_time(self, fan_min_on_time):
         """Set the minimum fan on time."""

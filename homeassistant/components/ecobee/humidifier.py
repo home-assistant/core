@@ -141,16 +141,12 @@ class EcobeeHumidifier(HumidifierEntity):
         # set_humidifier_mode was successful, reflect changes in thermostat
         self.thermostat["settings"]["humidifierMode"] = mode
 
-        self.update_without_throttle = True
-
     def set_humidity(self, humidity):
         """Set the humidity level."""
         self.data.ecobee.set_humidity(self.thermostat_index, humidity)
 
         # set_humidity was successful, reflect changes in thermostat
         self.thermostat["runtime"]["desiredHumidity"] = humidity
-
-        self.update_without_throttle = True
 
     def turn_off(self, **kwargs):
         """Set humidifier to off mode."""
