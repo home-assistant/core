@@ -169,7 +169,6 @@ class NightscoutSensor(SensorEntity):
 class Battery(CoordinatorEntity, SensorEntity):
     """Battery sensor of Nightscout device."""
 
-    # SENSOR_ATTR = "battery_percentage_remaining"
     _attr_device_class = DEVICE_CLASS_BATTERY
     _attr_state_class = STATE_CLASS_MEASUREMENT
     _attr_native_unit_of_measurement = PERCENTAGE
