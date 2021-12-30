@@ -57,6 +57,27 @@ BUTTONS: Final = [
         entity_category=EntityCategory.CONFIG,
         press_action=lambda wrapper: wrapper.device.trigger_reboot(),
     ),
+    ShellyButtonDescription(
+        key="self_test",
+        name="Self Test",
+        icon="mdi:progress-wrench",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        press_action=lambda wrapper: wrapper.device.trigger_shelly_gas_self_test(),
+    ),
+    ShellyButtonDescription(
+        key="mute",
+        name="Mute",
+        icon="mdi:volume-variant-off",
+        entity_category=EntityCategory.CONFIG,
+        press_action=lambda wrapper: wrapper.device.trigger_shelly_gas_mute(),
+    ),
+    ShellyButtonDescription(
+        key="unmute",
+        name="Unmute",
+        icon="mdi:volume-high",
+        entity_category=EntityCategory.CONFIG,
+        press_action=lambda wrapper: wrapper.device.trigger_shelly_gas_unmute(),
+    ),
 ]
 
 
@@ -78,8 +99,19 @@ async def async_setup_entry(
         ].get(BLOCK):
             wrapper = cast(BlockDeviceWrapper, block_wrapper)
 
-    if wrapper is not None:
-        async_add_entities([ShellyButton(wrapper, button) for button in BUTTONS])
+    if wrapper is None:
+        return
+
+    entities = []
+    for button in BUTTONS:
+        if (
+            button.key in ("self_test", "mute", "unmute")
+            and wrapper.device.model != "SHGS-1"
+        ):
+            continue
+        entities.append(ShellyButton(wrapper, button))
+
+    async_add_entities(entities)
 
 
 class ShellyButton(ButtonEntity):
