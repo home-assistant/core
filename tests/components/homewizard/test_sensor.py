@@ -50,8 +50,8 @@ async def test_sensor_entity_smr_version(
 
     entity_registry = er.async_get(hass)
 
-    state = hass.states.get("sensor.product_name_aabbccddeeff_smr_version")
-    entry = entity_registry.async_get("sensor.product_name_aabbccddeeff_smr_version")
+    state = hass.states.get("sensor.product_name_aabbccddeeff_dsmr_version")
+    entry = entity_registry.async_get("sensor.product_name_aabbccddeeff_dsmr_version")
     assert entry
     assert state
     assert entry.unique_id == "aabbccddeeff_smr_version"
@@ -59,7 +59,7 @@ async def test_sensor_entity_smr_version(
     assert state.state == "50"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
-        == "Product Name (aabbccddeeff) SMR Version"
+        == "Product Name (aabbccddeeff) DSMR Version"
     )
     assert ATTR_STATE_CLASS not in state.attributes
     assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
@@ -91,15 +91,18 @@ async def test_sensor_entity_meter_model(
 
     entity_registry = er.async_get(hass)
 
-    state = hass.states.get("sensor.product_name_aabbccddeeff_model")
-    entry = entity_registry.async_get("sensor.product_name_aabbccddeeff_model")
+    state = hass.states.get("sensor.product_name_aabbccddeeff_smart_meter_model")
+    entry = entity_registry.async_get(
+        "sensor.product_name_aabbccddeeff_smart_meter_model"
+    )
     assert entry
     assert state
     assert entry.unique_id == "aabbccddeeff_meter_model"
     assert not entry.disabled
     assert state.state == "Model X"
     assert (
-        state.attributes.get(ATTR_FRIENDLY_NAME) == "Product Name (aabbccddeeff) Model"
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == "Product Name (aabbccddeeff) Smart Meter Model"
     )
     assert ATTR_STATE_CLASS not in state.attributes
     assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
@@ -586,8 +589,10 @@ async def test_sensor_entity_gas_timestamp(
 
     entity_registry = er.async_get(hass)
 
-    state = hass.states.get("sensor.product_name_aabbccddeeff_gas_timestamp")
-    entry = entity_registry.async_get("sensor.product_name_aabbccddeeff_gas_timestamp")
+    state = hass.states.get("sensor.product_name_aabbccddeeff_last_gas_update")
+    entry = entity_registry.async_get(
+        "sensor.product_name_aabbccddeeff_last_gas_update"
+    )
     assert entry
     assert state
     assert entry.unique_id == "aabbccddeeff_gas_timestamp"
@@ -595,7 +600,7 @@ async def test_sensor_entity_gas_timestamp(
     assert state.state == "2021-06-06T14:00:10"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
-        == "Product Name (aabbccddeeff) Gas Timestamp"
+        == "Product Name (aabbccddeeff) Last Gas Update"
     )
     assert ATTR_STATE_CLASS not in state.attributes
     assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
@@ -649,7 +654,9 @@ async def test_sensor_entity_disabled_when_null(
     assert entry
     assert entry.disabled
 
-    entry = entity_registry.async_get("sensor.product_name_aabbccddeeff_gas_timestamp")
+    entry = entity_registry.async_get(
+        "sensor.product_name_aabbccddeeff_last_gas_update"
+    )
     assert entry
     assert entry.disabled
 

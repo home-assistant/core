@@ -36,13 +36,13 @@ _LOGGER = logging.getLogger(__name__)
 SENSORS: Final[tuple[SensorEntityDescription, ...]] = (
     SensorEntityDescription(
         key="smr_version",
-        name="SMR Version",
+        name="DSMR Version",
         icon="mdi:counter",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="meter_model",
-        name="Model",
+        name="Smart Meter Model",
         icon="mdi:gauge",
         entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
@@ -126,8 +126,9 @@ SENSORS: Final[tuple[SensorEntityDescription, ...]] = (
     ),
     SensorEntityDescription(
         key="gas_timestamp",
-        name="Gas Timestamp",
+        name="Last Gas Update",
         device_class=DEVICE_CLASS_TIMESTAMP,
+        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
 )
 
