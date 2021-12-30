@@ -37,8 +37,7 @@ async def async_setup_entry(
 
     async def _async_create_mic_entity(speaker: SonosSpeaker) -> None:
         _LOGGER.debug("Creating microphone binary_sensor on %s", speaker.zone_name)
-        entity = SonosMicrophoneSensorEntity(speaker)
-        async_add_entities([entity])
+        async_add_entities([SonosMicrophoneSensorEntity(speaker)])
 
     config_entry.async_on_unload(
         async_dispatcher_connect(
