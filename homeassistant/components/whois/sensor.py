@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from datetime import timedelta
-import logging
 
 import voluptuous as vol
 import whois
@@ -14,16 +13,16 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-_LOGGER = logging.getLogger(__name__)
+from .const import (
+    ATTR_EXPIRES,
+    ATTR_NAME_SERVERS,
+    ATTR_REGISTRAR,
+    ATTR_UPDATED,
+    DEFAULT_NAME,
+    LOGGER,
+)
 
-DEFAULT_NAME = "Whois"
-
-ATTR_EXPIRES = "expires"
-ATTR_NAME_SERVERS = "name_servers"
-ATTR_REGISTRAR = "registrar"
-ATTR_UPDATED = "updated"
-
-SCAN_INTERVAL = timedelta(hours=24)
+SCANTERVAL = timedelta(hours=24)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -47,12 +46,12 @@ def setup_platform(
         if "expiration_date" in whois.whois(domain):
             add_entities([WhoisSensor(name, domain)], True)
         else:
-            _LOGGER.error(
+            LOGGER.error(
                 "WHOIS lookup for %s didn't contain an expiration date", domain
             )
             return
     except whois.BaseException as ex:  # pylint: disable=broad-except
-        _LOGGER.error("Exception %s occurred during WHOIS lookup for %s", ex, domain)
+        LOGGER.error("Exception %s occurred during WHOIS lookup for %s", ex, domain)
         return
 
 
@@ -78,13 +77,13 @@ class WhoisSensor(SensorEntity):
         try:
             response = self.whois(self._domain)
         except whois.BaseException as ex:  # pylint: disable=broad-except
-            _LOGGER.error("Exception %s occurred during WHOIS lookup", ex)
+            LOGGER.error("Exception %s occurred during WHOIS lookup", ex)
             self._empty_value_and_attributes()
             return
 
         if response:
             if "expiration_date" not in response:
-                _LOGGER.error(
+                LOGGER.error(
                     "Failed to find expiration_date in whois lookup response. "
                     "Did find: %s",
                     ", ".join(response.keys()),
@@ -93,7 +92,7 @@ class WhoisSensor(SensorEntity):
                 return
 
             if not response["expiration_date"]:
-                _LOGGER.error("Whois response contains empty expiration_date")
+                LOGGER.error("Whois response contains empty expiration_date")
                 self._empty_value_and_attributes()
                 return
 
