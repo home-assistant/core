@@ -101,7 +101,8 @@ def async_populate_data_from_discovery(
     for conf_key, discovery_key in CONF_TO_DISCOVERY.items():
         if (
             device.get(discovery_key) is not None
-            and conf_key not in data_updates
+            and conf_key
+            not in data_updates  # Prefer the model num from TCP instead of UDP
             and current_data.get(conf_key) != device[discovery_key]  # type: ignore[misc]
         ):
             data_updates[conf_key] = device[discovery_key]  # type: ignore[misc]
