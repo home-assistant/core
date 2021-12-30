@@ -4,23 +4,34 @@ from __future__ import annotations
 from asyncio import TimeoutError as AsyncIOTimeoutError
 from datetime import timedelta
 import logging
-import numbers
 
 from aiohttp import ClientError
 from py_nightscout import Api as NightscoutAPI
 
 from homeassistant.components.sensor import (
-    SensorEntity,
     DEVICE_CLASS_BATTERY,
     STATE_CLASS_MEASUREMENT,
+    SensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_DATE, PERCENTAGE, ENTITY_CATEGORY_DIAGNOSTIC
+from homeassistant.const import ATTR_DATE, ENTITY_CATEGORY_DIAGNOSTIC, PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
-from .const import ATTR_DELTA, ATTR_DEVICE, ATTR_DIRECTION, DOMAIN
+from .const import (
+    ATTR_BATTERY_VOLTAGE,
+    ATTR_DELTA,
+    ATTR_DEVICE,
+    ATTR_DIRECTION,
+    ATTR_TYPE,
+    DOMAIN,
+)
 
 SCAN_INTERVAL = timedelta(minutes=1)
 
@@ -36,18 +47,32 @@ async def async_setup_entry(
 ) -> None:
     """Set up entities."""
     api = hass.data[DOMAIN][entry.entry_id]
+
     # Glucose sensor
     async_add_entities([NightscoutSensor(api, "Blood Sugar", entry.unique_id)], True)
+
     # Uploader batteries
-    try:
-        devices = await api.get_latest_devices_status()
-        for device in devices:
-            if device.uploder:
-                async_add_entities(
-                    [Battery(api, device.name, f"{entry.unique_id}_{device.name}")]
-                )
-    except (ClientError, AsyncIOTimeoutError, OSError) as error:
-        _LOGGER.error("Error fetching device status. Failed with %s", error)
+    async def async_update_batteries():
+        """Fetch the latest data from Nightscout REST API and update the state of devices batteries."""
+        try:
+            return await api.get_latest_devices_status()
+        except OSError as error:
+            _LOGGER.error(f"Error fetching battery devices status. Failed with {error}")
+            raise UpdateFailed(f"Error communicating with API: {error}")
+
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name="battery_sensor",
+        update_method=async_update_batteries,
+        update_interval=timedelta(minutes=1),
+    )
+
+    await coordinator.async_config_entry_first_refresh()
+    async_add_entities(
+        Battery(coordinator, api, device_name, f"{entry.unique_id}_{device_name}")
+        for device_name in coordinator.data
+    )
 
 
 class NightscoutSensor(SensorEntity):
@@ -139,25 +164,23 @@ class NightscoutSensor(SensorEntity):
         return self._attributes
 
 
-class Battery(SensorEntity):
+class Battery(CoordinatorEntity, SensorEntity):
     """Battery sensor of Nightscout device."""
 
     # SENSOR_ATTR = "battery_percentage_remaining"
-    _device_class = DEVICE_CLASS_BATTERY
-    _state_class = STATE_CLASS_MEASUREMENT
-    _unit = PERCENTAGE
+    _attr_device_class = DEVICE_CLASS_BATTERY
+    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_native_unit_of_measurement = PERCENTAGE
     _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
 
-    def __init__(self, api: NightscoutAPI, name, unique_id):
+    def __init__(self, coordinator, api: NightscoutAPI, name, unique_id):
         """Initialize the Nightscout sensor."""
+        super().__init__(coordinator)
         self.api = api
         self._unique_id = unique_id
         self._name = name
         self._device_name = name
-        self._state = None
-        self._attributes = None
         self._icon = "mdi:battery-unknown"
-        self._available = False
 
     @property
     def unique_id(self):
@@ -170,60 +193,30 @@ class Battery(SensorEntity):
         return self._name
 
     @property
-    def native_unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._unit
-
-    @property
     def available(self):
         """Return if the sensor data are available."""
-        return self._available
+        return hasattr(self.coordinator.data[self._name], "uploader")
 
     @property
     def native_value(self):
         """Return the state of the device."""
-        return self._state
+        return self.coordinator.data[self._name].uploader.battery
 
     @property
     def icon(self) -> str:
         """Battery state icon handling."""
         return icon_for_battery_level(
-            battery_level=self._state,
+            battery_level=self.coordinator.data[self._name].uploader.battery,
             charging=False,
         )
-
-    async def async_update(self):
-        """Fetch the latest data from Nightscout REST API and update the state."""
-        try:
-            device = await self.api.get_latest_devices_status()[self._device_name]
-        except (ClientError, AsyncIOTimeoutError, OSError) as error:
-            _LOGGER.error("Error fetching device status. Failed with %s", error)
-            self._available = False
-            return
-
-        self._available = True
-        self._attributes = {}
-        self._state = None
-        if device.uploader:
-            self._state = device.uploader.battery
-        else:
-            self._available = False
-            _LOGGER.warning("Empty reply found when expecting JSON data")
-
-    def _parse_icon(self) -> str:
-        """Update the icon based on the direction attribute."""
-        switcher = {
-            "Flat": "mdi:arrow-right",
-            "SingleDown": "mdi:arrow-down",
-            "FortyFiveDown": "mdi:arrow-bottom-right",
-            "DoubleDown": "mdi:chevron-triple-down",
-            "SingleUp": "mdi:arrow-up",
-            "FortyFiveUp": "mdi:arrow-top-right",
-            "DoubleUp": "mdi:chevron-triple-up",
-        }
-        return switcher.get(self._attributes[ATTR_DIRECTION], "mdi:cloud-question")
 
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
-        return self._attributes
+        uploader = self.coordinator.data[self._name].uploader
+        attr = {}
+        if hasattr(uploader, "type"):
+            attr[ATTR_TYPE] = uploader.type
+        if hasattr(uploader, "batteryVoltage"):
+            attr[ATTR_BATTERY_VOLTAGE] = uploader.batteryVoltage
+        return attr
