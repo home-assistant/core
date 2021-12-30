@@ -349,20 +349,20 @@ def get_rpc_input_triggers(device: RpcDevice) -> list[tuple[str, str]]:
 
 
 async def async_device_update_info(
-    hass: HomeAssistant, shellydevice: BlockDevice | RpcDevice, shellyentry: ConfigEntry
+    hass: HomeAssistant, shellydevice: BlockDevice | RpcDevice, entry: ConfigEntry
 ) -> None:
     """Update device registry info."""
 
     _LOGGER.debug("Updating device registry info for %s", entry.title)
     dev_registry = device_registry.async_get(hass)
     device = None
-    if shellyentry.unique_id:
+    if entry.unique_id:
         device = dev_registry.async_get_device(
-            identifiers={(DOMAIN, shellyentry.entry_id)},
+            identifiers={(DOMAIN, entry.entry_id)},
             connections={
                 (
                     device_registry.CONNECTION_NETWORK_MAC,
-                    device_registry.format_mac(shellyentry.unique_id),
+                    device_registry.format_mac(entry.unique_id),
                 )
             },
         )
