@@ -13,9 +13,10 @@ from homeassistant.const import (
     CONF_REGION,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import ServiceCall, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entityfilter
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.aiohttp import MockRequest
 
@@ -168,7 +169,7 @@ def is_cloudhook_request(request):
     return isinstance(request, MockRequest)
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize the Home Assistant cloud."""
     # Process configs
     if DOMAIN in config:
