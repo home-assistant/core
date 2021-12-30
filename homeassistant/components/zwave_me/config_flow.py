@@ -20,6 +20,7 @@ class ZWaveMeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize flow."""
         self.url = None
         self.token = None
+        self.uuid = None
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user or started with zeroconf."""
@@ -54,15 +55,17 @@ class ZWaveMeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     data_schema=schema,
                     errors=errors,
                 )
-            uuid = await get_uuid(self.url, self.token)
-            if uuid is not None:
-                await self.async_set_unique_id(uuid + self.url)
-                self._abort_if_unique_id_configured()
-                return self.async_create_entry(
-                    title=self.url,
-                    data={"url": self.url, "token": self.token},
-                )
-            errors[CONF_URL] = "could_not_retrieve_data"
+            if self.uuid is None:
+                self.uuid = await get_uuid(self.url, self.token)
+                if self.uuid is not None:
+                    await self.async_set_unique_id(self.uuid + self.url)
+                    self._abort_if_unique_id_configured()
+                errors[CONF_URL] = "could_not_retrieve_data"
+            return self.async_create_entry(
+                title=self.url,
+                data={"url": self.url, "token": self.token},
+            )
+
         return self.async_show_form(
             step_id="user",
             data_schema=schema,
@@ -76,5 +79,9 @@ class ZWaveMeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         This flow is triggered by the discovery component.
         """
         self.url = discovery_info.host
-        await self._async_handle_discovery_without_unique_id()
+        self.uuid = await get_uuid(self.url, self.token)
+        if self.uuid is not None:
+            await self.async_set_unique_id(self.uuid + self.url)
+            self._abort_if_unique_id_configured()
+
         return await self.async_step_user()
