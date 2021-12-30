@@ -85,7 +85,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         integration = await async_get_integration(self.hass, DOMAIN)
 
-        if user_input is None or user_input[CONF_HOST] is None:
+        if user_input is None:
             return self.async_show_form(
                 step_id="user",
                 description_placeholders={
