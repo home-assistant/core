@@ -4,10 +4,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/wevolor",
   "requirements": ["pywevolor==0.0.1"],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
-  "dependencies": [],
   "codeowners": [
     "@timstallmann"
   ],

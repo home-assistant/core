@@ -36,7 +36,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class WevolorShade(CoverEntity):
     """Cover entity for control of Wevolor remote channel."""
 
-    _channel: int | None = None
+    _attr_assumed_state = True
     _wevolor: Wevolor | None = None
     _attr_assumed_state = True
     _support_tilt: bool = False
