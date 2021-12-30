@@ -33,6 +33,7 @@ from .const import (
     CONF_MODEL,
     CONF_MODEL_DESCRIPTION,
     CONF_MODEL_INFO,
+    CONF_MODEL_NUM,
     CONF_REMOTE_ACCESS_ENABLED,
     CONF_REMOTE_ACCESS_HOST,
     CONF_REMOTE_ACCESS_PORT,
@@ -65,7 +66,7 @@ def async_build_cached_discovery(entry: ConfigEntry) -> FluxLEDDiscovery:
         ipaddr=data[CONF_HOST],
         model=data.get(CONF_MODEL),
         id=format_as_flux_mac(entry.unique_id),
-        model_num=None,
+        model_num=data.get(CONF_MODEL_NUM),
         version_num=data.get(CONF_MINOR_VERSION),
         firmware_date=None,
         model_info=data.get(CONF_MODEL_INFO),
@@ -105,7 +106,10 @@ def async_populate_data_from_discovery(
 
 @callback
 def async_update_entry_from_discovery(
-    hass: HomeAssistant, entry: config_entries.ConfigEntry, device: FluxLEDDiscovery
+    hass: HomeAssistant,
+    entry: config_entries.ConfigEntry,
+    device: FluxLEDDiscovery,
+    model_num: int | None,
 ) -> bool:
     """Update a config entry from a flux_led discovery."""
     data_updates: dict[str, Any] = {}
@@ -115,6 +119,8 @@ def async_update_entry_from_discovery(
     if not entry.unique_id:
         updates["unique_id"] = dr.format_mac(mac_address)
     async_populate_data_from_discovery(entry.data, data_updates, device)
+    if model_num and entry.data.get(CONF_MODEL_NUM) != model_num:
+        data_updates[CONF_MODEL_NUM] = model_num
     if not entry.data.get(CONF_NAME) or is_ip_address(entry.data[CONF_NAME]):
         updates["title"] = data_updates[CONF_NAME] = async_name_from_discovery(device)
     if data_updates:

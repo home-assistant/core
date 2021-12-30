@@ -99,7 +99,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(mac)
         for entry in self._async_current_entries(include_ignore=False):
             if entry.unique_id == mac or entry.data[CONF_HOST] == host:
-                if async_update_entry_from_discovery(self.hass, entry, device):
+                if async_update_entry_from_discovery(self.hass, entry, device, None):
                     self.hass.async_create_task(
                         self.hass.config_entries.async_reload(entry.entry_id)
                     )
