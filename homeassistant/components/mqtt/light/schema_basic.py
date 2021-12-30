@@ -60,6 +60,7 @@ from .schema import MQTT_LIGHT_SCHEMA_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_BRIGHTNESS_COMMAND_TEMPLATE = "brightness_command_template"
 CONF_BRIGHTNESS_COMMAND_TOPIC = "brightness_command_topic"
 CONF_BRIGHTNESS_SCALE = "brightness_scale"
 CONF_BRIGHTNESS_STATE_TOPIC = "brightness_state_topic"
@@ -134,6 +135,7 @@ DEFAULT_ON_COMMAND_TYPE = "last"
 VALUES_ON_COMMAND_TYPE = ["first", "last", "brightness"]
 
 COMMAND_TEMPLATE_KEYS = [
+    CONF_BRIGHTNESS_COMMAND_TEMPLATE,
     CONF_COLOR_TEMP_COMMAND_TEMPLATE,
     CONF_RGB_COMMAND_TEMPLATE,
     CONF_RGBW_COMMAND_TEMPLATE,
@@ -156,6 +158,7 @@ VALUE_TEMPLATE_KEYS = [
 _PLATFORM_SCHEMA_BASE = (
     mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
         {
+            vol.Optional(CONF_BRIGHTNESS_COMMAND_TEMPLATE): cv.template,
             vol.Optional(CONF_BRIGHTNESS_COMMAND_TOPIC): mqtt.valid_publish_topic,
             vol.Optional(
                 CONF_BRIGHTNESS_SCALE, default=DEFAULT_BRIGHTNESS_SCALE
@@ -953,6 +956,9 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             )
             # Make sure the brightness is not rounded down to 0
             device_brightness = max(device_brightness, 1)
+            tpl = self._command_templates[CONF_BRIGHTNESS_COMMAND_TEMPLATE]
+            if tpl:
+                device_brightness = tpl({"value": device_brightness})
             await publish(CONF_BRIGHTNESS_COMMAND_TOPIC, device_brightness)
             should_update |= set_optimistic(ATTR_BRIGHTNESS, kwargs[ATTR_BRIGHTNESS])
         elif (
