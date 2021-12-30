@@ -51,7 +51,7 @@ def setup_platform(
         hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
-            data={CONF_NAME: config[CONF_NAME]},
+            data={CONF_DOMAIN: config[CONF_DOMAIN], CONF_NAME: config[CONF_NAME]},
         )
     )
 
