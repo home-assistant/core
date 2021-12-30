@@ -179,7 +179,7 @@ class HWEnergySensor(CoordinatorEntity[DeviceResponseEntry], SensorEntity):
             "total_power_export_t2_kwh",
         ]:
             if self.data["data"][self.data_type] == 0:
-                self.entity_description.entity_registry_enabled_default = False
+                self._attr_entity_registry_enabled_default = False
 
     @property
     def device_info(self) -> DeviceInfo:
