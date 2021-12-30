@@ -64,7 +64,6 @@ class FluxSwitch(FluxOnOffEntity, CoordinatorEntity, SwitchEntity):
 class FluxRemoteAccessSwitch(FluxBaseEntity, SwitchEntity):
     """Representation of a Flux remote access switch."""
 
-    _attr_should_poll = False
     _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(

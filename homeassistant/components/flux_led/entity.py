@@ -40,6 +40,8 @@ def _async_device_info(
 class FluxBaseEntity(Entity):
     """Representation of a Flux entity without a coordinator."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         device: AIOWifiLedBulb,
