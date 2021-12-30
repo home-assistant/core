@@ -44,7 +44,9 @@ async def async_setup_entry(
         entities.append(FluxRemoteAccessSwitch(coordinator.device, entry))
 
     if coordinator.device.microphone:
-        entities.append(FluxMusicSwitch(coordinator, unique_id, name))
+        entities.append(
+            FluxMusicSwitch(coordinator, f"{entry.unique_id}_music", f"{name} Music")
+        )
 
     if entities:
         async_add_entities(entities)

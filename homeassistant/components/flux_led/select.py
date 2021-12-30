@@ -44,7 +44,11 @@ async def async_setup_entry(
     if device.ic_types:
         entities.append(FluxICTypeSelect(coordinator, unique_id, name))
     if device.remote_config:
-        entities.append(FluxRemoteConfigSelect(coordinator, unique_id, name))
+        entities.append(
+            FluxRemoteConfigSelect(
+                coordinator, f"{unique_id}_remote_config", f"{name} Remote Config"
+            )
+        )
 
     if entities:
         async_add_entities(entities)
