@@ -80,9 +80,7 @@ class OAuthFixture:
         assert result["type"] == "form"
         assert result["step_id"] == "pick_implementation"
 
-        return await self.hass.config_entries.flow.async_configure(
-            result["flow_id"], {"implementation": auth_domain}
-        )
+        return await self.async_configure(result, {"implementation": auth_domain})
 
     async def async_oauth_web_flow(self, result: dict) -> None:
         """Invoke the oauth flow for Web Auth with fake responses."""
@@ -169,9 +167,7 @@ class OAuthFixture:
         with patch(
             "homeassistant.components.nest.async_setup_entry", return_value=True
         ) as mock_setup:
-            await self.hass.config_entries.flow.async_configure(
-                result["flow_id"], user_input
-            )
+            await self.async_configure(result, user_input)
             assert len(mock_setup.mock_calls) == 1
             await self.hass.async_block_till_done()
         return self.get_config_entry()
@@ -542,7 +538,7 @@ async def test_pubsub_subscriber_config_entry_reauth(hass, oauth, subscriber):
         hass,
         {
             "auth_implementation": APP_AUTH_DOMAIN,
-            "subscription_id": SUBSCRIBER_ID,
+            "subscriber_id": SUBSCRIBER_ID,
             "cloud_project_id": CLOUD_PROJECT_ID,
             "token": {
                 "access_token": "some-revoked-token",
@@ -552,22 +548,9 @@ async def test_pubsub_subscriber_config_entry_reauth(hass, oauth, subscriber):
     )
     result = await oauth.async_reauth(old_entry.data)
     await oauth.async_oauth_app_flow(result)
-    result = await oauth.async_configure(result, {"code": "1234"})
 
-    # Configure Pub/Sub
-    await oauth.async_pubsub_flow(result, cloud_project_id=CLOUD_PROJECT_ID)
-
-    # Verify existing tokens are replaced
-    with patch(
-        "homeassistant.components.nest.api.GoogleNestSubscriber",
-        return_value=subscriber,
-    ):
-        entry = await oauth.async_finish_setup(
-            result, {"cloud_project_id": "other-cloud-project-id"}
-        )
-        await hass.async_block_till_done()
-
-    entry = oauth.get_config_entry()
+    # Entering an updated access token refreshs the config entry.
+    entry = await oauth.async_finish_setup(result, {"code": "1234"})
     entry.data["token"].pop("expires_at")
     assert entry.unique_id == DOMAIN
     assert entry.data["token"] == {
@@ -577,7 +560,5 @@ async def test_pubsub_subscriber_config_entry_reauth(hass, oauth, subscriber):
         "expires_in": 60,
     }
     assert entry.data["auth_implementation"] == APP_AUTH_DOMAIN
-    assert (
-        "projects/other-cloud-project-id/subscriptions" in entry.data["subscriber_id"]
-    )
-    assert entry.data["cloud_project_id"] == "other-cloud-project-id"
+    assert entry.data["subscriber_id"] == SUBSCRIBER_ID
+    assert entry.data["cloud_project_id"] == CLOUD_PROJECT_ID
