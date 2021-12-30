@@ -69,11 +69,15 @@ async def async_setup_entry(
         update_interval=timedelta(minutes=5),
     )
 
-    await coordinator.async_config_entry_first_refresh()
-    async_add_entities(
-        Battery(coordinator, api, device_name, f"{entry.unique_id}_{device_name}")
-        for device_name in coordinator.data
-    )
+    entities = []
+
+    for device_name in coordinator.data:
+        entities.append(
+            Battery(coordinator, device_name, f"{entry.unique_id}_{device_name}")
+        )
+
+    async_add_entities(entities)
+    await coordinator.async_refresh()
 
 
 class NightscoutSensor(SensorEntity):
@@ -173,38 +177,29 @@ class Battery(CoordinatorEntity, SensorEntity):
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
 
-    def __init__(self, coordinator, api: NightscoutAPI, name, unique_id):
+    def __init__(self, coordinator, name, unique_id):
         """Initialize the Nightscout sensor."""
         super().__init__(coordinator)
-        self.api = api
-        self._unique_id = unique_id
-        self._name = name
-        self._device_name = name
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of the sensor."""
-        return self._unique_id
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
+        self._attr_unique_id = unique_id
+        self._attr_name = name
 
     @property
     def available(self):
         """Return if the sensor data are available."""
-        return hasattr(self.coordinator.data[self._name], "uploader")
+        return (
+            hasattr(self.coordinator.data[self._attr_name], "uploader")
+            and super().available
+        )
 
     @property
     def native_value(self):
         """Return the state of the device."""
-        return self.coordinator.data[self._name].uploader.battery
+        return self.coordinator.data[self._attr_name].uploader.battery
 
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
-        uploader = self.coordinator.data[self._name].uploader
+        uploader = self.coordinator.data[self._attr_name].uploader
         attr = {}
         if hasattr(uploader, "type"):
             attr[ATTR_TYPE] = uploader.type
