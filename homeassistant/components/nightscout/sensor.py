@@ -23,14 +23,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import (
-    ATTR_BATTERY_VOLTAGE,
-    ATTR_DELTA,
-    ATTR_DEVICE,
-    ATTR_DIRECTION,
-    ATTR_TYPE,
-    DOMAIN,
-)
+from .const import ATTR_DELTA, ATTR_DEVICE, ATTR_DIRECTION, ATTR_TYPE, DOMAIN
 
 SCAN_INTERVAL = timedelta(minutes=1)
 
@@ -203,6 +196,4 @@ class Battery(CoordinatorEntity, SensorEntity):
         attr = {}
         if hasattr(uploader, "type"):
             attr[ATTR_TYPE] = uploader.type
-        if hasattr(uploader, "batteryVoltage"):
-            attr[ATTR_BATTERY_VOLTAGE] = uploader.batteryVoltage
         return attr

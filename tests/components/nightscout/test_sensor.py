@@ -1,7 +1,6 @@
 """The sensor tests for the Nightscout platform."""
 
 from homeassistant.components.nightscout.const import (
-    ATTR_BATTERY_VOLTAGE,
     ATTR_DELTA,
     ATTR_DEVICE,
     ATTR_DIRECTION,
@@ -83,7 +82,6 @@ async def test_battery_sensor_state(hass):
     assert test_tomato_sensor.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_BATTERY
     assert test_tomato_sensor.attributes[ATTR_STATE_CLASS] == STATE_CLASS_MEASUREMENT
     assert test_tomato_sensor.attributes[ATTR_TYPE] == "BRIDGE"
-    assert test_tomato_sensor.attributes[ATTR_BATTERY_VOLTAGE] == 2.5
 
     test_samsung_sensor = hass.states.get("sensor.samsung_sm_n986b")
     assert test_samsung_sensor.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_BATTERY
