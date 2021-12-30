@@ -45,7 +45,7 @@ async def test_battery_attributes(hass, async_autosetup_sonos, soco):
     )
 
 
-async def test_battery_on_S1(hass, async_setup_sonos, soco, device_properties_event):
+async def test_battery_on_s1(hass, async_setup_sonos, soco, device_properties_event):
     """Test battery state updates on a Sonos S1 device."""
     soco.get_battery_info.return_value = {}
 
