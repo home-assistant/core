@@ -101,6 +101,7 @@ def get_api_version(message):
         return V2
     if message.get("handler") is not None:
         return V3
+    return None
 
 
 async def async_handle_message(hass, message):
@@ -147,7 +148,7 @@ async def async_handle_message(hass, message):
 
     if "plain" in intent_response.speech:
         _LOGGER.error(
-            "intent_response.speech : %s" % (intent_response.speech["plain"]["speech"])
+            "intent_response.speech : %s", intent_response.speech["plain"]["speech"]
         )
         dialogflow_response.add_speech(intent_response.speech["plain"]["speech"])
         dialogflow_response.add_next_scene("actions.scene.END_CONVERSATION")
@@ -185,10 +186,10 @@ class DialogflowResponse:
         if self.api_version is V1:
             return {"speech": self.speech, "displayText": self.speech, "source": SOURCE}
 
-        elif self.api_version is V2:
+        if self.api_version is V2:
             return {"fulfillmentText": self.speech, "source": SOURCE}
 
-        elif self.api_version is V3:
+        if self.api_version is V3:
             return {
                 "session": {"id": self.parameters["session_id"], "params": {}},
                 "prompt": {
@@ -201,5 +202,4 @@ class DialogflowResponse:
                     "next": {"name": self.next_scene},
                 },
             }
-        else:
-            return None
+        return None
