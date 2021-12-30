@@ -9,6 +9,7 @@ DOMAIN = "fritz"
 PLATFORMS = [
     Platform.BUTTON,
     Platform.BINARY_SENSOR,
+    Platform.CAMERA,
     Platform.DEVICE_TRACKER,
     Platform.SENSOR,
     Platform.SWITCH,
@@ -19,6 +20,8 @@ DATA_FRITZ = "fritz_data"
 DSL_CONNECTION: Literal["dsl"] = "dsl"
 
 DEFAULT_DEVICE_NAME = "Unknown device"
+DEFAULT_GUEST_WIFI_ENCRYPTION = "WPA/WPA2"
+DEFAULT_GUEST_WIFI_QR_REFRESH_SEC = 60
 DEFAULT_HOST = "192.168.178.1"
 DEFAULT_PORT = 49000
 DEFAULT_USERNAME = ""

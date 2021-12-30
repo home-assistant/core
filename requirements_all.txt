@@ -39,6 +39,7 @@ PyMata==2.20
 PyNaCl==1.4.0
 
 # homeassistant.auth.mfa_modules.totp
+# homeassistant.components.fritz
 # homeassistant.components.homekit
 PyQRCode==1.2.1
 

@@ -4,6 +4,7 @@
   "documentation": "https://www.home-assistant.io/integrations/fritz",
   "requirements": [
     "fritzconnection==1.8.0",
+    "PyQRCode==1.2.1",
     "xmltodict==0.12.0"
   ],
   "dependencies": ["network"],

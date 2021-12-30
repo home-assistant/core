@@ -17,6 +17,7 @@ from fritzconnection.core.exceptions import (
 )
 from fritzconnection.lib.fritzhosts import FritzHosts
 from fritzconnection.lib.fritzstatus import FritzStatus
+from fritzconnection.lib.fritzwlan import FritzGuestWLAN
 
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.device_tracker.const import (
@@ -140,6 +141,7 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
         self._options: MappingProxyType[str, Any] | None = None
         self._unique_id: str | None = None
         self.connection: FritzConnection = None
+        self.fritz_guest_wifi: FritzGuestWLAN = None
         self.fritz_hosts: FritzHosts = None
         self.fritz_status: FritzStatus = None
         self.hass = hass
@@ -175,6 +177,7 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
             _LOGGER.error("Unable to establish a connection with %s", self.host)
             return
 
+        self.fritz_guest_wifi = FritzGuestWLAN(fc=self.connection)
         self.fritz_status = FritzStatus(fc=self.connection)
         info = self.connection.call_action("DeviceInfo:1", "GetInfo")
         if not self._unique_id:
