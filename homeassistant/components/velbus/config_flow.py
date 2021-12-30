@@ -89,7 +89,7 @@ class VelbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_usb(self, discovery_info: usb.UsbServiceInfo) -> FlowResult:
         """Handle USB Discovery."""
         await self.async_set_unique_id(
-            f"{discovery_info.vid}:{discovery_info.pid}_{discovery_info.serial_number}"
+            f"{discovery_info.vid}:{discovery_info.pid}_{discovery_info.serial_number}_{discovery_info.manufacturer}_{discovery_info.description}"
         )
         dev_path = await self.hass.async_add_executor_job(
             usb.get_serial_by_id, discovery_info.device
