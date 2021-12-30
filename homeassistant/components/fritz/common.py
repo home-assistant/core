@@ -353,15 +353,22 @@ class FritzBoxTools:
             device_hosts_names.add(device["name"])
 
         for entry in ha_entity_reg_list:
-            entry_name = None
-            if entry.original_name is not None:
-                entry_name = entry.original_name.split(" ")[0]
+            assert entry.original_name
+            entry_name = entry.name or entry.original_name
+            entry_host = entry_name.split(" ")[0]
+            entry_mac = entry.unique_id.split("_")[0]
+
             if not _cleanup_entity_filter(entry) or (
-                entry.unique_id.split("_")[0] in device_hosts_macs
-                and entry_name in device_hosts_names
+                entry_mac in device_hosts_macs and entry_host in device_hosts_names
             ):
+                _LOGGER.debug(
+                    "Skipping entity %s [mac=%s, host=%s]",
+                    entry_name,
+                    entry_mac,
+                    entry_host,
+                )
                 continue
-            _LOGGER.info("Removing entity: %s", entry.name or entry.original_name)
+            _LOGGER.info("Removing entity: %s", entry_name)
             entity_reg.async_remove(entry.entity_id)
             entities_removed = True
 
