@@ -1,19 +1,22 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Service is already configured"
+            "already_configured": "Service is already configured",
+            "cannot_connect": "Failed to connect",
+            "invalid_host": "Invalid hostname or IP address",
+            "unknown": "Unknown error"
         },
         "error": {
             "cannot_connect": "Failed to connect",
-            "invalid_host": "Invalid hostname or IP address"
+            "invalid_host": "Invalid hostname or IP address",
+            "unknown": "Unknown error"
         },
         "step": {
             "user": {
                 "data": {
-                    "host": "Host",
-                    "name": "Name"
+                    "host": "Host"
                 },
-                "description": "Set up the Vallox integration. If you have problems with configuration go to https://www.home-assistant.io/integrations/vallox.",
+                "description": "Set up the Vallox integration. If you have problems with configuration go to {integration_docs_url}.",
                 "title": "Vallox"
             }
         }
