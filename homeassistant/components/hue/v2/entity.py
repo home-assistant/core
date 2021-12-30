@@ -181,7 +181,7 @@ class HueBaseEntity(Entity):
                 self.logger.warning(
                     "Device %s changed state while reported as disconnected. "
                     "This might be an indicator that routing is not working for this device "
-                    "or the device is having connectivity issues. "
+                    "or the device is having connectivity issues. You can disable availability reporting for this device in the Hue options."
                     "Device details: %s - %s (%s) fw: %s",
                     self.name,
                     self.device.product_data.manufacturer_name,
