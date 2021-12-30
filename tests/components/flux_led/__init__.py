@@ -24,6 +24,7 @@ MODULE = "homeassistant.components.flux_led"
 MODULE_CONFIG_FLOW = "homeassistant.components.flux_led.config_flow"
 IP_ADDRESS = "127.0.0.1"
 MODEL_NUM_HEX = "0x35"
+MODEL_NUM = 0x35
 MODEL = "AZ120444"
 MODEL_DESCRIPTION = "Bulb RGBCW"
 MAC_ADDRESS = "aa:bb:cc:dd:ee:ff"
@@ -52,7 +53,7 @@ FLUX_DISCOVERY = FluxLEDDiscovery(
     ipaddr=IP_ADDRESS,
     model=MODEL,
     id=FLUX_MAC_ADDRESS,
-    model_num=0x25,
+    model_num=MODEL_NUM,
     version_num=0x04,
     firmware_date=datetime.date(2021, 5, 5),
     model_info=MODEL,
@@ -112,8 +113,8 @@ def _mocked_bulb() -> AIOWifiLedBulb:
     bulb.color_temp = 2700
     bulb.getWhiteTemperature = MagicMock(return_value=(2700, 128))
     bulb.brightness = 128
-    bulb.model_num = 0x35
-    bulb.model_data = MODEL_MAP[0x35]
+    bulb.model_num = MODEL_NUM
+    bulb.model_data = MODEL_MAP[MODEL_NUM]
     bulb.effect = None
     bulb.speed = 50
     bulb.model = "Bulb RGBCW (0x35)"

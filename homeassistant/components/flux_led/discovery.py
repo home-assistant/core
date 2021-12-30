@@ -13,6 +13,7 @@ from flux_led.const import (
     ATTR_MODEL,
     ATTR_MODEL_DESCRIPTION,
     ATTR_MODEL_INFO,
+    ATTR_MODEL_NUM,
     ATTR_REMOTE_ACCESS_ENABLED,
     ATTR_REMOTE_ACCESS_HOST,
     ATTR_REMOTE_ACCESS_PORT,
@@ -53,6 +54,7 @@ CONF_TO_DISCOVERY: Final = {
     CONF_REMOTE_ACCESS_PORT: ATTR_REMOTE_ACCESS_PORT,
     CONF_MINOR_VERSION: ATTR_VERSION_NUM,
     CONF_MODEL: ATTR_MODEL,
+    CONF_MODEL_NUM: ATTR_MODEL_NUM,
     CONF_MODEL_INFO: ATTR_MODEL_INFO,
     CONF_MODEL_DESCRIPTION: ATTR_MODEL_DESCRIPTION,
 }
@@ -99,6 +101,8 @@ def async_populate_data_from_discovery(
     for conf_key, discovery_key in CONF_TO_DISCOVERY.items():
         if (
             device.get(discovery_key) is not None
+            and conf_key
+            not in data_updates  # Prefer the model num from TCP instead of UDP
             and current_data.get(conf_key) != device[discovery_key]  # type: ignore[misc]
         ):
             data_updates[conf_key] = device[discovery_key]  # type: ignore[misc]
@@ -118,9 +122,9 @@ def async_update_entry_from_discovery(
     updates: dict[str, Any] = {}
     if not entry.unique_id:
         updates["unique_id"] = dr.format_mac(mac_address)
-    async_populate_data_from_discovery(entry.data, data_updates, device)
     if model_num and entry.data.get(CONF_MODEL_NUM) != model_num:
         data_updates[CONF_MODEL_NUM] = model_num
+    async_populate_data_from_discovery(entry.data, data_updates, device)
     if not entry.data.get(CONF_NAME) or is_ip_address(entry.data[CONF_NAME]):
         updates["title"] = data_updates[CONF_NAME] = async_name_from_discovery(device)
     if data_updates:
