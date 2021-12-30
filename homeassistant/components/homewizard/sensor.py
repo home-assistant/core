@@ -144,7 +144,10 @@ async def async_setup_entry(
     entities = []
     if coordinator.api.data is not None:
         for description in SENSORS:
-            if description.key in coordinator.api.data.available_datapoints:
+            if (
+                description.key in coordinator.api.data.available_datapoints
+                and getattr(coordinator.api.data, description.key) is not None
+            ):
                 entities.append(HWEnergySensor(coordinator, entry, description))
     async_add_entities(entities)
 
@@ -168,10 +171,6 @@ class HWEnergySensor(CoordinatorEntity[DeviceResponseEntry], SensorEntity):
         self._attr_name = f"{entry.title} {description.name}"
         self.data_type = description.key
         self._attr_unique_id = f"{entry.unique_id}_{description.key}"
-
-        # Some values are given, but set to NULL (eg. gas_timestamp when no gas meter is connected)
-        if self.data["data"][self.data_type] is None:
-            self.entity_description.entity_registry_enabled_default = False
 
         # Special case for export, not everyone has solarpanels
         # The change that 'export' is non-zero when you have solar panels is nil

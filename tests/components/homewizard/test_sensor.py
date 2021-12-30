@@ -641,24 +641,20 @@ async def test_sensor_entity_disabled_when_null(
     entry = entity_registry.async_get(
         "sensor.product_name_aabbccddeeff_active_power_l2"
     )
-    assert entry
-    assert entry.disabled
+    assert entry is None
 
     entry = entity_registry.async_get(
         "sensor.product_name_aabbccddeeff_active_power_l3"
     )
-    assert entry
-    assert entry.disabled
+    assert entry is None
 
     entry = entity_registry.async_get("sensor.product_name_aabbccddeeff_total_gas")
-    assert entry
-    assert entry.disabled
+    assert entry is None
 
     entry = entity_registry.async_get(
         "sensor.product_name_aabbccddeeff_last_gas_update"
     )
-    assert entry
-    assert entry.disabled
+    assert entry is None
 
 
 async def test_sensor_entity_export_disabled_when_unused(
