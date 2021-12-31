@@ -704,10 +704,8 @@ class Camera(Entity):
             return False
         stream_source = await self.stream_source()
         return any(
-            [
-                stream_source and stream_source.startswith(prefix)
-                for prefix in RTSP_PREFIXES
-            ]
+            stream_source and stream_source.startswith(prefix)
+            for prefix in RTSP_PREFIXES
         )
 
 
