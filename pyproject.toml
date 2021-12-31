@@ -53,6 +53,7 @@ extension-pkg-allow-list = [
     "av.stream",
     "ciso8601",
     "cv2",
+    "evdev._ecodes",
 ]
 
 [tool.pylint.BASIC]

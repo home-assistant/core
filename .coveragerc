@@ -579,7 +579,6 @@ omit =
     homeassistant/components/keenetic_ndms2/router.py
     homeassistant/components/kef/*
     homeassistant/components/keyboard/*
-    homeassistant/components/keyboard_remote/*
     homeassistant/components/kira/*
     homeassistant/components/kiwi/lock.py
     homeassistant/components/knx/__init__.py

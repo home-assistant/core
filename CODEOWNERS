@@ -522,6 +522,7 @@ homeassistant/components/keenetic_ndms2/* @foxel
 tests/components/keenetic_ndms2/* @foxel
 homeassistant/components/kef/* @basnijholt
 homeassistant/components/keyboard_remote/* @bendavid @lanrat
+tests/components/keyboard_remote/* @bendavid @lanrat
 homeassistant/components/kmtronic/* @dgomes
 tests/components/kmtronic/* @dgomes
 homeassistant/components/knx/* @Julius2342 @farmio @marvin-w

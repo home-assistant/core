@@ -605,7 +605,7 @@ epsonprinter==0.0.9
 eternalegypt==0.0.12
 
 # homeassistant.components.keyboard_remote
-# evdev==1.4.0
+evdev==1.4.0
 
 # homeassistant.components.evohome
 evohome-async==0.3.15
