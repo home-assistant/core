@@ -64,6 +64,29 @@ async def init_integration(hass) -> MockConfigEntry:
     return entry
 
 
+async def init_integration_no_devices(hass) -> MockConfigEntry:
+    """Set up the Nightscout integration in Home Assistant."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_URL: "https://some.url:1234"},
+    )
+    with patch(
+        "homeassistant.components.nightscout.NightscoutAPI.get_sgvs",
+        return_value=GLUCOSE_READINGS,
+    ), patch(
+        "homeassistant.components.nightscout.NightscoutAPI.get_server_status",
+        return_value=SERVER_STATUS,
+    ), patch(
+        "homeassistant.components.nightscout.NightscoutAPI.get_latest_devices_status",
+        return_value=[],
+    ):
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    return entry
+
+
 async def init_integration_unavailable(hass) -> MockConfigEntry:
     """Set up the Nightscout integration in Home Assistant."""
     entry = MockConfigEntry(

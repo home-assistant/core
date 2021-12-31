@@ -17,6 +17,7 @@ from . import (
     GLUCOSE_READINGS,
     init_integration,
     init_integration_empty_response,
+    init_integration_no_devices,
     init_integration_unavailable,
 )
 
@@ -26,6 +27,16 @@ from . import (
 async def test_glucose_sensor_state(hass):
     """Test glucose sensor state data."""
     await init_integration(hass)
+
+    test_glucose_sensor = hass.states.get("sensor.blood_sugar")
+    assert test_glucose_sensor.state == str(
+        GLUCOSE_READINGS[0].sgv  # pylint: disable=maybe-no-member
+    )
+
+
+async def test_glucose_sensor_state_with_no_battery_devices(hass):
+    """Test glucose sensor state data."""
+    await init_integration_no_devices(hass)
 
     test_glucose_sensor = hass.states.get("sensor.blood_sugar")
     assert test_glucose_sensor.state == str(
