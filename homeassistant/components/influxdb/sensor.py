@@ -36,6 +36,7 @@ from .const import (
     CONF_MEASUREMENT_NAME,
     CONF_QUERIES,
     CONF_QUERIES_FLUX,
+    CONF_QUERIES_RAW,
     CONF_QUERY,
     CONF_RANGE_START,
     CONF_RANGE_STOP,
@@ -48,6 +49,7 @@ from .const import (
     DEFAULT_RANGE_STOP,
     INFLUX_CONF_VALUE,
     INFLUX_CONF_VALUE_V2,
+    LANGUAGE_INFLUXQL_RAW,
     LANGUAGE_FLUX,
     LANGUAGE_INFLUXQL,
     MIN_TIME_BETWEEN_UPDATES,
@@ -70,7 +72,7 @@ SCAN_INTERVAL: Final = datetime.timedelta(seconds=60)
 def _merge_connection_config_into_query(conf, query):
     """Merge connection details into each configured query."""
     for key in conf:
-        if key not in query and key not in [CONF_QUERIES, CONF_QUERIES_FLUX]:
+        if key not in query and key not in [CONF_QUERIES, CONF_QUERIES_FLUX, CONF_QUERIES_RAW]:
             query[key] = conf[key]
 
 
@@ -89,14 +91,19 @@ def validate_query_format_for_version(conf: dict) -> dict:
         del conf[CONF_BUCKET]
 
     else:
-        if CONF_QUERIES not in conf:
-            raise vol.Invalid(
-                f"{CONF_QUERIES} is required when {CONF_API_VERSION} is {DEFAULT_API_VERSION}"
-            )
+        if CONF_QUERIES in conf:
+            for query in conf[CONF_QUERIES]:
+                _merge_connection_config_into_query(conf, query)
+                query[CONF_LANGUAGE] = LANGUAGE_INFLUXQL
 
-        for query in conf[CONF_QUERIES]:
-            _merge_connection_config_into_query(conf, query)
-            query[CONF_LANGUAGE] = LANGUAGE_INFLUXQL
+        elif CONF_QUERIES_RAW in conf:        
+            for query in conf[CONF_QUERIES_RAW]:
+                _merge_connection_config_into_query(conf, query)
+                query[CONF_LANGUAGE] = LANGUAGE_INFLUXQL_RAW
+        else:
+            raise vol.Invalid(
+                f"{CONF_QUERIES} or {CONF_QUERIES_RAW} is required when {CONF_API_VERSION} is {DEFAULT_API_VERSION}"
+            )
 
         del conf[CONF_DB_NAME]
 
@@ -123,6 +130,13 @@ _QUERY_SCHEMA = {
             vol.Required(CONF_WHERE): cv.template,
         }
     ),
+    LANGUAGE_INFLUXQL_RAW: _QUERY_SENSOR_SCHEMA.extend(
+        {
+            vol.Optional(CONF_DB_NAME): cv.string,
+            vol.Required(CONF_QUERY): cv.template,
+            vol.Required(CONF_FIELD): cv.string,
+        }
+    ),
     LANGUAGE_FLUX: _QUERY_SENSOR_SCHEMA.extend(
         {
             vol.Optional(CONF_BUCKET): cv.string,
@@ -139,7 +153,8 @@ PLATFORM_SCHEMA = vol.All(
     SENSOR_PLATFORM_SCHEMA.extend(COMPONENT_CONFIG_SCHEMA_CONNECTION).extend(
         {
             vol.Exclusive(CONF_QUERIES, "queries"): [_QUERY_SCHEMA[LANGUAGE_INFLUXQL]],
-            vol.Exclusive(CONF_QUERIES_FLUX, "queries"): [_QUERY_SCHEMA[LANGUAGE_FLUX]],
+            vol.Exclusive(CONF_QUERIES_RAW, "queries"): [_QUERY_SCHEMA[LANGUAGE_INFLUXQL_RAW]],
+            vol.Exclusive(CONF_QUERIES_FLUX, "queries"): [_QUERY_SCHEMA[LANGUAGE_FLUX]],            
         }
     ),
     validate_version_specific_config,
@@ -163,8 +178,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 entities.append(InfluxSensor(hass, influx, query))
             else:
                 _LOGGER.error(NO_BUCKET_ERROR, query[CONF_BUCKET])
-    else:
+    
+    if CONF_QUERIES in config:
         for query in config[CONF_QUERIES]:
+            if query[CONF_DB_NAME] in influx.data_repositories:
+                entities.append(InfluxSensor(hass, influx, query))
+            else:
+                _LOGGER.error(NO_DATABASE_ERROR, query[CONF_DB_NAME])
+    else:
+        for query in config[CONF_QUERIES_RAW]:
             if query[CONF_DB_NAME] in influx.data_repositories:
                 entities.append(InfluxSensor(hass, influx, query))
             else:
@@ -204,6 +226,15 @@ class InfluxSensor(SensorEntity):
                 query.get(CONF_GROUP_FUNCTION),
             )
 
+        if query[CONF_LANGUAGE] == LANGUAGE_INFLUXQL_RAW:
+            query_clause = query.get(CONF_QUERY)
+            query_clause.hass = hass
+            self.data = InfluxRawSensorData(
+                influx,
+                query.get(CONF_DB_NAME),
+                query_clause,
+                query.get(CONF_FIELD),
+            )
         else:
             where_clause = query.get(CONF_WHERE)
             where_clause.hass = hass
@@ -341,3 +372,44 @@ class InfluxQLSensorData:
             if len(points) > 1:
                 _LOGGER.warning(QUERY_MULTIPLE_RESULTS_MESSAGE, self.query)
             self.value = points[0].get(INFLUX_CONF_VALUE)
+            
+class InfluxRawSensorData:
+    """Class for handling the data retrieval with v1 API and queries_raw format."""
+
+    def __init__(self, influx, db_name, query, field):
+        """Initialize the data object."""
+        self.influx = influx
+        self.db_name = db_name
+        self.query = query
+        self.field = field
+        self.value = None
+        self.full_query = None
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    def update(self):
+        """Get the latest data with a shell command."""
+        _LOGGER.debug(RENDERING_QUERY_MESSAGE, self.query)
+        try:
+            rendered_query = self.query.render(parse_result=False)
+        except TemplateError as ex:
+            _LOGGER.error(RENDERING_QUERY_ERROR_MESSAGE, ex)
+            return
+
+        self.full_query = f"{rendered_query}"
+
+        _LOGGER.debug(RUNNING_QUERY_MESSAGE, self.full_query)
+
+        try:
+            points = self.influx.query(self.full_query, self.db_name)
+        except (ConnectionError, ValueError) as exc:
+            _LOGGER.error(exc)
+            self.value = None
+            return
+
+        if not points:
+            _LOGGER.warning(QUERY_NO_RESULTS_MESSAGE, self.query)
+            self.value = None
+        else:
+            if len(points) > 1:
+                _LOGGER.warning(QUERY_MULTIPLE_RESULTS_MESSAGE, self.query)
+            self.value = points[0].get(self.field)
