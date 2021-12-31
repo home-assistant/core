@@ -2,13 +2,13 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from pysiaalarm import SIAEvent
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanelEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONF_PORT,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_ARMED_NIGHT,
@@ -20,8 +20,15 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import CONF_ACCOUNT, CONF_ACCOUNTS, CONF_ZONES, SIA_UNIQUE_ID_FORMAT_ALARM
+from .const import (
+    CONF_ACCOUNT,
+    CONF_ACCOUNTS,
+    CONF_PING_INTERVAL,
+    CONF_ZONES,
+    SIA_UNIQUE_ID_FORMAT_ALARM,
+)
 from .sia_entity_base import SIABaseEntity
+from .utils import SIAAlarmControlPanelEntityDescription, get_name
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,7 +70,26 @@ async def async_setup_entry(
 ) -> None:
     """Set up SIA alarm_control_panel(s) from a config entry."""
     async_add_entities(
-        SIAAlarmControlPanel(entry, account_data, zone)
+        SIAAlarmControlPanel(
+            SIAAlarmControlPanelEntityDescription(
+                key=SIA_UNIQUE_ID_FORMAT_ALARM.format(
+                    entry.entry_id, account_data[CONF_ACCOUNT], zone
+                ),
+                device_class=DEVICE_CLASS_ALARM,
+                name=get_name(
+                    port=entry.data[CONF_PORT],
+                    account=account_data[CONF_ACCOUNT],
+                    zone=zone,
+                    device_class=DEVICE_CLASS_ALARM,
+                ),
+                port=entry.data[CONF_PORT],
+                account=account_data[CONF_ACCOUNT],
+                zone=zone,
+                ping_interval=account_data[CONF_PING_INTERVAL],
+                code_consequences=CODE_CONSEQUENCES,
+                always_reset_availability=True,
+            ),
+        )
         for account_data in entry.data[CONF_ACCOUNTS]
         for zone in range(
             1,
@@ -75,29 +101,29 @@ async def async_setup_entry(
 class SIAAlarmControlPanel(SIABaseEntity, AlarmControlPanelEntity):
     """Class for SIA Alarm Control Panels."""
 
+    entity_description: SIAAlarmControlPanelEntityDescription
+
     def __init__(
         self,
-        entry: ConfigEntry,
-        account_data: dict[str, Any],
-        zone: int,
+        entity_description: SIAAlarmControlPanelEntityDescription,
     ) -> None:
         """Create SIAAlarmControlPanel object."""
-        super().__init__(entry, account_data, zone, DEVICE_CLASS_ALARM)
+        super().__init__(entity_description)
+
         self._attr_state: StateType = None
         self._old_state: StateType = None
+        self._attr_supported_features = 0
 
-        self._attr_unique_id = SIA_UNIQUE_ID_FORMAT_ALARM.format(
-            self._entry.entry_id, self._account, self._zone
-        )
-
-    def update_state(self, sia_event: SIAEvent) -> None:
+    def update_state(self, sia_event: SIAEvent) -> bool:
         """Update the state of the alarm control panel."""
-        new_state = CODE_CONSEQUENCES.get(sia_event.code, None)
-        if new_state is not None:
-            _LOGGER.debug("New state will be %s", new_state)
-            if new_state == PREVIOUS_STATE:
-                new_state = self._old_state
-            self._attr_state, self._old_state = new_state, self._attr_state
+        new_state = self.entity_description.code_consequences.get(sia_event.code, None)
+        if new_state is None:
+            return False
+        _LOGGER.debug("New state will be %s", new_state)
+        if new_state == PREVIOUS_STATE:
+            new_state = self._old_state
+        self._attr_state, self._old_state = new_state, self._attr_state
+        return True
 
     def handle_last_state(self, last_state: State | None) -> None:
         """Handle the last state."""
@@ -105,8 +131,3 @@ class SIAAlarmControlPanel(SIABaseEntity, AlarmControlPanelEntity):
             self._attr_state = last_state.state
         if self.state == STATE_UNAVAILABLE:
             self._attr_available = False
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return 0
