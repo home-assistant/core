@@ -158,6 +158,9 @@ aiomusiccast==0.14.3
 # homeassistant.components.nanoleaf
 aionanoleaf==0.1.1
 
+# homeassistant.components.keyboard_remote
+aionotify==0.2.0
+
 # homeassistant.components.notion
 aionotion==3.0.2
 
@@ -392,6 +395,9 @@ ephem==3.7.7.0
 
 # homeassistant.components.epson
 epson-projector==0.4.2
+
+# homeassistant.components.keyboard_remote
+# evdev==1.4.0
 
 # homeassistant.components.faa_delays
 faadelays==0.0.7
