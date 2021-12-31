@@ -19,7 +19,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     CONF_API_KEY,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
@@ -215,7 +214,7 @@ class TrafikverketWeatherStation(SensorEntity):
         self._station = sensor_station
         self._weather_api = weather_api
         self._weather: WeatherStationInfo | None = None
-        self._attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+        self._attr_attribution = ATTRIBUTION
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self) -> None:
@@ -228,7 +227,7 @@ class TrafikverketWeatherStation(SensorEntity):
         except (asyncio.TimeoutError, aiohttp.ClientError, ValueError) as error:
             _LOGGER.error("Could not fetch weather data: %s", error)
             return
-        self._attr_extra_state_attributes[ATTR_ACTIVE] = self._weather.active
-        self._attr_extra_state_attributes[
-            ATTR_MEASURE_TIME
-        ] = self._weather.measure_time
+        self._attr_extra_state_attributes = {
+            ATTR_ACTIVE: self._weather.active,
+            ATTR_MEASURE_TIME: self._weather.measure_time,
+        }
