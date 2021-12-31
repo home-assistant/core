@@ -2,7 +2,6 @@
 from unittest.mock import patch
 
 from homeassistant import config_entries
-from homeassistant.components.wevolor.config_flow import CannotConnect
 from homeassistant.components.wevolor.const import (
     CONFIG_CHANNELS,
     CONFIG_HOST,
@@ -56,7 +55,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.wevolor.config_flow.Wevolor.get_status",
-        side_effect=CannotConnect,
+        return_value=False,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

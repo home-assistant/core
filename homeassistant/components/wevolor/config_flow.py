@@ -27,7 +27,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input allows us to connect."""
-
     wevolor = Wevolor(data[CONFIG_HOST])
     status = await wevolor.get_status()
 
@@ -57,9 +56,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             info = await validate_input(self.hass, user_input)
         except CannotConnect:
             errors["base"] = "cannot_connect"
-        except Exception as err:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception: %s", err)
-            errors["base"] = "unknown"
         else:
             return self.async_create_entry(title=info["remote"], data=user_input)
 

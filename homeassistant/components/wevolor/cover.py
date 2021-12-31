@@ -20,14 +20,13 @@ from .const import CONFIG_CHANNELS, CONFIG_TILT, DOMAIN
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Wevolor shades."""
-
     wevolor = hass.data[DOMAIN][config_entry.entry_id]
 
     entities = [
         WevolorShade(wevolor, i, config_entry.data[CONFIG_TILT])
         for i in range(1, config_entry.data[CONFIG_CHANNELS] + 1)
     ]
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class WevolorShade(CoverEntity):
@@ -37,7 +36,9 @@ class WevolorShade(CoverEntity):
     _wevolor: Wevolor
     _channel: int
 
-    def __init__(self, wevolor: Wevolor, channel: int, support_tilt: bool = False):
+    def __init__(
+        self, wevolor: Wevolor, channel: int, support_tilt: bool = False
+    ) -> None:
         """Create this wevolor shade cover entity."""
         self._wevolor = wevolor
         self._channel = channel
@@ -75,6 +76,6 @@ class WevolorShade(CoverEntity):
         await self._wevolor.stop_blind_tilt(self._channel)
 
     @property
-    def is_closed(self) -> bool | None:
+    def is_closed(self) -> None:
         """Since Wevolor does not expose any status, return None here."""
         return None
