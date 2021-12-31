@@ -17,6 +17,7 @@ LOGGER = logging.getLogger(__package__)
 
 PLATFORMS = [Platform.SENSOR]
 CONF_DSMR_VERSION = "dsmr_version"
+CONF_IS_RFXTRX = "is_rfxtrx"
 CONF_RECONNECT_INTERVAL = "reconnect_interval"
 CONF_PRECISION = "precision"
 CONF_TIME_BETWEEN_UPDATE = "time_between_update"

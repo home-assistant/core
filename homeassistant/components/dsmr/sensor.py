@@ -9,6 +9,10 @@ from functools import partial
 
 from dsmr_parser import obis_references as obis_ref
 from dsmr_parser.clients.protocol import create_dsmr_reader, create_tcp_dsmr_reader
+from dsmr_parser.clients.rfxtrx_protocol import (
+    create_rfxtrx_dsmr_reader,
+    create_rfxtrx_tcp_dsmr_reader,
+)
 from dsmr_parser.objects import DSMRObject
 import serial
 
@@ -28,6 +32,7 @@ from homeassistant.util import Throttle
 
 from .const import (
     CONF_DSMR_VERSION,
+    CONF_IS_RFXTRX,
     CONF_PRECISION,
     CONF_RECONNECT_INTERVAL,
     CONF_SERIAL_ID,
@@ -77,9 +82,12 @@ async def async_setup_entry(
 
     # Creates an asyncio.Protocol factory for reading DSMR telegrams from
     # serial and calls update_entities_telegram to update entities on arrival
+    is_rfxtrx = False
+    if CONF_IS_RFXTRX in entry.data:
+        is_rfxtrx = entry.data[CONF_IS_RFXTRX]
     if CONF_HOST in entry.data:
         reader_factory = partial(
-            create_tcp_dsmr_reader,
+            create_tcp_dsmr_reader if not is_rfxtrx else create_rfxtrx_tcp_dsmr_reader,
             entry.data[CONF_HOST],
             entry.data[CONF_PORT],
             dsmr_version,
@@ -89,7 +97,7 @@ async def async_setup_entry(
         )
     else:
         reader_factory = partial(
-            create_dsmr_reader,
+            create_dsmr_reader if not is_rfxtrx else create_rfxtrx_dsmr_reader,
             entry.data[CONF_PORT],
             dsmr_version,
             update_entities_telegram,
