@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-import logging
 
 from pysiaalarm import SIAEvent
 
@@ -20,14 +19,12 @@ from .const import (
     CONF_ACCOUNTS,
     CONF_PING_INTERVAL,
     CONF_ZONES,
+    LOGGER,
     SIA_HUB_ZONE,
     SIA_UNIQUE_ID_FORMAT_BINARY,
 )
 from .sia_entity_base import SIABaseEntity
 from .utils import SIABinarySensorEntityDescription, get_name
-
-_LOGGER = logging.getLogger(__name__)
-
 
 CC_POWER: dict[str, bool] = {
     "AT": False,
@@ -161,7 +158,7 @@ class SIABinarySensor(SIABaseEntity, BinarySensorEntity):
         new_state = self.entity_description.code_consequences.get(sia_event.code, None)
         if new_state is None:
             return False
-        _LOGGER.debug("New state will be %s", new_state)
+        LOGGER.debug("New state will be %s", new_state)
         self._attr_is_on = new_state
         return True
 

@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-import logging
 
 from pysiaalarm import SIAEvent
 
@@ -12,15 +11,13 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import DOMAIN, SIA_EVENT, SIA_HUB_ZONE
+from .const import DOMAIN, LOGGER, SIA_EVENT, SIA_HUB_ZONE
 from .utils import (
     SIAAlarmControlPanelEntityDescription,
     SIABinarySensorEntityDescription,
     get_attr_from_sia_event,
     get_unavailability_interval,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class SIABaseEntity(RestoreEntity):
@@ -79,7 +76,7 @@ class SIABaseEntity(RestoreEntity):
 
         If the port and account combo receives any message it means it is online and can therefore be set to available.
         """
-        _LOGGER.debug("Received event: %s", sia_event)
+        LOGGER.debug("Received event: %s", sia_event)
         if int(sia_event.ri) not in (self.entity_description.zone, SIA_HUB_ZONE):
             return
         self._attr_extra_state_attributes.update(get_attr_from_sia_event(sia_event))

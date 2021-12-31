@@ -1,8 +1,6 @@
 """Module for SIA Alarm Control Panels."""
 from __future__ import annotations
 
-import logging
-
 from pysiaalarm import SIAEvent
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanelEntity
@@ -25,12 +23,11 @@ from .const import (
     CONF_ACCOUNTS,
     CONF_PING_INTERVAL,
     CONF_ZONES,
+    LOGGER,
     SIA_UNIQUE_ID_FORMAT_ALARM,
 )
 from .sia_entity_base import SIABaseEntity
 from .utils import SIAAlarmControlPanelEntityDescription, get_name
-
-_LOGGER = logging.getLogger(__name__)
 
 DEVICE_CLASS_ALARM = "alarm"
 PREVIOUS_STATE = "previous_state"
@@ -119,7 +116,7 @@ class SIAAlarmControlPanel(SIABaseEntity, AlarmControlPanelEntity):
         new_state = self.entity_description.code_consequences.get(sia_event.code, None)
         if new_state is None:
             return False
-        _LOGGER.debug("New state will be %s", new_state)
+        LOGGER.debug("New state will be %s", new_state)
         if new_state == PREVIOUS_STATE:
             new_state = self._old_state
         self._attr_state, self._old_state = new_state, self._attr_state

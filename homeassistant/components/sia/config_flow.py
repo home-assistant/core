@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from copy import deepcopy
-import logging
 from typing import Any
 
 from pysiaalarm import (
@@ -29,12 +28,10 @@ from .const import (
     CONF_PING_INTERVAL,
     CONF_ZONES,
     DOMAIN,
+    LOGGER,
     TITLE,
 )
 from .hub import SIAHub
-
-_LOGGER = logging.getLogger(__name__)
-
 
 HUB_SCHEMA = vol.Schema(
     {
@@ -74,7 +71,7 @@ def validate_input(data: dict[str, Any]) -> dict[str, str] | None:
     except InvalidAccountLengthError:
         return {"base": "invalid_account_length"}
     except Exception as exc:  # pylint: disable=broad-except
-        _LOGGER.exception("Unexpected exception from SIAAccount: %s", exc)
+        LOGGER.exception("Unexpected exception from SIAAccount: %s", exc)
         return {"base": "unknown"}
     if not 1 <= data[CONF_PING_INTERVAL] <= 1440:
         return {"base": "invalid_ping"}

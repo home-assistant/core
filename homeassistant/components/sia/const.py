@@ -1,5 +1,9 @@
 """Constants for the sia integration."""
+import logging
+
 from homeassistant.const import Platform
+
+LOGGER: logging.Logger = logging.getLogger(__package__)
 
 PLATFORMS = [Platform.ALARM_CONTROL_PANEL, Platform.BINARY_SENSOR]
 

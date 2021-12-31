@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from copy import deepcopy
-import logging
 from typing import Any
 
 from pysiaalarm.aio import CommunicationsProtocol, SIAAccount, SIAClient, SIAEvent
@@ -20,13 +19,11 @@ from .const import (
     CONF_IGNORE_TIMESTAMPS,
     CONF_ZONES,
     DOMAIN,
+    LOGGER,
     PLATFORMS,
     SIA_EVENT,
 )
 from .utils import get_event_data_from_sia_event
-
-_LOGGER = logging.getLogger(__name__)
-
 
 DEFAULT_TIMEBAND = (80, 40)
 IGNORED_TIMEBAND = (3600, 1800)
@@ -79,7 +76,7 @@ class SIAHub:
         The created event is handled by default for only a small subset for each platform (there are about 320 SIA Codes defined, only 22 of those are used in the alarm_control_panel), a user can choose to build other automation or even entities on the same event for SIA codes not handled by the built-in platforms.
 
         """
-        _LOGGER.debug(
+        LOGGER.debug(
             "Adding event to dispatch and bus for code %s for port %s and account %s",
             event.code,
             self._port,
