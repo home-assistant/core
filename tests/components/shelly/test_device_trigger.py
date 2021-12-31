@@ -168,6 +168,42 @@ async def test_get_triggers_button(hass):
     assert_lists_same(triggers, expected_triggers)
 
 
+async def test_get_triggers_non_initialized_devices(hass):
+    """Test we get the empty triggers for non-initialized devices."""
+    await async_setup_component(hass, "shelly", {})
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"sleep_period": 43200, "model": "SHDW-2", "host": "1.2.3.4"},
+        unique_id="12345678",
+    )
+    config_entry.add_to_hass(hass)
+
+    device = Mock(
+        blocks=None,
+        settings=None,
+        shelly=None,
+        update=AsyncMock(),
+        initialized=False,
+    )
+
+    hass.data[DOMAIN] = {DATA_CONFIG_ENTRY: {}}
+    hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id] = {}
+    coap_wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][
+        BLOCK
+    ] = BlockDeviceWrapper(hass, config_entry, device)
+
+    coap_wrapper.async_setup()
+
+    expected_triggers = []
+
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, coap_wrapper.device_id
+    )
+
+    assert_lists_same(triggers, expected_triggers)
+
+
 async def test_get_triggers_for_invalid_device_id(hass, device_reg, coap_wrapper):
     """Test error raised for invalid shelly device_id."""
     assert coap_wrapper
