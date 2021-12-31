@@ -104,6 +104,7 @@ class VelbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._device = dev_path
         self._title = "Velbus USB"
         # call the config step
+        self._set_confirm_only()
         return await self.async_step_discovery_confirm()
 
     async def async_step_discovery_confirm(
