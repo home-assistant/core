@@ -6,8 +6,6 @@ from pymfy.api.devices.category import Category
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    DEVICE_CLASS_BLIND,
-    DEVICE_CLASS_SHUTTER,
     SUPPORT_CLOSE,
     SUPPORT_CLOSE_TILT,
     SUPPORT_OPEN,
@@ -16,6 +14,7 @@ from homeassistant.components.cover import (
     SUPPORT_SET_TILT_POSITION,
     SUPPORT_STOP,
     SUPPORT_STOP_TILT,
+    CoverDeviceClass,
     CoverEntity,
 )
 from homeassistant.const import CONF_OPTIMISTIC, STATE_CLOSED, STATE_OPEN
@@ -123,9 +122,9 @@ class SomfyCover(SomfyEntity, RestoreEntity, CoverEntity):
     def device_class(self):
         """Return the device class."""
         if self.categories & BLIND_DEVICE_CATEGORIES:
-            return DEVICE_CLASS_BLIND
+            return CoverDeviceClass.BLIND
         if self.categories & SHUTTER_DEVICE_CATEGORIES:
-            return DEVICE_CLASS_SHUTTER
+            return CoverDeviceClass.SHUTTER
         return None
 
     @property

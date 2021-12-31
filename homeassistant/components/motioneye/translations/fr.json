@@ -30,6 +30,7 @@
         "step": {
             "init": {
                 "data": {
+                    "stream_url_template": "Mod\u00e8le d'URL de flux",
                     "webhook_set": "Configurer les webhooks motionEye pour signaler les \u00e9v\u00e9nements \u00e0 Home Assistant",
                     "webhook_set_overwrite": "\u00c9craser les webhooks non reconnus"
                 }

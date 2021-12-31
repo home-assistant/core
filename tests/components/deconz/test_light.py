@@ -399,6 +399,20 @@ async def test_light_state_change(hass, aioclient_mock, mock_deconz_websocket):
                 "xy": (0.411, 0.351),
             },
         ),
+        (  # Turn on light without transition time
+            {
+                "light_on": True,
+                "service": SERVICE_TURN_ON,
+                "call": {
+                    ATTR_ENTITY_ID: "light.hue_go",
+                    ATTR_TRANSITION: 0,
+                },
+            },
+            {
+                "on": True,
+                "transitiontime": 0,
+            },
+        ),
         (  # Turn on light with short color loop
             {
                 "light_on": False,
@@ -450,6 +464,22 @@ async def test_light_state_change(hass, aioclient_mock, mock_deconz_websocket):
             {
                 "bri": 0,
                 "transitiontime": 50,
+                "alert": "select",
+            },
+        ),
+        (  # Turn off light without transition time
+            {
+                "light_on": True,
+                "service": SERVICE_TURN_OFF,
+                "call": {
+                    ATTR_ENTITY_ID: "light.hue_go",
+                    ATTR_TRANSITION: 0,
+                    ATTR_FLASH: FLASH_SHORT,
+                },
+            },
+            {
+                "bri": 0,
+                "transitiontime": 0,
                 "alert": "select",
             },
         ),

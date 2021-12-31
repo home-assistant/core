@@ -1,6 +1,7 @@
 """Support for Nest devices."""
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 import logging
 
@@ -24,6 +25,7 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_SENSORS,
     CONF_STRUCTURE,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
@@ -50,7 +52,7 @@ from .const import (
 )
 from .events import EVENT_NAME_MAP, NEST_EVENT
 from .legacy import async_setup_legacy, async_setup_legacy_entry
-from .media_source import get_media_source_devices
+from .media_source import async_get_media_event_store, get_media_source_devices
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,9 +84,15 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 # Platforms for SDM API
-PLATFORMS = ["sensor", "camera", "climate"]
+PLATFORMS = [Platform.SENSOR, Platform.CAMERA, Platform.CLIMATE]
 WEB_AUTH_DOMAIN = DOMAIN
 INSTALLED_AUTH_DOMAIN = f"{DOMAIN}.installed"
+
+# Fetch media events with a disk backed cache, with a limit for each camera
+# device. The largest media items are mp4 clips at ~120kb each, and we target
+# ~125MB of storage per camera to try to balance a reasonable user experience
+# for event history not not filling the disk.
+EVENT_MEDIA_CACHE_SIZE = 1024  # number of events
 
 
 class WebAuth(config_entry_oauth2_flow.LocalOAuth2Implementation):
@@ -163,18 +171,29 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         ),
     )
 
+    hass.http.register_view(NestEventMediaView(hass))
+
     return True
 
 
 class SignalUpdateCallback:
     """An EventCallback invoked when new events arrive from subscriber."""
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_reload_cb: Callable[[], Awaitable[None]]
+    ) -> None:
         """Initialize EventCallback."""
         self._hass = hass
+        self._config_reload_cb = config_reload_cb
 
     async def async_handle_event(self, event_message: EventMessage) -> None:
         """Process an incoming EventMessage."""
+        if event_message.relation_update:
+            # A device was added/removed or a home was added/removed. Reload the integration
+            # in order to detect any changes.
+            _LOGGER.info("Devices or homes have changed; Reloading")
+            self._hass.async_create_task(self._config_reload_cb())
+            return
         if not event_message.resource_update_name:
             return
         device_id = event_message.resource_update_name
@@ -192,7 +211,7 @@ class SignalUpdateCallback:
                 "device_id": device_entry.id,
                 "type": event_type,
                 "timestamp": event_message.timestamp,
-                "nest_event_id": image_event.event_id,
+                "nest_event_id": image_event.event_session_id,
             }
             self._hass.bus.async_fire(NEST_EVENT, message)
 
@@ -206,8 +225,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     subscriber = await api.new_subscriber(hass, entry)
     if not subscriber:
         return False
+    # Keep media for last N events in memory
+    subscriber.cache_policy.event_cache_size = EVENT_MEDIA_CACHE_SIZE
+    subscriber.cache_policy.fetch = True
+    # Use disk backed event media store
+    subscriber.cache_policy.store = await async_get_media_event_store(hass, subscriber)
 
-    callback = SignalUpdateCallback(hass)
+    async def async_config_reload() -> None:
+        await hass.config_entries.async_reload(entry.entry_id)
+
+    callback = SignalUpdateCallback(hass, async_config_reload)
     subscriber.set_update_callback(callback.async_handle_event)
     try:
         await subscriber.start_async()
@@ -238,8 +265,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][DATA_SUBSCRIBER] = subscriber
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
-
-    hass.http.register_view(NestEventMediaView(hass))
 
     return True
 

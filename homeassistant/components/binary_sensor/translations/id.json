@@ -2,6 +2,7 @@
     "device_automation": {
         "condition_type": {
             "is_bat_low": "Baterai {entity_name} hampir habis",
+            "is_co": "{entity_name} mendeteksi karbon monoksida",
             "is_cold": "{entity_name} dingin",
             "is_connected": "{entity_name} terhubung",
             "is_gas": "{entity_name} mendeteksi gas",
@@ -11,6 +12,7 @@
             "is_moist": "{entity_name} lembab",
             "is_motion": "{entity_name} mendeteksi gerakan",
             "is_moving": "{entity_name} bergerak",
+            "is_no_co": "{entity_name} tidak mendeteksi karbon monoksida",
             "is_no_gas": "{entity_name} tidak mendeteksi gas",
             "is_no_light": "{entity_name} tidak mendeteksi cahaya",
             "is_no_motion": "{entity_name} tidak mendeteksi gerakan",
@@ -52,6 +54,7 @@
         },
         "trigger_type": {
             "bat_low": "Baterai {entity_name} hampir habis",
+            "co": "{entity_name} mulai mendeteksi karbon monoksida",
             "cold": "{entity_name} menjadi dingin",
             "connected": "{entity_name} terhubung",
             "gas": "{entity_name} mulai mendeteksi gas",
@@ -63,6 +66,7 @@
             "moist": "{entity_name} menjadi lembab",
             "motion": "{entity_name} mulai mendeteksi gerakan",
             "moving": "{entity_name} mulai bergerak",
+            "no_co": "{entity_name} berhenti mendeteksi karbon monoksida",
             "no_gas": "{entity_name} berhenti mendeteksi gas",
             "no_light": "{entity_name} berhenti mendeteksi cahaya",
             "no_motion": "{entity_name} berhenti mendeteksi gerakan",
@@ -84,6 +88,7 @@
             "not_powered": "{entity_name} tidak ditenagai",
             "not_present": "{entity_name} tidak ada",
             "not_running": "{entity_name} tidak lagi berjalan",
+            "not_tampered": "{entity_name} berhenti mendeteksi gangguan",
             "not_unsafe": "{entity_name} menjadi aman",
             "occupied": "{entity_name} menjadi ditempati",
             "opened": "{entity_name} terbuka",
@@ -94,6 +99,7 @@
             "running": "{entity_name} mulai berjalan",
             "smoke": "{entity_name} mulai mendeteksi asap",
             "sound": "{entity_name} mulai mendeteksi suara",
+            "tampered": "{entity_name} mulai mendeteksi gangguan",
             "turned_off": "{entity_name} dimatikan",
             "turned_on": "{entity_name} dinyalakan",
             "unsafe": "{entity_name} menjadi tidak aman",
@@ -102,6 +108,7 @@
         }
     },
     "device_class": {
+        "co": "carbon_monoxide",
         "cold": "dingin",
         "gas": "gas",
         "heat": "panas",
@@ -126,6 +133,10 @@
         "battery_charging": {
             "off": "Tidak mengisi daya",
             "on": "Mengisi daya"
+        },
+        "co": {
+            "off": "Tidak ada",
+            "on": "Terdeteksi"
         },
         "cold": {
             "off": "Normal",

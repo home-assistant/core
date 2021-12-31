@@ -1,0 +1,66 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "invalid_unique_id": "Penentuan ID unik yang valid untuk perangkat tidak dimungkinkan"
+        },
+        "error": {
+            "adbkey_not_file": "File kunci ADB tidak ditemukan",
+            "cannot_connect": "Gagal terhubung",
+            "invalid_host": "Nama host atau alamat IP tidak valid",
+            "key_and_server": "Sediakan salah satu dari Kunci ADB atau Server ADB",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "adb_server_ip": "Alamat IP server ADB (kosongkan jika tidak digunakan)",
+                    "adb_server_port": "Port server ADB",
+                    "adbkey": "Jalur ke file kunci ADB Anda (kosongkan untuk dihasilkan secara otomatis)",
+                    "device_class": "Jenis perangkat",
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "description": "Setel parameter yang diperlukan untuk terhubung ke perangkat Android TV Anda",
+                "title": "Android TV"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_det_rules": "Aturan deteksi status tidak valid"
+        },
+        "step": {
+            "apps": {
+                "data": {
+                    "app_delete": "Centang untuk menghapus aplikasi ini",
+                    "app_id": "ID Aplikasi",
+                    "app_name": "Nama Aplikasi"
+                },
+                "description": "Konfigurasikan id aplikasi {app_id}",
+                "title": "Konfigurasikan Aplikasi Android TV"
+            },
+            "init": {
+                "data": {
+                    "apps": "Konfigurasikan daftar aplikasi",
+                    "exclude_unnamed_apps": "Kecualikan aplikasi dengan nama tidak dikenal dari daftar sumber",
+                    "get_sources": "Ambil aplikasi yang berjalan sebagai daftar sumber",
+                    "screencap": "Gunakan tangkapan layar untuk sampul album",
+                    "state_detection_rules": "Konfigurasikan aturan deteksi status",
+                    "turn_off_command": "Perintah mematikan shell ADB (kosongkan untuk default)",
+                    "turn_on_command": "Perintah nyalakan shell ADB (kosongkan untuk default)"
+                },
+                "title": "Opsi Android TV"
+            },
+            "rules": {
+                "data": {
+                    "rule_delete": "Centang untuk menghapus aturan ini",
+                    "rule_id": "ID Aplikasi",
+                    "rule_values": "Daftar aturan pendeteksian status (lihat dokumentasi)"
+                },
+                "description": "Konfigurasikan aturan deteksi untuk id aplikasi {rule_id}",
+                "title": "Konfigurasikan aturan deteksi status Android TV"
+            }
+        }
+    }
+}

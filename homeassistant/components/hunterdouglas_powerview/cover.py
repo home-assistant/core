@@ -14,11 +14,11 @@ import async_timeout
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    DEVICE_CLASS_SHADE,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     SUPPORT_SET_POSITION,
     SUPPORT_STOP,
+    CoverDeviceClass,
     CoverEntity,
 )
 from homeassistant.core import callback
@@ -145,7 +145,7 @@ class PowerViewShade(ShadeEntity, CoverEntity):
     @property
     def device_class(self):
         """Return device class."""
-        return DEVICE_CLASS_SHADE
+        return CoverDeviceClass.SHADE
 
     @property
     def name(self):

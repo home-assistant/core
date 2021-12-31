@@ -7,12 +7,9 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_OPENING,
-    DEVICE_CLASS_SAFETY,
-    DEVICE_CLASS_SMOKE,
-    DEVICE_CLASSES,
+    DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
     PLATFORM_SCHEMA,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -31,7 +28,7 @@ DEFAULT_SSL = False
 
 SCAN_INTERVAL = datetime.timedelta(seconds=10)
 
-ZONE_TYPES_SCHEMA = vol.Schema({cv.positive_int: vol.In(DEVICE_CLASSES)})
+ZONE_TYPES_SCHEMA = vol.Schema({cv.positive_int: BINARY_SENSOR_DEVICE_CLASSES_SCHEMA})
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -89,14 +86,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 def get_opening_type(zone):
     """Return the result of the type guessing from name."""
     if "MOTION" in zone["name"]:
-        return DEVICE_CLASS_MOTION
+        return BinarySensorDeviceClass.MOTION
     if "KEY" in zone["name"]:
-        return DEVICE_CLASS_SAFETY
+        return BinarySensorDeviceClass.SAFETY
     if "SMOKE" in zone["name"]:
-        return DEVICE_CLASS_SMOKE
+        return BinarySensorDeviceClass.SMOKE
     if "WATER" in zone["name"]:
         return "water"
-    return DEVICE_CLASS_OPENING
+    return BinarySensorDeviceClass.OPENING
 
 
 class Concord232ZoneSensor(BinarySensorEntity):

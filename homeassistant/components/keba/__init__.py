@@ -6,6 +6,7 @@ from keba_kecontact.connection import KebaKeContact
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST
+from homeassistant.core import ServiceCall
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 
@@ -77,7 +78,7 @@ async def async_setup(hass, config):
         _LOGGER.warning("Could not set failsafe mode %s", ex)
 
     # Register services to hass
-    async def execute_service(call):
+    async def execute_service(call: ServiceCall) -> None:
         """Execute a service to KEBA charging station.
 
         This must be a member function as we need access to the keba

@@ -21,6 +21,12 @@ USB = [
         "domain": "zha",
         "vid": "10C4",
         "pid": "EA60",
+        "description": "*sonoff*plus*"
+    },
+    {
+        "domain": "zha",
+        "vid": "10C4",
+        "pid": "EA60",
         "description": "*tubeszb*"
     },
     {

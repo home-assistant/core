@@ -7,6 +7,7 @@ from dsmr_parser import obis_references
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import Platform
+from homeassistant.helpers.entity import EntityCategory
 
 from .models import DSMRSensorEntityDescription
 
@@ -137,6 +138,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         dsmr_versions={"2.2", "4", "5", "5B", "5L"},
         entity_registry_enabled_default=False,
         icon="mdi:flash-off",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
         key=obis_references.LONG_POWER_FAILURE_COUNT,
@@ -144,24 +146,28 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         dsmr_versions={"2.2", "4", "5", "5B", "5L"},
         entity_registry_enabled_default=False,
         icon="mdi:flash-off",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
         key=obis_references.VOLTAGE_SAG_L1_COUNT,
         name="Voltage Sags Phase L1",
         dsmr_versions={"2.2", "4", "5", "5B", "5L"},
         entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
         key=obis_references.VOLTAGE_SAG_L2_COUNT,
         name="Voltage Sags Phase L2",
         dsmr_versions={"2.2", "4", "5", "5B", "5L"},
         entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
         key=obis_references.VOLTAGE_SAG_L3_COUNT,
         name="Voltage Sags Phase L3",
         dsmr_versions={"2.2", "4", "5", "5B", "5L"},
         entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
         key=obis_references.VOLTAGE_SWELL_L1_COUNT,
@@ -169,6 +175,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         dsmr_versions={"2.2", "4", "5", "5B", "5L"},
         entity_registry_enabled_default=False,
         icon="mdi:pulse",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
         key=obis_references.VOLTAGE_SWELL_L2_COUNT,
@@ -176,6 +183,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         dsmr_versions={"2.2", "4", "5", "5B", "5L"},
         entity_registry_enabled_default=False,
         icon="mdi:pulse",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
         key=obis_references.VOLTAGE_SWELL_L3_COUNT,
@@ -183,6 +191,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         dsmr_versions={"2.2", "4", "5", "5B", "5L"},
         entity_registry_enabled_default=False,
         icon="mdi:pulse",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
         key=obis_references.INSTANTANEOUS_VOLTAGE_L1,
@@ -190,6 +199,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.VOLTAGE,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
         key=obis_references.INSTANTANEOUS_VOLTAGE_L2,
@@ -197,6 +207,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.VOLTAGE,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
         key=obis_references.INSTANTANEOUS_VOLTAGE_L3,
@@ -204,6 +215,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.VOLTAGE,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
         key=obis_references.INSTANTANEOUS_CURRENT_L1,
@@ -211,6 +223,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.CURRENT,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
         key=obis_references.INSTANTANEOUS_CURRENT_L2,
@@ -218,6 +231,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.CURRENT,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
         key=obis_references.INSTANTANEOUS_CURRENT_L3,
@@ -225,6 +239,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.CURRENT,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
         key=obis_references.LUXEMBOURG_ELECTRICITY_USED_TARIFF_GLOBAL,

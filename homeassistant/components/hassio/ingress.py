@@ -255,3 +255,5 @@ async def _websocket_forward(ws_from, ws_to):
                 await ws_to.close(code=ws_to.close_code, message=msg.extra)
     except RuntimeError:
         _LOGGER.debug("Ingress Websocket runtime error")
+    except ConnectionResetError:
+        _LOGGER.debug("Ingress Websocket Connection Reset")

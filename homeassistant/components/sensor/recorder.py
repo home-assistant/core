@@ -23,18 +23,6 @@ from homeassistant.components.recorder.models import (
     StatisticMetaData,
     StatisticResult,
 )
-from homeassistant.components.sensor import (
-    ATTR_STATE_CLASS,
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_GAS,
-    DEVICE_CLASS_MONETARY,
-    DEVICE_CLASS_PRESSURE,
-    DEVICE_CLASS_TEMPERATURE,
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL,
-    STATE_CLASS_TOTAL_INCREASING,
-    STATE_CLASSES,
-)
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -65,7 +53,20 @@ import homeassistant.util.pressure as pressure_util
 import homeassistant.util.temperature as temperature_util
 import homeassistant.util.volume as volume_util
 
-from . import ATTR_LAST_RESET, DOMAIN
+from . import (
+    ATTR_LAST_RESET,
+    ATTR_STATE_CLASS,
+    DEVICE_CLASS_ENERGY,
+    DEVICE_CLASS_GAS,
+    DEVICE_CLASS_MONETARY,
+    DEVICE_CLASS_PRESSURE,
+    DEVICE_CLASS_TEMPERATURE,
+    DOMAIN,
+    STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL,
+    STATE_CLASS_TOTAL_INCREASING,
+    STATE_CLASSES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -297,7 +298,9 @@ def _suggest_report_issue(hass: HomeAssistant, entity_id: str) -> str:
     return report_issue
 
 
-def warn_dip(hass: HomeAssistant, entity_id: str, state: State) -> None:
+def warn_dip(
+    hass: HomeAssistant, entity_id: str, state: State, previous_fstate: float
+) -> None:
     """Log a warning once if a sensor with state_class_total has a decreasing value.
 
     The log will be suppressed until two dips have been seen to prevent warning due to
@@ -318,11 +321,12 @@ def warn_dip(hass: HomeAssistant, entity_id: str, state: State) -> None:
             return
         _LOGGER.warning(
             "Entity %s %shas state class total_increasing, but its state is "
-            "not strictly increasing. Triggered by state %s with last_updated set to %s. "
+            "not strictly increasing. Triggered by state %s (%s) with last_updated set to %s. "
             "Please %s",
             entity_id,
             f"from integration {domain} " if domain else "",
             state.state,
+            previous_fstate,
             state.last_updated.isoformat(),
             _suggest_report_issue(hass, entity_id),
         )
@@ -358,7 +362,7 @@ def reset_detected(
         return False
 
     if 0.9 * previous_fstate <= fstate < previous_fstate:
-        warn_dip(hass, entity_id, state)
+        warn_dip(hass, entity_id, state, previous_fstate)
 
     if fstate < 0:
         warn_negative(hass, entity_id, state)
@@ -517,7 +521,9 @@ def _compile_statistics(  # noqa: C901
             last_reset = old_last_reset = None
             new_state = old_state = None
             _sum = 0.0
-            last_stats = statistics.get_last_statistics(hass, 1, entity_id, False)
+            last_stats = statistics.get_last_short_term_statistics(
+                hass, 1, entity_id, False
+            )
             if entity_id in last_stats:
                 # We have compiled history for this sensor before, use that as a starting point
                 last_reset = old_last_reset = last_stats[entity_id][0]["last_reset"]

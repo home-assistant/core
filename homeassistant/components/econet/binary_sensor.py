@@ -4,10 +4,7 @@ from __future__ import annotations
 from pyeconet.equipment import EquipmentType
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_LOCK,
-    DEVICE_CLASS_OPENING,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_SOUND,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -19,22 +16,22 @@ BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
         key="shutoff_valve_open",
         name="shutoff_valve",
-        device_class=DEVICE_CLASS_OPENING,
+        device_class=BinarySensorDeviceClass.OPENING,
     ),
     BinarySensorEntityDescription(
         key="running",
         name="running",
-        device_class=DEVICE_CLASS_POWER,
+        device_class=BinarySensorDeviceClass.POWER,
     ),
     BinarySensorEntityDescription(
         key="screen_locked",
         name="screen_locked",
-        device_class=DEVICE_CLASS_LOCK,
+        device_class=BinarySensorDeviceClass.LOCK,
     ),
     BinarySensorEntityDescription(
         key="beep_enabled",
         name="beep_enabled",
-        device_class=DEVICE_CLASS_SOUND,
+        device_class=BinarySensorDeviceClass.SOUND,
     ),
 )
 

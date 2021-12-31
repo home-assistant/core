@@ -1,7 +1,6 @@
 """Sensors for National Weather Service (NWS)."""
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     LENGTH_METERS,
@@ -57,7 +56,7 @@ class NWSSensor(CoordinatorEntity, SensorEntity):
     """An NWS Sensor Entity."""
 
     entity_description: NWSSensorEntityDescription
-    _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
+    _attr_attribution = ATTRIBUTION
 
     def __init__(
         self,

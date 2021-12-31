@@ -1,10 +1,8 @@
 """Support for Freedompro sensor."""
 from homeassistant.components.sensor import (
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_TEMPERATURE,
-    STATE_CLASS_MEASUREMENT,
+    SensorDeviceClass,
     SensorEntity,
+    SensorStateClass,
 )
 from homeassistant.const import LIGHT_LUX, PERCENTAGE, TEMP_CELSIUS
 from homeassistant.core import callback
@@ -14,13 +12,13 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 
 DEVICE_CLASS_MAP = {
-    "temperatureSensor": DEVICE_CLASS_TEMPERATURE,
-    "humiditySensor": DEVICE_CLASS_HUMIDITY,
-    "lightSensor": DEVICE_CLASS_ILLUMINANCE,
+    "temperatureSensor": SensorDeviceClass.TEMPERATURE,
+    "humiditySensor": SensorDeviceClass.HUMIDITY,
+    "lightSensor": SensorDeviceClass.ILLUMINANCE,
 }
 STATE_CLASS_MAP = {
-    "temperatureSensor": STATE_CLASS_MEASUREMENT,
-    "humiditySensor": STATE_CLASS_MEASUREMENT,
+    "temperatureSensor": SensorStateClass.MEASUREMENT,
+    "humiditySensor": SensorStateClass.MEASUREMENT,
     "lightSensor": None,
 }
 UNIT_MAP = {

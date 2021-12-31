@@ -29,6 +29,7 @@ from homeassistant.const import (
     HTTP_BEARER_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
 )
+from homeassistant.core import ServiceCall
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 
@@ -325,7 +326,7 @@ async def async_setup(hass, config):
             hass, bot, p_config.get(CONF_ALLOWED_CHAT_IDS), p_config.get(ATTR_PARSER)
         )
 
-    async def async_send_telegram_message(service):
+    async def async_send_telegram_message(service: ServiceCall) -> None:
         """Handle sending Telegram Bot message service calls."""
 
         def _render_template_attr(data, attribute):
@@ -575,7 +576,7 @@ class TelegramNotificationService:
                 }
                 if message_tag is not None:
                     event_data[ATTR_MESSAGE_TAG] = message_tag
-                self.hass.bus.async_fire(EVENT_TELEGRAM_SENT, event_data)
+                self.hass.bus.fire(EVENT_TELEGRAM_SENT, event_data)
             elif not isinstance(out, bool):
                 _LOGGER.warning(
                     "Update last message: out_type:%s, out=%s", type(out), out

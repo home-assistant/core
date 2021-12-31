@@ -9,7 +9,7 @@
             "invalid_host": "L'entr\u00e9e d'h\u00f4te n'\u00e9tait pas au format URL complet, par exemple http://192.168.10.100:80",
             "unknown": "Erreur inattendue"
         },
-        "flow_title": "Appareils universels ISY994 {name} ( {host} )",
+        "flow_title": "{name} ({host})",
         "step": {
             "user": {
                 "data": {

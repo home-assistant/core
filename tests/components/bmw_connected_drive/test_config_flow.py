@@ -3,10 +3,7 @@ from unittest.mock import patch
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.bmw_connected_drive.config_flow import DOMAIN
-from homeassistant.components.bmw_connected_drive.const import (
-    CONF_READ_ONLY,
-    CONF_USE_LOCATION,
-)
+from homeassistant.components.bmw_connected_drive.const import CONF_READ_ONLY
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
 
 from tests.common import MockConfigEntry
@@ -28,7 +25,7 @@ FIXTURE_CONFIG_ENTRY = {
         CONF_PASSWORD: FIXTURE_USER_INPUT[CONF_PASSWORD],
         CONF_REGION: FIXTURE_USER_INPUT[CONF_REGION],
     },
-    "options": {CONF_READ_ONLY: False, CONF_USE_LOCATION: False},
+    "options": {CONF_READ_ONLY: False},
     "source": config_entries.SOURCE_USER,
     "unique_id": f"{FIXTURE_USER_INPUT[CONF_REGION]}-{FIXTURE_USER_INPUT[CONF_REGION]}",
 }
@@ -137,14 +134,13 @@ async def test_options_flow_implementation(hass):
 
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
-            user_input={CONF_READ_ONLY: False, CONF_USE_LOCATION: False},
+            user_input={CONF_READ_ONLY: False},
         )
         await hass.async_block_till_done()
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["data"] == {
             CONF_READ_ONLY: False,
-            CONF_USE_LOCATION: False,
         }
 
         assert len(mock_setup.mock_calls) == 1

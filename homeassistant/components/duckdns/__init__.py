@@ -5,7 +5,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_DOMAIN
-from homeassistant.core import CALLBACK_TYPE, callback
+from homeassistant.core import CALLBACK_TYPE, ServiceCall, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_call_later
@@ -58,7 +58,7 @@ async def async_setup(hass, config):
     )
     async_track_time_interval_backoff(hass, update_domain_interval, intervals)
 
-    async def update_domain_service(call):
+    async def update_domain_service(call: ServiceCall) -> None:
         """Update the DuckDNS entry."""
         await _update_duckdns(session, domain, token, txt=call.data[ATTR_TXT])
 

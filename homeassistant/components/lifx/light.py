@@ -42,7 +42,7 @@ from homeassistant.const import (
     ATTR_SW_VERSION,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import callback
+from homeassistant.core import ServiceCall, callback
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
@@ -298,7 +298,7 @@ class LIFXManager:
     def register_effects(self):
         """Register the LIFX effects as hass service calls."""
 
-        async def service_handler(service):
+        async def service_handler(service: ServiceCall) -> None:
             """Apply a service, i.e. start an effect."""
             entities = await self.platform.async_extract_from_service(service)
             if entities:

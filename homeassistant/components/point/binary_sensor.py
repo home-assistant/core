@@ -4,14 +4,8 @@ import logging
 from pypoint import EVENTS
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_COLD,
-    DEVICE_CLASS_CONNECTIVITY,
-    DEVICE_CLASS_HEAT,
-    DEVICE_CLASS_MOISTURE,
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_SOUND,
     DOMAIN,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.core import callback
@@ -25,17 +19,17 @@ _LOGGER = logging.getLogger(__name__)
 
 DEVICES = {
     "alarm": {"icon": "mdi:alarm-bell"},
-    "battery": {"device_class": DEVICE_CLASS_BATTERY},
+    "battery": {"device_class": BinarySensorDeviceClass.BATTERY},
     "button_press": {"icon": "mdi:gesture-tap-button"},
-    "cold": {"device_class": DEVICE_CLASS_COLD},
-    "connectivity": {"device_class": DEVICE_CLASS_CONNECTIVITY},
+    "cold": {"device_class": BinarySensorDeviceClass.COLD},
+    "connectivity": {"device_class": BinarySensorDeviceClass.CONNECTIVITY},
     "dry": {"icon": "mdi:water"},
     "glass": {"icon": "mdi:window-closed-variant"},
-    "heat": {"device_class": DEVICE_CLASS_HEAT},
-    "moisture": {"device_class": DEVICE_CLASS_MOISTURE},
-    "motion": {"device_class": DEVICE_CLASS_MOTION},
+    "heat": {"device_class": BinarySensorDeviceClass.HEAT},
+    "moisture": {"device_class": BinarySensorDeviceClass.MOISTURE},
+    "motion": {"device_class": BinarySensorDeviceClass.MOTION},
     "noise": {"icon": "mdi:volume-high"},
-    "sound": {"device_class": DEVICE_CLASS_SOUND},
+    "sound": {"device_class": BinarySensorDeviceClass.SOUND},
     "tamper_old": {"icon": "mdi:shield-alert"},
     "tamper": {"icon": "mdi:shield-alert"},
 }
@@ -118,7 +112,7 @@ class MinutPointBinarySensor(MinutPointEntity, BinarySensorEntity):
     @property
     def is_on(self):
         """Return the state of the binary sensor."""
-        if self.device_class == DEVICE_CLASS_CONNECTIVITY:
+        if self.device_class == BinarySensorDeviceClass.CONNECTIVITY:
             # connectivity is the other way around.
             return not self._is_on
         return self._is_on

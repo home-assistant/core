@@ -9,13 +9,13 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
 from homeassistant.const import (
     CONF_DISPLAY_OPTIONS,
     CONF_NAME,
-    DEVICE_CLASS_TEMPERATURE,
     ELECTRIC_POTENTIAL_VOLT,
     PRESSURE_HPA,
     TEMP_CELSIUS,
@@ -88,7 +88,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="temperature",
         name="temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
     ),
     SensorEntityDescription(
         key="pressure",

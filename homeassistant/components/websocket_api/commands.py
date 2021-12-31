@@ -10,7 +10,6 @@ import voluptuous as vol
 
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_READ
 from homeassistant.bootstrap import SIGNAL_BOOTSTRAP_INTEGRATONS
-from homeassistant.components.websocket_api.const import ERR_NOT_FOUND
 from homeassistant.const import EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL
 from homeassistant.core import Context, Event, HomeAssistant, callback
 from homeassistant.exceptions import (
@@ -33,6 +32,7 @@ from homeassistant.setup import DATA_SETUP_TIME, async_get_loaded_integrations
 
 from . import const, decorators, messages
 from .connection import ActiveConnection
+from .const import ERR_NOT_FOUND
 
 
 @callback

@@ -45,17 +45,18 @@ from homeassistant.core import (
     valid_entity_id,
 )
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import (
-    area_registry,
-    device_registry,
-    entity_registry,
-    location as loc_helper,
-)
-from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.loader import bind_hass
-from homeassistant.util import convert, dt as dt_util, location as loc_util
+from homeassistant.util import (
+    convert,
+    dt as dt_util,
+    location as loc_util,
+    slugify as slugify_util,
+)
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.thread import ThreadWithException
+
+from . import area_registry, device_registry, entity_registry, location as loc_helper
+from .typing import TemplateVarsType
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -110,18 +111,25 @@ def attach(hass: HomeAssistant, obj: Any) -> None:
 
 
 def render_complex(
-    value: Any, variables: TemplateVarsType = None, limited: bool = False
+    value: Any,
+    variables: TemplateVarsType = None,
+    limited: bool = False,
+    parse_result: bool = True,
 ) -> Any:
     """Recursive template creator helper function."""
     if isinstance(value, list):
-        return [render_complex(item, variables) for item in value]
+        return [
+            render_complex(item, variables, limited, parse_result) for item in value
+        ]
     if isinstance(value, collections.abc.Mapping):
         return {
-            render_complex(key, variables): render_complex(item, variables)
+            render_complex(key, variables, limited, parse_result): render_complex(
+                item, variables, limited, parse_result
+            )
             for key, item in value.items()
         }
     if isinstance(value, Template):
-        return value.async_render(variables, limited=limited)
+        return value.async_render(variables, limited=limited, parse_result=parse_result)
 
     return value
 
@@ -870,9 +878,7 @@ def result_as_boolean(template_result: Any | None) -> bool:
 
     try:
         # Import here, not at top-level to avoid circular import
-        from homeassistant.helpers import (  # pylint: disable=import-outside-toplevel
-            config_validation as cv,
-        )
+        from . import config_validation as cv  # pylint: disable=import-outside-toplevel
 
         return cv.boolean(template_result)
     except vol.Invalid:
@@ -940,7 +946,7 @@ def integration_entities(hass: HomeAssistant, entry_name: str) -> Iterable[str]:
 
     # fallback to just returning all entities for a domain
     # pylint: disable=import-outside-toplevel
-    from homeassistant.helpers.entity import entity_sources
+    from .entity import entity_sources
 
     return [
         entity_id
@@ -1002,9 +1008,7 @@ def area_id(hass: HomeAssistant, lookup_value: str) -> str | None:
     ent_reg = entity_registry.async_get(hass)
     dev_reg = device_registry.async_get(hass)
     # Import here, not at top-level to avoid circular import
-    from homeassistant.helpers import (  # pylint: disable=import-outside-toplevel
-        config_validation as cv,
-    )
+    from . import config_validation as cv  # pylint: disable=import-outside-toplevel
 
     try:
         cv.entity_id(lookup_value)
@@ -1042,9 +1046,7 @@ def area_name(hass: HomeAssistant, lookup_value: str) -> str | None:
     dev_reg = device_registry.async_get(hass)
     ent_reg = entity_registry.async_get(hass)
     # Import here, not at top-level to avoid circular import
-    from homeassistant.helpers import (  # pylint: disable=import-outside-toplevel
-        config_validation as cv,
-    )
+    from . import config_validation as cv  # pylint: disable=import-outside-toplevel
 
     try:
         cv.entity_id(lookup_value)
@@ -1746,6 +1748,30 @@ def urlencode(value):
     return urllib_urlencode(value).encode("utf-8")
 
 
+def slugify(value, separator="_"):
+    """Convert a string into a slug, such as what is used for entity ids."""
+    return slugify_util(value, separator=separator)
+
+
+def iif(
+    value: Any, if_true: Any = True, if_false: Any = False, if_none: Any = _SENTINEL
+) -> Any:
+    """Immediate if function/filter that allow for common if/else constructs.
+
+    https://en.wikipedia.org/wiki/IIf
+
+    Examples:
+        {{ is_state("device_tracker.frenck", "home") | iif("yes", "no") }}
+        {{ iif(1==2, "yes", "no") }}
+        {{ (1 == 1) | iif("yes", "no") }}
+    """
+    if value is None and if_none is not _SENTINEL:
+        return if_none
+    if bool(value):
+        return if_true
+    return if_false
+
+
 @contextmanager
 def set_template(template_str: str, action: str) -> Generator:
     """Store template being parsed or rendered in a Contextvar to aid error handling."""
@@ -1859,6 +1885,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["float"] = forgiving_float_filter
         self.filters["int"] = forgiving_int_filter
         self.filters["relative_time"] = relative_time
+        self.filters["slugify"] = slugify
+        self.filters["iif"] = iif
         self.globals["log"] = logarithm
         self.globals["sin"] = sine
         self.globals["cos"] = cosine
@@ -1887,6 +1915,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["int"] = forgiving_int
         self.globals["pack"] = struct_pack
         self.globals["unpack"] = struct_unpack
+        self.globals["slugify"] = slugify
+        self.globals["iif"] = iif
         self.tests["match"] = regex_match
         self.tests["search"] = regex_search
 

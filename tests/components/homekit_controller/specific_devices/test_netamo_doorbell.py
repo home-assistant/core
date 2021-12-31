@@ -4,6 +4,7 @@ Regression tests for Netamo Doorbell.
 https://github.com/home-assistant/core/issues/44596
 """
 
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import assert_lists_same, async_get_device_automations
@@ -69,5 +70,7 @@ async def test_netamo_doorbell_setup(hass):
             }
         )
 
-    triggers = await async_get_device_automations(hass, "trigger", doorbell.device_id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, doorbell.device_id
+    )
     assert_lists_same(triggers, expected)

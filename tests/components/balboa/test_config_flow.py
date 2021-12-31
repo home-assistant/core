@@ -1,5 +1,5 @@
 """Test the Balboa Spa Client config flow."""
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.balboa.const import CONF_SYNC_TIME, DOMAIN
@@ -12,8 +12,6 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_FORM,
 )
 
-from . import BalboaMock
-
 from tests.common import MockConfigEntry
 
 TEST_DATA = {
@@ -22,7 +20,7 @@ TEST_DATA = {
 TEST_ID = "FakeBalboa"
 
 
-async def test_form(hass: HomeAssistant) -> None:
+async def test_form(hass: HomeAssistant, client: MagicMock) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -31,23 +29,8 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.balboa.config_flow.BalboaSpaWifi.connect",
-        new=BalboaMock.connect,
-    ), patch(
-        "homeassistant.components.balboa.config_flow.BalboaSpaWifi.disconnect",
-        new=BalboaMock.disconnect,
-    ), patch(
-        "homeassistant.components.balboa.config_flow.BalboaSpaWifi.listen",
-        new=BalboaMock.listen,
-    ), patch(
-        "homeassistant.components.balboa.config_flow.BalboaSpaWifi.send_mod_ident_req",
-        new=BalboaMock.send_mod_ident_req,
-    ), patch(
-        "homeassistant.components.balboa.config_flow.BalboaSpaWifi.send_panel_req",
-        new=BalboaMock.send_panel_req,
-    ), patch(
-        "homeassistant.components.balboa.config_flow.BalboaSpaWifi.spa_configured",
-        new=BalboaMock.spa_configured,
+        "homeassistant.components.balboa.config_flow.BalboaSpaWifi",
+        return_value=client,
     ), patch(
         "homeassistant.components.balboa.async_setup_entry",
         return_value=True,
@@ -63,19 +46,17 @@ async def test_form(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_cannot_connect(hass: HomeAssistant) -> None:
+async def test_form_cannot_connect(hass: HomeAssistant, client: MagicMock) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(
-        "homeassistant.components.balboa.config_flow.BalboaSpaWifi.connect",
-        new=BalboaMock.broken_connect,
-    ), patch(
-        "homeassistant.components.balboa.config_flow.BalboaSpaWifi.disconnect",
-        new=BalboaMock.disconnect,
+        "homeassistant.components.balboa.config_flow.BalboaSpaWifi",
+        return_value=client,
     ):
+        client.connect.return_value = False
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             TEST_DATA,
@@ -85,16 +66,17 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_unknown_error(hass: HomeAssistant) -> None:
+async def test_unknown_error(hass: HomeAssistant, client: MagicMock) -> None:
     """Test we handle unknown error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(
-        "homeassistant.components.balboa.config_flow.BalboaSpaWifi.connect",
-        side_effect=Exception,
+        "homeassistant.components.balboa.config_flow.BalboaSpaWifi",
+        return_value=client,
     ):
+        client.connect.side_effect = Exception("Boom")
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             TEST_DATA,
@@ -104,7 +86,7 @@ async def test_unknown_error(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_already_configured(hass: HomeAssistant) -> None:
+async def test_already_configured(hass: HomeAssistant, client: MagicMock) -> None:
     """Test when provided credentials are already configured."""
     MockConfigEntry(domain=DOMAIN, data=TEST_DATA, unique_id=TEST_ID).add_to_hass(hass)
 
@@ -116,11 +98,8 @@ async def test_already_configured(hass: HomeAssistant) -> None:
     assert result["step_id"] == SOURCE_USER
 
     with patch(
-        "homeassistant.components.balboa.config_flow.BalboaSpaWifi.connect",
-        new=BalboaMock.connect,
-    ), patch(
-        "homeassistant.components.balboa.config_flow.BalboaSpaWifi.disconnect",
-        new=BalboaMock.disconnect,
+        "homeassistant.components.balboa.config_flow.BalboaSpaWifi",
+        return_value=client,
     ), patch(
         "homeassistant.components.balboa.async_setup_entry",
         return_value=True,
@@ -135,25 +114,15 @@ async def test_already_configured(hass: HomeAssistant) -> None:
     assert result2["reason"] == "already_configured"
 
 
-async def test_options_flow(hass):
+async def test_options_flow(hass: HomeAssistant, client: MagicMock) -> None:
     """Test specifying non default settings using options flow."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=TEST_DATA, unique_id=TEST_ID)
     config_entry.add_to_hass(hass)
 
-    # Rather than mocking out 15 or so functions, we just need to mock
-    # the entire library, otherwise it will get stuck in a listener and
-    # the various loops in pybalboa.
-    with patch(
-        "homeassistant.components.balboa.config_flow.BalboaSpaWifi",
-        new=BalboaMock,
-    ), patch(
-        "homeassistant.components.balboa.BalboaSpaWifi",
-        new=BalboaMock,
-    ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
-        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "init"
@@ -164,4 +133,4 @@ async def test_options_flow(hass):
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert config_entry.options == {CONF_SYNC_TIME: True}
+    assert dict(config_entry.options) == {CONF_SYNC_TIME: True}
