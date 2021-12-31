@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, cast
 from urllib.parse import urlparse
 
 from pyoverkiz.models import Command, Device
@@ -41,7 +41,7 @@ class OverkizExecutor:
         """Select first existing active state in a list of states."""
         for state in states:
             if current_state := self.device.states[state]:
-                return current_state.value
+                return cast(str, current_state.value)
 
         return None
 
@@ -53,7 +53,7 @@ class OverkizExecutor:
         """Select first existing active state in a list of states."""
         for attribute in attributes:
             if current_attribute := self.device.attributes[attribute]:
-                return current_attribute.value
+                return cast(str, current_attribute.value)
 
         return None
 

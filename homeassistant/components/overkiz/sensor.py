@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import cast
 
 from pyoverkiz.enums import OverkizAttribute, OverkizState, UIWidget
 
@@ -401,7 +402,7 @@ class OverkizStateSensor(OverkizDescriptiveEntity, SensorEntity):
         if self.entity_description.native_value:
             return self.entity_description.native_value(state.value)
 
-        return state.value
+        return cast(str, state.value)
 
 
 class OverkizHomeKitSetupCodeSensor(OverkizEntity, SensorEntity):
@@ -418,9 +419,11 @@ class OverkizHomeKitSetupCodeSensor(OverkizEntity, SensorEntity):
         self._attr_name = "HomeKit Setup Code"
 
     @property
-    def native_value(self) -> str:
+    def native_value(self) -> str | None:
         """Return the value of the sensor."""
-        return self.device.attributes.get(OverkizAttribute.HOMEKIT_SETUP_CODE).value
+        if state := self.device.attributes.get(OverkizAttribute.HOMEKIT_SETUP_CODE):
+            return cast(str, state.value)
+        return None
 
     @property
     def device_info(self) -> DeviceInfo:
