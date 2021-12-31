@@ -19,7 +19,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass, config_entry):
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate old entry."""
     # convert title and unique_id to string
     if config_entry.version == 1:
