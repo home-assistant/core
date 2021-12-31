@@ -2,6 +2,7 @@
 from homeassistant.components.binary_sensor import DOMAIN as BS_DOMAIN
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, EVENTS_COORDINATOR
 from .entity import binary_sensor_unique_id
@@ -91,7 +92,7 @@ class RiscoSensor(CoordinatorEntity, SensorEntity):
         if self._event is None:
             return None
 
-        return self._event.time
+        return dt_util.as_local(dt_util.parse_datetime(self._event.time))
 
     @property
     def extra_state_attributes(self):
