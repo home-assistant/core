@@ -419,11 +419,11 @@ class OverkizHomeKitSetupCodeSensor(OverkizEntity, SensorEntity):
         self._attr_name = "HomeKit Setup Code"
 
     @property
-    def native_value(self) -> str:
+    def native_value(self) -> str | None:
         """Return the value of the sensor."""
-        return cast(
-            str, self.device.attributes.get(OverkizAttribute.HOMEKIT_SETUP_CODE).value
-        )
+        if state := self.device.attributes.get(OverkizAttribute.HOMEKIT_SETUP_CODE):
+            return cast(str, state.value)
+        return None
 
     @property
     def device_info(self) -> DeviceInfo:
