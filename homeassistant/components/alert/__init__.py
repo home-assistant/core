@@ -23,10 +23,11 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import event, service
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.dt import now
 
 _LOGGER = logging.getLogger(__name__)
@@ -77,7 +78,7 @@ def is_on(hass, entity_id):
     return hass.states.is_state(entity_id, STATE_ON)
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Alert component."""
     entities = []
 
