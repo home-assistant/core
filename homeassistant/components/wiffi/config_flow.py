@@ -38,6 +38,8 @@ class WiffiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self._async_show_form()
 
         # received input from form or configuration.yaml
+        await self.async_set_unique_id(user_input[CONF_PORT])
+        self._abort_if_unique_id_configured()
 
         try:
             # try to start server to check whether port is in use

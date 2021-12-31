@@ -32,6 +32,7 @@ from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     async_entries_for_config_entry,
     async_get,
+    format_mac,
 )
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo
@@ -51,6 +52,7 @@ from .const import (
     SERVICE_CLEANUP,
     SERVICE_REBOOT,
     SERVICE_RECONNECT,
+    MeshRoles,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -102,10 +104,22 @@ class ClassSetupMissing(Exception):
 class Device:
     """FRITZ!Box device class."""
 
-    mac: str
+    connected: bool
+    connected_to: str
+    connection_type: str
     ip_address: str
     name: str
+    ssid: str | None
     wan_access: bool
+
+
+class Interface(TypedDict):
+    """Interface details."""
+
+    device: str
+    mac: str
+    ssid: str | None
+    type: str
 
 
 class HostInfo(TypedDict):
@@ -144,10 +158,11 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
         self.fritz_status: FritzStatus = None
         self.hass = hass
         self.host = host
+        self.mesh_role = MeshRoles.NONE
+        self.device_is_router: bool = True
         self.password = password
         self.port = port
         self.username = username
-        self._mac: str | None = None
         self._model: str | None = None
         self._current_firmware: str | None = None
         self._latest_firmware: str | None = None
@@ -184,6 +199,7 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
         self._current_firmware = info.get("NewSoftwareVersion")
 
         self._update_available, self._latest_firmware = self._update_device_info()
+        self.device_is_router = "WANIPConn1" in self.connection.services
 
     @callback
     async def _async_update_data(self) -> None:
@@ -269,8 +285,17 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
 
     def scan_devices(self, now: datetime | None = None) -> None:
         """Scan for new devices and return a list of found device ids."""
-        _LOGGER.debug("Checking devices for FRITZ!Box router %s", self.host)
 
+        _LOGGER.debug("Checking host info for FRITZ!Box router %s", self.host)
+        self._update_available, self._latest_firmware = self._update_device_info()
+
+        try:
+            topology = self.fritz_hosts.get_mesh_topology()
+        except FritzActionError:
+            self.mesh_role = MeshRoles.SLAVE
+            return
+
+        _LOGGER.debug("Checking devices for FRITZ!Box router %s", self.host)
         _default_consider_home = DEFAULT_CONSIDER_HOME.total_seconds()
         if self._options:
             consider_home = self._options.get(
@@ -280,40 +305,74 @@ class FritzBoxTools(update_coordinator.DataUpdateCoordinator):
             consider_home = _default_consider_home
 
         new_device = False
-        for known_host in self._update_hosts_info():
-            if not known_host.get("mac"):
+        hosts = {}
+        for host in self._update_hosts_info():
+            if not host.get("mac"):
                 continue
 
-            dev_mac = known_host["mac"]
-            dev_name = known_host["name"]
-            dev_ip = known_host["ip"]
-            dev_home = known_host["status"]
-            dev_wan_access = True
-            if dev_ip:
-                wan_access = self.connection.call_action(
-                    "X_AVM-DE_HostFilter:1",
-                    "GetWANAccessByIP",
-                    NewIPv4Address=dev_ip,
+            hosts[host["mac"]] = Device(
+                name=host["name"],
+                connected=host["status"],
+                connected_to="",
+                connection_type="",
+                ip_address=host["ip"],
+                ssid=None,
+                wan_access=False,
+            )
+
+        mesh_intf = {}
+        # first get all meshed devices
+        for node in topology["nodes"]:
+            if not node["is_meshed"]:
+                continue
+
+            for interf in node["node_interfaces"]:
+                int_mac = interf["mac_address"]
+                mesh_intf[interf["uid"]] = Interface(
+                    device=node["device_name"],
+                    mac=int_mac,
+                    ssid=interf.get("ssid", ""),
+                    type=interf["type"],
                 )
-                if wan_access:
-                    dev_wan_access = not wan_access.get("NewDisallow")
+                if format_mac(int_mac) == format_mac(self.mac):
+                    self.mesh_role = MeshRoles(node["mesh_role"])
 
-            dev_info = Device(dev_mac, dev_ip, dev_name, dev_wan_access)
+        # second get all client devices
+        for node in topology["nodes"]:
+            if node["is_meshed"]:
+                continue
 
-            if dev_mac in self._devices:
-                self._devices[dev_mac].update(dev_info, dev_home, consider_home)
-            else:
-                device = FritzDevice(dev_mac, dev_name)
-                device.update(dev_info, dev_home, consider_home)
-                self._devices[dev_mac] = device
-                new_device = True
+            for interf in node["node_interfaces"]:
+                dev_mac = interf["mac_address"]
+                for link in interf["node_links"]:
+                    intf = mesh_intf.get(link["node_interface_1_uid"])
+                    if (
+                        intf is not None
+                        and link["state"] == "CONNECTED"
+                        and dev_mac in hosts
+                    ):
+                        dev_info: Device = hosts[dev_mac]
+                        dev_info.wan_access = not self.connection.call_action(
+                            "X_AVM-DE_HostFilter:1",
+                            "GetWANAccessByIP",
+                            NewIPv4Address=dev_info.ip_address,
+                        ).get("NewDisallow")
+
+                        dev_info.connected_to = intf["device"]
+                        dev_info.connection_type = intf["type"]
+                        dev_info.ssid = intf.get("ssid")
+
+                        if dev_mac in self._devices:
+                            self._devices[dev_mac].update(dev_info, consider_home)
+                        else:
+                            device = FritzDevice(dev_mac, dev_info.name)
+                            device.update(dev_info, consider_home)
+                            self._devices[dev_mac] = device
+                            new_device = True
 
         dispatcher_send(self.hass, self.signal_device_update)
         if new_device:
             dispatcher_send(self.hass, self.signal_device_new)
-
-        _LOGGER.debug("Checking host info for FRITZ!Box router %s", self.host)
-        self._update_available, self._latest_firmware = self._update_device_info()
 
     async def async_trigger_firmware_update(self) -> bool:
         """Trigger firmware update."""
@@ -495,14 +554,17 @@ class FritzDevice:
 
     def __init__(self, mac: str, name: str) -> None:
         """Initialize device info."""
-        self._mac = mac
-        self._name = name
+        self._connected = False
+        self._connected_to: str | None = None
+        self._connection_type: str | None = None
         self._ip_address: str | None = None
         self._last_activity: datetime | None = None
-        self._connected = False
+        self._mac = mac
+        self._name = name
+        self._ssid: str | None = None
         self._wan_access = False
 
-    def update(self, dev_info: Device, dev_home: bool, consider_home: float) -> None:
+    def update(self, dev_info: Device, consider_home: float) -> None:
         """Update device info."""
         utc_point_in_time = dt_util.utcnow()
 
@@ -511,18 +573,31 @@ class FritzDevice:
                 utc_point_in_time - self._last_activity
             ).total_seconds() < consider_home
         else:
-            consider_home_evaluated = dev_home
+            consider_home_evaluated = dev_info.connected
 
         if not self._name:
             self._name = dev_info.name or self._mac.replace(":", "_")
 
-        self._connected = dev_home or consider_home_evaluated
+        self._connected = dev_info.connected or consider_home_evaluated
 
-        if dev_home:
+        if dev_info.connected:
             self._last_activity = utc_point_in_time
 
+        self._connected_to = dev_info.connected_to
+        self._connection_type = dev_info.connection_type
         self._ip_address = dev_info.ip_address
+        self._ssid = dev_info.ssid
         self._wan_access = dev_info.wan_access
+
+    @property
+    def connected_to(self) -> str | None:
+        """Return connected status."""
+        return self._connected_to
+
+    @property
+    def connection_type(self) -> str | None:
+        """Return connected status."""
+        return self._connection_type
 
     @property
     def is_connected(self) -> bool:
@@ -548,6 +623,11 @@ class FritzDevice:
     def last_activity(self) -> datetime | None:
         """Return device last activity."""
         return self._last_activity
+
+    @property
+    def ssid(self) -> str | None:
+        """Return device connected SSID."""
+        return self._ssid
 
     @property
     def wan_access(self) -> bool:

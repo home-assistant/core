@@ -19,7 +19,7 @@ from homeassistant.const import (
     PRECISION_WHOLE,
     TEMP_CELSIUS,
 )
-from homeassistant.core import callback
+from homeassistant.core import ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -65,7 +65,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     ]
     async_add_entities(entities)
 
-    async def set_room_temp(service):
+    async def set_room_temp(service: ServiceCall) -> None:
         """Set room temp."""
         room_name = service.data.get(ATTR_ROOM_NAME)
         sleep_temp = service.data.get(ATTR_SLEEP_TEMP)
@@ -105,7 +105,7 @@ class MillHeater(CoordinatorEntity, ClimateEntity):
             model=f"Generation {heater.generation}",
             name=self.name,
         )
-        if heater.is_gen1 or heater.is_gen3:
+        if heater.is_gen1:
             self._attr_hvac_modes = [HVAC_MODE_HEAT]
         else:
             self._attr_hvac_modes = [HVAC_MODE_HEAT, HVAC_MODE_OFF]

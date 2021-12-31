@@ -137,6 +137,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the BME680 sensor."""
+    _LOGGER.warning(
+        "The Bosch BME680 Environmental Sensor integration is deprecated and "
+        "will be removed in Home Assistant Core 2022.4; "
+        "this integration is removed under Architectural Decision Record 0019, "
+        "more information can be found here: "
+        "https://github.com/home-assistant/architecture/blob/master/adr/0019-GPIO.md"
+    )
+
     name = config[CONF_NAME]
 
     sensor_handler = await hass.async_add_executor_job(_setup_bme680, config)

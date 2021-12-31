@@ -18,10 +18,12 @@ UPDATE_INTERVAL: Final = timedelta(seconds=30)
 UPDATE_INTERVAL_ALL_ASSUMED_STATE: Final = timedelta(minutes=60)
 
 PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.LIGHT,
     Platform.LOCK,
     Platform.NUMBER,
+    Platform.SCENE,
     Platform.SENSOR,
 ]
 

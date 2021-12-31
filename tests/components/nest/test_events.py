@@ -5,6 +5,7 @@ pubsub subscriber.
 """
 
 import datetime
+from unittest.mock import patch
 
 from google_nest_sdm.device import Device
 from google_nest_sdm.event import EventMessage
@@ -446,3 +447,65 @@ async def test_doorbell_event_session_update(hass):
         "timestamp": timestamp2.replace(microsecond=0),
         "nest_event_id": EVENT_SESSION_ID,
     }
+
+
+async def test_structure_update_event(hass):
+    """Test a pubsub message for a new device being added."""
+    events = async_capture_events(hass, NEST_EVENT)
+    subscriber = await async_setup_devices(
+        hass,
+        "sdm.devices.types.DOORBELL",
+        create_device_traits(["sdm.devices.traits.DoorbellChime"]),
+    )
+
+    # Entity for first device is registered
+    registry = er.async_get(hass)
+    assert registry.async_get("camera.front")
+
+    new_device = Device.MakeDevice(
+        {
+            "name": "device-id-2",
+            "type": "sdm.devices.types.CAMERA",
+            "traits": {
+                "sdm.devices.traits.Info": {
+                    "customName": "Back",
+                },
+                "sdm.devices.traits.CameraLiveStream": {},
+            },
+        },
+        auth=None,
+    )
+    device_manager = await subscriber.async_get_device_manager()
+    device_manager.add_device(new_device)
+
+    # Entity for new devie has not yet been loaded
+    assert not registry.async_get("camera.back")
+
+    # Send a message that triggers the device to be loaded
+    message = EventMessage(
+        {
+            "eventId": "some-event-id",
+            "timestamp": utcnow().isoformat(timespec="seconds"),
+            "relationUpdate": {
+                "type": "CREATED",
+                "subject": "enterprise/example/foo",
+                "object": "enterprise/example/devices/some-device-id2",
+            },
+        },
+        auth=None,
+    )
+    with patch(
+        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation"
+    ), patch("homeassistant.components.nest.PLATFORMS", [PLATFORM]), patch(
+        "homeassistant.components.nest.api.GoogleNestSubscriber",
+        return_value=subscriber,
+    ):
+        await subscriber.async_receive_event(message)
+        await hass.async_block_till_done()
+
+    # No home assistant events published
+    assert not events
+
+    # Both enties now exist
+    assert registry.async_get("camera.front")
+    assert registry.async_get("camera.back")

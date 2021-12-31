@@ -405,7 +405,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         if self._brightness_dpcode:
             self._attr_supported_color_modes.add(COLOR_MODE_BRIGHTNESS)
             self._brightness_type = IntegerTypeData.from_json(
-                device.status_range[self._brightness_dpcode].values
+                device.function[self._brightness_dpcode].values
             )
 
             # Check if min/max capable
@@ -416,17 +416,17 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                 and description.brightness_min in device.function
             ):
                 self._brightness_max_type = IntegerTypeData.from_json(
-                    device.status_range[description.brightness_max].values
+                    device.function[description.brightness_max].values
                 )
                 self._brightness_min_type = IntegerTypeData.from_json(
-                    device.status_range[description.brightness_min].values
+                    device.function[description.brightness_min].values
                 )
 
         # Update internals based on found color temperature dpcode
         if self._color_temp_dpcode:
             self._attr_supported_color_modes.add(COLOR_MODE_COLOR_TEMP)
             self._color_temp_type = IntegerTypeData.from_json(
-                device.status_range[self._color_temp_dpcode].values
+                device.function[self._color_temp_dpcode].values
             )
 
         # Update internals based on found color data dpcode

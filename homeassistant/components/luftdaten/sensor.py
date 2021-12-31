@@ -1,4 +1,4 @@
-"""Support for Luftdaten sensors."""
+"""Support for Sensor.Community sensors."""
 from __future__ import annotations
 
 from typing import cast
@@ -79,11 +79,11 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up a Luftdaten sensor based on a config entry."""
+    """Set up a Sensor.Community sensor based on a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        LuftdatenSensor(
+        SensorCommunitySensor(
             coordinator=coordinator,
             description=description,
             sensor_id=entry.data[CONF_SENSOR_ID],
@@ -94,10 +94,10 @@ async def async_setup_entry(
     )
 
 
-class LuftdatenSensor(CoordinatorEntity, SensorEntity):
-    """Implementation of a Luftdaten sensor."""
+class SensorCommunitySensor(CoordinatorEntity, SensorEntity):
+    """Implementation of a Sensor.Community sensor."""
 
-    _attr_attribution = "Data provided by luftdaten.info"
+    _attr_attribution = "Data provided by Sensor.Community"
     _attr_should_poll = False
 
     def __init__(
@@ -108,7 +108,7 @@ class LuftdatenSensor(CoordinatorEntity, SensorEntity):
         sensor_id: int,
         show_on_map: bool,
     ) -> None:
-        """Initialize the Luftdaten sensor."""
+        """Initialize the Sensor.Community sensor."""
         super().__init__(coordinator=coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{sensor_id}_{description.key}"
@@ -119,7 +119,7 @@ class LuftdatenSensor(CoordinatorEntity, SensorEntity):
             configuration_url=f"https://devices.sensor.community/sensors/{sensor_id}/settings",
             identifiers={(DOMAIN, str(sensor_id))},
             name=f"Sensor {sensor_id}",
-            manufacturer="Luftdaten.info",
+            manufacturer="Sensor.Community",
         )
 
         if show_on_map:

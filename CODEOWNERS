@@ -180,7 +180,8 @@ homeassistant/components/counter/* @fabaff
 tests/components/counter/* @fabaff
 homeassistant/components/cover/* @home-assistant/core
 tests/components/cover/* @home-assistant/core
-homeassistant/components/cpuspeed/* @fabaff
+homeassistant/components/cpuspeed/* @fabaff @frenck
+tests/components/cpuspeed/* @fabaff @frenck
 homeassistant/components/crownstone/* @Crownstone @RicArch97
 tests/components/crownstone/* @Crownstone @RicArch97
 homeassistant/components/cups/* @fabaff
@@ -508,8 +509,8 @@ tests/components/lookin/* @ANMalko @bdraco
 homeassistant/components/lovelace/* @home-assistant/frontend
 tests/components/lovelace/* @home-assistant/frontend
 homeassistant/components/luci/* @mzdrale
-homeassistant/components/luftdaten/* @fabaff
-tests/components/luftdaten/* @fabaff
+homeassistant/components/luftdaten/* @fabaff @frenck
+tests/components/luftdaten/* @fabaff @frenck
 homeassistant/components/lupusec/* @majuss
 homeassistant/components/lutron/* @JonGilmore
 homeassistant/components/lutron_caseta/* @swails @bdraco
@@ -714,12 +715,13 @@ homeassistant/components/prometheus/* @knyar
 tests/components/prometheus/* @knyar
 homeassistant/components/prosegur/* @dgomes
 tests/components/prosegur/* @dgomes
-homeassistant/components/proxmoxve/* @k4ds3 @jhollowe @Corbeno
+homeassistant/components/proxmoxve/* @jhollowe @Corbeno
 homeassistant/components/ps4/* @ktnrg45
 tests/components/ps4/* @ktnrg45
 homeassistant/components/push/* @dgomes
 tests/components/push/* @dgomes
 homeassistant/components/pvoutput/* @fabaff @frenck
+tests/components/pvoutput/* @fabaff @frenck
 homeassistant/components/pvpc_hourly_pricing/* @azogue
 tests/components/pvpc_hourly_pricing/* @azogue
 homeassistant/components/qbittorrent/* @geoffreylagaisse
@@ -985,7 +987,8 @@ homeassistant/components/usgs_earthquakes_feed/* @exxamalte
 tests/components/usgs_earthquakes_feed/* @exxamalte
 homeassistant/components/utility_meter/* @dgomes
 tests/components/utility_meter/* @dgomes
-homeassistant/components/vallox/* @andre-richter
+homeassistant/components/vallox/* @andre-richter @slovdahl
+tests/components/vallox/* @andre-richter @slovdahl
 homeassistant/components/velbus/* @Cereal2nd @brefra
 tests/components/velbus/* @Cereal2nd @brefra
 homeassistant/components/velux/* @Julius2342
@@ -1033,6 +1036,8 @@ homeassistant/components/wevolor/* @timstallmann
 tests/components/wevolor/* @timstallmann
 homeassistant/components/whirlpool/* @abmantis
 tests/components/whirlpool/* @abmantis
+homeassistant/components/whois/* @frenck
+tests/components/whois/* @frenck
 homeassistant/components/wiffi/* @mampfes
 tests/components/wiffi/* @mampfes
 homeassistant/components/wilight/* @leofig-rj

@@ -13,7 +13,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SOURCE,
 )
-from homeassistant.core import callback
+from homeassistant.core import ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import make_entity_service_schema
@@ -75,7 +75,7 @@ async def async_setup(hass, config):
 
     await component.async_setup(config)
 
-    async def async_scan_service(service):
+    async def async_scan_service(service: ServiceCall) -> None:
         """Service handler for scan."""
         image_entities = await component.async_extract_from_service(service)
 

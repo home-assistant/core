@@ -20,6 +20,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
+from homeassistant.core import ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -184,7 +185,7 @@ async def async_setup_entry(hass, entry):
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
-    async def service_handler(service):
+    async def service_handler(service: ServiceCall) -> None:
         """Dispatch service calls to target entities."""
         params = dict(service.data)
 

@@ -32,6 +32,7 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
 from homeassistant.core import (
     CoreState,
@@ -127,20 +128,20 @@ DISCOVERY_COOLDOWN = 2
 TIMEOUT_ACK = 10
 
 PLATFORMS = [
-    "alarm_control_panel",
-    "binary_sensor",
-    "camera",
-    "climate",
-    "cover",
-    "fan",
-    "humidifier",
-    "light",
-    "lock",
-    "number",
-    "scene",
-    "sensor",
-    "switch",
-    "vacuum",
+    Platform.ALARM_CONTROL_PANEL,
+    Platform.BINARY_SENSOR,
+    Platform.CAMERA,
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.FAN,
+    Platform.HUMIDIFIER,
+    Platform.LIGHT,
+    Platform.LOCK,
+    Platform.NUMBER,
+    Platform.SCENE,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.VACUUM,
 ]
 
 
@@ -541,7 +542,7 @@ async def async_setup_entry(hass, entry):
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_mqtt)
 
-    async def async_publish_service(call: ServiceCall):
+    async def async_publish_service(call: ServiceCall) -> None:
         """Handle MQTT publish service calls."""
         msg_topic = call.data.get(ATTR_TOPIC)
         msg_topic_template = call.data.get(ATTR_TOPIC_TEMPLATE)
@@ -594,7 +595,7 @@ async def async_setup_entry(hass, entry):
         DOMAIN, SERVICE_PUBLISH, async_publish_service, schema=MQTT_PUBLISH_SCHEMA
     )
 
-    async def async_dump_service(call: ServiceCall):
+    async def async_dump_service(call: ServiceCall) -> None:
         """Handle MQTT dump service calls."""
         messages = []
 

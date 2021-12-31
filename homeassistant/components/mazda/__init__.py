@@ -1,6 +1,9 @@
 """The Mazda Connected Services integration."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING
 
 import async_timeout
 from pymazda import (
@@ -15,7 +18,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_REGION, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
@@ -67,12 +70,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("Error occurred during Mazda login request: %s", ex)
         raise ConfigEntryNotReady from ex
 
-    async def async_handle_service_call(service_call=None):
+    async def async_handle_service_call(service_call: ServiceCall) -> None:
         """Handle a service call."""
         # Get device entry from device registry
         dev_reg = device_registry.async_get(hass)
         device_id = service_call.data["device_id"]
         device_entry = dev_reg.async_get(device_id)
+        if TYPE_CHECKING:
+            # For mypy: it has already been checked in validate_mazda_device_id
+            assert device_entry
 
         # Get vehicle VIN from device identifiers
         mazda_identifiers = (

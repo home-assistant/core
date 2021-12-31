@@ -179,7 +179,6 @@ omit =
     homeassistant/components/coolmaster/climate.py
     homeassistant/components/coolmaster/const.py
     homeassistant/components/cppm_tracker/device_tracker.py
-    homeassistant/components/cpuspeed/sensor.py
     homeassistant/components/crownstone/__init__.py
     homeassistant/components/crownstone/const.py
     homeassistant/components/crownstone/listeners.py
@@ -803,6 +802,7 @@ omit =
     homeassistant/components/osramlightify/light.py
     homeassistant/components/otp/sensor.py
     homeassistant/components/overkiz/__init__.py
+    homeassistant/components/overkiz/binary_sensor.py
     homeassistant/components/overkiz/button.py
     homeassistant/components/overkiz/coordinator.py
     homeassistant/components/overkiz/entity.py
@@ -810,6 +810,7 @@ omit =
     homeassistant/components/overkiz/light.py
     homeassistant/components/overkiz/lock.py
     homeassistant/components/overkiz/number.py
+    homeassistant/components/overkiz/scene.py
     homeassistant/components/overkiz/sensor.py
     homeassistant/components/ovo_energy/__init__.py
     homeassistant/components/ovo_energy/const.py
@@ -863,6 +864,8 @@ omit =
     homeassistant/components/pushbullet/sensor.py
     homeassistant/components/pushover/notify.py
     homeassistant/components/pushsafer/notify.py
+    homeassistant/components/pvoutput/__init__.py
+    homeassistant/components/pvoutput/coordinator.py
     homeassistant/components/pvoutput/sensor.py
     homeassistant/components/pyload/sensor.py
     homeassistant/components/qbittorrent/sensor.py
@@ -1202,7 +1205,10 @@ omit =
     homeassistant/components/upnp/*
     homeassistant/components/upc_connect/*
     homeassistant/components/uscis/sensor.py
-    homeassistant/components/vallox/*
+    homeassistant/components/vallox/__init__.py
+    homeassistant/components/vallox/const.py
+    homeassistant/components/vallox/fan.py
+    homeassistant/components/vallox/sensor.py
     homeassistant/components/vasttrafik/sensor.py
     homeassistant/components/velbus/__init__.py
     homeassistant/components/velbus/binary_sensor.py
@@ -1264,6 +1270,7 @@ omit =
     homeassistant/components/webostv/*
     homeassistant/components/wevolor/__init__.py
     homeassistant/components/wevolor/cover.py
+    homeassistant/components/whois/__init__.py
     homeassistant/components/whois/sensor.py
     homeassistant/components/wiffi/*
     homeassistant/components/wirelesstag/*
