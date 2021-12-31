@@ -10,6 +10,7 @@ from .const import DOMAIN
 
 CONF_SERVER = "server"
 CONF_BROADCAST = "broadcast"
+CONF_DEFAULT_TRANSITION = "default_transition"
 
 INTERFACE_SCHEMA = vol.Schema(
     {
@@ -20,7 +21,10 @@ INTERFACE_SCHEMA = vol.Schema(
 )
 
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: {LIGHT_DOMAIN: vol.Schema(vol.All(cv.ensure_list, [INTERFACE_SCHEMA]))}},
+    {
+        DOMAIN: {LIGHT_DOMAIN: vol.Schema(vol.All(cv.ensure_list, [INTERFACE_SCHEMA]))},
+        vol.Optional(CONF_DEFAULT_TRANSITION): cv.positive_float,
+    },
     extra=vol.ALLOW_EXTRA,
 )
 

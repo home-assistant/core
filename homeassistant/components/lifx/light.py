@@ -52,6 +52,7 @@ import homeassistant.util.color as color_util
 
 from . import (
     CONF_BROADCAST,
+    CONF_DEFAULT_TRANSITION,
     CONF_PORT,
     CONF_SERVER,
     DATA_LIFX_MANAGER,
@@ -604,8 +605,14 @@ class LIFXLight(LightEntity):
             if ATTR_INFRARED in kwargs:
                 bulb.set_infrared(convert_8_to_16(kwargs[ATTR_INFRARED]))
 
+            default_transition = self.hass.data[LIFX_DOMAIN].get(
+                CONF_DEFAULT_TRANSITION
+            )
+
             if ATTR_TRANSITION in kwargs:
                 fade = int(kwargs[ATTR_TRANSITION] * 1000)
+            elif default_transition is not None:
+                fade = default_transition * 1000
             else:
                 fade = 0
 
