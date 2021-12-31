@@ -120,10 +120,9 @@ async def test_doorbell_chime_event(hass, auth):
     assert device.identifiers == {("nest", DEVICE_ID)}
 
     timestamp = utcnow()
-    event_message = create_event(
-        "sdm.devices.events.DoorbellChime.Chime", timestamp=timestamp
+    await subscriber.async_receive_event(
+        create_event("sdm.devices.events.DoorbellChime.Chime", timestamp=timestamp)
     )
-    await subscriber.async_receive_event(event_message)
     await hass.async_block_till_done()
 
     event_time = timestamp.replace(microsecond=0)

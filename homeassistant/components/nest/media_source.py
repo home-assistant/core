@@ -194,7 +194,7 @@ class NestEventMediaStore(EventMediaStore):
         def load_media(filename: str) -> bytes | None:
             if not os.path.exists(filename):
                 return None
-            _LOGGER.debug("Event media already exists, not overwriting: %s", filename)
+            _LOGGER.debug("Reading event media from disk store: %s", filename)
             with open(filename, "rb") as media:
                 return media.read()
 
@@ -211,7 +211,9 @@ class NestEventMediaStore(EventMediaStore):
         def save_media(filename: str, content: bytes) -> None:
             os.makedirs(os.path.dirname(filename), exist_ok=True)
             if os.path.exists(filename):
-                _LOGGER.debug("Keeping event media that already exists: %s", filename)
+                _LOGGER.debug(
+                    "Event media already exists, not overwriting: %s", filename
+                )
                 return
             _LOGGER.debug("Saving event media to disk store: %s", filename)
             with open(filename, "wb") as media:
@@ -432,7 +434,7 @@ async def _async_get_clip_preview_sessions(
 
 
 async def _async_get_image_sessions(device: Device) -> dict[str, ImageSession]:
-    """Return clip preview sessions for the device."""
+    """Return image events for the device."""
     events = await device.event_media_manager.async_image_sessions()
     return {e.event_token: e for e in events}
 
