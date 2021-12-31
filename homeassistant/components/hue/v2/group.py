@@ -102,7 +102,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
 
         # Entities for Hue groups are disabled by default
         # unless they were enabled in old version (legacy option)
-        self._attr_entity_registry_enabled_default = bridge.config_entry.data.get(
+        self._attr_entity_registry_enabled_default = bridge.config_entry.options.get(
             CONF_ALLOW_HUE_GROUPS, False
         )
 
