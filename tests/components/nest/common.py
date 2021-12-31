@@ -117,7 +117,4 @@ async def async_setup_sdm_platform(
     ):
         assert await async_setup_component(hass, DOMAIN, CONFIG)
         await hass.async_block_till_done()
-    # Disabled to reduce setup burden, and enabled manually by tests that
-    # need to exercise this
-    subscriber.cache_policy.fetch = False
     return subscriber
