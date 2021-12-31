@@ -59,13 +59,13 @@ async def async_setup_entry(
         {
             vol.Optional(ATTR_DYNAMIC): vol.Coerce(bool),
             vol.Optional(ATTR_SPEED): vol.All(
-                vol.Coerce(int), vol.Clamp(min=0, max=100)
+                vol.Coerce(int), vol.Range(min=0, max=100)
             ),
             vol.Optional(ATTR_TRANSITION): vol.All(
-                vol.Coerce(float), vol.Clamp(min=0, max=300)
+                vol.Coerce(float), vol.Range(min=0, max=600)
             ),
             vol.Optional(ATTR_BRIGHTNESS): vol.All(
-                vol.Coerce(int), vol.Clamp(min=0, max=255)
+                vol.Coerce(int), vol.Range(min=0, max=255)
             ),
         },
         "async_activate",
