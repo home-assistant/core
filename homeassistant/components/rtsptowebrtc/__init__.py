@@ -36,7 +36,6 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "rtsptowebrtc"
 DATA_SERVER_URL = "server_url"
 DATA_UNSUB = "unsub"
-DATA_UNAVAILABLE = "unavailable"
 TIMEOUT = 10
 
 
