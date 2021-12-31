@@ -2,67 +2,63 @@
 from __future__ import annotations
 
 import logging
+import re
 from typing import Any
 
-from aioremootio import (
-    ConnectionOptions,
-    RemootioClientAuthenticationError,
-    RemootioClientConnectionEstablishmentError,
-)
-from aioremootio.constants import (
-    CONNECTION_OPTION_REGEX_API_AUTH_KEY,
-    CONNECTION_OPTION_REGEX_API_SECRET_KEY,
-    CONNECTION_OPTION_REGEX_HOST,
-)
+from aioremootio import ConnectionOptions
 import voluptuous as vol
 from voluptuous.error import RequiredFieldInvalid
 from voluptuous.schema_builder import REMOVE_EXTRA
 
 from homeassistant import config_entries
-from homeassistant.components.cover import CoverDeviceClass
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_HOST
+from homeassistant.components.cover import DEVICE_CLASS_GARAGE, DEVICE_CLASS_GATE
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
     CONF_API_AUTH_KEY,
     CONF_API_SECRET_KEY,
-    CONF_DATA,
     CONF_SERIAL_NUMBER,
     CONF_TITLE,
     DOMAIN,
 )
-from .exceptions import UnsupportedRemootioDeviceError
+from .exceptions import CannotConnect, InvalidAuth, UnsupportedRemootioDeviceError
 from .utils import get_serial_number
 
 _LOGGER = logging.getLogger(__name__)
 
+REGEX_IP_ADDRESS = re.compile(
+    r"^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
+)
+REGEX_CREDENTIAL = re.compile(r"[0-9A-Z]{64}")
+
 INPUT_VALIDATION_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOST, msg="Host is required"): vol.All(
+        vol.Required(CONF_IP_ADDRESS, msg="IP address is required"): vol.All(
             vol.Coerce(str),
-            vol.Match(CONNECTION_OPTION_REGEX_HOST),
-            msg="Host appears to be invalid; it can be an IP address or a host name that complies with RFC-1123",
+            vol.Match(REGEX_IP_ADDRESS),
+            msg="IP address appears to be invalid",
         ),
         vol.Required(CONF_API_SECRET_KEY, msg="API Secret Key is required"): vol.All(
             vol.Coerce(str),
             vol.Upper,
-            vol.Match(CONNECTION_OPTION_REGEX_API_SECRET_KEY),
-            msg="API Secret Key appears to be invalid; it must be a sequence of 64 characters and can contain only numbers and english letters",
+            vol.Match(REGEX_CREDENTIAL),
+            msg="API Secret Key appears to be invalid",
         ),
         vol.Required(CONF_API_AUTH_KEY, msg="API Auth Key is required"): vol.All(
             vol.Coerce(str),
             vol.Upper,
-            vol.Match(CONNECTION_OPTION_REGEX_API_AUTH_KEY),
-            msg="API Auth Key appears to be invalid; it must be a sequence of 64 characters and can contain only numbers and english letters",
+            vol.Match(REGEX_CREDENTIAL),
+            msg="API Auth Key appears to be invalid",
         ),
         vol.Required(
             CONF_DEVICE_CLASS,
-            default=CoverDeviceClass.GARAGE,
+            default=DEVICE_CLASS_GARAGE,
             msg="Controlled device's class is required",
         ): vol.All(
             vol.Coerce(str),
-            vol.In([CoverDeviceClass.GARAGE, CoverDeviceClass.GATE]),
+            vol.In([DEVICE_CLASS_GARAGE, DEVICE_CLASS_GATE]),
             msg="Controlled device's class appears to be invalid",
         ),
     },
@@ -77,21 +73,19 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     _LOGGER.debug("Validating input... Input [%s]", data)
 
-    data = INPUT_VALIDATION_SCHEMA(data)
+    INPUT_VALIDATION_SCHEMA(data)
 
     connection_options: ConnectionOptions = ConnectionOptions(
-        data[CONF_HOST], data[CONF_API_SECRET_KEY], data[CONF_API_AUTH_KEY]
+        data[CONF_IP_ADDRESS], data[CONF_API_SECRET_KEY], data[CONF_API_AUTH_KEY]
     )
 
     device_serial_number: str = await get_serial_number(
         hass, connection_options, _LOGGER
     )
 
-    data[CONF_SERIAL_NUMBER] = device_serial_number
-
     return {
-        CONF_TITLE: f"{DEVICE_NAME} (Host: {data[CONF_HOST]}, S/N: {device_serial_number})",
-        CONF_DATA: data,
+        CONF_TITLE: f"{DEVICE_NAME} (IP: {data[CONF_IP_ADDRESS]}, S/N: {device_serial_number})",
+        CONF_SERIAL_NUMBER: device_serial_number,
     }
 
 
@@ -102,6 +96,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the class."""
+        super().__init__()
+
+        self.form_displayed = False
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -110,53 +107,60 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         user_input = user_input or {}
         errors = {}
 
-        if len(user_input) != 0:
-            validation_result = {}
-
+        if user_input is not None and len(user_input) != 0:
             try:
-                validation_result = await validate_input(self.hass, user_input)
+                info = await validate_input(self.hass, user_input)
             except UnsupportedRemootioDeviceError:
-                _LOGGER.debug("Remootio device isn't supported", exc_info=True)
+                _LOGGER.debug("Remootio device isn't supported.", exc_info=True)
                 return self.async_abort(reason="unsupported_device")
-            except vol.MultipleInvalid as ex:
-                _LOGGER.error(
-                    "Invalid user input. MultipleInvalid.Errors [%s]", ex.errors
+            except vol.MultipleInvalid as e:
+                incomplete_data = True
+
+                _LOGGER.debug(
+                    f"Invalid user input. MultipleInvalid.Errors [{e.errors}]",
+                    exc_info=True,
                 )
-                for error in ex.errors:
+                for error in e.errors:
                     _LOGGER.debug(
-                        "Error [%s] Path [%s]", error.__class__.__name__, error.path[0]
+                        f"Error [{error.__class__.__name__}] Path [{error.path[0]}]"
                     )
                     if isinstance(error, RequiredFieldInvalid):
                         errors[str(error.path[0])] = f"{error.path[0]}_required"
                     else:
                         errors[str(error.path[0])] = f"{error.path[0]}_invalid"
-            except RemootioClientConnectionEstablishmentError:
-                _LOGGER.error("Can't connect to Remootio device")
+                        incomplete_data = False
+
+                if incomplete_data and not self.form_displayed:
+                    errors = {}
+                    errors["base"] = "user_input_incomplete"
+            except CannotConnect:
+                _LOGGER.debug("Can't connect to Remootio device.", exc_info=True)
                 errors["base"] = "cannot_connect"
-            except RemootioClientAuthenticationError:
-                _LOGGER.error("Can't authenticate by the Remootio device")
+            except InvalidAuth:
+                _LOGGER.debug(
+                    "Can't autehnticate by the Remootio device.", exc_info=True
+                )
                 errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
+            except BaseException:
                 _LOGGER.exception("Unexpected exception/error")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(
-                    validation_result[CONF_DATA][CONF_SERIAL_NUMBER]
-                )
-                self._abort_if_unique_id_configured(validation_result[CONF_DATA])
+                await self.async_set_unique_id(info[CONF_SERIAL_NUMBER])
+                self._abort_if_unique_id_configured(user_input)
 
-                return self.async_create_entry(
-                    title=validation_result[CONF_TITLE],
-                    data=validation_result[CONF_DATA],
-                )
+                user_input[CONF_SERIAL_NUMBER] = info[CONF_SERIAL_NUMBER]
+
+                return self.async_create_entry(title=info[CONF_TITLE], data=user_input)
+
+        self.form_displayed = True
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
                     vol.Optional(
-                        CONF_HOST,
-                        default=user_input.get(CONF_HOST, vol.UNDEFINED),
+                        CONF_IP_ADDRESS,
+                        default=user_input.get(CONF_IP_ADDRESS, vol.UNDEFINED),
                     ): vol.Coerce(str),
                     vol.Optional(
                         CONF_API_SECRET_KEY,
@@ -168,12 +172,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     ): vol.Coerce(str),
                     vol.Optional(
                         CONF_DEVICE_CLASS,
-                        default=user_input.get(
-                            CONF_DEVICE_CLASS, CoverDeviceClass.GARAGE
-                        ),
+                        default=user_input.get(CONF_DEVICE_CLASS, DEVICE_CLASS_GARAGE),
                     ): vol.All(
                         vol.Coerce(str),
-                        vol.In([CoverDeviceClass.GARAGE, CoverDeviceClass.GATE]),
+                        vol.In([DEVICE_CLASS_GARAGE, DEVICE_CLASS_GATE]),
                     ),
                 },
                 extra=REMOVE_EXTRA,

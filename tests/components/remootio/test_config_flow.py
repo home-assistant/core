@@ -2,21 +2,20 @@
 import logging
 from unittest.mock import patch
 
-from aioremootio import (
-    RemootioClientAuthenticationError,
-    RemootioClientConnectionEstablishmentError,
-)
-
 from homeassistant import config_entries
-from homeassistant.components.cover import CoverDeviceClass
+from homeassistant.components.cover import DEVICE_CLASS_GARAGE
 from homeassistant.components.remootio.const import (
     CONF_API_AUTH_KEY,
     CONF_API_SECRET_KEY,
     CONF_SERIAL_NUMBER,
     DOMAIN,
 )
-from homeassistant.components.remootio.exceptions import UnsupportedRemootioDeviceError
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_HOST
+from homeassistant.components.remootio.exceptions import (
+    CannotConnect,
+    InvalidAuth,
+    UnsupportedRemootioDeviceError,
+)
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
@@ -28,8 +27,8 @@ from tests.common import MockConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
-TDV_VALID_HOST = "127.0.0.1"
-TDV_INVALID_HOST = "127.0.0_1"
+TDV_VALID_IP_ADDRESS = "127.0.0.1"
+TDV_INVALID_IP_ADDRESS = "127.0.0_1"
 TDV_VALID_CREDENTIAL = (
     "123456789A123456789B123456789C123456789D123456789E123456789FVXYZ"
 )
@@ -44,7 +43,7 @@ async def test_form_unsupported_device(hass: HomeAssistant) -> None:
         "homeassistant.components.remootio.async_setup_entry", return_value=True
     ), patch(
         "homeassistant.components.remootio.config_flow.get_serial_number",
-        side_effect=UnsupportedRemootioDeviceError,
+        side_effect=UnsupportedRemootioDeviceError(None),
     ) as get_serial_number:
         init_result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -53,10 +52,10 @@ async def test_form_unsupported_device(hass: HomeAssistant) -> None:
         configure_result = await hass.config_entries.flow.async_configure(
             init_result["flow_id"],
             {
-                CONF_HOST: TDV_VALID_HOST,
+                CONF_IP_ADDRESS: TDV_VALID_IP_ADDRESS,
                 CONF_API_AUTH_KEY: TDV_VALID_CREDENTIAL,
                 CONF_API_SECRET_KEY: TDV_VALID_CREDENTIAL,
-                CONF_DEVICE_CLASS: CoverDeviceClass.GARAGE,
+                CONF_DEVICE_CLASS: DEVICE_CLASS_GARAGE,
             },
         )
 
@@ -80,7 +79,7 @@ async def test_form_invalid_user_input(hass: HomeAssistant) -> None:
         "homeassistant.components.remootio.async_setup_entry", return_value=True
     ), patch(
         "homeassistant.components.remootio.config_flow.get_serial_number",
-        return_value=TDV_SERIAL_NUMBER,
+        side_effect=UnsupportedRemootioDeviceError(None),
     ) as get_serial_number:
         init_result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -89,10 +88,10 @@ async def test_form_invalid_user_input(hass: HomeAssistant) -> None:
         configure_result = await hass.config_entries.flow.async_configure(
             init_result["flow_id"],
             {
-                CONF_HOST: TDV_INVALID_HOST,
+                CONF_IP_ADDRESS: TDV_INVALID_IP_ADDRESS,
                 CONF_API_AUTH_KEY: TDV_INVALID_CREDENTIAL,
                 CONF_API_SECRET_KEY: TDV_VALID_CREDENTIAL,
-                CONF_DEVICE_CLASS: CoverDeviceClass.GARAGE,
+                CONF_DEVICE_CLASS: DEVICE_CLASS_GARAGE,
             },
         )
 
@@ -105,21 +104,48 @@ async def test_form_invalid_user_input(hass: HomeAssistant) -> None:
     assert configure_result
     assert configure_result["type"] == RESULT_TYPE_FORM
     assert configure_result["errors"] == {
-        CONF_HOST: f"{CONF_HOST}_invalid",
+        CONF_IP_ADDRESS: f"{CONF_IP_ADDRESS}_invalid",
         CONF_API_AUTH_KEY: f"{CONF_API_AUTH_KEY}_invalid",
     }
 
     assert get_serial_number.called is False
 
 
-async def test_form_incomplete_user_input(hass: HomeAssistant) -> None:
+async def test_form_incomplete_user_input_on_init(hass: HomeAssistant) -> None:
+    """Tests the successful handling of the case if the user input is incomplete."""
+
+    with patch(
+        "homeassistant.components.remootio.async_setup_entry", return_value=True
+    ), patch(
+        "homeassistant.components.remootio.config_flow.get_serial_number",
+        side_effect=UnsupportedRemootioDeviceError(None),
+    ) as get_serial_number:
+        init_result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data={
+                CONF_IP_ADDRESS: TDV_VALID_IP_ADDRESS,
+                CONF_API_SECRET_KEY: TDV_VALID_CREDENTIAL,
+                CONF_DEVICE_CLASS: DEVICE_CLASS_GARAGE,
+            },
+        )
+
+    _LOGGER.debug(f"init_result [{init_result}")
+    assert init_result
+    assert init_result["type"] == RESULT_TYPE_FORM
+    assert init_result["errors"] == {"base": "user_input_incomplete"}
+
+    assert get_serial_number.called is False
+
+
+async def test_form_incomplete_user_input_on_configure(hass: HomeAssistant) -> None:
     """Tests the successful handling of the case if the user input is invalid."""
 
     with patch(
         "homeassistant.components.remootio.async_setup_entry", return_value=True
     ), patch(
         "homeassistant.components.remootio.config_flow.get_serial_number",
-        return_value=TDV_SERIAL_NUMBER,
+        side_effect=UnsupportedRemootioDeviceError(None),
     ) as get_serial_number:
         init_result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -128,9 +154,9 @@ async def test_form_incomplete_user_input(hass: HomeAssistant) -> None:
         configure_result = await hass.config_entries.flow.async_configure(
             init_result["flow_id"],
             {
-                CONF_HOST: TDV_VALID_HOST,
+                CONF_IP_ADDRESS: TDV_VALID_IP_ADDRESS,
                 CONF_API_SECRET_KEY: TDV_VALID_CREDENTIAL,
-                CONF_DEVICE_CLASS: CoverDeviceClass.GARAGE,
+                CONF_DEVICE_CLASS: DEVICE_CLASS_GARAGE,
             },
         )
 
@@ -156,7 +182,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         "homeassistant.components.remootio.async_setup_entry", return_value=True
     ), patch(
         "homeassistant.components.remootio.config_flow.get_serial_number",
-        side_effect=RemootioClientConnectionEstablishmentError(None, None),
+        side_effect=CannotConnect,
     ) as get_serial_number:
         init_result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -165,10 +191,10 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         configure_result = await hass.config_entries.flow.async_configure(
             init_result["flow_id"],
             {
-                CONF_HOST: TDV_VALID_HOST,
+                CONF_IP_ADDRESS: TDV_VALID_IP_ADDRESS,
                 CONF_API_AUTH_KEY: TDV_VALID_CREDENTIAL,
                 CONF_API_SECRET_KEY: TDV_VALID_CREDENTIAL,
-                CONF_DEVICE_CLASS: CoverDeviceClass.GARAGE,
+                CONF_DEVICE_CLASS: DEVICE_CLASS_GARAGE,
             },
         )
 
@@ -192,7 +218,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
         "homeassistant.components.remootio.async_setup_entry", return_value=True
     ), patch(
         "homeassistant.components.remootio.config_flow.get_serial_number",
-        side_effect=RemootioClientAuthenticationError(None, None),
+        side_effect=InvalidAuth,
     ) as get_serial_number:
         init_result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -201,10 +227,10 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
         configure_result = await hass.config_entries.flow.async_configure(
             init_result["flow_id"],
             {
-                CONF_HOST: TDV_VALID_HOST,
+                CONF_IP_ADDRESS: TDV_VALID_IP_ADDRESS,
                 CONF_API_AUTH_KEY: TDV_VALID_CREDENTIAL,
                 CONF_API_SECRET_KEY: TDV_VALID_CREDENTIAL,
-                CONF_DEVICE_CLASS: CoverDeviceClass.GARAGE,
+                CONF_DEVICE_CLASS: DEVICE_CLASS_GARAGE,
             },
         )
 
@@ -227,10 +253,10 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_HOST: TDV_VALID_HOST,
+            CONF_IP_ADDRESS: TDV_VALID_IP_ADDRESS,
             CONF_API_SECRET_KEY: TDV_VALID_CREDENTIAL,
             CONF_API_AUTH_KEY: TDV_VALID_CREDENTIAL,
-            CONF_DEVICE_CLASS: CoverDeviceClass.GARAGE,
+            CONF_DEVICE_CLASS: DEVICE_CLASS_GARAGE,
             CONF_SERIAL_NUMBER: TDV_SERIAL_NUMBER,
         },
         unique_id=TDV_SERIAL_NUMBER,
@@ -250,10 +276,10 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
         configure_result = await hass.config_entries.flow.async_configure(
             init_result["flow_id"],
             {
-                CONF_HOST: TDV_VALID_HOST,
+                CONF_IP_ADDRESS: TDV_VALID_IP_ADDRESS,
                 CONF_API_AUTH_KEY: TDV_VALID_CREDENTIAL,
                 CONF_API_SECRET_KEY: TDV_VALID_CREDENTIAL,
-                CONF_DEVICE_CLASS: CoverDeviceClass.GARAGE,
+                CONF_DEVICE_CLASS: DEVICE_CLASS_GARAGE,
             },
         )
 
@@ -286,10 +312,10 @@ async def test_form(hass: HomeAssistant) -> None:
         configure_result = await hass.config_entries.flow.async_configure(
             init_result["flow_id"],
             {
-                CONF_HOST: TDV_VALID_HOST,
+                CONF_IP_ADDRESS: TDV_VALID_IP_ADDRESS,
                 CONF_API_AUTH_KEY: TDV_VALID_CREDENTIAL,
                 CONF_API_SECRET_KEY: TDV_VALID_CREDENTIAL,
-                CONF_DEVICE_CLASS: CoverDeviceClass.GARAGE,
+                CONF_DEVICE_CLASS: DEVICE_CLASS_GARAGE,
             },
         )
 
@@ -302,10 +328,10 @@ async def test_form(hass: HomeAssistant) -> None:
     assert configure_result
     assert configure_result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert configure_result["data"] == {
-        CONF_HOST: TDV_VALID_HOST,
+        CONF_IP_ADDRESS: TDV_VALID_IP_ADDRESS,
         CONF_API_AUTH_KEY: TDV_VALID_CREDENTIAL,
         CONF_API_SECRET_KEY: TDV_VALID_CREDENTIAL,
-        CONF_DEVICE_CLASS: CoverDeviceClass.GARAGE,
+        CONF_DEVICE_CLASS: DEVICE_CLASS_GARAGE,
         CONF_SERIAL_NUMBER: TDV_SERIAL_NUMBER,
     }
 

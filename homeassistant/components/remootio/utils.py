@@ -1,19 +1,22 @@
 """Utility methods for the Remootio integration."""
-from __future__ import annotations
-
-import asyncio
 import logging
 from logging import Logger
 
 from aioremootio import ConnectionOptions, LoggerConfiguration, RemootioClient
 from aioremootio.enums import State
+from aioremootio.errors import (
+    RemootioClientAuthenticationError,
+    RemootioClientConnectionEstablishmentError,
+)
 import async_timeout
 
 from homeassistant import core
 from homeassistant.helpers import aiohttp_client
 
-from .const import EXPECTED_MINIMUM_API_VERSION, REMOOTIO_DELAY, REMOOTIO_TIMEOUT
+from .const import EXPECTED_MINIMUM_API_VERSION, REMOOTIO_TIMEOUT
 from .exceptions import (
+    CannotConnect,
+    InvalidAuth,
     UnsupportedRemootioApiVersionError,
     UnsupportedRemootioDeviceError,
 )
@@ -21,32 +24,35 @@ from .exceptions import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def _wait_for_connected(remootio_client: RemootioClient) -> bool:
-    while not remootio_client.connected:
-        await asyncio.sleep(REMOOTIO_DELAY)
-
-    return remootio_client.connected
-
-
 async def _check_api_version(remootio_client: RemootioClient) -> None:
     """Check whether the by the given client represented Remootio device uses a supported API version."""
-    api_version: int = remootio_client.api_version
+    api_version: int = await remootio_client.api_version
     if api_version < EXPECTED_MINIMUM_API_VERSION:
-        raise UnsupportedRemootioApiVersionError
+        raise UnsupportedRemootioApiVersionError(remootio_client, api_version)
 
 
 async def _check_sensor_installed(
     remootio_client: RemootioClient, raise_error: bool = True
 ) -> None:
     """Check whether the by the given client represented Remootio device has a sensor installed."""
-    if remootio_client.state == State.NO_SENSOR_INSTALLED:
-        if raise_error:
-            raise UnsupportedRemootioDeviceError
+    if await remootio_client.initialized:
+        if remootio_client.state == State.NO_SENSOR_INSTALLED:
+            if raise_error:
+                raise UnsupportedRemootioDeviceError(remootio_client)
+            else:
+                _LOGGER.error(
+                    f"Your Remootio device isn't supported, possibly because it hasn't a sensor installed. IP [{remootio_client.ip_address}]"
+                )
 
-        _LOGGER.error(
-            "Your Remootio device isn't supported, possibly because it hasn't a sensor installed. Host [%s]",
-            remootio_client.host,
-        )
+
+def _handle_exception(ex: Exception) -> None:
+    """Handle errors raised by a Remootio client."""
+    if isinstance(ex, RemootioClientConnectionEstablishmentError):
+        raise CannotConnect from ex
+    elif isinstance(ex, RemootioClientAuthenticationError):
+        raise InvalidAuth from ex
+    else:
+        raise ex
 
 
 async def get_serial_number(
@@ -56,16 +62,21 @@ async def get_serial_number(
     result: str = ""
 
     async with async_timeout.timeout(REMOOTIO_TIMEOUT):
-        async with RemootioClient(
-            connection_options,
-            aiohttp_client.async_get_clientsession(hass),
-            LoggerConfiguration(logger=logger),
-        ) as remootio_client:
-            if await _wait_for_connected(remootio_client):
+        remootio_client: RemootioClient = None
+        try:
+            async with RemootioClient(
+                connection_options,
+                aiohttp_client.async_get_clientsession(hass),
+                LoggerConfiguration(logger=logger),
+            ) as remootio_client:
                 await _check_sensor_installed(remootio_client)
                 await _check_api_version(remootio_client)
 
-                result = remootio_client.serial_number
+                result = await remootio_client.serial_number
+        except UnsupportedRemootioApiVersionError:
+            raise
+        except Exception as ex:
+            _handle_exception(ex)
 
     return result
 
@@ -74,26 +85,30 @@ async def create_client(
     hass: core.HomeAssistant,
     connection_options: ConnectionOptions,
     logger: Logger,
-    expected_serial_number: str | None = None,
+    expected_serial_number: str = None,
 ) -> RemootioClient:
     """Create an Remootio client based on the given data."""
     result: RemootioClient = None
 
     async with async_timeout.timeout(REMOOTIO_TIMEOUT):
-        result = await RemootioClient(
-            connection_options,
-            aiohttp_client.async_get_clientsession(hass),
-            LoggerConfiguration(logger=logger),
-        )
+        try:
+            result = await RemootioClient(
+                connection_options,
+                aiohttp_client.async_get_clientsession(hass),
+                LoggerConfiguration(logger=logger),
+            )
 
-        if await _wait_for_connected(result):
             await _check_sensor_installed(result, False)
             await _check_api_version(result)
 
             if expected_serial_number is not None:
-                serial_number: str = result.serial_number
+                serial_number: str = await result.serial_number
                 assert (
                     expected_serial_number == serial_number
                 ), f"Serial number of the Remootio device isn't the expected. Actual [{serial_number}] Expected [{expected_serial_number}]"
+        except UnsupportedRemootioApiVersionError:
+            raise
+        except Exception as ex:
+            _handle_exception(ex)
 
     return result
