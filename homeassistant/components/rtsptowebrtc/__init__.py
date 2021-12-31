@@ -18,8 +18,8 @@ Other integrations may use this integration with these steps:
 
 from __future__ import annotations
 
+from collections.abc import Callable
 import logging
-from typing import Callable
 
 import async_timeout
 from rtsp_to_webrtc.client import Client
