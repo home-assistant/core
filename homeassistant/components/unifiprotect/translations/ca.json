@@ -10,12 +10,24 @@
             "unknown": "Error inesperat"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "host": "IP/amfitri\u00f3 del servidor d'UniFi Protect",
+                    "password": "Contrasenya",
+                    "port": "Port",
+                    "username": "Nom d'usuari"
+                },
+                "title": "Re-autenticaci\u00f3 d'UniFi Protect"
+            },
             "user": {
                 "data": {
                     "host": "Amfitri\u00f3",
                     "password": "Contrasenya",
-                    "username": "Nom d'usuari"
-                }
+                    "port": "Port",
+                    "username": "Nom d'usuari",
+                    "verify_ssl": "Verifica el certificat SSL"
+                },
+                "title": "Configuraci\u00f3 d'UniFi Protect"
             }
         }
     },

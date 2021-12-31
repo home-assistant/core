@@ -10,12 +10,24 @@
             "unknown": "Ootamatu t\u00f5rge"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "host": "UniFi Protect serveri IP aadress/host",
+                    "password": "Salas\u00f5na",
+                    "port": "Port",
+                    "username": "Kasutajanimi"
+                },
+                "title": "UniFi Protect taastuvastamine"
+            },
             "user": {
                 "data": {
                     "host": "Host",
                     "password": "Salas\u00f5na",
-                    "username": "Kasutajanimi"
-                }
+                    "port": "Port",
+                    "username": "Kasutajanimi",
+                    "verify_ssl": "Kontrolli SSL sertifikaati"
+                },
+                "title": "UniFi Protect seadistamine"
             }
         }
     },
