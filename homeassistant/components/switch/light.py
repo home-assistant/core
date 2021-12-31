@@ -6,7 +6,11 @@ from typing import Any, cast
 import voluptuous as vol
 
 from homeassistant.components import switch
-from homeassistant.components.light import PLATFORM_SCHEMA, LightEntity
+from homeassistant.components.light import (
+    COLOR_MODE_ONOFF,
+    PLATFORM_SCHEMA,
+    LightEntity,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ENTITY_ID,
@@ -64,6 +68,8 @@ class LightSwitch(LightEntity):
         self._switch_entity_id = switch_entity_id
         self._unique_id = unique_id
         self._switch_state: State | None = None
+        self._attr_color_mode = COLOR_MODE_ONOFF
+        self._attr_supported_color_modes = {COLOR_MODE_ONOFF}
 
     @property
     def name(self) -> str:
