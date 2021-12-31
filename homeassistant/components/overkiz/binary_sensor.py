@@ -145,6 +145,6 @@ class OverkizBinarySensor(OverkizDescriptiveEntity, BinarySensorEntity):
     def is_on(self) -> bool | None:
         """Return the state of the sensor."""
         if state := self.device.states.get(self.entity_description.key):
-            return self.entity_description.value_fn(str(state.value))
+            return self.entity_description.value_fn(state.value)
 
         return None
