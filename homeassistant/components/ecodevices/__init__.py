@@ -91,10 +91,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, controller.host)},
+        identifiers={(DOMAIN, controller.mac_address)},
         manufacturer="GCE",
         model="Eco-Devices",
-        default_name=f"Eco-Devices {controller.host}",
+        default_name=f"Eco-Devices {controller.host}:{str(controller.port)}",
         sw_version=controller.version,
         connections={(dr.CONNECTION_NETWORK_MAC, controller.mac_address)},
         configuration_url=f"http://{config[CONF_HOST]}:{config[CONF_PORT]}",

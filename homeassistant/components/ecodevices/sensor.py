@@ -10,9 +10,10 @@ from homeassistant.const import (
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_POWER,
     ENERGY_WATT_HOUR,
-    POWER_VOLT_AMPERE,
+    POWER_WATT,
 )
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import slugify
 
 from .const import (
     CONF_C1_DEVICE_CLASS,
@@ -64,7 +65,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 coordinator,
                 input_name="t1",
                 name=DEFAULT_T1_NAME,
-                unit=POWER_VOLT_AMPERE,
+                unit=POWER_WATT,
                 device_class=DEVICE_CLASS_POWER,
                 state_class=STATE_CLASS_MEASUREMENT,
                 icon="mdi:flash",
@@ -128,7 +129,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 coordinator,
                 input_name="t2",
                 name=DEFAULT_T2_NAME,
-                unit=POWER_VOLT_AMPERE,
+                unit=POWER_WATT,
                 device_class=DEVICE_CLASS_POWER,
                 state_class=STATE_CLASS_MEASUREMENT,
                 icon="mdi:flash",
@@ -287,17 +288,19 @@ class EdDevice(CoordinatorEntity, SensorEntity):
         self._attr_device_class = device_class
         self._attr_state_class = state_class
         self._attr_icon = icon
-        self._attr_unique_id = "_".join(
-            [
-                DOMAIN,
-                self.controller.host,
-                "sensor",
-                self._input_name,
-            ]
+        self._attr_unique_id = slugify(
+            "_".join(
+                [
+                    DOMAIN,
+                    self.controller.mac_address,
+                    "sensor",
+                    self._input_name,
+                ]
+            )
         )
         self._attr_device_info = {
-            "identifiers": {(DOMAIN, self.controller.host)},
-            "via_device": (DOMAIN, self.controller.host),
+            "identifiers": {(DOMAIN, self.controller.mac_address)},
+            "via_device": (DOMAIN, self.controller.mac_address),
         }
 
         self._state = None

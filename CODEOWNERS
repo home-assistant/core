@@ -231,6 +231,7 @@ tests/components/eafm/* @Jc2k
 homeassistant/components/ecobee/* @marthoc
 tests/components/ecobee/* @marthoc
 homeassistant/components/ecodevices/* @Aohzan
+tests/components/ecodevices/* @Aohzan
 homeassistant/components/econet/* @vangorra @w1ll1am23
 tests/components/econet/* @vangorra @w1ll1am23
 homeassistant/components/ecovacs/* @OverloadUT

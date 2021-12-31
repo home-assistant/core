@@ -95,7 +95,7 @@ async def test_complete_form_user(hass):
         )
 
     assert result4["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result4["title"] == "Eco-Devices 127.0.0.1"
+    assert result4["title"] == "Eco-Devices 127.0.0.1:80"
     assert result4["data"] == {
         CONF_HOST: "127.0.0.1",
         CONF_PORT: 80,
