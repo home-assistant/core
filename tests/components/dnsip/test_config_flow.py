@@ -23,7 +23,7 @@ from tests.common import MockConfigEntry
 
 
 class RetrieveDNS:
-    """Return list of test devices."""
+    """Return list of test information."""
 
     @staticmethod
     async def query(hostname, qtype) -> dict[str, str]:
