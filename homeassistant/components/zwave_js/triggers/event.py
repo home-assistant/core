@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import functools
-import logging
 
 import voluptuous as vol
 from zwave_js_server.client import Client
@@ -121,9 +120,6 @@ async def async_attach_trigger(
     @callback
     def async_on_event(event_data: dict, device: dr.DeviceEntry | None = None) -> None:
         """Handle event."""
-        logging.getLogger(__name__).error(config)
-        logging.getLogger(__name__).error(event_data)
-        logging.getLogger(__name__).error(event_data_filter)
         for key, val in event_data_filter.items():
             if key not in event_data:
                 return
