@@ -5,7 +5,7 @@ from collections.abc import Callable
 from datetime import timedelta
 import json
 import logging
-from typing import Any
+from typing import Any, cast
 
 from aiohttp import ServerDisconnectedError
 from pyoverkiz.client import OverkizClient
@@ -168,10 +168,14 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator):
         data_type = DataType(state.type)
 
         if data_type == DataType.NONE:
-            return state.value
+            return cast(None, state.value)
 
         cast_to_python = DATA_TYPE_TO_PYTHON[data_type]
-        return cast_to_python(state.value)
+        value = cast_to_python(state.value)
+
+        assert isinstance(value, (str, float, int, bool))
+
+        return value
 
     def places_to_area(self, place: Place) -> dict[str, str]:
         """Convert places with sub_places to a flat dictionary."""

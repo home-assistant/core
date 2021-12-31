@@ -1,7 +1,7 @@
 """Support for Overkiz locks."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
@@ -44,7 +44,6 @@ class OverkizLock(OverkizEntity, LockEntity):
     @property
     def is_locked(self) -> bool | None:
         """Return a boolean for the state of the lock."""
-        return (
-            self.executor.select_state(OverkizState.CORE_LOCKED_UNLOCKED)
-            == OverkizCommandParam.LOCKED
+        return self.executor.select_state(OverkizState.CORE_LOCKED_UNLOCKED) == cast(
+            str, OverkizCommandParam.LOCKED
         )
