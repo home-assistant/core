@@ -105,7 +105,7 @@ class MillHeater(CoordinatorEntity, ClimateEntity):
             model=f"Generation {heater.generation}",
             name=self.name,
         )
-        if heater.is_gen1 or heater.is_gen3:
+        if heater.is_gen1:
             self._attr_hvac_modes = [HVAC_MODE_HEAT]
         else:
             self._attr_hvac_modes = [HVAC_MODE_HEAT, HVAC_MODE_OFF]
