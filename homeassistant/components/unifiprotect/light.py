@@ -62,7 +62,7 @@ class ProtectLight(ProtectDeviceEntity, LightEntity):
         self,
         data: ProtectData,
         device: Light,
-    ):
+    ) -> None:
         """Initialize an UniFi light."""
         self.device: Light = device
         super().__init__(data)
