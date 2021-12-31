@@ -21,6 +21,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -205,11 +206,10 @@ class LocalMillHeater(CoordinatorEntity, ClimateEntity):
         super().__init__(coordinator)
         self._attr_name = coordinator.mill_data_connection.name
         if coordinator.mill_data_connection.mac_address:
-            self._attr_unique_id = coordinator.mill_data_connection.mac_address
+            mac = self.coordinator.mill_data_connection.mac_address
+            self._attr_unique_id = mac
             self._attr_device_info = DeviceInfo(
-                identifiers={
-                    (DOMAIN, self.coordinator.mill_data_connection.mac_address)
-                },
+                connections={(CONNECTION_NETWORK_MAC, mac)},
                 configuration_url=self.coordinator.mill_data_connection.url,
                 manufacturer=MANUFACTURER,
                 model="Generation 3",
