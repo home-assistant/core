@@ -323,6 +323,13 @@ async def test_event_order(hass, auth):
     subscriber = await async_setup_devices(
         hass, auth, CAMERA_DEVICE_TYPE, CAMERA_TRAITS
     )
+
+    auth.responses = [
+        aiohttp.web.json_response(GENERATE_IMAGE_URL_RESPONSE),
+        aiohttp.web.Response(body=IMAGE_BYTES_FROM_EVENT),
+        aiohttp.web.json_response(GENERATE_IMAGE_URL_RESPONSE),
+        aiohttp.web.Response(body=IMAGE_BYTES_FROM_EVENT),
+    ]
     event_session_id1 = "FWWVQVUdGNUlTU2V4MGV2aTNXV..."
     event_timestamp1 = dt_util.now()
     await subscriber.async_receive_event(
@@ -899,6 +906,10 @@ async def test_multiple_devices(hass, auth, hass_client):
 
     # Send events for device #1
     for i in range(0, 5):
+        auth.responses = [
+            aiohttp.web.json_response(GENERATE_IMAGE_URL_RESPONSE),
+            aiohttp.web.Response(body=IMAGE_BYTES_FROM_EVENT),
+        ]
         await subscriber.async_receive_event(
             create_event(
                 f"event-session-id-{i}",
@@ -920,6 +931,10 @@ async def test_multiple_devices(hass, auth, hass_client):
 
     # Send events for device #2
     for i in range(0, 3):
+        auth.responses = [
+            aiohttp.web.json_response(GENERATE_IMAGE_URL_RESPONSE),
+            aiohttp.web.Response(body=IMAGE_BYTES_FROM_EVENT),
+        ]
         await subscriber.async_receive_event(
             create_event(
                 f"other-id-{i}", f"event-id{i}", PERSON_EVENT, device_id=device_id2
