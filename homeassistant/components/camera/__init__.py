@@ -315,11 +315,15 @@ def async_register_rtsp_to_web_rtc_provider(
 
 async def _async_refresh_providers(hass: HomeAssistant) -> None:
     """Check all cameras for any state changes for registered providers."""
-    component: EntityComponent = hass.data[DOMAIN]
-    for entity in component.entities:
-        camera = cast(Camera, entity)
+
+    async def _refresh(camera: Camera) -> None:
         if await camera.async_refresh_providers():
             camera.async_write_ha_state()
+
+    component: EntityComponent = hass.data[DOMAIN]
+    await asyncio.gather(
+        *(_refresh(cast(Camera, camera)) for camera in component.entities)
+    )
 
 
 def _async_get_rtsp_to_web_rtc_providers(
