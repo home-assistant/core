@@ -10,8 +10,7 @@ from typing import Any, Callable
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from pyunifiprotect.data import Camera, Version
-from pyunifiprotect.data.websocket import WSSubscriptionMessage
+from pyunifiprotect.data import Camera, Light, Version, WSSubscriptionMessage
 
 from homeassistant.components.unifiprotect.const import DOMAIN, MIN_REQUIRED_PROTECT_V
 from homeassistant.core import HomeAssistant
@@ -129,6 +128,17 @@ def mock_camera():
         data = json.load(json_file)
 
     yield Camera.from_unifi_dict(**data)
+
+
+@pytest.fixture
+def mock_light():
+    """Mock UniFi Protect Camera device."""
+
+    path = Path(__file__).parent / "sample_data" / "sample_light.json"
+    with open(path, encoding="utf-8") as json_file:
+        data = json.load(json_file)
+
+    yield Light.from_unifi_dict(**data)
 
 
 async def time_changed(hass: HomeAssistant, seconds: int) -> None:
