@@ -3,7 +3,7 @@
 import logging
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_PROBLEM,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.core import callback
@@ -31,32 +31,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class SmartyBinarySensor(BinarySensorEntity):
     """Representation of a Smarty Binary Sensor."""
 
+    _attr_should_poll = False
+
     def __init__(self, name, device_class, smarty):
         """Initialize the entity."""
-        self._name = name
-        self._state = None
-        self._sensor_type = device_class
+        self._attr_name = name
+        self._attr_device_class = device_class
         self._smarty = smarty
-
-    @property
-    def device_class(self):
-        """Return the class of the sensor."""
-        return self._sensor_type
-
-    @property
-    def should_poll(self) -> bool:
-        """Do not poll."""
-        return False
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return true if the binary sensor is on."""
-        return self._state
 
     async def async_added_to_hass(self):
         """Call to update."""
@@ -77,8 +58,8 @@ class BoostSensor(SmartyBinarySensor):
 
     def update(self) -> None:
         """Update state."""
-        _LOGGER.debug("Updating sensor %s", self._name)
-        self._state = self._smarty.boost
+        _LOGGER.debug("Updating sensor %s", self._attr_name)
+        self._attr_is_on = self._smarty.boost
 
 
 class AlarmSensor(SmartyBinarySensor):
@@ -87,13 +68,15 @@ class AlarmSensor(SmartyBinarySensor):
     def __init__(self, name, smarty):
         """Alarm Sensor Init."""
         super().__init__(
-            name=f"{name} Alarm", device_class=DEVICE_CLASS_PROBLEM, smarty=smarty
+            name=f"{name} Alarm",
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            smarty=smarty,
         )
 
     def update(self) -> None:
         """Update state."""
-        _LOGGER.debug("Updating sensor %s", self._name)
-        self._state = self._smarty.alarm
+        _LOGGER.debug("Updating sensor %s", self._attr_name)
+        self._attr_is_on = self._smarty.alarm
 
 
 class WarningSensor(SmartyBinarySensor):
@@ -102,10 +85,12 @@ class WarningSensor(SmartyBinarySensor):
     def __init__(self, name, smarty):
         """Warning Sensor Init."""
         super().__init__(
-            name=f"{name} Warning", device_class=DEVICE_CLASS_PROBLEM, smarty=smarty
+            name=f"{name} Warning",
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            smarty=smarty,
         )
 
     def update(self) -> None:
         """Update state."""
-        _LOGGER.debug("Updating sensor %s", self._name)
-        self._state = self._smarty.warning
+        _LOGGER.debug("Updating sensor %s", self._attr_name)
+        self._attr_is_on = self._smarty.warning

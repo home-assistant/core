@@ -15,8 +15,9 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_PROTOCOL,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
-from homeassistant.core import callback
+from homeassistant.core import ServiceCall, callback
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
@@ -36,8 +37,15 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-GATEWAY_PLATFORMS = ["binary_sensor", "sensor", "switch", "light", "cover", "lock"]
-GATEWAY_PLATFORMS_NO_KEY = ["binary_sensor", "sensor"]
+GATEWAY_PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.COVER,
+    Platform.LIGHT,
+    Platform.LOCK,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
+GATEWAY_PLATFORMS_NO_KEY = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 ATTR_GW_MAC = "gw_mac"
 ATTR_RINGTONE_ID = "ringtone_id"
@@ -69,7 +77,7 @@ SERVICE_SCHEMA_REMOVE_DEVICE = vol.Schema(
 def setup(hass, config):
     """Set up the Xiaomi component."""
 
-    def play_ringtone_service(call):
+    def play_ringtone_service(call: ServiceCall) -> None:
         """Service to play ringtone through Gateway."""
         ring_id = call.data.get(ATTR_RINGTONE_ID)
         gateway = call.data.get(ATTR_GW_MAC)
@@ -81,12 +89,12 @@ def setup(hass, config):
 
         gateway.write_to_hub(gateway.sid, **kwargs)
 
-    def stop_ringtone_service(call):
+    def stop_ringtone_service(call: ServiceCall) -> None:
         """Service to stop playing ringtone on Gateway."""
         gateway = call.data.get(ATTR_GW_MAC)
         gateway.write_to_hub(gateway.sid, mid=10000)
 
-    def add_device_service(call):
+    def add_device_service(call: ServiceCall) -> None:
         """Service to add a new sub-device within the next 30 seconds."""
         gateway = call.data.get(ATTR_GW_MAC)
         gateway.write_to_hub(gateway.sid, join_permission="yes")
@@ -96,7 +104,7 @@ def setup(hass, config):
             title="Xiaomi Aqara Gateway",
         )
 
-    def remove_device_service(call):
+    def remove_device_service(call: ServiceCall) -> None:
         """Service to remove a sub-device from the gateway."""
         device_id = call.data.get(ATTR_DEVICE_ID)
         gateway = call.data.get(ATTR_GW_MAC)

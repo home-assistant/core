@@ -7,13 +7,13 @@ import logging
 from aiohttp import web
 import voluptuous as vol
 
-from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
 from homeassistant.const import (
     ATTR_ID,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     CONF_WEBHOOK_ID,
     STATE_NOT_HOME,
+    Platform,
 )
 from homeassistant.helpers import config_entry_flow
 import homeassistant.helpers.config_validation as cv
@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "locative"
 TRACKER_UPDATE = f"{DOMAIN}_tracker_update"
 
-PLATFORMS = [DEVICE_TRACKER]
+PLATFORMS = [Platform.DEVICE_TRACKER]
 
 ATTR_DEVICE_ID = "device"
 ATTR_TRIGGER = "trigger"
@@ -82,7 +82,7 @@ async def handle_webhook(hass, webhook_id, request):
         return web.Response(text=f"Setting location to {location_name}")
 
     if direction == "exit":
-        current_state = hass.states.get(f"{DEVICE_TRACKER}.{device}")
+        current_state = hass.states.get(f"{Platform.DEVICE_TRACKER}.{device}")
 
         if current_state is None or current_state.state == location_name:
             location_name = STATE_NOT_HOME

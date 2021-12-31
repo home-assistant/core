@@ -194,7 +194,11 @@ class NetatmoDataHandler:
             self._auth, **kwargs
         )
 
-        await self.async_fetch_data(data_class_entry)
+        try:
+            await self.async_fetch_data(data_class_entry)
+        except KeyError:
+            self.data_classes.pop(data_class_entry)
+            raise
 
         self._queue.append(self.data_classes[data_class_entry])
         _LOGGER.debug("Data class %s added", data_class_entry)

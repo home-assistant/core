@@ -96,7 +96,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def _get_device_unique_id(eight: EightSleep, user_obj: EightUser = None) -> str:
+def _get_device_unique_id(eight: EightSleep, user_obj: EightUser | None = None) -> str:
     """Get the device's unique ID."""
     unique_id = eight.deviceid
     if user_obj:
@@ -199,7 +199,6 @@ class EightSleepHeatDataCoordinator(DataUpdateCoordinator):
             _LOGGER,
             name=f"{DOMAIN}_heat",
             update_interval=HEAT_SCAN_INTERVAL,
-            update_method=self._async_update_data,
         )
 
     async def _async_update_data(self) -> None:
@@ -217,7 +216,6 @@ class EightSleepUserDataCoordinator(DataUpdateCoordinator):
             _LOGGER,
             name=f"{DOMAIN}_user",
             update_interval=USER_SCAN_INTERVAL,
-            update_method=self._async_update_data,
         )
 
     async def _async_update_data(self) -> None:
@@ -240,7 +238,7 @@ class EightSleepBaseEntity(CoordinatorEntity):
         self._eight = eight
         self._side = side
         self._sensor = sensor
-        self._usrobj: EightUser = None
+        self._usrobj: EightUser | None = None
         if self._side:
             self._usrobj = self._eight.users[self._eight.fetch_userid(self._side)]
         full_sensor_name = self._sensor

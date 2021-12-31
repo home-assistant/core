@@ -33,7 +33,7 @@ from miio import (
 from miio.gateway.gateway import GatewayException
 
 from homeassistant import config_entries, core
-from homeassistant.const import CONF_HOST, CONF_TOKEN
+from homeassistant.const import CONF_HOST, CONF_TOKEN, Platform
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -78,20 +78,32 @@ _LOGGER = logging.getLogger(__name__)
 POLLING_TIMEOUT_SEC = 10
 UPDATE_INTERVAL = timedelta(seconds=15)
 
-GATEWAY_PLATFORMS = ["alarm_control_panel", "light", "sensor", "switch"]
-SWITCH_PLATFORMS = ["switch"]
-FAN_PLATFORMS = ["binary_sensor", "fan", "number", "select", "sensor", "switch"]
-HUMIDIFIER_PLATFORMS = [
-    "binary_sensor",
-    "humidifier",
-    "number",
-    "select",
-    "sensor",
-    "switch",
+GATEWAY_PLATFORMS = [
+    Platform.ALARM_CONTROL_PANEL,
+    Platform.LIGHT,
+    Platform.SENSOR,
+    Platform.SWITCH,
 ]
-LIGHT_PLATFORMS = ["light"]
-VACUUM_PLATFORMS = ["binary_sensor", "sensor", "vacuum"]
-AIR_MONITOR_PLATFORMS = ["air_quality", "sensor"]
+SWITCH_PLATFORMS = [Platform.SWITCH]
+FAN_PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.FAN,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
+HUMIDIFIER_PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.HUMIDIFIER,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
+LIGHT_PLATFORMS = [Platform.LIGHT]
+VACUUM_PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.VACUUM]
+AIR_MONITOR_PLATFORMS = [Platform.AIR_QUALITY, Platform.SENSOR]
 
 MODEL_TO_CLASS_MAP = {
     MODEL_FAN_1C: Fan1C,
@@ -383,8 +395,6 @@ async def async_setup_gateway_entry(
         raise ConfigEntryNotReady() from error
     gateway_info = gateway.gateway_info
 
-    gateway_model = f"{gateway_info.model}-{gateway_info.hardware_version}"
-
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -392,8 +402,9 @@ async def async_setup_gateway_entry(
         identifiers={(DOMAIN, gateway_id)},
         manufacturer="Xiaomi",
         name=name,
-        model=gateway_model,
+        model=gateway_info.model,
         sw_version=gateway_info.firmware_version,
+        hw_version=gateway_info.hardware_version,
     )
 
     def update_data():

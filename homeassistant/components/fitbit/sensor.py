@@ -112,10 +112,11 @@ def request_app_setup(
                        Then come back here and hit the below button.
                        """
     except NoURLAvailableError:
-        error_msg = """Could not find a SSL enabled URL for your Home Assistant instance.
-                     Fitbit requires that your Home Assistant instance is accessible via HTTPS.
-                     """
-        configurator.notify_errors(_CONFIGURING["fitbit"], error_msg)
+        _LOGGER.error(
+            "Could not find an SSL enabled URL for your Home Assistant instance. "
+            "Fitbit requires that your Home Assistant instance is accessible via HTTPS"
+        )
+        return
 
     submit = "I have saved my Client ID and Client Secret into fitbit.conf."
 

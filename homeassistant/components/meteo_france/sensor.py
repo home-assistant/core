@@ -142,11 +142,7 @@ class MeteoFranceRainSensor(MeteoFranceSensor):
             (cadran for cadran in self.coordinator.data.forecast if cadran["rain"] > 1),
             None,
         )
-        return (
-            dt_util.utc_from_timestamp(next_rain["dt"]).isoformat()
-            if next_rain
-            else None
-        )
+        return dt_util.utc_from_timestamp(next_rain["dt"]) if next_rain else None
 
     @property
     def extra_state_attributes(self):

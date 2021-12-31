@@ -10,7 +10,7 @@
             "invalid_auth": "Authentification invalide",
             "invalid_zone": "Zone invalide"
         },
-        "flow_title": "Cloudflare: {name}",
+        "flow_title": "{name}",
         "step": {
             "reauth_confirm": {
                 "data": {

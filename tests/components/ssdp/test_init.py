@@ -793,3 +793,61 @@ async def test_ipv4_does_additional_search_for_sonos(
         ),
     )
     assert ssdp_listener.async_search.call_args[1] == {}
+
+
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_service_info_compatibility(hass, caplog):
+    """Test compatibility with old-style dict.
+
+    To be removed in 2022.6
+    """
+    discovery_info = ssdp.SsdpServiceInfo(
+        ssdp_st="mock-st",
+        ssdp_location="http://1.1.1.1",
+        ssdp_usn="uuid:mock-udn::mock-st",
+        ssdp_server="mock-server",
+        ssdp_ext="",
+        ssdp_headers=_ssdp_headers(
+            {
+                "st": "mock-st",
+                "location": "http://1.1.1.1",
+                "usn": "uuid:mock-udn::mock-st",
+                "server": "mock-server",
+                "ext": "",
+            }
+        ),
+        upnp={ssdp.ATTR_UPNP_DEVICE_TYPE: "ABC"},
+    )
+
+    with patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set()):
+        assert discovery_info["ssdp_st"] == "mock-st"
+    assert "Detected integration that accessed discovery_info['ssdp_st']" in caplog.text
+
+    with patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set()):
+        assert discovery_info.get("ssdp_location") == "http://1.1.1.1"
+    assert (
+        "Detected integration that accessed discovery_info.get('ssdp_location')"
+        in caplog.text
+    )
+
+    with patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set()):
+        assert "ssdp_usn" in discovery_info
+    assert (
+        "Detected integration that accessed discovery_info.__contains__('ssdp_usn')"
+        in caplog.text
+    )
+
+    # Root item
+    assert discovery_info["ssdp_usn"] == "uuid:mock-udn::mock-st"
+    assert discovery_info.get("ssdp_usn") == "uuid:mock-udn::mock-st"
+    assert "ssdp_usn" in discovery_info
+
+    # SSDP header
+    assert discovery_info["st"] == "mock-st"
+    assert discovery_info.get("st") == "mock-st"
+    assert "st" in discovery_info
+
+    # UPnP item
+    assert discovery_info[ssdp.ATTR_UPNP_DEVICE_TYPE] == "ABC"
+    assert discovery_info.get(ssdp.ATTR_UPNP_DEVICE_TYPE) == "ABC"
+    assert ssdp.ATTR_UPNP_DEVICE_TYPE in discovery_info

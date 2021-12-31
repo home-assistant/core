@@ -24,6 +24,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_OFFSET,
 )
+from homeassistant.core import ServiceCall
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import generate_entity_id
@@ -267,7 +268,7 @@ def setup_services(
 ):
     """Set up the service listeners."""
 
-    def _found_calendar(call):
+    def _found_calendar(call: ServiceCall) -> None:
         """Check if we know about a calendar and generate PLATFORM_DISCOVER."""
         calendar = get_calendar_info(hass, call.data)
         if hass.data[DATA_INDEX].get(calendar[CONF_CAL_ID]) is not None:
@@ -289,7 +290,7 @@ def setup_services(
 
     hass.services.register(DOMAIN, SERVICE_FOUND_CALENDARS, _found_calendar)
 
-    def _scan_for_calendars(service):
+    def _scan_for_calendars(call: ServiceCall) -> None:
         """Scan for new calendars."""
         service = calendar_service.get()
         cal_list = service.calendarList()
@@ -300,7 +301,7 @@ def setup_services(
 
     hass.services.register(DOMAIN, SERVICE_SCAN_CALENDARS, _scan_for_calendars)
 
-    def _add_event(call):
+    def _add_event(call: ServiceCall) -> None:
         """Add a new event to calendar."""
         service = calendar_service.get()
         start = {}

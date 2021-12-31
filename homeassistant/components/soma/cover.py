@@ -5,7 +5,8 @@ import logging
 from requests import RequestException
 
 from homeassistant.components.cover import ATTR_POSITION, CoverEntity
-from homeassistant.components.soma import API, DEVICES, DOMAIN, SomaEntity
+
+from . import API, DEVICES, DOMAIN, SomaEntity
 
 _LOGGER = logging.getLogger(__name__)
 

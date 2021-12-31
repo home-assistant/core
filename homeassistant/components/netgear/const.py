@@ -1,9 +1,11 @@
 """Netgear component constants."""
 from datetime import timedelta
 
+from homeassistant.const import Platform
+
 DOMAIN = "netgear"
 
-PLATFORMS = ["device_tracker", "sensor"]
+PLATFORMS = [Platform.DEVICE_TRACKER, Platform.SENSOR]
 
 CONF_CONSIDER_HOME = "consider_home"
 

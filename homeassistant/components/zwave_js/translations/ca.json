@@ -33,6 +33,7 @@
                     "s2_unauthenticated_key": "Clau d'S2 no autenticat",
                     "usb_path": "Ruta del dispositiu USB"
                 },
+                "description": "El complement generar\u00e0 claus de seguretat si aquests camps es deixen buits.",
                 "title": "Introdueix la configuraci\u00f3 del complement Z-Wave JS"
             },
             "hassio_confirm": {
@@ -119,6 +120,7 @@
                     "s2_unauthenticated_key": "Clau d'S2 no autenticat",
                     "usb_path": "Ruta del dispositiu USB"
                 },
+                "description": "El complement generar\u00e0 claus de seguretat si aquests camps es deixen buits.",
                 "title": "Introdueix la configuraci\u00f3 del complement Z-Wave JS"
             },
             "install_addon": {

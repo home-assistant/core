@@ -30,10 +30,6 @@ class SyncThruConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self._async_show_form(step_id="user")
         return await self._async_check_and_create("user", user_input)
 
-    async def async_step_import(self, user_input=None):
-        """Handle import initiated flow."""
-        return await self.async_step_user(user_input=user_input)
-
     async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Handle SSDP initiated flow."""
         await self.async_set_unique_id(discovery_info.upnp[ssdp.ATTR_UPNP_UDN])

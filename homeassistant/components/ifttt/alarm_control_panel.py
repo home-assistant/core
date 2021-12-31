@@ -26,6 +26,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_DISARMED,
 )
+from homeassistant.core import ServiceCall
 import homeassistant.helpers.config_validation as cv
 
 from . import ATTR_EVENT, DOMAIN, SERVICE_PUSH_ALARM_STATE, SERVICE_TRIGGER
@@ -99,7 +100,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     hass.data[DATA_IFTTT_ALARM].append(alarmpanel)
     add_entities([alarmpanel])
 
-    async def push_state_update(service):
+    async def push_state_update(service: ServiceCall) -> None:
         """Set the service state as device state attribute."""
         entity_ids = service.data.get(ATTR_ENTITY_ID)
         state = service.data.get(ATTR_STATE)

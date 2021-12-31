@@ -12,6 +12,7 @@ from simplipy.errors import (
     EndpointUnavailableError,
     InvalidCredentialsError,
     SimplipyError,
+    WebsocketError,
 )
 from simplipy.system import SystemNotification
 from simplipy.system.v3 import (
@@ -51,9 +52,14 @@ from homeassistant.const import (
     CONF_CODE,
     CONF_TOKEN,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
 from homeassistant.core import CoreState, Event, HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from homeassistant.helpers import (
     aiohttp_client,
     config_validation as cv,
@@ -118,12 +124,12 @@ DISPATCHER_TOPIC_WEBSOCKET_EVENT = "simplisafe_websocket_event_{0}"
 EVENT_SIMPLISAFE_EVENT = "SIMPLISAFE_EVENT"
 EVENT_SIMPLISAFE_NOTIFICATION = "SIMPLISAFE_NOTIFICATION"
 
-PLATFORMS = (
-    "alarm_control_panel",
-    "binary_sensor",
-    "lock",
-    "sensor",
-)
+PLATFORMS = [
+    Platform.ALARM_CONTROL_PANEL,
+    Platform.BINARY_SENSOR,
+    Platform.LOCK,
+    Platform.SENSOR,
+]
 
 VOLUME_MAP = {
     "high": Volume.HIGH,
@@ -144,57 +150,86 @@ SERVICES = (
     SERVICE_NAME_SET_SYSTEM_PROPERTIES,
 )
 
-
-SERVICE_REMOVE_PIN_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_DEVICE_ID): cv.string,
-        vol.Required(ATTR_PIN_LABEL_OR_VALUE): cv.string,
-    }
+SERVICE_CLEAR_NOTIFICATIONS_SCHEMA = vol.All(
+    cv.deprecated(ATTR_SYSTEM_ID),
+    vol.Schema(
+        {
+            vol.Optional(ATTR_DEVICE_ID): cv.string,
+            vol.Optional(ATTR_SYSTEM_ID): cv.string,
+        }
+    ),
+    cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_SYSTEM_ID),
 )
 
-SERVICE_SET_PIN_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_DEVICE_ID): cv.string,
-        vol.Required(ATTR_PIN_LABEL): cv.string,
-        vol.Required(ATTR_PIN_VALUE): cv.string,
-    }
+SERVICE_REMOVE_PIN_SCHEMA = vol.All(
+    cv.deprecated(ATTR_SYSTEM_ID),
+    vol.Schema(
+        {
+            vol.Optional(ATTR_DEVICE_ID): cv.string,
+            vol.Optional(ATTR_SYSTEM_ID): cv.string,
+            vol.Required(ATTR_PIN_LABEL_OR_VALUE): cv.string,
+        }
+    ),
+    cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_SYSTEM_ID),
 )
 
-SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_DEVICE_ID): cv.string,
-        vol.Optional(ATTR_ALARM_DURATION): vol.All(
-            cv.time_period,
-            lambda value: value.total_seconds(),
-            vol.Range(min=MIN_ALARM_DURATION, max=MAX_ALARM_DURATION),
-        ),
-        vol.Optional(ATTR_ALARM_VOLUME): vol.All(vol.In(VOLUME_MAP), VOLUME_MAP.get),
-        vol.Optional(ATTR_CHIME_VOLUME): vol.All(vol.In(VOLUME_MAP), VOLUME_MAP.get),
-        vol.Optional(ATTR_ENTRY_DELAY_AWAY): vol.All(
-            cv.time_period,
-            lambda value: value.total_seconds(),
-            vol.Range(min=MIN_ENTRY_DELAY_AWAY, max=MAX_ENTRY_DELAY_AWAY),
-        ),
-        vol.Optional(ATTR_ENTRY_DELAY_HOME): vol.All(
-            cv.time_period,
-            lambda value: value.total_seconds(),
-            vol.Range(max=MAX_ENTRY_DELAY_HOME),
-        ),
-        vol.Optional(ATTR_EXIT_DELAY_AWAY): vol.All(
-            cv.time_period,
-            lambda value: value.total_seconds(),
-            vol.Range(min=MIN_EXIT_DELAY_AWAY, max=MAX_EXIT_DELAY_AWAY),
-        ),
-        vol.Optional(ATTR_EXIT_DELAY_HOME): vol.All(
-            cv.time_period,
-            lambda value: value.total_seconds(),
-            vol.Range(max=MAX_EXIT_DELAY_HOME),
-        ),
-        vol.Optional(ATTR_LIGHT): cv.boolean,
-        vol.Optional(ATTR_VOICE_PROMPT_VOLUME): vol.All(
-            vol.In(VOLUME_MAP), VOLUME_MAP.get
-        ),
-    }
+SERVICE_SET_PIN_SCHEMA = vol.All(
+    cv.deprecated(ATTR_SYSTEM_ID),
+    vol.Schema(
+        {
+            vol.Optional(ATTR_DEVICE_ID): cv.string,
+            vol.Optional(ATTR_SYSTEM_ID): cv.string,
+            vol.Required(ATTR_PIN_LABEL): cv.string,
+            vol.Required(ATTR_PIN_VALUE): cv.string,
+        },
+    ),
+    cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_SYSTEM_ID),
+)
+
+SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA = vol.All(
+    cv.deprecated(ATTR_SYSTEM_ID),
+    vol.Schema(
+        {
+            vol.Optional(ATTR_DEVICE_ID): cv.string,
+            vol.Optional(ATTR_SYSTEM_ID): cv.string,
+            vol.Optional(ATTR_ALARM_DURATION): vol.All(
+                cv.time_period,
+                lambda value: value.total_seconds(),
+                vol.Range(min=MIN_ALARM_DURATION, max=MAX_ALARM_DURATION),
+            ),
+            vol.Optional(ATTR_ALARM_VOLUME): vol.All(
+                vol.In(VOLUME_MAP), VOLUME_MAP.get
+            ),
+            vol.Optional(ATTR_CHIME_VOLUME): vol.All(
+                vol.In(VOLUME_MAP), VOLUME_MAP.get
+            ),
+            vol.Optional(ATTR_ENTRY_DELAY_AWAY): vol.All(
+                cv.time_period,
+                lambda value: value.total_seconds(),
+                vol.Range(min=MIN_ENTRY_DELAY_AWAY, max=MAX_ENTRY_DELAY_AWAY),
+            ),
+            vol.Optional(ATTR_ENTRY_DELAY_HOME): vol.All(
+                cv.time_period,
+                lambda value: value.total_seconds(),
+                vol.Range(max=MAX_ENTRY_DELAY_HOME),
+            ),
+            vol.Optional(ATTR_EXIT_DELAY_AWAY): vol.All(
+                cv.time_period,
+                lambda value: value.total_seconds(),
+                vol.Range(min=MIN_EXIT_DELAY_AWAY, max=MAX_EXIT_DELAY_AWAY),
+            ),
+            vol.Optional(ATTR_EXIT_DELAY_HOME): vol.All(
+                cv.time_period,
+                lambda value: value.total_seconds(),
+                vol.Range(max=MAX_EXIT_DELAY_HOME),
+            ),
+            vol.Optional(ATTR_LIGHT): cv.boolean,
+            vol.Optional(ATTR_VOICE_PROMPT_VOLUME): vol.All(
+                vol.In(VOLUME_MAP), VOLUME_MAP.get
+            ),
+        }
+    ),
+    cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_SYSTEM_ID),
 )
 
 WEBSOCKET_EVENTS_REQUIRING_SERIAL = [EVENT_LOCK_LOCKED, EVENT_LOCK_UNLOCKED]
@@ -208,7 +243,7 @@ WEBSOCKET_EVENTS_TO_FIRE_HASS_EVENT = [
     EVENT_USER_INITIATED_TEST,
 ]
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 @callback
@@ -216,6 +251,15 @@ def _async_get_system_for_service_call(
     hass: HomeAssistant, call: ServiceCall
 ) -> SystemType:
     """Get the SimpliSafe system related to a service call (by device ID)."""
+    if ATTR_SYSTEM_ID in call.data:
+        for entry in hass.config_entries.async_entries(DOMAIN):
+            simplisafe = hass.data[DOMAIN][entry.entry_id]
+            if (
+                system := simplisafe.systems.get(int(call.data[ATTR_SYSTEM_ID]))
+            ) is None:
+                continue
+            return cast(SystemType, system)
+
     device_id = call.data[ATTR_DEVICE_ID]
     device_registry = dr.async_get(hass)
 
@@ -328,7 +372,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             try:
                 await func(call, system)
             except SimplipyError as err:
-                LOGGER.error("Error while executing %s: %s", func.__name__, err)
+                raise HomeAssistantError(
+                    f'Error while executing "{call.service}": {err}'
+                ) from err
 
         return wrapper
 
@@ -357,15 +403,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ) -> None:
         """Set one or more system parameters."""
         if not isinstance(system, SystemV3):
-            LOGGER.error("Can only set system properties on V3 systems")
-            return
+            raise HomeAssistantError("Can only set system properties on V3 systems")
 
         await system.async_set_properties(
             {prop: value for prop, value in call.data.items() if prop != ATTR_DEVICE_ID}
         )
 
     for service, method, schema in (
-        (SERVICE_NAME_CLEAR_NOTIFICATIONS, async_clear_notifications, None),
+        (
+            SERVICE_NAME_CLEAR_NOTIFICATIONS,
+            async_clear_notifications,
+            SERVICE_CLEAR_NOTIFICATIONS_SCHEMA,
+        ),
         (SERVICE_NAME_REMOVE_PIN, async_remove_pin, SERVICE_REMOVE_PIN_SCHEMA),
         (SERVICE_NAME_SET_PIN, async_set_pin, SERVICE_SET_PIN_SCHEMA),
         (
@@ -430,6 +479,7 @@ class SimpliSafe:
         self._api = api
         self._hass = hass
         self._system_notifications: dict[int, set[SystemNotification]] = {}
+        self._websocket_reconnect_task: asyncio.Task | None = None
         self.entry = entry
         self.initial_event_to_use: dict[int, dict[str, Any]] = {}
         self.systems: dict[int, SystemType] = {}
@@ -474,11 +524,44 @@ class SimpliSafe:
 
         self._system_notifications[system.system_id] = latest_notifications
 
-    async def _async_websocket_on_connect(self) -> None:
-        """Define a callback for connecting to the websocket."""
+    async def _async_start_websocket_loop(self) -> None:
+        """Start a websocket reconnection loop."""
         if TYPE_CHECKING:
             assert self._api.websocket
-        await self._api.websocket.async_listen()
+
+        should_reconnect = True
+
+        try:
+            await self._api.websocket.async_connect()
+            await self._api.websocket.async_listen()
+        except asyncio.CancelledError:
+            LOGGER.debug("Request to cancel websocket loop received")
+            raise
+        except WebsocketError as err:
+            LOGGER.error("Failed to connect to websocket: %s", err)
+        except Exception as err:  # pylint: disable=broad-except
+            LOGGER.error("Unknown exception while connecting to websocket: %s", err)
+
+        if should_reconnect:
+            LOGGER.info("Disconnected from websocket; reconnecting")
+            await self._async_cancel_websocket_loop()
+            self._websocket_reconnect_task = self._hass.async_create_task(
+                self._async_start_websocket_loop()
+            )
+
+    async def _async_cancel_websocket_loop(self) -> None:
+        """Stop any existing websocket reconnection loop."""
+        if self._websocket_reconnect_task:
+            self._websocket_reconnect_task.cancel()
+            try:
+                await self._websocket_reconnect_task
+            except asyncio.CancelledError:
+                LOGGER.debug("Websocket reconnection task successfully canceled")
+                self._websocket_reconnect_task = None
+
+            if TYPE_CHECKING:
+                assert self._api.websocket
+            await self._api.websocket.async_disconnect()
 
     @callback
     def _async_websocket_on_event(self, event: WebsocketEvent) -> None:
@@ -518,17 +601,17 @@ class SimpliSafe:
             assert self._api.refresh_token
             assert self._api.websocket
 
-        self._api.websocket.add_connect_callback(self._async_websocket_on_connect)
         self._api.websocket.add_event_callback(self._async_websocket_on_event)
-        asyncio.create_task(self._api.websocket.async_connect())
+        self._websocket_reconnect_task = asyncio.create_task(
+            self._async_start_websocket_loop()
+        )
 
         async def async_websocket_disconnect_listener(_: Event) -> None:
             """Define an event handler to disconnect from the websocket."""
             if TYPE_CHECKING:
                 assert self._api.websocket
 
-            if self._api.websocket.connected:
-                await self._api.websocket.async_disconnect()
+            await self._async_cancel_websocket_loop()
 
         self.entry.async_on_unload(
             self._hass.bus.async_listen_once(
@@ -570,10 +653,24 @@ class SimpliSafe:
                 data={**self.entry.data, CONF_TOKEN: token},
             )
 
+        async def async_handle_refresh_token(token: str) -> None:
+            """Handle a new refresh token."""
+            async_save_refresh_token(token)
+
+            if TYPE_CHECKING:
+                assert self._api.websocket
+
+            # Open a new websocket connection with the fresh token:
+            await self._async_cancel_websocket_loop()
+            self._websocket_reconnect_task = self._hass.async_create_task(
+                self._async_start_websocket_loop()
+            )
+
         self.entry.async_on_unload(
-            self._api.add_refresh_token_callback(async_save_refresh_token)
+            self._api.add_refresh_token_callback(async_handle_refresh_token)
         )
 
+        # Save the refresh token we got on entry setup:
         async_save_refresh_token(self._api.refresh_token)
 
     async def async_update(self) -> None:

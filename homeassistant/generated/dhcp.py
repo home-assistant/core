@@ -88,13 +88,18 @@ DHCP = [
     },
     {
         "domain": "flux_led",
+        "macaddress": "ACCF23*",
+        "hostname": "[hba][flk]*"
+    },
+    {
+        "domain": "flux_led",
         "macaddress": "B4E842*",
         "hostname": "[ba][lk]*"
     },
     {
         "domain": "flux_led",
         "macaddress": "F0FE6B*",
-        "hostname": "[ba][lk]*"
+        "hostname": "[hba][flk]*"
     },
     {
         "domain": "flux_led",
@@ -171,6 +176,18 @@ DHCP = [
         "macaddress": "18B430*"
     },
     {
+        "domain": "nest",
+        "macaddress": "641666*"
+    },
+    {
+        "domain": "nest",
+        "macaddress": "D8EB46*"
+    },
+    {
+        "domain": "nest",
+        "macaddress": "1C53F9*"
+    },
+    {
         "domain": "nexia",
         "hostname": "xl857-*",
         "macaddress": "000231*"
@@ -183,6 +200,11 @@ DHCP = [
     {
         "domain": "nuki",
         "hostname": "nuki_bridge_*"
+    },
+    {
+        "domain": "overkiz",
+        "hostname": "gateway*",
+        "macaddress": "F8811A*"
     },
     {
         "domain": "powerwall",
@@ -514,6 +536,10 @@ DHCP = [
     {
         "domain": "tuya",
         "macaddress": "D81F12*"
+    },
+    {
+        "domain": "twinkly",
+        "hostname": "twinkly_*"
     },
     {
         "domain": "verisure",

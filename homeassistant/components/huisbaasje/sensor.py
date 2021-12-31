@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID, POWER_WATT
 from homeassistant.core import HomeAssistant
@@ -44,7 +44,7 @@ class HuisbaasjeSensor(CoordinatorEntity, SensorEntity):
         unit_of_measurement: str = POWER_WATT,
         icon: str = "mdi:lightning-bolt",
         precision: int = 0,
-        state_class: str | None = STATE_CLASS_MEASUREMENT,
+        state_class: str | None = SensorStateClass.MEASUREMENT,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)

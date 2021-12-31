@@ -20,7 +20,7 @@
             },
             "configure": {
                 "data": {
-                    "host": "Ana bilgisayar",
+                    "host": "Sunucu",
                     "name": "Ad",
                     "password": "Parola",
                     "port": "Port",
@@ -43,7 +43,7 @@
             },
             "manual_input": {
                 "data": {
-                    "host": "Ana bilgisayar",
+                    "host": "Sunucu",
                     "name": "Ad",
                     "port": "Port"
                 },
