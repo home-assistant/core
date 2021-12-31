@@ -15,9 +15,8 @@ import homeassistant.helpers.config_validation as cv
 
 from .const import (
     CONF_HOSTNAME,
-    CONF_IPV4_IPV4,
-    CONF_IPV4_IPV6,
-    CONF_IPV6_IPV6,
+    CONF_IPV4,
+    CONF_IPV6,
     CONF_RESOLVER,
     CONF_RESOLVER_IPV6,
     DEFAULT_HOSTNAME,
@@ -35,34 +34,27 @@ DATA_SCHEMA = vol.Schema(
 
 
 async def async_validate_url(
-    url: str, resolver_ipv4: str, resolver_ipv6: str
+    url: str, resolver_ipv4: str, resolver_ipv6: str, entry_data: dict[str, Any]
 ) -> dict[str, bool]:
     """Validate url."""
     result = {}
-    try:
-        ipv4_ipv4 = await aiodns.DNSResolver(nameservers=[resolver_ipv4]).query(
-            url, "A"
-        )
-    except DNSError:
-        ipv4_ipv4 = None
-    try:
-        ipv4_ipv6 = await aiodns.DNSResolver(nameservers=[resolver_ipv4]).query(
-            url, "AAAA"
-        )
-    except DNSError:
-        ipv4_ipv6 = None
-    ipv6_ipv6 = None
-    if not ipv4_ipv6:
+    ipv4 = None
+    ipv6 = None
+    if entry_data[CONF_IPV4]:
         try:
-            ipv6_ipv6 = await aiodns.DNSResolver(nameservers=[resolver_ipv6]).query(
+            ipv4 = await aiodns.DNSResolver(nameservers=[resolver_ipv4]).query(url, "A")
+        except DNSError:
+            ipv4 = None
+    if entry_data[CONF_IPV6]:
+        try:
+            ipv6 = await aiodns.DNSResolver(nameservers=[resolver_ipv6]).query(
                 url, "AAAA"
             )
         except DNSError:
-            ipv6_ipv6 = None
+            ipv6 = None
 
-    result[CONF_IPV4_IPV4] = bool(ipv4_ipv4)
-    result[CONF_IPV4_IPV6] = bool(ipv4_ipv6)
-    result[CONF_IPV6_IPV6] = bool(ipv6_ipv6)
+    result[CONF_IPV4] = bool(ipv4)
+    result[CONF_IPV6] = bool(ipv6)
 
     return result
 
@@ -85,6 +77,7 @@ class DnsIPConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         hostname = config.get(CONF_HOSTNAME, DEFAULT_HOSTNAME)
         self._async_abort_entries_match({CONF_HOSTNAME: hostname})
+        config[CONF_HOSTNAME] = hostname
         return await self.async_step_user(user_input=config)
 
     async def async_step_user(
@@ -94,20 +87,19 @@ class DnsIPConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors = {}
 
-        if user_input is not None:
+        if user_input:
 
-            hostname = user_input.get(CONF_HOSTNAME, DEFAULT_HOSTNAME)
+            hostname = user_input[CONF_HOSTNAME]
             name = DEFAULT_NAME if hostname == DEFAULT_HOSTNAME else hostname
             resolver = DEFAULT_RESOLVER
             resolver_ipv6 = DEFAULT_RESOLVER_IPV6
 
-            validate = await async_validate_url(hostname, resolver, resolver_ipv6)
-            if (
-                not validate[CONF_IPV4_IPV4]
-                and not validate[CONF_IPV4_IPV6]
-                and not validate[CONF_IPV6_IPV6]
-            ):
-                errors["base"] = "invalid_host"
+            validate = await async_validate_url(
+                hostname, resolver, resolver_ipv6, {CONF_IPV4: True, CONF_IPV6: True}
+            )
+
+            if not validate[CONF_IPV4] and not validate[CONF_IPV6]:
+                errors["base"] = "invalid_hostname"
             else:
                 return self.async_create_entry(
                     title=name,
@@ -116,9 +108,8 @@ class DnsIPConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_NAME: name,
                         CONF_RESOLVER: resolver,
                         CONF_RESOLVER_IPV6: resolver_ipv6,
-                        CONF_IPV4_IPV4: validate[CONF_IPV4_IPV4],
-                        CONF_IPV4_IPV6: validate[CONF_IPV4_IPV6],
-                        CONF_IPV6_IPV6: validate[CONF_IPV6_IPV6],
+                        CONF_IPV4: validate[CONF_IPV4],
+                        CONF_IPV6: validate[CONF_IPV6],
                     },
                 )
 
@@ -146,28 +137,15 @@ class DnsIPOptionsFlowHandler(config_entries.OptionsFlow):
                 self.entry.data[CONF_HOSTNAME],
                 user_input[CONF_RESOLVER],
                 user_input[CONF_RESOLVER_IPV6],
+                {
+                    CONF_IPV4: self.entry.data[CONF_IPV4],
+                    CONF_IPV6: self.entry.data[CONF_IPV6],
+                },
             )
-            if (
-                not validate[CONF_IPV4_IPV4]
-                and not validate[CONF_IPV4_IPV6]
-                and not validate[CONF_IPV6_IPV6]
-            ):
-                errors["base"] = "invalid_host"
-            elif (
-                validate[CONF_IPV4_IPV4] is False
-                and self.entry.data[CONF_IPV4_IPV4] is True
-            ):
-                errors["base"] = "invalid_host"
-            elif (
-                validate[CONF_IPV4_IPV6] is False
-                and self.entry.data[CONF_IPV4_IPV6] is True
-            ):
-                errors["base"] = "invalid_host"
-            elif (
-                validate[CONF_IPV6_IPV6] is False
-                and self.entry.data[CONF_IPV6_IPV6] is True
-            ):
-                errors["base"] = "invalid_host"
+            if validate[CONF_IPV4] is False and self.entry.data[CONF_IPV4] is True:
+                errors[CONF_RESOLVER] = "invalid_resolver"
+            elif validate[CONF_IPV6] is False and self.entry.data[CONF_IPV6] is True:
+                errors[CONF_RESOLVER_IPV6] = "invalid_resolver"
             else:
                 return self.async_create_entry(title=self.entry.title, data=user_input)
 

@@ -21,10 +21,8 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     CONF_HOSTNAME,
-    CONF_IPV4_IPV4,
-    CONF_IPV4_IPV6,
+    CONF_IPV4,
     CONF_IPV6,
-    CONF_IPV6_IPV6,
     CONF_RESOLVER,
     CONF_RESOLVER_IPV6,
     DEFAULT_HOSTNAME,
@@ -84,23 +82,13 @@ async def async_setup_entry(
         CONF_RESOLVER_IPV6, entry.data[CONF_RESOLVER_IPV6]
     )
     entities = []
-    if entry.data[CONF_IPV4_IPV4]:
+    if entry.data[CONF_IPV4]:
         entities.append(
-            WanIpSensor(
-                name, hostname, resolver_ipv4, False, entry, f"{hostname}_ipv4_ipv4"
-            )
+            WanIpSensor(name, hostname, resolver_ipv4, False, entry, f"{hostname}_ipv4")
         )
-    if entry.data[CONF_IPV4_IPV6]:
+    if entry.data[CONF_IPV6]:
         entities.append(
-            WanIpSensor(
-                name, hostname, resolver_ipv4, True, entry, f"{hostname}_ipv4_ipv6"
-            )
-        )
-    if entry.data[CONF_IPV6_IPV6]:
-        entities.append(
-            WanIpSensor(
-                name, hostname, resolver_ipv6, True, entry, f"{hostname}_ipv6_ipv6"
-            )
+            WanIpSensor(name, hostname, resolver_ipv6, True, entry, f"{hostname}_ipv6")
         )
 
     async_add_entities(entities, update_before_add=True)

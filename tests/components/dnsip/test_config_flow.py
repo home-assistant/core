@@ -9,9 +9,8 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.dnsip.const import (
     CONF_HOSTNAME,
-    CONF_IPV4_IPV4,
-    CONF_IPV4_IPV6,
-    CONF_IPV6_IPV6,
+    CONF_IPV4,
+    CONF_IPV6,
     CONF_RESOLVER,
     CONF_RESOLVER_IPV6,
     DOMAIN,
@@ -68,9 +67,8 @@ async def test_form(hass: HomeAssistant) -> None:
         "name": "home-assistant.io",
         "resolver": "208.67.222.222",
         "resolver_ipv6": "2620:0:ccc::2",
-        "ipv4_ipv4": True,
-        "ipv4_ipv6": True,
-        "ipv6_ipv6": False,
+        "ipv4": True,
+        "ipv6": True,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -95,7 +93,7 @@ async def test_form_error(hass: HomeAssistant) -> None:
 
     assert result2["type"] == RESULT_TYPE_FORM
     assert result2["step_id"] == "user"
-    assert result2["errors"] == {"base": "invalid_host"}
+    assert result2["errors"] == {"base": "invalid_hostname"}
 
 
 @pytest.mark.parametrize(
@@ -108,9 +106,8 @@ async def test_form_error(hass: HomeAssistant) -> None:
                 "name": "home-assistant.io",
                 "resolver": "208.67.222.222",
                 "resolver_ipv6": "2620:0:ccc::2",
-                "ipv4_ipv4": True,
-                "ipv4_ipv6": True,
-                "ipv6_ipv6": False,
+                "ipv4": True,
+                "ipv6": True,
             },
         ),
         (
@@ -120,9 +117,8 @@ async def test_form_error(hass: HomeAssistant) -> None:
                 "name": "myip",
                 "resolver": "208.67.222.222",
                 "resolver_ipv6": "2620:0:ccc::2",
-                "ipv4_ipv4": True,
-                "ipv4_ipv6": True,
-                "ipv6_ipv6": False,
+                "ipv4": True,
+                "ipv6": True,
             },
         ),
     ],
@@ -162,9 +158,8 @@ async def test_options_flow(hass: HomeAssistant) -> None:
             CONF_NAME: "home-assistant.io",
             CONF_RESOLVER: "208.67.222.222",
             CONF_RESOLVER_IPV6: "2620:0:ccc::2",
-            CONF_IPV4_IPV4: True,
-            CONF_IPV4_IPV6: True,
-            CONF_IPV6_IPV6: False,
+            CONF_IPV4: True,
+            CONF_IPV6: False,
         },
     )
     entry.add_to_hass(hass)
@@ -199,20 +194,33 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     }
 
 
-async def test_options_error(hass: HomeAssistant) -> None:
-    """Test validate url fails in options."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="12345",
-        data={
+@pytest.mark.parametrize(
+    "p_input",
+    [
+        {
             CONF_HOSTNAME: "home-assistant.io",
             CONF_NAME: "home-assistant.io",
             CONF_RESOLVER: "208.67.222.222",
             CONF_RESOLVER_IPV6: "2620:0:ccc::2",
-            CONF_IPV4_IPV4: True,
-            CONF_IPV4_IPV6: True,
-            CONF_IPV6_IPV6: False,
+            CONF_IPV4: True,
+            CONF_IPV6: False,
         },
+        {
+            CONF_HOSTNAME: "home-assistant.io",
+            CONF_NAME: "home-assistant.io",
+            CONF_RESOLVER: "208.67.222.222",
+            CONF_RESOLVER_IPV6: "2620:0:ccc::2",
+            CONF_IPV4: False,
+            CONF_IPV6: True,
+        },
+    ],
+)
+async def test_options_error(hass: HomeAssistant, p_input: dict[str, str]) -> None:
+    """Test validate url fails in options."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="12345",
+        data=p_input,
     )
     entry.add_to_hass(hass)
 
@@ -233,4 +241,7 @@ async def test_options_error(hass: HomeAssistant) -> None:
 
     assert result2["type"] == RESULT_TYPE_FORM
     assert result2["step_id"] == "init"
-    assert result2["errors"] == {"base": "invalid_host"}
+    if p_input[CONF_IPV4]:
+        assert result2["errors"] == {"resolver": "invalid_resolver"}
+    if p_input[CONF_IPV6]:
+        assert result2["errors"] == {"resolver_ipv6": "invalid_resolver"}
