@@ -299,6 +299,8 @@ def async_register_rtsp_to_web_rtc_provider(
     may return None if the source or offer is not eligible or throw HomeAssistantError
     on failure. The first provider to satisfy the offer will be used.
     """
+    if DOMAIN not in hass.data:
+        raise ValueError("Unexpected state, camera not loaded")
 
     def remove_provider() -> None:
         if domain in hass.data[DATA_RTSP_TO_WEB_RTC]:
@@ -675,6 +677,8 @@ class Camera(Entity):
     async def async_internal_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_internal_added_to_hass()
+        # Note: State is always updated by entity on return
+        await self.async_refresh_providers()
 
     async def async_refresh_providers(self) -> bool:
         """Determine if any of the registered providers are suitable for this entity.
