@@ -2,7 +2,7 @@
 from homeassistant.components.sensor import SensorEntity
 
 from . import SleepIQSensor
-from .const import DOMAIN, SENSOR_TYPES, SIDES, SLEEP_NUMBER
+from .const import BED_ID, DOMAIN, SENSOR_TYPES, SIDE, SIDES, SLEEP_NUMBER
 
 ICON = "mdi:bed"
 
@@ -45,6 +45,14 @@ class SleepNumberSensor(SleepIQSensor, SensorEntity):
     def icon(self):
         """Icon to use in the frontend, if any."""
         return ICON
+
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes of the sleepnumber sensor."""
+        return {
+            BED_ID: self._bed_id,
+            SIDE: self._side,
+        }
 
     def update(self):
         """Get the latest data from SleepIQ and updates the states."""
