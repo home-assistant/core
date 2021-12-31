@@ -35,6 +35,7 @@ CONF_SSL_CA_CERT = "ssl_ca_cert"
 
 CONF_LANGUAGE = "language"
 CONF_QUERIES = "queries"
+CONF_QUERIES_RAW = "queries_raw"
 CONF_QUERIES_FLUX = "queries_flux"
 CONF_GROUP_FUNCTION = "group_function"
 CONF_FIELD = "field"
@@ -79,6 +80,7 @@ RETRY_INTERVAL = 60  # seconds
 BATCH_TIMEOUT = 1
 BATCH_BUFFER_SIZE = 100
 LANGUAGE_INFLUXQL = "influxQL"
+LANGUAGE_INFLUXQL_RAW = "influxQLraw"
 LANGUAGE_FLUX = "flux"
 TEST_QUERY_V1 = "SHOW DATABASES;"
 TEST_QUERY_V2 = "buckets()"
