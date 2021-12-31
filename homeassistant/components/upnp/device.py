@@ -67,7 +67,7 @@ class Device:
         # Register SSDP callback for updates.
         usn = f"{upnp_device.udn}::{upnp_device.device_type}"
         await ssdp.async_register_callback(
-            hass, device.async_ssdp_callback, {ssdp.ATTR_SSDP_USN: usn}
+            hass, device.async_ssdp_callback, {"usn": usn}
         )
 
         return device
@@ -76,7 +76,8 @@ class Device:
         self, headers: Mapping[str, Any], change: SsdpChange
     ) -> None:
         """SSDP callback, update if needed."""
-        if change != SsdpChange.UPDATE or ssdp.ATTR_SSDP_LOCATION not in headers:
+        _LOGGER.debug("SSDP Callback, change: %s, headers: %s", change, headers)
+        if ssdp.ATTR_SSDP_LOCATION not in headers:
             return
 
         location = headers[ssdp.ATTR_SSDP_LOCATION]
@@ -84,7 +85,7 @@ class Device:
         if location == device.device_url:
             return
 
-        new_upnp_device = Device.async_create_upnp_device(self.hass, location)
+        new_upnp_device = await Device.async_create_upnp_device(self.hass, location)
         device.reinit(new_upnp_device)
 
     @property
