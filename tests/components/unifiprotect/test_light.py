@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from copy import copy
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 from pyunifiprotect.data import Light
@@ -20,7 +20,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import MockEntityFixture
+from .conftest import MockEntityFixture, assert_entity_counts
 
 
 @pytest.fixture(name="light")
@@ -41,14 +41,10 @@ async def light_fixture(
         light_obj.id: light_obj,
     }
 
-    with patch("homeassistant.components.unifiprotect.PLATFORMS", [Platform.LIGHT]):
-        await hass.config_entries.async_setup(mock_entry.entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_entry.entry.entry_id)
+    await hass.async_block_till_done()
 
-    entity_registry = er.async_get(hass)
-
-    assert len(hass.states.async_all()) == 1
-    assert len(entity_registry.entities) == 1
+    assert_entity_counts(hass, Platform.LIGHT, 1, 1)
 
     yield (light_obj, "light.test_light")
 

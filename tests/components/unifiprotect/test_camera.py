@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from copy import copy
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 from pyunifiprotect.data import Camera as ProtectCamera
@@ -36,7 +36,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .conftest import MockEntityFixture, enable_entity, time_changed
+from .conftest import (
+    MockEntityFixture,
+    assert_entity_counts,
+    enable_entity,
+    time_changed,
+)
 
 
 @pytest.fixture(name="camera")
@@ -60,14 +65,10 @@ async def camera_fixture(
         camera_obj.id: camera_obj,
     }
 
-    with patch("homeassistant.components.unifiprotect.PLATFORMS", [Platform.CAMERA]):
-        await hass.config_entries.async_setup(mock_entry.entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_entry.entry.entry_id)
+    await hass.async_block_till_done()
 
-    entity_registry = er.async_get(hass)
-
-    assert len(hass.states.async_all()) == 1
-    assert len(entity_registry.entities) == 2
+    assert_entity_counts(hass, Platform.CAMERA, 2, 1)
 
     yield (camera_obj, "camera.test_camera_high")
 
@@ -264,15 +265,10 @@ async def test_basic_setup(
         camera_all_channels.id: camera_all_channels,
         camera_no_channels.id: camera_no_channels,
     }
+    await hass.config_entries.async_setup(mock_entry.entry.entry_id)
+    await hass.async_block_till_done()
 
-    with patch("homeassistant.components.unifiprotect.PLATFORMS", [Platform.CAMERA]):
-        await hass.config_entries.async_setup(mock_entry.entry.entry_id)
-        await hass.async_block_till_done()
-
-    entity_registry = er.async_get(hass)
-
-    assert len(hass.states.async_all()) == 4
-    assert len(entity_registry.entities) == 11
+    assert_entity_counts(hass, Platform.CAMERA, 11, 4)
 
     # test camera 1
     entity_id = validate_default_camera_entity(hass, camera_high_only, 0)
