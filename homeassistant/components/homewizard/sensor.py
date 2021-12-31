@@ -15,7 +15,6 @@ from homeassistant.const import (
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_GAS,
     DEVICE_CLASS_POWER,
-    DEVICE_CLASS_TIMESTAMP,
     ENERGY_KILO_WATT_HOUR,
     ENTITY_CATEGORY_DIAGNOSTIC,
     PERCENTAGE,
@@ -123,12 +122,6 @@ SENSORS: Final[tuple[SensorEntityDescription, ...]] = (
         native_unit_of_measurement=VOLUME_CUBIC_METERS,
         device_class=DEVICE_CLASS_GAS,
         state_class=STATE_CLASS_TOTAL_INCREASING,
-    ),
-    SensorEntityDescription(
-        key="gas_timestamp",
-        name="Last Gas Update",
-        device_class=DEVICE_CLASS_TIMESTAMP,
-        entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
     ),
 )
 

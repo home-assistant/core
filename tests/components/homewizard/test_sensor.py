@@ -1,6 +1,5 @@
 """Test the update coordinator for HomeWizard."""
 
-from datetime import datetime
 from unittest.mock import patch
 
 from homeassistant.components.sensor import (
@@ -16,7 +15,6 @@ from homeassistant.const import (
     DEVICE_CLASS_ENERGY,
     DEVICE_CLASS_GAS,
     DEVICE_CLASS_POWER,
-    DEVICE_CLASS_TIMESTAMP,
     ENERGY_KILO_WATT_HOUR,
     POWER_WATT,
     VOLUME_CUBIC_METERS,
@@ -560,54 +558,6 @@ async def test_sensor_entity_total_gas(hass, mock_config_entry_data, mock_config
     assert ATTR_ICON not in state.attributes
 
 
-async def test_sensor_entity_gas_timestamp(
-    hass, mock_config_entry_data, mock_config_entry
-):
-    """Test entity loads gas timestamp."""
-
-    api = get_mock_device()
-    api.data.available_datapoints = [
-        "gas_timestamp",
-    ]
-
-    # Generate timestamp
-    api.data.gas_timestamp = datetime.strptime(
-        "210606140010", "%y%m%d%H%M%S"
-    ).isoformat()
-    assert api.data.gas_timestamp == "2021-06-06T14:00:10"
-
-    with patch(
-        "aiohwenergy.HomeWizardEnergy",
-        return_value=api,
-    ):
-        entry = mock_config_entry
-        entry.data = mock_config_entry_data
-        entry.add_to_hass(hass)
-
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    entity_registry = er.async_get(hass)
-
-    state = hass.states.get("sensor.product_name_aabbccddeeff_last_gas_update")
-    entry = entity_registry.async_get(
-        "sensor.product_name_aabbccddeeff_last_gas_update"
-    )
-    assert entry
-    assert state
-    assert entry.unique_id == "aabbccddeeff_gas_timestamp"
-    assert not entry.disabled
-    assert state.state == "2021-06-06T14:00:10"
-    assert (
-        state.attributes.get(ATTR_FRIENDLY_NAME)
-        == "Product Name (aabbccddeeff) Last Gas Update"
-    )
-    assert ATTR_STATE_CLASS not in state.attributes
-    assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_TIMESTAMP
-    assert ATTR_ICON not in state.attributes
-
-
 async def test_sensor_entity_disabled_when_null(
     hass, mock_config_entry_data, mock_config_entry
 ):
@@ -618,12 +568,10 @@ async def test_sensor_entity_disabled_when_null(
         "active_power_l2_w",
         "active_power_l3_w",
         "total_gas_m3",
-        "gas_timestamp",
     ]
     api.data.active_power_l2_w = None
     api.data.active_power_l3_w = None
     api.data.total_gas_m3 = None
-    api.data.gas_timestamp = None
 
     with patch(
         "aiohwenergy.HomeWizardEnergy",
@@ -649,11 +597,6 @@ async def test_sensor_entity_disabled_when_null(
     assert entry is None
 
     entry = entity_registry.async_get("sensor.product_name_aabbccddeeff_total_gas")
-    assert entry is None
-
-    entry = entity_registry.async_get(
-        "sensor.product_name_aabbccddeeff_last_gas_update"
-    )
     assert entry is None
 
 

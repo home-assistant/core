@@ -58,7 +58,6 @@ async def test_coordinator_fetches_data(aioclient_mock, hass):
         "active_power_l2_w",
         "active_power_l3_w",
         "active_power_w",
-        "gas_timestamp",
         "meter_model",
         "smr_version",
         "total_power_export_t1_kwh",
