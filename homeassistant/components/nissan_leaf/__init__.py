@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime
+from datetime import datetime, timedelta
 from http import HTTPStatus
 import sys
 from typing import Any, cast
@@ -128,7 +128,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
             result = await hass.async_add_executor_job(data_store.leaf.start_charging)
             if result:
                 LOGGER.debug("Start charging sent, request updated data in 1 minute")
-                check_charge_at = utcnow() + MIN_UPDATE_INTERVAL
+                check_charge_at = utcnow() + timedelta(minutes=1)
                 data_store.next_update = check_charge_at
                 async_track_point_in_utc_time(
                     hass, data_store.async_update_data, check_charge_at
