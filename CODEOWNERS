@@ -777,6 +777,7 @@ homeassistant/components/rpi_gpio_pwm/* @soldag
 homeassistant/components/rpi_power/* @shenxn @swetoast
 tests/components/rpi_power/* @shenxn @swetoast
 homeassistant/components/rtsptowebrtc/* @allenporter
+tests/components/rtsptowebrtc/* @allenporter
 homeassistant/components/ruckus_unleashed/* @gabe565
 tests/components/ruckus_unleashed/* @gabe565
 homeassistant/components/safe_mode/* @home-assistant/core
@@ -1028,11 +1029,7 @@ tests/components/watttime/* @bachya
 homeassistant/components/weather/* @fabaff
 tests/components/weather/* @fabaff
 homeassistant/components/webostv/* @bendavid @thecode
-<<<<<<< HEAD
 tests/components/webostv/* @bendavid @thecode
-homeassistant/components/webrtc/* @allenporter
-=======
->>>>>>> Rename webrtc to rtstptowebrtc
 homeassistant/components/websocket_api/* @home-assistant/core
 tests/components/websocket_api/* @home-assistant/core
 homeassistant/components/wemo/* @esev

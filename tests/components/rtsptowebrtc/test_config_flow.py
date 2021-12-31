@@ -1,5 +1,6 @@
 """Test the RTSPtoWebRTC config flow."""
 
+from typing import Any
 from unittest.mock import patch
 
 import rtsp_to_webrtc
@@ -10,7 +11,7 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
-CONFIG = {}
+CONFIG: dict[str, Any] = {}
 
 
 async def test_web_full_flow(hass: HomeAssistant):

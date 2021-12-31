@@ -19,11 +19,13 @@ Other integrations may use this integration with these steps:
 from __future__ import annotations
 
 import logging
+from typing import Callable
 
 import async_timeout
 from rtsp_to_webrtc.client import Client
 from rtsp_to_webrtc.exceptions import ClientError, ResponseError
 
+from homeassistant.components import camera
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
@@ -33,10 +35,9 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "rtsptowebrtc"
 DATA_SERVER_URL = "server_url"
-DATA_CLIENT = "client"
+DATA_UNSUB = "unsub"
 DATA_UNAVAILABLE = "unavailable"
 TIMEOUT = 10
-RTSP_PREFIXES = {"rtsp://", "rtsps://"}
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -56,41 +57,34 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except (TimeoutError, ClientError) as err:
         raise ConfigEntryNotReady from err
 
-    hass.data[DOMAIN][DATA_CLIENT] = client
+    async def async_offer_for_stream_source(
+        stream_source: str,
+        offer_sdp: str,
+    ) -> str:
+        """Handle the signal path for a WebRTC stream.
 
+        This signal path is used to route the offer created by the client to the
+        a proxy server that translates a stream to WebRTC. The communication for
+        the stream itself happens directly between the client and proxy.
+        """
+        try:
+            async with async_timeout.timeout(TIMEOUT):
+                return await client.offer(offer_sdp, stream_source)
+        except TimeoutError as err:
+            raise HomeAssistantError("Timeout talking to RTSPtoWebRTC server") from err
+        except ClientError as err:
+            raise HomeAssistantError(str(err)) from err
+
+    unsub = camera.async_register_rtsp_to_web_rtc_provider(
+        hass, DOMAIN, async_offer_for_stream_source
+    )
+    hass.data[DOMAIN][DATA_UNSUB] = unsub
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
+    unsub: Callable[[], None] = hass.data[DOMAIN][DATA_UNSUB]
+    unsub()
     del hass.data[DOMAIN]
     return True
-
-
-def is_suported_stream_source(stream_source: str) -> bool:
-    """Return True if the stream source is supported by this component."""
-    for prefix in RTSP_PREFIXES:
-        if stream_source.startswith(prefix):
-            return True
-    return False
-
-
-async def async_offer_for_stream_source(
-    hass: HomeAssistant, offer_sdp: str, stream_source: str
-) -> str:
-    """Handle the signal path for a WebRTC stream.
-
-    This signal path is used to route the offer created by the client to the
-    a proxy server that translates a stream to WebRTC. The communication for
-    the stream itself happens directly between the client and proxy.
-    """
-    if DOMAIN not in hass.config.components:
-        raise HomeAssistantError(f"'{DOMAIN}' integration is not set up.")
-    client: Client = hass.data[DOMAIN][DATA_CLIENT]
-    try:
-        async with async_timeout.timeout(TIMEOUT):
-            return await client.offer(offer_sdp, stream_source)
-    except TimeoutError as err:
-        raise HomeAssistantError("Timeout talking to RTSPtoWebRTC server") from err
-    except ClientError as err:
-        raise HomeAssistantError(str(err)) from err

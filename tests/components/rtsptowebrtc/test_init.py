@@ -1,17 +1,20 @@
 """Tests for RTSPtoWebRTC inititalization."""
 
+from __future__ import annotations
+
 import base64
+from typing import Any, AsyncGenerator, Awaitable, Callable
 from unittest.mock import patch
 
 import aiohttp
 import pytest
 import rtsp_to_webrtc
 
-from homeassistant.components import rtsptowebrtc
+from homeassistant.components import camera
 from homeassistant.components.rtsptowebrtc import DOMAIN
+from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -28,16 +31,29 @@ SERVER_URL = "http://127.0.0.1:8083"
 CONFIG_ENTRY_DATA = {"server_url": SERVER_URL}
 
 
+@pytest.fixture
+async def mock_camera(hass) -> AsyncGenerator[None, None]:
+    """Initialize a demo camera platform."""
+    assert await async_setup_component(
+        hass, "camera", {camera.DOMAIN: {"platform": "demo"}}
+    )
+    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.demo.camera.Path.read_bytes",
+        return_value=b"Test",
+    ), patch(
+        "homeassistant.components.camera.Camera.stream_source",
+        return_value=STREAM_SOURCE,
+    ), patch(
+        "homeassistant.components.camera.Camera.supported_features",
+        return_value=camera.SUPPORT_STREAM,
+    ):
+        yield
+
+
 async def async_setup_rtsptowebrtc(hass: HomeAssistant):
     """Set up the component."""
     return await async_setup_component(hass, DOMAIN, {})
-
-
-async def test_supported_stream_source(hass: HomeAssistant) -> None:
-    """Test successful setup."""
-    assert rtsptowebrtc.is_suported_stream_source("rtsp://")
-    assert not rtsptowebrtc.is_suported_stream_source("http://")
-    assert not rtsptowebrtc.is_suported_stream_source("rtsp")
 
 
 async def test_setup_success(hass: HomeAssistant) -> None:
@@ -113,7 +129,10 @@ async def test_setup_communication_failure(hass: HomeAssistant) -> None:
 
 
 async def test_offer_for_stream_source(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_ws_client: Callable[[...], Awaitable[aiohttp.ClientWebSocketResponse]],
+    mock_camera: Any,
 ) -> None:
     """Test successful response from RTSPtoWebRTC server."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_ENTRY_DATA)
@@ -128,14 +147,29 @@ async def test_offer_for_stream_source(
         json={"sdp64": base64.b64encode(ANSWER_SDP.encode("utf-8")).decode("utf-8")},
     )
 
-    answer_sdp = await rtsptowebrtc.async_offer_for_stream_source(
-        hass, OFFER_SDP, STREAM_SOURCE
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "camera/web_rtc_offer",
+            "entity_id": "camera.demo_camera",
+            "offer": OFFER_SDP,
+        }
     )
-    assert answer_sdp == ANSWER_SDP
+    response = await client.receive_json()
+    assert response.get("id") == 1
+    assert response.get("type") == TYPE_RESULT
+    assert response.get("success")
+    assert "result" in response
+    assert response["result"].get("answer") == ANSWER_SDP
+    assert "error" not in response
 
 
 async def test_offer_failure(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_ws_client: Callable[[...], Awaitable[aiohttp.ClientWebSocketResponse]],
+    mock_camera: Any,
 ) -> None:
     """Test a transient failure talking to RTSPtoWebRTC server."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_ENTRY_DATA)
@@ -150,17 +184,21 @@ async def test_offer_failure(
         exc=aiohttp.ClientError,
     )
 
-    with pytest.raises(
-        HomeAssistantError, match=r"WebRTC server communication failure.*"
-    ):
-        await rtsptowebrtc.async_offer_for_stream_source(hass, OFFER_SDP, STREAM_SOURCE)
-
-
-async def test_integration_not_loaded(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test invoking the integration when not loaded."""
-    with pytest.raises(
-        HomeAssistantError, match=r"'rtsptowebrtc' integration is not set up.*"
-    ):
-        await rtsptowebrtc.async_offer_for_stream_source(hass, OFFER_SDP, STREAM_SOURCE)
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "camera/web_rtc_offer",
+            "entity_id": "camera.demo_camera",
+            "offer": OFFER_SDP,
+        }
+    )
+    response = await client.receive_json()
+    assert response.get("id") == 2
+    assert response.get("type") == TYPE_RESULT
+    assert "success" in response
+    assert not response.get("success")
+    assert "error" in response
+    assert response["error"].get("code") == "web_rtc_offer_failed"
+    assert "message" in response["error"]
+    assert "RTSPtoWebRTC server communication failure" in response["error"]["message"]
