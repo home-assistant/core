@@ -6,7 +6,8 @@
         "error": {
             "cannot_connect": "Failed to connect",
             "invalid_auth": "Invalid authentication",
-            "protect_version": "Minimum required version is v1.20.0. Please upgrade UniFi Protect and then retry."
+            "protect_version": "Minimum required version is v1.20.0. Please upgrade UniFi Protect and then retry.",
+            "unknown": "Unexpected error"
         },
         "step": {
             "reauth_confirm": {

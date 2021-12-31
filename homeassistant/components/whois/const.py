@@ -4,7 +4,10 @@ from __future__ import annotations
 import logging
 from typing import Final
 
+from homeassistant.const import Platform
+
 DOMAIN: Final = "whois"
+PLATFORMS = [Platform.SENSOR]
 
 LOGGER = logging.getLogger(__package__)
 

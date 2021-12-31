@@ -57,6 +57,7 @@
             "tunnel": {
                 "data": {
                     "host": "Host",
+                    "local_ip": "Local IP (leave empty if unsure)",
                     "port": "Port",
                     "route_back": "Route Back / NAT Mode"
                 }

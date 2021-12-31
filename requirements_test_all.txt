@@ -1196,6 +1196,9 @@ python-tado==0.12.0
 # homeassistant.components.twitch
 python-twitch-client==0.6.0
 
+# homeassistant.components.whois
+python-whois==0.7.3
+
 # homeassistant.components.awair
 python_awair==0.2.1
 
@@ -1216,7 +1219,7 @@ pytrafikverket==0.1.6.2
 pyudev==0.22.0
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==1.4.7
+pyunifiprotect==1.4.8
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==21.11.0
