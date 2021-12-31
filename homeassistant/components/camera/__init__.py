@@ -703,10 +703,12 @@ class Camera(Entity):
         if DATA_RTSP_TO_WEB_RTC not in self.hass.data:
             return False
         stream_source = await self.stream_source()
-        for prefix in RTSP_PREFIXES:
-            if stream_source and stream_source.startswith(prefix):
-                return True
-        return False
+        return any(
+            [
+                stream_source and stream_source.startswith(prefix)
+                for prefix in RTSP_PREFIXES
+            ]
+        )
 
 
 class CameraView(HomeAssistantView):
