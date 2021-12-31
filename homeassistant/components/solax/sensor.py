@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, CONF_PASSWORD, TEMP_CELSIUS
+from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT, TEMP_CELSIUS
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
