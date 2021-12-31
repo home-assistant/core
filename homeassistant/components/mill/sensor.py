@@ -20,6 +20,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import callback
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -202,6 +203,17 @@ class LocalMillSensor(CoordinatorEntity, SensorEntity):
         self._attr_name = (
             f"{coordinator.mill_data_connection.name} {entity_description.name}"
         )
+        if coordinator.mill_data_connection.mac_address:
+            mac = self.coordinator.mill_data_connection.mac_address
+            self._attr_unique_id = f"{mac}_{entity_description.key}"
+            self._attr_device_info = DeviceInfo(
+                connections={(CONNECTION_NETWORK_MAC, mac)},
+                configuration_url=self.coordinator.mill_data_connection.url,
+                manufacturer=MANUFACTURER,
+                model="Generation 3",
+                name=coordinator.mill_data_connection.name,
+                sw_version=coordinator.mill_data_connection.version,
+            )
 
     @property
     def native_value(self):
