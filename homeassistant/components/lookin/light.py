@@ -107,7 +107,7 @@ class LookinLightEntity(LookinPowerEntity, LightEntity):
         """Update media property from status.
 
         1000
-        0 - 0/1 on/off
+        0 - 1/0 on/off
         """
         if len(status) != 4:
             return
