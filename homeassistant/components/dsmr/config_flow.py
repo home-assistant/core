@@ -9,6 +9,10 @@ from typing import Any
 from async_timeout import timeout
 from dsmr_parser import obis_references as obis_ref
 from dsmr_parser.clients.protocol import create_dsmr_reader, create_tcp_dsmr_reader
+from dsmr_parser.clients.rfxtrx_protocol import (
+    create_rfxtrx_dsmr_reader,
+    create_rfxtrx_tcp_dsmr_reader,
+)
 from dsmr_parser.objects import DSMRObject
 import serial
 import serial.tools.list_ports
@@ -22,6 +26,7 @@ from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
     CONF_DSMR_VERSION,
+    CONF_IS_RFXTRX,
     CONF_SERIAL_ID,
     CONF_SERIAL_ID_GAS,
     CONF_TIME_BETWEEN_UPDATE,
@@ -37,11 +42,14 @@ CONF_MANUAL_PATH = "Enter Manually"
 class DSMRConnection:
     """Test the connection to DSMR and receive telegram to read serial ids."""
 
-    def __init__(self, host: str | None, port: int, dsmr_version: str) -> None:
+    def __init__(
+        self, host: str | None, port: int, dsmr_version: str, is_rfxtrx: bool = False
+    ) -> None:
         """Initialize."""
         self._host = host
         self._port = port
         self._dsmr_version = dsmr_version
+        self._is_rfxtrx = is_rfxtrx
         self._telegram: dict[str, DSMRObject] = {}
         self._equipment_identifier = obis_ref.EQUIPMENT_IDENTIFIER
         if dsmr_version == "5L":
@@ -77,7 +85,9 @@ class DSMRConnection:
 
         if self._host is None:
             reader_factory = partial(
-                create_dsmr_reader,
+                create_dsmr_reader
+                if not self._is_rfxtrx
+                else create_rfxtrx_dsmr_reader,
                 self._port,
                 self._dsmr_version,
                 update_telegram,
@@ -85,7 +95,9 @@ class DSMRConnection:
             )
         else:
             reader_factory = partial(
-                create_tcp_dsmr_reader,
+                create_tcp_dsmr_reader
+                if not self._is_rfxtrx
+                else create_rfxtrx_tcp_dsmr_reader,
                 self._host,
                 self._port,
                 self._dsmr_version,
@@ -114,7 +126,12 @@ async def _validate_dsmr_connection(
     hass: core.HomeAssistant, data: dict[str, Any]
 ) -> dict[str, str | None]:
     """Validate the user input allows us to connect."""
-    conn = DSMRConnection(data.get(CONF_HOST), data[CONF_PORT], data[CONF_DSMR_VERSION])
+    conn = DSMRConnection(
+        data.get(CONF_HOST),
+        data[CONF_PORT],
+        data[CONF_DSMR_VERSION],
+        data[CONF_IS_RFXTRX],
+    )
 
     if not await conn.validate_connect(hass):
         raise CannotConnect
@@ -138,6 +155,7 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     _dsmr_version: str | None = None
+    _is_rfxtrx = False
 
     @staticmethod
     @callback
@@ -208,6 +226,7 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_HOST): str,
                 vol.Required(CONF_PORT): int,
                 vol.Required(CONF_DSMR_VERSION): vol.In(DSMR_VERSIONS),
+                vol.Optional(CONF_IS_RFXTRX): bool,
             }
         )
         return self.async_show_form(
@@ -225,6 +244,7 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             user_selection = user_input[CONF_PORT]
             if user_selection == CONF_MANUAL_PATH:
                 self._dsmr_version = user_input[CONF_DSMR_VERSION]
+                self._is_rfxtrx = user_input[CONF_IS_RFXTRX]
                 return await self.async_step_setup_serial_manual_path()
 
             dev_path = await self.hass.async_add_executor_job(
@@ -234,6 +254,7 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             validate_data = {
                 CONF_PORT: dev_path,
                 CONF_DSMR_VERSION: user_input[CONF_DSMR_VERSION],
+                CONF_IS_RFXTRX: user_input[CONF_IS_RFXTRX],
             }
 
             data = await self.async_validate_dsmr(validate_data, errors)
@@ -252,6 +273,7 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(CONF_PORT): vol.In(list_of_ports),
                 vol.Required(CONF_DSMR_VERSION): vol.In(DSMR_VERSIONS),
+                vol.Optional(CONF_IS_RFXTRX): bool,
             }
         )
         return self.async_show_form(
@@ -268,6 +290,7 @@ class DSMRFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             validate_data = {
                 CONF_PORT: user_input[CONF_PORT],
                 CONF_DSMR_VERSION: self._dsmr_version,
+                CONF_IS_RFXTRX: self._is_rfxtrx,
             }
 
             errors: dict[str, str] = {}
