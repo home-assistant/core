@@ -21,8 +21,6 @@ from .entity import ProtectDeviceEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-ON_STATE = True
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
