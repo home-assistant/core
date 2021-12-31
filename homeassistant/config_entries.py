@@ -4,32 +4,34 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Iterable, Mapping
 from contextvars import ContextVar
+import dataclasses
 from enum import Enum
 import functools
 import logging
 from types import MappingProxyType, MethodType
-from typing import Any, Callable, Optional, cast
+from typing import TYPE_CHECKING, Any, Callable, Optional, TypeVar, cast
 import weakref
 
-from homeassistant import data_entry_flow, loader
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    HomeAssistantError,
-)
-from homeassistant.helpers import device_registry, entity_registry
-from homeassistant.helpers.event import Event
-from homeassistant.helpers.typing import (
-    UNDEFINED,
-    ConfigType,
-    DiscoveryInfoType,
-    UndefinedType,
-)
-from homeassistant.setup import async_process_deps_reqs, async_setup_component
-from homeassistant.util.decorator import Registry
-import homeassistant.util.uuid as uuid_util
+from . import data_entry_flow, loader
+from .backports.enum import StrEnum
+from .const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
+from .core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
+from .exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady, HomeAssistantError
+from .helpers import device_registry, entity_registry
+from .helpers.event import Event
+from .helpers.frame import report
+from .helpers.typing import UNDEFINED, ConfigType, DiscoveryInfoType, UndefinedType
+from .setup import async_process_deps_reqs, async_setup_component
+from .util import uuid as uuid_util
+from .util.decorator import Registry
+
+if TYPE_CHECKING:
+    from .components.dhcp import DhcpServiceInfo
+    from .components.hassio import HassioServiceInfo
+    from .components.mqtt import MqttServiceInfo
+    from .components.ssdp import SsdpServiceInfo
+    from .components.usb import UsbServiceInfo
+    from .components.zeroconf import ZeroconfServiceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,6 +70,8 @@ PATH_CONFIG = ".config_entries.json"
 
 SAVE_DELAY = 1
 
+_T = TypeVar("_T", bound="ConfigEntryState")
+
 
 class ConfigEntryState(Enum):
     """Config entry state."""
@@ -87,12 +91,12 @@ class ConfigEntryState(Enum):
 
     _recoverable: bool
 
-    def __new__(cls: type[object], value: str, recoverable: bool) -> ConfigEntryState:
+    def __new__(cls: type[_T], value: str, recoverable: bool) -> _T:
         """Create new ConfigEntryState."""
         obj = object.__new__(cls)
         obj._value_ = value
         obj._recoverable = recoverable
-        return cast("ConfigEntryState", obj)
+        return obj
 
     @property
     def recoverable(self) -> bool:
@@ -119,7 +123,15 @@ RECONFIGURE_NOTIFICATION_ID = "config_entry_reconfigure"
 
 EVENT_FLOW_DISCOVERED = "config_entry_discovered"
 
-DISABLED_USER = "user"
+
+class ConfigEntryDisabler(StrEnum):
+    """What disabled a config entry."""
+
+    USER = "user"
+
+
+# DISABLED_* is deprecated, to be removed in 2022.3
+DISABLED_USER = ConfigEntryDisabler.USER.value
 
 RELOAD_AFTER_UPDATE_DELAY = 30
 
@@ -186,7 +198,7 @@ class ConfigEntry:
         unique_id: str | None = None,
         entry_id: str | None = None,
         state: ConfigEntryState = ConfigEntryState.NOT_LOADED,
-        disabled_by: str | None = None,
+        disabled_by: ConfigEntryDisabler | None = None,
     ) -> None:
         """Initialize a config entry."""
         # Unique id of the config entry
@@ -228,6 +240,16 @@ class ConfigEntry:
         self.unique_id = unique_id
 
         # Config entry is disabled
+        if isinstance(disabled_by, str) and not isinstance(
+            disabled_by, ConfigEntryDisabler
+        ):
+            report(  # type: ignore[unreachable]
+                "uses str for config entry disabled_by. This is deprecated and will "
+                "stop working in Home Assistant 2022.3, it should be updated to use "
+                "ConfigEntryDisabler instead",
+                error_if_core=False,
+            )
+            disabled_by = ConfigEntryDisabler(disabled_by)
         self.disabled_by = disabled_by
 
         # Supports unload
@@ -301,7 +323,7 @@ class ConfigEntry:
         error_reason = None
 
         try:
-            result = await component.async_setup_entry(hass, self)  # type: ignore
+            result = await component.async_setup_entry(hass, self)
 
             if not isinstance(result, bool):
                 _LOGGER.error(
@@ -440,7 +462,7 @@ class ConfigEntry:
             return False
 
         try:
-            result = await component.async_unload_entry(hass, self)  # type: ignore
+            result = await component.async_unload_entry(hass, self)
 
             assert isinstance(result, bool)
 
@@ -451,7 +473,8 @@ class ConfigEntry:
 
             self._async_process_on_unload()
 
-            return result
+            # https://github.com/python/mypy/issues/11839
+            return result  # type: ignore[no-any-return]
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
                 "Error unloading entry %s for %s", self.title, integration.domain
@@ -479,7 +502,7 @@ class ConfigEntry:
         if not hasattr(component, "async_remove_entry"):
             return
         try:
-            await component.async_remove_entry(hass, self)  # type: ignore
+            await component.async_remove_entry(hass, self)
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
                 "Error calling entry remove callback %s for %s",
@@ -516,7 +539,7 @@ class ConfigEntry:
             return False
 
         try:
-            result = await component.async_migrate_entry(hass, self)  # type: ignore
+            result = await component.async_migrate_entry(hass, self)
             if not isinstance(result, bool):
                 _LOGGER.error(
                     "%s.async_migrate_entry did not return boolean", self.domain
@@ -525,7 +548,8 @@ class ConfigEntry:
             if result:
                 # pylint: disable=protected-access
                 hass.config_entries._async_schedule_save()
-            return result
+            # https://github.com/python/mypy/issues/11839
+            return result  # type: ignore[no-any-return]
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
                 "Error migrating entry %s for %s", self.title, self.domain
@@ -586,7 +610,7 @@ class ConfigEntry:
             "unique_id": self.unique_id,
         }
 
-        for flow in hass.config_entries.flow.async_progress():
+        for flow in hass.config_entries.flow.async_progress_by_handler(self.domain):
             if flow["context"] == flow_context:
                 return
 
@@ -618,6 +642,14 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         self.config_entries = config_entries
         self._hass_config = hass_config
 
+    @callback
+    def _async_has_other_discovery_flows(self, flow_id: str) -> bool:
+        """Check if there are any other discovery flows in progress."""
+        return any(
+            flow.context["source"] in DISCOVERY_SOURCES and flow.flow_id != flow_id
+            for flow in self._progress.values()
+        )
+
     async def async_finish_flow(
         self, flow: data_entry_flow.FlowHandler, result: data_entry_flow.FlowResult
     ) -> data_entry_flow.FlowResult:
@@ -625,11 +657,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         flow = cast(ConfigFlow, flow)
 
         # Remove notification if no other discovery config entries in progress
-        if not any(
-            ent["context"]["source"] in DISCOVERY_SOURCES
-            for ent in self.hass.config_entries.flow.async_progress()
-            if ent["flow_id"] != flow.flow_id
-        ):
+        if not self._async_has_other_discovery_flows(flow.flow_id):
             self.hass.components.persistent_notification.async_dismiss(
                 DISCOVERY_NOTIFICATION_ID
             )
@@ -642,15 +670,11 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
 
         # Abort all flows in progress with same unique ID
         # or the default discovery ID
-        for progress_flow in self.async_progress():
+        for progress_flow in self.async_progress_by_handler(flow.handler):
             progress_unique_id = progress_flow["context"].get("unique_id")
-            if (
-                progress_flow["handler"] == flow.handler
-                and progress_flow["flow_id"] != flow.flow_id
-                and (
-                    (flow.unique_id and progress_unique_id == flow.unique_id)
-                    or progress_unique_id == DEFAULT_DISCOVERY_UNIQUE_ID
-                )
+            if progress_flow["flow_id"] != flow.flow_id and (
+                (flow.unique_id and progress_unique_id == flow.unique_id)
+                or progress_unique_id == DEFAULT_DISCOVERY_UNIQUE_ID
             ):
                 self.async_abort(progress_flow["flow_id"])
 
@@ -837,7 +861,9 @@ class ConfigEntries:
 
         # If the configuration entry is removed during reauth, it should
         # abort any reauth flow that is active for the removed entry.
-        for progress_flow in self.hass.config_entries.flow.async_progress():
+        for progress_flow in self.hass.config_entries.flow.async_progress_by_handler(
+            entry.domain
+        ):
             context = progress_flow.get("context")
             if (
                 context
@@ -913,7 +939,9 @@ class ConfigEntries:
                 # New in 0.104
                 unique_id=entry.get("unique_id"),
                 # New in 2021.3
-                disabled_by=entry.get("disabled_by"),
+                disabled_by=ConfigEntryDisabler(entry["disabled_by"])
+                if entry.get("disabled_by")
+                else None,
                 # New in 2021.6
                 pref_disable_new_entities=pref_disable_new_entities,
                 pref_disable_polling=entry.get("pref_disable_polling"),
@@ -974,7 +1002,7 @@ class ConfigEntries:
         return await self.async_setup(entry_id)
 
     async def async_set_disabled_by(
-        self, entry_id: str, disabled_by: str | None
+        self, entry_id: str, disabled_by: ConfigEntryDisabler | None
     ) -> bool:
         """Disable an entry.
 
@@ -983,7 +1011,18 @@ class ConfigEntries:
         if (entry := self.async_get_entry(entry_id)) is None:
             raise UnknownEntry
 
-        if entry.disabled_by == disabled_by:
+        if isinstance(disabled_by, str) and not isinstance(
+            disabled_by, ConfigEntryDisabler
+        ):
+            report(  # type: ignore[unreachable]
+                "uses str for config entry disabled_by. This is deprecated and will "
+                "stop working in Home Assistant 2022.3, it should be updated to use "
+                "ConfigEntryDisabler instead",
+                error_if_core=False,
+            )
+            disabled_by = ConfigEntryDisabler(disabled_by)
+
+        if entry.disabled_by is disabled_by:
             return True
 
         entry.disabled_by = disabled_by
@@ -1134,7 +1173,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
 
     def __init_subclass__(cls, domain: str | None = None, **kwargs: Any) -> None:
         """Initialize a subclass, register if possible."""
-        super().__init_subclass__(**kwargs)  # type: ignore
+        super().__init_subclass__(**kwargs)
         if domain is not None:
             HANDLERS.register(domain)(cls)
 
@@ -1151,6 +1190,12 @@ class ConfigFlow(data_entry_flow.FlowHandler):
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
         """Get the options flow for this handler."""
         raise data_entry_flow.UnknownHandler
+
+    @classmethod
+    @callback
+    def async_supports_options_flow(cls, config_entry: ConfigEntry) -> bool:
+        """Return options flow support for this handler."""
+        return cls.async_get_options_flow is not ConfigFlow.async_get_options_flow
 
     @callback
     def _async_abort_entries_match(
@@ -1265,10 +1310,10 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         """Return other in progress flows for current domain."""
         return [
             flw
-            for flw in self.hass.config_entries.flow.async_progress(
-                include_uninitialized=include_uninitialized
+            for flw in self.hass.config_entries.flow.async_progress_by_handler(
+                self.handler, include_uninitialized=include_uninitialized
             )
-            if flw["handler"] == self.handler and flw["flow_id"] != self.flow_id
+            if flw["flow_id"] != self.flow_id
         ]
 
     async def async_step_ignore(
@@ -1329,7 +1374,9 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         # Remove reauth notification if no reauth flows are in progress
         if self.source == SOURCE_REAUTH and not any(
             ent["context"]["source"] == SOURCE_REAUTH
-            for ent in self.hass.config_entries.flow.async_progress()
+            for ent in self.hass.config_entries.flow.async_progress_by_handler(
+                self.handler
+            )
             if ent["flow_id"] != self.flow_id
         ):
             self.hass.components.persistent_notification.async_dismiss(
@@ -1341,46 +1388,46 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         )
 
     async def async_step_hassio(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: HassioServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by HASS IO discovery."""
-        return await self.async_step_discovery(discovery_info)
+        return await self.async_step_discovery(discovery_info.config)
 
     async def async_step_homekit(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: ZeroconfServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by Homekit discovery."""
-        return await self.async_step_discovery(discovery_info)
+        return await self.async_step_discovery(dataclasses.asdict(discovery_info))
 
     async def async_step_mqtt(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: MqttServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by MQTT discovery."""
-        return await self.async_step_discovery(discovery_info)
+        return await self.async_step_discovery(dataclasses.asdict(discovery_info))
 
     async def async_step_ssdp(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: SsdpServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by SSDP discovery."""
-        return await self.async_step_discovery(discovery_info)
+        return await self.async_step_discovery(dataclasses.asdict(discovery_info))
 
     async def async_step_zeroconf(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: ZeroconfServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by Zeroconf discovery."""
-        return await self.async_step_discovery(discovery_info)
+        return await self.async_step_discovery(dataclasses.asdict(discovery_info))
 
     async def async_step_dhcp(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: DhcpServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by DHCP discovery."""
-        return await self.async_step_discovery(discovery_info)
+        return await self.async_step_discovery(dataclasses.asdict(discovery_info))
 
     async def async_step_usb(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: UsbServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by USB discovery."""
-        return await self.async_step_discovery(discovery_info)
+        return await self.async_step_discovery(dataclasses.asdict(discovery_info))
 
     @callback
     def async_create_entry(  # pylint: disable=arguments-differ
@@ -1535,12 +1582,13 @@ def _handle_entry_updated_filter(event: Event) -> bool:
     """Handle entity registry entry update filter.
 
     Only handle changes to "disabled_by".
-    If "disabled_by" was DISABLED_CONFIG_ENTRY, reload is not needed.
+    If "disabled_by" was CONFIG_ENTRY, reload is not needed.
     """
     if (
         event.data["action"] != "update"
         or "disabled_by" not in event.data["changes"]
-        or event.data["changes"]["disabled_by"] == entity_registry.DISABLED_CONFIG_ENTRY
+        or event.data["changes"]["disabled_by"]
+        is entity_registry.RegistryEntryDisabler.CONFIG_ENTRY
     ):
         return False
     return True

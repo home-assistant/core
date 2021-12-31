@@ -42,7 +42,7 @@
         "step": {
             "gw_mqtt": {
                 "data": {
-                    "persistence_file": "file di persistenza (lasciare vuoto per generare automaticamente)",
+                    "persistence_file": "file di persistenza (lascia vuoto per generare automaticamente)",
                     "retain": "mqtt conserva",
                     "topic_in_prefix": "prefisso per argomenti di input (topic_in_prefix)",
                     "topic_out_prefix": "prefisso per argomenti di output (topic_out_prefix)",
@@ -54,7 +54,7 @@
                 "data": {
                     "baud_rate": "velocit\u00e0 di trasmissione",
                     "device": "Porta seriale",
-                    "persistence_file": "file di persistenza (lasciare vuoto per generare automaticamente)",
+                    "persistence_file": "file di persistenza (lascia vuoto per generare automaticamente)",
                     "version": "Versione MySensors"
                 },
                 "description": "Configurazione del gateway seriale"

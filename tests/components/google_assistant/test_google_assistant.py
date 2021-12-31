@@ -1,4 +1,6 @@
 """The tests for the Google Assistant component."""
+from http import HTTPStatus
+
 # pylint: disable=protected-access
 import json
 
@@ -142,10 +144,18 @@ async def test_sync_request(hass_fixture, assistant_client, auth_header):
         suggested_object_id="diagnostic_switch",
         entity_category="diagnostic",
     )
+    entity_entry3 = entity_registry.async_get_or_create(
+        "switch",
+        "test",
+        "switch_system_id",
+        suggested_object_id="system_switch",
+        entity_category="system",
+    )
 
     # These should not show up in the sync request
     hass_fixture.states.async_set(entity_entry1.entity_id, "on")
     hass_fixture.states.async_set(entity_entry2.entity_id, "something_else")
+    hass_fixture.states.async_set(entity_entry3.entity_id, "blah")
 
     reqid = "5711642932632160983"
     data = {"requestId": reqid, "inputs": [{"intent": "action.devices.SYNC"}]}
@@ -154,7 +164,7 @@ async def test_sync_request(hass_fixture, assistant_client, auth_header):
         data=json.dumps(data),
         headers=auth_header,
     )
-    assert result.status == 200
+    assert result.status == HTTPStatus.OK
     body = await result.json()
     assert body.get("requestId") == reqid
     devices = body["payload"]["devices"]
@@ -198,7 +208,7 @@ async def test_query_request(hass_fixture, assistant_client, auth_header):
         data=json.dumps(data),
         headers=auth_header,
     )
-    assert result.status == 200
+    assert result.status == HTTPStatus.OK
     body = await result.json()
     assert body.get("requestId") == reqid
     devices = body["payload"]["devices"]
@@ -238,7 +248,7 @@ async def test_query_climate_request(hass_fixture, assistant_client, auth_header
         data=json.dumps(data),
         headers=auth_header,
     )
-    assert result.status == 200
+    assert result.status == HTTPStatus.OK
     body = await result.json()
     assert body.get("requestId") == reqid
     devices = body["payload"]["devices"]
@@ -297,7 +307,7 @@ async def test_query_climate_request_f(hass_fixture, assistant_client, auth_head
         data=json.dumps(data),
         headers=auth_header,
     )
-    assert result.status == 200
+    assert result.status == HTTPStatus.OK
     body = await result.json()
     assert body.get("requestId") == reqid
     devices = body["payload"]["devices"]
@@ -350,7 +360,7 @@ async def test_query_humidifier_request(hass_fixture, assistant_client, auth_hea
         data=json.dumps(data),
         headers=auth_header,
     )
-    assert result.status == 200
+    assert result.status == HTTPStatus.OK
     body = await result.json()
     assert body.get("requestId") == reqid
     devices = body["payload"]["devices"]
@@ -464,7 +474,7 @@ async def test_execute_request(hass_fixture, assistant_client, auth_header):
         data=json.dumps(data),
         headers=auth_header,
     )
-    assert result.status == 200
+    assert result.status == HTTPStatus.OK
     body = await result.json()
     assert body.get("requestId") == reqid
     commands = body["payload"]["commands"]

@@ -16,7 +16,7 @@
                 "description": "\u00c1ll\u00edtsa be a WLED-et Home Assistantba val\u00f3 integr\u00e1l\u00e1shoz."
             },
             "zeroconf_confirm": {
-                "description": "Szeretn\u00e9 hozz\u00e1adni a(z) `{name}` WLED-et Home Assistanthoz?",
+                "description": "Szeretn\u00e9 hozz\u00e1adni `{name}` WLED-et Home Assistanthoz?",
                 "title": "Felfedezett WLED eszk\u00f6z"
             }
         }

@@ -13,11 +13,7 @@ from aiohomekit.model.characteristics import (
 from aiohomekit.model.services import ServicesTypes
 from aiohomekit.utils import clamp_enum_to_char
 
-from homeassistant.components.climate import (
-    DEFAULT_MAX_HUMIDITY,
-    DEFAULT_MIN_HUMIDITY,
-    ClimateEntity,
-)
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
@@ -37,8 +33,10 @@ from homeassistant.components.climate.const import (
     SWING_OFF,
     SWING_VERTICAL,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import KNOWN_DEVICES, HomeKitEntity
 
@@ -86,15 +84,18 @@ TARGET_HEATER_COOLER_STATE_HASS_TO_HOMEKIT = {
 SWING_MODE_HASS_TO_HOMEKIT = {v: k for k, v in SWING_MODE_HOMEKIT_TO_HASS.items()}
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Homekit climate."""
     hkid = config_entry.data["AccessoryPairingID"]
     conn = hass.data[KNOWN_DEVICES][hkid]
 
     @callback
     def async_add_service(service):
-        entity_class = ENTITY_TYPES.get(service.short_type)
-        if not entity_class:
+        if not (entity_class := ENTITY_TYPES.get(service.short_type)):
             return False
         info = {"aid": service.accessory.aid, "iid": service.iid}
         async_add_entities([entity_class(conn, info)], True)
@@ -488,14 +489,22 @@ class HomeKitClimateEntity(HomeKitEntity, ClimateEntity):
     @property
     def min_humidity(self):
         """Return the minimum humidity."""
-        char = self.service[CharacteristicsTypes.RELATIVE_HUMIDITY_TARGET]
-        return char.minValue or DEFAULT_MIN_HUMIDITY
+        min_humidity = self.service[
+            CharacteristicsTypes.RELATIVE_HUMIDITY_TARGET
+        ].minValue
+        if min_humidity is not None:
+            return min_humidity
+        return super().min_humidity
 
     @property
     def max_humidity(self):
         """Return the maximum humidity."""
-        char = self.service[CharacteristicsTypes.RELATIVE_HUMIDITY_TARGET]
-        return char.maxValue or DEFAULT_MAX_HUMIDITY
+        max_humidity = self.service[
+            CharacteristicsTypes.RELATIVE_HUMIDITY_TARGET
+        ].maxValue
+        if max_humidity is not None:
+            return max_humidity
+        return super().max_humidity
 
     @property
     def hvac_action(self):

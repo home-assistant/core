@@ -119,12 +119,11 @@ class FritzBoxTracker(FritzDeviceBase, ScannerEntity):
         """Initialize a FRITZ!Box device."""
         super().__init__(router, device)
         self._last_activity: datetime.datetime | None = device.last_activity
-        self._active = False
 
     @property
     def is_connected(self) -> bool:
         """Return device status."""
-        return self._active
+        return self._router.devices[self._mac].is_connected
 
     @property
     def unique_id(self) -> str:
@@ -142,22 +141,21 @@ class FritzBoxTracker(FritzDeviceBase, ScannerEntity):
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the attributes."""
         attrs: dict[str, str] = {}
+        device = self._router.devices[self._mac]
+        self._last_activity = device.last_activity
         if self._last_activity is not None:
             attrs["last_time_reachable"] = self._last_activity.isoformat(
                 timespec="seconds"
             )
+        if device.connected_to:
+            attrs["connected_to"] = device.connected_to
+        if device.connection_type:
+            attrs["connection_type"] = device.connection_type
+        if device.ssid:
+            attrs["ssid"] = device.ssid
         return attrs
 
     @property
     def source_type(self) -> str:
         """Return tracker source type."""
         return SOURCE_TYPE_ROUTER
-
-    async def async_process_update(self) -> None:
-        """Update device."""
-        if not self._mac:
-            return
-
-        device = self._router.devices[self._mac]
-        self._active = device.is_connected
-        self._last_activity = device.last_activity

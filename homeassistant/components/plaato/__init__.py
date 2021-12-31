@@ -85,9 +85,8 @@ WEBHOOK_SCHEMA = vol.Schema(
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Configure based on config entry."""
     hass.data.setdefault(DOMAIN, {})
-    use_webhook = entry.data[CONF_USE_WEBHOOK]
 
-    if use_webhook:
+    if entry.data[CONF_USE_WEBHOOK]:
         async_setup_webhook(hass, entry)
     else:
         await async_setup_coordinator(hass, entry)

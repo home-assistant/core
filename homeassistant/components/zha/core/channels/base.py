@@ -103,7 +103,6 @@ class ZigbeeChannel(LogMixin):
     ) -> None:
         """Initialize ZigbeeChannel."""
         self._generic_id = f"channel_0x{cluster.cluster_id:04x}"
-        self._channel_name = getattr(cluster, "ep_attribute", self._generic_id)
         self._ch_pool = ch_pool
         self._cluster = cluster
         self._id = f"{ch_pool.id}:0x{cluster.cluster_id:04x}"
@@ -141,7 +140,7 @@ class ZigbeeChannel(LogMixin):
     @property
     def name(self) -> str:
         """Return friendly name."""
-        return self._channel_name
+        return self.cluster.ep_attribute or self._generic_id
 
     @property
     def status(self):
@@ -332,7 +331,7 @@ class ZigbeeChannel(LogMixin):
         if ch_specific_init:
             await ch_specific_init(from_cache=from_cache)
 
-        self.debug("finished channel configuration")
+        self.debug("finished channel initialization")
         self._status = ChannelStatus.INITIALIZED
 
     @callback

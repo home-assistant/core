@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+from homeassistant.core import ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 
@@ -74,7 +75,7 @@ def setup(hass, config):
 
         success = zm_client.login() and success
 
-    def set_active_state(call):
+    def set_active_state(call: ServiceCall) -> None:
         """Set the ZoneMinder run state to the given state name."""
         zm_id = call.data[ATTR_ID]
         state_name = call.data[ATTR_NAME]

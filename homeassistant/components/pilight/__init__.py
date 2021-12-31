@@ -16,6 +16,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
+from homeassistant.core import ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.util import dt as dt_util
@@ -84,7 +85,7 @@ def setup(hass, config):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_pilight_client)
 
     @send_throttler.limited
-    def send_code(call):
+    def send_code(call: ServiceCall) -> None:
         """Send RF code to the pilight-daemon."""
         # Change type to dict from mappingproxy since data has to be JSON
         # serializable

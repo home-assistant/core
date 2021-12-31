@@ -17,7 +17,9 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
+    Platform,
 )
+from homeassistant.core import ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
@@ -95,7 +97,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-PLATFORMS = ["sensor", "switch"]
+PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
 
 
 async def async_setup(hass, config):
@@ -202,7 +204,7 @@ class TransmissionClient:
 
         self.hass.config_entries.async_setup_platforms(self.config_entry, PLATFORMS)
 
-        def add_torrent(service):
+        def add_torrent(service: ServiceCall) -> None:
             """Add new torrent to download."""
             tm_client = None
             for entry in self.hass.config_entries.async_entries(DOMAIN):
@@ -223,7 +225,7 @@ class TransmissionClient:
                     "Could not add torrent: unsupported type or no permission"
                 )
 
-        def start_torrent(service):
+        def start_torrent(service: ServiceCall) -> None:
             """Start torrent."""
             tm_client = None
             for entry in self.hass.config_entries.async_entries(DOMAIN):
@@ -237,7 +239,7 @@ class TransmissionClient:
             tm_client.tm_api.start_torrent(torrent_id)
             tm_client.api.update()
 
-        def stop_torrent(service):
+        def stop_torrent(service: ServiceCall) -> None:
             """Stop torrent."""
             tm_client = None
             for entry in self.hass.config_entries.async_entries(DOMAIN):
@@ -251,7 +253,7 @@ class TransmissionClient:
             tm_client.tm_api.stop_torrent(torrent_id)
             tm_client.api.update()
 
-        def remove_torrent(service):
+        def remove_torrent(service: ServiceCall) -> None:
             """Remove torrent."""
             tm_client = None
             for entry in self.hass.config_entries.async_entries(DOMAIN):
@@ -441,13 +443,13 @@ class TransmissionData:
 
     def start_torrents(self):
         """Start all torrents."""
-        if len(self._torrents) <= 0:
+        if not self._torrents:
             return
         self._api.start_all()
 
     def stop_torrents(self):
         """Stop all active torrents."""
-        if len(self._torrents) == 0:
+        if not self._torrents:
             return
         torrent_ids = [torrent.id for torrent in self._torrents]
         self._api.stop_torrent(torrent_ids)

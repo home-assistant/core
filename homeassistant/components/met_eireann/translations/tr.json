@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "Hizmet zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "elevation": "Y\u00fckseklik",
+                    "latitude": "Enlem",
+                    "longitude": "Boylam",
+                    "name": "Ad"
+                },
+                "description": "Met \u00c9ireann Public Weather Forecast API'sinden gelen hava durumu verilerini kullanmak i\u00e7in konumunuzu girin",
+                "title": "Konum"
+            }
+        }
+    }
+}

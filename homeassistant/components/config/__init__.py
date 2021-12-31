@@ -11,6 +11,7 @@ from homeassistant.const import CONF_ID, EVENT_COMPONENT_LOADED
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import ATTR_COMPONENT
+from homeassistant.util.file import write_utf8_file_atomic
 from homeassistant.util.yaml import dump, load_yaml
 
 DOMAIN = "config"
@@ -21,7 +22,6 @@ SECTIONS = (
     "automation",
     "config_entries",
     "core",
-    "customize",
     "device_registry",
     "entity_registry",
     "group",
@@ -226,9 +226,7 @@ class EditIdBasedConfigView(BaseEditConfigView):
 
     def _write_value(self, hass, data, config_key, new_value):
         """Set value."""
-        value = self._get_value(hass, data, config_key)
-
-        if value is None:
+        if (value := self._get_value(hass, data, config_key)) is None:
             value = {CONF_ID: config_key}
             data.append(value)
 
@@ -254,6 +252,5 @@ def _write(path, data):
     """Write YAML helper."""
     # Do it before opening file. If dump causes error it will now not
     # truncate the file.
-    data = dump(data)
-    with open(path, "w", encoding="utf-8") as outfile:
-        outfile.write(data)
+    contents = dump(data)
+    write_utf8_file_atomic(path, contents)

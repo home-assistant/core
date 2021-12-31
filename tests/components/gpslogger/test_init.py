@@ -1,4 +1,5 @@
 """The tests the for GPSLogger device tracker platform."""
+from http import HTTPStatus
 from unittest.mock import patch
 
 import pytest
@@ -8,12 +9,7 @@ from homeassistant.components import gpslogger, zone
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.gpslogger import DOMAIN, TRACKER_UPDATE
 from homeassistant.config import async_process_ha_core_config
-from homeassistant.const import (
-    HTTP_OK,
-    HTTP_UNPROCESSABLE_ENTITY,
-    STATE_HOME,
-    STATE_NOT_HOME,
-)
+from homeassistant.const import STATE_HOME, STATE_NOT_HOME
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import DATA_DISPATCHER
 from homeassistant.setup import async_setup_component
@@ -87,21 +83,21 @@ async def test_missing_data(hass, gpslogger_client, webhook_id):
     # No data
     req = await gpslogger_client.post(url)
     await hass.async_block_till_done()
-    assert req.status == HTTP_UNPROCESSABLE_ENTITY
+    assert req.status == HTTPStatus.UNPROCESSABLE_ENTITY
 
     # No latitude
     copy = data.copy()
     del copy["latitude"]
     req = await gpslogger_client.post(url, data=copy)
     await hass.async_block_till_done()
-    assert req.status == HTTP_UNPROCESSABLE_ENTITY
+    assert req.status == HTTPStatus.UNPROCESSABLE_ENTITY
 
     # No device
     copy = data.copy()
     del copy["device"]
     req = await gpslogger_client.post(url, data=copy)
     await hass.async_block_till_done()
-    assert req.status == HTTP_UNPROCESSABLE_ENTITY
+    assert req.status == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
 async def test_enter_and_exit(hass, gpslogger_client, webhook_id):
@@ -113,14 +109,14 @@ async def test_enter_and_exit(hass, gpslogger_client, webhook_id):
     # Enter the Home
     req = await gpslogger_client.post(url, data=data)
     await hass.async_block_till_done()
-    assert req.status == HTTP_OK
+    assert req.status == HTTPStatus.OK
     state_name = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{data['device']}").state
     assert state_name == STATE_HOME
 
     # Enter Home again
     req = await gpslogger_client.post(url, data=data)
     await hass.async_block_till_done()
-    assert req.status == HTTP_OK
+    assert req.status == HTTPStatus.OK
     state_name = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{data['device']}").state
     assert state_name == STATE_HOME
 
@@ -130,7 +126,7 @@ async def test_enter_and_exit(hass, gpslogger_client, webhook_id):
     # Enter Somewhere else
     req = await gpslogger_client.post(url, data=data)
     await hass.async_block_till_done()
-    assert req.status == HTTP_OK
+    assert req.status == HTTPStatus.OK
     state_name = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{data['device']}").state
     assert state_name == STATE_NOT_HOME
 
@@ -160,7 +156,7 @@ async def test_enter_with_attrs(hass, gpslogger_client, webhook_id):
 
     req = await gpslogger_client.post(url, data=data)
     await hass.async_block_till_done()
-    assert req.status == HTTP_OK
+    assert req.status == HTTPStatus.OK
     state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{data['device']}")
     assert state.state == STATE_NOT_HOME
     assert state.attributes["gps_accuracy"] == 10.5
@@ -186,7 +182,7 @@ async def test_enter_with_attrs(hass, gpslogger_client, webhook_id):
 
     req = await gpslogger_client.post(url, data=data)
     await hass.async_block_till_done()
-    assert req.status == HTTP_OK
+    assert req.status == HTTPStatus.OK
     state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{data['device']}")
     assert state.state == STATE_HOME
     assert state.attributes["gps_accuracy"] == 123
@@ -209,7 +205,7 @@ async def test_load_unload_entry(hass, gpslogger_client, webhook_id):
     # Enter the Home
     req = await gpslogger_client.post(url, data=data)
     await hass.async_block_till_done()
-    assert req.status == HTTP_OK
+    assert req.status == HTTPStatus.OK
     state_name = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{data['device']}").state
     assert state_name == STATE_HOME
     assert len(hass.data[DATA_DISPATCHER][TRACKER_UPDATE]) == 1

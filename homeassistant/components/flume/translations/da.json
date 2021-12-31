@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "client_id": "Klient-ID"
+                }
+            }
+        }
+    }
+}

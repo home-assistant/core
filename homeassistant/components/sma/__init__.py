@@ -20,6 +20,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -61,8 +62,7 @@ def _parse_legacy_options(
     )
 
     # Parsing of sensors configuration
-    config_sensors = entry.data.get(CONF_SENSORS)
-    if not config_sensors:
+    if not (config_sensors := entry.data.get(CONF_SENSORS)):
         return []
 
     # Support import of legacy config that should have been removed from 0.99, but was still functional
@@ -144,7 +144,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         # Get updated device info
-        device_info = await sma.device_info()
+        sma_device_info = await sma.device_info()
         # Get all device sensors
         sensor_def = await sma.get_sensors()
     except (
@@ -152,6 +152,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         pysma.exceptions.SmaConnectionException,
     ) as exc:
         raise ConfigEntryNotReady from exc
+
+    # Create DeviceInfo object from sma_device_info
+    device_info = DeviceInfo(
+        configuration_url=url,
+        identifiers={(DOMAIN, entry.unique_id)},
+        manufacturer=sma_device_info["manufacturer"],
+        model=sma_device_info["type"],
+        name=sma_device_info["name"],
+        sw_version=sma_device_info["sw_version"],
+    )
 
     # Parse legacy options if initial setup was done from yaml
     if entry.source == SOURCE_IMPORT:

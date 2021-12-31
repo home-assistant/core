@@ -9,9 +9,9 @@ import xmltodict
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
+    SensorDeviceClass,
     SensorEntity,
+    SensorStateClass,
 )
 from homeassistant.const import (
     ATTR_HIDDEN,
@@ -20,13 +20,8 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
     CURRENCY_DOLLAR,
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_MONETARY,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_POWER_FACTOR,
-    DEVICE_CLASS_VOLTAGE,
     ELECTRIC_POTENTIAL_VOLT,
-    ENERGY_WATT_HOUR,
+    ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
     POWER_WATT,
     TIME_DAYS,
@@ -40,18 +35,12 @@ DEFAULT_NAME = "ted"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 
-VALID_MODES = [
-    "base",
-    "advanced",
-    "extended",
-]
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=80): cv.port,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_MODE, default=VALID_MODES[0]): vol.In(VALID_MODES),
+        vol.Optional(CONF_MODE, default="base"): cv.string,
     }
 )
 
@@ -64,7 +53,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     mode = config.get(CONF_MODE)
     url = f"http://{host}:{port}/api/LiveData.xml"
 
-    lvl = {VALID_MODES[0]: 1, VALID_MODES[1]: 2, VALID_MODES[2]: 3}
+    lvl = {"base": 1, "advanced": 2, "extended": 3}
 
     gateway = Ted5000Gateway(url)
 
@@ -78,8 +67,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         dev.append(Ted5000Sensor(gateway, name, mtu, 0, POWER_WATT))
         dev.append(Ted5000Sensor(gateway, name, mtu, 1, ELECTRIC_POTENTIAL_VOLT))
         if lvl[mode] >= 2:  # advanced or extended
-            dev.append(Ted5000Sensor(gateway, name, mtu, 2, ENERGY_WATT_HOUR))
-            dev.append(Ted5000Sensor(gateway, name, mtu, 3, ENERGY_WATT_HOUR))
+            dev.append(Ted5000Sensor(gateway, name, mtu, 2, ENERGY_KILO_WATT_HOUR))
+            dev.append(Ted5000Sensor(gateway, name, mtu, 3, ENERGY_KILO_WATT_HOUR))
             dev.append(Ted5000Sensor(gateway, name, mtu, 4, PERCENTAGE))
 
     # Create utility sensors
@@ -113,16 +102,16 @@ class Ted5000Sensor(SensorEntity):
     def __init__(self, gateway, name, mtu, ptr, unit):
         """Initialize the sensor."""
         dclass = {
-            POWER_WATT: DEVICE_CLASS_POWER,
-            ELECTRIC_POTENTIAL_VOLT: DEVICE_CLASS_VOLTAGE,
-            ENERGY_WATT_HOUR: DEVICE_CLASS_ENERGY,
-            PERCENTAGE: DEVICE_CLASS_POWER_FACTOR,
+            POWER_WATT: SensorDeviceClass.POWER,
+            ELECTRIC_POTENTIAL_VOLT: SensorDeviceClass.VOLTAGE,
+            ENERGY_KILO_WATT_HOUR: SensorDeviceClass.ENERGY,
+            PERCENTAGE: SensorDeviceClass.POWER_FACTOR,
         }
         sclass = {
-            POWER_WATT: STATE_CLASS_MEASUREMENT,
-            ELECTRIC_POTENTIAL_VOLT: STATE_CLASS_MEASUREMENT,
-            ENERGY_WATT_HOUR: STATE_CLASS_TOTAL_INCREASING,
-            PERCENTAGE: STATE_CLASS_MEASUREMENT,
+            POWER_WATT: SensorStateClass.MEASUREMENT,
+            ELECTRIC_POTENTIAL_VOLT: SensorStateClass.MEASUREMENT,
+            ENERGY_KILO_WATT_HOUR: SensorStateClass.TOTAL_INCREASING,
+            PERCENTAGE: SensorStateClass.MEASUREMENT,
         }
         suffix = {
             0: "power",
@@ -178,12 +167,12 @@ class Ted5000Utility(SensorEntity):
         """Initialize the sensor."""
         dclass = {
             ATTR_HIDDEN: ATTR_HIDDEN,
-            CURRENCY_DOLLAR: DEVICE_CLASS_MONETARY,
+            CURRENCY_DOLLAR: SensorDeviceClass.MONETARY,
             TIME_DAYS: ATTR_HIDDEN,
         }
         sclass = {
             ATTR_HIDDEN: ATTR_HIDDEN,
-            CURRENCY_DOLLAR: STATE_CLASS_MEASUREMENT,
+            CURRENCY_DOLLAR: SensorStateClass.MEASUREMENT,
             TIME_DAYS: ATTR_HIDDEN,
         }
         units = {
@@ -282,8 +271,8 @@ class Ted5000Gateway:
                 self.data[mtu] = {
                     0: power,
                     1: voltage / 10,
-                    2: energy_tdy,
-                    3: energy_mtd,
+                    2: energy_tdy / 1000,
+                    3: energy_mtd / 1000,
                     4: power_factor / 10,
                 }
 

@@ -32,7 +32,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantTuyaData
 from .base import EnumTypeData, IntegerTypeData, TuyaEntity
-from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode
+from .const import DOMAIN, LOGGER, TUYA_DISCOVERY_NEW, DPCode
 
 TUYA_HVAC_TO_HA = {
     "auto": HVAC_MODE_HEAT_COOL,
@@ -182,10 +182,10 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         # it to define min, max & step temperatures
         if (
             self._set_temperature_dpcode
-            and self._set_temperature_dpcode in device.status_range
+            and self._set_temperature_dpcode in device.function
         ):
             type_data = IntegerTypeData.from_json(
-                device.status_range[self._set_temperature_dpcode].values
+                device.function[self._set_temperature_dpcode].values
             )
             self._attr_supported_features |= SUPPORT_TARGET_TEMPERATURE
             self._set_temperature_type = type_data
@@ -232,14 +232,11 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             ]
 
         # Determine dpcode to use for setting the humidity
-        if (
-            DPCode.HUMIDITY_SET in device.status
-            and DPCode.HUMIDITY_SET in device.status_range
-        ):
+        if DPCode.HUMIDITY_SET in device.function:
             self._attr_supported_features |= SUPPORT_TARGET_HUMIDITY
             self._set_humidity_dpcode = DPCode.HUMIDITY_SET
             type_data = IntegerTypeData.from_json(
-                device.status_range[DPCode.HUMIDITY_SET].values
+                device.function[DPCode.HUMIDITY_SET].values
             )
             self._set_humidity_type = type_data
             self._attr_min_humidity = int(type_data.min_scaled)
@@ -252,7 +249,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         ):
             self._current_humidity_dpcode = DPCode.HUMIDITY_CURRENT
             self._current_humidity_type = IntegerTypeData.from_json(
-                self.device.status_range[DPCode.HUMIDITY_CURRENT].values
+                device.status_range[DPCode.HUMIDITY_CURRENT].values
             )
 
         # Determine dpcode to use for getting the current humidity
@@ -262,7 +259,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         ):
             self._current_humidity_dpcode = DPCode.HUMIDITY_CURRENT
             self._current_humidity_type = IntegerTypeData.from_json(
-                self.device.status_range[DPCode.HUMIDITY_CURRENT].values
+                device.status_range[DPCode.HUMIDITY_CURRENT].values
             )
 
         # Determine fan modes
@@ -272,12 +269,12 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         ):
             self._attr_supported_features |= SUPPORT_FAN_MODE
             self._attr_fan_modes = EnumTypeData.from_json(
-                self.device.status_range[DPCode.FAN_SPEED_ENUM].values
+                device.status_range[DPCode.FAN_SPEED_ENUM].values
             ).range
 
         # Determine swing modes
         if any(
-            dpcode in self.device.function
+            dpcode in device.function
             for dpcode in (
                 DPCode.SHAKE,
                 DPCode.SWING,
@@ -288,16 +285,30 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             self._attr_supported_features |= SUPPORT_SWING_MODE
             self._attr_swing_modes = [SWING_OFF]
             if any(
-                dpcode in self.device.function
-                for dpcode in (DPCode.SHAKE, DPCode.SWING)
+                dpcode in device.function for dpcode in (DPCode.SHAKE, DPCode.SWING)
             ):
                 self._attr_swing_modes.append(SWING_ON)
 
-            if DPCode.SWITCH_HORIZONTAL in self.device.function:
+            if DPCode.SWITCH_HORIZONTAL in device.function:
                 self._attr_swing_modes.append(SWING_HORIZONTAL)
 
-            if DPCode.SWITCH_VERTICAL in self.device.function:
+            if DPCode.SWITCH_VERTICAL in device.function:
                 self._attr_swing_modes.append(SWING_VERTICAL)
+
+    async def async_added_to_hass(self) -> None:
+        """Call when entity is added to hass."""
+        await super().async_added_to_hass()
+
+        # Log unknown modes
+        if DPCode.MODE in self.device.function:
+            data_type = EnumTypeData.from_json(self.device.function[DPCode.MODE].values)
+            for tuya_mode in data_type.range:
+                if tuya_mode not in TUYA_HVAC_TO_HA:
+                    LOGGER.warning(
+                        "Unknown HVAC mode '%s' for device %s; assuming it as off",
+                        tuya_mode,
+                        self.device.name,
+                    )
 
     def set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
@@ -323,7 +334,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             [
                 {
                     "code": self._set_humidity_dpcode,
-                    "value": self._set_humidity_type.scale_value(humidity),
+                    "value": self._set_humidity_type.scale_value_back(humidity),
                 }
             ]
         )
@@ -365,7 +376,9 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
                 {
                     "code": self._set_temperature_dpcode,
                     "value": round(
-                        self._set_temperature_type.scale_value(kwargs["temperature"])
+                        self._set_temperature_type.scale_value_back(
+                            kwargs["temperature"]
+                        )
                     ),
                 }
             ]
@@ -435,8 +448,11 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
                 return self.entity_description.switch_only_hvac_mode
             return HVAC_MODE_OFF
 
-        if self.device.status.get(DPCode.MODE) is not None:
-            return TUYA_HVAC_TO_HA[self.device.status[DPCode.MODE]]
+        if (
+            mode := self.device.status.get(DPCode.MODE)
+        ) is not None and mode in TUYA_HVAC_TO_HA:
+            return TUYA_HVAC_TO_HA[mode]
+
         return HVAC_MODE_OFF
 
     @property

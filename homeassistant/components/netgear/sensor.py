@@ -1,14 +1,14 @@
 """Support for Netgear routers."""
 from homeassistant.components.sensor import (
-    DEVICE_CLASS_SIGNAL_STRENGTH,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .router import NetgearDeviceEntity, NetgearRouter, async_setup_netgear_entry
 
@@ -16,31 +16,36 @@ SENSOR_TYPES = {
     "type": SensorEntityDescription(
         key="type",
         name="link type",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "link_rate": SensorEntityDescription(
         key="link_rate",
         name="link rate",
         native_unit_of_measurement="Mbps",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "signal": SensorEntityDescription(
         key="signal",
         name="signal strength",
         native_unit_of_measurement=PERCENTAGE,
-        device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "ssid": SensorEntityDescription(
         key="ssid",
         name="ssid",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "conn_ap_mac": SensorEntityDescription(
         key="conn_ap_mac",
         name="access point mac",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 }
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up device tracker for Netgear component."""
 
@@ -66,7 +71,7 @@ class NetgearSensorEntity(NetgearDeviceEntity, SensorEntity):
         self.entity_description = SENSOR_TYPES[self._attribute]
         self._name = f"{self.get_device_name()} {self.entity_description.name}"
         self._unique_id = f"{self._mac}-{self._attribute}"
-        self._state = self._device[self._attribute]
+        self._state = self._device.get(self._attribute)
 
     @property
     def native_value(self):
@@ -78,7 +83,7 @@ class NetgearSensorEntity(NetgearDeviceEntity, SensorEntity):
         """Update the Netgear device."""
         self._device = self._router.devices[self._mac]
         self._active = self._device["active"]
-        if self._device[self._attribute] is not None:
+        if self._device.get(self._attribute) is not None:
             self._state = self._device[self._attribute]
 
         self.async_write_ha_state()

@@ -1,5 +1,6 @@
 """Support for openexchangerates.org exchange rates service."""
 from datetime import timedelta
+from http import HTTPStatus
 import logging
 
 import requests
@@ -12,7 +13,6 @@ from homeassistant.const import (
     CONF_BASE,
     CONF_NAME,
     CONF_QUOTE,
-    HTTP_OK,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
@@ -49,7 +49,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     rest = OpenexchangeratesData(_RESOURCE, parameters, quote)
     response = requests.get(_RESOURCE, params=parameters, timeout=10)
 
-    if response.status_code != HTTP_OK:
+    if response.status_code != HTTPStatus.OK:
         _LOGGER.error("Check your OpenExchangeRates API key")
         return False
 

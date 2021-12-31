@@ -133,8 +133,7 @@ class HMThermostat(HMDevice, ClimateEntity):
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
-        if temperature is None:
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return None
 
         self._hmdevice.writeNodeData(self._state, float(temperature))

@@ -1,7 +1,7 @@
 """The Elv integration."""
 import voluptuous as vol
 
-from homeassistant.const import CONF_DEVICE
+from homeassistant.const import CONF_DEVICE, Platform
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 
@@ -9,7 +9,7 @@ DOMAIN = "elv"
 
 DEFAULT_DEVICE = "/dev/ttyUSB0"
 
-ELV_PLATFORMS = ["switch"]
+ELV_PLATFORMS = [Platform.SWITCH]
 
 CONFIG_SCHEMA = vol.Schema(
     {

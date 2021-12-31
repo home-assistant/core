@@ -28,7 +28,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class LiteJetSwitch(SwitchEntity):
     """Representation of a single LiteJet switch."""
 
-    def __init__(self, entry_id, lj, i, name):
+    def __init__(self, entry_id, lj, i, name):  # pylint: disable=invalid-name
         """Initialize a LiteJet switch."""
         self._entry_id = entry_id
         self._lj = lj

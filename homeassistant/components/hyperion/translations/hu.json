@@ -2,13 +2,13 @@
     "config": {
         "abort": {
             "already_configured": "A szolg\u00e1ltat\u00e1s m\u00e1r konfigur\u00e1lva van",
-            "already_in_progress": "A konfigur\u00e1l\u00e1s m\u00e1r folyamatban van.",
+            "already_in_progress": "A konfigur\u00e1l\u00e1s m\u00e1r folyamatban van",
             "auth_new_token_not_granted_error": "Az \u00fajonnan l\u00e9trehozott tokent nem hagyt\u00e1k j\u00f3v\u00e1 a Hyperion felhaszn\u00e1l\u00f3i fel\u00fclet\u00e9n",
             "auth_new_token_not_work_error": "Nem siker\u00fclt hiteles\u00edteni az \u00fajonnan l\u00e9trehozott token haszn\u00e1lat\u00e1val",
             "auth_required_error": "Nem siker\u00fclt meghat\u00e1rozni, hogy sz\u00fcks\u00e9ges-e enged\u00e9ly",
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
             "no_id": "A Hyperion Ambilight p\u00e9ld\u00e1ny nem szolg\u00e1ltatja az azonos\u00edt\u00f3j\u00e1t",
-            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt"
+            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt."
         },
         "error": {
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",

@@ -1,4 +1,6 @@
 """Support for custom shell commands to turn a switch on/off."""
+from __future__ import annotations
+
 import logging
 
 import voluptuous as vol
@@ -13,11 +15,15 @@ from homeassistant.const import (
     CONF_COMMAND_ON,
     CONF_COMMAND_STATE,
     CONF_FRIENDLY_NAME,
+    CONF_ICON_TEMPLATE,
     CONF_SWITCHES,
     CONF_VALUE_TEMPLATE,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.reload import setup_reload_service
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import call_shell_with_timeout, check_output_or_log
 from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN, PLATFORMS
@@ -31,6 +37,7 @@ SWITCH_SCHEMA = vol.Schema(
         vol.Optional(CONF_COMMAND_STATE): cv.string,
         vol.Optional(CONF_FRIENDLY_NAME): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_ICON_TEMPLATE): cv.template,
         vol.Optional(CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     }
 )
@@ -40,7 +47,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Find and return switches controlled by shell commands."""
 
     setup_reload_service(hass, DOMAIN, PLATFORMS)
@@ -54,6 +66,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if value_template is not None:
             value_template.hass = hass
 
+        icon_template = device_config.get(CONF_ICON_TEMPLATE)
+        if icon_template is not None:
+            icon_template.hass = hass
+
         switches.append(
             CommandSwitch(
                 hass,
@@ -62,6 +78,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 device_config[CONF_COMMAND_ON],
                 device_config[CONF_COMMAND_OFF],
                 device_config.get(CONF_COMMAND_STATE),
+                icon_template,
                 value_template,
                 device_config[CONF_COMMAND_TIMEOUT],
             )
@@ -69,7 +86,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     if not switches:
         _LOGGER.error("No switches added")
-        return False
+        return
 
     add_entities(switches)
 
@@ -85,6 +102,7 @@ class CommandSwitch(SwitchEntity):
         command_on,
         command_off,
         command_state,
+        icon_template,
         value_template,
         timeout,
     ):
@@ -96,6 +114,7 @@ class CommandSwitch(SwitchEntity):
         self._command_on = command_on
         self._command_off = command_off
         self._command_state = command_state
+        self._icon_template = icon_template
         self._value_template = value_template
         self._timeout = timeout
 
@@ -152,6 +171,10 @@ class CommandSwitch(SwitchEntity):
         """Update device state."""
         if self._command_state:
             payload = str(self._query_state())
+            if self._icon_template:
+                self._attr_icon = self._icon_template.render_with_possible_json_value(
+                    payload
+                )
             if self._value_template:
                 payload = self._value_template.render_with_possible_json_value(payload)
             self._state = payload.lower() == "true"

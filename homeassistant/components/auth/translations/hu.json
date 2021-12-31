@@ -13,7 +13,7 @@
                     "title": "\u00c1ll\u00edtsa be az \u00e9rtes\u00edt\u00e9si \u00f6sszetev\u0151 \u00e1ltal megadott egyszeri jelsz\u00f3t"
                 },
                 "setup": {
-                    "description": "Az egyszeri jelsz\u00f3 el lett k\u00fcldve a(z) **notify.{notify_service}** szolg\u00e1ltat\u00e1ssal. K\u00e9rem, adja meg al\u00e1bb:",
+                    "description": "Az egyszeri jelsz\u00f3 el lett k\u00fcldve **notify.{notify_service}** szolg\u00e1ltat\u00e1ssal. K\u00e9rem, adja meg al\u00e1bb:",
                     "title": "Be\u00e1ll\u00edt\u00e1s ellen\u0151rz\u00e9se"
                 }
             },

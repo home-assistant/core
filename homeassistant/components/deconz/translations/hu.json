@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "A bridge m\u00e1r konfigur\u00e1lva van",
-            "already_in_progress": "A konfigur\u00e1l\u00e1s m\u00e1r folyamatban van.",
+            "already_in_progress": "A konfigur\u00e1l\u00e1s m\u00e1r folyamatban van",
             "no_bridges": "Nem tal\u00e1lhat\u00f3 deCONZ \u00e1tj\u00e1r\u00f3",
             "no_hardware_available": "Nincs deCONZ-hoz csatlakoztatott r\u00e1di\u00f3hardver",
             "not_deconz_bridge": "Nem egy deCONZ \u00e1tj\u00e1r\u00f3",
@@ -71,7 +71,7 @@
             "remote_button_quintuple_press": "\"{subtype}\" gombra \u00f6tsz\u00f6r kattintottak",
             "remote_button_rotated": "A gomb elforgatva: \"{subtype}\"",
             "remote_button_rotated_fast": "A gomb gyorsan elfordult: \"{subtype}\"",
-            "remote_button_rotation_stopped": "A(z) \"{subtype}\" gomb forg\u00e1sa le\u00e1llt",
+            "remote_button_rotation_stopped": "\"{subtype}\" gomb forg\u00e1sa le\u00e1llt",
             "remote_button_short_press": "\"{subtype}\" gomb lenyomva",
             "remote_button_short_release": "\"{subtype}\" gomb elengedve",
             "remote_button_triple_press": "\"{subtype}\" gombra h\u00e1romszor kattintottak",

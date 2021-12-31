@@ -13,7 +13,7 @@ from homeassistant.auth import (
     const as auth_const,
     models as auth_models,
 )
-from homeassistant.auth.const import MFA_SESSION_EXPIRATION
+from homeassistant.auth.const import GROUP_ID_ADMIN, MFA_SESSION_EXPIRATION
 from homeassistant.core import callback
 from homeassistant.util import dt as dt_util
 
@@ -390,12 +390,29 @@ async def test_generating_system_user(hass):
     user = await manager.async_create_system_user("Hass.io")
     token = await manager.async_create_refresh_token(user)
     assert user.system_generated
+    assert user.groups == []
+    assert not user.local_only
     assert token is not None
     assert token.client_id is None
 
     await hass.async_block_till_done()
     assert len(events) == 1
     assert events[0].data["user_id"] == user.id
+
+    # Passing arguments
+    user = await manager.async_create_system_user(
+        "Hass.io", group_ids=[GROUP_ID_ADMIN], local_only=True
+    )
+    token = await manager.async_create_refresh_token(user)
+    assert user.system_generated
+    assert user.is_admin
+    assert user.local_only
+    assert token is not None
+    assert token.client_id is None
+
+    await hass.async_block_till_done()
+    assert len(events) == 2
+    assert events[1].data["user_id"] == user.id
 
 
 async def test_refresh_token_requires_client_for_user(hass):
@@ -1038,15 +1055,19 @@ async def test_new_users(mock_hass):
     # first user in the system is owner and admin
     assert user.is_owner
     assert user.is_admin
+    assert not user.local_only
     assert user.groups == []
 
     user = await manager.async_create_user("Hello 2")
     assert not user.is_admin
     assert user.groups == []
 
-    user = await manager.async_create_user("Hello 3", ["system-admin"])
+    user = await manager.async_create_user(
+        "Hello 3", group_ids=["system-admin"], local_only=True
+    )
     assert user.is_admin
     assert user.groups[0].id == "system-admin"
+    assert user.local_only
 
     user_cred = await manager.async_get_or_create_user(
         auth_models.Credentials(

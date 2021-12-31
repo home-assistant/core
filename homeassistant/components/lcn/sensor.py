@@ -1,6 +1,7 @@
 """Support for LCN sensors."""
 from __future__ import annotations
 
+from itertools import chain
 from typing import cast
 
 import pypck
@@ -38,9 +39,8 @@ def create_lcn_sensor_entity(
         hass, entity_config[CONF_ADDRESS], config_entry
     )
 
-    if (
-        entity_config[CONF_DOMAIN_DATA][CONF_SOURCE]
-        in VARIABLES + SETPOINTS + THRESHOLDS + S0_INPUTS
+    if entity_config[CONF_DOMAIN_DATA][CONF_SOURCE] in chain(
+        VARIABLES, SETPOINTS, THRESHOLDS, S0_INPUTS
     ):
         return LcnVariableSensor(
             entity_config, config_entry.entry_id, device_connection

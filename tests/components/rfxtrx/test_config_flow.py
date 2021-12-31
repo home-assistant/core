@@ -6,6 +6,7 @@ import serial.tools.list_ports
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.rfxtrx import DOMAIN, config_flow
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
@@ -352,7 +353,7 @@ async def test_options_add_device(hass):
     assert result["step_id"] == "set_device_options"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"fire_event": True, "signal_repetitions": 5}
+        result["flow_id"], user_input={"signal_repetitions": 5}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -362,13 +363,12 @@ async def test_options_add_device(hass):
     assert entry.data["automatic_add"]
 
     assert entry.data["devices"]["0b1100cd0213c7f230010f71"]
-    assert entry.data["devices"]["0b1100cd0213c7f230010f71"]["fire_event"]
     assert entry.data["devices"]["0b1100cd0213c7f230010f71"]["signal_repetitions"] == 5
     assert "delay_off" not in entry.data["devices"]["0b1100cd0213c7f230010f71"]
 
     state = hass.states.get("binary_sensor.ac_213c7f2_48")
     assert state
-    assert state.state == "off"
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get("friendly_name") == "AC 213c7f2:48"
 
 
@@ -442,7 +442,7 @@ async def test_options_add_remove_device(hass):
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={"fire_event": True, "signal_repetitions": 5, "off_delay": "4"},
+        user_input={"signal_repetitions": 5, "off_delay": "4"},
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -452,13 +452,12 @@ async def test_options_add_remove_device(hass):
     assert entry.data["automatic_add"]
 
     assert entry.data["devices"]["0b1100cd0213c7f230010f71"]
-    assert entry.data["devices"]["0b1100cd0213c7f230010f71"]["fire_event"]
     assert entry.data["devices"]["0b1100cd0213c7f230010f71"]["signal_repetitions"] == 5
     assert entry.data["devices"]["0b1100cd0213c7f230010f71"]["off_delay"] == 4
 
     state = hass.states.get("binary_sensor.ac_213c7f2_48")
     assert state
-    assert state.state == "off"
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get("friendly_name") == "AC 213c7f2:48"
 
     device_registry = dr.async_get(hass)
@@ -864,7 +863,6 @@ async def test_options_add_and_configure_device(hass):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "fire_event": False,
             "signal_repetitions": 5,
             "data_bits": 4,
             "off_delay": "abcdef",
@@ -883,7 +881,6 @@ async def test_options_add_and_configure_device(hass):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "fire_event": False,
             "signal_repetitions": 5,
             "data_bits": 4,
             "command_on": "0xE",
@@ -899,13 +896,12 @@ async def test_options_add_and_configure_device(hass):
     assert entry.data["automatic_add"]
 
     assert entry.data["devices"]["0913000022670e013970"]
-    assert not entry.data["devices"]["0913000022670e013970"]["fire_event"]
     assert entry.data["devices"]["0913000022670e013970"]["signal_repetitions"] == 5
     assert entry.data["devices"]["0913000022670e013970"]["off_delay"] == 9
 
     state = hass.states.get("binary_sensor.pt2262_22670e")
     assert state
-    assert state.state == "off"
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get("friendly_name") == "PT2262 22670e"
 
     device_registry = dr.async_get(hass)
@@ -932,7 +928,6 @@ async def test_options_add_and_configure_device(hass):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "fire_event": True,
             "signal_repetitions": 5,
             "data_bits": 4,
             "command_on": "0xE",
@@ -945,7 +940,6 @@ async def test_options_add_and_configure_device(hass):
     await hass.async_block_till_done()
 
     assert entry.data["devices"]["0913000022670e013970"]
-    assert entry.data["devices"]["0913000022670e013970"]["fire_event"]
     assert entry.data["devices"]["0913000022670e013970"]["signal_repetitions"] == 5
     assert "delay_off" not in entry.data["devices"]["0913000022670e013970"]
 
@@ -988,7 +982,6 @@ async def test_options_configure_rfy_cover_device(hass):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "fire_event": False,
             "venetian_blind_mode": "EU",
         },
     )
@@ -1021,7 +1014,6 @@ async def test_options_configure_rfy_cover_device(hass):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "fire_event": False,
             "venetian_blind_mode": "EU",
         },
     )

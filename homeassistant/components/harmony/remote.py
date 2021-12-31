@@ -144,8 +144,7 @@ class HarmonyRemote(HarmonyEntity, remote.RemoteEntity, RestoreEntity):
         # Restore the last activity so we know
         # how what to turn on if nothing
         # is specified
-        last_state = await self.async_get_last_state()
-        if not last_state:
+        if not (last_state := await self.async_get_last_state()):
             return
         if ATTR_LAST_ACTIVITY not in last_state.attributes:
             return
@@ -227,8 +226,7 @@ class HarmonyRemote(HarmonyEntity, remote.RemoteEntity, RestoreEntity):
     async def async_send_command(self, command, **kwargs):
         """Send a list of commands to one device."""
         _LOGGER.debug("%s: Send Command", self.name)
-        device = kwargs.get(ATTR_DEVICE)
-        if device is None:
+        if (device := kwargs.get(ATTR_DEVICE)) is None:
             _LOGGER.error("%s: Missing required argument: device", self.name)
             return
 

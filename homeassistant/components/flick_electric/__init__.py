@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_CLIENT_SECRET,
     CONF_PASSWORD,
     CONF_USERNAME,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
@@ -21,7 +22,7 @@ from .const import CONF_TOKEN_EXPIRES_IN, CONF_TOKEN_EXPIRY, DOMAIN
 
 CONF_ID_TOKEN = "id_token"
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

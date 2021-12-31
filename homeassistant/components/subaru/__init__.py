@@ -125,8 +125,7 @@ async def refresh_subaru_data(config_entry, vehicle_info, controller):
         await controller.fetch(vin, force=True)
 
         # Update our local data that will go to entity states
-        received_data = await controller.get_data(vin)
-        if received_data:
+        if received_data := await controller.get_data(vin):
             data[vin] = received_data
 
     return data

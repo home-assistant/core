@@ -10,11 +10,12 @@ from homeassistant import config as conf_util
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_per_platform
-from homeassistant.helpers.entity_platform import EntityPlatform, async_get_platforms
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
+
+from . import config_per_platform
+from .entity_platform import EntityPlatform, async_get_platforms
+from .typing import ConfigType
 
 # mypy: disallow-any-generics
 
@@ -78,11 +79,11 @@ async def _resetup_platform(
     if hasattr(component, "async_reset_platform"):
         # If the integration has its own way to reset
         # use this method.
-        await component.async_reset_platform(hass, integration_name)  # type: ignore
-        await component.async_setup(hass, root_config)  # type: ignore
+        await component.async_reset_platform(hass, integration_name)
+        await component.async_setup(hass, root_config)
         return
 
-    # If its an entity platform, we use the entity_platform
+    # If it's an entity platform, we use the entity_platform
     # async_reset method
     platform = async_get_platform_without_config_entry(
         hass, integration_name, integration_platform
@@ -93,7 +94,7 @@ async def _resetup_platform(
 
     if not root_config[integration_platform]:
         # No config for this platform
-        # and its not loaded.  Nothing to do
+        # and it's not loaded. Nothing to do.
         return
 
     await _async_setup_platform(

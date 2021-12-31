@@ -55,7 +55,7 @@ async def async_setup(hass, config):
     """Register the process service."""
     hass.data[DATA_CONFIG] = config
 
-    async def handle_service(service):
+    async def handle_service(service: core.ServiceCall) -> None:
         """Parse text into commands."""
         text = service.data[ATTR_TEXT]
         _LOGGER.debug("Processing: <%s>", text)
@@ -154,8 +154,7 @@ class ConversationProcessView(http.HomeAssistantView):
 
 async def _get_agent(hass: core.HomeAssistant) -> AbstractConversationAgent:
     """Get the active conversation agent."""
-    agent = hass.data.get(DATA_AGENT)
-    if agent is None:
+    if (agent := hass.data.get(DATA_AGENT)) is None:
         agent = hass.data[DATA_AGENT] = DefaultAgent(hass)
         await agent.async_initialize(hass.data.get(DATA_CONFIG))
     return agent

@@ -26,7 +26,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class LiteJetScene(Scene):
     """Representation of a single LiteJet scene."""
 
-    def __init__(self, entry_id, lj, i, name):
+    def __init__(self, entry_id, lj, i, name):  # pylint: disable=invalid-name
         """Initialize the scene."""
         self._entry_id = entry_id
         self._lj = lj

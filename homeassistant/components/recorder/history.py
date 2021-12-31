@@ -10,15 +10,11 @@ from sqlalchemy import and_, bindparam, func
 from sqlalchemy.ext import baked
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder.models import (
-    States,
-    process_timestamp_to_utc_isoformat,
-)
-from homeassistant.components.recorder.util import execute, session_scope
 from homeassistant.core import split_entity_id
 import homeassistant.util.dt as dt_util
 
-from .models import LazyState
+from .models import LazyState, States, process_timestamp_to_utc_isoformat
+from .util import execute, session_scope
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 

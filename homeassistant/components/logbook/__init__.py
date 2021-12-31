@@ -34,7 +34,12 @@ from homeassistant.const import (
     EVENT_LOGBOOK_ENTRY,
     EVENT_STATE_CHANGED,
 )
-from homeassistant.core import DOMAIN as HA_DOMAIN, callback, split_entity_id
+from homeassistant.core import (
+    DOMAIN as HA_DOMAIN,
+    ServiceCall,
+    callback,
+    split_entity_id,
+)
 from homeassistant.exceptions import InvalidEntityFormatError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import (
@@ -112,6 +117,7 @@ def log_entry(hass, name, message, domain=None, entity_id=None, context=None):
     hass.add_job(async_log_entry, hass, name, message, domain, entity_id, context)
 
 
+@callback
 @bind_hass
 def async_log_entry(hass, name, message, domain=None, entity_id=None, context=None):
     """Add an entry to the logbook."""
@@ -129,7 +135,7 @@ async def async_setup(hass, config):
     hass.data[DOMAIN] = {}
 
     @callback
-    def log_message(service):
+    def log_message(service: ServiceCall) -> None:
         """Handle sending notification message service calls."""
         message = service.data[ATTR_MESSAGE]
         name = service.data[ATTR_NAME]
@@ -193,9 +199,7 @@ class LogbookView(HomeAssistantView):
     async def get(self, request, datetime=None):
         """Retrieve logbook entries."""
         if datetime:
-            datetime = dt_util.parse_datetime(datetime)
-
-            if datetime is None:
+            if (datetime := dt_util.parse_datetime(datetime)) is None:
                 return self.json_message("Invalid datetime", HTTPStatus.BAD_REQUEST)
         else:
             datetime = dt_util.start_of_local_day()
@@ -205,8 +209,7 @@ class LogbookView(HomeAssistantView):
         else:
             period = int(period)
 
-        entity_ids = request.query.get("entity")
-        if entity_ids:
+        if entity_ids := request.query.get("entity"):
             try:
                 entity_ids = cv.entity_ids(entity_ids)
             except vol.Invalid:
@@ -220,8 +223,7 @@ class LogbookView(HomeAssistantView):
             end_day = start_day + timedelta(days=period)
         else:
             start_day = datetime
-            end_day = dt_util.parse_datetime(end_time)
-            if end_day is None:
+            if (end_day := dt_util.parse_datetime(end_time)) is None:
                 return self.json_message("Invalid end_time", HTTPStatus.BAD_REQUEST)
 
         hass = request.app["hass"]

@@ -13,6 +13,7 @@ from homeassistant.components.media_player.const import (
     SERVICE_PLAY_MEDIA,
 )
 from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.core import ServiceCall
 from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -41,7 +42,7 @@ CONFIG_SCHEMA = vol.Schema(
 def setup(hass, config):
     """Set up the media extractor service."""
 
-    def play_media(call):
+    def play_media(call: ServiceCall) -> None:
         """Get stream URL and send it to the play_media service."""
         MediaExtractor(hass, config[DOMAIN], call.data).extract_and_send()
 
@@ -89,9 +90,7 @@ class MediaExtractor:
                 "Could not retrieve data for the URL: %s", self.get_media_url()
             )
         else:
-            entities = self.get_entities()
-
-            if not entities:
+            if not (entities := self.get_entities()):
                 self.call_media_player_service(stream_selector, None)
 
             for entity_id in entities:

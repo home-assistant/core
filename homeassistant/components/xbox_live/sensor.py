@@ -47,8 +47,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     interval = config.get(CONF_SCAN_INTERVAL, interval)
 
     for xuid in users:
-        gamercard = get_user_gamercard(api, xuid)
-        if gamercard is None:
+        if (gamercard := get_user_gamercard(api, xuid)) is None:
             continue
         entities.append(XboxSensor(api, xuid, gamercard, interval))
 

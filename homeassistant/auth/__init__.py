@@ -214,11 +214,19 @@ class AuthManager:
         return None
 
     async def async_create_system_user(
-        self, name: str, group_ids: list[str] | None = None
+        self,
+        name: str,
+        *,
+        group_ids: list[str] | None = None,
+        local_only: bool | None = None,
     ) -> models.User:
         """Create a system user."""
         user = await self._store.async_create_user(
-            name=name, system_generated=True, is_active=True, group_ids=group_ids or []
+            name=name,
+            system_generated=True,
+            is_active=True,
+            group_ids=group_ids or [],
+            local_only=local_only,
         )
 
         self.hass.bus.async_fire(EVENT_USER_ADDED, {"user_id": user.id})
@@ -226,13 +234,18 @@ class AuthManager:
         return user
 
     async def async_create_user(
-        self, name: str, group_ids: list[str] | None = None
+        self,
+        name: str,
+        *,
+        group_ids: list[str] | None = None,
+        local_only: bool | None = None,
     ) -> models.User:
         """Create a user."""
         kwargs: dict[str, Any] = {
             "name": name,
             "is_active": True,
             "group_ids": group_ids or [],
+            "local_only": local_only,
         }
 
         if await self._user_should_be_owner():
@@ -304,13 +317,18 @@ class AuthManager:
         name: str | None = None,
         is_active: bool | None = None,
         group_ids: list[str] | None = None,
+        local_only: bool | None = None,
     ) -> None:
         """Update a user."""
         kwargs: dict[str, Any] = {}
-        if name is not None:
-            kwargs["name"] = name
-        if group_ids is not None:
-            kwargs["group_ids"] = group_ids
+
+        for attr_name, value in (
+            ("name", name),
+            ("group_ids", group_ids),
+            ("local_only", local_only),
+        ):
+            if value is not None:
+                kwargs[attr_name] = value
         await self._store.async_update_user(user, **kwargs)
 
         if is_active is not None:

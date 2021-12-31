@@ -1,0 +1,5 @@
+sensor:
+  - platform: statistics
+    entity_id: sensor.cpu
+    name: cputest
+    state_characteristic: mean

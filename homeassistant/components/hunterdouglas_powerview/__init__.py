@@ -13,7 +13,7 @@ from aiopvapi.userdata import UserData
 import async_timeout
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -53,9 +53,9 @@ from .const import (
 
 PARALLEL_UPDATES = 1
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
-PLATFORMS = ["cover", "scene", "sensor"]
+PLATFORMS = [Platform.COVER, Platform.SCENE, Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -89,12 +89,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 (await shades.get_resources())[SHADE_DATA]
             )
     except HUB_EXCEPTIONS as err:
-        _LOGGER.error("Connection error to PowerView hub: %s", hub_address)
-        raise ConfigEntryNotReady from err
-
+        raise ConfigEntryNotReady(
+            f"Connection error to PowerView hub: {hub_address}: {err}"
+        ) from err
     if not device_info:
-        _LOGGER.error("Unable to initialize PowerView hub: %s", hub_address)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady(f"Unable to initialize PowerView hub: {hub_address}")
 
     async def async_update_data():
         """Fetch data from shade endpoint."""

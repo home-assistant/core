@@ -1,4 +1,5 @@
 """Support for functionality to download files."""
+from http import HTTPStatus
 import logging
 import os
 import re
@@ -7,7 +8,7 @@ import threading
 import requests
 import voluptuous as vol
 
-from homeassistant.const import HTTP_OK
+from homeassistant.core import ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import raise_if_invalid_filename, raise_if_invalid_path
 
@@ -56,7 +57,7 @@ def setup(hass, config):
 
         return False
 
-    def download_file(service):
+    def download_file(service: ServiceCall) -> None:
         """Start thread to download file specified in the URL."""
 
         def do_download():
@@ -78,7 +79,7 @@ def setup(hass, config):
 
                 req = requests.get(url, stream=True, timeout=10)
 
-                if req.status_code != HTTP_OK:
+                if req.status_code != HTTPStatus.OK:
                     _LOGGER.warning(
                         "Downloading '%s' failed, status_code=%d", url, req.status_code
                     )
@@ -110,8 +111,7 @@ def setup(hass, config):
                         subdir_path = os.path.join(download_path, subdir)
 
                         # Ensure subdir exist
-                        if not os.path.isdir(subdir_path):
-                            os.makedirs(subdir_path)
+                        os.makedirs(subdir_path, exist_ok=True)
 
                         final_path = os.path.join(subdir_path, filename)
 

@@ -1,5 +1,6 @@
 """Component for facial detection and identification via facebox."""
 import base64
+from http import HTTPStatus
 import logging
 
 import requests
@@ -21,11 +22,8 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
-    HTTP_BAD_REQUEST,
-    HTTP_OK,
-    HTTP_UNAUTHORIZED,
 )
-from homeassistant.core import split_entity_id
+from homeassistant.core import ServiceCall, split_entity_id
 import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN, SERVICE_TEACH_FACE
@@ -67,10 +65,10 @@ def check_box_health(url, username, password):
         kwargs["auth"] = requests.auth.HTTPBasicAuth(username, password)
     try:
         response = requests.get(url, **kwargs)
-        if response.status_code == HTTP_UNAUTHORIZED:
+        if response.status_code == HTTPStatus.UNAUTHORIZED:
             _LOGGER.error("AuthenticationError on %s", CLASSIFIER)
             return None
-        if response.status_code == HTTP_OK:
+        if response.status_code == HTTPStatus.OK:
             return response.json()["hostname"]
     except requests.exceptions.ConnectionError:
         _LOGGER.error("ConnectionError: Is %s running?", CLASSIFIER)
@@ -115,7 +113,7 @@ def post_image(url, image, username, password):
         kwargs["auth"] = requests.auth.HTTPBasicAuth(username, password)
     try:
         response = requests.post(url, json={"base64": encode_image(image)}, **kwargs)
-        if response.status_code == HTTP_UNAUTHORIZED:
+        if response.status_code == HTTPStatus.UNAUTHORIZED:
             _LOGGER.error("AuthenticationError on %s", CLASSIFIER)
             return None
         return response
@@ -137,9 +135,9 @@ def teach_file(url, name, file_path, username, password):
                 files={"file": open_file},
                 **kwargs,
             )
-        if response.status_code == HTTP_UNAUTHORIZED:
+        if response.status_code == HTTPStatus.UNAUTHORIZED:
             _LOGGER.error("AuthenticationError on %s", CLASSIFIER)
-        elif response.status_code == HTTP_BAD_REQUEST:
+        elif response.status_code == HTTPStatus.BAD_REQUEST:
             _LOGGER.error(
                 "%s teaching of file %s failed with message:%s",
                 CLASSIFIER,
@@ -189,7 +187,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         hass.data[DATA_FACEBOX].append(facebox)
     add_entities(entities)
 
-    def service_handle(service):
+    def service_handle(service: ServiceCall) -> None:
         """Handle for services."""
         entity_ids = service.data.get("entity_id")
 

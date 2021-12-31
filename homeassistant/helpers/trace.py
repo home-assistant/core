@@ -8,8 +8,9 @@ from contextvars import ContextVar
 from functools import wraps
 from typing import Any, cast
 
-from homeassistant.helpers.typing import TemplateVarsType
 import homeassistant.util.dt as dt_util
+
+from .typing import TemplateVarsType
 
 
 class TraceElement:
@@ -17,7 +18,7 @@ class TraceElement:
 
     def __init__(self, variables: TemplateVarsType, path: str) -> None:
         """Container for trace data."""
-        self._child_key: tuple[str, str] | None = None
+        self._child_key: str | None = None
         self._child_run_id: str | None = None
         self._error: Exception | None = None
         self.path: str = path
@@ -40,7 +41,7 @@ class TraceElement:
         """Container for trace data."""
         return str(self.as_dict())
 
-    def set_child_id(self, child_key: tuple[str, str], child_run_id: str) -> None:
+    def set_child_id(self, child_key: str, child_run_id: str) -> None:
         """Set trace id of a nested script run."""
         self._child_key = child_key
         self._child_run_id = child_run_id
@@ -62,9 +63,10 @@ class TraceElement:
         """Return dictionary version of this TraceElement."""
         result: dict[str, Any] = {"path": self.path, "timestamp": self._timestamp}
         if self._child_key is not None:
+            domain, item_id = self._child_key.split(".", 1)
             result["child_id"] = {
-                "domain": self._child_key[0],
-                "item_id": self._child_key[1],
+                "domain": domain,
+                "item_id": item_id,
                 "run_id": str(self._child_run_id),
             }
         if self._variables:
@@ -91,8 +93,8 @@ trace_path_stack_cv: ContextVar[list[str] | None] = ContextVar(
 )
 # Copy of last variables
 variables_cv: ContextVar[Any | None] = ContextVar("variables_cv", default=None)
-# (domain, item_id) + Run ID
-trace_id_cv: ContextVar[tuple[tuple[str, str], str] | None] = ContextVar(
+# (domain.item_id, Run ID)
+trace_id_cv: ContextVar[tuple[str, str] | None] = ContextVar(
     "trace_id_cv", default=None
 )
 # Reason for stopped script execution
@@ -101,12 +103,12 @@ script_execution_cv: ContextVar[StopReason | None] = ContextVar(
 )
 
 
-def trace_id_set(trace_id: tuple[tuple[str, str], str]) -> None:
+def trace_id_set(trace_id: tuple[str, str]) -> None:
     """Set id of the current trace."""
     trace_id_cv.set(trace_id)
 
 
-def trace_id_get() -> tuple[tuple[str, str], str] | None:
+def trace_id_get() -> tuple[str, str] | None:
     """Get id if the current trace."""
     return trace_id_cv.get()
 
@@ -182,7 +184,7 @@ def trace_clear() -> None:
     script_execution_cv.set(StopReason())
 
 
-def trace_set_child_id(child_key: tuple[str, str], child_run_id: str) -> None:
+def trace_set_child_id(child_key: str, child_run_id: str) -> None:
     """Set child trace_id of TraceElement at the top of the stack."""
     node = cast(TraceElement, trace_stack_top(trace_stack_cv))
     if node:
@@ -215,7 +217,7 @@ def script_execution_set(reason: str) -> None:
 
 
 def script_execution_get() -> str | None:
-    """Return the current trace."""
+    """Return the stop reason."""
     if (data := script_execution_cv.get()) is None:
         return None
     return data.script_execution

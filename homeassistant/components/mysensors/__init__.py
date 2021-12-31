@@ -62,8 +62,7 @@ DEFAULT_VERSION = "1.4"
 def set_default_persistence_file(value: dict) -> dict:
     """Set default persistence file."""
     for idx, gateway in enumerate(value):
-        fil = gateway.get(CONF_PERSISTENCE_FILE)
-        if fil is not None:
+        if gateway.get(CONF_PERSISTENCE_FILE) is not None:
             continue
         new_name = f"mysensors{idx + 1}.pickle"
         gateway[CONF_PERSISTENCE_FILE] = new_name

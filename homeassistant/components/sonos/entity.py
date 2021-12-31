@@ -1,6 +1,7 @@
 """Entity representing a Sonos player."""
 from __future__ import annotations
 
+from abc import abstractmethod
 import datetime
 import logging
 
@@ -9,15 +10,11 @@ from soco.core import SoCo
 from soco.exceptions import SoCoException
 
 import homeassistant.helpers.device_registry as dr
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import (
     DOMAIN,
-    SONOS_ENTITY_CREATED,
     SONOS_FAVORITES_UPDATED,
     SONOS_POLL_UPDATE,
     SONOS_STATE_UPDATED,
@@ -30,14 +27,14 @@ _LOGGER = logging.getLogger(__name__)
 class SonosEntity(Entity):
     """Representation of a Sonos entity."""
 
+    _attr_should_poll = False
+
     def __init__(self, speaker: SonosSpeaker) -> None:
         """Initialize a SonosEntity."""
         self.speaker = speaker
 
     async def async_added_to_hass(self) -> None:
         """Handle common setup when added to hass."""
-        await self.speaker.async_seen()
-
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
@@ -59,9 +56,6 @@ class SonosEntity(Entity):
                 self.async_write_ha_state,
             )
         )
-        async_dispatcher_send(
-            self.hass, f"{SONOS_ENTITY_CREATED}-{self.soco.uid}", self.platform.domain
-        )
 
     async def async_poll(self, now: datetime.datetime) -> None:
         """Poll the entity if subscriptions fail."""
@@ -78,9 +72,13 @@ class SonosEntity(Entity):
             self.speaker.subscriptions_failed = True
             await self.speaker.async_unsubscribe()
         try:
-            await self.async_update()  # pylint: disable=no-member
+            await self._async_poll()
         except (OSError, SoCoException) as ex:
             _LOGGER.debug("Error connecting to %s: %s", self.entity_id, ex)
+
+    @abstractmethod
+    async def _async_poll(self) -> None:
+        """Poll the specific functionality. Should be implemented by platforms if needed."""
 
     @property
     def soco(self) -> SoCo:
@@ -90,25 +88,21 @@ class SonosEntity(Entity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return information about the device."""
-        return {
-            "identifiers": {(DOMAIN, self.soco.uid)},
-            "name": self.speaker.zone_name,
-            "model": self.speaker.model_name.replace("Sonos ", ""),
-            "sw_version": self.speaker.version,
-            "connections": {
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.soco.uid)},
+            name=self.speaker.zone_name,
+            model=self.speaker.model_name.replace("Sonos ", ""),
+            sw_version=self.speaker.version,
+            connections={
                 (dr.CONNECTION_NETWORK_MAC, self.speaker.mac_address),
                 (dr.CONNECTION_UPNP, f"uuid:{self.speaker.uid}"),
             },
-            "manufacturer": "Sonos",
-            "suggested_area": self.speaker.zone_name,
-        }
+            manufacturer="Sonos",
+            suggested_area=self.speaker.zone_name,
+            configuration_url=f"http://{self.soco.ip_address}:1400/support/review",
+        )
 
     @property
     def available(self) -> bool:
         """Return whether this device is available."""
         return self.speaker.available
-
-    @property
-    def should_poll(self) -> bool:
-        """Return that we should not be polled (we handle that internally)."""
-        return False

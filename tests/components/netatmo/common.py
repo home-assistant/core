@@ -51,7 +51,7 @@ async def fake_post_request(*args, **kwargs):
     if endpoint in "snapshot_720.jpg":
         return b"test stream image bytes"
 
-    elif endpoint in [
+    if endpoint in [
         "setpersonsaway",
         "setpersonshome",
         "setstate",
@@ -60,6 +60,10 @@ async def fake_post_request(*args, **kwargs):
         "switchhomeschedule",
     ]:
         payload = f'{{"{endpoint}": true}}'
+
+    elif endpoint == "homestatus":
+        home_id = kwargs.get("params", {}).get("home_id")
+        payload = json.loads(load_fixture(f"netatmo/{endpoint}_{home_id}.json"))
 
     else:
         payload = json.loads(load_fixture(f"netatmo/{endpoint}.json"))

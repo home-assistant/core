@@ -2,13 +2,15 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from http import HTTPStatus
 import logging
 
 import boto3
 import requests
 import voluptuous as vol
 
-from homeassistant.const import CONF_DOMAIN, CONF_TTL, CONF_ZONE, HTTP_OK
+from homeassistant.const import CONF_DOMAIN, CONF_TTL, CONF_ZONE
+from homeassistant.core import ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_time_interval
 
@@ -55,7 +57,7 @@ def setup(hass, config):
             aws_access_key_id, aws_secret_access_key, zone, domain, records, ttl
         )
 
-    def update_records_service(now):
+    def update_records_service(call: ServiceCall) -> None:
         """Set up service for manual trigger."""
         _update_route53(
             aws_access_key_id, aws_secret_access_key, zone, domain, records, ttl
@@ -121,5 +123,5 @@ def _update_route53(
     )
     _LOGGER.debug("Response is %s", response)
 
-    if response["ResponseMetadata"]["HTTPStatusCode"] != HTTP_OK:
+    if response["ResponseMetadata"]["HTTPStatusCode"] != HTTPStatus.OK:
         _LOGGER.warning(response)

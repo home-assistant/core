@@ -81,26 +81,11 @@ class TuyaCameraEntity(TuyaEntity, CameraEntity):
 
     async def stream_source(self) -> str | None:
         """Return the source of the stream."""
-
-        def _stream_source() -> str | None:
-            # This method can be replaced by the following snippet, once
-            # upstream changes have been merged.
-            #
-            #   return self.device_manager.get_device_stream_allocate(
-            #       self.device.id, stream_type="rtsp"
-            #   )
-            #
-            # https://github.com/tuya/tuya-iot-python-sdk/pull/28
-
-            response = self.device_manager.api.post(
-                f"/v1.0/devices/{self.device.id}/stream/actions/allocate",
-                {"type": "rtsp"},
-            )
-            if response["success"]:
-                return response["result"]["url"]
-            return None
-
-        return await self.hass.async_add_executor_job(_stream_source)
+        return await self.hass.async_add_executor_job(
+            self.device_manager.get_device_stream_allocate,
+            self.device.id,
+            "rtsp",
+        )
 
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None

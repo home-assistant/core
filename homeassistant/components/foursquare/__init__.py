@@ -6,7 +6,8 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.const import CONF_ACCESS_TOKEN, HTTP_CREATED, HTTP_OK
+from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.core import ServiceCall
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,12 +52,12 @@ def setup(hass, config):
     """Set up the Foursquare component."""
     config = config[DOMAIN]
 
-    def checkin_user(call):
+    def checkin_user(call: ServiceCall) -> None:
         """Check a user in on Swarm."""
         url = f"https://api.foursquare.com/v2/checkins/add?oauth_token={config[CONF_ACCESS_TOKEN]}&v=20160802&m=swarm"
         response = requests.post(url, data=call.data, timeout=10)
 
-        if response.status_code not in (HTTP_OK, HTTP_CREATED):
+        if response.status_code not in (HTTPStatus.OK, HTTPStatus.CREATED):
             _LOGGER.exception(
                 "Error checking in user. Response %d: %s:",
                 response.status_code,

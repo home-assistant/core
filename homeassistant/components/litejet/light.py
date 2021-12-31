@@ -34,7 +34,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class LiteJetLight(LightEntity):
     """Representation of a single LiteJet light."""
 
-    def __init__(self, config_entry, lj, i, name):
+    def __init__(self, config_entry, lj, i, name):  # pylint: disable=invalid-name
         """Initialize a LiteJet light."""
         self._config_entry = config_entry
         self._lj = lj

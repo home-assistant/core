@@ -1,9 +1,10 @@
 """Base class for deCONZ devices."""
+from __future__ import annotations
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import DOMAIN as DECONZ_DOMAIN
 
@@ -30,20 +31,20 @@ class DeconzBase:
         return self._device.unique_id.split("-", 1)[0]
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo | None:
         """Return a device description for device registry."""
         if self.serial is None:
             return None
 
-        return {
-            "connections": {(CONNECTION_ZIGBEE, self.serial)},
-            "identifiers": {(DECONZ_DOMAIN, self.serial)},
-            "manufacturer": self._device.manufacturer,
-            "model": self._device.model_id,
-            "name": self._device.name,
-            "sw_version": self._device.software_version,
-            "via_device": (DECONZ_DOMAIN, self.gateway.api.config.bridge_id),
-        }
+        return DeviceInfo(
+            connections={(CONNECTION_ZIGBEE, self.serial)},
+            identifiers={(DECONZ_DOMAIN, self.serial)},
+            manufacturer=self._device.manufacturer,
+            model=self._device.model_id,
+            name=self._device.name,
+            sw_version=self._device.software_version,
+            via_device=(DECONZ_DOMAIN, self.gateway.api.config.bridge_id),
+        )
 
 
 class DeconzDevice(DeconzBase, Entity):
@@ -66,7 +67,9 @@ class DeconzDevice(DeconzBase, Entity):
         self.gateway.deconz_ids[self.entity_id] = self._device.deconz_id
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, self.gateway.signal_reachable, self.async_update_callback
+                self.hass,
+                self.gateway.signal_reachable,
+                self.async_update_connection_state,
             )
         )
 
@@ -77,9 +80,14 @@ class DeconzDevice(DeconzBase, Entity):
         self.gateway.entities[self.TYPE].remove(self.unique_id)
 
     @callback
-    def async_update_callback(self, force_update=False):
+    def async_update_connection_state(self):
+        """Update the device's available state."""
+        self.async_write_ha_state()
+
+    @callback
+    def async_update_callback(self):
         """Update the device's state."""
-        if not force_update and self.gateway.ignore_state_updates:
+        if self.gateway.ignore_state_updates:
             return
 
         self.async_write_ha_state()

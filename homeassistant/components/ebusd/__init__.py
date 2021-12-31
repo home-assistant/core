@@ -11,6 +11,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
 )
+from homeassistant.core import ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 
@@ -107,7 +108,7 @@ class EbusdData:
             _LOGGER.error(err)
             raise RuntimeError(err) from err
 
-    def write(self, call):
+    def write(self, call: ServiceCall) -> None:
         """Call write methon on ebusd."""
         name = call.data.get("name")
         value = call.data.get("value")

@@ -92,8 +92,7 @@ class VeraThermostat(VeraDevice[veraApi.VeraThermostat], ClimateEntity):
     @property
     def fan_mode(self) -> str | None:
         """Return the fan setting."""
-        mode = self.vera_device.get_fan_mode()
-        if mode == "ContinuousOn":
+        if self.vera_device.get_fan_mode() == "ContinuousOn":
             return FAN_ON
         return FAN_AUTO
 

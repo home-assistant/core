@@ -17,6 +17,7 @@ from homeassistant.helpers.typing import ConfigType
 from . import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_BATTERY_CHARGING,
+    DEVICE_CLASS_CO,
     DEVICE_CLASS_COLD,
     DEVICE_CLASS_CONNECTIVITY,
     DEVICE_CLASS_DOOR,
@@ -34,6 +35,7 @@ from . import (
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_PRESENCE,
     DEVICE_CLASS_PROBLEM,
+    DEVICE_CLASS_RUNNING,
     DEVICE_CLASS_SAFETY,
     DEVICE_CLASS_SMOKE,
     DEVICE_CLASS_SOUND,
@@ -52,6 +54,8 @@ CONF_IS_BAT_LOW = "is_bat_low"
 CONF_IS_NOT_BAT_LOW = "is_not_bat_low"
 CONF_IS_CHARGING = "is_charging"
 CONF_IS_NOT_CHARGING = "is_not_charging"
+CONF_IS_CO = "is_co"
+CONF_IS_NO_CO = "is_no_co"
 CONF_IS_COLD = "is_cold"
 CONF_IS_NOT_COLD = "is_not_cold"
 CONF_IS_CONNECTED = "is_connected"
@@ -80,6 +84,8 @@ CONF_IS_PRESENT = "is_present"
 CONF_IS_NOT_PRESENT = "is_not_present"
 CONF_IS_PROBLEM = "is_problem"
 CONF_IS_NO_PROBLEM = "is_no_problem"
+CONF_IS_RUNNING = "is_running"
+CONF_IS_NOT_RUNNING = "is_not_running"
 CONF_IS_UNSAFE = "is_unsafe"
 CONF_IS_NOT_UNSAFE = "is_not_unsafe"
 CONF_IS_SMOKE = "is_smoke"
@@ -98,6 +104,7 @@ CONF_IS_NOT_OPEN = "is_not_open"
 IS_ON = [
     CONF_IS_BAT_LOW,
     CONF_IS_CHARGING,
+    CONF_IS_CO,
     CONF_IS_COLD,
     CONF_IS_CONNECTED,
     CONF_IS_GAS,
@@ -113,6 +120,7 @@ IS_ON = [
     CONF_IS_POWERED,
     CONF_IS_PRESENT,
     CONF_IS_PROBLEM,
+    CONF_IS_RUNNING,
     CONF_IS_SMOKE,
     CONF_IS_SOUND,
     CONF_IS_TAMPERED,
@@ -138,10 +146,12 @@ IS_OFF = [
     CONF_IS_NOT_PRESENT,
     CONF_IS_NOT_TAMPERED,
     CONF_IS_NOT_UNSAFE,
+    CONF_IS_NO_CO,
     CONF_IS_NO_GAS,
     CONF_IS_NO_LIGHT,
     CONF_IS_NO_MOTION,
     CONF_IS_NO_PROBLEM,
+    CONF_IS_NOT_RUNNING,
     CONF_IS_NO_SMOKE,
     CONF_IS_NO_SOUND,
     CONF_IS_NO_UPDATE,
@@ -158,6 +168,7 @@ ENTITY_CONDITIONS = {
         {CONF_TYPE: CONF_IS_CHARGING},
         {CONF_TYPE: CONF_IS_NOT_CHARGING},
     ],
+    DEVICE_CLASS_CO: [{CONF_TYPE: CONF_IS_CO}, {CONF_TYPE: CONF_IS_NO_CO}],
     DEVICE_CLASS_COLD: [{CONF_TYPE: CONF_IS_COLD}, {CONF_TYPE: CONF_IS_NOT_COLD}],
     DEVICE_CLASS_CONNECTIVITY: [
         {CONF_TYPE: CONF_IS_CONNECTED},
@@ -195,6 +206,10 @@ ENTITY_CONDITIONS = {
     DEVICE_CLASS_PROBLEM: [
         {CONF_TYPE: CONF_IS_PROBLEM},
         {CONF_TYPE: CONF_IS_NO_PROBLEM},
+    ],
+    DEVICE_CLASS_RUNNING: [
+        {CONF_TYPE: CONF_IS_RUNNING},
+        {CONF_TYPE: CONF_IS_NOT_RUNNING},
     ],
     DEVICE_CLASS_SAFETY: [{CONF_TYPE: CONF_IS_UNSAFE}, {CONF_TYPE: CONF_IS_NOT_UNSAFE}],
     DEVICE_CLASS_SMOKE: [{CONF_TYPE: CONF_IS_SMOKE}, {CONF_TYPE: CONF_IS_NO_SMOKE}],
@@ -256,11 +271,9 @@ async def async_get_conditions(
 
 @callback
 def async_condition_from_config(
-    config: ConfigType, config_validation: bool
+    hass: HomeAssistant, config: ConfigType
 ) -> condition.ConditionCheckerType:
     """Evaluate state based on configuration."""
-    if config_validation:
-        config = CONDITION_SCHEMA(config)
     condition_type = config[CONF_TYPE]
     if condition_type in IS_ON:
         stat = "on"
@@ -273,6 +286,8 @@ def async_condition_from_config(
     }
     if CONF_FOR in config:
         state_config[CONF_FOR] = config[CONF_FOR]
+    state_config = cv.STATE_CONDITION_SCHEMA(state_config)
+    state_config = condition.state_validate_config(hass, state_config)
 
     return condition.state_from_config(state_config)
 

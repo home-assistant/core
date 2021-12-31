@@ -1,4 +1,5 @@
 """Support to trigger Maker IFTTT recipes."""
+from http import HTTPStatus
 import json
 import logging
 
@@ -6,7 +7,8 @@ import pyfttt
 import requests
 import voluptuous as vol
 
-from homeassistant.const import CONF_WEBHOOK_ID, HTTP_OK
+from homeassistant.const import CONF_WEBHOOK_ID
+from homeassistant.core import ServiceCall
 from homeassistant.helpers import config_entry_flow
 import homeassistant.helpers.config_validation as cv
 
@@ -56,7 +58,7 @@ async def async_setup(hass, config):
     if isinstance(api_keys, str):
         api_keys = {"default": api_keys}
 
-    def trigger_service(call):
+    def trigger_service(call: ServiceCall) -> None:
         """Handle IFTTT trigger service calls."""
         event = call.data[ATTR_EVENT]
         targets = call.data.get(ATTR_TARGET, list(api_keys))
@@ -75,7 +77,7 @@ async def async_setup(hass, config):
 
             for target, key in target_keys.items():
                 res = pyfttt.send_event(key, event, value1, value2, value3)
-                if res.status_code != HTTP_OK:
+                if res.status_code != HTTPStatus.OK:
                     _LOGGER.error("IFTTT reported error sending event to %s", target)
         except requests.exceptions.RequestException:
             _LOGGER.exception("Error communicating with IFTTT")

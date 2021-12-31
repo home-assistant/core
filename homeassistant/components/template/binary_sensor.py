@@ -4,6 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 from functools import partial
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -14,7 +15,6 @@ from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA,
     BinarySensorEntity,
 )
-from homeassistant.components.template import TriggerUpdateCoordinator
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
@@ -38,6 +38,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_call_later
 
+from . import TriggerUpdateCoordinator
 from .const import (
     CONF_ATTRIBUTES,
     CONF_AVAILABILITY,
@@ -45,7 +46,11 @@ from .const import (
     CONF_OBJECT_ID,
     CONF_PICTURE,
 )
-from .template_entity import TemplateEntity
+from .template_entity import (
+    TEMPLATE_ENTITY_COMMON_SCHEMA,
+    TemplateEntity,
+    rewrite_common_legacy_to_modern_conf,
+)
 from .trigger_entity import TriggerEntity
 
 CONF_DELAY_ON = "delay_on"
@@ -65,20 +70,16 @@ LEGACY_FIELDS = {
 
 BINARY_SENSOR_SCHEMA = vol.Schema(
     {
+        vol.Optional(CONF_AUTO_OFF): vol.Any(cv.positive_time_period, cv.template),
+        vol.Optional(CONF_DELAY_OFF): vol.Any(cv.positive_time_period, cv.template),
+        vol.Optional(CONF_DELAY_ON): vol.Any(cv.positive_time_period, cv.template),
+        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_NAME): cv.template,
         vol.Required(CONF_STATE): cv.template,
-        vol.Optional(CONF_ICON): cv.template,
-        vol.Optional(CONF_PICTURE): cv.template,
-        vol.Optional(CONF_AVAILABILITY): cv.template,
-        vol.Optional(CONF_ATTRIBUTES): vol.Schema({cv.string: cv.template}),
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Optional(CONF_DELAY_ON): vol.Any(cv.positive_time_period, cv.template),
-        vol.Optional(CONF_DELAY_OFF): vol.Any(cv.positive_time_period, cv.template),
-        vol.Optional(CONF_AUTO_OFF): vol.Any(cv.positive_time_period, cv.template),
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }
-)
+).extend(TEMPLATE_ENTITY_COMMON_SCHEMA.schema)
 
 LEGACY_BINARY_SENSOR_SCHEMA = vol.All(
     cv.deprecated(ATTR_ENTITY_ID),
@@ -109,14 +110,7 @@ def rewrite_legacy_to_modern_conf(cfg: dict[str, dict]) -> list[dict]:
     for object_id, entity_cfg in cfg.items():
         entity_cfg = {**entity_cfg, CONF_OBJECT_ID: object_id}
 
-        for from_key, to_key in LEGACY_FIELDS.items():
-            if from_key not in entity_cfg or to_key in entity_cfg:
-                continue
-
-            val = entity_cfg.pop(from_key)
-            if isinstance(val, str):
-                val = template.Template(val)
-            entity_cfg[to_key] = val
+        entity_cfg = rewrite_common_legacy_to_modern_conf(entity_cfg, LEGACY_FIELDS)
 
         if CONF_NAME not in entity_cfg:
             entity_cfg[CONF_NAME] = template.Template(object_id)
@@ -143,18 +137,6 @@ def _async_create_template_tracking_entities(
     sensors = []
 
     for entity_conf in definitions:
-        # Still available on legacy
-        object_id = entity_conf.get(CONF_OBJECT_ID)
-
-        value = entity_conf[CONF_STATE]
-        icon = entity_conf.get(CONF_ICON)
-        entity_picture = entity_conf.get(CONF_PICTURE)
-        availability = entity_conf.get(CONF_AVAILABILITY)
-        attributes = entity_conf.get(CONF_ATTRIBUTES, {})
-        friendly_name = entity_conf.get(CONF_NAME)
-        device_class = entity_conf.get(CONF_DEVICE_CLASS)
-        delay_on_raw = entity_conf.get(CONF_DELAY_ON)
-        delay_off_raw = entity_conf.get(CONF_DELAY_OFF)
         unique_id = entity_conf.get(CONF_UNIQUE_ID)
 
         if unique_id and unique_id_prefix:
@@ -163,16 +145,7 @@ def _async_create_template_tracking_entities(
         sensors.append(
             BinarySensorTemplate(
                 hass,
-                object_id,
-                friendly_name,
-                device_class,
-                value,
-                icon,
-                entity_picture,
-                availability,
-                delay_on_raw,
-                delay_off_raw,
-                attributes,
+                entity_conf,
                 unique_id,
             )
         )
@@ -212,49 +185,37 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity):
     def __init__(
         self,
         hass: HomeAssistant,
-        object_id: str | None,
-        friendly_name: template.Template | None,
-        device_class: str,
-        value_template: template.Template,
-        icon_template: template.Template | None,
-        entity_picture_template: template.Template | None,
-        availability_template: template.Template | None,
-        delay_on_raw,
-        delay_off_raw,
-        attribute_templates: dict[str, template.Template],
+        config: dict[str, Any],
         unique_id: str | None,
-    ):
+    ) -> None:
         """Initialize the Template binary sensor."""
-        super().__init__(
-            attribute_templates=attribute_templates,
-            availability_template=availability_template,
-            icon_template=icon_template,
-            entity_picture_template=entity_picture_template,
-        )
-        if object_id is not None:
+        super().__init__(config=config)
+        if (object_id := config.get(CONF_OBJECT_ID)) is not None:
             self.entity_id = async_generate_entity_id(
                 ENTITY_ID_FORMAT, object_id, hass=hass
             )
 
         self._name: str | None = None
-        self._friendly_name_template: template.Template | None = friendly_name
+        self._friendly_name_template = config.get(CONF_NAME)
 
         # Try to render the name as it can influence the entity ID
-        if friendly_name:
-            friendly_name.hass = hass
+        if self._friendly_name_template:
+            self._friendly_name_template.hass = hass
             try:
-                self._name = friendly_name.async_render(parse_result=False)
+                self._name = self._friendly_name_template.async_render(
+                    parse_result=False
+                )
             except template.TemplateError:
                 pass
 
-        self._device_class = device_class
-        self._template = value_template
+        self._device_class = config.get(CONF_DEVICE_CLASS)
+        self._template = config[CONF_STATE]
         self._state = None
         self._delay_cancel = None
         self._delay_on = None
-        self._delay_on_raw = delay_on_raw
+        self._delay_on_raw = config.get(CONF_DELAY_ON)
         self._delay_off = None
-        self._delay_off_raw = delay_off_raw
+        self._delay_off_raw = config.get(CONF_DELAY_OFF)
         self._unique_id = unique_id
 
     async def async_added_to_hass(self):
@@ -363,7 +324,7 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity):
 
         self._delay_cancel = None
         self._auto_off_cancel = None
-        self._state = False
+        self._state = None
 
     @property
     def is_on(self) -> bool:

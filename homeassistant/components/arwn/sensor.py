@@ -3,10 +3,9 @@ import json
 import logging
 
 from homeassistant.components import mqtt
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import (
     DEGREE,
-    DEVICE_CLASS_TEMPERATURE,
     PRECIPITATION_INCHES,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
@@ -37,7 +36,7 @@ def discover_sensors(topic, payload):
         else:
             unit = TEMP_CELSIUS
         return ArwnSensor(
-            topic, name, "temp", unit, device_class=DEVICE_CLASS_TEMPERATURE
+            topic, name, "temp", unit, device_class=SensorDeviceClass.TEMPERATURE
         )
     if domain == "moisture":
         name = f"{parts[2]} Moisture"
@@ -95,8 +94,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         if not sensors:
             return
 
-        store = hass.data.get(DATA_ARWN)
-        if store is None:
+        if (store := hass.data.get(DATA_ARWN)) is None:
             store = hass.data[DATA_ARWN] = {}
 
         if isinstance(sensors, ArwnSensor):

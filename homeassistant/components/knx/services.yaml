@@ -23,6 +23,12 @@ send:
       example: "temperature"
       selector:
         text:
+    response:
+      name: "Send as Response"
+      description: "If set to `True`, the telegram will be sent as a `GroupValueResponse` instead of a `GroupValueWrite`."
+      default: false
+      selector:
+        boolean:
 read:
   name: "Read from KNX bus"
   description: "Send GroupValueRead requests to the KNX bus. Response can be used from `knx_event` and will be processed in KNX entities."
@@ -45,6 +51,13 @@ event_register:
       example: "1/1/0"
       selector:
         object:
+    type:
+      name: "Value type"
+      description: "If set, the payload will be decoded as given DPT in the event data `value` key. Knx sensor types are valid values (see https://www.home-assistant.io/integrations/sensor.knx)."
+      required: false
+      example: "2byte_float"
+      selector:
+        text:
     remove:
       name: "Remove event registration"
       description: "If `True` the group address(es) will be removed."
@@ -93,6 +106,3 @@ exposure_register:
       default: false
       selector:
         boolean:
-reload:
-  name: "Reload KNX configuration"
-  description: "Reload the KNX configuration from YAML."

@@ -23,12 +23,12 @@ jobs:
       publish: ${{ steps.version.outputs.publish }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v2.4.0
         with:
           fetch-depth: 0
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2.2.2
+        uses: actions/setup-python@v2.3.1
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
@@ -56,9 +56,7 @@ jobs:
         uses: home-assistant/actions/helpers/codenotary@master
         with:
           source: file://${{ github.workspace }}/OFFICIAL_IMAGE
-          user: ${{ secrets.VCN_USER }}
-          password: ${{ secrets.VCN_PASSWORD }}
-          organisation: home-assistant.io
+          token: ${{ secrets.CAS_TOKEN }}
 
   build_python:
     name: Build PyPi package
@@ -67,10 +65,10 @@ jobs:
     if: needs.init.outputs.publish == 'true'
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v2.4.0
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v2.2.2
+        uses: actions/setup-python@v2.3.1
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
@@ -97,11 +95,11 @@ jobs:
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v2.4.0
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         if: needs.init.outputs.channel == 'dev'
-        uses: actions/setup-python@v2.2.2
+        uses: actions/setup-python@v2.3.1
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
@@ -120,28 +118,28 @@ jobs:
           echo "${{ github.sha }};${{ github.ref }};${{ github.event_name }};${{ github.actor }}" > rootfs/OFFICIAL_IMAGE
 
       - name: Login to DockerHub
-        uses: docker/login-action@v1.10.0
+        uses: docker/login-action@v1.12.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v1.10.0
+        uses: docker/login-action@v1.12.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build base image
-        uses: home-assistant/builder@2021.09.0
+        uses: home-assistant/builder@2021.12.0
         with:
           args: |
             $BUILD_ARGS \
             --${{ matrix.arch }} \
             --target /data \
-            --with-codenotary "${{ secrets.VCN_USER }}" "${{ secrets.VCN_PASSWORD }}" "${{ secrets.VCN_ORG }}" \
-            --validate-from "${{ secrets.VCN_ORG }}" \
             --generic ${{ needs.init.outputs.version }}
+        env:
+          CAS_API_KEY: ${{ secrets.CAS_TOKEN }}
 
   build_machine:
     name: Build ${{ matrix.machine }} machine core image
@@ -170,30 +168,41 @@ jobs:
           - tinker
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v2.4.0
+
+      - name: Set build additional args
+        run: |
+          # Create general tags
+          if [[ "${{ needs.init.outputs.version }}" =~ d ]]; then
+            echo "BUILD_ARGS=--additional-tag dev" >> $GITHUB_ENV
+          elif [[ "${{ needs.init.outputs.version }}" =~ b ]]; then
+            echo "BUILD_ARGS=--additional-tag beta" >> $GITHUB_ENV
+          else
+            echo "BUILD_ARGS=--additional-tag stable" >> $GITHUB_ENV
+          fi
 
       - name: Login to DockerHub
-        uses: docker/login-action@v1.10.0
+        uses: docker/login-action@v1.12.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v1.10.0
+        uses: docker/login-action@v1.12.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build base image
-        uses: home-assistant/builder@2021.09.0
+        uses: home-assistant/builder@2021.12.0
         with:
           args: |
             $BUILD_ARGS \
             --target /data/machine \
-            --with-codenotary "${{ secrets.VCN_USER }}" "${{ secrets.VCN_PASSWORD }}" "${{ secrets.VCN_ORG }}" \
-            --validate-from "${{ secrets.VCN_ORG }}" \
             --machine "${{ needs.init.outputs.version }}=${{ matrix.machine }}"
+        env:
+          CAS_API_KEY: ${{ secrets.CAS_TOKEN }}
 
   publish_ha:
     name: Publish version files
@@ -201,7 +210,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v2.4.0
 
       - name: Initialize git
         uses: home-assistant/actions/helpers/git-init@master
@@ -233,23 +242,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v2.4.0
 
       - name: Login to DockerHub
-        uses: docker/login-action@v1.10.0
+        uses: docker/login-action@v1.12.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v1.10.0
+        uses: docker/login-action@v1.12.0
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install VCN tools
-        uses: home-assistant/actions/helpers/vcn@master
+      - name: Install CAS tools
+        uses: home-assistant/actions/helpers/cas@master
 
       - name: Build Meta Image
         shell: bash
@@ -293,8 +302,7 @@ jobs:
 
           function validate_image() {
             local image=${1}
-            state="$(vcn authenticate --org home-assistant.io --output json docker://${image} | jq '.verification.status // 2')"
-            if [[ "${state}" != "0" ]]; then
+            if ! cas authenticate --signerID notary@home-assistant.io "docker://${image}"; then
               echo "Invalid signature!"
               exit 1
             fi

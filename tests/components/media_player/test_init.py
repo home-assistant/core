@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from homeassistant.components import media_player
 from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF
 from homeassistant.setup import async_setup_component
 
 
@@ -118,16 +119,6 @@ async def test_get_async_get_browse_image(hass, hass_client_no_auth, hass_ws_cli
     assert content == b"image"
 
 
-def test_deprecated_base_class(caplog):
-    """Test deprecated base class."""
-
-    class CustomMediaPlayer(media_player.MediaPlayerDevice):
-        pass
-
-    CustomMediaPlayer()
-    assert "MediaPlayerDevice is deprecated, modify CustomMediaPlayer" in caplog.text
-
-
 async def test_media_browse(hass, hass_ws_client):
     """Test browsing media."""
     await async_setup_component(
@@ -183,3 +174,27 @@ async def test_media_browse(hass, hass_ws_client):
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
     assert msg["result"] == {"bla": "yo"}
+
+
+async def test_group_members_available_when_off(hass):
+    """Test that group_members are still available when media_player is off."""
+    await async_setup_component(
+        hass, "media_player", {"media_player": {"platform": "demo"}}
+    )
+    await hass.async_block_till_done()
+
+    # Fake group support for DemoYoutubePlayer
+    with patch(
+        "homeassistant.components.demo.media_player.YOUTUBE_PLAYER_SUPPORT",
+        media_player.SUPPORT_GROUPING | media_player.SUPPORT_TURN_OFF,
+    ):
+        await hass.services.async_call(
+            "media_player",
+            "turn_off",
+            {ATTR_ENTITY_ID: "media_player.bedroom"},
+            blocking=True,
+        )
+
+    state = hass.states.get("media_player.bedroom")
+    assert state.state == STATE_OFF
+    assert "group_members" in state.attributes

@@ -11,7 +11,7 @@ from pyhap.camera import (
 )
 from pyhap.const import CATEGORY_CAMERA
 
-from homeassistant.components.ffmpeg import DATA_FFMPEG
+from homeassistant.components.ffmpeg import get_ffmpeg_manager
 from homeassistant.const import STATE_ON
 from homeassistant.core import callback
 from homeassistant.helpers.event import (
@@ -139,7 +139,7 @@ class Camera(HomeAccessory, PyhapCamera):
 
     def __init__(self, hass, driver, name, entity_id, aid, config):
         """Initialize a Camera accessory object."""
-        self._ffmpeg = hass.data[DATA_FFMPEG]
+        self._ffmpeg = get_ffmpeg_manager(hass)
         for config_key, conf in CONFIG_DEFAULTS.items():
             if config_key not in config:
                 config[config_key] = conf
@@ -314,8 +314,7 @@ class Camera(HomeAccessory, PyhapCamera):
 
     async def _async_get_stream_source(self):
         """Find the camera stream source url."""
-        stream_source = self.config.get(CONF_STREAM_SOURCE)
-        if stream_source:
+        if stream_source := self.config.get(CONF_STREAM_SOURCE):
             return stream_source
         try:
             stream_source = await self.hass.components.camera.async_get_stream_source(
@@ -334,8 +333,7 @@ class Camera(HomeAccessory, PyhapCamera):
             session_info["id"],
             stream_config,
         )
-        input_source = await self._async_get_stream_source()
-        if not input_source:
+        if not (input_source := await self._async_get_stream_source()):
             _LOGGER.error("Camera has no stream source")
             return False
         if "-i " not in input_source:
@@ -447,8 +445,7 @@ class Camera(HomeAccessory, PyhapCamera):
     async def stop_stream(self, session_info):
         """Stop the stream for the given ``session_id``."""
         session_id = session_info["id"]
-        stream = session_info.get("stream")
-        if not stream:
+        if not (stream := session_info.get("stream")):
             _LOGGER.debug("No stream for session ID %s", session_id)
             return
 

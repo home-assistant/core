@@ -5,6 +5,7 @@ Such systems include evohome, Round Thermostat, and others.
 from __future__ import annotations
 
 from datetime import datetime as dt, timedelta
+from http import HTTPStatus
 import logging
 import re
 from typing import Any
@@ -19,11 +20,9 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
-    HTTP_SERVICE_UNAVAILABLE,
-    HTTP_TOO_MANY_REQUESTS,
     TEMP_CELSIUS,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
@@ -158,13 +157,13 @@ def _handle_exception(err) -> bool:
         )
 
     except aiohttp.ClientResponseError:
-        if err.status == HTTP_SERVICE_UNAVAILABLE:
+        if err.status == HTTPStatus.SERVICE_UNAVAILABLE:
             _LOGGER.warning(
                 "The vendor says their server is currently unavailable. "
                 "Check the vendor's service status page"
             )
 
-        elif err.status == HTTP_TOO_MANY_REQUESTS:
+        elif err.status == HTTPStatus.TOO_MANY_REQUESTS:
             _LOGGER.warning(
                 "The vendor's API rate limit has been exceeded. "
                 "If this message persists, consider increasing the %s",
@@ -275,12 +274,12 @@ def setup_service_functions(hass: HomeAssistant, broker):
     """
 
     @verify_domain_control(hass, DOMAIN)
-    async def force_refresh(call) -> None:
+    async def force_refresh(call: ServiceCall) -> None:
         """Obtain the latest state data via the vendor's RESTful API."""
         await broker.async_update()
 
     @verify_domain_control(hass, DOMAIN)
-    async def set_system_mode(call) -> None:
+    async def set_system_mode(call: ServiceCall) -> None:
         """Set the system mode."""
         payload = {
             "unique_id": broker.tcs.systemId,
@@ -290,7 +289,7 @@ def setup_service_functions(hass: HomeAssistant, broker):
         async_dispatcher_send(hass, DOMAIN, payload)
 
     @verify_domain_control(hass, DOMAIN)
-    async def set_zone_override(call) -> None:
+    async def set_zone_override(call: ServiceCall) -> None:
         """Set the zone override (setpoint)."""
         entity_id = call.data[ATTR_ENTITY_ID]
 

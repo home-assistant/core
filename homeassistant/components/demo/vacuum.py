@@ -22,6 +22,7 @@ from homeassistant.components.vacuum import (
     StateVacuumEntity,
     VacuumEntity,
 )
+from homeassistant.helpers import event
 
 SUPPORT_MINIMAL_SERVICES = SUPPORT_TURN_ON | SUPPORT_TURN_OFF
 
@@ -328,7 +329,7 @@ class StateDemoVacuum(StateVacuumEntity):
         self._state = STATE_RETURNING
         self.schedule_update_ha_state()
 
-        self.hass.loop.call_later(30, self.__set_state_to_dock)
+        event.call_later(self.hass, 30, self.__set_state_to_dock)
 
     def clean_spot(self, **kwargs):
         """Perform a spot clean-up."""
@@ -349,6 +350,6 @@ class StateDemoVacuum(StateVacuumEntity):
             self._fan_speed = fan_speed
             self.schedule_update_ha_state()
 
-    def __set_state_to_dock(self):
+    def __set_state_to_dock(self, _):
         self._state = STATE_DOCKED
         self.schedule_update_ha_state()

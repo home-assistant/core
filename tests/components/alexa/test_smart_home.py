@@ -25,7 +25,7 @@ from homeassistant.components.media_player.const import (
 )
 import homeassistant.components.vacuum as vacuum
 from homeassistant.config import async_process_ha_core_config
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import Context
 from homeassistant.helpers import entityfilter
 from homeassistant.setup import async_setup_component
@@ -365,7 +365,7 @@ async def test_fan(hass):
     assert appliance["endpointId"] == "fan#test_1"
     assert appliance["displayCategories"][0] == "FAN"
     assert appliance["friendlyName"] == "Test fan 1"
-    # Alexa.RangeController is added to make a van controllable when no other controllers are available
+    # Alexa.RangeController is added to make a fan controllable when no other controllers are available
     capabilities = assert_endpoint_capabilities(
         appliance,
         "Alexa.RangeController",
@@ -400,6 +400,39 @@ async def test_fan(hass):
         payload={"rangeValue": "0"},
         instance="fan.percentage",
     )
+
+
+async def test_fan2(hass):
+    """Test fan discovery with percentage_step."""
+
+    # Test fan discovery with percentage_step
+    device = (
+        "fan.test_2",
+        "on",
+        {
+            "friendly_name": "Test fan 2",
+            "percentage": 66,
+            "supported_features": 1,
+            "percentage_step": 33.3333,
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "fan#test_2"
+    assert appliance["displayCategories"][0] == "FAN"
+    assert appliance["friendlyName"] == "Test fan 2"
+    # Alexa.RangeController is added to make a fan controllable when no other controllers are available
+    capabilities = assert_endpoint_capabilities(
+        appliance,
+        "Alexa.RangeController",
+        "Alexa.PowerController",
+        "Alexa.EndpointHealth",
+        "Alexa",
+    )
+
+    power_capability = get_capability(capabilities, "Alexa.PowerController")
+    assert "capabilityResources" not in power_capability
+    assert "configuration" not in power_capability
 
 
 async def test_variable_fan(hass):
@@ -3903,4 +3936,32 @@ async def test_initialize_camera_stream(hass, mock_camera, mock_stream):
     assert (
         "https://mycamerastream.test/api/camera_proxy/camera.demo_camera?token="
         in response["payload"]["imageUri"]
+    )
+
+
+@pytest.mark.parametrize(
+    "domain",
+    ["button", "input_button"],
+)
+async def test_button(hass, domain):
+    """Test button discovery."""
+    device = (
+        f"{domain}.ring_doorbell",
+        STATE_UNKNOWN,
+        {"friendly_name": "Ring Doorbell"},
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == f"{domain}#ring_doorbell"
+    assert appliance["displayCategories"][0] == "ACTIVITY_TRIGGER"
+    assert appliance["friendlyName"] == "Ring Doorbell"
+
+    capabilities = assert_endpoint_capabilities(
+        appliance, "Alexa.SceneController", "Alexa"
+    )
+    scene_capability = get_capability(capabilities, "Alexa.SceneController")
+    assert scene_capability["supportsDeactivation"] is False
+
+    await assert_scene_controller_works(
+        f"{domain}#ring_doorbell", f"{domain}.press", False, hass
     )

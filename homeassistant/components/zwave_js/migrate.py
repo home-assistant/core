@@ -331,8 +331,7 @@ async def async_migrate_legacy_zwave(
     ent_reg = async_get_entity_registry(hass)
     for zwave_js_entity_id, zwave_entry in migration_map.entity_entries.items():
         zwave_entity_id = zwave_entry["entity_id"]
-        entity_entry = ent_reg.async_get(zwave_entity_id)
-        if not entity_entry:
+        if not (entity_entry := ent_reg.async_get(zwave_entity_id)):
             continue
         ent_reg.async_remove(zwave_entity_id)
         ent_reg.async_update_entity(

@@ -4,6 +4,11 @@
             "identifier_exists": "Conta j\u00e1 cadastrada"
         },
         "step": {
+            "input_auth_code": {
+                "data": {
+                    "auth_code": "C\u00f3digo de Autoriza\u00e7\u00e3o"
+                }
+            },
             "user": {
                 "data": {
                     "password": "Senha",

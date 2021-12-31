@@ -1,6 +1,7 @@
 """Config flow for Samsung TV."""
 from __future__ import annotations
 
+from functools import partial
 import socket
 from types import MappingProxyType
 from typing import Any
@@ -10,13 +11,7 @@ import getmac
 import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.dhcp import IP_ADDRESS, MAC_ADDRESS
-from homeassistant.components.ssdp import (
-    ATTR_SSDP_LOCATION,
-    ATTR_UPNP_MANUFACTURER,
-    ATTR_UPNP_MODEL_NAME,
-    ATTR_UPNP_UDN,
-)
+from homeassistant.components import dhcp, ssdp, zeroconf
 from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
@@ -27,7 +22,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .bridge import (
     SamsungTVBridge,
@@ -37,7 +31,6 @@ from .bridge import (
     mac_from_device_info,
 )
 from .const import (
-    ATTR_PROPERTIES,
     CONF_MANUFACTURER,
     CONF_MODEL,
     DEFAULT_MANUFACTURER,
@@ -159,8 +152,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 raise data_entry_flow.AbortFlow(RESULT_NOT_SUPPORTED)
             return False
         dev_info = info.get("device", {})
-        device_type = dev_info.get("type")
-        if device_type != "Samsung SmartTV":
+        if (device_type := dev_info.get("type")) != "Samsung SmartTV":
             raise data_entry_flow.AbortFlow(RESULT_NOT_SUPPORTED)
         self._model = dev_info.get("modelName")
         name = dev_info.get("name")
@@ -169,7 +161,9 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._udn = _strip_uuid(dev_info.get("udn", info["id"]))
         if mac := mac_from_device_info(info):
             self._mac = mac
-        elif mac := getmac.get_mac_address(ip=self._host):
+        elif mac := await self.hass.async_add_executor_job(
+            partial(getmac.get_mac_address, ip=self._host)
+        ):
             self._mac = mac
         self._device_info = info
         return True
@@ -265,16 +259,16 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             raise data_entry_flow.AbortFlow(RESULT_NOT_SUPPORTED)
 
     async def async_step_ssdp(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: ssdp.SsdpServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by ssdp discovery."""
         LOGGER.debug("Samsung device found via SSDP: %s", discovery_info)
-        model_name: str = discovery_info.get(ATTR_UPNP_MODEL_NAME) or ""
-        self._udn = _strip_uuid(discovery_info[ATTR_UPNP_UDN])
-        if hostname := urlparse(discovery_info[ATTR_SSDP_LOCATION]).hostname:
+        model_name: str = discovery_info.upnp.get(ssdp.ATTR_UPNP_MODEL_NAME) or ""
+        self._udn = _strip_uuid(discovery_info.upnp[ssdp.ATTR_UPNP_UDN])
+        if hostname := urlparse(discovery_info.ssdp_location or "").hostname:
             self._host = hostname
         await self._async_set_unique_id_from_udn()
-        self._manufacturer = discovery_info[ATTR_UPNP_MANUFACTURER]
+        self._manufacturer = discovery_info.upnp[ssdp.ATTR_UPNP_MANUFACTURER]
         self._abort_if_manufacturer_is_not_samsung()
         if not await self._async_get_and_check_device_info():
             # If we cannot get device info for an SSDP discovery
@@ -286,24 +280,24 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_confirm()
 
     async def async_step_dhcp(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: dhcp.DhcpServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by dhcp discovery."""
         LOGGER.debug("Samsung device found via DHCP: %s", discovery_info)
-        self._mac = discovery_info[MAC_ADDRESS]
-        self._host = discovery_info[IP_ADDRESS]
+        self._mac = discovery_info.macaddress
+        self._host = discovery_info.ip
         await self._async_start_discovery_with_mac_address()
         await self._async_set_device_unique_id()
         self.context["title_placeholders"] = {"device": self._title}
         return await self.async_step_confirm()
 
     async def async_step_zeroconf(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> data_entry_flow.FlowResult:
         """Handle a flow initialized by zeroconf discovery."""
         LOGGER.debug("Samsung device found via ZEROCONF: %s", discovery_info)
-        self._mac = format_mac(discovery_info[ATTR_PROPERTIES]["deviceid"])
-        self._host = discovery_info[CONF_HOST]
+        self._mac = format_mac(discovery_info.properties["deviceid"])
+        self._host = discovery_info.host
         await self._async_start_discovery_with_mac_address()
         await self._async_set_device_unique_id()
         self.context["title_placeholders"] = {"device": self._title}

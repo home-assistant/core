@@ -32,7 +32,7 @@ from homeassistant.const import (
     CONF_PLATFORM,
     PLATFORM_FORMAT,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, discovery
 import homeassistant.helpers.config_validation as cv
@@ -172,7 +172,7 @@ async def async_setup(hass, config):
             _LOGGER.exception("Error setting up platform: %s", p_type)
             return
 
-        async def async_say_handle(service):
+        async def async_say_handle(service: ServiceCall) -> None:
             """Service handle for say."""
             entity_ids = service.data[ATTR_ENTITY_ID]
             message = service.data.get(ATTR_MESSAGE)
@@ -232,7 +232,7 @@ async def async_setup(hass, config):
 
     discovery.async_listen_platform(hass, DOMAIN, async_platform_discovered)
 
-    async def async_clear_cache_handle(service):
+    async def async_clear_cache_handle(service: ServiceCall) -> None:
         """Handle clear cache service call."""
         await tts.async_clear_cache()
 
@@ -427,8 +427,7 @@ class SpeechManager:
 
         This method is a coroutine.
         """
-        filename = self.file_cache.get(key)
-        if not filename:
+        if not (filename := self.file_cache.get(key)):
             raise HomeAssistantError(f"Key {key} not in file cache!")
 
         voice_file = os.path.join(self.cache_dir, filename)
@@ -463,8 +462,7 @@ class SpeechManager:
 
         This method is a coroutine.
         """
-        record = _RE_VOICE_FILE.match(filename.lower())
-        if not record:
+        if not (record := _RE_VOICE_FILE.match(filename.lower())):
             raise HomeAssistantError("Wrong tts file format!")
 
         key = KEY_PATTERN.format(
@@ -572,8 +570,7 @@ def _get_cache_files(cache_dir):
 
     folder_data = os.listdir(cache_dir)
     for file_data in folder_data:
-        record = _RE_VOICE_FILE.match(file_data)
-        if record:
+        if record := _RE_VOICE_FILE.match(file_data):
             key = KEY_PATTERN.format(
                 record.group(1), record.group(2), record.group(3), record.group(4)
             )

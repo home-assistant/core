@@ -1,7 +1,7 @@
 """The Minecraft Server binary sensor platform."""
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_CONNECTIVITY,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -33,7 +33,7 @@ class MinecraftServerStatusBinarySensor(MinecraftServerEntity, BinarySensorEntit
             server=server,
             type_name=NAME_STATUS,
             icon=ICON_STATUS,
-            device_class=DEVICE_CLASS_CONNECTIVITY,
+            device_class=BinarySensorDeviceClass.CONNECTIVITY,
         )
         self._is_on = False
 

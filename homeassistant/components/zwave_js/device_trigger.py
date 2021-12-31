@@ -236,8 +236,7 @@ def get_trigger_platform_from_type(trigger_type: str) -> str:
     trigger_split = trigger_type.split(".")
     # Our convention for trigger types is to have the trigger type at the beginning
     # delimited by a `.`. For zwave_js triggers, there is a `.` in the name
-    trigger_platform = trigger_split[0]
-    if trigger_platform == DOMAIN:
+    if (trigger_platform := trigger_split[0]) == DOMAIN:
         return ".".join(trigger_split[:2])
     return trigger_platform
 
@@ -416,7 +415,7 @@ async def async_attach_trigger(
         else:
             raise HomeAssistantError(f"Unhandled trigger type {trigger_type}")
 
-        state_config = state.TRIGGER_SCHEMA(state_config)
+        state_config = await state.async_validate_trigger_config(hass, state_config)
         return await state.async_attach_trigger(
             hass, state_config, action, automation_info, platform_type="device"
         )

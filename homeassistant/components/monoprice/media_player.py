@@ -15,6 +15,7 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.const import CONF_PORT, STATE_OFF, STATE_ON
 from homeassistant.helpers import config_validation as cv, entity_platform, service
+from homeassistant.helpers.entity import DeviceInfo
 
 from .const import (
     CONF_SOURCES,
@@ -92,7 +93,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 entity.restore()
 
     @service.verify_domain_control(hass, DOMAIN)
-    async def async_service_handle(service_call):
+    async def async_service_handle(service_call: core.ServiceCall) -> None:
         """Handle for services."""
         entities = await platform.async_extract_from_service(service_call)
 
@@ -167,14 +168,14 @@ class MonopriceZone(MediaPlayerEntity):
         return self._zone_id < 20 or self._update_success
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device info for this device."""
-        return {
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "name": self.name,
-            "manufacturer": "Monoprice",
-            "model": "6-Zone Amplifier",
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.unique_id)},
+            manufacturer="Monoprice",
+            model="6-Zone Amplifier",
+            name=self.name,
+        )
 
     @property
     def unique_id(self):

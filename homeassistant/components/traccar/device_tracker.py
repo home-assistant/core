@@ -402,8 +402,7 @@ class TraccarEntity(TrackerEntity, RestoreEntity):
         if self._latitude is not None or self._longitude is not None:
             return
 
-        state = await self.async_get_last_state()
-        if state is None:
+        if (state := await self.async_get_last_state()) is None:
             self._latitude = None
             self._longitude = None
             self._accuracy = None

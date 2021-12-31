@@ -42,7 +42,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     config_port = config[CONF_PORT]
     config_name = config[CONF_NAME]
     try:
-        with async_timeout.timeout(PLATFORM_TIMEOUT):
+        async with async_timeout.timeout(PLATFORM_TIMEOUT):
             api = await real_time_api(config_host, config_port)
     except (IamMeterError, asyncio.TimeoutError) as err:
         _LOGGER.error("Device is not ready")
@@ -50,7 +50,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     async def async_update_data():
         try:
-            with async_timeout.timeout(PLATFORM_TIMEOUT):
+            async with async_timeout.timeout(PLATFORM_TIMEOUT):
                 return await api.get_data()
         except (IamMeterError, asyncio.TimeoutError) as err:
             raise UpdateFailed from err

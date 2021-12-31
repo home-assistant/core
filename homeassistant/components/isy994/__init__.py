@@ -200,7 +200,7 @@ async def async_setup_entry(
     _LOGGER.info(repr(isy.clock))
 
     hass_isy_data[ISY994_ISY] = isy
-    await _async_get_or_create_isy_device_in_registry(hass, entry, isy)
+    _async_get_or_create_isy_device_in_registry(hass, entry, isy)
 
     # Load platforms for the devices in the ISY controller that we support.
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
@@ -251,11 +251,20 @@ def _async_import_options_from_data_if_missing(
         hass.config_entries.async_update_entry(entry, options=options)
 
 
-async def _async_get_or_create_isy_device_in_registry(
+@callback
+def _async_isy_to_configuration_url(isy: ISY) -> str:
+    """Extract the configuration url from the isy."""
+    connection_info = isy.conn.connection_info
+    proto = "https" if "tls" in connection_info else "http"
+    return f"{proto}://{connection_info['addr']}:{connection_info['port']}"
+
+
+@callback
+def _async_get_or_create_isy_device_in_registry(
     hass: HomeAssistant, entry: config_entries.ConfigEntry, isy
 ) -> None:
-    device_registry = await dr.async_get_registry(hass)
-
+    device_registry = dr.async_get(hass)
+    url = _async_isy_to_configuration_url(isy)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, isy.configuration["uuid"])},
@@ -264,6 +273,7 @@ async def _async_get_or_create_isy_device_in_registry(
         name=isy.configuration["name"],
         model=isy.configuration["model"],
         sw_version=isy.configuration["firmware"],
+        configuration_url=url,
     )
 
 

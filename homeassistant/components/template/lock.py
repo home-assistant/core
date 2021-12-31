@@ -22,8 +22,12 @@ from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.script import Script
 
-from .const import CONF_AVAILABILITY_TEMPLATE
-from .template_entity import TemplateEntity
+from .const import DOMAIN
+from .template_entity import (
+    TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY,
+    TemplateEntity,
+    rewrite_common_legacy_to_modern_conf,
+)
 
 CONF_LOCK = "lock"
 CONF_UNLOCK = "unlock"
@@ -37,31 +41,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_LOCK): cv.SCRIPT_SCHEMA,
         vol.Required(CONF_UNLOCK): cv.SCRIPT_SCHEMA,
         vol.Required(CONF_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
         vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
-)
+).extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY.schema)
 
 
 async def _async_create_entities(hass, config):
     """Create the Template lock."""
-    device = config.get(CONF_NAME)
-    value_template = config.get(CONF_VALUE_TEMPLATE)
-    availability_template = config.get(CONF_AVAILABILITY_TEMPLATE)
-
-    return [
-        TemplateLock(
-            hass,
-            device,
-            value_template,
-            availability_template,
-            config.get(CONF_LOCK),
-            config.get(CONF_UNLOCK),
-            config.get(CONF_OPTIMISTIC),
-            config.get(CONF_UNIQUE_ID),
-        )
-    ]
+    config = rewrite_common_legacy_to_modern_conf(config)
+    return [TemplateLock(hass, config, config.get(CONF_UNIQUE_ID))]
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -75,23 +64,17 @@ class TemplateLock(TemplateEntity, LockEntity):
     def __init__(
         self,
         hass,
-        name,
-        value_template,
-        availability_template,
-        command_lock,
-        command_unlock,
-        optimistic,
+        config,
         unique_id,
     ):
         """Initialize the lock."""
-        super().__init__(availability_template=availability_template)
+        super().__init__(config=config)
         self._state = None
-        self._name = name
-        self._state_template = value_template
-        domain = __name__.split(".")[-2]
-        self._command_lock = Script(hass, command_lock, name, domain)
-        self._command_unlock = Script(hass, command_unlock, name, domain)
-        self._optimistic = optimistic
+        self._name = name = config.get(CONF_NAME)
+        self._state_template = config.get(CONF_VALUE_TEMPLATE)
+        self._command_lock = Script(hass, config[CONF_LOCK], name, DOMAIN)
+        self._command_unlock = Script(hass, config[CONF_UNLOCK], name, DOMAIN)
+        self._optimistic = config.get(CONF_OPTIMISTIC)
         self._unique_id = unique_id
 
     @property

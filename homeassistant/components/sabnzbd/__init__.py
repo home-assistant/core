@@ -22,7 +22,7 @@ from homeassistant.const import (
     DATA_MEGABYTES,
     DATA_RATE_MEGABYTES_PER_SECOND,
 )
-from homeassistant.core import callback
+from homeassistant.core import ServiceCall, callback
 from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -206,8 +206,7 @@ async def async_setup(hass, config):
 
     discovery.async_listen(hass, SERVICE_SABNZBD, sabnzbd_discovered)
 
-    conf = config.get(DOMAIN)
-    if conf is not None:
+    if (conf := config.get(DOMAIN)) is not None:
         use_ssl = conf[CONF_SSL]
         name = conf.get(CONF_NAME)
         api_key = conf.get(CONF_API_KEY)
@@ -226,7 +225,7 @@ def async_setup_sabnzbd(hass, sab_api, config, name):
             discovery.async_load_platform(hass, "sensor", DOMAIN, {}, config)
         )
 
-    async def async_service_handler(service):
+    async def async_service_handler(service: ServiceCall) -> None:
         """Handle service calls."""
         if service.service == SERVICE_PAUSE:
             await sab_api_data.async_pause_queue()

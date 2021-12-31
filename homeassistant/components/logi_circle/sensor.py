@@ -13,6 +13,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.util.dt import as_local
 
@@ -56,15 +57,15 @@ class LogiSensor(SensorEntity):
         self._tz = time_zone
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return information about the device."""
-        return {
-            "name": self._camera.name,
-            "identifiers": {(LOGI_CIRCLE_DOMAIN, self._camera.id)},
-            "model": self._camera.model_name,
-            "sw_version": self._camera.firmware,
-            "manufacturer": DEVICE_BRAND,
-        }
+        return DeviceInfo(
+            identifiers={(LOGI_CIRCLE_DOMAIN, self._camera.id)},
+            manufacturer=DEVICE_BRAND,
+            model=self._camera.model_name,
+            name=self._camera.name,
+            sw_version=self._camera.firmware,
+        )
 
     @property
     def extra_state_attributes(self):

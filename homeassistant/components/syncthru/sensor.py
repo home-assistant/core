@@ -1,23 +1,18 @@
 """Support for Samsung Printers with SyncThru web interface."""
-
-import logging
+from __future__ import annotations
 
 from pysyncthru import SyncThru, SyncthruState
-import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_NAME, CONF_RESOURCE, CONF_URL, PERCENTAGE
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.const import CONF_NAME, PERCENTAGE
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
 from . import device_identifiers
-from .const import DEFAULT_MODEL, DEFAULT_NAME_TEMPLATE, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN
 
 COLORS = ["black", "cyan", "magenta", "yellow"]
 DRUM_COLORS = COLORS
@@ -39,34 +34,6 @@ SYNCTHRU_STATE_HUMAN = {
     SyncthruState.TESTING: "testing",
     SyncthruState.ERROR: "error",
 }
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_RESOURCE): cv.url,
-        vol.Optional(
-            CONF_NAME, default=DEFAULT_NAME_TEMPLATE.format(DEFAULT_MODEL)
-        ): cv.string,
-    }
-)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the SyncThru component."""
-    _LOGGER.warning(
-        "Loading syncthru via platform config is deprecated and no longer "
-        "necessary as of 0.113; Please remove it from your configuration YAML"
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={
-                CONF_URL: config.get(CONF_RESOURCE),
-                CONF_NAME: config.get(CONF_NAME),
-            },
-        )
-    )
-    return True
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -129,9 +96,13 @@ class SyncThruSensor(CoordinatorEntity, SensorEntity):
         return self._unit_of_measurement
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo | None:
         """Return device information."""
-        return {"identifiers": device_identifiers(self.syncthru)}
+        if (identifiers := device_identifiers(self.syncthru)) is None:
+            return None
+        return DeviceInfo(
+            identifiers=identifiers,
+        )
 
 
 class SyncThruMainSensor(SyncThruSensor):

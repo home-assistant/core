@@ -55,8 +55,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         config.get(CONF_FOLDER),
     )
 
-    value_template = config.get(CONF_VALUE_TEMPLATE)
-    if value_template is not None:
+    if (value_template := config.get(CONF_VALUE_TEMPLATE)) is not None:
         value_template.hass = hass
     sensor = EmailContentSensor(
         hass,

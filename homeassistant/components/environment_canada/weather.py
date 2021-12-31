@@ -1,6 +1,7 @@
 """Platform for retrieving meteorological data from Environment Canada."""
+from __future__ import annotations
+
 import datetime
-import logging
 import re
 
 import voluptuous as vol
@@ -23,19 +24,13 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_TEMP,
     ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_TIME,
-    PLATFORM_SCHEMA,
     WeatherEntity,
 )
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_CELSIUS
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import TEMP_CELSIUS
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt
 
-from . import trigger_import
-from .const import CONF_ATTRIBUTION, CONF_STATION, DOMAIN
-
-CONF_FORECAST = "forecast"
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN
 
 
 def validate_station(station):
@@ -46,16 +41,6 @@ def validate_station(station):
         raise vol.Invalid('Station ID must be of the form "XX/s0000###"')
     return station
 
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_STATION): validate_station,
-        vol.Inclusive(CONF_LATITUDE, "latlon"): cv.latitude,
-        vol.Inclusive(CONF_LONGITUDE, "latlon"): cv.longitude,
-        vol.Optional(CONF_FORECAST, default="daily"): vol.In(["daily", "hourly"]),
-    }
-)
 
 # Icon codes from http://dd.weatheroffice.ec.gc.ca/citypage_weather/
 # docs/current_conditions_icon_code_descriptions_e.csv
@@ -75,50 +60,27 @@ ICON_CONDITION_MAP = {
 }
 
 
-async def async_setup_platform(hass, config, async_add_entries, discovery_info=None):
-    """Set up the Environment Canada weather."""
-    trigger_import(hass, config)
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add a weather entity from a config_entry."""
-    weather_data = hass.data[DOMAIN][config_entry.entry_id]["weather_data"]
-
-    async_add_entities(
-        [
-            ECWeather(
-                weather_data,
-                f"{config_entry.title}",
-                config_entry.data,
-                "daily",
-                f"{config_entry.unique_id}-daily",
-            ),
-            ECWeather(
-                weather_data,
-                f"{config_entry.title} Hourly",
-                config_entry.data,
-                "hourly",
-                f"{config_entry.unique_id}-hourly",
-            ),
-        ]
-    )
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]["weather_coordinator"]
+    async_add_entities([ECWeather(coordinator, False), ECWeather(coordinator, True)])
 
 
-class ECWeather(WeatherEntity):
+class ECWeather(CoordinatorEntity, WeatherEntity):
     """Representation of a weather condition."""
 
-    def __init__(self, ec_data, name, config, forecast_type, unique_id):
+    def __init__(self, coordinator, hourly):
         """Initialize Environment Canada weather."""
-        self.ec_data = ec_data
-        self.config = config
-        self._attr_name = name
-        self._attr_unique_id = unique_id
-        self.forecast_type = forecast_type
-
-    @property
-    def attribution(self):
-        """Return the attribution."""
-        return CONF_ATTRIBUTION
+        super().__init__(coordinator)
+        self.ec_data = coordinator.ec_data
+        self._attr_attribution = self.ec_data.metadata["attribution"]
+        self._attr_name = (
+            f"{coordinator.config_entry.title}{' Hourly' if hourly else ''}"
+        )
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.unique_id}{'-hourly' if hourly else '-daily'}"
+        )
+        self._hourly = hourly
 
     @property
     def temperature(self):
@@ -190,18 +152,14 @@ class ECWeather(WeatherEntity):
     @property
     def forecast(self):
         """Return the forecast array."""
-        return get_forecast(self.ec_data, self.forecast_type)
-
-    def update(self):
-        """Get the latest data from Environment Canada."""
-        self.ec_data.update()
+        return get_forecast(self.ec_data, self._hourly)
 
 
-def get_forecast(ec_data, forecast_type):
+def get_forecast(ec_data, hourly):
     """Build the forecast array."""
     forecast_array = []
 
-    if forecast_type == "daily":
+    if not hourly:
         if not (half_days := ec_data.daily_forecasts):
             return None
 
@@ -251,15 +209,11 @@ def get_forecast(ec_data, forecast_type):
                 }
             )
 
-    elif forecast_type == "hourly":
+    else:
         for hour in ec_data.hourly_forecasts:
             forecast_array.append(
                 {
-                    ATTR_FORECAST_TIME: datetime.datetime.strptime(
-                        hour["period"], "%Y%m%d%H%M%S"
-                    )
-                    .replace(tzinfo=dt.UTC)
-                    .isoformat(),
+                    ATTR_FORECAST_TIME: hour["period"],
                     ATTR_FORECAST_TEMP: int(hour["temperature"]),
                     ATTR_FORECAST_CONDITION: icon_code_to_condition(
                         int(hour["icon_code"])

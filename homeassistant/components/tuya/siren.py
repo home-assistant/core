@@ -27,6 +27,14 @@ SIRENS: dict[str, tuple[SirenEntityDescription, ...]] = {
             name="Siren",
         ),
     ),
+    # Smart Camera
+    # https://developer.tuya.com/en/docs/iot/categorysp?id=Kaiuz35leyo12
+    "sp": (
+        SirenEntityDescription(
+            key=DPCode.SIREN_SWITCH,
+            name="Siren",
+        ),
+    ),
 }
 
 

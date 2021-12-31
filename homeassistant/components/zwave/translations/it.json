@@ -5,7 +5,7 @@
             "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
         },
         "error": {
-            "option_error": "Convalida Z-Wave fallita. Il percorso della chiavetta USB \u00e8 corretto?"
+            "option_error": "Convalida Z-Wave non riuscita. Il percorso della chiavetta USB \u00e8 corretto?"
         },
         "step": {
             "user": {

@@ -8,17 +8,17 @@ from typing import Final
 from pyfritzhome.fritzhomedevice import FritzhomeDevice
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_WINDOW,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import FritzBoxEntity
 from .const import CONF_COORDINATOR, DOMAIN as FRITZBOX_DOMAIN
+from .coordinator import FritzboxDataUpdateCoordinator
 from .model import FritzEntityDescriptionMixinBase
 
 
@@ -40,7 +40,7 @@ BINARY_SENSOR_TYPES: Final[tuple[FritzBinarySensorEntityDescription, ...]] = (
     FritzBinarySensorEntityDescription(
         key="alarm",
         name="Alarm",
-        device_class=DEVICE_CLASS_WINDOW,
+        device_class=BinarySensorDeviceClass.WINDOW,
         suitable=lambda device: device.has_alarm,  # type: ignore[no-any-return]
         is_on=lambda device: device.alert_state,  # type: ignore[no-any-return]
     ),
@@ -70,7 +70,7 @@ class FritzboxBinarySensor(FritzBoxEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[dict[str, FritzhomeDevice]],
+        coordinator: FritzboxDataUpdateCoordinator,
         ain: str,
         entity_description: FritzBinarySensorEntityDescription,
     ) -> None:

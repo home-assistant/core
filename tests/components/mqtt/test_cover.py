@@ -2401,10 +2401,10 @@ async def test_discovery_removal_cover(hass, mqtt_mock, caplog):
 
 async def test_discovery_update_cover(hass, mqtt_mock, caplog):
     """Test update of discovered cover."""
-    data1 = '{ "name": "Beer", "command_topic": "test_topic" }'
-    data2 = '{ "name": "Milk", "command_topic": "test_topic" }'
+    config1 = {"name": "Beer", "command_topic": "test_topic"}
+    config2 = {"name": "Milk", "command_topic": "test_topic"}
     await help_test_discovery_update(
-        hass, mqtt_mock, caplog, cover.DOMAIN, data1, data2
+        hass, mqtt_mock, caplog, cover.DOMAIN, config1, config2
     )
 
 

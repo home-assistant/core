@@ -4,6 +4,20 @@
       "pick_implementation": {
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
       },
+      "auth": {
+        "title": "Link Google Account",
+        "description": "To link your Google account, [authorize your account]({url}).\n\nAfter authorization, copy-paste the provided Auth Token code below.",
+        "data": {
+          "code": "[%key:common::config_flow::data::access_token%]"
+        }
+      },
+      "pubsub": {
+        "title": "Configure Google Cloud",
+        "description": "Visit the [Cloud Console]({url}) to find your Google Cloud Project ID.",
+        "data": {
+          "cloud_project_id": "Google Cloud Project ID"
+        }
+      },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
         "description": "The Nest integration needs to re-authenticate your account"
@@ -27,7 +41,10 @@
       "timeout": "Timeout validating code",
       "invalid_pin": "Invalid [%key:common::config_flow::data::pin%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "internal_error": "Internal error validating code"
+      "internal_error": "Internal error validating code",
+      "bad_project_id": "Please enter a valid Cloud Project ID (check Cloud Console)",
+      "wrong_project_id": "Please enter a valid Cloud Project ID (found Device Access Project ID)",
+      "subscriber_error": "Unknown subscriber error, see logs"
     },
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
@@ -35,7 +52,8 @@
       "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
       "unknown_authorize_url_generation": "[%key:common::config_flow::abort::unknown_authorize_url_generation%]",
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]"
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"

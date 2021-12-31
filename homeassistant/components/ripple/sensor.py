@@ -62,7 +62,5 @@ class RippleSensor(SensorEntity):
 
     def update(self):
         """Get the latest state of the sensor."""
-
-        balance = get_balance(self.address)
-        if balance is not None:
+        if (balance := get_balance(self.address)) is not None:
             self._state = balance

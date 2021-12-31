@@ -1,5 +1,9 @@
 """Demo platform for the Device tracker component."""
+from __future__ import annotations
+
 import random
+
+from homeassistant.core import ServiceCall
 
 from .const import DOMAIN, SERVICE_RANDOMIZE_DEVICE_TRACKER_DATA
 
@@ -21,7 +25,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
             battery=random.randrange(10, 90),
         )
 
-    def observe(call=None):
+    def observe(call: ServiceCall | None = None) -> None:
         """Observe three entities."""
         random_see("demo_paulus", "Paulus")
         random_see("demo_anne_therese", "Anne Therese")

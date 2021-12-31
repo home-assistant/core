@@ -2,13 +2,14 @@
 from __future__ import annotations
 
 import asyncio
+from http import HTTPStatus
 import json
 import logging
 
 import aiohttp
 import async_timeout
 
-from homeassistant.const import HTTP_ACCEPTED, MATCH_ALL, STATE_ON
+from homeassistant.const import MATCH_ALL, STATE_ON
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.significant_change import create_checker
 import homeassistant.util.dt as dt_util
@@ -131,7 +132,7 @@ async def async_send_changereport_message(
     session = hass.helpers.aiohttp_client.async_get_clientsession()
 
     try:
-        with async_timeout.timeout(DEFAULT_TIMEOUT):
+        async with async_timeout.timeout(DEFAULT_TIMEOUT):
             response = await session.post(
                 config.endpoint,
                 headers=headers,
@@ -148,7 +149,7 @@ async def async_send_changereport_message(
     _LOGGER.debug("Sent: %s", json.dumps(message_serialized))
     _LOGGER.debug("Received (%s): %s", response.status, response_text)
 
-    if response.status == HTTP_ACCEPTED:
+    if response.status == HTTPStatus.ACCEPTED:
         return
 
     response_json = json.loads(response_text)
@@ -181,12 +182,13 @@ async def async_send_add_or_update_message(hass, config, entity_ids):
     endpoints = []
 
     for entity_id in entity_ids:
-        domain = entity_id.split(".", 1)[0]
-
-        if domain not in ENTITY_ADAPTERS:
+        if (domain := entity_id.split(".", 1)[0]) not in ENTITY_ADAPTERS:
             continue
 
-        alexa_entity = ENTITY_ADAPTERS[domain](hass, config, hass.states.get(entity_id))
+        if (state := hass.states.get(entity_id)) is None:
+            continue
+
+        alexa_entity = ENTITY_ADAPTERS[domain](hass, config, state)
         endpoints.append(alexa_entity.serialize_discovery())
 
     payload = {"endpoints": endpoints, "scope": {"type": "BearerToken", "token": token}}
@@ -262,7 +264,7 @@ async def async_send_doorbell_event_message(hass, config, alexa_entity):
     session = hass.helpers.aiohttp_client.async_get_clientsession()
 
     try:
-        with async_timeout.timeout(DEFAULT_TIMEOUT):
+        async with async_timeout.timeout(DEFAULT_TIMEOUT):
             response = await session.post(
                 config.endpoint,
                 headers=headers,
@@ -279,7 +281,7 @@ async def async_send_doorbell_event_message(hass, config, alexa_entity):
     _LOGGER.debug("Sent: %s", json.dumps(message_serialized))
     _LOGGER.debug("Received (%s): %s", response.status, response_text)
 
-    if response.status == HTTP_ACCEPTED:
+    if response.status == HTTPStatus.ACCEPTED:
         return
 
     response_json = json.loads(response_text)

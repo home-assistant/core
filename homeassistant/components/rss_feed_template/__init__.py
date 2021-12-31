@@ -43,8 +43,7 @@ def setup(hass, config):
 
         requires_auth = feedconfig.get("requires_api_password")
 
-        title = feedconfig.get("title")
-        if title is not None:
+        if (title := feedconfig.get("title")) is not None:
             title.hass = hass
 
         items = feedconfig.get("items")

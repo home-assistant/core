@@ -7,8 +7,8 @@ import abodepy.helpers.timeline as TIMELINE
 from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     ATTR_DATE,
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
@@ -16,11 +16,13 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import ATTRIBUTION, DEFAULT_CACHEDB, DOMAIN, LOGGER
 
@@ -42,7 +44,7 @@ ATTR_APP_TYPE = "app_type"
 ATTR_EVENT_BY = "event_by"
 ATTR_VALUE = "value"
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 CHANGE_SETTING_SCHEMA = vol.Schema(
     {vol.Required(ATTR_SETTING): cv.string, vol.Required(ATTR_VALUE): cv.string}
@@ -53,14 +55,14 @@ CAPTURE_IMAGE_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids})
 AUTOMATION_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids})
 
 PLATFORMS = [
-    "alarm_control_panel",
-    "binary_sensor",
-    "lock",
-    "switch",
-    "cover",
-    "camera",
-    "light",
-    "sensor",
+    Platform.ALARM_CONTROL_PANEL,
+    Platform.BINARY_SENSOR,
+    Platform.LOCK,
+    Platform.SWITCH,
+    Platform.COVER,
+    Platform.CAMERA,
+    Platform.LIGHT,
+    Platform.SENSOR,
 ]
 
 
@@ -75,7 +77,7 @@ class AbodeSystem:
         self.logout_listener = None
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up Abode integration from a config entry."""
     username = config_entry.data.get(CONF_USERNAME)
     password = config_entry.data.get(CONF_PASSWORD)
@@ -110,7 +112,7 @@ async def async_setup_entry(hass, config_entry):
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     hass.services.async_remove(DOMAIN, SERVICE_SETTINGS)
     hass.services.async_remove(DOMAIN, SERVICE_CAPTURE_IMAGE)
@@ -129,22 +131,22 @@ async def async_unload_entry(hass, config_entry):
     return unload_ok
 
 
-def setup_hass_services(hass):
+def setup_hass_services(hass: HomeAssistant) -> None:
     """Home Assistant services."""
 
-    def change_setting(call):
+    def change_setting(call: ServiceCall) -> None:
         """Change an Abode system setting."""
-        setting = call.data.get(ATTR_SETTING)
-        value = call.data.get(ATTR_VALUE)
+        setting = call.data[ATTR_SETTING]
+        value = call.data[ATTR_VALUE]
 
         try:
             hass.data[DOMAIN].abode.set_setting(setting, value)
         except AbodeException as ex:
             LOGGER.warning(ex)
 
-    def capture_image(call):
+    def capture_image(call: ServiceCall) -> None:
         """Capture a new image."""
-        entity_ids = call.data.get(ATTR_ENTITY_ID)
+        entity_ids = call.data[ATTR_ENTITY_ID]
 
         target_entities = [
             entity_id
@@ -156,9 +158,9 @@ def setup_hass_services(hass):
             signal = f"abode_camera_capture_{entity_id}"
             dispatcher_send(hass, signal)
 
-    def trigger_automation(call):
+    def trigger_automation(call: ServiceCall) -> None:
         """Trigger an Abode automation."""
-        entity_ids = call.data.get(ATTR_ENTITY_ID)
+        entity_ids = call.data[ATTR_ENTITY_ID]
 
         target_entities = [
             entity_id
@@ -183,7 +185,7 @@ def setup_hass_services(hass):
     )
 
 
-async def setup_hass_events(hass):
+async def setup_hass_events(hass: HomeAssistant) -> None:
     """Home Assistant start and stop callbacks."""
 
     def logout(event):
@@ -202,7 +204,7 @@ async def setup_hass_events(hass):
     )
 
 
-def setup_abode_events(hass):
+def setup_abode_events(hass: HomeAssistant) -> None:
     """Event callbacks."""
 
     def event_callback(event, event_json):
@@ -247,16 +249,12 @@ def setup_abode_events(hass):
 class AbodeEntity(Entity):
     """Representation of an Abode entity."""
 
+    _attr_attribution = ATTRIBUTION
+
     def __init__(self, data):
         """Initialize Abode entity."""
         self._data = data
-        self._available = True
         self._attr_should_poll = data.polling
-
-    @property
-    def available(self):
-        """Return the available state."""
-        return self._available
 
     async def async_added_to_hass(self):
         """Subscribe to Abode connection status updates."""
@@ -276,7 +274,7 @@ class AbodeEntity(Entity):
 
     def _update_connection_status(self):
         """Update the entity available property."""
-        self._available = self._data.abode.events.connected
+        self._attr_available = self._data.abode.events.connected
         self.schedule_update_ha_state()
 
 
@@ -314,7 +312,6 @@ class AbodeDevice(AbodeEntity):
     def extra_state_attributes(self):
         """Return the state attributes."""
         return {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
             "device_id": self._device.device_id,
             "battery_low": self._device.battery_low,
             "no_response": self._device.no_response,
@@ -322,14 +319,14 @@ class AbodeDevice(AbodeEntity):
         }
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device registry information for this entity."""
-        return {
-            "identifiers": {(DOMAIN, self._device.device_id)},
-            "manufacturer": "Abode",
-            "name": self._device.name,
-            "device_type": self._device.type,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._device.device_id)},
+            manufacturer="Abode",
+            model=self._device.type,
+            name=self._device.name,
+        )
 
     def _update_callback(self, device):
         """Update the device state."""
@@ -346,7 +343,6 @@ class AbodeAutomation(AbodeEntity):
         self._attr_name = automation.name
         self._attr_unique_id = automation.automation_id
         self._attr_extra_state_attributes = {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
             "type": "CUE automation",
         }
 

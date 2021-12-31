@@ -150,6 +150,7 @@ async def test_device_discover(
         set(), {(dr.CONNECTION_NETWORK_MAC, mac)}
     )
     assert device_entry is not None
+    assert device_entry.configuration_url == f"http://{config['ip']}/"
     assert device_entry.manufacturer == "Tasmota"
     assert device_entry.model == config["md"]
     assert device_entry.name == config["dn"]

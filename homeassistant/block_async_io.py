@@ -1,7 +1,7 @@
 """Block I/O being done in asyncio."""
 from http.client import HTTPConnection
 
-from homeassistant.util.async_ import protect_loop
+from .util.async_ import protect_loop
 
 
 def enable() -> None:

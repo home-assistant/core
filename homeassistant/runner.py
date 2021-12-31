@@ -5,13 +5,14 @@ import asyncio
 import dataclasses
 import logging
 import threading
+import traceback
 from typing import Any
 
-from homeassistant import bootstrap
-from homeassistant.core import callback
-from homeassistant.helpers.frame import warn_use
-from homeassistant.util.executor import InterruptibleThreadPoolExecutor
-from homeassistant.util.thread import deadlock_safe_shutdown
+from . import bootstrap
+from .core import callback
+from .helpers.frame import warn_use
+from .util.executor import InterruptibleThreadPoolExecutor
+from .util.thread import deadlock_safe_shutdown
 
 # mypy: disallow-any-generics
 
@@ -86,9 +87,15 @@ def _async_loop_exception_handler(_: Any, context: dict[str, Any]) -> None:
     if exception := context.get("exception"):
         kwargs["exc_info"] = (type(exception), exception, exception.__traceback__)
 
-    logging.getLogger(__package__).error(
-        "Error doing job: %s", context["message"], **kwargs  # type: ignore
-    )
+    logger = logging.getLogger(__package__)
+    if source_traceback := context.get("source_traceback"):
+        stack_summary = "".join(traceback.format_list(source_traceback))
+        logger.error(
+            "Error doing job: %s: %s", context["message"], stack_summary, **kwargs  # type: ignore
+        )
+        return
+
+    logger.error("Error doing job: %s", context["message"], **kwargs)  # type: ignore
 
 
 async def setup_and_run_hass(runtime_config: RuntimeConfig) -> int:

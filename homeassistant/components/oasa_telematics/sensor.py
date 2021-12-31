@@ -6,8 +6,12 @@ from operator import itemgetter
 import oasatelematics
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, DEVICE_CLASS_TIMESTAMP
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
+)
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt as dt_util
 
@@ -70,7 +74,7 @@ class OASATelematicsSensor(SensorEntity):
     @property
     def device_class(self):
         """Return the class of this sensor."""
-        return DEVICE_CLASS_TIMESTAMP
+        return SensorDeviceClass.TIMESTAMP
 
     @property
     def native_value(self):
@@ -120,7 +124,7 @@ class OASATelematicsSensor(SensorEntity):
         self._name_data = self.data.name_data
         next_arrival_data = self._times[0]
         if ATTR_NEXT_ARRIVAL in next_arrival_data:
-            self._state = next_arrival_data[ATTR_NEXT_ARRIVAL].isoformat()
+            self._state = next_arrival_data[ATTR_NEXT_ARRIVAL]
 
 
 class OASATelematicsData:
@@ -176,8 +180,7 @@ class OASATelematicsData:
         current_time = dt_util.utcnow()
 
         for result in results:
-            btime2 = result.get("btime2")
-            if btime2 is not None:
+            if (btime2 := result.get("btime2")) is not None:
                 arrival_min = int(btime2)
                 timestamp = current_time + timedelta(minutes=arrival_min)
                 arrival_data = {

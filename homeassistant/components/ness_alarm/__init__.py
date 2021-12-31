@@ -5,7 +5,10 @@ import datetime
 from nessclient import ArmingState, Client
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import DEVICE_CLASSES
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
+    BinarySensorDeviceClass,
+)
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_STATE,
@@ -13,6 +16,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_STOP,
 )
+from homeassistant.core import ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -36,12 +40,14 @@ SIGNAL_ARMING_STATE_CHANGED = "ness_alarm.arming_state_changed"
 
 ZoneChangedData = namedtuple("ZoneChangedData", ["zone_id", "state"])
 
-DEFAULT_ZONE_TYPE = "motion"
+DEFAULT_ZONE_TYPE = BinarySensorDeviceClass.MOTION
 ZONE_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ZONE_NAME): cv.string,
         vol.Required(CONF_ZONE_ID): cv.positive_int,
-        vol.Optional(CONF_ZONE_TYPE, default=DEFAULT_ZONE_TYPE): vol.In(DEVICE_CLASSES),
+        vol.Optional(
+            CONF_ZONE_TYPE, default=DEFAULT_ZONE_TYPE
+        ): BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
     }
 )
 
@@ -127,10 +133,10 @@ async def async_setup(hass, config):
     hass.loop.create_task(client.keepalive())
     hass.loop.create_task(client.update())
 
-    async def handle_panic(call):
+    async def handle_panic(call: ServiceCall) -> None:
         await client.panic(call.data[ATTR_CODE])
 
-    async def handle_aux(call):
+    async def handle_aux(call: ServiceCall) -> None:
         await client.aux(call.data[ATTR_OUTPUT_ID], call.data[ATTR_STATE])
 
     hass.services.async_register(

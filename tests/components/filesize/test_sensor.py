@@ -10,6 +10,8 @@ from homeassistant.components.filesize.sensor import CONF_FILE_PATHS
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.setup import async_setup_component
 
+from tests.common import get_fixture_path
+
 TEST_DIR = os.path.join(os.path.dirname(__file__))
 TEST_FILE = os.path.join(TEST_DIR, "mock_file_test_filesize.txt")
 
@@ -70,11 +72,7 @@ async def test_reload(hass, tmpdir):
 
     assert hass.states.get("sensor.file")
 
-    yaml_path = os.path.join(
-        _get_fixtures_base_path(),
-        "fixtures",
-        "filesize/configuration.yaml",
-    )
+    yaml_path = get_fixture_path("configuration.yaml", "filesize")
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path), patch.object(
         hass.config, "is_allowed_path", return_value=True
     ):
@@ -87,7 +85,3 @@ async def test_reload(hass, tmpdir):
         await hass.async_block_till_done()
 
     assert hass.states.get("sensor.file") is None
-
-
-def _get_fixtures_base_path():
-    return os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
