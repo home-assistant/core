@@ -352,6 +352,9 @@ aioraven==0.5.0
 # homeassistant.components.recollect_waste
 aiorecollect==2023.09.0
 
+# homeassistant.components.remootio
+aioremootio==1.0.0a11
+
 # homeassistant.components.ridwell
 aioridwell==2024.01.0
 

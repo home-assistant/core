@@ -1,0 +1,37 @@
+{
+  "title": "Remootio",
+  "config": {
+    "flow_title": "Remootio",
+    "step": {
+      "user": {
+        "title": "Remootio integration :: Settings",
+        "description": "To use this integration with your Remootio device it has to be connected to your Wi-Fi, must have a fixed IP address assigned and a status sensor installed. Furthermore the API access must be enabled on the device.\n\nTo enable the API access on the device you need to access the device using the master key via the Remootio app, afterwards go to the _Websocket API_ settings in the _Device software_ section of the device settings and enbale the API with logging.\nAfter enabling the API the app will display the device's IP address and the credentials needed for API access.\n\nPlease enable the API on your Remootio device and enter the IP address and credentials shown by the app.",
+        "data": {
+          "ip_address": "[%key:common::config_flow::data::ip%]",
+          "api_scrt_key": "API Secret Key",
+          "api_auth_key": "API Auth Key",
+          "device_class": "Controlled device's class"
+        }
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "unsupported_device": "Your Remootio device isn't supported. Please update the software on your device at least to v2.21 and install the sensor for detecting if your gate is open or closed."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "user_input_incomplete": "Please complete the setup of your Remootio device.",
+      "ip_address_required": "IP address is required",
+      "ip_address_invalid": "IP address appears to be invalid",
+      "api_scrt_key_required": "API Secret Key is required",
+      "api_scrt_key_invalid": "API Secret Key appears to be invalid, it must be a character sequence of 64 characters and can contain only numbers and english letters",
+      "api_auth_key_required": "API Auth Key is required",
+      "api_auth_key_invalid": "API Auth Key appears to be invalid, it must be a character sequence of 64 characters and can contain only numbers and english letters",
+      "device_class_required": "Controlled device's class is required",
+      "device_class_invalid": "Controlled device's appears to be invalid"
+    }
+  }
+}
