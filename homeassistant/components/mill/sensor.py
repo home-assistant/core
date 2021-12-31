@@ -202,6 +202,18 @@ class LocalMillSensor(CoordinatorEntity, SensorEntity):
         self._attr_name = (
             f"{coordinator.mill_data_connection.name} {entity_description.name}"
         )
+        if coordinator.mill_data_connection.mac_address:
+            self._attr_unique_id = f"{coordinator.mill_data_connection.mac_address}_{entity_description.key}"
+            self._attr_device_info = DeviceInfo(
+                identifiers={
+                    (DOMAIN, self.coordinator.mill_data_connection.mac_address)
+                },
+                configuration_url=self.coordinator.mill_data_connection.url,
+                manufacturer=MANUFACTURER,
+                model="Generation 3",
+                name=coordinator.mill_data_connection.name,
+                sw_version=coordinator.mill_data_connection.version,
+            )
 
     @property
     def native_value(self):
