@@ -1,8 +1,8 @@
 """Common code for tplink."""
 from __future__ import annotations
 
-from collections.abc import Awaitable
-from typing import Callable, TypeVar
+from collections.abc import Awaitable, Callable
+from typing import TypeVar
 
 from kasa import SmartDevice
 from typing_extensions import Concatenate, ParamSpec

@@ -1,9 +1,10 @@
 """Provide functionality to interact with the vlc telnet interface."""
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 from datetime import datetime
 from functools import wraps
-from typing import Any, Awaitable, Callable, TypeVar
+from typing import Any, TypeVar
 
 from aiovlc.client import Client
 from aiovlc.exceptions import AuthError, CommandError, ConnectError

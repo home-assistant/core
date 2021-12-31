@@ -1,8 +1,9 @@
 """Helper methods for common tasks."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import logging
-from typing import TYPE_CHECKING, Callable, TypeVar
+from typing import TYPE_CHECKING, TypeVar
 
 from soco.exceptions import SoCoException, SoCoUPnPException
 from typing_extensions import Concatenate, ParamSpec
@@ -22,7 +23,7 @@ UID_POSTFIX = "01400"
 
 _LOGGER = logging.getLogger(__name__)
 
-_T = TypeVar("_T", SonosSpeaker, SonosEntity)
+_T = TypeVar("_T", "SonosSpeaker", "SonosEntity")
 _R = TypeVar("_R")
 _P = ParamSpec("_P")
 

@@ -1,4 +1,6 @@
 """Utilities for Evil Genius Labs."""
+from __future__ import annotations
+
 from collections.abc import Awaitable, Callable
 from functools import wraps
 from typing import TypeVar

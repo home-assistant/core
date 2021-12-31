@@ -2,11 +2,11 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from enum import Enum
 from functools import partial
-from typing import Any, Callable, TypeVar
+from typing import Any, TypeVar
 
 from typing_extensions import ParamSpec
 

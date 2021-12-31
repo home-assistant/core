@@ -2,11 +2,11 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Sequence
+from collections.abc import Awaitable, Callable, Sequence
 import contextlib
 from datetime import datetime, timedelta
 import functools
-from typing import TYPE_CHECKING, Any, Callable, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from async_upnp_client import UpnpService, UpnpStateVariable
 from async_upnp_client.const import NotificationSubType
