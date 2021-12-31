@@ -93,7 +93,7 @@ async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
     first_entry = MockConfigEntry(
         domain="adax",
         data=TEST_DATA,
-        unique_id=TEST_DATA[ACCOUNT_ID],
+        unique_id=str(TEST_DATA[ACCOUNT_ID]),
     )
     first_entry.add_to_hass(hass)
 
