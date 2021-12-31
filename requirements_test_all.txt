@@ -622,7 +622,7 @@ mficlient==0.3.0
 micloud==0.4
 
 # homeassistant.components.mill
-mill-local==0.1.0
+mill-local==0.1.1
 
 # homeassistant.components.mill
 millheater==0.9.0
