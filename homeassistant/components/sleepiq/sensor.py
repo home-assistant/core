@@ -1,52 +1,50 @@
 """Support for SleepIQ sensors."""
+from typing import Dict
+
+from sleepyq import Bed
+
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_USERNAME
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import SleepIQSensor
-from .const import DOMAIN, SENSOR_TYPES, SIDES, SLEEP_NUMBER
-
-ICON = "mdi:bed"
+from . import DATA_SLEEPIQ, SleepIQBedSideEntity
+from .const import SIDES, SLEEP_NUMBER
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the SleepIQ sensors."""
-    if discovery_info is None:
-        return
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the SleepIQ bed sensors."""
+    coordinator = hass.data[DATA_SLEEPIQ].coordinators[config_entry.data[CONF_USERNAME]]
+    entities = []
 
-    data = hass.data[DOMAIN]
-    data.update()
-
-    dev = []
-    for bed_id, bed in data.beds.items():
+    for bed_id in coordinator.data:
         for side in SIDES:
-            if getattr(bed, side) is not None:
-                dev.append(SleepNumberSensor(data, bed_id, side))
-    add_entities(dev)
+            if getattr(coordinator.data[bed_id], side) is not None:
+                entities.append(SleepNumberSensor(coordinator, bed_id, side))
+
+    async_add_entities(entities, True)
 
 
-class SleepNumberSensor(SleepIQSensor, SensorEntity):
+class SleepNumberSensor(SleepIQBedSideEntity, SensorEntity):
     """Implementation of a SleepIQ sensor."""
 
-    def __init__(self, sleepiq_data, bed_id, side):
-        """Initialize the sensor."""
-        SleepIQSensor.__init__(self, sleepiq_data, bed_id, side)
-
-        self._state = None
-        self.type = SLEEP_NUMBER
-        self._name = SENSOR_TYPES[self.type]
-
-        self.update()
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator[Dict[str, Bed]],
+        bed_id: str,
+        side: str,
+    ) -> None:
+        """Initialize the SleepIQ sleep number sensor."""
+        super().__init__(coordinator, bed_id, side)
+        self._name = SLEEP_NUMBER
 
     @property
-    def native_value(self):
+    def native_value(self) -> int:
         """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return ICON
-
-    def update(self):
-        """Get the latest data from SleepIQ and updates the states."""
-        SleepIQSensor.update(self)
-        self._state = self.side.sleep_number
+        return self._side.sleep_number

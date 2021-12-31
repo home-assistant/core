@@ -273,6 +273,7 @@ FLOWS = [
     "shopping_list",
     "sia",
     "simplisafe",
+    "sleepiq",
     "sma",
     "smappee",
     "smart_meter_texas",

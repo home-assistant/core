@@ -1,6 +1,12 @@
 """Define constants for the SleepIQ component."""
 
+from datetime import timedelta
+
 DOMAIN = "sleepiq"
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)
+CONFIG_ENTRY_UPDATE_SIGNAL_TEMPLATE = f"{DOMAIN}_config_entry_update:" "{}"
+ICON_EMPTY = "mdi:bed-empty"
+ICON_OCCUPIED = "mdi:bed"
 
 IS_IN_BED = "is_in_bed"
 SLEEP_NUMBER = "sleep_number"

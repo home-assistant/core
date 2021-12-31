@@ -1,50 +1,50 @@
-"""Support for SleepIQ sensors."""
+"""Support for SleepIQ binary sensors."""
+from typing import Dict
+
+from sleepyq import Bed
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_USERNAME
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import SleepIQSensor
-from .const import DOMAIN, IS_IN_BED, SENSOR_TYPES, SIDES
+from . import DATA_SLEEPIQ, SleepIQBedSideEntity
+from .const import IS_IN_BED, SIDES
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the SleepIQ sensors."""
-    if discovery_info is None:
-        return
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the SleepIQ bed binary sensors."""
+    coordinator = hass.data[DATA_SLEEPIQ].coordinators[config_entry.data[CONF_USERNAME]]
+    entities = []
 
-    data = hass.data[DOMAIN]
-    data.update()
-
-    dev = []
-    for bed_id, bed in data.beds.items():
+    for bed_id in coordinator.data:
         for side in SIDES:
-            if getattr(bed, side) is not None:
-                dev.append(IsInBedBinarySensor(data, bed_id, side))
-    add_entities(dev)
+            if getattr(coordinator.data[bed_id], side) is not None:
+                entities.append(IsInBedBinarySensor(coordinator, bed_id, side))
+
+    async_add_entities(entities, True)
 
 
-class IsInBedBinarySensor(SleepIQSensor, BinarySensorEntity):
-    """Implementation of a SleepIQ presence sensor."""
+class IsInBedBinarySensor(SleepIQBedSideEntity, BinarySensorEntity):
+    """Representation of a bed side sensor."""
 
-    def __init__(self, sleepiq_data, bed_id, side):
-        """Initialize the sensor."""
-        super().__init__(sleepiq_data, bed_id, side)
-        self._state = None
-        self._name = SENSOR_TYPES[IS_IN_BED]
-        self.update()
+    _attr_device_class = BinarySensorDeviceClass.OCCUPANCY
 
-    @property
-    def is_on(self):
-        """Return the status of the sensor."""
-        return self._state is True
-
-    @property
-    def device_class(self) -> BinarySensorDeviceClass:
-        """Return the class of this sensor."""
-        return BinarySensorDeviceClass.OCCUPANCY
-
-    def update(self):
-        """Get the latest data from SleepIQ and updates the states."""
-        super().update()
-        self._state = self.side.is_in_bed
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator[Dict[str, Bed]],
+        bed_id: str,
+        side: str,
+    ) -> None:
+        """Initialize the SleepIQ bed side binary sensor."""
+        super().__init__(coordinator, bed_id, side)
+        self._name = IS_IN_BED
