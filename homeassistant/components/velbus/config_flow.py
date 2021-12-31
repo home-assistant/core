@@ -53,9 +53,7 @@ class VelbusConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def _prt_in_configuration_exists(self, prt: str) -> bool:
         """Return True if port exists in configuration."""
-        if prt in velbus_entries(self.hass):
-            return True
-        return False
+        return prt in velbus_entries(self.hass)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
