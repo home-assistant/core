@@ -113,7 +113,7 @@ class LookinLightEntity(LookinPowerEntity, LightEntity):
             return
         state = status[0]
 
-        self._attr_is_on = state == "0"
+        self._attr_is_on = state == "1"
 
     def _async_push_update(self, event: UDPEvent) -> None:
         """Process an update pushed via UDP."""
