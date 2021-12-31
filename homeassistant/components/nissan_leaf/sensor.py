@@ -9,6 +9,7 @@ from voluptuous.validators import Number
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -88,6 +89,8 @@ class LeafBatterySensor(LeafEntity, SensorEntity):
 
 class LeafRangeSensor(LeafEntity, SensorEntity):
     """Nissan Leaf Range Sensor."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(self, car: Leaf, ac_on: bool) -> None:
         """Set up range sensor. Store if AC on."""

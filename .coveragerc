@@ -731,7 +731,7 @@ omit =
     homeassistant/components/nfandroidtv/notify.py
     homeassistant/components/niko_home_control/light.py
     homeassistant/components/nilu/air_quality.py
-    homeassistant/components/nissan_leaf/*
+    homeassistant/components/nissan_leaf/__init__.py
     homeassistant/components/nmap_tracker/__init__.py
     homeassistant/components/nmap_tracker/device_tracker.py
     homeassistant/components/nmbs/sensor.py

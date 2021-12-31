@@ -9,13 +9,32 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+
+# from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DATA_CHARGING, DATA_LEAF, DATA_PLUGGED_IN, LeafEntity
 
 _LOGGER = logging.getLogger(__name__)
+
+# async def async_setup_entry(
+#     hass: HomeAssistant,
+#     config_entry: ConfigEntry,
+#     async_add_entities: AddEntitiesCallback,
+# ) -> None:
+#     """Set up of a Nissan Leaf binary sensor from a config entry."""
+
+#     devices = []
+#     for vin, datastore in hass.data[DATA_LEAF].items():
+#         _LOGGER.debug("Adding binary_sensors for vin=%s", vin)
+#         devices.append(LeafPluggedInSensor(datastore))
+#         devices.append(LeafChargingSensor(datastore))
+
+#     async_add_entities()
+#     async_add_entities(devices, True)
 
 
 def setup_platform(
@@ -41,6 +60,7 @@ class LeafPluggedInSensor(LeafEntity, BinarySensorEntity):
     """Plugged In Sensor class."""
 
     _attr_device_class = BinarySensorDeviceClass.PLUG
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(self, car: Leaf) -> None:
         """Set up plug status sensor."""
@@ -67,6 +87,7 @@ class LeafChargingSensor(LeafEntity, BinarySensorEntity):
     """Charging Sensor class."""
 
     _attr_device_class = BinarySensorDeviceClass.BATTERY_CHARGING
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(self, car: Leaf) -> None:
         """Set up charging status sensor."""

@@ -611,6 +611,7 @@ homeassistant/components/nilu/* @hfurubotten
 homeassistant/components/nina/* @DeerMaximum
 tests/components/nina/* @DeerMaximum
 homeassistant/components/nissan_leaf/* @filcole
+tests/components/nissan_leaf/* @filcole
 homeassistant/components/nmbs/* @thibmaek
 homeassistant/components/no_ip/* @fabaff
 tests/components/no_ip/* @fabaff

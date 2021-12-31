@@ -1,0 +1,40 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Already configured. Only a single configuration possible.",
+            "unknown": "Unexpected error",
+            "already_configured": "Account is already configured",
+            "nissan_no_account": "Unable to find Nissan Connect account",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "auth": "AUTH FAILURE - see strings",
+            "cannot_connect": "Failed to connect",
+            "invalid_credentials": "Invalid authentication"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Name",
+                    "password": "Password",
+                    "port": "Port",
+                    "region": "Region",
+                    "ssl": "Uses an SSL certificate",
+                    "username": "Username"
+                },
+                "title": "Connect to Nissan Leaf"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Update frequency (seconds)"
+                }
+            }
+        }
+    }
+}

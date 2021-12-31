@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from http import HTTPStatus
 import logging
 import sys
-from typing import Any, cast
+from typing import Any, Mapping, cast
 
 from pycarwings2 import CarwingsError, Leaf, Session
 from pycarwings2.responses import (
@@ -15,15 +15,15 @@ from pycarwings2.responses import (
 )
 import voluptuous as vol
 
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME, Platform
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, ServiceCall, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.dt import utcnow
@@ -102,101 +102,90 @@ UPDATE_LEAF_SCHEMA = vol.Schema({vol.Required(ATTR_VIN): cv.string})
 START_CHARGE_LEAF_SCHEMA = vol.Schema({vol.Required(ATTR_VIN): cv.string})
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Nissan Leaf integration."""
+async def async_setup(
+    hass: HomeAssistant,
+    config: ConfigType,
+    #    async_add_entities: AddEntitiesCallback,
+    #    discovery_info: DiscoveryInfoType | None = None,
+) -> bool:
+    """Set up the Nissan Leaf integration - allow migration from YAML config."""
 
-    async def async_handle_update(service: ServiceCall) -> None:
-        """Handle service to update leaf data from Nissan servers."""
-        # It would be better if this was changed to use nickname, or
-        # an entity name rather than a vin.
-        vin = service.data[ATTR_VIN]
+    _LOGGER.debug("In async_setup")
 
-        if vin in hass.data[DATA_LEAF]:
-            data_store = hass.data[DATA_LEAF][vin]
-            await data_store.async_update_data(utcnow())
-        else:
-            _LOGGER.debug("Vin %s not recognised for update", vin)
-
-    async def async_handle_start_charge(service: ServiceCall) -> None:
-        """Handle service to start charging."""
-        # It would be better if this was changed to use nickname, or
-        # an entity name rather than a vin.
-        vin = service.data[ATTR_VIN]
-
-        if vin in hass.data[DATA_LEAF]:
-            data_store = hass.data[DATA_LEAF][vin]
-
-            # Send the command to request charging is started to Nissan
-            # servers. If that completes OK then trigger a fresh update to
-            # pull the charging status from the car after waiting a minute
-            # for the charging request to reach the car.
-            result = await hass.async_add_executor_job(data_store.leaf.start_charging)
-            if result:
-                _LOGGER.debug("Start charging sent, request updated data in 1 minute")
-                check_charge_at = utcnow() + timedelta(minutes=1)
-                data_store.next_update = check_charge_at
-                async_track_point_in_utc_time(
-                    hass, data_store.async_update_data, check_charge_at
-                )
-
-        else:
-            _LOGGER.debug("Vin %s not recognised for update", vin)
-
-    def setup_leaf(car_config: dict[str, Any]) -> None:
-        """Set up a car."""
-        _LOGGER.debug("Logging into You+Nissan")
-
-        username: str = car_config[CONF_USERNAME]
-        password: str = car_config[CONF_PASSWORD]
-        region: str = car_config[CONF_REGION]
-
-        try:
-            # This might need to be made async (somehow) causes
-            # homeassistant to be slow to start
-            sess = Session(username, password, region)
-            leaf = sess.get_leaf()
-        except KeyError:
-            _LOGGER.error(
-                "Unable to fetch car details..."
-                " do you actually have a Leaf connected to your account?"
-            )
-            return
-        except CarwingsError:
-            _LOGGER.error(
-                "An unknown error occurred while connecting to Nissan: %s",
-                sys.exc_info()[0],
-            )
-            return
-
-        _LOGGER.warning(
-            "WARNING: This may poll your Leaf too often, and drain the 12V"
-            " battery.  If you drain your cars 12V battery it WILL NOT START"
-            " as the drive train battery won't connect."
-            " Don't set the intervals too low"
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
         )
-
-        data_store = LeafDataStore(hass, leaf, car_config)
-        hass.data[DATA_LEAF][leaf.vin] = data_store
-
-        for platform in PLATFORMS:
-            load_platform(hass, platform, DOMAIN, {}, car_config)
-
-        async_track_point_in_utc_time(
-            hass, data_store.async_update_data, utcnow() + INITIAL_UPDATE
-        )
-
-    hass.data[DATA_LEAF] = {}
-    for car in config[DOMAIN]:
-        setup_leaf(car)
-
-    hass.services.register(
-        DOMAIN, SERVICE_UPDATE_LEAF, async_handle_update, schema=UPDATE_LEAF_SCHEMA
     )
-    hass.services.register(
-        DOMAIN,
-        SERVICE_START_CHARGE_LEAF,
-        async_handle_start_charge,
-        schema=START_CHARGE_LEAF_SCHEMA,
+
+    _LOGGER.warning(
+        "Your Nissan Leaf configuration has been imported into the UI; "
+        "please remove it from configuration.yaml as support for it "
+        "will be removed in a future release"
+    )
+
+    return True
+
+
+def setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Load a config entry."""
+    _LOGGER.debug("Hit setup_entry")
+    _LOGGER.debug("config_entry=%s", config_entry)
+
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Load a config entry."""
+    _LOGGER.debug("Hit async setup_entry")
+    _LOGGER.debug("config_entry=%s", config_entry)
+
+    username = config_entry.data[CONF_USERNAME]
+    _LOGGER.debug("username=%s", username)
+
+    password = config_entry.data[CONF_PASSWORD]
+    _LOGGER.debug("password=%s", password)
+
+    region = config_entry.data[CONF_REGION]
+    _LOGGER.debug("region=%s", region)
+
+    _LOGGER.debug("Creating leaf session")
+
+    # This might need to be made async (somehow) causes
+    # homeassistant to be slow to start
+
+    try:
+        sess = Session(username, password, region)
+
+        _LOGGER.debug("Getting leaf")
+        leaf = await hass.async_add_executor_job(sess.get_leaf)
+
+        _LOGGER.debug("Leaf obtained")
+    except CarwingsError:
+        _LOGGER.error(
+            "An unknown error occurred while connecting to Nissan: %s",
+            sys.exc_info()[0],
+        )
+
+    _LOGGER.warning(
+        "WARNING: This may poll your Leaf too often, and drain the 12V"
+        " battery.  If you drain your cars 12V battery it WILL NOT START"
+        " as the drive train battery won't connect."
+        " Don't set the intervals too low"
+    )
+
+    _LOGGER.debug("leaf=%s", leaf)
+
+    data_store = LeafDataStore(hass, leaf, config_entry.data)
+    hass.data[DATA_LEAF][leaf.vin] = data_store
+
+    for platform in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(config_entry, platform)
+        )
+
+    async_track_point_in_utc_time(
+        hass, data_store.async_update_data, utcnow() + INITIAL_UPDATE
     )
 
     return True
@@ -215,12 +204,18 @@ def _extract_start_date(
         return None
 
 
+def get_timedelta(input: timedelta | int) -> timedelta:
+    """Convert passed input to timedelta (in mins) if not already a timedelta."""
+    if isinstance(input, int):
+        return timedelta(minutes=input)
+    # We must have a timedelta
+    return input
+
+
 class LeafDataStore:
     """Nissan Leaf Data Store."""
 
-    def __init__(
-        self, hass: HomeAssistant, leaf: Leaf, car_config: dict[str, Any]
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, leaf: Leaf, car_config: Mapping) -> None:
         """Initialise the data store."""
         self.hass = hass
         self.leaf = leaf
@@ -263,9 +258,12 @@ class LeafDataStore:
 
     def get_next_interval(self) -> datetime:
         """Calculate when the next update should occur."""
-        base_interval = self.car_config[CONF_INTERVAL]
-        climate_interval = self.car_config[CONF_CLIMATE_INTERVAL]
-        charging_interval = self.car_config[CONF_CHARGING_INTERVAL]
+        # ConfigEntry stores config in minutes, whereas yaml config uses
+        # a timedelta (which cannot be serialised).  Perform a conversion
+        # in get_timedelta whilst the YAML configuration option still exists.
+        base_interval = get_timedelta(self.car_config[CONF_INTERVAL])
+        climate_interval = get_timedelta(self.car_config[CONF_CLIMATE_INTERVAL])
+        charging_interval = get_timedelta(self.car_config[CONF_CHARGING_INTERVAL])
 
         # The 12V battery is used when communicating with Nissan servers.
         # The 12V battery is charged from the traction battery when not
@@ -400,7 +398,7 @@ class LeafDataStore:
                         server_info and start_date != _extract_start_date(server_info)
                     ):
                         return server_info
-                    # get_status_from_update returned {"resultFlag": "1"}
+                    # Get_status_from_update returned {"resultFlag": "1"}
                     # but the data didn't change, make a fresh request.
                     await asyncio.sleep(1)  # Critical sleep
                     request = await self.hass.async_add_executor_job(
@@ -494,6 +492,20 @@ class LeafEntity(Entity):
             self.__class__.__name__,
             self.car.leaf.vin,
         )
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device registry information for this entity."""
+        _LOGGER.debug(
+            "Providing device_info: self.car.leaf.vin = %s",
+            self.car.leaf.vin,
+        )
+        return {
+            "identifiers": {(DOMAIN, self.car.leaf.vin)},
+            "manufacturer": "Nissan Corp",  # FIXME: Find correct manufactures name
+            "model": "Leaf",  # FIXME: Handle env200
+            "name": self.name,
+        }
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

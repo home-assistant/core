@@ -208,6 +208,7 @@ FLOWS = [
     "nfandroidtv",
     "nightscout",
     "nina",
+    "nissan_leaf",
     "nmap_tracker",
     "notion",
     "nuheat",
