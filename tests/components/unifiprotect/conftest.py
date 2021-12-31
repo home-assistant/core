@@ -14,7 +14,7 @@ from pyunifiprotect.data import Camera, Light, Version, WSSubscriptionMessage
 
 from homeassistant.components.unifiprotect.const import DOMAIN, MIN_REQUIRED_PROTECT_V
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers import entity_registry as er
 import homeassistant.util.dt as dt_util
 
@@ -170,7 +170,9 @@ def assert_entity_counts(
 
     entity_registry = er.async_get(hass)
 
-    entities = [e for e in entity_registry.entities if e.startswith(platform.value)]
+    entities = [
+        e for e in entity_registry.entities if split_entity_id(e)[0] == platform.value
+    ]
 
     assert len(entities) == total
     assert len(hass.states.async_all(platform.value)) == enabled
