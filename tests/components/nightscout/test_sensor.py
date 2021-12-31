@@ -4,7 +4,6 @@ from homeassistant.components.nightscout.const import (
     ATTR_DELTA,
     ATTR_DEVICE,
     ATTR_DIRECTION,
-    ATTR_TYPE,
 )
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
@@ -17,6 +16,7 @@ from homeassistant.const import (
     ATTR_ICON,
     STATE_UNAVAILABLE,
 )
+from homeassistant.helpers import device_registry as dr
 
 from . import (
     GLUCOSE_READINGS,
@@ -75,16 +75,22 @@ async def test_glucose_sensor_attributes(hass):
 
 async def test_battery_sensor_state(hass):
     """Test battery sensor state data."""
-    await init_integration(hass)
+    config_entry = await init_integration(hass)
 
     test_tomato_sensor = hass.states.get("sensor.tomato")
     assert test_tomato_sensor.state == "70"
     assert test_tomato_sensor.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_BATTERY
     assert test_tomato_sensor.attributes[ATTR_STATE_CLASS] == STATE_CLASS_MEASUREMENT
-    assert test_tomato_sensor.attributes[ATTR_TYPE] == "BRIDGE"
+    tomato_device_info = dr.async_get(hass).async_get_device(
+        {("nightscout", f"{config_entry.unique_id}_{test_tomato_sensor.name}")}
+    )
+    assert tomato_device_info.model == "BRIDGE"
 
     test_samsung_sensor = hass.states.get("sensor.samsung_sm_n986b")
+    assert test_samsung_sensor.state == "68"
     assert test_samsung_sensor.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_BATTERY
     assert test_samsung_sensor.attributes[ATTR_STATE_CLASS] == STATE_CLASS_MEASUREMENT
-    assert test_samsung_sensor.attributes[ATTR_TYPE] == "PHONE"
-    assert test_samsung_sensor.state == "68"
+    samsung_device_info = dr.async_get(hass).async_get_device(
+        {("nightscout", f"{config_entry.unique_id}_{test_samsung_sensor.name}")}
+    )
+    assert samsung_device_info.model == "PHONE"

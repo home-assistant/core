@@ -18,15 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    API,
-    ATTR_DELTA,
-    ATTR_DEVICE,
-    ATTR_DIRECTION,
-    ATTR_TYPE,
-    COORDINATOR,
-    DOMAIN,
-)
+from .const import API, ATTR_DELTA, ATTR_DEVICE, ATTR_DIRECTION, COORDINATOR, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -161,6 +153,18 @@ class Battery(CoordinatorEntity, SensorEntity):
         self._attr_name = name
 
     @property
+    def device_info(self):
+        """Return the device info."""
+        uploader = self.coordinator.data[self._attr_name].uploader
+        info = {
+            "identifiers": {(DOMAIN, self.unique_id)},
+        }
+        if hasattr(uploader, "type"):
+            info["model"] = uploader.type
+
+        return info
+
+    @property
     def available(self):
         """Return if the sensor data are available."""
         return (
@@ -172,12 +176,3 @@ class Battery(CoordinatorEntity, SensorEntity):
     def native_value(self):
         """Return the state of the device."""
         return self.coordinator.data[self._attr_name].uploader.battery
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        uploader = self.coordinator.data[self._attr_name].uploader
-        attr = {}
-        if hasattr(uploader, "type"):
-            attr[ATTR_TYPE] = uploader.type
-        return attr
