@@ -10,12 +10,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_BATTERY,
     STATE_CLASS_MEASUREMENT,
 )
-from homeassistant.const import (
-    ATTR_DATE,
-    ATTR_DEVICE_CLASS,
-    ATTR_ICON,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import ATTR_DATE, ATTR_DEVICE_CLASS, ATTR_ICON
 from homeassistant.helpers import device_registry as dr
 
 from . import (
@@ -43,7 +38,7 @@ async def test_glucose_sensor_error(hass):
     await init_integration_unavailable(hass)
 
     test_glucose_sensor = hass.states.get("sensor.blood_sugar")
-    assert test_glucose_sensor.state == STATE_UNAVAILABLE
+    assert test_glucose_sensor is None
 
 
 async def test_glucose_sensor_empty_response(hass):
@@ -51,7 +46,7 @@ async def test_glucose_sensor_empty_response(hass):
     await init_integration_empty_response(hass)
 
     test_glucose_sensor = hass.states.get("sensor.blood_sugar")
-    assert test_glucose_sensor.state == STATE_UNAVAILABLE
+    assert test_glucose_sensor is None
 
 
 async def test_glucose_sensor_attributes(hass):
