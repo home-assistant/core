@@ -52,7 +52,7 @@ async def test_form(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result3["type"] == "create_entry"
-    assert result3["title"] == TEST_DATA["account_id"]
+    assert result3["title"] == str(TEST_DATA["account_id"])
     assert result3["data"] == {
         ACCOUNT_ID: TEST_DATA["account_id"],
         CONF_PASSWORD: TEST_DATA["password"],
