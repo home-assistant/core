@@ -71,4 +71,20 @@ class OnCueDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> None:
         """Fetch all device and sensor data from api."""
-        return await self.oncue.async_list_devices_with_params()
+        devices = await self.oncue.async_list_devices_with_params()
+        indexed_devices = {}
+        for device in devices:
+            indexed_devices[device["id"]] = {
+                "name": device["displayname"],
+                "state": device[
+                    "devicestate",
+                ],
+                "productname": device["productname"],
+                "version": device["version"],
+                "serialnumber": device["serialnumber"],
+                "sensors": {
+                    param_dict["name"]: param_dict
+                    for param_dict in device["parameters"]
+                },
+            }
+        self.data = indexed_devices
