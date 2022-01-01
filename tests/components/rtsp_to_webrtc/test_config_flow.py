@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
-async def test_web_full_flow(hass: HomeAssistant):
+async def test_web_full_flow(hass: HomeAssistant) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -32,7 +32,7 @@ async def test_web_full_flow(hass: HomeAssistant):
         assert result["result"].data == {"server_url": "https://example.com"}
 
 
-async def test_single_config_entry(hass):
+async def test_single_config_entry(hass: HomeAssistant) -> None:
     """Test that only a single config entry is allowed."""
     old_entry = MockConfigEntry(domain=DOMAIN, data={"example": True})
     old_entry.add_to_hass(hass)
@@ -44,7 +44,7 @@ async def test_single_config_entry(hass):
     assert result.get("reason") == "single_instance_allowed"
 
 
-async def test_invalid_url(hass: HomeAssistant):
+async def test_invalid_url(hass: HomeAssistant) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -63,7 +63,7 @@ async def test_invalid_url(hass: HomeAssistant):
     assert result.get("errors") == {"server_url": "invalid_url"}
 
 
-async def test_server_unreachable(hass: HomeAssistant):
+async def test_server_unreachable(hass: HomeAssistant) -> None:
     """Exercise case where the server is unreachable."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -84,7 +84,7 @@ async def test_server_unreachable(hass: HomeAssistant):
         assert result.get("errors") == {"base": "server_unreachable"}
 
 
-async def test_server_failure(hass: HomeAssistant):
+async def test_server_failure(hass: HomeAssistant) -> None:
     """Exercise case where server returns a failure."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

@@ -51,7 +51,7 @@ async def mock_camera(hass) -> AsyncGenerator[None, None]:
         yield
 
 
-async def async_setup_rtsp_to_webrtc(hass: HomeAssistant):
+async def async_setup_rtsp_to_webrtc(hass: HomeAssistant) -> None:
     """Set up the component."""
     return await async_setup_component(hass, DOMAIN, {})
 
