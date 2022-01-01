@@ -4,7 +4,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.lock import DOMAIN, LockEntity
-from homeassistant.core import callback
+from homeassistant.core import ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -169,7 +169,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     network = hass.data[const.DATA_NETWORK]
 
-    def set_usercode(service):
+    def set_usercode(service: ServiceCall) -> None:
         """Set the usercode to index X on the lock."""
         node_id = service.data.get(const.ATTR_NODE_ID)
         lock_node = network.nodes[node_id]
@@ -193,7 +193,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             value.data = str(usercode)
             break
 
-    def get_usercode(service):
+    def get_usercode(service: ServiceCall) -> None:
         """Get a usercode at index X on the lock."""
         node_id = service.data.get(const.ATTR_NODE_ID)
         lock_node = network.nodes[node_id]
@@ -207,7 +207,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             _LOGGER.info("Usercode at slot %s is: %s", value.index, value.data)
             break
 
-    def clear_usercode(service):
+    def clear_usercode(service: ServiceCall) -> None:
         """Set usercode to slot X on the lock."""
         node_id = service.data.get(const.ATTR_NODE_ID)
         lock_node = network.nodes[node_id]

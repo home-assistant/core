@@ -5,6 +5,7 @@ import logging
 from plexapi.exceptions import BadRequest, NotFound
 import voluptuous as vol
 
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -26,10 +27,10 @@ _LOGGER = logging.getLogger(__package__)
 async def async_setup_services(hass):
     """Set up services for the Plex component."""
 
-    async def async_refresh_library_service(service_call):
+    async def async_refresh_library_service(service_call: ServiceCall) -> None:
         await hass.async_add_executor_job(refresh_library, hass, service_call)
 
-    async def async_scan_clients_service(_):
+    async def async_scan_clients_service(_: ServiceCall) -> None:
         _LOGGER.debug("Scanning for new Plex clients")
         for server_id in hass.data[DOMAIN][SERVERS]:
             async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
@@ -47,7 +48,7 @@ async def async_setup_services(hass):
     return True
 
 
-def refresh_library(hass, service_call):
+def refresh_library(hass: HomeAssistant, service_call: ServiceCall) -> None:
     """Scan a Plex library for new and updated media."""
     plex_server_name = service_call.data.get("server_name")
     library_name = service_call.data["library_name"]

@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -26,7 +27,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-PLATFORMS = ["binary_sensor"]
+PLATFORMS = [Platform.BINARY_SENSOR]
 DOMAIN = "proxmoxve"
 PROXMOX_CLIENTS = "proxmox_clients"
 CONF_REALM = "realm"

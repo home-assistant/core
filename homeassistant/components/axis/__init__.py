@@ -1,9 +1,9 @@
 """Support for Axis devices."""
-
 import logging
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, CONF_MAC, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity_registry import async_migrate_entries
 
@@ -13,7 +13,7 @@ from .device import AxisNetworkDevice
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up the Axis component."""
     hass.data.setdefault(AXIS_DOMAIN, {})
 
@@ -33,7 +33,7 @@ async def async_setup_entry(hass, config_entry):
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload Axis device config entry."""
     device = hass.data[AXIS_DOMAIN].pop(config_entry.unique_id)
     return await device.async_reset()

@@ -20,6 +20,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     DATA_RATE_MEGABITS_PER_SECOND,
 )
+from homeassistant.core import ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import dispatcher_send
@@ -103,7 +104,7 @@ async def async_setup(hass, config):
         if not conf[CONF_MANUAL]:
             async_track_time_interval(hass, data.update, conf[CONF_SCAN_INTERVAL])
 
-    def update(call):
+    def update(call: ServiceCall) -> None:
         """Service call to manually update the data."""
         called_host = call.data[ATTR_HOST]
         if called_host in hass.data[DOMAIN]:

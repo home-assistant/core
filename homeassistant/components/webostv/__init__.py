@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_NAME,
     EVENT_HOMEASSISTANT_STOP,
 )
+from homeassistant.core import ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -86,8 +87,8 @@ async def async_setup(hass, config):
     """Set up the LG WebOS TV platform."""
     hass.data[DOMAIN] = {}
 
-    async def async_service_handler(service):
-        method = SERVICE_TO_METHOD.get(service.service)
+    async def async_service_handler(service: ServiceCall) -> None:
+        method = SERVICE_TO_METHOD[service.service]
         data = service.data.copy()
         data["method"] = method["method"]
         async_dispatcher_send(hass, DOMAIN, data)

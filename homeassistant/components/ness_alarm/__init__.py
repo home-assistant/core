@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_STOP,
 )
+from homeassistant.core import ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -132,10 +133,10 @@ async def async_setup(hass, config):
     hass.loop.create_task(client.keepalive())
     hass.loop.create_task(client.update())
 
-    async def handle_panic(call):
+    async def handle_panic(call: ServiceCall) -> None:
         await client.panic(call.data[ATTR_CODE])
 
-    async def handle_aux(call):
+    async def handle_aux(call: ServiceCall) -> None:
         await client.aux(call.data[ATTR_OUTPUT_ID], call.data[ATTR_STATE])
 
     hass.services.async_register(

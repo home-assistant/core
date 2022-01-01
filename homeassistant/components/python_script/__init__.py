@@ -20,6 +20,7 @@ from RestrictedPython.Guards import (
 import voluptuous as vol
 
 from homeassistant.const import CONF_DESCRIPTION, CONF_NAME, SERVICE_RELOAD
+from homeassistant.core import ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.loader import bind_hass
@@ -88,7 +89,7 @@ def setup(hass, config):
 
     discover_scripts(hass)
 
-    def reload_scripts_handler(call):
+    def reload_scripts_handler(call: ServiceCall) -> None:
         """Handle reload service calls."""
         discover_scripts(hass)
 
@@ -105,7 +106,7 @@ def discover_scripts(hass):
         _LOGGER.warning("Folder %s not found in configuration folder", FOLDER)
         return False
 
-    def python_script_service_handler(call):
+    def python_script_service_handler(call: ServiceCall) -> None:
         """Handle python script service calls."""
         execute_script(hass, call.service, call.data)
 

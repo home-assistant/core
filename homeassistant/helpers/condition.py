@@ -880,7 +880,7 @@ async def async_device_from_config(
     return trace_condition_function(
         cast(
             ConditionCheckerType,
-            platform.async_condition_from_config(hass, config),  # type: ignore
+            platform.async_condition_from_config(hass, config),
         )
     )
 
@@ -946,7 +946,7 @@ async def async_validate_condition_config(
         )
         if hasattr(platform, "async_validate_condition_config"):
             return await platform.async_validate_condition_config(hass, config)  # type: ignore
-        return cast(ConfigType, platform.CONDITION_SCHEMA(config))  # type: ignore
+        return cast(ConfigType, platform.CONDITION_SCHEMA(config))
 
     if condition in ("numeric_state", "state"):
         validator = getattr(

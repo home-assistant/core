@@ -142,7 +142,7 @@ async def auth_provider_from_config(
     module = await load_auth_provider_module(hass, provider_name)
 
     try:
-        config = module.CONFIG_SCHEMA(config)  # type: ignore
+        config = module.CONFIG_SCHEMA(config)
     except vol.Invalid as err:
         _LOGGER.error(
             "Invalid configuration for auth provider %s: %s",
@@ -174,8 +174,7 @@ async def load_auth_provider_module(
     elif provider in processed:
         return module
 
-    # https://github.com/python/mypy/issues/1424
-    reqs = module.REQUIREMENTS  # type: ignore
+    reqs = module.REQUIREMENTS
     await requirements.async_process_requirements(
         hass, f"auth provider {provider}", reqs
     )

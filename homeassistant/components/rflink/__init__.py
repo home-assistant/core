@@ -18,7 +18,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     STATE_ON,
 )
-from homeassistant.core import CoreState, callback
+from homeassistant.core import CoreState, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
@@ -134,7 +134,7 @@ async def async_setup(hass, config):
     # Allow platform to specify function to register new unknown devices
     hass.data[DATA_DEVICE_REGISTER] = {}
 
-    async def async_send_command(call):
+    async def async_send_command(call: ServiceCall) -> None:
         """Send Rflink command."""
         _LOGGER.debug("Rflink command for %s", str(call.data))
         if not (
