@@ -154,10 +154,24 @@ class OncueSensorEntity(CoordinatorEntity, SensorEntity):
         self._device_id = device_id
         self._attr_unique_id = f"{device_id}_{description.key}"
         self._attr_name = f"{device.name} {sensor.display_name}"
-        if description.native_unit_of_measurement is None and sensor.unit is not None:
+        import pprint
+
+        if not description.native_unit_of_measurement and sensor.unit is not None:
             self._attr_native_unit_of_measurement = UNIT_MAPPINGS.get(
                 sensor.unit, sensor.unit
             )
+        pprint.pprint(
+            [
+                sensor.display_name,
+                "description.native_unit_of_measurement",
+                description.native_unit_of_measurement,
+                "sensor.unit",
+                sensor.unit,
+                "self._attr_native_unit_of_measurement",
+                self._attr_native_unit_of_measurement,
+            ]
+        )
+
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device_id)},
             name=device.name,
