@@ -1120,7 +1120,9 @@ def area_devices(hass: HomeAssistant, area_id_or_name: str) -> Iterable[str]:
     return [entry.id for entry in entries]
 
 
-def target_entities(hass: HomeAssistant, target: dict, domain: str) -> Iterable[str]:
+def target_entities(
+    hass: HomeAssistant, target: dict, domain: str | None = None
+) -> Iterable[str]:
     """Return entities for a given target selector."""
     entities: list = []
     # area_id can be a list or str or None
@@ -1149,8 +1151,10 @@ def target_entities(hass: HomeAssistant, target: dict, domain: str) -> Iterable[
     # remove duplicates
     entities = list(set(entities))
     # filter by domain
-    states = expand(hass, *entities)
-    return [state.entity_id for state in states if state.domain == domain]
+    if domain is not None:
+        states = expand(hass, *entities)
+        return [state.entity_id for state in states if state.domain == domain]
+    return entities
 
 
 def closest(hass, *args):
