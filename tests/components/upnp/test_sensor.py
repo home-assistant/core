@@ -75,7 +75,9 @@ async def test_derived_upnp_sensors(
     hass: HomeAssistant, setup_integration: MockConfigEntry
 ):
     """Test derived sensors."""
-    coordinator: UpnpDataUpdateCoordinator = hass.data[DOMAIN][setup_integration.entry_id]
+    coordinator: UpnpDataUpdateCoordinator = hass.data[DOMAIN][
+        setup_integration.entry_id
+    ]
 
     # First poll.
     kib_s_received_state = hass.states.get("sensor.mock_name_kib_s_received")
