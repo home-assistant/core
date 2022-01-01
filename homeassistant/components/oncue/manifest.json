@@ -4,12 +4,8 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/oncue",
   "requirements": [
-    "aiooncue==0.2.2"
+    "aiooncue==0.2.7"
   ],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
-  "dependencies": [],
   "codeowners": [
     "@bdraco"
   ],
