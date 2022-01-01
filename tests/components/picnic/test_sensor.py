@@ -251,7 +251,7 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         )
         self._assert_sensor(
             "sensor.picnic_last_order_max_order_time",
-            "2021-02-25T21:00:00.000+00:00",
+            "2021-02-25T21:00:00+00:00",
             cls=SensorDeviceClass.TIMESTAMP,
         )
         self._assert_sensor(
@@ -409,7 +409,7 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         self._assert_sensor("sensor.picnic_last_order_eta_start", STATE_UNKNOWN)
         self._assert_sensor("sensor.picnic_last_order_eta_end", STATE_UNKNOWN)
         self._assert_sensor(
-            "sensor.picnic_last_order_max_order_time", STATE_UNAVAILABLE
+            "sensor.picnic_last_order_max_order_time", STATE_UNKNOWN
         )
         self._assert_sensor("sensor.picnic_last_order_delivery_time", STATE_UNKNOWN)
 
