@@ -13,7 +13,12 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import DOMAIN
 
-STATIC_SENSORS = {"GensetSerialNumber", "GensetModelNumberSelect", "FirmwareVersion"}
+STATIC_SENSORS = {
+    "GensetSerialNumber",
+    "GensetModelNumberSelect",
+    "FirmwareVersion",
+    "Product",
+}
 
 DEVICE_CLASSES = {
     "EngineOilPressure": SensorDeviceClass.PRESSURE,  # its PSI though
@@ -74,7 +79,8 @@ class OncueSensor(CoordinatorEntity, SensorEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device_id)},
             name=device_data["name"],
-            sw_version=device_data["version"],
+            hw_version=device_data["hardware_version"],
+            sw_version=sensor_data["FirmwareVersion"]["value"],
             model=device_data["product_name"],
             manufacturer="Kohler",
         )
