@@ -1275,6 +1275,9 @@ roonapi==0.0.38
 # homeassistant.components.rpi_power
 rpi-bad-power==0.1.0
 
+# homeassistant.components.rtsp_to_webrtc
+rtsp-to-webrtc==0.2.7
+
 # homeassistant.components.yamaha
 rxv==0.7.0
 
