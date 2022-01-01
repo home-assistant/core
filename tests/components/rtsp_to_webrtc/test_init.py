@@ -11,7 +11,7 @@ import pytest
 import rtsp_to_webrtc
 
 from homeassistant.components import camera
-from homeassistant.components.rtsptowebrtc import DOMAIN
+from homeassistant.components.rtsp_to_webrtc import DOMAIN
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -51,7 +51,7 @@ async def mock_camera(hass) -> AsyncGenerator[None, None]:
         yield
 
 
-async def async_setup_rtsptowebrtc(hass: HomeAssistant):
+async def async_setup_rtsp_to_webrtc(hass: HomeAssistant):
     """Set up the component."""
     return await async_setup_component(hass, DOMAIN, {})
 
@@ -62,7 +62,7 @@ async def test_setup_success(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
 
     with patch("rtsp_to_webrtc.client.Client.heartbeat"):
-        assert await async_setup_rtsptowebrtc(hass)
+        assert await async_setup_rtsp_to_webrtc(hass)
         await hass.async_block_till_done()
 
     entries = hass.config_entries.async_entries(DOMAIN)
@@ -81,7 +81,7 @@ async def test_invalid_config_entry(hass: HomeAssistant) -> None:
     config_entry = MockConfigEntry(domain=DOMAIN, data={})
     config_entry.add_to_hass(hass)
 
-    assert await async_setup_rtsptowebrtc(hass)
+    assert await async_setup_rtsp_to_webrtc(hass)
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
@@ -97,7 +97,7 @@ async def test_setup_server_failure(hass: HomeAssistant) -> None:
         "rtsp_to_webrtc.client.Client.heartbeat",
         side_effect=rtsp_to_webrtc.exceptions.ResponseError(),
     ):
-        assert await async_setup_rtsptowebrtc(hass)
+        assert await async_setup_rtsp_to_webrtc(hass)
         await hass.async_block_till_done()
 
     entries = hass.config_entries.async_entries(DOMAIN)
@@ -117,7 +117,7 @@ async def test_setup_communication_failure(hass: HomeAssistant) -> None:
         "rtsp_to_webrtc.client.Client.heartbeat",
         side_effect=rtsp_to_webrtc.exceptions.ClientError(),
     ):
-        assert await async_setup_rtsptowebrtc(hass)
+        assert await async_setup_rtsp_to_webrtc(hass)
         await hass.async_block_till_done()
 
     entries = hass.config_entries.async_entries(DOMAIN)
@@ -139,7 +139,7 @@ async def test_offer_for_stream_source(
     config_entry.add_to_hass(hass)
 
     with patch("rtsp_to_webrtc.client.Client.heartbeat"):
-        assert await async_setup_rtsptowebrtc(hass)
+        assert await async_setup_rtsp_to_webrtc(hass)
         await hass.async_block_till_done()
 
     aioclient_mock.post(
@@ -176,7 +176,7 @@ async def test_offer_failure(
     config_entry.add_to_hass(hass)
 
     with patch("rtsp_to_webrtc.client.Client.heartbeat"):
-        assert await async_setup_rtsptowebrtc(hass)
+        assert await async_setup_rtsp_to_webrtc(hass)
         await hass.async_block_till_done()
 
     aioclient_mock.post(

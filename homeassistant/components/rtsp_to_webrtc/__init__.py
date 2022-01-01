@@ -33,7 +33,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "rtsptowebrtc"
+DOMAIN = "rtsp_to_webrtc"
 DATA_SERVER_URL = "server_url"
 DATA_UNSUB = "unsub"
 TIMEOUT = 10
@@ -42,10 +42,6 @@ TIMEOUT = 10
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up RTSPtoWebRTC from a config entry."""
     hass.data.setdefault(DOMAIN, {})
-
-    if DATA_SERVER_URL not in entry.data:
-        _LOGGER.error("Invalid ConfigEntry for webrtc, missing '%s'", DATA_SERVER_URL)
-        return False
 
     client = Client(async_get_clientsession(hass), entry.data[DATA_SERVER_URL])
     try:
@@ -63,7 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Handle the signal path for a WebRTC stream.
 
         This signal path is used to route the offer created by the client to the
-        a proxy server that translates a stream to WebRTC. The communication for
+        proxy server that translates a stream to WebRTC. The communication for
         the stream itself happens directly between the client and proxy.
         """
         try:

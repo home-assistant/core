@@ -1,8 +1,8 @@
 {
-  "domain": "rtsptowebrtc",
+  "domain": "rtsp_to_webrtc",
   "name": "RTSPtoWebRTC",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/rtsptowebrtc",
+  "documentation": "https://www.home-assistant.io/integrations/rtsp_to_webrtc",
   "requirements": ["rtsp-to-webrtc==0.2.7"],
   "dependencies": ["camera"],
   "codeowners": [

@@ -8,7 +8,7 @@ from unittest.mock import patch
 import rtsp_to_webrtc
 
 from homeassistant import config_entries, setup
-from homeassistant.components.rtsptowebrtc import DOMAIN
+from homeassistant.components.rtsp_to_webrtc import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
