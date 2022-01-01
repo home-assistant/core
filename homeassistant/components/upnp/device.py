@@ -83,7 +83,7 @@ class Device:
         if location == device.device_url:
             return
 
-        new_upnp_device = await Device.async_create_upnp_device(self.hass, location)
+        new_upnp_device = await async_create_upnp_device(self.hass, location)
         device.reinit(new_upnp_device)
 
     @property
