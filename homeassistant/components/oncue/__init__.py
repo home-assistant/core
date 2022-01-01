@@ -74,9 +74,7 @@ class OnCueDataUpdateCoordinator(DataUpdateCoordinator):
         for device in devices:
             indexed_devices[device["id"]] = {
                 "name": device["displayname"],
-                "state": device[
-                    "devicestate",
-                ],
+                "state": device["devicestate"],
                 "product_name": device["productname"],
                 "version": device["version"],
                 "serial_number": device["serialnumber"],
