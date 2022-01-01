@@ -33,7 +33,7 @@ from .conftest import MockEntityFixture, assert_entity_counts
 async def camera_fixture(
     hass: HomeAssistant, mock_entry: MockEntityFixture, mock_camera: Camera
 ):
-    """Fixture for a single camera with only the media_player platform active, camera has speaker."""
+    """Fixture for a single camera for testing the media_player platform."""
 
     # disable pydantic validation so mocking can happen
     Camera.__config__.validate_assignment = False
