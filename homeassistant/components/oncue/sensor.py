@@ -80,8 +80,8 @@ class OncueSensor(CoordinatorEntity, SensorEntity):
             identifiers={(DOMAIN, self._device_id)},
             name=device_data["name"],
             hw_version=device_data["hardware_version"],
-            sw_version=sensor_data["FirmwareVersion"]["value"],
-            model=device_data["product_name"],
+            sw_version=sensor_data["FirmwareVersion"]["displayvalue"],
+            model=sensor_data["GensetModelNumberSelect"]["displayvalue"],
             manufacturer="Kohler",
         )
 
