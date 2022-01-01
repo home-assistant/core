@@ -66,8 +66,8 @@ class OncueSensor(CoordinatorEntity, SensorEntity):
         self._device_id = device_id
         self._sensor_name = name
         device_data = coordinator.data[device_id]
-        sensor_data = device_data["sensors"]
-        sensor_data = sensor_data[self._sensor_name]
+        device_sensor_data = device_data["sensors"]
+        sensor_data = device_sensor_data[self._sensor_name]
         value = sensor_data["value"]
         if isinstance(value, str) and len(sensor_data["displayvalue"]) > len(value) + 1:
             self._attr_native_unit_of_measurement = sensor_data["displayvalue"][
@@ -80,8 +80,8 @@ class OncueSensor(CoordinatorEntity, SensorEntity):
             identifiers={(DOMAIN, self._device_id)},
             name=device_data["name"],
             hw_version=device_data["hardware_version"],
-            sw_version=sensor_data["FirmwareVersion"]["displayvalue"],
-            model=sensor_data["GensetModelNumberSelect"]["displayvalue"],
+            sw_version=device_sensor_data["FirmwareVersion"]["displayvalue"],
+            model=device_sensor_data["GensetModelNumberSelect"]["displayvalue"],
             manufacturer="Kohler",
         )
 
