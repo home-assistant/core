@@ -56,7 +56,7 @@ homeassistant/components/aseko_pool_live/* @milanmeu
 homeassistant/components/asuswrt/* @kennedyshead @ollo69
 homeassistant/components/atag/* @MatsNL
 homeassistant/components/aten_pe/* @mtdcr
-homeassistant/components/atome/* @baqs
+homeassistant/components/atome/* @baqs @jugla
 homeassistant/components/august/* @bdraco
 homeassistant/components/aurora/* @djtimca
 homeassistant/components/aurora_abb_powerone/* @davet2001

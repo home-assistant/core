@@ -2,7 +2,7 @@
   "domain": "atome",
   "name": "Atome Linky",
   "documentation": "https://www.home-assistant.io/integrations/atome",
-  "codeowners": ["@baqs"],
+  "codeowners": ["@baqs", "@jugla"],
   "requirements": ["pykeyatome==1.2.0"],
   "iot_class": "cloud_polling"
 }
