@@ -1,0 +1,9 @@
+send_alarm_keystrokes:
+  description: Sends keystrokes to the virtual keypad of an alarm control panel.
+  fields:
+    entity_id:
+      description: Name(s) of the entities to send keystrokes to.
+      example: "alarm_control_panel.partition_1"
+    keystrokes:
+      description: String of keystrokes.
+      example: "*101#"
