@@ -104,6 +104,33 @@ async def test_setup_serial(com_mock, hass, dsmr_connection_send_validate_fixtur
 
 
 @patch("serial.tools.list_ports.comports", return_value=[com_port()])
+async def test_setup_serial_rfxtrx(
+    com_mock, hass, rfxtrx_dsmr_connection_send_validate_fixture
+):
+    """Test we can setup serial."""
+    port = com_port()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"type": "Serial"},
+    )
+
+    with patch("homeassistant.components.dsmr.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"port": port.device, "dsmr_version": "2.2", "is_rfxtrx": True},
+        )
+
+    entry_data = {"port": port.device, "dsmr_version": "2.2", "is_rfxtrx": True}
+
+    assert result["data"] == {**entry_data, **SERIAL_DATA}
+
+
+@patch("serial.tools.list_ports.comports", return_value=[com_port()])
 async def test_setup_serial_manual(
     com_mock, hass, dsmr_connection_send_validate_fixture
 ):
