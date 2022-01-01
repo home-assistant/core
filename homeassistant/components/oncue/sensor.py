@@ -5,6 +5,7 @@ from aiooncue import OncueDevice, OncueSensor
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -33,6 +34,7 @@ DEVICE_CLASSES = {
     "GeneratorVoltageAverageLineToLine": SensorDeviceClass.VOLTAGE,
     "GeneratorFrequency": SensorDeviceClass.FREQUENCY,
 }
+UNIT_MAPPINGS = {"C": TEMP_CELSIUS, "F": TEMP_FAHRENHEIT}
 
 
 async def async_setup_entry(
@@ -77,6 +79,10 @@ class OncueSensorEntity(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = f"{device_id}_{sensor.name}"
         self._attr_name = f"{device.name} {sensor.display_name}"
         self._attr_device_class = DEVICE_CLASSES.get(sensor.name)
+        if sensor.unit is not None:
+            self._attr_native_unit_of_measurement = UNIT_MAPPINGS.get(
+                sensor.unit, sensor.unit
+            )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device_id)},
             name=device.name,
