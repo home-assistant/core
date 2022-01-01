@@ -498,6 +498,7 @@ async def test_timeout_cancelled(hass, hass_client):
         assert resp.status == HTTPStatus.OK
         assert await resp.read() == fakeimgbytes_png
 
+
 async def test_no_still_image_url(hass, hass_client):
     """Test that the component can grab images from stream with no still_image_url."""
     assert await async_setup_component(
@@ -560,4 +561,3 @@ def test_frame_interval_property(hass):
         },
     )
     assert cam.frame_interval == pytest.approx(0.2)
-
