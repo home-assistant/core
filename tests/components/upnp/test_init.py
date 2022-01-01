@@ -32,3 +32,19 @@ async def test_async_setup_entry_default(hass: HomeAssistant):
     # Load config_entry.
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id) is True
+
+
+async def test_reinitialize_device(hass: HomeAssistant, setup_integration: MockConfigEntry):
+    """Test device is reinitialized when device changes location."""
+    config_entry = setup_integration
+    coordinator: UpnpDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    device: Device = coordinator.device
+    assert device._igd_device.device.device_url == TEST_DISCOVERY.ssdp_location
+
+    # Reinit.
+    new_location = "http://192.168.1.1:12345/desc.xml"
+    headers = {
+        ssdp.ATTR_SSDP_LOCATION: new_location,
+    }
+    await device.async_ssdp_callback(headers, ...)
+    assert device._igd_device.device.device_url == new_location
