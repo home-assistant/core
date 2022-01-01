@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Awaitable
 
 from aiooncue import LoginFailedException, Oncue
 
@@ -33,7 +34,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("Failed to login to oncue service: %s", ex)
         return False
 
-    coordinator = OnCueDataUpdateCoordinator(hass, client, entry)
+    async def _async_update_data(self) -> dict:
+        """Fetch all device and sensor data from api."""
+        devices = await self.oncue.async_list_devices_with_params()
+        indexed_devices = {}
+        for device in devices:
+            indexed_devices[device["id"]] = {
+                "name": device["displayname"],
+                "state": device["devicestate"],
+                "product_name": device["productname"],
+                "version": device["version"],
+                "serial_number": device["serialnumber"],
+                "sensors": {
+                    param_dict["name"]: param_dict
+                    for param_dict in device["parameters"]
+                },
+            }
+        return indexed_devices
+
+    coordinator = OnCueDataUpdateCoordinator(hass, client, entry, _async_update_data)  # type: ignore
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
@@ -56,6 +75,7 @@ class OnCueDataUpdateCoordinator(DataUpdateCoordinator):
         hass: HomeAssistant,
         oncue: Oncue,
         entry: ConfigEntry,
+        update_method: Awaitable,
     ) -> None:
         """Initialize DataUpdateCoordinator to gather data."""
         self.entry = entry
@@ -65,22 +85,5 @@ class OnCueDataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER,
             name=f"Oncue {entry.data[CONF_USERNAME]}",
             update_interval=timedelta(minutes=10),
+            update_method=update_method,  # type: ignore
         )
-
-    async def _async_update_data(self) -> None:
-        """Fetch all device and sensor data from api."""
-        devices = await self.oncue.async_list_devices_with_params()
-        indexed_devices = {}
-        for device in devices:
-            indexed_devices[device["id"]] = {
-                "name": device["displayname"],
-                "state": device["devicestate"],
-                "product_name": device["productname"],
-                "version": device["version"],
-                "serial_number": device["serialnumber"],
-                "sensors": {
-                    param_dict["name"]: param_dict
-                    for param_dict in device["parameters"]
-                },
-            }
-        self.data = indexed_devices
