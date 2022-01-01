@@ -11,11 +11,13 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from pyunifiprotect.data import Camera, Light, Version, WSSubscriptionMessage
+from pyunifiprotect.data.base import ProtectAdoptableDeviceModel
 
 from homeassistant.components.unifiprotect.const import DOMAIN, MIN_REQUIRED_PROTECT_V
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity import EntityDescription
 import homeassistant.util.dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -176,3 +178,21 @@ def assert_entity_counts(
 
     assert len(entities) == total
     assert len(hass.states.async_all(platform.value)) == enabled
+
+
+def ids_from_device_description(
+    platform: Platform,
+    device: ProtectAdoptableDeviceModel,
+    description: EntityDescription,
+) -> tuple[str, str]:
+    """Return expected unique_id and entity_id for a give platform/device/description combination."""
+
+    entity_name = device.name.lower().replace(":", "").replace(" ", "_")
+    description_entity_name = (
+        description.name.lower().replace(":", "").replace(" ", "_")
+    )
+
+    unique_id = f"{device.id}_{description.key}"
+    entity_id = f"{platform.value}.{entity_name}_{description_entity_name}"
+
+    return unique_id, entity_id
