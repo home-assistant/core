@@ -16,10 +16,11 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "ness_alarm"
 DATA_NESS = "ness_alarm"
@@ -84,7 +85,7 @@ SERVICE_SCHEMA_AUX = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Ness Alarm platform."""
 
     conf = config[DOMAIN]
