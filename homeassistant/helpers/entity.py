@@ -37,6 +37,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, NoEntitySpecifiedError
+from homeassistant.helpers.frame import report
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util, ensure_unique_string, slugify
 
@@ -209,10 +210,10 @@ def convert_to_entity_category(
         return value
 
     if not isinstance(value, EntityCategory):
-        _LOGGER.warning(
-            "An entity_category should only be assigned an enum.  Strings or other assignments are deprecated. Value %s is type %s",
-            value,
-            type(value),
+        report(
+            "An entity_category should only be assigned an enum.  Strings or other assignments are deprecated. Value %s is type %s"
+            % (value, type(value)),
+            error_if_core=False,
         )
         return EntityCategory(value)
     return value
