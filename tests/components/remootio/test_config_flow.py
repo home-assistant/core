@@ -2,6 +2,11 @@
 import logging
 from unittest.mock import patch
 
+from aioremootio import (
+    RemootioClientAuthenticationError,
+    RemootioClientConnectionEstablishmentError,
+)
+
 from homeassistant import config_entries
 from homeassistant.components.cover import DEVICE_CLASS_GARAGE
 from homeassistant.components.remootio.const import (
@@ -10,11 +15,7 @@ from homeassistant.components.remootio.const import (
     CONF_SERIAL_NUMBER,
     DOMAIN,
 )
-from homeassistant.components.remootio.exceptions import (
-    CannotConnect,
-    InvalidAuth,
-    UnsupportedRemootioDeviceError,
-)
+from homeassistant.components.remootio.exceptions import UnsupportedRemootioDeviceError
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import (
@@ -182,7 +183,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         "homeassistant.components.remootio.async_setup_entry", return_value=True
     ), patch(
         "homeassistant.components.remootio.config_flow.get_serial_number",
-        side_effect=CannotConnect,
+        side_effect=RemootioClientConnectionEstablishmentError(None, None),
     ) as get_serial_number:
         init_result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -218,7 +219,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
         "homeassistant.components.remootio.async_setup_entry", return_value=True
     ), patch(
         "homeassistant.components.remootio.config_flow.get_serial_number",
-        side_effect=InvalidAuth,
+        side_effect=RemootioClientAuthenticationError(None, None),
     ) as get_serial_number:
         init_result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
