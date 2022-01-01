@@ -31,6 +31,17 @@ from .const import (
 )
 
 
+async def async_create_upnp_device(
+    hass: HomeAssistant, ssdp_location: str
+) -> UpnpDevice:
+    """Create UPnP device."""
+    session = async_get_clientsession(hass)
+    requester = AiohttpSessionRequester(session, with_sleep=True, timeout=20)
+
+    factory = UpnpFactory(requester, disable_state_variable_validation=True)
+    return await factory.async_create_device(ssdp_location)
+
+
 class Device:
     """Home Assistant representation of a UPnP/IGD device."""
 
@@ -41,24 +52,11 @@ class Device:
         self.coordinator: DataUpdateCoordinator = None
 
     @classmethod
-    async def async_create_upnp_device(
-        cls, hass: HomeAssistant, ssdp_location: str
-    ) -> UpnpDevice:
-        """Create UPnP device."""
-        # Build async_upnp_client requester.
-        session = async_get_clientsession(hass)
-        requester = AiohttpSessionRequester(session, True, 20)
-
-        # Create async_upnp_client device.
-        factory = UpnpFactory(requester, disable_state_variable_validation=True)
-        return await factory.async_create_device(ssdp_location)
-
-    @classmethod
     async def async_create_device(
         cls, hass: HomeAssistant, ssdp_location: str
     ) -> Device:
         """Create UPnP/IGD device."""
-        upnp_device = await Device.async_create_upnp_device(hass, ssdp_location)
+        upnp_device = await async_create_upnp_device(hass, ssdp_location)
 
         # Create profile wrapper.
         igd_device = IgdDevice(upnp_device, None)

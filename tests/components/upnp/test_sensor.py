@@ -1,7 +1,7 @@
 """Tests for UPnP/IGD sensor."""
 
 from datetime import timedelta
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.upnp.const import (
     BYTES_RECEIVED,
@@ -18,14 +18,16 @@ from homeassistant.components.upnp.const import (
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
-from .conftest import MockDevice
+# from .conftest import MockDevice
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+
+from .conftest import MockIgdDevice
 
 
 async def test_upnp_sensors(hass: HomeAssistant, setup_integration: MockConfigEntry):
     """Test normal sensors."""
-    mock_device: MockDevice = hass.data[DOMAIN][setup_integration.entry_id].device
+    mock_device: MockIgdDevice = hass.data[DOMAIN][setup_integration.entry_id].device._igd_device
 
     # First poll.
     b_received_state = hass.states.get("sensor.mock_name_b_received")
@@ -42,22 +44,17 @@ async def test_upnp_sensors(hass: HomeAssistant, setup_integration: MockConfigEn
     assert wan_status_state.state == "Connected"
 
     # Second poll.
-    mock_device.async_get_traffic_data = AsyncMock(
-        return_value={
-            TIMESTAMP: mock_device._timestamp + UPDATE_INTERVAL,
-            BYTES_RECEIVED: 10240,
-            BYTES_SENT: 20480,
-            PACKETS_RECEIVED: 30,
-            PACKETS_SENT: 40,
-        }
-    )
-    mock_device.async_get_status = AsyncMock(
-        return_value={
-            WAN_STATUS: "Disconnected",
-            ROUTER_UPTIME: 100,
-            ROUTER_IP: "",
-        }
-    )
+    mock_device.traffic_data = {
+        BYTES_RECEIVED: 10240,
+        BYTES_SENT: 20480,
+        PACKETS_RECEIVED: 30,
+        PACKETS_SENT: 40,
+    }
+    mock_device.status_data = {
+        WAN_STATUS: "Disconnected",
+        ROUTER_UPTIME: 100,
+        ROUTER_IP: "",
+    }
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=31))
     await hass.async_block_till_done()
 
@@ -79,7 +76,8 @@ async def test_derived_upnp_sensors(
     hass: HomeAssistant, setup_integration: MockConfigEntry
 ):
     """Test derived sensors."""
-    mock_device: MockDevice = hass.data[DOMAIN][setup_integration.entry_id].device
+    mock_device: MockIgdDevice = hass.data[DOMAIN][setup_integration.entry_id].device._igd_device
+    now = dt_util.utcnow()
 
     # First poll.
     kib_s_received_state = hass.states.get("sensor.mock_name_kib_s_received")
@@ -92,23 +90,21 @@ async def test_derived_upnp_sensors(
     assert packets_s_sent_state.state == "unknown"
 
     # Second poll.
-    mock_device.async_get_traffic_data = AsyncMock(
-        return_value={
-            TIMESTAMP: mock_device._timestamp + UPDATE_INTERVAL,
+    with patch("homeassistant.core.dt_util.utcnow", return_value=now + UPDATE_INTERVAL) as mock_utcnow:
+        mock_device.traffic_data = {
             BYTES_RECEIVED: int(10240 * UPDATE_INTERVAL.total_seconds()),
             BYTES_SENT: int(20480 * UPDATE_INTERVAL.total_seconds()),
             PACKETS_RECEIVED: int(30 * UPDATE_INTERVAL.total_seconds()),
             PACKETS_SENT: int(40 * UPDATE_INTERVAL.total_seconds()),
         }
-    )
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=31))
-    await hass.async_block_till_done()
+        async_fire_time_changed(hass, now + timedelta(seconds=31))
+        await hass.async_block_till_done()
 
-    kib_s_received_state = hass.states.get("sensor.mock_name_kib_s_received")
-    kib_s_sent_state = hass.states.get("sensor.mock_name_kib_s_sent")
-    packets_s_received_state = hass.states.get("sensor.mock_name_packets_s_received")
-    packets_s_sent_state = hass.states.get("sensor.mock_name_packets_s_sent")
-    assert kib_s_received_state.state == "10.0"
-    assert kib_s_sent_state.state == "20.0"
-    assert packets_s_received_state.state == "30.0"
-    assert packets_s_sent_state.state == "40.0"
+        kib_s_received_state = hass.states.get("sensor.mock_name_kib_s_received")
+        kib_s_sent_state = hass.states.get("sensor.mock_name_kib_s_sent")
+        packets_s_received_state = hass.states.get("sensor.mock_name_packets_s_received")
+        packets_s_sent_state = hass.states.get("sensor.mock_name_packets_s_sent")
+        assert kib_s_received_state.state == "10.0"
+        assert kib_s_sent_state.state == "20.0"
+        assert packets_s_received_state.state == "30.0"
+        assert packets_s_sent_state.state == "40.0"
