@@ -27,9 +27,11 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import (
+    BED,
     CONFIG_ENTRY_UPDATE_SIGNAL_TEMPLATE,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    FOUNDATION,
     ICON_EMPTY,
     ICON_OCCUPIED,
     IS_IN_BED,
@@ -54,11 +56,12 @@ DEFAULT_COMPONENT_NAME = "SleepIQ {}"
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.NUMBER,
     Platform.SENSOR,
 ]
 
 
-class SleepIQDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Bed]]):
+class SleepIQDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Dict]]):
     """SleepIQ data update coordinator."""
 
     def __init__(
@@ -81,13 +84,16 @@ class SleepIQDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Bed]]):
             seconds=config_entry.options[CONF_SCAN_INTERVAL]
         )
 
-    async def _async_update_data(self) -> Dict[str, Bed]:
-        return {
-            bed.bed_id: bed
-            for bed in await self.hass.async_add_executor_job(
-                self.client.beds_with_sleeper_status
+    async def _async_update_data(self) -> Dict[str, Dict]:
+        data = {}
+        for bed in await self.hass.async_add_executor_job(
+            self.client.beds_with_sleeper_status
+        ):
+            data[bed.bed_id] = {BED: bed}
+            data[bed.bed_id][FOUNDATION] = await self.hass.async_add_executor_job(
+                self.client.foundation_status, bed.bed_id
             )
-        }
+        return data
 
 
 @dataclasses.dataclass
@@ -188,12 +194,12 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     return unload_ok
 
 
-class SleepIQBedSideEntity(CoordinatorEntity):
+class SleepIQEntity(CoordinatorEntity):
     """Entity class for a side of a SleepIQ bed."""
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[Dict[str, Bed]],
+        coordinator: SleepIQDataUpdateCoordinator,
         bed_id: str,
         side: str,
     ) -> None:
@@ -207,7 +213,7 @@ class SleepIQBedSideEntity(CoordinatorEntity):
 
     @property
     def _bed(self) -> Bed:
-        return self.coordinator.data[self.bed_id]
+        return self.coordinator.data[self.bed_id][BED]
 
     @property
     def _side(self) -> SideStatus:

@@ -1,17 +1,12 @@
 """Support for SleepIQ sensors."""
-from typing import Dict
-
-from sleepyq import Bed
-
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import DATA_SLEEPIQ, SleepIQBedSideEntity
-from .const import SIDES, SLEEP_NUMBER
+from . import DATA_SLEEPIQ, SleepIQDataUpdateCoordinator, SleepIQEntity
+from .const import BED, SIDES, SLEEP_NUMBER
 
 
 async def async_setup_entry(
@@ -25,18 +20,18 @@ async def async_setup_entry(
 
     for bed_id in coordinator.data:
         for side in SIDES:
-            if getattr(coordinator.data[bed_id], side) is not None:
+            if getattr(coordinator.data[bed_id][BED], side) is not None:
                 entities.append(SleepNumberSensor(coordinator, bed_id, side))
 
     async_add_entities(entities, True)
 
 
-class SleepNumberSensor(SleepIQBedSideEntity, SensorEntity):
+class SleepNumberSensor(SleepIQEntity, SensorEntity):
     """Implementation of a SleepIQ sensor."""
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[Dict[str, Bed]],
+        coordinator: SleepIQDataUpdateCoordinator,
         bed_id: str,
         side: str,
     ) -> None:
