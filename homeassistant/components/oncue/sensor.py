@@ -140,10 +140,8 @@ class OncueSensorEntity(CoordinatorEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        sensors = device.sensors
         self._device_id = device_id
-        self._sensor_name = sensor.name
-        self._attr_unique_id = f"{device_id}_{sensor.name}"
+        self._attr_unique_id = f"{device_id}_{description.key}"
         self._attr_name = f"{device.name} {sensor.display_name}"
         if description.native_unit_of_measurement is None and sensor.unit is not None:
             self._attr_native_unit_of_measurement = UNIT_MAPPINGS.get(
@@ -153,12 +151,16 @@ class OncueSensorEntity(CoordinatorEntity, SensorEntity):
             identifiers={(DOMAIN, device_id)},
             name=device.name,
             hw_version=device.hardware_version,
-            sw_version=sensors["FirmwareVersion"].display_value,
-            model=sensors["GensetModelNumberSelect"].display_value,
+            sw_version=device.sensors["FirmwareVersion"].display_value,
+            model=device.sensors["GensetModelNumberSelect"].display_value,
             manufacturer="Kohler",
         )
 
     @property
     def native_value(self) -> float | None:
         """Return the sensors state."""
-        return self.coordinator.data[self._device_id].sensors[self._sensor_name].value
+        return (
+            self.coordinator.data[self._device_id]
+            .sensors[self.entity_description.key]
+            .value
+        )
