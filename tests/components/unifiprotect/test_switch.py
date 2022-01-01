@@ -429,6 +429,7 @@ async def test_switch_camera_highfps(hass: HomeAssistant, camera: Camera):
 
 
 async def test_switch_camera_privacy(hass: HomeAssistant, camera: Camera):
+    """Tests Privacy Mode switch for cameras."""
 
     description = CAMERA_SWITCHES[3]
 
@@ -455,7 +456,7 @@ async def test_switch_camera_privacy(hass: HomeAssistant, camera: Camera):
 async def test_switch_camera_privacy_already_on(
     hass: HomeAssistant, camera_privacy: Camera
 ):
-    """Tests Privacy Mode switch for cameras."""
+    """Tests Privacy Mode switch for cameras with privacy mode defaulted on."""
 
     description = CAMERA_SWITCHES[3]
 
