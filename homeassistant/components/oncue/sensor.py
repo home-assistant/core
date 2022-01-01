@@ -1,7 +1,7 @@
 """Support for Oncue sensors."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
@@ -13,7 +13,19 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import DOMAIN
 
-STATIC_SENSORS = {"GensetSerialNumber", "GensetModelNumberSelect"}
+STATIC_SENSORS = {"GensetSerialNumber", "GensetModelNumberSelect", "FirmwareVersion"}
+
+DEVICE_CLASSES = {
+    "EngineOilPressure": SensorDeviceClass.PRESSURE,  # its PSI though
+    "EngineCoolantTemperature": SensorDeviceClass.TEMPERATURE,
+    "BatteryVoltage": SensorDeviceClass.VOLTAGE,
+    "LubeOilTemperature": SensorDeviceClass.TEMPERATURE,
+    "GensetControllerTemperature": SensorDeviceClass.TEMPERATURE,
+    "EngineCompartmentTemperature": SensorDeviceClass.TEMPERATURE,
+    "GeneratorTrueTotalPower": SensorDeviceClass.POWER,
+    "GeneratorVoltageAverageLineToLine": SensorDeviceClass.VOLTAGE,
+    "GeneratorFrequency": SensorDeviceClass.FREQUENCY,
+}
 
 
 async def async_setup_entry(
@@ -58,6 +70,7 @@ class OncueSensor(CoordinatorEntity, SensorEntity):
             ]
         self._attr_unique_id = f"{device_id}_{name}"
         self._attr_name = f'{device_data["name"]} {sensor_data["displayname"]}'
+        self._attr_device_class = DEVICE_CLASSES.get(name)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device_id)},
             name=device_data["name"],
