@@ -28,77 +28,78 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import DOMAIN
 
-SENSORS: dict[str, SensorEntityDescription] = {
-    "LatestFirmware": SensorEntityDescription(
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
         key="LatestFirmware",
     ),
-    "EngineSpeed": SensorEntityDescription(
+    SensorEntityDescription(
         key="EngineSpeed",
     ),
-    "EngineOilPressure": SensorEntityDescription(
+    SensorEntityDescription(
         key="EngineOilPressure",
         native_unit_of_measurement=PRESSURE_PSI,
         device_class=SensorDeviceClass.PRESSURE,
     ),
-    "EngineCoolantTemperature": SensorEntityDescription(
+    SensorEntityDescription(
         key="EngineCoolantTemperature", device_class=SensorDeviceClass.TEMPERATURE
     ),
-    "BatteryVoltage": SensorEntityDescription(
+    SensorEntityDescription(
         key="BatteryVoltage",
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
     ),
-    "LubeOilTemperature": SensorEntityDescription(
+    SensorEntityDescription(
         key="LubeOilTemperature",
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
-    "GensetControllerTemperature": SensorEntityDescription(
+    SensorEntityDescription(
         key="GensetControllerTemperature",
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
-    "EngineCompartmentTemperature": SensorEntityDescription(
+    SensorEntityDescription(
         key="EngineCompartmentTemperature",
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
-    "GeneratorTrueTotalPower": SensorEntityDescription(
+    SensorEntityDescription(
         key="GeneratorTrueTotalPower",
         native_unit_of_measurement=POWER_WATT,
         device_class=SensorDeviceClass.POWER,
     ),
-    "GeneratorTruePercentOfRatedPower": SensorEntityDescription(
+    SensorEntityDescription(
         key="GeneratorTruePercentOfRatedPower",
         native_unit_of_measurement=PERCENTAGE,
     ),
-    "GeneratorVoltageAverageLineToLine": SensorEntityDescription(
+    SensorEntityDescription(
         key="GeneratorVoltageAverageLineToLine",
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
     ),
-    "GeneratorFrequency": SensorEntityDescription(
+    SensorEntityDescription(
         key="GeneratorFrequency",
         native_unit_of_measurement=FREQUENCY_HERTZ,
         device_class=SensorDeviceClass.FREQUENCY,
     ),
-    "GensetState": SensorEntityDescription(
+    SensorEntityDescription(
         key="GensetState",
     ),
-    "GensetControllerTotalOperationTime": SensorEntityDescription(
+    SensorEntityDescription(
         key="GensetControllerTotalOperationTime",
     ),
-    "EngineTotalRunTime": SensorEntityDescription(
+    SensorEntityDescription(
         key="EngineTotalRunTime",
     ),
-    "AtsContactorPosition": SensorEntityDescription(
+    SensorEntityDescription(
         key="AtsContactorPosition",
     ),
-    "IPAddress": SensorEntityDescription(
+    SensorEntityDescription(
         key="IPAddress",
     ),
-    "ConnectedServerIPAddress": SensorEntityDescription(
+    SensorEntityDescription(
         key="ConnectedServerIPAddress",
     ),
-}
+)
 
+SENSOR_MAP = {description.key: description for description in SENSOR_TYPES}
 
 UNIT_MAPPINGS = {
     "C": TEMP_CELSIUS,
@@ -117,9 +118,9 @@ async def async_setup_entry(
     devices: dict[str, OncueDevice] = coordinator.data
     for device_id, device in devices.items():
         entities.extend(
-            OncueSensorEntity(coordinator, device_id, device, sensor, SENSORS[name])
-            for name, sensor in device.sensors.items()
-            if name not in SENSORS
+            OncueSensorEntity(coordinator, device_id, device, sensor, SENSOR_MAP[key])
+            for key, sensor in device.sensors.items()
+            if key not in SENSOR_MAP
         )
 
     async_add_entities(entities)
@@ -145,7 +146,9 @@ class OncueSensorEntity(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = f"{device_id}_{sensor.name}"
         self._attr_name = f"{device.name} {sensor.display_name}"
         if description.native_unit_of_measurement is None and sensor.unit is not None:
-            self._attr_native_unit_of_measurement = UNIT_MAPPINGS.get(sensor.unit)
+            self._attr_native_unit_of_measurement = UNIT_MAPPINGS.get(
+                sensor.unit, sensor.unit
+            )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device_id)},
             name=device.name,
