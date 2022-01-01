@@ -1,11 +1,9 @@
 """Config flow for Oncue integration."""
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Any
 
-import aiohttp
 from aiooncue import LoginFailedException, Oncue
 import voluptuous as vol
 
@@ -14,7 +12,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
+from .const import CONNECTION_EXCEPTIONS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +35,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     user_input[CONF_PASSWORD],
                     async_get_clientsession(self.hass),
                 ).async_login()
-            except (asyncio.TimeoutError, aiohttp.ClientError):
+            except CONNECTION_EXCEPTIONS:
                 errors["base"] = "cannot_connect"
             except LoginFailedException:
                 errors["base"] = "invalid_auth"

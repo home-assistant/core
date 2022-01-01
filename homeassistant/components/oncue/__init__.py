@@ -1,11 +1,9 @@
 """The Oncue integration."""
 from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
 import logging
 
-import aiohttp
 from aiooncue import LoginFailedException, Oncue
 
 from homeassistant.config_entries import ConfigEntry
@@ -15,7 +13,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN
+from .const import CONNECTION_EXCEPTIONS, DOMAIN
 
 PLATFORMS: list[str] = [Platform.SENSOR]
 
@@ -30,7 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     try:
         client.async_login()
-    except (asyncio.TimeoutError, aiohttp.ClientError) as ex:
+    except CONNECTION_EXCEPTIONS as ex:
         raise ConfigEntryNotReady(ex) from ex
     except LoginFailedException as ex:
         _LOGGER.error("Failed to login to oncue service: %s", ex)
