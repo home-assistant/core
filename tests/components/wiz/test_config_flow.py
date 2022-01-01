@@ -1,14 +1,14 @@
-"""Test the WiZ Light config flow."""
+"""Test the WiZ Platform config flow."""
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant import config_entries, setup
-from homeassistant.components.wiz_light.config_flow import (
+from homeassistant.components.wiz.config_flow import (
     WizLightConnectionError,
     WizLightTimeOutError,
 )
-from homeassistant.components.wiz_light.const import DOMAIN
+from homeassistant.components.wiz.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME
 
 from tests.common import MockConfigEntry
@@ -42,16 +42,13 @@ async def test_form(hass):
     assert result["errors"] == {}
     # Patch functions
     with patch(
-        "homeassistant.components.wiz_light.wizlight.getBulbConfig",
+        "homeassistant.components.wiz.wizlight.getBulbConfig",
         return_value=FAKE_BULB_CONFIG,
     ), patch(
-        "homeassistant.components.wiz_light.wizlight.getMac",
+        "homeassistant.components.wiz.wizlight.getMac",
         return_value="ABCABCABCABC",
-    ), patch(
-        "homeassistant.components.wiz_light.async_setup",
-        return_value=True,
     ) as mock_setup, patch(
-        "homeassistant.components.wiz_light.async_setup_entry",
+        "homeassistant.components.wiz.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -83,7 +80,7 @@ async def test_user_form_exceptions(hass, side_effect, error_base):
     )
 
     with patch(
-        "homeassistant.components.wiz_light.wizlight.getBulbConfig",
+        "homeassistant.components.wiz.wizlight.getBulbConfig",
         side_effect=side_effect,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -113,15 +110,13 @@ async def test_form_updates_unique_id(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     with patch(
-        "homeassistant.components.wiz_light.wizlight.getBulbConfig",
+        "homeassistant.components.wiz.wizlight.getBulbConfig",
         return_value=FAKE_BULB_CONFIG,
     ), patch(
-        "homeassistant.components.wiz_light.wizlight.getMac",
+        "homeassistant.components.wiz.wizlight.getMac",
         return_value="ABCABCABCABC",
     ), patch(
-        "homeassistant.components.wiz_light.async_setup", return_value=True
-    ), patch(
-        "homeassistant.components.wiz_light.async_setup_entry",
+        "homeassistant.components.wiz.async_setup_entry",
         return_value=True,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -131,4 +126,4 @@ async def test_form_updates_unique_id(hass):
         await hass.async_block_till_done()
 
     assert result2["type"] == "abort"
-    assert result2["reason"] == "single_instance_allowed"
+    assert result2["reason"] == "already_configured"

@@ -1,3 +1,0 @@
-update:
-  # Description of the update state service
-  description: Trigger for update the state of the WiZ Bulb.

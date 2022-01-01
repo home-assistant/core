@@ -2027,7 +2027,7 @@ pywemo==0.6.7
 # homeassistant.components.wilight
 pywilight==0.0.70
 
-# homeassistant.components.wiz_light
+# homeassistant.components.wiz
 pywizlight==0.4.15
 
 # homeassistant.components.xeoma

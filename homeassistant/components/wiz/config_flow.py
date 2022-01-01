@@ -1,4 +1,4 @@
-"""Config flow for wiz_light."""
+"""Config flow for WiZ Platform."""
 import logging
 
 from pywizlight import wizlight
@@ -22,7 +22,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for WiZ Light."""
+    """Handle a config flow for WiZ."""
 
     VERSION = 1
 

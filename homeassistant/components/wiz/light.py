@@ -1,4 +1,4 @@
-"""WiZ Light integration."""
+"""WiZ integration."""
 from __future__ import annotations
 
 from datetime import timedelta
@@ -42,7 +42,7 @@ SCAN_INTERVAL = timedelta(seconds=15)
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up the WiZ Light platform from config_flow."""
+    """Set up the WiZ Platform from config_flow."""
     # Assign configuration variables.
     wiz_data = hass.data[DOMAIN][entry.entry_id]
     wizbulb = WizBulbEntity(wiz_data.bulb, entry.data.get(CONF_NAME), wiz_data.scenes)
@@ -176,7 +176,7 @@ class WizBulbEntity(LightEntity):
                 self._bulbtype.kelvin_range.max
             )
         except WizLightNotKnownBulb:
-            _LOGGER.info("Kelvin is not present in the library. Fallback to 6500")
+            _LOGGER.debug("Kelvin is not present in the library. Fallback to 6500")
             return color_utils.color_temperature_kelvin_to_mired(6500)
 
     def get_max_mireds(self) -> int:
@@ -192,31 +192,31 @@ class WizBulbEntity(LightEntity):
                 self._bulbtype.kelvin_range.min
             )
         except WizLightNotKnownBulb:
-            _LOGGER.info("Kelvin is not present in the library. Fallback to 2200")
+            _LOGGER.debug("Kelvin is not present in the library. Fallback to 2200")
             return color_utils.color_temperature_kelvin_to_mired(2200)
 
     def get_supported_features(self) -> int:
         """Flag supported features."""
-        if self._bulbtype:
-            features = 0
-            try:
-                # Map features for better reading
-                if self._bulbtype.features.brightness:
-                    features = features | SUPPORT_BRIGHTNESS
-                if self._bulbtype.features.color:
-                    features = features | SUPPORT_COLOR
-                if self._bulbtype.features.effect:
-                    features = features | SUPPORT_EFFECT
-                if self._bulbtype.features.color_tmp:
-                    features = features | SUPPORT_COLOR_TEMP
-                return features
-            except WizLightNotKnownBulb:
-                _LOGGER.info(
-                    "Bulb is not present in the library. Fallback to full feature"
-                )
-                return SUPPORT_FEATURES_RGB
-        # fallback
-        return SUPPORT_FEATURES_RGB
+        if not self._bulbtype:
+            # fallback
+            return SUPPORT_FEATURES_RGB
+        features = 0
+        try:
+            # Map features for better reading
+            if self._bulbtype.features.brightness:
+                features = features | SUPPORT_BRIGHTNESS
+            if self._bulbtype.features.color:
+                features = features | SUPPORT_COLOR
+            if self._bulbtype.features.effect:
+                features = features | SUPPORT_EFFECT
+            if self._bulbtype.features.color_tmp:
+                features = features | SUPPORT_COLOR_TEMP
+            return features
+        except WizLightNotKnownBulb:
+            _LOGGER.warning(
+                "Bulb is not present in the library. Fallback to full feature"
+            )
+            return SUPPORT_FEATURES_RGB
 
     @property
     def effect(self):
@@ -270,13 +270,14 @@ class WizBulbEntity(LightEntity):
         """Update the state."""
         try:
             await self._light.updateState()
+        except (TimeoutError, WizLightTimeOutError) as ex:
+            _LOGGER.debug(ex)
+            self.update_state_unavailable()
+        else:
             if self._light.state is None:
                 self.update_state_unavailable()
             else:
                 self.update_state_available()
-        except (TimeoutError, WizLightTimeOutError) as ex:
-            _LOGGER.debug(ex)
-            self.update_state_unavailable()
         _LOGGER.debug(
             "[wizlight %s] updated state: %s and available: %s",
             self._light.ip,
@@ -288,19 +289,14 @@ class WizBulbEntity(LightEntity):
         """Update the brightness."""
         if self._light.state.get_brightness() is None:
             return
-        try:
-            brightness = self._light.state.get_brightness()
-            if 0 <= int(brightness) <= 255:
-                self._brightness = int(brightness)
-            else:
-                _LOGGER.error(
-                    "Received invalid brightness : %s. Expected: 0-255", brightness
-                )
-                self._brightness = None
-        # pylint: disable=broad-except
-        except Exception as ex:
-            _LOGGER.error(ex)
-            self._state = None
+        brightness = self._light.state.get_brightness()
+        if 0 <= int(brightness) <= 255:
+            self._brightness = int(brightness)
+        else:
+            _LOGGER.error(
+                "Received invalid brightness : %s. Expected: 0-255", brightness
+            )
+            self._brightness = None
 
     def update_temperature(self):
         """Update the temperature."""
@@ -323,22 +319,16 @@ class WizBulbEntity(LightEntity):
             return
         if self._light.state.get_rgb() is None:
             return
-        try:
-            rgb = self._light.state.get_rgb()
-            if rgb[0] is None:
-                # this is the case if the temperature was changed
-                # do nothing until the RGB color was changed
-                return
-            warmwhite = self._light.state.get_warm_white()
-            if warmwhite is None:
-                return
 
-            self._hscolor = convertHSfromRGBCW(rgb, warmwhite)
-
-        # pylint: disable=broad-except
-        except Exception:
-            _LOGGER.error("Cannot evaluate color", exc_info=True)
-            self._hscolor = None
+        rgb = self._light.state.get_rgb()
+        if rgb[0] is None:
+            # this is the case if the temperature was changed
+            # do nothing until the RGB color was changed
+            return
+        warmwhite = self._light.state.get_warm_white()
+        if warmwhite is None:
+            return
+        self._hscolor = convertHSfromRGBCW(rgb, warmwhite)
 
     def update_effect(self):
         """Update the bulb scene."""

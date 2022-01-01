@@ -1,4 +1,4 @@
-"""WiZ Light integration."""
+"""WiZ Platform integration."""
 from dataclasses import dataclass
 import logging
 
@@ -18,7 +18,7 @@ PLATFORMS = ["light"]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Set up the wiz_light integration from a config entry."""
+    """Set up the wiz integration from a config entry."""
     ip_address = entry.data.get(CONF_HOST)
     _LOGGER.debug("Get bulb with IP: %s", ip_address)
     try:

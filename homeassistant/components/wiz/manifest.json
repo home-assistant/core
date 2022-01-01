@@ -1,6 +1,6 @@
 {
-  "domain": "wiz_light",
-  "name": "WiZ Light",
+  "domain": "wiz",
+  "name": "WiZ Platform",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/wiz_light",
   "issue_tracker": "https://github.com/sbidy/wiz_light/issues",

@@ -342,7 +342,7 @@ FLOWS = [
     "wiffi",
     "wilight",
     "withings",
-    "wiz_light",
+    "wiz",
     "wled",
     "wolflink",
     "xbox",
