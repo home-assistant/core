@@ -34,9 +34,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("Failed to login to oncue service: %s", ex)
         return False
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = OnCueDataUpdateCoordinator(
-        hass, client, entry
-    )
+    coordinator = OnCueDataUpdateCoordinator(hass, client, entry)
+    await coordinator.async_config_entry_first_refresh()
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
