@@ -168,7 +168,9 @@ class OncueSensorEntity(CoordinatorEntity, SensorEntity):
                 "sensor.unit",
                 sensor.unit,
                 "self._attr_native_unit_of_measurement",
-                self._attr_native_unit_of_measurement,
+                self._attr_native_unit_of_measurement
+                if hasattr(self, "_attr_native_unit_of_measurement")
+                else None,
             ]
         )
 
