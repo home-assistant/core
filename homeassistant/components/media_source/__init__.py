@@ -12,7 +12,6 @@ from homeassistant.components.http.auth import async_sign_path
 from homeassistant.components.media_player import BrowseMedia
 from homeassistant.components.media_player.const import ATTR_MEDIA_CONTENT_ID
 from homeassistant.components.media_player.errors import BrowseError
-from homeassistant.components.media_source.models import BrowseMediaSource
 from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.integration_platform import (
@@ -24,6 +23,7 @@ from homeassistant.loader import bind_hass
 from . import local_source, models
 from .const import DOMAIN, URI_SCHEME, URI_SCHEME_REGEX
 from .error import Unresolvable
+from .models import BrowseMediaSource
 
 DEFAULT_EXPIRY_TIME = 3600 * 24
 
