@@ -1,8 +1,8 @@
 """Tests for UPnP/IGD sensor."""
 
 from unittest.mock import patch
-from homeassistant.components.upnp import UpnpDataUpdateCoordinator
 
+from homeassistant.components.upnp import UpnpDataUpdateCoordinator
 from homeassistant.components.upnp.const import (
     BYTES_RECEIVED,
     BYTES_SENT,
