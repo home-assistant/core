@@ -1,6 +1,8 @@
 """Plugged In Status Support for the Nissan Leaf."""
 from __future__ import annotations
 
+import logging
+
 from pycarwings2.pycarwings2 import Leaf
 
 from homeassistant.components.binary_sensor import (
@@ -12,7 +14,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import LeafEntity
-from .const import DATA_CHARGING, DATA_LEAF, DATA_PLUGGED_IN, LOGGER
+from .const import DATA_CHARGING, DATA_LEAF, DATA_PLUGGED_IN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(
@@ -27,7 +31,7 @@ def setup_platform(
 
     devices: list[LeafEntity] = []
     for vin, datastore in hass.data[DATA_LEAF].items():
-        LOGGER.debug("Adding binary_sensors for vin=%s", vin)
+        _LOGGER.debug("Adding binary_sensors for vin=%s", vin)
         devices.append(LeafPluggedInSensor(datastore))
         devices.append(LeafChargingSensor(datastore))
 

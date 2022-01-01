@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime, timedelta
 from http import HTTPStatus
+import logging
 import sys
 from typing import Any, cast
 
@@ -45,13 +46,14 @@ from .const import (
     DEFAULT_INTERVAL,
     DOMAIN,
     INITIAL_UPDATE,
-    LOGGER,
     MAX_RESPONSE_ATTEMPTS,
     MIN_UPDATE_INTERVAL,
     PYCARWINGS2_SLEEP,
     RESTRICTED_BATTERY,
     RESTRICTED_INTERVAL,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -110,7 +112,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
             data_store = hass.data[DATA_LEAF][vin]
             await data_store.async_update_data(utcnow())
         else:
-            LOGGER.debug("Vin %s not recognised for update", vin)
+            _LOGGER.debug("Vin %s not recognised for update", vin)
 
     async def async_handle_start_charge(service: ServiceCall) -> None:
         """Handle service to start charging."""
@@ -127,7 +129,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
             # for the charging request to reach the car.
             result = await hass.async_add_executor_job(data_store.leaf.start_charging)
             if result:
-                LOGGER.debug("Start charging sent, request updated data in 1 minute")
+                _LOGGER.debug("Start charging sent, request updated data in 1 minute")
                 check_charge_at = utcnow() + timedelta(minutes=1)
                 data_store.next_update = check_charge_at
                 async_track_point_in_utc_time(
@@ -135,11 +137,11 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 )
 
         else:
-            LOGGER.debug("Vin %s not recognised for update", vin)
+            _LOGGER.debug("Vin %s not recognised for update", vin)
 
     def setup_leaf(car_config: dict[str, Any]) -> None:
         """Set up a car."""
-        LOGGER.debug("Logging into You+Nissan")
+        _LOGGER.debug("Logging into You+Nissan")
 
         username: str = car_config[CONF_USERNAME]
         password: str = car_config[CONF_PASSWORD]
@@ -151,19 +153,19 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
             sess = Session(username, password, region)
             leaf = sess.get_leaf()
         except KeyError:
-            LOGGER.error(
+            _LOGGER.error(
                 "Unable to fetch car details..."
                 " do you actually have a Leaf connected to your account?"
             )
             return
         except CarwingsError:
-            LOGGER.error(
+            _LOGGER.error(
                 "An unknown error occurred while connecting to Nissan: %s",
                 sys.exc_info()[0],
             )
             return
 
-        LOGGER.warning(
+        _LOGGER.warning(
             "WARNING: This may poll your Leaf too often, and drain the 12V"
             " battery.  If you drain your cars 12V battery it WILL NOT START"
             " as the drive train battery won't connect."
@@ -249,7 +251,7 @@ class LeafDataStore:
 
         await self.async_refresh_data(now)
         self.next_update = self.get_next_interval()
-        LOGGER.debug("Next update=%s", self.next_update)
+        _LOGGER.debug("Next update=%s", self.next_update)
 
         if self.next_update is not None:
             self._remove_listener = async_track_point_in_utc_time(
@@ -272,7 +274,7 @@ class LeafDataStore:
             and self.data[DATA_CHARGING] is False
             and self.data[DATA_BATTERY] <= RESTRICTED_BATTERY
         ):
-            LOGGER.debug(
+            _LOGGER.debug(
                 "Low battery so restricting refresh frequency (%s)", self.leaf.nickname
             )
             interval = RESTRICTED_INTERVAL
@@ -292,10 +294,10 @@ class LeafDataStore:
     async def async_refresh_data(self, now: datetime) -> None:
         """Refresh the leaf data and update the datastore."""
         if self.request_in_progress:
-            LOGGER.debug("Refresh currently in progress for %s", self.leaf.nickname)
+            _LOGGER.debug("Refresh currently in progress for %s", self.leaf.nickname)
             return
 
-        LOGGER.debug("Updating Nissan Leaf Data")
+        _LOGGER.debug("Updating Nissan Leaf Data")
 
         self.last_check = datetime.today()
         self.request_in_progress = True
@@ -303,7 +305,7 @@ class LeafDataStore:
         server_response = await self.async_get_battery()
 
         if server_response is not None:
-            LOGGER.debug("Server Response: %s", server_response.__dict__)
+            _LOGGER.debug("Server Response: %s", server_response.__dict__)
 
             if server_response.answer["status"] == HTTPStatus.OK:
                 self.data[DATA_BATTERY] = server_response.battery_percent
@@ -333,13 +335,13 @@ class LeafDataStore:
             try:
                 climate_response = await self.async_get_climate()
                 if climate_response is not None:
-                    LOGGER.debug(
+                    _LOGGER.debug(
                         "Got climate data for Leaf: %s", climate_response.__dict__
                     )
                     self.data[DATA_CLIMATE] = climate_response.is_hvac_running
                     self.last_climate_response = utcnow()
             except CarwingsError:
-                LOGGER.error("Error fetching climate info")
+                _LOGGER.error("Error fetching climate info")
 
         self.request_in_progress = False
         async_dispatcher_send(self.hass, SIGNAL_UPDATE_LEAF)
@@ -350,27 +352,27 @@ class LeafDataStore:
         """Request battery update from Nissan servers."""
         try:
             # Request battery update from the car
-            LOGGER.debug("Requesting battery update, %s", self.leaf.vin)
+            _LOGGER.debug("Requesting battery update, %s", self.leaf.vin)
             start_date: datetime | None = None
             try:
                 start_server_info = await self.hass.async_add_executor_job(
                     self.leaf.get_latest_battery_status
                 )
             except TypeError:  # pycarwings2 can fail if Nissan returns nothing
-                LOGGER.debug("Battery status check returned nothing")
+                _LOGGER.debug("Battery status check returned nothing")
             else:
                 if not start_server_info:
-                    LOGGER.debug("Battery status check failed")
+                    _LOGGER.debug("Battery status check failed")
                 else:
                     start_date = _extract_start_date(start_server_info)
             await asyncio.sleep(1)  # Critical sleep
             request = await self.hass.async_add_executor_job(self.leaf.request_update)
             if not request:
-                LOGGER.error("Battery update request failed")
+                _LOGGER.error("Battery update request failed")
                 return None
 
             for attempt in range(MAX_RESPONSE_ATTEMPTS):
-                LOGGER.debug(
+                _LOGGER.debug(
                     "Waiting %s seconds for battery update (%s) (%s)",
                     PYCARWINGS2_SLEEP,
                     self.leaf.vin,
@@ -402,10 +404,10 @@ class LeafDataStore:
                         self.leaf.request_update
                     )
                     if not request:
-                        LOGGER.error("Battery update request failed")
+                        _LOGGER.error("Battery update request failed")
                         return None
 
-            LOGGER.debug(
+            _LOGGER.debug(
                 "%s attempts exceeded return latest data from server",
                 MAX_RESPONSE_ATTEMPTS,
             )
@@ -416,10 +418,10 @@ class LeafDataStore:
             )
             return server_info
         except CarwingsError:
-            LOGGER.error("An error occurred getting battery status")
+            _LOGGER.error("An error occurred getting battery status")
             return None
         except (KeyError, TypeError):
-            LOGGER.error("An error occurred parsing response from server")
+            _LOGGER.error("An error occurred parsing response from server")
             return None
 
     async def async_get_climate(
@@ -431,7 +433,7 @@ class LeafDataStore:
                 self.leaf.get_latest_hvac_status
             )
         except CarwingsError:
-            LOGGER.error(
+            _LOGGER.error(
                 "An error occurred communicating with the car %s", self.leaf.vin
             )
             return None
@@ -440,18 +442,18 @@ class LeafDataStore:
         """Set climate control mode via Nissan servers."""
         climate_result = None
         if toggle:
-            LOGGER.debug("Requesting climate turn on for %s", self.leaf.vin)
+            _LOGGER.debug("Requesting climate turn on for %s", self.leaf.vin)
             set_function = self.leaf.start_climate_control
             result_function = self.leaf.get_start_climate_control_result
         else:
-            LOGGER.debug("Requesting climate turn off for %s", self.leaf.vin)
+            _LOGGER.debug("Requesting climate turn off for %s", self.leaf.vin)
             set_function = self.leaf.stop_climate_control
             result_function = self.leaf.get_stop_climate_control_result
 
         request = await self.hass.async_add_executor_job(set_function)
         for attempt in range(MAX_RESPONSE_ATTEMPTS):
             if attempt > 0:
-                LOGGER.debug(
+                _LOGGER.debug(
                     "Climate data not in yet (%s) (%s). Waiting (%s) seconds",
                     self.leaf.vin,
                     attempt,
@@ -467,11 +469,11 @@ class LeafDataStore:
                 break
 
         if climate_result is not None:
-            LOGGER.debug("Climate result: %s", climate_result.__dict__)
+            _LOGGER.debug("Climate result: %s", climate_result.__dict__)
             async_dispatcher_send(self.hass, SIGNAL_UPDATE_LEAF)
             return bool(climate_result.is_hvac_running) == toggle
 
-        LOGGER.debug("Climate result not returned by Nissan servers")
+        _LOGGER.debug("Climate result not returned by Nissan servers")
         return False
 
 
@@ -484,7 +486,7 @@ class LeafEntity(Entity):
 
     def log_registration(self) -> None:
         """Log registration."""
-        LOGGER.debug(
+        _LOGGER.debug(
             "Registered %s integration for VIN %s",
             self.__class__.__name__,
             self.car.leaf.vin,

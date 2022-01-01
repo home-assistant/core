@@ -2,12 +2,9 @@
 from __future__ import annotations
 
 from datetime import timedelta
-import logging
 from typing import Final
 
 DOMAIN: Final = "nissan_leaf"
-
-LOGGER = logging.getLogger(__package__)
 
 DATA_LEAF: Final = "nissan_leaf_data"
 

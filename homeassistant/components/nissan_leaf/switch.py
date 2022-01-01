@@ -1,6 +1,7 @@
 """Charge and Climate Control Support for the Nissan Leaf."""
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from pycarwings2.pycarwings2 import Leaf
@@ -11,7 +12,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import LeafEntity
-from .const import DATA_CLIMATE, DATA_LEAF, LOGGER
+from .const import DATA_CLIMATE, DATA_LEAF
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(
@@ -26,7 +29,7 @@ def setup_platform(
 
     devices = []
     for vin, datastore in hass.data[DATA_LEAF].items():
-        LOGGER.debug("Adding switch for vin=%s", vin)
+        _LOGGER.debug("Adding switch for vin=%s", vin)
         devices.append(LeafClimateSwitch(datastore))
 
     add_devices(devices, True)
@@ -47,7 +50,7 @@ class LeafClimateSwitch(LeafEntity, ToggleEntity):
 
     def log_registration(self) -> None:
         """Log registration."""
-        LOGGER.debug(
+        _LOGGER.debug(
             "Registered LeafClimateSwitch integration with Home Assistant for VIN %s",
             self.car.leaf.vin,
         )
