@@ -19,7 +19,7 @@ from homeassistant.const import (
     CONF_RECIPIENT,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import ServiceCall, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.dispatcher import (
@@ -28,6 +28,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import ConfigType
 
 from . import sensor_types
 
@@ -171,7 +172,7 @@ class LTEData:
         return next(iter(self.modem_data.values()))
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Netgear LTE component."""
     if DATA_KEY not in hass.data:
         websession = async_create_clientsession(
