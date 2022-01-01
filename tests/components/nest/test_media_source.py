@@ -38,8 +38,8 @@ DEVICE_ID = "example/api/device/id"
 DEVICE_NAME = "Front"
 PLATFORM = "camera"
 NEST_EVENT = "nest_event"
-EVENT_ID = "1aXEvi9ajKVTdDsXdJda8fzfCa..."
-EVENT_SESSION_ID = "CjY5Y3VKaTZwR3o4Y19YbTVfMF..."
+EVENT_ID = "1aXEvi9ajKVTdDsXdJda8fzfCa"
+EVENT_SESSION_ID = "CjY5Y3VKaTZwR3o4Y19YbTVfMF"
 CAMERA_DEVICE_TYPE = "sdm.devices.types.CAMERA"
 CAMERA_TRAITS = {
     "sdm.devices.traits.Info": {
@@ -1319,7 +1319,7 @@ async def test_camera_image_resize(hass, auth, hass_client):
 
     client = await hass_client()
     response = await client.get(
-        f"/api/nest/event_media/{device.id}/{EVENT_SESSION_ID}?width=175&height=175"
+        f"/api/nest/event_media/{device.id}/{EVENT_SESSION_ID}/thumbnail"
     )
     assert response.status == HTTPStatus.OK, "Response not matched: %s" % response
     contents = await response.read()
@@ -1333,5 +1333,5 @@ async def test_camera_image_resize(hass, auth, hass_client):
     assert browse.identifier == device.id
     assert (
         browse.thumbnail
-        == f"/api/nest/event_media/{device.id}/{EVENT_SESSION_ID}?width=175&height=175"
+        == f"/api/nest/event_media/{device.id}/{EVENT_SESSION_ID}/thumbnail"
     )
