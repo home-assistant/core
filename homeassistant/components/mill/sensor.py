@@ -204,7 +204,6 @@ class LocalMillSensor(CoordinatorEntity, SensorEntity):
             f"{coordinator.mill_data_connection.name} {entity_description.name}"
         )
         if mac := coordinator.mill_data_connection.mac_address:
-            self._attr_unique_id = mac
             self._attr_unique_id = f"{mac}_{entity_description.key}"
             self._attr_device_info = DeviceInfo(
                 connections={(CONNECTION_NETWORK_MAC, mac)},
