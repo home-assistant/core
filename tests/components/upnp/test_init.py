@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 import pytest
-from homeassistant.components import ssdp
 
+from homeassistant.components import ssdp
 from homeassistant.components.upnp import UpnpDataUpdateCoordinator
 from homeassistant.components.upnp.const import (
     CONFIG_ENTRY_ST,
@@ -34,7 +34,9 @@ async def test_async_setup_entry_default(hass: HomeAssistant):
     assert await hass.config_entries.async_setup(entry.entry_id) is True
 
 
-async def test_reinitialize_device(hass: HomeAssistant, setup_integration: MockConfigEntry):
+async def test_reinitialize_device(
+    hass: HomeAssistant, setup_integration: MockConfigEntry
+):
     """Test device is reinitialized when device changes location."""
     config_entry = setup_integration
     coordinator: UpnpDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]

@@ -199,7 +199,9 @@ async def test_options_flow(hass: HomeAssistant):
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id) is True
     await hass.async_block_till_done()
-    mock_device: MockIgdDevice = hass.data[DOMAIN][config_entry.entry_id].device._igd_device
+    mock_device: MockIgdDevice = hass.data[DOMAIN][
+        config_entry.entry_id
+    ].device._igd_device
 
     # Reset.
     mock_device.traffic_times_polled = 0

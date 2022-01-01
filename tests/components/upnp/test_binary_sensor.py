@@ -1,7 +1,6 @@
 """Tests for UPnP/IGD binary_sensor."""
 
 from datetime import timedelta
-from unittest.mock import AsyncMock
 
 from homeassistant.components.upnp.const import (
     DOMAIN,
@@ -12,16 +11,18 @@ from homeassistant.components.upnp.const import (
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
-from tests.common import MockConfigEntry, async_fire_time_changed
-
 from .conftest import MockIgdDevice
+
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_upnp_binary_sensors(
     hass: HomeAssistant, setup_integration: MockConfigEntry
 ):
     """Test normal sensors."""
-    mock_device: MockIgdDevice = hass.data[DOMAIN][setup_integration.entry_id].device._igd_device
+    mock_device: MockIgdDevice = hass.data[DOMAIN][
+        setup_integration.entry_id
+    ].device._igd_device
 
     # First poll.
     wan_status_state = hass.states.get("binary_sensor.mock_name_wan_status")

@@ -2,10 +2,10 @@
 from typing import Optional, Sequence
 from unittest.mock import AsyncMock, MagicMock, patch
 from urllib.parse import urlparse
+
 from async_upnp_client.client import UpnpDevice
 from async_upnp_client.event_handler import UpnpEventHandler
 from async_upnp_client.profiles.igd import StatusInfo
-
 import pytest
 
 from homeassistant.components import ssdp
@@ -110,7 +110,7 @@ class MockIgdDevice:
         self._timestamp = dt.utcnow()
         self.traffic_times_polled = 0
         self.status_times_polled = 0
-        
+
         self.traffic_data = {
             BYTES_RECEIVED: 0,
             BYTES_SENT: 0,
@@ -184,19 +184,25 @@ class MockIgdDevice:
         :param services List of service names to try to get action from, defaults to [WANIPC,WANPPP]
         """
         self.status_times_polled += 1
-        return StatusInfo(self.status_data[WAN_STATUS], "", self.status_data[ROUTER_UPTIME])
+        return StatusInfo(
+            self.status_data[WAN_STATUS], "", self.status_data[ROUTER_UPTIME]
+        )
 
 
 @pytest.fixture(autouse=True)
 def mock_upnp_device():
     """Mock homeassistant.components.upnp.Device."""
-    async def mock_async_create_upnp_device(hass: HomeAssistant, location: str) -> UpnpDevice:
+
+    async def mock_async_create_upnp_device(
+        hass: HomeAssistant, location: str
+    ) -> UpnpDevice:
         """Create UPnP device."""
         return MockUpnpDevice(location)
 
     with patch(
-        "homeassistant.components.upnp.device.async_create_upnp_device", side_effect=mock_async_create_upnp_device
-    ) as mock_async_create_upnp_device, patch (
+        "homeassistant.components.upnp.device.async_create_upnp_device",
+        side_effect=mock_async_create_upnp_device,
+    ) as mock_async_create_upnp_device, patch(
         "homeassistant.components.upnp.device.IgdDevice", new=MockIgdDevice
     ) as mock_igd_device:
         yield mock_async_create_upnp_device, mock_igd_device
