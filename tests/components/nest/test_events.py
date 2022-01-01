@@ -4,6 +4,8 @@ These tests fake out the subscriber/devicemanager, and are not using a real
 pubsub subscriber.
 """
 
+from __future__ import annotations
+
 from collections.abc import Mapping
 import datetime
 from typing import Any
