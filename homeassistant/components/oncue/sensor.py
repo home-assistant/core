@@ -120,7 +120,7 @@ async def async_setup_entry(
         entities.extend(
             OncueSensorEntity(coordinator, device_id, device, sensor, SENSOR_MAP[key])
             for key, sensor in device.sensors.items()
-            if key not in SENSOR_MAP
+            if key in SENSOR_MAP
         )
 
     async_add_entities(entities)
