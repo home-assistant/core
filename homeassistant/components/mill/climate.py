@@ -205,8 +205,7 @@ class LocalMillHeater(CoordinatorEntity, ClimateEntity):
         """Initialize the thermostat."""
         super().__init__(coordinator)
         self._attr_name = coordinator.mill_data_connection.name
-        if coordinator.mill_data_connection.mac_address:
-            mac = self.coordinator.mill_data_connection.mac_address
+        if mac := coordinator.mill_data_connection.mac_address:
             self._attr_unique_id = mac
             self._attr_device_info = DeviceInfo(
                 connections={(CONNECTION_NETWORK_MAC, mac)},
