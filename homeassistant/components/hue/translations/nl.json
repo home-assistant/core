@@ -70,7 +70,7 @@
                     "allow_hue_groups": "Sta Hue-groepen toe",
                     "allow_hue_scenes": "Sta Hue sc\u00e8nes toe",
                     "allow_unreachable": "Onbereikbare lampen toestaan hun status correct te melden",
-                    "ignore_availability": "Negeer beschikbaarheid status voor deze apparaten"
+                    "ignore_availability": "Verbindingsstatus negeren voor de opgegeven apparaten"
                 }
             }
         }
