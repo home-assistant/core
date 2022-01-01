@@ -85,7 +85,7 @@ class OncueSensorEntity(CoordinatorEntity, SensorEntity):
         device: OncueDevice,
         sensor: OncueSensor,
     ) -> None:
-        """Initialize the switch."""
+        """Initialize the sensor."""
         super().__init__(coordinator)
         sensors = device.sensors
         self._device_id = device_id
