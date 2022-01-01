@@ -227,7 +227,7 @@ class EntityDescription:
     key: str
 
     device_class: str | None = None
-    # Type Literal (ENTITY_CATEG*) is deprecated as of 2021.12, use EntityCategory
+    # Type string is deprecated as of 2021.12, use EntityCategory
     entity_category: EntityCategory | Literal[
         "config", "diagnostic", "system"
     ] | None = None
@@ -459,7 +459,7 @@ class Entity(ABC):
         """Return the attribution."""
         return self._attr_attribution
 
-    # Type str (ENTITY_CATEG*) is deprecated as of 2021.12, use EntityCategory
+    # Type str is deprecated as of 2021.12, use EntityCategory
     @property
     def entity_category(self) -> EntityCategory | str | None:
         """Return the category of the entity, if any."""
