@@ -3,8 +3,8 @@
 from datetime import timedelta
 import logging
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import CONF_ENTITIES, DEVICE_CLASS_TIMESTAMP
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.const import CONF_ENTITIES
 import homeassistant.util.dt as dt_util
 
 from .const import ATTR_VALUE, BSH_OPERATION_STATE, DOMAIN
@@ -57,7 +57,7 @@ class HomeConnectSensor(HomeConnectEntity, SensorEntity):
         if self._key not in status:
             self._state = None
         else:
-            if self.device_class == DEVICE_CLASS_TIMESTAMP:
+            if self.device_class == SensorDeviceClass.TIMESTAMP:
                 if ATTR_VALUE not in status[self._key]:
                     self._state = None
                 elif (

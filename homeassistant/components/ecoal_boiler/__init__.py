@@ -12,8 +12,10 @@ from homeassistant.const import (
     CONF_SWITCHES,
     CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,7 +81,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, hass_config):
+def setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     """Set up global ECoalController instance same for sensors and switches."""
 
     conf = hass_config[DOMAIN]

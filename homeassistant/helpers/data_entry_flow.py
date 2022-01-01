@@ -10,7 +10,8 @@ import voluptuous as vol
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
-import homeassistant.helpers.config_validation as cv
+
+from . import config_validation as cv
 
 
 class _BaseFlowManagerView(HomeAssistantView):

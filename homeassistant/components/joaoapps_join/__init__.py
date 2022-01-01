@@ -13,6 +13,7 @@ from pyjoin import (
 import voluptuous as vol
 
 from homeassistant.const import CONF_API_KEY, CONF_DEVICE_ID, CONF_NAME
+from homeassistant.core import ServiceCall
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,7 +45,7 @@ CONFIG_SCHEMA = vol.Schema(
 def register_device(hass, api_key, name, device_id, device_ids, device_names):
     """Register services for each join device listed."""
 
-    def ring_service(service):
+    def ring_service(service: ServiceCall) -> None:
         """Service to ring devices."""
         ring_device(
             api_key=api_key,
@@ -53,7 +54,7 @@ def register_device(hass, api_key, name, device_id, device_ids, device_names):
             device_names=device_names,
         )
 
-    def set_wallpaper_service(service):
+    def set_wallpaper_service(service: ServiceCall) -> None:
         """Service to set wallpaper on devices."""
         set_wallpaper(
             api_key=api_key,
@@ -63,7 +64,7 @@ def register_device(hass, api_key, name, device_id, device_ids, device_names):
             url=service.data.get("url"),
         )
 
-    def send_file_service(service):
+    def send_file_service(service: ServiceCall) -> None:
         """Service to send files to devices."""
         send_file(
             api_key=api_key,
@@ -73,7 +74,7 @@ def register_device(hass, api_key, name, device_id, device_ids, device_names):
             url=service.data.get("url"),
         )
 
-    def send_url_service(service):
+    def send_url_service(service: ServiceCall) -> None:
         """Service to open url on devices."""
         send_url(
             api_key=api_key,
@@ -83,7 +84,7 @@ def register_device(hass, api_key, name, device_id, device_ids, device_names):
             url=service.data.get("url"),
         )
 
-    def send_tasker_service(service):
+    def send_tasker_service(service: ServiceCall) -> None:
         """Service to open url on devices."""
         send_notification(
             api_key=api_key,
@@ -93,7 +94,7 @@ def register_device(hass, api_key, name, device_id, device_ids, device_names):
             text=service.data.get("command"),
         )
 
-    def send_sms_service(service):
+    def send_sms_service(service: ServiceCall) -> None:
         """Service to send sms from devices."""
         send_sms(
             device_id=device_id,

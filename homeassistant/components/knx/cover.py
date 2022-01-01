@@ -12,7 +12,6 @@ from homeassistant import config_entries
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    DEVICE_CLASS_BLIND,
     SUPPORT_CLOSE,
     SUPPORT_CLOSE_TILT,
     SUPPORT_OPEN,
@@ -21,6 +20,7 @@ from homeassistant.components.cover import (
     SUPPORT_SET_TILT_POSITION,
     SUPPORT_STOP,
     SUPPORT_STOP_TILT,
+    CoverDeviceClass,
     CoverEntity,
 )
 from homeassistant.const import (
@@ -83,7 +83,7 @@ class KNXCover(KnxEntity, CoverEntity):
         self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
 
         self._attr_device_class = config.get(CONF_DEVICE_CLASS) or (
-            DEVICE_CLASS_BLIND if self._device.supports_angle else None
+            CoverDeviceClass.BLIND if self._device.supports_angle else None
         )
         self._attr_supported_features = (
             SUPPORT_CLOSE | SUPPORT_OPEN | SUPPORT_SET_POSITION

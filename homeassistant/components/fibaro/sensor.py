@@ -1,13 +1,9 @@
 """Support for Fibaro sensors."""
 from contextlib import suppress
 
-from homeassistant.components.sensor import DOMAIN, SensorEntity
+from homeassistant.components.sensor import DOMAIN, SensorDeviceClass, SensorEntity
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
-    DEVICE_CLASS_CO2,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_TEMPERATURE,
     LIGHT_LUX,
     PERCENTAGE,
     TEMP_CELSIUS,
@@ -21,7 +17,7 @@ SENSOR_TYPES = {
         "Temperature",
         None,
         None,
-        DEVICE_CLASS_TEMPERATURE,
+        SensorDeviceClass.TEMPERATURE,
     ],
     "com.fibaro.smokeSensor": [
         "Smoke",
@@ -34,15 +30,15 @@ SENSOR_TYPES = {
         CONCENTRATION_PARTS_PER_MILLION,
         None,
         None,
-        DEVICE_CLASS_CO2,
+        SensorDeviceClass.CO2,
     ],
     "com.fibaro.humiditySensor": [
         "Humidity",
         PERCENTAGE,
         None,
-        DEVICE_CLASS_HUMIDITY,
+        SensorDeviceClass.HUMIDITY,
     ],
-    "com.fibaro.lightSensor": ["Light", LIGHT_LUX, None, DEVICE_CLASS_ILLUMINANCE],
+    "com.fibaro.lightSensor": ["Light", LIGHT_LUX, None, SensorDeviceClass.ILLUMINANCE],
 }
 
 

@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 import base64
 import collections
-from collections.abc import Awaitable, Callable, Mapping
+from collections.abc import Awaitable, Callable, Iterable, Mapping
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -61,6 +61,7 @@ from .const import (
     CONF_DURATION,
     CONF_LOOKBACK,
     DATA_CAMERA_PREFS,
+    DATA_RTSP_TO_WEB_RTC,
     DOMAIN,
     SERVICE_RECORD,
     STREAM_TYPE_HLS,
@@ -92,6 +93,8 @@ STATE_IDLE: Final = "idle"
 # Bitfield of features supported by the camera entity
 SUPPORT_ON_OFF: Final = 1
 SUPPORT_STREAM: Final = 2
+
+RTSP_PREFIXES = {"rtsp://", "rtsps://"}
 
 DEFAULT_CONTENT_TYPE: Final = "image/jpeg"
 ENTITY_IMAGE_URL: Final = "/api/camera_proxy/{0}?token={1}"
@@ -284,6 +287,55 @@ def _get_camera_from_entity_id(hass: HomeAssistant, entity_id: str) -> Camera:
     return cast(Camera, camera)
 
 
+def async_register_rtsp_to_web_rtc_provider(
+    hass: HomeAssistant,
+    domain: str,
+    provider: Callable[[str, str], Awaitable[str | None]],
+) -> Callable[[], None]:
+    """Register an RTSP to WebRTC provider.
+
+    Integrations may register a Callable that accepts a `stream_source` and
+    SDP `offer` as an input, and the output is the SDP `answer`. An implementation
+    may return None if the source or offer is not eligible or throw HomeAssistantError
+    on failure. The first provider to satisfy the offer will be used.
+    """
+    if DOMAIN not in hass.data:
+        raise ValueError("Unexpected state, camera not loaded")
+
+    def remove_provider() -> None:
+        if domain in hass.data[DATA_RTSP_TO_WEB_RTC]:
+            del hass.data[DATA_RTSP_TO_WEB_RTC]
+        hass.async_create_task(_async_refresh_providers(hass))
+
+    hass.data.setdefault(DATA_RTSP_TO_WEB_RTC, {})
+    hass.data[DATA_RTSP_TO_WEB_RTC][domain] = provider
+    hass.async_create_task(_async_refresh_providers(hass))
+    return remove_provider
+
+
+async def _async_refresh_providers(hass: HomeAssistant) -> None:
+    """Check all cameras for any state changes for registered providers."""
+
+    async def _refresh(camera: Camera) -> None:
+        if await camera.async_refresh_providers():
+            camera.async_write_ha_state()
+
+    component: EntityComponent = hass.data[DOMAIN]
+    await asyncio.gather(
+        *(_refresh(cast(Camera, camera)) for camera in component.entities)
+    )
+
+
+def _async_get_rtsp_to_web_rtc_providers(
+    hass: HomeAssistant,
+) -> Iterable[Callable[[str, str], Awaitable[str | None]]]:
+    """Return registered RTSP to WebRTC providers."""
+    providers: dict[str, Callable[[str, str], Awaitable[str | None]]] = hass.data.get(
+        DATA_RTSP_TO_WEB_RTC, {}
+    )
+    return providers.values()
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the camera component."""
     component = hass.data[DOMAIN] = EntityComponent(
@@ -312,7 +364,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             camera_prefs = prefs.get(camera.entity_id)
             if not camera_prefs.preload_stream:
                 continue
-            stream = await camera.create_stream()
+            stream = await camera.async_create_stream()
             if not stream:
                 continue
             stream.keepalive = True
@@ -390,6 +442,8 @@ class Camera(Entity):
         self.access_tokens: collections.deque = collections.deque([], 2)
         self._warned_old_signature = False
         self.async_update_token()
+        self._create_stream_lock: asyncio.Lock | None = None
+        self._rtsp_to_webrtc = False
 
     @property
     def entity_picture(self) -> str:
@@ -445,18 +499,36 @@ class Camera(Entity):
             return self._attr_frontend_stream_type
         if not self.supported_features & SUPPORT_STREAM:
             return None
+        if self._rtsp_to_webrtc:
+            return STREAM_TYPE_WEB_RTC
         return STREAM_TYPE_HLS
 
-    async def create_stream(self) -> Stream | None:
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        if self.stream and not self.stream.available:
+            return self.stream.available
+        return super().available
+
+    async def async_create_stream(self) -> Stream | None:
         """Create a Stream for stream_source."""
         # There is at most one stream (a decode worker) per camera
-        if not self.stream:
-            async with async_timeout.timeout(CAMERA_STREAM_SOURCE_TIMEOUT):
-                source = await self.stream_source()
-            if not source:
-                return None
-            self.stream = create_stream(self.hass, source, options=self.stream_options)
-        return self.stream
+        if not self._create_stream_lock:
+            self._create_stream_lock = asyncio.Lock()
+        async with self._create_stream_lock:
+            if not self.stream:
+                async with async_timeout.timeout(CAMERA_STREAM_SOURCE_TIMEOUT):
+                    source = await self.stream_source()
+                if not source:
+                    return None
+                self.stream = create_stream(
+                    self.hass,
+                    source,
+                    options=self.stream_options,
+                    stream_label=self.entity_id,
+                )
+                self.stream.set_update_callback(self.async_write_ha_state)
+            return self.stream
 
     async def stream_source(self) -> str | None:
         """Return the source of the stream.
@@ -470,8 +542,17 @@ class Camera(Entity):
         """Handle the WebRTC offer and return an answer.
 
         This is used by cameras with SUPPORT_STREAM and STREAM_TYPE_WEB_RTC.
+
+        Integrations can override with a native WebRTC implementation.
         """
-        raise NotImplementedError()
+        stream_source = await self.stream_source()
+        if not stream_source:
+            return None
+        for provider in _async_get_rtsp_to_web_rtc_providers(self.hass):
+            answer_sdp = await provider(stream_source, offer_sdp)
+            if answer_sdp:
+                return answer_sdp
+        raise HomeAssistantError("WebRTC offer was not accepted by any providers")
 
     def camera_image(
         self, width: int | None = None, height: int | None = None
@@ -595,6 +676,36 @@ class Camera(Entity):
         """Update the used token."""
         self.access_tokens.append(
             hashlib.sha256(_RND.getrandbits(256).to_bytes(32, "little")).hexdigest()
+        )
+
+    async def async_internal_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        await super().async_internal_added_to_hass()
+        # Note: State is always updated by entity on return
+        await self.async_refresh_providers()
+
+    async def async_refresh_providers(self) -> bool:
+        """Determine if any of the registered providers are suitable for this entity.
+
+        This affects state attributes, so it should be invoked any time the registered
+        providers or inputs to the state attributes change.
+
+        Returns True if any state was updated (and needs to be written)
+        """
+        old_state = self._rtsp_to_webrtc
+        self._rtsp_to_webrtc = await self._async_use_rtsp_to_webrtc()
+        return old_state != self._rtsp_to_webrtc
+
+    async def _async_use_rtsp_to_webrtc(self) -> bool:
+        """Determine if a WebRTC provider can be used for the camera."""
+        if not self.supported_features & SUPPORT_STREAM:
+            return False
+        if DATA_RTSP_TO_WEB_RTC not in self.hass.data:
+            return False
+        stream_source = await self.stream_source()
+        return any(
+            stream_source and stream_source.startswith(prefix)
+            for prefix in RTSP_PREFIXES
         )
 
 
@@ -836,8 +947,7 @@ async def async_handle_snapshot_service(
         """Executor helper to write image."""
         if image_data is None:
             return
-        if not os.path.exists(os.path.dirname(to_file)):
-            os.makedirs(os.path.dirname(to_file), exist_ok=True)
+        os.makedirs(os.path.dirname(to_file), exist_ok=True)
         with open(to_file, "wb") as img_file:
             img_file.write(image_data)
 
@@ -906,7 +1016,7 @@ async def async_handle_play_stream_service(
 async def _async_stream_endpoint_url(
     hass: HomeAssistant, camera: Camera, fmt: str
 ) -> str:
-    stream = await camera.create_stream()
+    stream = await camera.async_create_stream()
     if not stream:
         raise HomeAssistantError(
             f"{camera.entity_id} does not support play stream service"
@@ -925,7 +1035,7 @@ async def async_handle_record_service(
     camera: Camera, service_call: ServiceCall
 ) -> None:
     """Handle stream recording service calls."""
-    stream = await camera.create_stream()
+    stream = await camera.async_create_stream()
 
     if not stream:
         raise HomeAssistantError(f"{camera.entity_id} does not support record service")

@@ -9,6 +9,7 @@ import threading
 import voluptuous as vol
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import ServiceCall
 import homeassistant.helpers.config_validation as cv
 
 from .minio_helper import MinioEventThread, create_minio_client
@@ -127,7 +128,7 @@ def setup(hass, config):
         value.hass = hass
         return value.async_render(parse_result=False)
 
-    def put_file(service):
+    def put_file(service: ServiceCall) -> None:
         """Upload file service."""
         bucket = _render_service_value(service, ATTR_BUCKET)
         key = _render_service_value(service, ATTR_KEY)
@@ -139,7 +140,7 @@ def setup(hass, config):
 
         minio_client.fput_object(bucket, key, file_path)
 
-    def get_file(service):
+    def get_file(service: ServiceCall) -> None:
         """Download file service."""
         bucket = _render_service_value(service, ATTR_BUCKET)
         key = _render_service_value(service, ATTR_KEY)
@@ -151,7 +152,7 @@ def setup(hass, config):
 
         minio_client.fget_object(bucket, key, file_path)
 
-    def remove_file(service):
+    def remove_file(service: ServiceCall) -> None:
         """Delete file service."""
         bucket = _render_service_value(service, ATTR_BUCKET)
         key = _render_service_value(service, ATTR_KEY)

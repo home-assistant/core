@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, Mock
 import pytest
 
 from homeassistant.components import automation
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
@@ -49,7 +50,7 @@ async def test_get_triggers_block_device(hass, coap_wrapper):
     ]
 
     triggers = await async_get_device_automations(
-        hass, "trigger", coap_wrapper.device_id
+        hass, DeviceAutomationType.TRIGGER, coap_wrapper.device_id
     )
 
     assert_lists_same(triggers, expected_triggers)
@@ -97,7 +98,7 @@ async def test_get_triggers_rpc_device(hass, rpc_wrapper):
     ]
 
     triggers = await async_get_device_automations(
-        hass, "trigger", rpc_wrapper.device_id
+        hass, DeviceAutomationType.TRIGGER, rpc_wrapper.device_id
     )
 
     assert_lists_same(triggers, expected_triggers)
@@ -162,7 +163,43 @@ async def test_get_triggers_button(hass):
     ]
 
     triggers = await async_get_device_automations(
-        hass, "trigger", coap_wrapper.device_id
+        hass, DeviceAutomationType.TRIGGER, coap_wrapper.device_id
+    )
+
+    assert_lists_same(triggers, expected_triggers)
+
+
+async def test_get_triggers_non_initialized_devices(hass):
+    """Test we get the empty triggers for non-initialized devices."""
+    await async_setup_component(hass, "shelly", {})
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"sleep_period": 43200, "model": "SHDW-2", "host": "1.2.3.4"},
+        unique_id="12345678",
+    )
+    config_entry.add_to_hass(hass)
+
+    device = Mock(
+        blocks=None,
+        settings=None,
+        shelly=None,
+        update=AsyncMock(),
+        initialized=False,
+    )
+
+    hass.data[DOMAIN] = {DATA_CONFIG_ENTRY: {}}
+    hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id] = {}
+    coap_wrapper = hass.data[DOMAIN][DATA_CONFIG_ENTRY][config_entry.entry_id][
+        BLOCK
+    ] = BlockDeviceWrapper(hass, config_entry, device)
+
+    coap_wrapper.async_setup()
+
+    expected_triggers = []
+
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, coap_wrapper.device_id
     )
 
     assert_lists_same(triggers, expected_triggers)
@@ -179,7 +216,9 @@ async def test_get_triggers_for_invalid_device_id(hass, device_reg, coap_wrapper
     )
 
     with pytest.raises(InvalidDeviceAutomationConfig):
-        await async_get_device_automations(hass, "trigger", invalid_device.id)
+        await async_get_device_automations(
+            hass, DeviceAutomationType.TRIGGER, invalid_device.id
+        )
 
 
 async def test_if_fires_on_click_event_block_device(hass, calls, coap_wrapper):

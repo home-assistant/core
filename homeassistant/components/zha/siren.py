@@ -7,7 +7,6 @@ from typing import Any
 
 from homeassistant.components.siren import (
     ATTR_DURATION,
-    DOMAIN,
     SUPPORT_DURATION,
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
@@ -20,6 +19,7 @@ from homeassistant.components.siren.const import (
     SUPPORT_VOLUME_SET,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -45,7 +45,7 @@ from .core.registries import ZHA_ENTITIES
 from .core.typing import ChannelType, ZhaDeviceType
 from .entity import ZhaEntity
 
-STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
+STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.SIREN)
 DEFAULT_DURATION = 5  # seconds
 
 
@@ -55,7 +55,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Zigbee Home Automation siren from config entry."""
-    entities_to_create = hass.data[DATA_ZHA][DOMAIN]
+    entities_to_create = hass.data[DATA_ZHA][Platform.SIREN]
 
     unsub = async_dispatcher_connect(
         hass,

@@ -1,10 +1,18 @@
 """Support for controlling GPIO pins of a Raspberry Pi."""
 from RPi import GPIO  # pylint: disable=import-error
 
-from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP,
+    Platform,
+)
 
 DOMAIN = "rpi_gpio"
-PLATFORMS = ["binary_sensor", "cover", "switch"]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.COVER,
+    Platform.SWITCH,
+]
 
 
 def setup(hass, config):

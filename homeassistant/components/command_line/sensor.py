@@ -1,4 +1,6 @@
 """Allows to configure custom shell commands to turn a value for a sensor."""
+from __future__ import annotations
+
 from collections.abc import Mapping
 from datetime import timedelta
 import json
@@ -14,10 +16,13 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
     STATE_UNKNOWN,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.reload import setup_reload_service
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import check_output_or_log
 from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN, PLATFORMS
@@ -42,7 +47,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Command Sensor."""
 
     setup_reload_service(hass, DOMAIN, PLATFORMS)

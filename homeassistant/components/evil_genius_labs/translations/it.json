@@ -2,6 +2,7 @@
     "config": {
         "error": {
             "cannot_connect": "Impossibile connettersi",
+            "timeout": "Tempo scaduto per stabile la connessione.",
             "unknown": "Errore imprevisto"
         },
         "step": {

@@ -13,9 +13,9 @@ from homeassistant.components.number import (
     NumberEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENTITY_CATEGORY_CONFIG
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .deconz_device import DeconzDevice
@@ -37,7 +37,7 @@ class DeconzNumberEntityDescription(
 ):
     """Class describing deCONZ number entities."""
 
-    entity_category = ENTITY_CATEGORY_CONFIG
+    entity_category = EntityCategory.CONFIG
 
 
 ENTITY_DESCRIPTIONS = {

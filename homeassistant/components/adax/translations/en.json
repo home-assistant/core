@@ -19,8 +19,8 @@
             },
             "local": {
                 "data": {
-                    "wifi_pswd": "Wifi password",
-                    "wifi_ssid": "Wifi ssid"
+                    "wifi_pswd": "Wi-Fi Password",
+                    "wifi_ssid": "Wi-Fi SSID"
                 },
                 "description": "Reset the heater by pressing + and OK until display shows 'Reset'. Then press and hold OK button on the heater until the blue led starts blinking before pressing Submit. Configuring heater might take some minutes."
             },

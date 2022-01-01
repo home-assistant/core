@@ -16,6 +16,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
+from homeassistant.core import ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json, save_json
@@ -384,7 +385,7 @@ class MatrixBot:
             for img in data.get(ATTR_IMAGES, []):
                 self._send_image(img, target_rooms)
 
-    def handle_send_message(self, service):
+    def handle_send_message(self, service: ServiceCall) -> None:
         """Handle the send_message service."""
         self._send_message(
             service.data.get(ATTR_MESSAGE),

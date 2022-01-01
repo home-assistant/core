@@ -11,7 +11,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     SERVICE_RELOAD,
 )
-from homeassistant.core import CoreState, Event, callback
+from homeassistant.core import CoreState, Event, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     discovery,
@@ -31,7 +31,7 @@ async def async_setup(hass, config):
     if DOMAIN in config:
         await _process_config(hass, config)
 
-    async def _reload_config(call: Event) -> None:
+    async def _reload_config(call: Event | ServiceCall) -> None:
         """Reload top-level + platforms."""
         try:
             unprocessed_conf = await conf_util.async_hass_config_yaml(hass)

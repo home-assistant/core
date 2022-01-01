@@ -20,6 +20,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import callback
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -202,14 +203,18 @@ class LocalMillSensor(CoordinatorEntity, SensorEntity):
         self._attr_name = (
             f"{coordinator.mill_data_connection.name} {entity_description.name}"
         )
-        self._update_attr()
+        if mac := coordinator.mill_data_connection.mac_address:
+            self._attr_unique_id = f"{mac}_{entity_description.key}"
+            self._attr_device_info = DeviceInfo(
+                connections={(CONNECTION_NETWORK_MAC, mac)},
+                configuration_url=self.coordinator.mill_data_connection.url,
+                manufacturer=MANUFACTURER,
+                model="Generation 3",
+                name=coordinator.mill_data_connection.name,
+                sw_version=coordinator.mill_data_connection.version,
+            )
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._update_attr()
-        self.async_write_ha_state()
-
-    @callback
-    def _update_attr(self) -> None:
-        self._attr_native_value = self.coordinator.data[self.entity_description.key]
+    @property
+    def native_value(self):
+        """Return the native value of the sensor."""
+        return self.coordinator.data[self.entity_description.key]

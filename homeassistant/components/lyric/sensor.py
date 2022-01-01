@@ -10,16 +10,12 @@ from aiolyric.objects.device import LyricDevice
 from aiolyric.objects.location import LyricLocation
 
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_TIMESTAMP,
-)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -81,8 +77,8 @@ async def async_setup_entry(
                         LyricSensorEntityDescription(
                             key=f"{device.macID}_indoor_temperature",
                             name="Indoor Temperature",
-                            device_class=DEVICE_CLASS_TEMPERATURE,
-                            state_class=STATE_CLASS_MEASUREMENT,
+                            device_class=SensorDeviceClass.TEMPERATURE,
+                            state_class=SensorStateClass.MEASUREMENT,
                             native_unit_of_measurement=hass.config.units.temperature_unit,
                             value=lambda device: device.indoorTemperature,
                         ),
@@ -97,8 +93,8 @@ async def async_setup_entry(
                         LyricSensorEntityDescription(
                             key=f"{device.macID}_outdoor_temperature",
                             name="Outdoor Temperature",
-                            device_class=DEVICE_CLASS_TEMPERATURE,
-                            state_class=STATE_CLASS_MEASUREMENT,
+                            device_class=SensorDeviceClass.TEMPERATURE,
+                            state_class=SensorStateClass.MEASUREMENT,
                             native_unit_of_measurement=hass.config.units.temperature_unit,
                             value=lambda device: device.outdoorTemperature,
                         ),
@@ -113,8 +109,8 @@ async def async_setup_entry(
                         LyricSensorEntityDescription(
                             key=f"{device.macID}_outdoor_humidity",
                             name="Outdoor Humidity",
-                            device_class=DEVICE_CLASS_HUMIDITY,
-                            state_class=STATE_CLASS_MEASUREMENT,
+                            device_class=SensorDeviceClass.HUMIDITY,
+                            state_class=SensorStateClass.MEASUREMENT,
                             native_unit_of_measurement="%",
                             value=lambda device: device.displayedOutdoorHumidity,
                         ),
@@ -130,7 +126,7 @@ async def async_setup_entry(
                             LyricSensorEntityDescription(
                                 key=f"{device.macID}_next_period_time",
                                 name="Next Period Time",
-                                device_class=DEVICE_CLASS_TIMESTAMP,
+                                device_class=SensorDeviceClass.TIMESTAMP,
                                 value=lambda device: get_datetime_from_future_time(
                                     device.changeableValues.nextPeriodTime
                                 ),

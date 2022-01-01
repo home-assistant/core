@@ -15,6 +15,7 @@ from homeassistant.helpers.entity_registry import async_entries_for_device
 from . import (
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_BATTERY_CHARGING,
+    DEVICE_CLASS_CO,
     DEVICE_CLASS_COLD,
     DEVICE_CLASS_CONNECTIVITY,
     DEVICE_CLASS_DOOR,
@@ -51,6 +52,8 @@ CONF_BAT_LOW = "bat_low"
 CONF_NOT_BAT_LOW = "not_bat_low"
 CONF_CHARGING = "charging"
 CONF_NOT_CHARGING = "not_charging"
+CONF_CO = "co"
+CONF_NO_CO = "no_co"
 CONF_COLD = "cold"
 CONF_NOT_COLD = "not_cold"
 CONF_CONNECTED = "connected"
@@ -99,6 +102,7 @@ CONF_NOT_OPENED = "not_opened"
 
 TURNED_ON = [
     CONF_BAT_LOW,
+    CONF_CO,
     CONF_COLD,
     CONF_CONNECTED,
     CONF_GAS,
@@ -139,6 +143,7 @@ TURNED_OFF = [
     CONF_NOT_PRESENT,
     CONF_NOT_TAMPERED,
     CONF_NOT_UNSAFE,
+    CONF_NO_CO,
     CONF_NO_GAS,
     CONF_NO_LIGHT,
     CONF_NO_MOTION,
@@ -157,6 +162,7 @@ ENTITY_TRIGGERS = {
         {CONF_TYPE: CONF_CHARGING},
         {CONF_TYPE: CONF_NOT_CHARGING},
     ],
+    DEVICE_CLASS_CO: [{CONF_TYPE: CONF_CO}, {CONF_TYPE: CONF_NO_CO}],
     DEVICE_CLASS_COLD: [{CONF_TYPE: CONF_COLD}, {CONF_TYPE: CONF_NOT_COLD}],
     DEVICE_CLASS_CONNECTIVITY: [
         {CONF_TYPE: CONF_CONNECTED},

@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from datetime import date, datetime
-import logging
 from typing import Any
 
 import voluptuous as vol
@@ -17,6 +16,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
 )
+from homeassistant.components.sensor.helpers import async_parse_date_datetime
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE_CLASS,
@@ -35,7 +35,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.entity import async_generate_entity_id
-from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_ATTRIBUTE_TEMPLATES,
@@ -89,7 +88,6 @@ LEGACY_SENSOR_SCHEMA = vol.All(
         }
     ),
 )
-_LOGGER = logging.getLogger(__name__)
 
 
 def extra_validation_checks(val):
@@ -184,32 +182,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-@callback
-def _async_parse_date_datetime(
-    value: str, entity_id: str, device_class: SensorDeviceClass | str | None
-) -> datetime | date | None:
-    """Parse datetime."""
-    if device_class == SensorDeviceClass.TIMESTAMP:
-        if (parsed_timestamp := dt_util.parse_datetime(value)) is None:
-            _LOGGER.warning("%s rendered invalid timestamp: %s", entity_id, value)
-            return None
-
-        if parsed_timestamp.tzinfo is None:
-            _LOGGER.warning(
-                "%s rendered timestamp without timezone: %s", entity_id, value
-            )
-            return None
-
-        return parsed_timestamp
-
-    # Date device class
-    if (parsed_date := dt_util.parse_date(value)) is not None:
-        return parsed_date
-
-    _LOGGER.warning("%s rendered invalid date %s", entity_id, value)
-    return None
-
-
 class SensorTemplate(TemplateEntity, SensorEntity):
     """Representation of a Template Sensor."""
 
@@ -269,7 +241,7 @@ class SensorTemplate(TemplateEntity, SensorEntity):
             self._attr_native_value = result
             return
 
-        self._attr_native_value = _async_parse_date_datetime(
+        self._attr_native_value = async_parse_date_datetime(
             result, self.entity_id, self.device_class
         )
 
@@ -303,6 +275,6 @@ class TriggerSensorEntity(TriggerEntity, SensorEntity):
         ):
             return
 
-        self._rendered[CONF_STATE] = _async_parse_date_datetime(
+        self._rendered[CONF_STATE] = async_parse_date_datetime(
             state, self.entity_id, self.device_class
         )
