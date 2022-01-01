@@ -1309,7 +1309,7 @@ async def test_camera_image_resize(hass, auth, hass_client):
     assert not browse.children
     assert (
         browse.thumbnail
-        == f"/api/nest/event_media/{device.id}/{EVENT_SESSION_ID}?width=175&height=175"
+        == f"/api/nest/event_media/{device.id}/{EVENT_SESSION_ID}/thumbnail"
     )
 
     auth.responses = [

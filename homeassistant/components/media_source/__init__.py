@@ -9,8 +9,10 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.http.auth import async_sign_path
+from homeassistant.components.media_player import BrowseMedia
 from homeassistant.components.media_player.const import ATTR_MEDIA_CONTENT_ID
 from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.components.media_source.models import BrowseMediaSource
 from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.integration_platform import (
@@ -103,12 +105,32 @@ async def websocket_browse_media(
     """Browse available media."""
     try:
         media = await async_browse_media(hass, msg.get("media_content_id", ""))
+    except BrowseError as err:
+        connection.send_error(msg["id"], "browse_media_failed", str(err))
+    else:
+        expiration = timedelta(seconds=DEFAULT_EXPIRY_TIME)
+
+        def sign_thumbnail(item: BrowseMedia) -> None:
+            if not item.thumbnail or item.thumbnail[0] != "/":
+                return
+            item.thumbnail = async_sign_path(
+                hass,
+                connection.refresh_token_id,
+                quote(item.thumbnail),
+                expiration,
+            )
+
+        items: list[BrowseMedia | BrowseMediaSource] = [media]
+        while items:
+            item = items.pop()
+            sign_thumbnail(item)
+            if item.children:
+                items.extend(child for child in item.children)
+
         connection.send_result(
             msg["id"],
             media.as_dict(),
         )
-    except BrowseError as err:
-        connection.send_error(msg["id"], "browse_media_failed", str(err))
 
 
 @websocket_api.websocket_command(

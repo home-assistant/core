@@ -64,9 +64,7 @@ MEDIA_SOURCE_TITLE = "Nest"
 DEVICE_TITLE_FORMAT = "{device_name}: Recent Events"
 CLIP_TITLE_FORMAT = "{event_name} @ {event_time}"
 EVENT_MEDIA_API_URL_FORMAT = "/api/nest/event_media/{device_id}/{event_token}"
-EVENT_THUMBNAIL_URL_FORMAT = (
-    "/api/nest/event_media/{device_id}/{event_token}?width=175&height=175"
-)
+EVENT_THUMBNAIL_URL_FORMAT = "/api/nest/event_media/{device_id}/{event_token}/thumbnail"
 
 STORAGE_KEY = "nest.event_media"
 STORAGE_VERSION = 1
