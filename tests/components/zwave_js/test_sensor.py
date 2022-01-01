@@ -5,7 +5,6 @@ from zwave_js_server.const.command_class.meter import MeterType
 from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
 
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     SensorDeviceClass,
@@ -62,12 +61,12 @@ async def test_numeric_sensor(hass, multisensor_6, integration):
     assert state
     assert state.state == "100.0"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "%"
-    assert state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.BATTERY
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.BATTERY
 
     ent_reg = er.async_get(hass)
     entity_entry = ent_reg.async_get(BATTERY_SENSOR)
     assert entity_entry
-    assert entity_entry.entity_category == EntityCategory.DIAGNOSTIC
+    assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
 
     state = hass.states.get(HUMIDITY_SENSOR)
 
@@ -85,7 +84,7 @@ async def test_energy_sensors(hass, hank_binary_switch, integration):
     assert state.state == "0.0"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == POWER_WATT
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.POWER
-    assert state.attributes["state_class"] is SensorStateClass.MEASUREMENT
+    assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.MEASUREMENT
 
     state = hass.states.get(ENERGY_SENSOR)
 
@@ -93,7 +92,7 @@ async def test_energy_sensors(hass, hank_binary_switch, integration):
     assert state.state == "0.16"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == ENERGY_KILO_WATT_HOUR
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENERGY
-    assert state.attributes["state_class"] is SensorStateClass.TOTAL_INCREASING
+    assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.TOTAL_INCREASING
 
     state = hass.states.get(VOLTAGE_SENSOR)
 
