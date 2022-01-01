@@ -95,7 +95,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(key="EngineTotalRunTime", icon="mdi:hours-24"),
     SensorEntityDescription(key="AtsContactorPosition", icon="mdi:electric-switch"),
-    SensorEntityDescription(key="IPAddress", icon="mdi:mip-network"),
+    SensorEntityDescription(key="IPAddress", icon="mdi:ip-network"),
     SensorEntityDescription(key="ConnectedServerIPAddress", icon="mdi:server-network"),
 )
 
