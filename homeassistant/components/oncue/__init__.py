@@ -42,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 "name": device["displayname"],
                 "state": device["devicestate"],
                 "product_name": device["productname"],
-                "version": device["version"],
+                "hardware_version": device["version"],
                 "serial_number": device["serialnumber"],
                 "sensors": {
                     param_dict["name"]: param_dict
