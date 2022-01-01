@@ -60,6 +60,7 @@ class OncueSensor(CoordinatorEntity, SensorEntity):
         self._attr_name = f'{device_data["name"]} {sensor_data["displayname"]}'
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device_id)},
+            name=device_data["name"],
             sw_version=device_data["version"],
             model=device_data["product_name"],
             manufacturer="Kohler",
