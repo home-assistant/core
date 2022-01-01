@@ -228,8 +228,8 @@ class TrafikverketWeatherStation(SensorEntity):
             self._weather, self.entity_description.api_key
         )
         if (
-            self.entity_description.api_key == "precipitation_amount"
-            and getattr(self._weather, self.entity_description.api_key) is None
+            self._attr_native_value is None
+            and self.entity_description.state_class == SensorStateClass.MEASUREMENT
         ):
             self._attr_native_value = 0
 
