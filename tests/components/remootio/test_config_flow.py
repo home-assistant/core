@@ -43,7 +43,7 @@ async def test_form_unsupported_device(hass: HomeAssistant) -> None:
         "homeassistant.components.remootio.async_setup_entry", return_value=True
     ), patch(
         "homeassistant.components.remootio.config_flow.get_serial_number",
-        side_effect=UnsupportedRemootioDeviceError(None),
+        side_effect=UnsupportedRemootioDeviceError,
     ) as get_serial_number:
         init_result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -79,7 +79,7 @@ async def test_form_invalid_user_input(hass: HomeAssistant) -> None:
         "homeassistant.components.remootio.async_setup_entry", return_value=True
     ), patch(
         "homeassistant.components.remootio.config_flow.get_serial_number",
-        side_effect=UnsupportedRemootioDeviceError(None),
+        return_value=TDV_SERIAL_NUMBER,
     ) as get_serial_number:
         init_result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -118,7 +118,7 @@ async def test_form_incomplete_user_input_on_init(hass: HomeAssistant) -> None:
         "homeassistant.components.remootio.async_setup_entry", return_value=True
     ), patch(
         "homeassistant.components.remootio.config_flow.get_serial_number",
-        side_effect=UnsupportedRemootioDeviceError(None),
+        return_value=TDV_SERIAL_NUMBER,
     ) as get_serial_number:
         init_result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -145,7 +145,7 @@ async def test_form_incomplete_user_input_on_configure(hass: HomeAssistant) -> N
         "homeassistant.components.remootio.async_setup_entry", return_value=True
     ), patch(
         "homeassistant.components.remootio.config_flow.get_serial_number",
-        side_effect=UnsupportedRemootioDeviceError(None),
+        return_value=TDV_SERIAL_NUMBER,
     ) as get_serial_number:
         init_result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}

@@ -107,7 +107,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         user_input = user_input or {}
         errors = {}
 
-        if user_input is not None and len(user_input) != 0:
+        if len(user_input) != 0:
             try:
                 info = await validate_input(self.hass, user_input)
             except UnsupportedRemootioDeviceError:
@@ -117,8 +117,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 incomplete_data = True
 
                 _LOGGER.debug(
-                    f"Invalid user input. MultipleInvalid.Errors [{e.errors}]",
-                    exc_info=True,
+                    f"Invalid user input. MultipleInvalid.Errors [{e.errors}]"
                 )
                 for error in e.errors:
                     _LOGGER.debug(
@@ -141,7 +140,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     "Can't autehnticate by the Remootio device.", exc_info=True
                 )
                 errors["base"] = "invalid_auth"
-            except BaseException:
+            except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception/error")
                 errors["base"] = "unknown"
             else:

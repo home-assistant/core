@@ -68,11 +68,7 @@ async def async_setup_entry(
 class RemootioCover(cover.CoverEntity):
     """Cover entity which represents an Remootio device controlled garage door or gate."""
 
-    __name: str
-    __unique_id: str
-    __device_class: str
     __remootio_client: RemootioClient
-    __device_info: DeviceInfo
 
     def __init__(
         self,
@@ -83,16 +79,18 @@ class RemootioCover(cover.CoverEntity):
     ) -> None:
         """Initialize this cover entity."""
         super().__init__()
-        self.__name = name
-        self.__unique_id = unique_id
-        self.__device_class = device_class
+        self._attr_name = name
+        self._attr_unique_id = unique_id
+        self._attr_device_class = device_class
         self.__remootio_client = remootio_client
-        self.__device_info = DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             name="Remootio",
             manufacturer="Assemblabs Ltd",
             suggested_area="The first end-to-end encrypted Wi-Fi and Bluetooth enabled smart remote controller, "
             "that lets you control and monitor your gates and garage doors using your smartphone.",
         )
+        self._attr_should_poll = False
+        self._attr_supported_features = cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE
 
     async def async_added_to_hass(self) -> None:
         """Register listeners to the used Remootio client to be notified on state changes and events."""
@@ -113,36 +111,6 @@ class RemootioCover(cover.CoverEntity):
     async def async_update(self) -> None:
         """Trigger state update of the used Remootio client."""
         await self.__remootio_client.trigger_state_update()
-
-    @property
-    def should_poll(self) -> bool:
-        """Home Assistant shouldn't check this entity for an updated state because it notifies Home Assistant about state changes, therefore this method always returns False."""
-        return False
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return the unique id of this entity. Serial number of the connected Remmotio device."""
-        return self.__unique_id
-
-    @property
-    def name(self) -> str | None:
-        """Return the name of this entity."""
-        return self.__name
-
-    @property
-    def device_info(self) -> DeviceInfo | None:
-        """Return information about the Remootio device."""
-        return self.__device_info
-
-    @property
-    def device_class(self) -> str | None:
-        """Return the device class of the represented device."""
-        return self.__device_class
-
-    @property
-    def supported_features(self) -> int:
-        """Return the features supported by the represented device."""
-        return cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE
 
     @property
     def is_opening(self):
