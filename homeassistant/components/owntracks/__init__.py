@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import mqtt
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_GPS_ACCURACY,
     ATTR_LATITUDE,
@@ -16,8 +17,9 @@ from homeassistant.const import (
     CONF_WEBHOOK_ID,
     Platform,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_when_setup
 
 from .config_flow import CONF_SECRET
@@ -58,7 +60,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize OwnTracks component."""
     hass.data[DOMAIN] = {"config": config[DOMAIN], "devices": {}, "unsub": None}
     if not hass.config_entries.async_entries(DOMAIN):
@@ -71,7 +73,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up OwnTracks entry."""
     config = hass.data[DOMAIN]["config"]
     max_gps_accuracy = config.get(CONF_MAX_GPS_ACCURACY)
@@ -112,7 +114,7 @@ async def async_setup_entry(hass, entry):
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload an OwnTracks config entry."""
     hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
@@ -121,7 +123,7 @@ async def async_unload_entry(hass, entry):
     return unload_ok
 
 
-async def async_remove_entry(hass, entry):
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Remove an OwnTracks config entry."""
     if not entry.data.get("cloudhook"):
         return
