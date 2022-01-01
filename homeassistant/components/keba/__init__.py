@@ -6,9 +6,10 @@ from keba_kecontact.connection import KebaKeContact
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST
-from homeassistant.core import ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,7 +55,7 @@ _SERVICE_MAP = {
 }
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Check connectivity and version of KEBA charging station."""
     host = config[DOMAIN][CONF_HOST]
     rfid = config[DOMAIN][CONF_RFID]
