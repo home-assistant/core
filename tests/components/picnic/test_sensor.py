@@ -408,9 +408,7 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         assert self._coordinator.last_update_success is True
         self._assert_sensor("sensor.picnic_last_order_eta_start", STATE_UNKNOWN)
         self._assert_sensor("sensor.picnic_last_order_eta_end", STATE_UNKNOWN)
-        self._assert_sensor(
-            "sensor.picnic_last_order_max_order_time", STATE_UNKNOWN
-        )
+        self._assert_sensor("sensor.picnic_last_order_max_order_time", STATE_UNKNOWN)
         self._assert_sensor("sensor.picnic_last_order_delivery_time", STATE_UNKNOWN)
 
     async def test_sensors_malformed_response(self):
