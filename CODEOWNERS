@@ -646,6 +646,8 @@ homeassistant/components/omnilogic/* @oliver84 @djtimca @gentoosu
 tests/components/omnilogic/* @oliver84 @djtimca @gentoosu
 homeassistant/components/onboarding/* @home-assistant/core
 tests/components/onboarding/* @home-assistant/core
+homeassistant/components/oncue/* @bdraco
+tests/components/oncue/* @bdraco
 homeassistant/components/ondilo_ico/* @JeromeHXP
 tests/components/ondilo_ico/* @JeromeHXP
 homeassistant/components/onewire/* @garbled1 @epenet

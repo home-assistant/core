@@ -232,6 +232,9 @@ aionotify==0.2.0
 # homeassistant.components.notion
 aionotion==3.0.2
 
+# homeassistant.components.oncue
+aiooncue==0.2.2
+
 # homeassistant.components.acmeda
 aiopulse==0.4.3
 
@@ -1022,7 +1025,7 @@ micloud==0.4
 miflora==0.7.0
 
 # homeassistant.components.mill
-mill-local==0.1.0
+mill-local==0.1.1
 
 # homeassistant.components.mill
 millheater==0.9.0
