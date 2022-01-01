@@ -776,6 +776,8 @@ tests/components/roon/* @pavoni
 homeassistant/components/rpi_gpio_pwm/* @soldag
 homeassistant/components/rpi_power/* @shenxn @swetoast
 tests/components/rpi_power/* @shenxn @swetoast
+homeassistant/components/rtsp_to_webrtc/* @allenporter
+tests/components/rtsp_to_webrtc/* @allenporter
 homeassistant/components/ruckus_unleashed/* @gabe565
 tests/components/ruckus_unleashed/* @gabe565
 homeassistant/components/safe_mode/* @home-assistant/core
