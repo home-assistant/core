@@ -1,4 +1,4 @@
-"""Support for Renault button entities."""
+"""Support for BMW connected drive button entities."""
 from __future__ import annotations
 
 from dataclasses import dataclass
