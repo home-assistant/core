@@ -50,22 +50,20 @@ class OncueSensor(CoordinatorEntity, SensorEntity):
         self._sensor_name = name
         device_data = coordinator.data[device_id]
         sensor_data = device_data["sensors"]
-        device_name = device_data["display_name"]
         sensor_data = sensor_data[self._sensor_name]
-        sensor_display_name = sensor_data["displayname"]
-        unit = None
         value = sensor_data["value"]
         if len(sensor_data["displayvalue"]) > len(value) + 1:
-            unit = sensor_data["displayvalue"][len(value) + 1]
+            self._attr_native_unit_of_measurement = sensor_data["displayvalue"][
+                len(value) + 1
+            ]
         self._attr_unique_id = f"{device_id}_{name}"
-        self._attr_name = f"{device_name} {sensor_display_name}"
+        self._attr_name = f'{device_data["name"]} {sensor_data["displayname"]}'
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device_id)},
             sw_version=device_data["version"],
             model=device_data["product_name"],
             manufacturer="Kohler",
         )
-        self._attr_native_unit_of_measurement = unit
 
     @property
     def native_value(self) -> float | None:

@@ -23,11 +23,10 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Oncue from a config entry."""
     data = entry.data
-    client = await Oncue(
-        data[CONF_USERNAME], data[CONF_PASSWORD], async_get_clientsession(hass)
-    )
+    websession = async_get_clientsession(hass)
+    client = Oncue(data[CONF_USERNAME], data[CONF_PASSWORD], websession)
     try:
-        client.async_login()
+        await client.async_login()
     except CONNECTION_EXCEPTIONS as ex:
         raise ConfigEntryNotReady(ex) from ex
     except LoginFailedException as ex:
@@ -35,11 +34,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return False
 
     coordinator = OnCueDataUpdateCoordinator(hass, client, entry)
+    await coordinator.async_config_entry_first_refresh()
 
-    hass.data[DOMAIN][entry.entry_id] = coordinator
-
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
-
     return True
 
 
@@ -76,9 +74,7 @@ class OnCueDataUpdateCoordinator(DataUpdateCoordinator):
         for device in devices:
             indexed_devices[device["id"]] = {
                 "name": device["displayname"],
-                "state": device[
-                    "devicestate",
-                ],
+                "state": device["devicestate"],
                 "product_name": device["productname"],
                 "version": device["version"],
                 "serial_number": device["serialnumber"],
