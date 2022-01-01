@@ -199,6 +199,7 @@ class TrafikverketWeatherStation(SensorEntity):
     """Representation of a Trafikverket sensor."""
 
     entity_description: TrafikverketSensorEntityDescription
+    _attr_attribution = ATTRIBUTION
 
     def __init__(
         self,
@@ -214,19 +215,24 @@ class TrafikverketWeatherStation(SensorEntity):
         self._station = sensor_station
         self._weather_api = weather_api
         self._weather: WeatherStationInfo | None = None
-        self._attr_attribution = ATTRIBUTION
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self) -> None:
         """Get the latest data from Trafikverket and updates the states."""
         try:
             self._weather = await self._weather_api.async_get_weather(self._station)
-            self._attr_native_value = getattr(
-                self._weather, self.entity_description.api_key
-            )
         except (asyncio.TimeoutError, aiohttp.ClientError, ValueError) as error:
             _LOGGER.error("Could not fetch weather data: %s", error)
             return
+        if (
+            self.entity_description.api_key == "precipitation_amount"
+            and getattr(self._weather, self.entity_description.api_key) is None
+        ):
+            self._attr_native_value = 0
+        else:
+            self._attr_native_value = getattr(
+                self._weather, self.entity_description.api_key
+            )
         self._attr_extra_state_attributes = {
             ATTR_ACTIVE: self._weather.active,
             ATTR_MEASURE_TIME: self._weather.measure_time,
