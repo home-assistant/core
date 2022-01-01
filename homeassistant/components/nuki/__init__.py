@@ -6,6 +6,12 @@ import logging
 import async_timeout
 from pynuki import NukiBridge
 from pynuki.bridge import InvalidCredentialsException
+from pynuki.constants import (
+    DEVICE_TYPE_LOCK,
+    DEVICE_TYPE_OPENER,
+    DEVICE_TYPE_SMARTDOOR,
+    DEVICE_TYPE_SMARTLOCK3,
+)
 from requests.exceptions import RequestException
 
 from homeassistant import exceptions
@@ -31,10 +37,22 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.LOCK]
 UPDATE_INTERVAL = timedelta(seconds=30)
+KNOWN_LOCKS = [DEVICE_TYPE_LOCK, DEVICE_TYPE_SMARTDOOR, DEVICE_TYPE_SMARTLOCK3]
 
 
 def _get_bridge_devices(bridge):
-    return bridge.locks, bridge.openers
+    locks = []
+    openers = []
+
+    # Note: bridge.locks() only returns DEVICE_TYPE_LOCK
+    # So we manually check for known types here.
+    for device in bridge.devices:
+        if device.device_type in KNOWN_LOCKS:
+            locks.append(device)
+        elif device.device_type == DEVICE_TYPE_OPENER:
+            openers.append(device)
+
+    return locks, openers
 
 
 def _update_devices(devices):
