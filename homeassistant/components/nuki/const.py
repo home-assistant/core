@@ -6,6 +6,10 @@ ATTR_BATTERY_CRITICAL = "battery_critical"
 ATTR_NUKI_ID = "nuki_id"
 ATTR_ENABLE = "enable"
 ATTR_UNLATCH = "unlatch"
+ATTR_EXTRA_OPTIONAL = [
+    "battery_charge",
+    "firmware_version",
+]
 
 # Data
 DATA_BRIDGE = "nuki_bridge_data"

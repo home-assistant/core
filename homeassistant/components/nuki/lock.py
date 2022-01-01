@@ -11,6 +11,7 @@ from . import NukiEntity
 from .const import (
     ATTR_BATTERY_CRITICAL,
     ATTR_ENABLE,
+    ATTR_EXTRA_OPTIONAL,
     ATTR_NUKI_ID,
     ATTR_UNLATCH,
     DATA_COORDINATOR,
@@ -75,6 +76,11 @@ class NukiDeviceEntity(NukiEntity, LockEntity, ABC):
             ATTR_BATTERY_CRITICAL: self._nuki_device.battery_critical,
             ATTR_NUKI_ID: self._nuki_device.nuki_id,
         }
+
+        for attr in ATTR_EXTRA_OPTIONAL:
+            if hasattr(self._nuki_device, attr):
+                data[attr] = self._nuki_device.__getattribute__(attr)
+
         return data
 
     @property
