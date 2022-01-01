@@ -57,7 +57,7 @@ class OncueSensor(CoordinatorEntity, SensorEntity):
                 len(value) + 1
             ]
         self._attr_unique_id = f"{device_id}_{name}"
-        self._attr_name = '"{device_data["name"} {sensor_data["displayname"]}'
+        self._attr_name = f'{device_data["name"]} {sensor_data["displayname"]}'
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device_id)},
             sw_version=device_data["version"],
