@@ -27,20 +27,21 @@ from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.reload import async_setup_reload_service
 
 from . import DOMAIN, PLATFORMS
+from .const import (
+    ALLOWED_RTSP_TRANSPORT_PROTOCOLS,
+    CONF_CONTENT_TYPE,
+    CONF_FRAMERATE,
+    CONF_LIMIT_REFETCH_TO_URL_CHANGE,
+    CONF_RTSP_TRANSPORT,
+    CONF_STILL_IMAGE_URL,
+    CONF_STREAM_SOURCE,
+    DEFAULT_NAME,
+    FFMPEG_OPTION_MAP,
+    GET_IMAGE_TIMEOUT,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_CONTENT_TYPE = "content_type"
-CONF_LIMIT_REFETCH_TO_URL_CHANGE = "limit_refetch_to_url_change"
-CONF_STILL_IMAGE_URL = "still_image_url"
-CONF_STREAM_SOURCE = "stream_source"
-CONF_FRAMERATE = "framerate"
-CONF_RTSP_TRANSPORT = "rtsp_transport"
-FFMPEG_OPTION_MAP = {CONF_RTSP_TRANSPORT: "rtsp_transport"}
-ALLOWED_RTSP_TRANSPORT_PROTOCOLS = {"tcp", "udp", "udp_multicast", "http"}
-
-DEFAULT_NAME = "Generic Camera"
-GET_IMAGE_TIMEOUT = 10
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
