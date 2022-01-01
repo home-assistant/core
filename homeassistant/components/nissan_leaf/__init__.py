@@ -452,19 +452,23 @@ class LeafDataStore:
 
         # Setting climate control is now a fire and forget
         await self.hass.async_add_executor_job(set_function)
-
-        # Cancel the routine refresh and immediately request updated info so that we can retrieve the
-        # climate control state from the car.
-        if self._remove_listener:
-            _LOGGER.debug("Cancelling planned refresh")
-            self._remove_listener()
-        self.next_update = utcnow() + MIN_UPDATE_INTERVAL
-        _LOGGER.debug("Scheduling new refresh at %s", self.next_update)
-        self._remove_listener = async_track_point_in_utc_time(
-            self.hass, self.async_update_data, self.next_update
-        )
+        self.schedule_update()
 
         return True
+
+    def schedule_update(self) -> None:
+        """Set the next update to be triggered in a minute."""
+
+        # Remove any future updates that may be scheduled
+        if self._remove_listener:
+            self._remove_listener()
+        # Schedule update for one minute in the future - so that previously sent
+        # requests can be processed by Nissan servers or the car.
+        update_at = utcnow() + timedelta(minutes=1)
+        self.next_update = update_at
+        self._remove_listener = async_track_point_in_utc_time(
+            self.hass, self.async_update_data, update_at
+        )
 
 
 class LeafEntity(Entity):
