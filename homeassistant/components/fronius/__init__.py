@@ -153,7 +153,7 @@ class FroniusSolarNet:
         )
         if self.logger_coordinator:
             _logger_info = self.logger_coordinator.data[SOLAR_NET_ID_SYSTEM]
-            solar_net_device[ATTR_MODEL] = _logger_info["product_type"]["value"]
+            solar_net_device[ATTR_MODEL] = _logger_info.get("product_type", {"value": "fronius-datalogger-web"})["value"]
             solar_net_device[ATTR_SW_VERSION] = _logger_info["software_version"][
                 "value"
             ]
