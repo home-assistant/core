@@ -157,10 +157,8 @@ class OncueSensorEntity(CoordinatorEntity, SensorEntity):
         )
 
     @property
-    def native_value(self) -> float | None:
+    def native_value(self) -> str | None:
         """Return the sensors state."""
-        return (
-            self.coordinator.data[self._device_id]
-            .sensors[self.entity_description.key]
-            .value
-        )
+        device: OncueDevice = self.coordinator.data[self._device_id]
+        sensor: OncueSensor = device.sensors[self.entity_description.key]
+        return sensor.value
