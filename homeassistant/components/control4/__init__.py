@@ -26,27 +26,19 @@ from homeassistant.helpers.event import async_call_later
 
 from .const import (
     CONF_ACCOUNT,
-    CONF_ALARM_AWAY_MODE,
-    CONF_ALARM_CUSTOM_BYPASS_MODE,
-    CONF_ALARM_HOME_MODE,
-    CONF_ALARM_NIGHT_MODE,
-    CONF_CONFIG_LISTENER,
     CONF_CONTROLLER_UNIQUE_ID,
     CONF_DIRECTOR,
     CONF_DIRECTOR_ALL_ITEMS,
     CONF_DIRECTOR_MODEL,
     CONF_DIRECTOR_SW_VERSION,
     CONF_WEBSOCKET,
-    DEFAULT_ALARM_AWAY_MODE,
-    DEFAULT_ALARM_CUSTOM_BYPASS_MODE,
-    DEFAULT_ALARM_HOME_MODE,
-    DEFAULT_ALARM_NIGHT_MODE,
     DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.LIGHT, Platform.ALARM_CONTROL_PANEL, Platform.BINARY_SENSOR]
+PLATFORMS = [Platform.LIGHT]
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Control4 from a config entry."""
@@ -82,25 +74,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     director_all_items = await entry_data[CONF_DIRECTOR].getAllItemInfo()
     director_all_items = json.loads(director_all_items)
     entry_data[CONF_DIRECTOR_ALL_ITEMS] = director_all_items
-
-    # Load options from config entry
-    entry_data[CONF_SCAN_INTERVAL] = entry.options.get(
-        CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-    )
-    entry_data[CONF_ALARM_AWAY_MODE] = entry.options.get(
-        CONF_ALARM_AWAY_MODE, DEFAULT_ALARM_AWAY_MODE
-    )
-    entry_data[CONF_ALARM_HOME_MODE] = entry.options.get(
-        CONF_ALARM_HOME_MODE, DEFAULT_ALARM_HOME_MODE
-    )
-    entry_data[CONF_ALARM_NIGHT_MODE] = entry.options.get(
-        CONF_ALARM_NIGHT_MODE, DEFAULT_ALARM_NIGHT_MODE
-    )
-    entry_data[CONF_ALARM_CUSTOM_BYPASS_MODE] = entry.options.get(
-        CONF_ALARM_CUSTOM_BYPASS_MODE, DEFAULT_ALARM_CUSTOM_BYPASS_MODE
-    )
-
-    entry_data[CONF_CONFIG_LISTENER] = entry.add_update_listener(update_listener)
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 

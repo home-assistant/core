@@ -18,18 +18,5 @@
         "description": "Please enter your Control4 account details and the IP address of your local controller."
       }
     }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "scan_interval": "Seconds between updates",
-          "alarm_home_mode": "Alarm arm home mode name",
-          "alarm_away_mode": "Alarm arm away mode name",
-          "alarm_night_mode": "Alarm arm night mode name",
-          "alarm_custom_bypass_mode": "Alarm arm custom bypass mode name"
-        }
-      }
-    }
   }
 }
