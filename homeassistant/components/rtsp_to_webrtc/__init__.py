@@ -18,7 +18,6 @@ Other integrations may use this integration with these steps:
 
 from __future__ import annotations
 
-from collections.abc import Callable
 import logging
 
 import async_timeout
@@ -70,16 +69,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except ClientError as err:
             raise HomeAssistantError(str(err)) from err
 
-    unsub = camera.async_register_rtsp_to_web_rtc_provider(
-        hass, DOMAIN, async_offer_for_stream_source
+    entry.async_on_unload(
+        camera.async_register_rtsp_to_web_rtc_provider(
+            hass, DOMAIN, async_offer_for_stream_source
+        )
     )
-    hass.data[DOMAIN][DATA_UNSUB] = unsub
+
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unsub: Callable[[], None] = hass.data[DOMAIN][DATA_UNSUB]
-    unsub()
-    del hass.data[DOMAIN]
     return True
