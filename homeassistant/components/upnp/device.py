@@ -16,7 +16,7 @@ from homeassistant.components.ssdp import SsdpChange
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-import homeassistant.util.dt as dt_util
+from homeassistant.util.dt import utcnow
 
 from .const import (
     BYTES_RECEIVED,
@@ -154,7 +154,7 @@ class Device:
         )
 
         return {
-            TIMESTAMP: dt_util.utcnow(),
+            TIMESTAMP: utcnow(),
             BYTES_RECEIVED: values[0],
             BYTES_SENT: values[1],
             PACKETS_RECEIVED: values[2],

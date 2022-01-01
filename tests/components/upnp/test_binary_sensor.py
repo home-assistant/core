@@ -20,15 +20,14 @@ async def test_upnp_binary_sensors(
     hass: HomeAssistant, setup_integration: MockConfigEntry
 ):
     """Test normal sensors."""
-    mock_device: MockIgdDevice = hass.data[DOMAIN][
-        setup_integration.entry_id
-    ].device._igd_device
-
     # First poll.
     wan_status_state = hass.states.get("binary_sensor.mock_name_wan_status")
     assert wan_status_state.state == "on"
 
     # Second poll.
+    mock_device: MockIgdDevice = hass.data[DOMAIN][
+        setup_integration.entry_id
+    ].device._igd_device
     mock_device.status_data = {
         WAN_STATUS: "Disconnected",
         ROUTER_UPTIME: 100,
