@@ -199,12 +199,13 @@ class ProtectSwitch(ProtectDeviceEntity, SwitchEntity):
         if not isinstance(self.device, Camera):
             return
 
-        if self.device.is_privacy_on:
-            self._previous_mic_level = 100
-            self._previous_record_mode = RecordingMode.ALWAYS
-        else:
-            self._previous_mic_level = self.device.mic_volume
-            self._previous_record_mode = self.device.recording_settings.mode
+        if self.entity_description.key == _KEY_PRIVACY_MODE:
+            if self.device.is_privacy_on:
+                self._previous_mic_level = 100
+                self._previous_record_mode = RecordingMode.ALWAYS
+            else:
+                self._previous_mic_level = self.device.mic_volume
+                self._previous_record_mode = self.device.recording_settings.mode
 
     @property
     def is_on(self) -> bool:

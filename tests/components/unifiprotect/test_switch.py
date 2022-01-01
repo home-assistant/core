@@ -72,6 +72,7 @@ async def camera_fixture(
     camera_obj.channels[1]._api = mock_entry.api
     camera_obj.channels[2]._api = mock_entry.api
     camera_obj.name = "Test Camera"
+    camera_obj.recording_settings.mode = RecordingMode.DETECTIONS
     camera_obj.feature_flags.has_led_status = True
     camera_obj.feature_flags.has_hdr = True
     camera_obj.feature_flags.video_modes = [VideoMode.DEFAULT, VideoMode.HIGH_FPS]
@@ -120,10 +121,54 @@ async def camera_none_fixture(
     camera_obj.channels[1]._api = mock_entry.api
     camera_obj.channels[2]._api = mock_entry.api
     camera_obj.name = "Test Camera"
+    camera_obj.recording_settings.mode = RecordingMode.DETECTIONS
     camera_obj.feature_flags.has_led_status = False
     camera_obj.feature_flags.has_hdr = False
     camera_obj.feature_flags.video_modes = [VideoMode.DEFAULT]
     camera_obj.feature_flags.has_privacy_mask = False
+    camera_obj.feature_flags.has_speaker = False
+    camera_obj.feature_flags.has_smart_detect = False
+    camera_obj.is_ssh_enabled = False
+    camera_obj.osd_settings.is_name_enabled = False
+    camera_obj.osd_settings.is_date_enabled = False
+    camera_obj.osd_settings.is_logo_enabled = False
+    camera_obj.osd_settings.is_debug_enabled = False
+
+    mock_entry.api.bootstrap.lights = {}
+    mock_entry.api.bootstrap.cameras = {
+        camera_obj.id: camera_obj,
+    }
+
+    await hass.config_entries.async_setup(mock_entry.entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert_entity_counts(hass, Platform.SWITCH, 5, 4)
+
+    yield camera_obj
+
+    Camera.__config__.validate_assignment = True
+
+
+@pytest.fixture(name="camera_privacy")
+async def camera_privacy_fixture(
+    hass: HomeAssistant, mock_entry: MockEntityFixture, mock_camera: Camera
+):
+    """Fixture for a single camera for testing the switch platform."""
+
+    # disable pydantic validation so mocking can happen
+    Camera.__config__.validate_assignment = False
+
+    camera_obj = mock_camera.copy(deep=True)
+    camera_obj._api = mock_entry.api
+    camera_obj.channels[0]._api = mock_entry.api
+    camera_obj.channels[1]._api = mock_entry.api
+    camera_obj.channels[2]._api = mock_entry.api
+    camera_obj.name = "Test Camera"
+    camera_obj.recording_settings.mode = RecordingMode.NEVER
+    camera_obj.feature_flags.has_led_status = False
+    camera_obj.feature_flags.has_hdr = False
+    camera_obj.feature_flags.video_modes = [VideoMode.DEFAULT]
+    camera_obj.feature_flags.has_privacy_mask = True
     camera_obj.feature_flags.has_speaker = False
     camera_obj.feature_flags.has_smart_detect = False
     camera_obj.add_privacy_zone()
@@ -141,7 +186,7 @@ async def camera_none_fixture(
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
 
-    assert_entity_counts(hass, Platform.SWITCH, 5, 4)
+    assert_entity_counts(hass, Platform.SWITCH, 6, 5)
 
     yield camera_obj
 
@@ -195,7 +240,7 @@ async def test_switch_setup_camera_all(
     mock_entry: MockEntityFixture,
     camera: Camera,
 ):
-    """Test switch entity setup for light devices."""
+    """Test switch entity setup for camera devices (all enabled feature flags)."""
 
     entity_registry = er.async_get(hass)
 
@@ -239,7 +284,7 @@ async def test_switch_setup_camera_none(
     mock_entry: MockEntityFixture,
     camera_none: Camera,
 ):
-    """Test switch entity setup for light devices."""
+    """Test switch entity setup for camera devices (no enabled feature flags)."""
 
     entity_registry = er.async_get(hass)
 
@@ -384,7 +429,6 @@ async def test_switch_camera_highfps(hass: HomeAssistant, camera: Camera):
 
 
 async def test_switch_camera_privacy(hass: HomeAssistant, camera: Camera):
-    """Tests Privacy Mode switch for cameras."""
 
     description = CAMERA_SWITCHES[3]
 
@@ -406,3 +450,24 @@ async def test_switch_camera_privacy(hass: HomeAssistant, camera: Camera):
     camera.set_privacy.assert_called_with(
         False, camera.mic_volume, camera.recording_settings.mode
     )
+
+
+async def test_switch_camera_privacy_already_on(
+    hass: HomeAssistant, camera_privacy: Camera
+):
+    """Tests Privacy Mode switch for cameras."""
+
+    description = CAMERA_SWITCHES[3]
+
+    camera_privacy.__fields__["set_privacy"] = Mock()
+    camera_privacy.set_privacy = AsyncMock()
+
+    _, entity_id = ids_from_device_description(
+        Platform.SWITCH, camera_privacy, description
+    )
+
+    await hass.services.async_call(
+        "switch", "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+
+    camera_privacy.set_privacy.assert_called_once_with(False, 100, RecordingMode.ALWAYS)
