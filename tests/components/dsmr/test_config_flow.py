@@ -48,13 +48,19 @@ async def test_setup_network(hass, dsmr_connection_send_validate_fixture):
     with patch("homeassistant.components.dsmr.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": "10.10.0.1", "port": 1234, "dsmr_version": "2.2"},
+            {
+                "host": "10.10.0.1",
+                "port": 1234,
+                "dsmr_version": "2.2",
+                "is_rfxtrx": False,
+            },
         )
 
     entry_data = {
         "host": "10.10.0.1",
         "port": 1234,
         "dsmr_version": "2.2",
+        "is_rfxtrx": False,
     }
 
     assert result["type"] == "create_entry"
@@ -86,13 +92,11 @@ async def test_setup_serial(com_mock, hass, dsmr_connection_send_validate_fixtur
 
     with patch("homeassistant.components.dsmr.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"port": port.device, "dsmr_version": "2.2"}
+            result["flow_id"],
+            {"port": port.device, "dsmr_version": "2.2", "is_rfxtrx": False},
         )
 
-    entry_data = {
-        "port": port.device,
-        "dsmr_version": "2.2",
-    }
+    entry_data = {"port": port.device, "dsmr_version": "2.2", "is_rfxtrx": False}
 
     assert result["type"] == "create_entry"
     assert result["title"] == port.device
@@ -122,7 +126,8 @@ async def test_setup_serial_manual(
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"port": "Enter Manually", "dsmr_version": "2.2"}
+        result["flow_id"],
+        {"port": "Enter Manually", "dsmr_version": "2.2", "is_rfxtrx": False},
     )
 
     assert result["type"] == "form"
@@ -137,6 +142,7 @@ async def test_setup_serial_manual(
     entry_data = {
         "port": "/dev/ttyUSB0",
         "dsmr_version": "2.2",
+        "is_rfxtrx": False,
     }
 
     assert result["type"] == "create_entry"
@@ -179,7 +185,8 @@ async def test_setup_serial_fail(com_mock, hass, dsmr_connection_send_validate_f
         first_fail_connection_factory,
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"port": port.device, "dsmr_version": "2.2"}
+            result["flow_id"],
+            {"port": port.device, "dsmr_version": "2.2", "is_rfxtrx": False},
         )
 
     assert result["type"] == "form"
@@ -216,7 +223,8 @@ async def test_setup_serial_wrong_telegram(
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"port": port.device, "dsmr_version": "2.2"}
+        result["flow_id"],
+        {"port": port.device, "dsmr_version": "2.2", "is_rfxtrx": False},
     )
 
     assert result["type"] == "form"
