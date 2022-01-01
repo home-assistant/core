@@ -37,15 +37,15 @@ class LeafChargingButton(LeafEntity, ButtonEntity):
     _attr_icon = "mdi:power"
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Sensor name."""
         return f"Start {self.car.leaf.nickname} Charging"
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Button availability."""
         return self.car.data[DATA_CHARGING] is not None
 
-    async def async_press(self):
+    async def async_press(self) -> None:
         """Start charging."""
-        return await self.car.async_start_charging()
+        await self.car.async_start_charging()

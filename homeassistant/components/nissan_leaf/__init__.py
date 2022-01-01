@@ -480,14 +480,12 @@ class LeafDataStore:
         _LOGGER.debug("Climate result not returned by Nissan servers")
         return False
 
-    async def async_start_charging(self):
+    async def async_start_charging(self) -> None:
         """Request to start charging the car. Used by the button platform."""
-        result = await self.hass.async_add_executor_job(self.leaf.start_charging)
-        if result:
-            self.schedule_update()
-        return result
+        await self.hass.async_add_executor_job(self.leaf.start_charging)
+        self.schedule_update()
 
-    def schedule_update(self):
+    def schedule_update(self) -> None:
         """Set the next update to be triggered in a minute."""
 
         # Remove any future updates that may be scheduled
