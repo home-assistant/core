@@ -5,7 +5,11 @@ import logging
 import re
 from typing import Any
 
-from aioremootio import ConnectionOptions
+from aioremootio import (
+    ConnectionOptions,
+    RemootioClientAuthenticationError,
+    RemootioClientConnectionEstablishmentError,
+)
 import voluptuous as vol
 from voluptuous.error import RequiredFieldInvalid
 from voluptuous.schema_builder import REMOVE_EXTRA
@@ -23,7 +27,7 @@ from .const import (
     CONF_TITLE,
     DOMAIN,
 )
-from .exceptions import CannotConnect, InvalidAuth, UnsupportedRemootioDeviceError
+from .exceptions import UnsupportedRemootioDeviceError
 from .utils import get_serial_number
 
 _LOGGER = logging.getLogger(__name__)
@@ -132,10 +136,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if incomplete_data and not self.form_displayed:
                     errors = {}
                     errors["base"] = "user_input_incomplete"
-            except CannotConnect:
+            except RemootioClientConnectionEstablishmentError:
                 _LOGGER.debug("Can't connect to Remootio device.", exc_info=True)
                 errors["base"] = "cannot_connect"
-            except InvalidAuth:
+            except RemootioClientAuthenticationError:
                 _LOGGER.debug(
                     "Can't autehnticate by the Remootio device.", exc_info=True
                 )

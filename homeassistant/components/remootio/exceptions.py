@@ -8,11 +8,3 @@ class UnsupportedRemootioDeviceError(HomeAssistantError):
 
 class UnsupportedRemootioApiVersionError(UnsupportedRemootioDeviceError):
     """Error to indicate unsupported Remootio API version."""
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""
