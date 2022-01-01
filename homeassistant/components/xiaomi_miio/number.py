@@ -4,8 +4,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.components.number.const import DOMAIN as PLATFORM_DOMAIN
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEGREE, TIME_MINUTES
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
