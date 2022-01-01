@@ -37,6 +37,9 @@ CONF_ZONENAME = "name"
 CONF_ZONES = "zones"
 CONF_ZONETYPE = "type"
 
+PANEL_TYPE_HONEYWELL = "HONEYWELL"
+PANEL_TYPE_DSC = "DSC"
+
 DEFAULT_PORT = 4025
 DEFAULT_EVL_VERSION = 3
 DEFAULT_KEEPALIVE = 60
@@ -65,7 +68,7 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_HOST): cv.string,
                 vol.Required(CONF_PANEL_TYPE): vol.All(
-                    cv.string, vol.In(["HONEYWELL", "DSC"])
+                    cv.string, vol.In([PANEL_TYPE_HONEYWELL, PANEL_TYPE_DSC])
                 ),
                 vol.Required(CONF_USERNAME): cv.string,
                 vol.Required(CONF_PASS): cv.string,
@@ -236,7 +239,7 @@ async def async_setup(hass, config):
             )
         )
         """Only DSC panels support getting zone bypass status"""
-        if panel_type == "DSC":
+        if panel_type == PANEL_TYPE_DSC:
             hass.async_create_task(
                 async_load_platform(
                     hass, "switch", "envisalink", {CONF_ZONES: zones}, config
