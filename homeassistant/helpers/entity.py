@@ -37,7 +37,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, NoEntitySpecifiedError
-from homeassistant.helpers.frame import report
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util, ensure_unique_string, slugify
 
@@ -45,6 +44,7 @@ from . import entity_registry as er
 from .device_registry import DeviceEntryType
 from .entity_platform import EntityPlatform
 from .event import Event, async_track_entity_registry_updated_event
+from .frame import report
 from .typing import StateType
 
 _LOGGER = logging.getLogger(__name__)
