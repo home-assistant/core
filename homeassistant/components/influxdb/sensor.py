@@ -179,7 +179,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             else:
                 _LOGGER.error(NO_BUCKET_ERROR, query[CONF_BUCKET])
     
-    if CONF_QUERIES in config:
+    elif CONF_QUERIES in config:
         for query in config[CONF_QUERIES]:
             if query[CONF_DB_NAME] in influx.data_repositories:
                 entities.append(InfluxSensor(hass, influx, query))
