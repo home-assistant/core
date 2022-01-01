@@ -48,6 +48,7 @@ DEFAULT_TIMEOUT = 10
 SIGNAL_ZONE_UPDATE = "envisalink.zones_updated"
 SIGNAL_PARTITION_UPDATE = "envisalink.partition_updated"
 SIGNAL_KEYPAD_UPDATE = "envisalink.keypad_updated"
+SIGNAL_ZONE_BYPASS_UPDATE = "envisalink.zone_bypass_updated"
 
 ZONE_SCHEMA = vol.Schema(
     {
@@ -176,6 +177,12 @@ async def async_setup(hass, config):
         async_dispatcher_send(hass, SIGNAL_PARTITION_UPDATE, data)
 
     @callback
+    def zone_bypass_update(data):
+        """Handle zone bypass status updates."""
+        _LOGGER.debug("Envisalink sent a zone bypass update event. Updating zones")
+        async_dispatcher_send(hass, SIGNAL_ZONE_BYPASS_UPDATE, data)
+
+    @callback
     def stop_envisalink(event):
         """Shutdown envisalink connection and thread on exit."""
         _LOGGER.info("Shutting down Envisalink")
@@ -194,6 +201,7 @@ async def async_setup(hass, config):
     controller.callback_login_failure = login_fail_callback
     controller.callback_login_timeout = connection_fail_callback
     controller.callback_login_success = connection_success_callback
+    controller.callback_zone_bypass_update = zone_bypass_update
 
     _LOGGER.info("Start envisalink")
     controller.start()
@@ -227,6 +235,13 @@ async def async_setup(hass, config):
                 hass, "binary_sensor", "envisalink", {CONF_ZONES: zones}, config
             )
         )
+        """Only DSC panels support getting zone bypass status"""
+        if panel_type == "DSC":
+            hass.async_create_task(
+                async_load_platform(
+                    hass, "switch", "envisalink", {CONF_ZONES: zones}, config
+                )
+            )
 
     hass.services.async_register(
         DOMAIN, SERVICE_CUSTOM_FUNCTION, handle_custom_function, schema=SERVICE_SCHEMA
