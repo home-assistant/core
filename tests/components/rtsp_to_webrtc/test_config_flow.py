@@ -2,24 +2,19 @@
 
 from __future__ import annotations
 
-from typing import Any
 from unittest.mock import patch
 
 import rtsp_to_webrtc
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
 from homeassistant.components.rtsp_to_webrtc import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
-CONFIG: dict[str, Any] = {}
-
 
 async def test_web_full_flow(hass: HomeAssistant):
     """Check full flow."""
-    assert await setup.async_setup_component(hass, DOMAIN, CONFIG)
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -42,8 +37,6 @@ async def test_single_config_entry(hass):
     old_entry = MockConfigEntry(domain=DOMAIN, data={"example": True})
     old_entry.add_to_hass(hass)
 
-    assert await setup.async_setup_component(hass, DOMAIN, CONFIG)
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -53,8 +46,6 @@ async def test_single_config_entry(hass):
 
 async def test_invalid_url(hass: HomeAssistant):
     """Check full flow."""
-    assert await setup.async_setup_component(hass, DOMAIN, CONFIG)
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -74,8 +65,6 @@ async def test_invalid_url(hass: HomeAssistant):
 
 async def test_server_unreachable(hass: HomeAssistant):
     """Exercise case where the server is unreachable."""
-    assert await setup.async_setup_component(hass, DOMAIN, CONFIG)
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -97,8 +86,6 @@ async def test_server_unreachable(hass: HomeAssistant):
 
 async def test_server_failure(hass: HomeAssistant):
     """Exercise case where server returns a failure."""
-    assert await setup.async_setup_component(hass, DOMAIN, CONFIG)
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
