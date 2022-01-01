@@ -7,6 +7,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -39,31 +40,39 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="EngineOilPressure",
         native_unit_of_measurement=PRESSURE_PSI,
         device_class=SensorDeviceClass.PRESSURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
-        key="EngineCoolantTemperature", device_class=SensorDeviceClass.TEMPERATURE
+        key="EngineCoolantTemperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="BatteryVoltage",
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="LubeOilTemperature",
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="GensetControllerTemperature",
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="EngineCompartmentTemperature",
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="GeneratorTrueTotalPower",
         native_unit_of_measurement=POWER_WATT,
         device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="GeneratorTruePercentOfRatedPower",
@@ -73,11 +82,13 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="GeneratorVoltageAverageLineToLine",
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="GeneratorFrequency",
         native_unit_of_measurement=FREQUENCY_HERTZ,
         device_class=SensorDeviceClass.FREQUENCY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="GensetState",
