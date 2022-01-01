@@ -32,10 +32,9 @@ from .const import DOMAIN
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="LatestFirmware",
+        icon="mdi:update",
     ),
-    SensorEntityDescription(
-        key="EngineSpeed",
-    ),
+    SensorEntityDescription(key="EngineSpeed", icon="mdi:speedometer"),
     SensorEntityDescription(
         key="EngineOilPressure",
         native_unit_of_measurement=PRESSURE_PSI,
@@ -90,24 +89,14 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.FREQUENCY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    SensorEntityDescription(key="GensetState", icon="mdi:home-lightning-bolt"),
     SensorEntityDescription(
-        key="GensetState",
+        key="GensetControllerTotalOperationTime", icon="mdi:hours-24"
     ),
-    SensorEntityDescription(
-        key="GensetControllerTotalOperationTime",
-    ),
-    SensorEntityDescription(
-        key="EngineTotalRunTime",
-    ),
-    SensorEntityDescription(
-        key="AtsContactorPosition",
-    ),
-    SensorEntityDescription(
-        key="IPAddress",
-    ),
-    SensorEntityDescription(
-        key="ConnectedServerIPAddress",
-    ),
+    SensorEntityDescription(key="EngineTotalRunTime", icon="mdi:hours-24"),
+    SensorEntityDescription(key="AtsContactorPosition", icon="mdi:electric-switch"),
+    SensorEntityDescription(key="IPAddress", icon="mdi:mip-network"),
+    SensorEntityDescription(key="ConnectedServerIPAddress", icon="mdi:server-network"),
 )
 
 SENSOR_MAP = {description.key: description for description in SENSOR_TYPES}
@@ -154,26 +143,10 @@ class OncueSensorEntity(CoordinatorEntity, SensorEntity):
         self._device_id = device_id
         self._attr_unique_id = f"{device_id}_{description.key}"
         self._attr_name = f"{device.name} {sensor.display_name}"
-        import pprint
-
         if not description.native_unit_of_measurement and sensor.unit is not None:
             self._attr_native_unit_of_measurement = UNIT_MAPPINGS.get(
                 sensor.unit, sensor.unit
             )
-        pprint.pprint(
-            [
-                sensor.display_name,
-                "description.native_unit_of_measurement",
-                description.native_unit_of_measurement,
-                "sensor.unit",
-                sensor.unit,
-                "self._attr_native_unit_of_measurement",
-                self._attr_native_unit_of_measurement
-                if hasattr(self, "_attr_native_unit_of_measurement")
-                else None,
-            ]
-        )
-
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device_id)},
             name=device.name,
