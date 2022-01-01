@@ -1,7 +1,18 @@
 """Shared Entity definition for UniFi Protect Integration."""
 from __future__ import annotations
 
-from pyunifiprotect.data import ProtectAdoptableDeviceModel, StateType
+from collections.abc import Sequence
+import logging
+
+from pyunifiprotect.data import (
+    Camera,
+    Light,
+    ModelType,
+    ProtectAdoptableDeviceModel,
+    Sensor,
+    StateType,
+    Viewer,
+)
 
 from homeassistant.core import callback
 import homeassistant.helpers.device_registry as dr
@@ -9,6 +20,72 @@ from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 
 from .const import DEFAULT_ATTRIBUTION, DEFAULT_BRAND, DOMAIN
 from .data import ProtectData
+from .models import ProtectRequiredKeysMixin
+from .utils import get_nested_attr
+
+_LOGGER = logging.getLogger(__name__)
+
+
+@callback
+def _async_device_entities(
+    data: ProtectData,
+    klass: type[ProtectDeviceEntity],
+    model_type: ModelType,
+    descs: Sequence[ProtectRequiredKeysMixin],
+) -> list[ProtectDeviceEntity]:
+    if len(descs) == 0:
+        return []
+
+    entities: list[ProtectDeviceEntity] = []
+    for device in data.get_by_types({model_type}):
+        assert isinstance(device, (Camera, Light, Sensor, Viewer))
+        for description in descs:
+            assert isinstance(description, EntityDescription)
+            if description.ufp_required_field:
+                required_field = get_nested_attr(device, description.ufp_required_field)
+                if not required_field:
+                    continue
+
+            entities.append(
+                klass(
+                    data,
+                    device=device,
+                    description=description,
+                )
+            )
+            _LOGGER.debug(
+                "Adding %s entity %s for %s",
+                klass.__name__,
+                description.name,
+                device.name,
+            )
+
+    return entities
+
+
+@callback
+def async_all_device_entities(
+    data: ProtectData,
+    klass: type[ProtectDeviceEntity],
+    camera_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
+    light_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
+    sense_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
+    viewport_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
+    all_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
+) -> list[ProtectDeviceEntity]:
+    """Generate a list of all the device entities."""
+    all_descs = list(all_descs or [])
+    camera_descs = list(camera_descs or []) + all_descs
+    light_descs = list(light_descs or []) + all_descs
+    sense_descs = list(sense_descs or []) + all_descs
+    viewport_descs = list(viewport_descs or []) + all_descs
+
+    return (
+        _async_device_entities(data, klass, ModelType.CAMERA, camera_descs)
+        + _async_device_entities(data, klass, ModelType.LIGHT, light_descs)
+        + _async_device_entities(data, klass, ModelType.SENSOR, sense_descs)
+        + _async_device_entities(data, klass, ModelType.VIEWPORT, viewport_descs)
+    )
 
 
 class ProtectDeviceEntity(Entity):

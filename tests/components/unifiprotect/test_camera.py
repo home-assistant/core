@@ -48,7 +48,7 @@ from .conftest import (
 async def camera_fixture(
     hass: HomeAssistant, mock_entry: MockEntityFixture, mock_camera: Camera
 ):
-    """Fixture for a single camera, no extra setup."""
+    """Fixture for a single camera for testing the camera platform."""
 
     camera_obj = mock_camera.copy(deep=True)
     camera_obj._api = mock_entry.api
