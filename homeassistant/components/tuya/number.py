@@ -59,9 +59,14 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
     # https://developer.tuya.com/en/docs/iot/categorycwwsq?id=Kaiuz2b6vydld
     "cwwsq": (
         NumberEntityDescription(
-            key=DPCode.FEED_MANUAL,
+            key=DPCode.MANUAL_FEED,
             name="Feed",
             icon="mdi:bowl",
+        ),
+        NumberEntityDescription(
+            key=DPCode.VOICE_TIMES,
+            name="Voice Times",
+            icon="mdi:microphone",
         ),
     ),
     # Human Presence Sensor
