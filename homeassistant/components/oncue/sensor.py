@@ -5,7 +5,14 @@ from aiooncue import OncueDevice, OncueSensor
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import (
+    ELECTRIC_POTENTIAL_VOLT,
+    FREQUENCY_HERTZ,
+    POWER_WATT,
+    PRESSURE_PSI,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -24,7 +31,7 @@ STATIC_SENSORS = {
 }
 
 DEVICE_CLASSES = {
-    "EngineOilPressure": SensorDeviceClass.PRESSURE,  # its PSI though
+    "EngineOilPressure": SensorDeviceClass.PRESSURE,
     "EngineCoolantTemperature": SensorDeviceClass.TEMPERATURE,
     "BatteryVoltage": SensorDeviceClass.VOLTAGE,
     "LubeOilTemperature": SensorDeviceClass.TEMPERATURE,
@@ -34,7 +41,14 @@ DEVICE_CLASSES = {
     "GeneratorVoltageAverageLineToLine": SensorDeviceClass.VOLTAGE,
     "GeneratorFrequency": SensorDeviceClass.FREQUENCY,
 }
-UNIT_MAPPINGS = {"C": TEMP_CELSIUS, "F": TEMP_FAHRENHEIT}
+UNIT_MAPPINGS = {
+    "C": TEMP_CELSIUS,
+    "F": TEMP_FAHRENHEIT,
+    "psi": PRESSURE_PSI,
+    "H": FREQUENCY_HERTZ,
+    "V": ELECTRIC_POTENTIAL_VOLT,
+    "W": POWER_WATT,
+}
 
 
 async def async_setup_entry(
