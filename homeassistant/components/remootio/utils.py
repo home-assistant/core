@@ -28,7 +28,7 @@ async def _check_api_version(remootio_client: RemootioClient) -> None:
     """Check whether the by the given client represented Remootio device uses a supported API version."""
     api_version: int = await remootio_client.api_version
     if api_version < EXPECTED_MINIMUM_API_VERSION:
-        raise UnsupportedRemootioApiVersionError(remootio_client, api_version)
+        raise UnsupportedRemootioApiVersionError
 
 
 async def _check_sensor_installed(
@@ -38,7 +38,7 @@ async def _check_sensor_installed(
     if await remootio_client.initialized:
         if remootio_client.state == State.NO_SENSOR_INSTALLED:
             if raise_error:
-                raise UnsupportedRemootioDeviceError(remootio_client)
+                raise UnsupportedRemootioDeviceError
             else:
                 _LOGGER.error(
                     f"Your Remootio device isn't supported, possibly because it hasn't a sensor installed. IP [{remootio_client.ip_address}]"
