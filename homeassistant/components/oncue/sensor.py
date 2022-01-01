@@ -52,7 +52,7 @@ class OncueSensor(CoordinatorEntity, SensorEntity):
         sensor_data = device_data["sensors"]
         sensor_data = sensor_data[self._sensor_name]
         value = sensor_data["value"]
-        if len(sensor_data["displayvalue"]) > len(value) + 1:
+        if isinstance(value, str) and len(sensor_data["displayvalue"]) > len(value) + 1:
             self._attr_native_unit_of_measurement = sensor_data["displayvalue"][
                 len(value) + 1
             ]
