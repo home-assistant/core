@@ -464,13 +464,22 @@ class LeafDataStore:
         """Request to start charging the car. Used by the button platform."""
         result = await self.hass.async_add_executor_job(self.leaf.start_charging)
         if result:
-            _LOGGER.debug("Start charging sent, request updated data in 1 minute")
-            check_charge_at = utcnow() + timedelta(minutes=1)
-            self.next_update = check_charge_at
-            async_track_point_in_utc_time(
-                self.hass, self.async_update_data, check_charge_at
-            )
+            self.schedule_update()
         return result
+
+    def schedule_update(self):
+        """Set the next update to be triggered in a minute."""
+
+        # Remove any future updates that may be scheduled
+        if self._remove_listener:
+            self._remove_listener()
+        # Schedule update for one minute in the future - so that previously sent
+        # requests can be processed by Nissan servers or the car.
+        update_at = utcnow() + timedelta(minutes=1)
+        self.next_update = update_at
+        self._remove_listener = async_track_point_in_utc_time(
+            self.hass, self.async_update_data, update_at
+        )
 
 
 class LeafEntity(Entity):
