@@ -2517,6 +2517,96 @@ async def test_area_devices(hass):
     assert info.rate_limit is None
 
 
+def test_target_entities(hass):
+    """Test target_entities function."""
+    config_entry = MockConfigEntry(domain="light")
+    entity_registry = mock_registry(hass)
+    device_registry = mock_device_registry(hass)
+    area_registry = mock_area_registry(hass)
+
+    # Test incorrect value entry str
+    info = render_to_info(hass, "{{ target_entities('foo') }}")
+    assert_result_info(info, [])
+    assert info.rate_limit is None
+
+    # Test incorrect value entry list
+    info = render_to_info(hass, "{{ target_entities(['foo', 'bar']) }}")
+    assert_result_info(info, [])
+    assert info.rate_limit is None
+
+    # Test incorrect value entry dict
+    info = render_to_info(hass, "{{ target_entities({'foo': 'bar', 'spam': 'eggs'}) }}")
+    assert_result_info(info, [])
+    assert info.rate_limit is None
+
+    # Test non existing entry
+    info = render_to_info(
+        hass, "{{ target_entities({'entity_id': 'light.non_existing'}) }}"
+    )
+    assert_result_info(info, [])
+    assert info.rate_limit is None
+
+    area_entry = area_registry.async_get_or_create("fakearea")
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "01:23:45:67:89:AB")},
+        suggested_area=area_entry.name,
+    )
+    entity_entry = entity_registry.async_get_or_create(
+        domain="light",
+        platform="hue",
+        unique_id="5678",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+        area_id=area_entry.id,
+    )
+
+    # Test correct value area str
+    info = render_to_info(
+        hass, f"{{{{ target_entities({{'area_id': '{area_entry.id}'}}) }}}}"
+    )
+    assert_result_info(info, [entity_entry.id])
+    assert info.rate_limit is None
+
+    # Test correct value area list
+    info = render_to_info(
+        hass,
+        f"{{{{ target_entities({{'area_id': ['{area_entry.id}', '{area_entry.id}']}}) }}}}",
+    )
+    assert_result_info(info, [entity_entry.id])
+    assert info.rate_limit is None
+
+    # Test correct value device str
+    info = render_to_info(
+        hass, f"{{{{ target_entities({{'device_id': '{device_entry.id}'}}) }}}}"
+    )
+    assert_result_info(info, [entity_entry.id])
+    assert info.rate_limit is None
+
+    # Test correct value device list
+    info = render_to_info(
+        hass,
+        f"{{{{ target_entities({{'device_id': ['{device_entry.id}', '{device_entry.id}']}}) }}}}",
+    )
+    assert_result_info(info, [entity_entry.id])
+    assert info.rate_limit is None
+
+    # Test correct value entity str
+    info = render_to_info(
+        hass, f"{{{{ target_entities({{'entity_id': '{entity_entry.id}'}}) }}}}"
+    )
+    assert_result_info(info, [entity_entry.id])
+    assert info.rate_limit is None
+
+    # Test correct value entity list
+    info = render_to_info(
+        hass,
+        f"{{{{ target_entities({{'entity_id': ['{entity_entry.id}', '{entity_entry.id}']}}) }}}}",
+    )
+    assert_result_info(info, [entity_entry.id])
+    assert info.rate_limit is None
+
+
 def test_closest_function_to_coord(hass):
     """Test closest function to coord."""
     hass.states.async_set(

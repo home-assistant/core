@@ -30,6 +30,8 @@ from jinja2.utils import Namespace
 import voluptuous as vol
 
 from homeassistant.const import (
+    ATTR_AREA_ID,
+    ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
@@ -1118,6 +1120,36 @@ def area_devices(hass: HomeAssistant, area_id_or_name: str) -> Iterable[str]:
     return [entry.id for entry in entries]
 
 
+def target_entities(hass: HomeAssistant, target: dict) -> Iterable[str]:
+    """Return entities for a given target selector."""
+    entities: list = []
+    # area_id can be a list or str or None
+    _area_id = target.get(ATTR_AREA_ID)
+    if _area_id is not None:
+        _area_id = _area_id if isinstance(_area_id, list) else [_area_id]
+        entities += [
+            _area_entity
+            for _id in _area_id
+            for _area_entity in area_entities(hass, _id)
+        ]
+    # device_id can be a list or str or None
+    _device_id = target.get(ATTR_DEVICE_ID)
+    if _device_id is not None:
+        _device_id = _device_id if isinstance(_device_id, list) else [_device_id]
+        entities += [
+            _device_entity
+            for _id in _area_id
+            for _device_entity in device_entities(hass, _id)
+        ]
+    # entity_id can be a list or str or None
+    _entity_id = target.get(ATTR_ENTITY_ID)
+    if _entity_id is not None:
+        _entity_id = _entity_id if isinstance(_entity_id, list) else [_entity_id]
+        entities += _entity_id
+    # remove duplicates
+    return list(set(entities))
+
+
 def closest(hass, *args):
     """Find closest entity.
 
@@ -1956,6 +1988,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
         self.globals["area_devices"] = hassfunction(area_devices)
         self.filters["area_devices"] = pass_context(self.globals["area_devices"])
+
+        self.globals["target_entities"] = hassfunction(target_entities)
+        self.filters["target_entities"] = pass_context(self.globals["target_entities"])
 
         self.globals["integration_entities"] = hassfunction(integration_entities)
         self.filters["integration_entities"] = pass_context(
