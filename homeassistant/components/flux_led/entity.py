@@ -24,7 +24,7 @@ def _async_device_info(
     version_num = device.version_num
     if minor_version := entry.data.get(CONF_MINOR_VERSION):
         sw_version = version_num + int(hex(minor_version)[2:]) / 100
-        sw_version_str = f"{sw_version:0.3f}"
+        sw_version_str = f"{sw_version:0.2f}"
     else:
         sw_version_str = str(device.version_num)
     return DeviceInfo(
