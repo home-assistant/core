@@ -36,7 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def _async_update_data(self) -> dict:
         """Fetch all device and sensor data from api."""
-        devices = await self.oncue.async_list_devices_with_params()
+        devices = await client.async_list_devices_with_params()
         indexed_devices = {}
         for device in devices:
             indexed_devices[device["id"]] = {
