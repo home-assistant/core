@@ -62,7 +62,7 @@ class OncueSensor(CoordinatorEntity, SensorEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device_id)},
             sw_version=device_data["version"],
-            model=sensor_data["GensetModelNumberSelect"]["displayvalue"],
+            model=device_data["product_name"],
             manufacturer="Kohler",
         )
         self._attr_native_unit_of_measurement = unit

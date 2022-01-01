@@ -79,9 +79,9 @@ class OnCueDataUpdateCoordinator(DataUpdateCoordinator):
                 "state": device[
                     "devicestate",
                 ],
-                "productname": device["productname"],
+                "product_name": device["productname"],
                 "version": device["version"],
-                "serialnumber": device["serialnumber"],
+                "serial_number": device["serialnumber"],
                 "sensors": {
                     param_dict["name"]: param_dict
                     for param_dict in device["parameters"]
