@@ -23,13 +23,18 @@ async def test_web_full_flow(hass: HomeAssistant) -> None:
     assert result.get("data_schema").schema.get("server_url") == str
     assert not result.get("errors")
     assert "flow_id" in result
-    with patch("rtsp_to_webrtc.client.Client.heartbeat"):
+    with patch("rtsp_to_webrtc.client.Client.heartbeat"), patch(
+        "homeassistant.components.rtsp_to_webrtc.async_setup_entry",
+        return_value=True,
+    ) as mock_setup:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"server_url": "https://example.com"}
         )
         assert result.get("type") == "create_entry"
         assert "result" in result
         assert result["result"].data == {"server_url": "https://example.com"}
+
+        assert len(mock_setup.mock_calls) == 1
 
 
 async def test_single_config_entry(hass: HomeAssistant) -> None:
