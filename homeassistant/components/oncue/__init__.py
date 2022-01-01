@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Awaitable
 
 from aiooncue import LoginFailedException, Oncue
 
@@ -34,9 +33,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("Failed to login to oncue service: %s", ex)
         return False
 
-    async def _async_update_data(self) -> dict:
+    async def _async_update_data() -> dict:
         """Fetch all device and sensor data from api."""
-        devices = await self.oncue.async_list_devices_with_params()
+        devices = await client.async_list_devices_with_params()
         indexed_devices = {}
         for device in devices:
             indexed_devices[device["id"]] = {
@@ -52,7 +51,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             }
         return indexed_devices
 
-    coordinator = OnCueDataUpdateCoordinator(hass, client, entry, _async_update_data)  # type: ignore
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name=f"Oncue {entry.data[CONF_USERNAME]}",
+        update_interval=timedelta(minutes=10),
+        update_method=_async_update_data,
+    )
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
@@ -65,25 +70,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
-
-
-class OnCueDataUpdateCoordinator(DataUpdateCoordinator):
-    """DataUpdateCoordinator to gather data for a specific TPLink device."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        oncue: Oncue,
-        entry: ConfigEntry,
-        update_method: Awaitable,
-    ) -> None:
-        """Initialize DataUpdateCoordinator to gather data."""
-        self.entry = entry
-        self.oncue = oncue
-        super().__init__(
-            hass,
-            _LOGGER,
-            name=f"Oncue {entry.data[CONF_USERNAME]}",
-            update_interval=timedelta(minutes=10),
-            update_method=update_method,  # type: ignore
-        )
