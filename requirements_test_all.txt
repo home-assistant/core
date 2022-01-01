@@ -397,7 +397,7 @@ ephem==3.7.7.0
 epson-projector==0.4.2
 
 # homeassistant.components.keyboard_remote
-# evdev==1.4.0
+evdev==1.4.0
 
 # homeassistant.components.faa_delays
 faadelays==0.0.7
