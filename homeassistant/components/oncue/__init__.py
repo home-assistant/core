@@ -23,9 +23,8 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Oncue from a config entry."""
     data = entry.data
-    client = Oncue(
-        data[CONF_USERNAME], data[CONF_PASSWORD], async_get_clientsession(hass)
-    )
+    websession = async_get_clientsession(hass)
+    client = Oncue(data[CONF_USERNAME], data[CONF_PASSWORD], websession)
     try:
         await client.async_login()
     except CONNECTION_EXCEPTIONS as ex:
