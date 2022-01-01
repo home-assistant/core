@@ -1,6 +1,7 @@
 """Support for interface with an LG webOS Smart TV."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Awaitable, Callable, Coroutine
 from contextlib import suppress
 from datetime import timedelta
@@ -169,9 +170,25 @@ class LgWebOSMediaPlayerEntity(MediaPlayerEntity):
             }
             await getattr(self, data["method"])(**params)
 
+    async def disconnect_client_later(self) -> None:
+        """Request the disconnection of WebOsClient with a delay"""
+        await asyncio.sleep(1)
+        await self._client.disconnect()
+
     async def async_handle_state_update(self, _client: WebOsClient) -> None:
         """Update state from WebOsClient."""
         self.update_sources()
+
+        # WebOSTV do not respond to ping whilst in 'Suspend' state therefore
+        # the connection to the TV will can die unexpectedly and this is not
+        # detected reliabily by aiopylgtv. 
+        # Most reliable workaound is to disconnect the client and poll the TV
+        # until it is turned back on by home assistant or physically
+        if ('state' in self._client.power_state.keys()) and (
+           self._client.power_state['state'] == 'Suspend'
+        ):
+            self.hass.async_create_task(self.disconnect_client_later())
+
         self.async_write_ha_state()
 
     def update_sources(self) -> None:
