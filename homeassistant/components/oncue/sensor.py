@@ -32,7 +32,7 @@ async def async_setup_entry(
                 name,
             )
             for name in device["sensors"]
-            if name in STATIC_SENSORS
+            if name not in STATIC_SENSORS
         )
 
     async_add_entities(entities)
