@@ -2,13 +2,15 @@
 import pifacedigitalio as PFIO
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "rpi_pfio"
 
 DATA_PFIO_LISTENER = "pfio_listener"
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Raspberry PI PFIO component."""
     pifacedigital = PFIO.PiFaceDigital()
     hass.data[DATA_PFIO_LISTENER] = PFIO.InputEventListener(chip=pifacedigital)
