@@ -35,6 +35,12 @@ class RokuBinarySensorEntityDescription(
 
 BINARY_SENSORS: tuple[RokuBinarySensorEntityDescription, ...] = (
     RokuBinarySensorEntityDescription(
+        key="headphones_connected",
+        name="Headphones Connected",
+        icon="mdi:headphones",
+        is_on_fn=lambda device: device.info.headphones_connected,
+    ),
+    RokuBinarySensorEntityDescription(
         key="supports_airplay",
         name="Supports AirPlay",
         icon="mdi:wan",
