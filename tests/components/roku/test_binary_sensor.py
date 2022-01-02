@@ -66,7 +66,9 @@ async def test_rokutv_binary_sensors(
     assert entry.unique_id == "YN00H5555555_supports_airplay"
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
     assert state.state == STATE_OFF
-    assert state.attributes.get(ATTR_FRIENDLY_NAME) == '58" Onn Roku TV Supports AirPlay'
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME) == '58" Onn Roku TV Supports AirPlay'
+    )
     assert state.attributes.get(ATTR_ICON) == "mdi:wan"
     assert ATTR_DEVICE_CLASS not in state.attributes
 
