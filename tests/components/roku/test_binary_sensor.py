@@ -96,7 +96,7 @@ async def test_rokutv_binary_sensors(
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == '58" Onn Roku TV Supports Find Remote'
     )
-    assert state.attributes.get(ATTR_ICON) == "mdi:wan"
+    assert state.attributes.get(ATTR_ICON) == "mdi:remote"
     assert ATTR_DEVICE_CLASS not in state.attributes
 
     assert entry.device_id
