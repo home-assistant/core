@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "no_devices_found": "No devices found on the network",
             "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
         "error": {
@@ -10,14 +9,11 @@
             "server_unreachable": "Unable to communicate with RTSPtoWebRTC server. Check logs for more information."
         },
         "step": {
-            "confirm": {
-                "description": "Do you want to start set up?"
-            },
             "user": {
                 "data": {
                     "server_url": "RTSPtoWebRTC server URL e.g. https://example.com"
                 },
-                "description": "The RTSPtoWebRTC integration requires a server to translate RTSP streams into WebRTC. Enter the URL to the RTSPtoWebRTC server.\n",
+                "description": "The RTSPtoWebRTC integration requires a server to translate RTSP streams into WebRTC. Enter the URL to the RTSPtoWebRTC server.",
                 "title": "Configure RTSPtoWebRTC"
             }
         }
