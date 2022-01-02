@@ -39,6 +39,7 @@ from .const import (
     SWITCH_TYPE_DEFLECTION,
     SWITCH_TYPE_PORTFORWARD,
     SWITCH_TYPE_WIFINETWORK,
+    MeshRoles,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -310,6 +311,10 @@ def all_entities_list(
     local_ip: str,
 ) -> list[Entity]:
     """Get a list of all entities."""
+
+    if fritzbox_tools.mesh_role == MeshRoles.SLAVE:
+        return []
+
     return [
         *deflection_entities_list(fritzbox_tools, device_friendly_name),
         *port_entities_list(fritzbox_tools, device_friendly_name, local_ip),
