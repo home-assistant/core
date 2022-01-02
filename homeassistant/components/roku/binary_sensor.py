@@ -12,8 +12,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .roku import RokuEntity
 from .const import DOMAIN
+from .entity import RokuEntity
 
 
 @dataclass
