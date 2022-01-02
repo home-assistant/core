@@ -9,8 +9,9 @@ import threading
 import voluptuous as vol
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .minio_helper import MinioEventThread, create_minio_client
 
@@ -79,7 +80,7 @@ BUCKET_KEY_FILE_SCHEMA = BUCKET_KEY_SCHEMA.extend(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up MinioClient and event listeners."""
     conf = config[DOMAIN]
 

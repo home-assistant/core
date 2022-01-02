@@ -367,7 +367,7 @@ directv==0.4.0
 doorbirdpy==2.1.0
 
 # homeassistant.components.dsmr
-dsmr_parser==0.30
+dsmr_parser==0.31
 
 # homeassistant.components.dynalite
 dynalite_devices==0.1.46
@@ -477,7 +477,7 @@ google-api-python-client==1.6.4
 google-cloud-pubsub==2.1.0
 
 # homeassistant.components.nest
-google-nest-sdm==1.2.1
+google-nest-sdm==1.3.0
 
 # homeassistant.components.google_travel_time
 googlemaps==2.5.1

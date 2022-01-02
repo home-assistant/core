@@ -13,8 +13,10 @@ from homeassistant.const import (
     CONF_USERNAME,
     Platform,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +46,7 @@ LUPUSEC_PLATFORMS = [
 ]
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Lupusec component."""
     conf = config[DOMAIN]
     username = conf[CONF_USERNAME]

@@ -20,7 +20,7 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -33,70 +33,99 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="LatestFirmware",
         icon="mdi:update",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    SensorEntityDescription(key="EngineSpeed", icon="mdi:speedometer"),
+    SensorEntityDescription(
+        key="EngineSpeed",
+        icon="mdi:speedometer",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
     SensorEntityDescription(
         key="EngineOilPressure",
         native_unit_of_measurement=PRESSURE_PSI,
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="EngineCoolantTemperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="BatteryVoltage",
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="LubeOilTemperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="GensetControllerTemperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="EngineCompartmentTemperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="GeneratorTrueTotalPower",
         native_unit_of_measurement=POWER_WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="GeneratorTruePercentOfRatedPower",
         native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="GeneratorVoltageAverageLineToLine",
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="GeneratorFrequency",
         native_unit_of_measurement=FREQUENCY_HERTZ,
         device_class=SensorDeviceClass.FREQUENCY,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(key="GensetState", icon="mdi:home-lightning-bolt"),
     SensorEntityDescription(
-        key="GensetControllerTotalOperationTime", icon="mdi:hours-24"
+        key="GensetControllerTotalOperationTime",
+        icon="mdi:hours-24",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    SensorEntityDescription(key="EngineTotalRunTime", icon="mdi:hours-24"),
+    SensorEntityDescription(
+        key="EngineTotalRunTime",
+        icon="mdi:hours-24",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
     SensorEntityDescription(key="AtsContactorPosition", icon="mdi:electric-switch"),
-    SensorEntityDescription(key="IPAddress", icon="mdi:ip-network"),
-    SensorEntityDescription(key="ConnectedServerIPAddress", icon="mdi:server-network"),
+    SensorEntityDescription(
+        key="IPAddress",
+        icon="mdi:ip-network",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key="ConnectedServerIPAddress",
+        icon="mdi:server-network",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
 )
 
 SENSOR_MAP = {description.key: description for description in SENSOR_TYPES}

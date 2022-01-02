@@ -30,7 +30,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import event as event_helper, state as state_helper
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_values import EntityValues
@@ -38,6 +38,7 @@ from homeassistant.helpers.entityfilter import (
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
     convert_include_exclude_filter,
 )
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     API_VERSION_2,
@@ -468,7 +469,7 @@ def get_influx_connection(conf, test_write=False, test_read=False):  # noqa: C90
     return InfluxClient(databases, write_v1, query_v1, close_v1)
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the InfluxDB component."""
     conf = config[DOMAIN]
     try:
