@@ -22,7 +22,7 @@ async def test_roku_binary_sensors(
 
     state = hass.states.get("binary_sensor.my_roku_3_supports_airplay")
     entry = entity_registry.async_get(
-       "binary_sensor.my_roku_3_supports_airplay"
+        "binary_sensor.my_roku_3_supports_airplay"
     )
     assert entry
     assert state
