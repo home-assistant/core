@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import RokuEntity
+from .roku import RokuEntity
 from .const import DOMAIN
 
 
@@ -71,6 +71,4 @@ class RokuBinarySensorEntity(RokuEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return the state of the sensor."""
-        return bool(
-            self.entity_description.is_on_fn(self.coordinator.data)
-        )
+        return bool(self.entity_description.is_on_fn(self.coordinator.data))
