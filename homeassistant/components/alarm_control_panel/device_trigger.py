@@ -5,12 +5,6 @@ from typing import Any, Final
 
 import voluptuous as vol
 
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_ARM_NIGHT,
-    SUPPORT_ALARM_ARM_VACATION,
-)
 from homeassistant.components.automation import (
     AutomationActionType,
     AutomationTriggerInfo,
@@ -38,6 +32,12 @@ from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN
+from .const import (
+    SUPPORT_ALARM_ARM_AWAY,
+    SUPPORT_ALARM_ARM_HOME,
+    SUPPORT_ALARM_ARM_NIGHT,
+    SUPPORT_ALARM_ARM_VACATION,
+)
 
 BASIC_TRIGGER_TYPES: Final[set[str]] = {"triggered", "disarmed", "arming"}
 TRIGGER_TYPES: Final[set[str]] = BASIC_TRIGGER_TYPES | {

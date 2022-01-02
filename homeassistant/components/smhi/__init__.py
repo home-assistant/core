@@ -1,8 +1,9 @@
 """Support for the Swedish weather institute weather service."""
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-PLATFORMS = ["weather"]
+PLATFORMS = [Platform.WEATHER]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

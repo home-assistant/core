@@ -5,8 +5,8 @@ import logging
 from aiohttp import ClientConnectorError
 from pygti.exceptions import InvalidAuth
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import ATTR_ATTRIBUTION, ATTR_ID, DEVICE_CLASS_TIMESTAMP
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.const import ATTR_ATTRIBUTION, ATTR_ID
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.util import Throttle
@@ -116,7 +116,7 @@ class HVVDepartureSensor(SensorEntity):
             departure_time
             + timedelta(minutes=departure["timeOffset"])
             + timedelta(seconds=delay)
-        ).isoformat()
+        )
 
         self.attr.update(
             {
@@ -195,7 +195,7 @@ class HVVDepartureSensor(SensorEntity):
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return DEVICE_CLASS_TIMESTAMP
+        return SensorDeviceClass.TIMESTAMP
 
     @property
     def extra_state_attributes(self):

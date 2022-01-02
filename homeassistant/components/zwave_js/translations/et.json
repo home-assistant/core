@@ -33,6 +33,7 @@
                     "s2_unauthenticated_key": "Autentimata S2 v\u00f5ti",
                     "usb_path": "USB-seadme asukoha rada"
                 },
+                "description": "Lisandmoodul loob ise turvav\u00f5tmed kui need v\u00e4ljad t\u00fchjaks j\u00e4etakse.",
                 "title": "Sisesta Z-Wave JS lisandmooduli seaded"
             },
             "hassio_confirm": {
@@ -119,6 +120,7 @@
                     "s2_unauthenticated_key": "Autentimata S2 v\u00f5ti",
                     "usb_path": "USB-seadme asukoha rada"
                 },
+                "description": "Lisandmoodul loob ise turvav\u00f5tmed kui need v\u00e4ljad t\u00fchjaks j\u00e4etakse.",
                 "title": "Sisesta Z-Wave JS lisandmooduli seaded"
             },
             "install_addon": {

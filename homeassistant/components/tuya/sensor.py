@@ -579,6 +579,64 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             subkey="voltage",
         ),
     ),
+    # Robot Vacuum
+    # https://developer.tuya.com/en/docs/iot/fsd?id=K9gf487ck1tlo
+    "sd": (
+        TuyaSensorEntityDescription(
+            key=DPCode.CLEAN_AREA,
+            name="Cleaning Area",
+            icon="mdi:texture-box",
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.CLEAN_TIME,
+            name="Cleaning Time",
+            icon="mdi:progress-clock",
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.TOTAL_CLEAN_AREA,
+            name="Total Cleaning Area",
+            icon="mdi:texture-box",
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.TOTAL_CLEAN_TIME,
+            name="Total Cleaning Time",
+            icon="mdi:history",
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.TOTAL_CLEAN_COUNT,
+            name="Total Cleaning Times",
+            icon="mdi:counter",
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.DUSTER_CLOTH,
+            name="Duster Cloth Life",
+            icon="mdi:ticket-percent-outline",
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.EDGE_BRUSH,
+            name="Side Brush Life",
+            icon="mdi:ticket-percent-outline",
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.FILTER_LIFE,
+            name="Filter Life",
+            icon="mdi:ticket-percent-outline",
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.ROLL_BRUSH,
+            name="Rolling Brush Life",
+            icon="mdi:ticket-percent-outline",
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+    ),
 }
 
 # Socket (duplicate of `kg`)
@@ -669,15 +727,15 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             # We cannot have a device class, if the UOM isn't set or the
             # device class cannot be found in the validation mapping.
             if (
-                self.unit_of_measurement is None
+                self.native_unit_of_measurement is None
                 or self.device_class not in DEVICE_CLASS_UNITS
             ):
                 self._attr_device_class = None
                 return
 
             uoms = DEVICE_CLASS_UNITS[self.device_class]
-            self._uom = uoms.get(self.unit_of_measurement) or uoms.get(
-                self.unit_of_measurement.lower()
+            self._uom = uoms.get(self.native_unit_of_measurement) or uoms.get(
+                self.native_unit_of_measurement.lower()
             )
 
             # Unknown unit of measurement, device class should not be used.

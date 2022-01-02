@@ -18,10 +18,9 @@ import xmltodict
 from homeassistant.components.network import async_get_source_ip
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENTITY_CATEGORY_CONFIG
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
@@ -40,6 +39,7 @@ from .const import (
     SWITCH_TYPE_DEFLECTION,
     SWITCH_TYPE_PORTFORWARD,
     SWITCH_TYPE_WIFINETWORK,
+    MeshRoles,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -311,6 +311,10 @@ def all_entities_list(
     local_ip: str,
 ) -> list[Entity]:
     """Get a list of all entities."""
+
+    if fritzbox_tools.mesh_role == MeshRoles.SLAVE:
+        return []
+
     return [
         *deflection_entities_list(fritzbox_tools, device_friendly_name),
         *port_entities_list(fritzbox_tools, device_friendly_name, local_ip),
@@ -445,7 +449,7 @@ class FritzBoxPortSwitch(FritzBoxBaseSwitch, SwitchEntity):
         self.connection_type = connection_type
         self.port_mapping = port_mapping  # dict in the format as it comes from fritzconnection. eg: {'NewRemoteHost': '0.0.0.0', 'NewExternalPort': 22, 'NewProtocol': 'TCP', 'NewInternalPort': 22, 'NewInternalClient': '192.168.178.31', 'NewEnabled': True, 'NewPortMappingDescription': 'Beast SSH ', 'NewLeaseDuration': 0}
         self._idx = idx  # needed for update routine
-        self._attr_entity_category = ENTITY_CATEGORY_CONFIG
+        self._attr_entity_category = EntityCategory.CONFIG
 
         if port_mapping is None:
             return
@@ -524,7 +528,7 @@ class FritzBoxDeflectionSwitch(FritzBoxBaseSwitch, SwitchEntity):
         self.dict_of_deflection = dict_of_deflection
         self._attributes = {}
         self.id = int(self.dict_of_deflection["DeflectionId"])
-        self._attr_entity_category = ENTITY_CATEGORY_CONFIG
+        self._attr_entity_category = EntityCategory.CONFIG
 
         switch_info = SwitchInfo(
             description=f"Call deflection {self.id}",
@@ -594,25 +598,12 @@ class FritzBoxProfileSwitch(FritzDeviceBase, SwitchEntity):
         self._attr_is_on: bool = False
         self._name = f"{device.hostname} Internet Access"
         self._attr_unique_id = f"{self._mac}_internet_access"
-        self._attr_entity_category = ENTITY_CATEGORY_CONFIG
+        self._attr_entity_category = EntityCategory.CONFIG
 
-    async def async_process_update(self) -> None:
-        """Update device."""
-        if not self._mac or not self.ip_address:
-            return
-
-        wan_disable_info = await async_service_call_action(
-            self._router,
-            "X_AVM-DE_HostFilter",
-            "1",
-            "GetWANAccessByIP",
-            NewIPv4Address=self.ip_address,
-        )
-
-        if wan_disable_info is None:
-            return
-
-        self._attr_is_on = not wan_disable_info["NewDisallow"]
+    @property
+    def is_on(self) -> bool:
+        """Switch status."""
+        return self._router.devices[self._mac].wan_access
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
@@ -625,7 +616,6 @@ class FritzBoxProfileSwitch(FritzDeviceBase, SwitchEntity):
     async def _async_handle_turn_on_off(self, turn_on: bool) -> bool:
         """Handle switch state change request."""
         await self._async_switch_on_off(turn_on)
-        self._attr_is_on = turn_on
         self.async_write_ha_state()
         return True
 
@@ -655,7 +645,7 @@ class FritzBoxWifiSwitch(FritzBoxBaseSwitch, SwitchEntity):
         self._fritzbox_tools = fritzbox_tools
 
         self._attributes = {}
-        self._attr_entity_category = ENTITY_CATEGORY_CONFIG
+        self._attr_entity_category = EntityCategory.CONFIG
         self._network_num = network_num
 
         switch_info = SwitchInfo(

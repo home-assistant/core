@@ -584,15 +584,3 @@ async def async_service_temperature_set(
             kwargs[value] = temp
 
     await entity.async_set_temperature(**kwargs)
-
-
-class ClimateDevice(ClimateEntity):
-    """Representation of a climate entity (for backwards compatibility)."""
-
-    def __init_subclass__(cls, **kwargs):
-        """Print deprecation warning."""
-        super().__init_subclass__(**kwargs)
-        _LOGGER.warning(
-            "ClimateDevice is deprecated, modify %s to extend ClimateEntity",
-            cls.__name__,
-        )

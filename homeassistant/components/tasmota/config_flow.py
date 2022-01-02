@@ -6,7 +6,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.mqtt import discovery as mqtt, valid_subscribe_topic
+from homeassistant.components.mqtt import MqttServiceInfo, valid_subscribe_topic
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import CONF_DISCOVERY_PREFIX, DEFAULT_PREFIX, DOMAIN
@@ -21,7 +21,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize flow."""
         self._prefix = DEFAULT_PREFIX
 
-    async def async_step_mqtt(self, discovery_info: mqtt.MqttServiceInfo) -> FlowResult:
+    async def async_step_mqtt(self, discovery_info: MqttServiceInfo) -> FlowResult:
         """Handle a flow initialized by MQTT discovery."""
         if self._async_in_progress() or self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")

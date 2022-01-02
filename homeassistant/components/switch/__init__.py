@@ -140,15 +140,3 @@ class SwitchEntity(ToggleEntity):
                 data[attr] = value
 
         return data
-
-
-class SwitchDevice(SwitchEntity):
-    """Representation of a switch (for backwards compatibility)."""
-
-    def __init_subclass__(cls, **kwargs: Any) -> None:
-        """Print deprecation warning."""
-        super().__init_subclass__(**kwargs)  # type: ignore[call-arg]
-        _LOGGER.warning(
-            "SwitchDevice is deprecated, modify %s to extend SwitchEntity",
-            cls.__name__,
-        )

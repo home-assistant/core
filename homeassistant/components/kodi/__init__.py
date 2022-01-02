@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -25,7 +26,7 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-PLATFORMS = ["media_player"]
+PLATFORMS = [Platform.MEDIA_PLAYER]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

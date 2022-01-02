@@ -1,7 +1,7 @@
 """Tests for the srp_energy sensor platform."""
 from unittest.mock import MagicMock
 
-from homeassistant.components.sensor import STATE_CLASS_TOTAL_INCREASING
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.components.srp_energy.const import (
     ATTRIBUTION,
     DEFAULT_NAME,
@@ -11,11 +11,7 @@ from homeassistant.components.srp_energy.const import (
     SRP_ENERGY_DOMAIN,
 )
 from homeassistant.components.srp_energy.sensor import SrpEntity, async_setup_entry
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    DEVICE_CLASS_ENERGY,
-    ENERGY_KILO_WATT_HOUR,
-)
+from homeassistant.const import ATTR_ATTRIBUTION, ENERGY_KILO_WATT_HOUR
 
 
 async def test_async_setup_entry(hass):
@@ -99,8 +95,8 @@ async def test_srp_entity(hass):
     assert srp_entity.should_poll is False
     assert srp_entity.extra_state_attributes[ATTR_ATTRIBUTION] == ATTRIBUTION
     assert srp_entity.available is not None
-    assert srp_entity.device_class == DEVICE_CLASS_ENERGY
-    assert srp_entity.state_class == STATE_CLASS_TOTAL_INCREASING
+    assert srp_entity.device_class is SensorDeviceClass.ENERGY
+    assert srp_entity.state_class is SensorStateClass.TOTAL_INCREASING
 
     await srp_entity.async_added_to_hass()
     assert srp_entity.state is not None

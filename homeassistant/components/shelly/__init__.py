@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -58,6 +59,7 @@ from .const import (
     UPDATE_PERIOD_MULTIPLIER,
 )
 from .utils import (
+    device_update_info,
     get_block_device_name,
     get_block_device_sleep_period,
     get_coap_context,
@@ -66,15 +68,25 @@ from .utils import (
 )
 
 BLOCK_PLATFORMS: Final = [
-    "binary_sensor",
-    "button",
-    "cover",
-    "light",
-    "sensor",
-    "switch",
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.COVER,
+    Platform.LIGHT,
+    Platform.SENSOR,
+    Platform.SWITCH,
 ]
-BLOCK_SLEEPING_PLATFORMS: Final = ["binary_sensor", "climate", "sensor"]
-RPC_PLATFORMS: Final = ["binary_sensor", "button", "light", "sensor", "switch"]
+BLOCK_SLEEPING_PLATFORMS: Final = [
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.SENSOR,
+]
+RPC_PLATFORMS: Final = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.LIGHT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 _LOGGER: Final = logging.getLogger(__name__)
 
 COAP_SCHEMA: Final = vol.Schema(
@@ -211,7 +223,7 @@ async def async_block_device_setup(
     if not entry.data.get(CONF_SLEEP_PERIOD):
         hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][
             REST
-        ] = ShellyDeviceRestWrapper(hass, device)
+        ] = ShellyDeviceRestWrapper(hass, device, entry)
         platforms = BLOCK_PLATFORMS
 
     hass.config_entries.async_setup_platforms(entry, platforms)
@@ -396,6 +408,7 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         try:
             async with async_timeout.timeout(POLLING_TIMEOUT_SEC):
                 await self.device.update()
+                device_update_info(self.hass, self.device, self.entry)
         except OSError as err:
             raise update_coordinator.UpdateFailed("Error fetching data") from err
 
@@ -420,6 +433,7 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
             manufacturer="Shelly",
             model=aioshelly.const.MODEL_NAMES.get(self.model, self.model),
             sw_version=sw_version,
+            hw_version=f"gen{self.device.gen} ({self.model})",
             configuration_url=f"http://{self.entry.data[CONF_HOST]}",
         )
         self.device_id = entry.id
@@ -474,7 +488,9 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
 class ShellyDeviceRestWrapper(update_coordinator.DataUpdateCoordinator):
     """Rest Wrapper for a Shelly device with Home Assistant specific functions."""
 
-    def __init__(self, hass: HomeAssistant, device: BlockDevice) -> None:
+    def __init__(
+        self, hass: HomeAssistant, device: BlockDevice, entry: ConfigEntry
+    ) -> None:
         """Initialize the Shelly device wrapper."""
         if (
             device.settings["device"]["type"]
@@ -493,6 +509,7 @@ class ShellyDeviceRestWrapper(update_coordinator.DataUpdateCoordinator):
             update_interval=timedelta(seconds=update_interval),
         )
         self.device = device
+        self.entry = entry
 
     async def _async_update_data(self) -> None:
         """Fetch data."""
@@ -500,6 +517,14 @@ class ShellyDeviceRestWrapper(update_coordinator.DataUpdateCoordinator):
             async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
                 _LOGGER.debug("REST update for %s", self.name)
                 await self.device.update_status()
+
+                if self.device.status["uptime"] > 2 * REST_SENSORS_UPDATE_INTERVAL:
+                    return
+                old_firmware = self.device.firmware_version
+                await self.device.update_shelly()
+                if self.device.firmware_version == old_firmware:
+                    return
+                device_update_info(self.hass, self.device, self.entry)
         except OSError as err:
             raise update_coordinator.UpdateFailed("Error fetching data") from err
 
@@ -668,6 +693,7 @@ class RpcDeviceWrapper(update_coordinator.DataUpdateCoordinator):
             _LOGGER.debug("Reconnecting to Shelly RPC Device - %s", self.name)
             async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
                 await self.device.initialize()
+                device_update_info(self.hass, self.device, self.entry)
         except OSError as err:
             raise update_coordinator.UpdateFailed("Device disconnected") from err
 
@@ -692,6 +718,7 @@ class RpcDeviceWrapper(update_coordinator.DataUpdateCoordinator):
             manufacturer="Shelly",
             model=aioshelly.const.MODEL_NAMES.get(self.model, self.model),
             sw_version=sw_version,
+            hw_version=f"gen{self.device.gen} ({self.model})",
             configuration_url=f"http://{self.entry.data[CONF_HOST]}",
         )
         self.device_id = entry.id

@@ -8,7 +8,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
 
 from tests.common import async_fire_time_changed
-from tests.components.freedompro.const import DEVICES_STATE
+from tests.components.freedompro.conftest import get_states_response_for_uid
 
 
 @pytest.mark.parametrize(
@@ -48,18 +48,16 @@ async def test_sensor_get_state(
 
     assert state.state == "0"
 
-    get_states_response = list(DEVICES_STATE)
-    for state_response in get_states_response:
-        if state_response["uid"] == uid:
-            if state_response["type"] == "lightSensor":
-                state_response["state"]["currentAmbientLightLevel"] = "1"
-            if state_response["type"] == "temperatureSensor":
-                state_response["state"]["currentTemperature"] = "1"
-            if state_response["type"] == "humiditySensor":
-                state_response["state"]["currentRelativeHumidity"] = "1"
+    states_response = get_states_response_for_uid(uid)
+    if states_response[0]["type"] == "lightSensor":
+        states_response[0]["state"]["currentAmbientLightLevel"] = "1"
+    elif states_response[0]["type"] == "temperatureSensor":
+        states_response[0]["state"]["currentTemperature"] = "1"
+    elif states_response[0]["type"] == "humiditySensor":
+        states_response[0]["state"]["currentRelativeHumidity"] = "1"
     with patch(
         "homeassistant.components.freedompro.get_states",
-        return_value=get_states_response,
+        return_value=states_response,
     ):
 
         async_fire_time_changed(hass, utcnow() + timedelta(hours=2))

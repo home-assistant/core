@@ -17,18 +17,20 @@ from homeassistant.components.mqtt import (
     valid_publish_topic,
     valid_subscribe_topic,
 )
-from homeassistant.components.mysensors import (
-    CONF_DEVICE,
-    DEFAULT_BAUD_RATE,
-    DEFAULT_TCP_PORT,
-    is_persistence_file,
-)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
-from . import CONF_RETAIN, CONF_VERSION, DEFAULT_VERSION
+from . import (
+    CONF_DEVICE,
+    CONF_RETAIN,
+    CONF_VERSION,
+    DEFAULT_BAUD_RATE,
+    DEFAULT_TCP_PORT,
+    DEFAULT_VERSION,
+    is_persistence_file,
+)
 from .const import (
     CONF_BAUD_RATE,
     CONF_GATEWAY_TYPE,

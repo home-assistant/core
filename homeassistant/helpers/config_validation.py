@@ -16,7 +16,7 @@ from numbers import Number
 import os
 import re
 from socket import _GLOBAL_DEFAULT_TIMEOUT  # type: ignore # private, not in typeshed
-from typing import Any, Dict, TypeVar, cast
+from typing import Any, Dict, TypeVar, cast, overload
 from urllib.parse import urlparse
 from uuid import UUID
 
@@ -75,12 +75,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import split_entity_id, valid_entity_id
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import (
-    script_variables as script_variables_helper,
-    template as template_helper,
-)
 from homeassistant.util import raise_if_invalid_path, slugify as util_slugify
 import homeassistant.util.dt as dt_util
+
+from . import script_variables as script_variables_helper, template as template_helper
 
 # pylint: disable=invalid-name
 
@@ -247,7 +245,17 @@ def isdir(value: Any) -> str:
     return dir_in
 
 
-def ensure_list(value: T | list[T] | None) -> list[T]:
+@overload
+def ensure_list(value: None) -> list[Any]:
+    ...
+
+
+@overload
+def ensure_list(value: T | list[T]) -> list[T]:
+    ...
+
+
+def ensure_list(value: T | list[T] | None) -> list[T] | list[Any]:
     """Wrap value in list if it is not one."""
     if value is None:
         return []
@@ -860,7 +868,10 @@ def removed(
 
 
 def key_value_schemas(
-    key: str, value_schemas: dict[Hashable, vol.Schema]
+    key: str,
+    value_schemas: dict[Hashable, vol.Schema],
+    default_schema: vol.Schema | None = None,
+    default_description: str | None = None,
 ) -> Callable[[Any], dict[Hashable, Any]]:
     """Create a validator that validates based on a value for specific key.
 
@@ -876,8 +887,15 @@ def key_value_schemas(
         if isinstance(key_value, Hashable) and key_value in value_schemas:
             return cast(Dict[Hashable, Any], value_schemas[key_value](value))
 
+        if default_schema:
+            with contextlib.suppress(vol.Invalid):
+                return cast(Dict[Hashable, Any], default_schema(value))
+
+        alternatives = ", ".join(str(key) for key in value_schemas)
+        if default_description:
+            alternatives += ", " + default_description
         raise vol.Invalid(
-            f"Unexpected value for {key}: '{key_value}'. Expected {', '.join(str(key) for key in value_schemas)}"
+            f"Unexpected value for {key}: '{key_value}'. Expected {alternatives}"
         )
 
     return key_value_validator
@@ -1185,6 +1203,16 @@ DEVICE_CONDITION_BASE_SCHEMA = vol.Schema(
 
 DEVICE_CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
 
+dynamic_template_condition_action = vol.All(
+    # Wrap a shorthand template condition in a template condition
+    dynamic_template,
+    lambda config: {
+        CONF_VALUE_TEMPLATE: config,
+        CONF_CONDITION: "template",
+    },
+)
+
+
 CONDITION_SCHEMA: vol.Schema = vol.Schema(
     vol.Any(
         key_value_schemas(
@@ -1203,7 +1231,42 @@ CONDITION_SCHEMA: vol.Schema = vol.Schema(
                 "zone": ZONE_CONDITION_SCHEMA,
             },
         ),
-        dynamic_template,
+        dynamic_template_condition_action,
+    )
+)
+
+
+dynamic_template_condition_action = vol.All(
+    # Wrap a shorthand template condition action in a template condition
+    vol.Schema(
+        {**CONDITION_BASE_SCHEMA, vol.Required(CONF_CONDITION): dynamic_template}
+    ),
+    lambda config: {
+        **config,
+        CONF_VALUE_TEMPLATE: config[CONF_CONDITION],
+        CONF_CONDITION: "template",
+    },
+)
+
+
+CONDITION_ACTION_SCHEMA: vol.Schema = vol.Schema(
+    key_value_schemas(
+        CONF_CONDITION,
+        {
+            "and": AND_CONDITION_SCHEMA,
+            "device": DEVICE_CONDITION_SCHEMA,
+            "not": NOT_CONDITION_SCHEMA,
+            "numeric_state": NUMERIC_STATE_CONDITION_SCHEMA,
+            "or": OR_CONDITION_SCHEMA,
+            "state": STATE_CONDITION_SCHEMA,
+            "sun": SUN_CONDITION_SCHEMA,
+            "template": TEMPLATE_CONDITION_SCHEMA,
+            "time": TIME_CONDITION_SCHEMA,
+            "trigger": TRIGGER_CONDITION_SCHEMA,
+            "zone": ZONE_CONDITION_SCHEMA,
+        },
+        dynamic_template_condition_action,
+        "a valid template",
     )
 )
 
@@ -1352,7 +1415,7 @@ ACTION_TYPE_SCHEMAS: dict[str, Callable[[Any], dict]] = {
     SCRIPT_ACTION_DELAY: _SCRIPT_DELAY_SCHEMA,
     SCRIPT_ACTION_WAIT_TEMPLATE: _SCRIPT_WAIT_TEMPLATE_SCHEMA,
     SCRIPT_ACTION_FIRE_EVENT: EVENT_SCHEMA,
-    SCRIPT_ACTION_CHECK_CONDITION: CONDITION_SCHEMA,
+    SCRIPT_ACTION_CHECK_CONDITION: CONDITION_ACTION_SCHEMA,
     SCRIPT_ACTION_DEVICE_AUTOMATION: DEVICE_ACTION_SCHEMA,
     SCRIPT_ACTION_ACTIVATE_SCENE: _SCRIPT_SCENE_SCHEMA,
     SCRIPT_ACTION_REPEAT: _SCRIPT_REPEAT_SCHEMA,

@@ -8,7 +8,7 @@ import logging
 from pynws import SimpleNWS
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import debounce
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -29,7 +29,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["sensor", "weather"]
+PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
 
 DEFAULT_SCAN_INTERVAL = datetime.timedelta(minutes=10)
 FAILED_SCAN_INTERVAL = datetime.timedelta(minutes=1)

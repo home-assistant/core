@@ -4,14 +4,10 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.binary_sensor import DOMAIN
-from homeassistant.const import (
-    ENTITY_CATEGORY_DIAGNOSTIC,
-    STATE_OFF,
-    STATE_ON,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry
+from homeassistant.helpers.entity import EntityCategory
 
 from . import configure_integration
 from .mocks import (
@@ -42,9 +38,7 @@ async def test_binary_sensor(hass: HomeAssistant):
     state = hass.states.get(f"{DOMAIN}.test_2")
     assert state is not None
     er = entity_registry.async_get(hass)
-    assert (
-        er.async_get(f"{DOMAIN}.test_2").entity_category == ENTITY_CATEGORY_DIAGNOSTIC
-    )
+    assert er.async_get(f"{DOMAIN}.test_2").entity_category == EntityCategory.DIAGNOSTIC
 
     # Emulate websocket message: sensor turned on
     test_gateway.publisher.dispatch("Test", ("Test", True))

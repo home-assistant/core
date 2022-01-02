@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -54,9 +55,9 @@ DEFAULT_ICON = "mdi:water"
 DEFAULT_SSL = True
 DEFAULT_UPDATE_INTERVAL = timedelta(seconds=15)
 
-CONFIG_SCHEMA = cv.deprecated(DOMAIN)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
-PLATFORMS = ["binary_sensor", "sensor", "switch"]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
 
 UPDATE_INTERVALS = {
     DATA_PROVISION_SETTINGS: timedelta(minutes=1),
@@ -343,10 +344,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if version == 1:
         version = entry.version = 2
 
-        ent_reg = er.async_get(hass)
-        for entity_entry in [
-            e for e in ent_reg.entities.values() if e.config_entry_id == entry.entry_id
-        ]:
+        @callback
+        def migrate_unique_id(entity_entry: er.RegistryEntry) -> dict[str, Any]:
+            """Migrate the unique ID to a new format."""
             unique_id_pieces = entity_entry.unique_id.split("_")
             old_mac = unique_id_pieces[0]
             new_mac = ":".join(old_mac[i : i + 2] for i in range(0, len(old_mac), 2))
@@ -355,9 +355,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             if entity_entry.entity_id.startswith("switch"):
                 unique_id_pieces[1] = unique_id_pieces[1][11:].lower()
 
-            ent_reg.async_update_entity(
-                entity_entry.entity_id, new_unique_id="_".join(unique_id_pieces)
-            )
+            return {"new_unique_id": "_".join(unique_id_pieces)}
+
+        await er.async_migrate_entries(hass, entry.entry_id, migrate_unique_id)
 
     LOGGER.info("Migration to version %s successful", version)
 

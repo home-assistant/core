@@ -18,6 +18,7 @@ from homeassistant.const import (
     EVENT_CORE_CONFIG_UPDATE,
     LENGTH_FEET,
     LENGTH_METERS,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -34,7 +35,7 @@ from .const import (
 
 URL = "https://aa015h6buqvih86i1.api.met.no/weatherapi/locationforecast/2.0/complete"
 
-PLATFORMS = ["weather"]
+PLATFORMS = [Platform.WEATHER]
 
 _LOGGER = logging.getLogger(__name__)
 

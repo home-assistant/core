@@ -3,10 +3,11 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from enum import Enum
+import logging
 
 from tuya_iot import TuyaCloudOpenAPIEndpoint
 
+from homeassistant.backports.enum import StrEnum
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -35,9 +36,11 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
     VOLUME_CUBIC_FEET,
     VOLUME_CUBIC_METERS,
+    Platform,
 )
 
 DOMAIN = "tuya"
+LOGGER = logging.getLogger(__package__)
 
 CONF_AUTH_TYPE = "auth_type"
 CONF_PROJECT_TYPE = "tuya_project_type"
@@ -60,6 +63,9 @@ DEVICE_CLASS_TUYA_RECORD_MODE = "tuya__record_mode"
 DEVICE_CLASS_TUYA_RELAY_STATUS = "tuya__relay_status"
 DEVICE_CLASS_TUYA_STATUS = "tuya__status"
 DEVICE_CLASS_TUYA_FINGERBOT_MODE = "tuya__fingerbot_mode"
+DEVICE_CLASS_TUYA_VACUUM_CISTERN = "tuya__vacuum_cistern"
+DEVICE_CLASS_TUYA_VACUUM_COLLECTION = "tuya__vacuum_collection"
+DEVICE_CLASS_TUYA_VACUUM_MODE = "tuya__vacuum_mode"
 
 TUYA_DISCOVERY_NEW = "tuya_discovery_new"
 TUYA_HA_SIGNAL_UPDATE_ENTITY = "tuya_entry_update"
@@ -74,25 +80,25 @@ TUYA_SMART_APP = "tuyaSmart"
 SMARTLIFE_APP = "smartlife"
 
 PLATFORMS = [
-    "binary_sensor",
-    "button",
-    "camera",
-    "climate",
-    "cover",
-    "fan",
-    "humidifier",
-    "light",
-    "number",
-    "scene",
-    "select",
-    "sensor",
-    "siren",
-    "switch",
-    "vacuum",
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.CAMERA,
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.FAN,
+    Platform.HUMIDIFIER,
+    Platform.LIGHT,
+    Platform.NUMBER,
+    Platform.SCENE,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SIREN,
+    Platform.SWITCH,
+    Platform.VACUUM,
 ]
 
 
-class WorkMode(str, Enum):
+class WorkMode(StrEnum):
     """Work modes."""
 
     COLOUR = "colour"
@@ -101,8 +107,8 @@ class WorkMode(str, Enum):
     WHITE = "white"
 
 
-class DPCode(str, Enum):
-    """Device Property Codes used by Tuya.
+class DPCode(StrEnum):
+    """Data Point Codes used by Tuya.
 
     https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
     """
@@ -145,12 +151,16 @@ class DPCode(str, Enum):
     CH4_SENSOR_STATE = "ch4_sensor_state"
     CH4_SENSOR_VALUE = "ch4_sensor_value"
     CHILD_LOCK = "child_lock"  # Child lock
+    CISTERN = "cistern"
+    CLEAN_AREA = "clean_area"
+    CLEAN_TIME = "clean_time"
     CLICK_SUSTAIN_TIME = "click_sustain_time"
     CO_STATE = "co_state"
     CO_STATUS = "co_status"
     CO_VALUE = "co_value"
     CO2_STATE = "co2_state"
     CO2_VALUE = "co2_value"  # CO2 concentration
+    COLLECTION_MODE = "collection_mode"
     COLOR_DATA_V2 = "color_data_v2"
     COLOUR_DATA = "colour_data"  # Colored light mode
     COLOUR_DATA_HSV = "colour_data_hsv"  # Colored light mode
@@ -171,11 +181,15 @@ class DPCode(str, Enum):
     DOORCONTACT_STATE = "doorcontact_state"  # Status of door window sensor
     DOORCONTACT_STATE_2 = "doorcontact_state_2"
     DOORCONTACT_STATE_3 = "doorcontact_state_3"
+    DUSTER_CLOTH = "duster_cloth"
+    EDGE_BRUSH = "edge_brush"
     ELECTRICITY_LEFT = "electricity_left"
     FAN_DIRECTION = "fan_direction"  # Fan direction
     FAN_SPEED_ENUM = "fan_speed_enum"  # Speed mode
     FAN_SPEED_PERCENT = "fan_speed_percent"  # Stepless speed
     FAR_DETECTION = "far_detection"
+    FAULT = "fault"
+    FILTER_LIFE = "filter"
     FILTER_RESET = "filter_reset"  # Filter (cartridge) reset
     FLOODLIGHT_LIGHTNESS = "floodlight_lightness"
     FLOODLIGHT_SWITCH = "floodlight_switch"
@@ -194,6 +208,7 @@ class DPCode(str, Enum):
     LIGHT = "light"  # Light
     LIGHT_MODE = "light_mode"
     LOCK = "lock"  # Lock / Child lock
+    MACH_OPERATE = "mach_operate"
     MATERIAL = "material"  # Material
     MODE = "mode"  # Working mode / Mode
     MOTION_RECORD = "motion_record"
@@ -209,6 +224,7 @@ class DPCode(str, Enum):
     PERCENT_STATE = "percent_state"
     PERCENT_STATE_2 = "percent_state_2"
     PERCENT_STATE_3 = "percent_state_3"
+    POSITION = "position"
     PHASE_A = "phase_a"
     PHASE_B = "phase_b"
     PHASE_C = "phase_c"
@@ -232,6 +248,7 @@ class DPCode(str, Enum):
     RESET_FILTER = "reset_filter"
     RESET_MAP = "reset_map"
     RESET_ROLL_BRUSH = "reset_roll_brush"
+    ROLL_BRUSH = "roll_brush"
     SEEK = "seek"
     SENSITIVITY = "sensitivity"  # Sensitivity
     SENSOR_HUMIDITY = "sensor_humidity"
@@ -288,6 +305,9 @@ class DPCode(str, Enum):
     TEMP_VALUE = "temp_value"  # Color temperature
     TEMP_VALUE_V2 = "temp_value_v2"
     TEMPER_ALARM = "temper_alarm"  # Tamper alarm
+    TOTAL_CLEAN_AREA = "total_clean_area"
+    TOTAL_CLEAN_COUNT = "total_clean_count"
+    TOTAL_CLEAN_TIME = "total_clean_time"
     UV = "uv"  # UV sterilization
     VA_BATTERY = "va_battery"
     VA_HUMIDITY = "va_humidity"

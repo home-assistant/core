@@ -12,10 +12,10 @@ from vallox_websocket_api.exceptions import ValloxApiException
 from vallox_websocket_api.vallox import get_uuid as calculate_uuid
 import voluptuous as vol
 
-from homeassistant.const import CONF_HOST, CONF_NAME, EVENT_HOMEASSISTANT_STARTED
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType, StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -35,16 +35,24 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_HOST): vol.All(ipaddress.ip_address, cv.string),
-                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            }
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                {
+                    vol.Required(CONF_HOST): vol.All(ipaddress.ip_address, cv.string),
+                    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                }
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
+
+PLATFORMS: list[str] = [
+    Platform.SENSOR,
+    Platform.FAN,
+]
 
 ATTR_PROFILE = "profile"
 ATTR_PROFILE_FAN_SPEED = "fan_speed"
@@ -131,10 +139,25 @@ class ValloxDataUpdateCoordinator(DataUpdateCoordinator):
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the integration from configuration.yaml (DEPRECATED)."""
+    if DOMAIN not in config:
+        return True
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config[DOMAIN],
+        )
+    )
+
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the client and boot the platforms."""
-    conf = config[DOMAIN]
-    host = conf[CONF_HOST]
-    name = conf[CONF_NAME]
+    host = entry.data[CONF_HOST]
+    name = entry.data[CONF_NAME]
 
     client = Vallox(host)
 
@@ -159,6 +182,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         update_method=async_update_data,
     )
 
+    await coordinator.async_config_entry_first_refresh()
+
     service_handler = ValloxServiceHandler(client, coordinator)
     for vallox_service, service_details in SERVICE_TO_METHOD.items():
         hass.services.async_register(
@@ -168,25 +193,29 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             schema=service_details.schema,
         )
 
-    hass.data[DOMAIN] = {"client": client, "coordinator": coordinator, "name": name}
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
+        "client": client,
+        "coordinator": coordinator,
+        "name": name,
+    }
 
-    async def _async_load_platform_delayed(*_: Any) -> None:
-        await coordinator.async_refresh()
-        hass.async_create_task(async_load_platform(hass, "sensor", DOMAIN, {}, config))
-        hass.async_create_task(async_load_platform(hass, "fan", DOMAIN, {}, config))
-
-    # The Vallox hardware expects quite strict timings for websocket requests. Timings that machines
-    # with less processing power, like a Raspberry Pi, cannot live up to during the busy start phase
-    # of Home Asssistant.
-    #
-    # Hence, wait for the started event before doing a first data refresh and loading the platforms,
-    # because it usually means the system is less busy after the event and can now meet the
-    # websocket timing requirements.
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STARTED, _async_load_platform_delayed
-    )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        hass.data[DOMAIN].pop(entry.entry_id)
+
+        if hass.data[DOMAIN]:
+            return unload_ok
+
+        for service in SERVICE_TO_METHOD:
+            hass.services.async_remove(DOMAIN, service)
+
+    return unload_ok
 
 
 class ValloxServiceHandler:

@@ -78,6 +78,8 @@ async def test_setup_with_local_config(hass):
             "ambient_temperature": 20,
             "set_temperature": 22,
             "current_power": 0,
+            "control_signal": 0,
+            "raw_ambient_temperature": 19,
         },
     ) as mock_fetch, patch(
         "mill_local.Mill.connect",

@@ -59,7 +59,7 @@ class ZWaveBinarySensor(BinarySensorEntity, ZWaveDeviceEntity):
 
     @property
     def device_class(self):
-        """Return the class of this sensor, from DEVICE_CLASSES."""
+        """Return the class of this sensor, from BinarySensorDeviceClass."""
         return self._sensor_type
 
 

@@ -11,11 +11,11 @@ from requests.exceptions import ConnectionError as ConnectError, HTTPError, Time
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    DEVICE_CLASS_TEMPERATURE,
     PLATFORM_SCHEMA,
-    STATE_CLASS_MEASUREMENT,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -26,9 +26,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SCAN_INTERVAL,
     DEGREE,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_OZONE,
-    DEVICE_CLASS_PRESSURE,
     LENGTH_CENTIMETERS,
     LENGTH_INCHES,
     LENGTH_KILOMETERS,
@@ -181,8 +178,8 @@ SENSOR_TYPES: dict[str, DarkskySensorEntityDescription] = {
     "temperature": DarkskySensorEntityDescription(
         key="temperature",
         name="Temperature",
-        device_class=DEVICE_CLASS_TEMPERATURE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
         si_unit=TEMP_CELSIUS,
         us_unit=TEMP_FAHRENHEIT,
         ca_unit=TEMP_CELSIUS,
@@ -193,8 +190,8 @@ SENSOR_TYPES: dict[str, DarkskySensorEntityDescription] = {
     "apparent_temperature": DarkskySensorEntityDescription(
         key="apparent_temperature",
         name="Apparent Temperature",
-        device_class=DEVICE_CLASS_TEMPERATURE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
         si_unit=TEMP_CELSIUS,
         us_unit=TEMP_FAHRENHEIT,
         ca_unit=TEMP_CELSIUS,
@@ -205,8 +202,8 @@ SENSOR_TYPES: dict[str, DarkskySensorEntityDescription] = {
     "dew_point": DarkskySensorEntityDescription(
         key="dew_point",
         name="Dew Point",
-        device_class=DEVICE_CLASS_TEMPERATURE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
         si_unit=TEMP_CELSIUS,
         us_unit=TEMP_FAHRENHEIT,
         ca_unit=TEMP_CELSIUS,
@@ -261,8 +258,8 @@ SENSOR_TYPES: dict[str, DarkskySensorEntityDescription] = {
     "humidity": DarkskySensorEntityDescription(
         key="humidity",
         name="Humidity",
-        device_class=DEVICE_CLASS_HUMIDITY,
-        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
         si_unit=PERCENTAGE,
         us_unit=PERCENTAGE,
         ca_unit=PERCENTAGE,
@@ -273,7 +270,7 @@ SENSOR_TYPES: dict[str, DarkskySensorEntityDescription] = {
     "pressure": DarkskySensorEntityDescription(
         key="pressure",
         name="Pressure",
-        device_class=DEVICE_CLASS_PRESSURE,
+        device_class=SensorDeviceClass.PRESSURE,
         si_unit=PRESSURE_MBAR,
         us_unit=PRESSURE_MBAR,
         ca_unit=PRESSURE_MBAR,
@@ -295,7 +292,7 @@ SENSOR_TYPES: dict[str, DarkskySensorEntityDescription] = {
     "ozone": DarkskySensorEntityDescription(
         key="ozone",
         name="Ozone",
-        device_class=DEVICE_CLASS_OZONE,
+        device_class=SensorDeviceClass.OZONE,
         si_unit="DU",
         us_unit="DU",
         ca_unit="DU",
@@ -306,7 +303,7 @@ SENSOR_TYPES: dict[str, DarkskySensorEntityDescription] = {
     "apparent_temperature_max": DarkskySensorEntityDescription(
         key="apparent_temperature_max",
         name="Daily High Apparent Temperature",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         si_unit=TEMP_CELSIUS,
         us_unit=TEMP_FAHRENHEIT,
         ca_unit=TEMP_CELSIUS,
@@ -317,7 +314,7 @@ SENSOR_TYPES: dict[str, DarkskySensorEntityDescription] = {
     "apparent_temperature_high": DarkskySensorEntityDescription(
         key="apparent_temperature_high",
         name="Daytime High Apparent Temperature",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         si_unit=TEMP_CELSIUS,
         us_unit=TEMP_FAHRENHEIT,
         ca_unit=TEMP_CELSIUS,
@@ -328,7 +325,7 @@ SENSOR_TYPES: dict[str, DarkskySensorEntityDescription] = {
     "apparent_temperature_min": DarkskySensorEntityDescription(
         key="apparent_temperature_min",
         name="Daily Low Apparent Temperature",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         si_unit=TEMP_CELSIUS,
         us_unit=TEMP_FAHRENHEIT,
         ca_unit=TEMP_CELSIUS,
@@ -339,7 +336,7 @@ SENSOR_TYPES: dict[str, DarkskySensorEntityDescription] = {
     "apparent_temperature_low": DarkskySensorEntityDescription(
         key="apparent_temperature_low",
         name="Overnight Low Apparent Temperature",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         si_unit=TEMP_CELSIUS,
         us_unit=TEMP_FAHRENHEIT,
         ca_unit=TEMP_CELSIUS,
@@ -350,7 +347,7 @@ SENSOR_TYPES: dict[str, DarkskySensorEntityDescription] = {
     "temperature_max": DarkskySensorEntityDescription(
         key="temperature_max",
         name="Daily High Temperature",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         si_unit=TEMP_CELSIUS,
         us_unit=TEMP_FAHRENHEIT,
         ca_unit=TEMP_CELSIUS,
@@ -361,7 +358,7 @@ SENSOR_TYPES: dict[str, DarkskySensorEntityDescription] = {
     "temperature_high": DarkskySensorEntityDescription(
         key="temperature_high",
         name="Daytime High Temperature",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         si_unit=TEMP_CELSIUS,
         us_unit=TEMP_FAHRENHEIT,
         ca_unit=TEMP_CELSIUS,
@@ -372,7 +369,7 @@ SENSOR_TYPES: dict[str, DarkskySensorEntityDescription] = {
     "temperature_min": DarkskySensorEntityDescription(
         key="temperature_min",
         name="Daily Low Temperature",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         si_unit=TEMP_CELSIUS,
         us_unit=TEMP_FAHRENHEIT,
         ca_unit=TEMP_CELSIUS,
@@ -383,7 +380,7 @@ SENSOR_TYPES: dict[str, DarkskySensorEntityDescription] = {
     "temperature_low": DarkskySensorEntityDescription(
         key="temperature_low",
         name="Overnight Low Temperature",
-        device_class=DEVICE_CLASS_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
         si_unit=TEMP_CELSIUS,
         us_unit=TEMP_FAHRENHEIT,
         ca_unit=TEMP_CELSIUS,

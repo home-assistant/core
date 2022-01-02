@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 
+from xknx.core import XknxConnectionState
 from xknx.devices.light import Light as XknxLight
 
 from homeassistant.components.knx.const import CONF_STATE_ADDRESS, KNX_ADDRESS
@@ -35,7 +36,7 @@ async def test_light_simple(hass: HomeAssistant, knx: KNXTestKit):
     test_address = "1/1/1"
     await knx.setup_integration(
         {
-            LightSchema.PLATFORM_NAME: {
+            LightSchema.PLATFORM: {
                 CONF_NAME: "test",
                 KNX_ADDRESS: test_address,
             }
@@ -86,7 +87,7 @@ async def test_light_brightness(hass: HomeAssistant, knx: KNXTestKit):
     test_brightness_state = "1/1/3"
     await knx.setup_integration(
         {
-            LightSchema.PLATFORM_NAME: {
+            LightSchema.PLATFORM: {
                 CONF_NAME: "test",
                 KNX_ADDRESS: test_address,
                 LightSchema.CONF_BRIGHTNESS_ADDRESS: test_brightness,
@@ -96,6 +97,9 @@ async def test_light_brightness(hass: HomeAssistant, knx: KNXTestKit):
     )
     # StateUpdater initialize state
     await knx.assert_read(test_brightness_state)
+    await knx.xknx.connection_manager.connection_state_changed(
+        XknxConnectionState.CONNECTED
+    )
     # turn on light via brightness
     await hass.services.async_call(
         "light",
@@ -139,7 +143,7 @@ async def test_light_color_temp_absolute(hass: HomeAssistant, knx: KNXTestKit):
     test_ct_state = "1/1/6"
     await knx.setup_integration(
         {
-            LightSchema.PLATFORM_NAME: [
+            LightSchema.PLATFORM: [
                 {
                     CONF_NAME: "test",
                     KNX_ADDRESS: test_address,
@@ -193,7 +197,7 @@ async def test_light_color_temp_relative(hass: HomeAssistant, knx: KNXTestKit):
     test_ct_state = "1/1/6"
     await knx.setup_integration(
         {
-            LightSchema.PLATFORM_NAME: [
+            LightSchema.PLATFORM: [
                 {
                     CONF_NAME: "test",
                     KNX_ADDRESS: test_address,
@@ -251,7 +255,7 @@ async def test_light_hs_color(hass: HomeAssistant, knx: KNXTestKit):
     test_sat_state = "1/1/8"
     await knx.setup_integration(
         {
-            LightSchema.PLATFORM_NAME: [
+            LightSchema.PLATFORM: [
                 {
                     CONF_NAME: "test",
                     KNX_ADDRESS: test_address,
@@ -335,7 +339,7 @@ async def test_light_xyy_color(hass: HomeAssistant, knx: KNXTestKit):
     test_xyy_state = "1/1/6"
     await knx.setup_integration(
         {
-            LightSchema.PLATFORM_NAME: [
+            LightSchema.PLATFORM: [
                 {
                     CONF_NAME: "test",
                     KNX_ADDRESS: test_address,
@@ -410,7 +414,7 @@ async def test_light_xyy_color_with_brightness(hass: HomeAssistant, knx: KNXTest
     test_xyy_state = "1/1/6"
     await knx.setup_integration(
         {
-            LightSchema.PLATFORM_NAME: [
+            LightSchema.PLATFORM: [
                 {
                     CONF_NAME: "test",
                     KNX_ADDRESS: test_address,
@@ -488,7 +492,7 @@ async def test_light_rgb_individual(hass: HomeAssistant, knx: KNXTestKit):
     test_blue_state = "1/1/8"
     await knx.setup_integration(
         {
-            LightSchema.PLATFORM_NAME: [
+            LightSchema.PLATFORM: [
                 {
                     CONF_NAME: "test",
                     LightSchema.CONF_INDIVIDUAL_COLORS: {
@@ -636,7 +640,7 @@ async def test_light_rgbw_individual(hass: HomeAssistant, knx: KNXTestKit):
     test_white_state = "1/1/10"
     await knx.setup_integration(
         {
-            LightSchema.PLATFORM_NAME: [
+            LightSchema.PLATFORM: [
                 {
                     CONF_NAME: "test",
                     LightSchema.CONF_INDIVIDUAL_COLORS: {
@@ -810,7 +814,7 @@ async def test_light_rgb(hass: HomeAssistant, knx: KNXTestKit):
     test_rgb_state = "1/1/6"
     await knx.setup_integration(
         {
-            LightSchema.PLATFORM_NAME: [
+            LightSchema.PLATFORM: [
                 {
                     CONF_NAME: "test",
                     KNX_ADDRESS: test_address,
@@ -918,7 +922,7 @@ async def test_light_rgbw(hass: HomeAssistant, knx: KNXTestKit):
     test_rgbw_state = "1/1/6"
     await knx.setup_integration(
         {
-            LightSchema.PLATFORM_NAME: [
+            LightSchema.PLATFORM: [
                 {
                     CONF_NAME: "test",
                     KNX_ADDRESS: test_address,
@@ -1031,7 +1035,7 @@ async def test_light_rgbw_brightness(hass: HomeAssistant, knx: KNXTestKit):
     test_rgbw_state = "1/1/6"
     await knx.setup_integration(
         {
-            LightSchema.PLATFORM_NAME: [
+            LightSchema.PLATFORM: [
                 {
                     CONF_NAME: "test",
                     KNX_ADDRESS: test_address,

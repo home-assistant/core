@@ -9,7 +9,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util.dt import utcnow
 
 from tests.common import async_fire_time_changed
-from tests.components.freedompro.const import DEVICES_STATE
+from tests.components.freedompro.conftest import get_states_response_for_uid
 
 
 @pytest.mark.parametrize(
@@ -84,20 +84,18 @@ async def test_binary_sensor_get_state(
 
         assert state.state == STATE_OFF
 
-    get_states_response = list(DEVICES_STATE)
-    for state_response in get_states_response:
-        if state_response["uid"] == uid:
-            if state_response["type"] == "smokeSensor":
-                state_response["state"]["smokeDetected"] = True
-            if state_response["type"] == "occupancySensor":
-                state_response["state"]["occupancyDetected"] = True
-            if state_response["type"] == "motionSensor":
-                state_response["state"]["motionDetected"] = True
-            if state_response["type"] == "contactSensor":
-                state_response["state"]["contactSensorState"] = True
+    states_response = get_states_response_for_uid(uid)
+    if states_response[0]["type"] == "smokeSensor":
+        states_response[0]["state"]["smokeDetected"] = True
+    elif states_response[0]["type"] == "occupancySensor":
+        states_response[0]["state"]["occupancyDetected"] = True
+    elif states_response[0]["type"] == "motionSensor":
+        states_response[0]["state"]["motionDetected"] = True
+    elif states_response[0]["type"] == "contactSensor":
+        states_response[0]["state"]["contactSensorState"] = True
     with patch(
         "homeassistant.components.freedompro.get_states",
-        return_value=get_states_response,
+        return_value=states_response,
     ):
 
         async_fire_time_changed(hass, utcnow() + timedelta(hours=2))

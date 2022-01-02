@@ -12,15 +12,15 @@
                 "data": {
                     "area_id": "Alan Kodu",
                     "name": "Ad",
-                    "password": "\u015eifre",
+                    "password": "Parola",
                     "username": "Kullan\u0131c\u0131 Ad\u0131"
                 }
             },
             "user": {
                 "data": {
                     "area_id": "Alan Kodu",
-                    "name": "\u0130sim",
-                    "password": "\u015eifre",
+                    "name": "Ad",
+                    "password": "Parola",
                     "username": "Kullan\u0131c\u0131 Ad\u0131"
                 }
             }

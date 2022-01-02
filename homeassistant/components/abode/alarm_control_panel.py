@@ -4,20 +4,26 @@ from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
     SUPPORT_ALARM_ARM_HOME,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_DISARMED,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AbodeDevice
-from .const import ATTRIBUTION, DOMAIN
+from .const import DOMAIN
 
 ICON = "mdi:security"
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up Abode alarm control panel device."""
     data = hass.data[DOMAIN]
     async_add_entities(
@@ -61,7 +67,6 @@ class AbodeAlarm(AbodeDevice, alarm.AlarmControlPanelEntity):
     def extra_state_attributes(self):
         """Return the state attributes."""
         return {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
             "device_id": self._device.device_id,
             "battery_backup": self._device.battery,
             "cellular_backup": self._device.is_cellular,
