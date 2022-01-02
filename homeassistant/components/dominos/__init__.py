@@ -7,7 +7,7 @@ from pizzapi.address import StoreException
 import voluptuous as vol
 
 from homeassistant.components import http
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -72,7 +72,16 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     entities = []
     conf = config[DOMAIN]
 
-    hass.services.register(DOMAIN, "order", dominos.handle_order)
+    hass.services.register(
+        DOMAIN,
+        "order",
+        dominos.handle_order,
+        vol.Schema(
+            {
+                vol.Required(ATTR_ORDER_ENTITY): cv.entity_ids,
+            }
+        ),
+    )
 
     if conf.get(ATTR_SHOW_MENU):
         hass.http.register_view(DominosProductListView(dominos))
@@ -112,9 +121,9 @@ class Dominos:
         except StoreException:
             self.closest_store = None
 
-    def handle_order(self, call):
+    def handle_order(self, call: ServiceCall) -> None:
         """Handle ordering pizza."""
-        entity_ids = call.data.get(ATTR_ORDER_ENTITY)
+        entity_ids = call.data[ATTR_ORDER_ENTITY]
 
         target_orders = [
             order
