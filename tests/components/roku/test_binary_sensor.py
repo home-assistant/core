@@ -20,6 +20,17 @@ async def test_roku_binary_sensors(
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
 
+    state = hass.states.get("binary_sensor.my_roku_3_headphones_connected")
+    entry = entity_registry.async_get("binary_sensor.my_roku_3_headphones_connected")
+    assert entry
+    assert state
+    assert entry.unique_id == f"{UPNP_SERIAL}_headphones_connected"
+    assert entry.entity_category is None
+    assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Roku 3 Headphones Connected"
+    assert state.attributes.get(ATTR_ICON) == "mdi:headphones"
+    assert ATTR_DEVICE_CLASS not in state.attributes
+
     state = hass.states.get("binary_sensor.my_roku_3_supports_airplay")
     entry = entity_registry.async_get("binary_sensor.my_roku_3_supports_airplay")
     assert entry
@@ -49,7 +60,7 @@ async def test_roku_binary_sensors(
     assert device_entry.manufacturer == "Roku"
     assert device_entry.model == "Roku 3"
     assert device_entry.name == "My Roku 3"
-    assert device_entry.entry_type == dr.DeviceEntryType.DEVICE
+    assert device_entry.entry_type is None
     assert device_entry.sw_version == "7.5.0"
 
 
@@ -69,6 +80,19 @@ async def test_rokutv_binary_sensors(
 
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
+
+    state = hass.states.get("binary_sensor.58_onn_roku_tv_headphones_connected")
+    entry = entity_registry.async_get("binary_sensor.58_onn_roku_tv_headphones_connected")
+    assert entry
+    assert state
+    assert entry.unique_id == "YN00H5555555_headphones_connected"
+    assert entry.entity_category is None
+    assert state.state == STATE_OFF
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME) == '58" Onn Roku TV Headphones Connected'
+    )
+    assert state.attributes.get(ATTR_ICON) == "mdi:headphones"
+    assert ATTR_DEVICE_CLASS not in state.attributes
 
     state = hass.states.get("binary_sensor.58_onn_roku_tv_supports_airplay")
     entry = entity_registry.async_get("binary_sensor.58_onn_roku_tv_supports_airplay")
@@ -106,5 +130,5 @@ async def test_rokutv_binary_sensors(
     assert device_entry.manufacturer == "Onn"
     assert device_entry.model == "100005844"
     assert device_entry.name == '58" Onn Roku TV'
-    assert device_entry.entry_type == dr.DeviceEntryType.DEVICE
+    assert device_entry.entry_type is None
     assert device_entry.sw_version == "9.2.0"
