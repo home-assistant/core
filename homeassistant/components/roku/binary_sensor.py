@@ -43,7 +43,7 @@ BINARY_SENSORS: tuple[RokuBinarySensorEntityDescription, ...] = (
     RokuBinarySensorEntityDescription(
         key="supports_airplay",
         name="Supports AirPlay",
-        icon="mdi:wan",
+        icon="mdi:cast-variant",
         entity_category=EntityCategory.DIAGNOSTIC,
         is_on_fn=lambda device: device.info.supports_airplay,
     ),
