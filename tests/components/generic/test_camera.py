@@ -57,25 +57,21 @@ async def test_fetching_without_verify_ssl(hass, hass_client, fakeimgbytes_png):
     """Test that it fetches the given url when ssl verify is off."""
     respx.get("https://example.com").respond(stream=fakeimgbytes_png)
 
-    with patch(
-        "homeassistant.components.generic.camera.GenericCamera.async_camera_image",
-        return_value=fakeimgbytes_png,
-    ):
-        await async_setup_component(
-            hass,
-            "camera",
-            {
-                "camera": {
-                    "name": "config_test",
-                    "platform": "generic",
-                    "still_image_url": "https://example.com",
-                    "username": "user",
-                    "password": "pass",
-                    "verify_ssl": "false",
-                }
-            },
-        )
-        await hass.async_block_till_done()
+    await async_setup_component(
+        hass,
+        "camera",
+        {
+            "camera": {
+                "name": "config_test",
+                "platform": "generic",
+                "still_image_url": "https://example.com",
+                "username": "user",
+                "password": "pass",
+                "verify_ssl": "false",
+            }
+        },
+    )
+    await hass.async_block_till_done()
 
     client = await hass_client()
 
@@ -89,25 +85,21 @@ async def test_fetching_url_with_verify_ssl(hass, hass_client, fakeimgbytes_png)
     """Test that it fetches the given url when ssl verify is explicitly on."""
     respx.get("https://example.com").respond(stream=fakeimgbytes_png)
 
-    with patch(
-        "homeassistant.components.generic.camera.GenericCamera.async_camera_image",
-        return_value=fakeimgbytes_png,
-    ):
-        await async_setup_component(
-            hass,
-            "camera",
-            {
-                "camera": {
-                    "name": "config_test",
-                    "platform": "generic",
-                    "still_image_url": "https://example.com",
-                    "username": "user",
-                    "password": "pass",
-                    "verify_ssl": "true",
-                }
-            },
-        )
-        await hass.async_block_till_done()
+    await async_setup_component(
+        hass,
+        "camera",
+        {
+            "camera": {
+                "name": "config_test",
+                "platform": "generic",
+                "still_image_url": "https://example.com",
+                "username": "user",
+                "password": "pass",
+                "verify_ssl": "true",
+            }
+        },
+    )
+    await hass.async_block_till_done()
 
     client = await hass_client()
 
@@ -124,23 +116,19 @@ async def test_limit_refetch(hass, hass_client, fakeimgbytes_png, fakeimgbytes_j
     respx.get("http://example.com/15a").respond(stream=fakeimgbytes_jpg)
     respx.get("http://example.com/20a").respond(status_code=HTTPStatus.NOT_FOUND)
 
-    with patch(
-        "homeassistant.components.generic.camera.GenericCamera.async_camera_image",
-        return_value=fakeimgbytes_png,
-    ):
-        await async_setup_component(
-            hass,
-            "camera",
-            {
-                "camera": {
-                    "name": "config_test",
-                    "platform": "generic",
-                    "still_image_url": 'http://example.com/{{ states.sensor.temp.state + "a" }}',
-                    "limit_refetch_to_url_change": True,
-                }
-            },
-        )
-        await hass.async_block_till_done()
+    await async_setup_component(
+        hass,
+        "camera",
+        {
+            "camera": {
+                "name": "config_test",
+                "platform": "generic",
+                "still_image_url": 'http://example.com/{{ states.sensor.temp.state + "a" }}',
+                "limit_refetch_to_url_change": True,
+            }
+        },
+    )
+    await hass.async_block_till_done()
 
     client = await hass_client()
 
