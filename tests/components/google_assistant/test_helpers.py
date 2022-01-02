@@ -171,7 +171,10 @@ async def test_agent_user_id_storage(hass, hass_storage):
         "version": 1,
         "minor_version": 1,
         "key": "google_assistant",
-        "data": {"agent_user_ids": {"agent_1": {}}},
+        "data": {
+            "agent_user_ids": {"agent_1": {}},
+            "local_webhook_id": "test_webhook",
+        },
     }
 
     store = helpers.GoogleConfigStore(hass)
@@ -181,7 +184,10 @@ async def test_agent_user_id_storage(hass, hass_storage):
         "version": 1,
         "minor_version": 1,
         "key": "google_assistant",
-        "data": {"agent_user_ids": {"agent_1": {}}},
+        "data": {
+            "agent_user_ids": {"agent_1": {}},
+            "local_webhook_id": "test_webhook",
+        },
     }
 
     async def _check_after_delay(data):
@@ -196,10 +202,20 @@ async def test_agent_user_id_storage(hass, hass_storage):
         }
 
     store.add_agent_user_id("agent_2")
-    await _check_after_delay({"agent_user_ids": {"agent_1": {}, "agent_2": {}}})
+    await _check_after_delay(
+        {
+            "agent_user_ids": {"agent_1": {}, "agent_2": {}},
+            "local_webhook_id": "test_webhook",
+        }
+    )
 
     store.pop_agent_user_id("agent_1")
-    await _check_after_delay({"agent_user_ids": {"agent_2": {}}})
+    await _check_after_delay(
+        {
+            "agent_user_ids": {"agent_2": {}},
+            "local_webhook_id": "test_webhook",
+        }
+    )
 
 
 async def test_agent_user_id_connect():
