@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 from typing import Dict
 
-from sleepyq import Bed, SideStatus, Sleepyq
+from sleepyq import Bed, SideStatus, Sleepyq, Status
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -35,7 +35,9 @@ from .const import (
     ICON_EMPTY,
     ICON_OCCUPIED,
     IS_IN_BED,
+    LIGHT,
     SENSOR_TYPES,
+    UNDER_BED_LIGHT_ID,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -56,6 +58,7 @@ DEFAULT_COMPONENT_NAME = "SleepIQ {}"
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.LIGHT,
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
@@ -78,6 +81,7 @@ class SleepIQDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Dict]]):
             hass, _LOGGER, name=f"{username}@SleepIQ", update_interval=update_interval
         )
         self.client = client
+        self.foundation_features: Status = None
 
     async def async_update_config(self, config_entry: ConfigEntry) -> None:
         """Handle config update."""
@@ -94,6 +98,16 @@ class SleepIQDataUpdateCoordinator(DataUpdateCoordinator[Dict[str, Dict]]):
             data[bed.bed_id][FOUNDATION] = await self.hass.async_add_executor_job(
                 self.client.foundation_status, bed.bed_id
             )
+
+            if self.foundation_features is None:
+                self.foundation_features = await self.hass.async_add_executor_job(
+                    self.client.foundation_features, bed.bed_id
+                )
+
+            if self.foundation_features.hasUnderbedLight:
+                data[bed.bed_id][LIGHT] = await self.hass.async_add_executor_job(
+                    self.client.get_light, UNDER_BED_LIGHT_ID, bed.bed_id
+                )
         return data
 
 

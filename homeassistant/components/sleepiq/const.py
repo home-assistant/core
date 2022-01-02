@@ -15,8 +15,12 @@ ACTUATOR = "position"
 BED = "bed"
 FOUNDATION = "foundation"
 IS_IN_BED = "is_in_bed"
+LIGHT = "light"
 PRESET = "preset"
 SLEEP_NUMBER = "sleep_number"
+UNDER_BED_LIGHT_ID = 3
+
+LIGHTS = {UNDER_BED_LIGHT_ID: "Under Bed Light"}
 
 SENSOR_TYPES = {
     SLEEP_NUMBER: "SleepNumber",
