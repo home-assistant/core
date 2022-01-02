@@ -91,10 +91,6 @@ class FritzBoxBinarySensor(FritzBoxBaseEntity, BinarySensorEntity):
                 "installed_version": self._fritzbox_tools.current_firmware,
                 "latest_available_version": self._fritzbox_tools.latest_firmware,
             }
-
-        if self._fritzbox_tools.mesh_role == MeshRoles.SLAVE:
-            return
-
         if self.entity_description.key == "is_connected":
             self._attr_is_on = bool(self._fritzbox_tools.fritz_status.is_connected)
         elif self.entity_description.key == "is_linked":
