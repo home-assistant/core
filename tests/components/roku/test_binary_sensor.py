@@ -47,7 +47,7 @@ async def test_roku_binary_sensors(
     assert device_entry
     assert device_entry.identifiers == {(DOMAIN, UPNP_SERIAL)}
     assert device_entry.manufacturer == "Roku"
-    assert device_entry.model == "4200X"
+    assert device_entry.model == "Roku 3"
     assert device_entry.name == "My Roku 3"
     assert device_entry.entry_type == dr.DeviceEntryType.DEVICE
     assert device_entry.sw_version == "7.5.0"
