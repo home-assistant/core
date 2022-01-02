@@ -48,6 +48,13 @@ BINARY_SENSORS: tuple[RokuBinarySensorEntityDescription, ...] = (
         is_on_fn=lambda device: device.info.supports_airplay,
     ),
     RokuBinarySensorEntityDescription(
+        key="supports_ethernet",
+        name="Supports Ethernet",
+        icon="mdi:ethernet",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        is_on_fn=lambda device: device.info.ethernet_support,
+    ),
+    RokuBinarySensorEntityDescription(
         key="supports_find_remote",
         name="Supports Find Remote",
         icon="mdi:remote",
