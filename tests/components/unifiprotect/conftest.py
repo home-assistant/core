@@ -187,9 +187,11 @@ def ids_from_device_description(
 ) -> tuple[str, str]:
     """Return expected unique_id and entity_id for a give platform/device/description combination."""
 
-    entity_name = device.name.lower().replace(":", "").replace(" ", "_")
+    entity_name = (
+        device.name.lower().replace(":", "").replace(" ", "_").replace("-", "_")
+    )
     description_entity_name = (
-        description.name.lower().replace(":", "").replace(" ", "_")
+        description.name.lower().replace(":", "").replace(" ", "_").replace("-", "_")
     )
 
     unique_id = f"{device.id}_{description.key}"
