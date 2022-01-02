@@ -1266,7 +1266,7 @@ class Service:
 
     def __init__(
         self,
-        func: Callable,
+        func: Callable[[ServiceCall], Any],
         schema: vol.Schema | None,
         context: Context | None = None,
     ) -> None:
@@ -1284,7 +1284,7 @@ class ServiceCall:
         self,
         domain: str,
         service: str,
-        data: dict | None = None,
+        data: dict[str, Any] | None = None,
         context: Context | None = None,
     ) -> None:
         """Initialize a service call."""
@@ -1408,11 +1408,11 @@ class ServiceRegistry:
         self,
         domain: str,
         service: str,
-        service_data: dict | None = None,
+        service_data: dict[str, Any] | None = None,
         blocking: bool = False,
         context: Context | None = None,
         limit: float | None = SERVICE_CALL_LIMIT,
-        target: dict | None = None,
+        target: dict[str, Any] | None = None,
     ) -> bool | None:
         """
         Call a service.
@@ -1430,11 +1430,11 @@ class ServiceRegistry:
         self,
         domain: str,
         service: str,
-        service_data: dict | None = None,
+        service_data: dict[str, Any] | None = None,
         blocking: bool = False,
         context: Context | None = None,
         limit: float | None = SERVICE_CALL_LIMIT,
-        target: dict | None = None,
+        target: dict[str, Any] | None = None,
     ) -> bool | None:
         """
         Call a service.
@@ -1467,7 +1467,7 @@ class ServiceRegistry:
 
         if handler.schema:
             try:
-                processed_data = handler.schema(service_data)
+                processed_data: dict[str, Any] = handler.schema(service_data)
             except vol.Invalid:
                 _LOGGER.debug(
                     "Invalid data for service call %s.%s: %s",
@@ -1523,7 +1523,9 @@ class ServiceRegistry:
         return False
 
     def _run_service_in_background(
-        self, coro_or_task: Coroutine | asyncio.Task, service_call: ServiceCall
+        self,
+        coro_or_task: Coroutine[Any, Any, None] | asyncio.Task[None],
+        service_call: ServiceCall,
     ) -> None:
         """Run service call in background, catching and logging any exceptions."""
 
