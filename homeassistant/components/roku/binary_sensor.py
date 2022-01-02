@@ -58,7 +58,6 @@ async def async_setup_entry(
             device=device,
             description=description,
         )
-        for device in coordinator.data.values()
         for description in BINARY_SENSORS
     )
 
