@@ -99,6 +99,11 @@ class SongpalMediaPlayerEntity(MediaPlayerEntity, SongpalEntity):
         | MediaPlayerEntityFeature.TURN_ON
         | MediaPlayerEntityFeature.TURN_OFF
         | MediaPlayerEntityFeature.SELECT_SOUND_MODE
+        | MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.STOP
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
     )
 
     def __init__(self, name, coordinator: SongpalCoordinator):
@@ -131,6 +136,41 @@ class SongpalMediaPlayerEntity(MediaPlayerEntity, SongpalEntity):
             return None
 
         return PLAYING_STATES_MAP[reported_state]
+
+    @property
+    def media_title(self) -> str | None:
+        """Title of the currently playing media, if any."""
+        return self.coordinator.data.playing_content.title
+
+    @property
+    def media_album_name(self) -> str | None:
+        """Album name of the currently playing media, if any."""
+        return self.coordinator.data.playing_content.albumName
+
+    @property
+    def media_artist(self) -> str | None:
+        """Artist of the currently playing media, if any."""
+        return self.coordinator.data.playing_content.artist
+
+    @property
+    def media_duration(self) -> int | None:
+        """Duration in seconds of the currently playing media, if any."""
+        duration_msec = self.coordinator.data.playing_content.durationMsec
+        if duration_msec is not None:
+            return duration_msec // 1000
+
+        return None
+
+    @property
+    def media_image_url(self) -> str | None:
+        """Return the URL of the currently playing media, if any."""
+        if (
+            self.coordinator.data.playing_content
+            and self.coordinator.data.playing_content.content
+        ):
+            return self.coordinator.data.playing_content.content.thumbnailUrl
+
+        return None
 
     @property
     def source_list(self) -> list[str]:
@@ -227,3 +267,29 @@ class SongpalMediaPlayerEntity(MediaPlayerEntity, SongpalEntity):
         for candidate in sound_field_setting.candidate:
             if candidate.title == sound_mode:
                 await self.coordinator.device.set_soundfield(candidate.value)
+
+    async def async_media_play_pause(self):
+        """Attempt at pausing or resuming the currently playing media."""
+        await self.coordinator.device.services["avContent"]["pausePlayingContent"]({})
+
+    async def async_media_play(self):
+        """Attempt at pausing or resuming the currently playing media."""
+        await self.async_media_play_pause()
+
+    async def async_media_pause(self):
+        """Attempt at pausing or resuming the currently playing media."""
+        await self.async_media_play_pause()
+
+    async def async_media_stop(self):
+        """Attempt at stopping the currently playing media."""
+        await self.coordinator.device.services["avContent"]["stopPlayingContent"]({})
+
+    async def async_media_next_track(self):
+        """Attempt playing the next track."""
+        await self.coordinator.device.services["avContent"]["setPlayNextContent"]({})
+
+    async def async_media_previous_track(self):
+        """Attempt playing the previous track."""
+        await self.coordinator.device.services["avContent"]["setPlayPreviousContent"](
+            {}
+        )
