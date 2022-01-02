@@ -42,6 +42,17 @@ async def test_roku_binary_sensors(
     assert state.attributes.get(ATTR_ICON) == "mdi:cast-variant"
     assert ATTR_DEVICE_CLASS not in state.attributes
 
+    state = hass.states.get("binary_sensor.my_roku_3_supports_ethernet")
+    entry = entity_registry.async_get("binary_sensor.my_roku_3_supports_ethernet")
+    assert entry
+    assert state
+    assert entry.unique_id == f"{UPNP_SERIAL}_supports_ethernet"
+    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+    assert state.state == STATE_ON
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Roku 3 Supports Ethernet"
+    assert state.attributes.get(ATTR_ICON) == "mdi:ethernet"
+    assert ATTR_DEVICE_CLASS not in state.attributes
+
     state = hass.states.get("binary_sensor.my_roku_3_supports_find_remote")
     entry = entity_registry.async_get("binary_sensor.my_roku_3_supports_find_remote")
     assert entry
@@ -108,6 +119,19 @@ async def test_rokutv_binary_sensors(
         state.attributes.get(ATTR_FRIENDLY_NAME) == '58" Onn Roku TV Supports AirPlay'
     )
     assert state.attributes.get(ATTR_ICON) == "mdi:cast-variant"
+    assert ATTR_DEVICE_CLASS not in state.attributes
+
+    state = hass.states.get("binary_sensor.58_onn_roku_tv_supports_ethernet")
+    entry = entity_registry.async_get("binary_sensor.58_onn_roku_tv_supports_ethernet")
+    assert entry
+    assert state
+    assert entry.unique_id == "YN00H5555555_supports_ethernet"
+    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+    assert state.state == STATE_ON
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME) == '58" Onn Roku TV Supports Ethernet'
+    )
+    assert state.attributes.get(ATTR_ICON) == "mdi:ethernet"
     assert ATTR_DEVICE_CLASS not in state.attributes
 
     state = hass.states.get("binary_sensor.58_onn_roku_tv_supports_find_remote")
