@@ -57,6 +57,7 @@ DEFAULT_COMPONENT_NAME = "SleepIQ {}"
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.NUMBER,
+    Platform.SELECT,
     Platform.SENSOR,
 ]
 
@@ -218,6 +219,10 @@ class SleepIQEntity(CoordinatorEntity):
     @property
     def _side(self) -> SideStatus:
         return getattr(self._bed, self.side)
+
+    @property
+    def _foundation(self) -> str:
+        return self.coordinator.data[self.bed_id][FOUNDATION]
 
     @property
     def unique_id(self) -> str:

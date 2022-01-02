@@ -1,4 +1,4 @@
-"""Support for SleepIQ SleepNumber firmness number entities."""
+"""Support for SleepIQ SleepNumber firmness and actuator number entities."""
 from typing import List
 
 from homeassistant.components.number import NumberEntity
@@ -13,7 +13,6 @@ from .const import (
     ATTRIBUTES,
     BED,
     FOOT,
-    FOUNDATION,
     HEAD,
     NAME,
     RIGHT,
@@ -34,7 +33,7 @@ async def async_setup_entry(
 
     for bed_id in coordinator.data:
         foundation_features = await hass.async_add_executor_job(
-            coordinator.client.foundation_features
+            coordinator.client.foundation_features, bed_id
         )
 
         for side in SIDES:
@@ -131,10 +130,6 @@ class SleepIQFoundationActuator(SleepIQEntity, NumberEntity):
         self.actuator = actuator
         self.client = coordinator.client
         self.single = single
-
-    @property
-    def _foundation(self) -> str:
-        return self.coordinator.data[self.bed_id][FOUNDATION]
 
     @property
     def unique_id(self) -> str:
