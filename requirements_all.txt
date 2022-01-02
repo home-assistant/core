@@ -232,6 +232,9 @@ aionotify==0.2.0
 # homeassistant.components.notion
 aionotion==3.0.2
 
+# homeassistant.components.oncue
+aiooncue==0.3.0
+
 # homeassistant.components.acmeda
 aiopulse==0.4.3
 
