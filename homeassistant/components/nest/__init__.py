@@ -8,9 +8,10 @@ import logging
 from aiohttp import web
 from google_nest_sdm.event import EventMessage
 from google_nest_sdm.exceptions import (
+    ApiException,
     AuthException,
     ConfigurationException,
-    GoogleNestException,
+    SubscriberException,
 )
 import voluptuous as vol
 
@@ -242,7 +243,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("Configuration error: %s", err)
         subscriber.stop_async()
         return False
-    except GoogleNestException as err:
+    except SubscriberException as err:
         if DATA_NEST_UNAVAILABLE not in hass.data[DOMAIN]:
             _LOGGER.error("Subscriber error: %s", err)
             hass.data[DOMAIN][DATA_NEST_UNAVAILABLE] = True
@@ -251,7 +252,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await subscriber.async_get_device_manager()
-    except GoogleNestException as err:
+    except ApiException as err:
         if DATA_NEST_UNAVAILABLE not in hass.data[DOMAIN]:
             _LOGGER.error("Device manager error: %s", err)
             hass.data[DOMAIN][DATA_NEST_UNAVAILABLE] = True
@@ -293,7 +294,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     _LOGGER.debug("Deleting subscriber '%s'", subscriber.subscriber_id)
     try:
         await subscriber.delete_subscription()
-    except GoogleNestException as err:
+    except (AuthException, SubscriberException) as err:
         _LOGGER.warning(
             "Unable to delete subscription '%s'; Will be automatically cleaned up by cloud console: %s",
             subscriber.subscriber_id,
@@ -334,7 +335,7 @@ class NestEventMediaView(HomeAssistantView):
             )
         try:
             event_media = await nest_device.event_media_manager.get_media(event_id)
-        except GoogleNestException as err:
+        except ApiException as err:
             raise HomeAssistantError("Unable to fetch media for event") from err
         if not event_media:
             return self._json_error(
