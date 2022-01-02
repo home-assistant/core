@@ -5,7 +5,10 @@ from urllib.parse import quote
 import pytest
 
 from homeassistant.components import media_source
-from homeassistant.components.media_player.const import MEDIA_CLASS_DIRECTORY
+from homeassistant.components.media_player.const import (
+    MEDIA_CLASS_DIRECTORY,
+    MEDIA_CLASS_IMAGE,
+)
 from homeassistant.components.media_player.errors import BrowseError
 from homeassistant.components.media_source import const
 from homeassistant.components.media_source.error import Unresolvable
@@ -132,6 +135,72 @@ async def test_websocket_browse_media(hass, hass_ws_client):
     assert not msg["success"]
     assert msg["error"]["code"] == "browse_media_failed"
     assert msg["error"]["message"] == "test"
+
+
+async def test_websocket_browse_media_thumbnail(hass, hass_ws_client):
+    """Test browse media websocket."""
+    assert await async_setup_component(hass, const.DOMAIN, {})
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+
+    child1 = media_source.models.BrowseMediaSource(
+        domain=const.DOMAIN,
+        identifier="/media/child-1",
+        title="Child 1",
+        media_class=MEDIA_CLASS_IMAGE,
+        media_content_type="image/jpeg",
+        can_play=True,
+        can_expand=False,
+        thumbnail="/api/child-1-thumbnail",
+    )
+    child2 = media_source.models.BrowseMediaSource(
+        domain=const.DOMAIN,
+        identifier="/media/child-2",
+        title="Child 2",
+        media_class=MEDIA_CLASS_IMAGE,
+        media_content_type="image/jpeg",
+        can_play=True,
+        can_expand=False,
+        thumbnail="http://remote-thumbnail",
+    )
+
+    media = media_source.models.BrowseMediaSource(
+        domain=const.DOMAIN,
+        identifier="/media",
+        title="Local Media",
+        media_class=MEDIA_CLASS_DIRECTORY,
+        media_content_type="listing",
+        can_play=False,
+        can_expand=True,
+        thumbnail="/api/thumbnail",
+        children=[child1, child2],
+    )
+
+    with patch(
+        "homeassistant.components.media_source.async_browse_media",
+        return_value=media,
+    ):
+        await client.send_json(
+            {
+                "id": 1,
+                "type": "media_source/browse_media",
+            }
+        )
+
+        msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["id"] == 1
+    assert media.as_dict() == msg["result"]
+    # Add an auth signature for local thumbnails
+    assert "/api/thumbnail?authSig=" in msg["result"]["thumbnail"]
+    assert len(msg["result"]["children"]) == 2
+    assert (
+        "/api/child-1-thumbnail?authSig=" in msg["result"]["children"][0]["thumbnail"]
+    )
+    # Not served by home assistant, so not auth token
+    assert msg["result"]["children"][1]["thumbnail"] == "http://remote-thumbnail"
 
 
 @pytest.mark.parametrize("filename", ["test.mp3", "Epic Sax Guy 10 Hours.mp4"])
