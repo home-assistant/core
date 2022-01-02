@@ -113,84 +113,7 @@ class HiveClimateEntity(HiveEntity, ClimateEntity):
         """Initialize the Climate device."""
         super().__init__(hive_session, hive_device)
         self.thermostat_node_id = hive_device["device_id"]
-        self.temperature_type = TEMP_UNIT.get(hive_device["temperatureunit"])
-
-    @property
-    def unique_id(self):
-        """Return unique ID of entity."""
-        return self._unique_id
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.device["device_id"])},
-            manufacturer=self.device["deviceData"]["manufacturer"],
-            model=self.device["deviceData"]["model"],
-            name=self.device["device_name"],
-            sw_version=self.device["deviceData"]["version"],
-            via_device=(DOMAIN, self.device["parentDevice"]),
-        )
-
-    @property
-    def name(self):
-        """Return the name of the Climate device."""
-        return self.device["haName"]
-
-    @property
-    def available(self):
-        """Return if the device is available."""
-        return self.device["deviceData"]["online"]
-
-    @property
-    def hvac_mode(self) -> HVACMode:
-        """Return hvac operation ie. heat, cool mode.
-
-        Need to be one of HVAC_MODE_*.
-        """
-        return HIVE_TO_HASS_STATE[self.device["status"]["mode"]]
-
-    @property
-    def hvac_action(self) -> HVACAction:
-        """Return current HVAC action."""
-        return HIVE_TO_HASS_HVAC_ACTION[self.device["status"]["action"]]
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return self.temperature_type
-
-    @property
-    def current_temperature(self):
-        """Return the current temperature."""
-        return self.device["status"]["current_temperature"]
-
-    @property
-    def target_temperature(self):
-        """Return the target temperature."""
-        return self.device["status"]["target_temperature"]
-
-    @property
-    def min_temp(self):
-        """Return minimum temperature."""
-        return self.device["min_temp"]
-
-    @property
-    def max_temp(self):
-        """Return the maximum temperature."""
-        return self.device["max_temp"]
-
-    @property
-    def preset_mode(self):
-        """Return the current preset mode, e.g., home, away, temp."""
-        if self.device["status"]["boost"] == "ON":
-            return PRESET_BOOST
-        return PRESET_NONE
-
-    @property
-    def preset_modes(self):
-        """Return a list of available preset modes."""
-        return SUPPORT_PRESET
+        self._attr_temperature_unit = TEMP_UNIT.get(hive_device["temperatureunit"])
 
     @refresh_system
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
@@ -236,3 +159,15 @@ class HiveClimateEntity(HiveEntity, ClimateEntity):
         """Update all Node data from Hive."""
         await self.hive.session.updateData(self.device)
         self.device = await self.hive.heating.getClimate(self.device)
+        self._attr_available = self.device["deviceData"].get("online")
+        self._attr_hvac_mode = HIVE_TO_HASS_STATE[self.device["status"]["mode"]]
+        self._attr_hvac_action = HIVE_TO_HASS_HVAC_ACTION[
+            self.device["status"]["action"]
+        ]
+        self._attr_current_temperature = self.device["status"]["current_temperature"]
+        self._attr_target_temperature = self.device["status"]["target_temperature"]
+        self._attr_min_temp = self.device["min_temp"]
+        self._attr_max_temp = self.device["max_temp"]
+        if self.device["status"]["boost"] == "ON":
+            self._attr_preset_mode = PRESET_BOOST
+        self._attr_preset_mode = PRESET_NONE

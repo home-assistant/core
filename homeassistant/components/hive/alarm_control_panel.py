@@ -45,44 +45,7 @@ class HiveAlarmControlPanelEntity(HiveEntity, AlarmControlPanelEntity):
     """Representation of a Hive alarm."""
 
     _attr_icon = ICON
-    _attr_supported_features = (
-        AlarmControlPanelEntityFeature.ARM_NIGHT
-        | AlarmControlPanelEntityFeature.ARM_AWAY
-    )
-
-    @property
-    def unique_id(self):
-        """Return unique ID of entity."""
-        return self._unique_id
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information about this AdGuard Home instance."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.device["device_id"])},
-            model=self.device["deviceData"]["model"],
-            manufacturer=self.device["deviceData"]["manufacturer"],
-            name=self.device["device_name"],
-            sw_version=self.device["deviceData"]["version"],
-            via_device=(DOMAIN, self.device["parentDevice"]),
-        )
-
-    @property
-    def name(self):
-        """Return the name of the alarm."""
-        return self.device["haName"]
-
-    @property
-    def available(self):
-        """Return if the device is available."""
-        return self.device["deviceData"]["online"]
-
-    @property
-    def state(self):
-        """Return state of alarm."""
-        if self.device["status"]["state"]:
-            return STATE_ALARM_TRIGGERED
-        return HIVETOHA[self.device["status"]["mode"]]
+    _attr_supported_features = SUPPORT_ALARM_ARM_NIGHT | SUPPORT_ALARM_ARM_AWAY
 
     async def async_alarm_disarm(self, code=None):
         """Send disarm command."""
@@ -100,3 +63,8 @@ class HiveAlarmControlPanelEntity(HiveEntity, AlarmControlPanelEntity):
         """Update all Node data from Hive."""
         await self.hive.session.updateData(self.device)
         self.device = await self.hive.alarm.getAlarm(self.device)
+        self._attr_available = self.device["deviceData"].get("online")
+        if self.device["status"]["state"]:
+            self._attr_state = STATE_ALARM_TRIGGERED
+        else:
+            self._attr_state = HIVETOHA[self.device["status"]["mode"]]
