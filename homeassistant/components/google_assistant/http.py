@@ -22,7 +22,6 @@ from .const import (
     CONF_EXPOSE,
     CONF_EXPOSE_BY_DEFAULT,
     CONF_EXPOSED_DOMAINS,
-    CONF_LOCAL_FULFILLMENT,
     CONF_PRIVATE_KEY,
     CONF_REPORT_STATE,
     CONF_SECURE_DEVICES_PIN,
@@ -83,8 +82,7 @@ class GoogleConfig(AbstractConfig):
         """Perform async initialization of config."""
         await super().async_initialize()
 
-        if self._config.get(CONF_LOCAL_FULFILLMENT):
-            self.async_enable_local_sdk()
+        self.async_enable_local_sdk()
 
     @property
     def enabled(self):

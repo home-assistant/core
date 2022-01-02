@@ -39,7 +39,6 @@ CONF_REPORT_STATE = "report_state"
 CONF_SERVICE_ACCOUNT = "service_account"
 CONF_CLIENT_EMAIL = "client_email"
 CONF_PRIVATE_KEY = "private_key"
-CONF_LOCAL_FULFILLMENT = "local_fulfillment"
 
 DEFAULT_EXPOSE_BY_DEFAULT = True
 DEFAULT_EXPOSED_DOMAINS = [
