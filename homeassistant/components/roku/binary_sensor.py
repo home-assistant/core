@@ -44,7 +44,7 @@ BINARY_SENSORS: tuple[RokuBinarySensorEntityDescription, ...] = (
     RokuBinarySensorEntityDescription(
         key="supports_find_remote",
         name="Supports Find Remote",
-        icon="mdi:wan",
+        icon="mdi:remote",
         entity_category=EntityCategory.DIAGNOSTIC,
         is_on_fn=lambda device: device.info.supports_find_remote,
     ),
