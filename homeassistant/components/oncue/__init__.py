@@ -15,7 +15,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONNECTION_EXCEPTIONS, DOMAIN
 
-PLATFORMS: list[str] = [Platform.SENSOR]
+PLATFORMS: list[str] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 

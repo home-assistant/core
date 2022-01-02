@@ -20,14 +20,12 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
+from .entity import OncueEntity
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -155,7 +153,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class OncueSensorEntity(CoordinatorEntity, SensorEntity):
+class OncueSensorEntity(OncueEntity, SensorEntity):
     """Representation of an Oncue sensor."""
 
     def __init__(
@@ -167,27 +165,13 @@ class OncueSensorEntity(CoordinatorEntity, SensorEntity):
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
-        self.entity_description = description
-        self._device_id = device_id
-        self._attr_unique_id = f"{device_id}_{description.key}"
-        self._attr_name = f"{device.name} {sensor.display_name}"
+        super().__init__(coordinator, device_id, device, sensor, description)
         if not description.native_unit_of_measurement and sensor.unit is not None:
             self._attr_native_unit_of_measurement = UNIT_MAPPINGS.get(
                 sensor.unit, sensor.unit
             )
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device_id)},
-            name=device.name,
-            hw_version=device.hardware_version,
-            sw_version=device.sensors["FirmwareVersion"].display_value,
-            model=device.sensors["GensetModelNumberSelect"].display_value,
-            manufacturer="Kohler",
-        )
 
     @property
-    def native_value(self) -> str | None:
+    def native_value(self) -> str:
         """Return the sensors state."""
-        device: OncueDevice = self.coordinator.data[self._device_id]
-        sensor: OncueSensor = device.sensors[self.entity_description.key]
-        return sensor.value
+        return self._oncue_value
