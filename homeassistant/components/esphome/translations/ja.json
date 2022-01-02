@@ -21,7 +21,7 @@
             },
             "discovery_confirm": {
                 "description": "ESPHome\u306e\u30ce\u30fc\u30c9 `{name}` \u3092Home Assistant\u306b\u8ffd\u52a0\u3057\u307e\u3059\u304b\uff1f",
-                "title": "\u691c\u51fa\u3055\u308c\u305fESPHome\u306e\u30ce\u30fc\u30c9"
+                "title": "ESPHome\u306e\u30ce\u30fc\u30c9\u304c\u691c\u51fa\u3055\u308c\u307e\u3057\u305f"
             },
             "encryption_key": {
                 "data": {

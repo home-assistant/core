@@ -15,13 +15,13 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.distance import LENGTH_KILOMETERS, LENGTH_MILES
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 
-from . import (
+from . import LeafEntity
+from .const import (
     DATA_BATTERY,
     DATA_CHARGING,
     DATA_LEAF,
     DATA_RANGE_AC,
     DATA_RANGE_AC_OFF,
-    LeafEntity,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,6 +51,11 @@ def setup_platform(
 
 class LeafBatterySensor(LeafEntity, SensorEntity):
     """Nissan Leaf Battery Sensor."""
+
+    def __init__(self, car: Leaf) -> None:
+        """Set up battery sensor."""
+        super().__init__(car)
+        self._attr_unique_id = f"{self.car.leaf.vin.lower()}_soc"
 
     @property
     def name(self) -> str:
@@ -88,6 +93,10 @@ class LeafRangeSensor(LeafEntity, SensorEntity):
         """Set up range sensor. Store if AC on."""
         self._ac_on = ac_on
         super().__init__(car)
+        if ac_on:
+            self._attr_unique_id = f"{self.car.leaf.vin.lower()}_range_ac"
+        else:
+            self._attr_unique_id = f"{self.car.leaf.vin.lower()}_range"
 
     @property
     def name(self) -> str:

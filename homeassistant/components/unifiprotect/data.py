@@ -2,13 +2,14 @@
 from __future__ import annotations
 
 import collections
+from collections.abc import Generator, Iterable
 from datetime import timedelta
 import logging
 from typing import Any
 
 from pyunifiprotect import NotAuthorized, NvrError, ProtectApiClient
-from pyunifiprotect.data import Bootstrap, WSSubscriptionMessage
-from pyunifiprotect.data.base import ProtectDeviceModel
+from pyunifiprotect.data import Bootstrap, ModelType, WSSubscriptionMessage
+from pyunifiprotect.data.base import ProtectAdoptableDeviceModel, ProtectDeviceModel
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -48,6 +49,18 @@ class ProtectData:
     def disable_stream(self) -> bool:
         """Check if RTSP is disabled."""
         return self._entry.options.get(CONF_DISABLE_RTSP, False)
+
+    def get_by_types(
+        self, device_types: Iterable[ModelType]
+    ) -> Generator[ProtectAdoptableDeviceModel, None, None]:
+        """Get all devices matching types."""
+
+        for device_type in device_types:
+            attr = f"{device_type.value}s"
+            devices: dict[str, ProtectAdoptableDeviceModel] = getattr(
+                self.api.bootstrap, attr
+            )
+            yield from devices.values()
 
     async def async_setup(self) -> None:
         """Subscribe and do the refresh."""

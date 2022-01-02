@@ -15,9 +15,10 @@ from homeassistant.components.light import (
     LIGHT_TURN_ON_SCHEMA,
     SERVICE_TURN_ON as LIGHT_SERVICE_TURN_ON,
 )
-from homeassistant.core import ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import aiohttp_client
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .const import ATTR_PATH, ATTR_URL, DOMAIN, SERVICE_TURN_ON
 
@@ -56,7 +57,7 @@ def _get_color(file_handler) -> tuple:
     return color
 
 
-async def async_setup(hass, hass_config):
+async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     """Set up services for color_extractor integration."""
 
     async def async_handle_service(service_call: ServiceCall) -> None:

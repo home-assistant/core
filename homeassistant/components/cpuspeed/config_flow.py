@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from cpuinfo import cpuinfo
+
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_NAME
 from homeassistant.data_entry_flow import FlowResult
@@ -26,6 +28,9 @@ class CPUSpeedFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is None:
             return self.async_show_form(step_id="user")
+
+        if not await self.hass.async_add_executor_job(cpuinfo.get_cpu_info):
+            return self.async_abort(reason="not_compatible")
 
         return self.async_create_entry(
             title=self._imported_name or "CPU Speed",
