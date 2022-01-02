@@ -1,20 +1,17 @@
 """Support for the Hive alarm."""
 from datetime import timedelta
 
-from homeassistant.components.alarm_control_panel import (
-    AlarmControlPanelEntity,
-    AlarmControlPanelEntityFeature,
+from homeassistant.components.alarm_control_panel import AlarmControlPanelEntity
+from homeassistant.components.alarm_control_panel.const import (
+    SUPPORT_ALARM_ARM_AWAY,
+    SUPPORT_ALARM_ARM_NIGHT,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HiveEntity
 from .const import DOMAIN
@@ -29,13 +26,12 @@ HIVETOHA = {
 }
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
-) -> None:
+async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Hive thermostat based on a config entry."""
 
     hive = hass.data[DOMAIN][entry.entry_id]
-    if devices := hive.session.deviceList.get("alarm_control_panel"):
+    devices = hive.session.deviceList.get("alarm_control_panel")
+    if devices:
         async_add_entities(
             [HiveAlarmControlPanelEntity(hive, dev) for dev in devices], True
         )

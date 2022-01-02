@@ -1,20 +1,23 @@
 """Support for the Hive devices and services."""
-from __future__ import annotations
-
-from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
 import logging
-from typing import Any, TypeVar
 
 from aiohttp.web_exceptions import HTTPException
 from apyhiveapi import Hive
 from apyhiveapi.helper.hive_exceptions import HiveReauthRequired
-from typing_extensions import Concatenate, ParamSpec
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_SCAN_INTERVAL,
+    CONF_USERNAME,
+    POWER_WATT,
+    TEMP_CELSIUS,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
@@ -22,13 +25,56 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, PLATFORM_LOOKUP, PLATFORMS
 
-_HiveEntityT = TypeVar("_HiveEntityT", bound="HiveEntity")
-_P = ParamSpec("_P")
+DEVICETYPE = {
+    "contactsensor": {"device_class": BinarySensorDeviceClass.OPENING},
+    "motionsensor": {"device_class": BinarySensorDeviceClass.MOTION},
+    "Connectivity": {"device_class": BinarySensorDeviceClass.CONNECTIVITY},
+    "SMOKE_CO": {"device_class": BinarySensorDeviceClass.SMOKE},
+    "DOG_BARK": {"device_class": BinarySensorDeviceClass.SOUND},
+    "GLASS_BREAK": {"device_class": BinarySensorDeviceClass.SOUND},
+    "Heating_Current_Temperature": {
+        "device_class": SensorDeviceClass.TEMPERATURE,
+        "state_class": SensorStateClass.MEASUREMENT,
+        "unit": TEMP_CELSIUS,
+    },
+    "Heating_Target_Temperature": {
+        "device_class": SensorDeviceClass.TEMPERATURE,
+        "state_class": SensorStateClass.MEASUREMENT,
+        "unit": TEMP_CELSIUS,
+    },
+    "Heating_State": {"icon": "mdi:radiator"},
+    "Heating_Mode": {"icon": "mdi:radiator"},
+    "Heating_Boost": {"icon": "mdi:radiator"},
+    "Hotwater_State": {"icon": "mdi:water-pump"},
+    "Hotwater_Mode": {"icon": "mdi:water-pump"},
+    "Hotwater_Boost": {"icon": "mdi:water-pump"},
+    "Heating_Heat_On_Demand": {},
+    "Mode": {
+        "icon": "mdi:eye",
+    },
+    "Availability": {"icon": "mdi:check-circle"},
+    "warmwhitelight": {},
+    "tuneablelight": {},
+    "colourtunablelight": {},
+    "activeplug": {},
+    "trvcontrol": {},
+    "heating": {},
+    "siren": {},
+    "Battery": {
+        "device_class": SensorDeviceClass.BATTERY,
+        "state_class": SensorStateClass.MEASUREMENT,
+    },
+    "Power": {
+        "device_class": SensorDeviceClass.ENERGY,
+        "state_class": SensorStateClass.MEASUREMENT,
+        "unit": POWER_WATT,
+    },
+}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -112,13 +158,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-def refresh_system(
-    func: Callable[Concatenate[_HiveEntityT, _P], Awaitable[Any]]
-) -> Callable[Concatenate[_HiveEntityT, _P], Coroutine[Any, Any, None]]:
+def refresh_system(func):
     """Force update all entities after state change."""
 
     @wraps(func)
-    async def wrapper(self: _HiveEntityT, *args: _P.args, **kwargs: _P.kwargs) -> None:
+    async def wrapper(self, *args, **kwargs):
         await func(self, *args, **kwargs)
         async_dispatcher_send(self.hass, DOMAIN)
 
@@ -132,8 +176,25 @@ class HiveEntity(Entity):
         """Initialize the instance."""
         self.hive = hive
         self.device = hive_device
+        self._attr_name = self.device["haName"]
+        self._attr_unique_id = f'{self.device["hiveID"]}-{self.device["hiveType"]}'
+        self._attr_entity_category = self.device.get("category")
+        self._attr_device_class = DEVICETYPE.get(self.device["hiveType"])
+        self._attr_state_class = DEVICETYPE[self.device.get("hiveType")].get(
+            "state_class"
+        )
+        self._attr_native_unit_of_measurement = DEVICETYPE[
+            self.device.get("hiveType")
+        ].get("unit")
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.device["device_id"])},
+            model=self.device["deviceData"]["model"],
+            manufacturer=self.device["deviceData"]["manufacturer"],
+            name=self.device["device_name"],
+            sw_version=self.device["deviceData"]["version"],
+            via_device=(DOMAIN, self.device["parentDevice"]),
+        )
         self.attributes = {}
-        self._unique_id = f'{self.device["hiveID"]}-{self.device["hiveType"]}'
 
     async def async_added_to_hass(self):
         """When entity is added to Home Assistant."""

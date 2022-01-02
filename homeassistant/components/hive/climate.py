@@ -6,18 +6,19 @@ import voluptuous as vol
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE,
+    CURRENT_HVAC_OFF,
+    HVAC_MODE_AUTO,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_OFF,
     PRESET_BOOST,
     PRESET_NONE,
-    ClimateEntityFeature,
-    HVACAction,
-    HVACMode,
+    SUPPORT_PRESET_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HiveEntity, refresh_system
 from .const import (
@@ -28,34 +29,34 @@ from .const import (
 )
 
 HIVE_TO_HASS_STATE = {
-    "SCHEDULE": HVACMode.AUTO,
-    "MANUAL": HVACMode.HEAT,
-    "OFF": HVACMode.OFF,
+    "SCHEDULE": HVAC_MODE_AUTO,
+    "MANUAL": HVAC_MODE_HEAT,
+    "OFF": HVAC_MODE_OFF,
 }
 
 HASS_TO_HIVE_STATE = {
-    HVACMode.AUTO: "SCHEDULE",
-    HVACMode.HEAT: "MANUAL",
-    HVACMode.OFF: "OFF",
+    HVAC_MODE_AUTO: "SCHEDULE",
+    HVAC_MODE_HEAT: "MANUAL",
+    HVAC_MODE_OFF: "OFF",
 }
 
 HIVE_TO_HASS_HVAC_ACTION = {
-    "UNKNOWN": HVACAction.OFF,
-    False: HVACAction.IDLE,
-    True: HVACAction.HEATING,
+    "UNKNOWN": CURRENT_HVAC_OFF,
+    False: CURRENT_HVAC_IDLE,
+    True: CURRENT_HVAC_HEAT,
 }
 
 TEMP_UNIT = {"C": TEMP_CELSIUS, "F": TEMP_FAHRENHEIT}
 
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
+SUPPORT_HVAC = [HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF]
 SUPPORT_PRESET = [PRESET_NONE, PRESET_BOOST]
 PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=15)
 _LOGGER = logging.getLogger()
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
-) -> None:
+async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Hive thermostat based on a config entry."""
 
     hive = hass.data[DOMAIN][entry.entry_id]
@@ -104,10 +105,9 @@ async def async_setup_entry(
 class HiveClimateEntity(HiveEntity, ClimateEntity):
     """Hive Climate Device."""
 
-    _attr_hvac_modes = [HVACMode.AUTO, HVACMode.HEAT, HVACMode.OFF]
-    _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
-    )
+    _attr_supported_features = SUPPORT_FLAGS
+    _attr_hvac_modes = SUPPORT_HVAC
+    _attr_preset_modes = SUPPORT_PRESET
 
     def __init__(self, hive_session, hive_device):
         """Initialize the Climate device."""
@@ -116,7 +116,7 @@ class HiveClimateEntity(HiveEntity, ClimateEntity):
         self._attr_temperature_unit = TEMP_UNIT.get(hive_device["temperatureunit"])
 
     @refresh_system
-    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+    async def async_set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
         new_mode = HASS_TO_HIVE_STATE[hvac_mode]
         await self.hive.heating.setMode(self.device, new_mode)
