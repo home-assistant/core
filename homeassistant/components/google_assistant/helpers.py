@@ -329,7 +329,10 @@ class GoogleConfigStore:
     async def async_initialize(self):
         """Finish initializing the ConfigStore."""
         if (data := await self._store.async_load()) is None:
-            data = self._empty_config()
+            data = {
+                STORE_AGENT_USER_IDS: {},
+                STORE_GOOGLE_LOCAL_WEBHOOK_ID: webhook.async_generate_id(),
+            }
             await self._store.async_save(data)
 
         self._data = data
@@ -337,7 +340,7 @@ class GoogleConfigStore:
         if STORE_GOOGLE_LOCAL_WEBHOOK_ID not in self._data:
             self._data = {
                 **self._data,
-                STORE_GOOGLE_LOCAL_WEBHOOK_ID: self._hass.components.webhook.async_generate_id(),
+                STORE_GOOGLE_LOCAL_WEBHOOK_ID: webhook.async_generate_id(),
             }
             await self._store.async_save(self._data)
 
@@ -364,14 +367,6 @@ class GoogleConfigStore:
         if agent_user_id in self._data[STORE_AGENT_USER_IDS]:
             self._data[STORE_AGENT_USER_IDS].pop(agent_user_id, None)
             self._store.async_delay_save(lambda: self._data, 1.0)
-
-    @callback
-    def _empty_config(self):
-        """Return an empty config."""
-        return {
-            STORE_AGENT_USER_IDS: {},
-            STORE_GOOGLE_LOCAL_WEBHOOK_ID: self._hass.components.webhook.async_generate_id(),
-        }
 
 
 class RequestData:
