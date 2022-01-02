@@ -30,7 +30,7 @@ ATTR_MANUFACTURER = "manufacturer"
 ATTR_MODEL = "model"
 ATTR_OS_NAME = "os_name"
 ATTR_OS_VERSION = "os_version"
-ATTR_PUSH_HAS_LOCAL = "push_has_local"
+ATTR_PUSH_WEBSOCKET_CHANNEL = "push_websocket_channel"
 ATTR_PUSH_TOKEN = "push_token"
 ATTR_PUSH_URL = "push_url"
 ATTR_PUSH_RATE_LIMITS = "rateLimits"
@@ -86,7 +86,9 @@ SCHEMA_APP_DATA = vol.Schema(
     {
         vol.Inclusive(ATTR_PUSH_TOKEN, "push_cloud"): cv.string,
         vol.Inclusive(ATTR_PUSH_URL, "push_cloud"): cv.url,
-        vol.Optional(ATTR_PUSH_HAS_LOCAL): cv.boolean,
+        # Set to True to indicate that this registration will connect via websocket channel
+        # to receive push notifications.
+        vol.Optional(ATTR_PUSH_WEBSOCKET_CHANNEL): cv.boolean,
     },
     extra=vol.ALLOW_EXTRA,
 )
