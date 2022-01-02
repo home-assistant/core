@@ -1,6 +1,6 @@
 {
   "domain": "oncue",
-  "name": "Oncue",
+  "name": "Oncue by Kohler",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/oncue",
   "requirements": ["aiooncue==0.3.0"],
