@@ -1,4 +1,4 @@
-"""Test the UniFi Protect light platform."""
+"""Test the UniFi Protect switch platform."""
 # pylint: disable=protected-access
 from __future__ import annotations
 
