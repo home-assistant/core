@@ -10,7 +10,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HiveEntity, refresh_system
-from .const import ATTR_MODE, DOMAIN
+from .const import DOMAIN
 
 PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=15)
@@ -33,47 +33,6 @@ async def async_setup_entry(
 class HiveDevicePlug(HiveEntity, SwitchEntity):
     """Hive Active Plug."""
 
-    @property
-    def unique_id(self):
-        """Return unique ID of entity."""
-        return self._unique_id
-
-    @property
-    def device_info(self) -> DeviceInfo | None:
-        """Return device information."""
-        if self.device["hiveType"] == "activeplug":
-            return DeviceInfo(
-                identifiers={(DOMAIN, self.device["device_id"])},
-                manufacturer=self.device["deviceData"]["manufacturer"],
-                model=self.device["deviceData"]["model"],
-                name=self.device["device_name"],
-                sw_version=self.device["deviceData"]["version"],
-                via_device=(DOMAIN, self.device["parentDevice"]),
-            )
-        return None
-
-    @property
-    def name(self):
-        """Return the name of this Switch device if any."""
-        return self.device["haName"]
-
-    @property
-    def available(self):
-        """Return if the device is available."""
-        return self.device["deviceData"].get("online")
-
-    @property
-    def extra_state_attributes(self):
-        """Show Device Attributes."""
-        return {
-            ATTR_MODE: self.attributes.get(ATTR_MODE),
-        }
-
-    @property
-    def is_on(self):
-        """Return true if switch is on."""
-        return self.device["status"]["state"]
-
     @refresh_system
     async def async_turn_on(self, **kwargs):
         """Turn the switch on."""
@@ -88,4 +47,7 @@ class HiveDevicePlug(HiveEntity, SwitchEntity):
         """Update all Node data from Hive."""
         await self.hive.session.updateData(self.device)
         self.device = await self.hive.switch.getSwitch(self.device)
+        self._attr_available = self.device["deviceData"].get("online")
+        self._attr_current_power_w = self.device["status"].get("power_usage")
+        self._attr_is_on = self.device["status"]["state"]
         self.attributes.update(self.device.get("attributes", {}))
