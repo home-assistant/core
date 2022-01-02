@@ -52,7 +52,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.template import DATE_STR_FORMAT
-from homeassistant.util import dt as dt_util, raise_if_invalid_filename
+from homeassistant.util import dt as dt_util
 
 from .const import DATA_SUBSCRIBER, DOMAIN
 from .device_info import NestDeviceInfo
@@ -162,26 +162,16 @@ class NestEventMediaStore(EventMediaStore):
     def get_image_media_key(self, device_id: str, event: ImageEventBase) -> str:
         """Return the filename for image media for an event."""
         device_id_str = self._map_device_id(device_id)
-        event_id_str = f"{event.event_session_id}-{event.event_id}"
-        try:
-            raise_if_invalid_filename(event_id_str)
-        except ValueError:
-            event_id_str = ""
         time_str = str(int(event.timestamp.timestamp()))
         event_type_str = EVENT_NAME_MAP.get(event.event_type, "event")
-        return f"{device_id_str}/{time_str}-{event_id_str}-{event_type_str}.jpg"
+        return f"{device_id_str}/{time_str}-{event_type_str}.jpg"
 
     def get_clip_preview_media_key(self, device_id: str, event: ImageEventBase) -> str:
         """Return the filename for clip preview media for an event session."""
         device_id_str = self._map_device_id(device_id)
-        event_id_str = event.event_session_id
-        try:
-            raise_if_invalid_filename(event_id_str)
-        except ValueError:
-            event_id_str = ""
         time_str = str(int(event.timestamp.timestamp()))
         event_type_str = EVENT_NAME_MAP.get(event.event_type, "event")
-        return f"{device_id_str}/{time_str}-{event_id_str}-{event_type_str}.mp4"
+        return f"{device_id_str}/{time_str}-{event_type_str}.mp4"
 
     def get_media_filename(self, media_key: str) -> str:
         """Return the filename in storage for a media key."""
