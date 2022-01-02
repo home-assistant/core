@@ -14,7 +14,8 @@ class RokuEntity(CoordinatorEntity):
     coordinator: RokuDataUpdateCoordinator
 
     def __init__(
-        self, *,
+        self,
+        *,
         device_id: str,
         coordinator: RokuDataUpdateCoordinator,
         description: EntityDescription | None = None,
@@ -24,7 +25,7 @@ class RokuEntity(CoordinatorEntity):
         self._device_id = device_id
 
         if description is not None:
-            self.entity_description = description 
+            self.entity_description = description
             self._attr_name = f"{coordinator.data.info.name} {description.name}"
             self._attr_unique_id = f"{device_id}_{description.key}"
 
