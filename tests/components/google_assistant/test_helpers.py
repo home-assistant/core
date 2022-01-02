@@ -175,7 +175,7 @@ async def test_agent_user_id_storage(hass, hass_storage):
     }
 
     store = helpers.GoogleConfigStore(hass)
-    await store.async_load()
+    await store.async_initialize()
 
     assert hass_storage["google_assistant"] == {
         "version": 1,

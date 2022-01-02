@@ -39,6 +39,7 @@ CONF_REPORT_STATE = "report_state"
 CONF_SERVICE_ACCOUNT = "service_account"
 CONF_CLIENT_EMAIL = "client_email"
 CONF_PRIVATE_KEY = "private_key"
+CONF_LOCAL_FULFILLMENT = "local_fulfillment"
 
 DEFAULT_EXPOSE_BY_DEFAULT = True
 DEFAULT_EXPOSED_DOMAINS = [
@@ -176,6 +177,7 @@ CHALLENGE_PIN_NEEDED = "pinNeeded"
 CHALLENGE_FAILED_PIN_NEEDED = "challengeFailedPinNeeded"
 
 STORE_AGENT_USER_IDS = "agent_user_ids"
+STORE_GOOGLE_LOCAL_WEBHOOK_ID = "local_webhook_id"
 
 SOURCE_CLOUD = "cloud"
 SOURCE_LOCAL = "local"

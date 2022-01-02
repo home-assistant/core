@@ -38,6 +38,7 @@ from .const import (
     NOT_EXPOSE_LOCAL,
     SOURCE_LOCAL,
     STORE_AGENT_USER_IDS,
+    STORE_GOOGLE_LOCAL_WEBHOOK_ID,
 )
 from .error import SmartHomeError
 
@@ -103,7 +104,7 @@ class AbstractConfig(ABC):
     async def async_initialize(self):
         """Perform async initialization of config."""
         self._store = GoogleConfigStore(self.hass)
-        await self._store.async_load()
+        await self._store.async_initialize()
 
         if not self.enabled:
             return
@@ -323,12 +324,32 @@ class GoogleConfigStore:
         """Initialize a configuration store."""
         self._hass = hass
         self._store = Store(hass, self._STORAGE_VERSION, self._STORAGE_KEY)
-        self._data = {STORE_AGENT_USER_IDS: {}}
+        self._data = None
+
+    async def async_initialize(self):
+        """Finish initializing the ConfigStore."""
+        if (data := await self._store.async_load()) is None:
+            data = self._empty_config()
+
+        self._data = data
+
+        if STORE_GOOGLE_LOCAL_WEBHOOK_ID not in self._data:
+            await self._store.async_save(
+                {
+                    **self._data,
+                    STORE_GOOGLE_LOCAL_WEBHOOK_ID: self._hass.components.webhook.async_generate_id(),
+                }
+            )
 
     @property
     def agent_user_ids(self):
         """Return a list of connected agent user_ids."""
         return self._data[STORE_AGENT_USER_IDS]
+
+    @property
+    def webhook_id(self):
+        """Return a non changing webhook id."""
+        return self._data[STORE_GOOGLE_LOCAL_WEBHOOK_ID]
 
     @callback
     def add_agent_user_id(self, agent_user_id):
@@ -344,10 +365,12 @@ class GoogleConfigStore:
             self._data[STORE_AGENT_USER_IDS].pop(agent_user_id, None)
             self._store.async_delay_save(lambda: self._data, 1.0)
 
-    async def async_load(self):
-        """Store current configuration to disk."""
-        if data := await self._store.async_load():
-            self._data = data
+    @callback
+    def _empty_config(self):
+        """Return an empty config."""
+        return {
+            STORE_AGENT_USER_IDS: {},
+        }
 
 
 class RequestData:

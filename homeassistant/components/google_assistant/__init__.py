@@ -17,6 +17,7 @@ from .const import (
     CONF_EXPOSE,
     CONF_EXPOSE_BY_DEFAULT,
     CONF_EXPOSED_DOMAINS,
+    CONF_LOCAL_FULFILLMENT,
     CONF_PRIVATE_KEY,
     CONF_PROJECT_ID,
     CONF_REPORT_STATE,
@@ -76,6 +77,7 @@ GOOGLE_ASSISTANT_SCHEMA = vol.All(
             vol.Optional(CONF_SECURE_DEVICES_PIN): str,
             vol.Optional(CONF_REPORT_STATE, default=False): cv.boolean,
             vol.Optional(CONF_SERVICE_ACCOUNT): GOOGLE_SERVICE_ACCOUNT,
+            vol.Optional(CONF_LOCAL_FULFILLMENT, default=False): cv.boolean,
             # deprecated configuration options
             vol.Remove(CONF_ALLOW_UNLOCK): cv.boolean,
             vol.Remove(CONF_API_KEY): cv.string,

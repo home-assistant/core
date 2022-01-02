@@ -22,6 +22,7 @@ from .const import (
     CONF_EXPOSE,
     CONF_EXPOSE_BY_DEFAULT,
     CONF_EXPOSED_DOMAINS,
+    CONF_LOCAL_FULFILLMENT,
     CONF_PRIVATE_KEY,
     CONF_REPORT_STATE,
     CONF_SECURE_DEVICES_PIN,
@@ -78,6 +79,13 @@ class GoogleConfig(AbstractConfig):
         self._access_token = None
         self._access_token_renew = None
 
+    async def async_initialize(self):
+        """Perform async initialization of config."""
+        await super().async_initialize()
+
+        if self._config.get(CONF_LOCAL_FULFILLMENT):
+            self.async_enable_local_sdk()
+
     @property
     def enabled(self):
         """Return if Google is enabled."""
@@ -97,6 +105,16 @@ class GoogleConfig(AbstractConfig):
     def should_report_state(self):
         """Return if states should be proactively reported."""
         return self._config.get(CONF_REPORT_STATE)
+
+    @property
+    def local_sdk_webhook_id(self):
+        """Return the local SDK webhook ID."""
+        return self._store.webhook_id
+
+    @property
+    def local_sdk_user_id(self):
+        """Return the user ID to be used for actions received via the local SDK."""
+        return list(self._store.agent_user_ids.keys())[0]
 
     def should_expose(self, state) -> bool:
         """Return if entity should be exposed."""
