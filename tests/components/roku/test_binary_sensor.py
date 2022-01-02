@@ -82,14 +82,17 @@ async def test_rokutv_binary_sensors(
     device_registry = dr.async_get(hass)
 
     state = hass.states.get("binary_sensor.58_onn_roku_tv_headphones_connected")
-    entry = entity_registry.async_get("binary_sensor.58_onn_roku_tv_headphones_connected")
+    entry = entity_registry.async_get(
+        "binary_sensor.58_onn_roku_tv_headphones_connected"
+    )
     assert entry
     assert state
     assert entry.unique_id == "YN00H5555555_headphones_connected"
     assert entry.entity_category is None
     assert state.state == STATE_OFF
     assert (
-        state.attributes.get(ATTR_FRIENDLY_NAME) == '58" Onn Roku TV Headphones Connected'
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == '58" Onn Roku TV Headphones Connected'
     )
     assert state.attributes.get(ATTR_ICON) == "mdi:headphones"
     assert ATTR_DEVICE_CLASS not in state.attributes
