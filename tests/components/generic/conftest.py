@@ -6,7 +6,7 @@ from PIL import Image
 import pytest
 
 
-@pytest.fixture()
+@pytest.fixture(scope="package")
 def fakeimgbytes_png():
     """Fake image in RAM for testing."""
     buf = BytesIO()
@@ -14,7 +14,7 @@ def fakeimgbytes_png():
     yield bytes(buf.getbuffer())
 
 
-@pytest.fixture()
+@pytest.fixture(scope="package")
 def fakeimgbytes_jpg():
     """Fake image in RAM for testing."""
     buf = BytesIO()  # fake image in ram for testing.
@@ -22,7 +22,7 @@ def fakeimgbytes_jpg():
     yield bytes(buf.getbuffer())
 
 
-@pytest.fixture()
+@pytest.fixture(scope="package")
 def fakeimgbytes_svg():
     """Fake image in RAM for testing."""
     yield bytes(

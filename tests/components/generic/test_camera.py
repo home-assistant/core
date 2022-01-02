@@ -346,13 +346,15 @@ async def test_camera_content_type(
         "still_image_url": urlsvg,
         "content_type": "image/svg+xml",
     }
-    cam_config_normal = cam_config_svg.copy()
-    cam_config_normal["content_type"] = "image/jpeg"
-    cam_config_normal["name"] = "config_test_jpg"
-    cam_config_normal["still_image_url"] = urljpg
+    cam_config_jpg = {
+        "name": "config_test_jpg",
+        "platform": "generic",
+        "still_image_url": urljpg,
+        "content_type": "image/jpeg",
+    }
 
     await async_setup_component(
-        hass, "camera", {"camera": [cam_config_svg, cam_config_normal]}
+        hass, "camera", {"camera": [cam_config_svg, cam_config_jpg]}
     )
     await hass.async_block_till_done()
 
