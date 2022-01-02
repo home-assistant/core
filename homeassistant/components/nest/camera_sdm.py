@@ -193,7 +193,7 @@ class NestCamera(Camera):
             _LOGGER.debug("Invalidating stream")
             try:
                 await self._stream.stop_rtsp_stream()
-            except GoogleNestException as err:
+            except ApiException as err:
                 _LOGGER.debug(
                     "Failed to revoke stream token, will rely on ttl: %s", err
                 )
