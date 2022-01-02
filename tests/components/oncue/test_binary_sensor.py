@@ -1,10 +1,10 @@
-"""Tests for the oncue component."""
+"""Tests for the oncue binary_sensor."""
 from __future__ import annotations
 
 from homeassistant.components import oncue
 from homeassistant.components.oncue.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -28,5 +28,8 @@ async def test_binary_sensors(hass: HomeAssistant) -> None:
 
     assert len(hass.states.async_all("binary_sensor")) == 1
     assert (
-        hass.states.get("binary_sensor.my_generator_latest_firmware").state == "2.0.6"
+        hass.states.get(
+            "binary_sensor.my_generator_network_connection_established"
+        ).state
+        == STATE_ON
     )
