@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "invalid_url": "\u00c9rv\u00e9nyes RTSPtoWebRTC szerver URL-nek kell lennie, pl. https://example.com",
+            "server_failure": "Az RTSPtoWebRTC szerver hib\u00e1t jelzett vissza. Tov\u00e1bbi inform\u00e1ci\u00f3k\u00e9rt ellen\u0151rizze a napl\u00f3kat.",
+            "server_unreachable": "Nem lehet kommunik\u00e1lni az RTSPtoWebRTC szerverrel. Tov\u00e1bbi inform\u00e1ci\u00f3k\u00e9rt ellen\u0151rizze a napl\u00f3kat."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "server_url": "RTSPtoWebRTC szerver URL-c\u00edme pl. https://example.com"
+                },
+                "description": "Az RTSPtoWebRTC integr\u00e1ci\u00f3hoz egy szerverre van sz\u00fcks\u00e9g ahhoz, hogy az RTSP adatfolyamokat WebRTC-be konvert\u00e1lja. Adja meg az RTSPtoWebRTC szerver URL-c\u00edm\u00e9t.",
+                "title": "RTSPtoWebRTC konfigur\u00e1l\u00e1sa"
+            }
+        }
+    }
+}

@@ -316,13 +316,12 @@ def async_register_rtsp_to_web_rtc_provider(
 async def _async_refresh_providers(hass: HomeAssistant) -> None:
     """Check all cameras for any state changes for registered providers."""
 
-    async def _refresh(camera: Camera) -> None:
-        if await camera.async_refresh_providers():
-            camera.async_write_ha_state()
-
     component: EntityComponent = hass.data[DOMAIN]
     await asyncio.gather(
-        *(_refresh(cast(Camera, camera)) for camera in component.entities)
+        *(
+            cast(Camera, camera).async_refresh_providers()
+            for camera in component.entities
+        )
     )
 
 
@@ -681,10 +680,9 @@ class Camera(Entity):
     async def async_internal_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_internal_added_to_hass()
-        # Note: State is always updated by entity on return
         await self.async_refresh_providers()
 
-    async def async_refresh_providers(self) -> bool:
+    async def async_refresh_providers(self) -> None:
         """Determine if any of the registered providers are suitable for this entity.
 
         This affects state attributes, so it should be invoked any time the registered
@@ -694,7 +692,8 @@ class Camera(Entity):
         """
         old_state = self._rtsp_to_webrtc
         self._rtsp_to_webrtc = await self._async_use_rtsp_to_webrtc()
-        return old_state != self._rtsp_to_webrtc
+        if old_state != self._rtsp_to_webrtc:
+            self.async_write_ha_state()
 
     async def _async_use_rtsp_to_webrtc(self) -> bool:
         """Determine if a WebRTC provider can be used for the camera."""

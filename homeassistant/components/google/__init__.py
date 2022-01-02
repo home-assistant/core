@@ -24,11 +24,12 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_OFFSET,
 )
-from homeassistant.core import ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.event import track_utc_time_change
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import convert
 
 _LOGGER = logging.getLogger(__name__)
@@ -229,7 +230,7 @@ def do_authentication(hass, hass_config, config):
     return True
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Google platform."""
     if DATA_INDEX not in hass.data:
         hass.data[DATA_INDEX] = {}
