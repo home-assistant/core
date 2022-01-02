@@ -112,13 +112,18 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
             self._supported_features |= SUPPORT_FAN_SPEED
             self._fan_speed_type = EnumTypeData.from_json(function.values)
 
-        if DPCode.ELECTRICITY_LEFT in self.device.status:
+        if function := device.status_range.get(DPCode.ELECTRICITY_LEFT):
             self._supported_features |= SUPPORT_BATTERY
+            self._battery_level_type = IntegerTypeData.from_json(function.values)
 
     @property
     def battery_level(self) -> int | None:
         """Return Tuya device state."""
-        return self.device.status.get(DPCode.ELECTRICITY_LEFT)
+        if self._battery_level_type is None or not (
+            status := self.device.status.get(DPCode.ELECTRICITY_LEFT)
+        ):
+            return None
+        return round(self._battery_level_type.scale_value(status))
 
     @property
     def fan_speed(self) -> str | None:
