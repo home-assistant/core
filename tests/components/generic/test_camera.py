@@ -1,10 +1,8 @@
 """The tests for generic camera component."""
 import asyncio
 from http import HTTPStatus
-from io import BytesIO
 from unittest.mock import patch
 
-from PIL import Image
 import aiohttp
 import httpx
 import pytest
@@ -20,18 +18,9 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import AsyncMock, Mock, get_fixture_path
 
-buf = BytesIO()  # fake image in ram for testing.
-Image.new("RGB", (1, 1)).save(buf, format="PNG")
-fakeimgbytes_png = bytes(buf.getbuffer())
-Image.new("RGB", (1, 1)).save(buf, format="jpeg")
-fakeimgbytes_jpg = bytes(buf.getbuffer())
-fakeimgbytes_svg = bytes(
-    '<svg xmlns="http://www.w3.org/2000/svg"><circle r="50"/></svg>', encoding="utf-8"
-)
-
 
 @respx.mock
-async def test_fetching_url(hass, hass_client):
+async def test_fetching_url(hass, hass_client, fakeimgbytes_png):
     """Test that it fetches the given url."""
     respx.get("http://example.com").respond(stream=fakeimgbytes_png)
 
@@ -64,7 +53,7 @@ async def test_fetching_url(hass, hass_client):
 
 
 @respx.mock
-async def test_fetching_without_verify_ssl(hass, hass_client):
+async def test_fetching_without_verify_ssl(hass, hass_client, fakeimgbytes_png):
     """Test that it fetches the given url when ssl verify is off."""
     respx.get("https://example.com").respond(stream=fakeimgbytes_png)
 
@@ -96,7 +85,7 @@ async def test_fetching_without_verify_ssl(hass, hass_client):
 
 
 @respx.mock
-async def test_fetching_url_with_verify_ssl(hass, hass_client):
+async def test_fetching_url_with_verify_ssl(hass, hass_client, fakeimgbytes_png):
     """Test that it fetches the given url when ssl verify is explicitly on."""
     respx.get("https://example.com").respond(stream=fakeimgbytes_png)
 
@@ -128,7 +117,7 @@ async def test_fetching_url_with_verify_ssl(hass, hass_client):
 
 
 @respx.mock
-async def test_limit_refetch(hass, hass_client):
+async def test_limit_refetch(hass, hass_client, fakeimgbytes_png, fakeimgbytes_jpg):
     """Test that it fetches the given url."""
     respx.get("http://example.com/5a").respond(stream=fakeimgbytes_png)
     respx.get("http://example.com/10a").respond(stream=fakeimgbytes_png)
@@ -199,7 +188,7 @@ async def test_limit_refetch(hass, hass_client):
     assert body == fakeimgbytes_jpg
 
 
-async def test_stream_source(hass, hass_client, hass_ws_client):
+async def test_stream_source(hass, hass_client, hass_ws_client, fakeimgbytes_png):
     """Test that the stream source is rendered."""
     with patch(
         "homeassistant.components.generic.camera.GenericCamera.async_camera_image",
@@ -243,7 +232,7 @@ async def test_stream_source(hass, hass_client, hass_ws_client):
         assert msg["result"]["url"][-13:] == "playlist.m3u8"
 
 
-async def test_stream_source_error(hass, hass_client, hass_ws_client):
+async def test_stream_source_error(hass, hass_client, hass_ws_client, fakeimgbytes_png):
     """Test that the stream source has an error."""
     with patch(
         "homeassistant.components.generic.camera.GenericCamera.async_camera_image",
@@ -311,7 +300,7 @@ async def test_setup_alternative_options(hass, hass_ws_client):
     assert hass.data["camera"].get_entity("camera.config_test")
 
 
-async def test_no_stream_source(hass, hass_client, hass_ws_client):
+async def test_no_stream_source(hass, hass_client, hass_ws_client, fakeimgbytes_png):
     """Test a stream request without stream source option set."""
     with patch(
         "homeassistant.components.generic.camera.GenericCamera.async_camera_image",
@@ -355,7 +344,9 @@ async def test_no_stream_source(hass, hass_client, hass_ws_client):
 
 
 @respx.mock
-async def test_camera_content_type(hass, hass_client):
+async def test_camera_content_type(
+    hass, hass_client, fakeimgbytes_svg, fakeimgbytes_jpg
+):
     """Test generic camera with custom content_type."""
     urlsvg = "https://upload.wikimedia.org/wikipedia/commons/0/02/SVG_logo.svg"
     respx.get(urlsvg).respond(stream=fakeimgbytes_svg)
@@ -449,7 +440,7 @@ async def test_reloading(hass, hass_client):
 
 
 @respx.mock
-async def test_timeout_cancelled(hass, hass_client):
+async def test_timeout_cancelled(hass, hass_client, fakeimgbytes_png, fakeimgbytes_jpg):
     """Test that timeouts and cancellations return last image."""
 
     respx.get("http://example.com").respond(stream=fakeimgbytes_png)
