@@ -879,6 +879,9 @@ class EventBus:
             )
 
 
+_StateT = TypeVar("_StateT", bound="State")
+
+
 class State:
     """Object to represent a state within the state machine.
 
@@ -945,7 +948,7 @@ class State:
             "_", " "
         )
 
-    def as_dict(self) -> dict:
+    def as_dict(self) -> dict[str, Collection[Any]]:
         """Return a dict representation of the State.
 
         Async friendly.
@@ -970,7 +973,7 @@ class State:
         return self._as_dict
 
     @classmethod
-    def from_dict(cls, json_dict: dict) -> Any:
+    def from_dict(cls: type[_StateT], json_dict: dict[str, Any]) -> _StateT | None:
         """Initialize a state from a dict.
 
         Async friendly.
@@ -1041,7 +1044,7 @@ class StateMachine:
 
     @callback
     def async_entity_ids(
-        self, domain_filter: str | Iterable | None = None
+        self, domain_filter: str | Iterable[str] | None = None
     ) -> list[str]:
         """List of entity ids that are being tracked.
 
@@ -1061,7 +1064,7 @@ class StateMachine:
 
     @callback
     def async_entity_ids_count(
-        self, domain_filter: str | Iterable | None = None
+        self, domain_filter: str | Iterable[str] | None = None
     ) -> int:
         """Count the entity ids that are being tracked.
 
@@ -1077,14 +1080,16 @@ class StateMachine:
             [None for state in self._states.values() if state.domain in domain_filter]
         )
 
-    def all(self, domain_filter: str | Iterable | None = None) -> list[State]:
+    def all(self, domain_filter: str | Iterable[str] | None = None) -> list[State]:
         """Create a list of all states."""
         return run_callback_threadsafe(
             self._loop, self.async_all, domain_filter
         ).result()
 
     @callback
-    def async_all(self, domain_filter: str | Iterable | None = None) -> list[State]:
+    def async_all(
+        self, domain_filter: str | Iterable[str] | None = None
+    ) -> list[State]:
         """Create a list of all states matching the filter.
 
         This method must be run in the event loop.
