@@ -88,7 +88,7 @@ class GenericCamera(Camera):
         if self._stream_source is not None:
             self._stream_source.hass = hass
         self._limit_refetch = device_info[CONF_LIMIT_REFETCH_TO_URL_CHANGE]
-        self._frame_interval = 1 / device_info[CONF_FRAMERATE]
+        self._attr_frames_interval = 1 / device_info[CONF_FRAMERATE]
         self._supported_features = SUPPORT_STREAM if self._stream_source else 0
         self.content_type = device_info[CONF_CONTENT_TYPE]
         self.verify_ssl = device_info[CONF_VERIFY_SSL]
@@ -115,11 +115,6 @@ class GenericCamera(Camera):
     def supported_features(self):
         """Return supported features for this camera."""
         return self._supported_features
-
-    @property
-    def frame_interval(self):
-        """Return the interval between frames of the mjpeg stream."""
-        return self._frame_interval
 
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
