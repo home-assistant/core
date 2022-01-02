@@ -119,13 +119,16 @@ class MobileAppNotificationService(BaseNotificationService):
         local_push_channels = self.hass.data[DOMAIN][DATA_PUSH_CHANNEL]
 
         for target in targets:
+            registration = self.hass.data[DOMAIN][DATA_CONFIG_ENTRIES][target].data
+
             if target in local_push_channels:
                 local_push_channels[target].async_send_notification(
-                    data, partial(self._async_send_remote_message_target, target)
+                    data,
+                    partial(
+                        self._async_send_remote_message_target, target, registration
+                    ),
                 )
                 continue
-
-            registration = self.hass.data[DOMAIN][DATA_CONFIG_ENTRIES][target].data
 
             # Test if local push only.
             if ATTR_PUSH_URL not in registration[ATTR_APP_DATA]:
