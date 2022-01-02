@@ -506,6 +506,6 @@ async def test_structure_update_event(hass):
     # No home assistant events published
     assert not events
 
-    # Both enties now exist
     assert registry.async_get("camera.front")
-    assert registry.async_get("camera.back")
+    # Currently need a manual reload to detect the new entity
+    assert not registry.async_get("camera.back")
