@@ -18,7 +18,8 @@
                     "adb_server_port": "Poort van de ADB-server",
                     "adbkey": "Pad naar uw ADB-key file (leeg laten om automatisch te genereren)",
                     "device_class": "Het type apparaat",
-                    "host": "Host"
+                    "host": "Host",
+                    "port": "Poort"
                 },
                 "description": "Stel de vereiste parameters in om verbinding te maken met uw Android TV-apparaat",
                 "title": "Android TV"
@@ -42,12 +43,12 @@
             "init": {
                 "data": {
                     "apps": "Configureer applicaties lijst",
-                    "exclude_unnamed_apps": "App met onbekende naam uitsluiten",
-                    "get_sources": "Of de actieve apps wel of niet moeten worden opgehaald als de lijst met bronnen",
-                    "screencap": "Bepaalt of albumhoezen moeten worden opgehaald van wat op het scherm wordt weergegeven",
+                    "exclude_unnamed_apps": "Apps met onbekende naam uitsluiten van de bronnenlijst",
+                    "get_sources": "Haal de actieve apps op als de lijst met bronnen",
+                    "screencap": "Schermafbeelding gebruiken voor albumhoezen",
                     "state_detection_rules": "Regels voor statusdetectie van Android TV configureren",
-                    "turn_off_command": "ADB shell commando om standaard turn_off commando te overschrijven",
-                    "turn_on_command": "ADB shell commando om standaard turn_on commando te overschrijven"
+                    "turn_off_command": "ADB shell-uitschakelcommando(laat standaard leeg)",
+                    "turn_on_command": "ADB shell-inschakelcommando (laat standaard leeg)"
                 },
                 "title": "Android TV-opties"
             },

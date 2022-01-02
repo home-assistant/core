@@ -18,7 +18,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     STATE_ON,
 )
-from homeassistant.core import CoreState, callback
+from homeassistant.core import CoreState, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
@@ -27,6 +27,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import ConfigType
 
 from .utils import brightness_to_rflink
 
@@ -121,7 +122,7 @@ def identify_event_type(event):
     return "unknown"
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Rflink component."""
     # Allow entities to register themselves by device_id to be looked up when
     # new rflink events arrive to be handled
@@ -134,7 +135,7 @@ async def async_setup(hass, config):
     # Allow platform to specify function to register new unknown devices
     hass.data[DATA_DEVICE_REGISTER] = {}
 
-    async def async_send_command(call):
+    async def async_send_command(call: ServiceCall) -> None:
         """Send Rflink command."""
         _LOGGER.debug("Rflink command for %s", str(call.data))
         if not (

@@ -35,9 +35,11 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entityfilter, state as state_helper
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_values import EntityValues
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.temperature import fahrenheit_to_celsius
 
 _LOGGER = logging.getLogger(__name__)
@@ -82,7 +84,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Activate Prometheus component."""
     hass.http.register_view(PrometheusView(prometheus_client))
 

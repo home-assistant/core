@@ -7,9 +7,11 @@ from rtmapi import Rtm, RtmRequestFailedException
 import voluptuous as vol
 
 from homeassistant.const import CONF_API_KEY, CONF_ID, CONF_NAME, CONF_TOKEN, STATE_OK
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.typing import ConfigType
 
 # httplib2 is a transitive dependency from RtmAPI. If this dependency is not
 # set explicitly, the library does not work.
@@ -47,7 +49,7 @@ SERVICE_SCHEMA_CREATE_TASK = vol.Schema(
 SERVICE_SCHEMA_COMPLETE_TASK = vol.Schema({vol.Required(CONF_ID): cv.string})
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Remember the milk component."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 

@@ -1,7 +1,7 @@
 """Support for Overkiz lights."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
@@ -28,7 +28,7 @@ async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-):
+) -> None:
     """Set up the Overkiz lights from a config entry."""
     data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
 
@@ -59,9 +59,8 @@ class OverkizLight(OverkizEntity, LightEntity):
     @property
     def is_on(self) -> bool:
         """Return true if light is on."""
-        return (
-            self.executor.select_state(OverkizState.CORE_ON_OFF)
-            == OverkizCommandParam.ON
+        return self.executor.select_state(OverkizState.CORE_ON_OFF) == cast(
+            str, OverkizCommandParam.ON
         )
 
     @property

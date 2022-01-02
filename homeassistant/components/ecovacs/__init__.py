@@ -7,8 +7,10 @@ from sucks import EcoVacsAPI, VacBot
 import voluptuous as vol
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,7 +41,7 @@ ECOVACS_API_DEVICEID = "".join(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Ecovacs component."""
     _LOGGER.debug("Creating new Ecovacs component")
 

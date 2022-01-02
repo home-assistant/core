@@ -66,7 +66,7 @@ from homeassistant.helpers.trace import (
     trace_path,
 )
 from homeassistant.helpers.trigger import async_initialize_triggers
-from homeassistant.helpers.typing import TemplateVarsType
+from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from homeassistant.loader import bind_hass
 from homeassistant.util.dt import parse_datetime
 
@@ -220,7 +220,7 @@ def areas_in_automation(hass: HomeAssistant, entity_id: str) -> list[str]:
     return list(automation_entity.referenced_areas)
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up all automations."""
     hass.data[DOMAIN] = component = EntityComponent(LOGGER, DOMAIN, hass)
 
