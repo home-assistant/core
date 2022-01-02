@@ -1,9 +1,5 @@
 """Tests for the sensors provided by the Roku integration."""
-from homeassistant.components.binary_sensor import (
-    STATE_OFF,
-    STATE_ON,
-    BinarySensorDeviceClass,
-)
+from homeassistant.components.binary_sensor import STATE_OFF, STATE_ON
 from homeassistant.components.roku.const import DOMAIN
 from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_FRIENDLY_NAME, ATTR_ICON
 from homeassistant.core import HomeAssistant
