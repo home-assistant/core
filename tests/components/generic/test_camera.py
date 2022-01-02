@@ -178,25 +178,23 @@ async def test_limit_refetch(hass, hass_client, fakeimgbytes_png, fakeimgbytes_j
 
 async def test_stream_source(hass, hass_client, hass_ws_client, fakeimgbytes_png):
     """Test that the stream source is rendered."""
-    with patch(
-        "homeassistant.components.generic.camera.GenericCamera.async_camera_image",
-        return_value=fakeimgbytes_png,
-    ):
-        assert await async_setup_component(
-            hass,
-            "camera",
-            {
-                "camera": {
-                    "name": "config_test",
-                    "platform": "generic",
-                    "still_image_url": "https://example.com",
-                    "stream_source": 'http://example.com/{{ states.sensor.temp.state + "a" }}',
-                    "limit_refetch_to_url_change": True,
-                },
+    respx.get("http://example.com").respond(stream=fakeimgbytes_png)
+
+    assert await async_setup_component(
+        hass,
+        "camera",
+        {
+            "camera": {
+                "name": "config_test",
+                "platform": "generic",
+                "still_image_url": "https://example.com",
+                "stream_source": 'http://example.com/{{ states.sensor.temp.state + "a" }}',
+                "limit_refetch_to_url_change": True,
             },
-        )
-        assert await async_setup_component(hass, "stream", {})
-        await hass.async_block_till_done()
+        },
+    )
+    assert await async_setup_component(hass, "stream", {})
+    await hass.async_block_till_done()
 
     hass.states.async_set("sensor.temp", "5")
 
@@ -222,26 +220,24 @@ async def test_stream_source(hass, hass_client, hass_ws_client, fakeimgbytes_png
 
 async def test_stream_source_error(hass, hass_client, hass_ws_client, fakeimgbytes_png):
     """Test that the stream source has an error."""
-    with patch(
-        "homeassistant.components.generic.camera.GenericCamera.async_camera_image",
-        return_value=fakeimgbytes_png,
-    ):
-        assert await async_setup_component(
-            hass,
-            "camera",
-            {
-                "camera": {
-                    "name": "config_test",
-                    "platform": "generic",
-                    "still_image_url": "https://example.com",
-                    # Does not exist
-                    "stream_source": 'http://example.com/{{ states.sensor.temp.state + "a" }}',
-                    "limit_refetch_to_url_change": True,
-                },
+    respx.get("http://example.com").respond(stream=fakeimgbytes_png)
+
+    assert await async_setup_component(
+        hass,
+        "camera",
+        {
+            "camera": {
+                "name": "config_test",
+                "platform": "generic",
+                "still_image_url": "https://example.com",
+                # Does not exist
+                "stream_source": 'http://example.com/{{ states.sensor.temp.state + "a" }}',
+                "limit_refetch_to_url_change": True,
             },
-        )
-        assert await async_setup_component(hass, "stream", {})
-        await hass.async_block_till_done()
+        },
+    )
+    assert await async_setup_component(hass, "stream", {})
+    await hass.async_block_till_done()
 
     with patch(
         "homeassistant.components.camera.Stream.endpoint_url",
@@ -290,23 +286,21 @@ async def test_setup_alternative_options(hass, hass_ws_client):
 
 async def test_no_stream_source(hass, hass_client, hass_ws_client, fakeimgbytes_png):
     """Test a stream request without stream source option set."""
-    with patch(
-        "homeassistant.components.generic.camera.GenericCamera.async_camera_image",
-        return_value=fakeimgbytes_png,
-    ):
-        assert await async_setup_component(
-            hass,
-            "camera",
-            {
-                "camera": {
-                    "name": "config_test",
-                    "platform": "generic",
-                    "still_image_url": "https://example.com",
-                    "limit_refetch_to_url_change": True,
-                }
-            },
-        )
-        await hass.async_block_till_done()
+    respx.get("http://example.com").respond(stream=fakeimgbytes_png)
+
+    assert await async_setup_component(
+        hass,
+        "camera",
+        {
+            "camera": {
+                "name": "config_test",
+                "platform": "generic",
+                "still_image_url": "https://example.com",
+                "limit_refetch_to_url_change": True,
+            }
+        },
+    )
+    await hass.async_block_till_done()
 
     with patch(
         "homeassistant.components.camera.Stream.endpoint_url",
