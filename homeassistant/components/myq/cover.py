@@ -3,6 +3,7 @@ from pymyq.const import DEVICE_TYPE_GATE as MYQ_DEVICE_TYPE_GATE
 from pymyq.errors import MyQError
 
 from homeassistant.components.cover import (
+    ATTR_POSITION,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     CoverDeviceClass,
@@ -60,6 +61,11 @@ class MyQCover(MyQEntity, CoverEntity):
     def is_opening(self):
         """Return if the cover is opening or not."""
         return MYQ_TO_HASS.get(self._device.state) == STATE_OPENING
+
+    @property
+    def extra_state_attributes(self):
+        """Return entity specific state attributes."""
+        return {ATTR_POSITION:MYQ_TO_HASS.get(self._device.state)}
 
     async def async_close_cover(self, **kwargs):
         """Issue close command to cover."""
