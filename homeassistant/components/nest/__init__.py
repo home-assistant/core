@@ -189,10 +189,7 @@ class SignalUpdateCallback:
     async def async_handle_event(self, event_message: EventMessage) -> None:
         """Process an incoming EventMessage."""
         if event_message.relation_update:
-            # A device was added/removed or a home was added/removed. Reload the integration
-            # in order to detect any changes.
-            _LOGGER.info("Devices or homes have changed; Reloading")
-            self._hass.async_create_task(self._config_reload_cb())
+            _LOGGER.info("Devices or homes have changed; Need reload to take effect")
             return
         if not event_message.resource_update_name:
             return
