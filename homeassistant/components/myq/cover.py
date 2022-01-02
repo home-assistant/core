@@ -65,7 +65,7 @@ class MyQCover(MyQEntity, CoverEntity):
     @property
     def extra_state_attributes(self):
         """Return entity specific state attributes."""
-        return {ATTR_POSITION:MYQ_TO_HASS.get(self._device.state)}
+        return {ATTR_POSITION: MYQ_TO_HASS.get(self._device.state)}
 
     async def async_close_cover(self, **kwargs):
         """Issue close command to cover."""
