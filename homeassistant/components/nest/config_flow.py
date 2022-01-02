@@ -121,9 +121,7 @@ class NestFlowHandler(
     def __init__(self) -> None:
         """Initialize NestFlowHandler."""
         super().__init__()
-        # Allows updating an existing config entry
-        self._reauth_data: dict[str, Any] | None = None
-        # ConfigEntry data for SDM API
+        self._reauth = False
         self._data: dict[str, Any] = {DATA_SDM: {}}
 
     @classmethod
@@ -169,7 +167,7 @@ class NestFlowHandler(
         if user_input is None:
             _LOGGER.error("Reauth invoked with empty config entry data")
             return self.async_abort(reason="missing_configuration")
-        self._reauth_data = user_input
+        self._reauth = True
         self._data.update(user_input)
         return await self.async_step_reauth_confirm()
 
@@ -199,7 +197,7 @@ class NestFlowHandler(
         """Handle a flow initialized by the user."""
         if self.is_sdm_api():
             # Reauth will update an existing entry
-            if self._async_current_entries() and not self._reauth_data:
+            if self._async_current_entries() and not self._reauth:
                 return self.async_abort(reason="single_instance_allowed")
             return await super().async_step_user(user_input)
         return await self.async_step_init(user_input)
@@ -233,9 +231,9 @@ class NestFlowHandler(
 
     def _configure_pubsub(self) -> bool:
         """Return True if the config flow should configure Pub/Sub."""
-        if self._reauth_data is not None and CONF_SUBSCRIBER_ID in self._reauth_data:
-            # Existing entry needs to be reconfigured
-            return True
+        if self._reauth:
+            # Just refreshing tokens and preserving existing subscriber id
+            return False
         if CONF_SUBSCRIBER_ID in self.hass.data[DOMAIN][DATA_NEST_CONFIG]:
             # Hard coded configuration.yaml skips pubsub in config flow
             return False
@@ -249,8 +247,8 @@ class NestFlowHandler(
         # Populate data from the previous config entry during reauth, then
         # overwrite with the user entered values.
         data = {}
-        if self._reauth_data:
-            data.update(self._reauth_data)
+        if self._reauth:
+            data.update(self._data)
         if user_input:
             data.update(user_input)
         cloud_project_id = data.get(CONF_CLOUD_PROJECT_ID, "")

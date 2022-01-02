@@ -259,6 +259,9 @@ aiosenseme==0.5.5
 # homeassistant.components.shelly
 aioshelly==1.0.7
 
+# homeassistant.components.steamist
+aiosteamist==0.3.0
+
 # homeassistant.components.switcher_kis
 aioswitcher==2.0.6
 
@@ -2096,7 +2099,7 @@ rjpl==0.3.6
 rocketchat-API==0.6.1
 
 # homeassistant.components.roku
-rokuecp==0.8.5
+rokuecp==0.9.0
 
 # homeassistant.components.roomba
 roombapy==1.6.5

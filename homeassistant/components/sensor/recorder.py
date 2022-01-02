@@ -140,6 +140,8 @@ WARN_NEGATIVE = "sensor_warn_total_increasing_negative"
 # Keep track of entities for which a warning about unsupported unit has been logged
 WARN_UNSUPPORTED_UNIT = "sensor_warn_unsupported_unit"
 WARN_UNSTABLE_UNIT = "sensor_warn_unstable_unit"
+# Link to dev statistics where issues around LTS can be fixed
+LINK_DEV_STATISTICS = "https://my.home-assistant.io/redirect/developer_statistics"
 
 
 def _get_sensor_states(hass: HomeAssistant) -> list[State]:
@@ -244,10 +246,12 @@ def _normalize_states(
                         )
                     _LOGGER.warning(
                         "The unit of %s is changing, got multiple %s, generation of long term "
-                        "statistics will be suppressed unless the unit is stable%s",
+                        "statistics will be suppressed unless the unit is stable%s. "
+                        "Go to %s to fix this",
                         entity_id,
                         all_units,
                         extra,
+                        LINK_DEV_STATISTICS,
                     )
                 return None, []
             unit = fstates[0][1].attributes.get(ATTR_UNIT_OF_MEASUREMENT)
@@ -488,12 +492,14 @@ def _compile_statistics(  # noqa: C901
                     _LOGGER.warning(
                         "The %sunit of %s (%s) does not match the unit of already "
                         "compiled statistics (%s). Generation of long term statistics "
-                        "will be suppressed unless the unit changes back to %s",
+                        "will be suppressed unless the unit changes back to %s. "
+                        "Go to %s to fix this",
                         "normalized " if device_class in DEVICE_CLASS_UNITS else "",
                         entity_id,
                         unit,
                         old_metadata[1]["unit_of_measurement"],
                         old_metadata[1]["unit_of_measurement"],
+                        LINK_DEV_STATISTICS,
                     )
                 continue
 
