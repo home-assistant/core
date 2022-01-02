@@ -84,14 +84,17 @@ async def test_rokutv_binary_sensors(
     assert ATTR_DEVICE_CLASS not in state.attributes
 
     state = hass.states.get("binary_sensor.58_onn_roku_tv_supports_find_remote")
-    entry = entity_registry.async_get("binary_sensor.58_onn_roku_tv_supports_find_remote")
+    entry = entity_registry.async_get(
+        "binary_sensor.58_onn_roku_tv_supports_find_remote"
+    )
     assert entry
     assert state
     assert entry.unique_id == "YN00H5555555_supports_find_remote"
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
     assert state.state == STATE_ON
     assert (
-        state.attributes.get(ATTR_FRIENDLY_NAME) == '58" Onn Roku TV Supports Find Remote'
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == '58" Onn Roku TV Supports Find Remote'
     )
     assert state.attributes.get(ATTR_ICON) == "mdi:wan"
     assert ATTR_DEVICE_CLASS not in state.attributes
