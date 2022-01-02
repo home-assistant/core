@@ -1,4 +1,4 @@
-"""Tests for the oncue component."""
+"""Tests for the oncue sensor."""
 from __future__ import annotations
 
 from homeassistant.components import oncue
@@ -26,7 +26,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
     assert config_entry.state == ConfigEntryState.LOADED
 
-    assert len(hass.states.async_all()) == 18
+    assert len(hass.states.async_all("sensor")) == 18
     assert hass.states.get("sensor.my_generator_latest_firmware").state == "2.0.6"
 
     assert hass.states.get("sensor.my_generator_engine_speed").state == "0"
