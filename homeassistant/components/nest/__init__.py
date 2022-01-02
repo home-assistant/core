@@ -11,7 +11,6 @@ from google_nest_sdm.exceptions import (
     ApiException,
     AuthException,
     ConfigurationException,
-    DecodeException,
     SubscriberException,
 )
 import voluptuous as vol
@@ -339,7 +338,7 @@ class NestEventMediaView(HomeAssistantView):
             )
         try:
             event_media = await nest_device.event_media_manager.get_media(event_id)
-        except (DecodeException, ApiException) as err:
+        except ApiException as err:
             raise HomeAssistantError("Unable to fetch media for event") from err
         if not event_media:
             return self._json_error(
