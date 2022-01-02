@@ -5,6 +5,13 @@ from datetime import timedelta
 
 import voluptuous as vol
 import whois
+from whois import Domain
+from whois.exceptions import (
+    FailedParsingWhoisOutput,
+    UnknownDateFormat,
+    UnknownTld,
+    WhoisCommandFailed,
+)
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -64,13 +71,12 @@ async def async_setup_entry(
     """Set up the platform from config_entry."""
     domain = entry.data[CONF_DOMAIN]
     try:
-        info = await hass.async_add_executor_job(whois.whois, domain)
-    except whois.BaseException as ex:  # pylint: disable=broad-except
-        LOGGER.error("Exception %s occurred during WHOIS lookup for %s", ex, domain)
+        await hass.async_add_executor_job(whois.query, domain)
+    except UnknownTld:
+        LOGGER.error("Could not set up whois for %s, TLD is unknown", domain)
         return
-
-    if "expiration_date" not in info:
-        LOGGER.error("WHOIS lookup for %s didn't contain an expiration date", domain)
+    except (FailedParsingWhoisOutput, WhoisCommandFailed, UnknownDateFormat) as ex:
+        LOGGER.error("Exception %s occurred during WHOIS lookup for %s", ex, domain)
         return
 
     async_add_entities([WhoisSensor(domain)], True)
@@ -85,7 +91,6 @@ class WhoisSensor(SensorEntity):
     def __init__(self, domain: str) -> None:
         """Initialize the sensor."""
         self._attr_name = domain
-        self.whois = whois.whois
         self._domain = domain
 
     def _empty_value_and_attributes(self) -> None:
@@ -96,50 +101,31 @@ class WhoisSensor(SensorEntity):
     def update(self) -> None:
         """Get the current WHOIS data for the domain."""
         try:
-            response = self.whois(self._domain)
-        except whois.BaseException as ex:  # pylint: disable=broad-except
+            response: Domain | None = whois.query(self._domain)
+        except (FailedParsingWhoisOutput, WhoisCommandFailed, UnknownDateFormat) as ex:
             LOGGER.error("Exception %s occurred during WHOIS lookup", ex)
             self._empty_value_and_attributes()
             return
 
         if response:
-            if "expiration_date" not in response:
-                LOGGER.error(
-                    "Failed to find expiration_date in whois lookup response. "
-                    "Did find: %s",
-                    ", ".join(response.keys()),
-                )
-                self._empty_value_and_attributes()
-                return
-
-            if not response["expiration_date"]:
-                LOGGER.error("Whois response contains empty expiration_date")
+            if not response.expiration_date:
+                LOGGER.error("Failed to find expiration_date in whois lookup response")
                 self._empty_value_and_attributes()
                 return
 
             attrs = {}
+            attrs[ATTR_EXPIRES] = response.expiration_date.isoformat()
 
-            expiration_date = response["expiration_date"]
-            if isinstance(expiration_date, list):
-                attrs[ATTR_EXPIRES] = expiration_date[0].isoformat()
-                expiration_date = expiration_date[0]
-            else:
-                attrs[ATTR_EXPIRES] = expiration_date.isoformat()
+            if response.name_servers:
+                attrs[ATTR_NAME_SERVERS] = " ".join(response.name_servers)
 
-            if "nameservers" in response:
-                attrs[ATTR_NAME_SERVERS] = " ".join(response["nameservers"])
+            if response.last_updated:
+                attrs[ATTR_UPDATED] = response.last_updated.isoformat()
 
-            if "updated_date" in response:
-                update_date = response["updated_date"]
-                if isinstance(update_date, list):
-                    attrs[ATTR_UPDATED] = update_date[0].isoformat()
-                else:
-                    attrs[ATTR_UPDATED] = update_date.isoformat()
+            if response.registrar:
+                attrs[ATTR_REGISTRAR] = response.registrar
 
-            if "registrar" in response:
-                attrs[ATTR_REGISTRAR] = response["registrar"]
-
-            time_delta = expiration_date - expiration_date.now()
+            time_delta = response.expiration_date - response.expiration_date.now()
 
             self._attr_extra_state_attributes = attrs
             self._attr_native_value = time_delta.days
