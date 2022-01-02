@@ -73,7 +73,7 @@ CAMERA_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
     ),
     ProtectNumberEntityDescription(
         key=_KEY_ZOOM_POS,
-        name="Zoom Position",
+        name="Zoom Level",
         icon="mdi:magnify-plus-outline",
         entity_category=EntityCategory.CONFIG,
         ufp_min=0,
