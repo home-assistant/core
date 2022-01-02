@@ -180,7 +180,6 @@ async def test_local_webhook_id_storage(hass, hass_storage):
     await store.async_initialize()
 
     assert "local_webhook_id" in hass_storage["google_assistant"]["data"]
-    assert len(hass_storage["google_assistant"]["data"]["local_webhook_id"]) == 64
 
 
 async def test_agent_user_id_storage(hass, hass_storage):
