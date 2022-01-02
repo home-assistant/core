@@ -1,15 +1,19 @@
 """Support for Hive light devices."""
+from __future__ import annotations
+
 from datetime import timedelta
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_COLOR_TEMP,
+    ColorMode,
     LightEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.color as color_util
 
 from . import HiveEntity, refresh_system
@@ -19,7 +23,9 @@ PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=15)
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up Hive thermostat based on a config entry."""
 
     hive = hass.data[DOMAIN][entry.entry_id]
@@ -75,10 +81,11 @@ class HiveDeviceLight(HiveEntity, LightEntity):
         self._attr_min_mireds = self.device.get("min_mireds")
         self._attr_max_mireds = self.device.get("max_mireds")
         if self.device["hiveType"] == "warmwhitelight":
-            self._attr_supported_features = SUPPORT_BRIGHTNESS
+            self._attr_supported_features = ColorMode.BRIGHTNESS
         elif self.device["hiveType"] == "tuneablelight":
-            self._attr_supported_features = SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP
+            self._attr_supported_features = {ColorMode.BRIGHTNESS, ColorMode.COLOR_TEMP}
         elif self.device["hiveType"] == "colourtuneablelight":
+            self._attr_supported_features = {ColorMode.COLOR_TEMP, ColorMode.HS}
             rgb = self.device["status"].get("hs_color")
             self._attr_hs_color = color_util.color_RGB_to_hs(*rgb)
             self._attr_supported_features = (
