@@ -35,7 +35,7 @@ import async_timeout
 from google_nest_sdm.exceptions import (
     AuthException,
     ConfigurationException,
-    GoogleNestException,
+    SubscriberException,
 )
 import voluptuous as vol
 
@@ -285,7 +285,7 @@ class NestFlowHandler(
             except ConfigurationException as err:
                 _LOGGER.error("Configuration error creating subscription: %s", err)
                 errors[CONF_CLOUD_PROJECT_ID] = "bad_project_id"
-            except GoogleNestException as err:
+            except SubscriberException as err:
                 _LOGGER.error("Error creating subscription: %s", err)
                 errors[CONF_CLOUD_PROJECT_ID] = "subscriber_error"
 

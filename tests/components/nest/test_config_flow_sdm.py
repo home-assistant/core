@@ -6,7 +6,7 @@ from unittest.mock import patch
 from google_nest_sdm.exceptions import (
     AuthException,
     ConfigurationException,
-    GoogleNestException,
+    SubscriberException,
 )
 import pytest
 
@@ -473,7 +473,7 @@ async def test_pubsub_subscription_failure(hass, oauth):
     await oauth.async_pubsub_flow(result)
     with patch(
         "homeassistant.components.nest.api.GoogleNestSubscriber.create_subscription",
-        side_effect=GoogleNestException(),
+        side_effect=SubscriberException(),
     ):
         result = await oauth.async_configure(
             result, {"cloud_project_id": CLOUD_PROJECT_ID}
