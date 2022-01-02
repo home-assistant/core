@@ -31,7 +31,7 @@ async def test_roku_binary_sensors(
     assert state.state == STATE_OFF
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
-        == "My Roku 3 Supports Airplay"
+        == "My Roku 3 Supports AirPlay"
     )
     assert state.attributes.get(ATTR_ICON) == "mdi:wan"
     assert ATTR_DEVICE_CLASS not in state.attributes
@@ -45,3 +45,47 @@ async def test_roku_binary_sensors(
     assert device_entry.name == "My Roku 3"
     assert device_entry.entry_type == dr.DeviceEntryType.DEVICE
     assert device_entry.sw_version == "7.5.0"
+
+
+async def test_rokutv_binary_sensors(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test the Roku binary sensors."""
+    await setup_integration(
+        hass,
+        aioclient_mock,
+        device="rokutv",
+        app="tvinput-dtv",
+        host="192.168.1.161",
+        unique_id="YN00H5555555",
+    )
+
+    entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
+
+    state = hass.states.get("binary_sensor.58_onn_roku_tv_supports_airplay")
+    entry = entity_registry.async_get(
+        "binary_sensor.58_onn_roku_tv_supports_airplay"
+    )
+    assert entry
+    assert state
+    assert entry.unique_id == "YN00H5555555_supports_airplay"
+    assert entry.entity_category == EntityCategory.DIAGNOSTIC
+    assert state.state == STATE_OFF
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == '58" Onn Roku TV Supports AirPlay'
+    )
+    assert state.attributes.get(ATTR_ICON) == "mdi:wan"
+    assert ATTR_DEVICE_CLASS not in state.attributes
+
+    assert entry.device_id
+    device_entry = device_registry.async_get(entry.device_id)
+    assert device_entry
+    assert device_entry.identifiers == {(DOMAIN, "YN00H5555555")}
+    assert device_entry.manufacturer == "Onn"
+    assert device_entry.model == "100005844"
+    assert device_entry.name == '58" Onn Roku TV'
+    assert device_entry.entry_type == dr.DeviceEntryType.DEVICE
+    assert device_entry.sw_version == "9.2.0"
